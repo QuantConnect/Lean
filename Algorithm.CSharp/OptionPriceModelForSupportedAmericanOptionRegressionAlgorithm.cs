@@ -33,7 +33,7 @@ namespace QuantConnect.Algorithm.CSharp
             option.SetFilter(u => u.StandardsOnly().Strikes(-1, 1).Expiration(0, 35));
 
             // BaroneAdesiWhaley model supports American style options
-            option.PriceModel = OptionPriceModels.BaroneAdesiWhaley();
+            option.PriceModel = OptionPriceModels.QuantLib.BaroneAdesiWhaley();
 
             SetWarmup(2, Resolution.Daily);
 

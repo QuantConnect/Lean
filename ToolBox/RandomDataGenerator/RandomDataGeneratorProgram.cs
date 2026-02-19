@@ -102,7 +102,7 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
                     // from settings
                     if (security is Option option)
                     {
-                        option.PriceModel = OptionPriceModels.Create(settings.OptionPriceEngineName,
+                        option.PriceModel = OptionPriceModels.QuantLib.Create(settings.OptionPriceEngineName,
                             _interestRateProvider.GetRiskFreeRate(settings.Start, settings.End));
                     }
                 })),

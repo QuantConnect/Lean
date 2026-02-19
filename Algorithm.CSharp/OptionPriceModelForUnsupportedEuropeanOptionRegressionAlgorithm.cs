@@ -32,7 +32,7 @@ namespace QuantConnect.Algorithm.CSharp
 
             var option = AddIndexOption("SPX", Resolution.Hour);
             // BaroneAdesiWhaley model does not support European style options
-            option.PriceModel = OptionPriceModels.BaroneAdesiWhaley();
+            option.PriceModel = OptionPriceModels.QuantLib.BaroneAdesiWhaley();
 
             SetWarmup(7, Resolution.Daily);
 

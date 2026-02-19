@@ -15,50 +15,30 @@
 
 using QLNet;
 using System;
-using System.Linq;
-using Fasterflect;
 
 namespace QuantConnect.Securities.Option
 {
-    using PricingEngineFuncEx = Func<Symbol, GeneralizedBlackScholesProcess, IPricingEngine>;
-
     /// <summary>
     /// Static class contains definitions of major option pricing models that can be used in LEAN
     /// </summary>
     /// <remarks>
     /// To introduce particular model into algorithm add the following line to the algorithm's Initialize() method:
     ///
-    ///     option.PriceModel = OptionPriceModels.BjerksundStensland(); // Option pricing model of choice
+    ///     option.PriceModel = OptionPriceModels.BlackScholes(); // Option pricing model of choice
     ///
     /// </remarks>
-    public static class OptionPriceModels
+    public static partial class OptionPriceModels
     {
-        private const int _timeStepsFD = 100;
-
         /// <summary>
         /// Default option price model provider used by LEAN when creating price models.
         /// </summary>
         internal static IOptionPriceModelProvider DefaultPriceModelProvider { get; set; } = QLOptionPriceModelProvider.Instance;
 
         /// <summary>
-        /// Creates pricing engine by engine type name.
+        /// Null pricing engine that returns the current price as the option theoretical price.
+        /// It will also set the option Greeks and implied volatility to zero, effectively disabling the pricing.
         /// </summary>
-        /// <param name="priceEngineName">QL price engine name</param>
-        /// <param name="riskFree">The risk free rate</param>
-        /// <param name="allowedOptionStyles">List of option styles supported by the pricing model. It defaults to both American and European option styles</param>
-        /// <returns>New option price model instance of specific engine</returns>
-        public static IOptionPriceModel Create(string priceEngineName, decimal riskFree, OptionStyle[] allowedOptionStyles = null)
-        {
-            var type = AppDomain.CurrentDomain.GetAssemblies()
-                .Where(a => !a.IsDynamic)
-                .SelectMany(a => a.GetTypes())
-                .Where(s => s.Implements(typeof(IPricingEngine)))
-                .FirstOrDefault(t => t.FullName?.EndsWith(priceEngineName, StringComparison.InvariantCulture) == true);
-
-            return new QLOptionPriceModel(process => (IPricingEngine)Activator.CreateInstance(type, process),
-                riskFreeRateEstimator: new ConstantQLRiskFreeRateEstimator(riskFree),
-                allowedOptionStyles: allowedOptionStyles);
-        }
+        public static IOptionPriceModel Null { get; } = new CurrentPriceOptionPriceModel();
 
         /// <summary>
         /// Pricing engine for Black-Scholes model.
@@ -70,65 +50,6 @@ namespace QuantConnect.Securities.Option
         }
 
         /// <summary>
-        /// Barone-Adesi and Whaley pricing engine for American options (1987)
-        /// QuantLib reference: http://quantlib.org/reference/class_quant_lib_1_1_barone_adesi_whaley_approximation_engine.html
-        /// </summary>
-        /// <returns>New option price model instance</returns>
-        public static IOptionPriceModel BaroneAdesiWhaley()
-        {
-            return new QLOptionPriceModel(process => new BaroneAdesiWhaleyApproximationEngine(process),
-                                          allowedOptionStyles: new[] { OptionStyle.American });
-        }
-
-        /// <summary>
-        /// Bjerksund and Stensland pricing engine for American options (1993)
-        /// QuantLib reference: http://quantlib.org/reference/class_quant_lib_1_1_bjerksund_stensland_approximation_engine.html
-        /// </summary>
-        /// <returns>New option price model instance</returns>
-        public static IOptionPriceModel BjerksundStensland()
-        {
-            return new QLOptionPriceModel(process => new BjerksundStenslandApproximationEngine(process),
-                                          allowedOptionStyles: new[] { OptionStyle.American });
-        }
-
-        /// <summary>
-        /// Pricing engine for European vanilla options using integral approach.
-        /// QuantLib reference: http://quantlib.org/reference/class_quant_lib_1_1_integral_engine.html
-        /// </summary>
-        /// <returns>New option price model instance</returns>
-        public static IOptionPriceModel Integral()
-        {
-            return new QLOptionPriceModel(process => new IntegralEngine(process),
-                                          allowedOptionStyles: new[] { OptionStyle.European });
-        }
-
-        /// <summary>
-        /// Pricing engine for European and American options using finite-differences.
-        /// QuantLib reference: http://quantlib.org/reference/class_quant_lib_1_1_f_d_european_engine.html
-        /// </summary>
-        /// <returns>New option price model instance</returns>
-        public static IOptionPriceModel CrankNicolsonFD()
-        {
-            PricingEngineFuncEx pricingEngineFunc = (symbol, process) =>
-                symbol.ID.OptionStyle == OptionStyle.American
-                    ? new FDAmericanEngine(process, _timeStepsFD, _timeStepsFD - 1)
-                    : new FDEuropeanEngine(process, _timeStepsFD, _timeStepsFD - 1);
-
-            return new QLOptionPriceModel(pricingEngineFunc);
-        }
-
-        /// <summary>
-        /// Pricing engine for European and American vanilla options using binomial trees. Jarrow-Rudd model.
-        /// QuantLib reference: http://quantlib.org/reference/class_quant_lib_1_1_f_d_european_engine.html
-        /// </summary>
-        /// <returns>New option price model instance</returns>
-        public static IOptionPriceModel BinomialJarrowRudd()
-        {
-            return new QLOptionPriceModel(process => new BinomialVanillaEngine<JarrowRudd>(process, QLOptionPriceModelProvider.TimeStepsBinomial));
-        }
-
-
-        /// <summary>
         /// Pricing engine for Cox-Ross-Rubinstein (CRR) model.
         /// </summary>
         /// <returns>New option price model instance</returns>
@@ -136,56 +57,5 @@ namespace QuantConnect.Securities.Option
         {
             return DefaultPriceModelProvider.GetOptionPriceModel(Symbol.Empty, Indicators.OptionPricingModelType.BinomialCoxRossRubinstein);
         }
-
-        /// <summary>
-        /// Pricing engine for European and American vanilla options using binomial trees. Additive Equiprobabilities model.
-        /// QuantLib reference: http://quantlib.org/reference/class_quant_lib_1_1_f_d_european_engine.html
-        /// </summary>
-        /// <returns>New option price model instance</returns>
-        public static IOptionPriceModel AdditiveEquiprobabilities()
-        {
-            return new QLOptionPriceModel(process => new BinomialVanillaEngine<AdditiveEQPBinomialTree>(process, QLOptionPriceModelProvider.TimeStepsBinomial));
-        }
-
-        /// <summary>
-        /// Pricing engine for European and American vanilla options using binomial trees. Trigeorgis model.
-        /// QuantLib reference: http://quantlib.org/reference/class_quant_lib_1_1_f_d_european_engine.html
-        /// </summary>
-        /// <returns>New option price model instance</returns>
-        public static IOptionPriceModel BinomialTrigeorgis()
-        {
-            return new QLOptionPriceModel(process => new BinomialVanillaEngine<Trigeorgis>(process, QLOptionPriceModelProvider.TimeStepsBinomial));
-        }
-
-        /// <summary>
-        /// Pricing engine for European and American vanilla options using binomial trees. Tian model.
-        /// QuantLib reference: http://quantlib.org/reference/class_quant_lib_1_1_f_d_european_engine.html
-        /// </summary>
-        /// <returns>New option price model instance</returns>
-        public static IOptionPriceModel BinomialTian()
-        {
-            return new QLOptionPriceModel(process => new BinomialVanillaEngine<Tian>(process, QLOptionPriceModelProvider.TimeStepsBinomial));
-        }
-
-        /// <summary>
-        /// Pricing engine for European and American vanilla options using binomial trees. Leisen-Reimer model.
-        /// QuantLib reference: http://quantlib.org/reference/class_quant_lib_1_1_f_d_european_engine.html
-        /// </summary>
-        /// <returns>New option price model instance</returns>
-        public static IOptionPriceModel BinomialLeisenReimer()
-        {
-            return new QLOptionPriceModel(process => new BinomialVanillaEngine<LeisenReimer>(process, QLOptionPriceModelProvider.TimeStepsBinomial));
-        }
-
-        /// <summary>
-        /// Pricing engine for European and American vanilla options using binomial trees. Joshi model.
-        /// QuantLib reference: http://quantlib.org/reference/class_quant_lib_1_1_f_d_european_engine.html
-        /// </summary>
-        /// <returns>New option price model instance</returns>
-        public static IOptionPriceModel BinomialJoshi()
-        {
-            return new QLOptionPriceModel(process => new BinomialVanillaEngine<Joshi4>(process, QLOptionPriceModelProvider.TimeStepsBinomial));
-        }
-
     }
 }

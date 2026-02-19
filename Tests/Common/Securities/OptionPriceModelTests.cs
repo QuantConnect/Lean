@@ -221,7 +221,7 @@ namespace QuantConnect.Tests.Common
             var optionCall = GetOption(SPY_C_192_Feb19_2016E, equity, tz);
             optionCall.SetMarketPrice(new Tick { Value = price });
 
-            var priceModel = OptionPriceModels.BaroneAdesiWhaley();
+            var priceModel = OptionPriceModels.QuantLib.BaroneAdesiWhaley();
             var results = priceModel.Evaluate(new OptionPriceModelParameters(optionCall, null, contract));
 
             var callPrice = results.TheoreticalPrice;
@@ -254,7 +254,7 @@ namespace QuantConnect.Tests.Common
             var optionCall = GetOption(SPY_C_192_Feb19_2016E, equity, tz);
             optionCall.SetMarketPrice(new Tick { Value = price });
 
-            var priceModel = OptionPriceModels.BaroneAdesiWhaley();
+            var priceModel = OptionPriceModels.QuantLib.BaroneAdesiWhaley();
             var results = priceModel.Evaluate(new OptionPriceModelParameters(optionCall, null, contract));
 
             var callPrice1 = results.TheoreticalPrice;
@@ -273,7 +273,7 @@ namespace QuantConnect.Tests.Common
             IOptionPriceModel priceModel = null;
             Assert.DoesNotThrow(() =>
             {
-                priceModel = OptionPriceModels.Create(priceEngineName, 0.01m);
+                priceModel = OptionPriceModels.QuantLib.Create(priceEngineName, 0.01m);
             });
 
             Assert.NotNull(priceModel);
@@ -297,7 +297,7 @@ namespace QuantConnect.Tests.Common
             var optionPut = GetOption(Symbols.SPY_P_192_Feb19_2016, equity, tz);
             optionPut.SetMarketPrice(new Tick { Value = price });
 
-            var priceModel = (QLOptionPriceModel)OptionPriceModels.CrankNicolsonFD();
+            var priceModel = (QLOptionPriceModel)OptionPriceModels.QuantLib.CrankNicolsonFD();
             priceModel.EnableGreekApproximation = false;
 
             var results = priceModel.Evaluate(optionPut, null, contract);
@@ -307,7 +307,7 @@ namespace QuantConnect.Tests.Common
             Assert.AreEqual(greeks.Rho, 0);
             Assert.AreEqual(greeks.Vega, 0);
 
-            priceModel = (QLOptionPriceModel)OptionPriceModels.CrankNicolsonFD();
+            priceModel = (QLOptionPriceModel)OptionPriceModels.QuantLib.CrankNicolsonFD();
             priceModel.EnableGreekApproximation = true;
 
             results = priceModel.Evaluate(optionPut, null, contract);
