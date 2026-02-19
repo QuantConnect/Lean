@@ -15,6 +15,7 @@
 
 using System;
 using System.Linq;
+using System.Threading;
 using QuantConnect.Util;
 using QuantConnect.Data;
 using QuantConnect.Logging;
@@ -52,6 +53,16 @@ namespace QuantConnect.Lean.Engine.DataFeeds.DataDownloader
         /// The underlying data downloader that performs the actual data retrieval.
         /// </summary>
         private readonly IDataDownloader _dataDownloader;
+
+        /// <summary>
+        /// Controls parallelism for concurrent operations, 
+        /// limiting execution to a configurable number of threads (default: 4) on the default task scheduler.
+        /// </summary>
+        private readonly ParallelOptions _parallelOptions = new()
+        {
+            MaxDegreeOfParallelism = Config.GetInt("downloader-thread-count", 4),
+            TaskScheduler = TaskScheduler.Default
+        };
 
         /// <summary>
         /// Initializes a new instance of the <see cref="CanonicalDataDownloaderDecorator"/> class.
@@ -150,15 +161,17 @@ namespace QuantConnect.Lean.Engine.DataFeeds.DataDownloader
 
             var blockingCollection = new BlockingCollection<BaseData>();
 
+            var processedContracts = 0L;
             var producerTask = Task.Run(() =>
             {
                 try
                 {
                     Parallel.ForEach(
                         contracts,
-                        new ParallelOptions { MaxDegreeOfParallelism = 4, TaskScheduler = TaskScheduler.Default },
+                        _parallelOptions,
                         contract =>
                         {
+                            Interlocked.Increment(ref processedContracts);
                             var contractParameters = new DataDownloaderGetParameters(
                                 contract,
                                 parameters.Resolution,
@@ -185,7 +198,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.DataDownloader
                 }
                 finally
                 {
-                    Log.Debug($"{nameof(CanonicalDataDownloaderDecorator)}.{nameof(GetContractsData)}:Finished downloading data for canonical symbol, marking the collection as complete for consuming");
+                    Log.Trace($"{nameof(CanonicalDataDownloaderDecorator)}.{nameof(GetContractsData)}: Finished downloading {processedContracts} for canonical symbol.");
                     blockingCollection.CompleteAdding();
                 }
             });
@@ -194,6 +207,10 @@ namespace QuantConnect.Lean.Engine.DataFeeds.DataDownloader
 
             if (!consumingEnumerable.Any())
             {
+                if (Interlocked.Read(ref processedContracts) == 0)
+                {
+                    Log.Error($"{nameof(CanonicalDataDownloaderDecorator)}.{nameof(GetContractsData)}: No contracts were found. Do you have universe data?");
+                }
                 return null;
             }
 
