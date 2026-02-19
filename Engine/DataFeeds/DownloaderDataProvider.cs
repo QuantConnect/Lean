@@ -44,10 +44,10 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         private bool _customDataDownloadError;
         private readonly ConcurrentDictionary<Symbol, Symbol> _marketHoursWarning = new();
         private readonly MarketHoursDatabase _marketHoursDatabase = MarketHoursDatabase.FromDataFolder();
-        private readonly IDataDownloader _dataDownloader;
+        private readonly DataDownloaderSelector _dataDownloader;
         private readonly IDataCacheProvider _dataCacheProvider = new DiskDataCacheProvider(DiskSynchronizer);
         private readonly IMapFileProvider _mapFileProvider = Composer.Instance.GetPart<IMapFileProvider>();
-        private Lazy<IDataDownloader> CanonicalDataDownloader => new(() => new CanonicalDataDownloaderDecorator(_dataDownloader));
+
         /// <summary>
         /// Creates a new instance
         /// </summary>
@@ -56,7 +56,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             var dataDownloaderConfig = Config.Get("data-downloader");
             if (!string.IsNullOrEmpty(dataDownloaderConfig))
             {
-                _dataDownloader = Composer.Instance.GetExportedValueByTypeName<IDataDownloader>(dataDownloaderConfig);
+                _dataDownloader = new DataDownloaderSelector(Composer.Instance.GetExportedValueByTypeName<IDataDownloader>(dataDownloaderConfig));
             }
             else
             {
@@ -69,7 +69,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// </summary>
         public DownloaderDataProvider(IDataDownloader dataDownloader)
         {
-            _dataDownloader = dataDownloader;
+            _dataDownloader = new DataDownloaderSelector(dataDownloader);
         }
 
         /// <summary>
@@ -173,7 +173,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                         if (dataType == typeof(OptionUniverse))
                         {
                             var processingDate = date.ConvertToUtc(dataTimeZone);
-                            UniverseExtensions.RunUniverseDownloader(GetDownloaderForDataType(dataType), new DataUniverseDownloaderGetParameters(symbol, processingDate, processingDate.AddDays(1), entry.ExchangeHours));
+                            UniverseExtensions.RunUniverseDownloader(_dataDownloader.GetDataDownloader(dataType), new DataUniverseDownloaderGetParameters(symbol, processingDate, processingDate.AddDays(1), entry.ExchangeHours));
                             return;
                         }
 
@@ -226,7 +226,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
             foreach (var downloaderDataParameter in downloaderDataParameters)
             {
-                var downloadedData = GetDownloaderForDataType(dataType).Get(downloaderDataParameter);
+                var downloadedData = _dataDownloader.GetDataDownloader(dataType).Get(downloaderDataParameter);
 
                 if (downloadedData == null)
                 {
@@ -345,14 +345,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 })
                 // for canonical symbols, downloader will return data for all of the chain
                 .GroupBy(baseData => baseData.Symbol);
-        }
-
-        /// <summary>
-        /// Returns the base downloader for universe data types, otherwise returns the canonical-aware downloader.
-        /// </summary>
-        private IDataDownloader GetDownloaderForDataType(Type dataType)
-        {
-            return dataType == typeof(OptionUniverse) ? _dataDownloader : CanonicalDataDownloader.Value;
         }
     }
 }

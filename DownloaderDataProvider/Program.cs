@@ -63,29 +63,32 @@ public static class Program
             Config.MergeCommandLineArgumentsWithConfiguration(DownloaderDataProviderArgumentParser.ParseArguments(args));
         }
 
-        var dataDownloader = InitializeConfigurations();
+        Log.DebuggingEnabled = Config.GetBool("debug-mode", false);
+        Log.LogHandler = Composer.Instance.GetExportedValueByTypeName<ILogHandler>(Config.Get("log-handler", "CompositeLogHandler"));
 
+        var dataDownloader = Composer.Instance.GetExportedValueByTypeName<IDataDownloader>(Config.Get(DownloaderCommandArguments.CommandDownloaderDataDownloader));
+        var dataDownloaderSelector = new DataDownloaderSelector(dataDownloader);
         var commandDataType = Config.Get(DownloaderCommandArguments.CommandDataType).ToUpperInvariant();
 
+        var dataDownloadConfig = default(BaseDataDownloadConfig);
         switch (commandDataType)
         {
             case "UNIVERSE":
-                RunUniverseDownloader(dataDownloader, new DataUniverseDownloadConfig());
+                dataDownloadConfig = new DataUniverseDownloadConfig();
+                RunUniverseDownloader(dataDownloaderSelector.GetDataDownloader(dataDownloadConfig.DataType), dataDownloadConfig);
                 break;
             case "TRADE":
             case "QUOTE":
             case "OPENINTEREST":
-                RunDownload(dataDownloader, new DataDownloadConfig(), Globals.DataFolder, _dataCacheProvider);
+                dataDownloadConfig = new DataDownloadConfig();
+                RunDownload(dataDownloaderSelector.GetDataDownloader(dataDownloadConfig.DataType), dataDownloadConfig, Globals.DataFolder, _dataCacheProvider);
                 break;
             default:
                 Log.Error($"QuantConnect.DownloaderDataProvider.Launcher: Unsupported command data type '{commandDataType}'. Valid options: UNIVERSE, TRADE, QUOTE, OPENINTEREST.");
                 break;
         }
 
-        if (dataDownloader is BrokerageDataDownloader brokerageDataDownloader)
-        {
-            brokerageDataDownloader.DisposeSafely();
-        }
+        dataDownloaderSelector.Dispose();
     }
 
     /// <summary>
@@ -97,7 +100,7 @@ public static class Program
     /// <param name="dataCacheProvider">The provider used to cache history data files</param>
     /// <param name="mapSymbol">True if the symbol should be mapped while writing the data</param>
     /// <exception cref="ArgumentNullException">Thrown when <paramref name="dataDownloader"/> is null.</exception>
-    public static void RunDownload(IDataDownloader dataDownloader, DataDownloadConfig dataDownloadConfig, string dataDirectory, IDataCacheProvider dataCacheProvider, bool mapSymbol = true)
+    public static void RunDownload(IDataDownloader dataDownloader, BaseDataDownloadConfig dataDownloadConfig, string dataDirectory, IDataCacheProvider dataCacheProvider, bool mapSymbol = true)
     {
         if (dataDownloader == null)
         {
@@ -166,7 +169,7 @@ public static class Program
     /// </summary>
     /// <param name="dataDownloader">The data downloader instance.</param>
     /// <param name="dataUniverseDownloadConfig">The universe download configuration.</param>
-    private static void RunUniverseDownloader(IDataDownloader dataDownloader, DataUniverseDownloadConfig dataUniverseDownloadConfig)
+    private static void RunUniverseDownloader(IDataDownloader dataDownloader, BaseDataDownloadConfig dataUniverseDownloadConfig)
     {
         foreach (var symbol in dataUniverseDownloadConfig.Symbols)
         {
@@ -188,30 +191,5 @@ public static class Program
     {
         var entry = _marketHoursDatabase.GetEntry(symbol.ID.Market, symbol, symbol.SecurityType);
         return (entry.DataTimeZone, entry.ExchangeHours.TimeZone);
-    }
-
-    /// <summary>
-    /// Initializes various configurations for the application.
-    /// This method sets up logging, data providers, map file providers, and factor file providers.
-    /// </summary>
-    /// <remarks>
-    /// The method reads configuration values to determine whether debugging is enabled,
-    /// which log handler to use, and which data, map file, and factor file providers to initialize.
-    /// </remarks>
-    /// <seealso cref="Log"/>
-    /// <seealso cref="Config"/>
-    /// <seealso cref="Composer"/>
-    /// <seealso cref="ILogHandler"/>
-    /// <seealso cref="IDataProvider"/>
-    /// <seealso cref="IMapFileProvider"/>
-    /// <seealso cref="IFactorFileProvider"/>
-    public static IDataDownloader InitializeConfigurations()
-    {
-        Log.DebuggingEnabled = Config.GetBool("debug-mode", false);
-        Log.LogHandler = Composer.Instance.GetExportedValueByTypeName<ILogHandler>(Config.Get("log-handler", "CompositeLogHandler"));
-
-        var dataDownloader = Composer.Instance.GetExportedValueByTypeName<IDataDownloader>(Config.Get(DownloaderCommandArguments.CommandDownloaderDataDownloader));
-
-        return new CanonicalDataDownloaderDecorator(dataDownloader);
     }
 }
