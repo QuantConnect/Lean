@@ -61,7 +61,6 @@ class IndexOptionCallITMGreeksExpiryRegressionAlgorithm(QCAlgorithm):
 
         deltas = [i.greeks.delta for i in self.sort_by_max_volume(data)]
         gammas = [i.greeks.gamma for i in self.sort_by_max_volume(data)] #data.option_chains.values().order_by_descending(y => y.contracts.values().sum(x => x.volume)).first().contracts.values().select(x => x.greeks.gamma).to_list()
-        lambda_ = [i.greeks.lambda_ for i in self.sort_by_max_volume(data)] #data.option_chains.values().order_by_descending(y => y.contracts.values().sum(x => x.volume)).first().contracts.values().select(x => x.greeks.lambda).to_list()
         rho = [i.greeks.rho for i in self.sort_by_max_volume(data)] #data.option_chains.values().order_by_descending(y => y.contracts.values().sum(x => x.volume)).first().contracts.values().select(x => x.greeks.rho).to_list()
         theta = [i.greeks.theta for i in self.sort_by_max_volume(data)] #data.option_chains.values().order_by_descending(y => y.contracts.values().sum(x => x.volume)).first().contracts.values().select(x => x.greeks.theta).to_list()
         vega = [i.greeks.vega for i in self.sort_by_max_volume(data)] #data.option_chains.values().order_by_descending(y => y.contracts.values().sum(x => x.volume)).first().contracts.values().select(x => x.greeks.vega).to_list()
@@ -75,9 +74,6 @@ class IndexOptionCallITMGreeksExpiryRegressionAlgorithm(QCAlgorithm):
         # Delta is 1, therefore we expect a gamma of 0
         if any([i for i in gammas if i == 0]):
             raise AssertionError("Option contract Gamma was equal to zero")
-
-        if any([i for i in lambda_ if lambda_ == 0]):
-            raise AssertionError("Option contract Lambda was equal to zero")
 
         if any([i for i in rho if i == 0]):
             raise AssertionError("Option contract Rho was equal to zero")

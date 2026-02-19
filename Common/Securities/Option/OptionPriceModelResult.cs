@@ -29,13 +29,24 @@ namespace QuantConnect.Securities.Option
         /// </summary>
         public static OptionPriceModelResult None { get; } = new(0, NullGreeks.Instance);
 
+        private Lazy<decimal> _theoreticalPrice;
         private Lazy<Greeks> _greeks;
         private Lazy<decimal> _impliedVolatility;
 
         /// <summary>
         /// Gets the theoretical price as computed by the <see cref="IOptionPriceModel"/>
         /// </summary>
-        public decimal TheoreticalPrice { get; set; }
+        public decimal TheoreticalPrice
+        {
+            get
+            {
+                return _theoreticalPrice.Value;
+            }
+            set
+            {
+                _theoreticalPrice = new Lazy<decimal>(() => value, isThreadSafe: false);
+            }
+        }
 
         /// <summary>
         /// Gets the implied volatility of the option contract
@@ -80,10 +91,8 @@ namespace QuantConnect.Securities.Option
         /// <param name="theoreticalPrice">The theoretical price computed by the price model</param>
         /// <param name="greeks">The sensitivities (greeks) computed by the price model</param>
         public OptionPriceModelResult(decimal theoreticalPrice, Greeks greeks)
+             : this(() => theoreticalPrice, () => decimal.Zero, () => greeks)
         {
-            TheoreticalPrice = theoreticalPrice;
-            _impliedVolatility = new Lazy<decimal>(() => 0m, isThreadSafe: false);
-            _greeks = new Lazy<Greeks>(() => greeks, isThreadSafe: false);
         }
 
         /// <summary>
@@ -104,8 +113,19 @@ namespace QuantConnect.Securities.Option
         /// <param name="impliedVolatility">The calculated implied volatility</param>
         /// <param name="greeks">The sensitivities (greeks) computed by the price model</param>
         public OptionPriceModelResult(decimal theoreticalPrice, Func<decimal> impliedVolatility, Func<Greeks> greeks)
+            : this(() => theoreticalPrice, impliedVolatility, greeks)
         {
-            TheoreticalPrice = theoreticalPrice;
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="OptionPriceModelResult"/> class with lazy calculations of implied volatility and greeks
+        /// </summary>
+        /// <param name="theoreticalPrice">The theoretical price computed by the price model</param>
+        /// <param name="impliedVolatility">The calculated implied volatility</param>
+        /// <param name="greeks">The sensitivities (greeks) computed by the price model</param>
+        public OptionPriceModelResult(Func<decimal> theoreticalPrice, Func<decimal> impliedVolatility, Func<Greeks> greeks)
+        {
+            _theoreticalPrice = new Lazy<decimal>(theoreticalPrice, isThreadSafe: false);
             _impliedVolatility = new Lazy<decimal>(impliedVolatility, isThreadSafe: false);
             _greeks = new Lazy<Greeks>(greeks, isThreadSafe: false);
         }

@@ -206,7 +206,7 @@ namespace QuantConnect.Data.UniverseSelection
             }
 
             return $"{GetOptionSymbolCsv(symbol)},{open},{high},{low},{close},{volume},"
-                + $"{openInterest},{impliedVolatility},{greeks?.Delta},{greeks?.Gamma},{greeks?.Vega},{greeks?.Theta},{greeks?.Rho}";
+                + $"{openInterest},{impliedVolatility},{greeks?.Delta},{greeks?.Gamma},{greeks?.Vega},{greeks?.ThetaPerDay},{greeks?.Rho}";
         }
 
         /// <summary>
@@ -257,7 +257,7 @@ namespace QuantConnect.Data.UniverseSelection
 
             public override decimal Vega => _csvLine.GetDecimalFromCsv(StartingGreeksCsvIndex + 2);
 
-            public override decimal Theta => _csvLine.GetDecimalFromCsv(StartingGreeksCsvIndex + 3);
+            public override decimal Theta => _csvLine.GetDecimalFromCsv(StartingGreeksCsvIndex + 3) * 365m;
 
             public override decimal Rho => _csvLine.GetDecimalFromCsv(StartingGreeksCsvIndex + 4);
 

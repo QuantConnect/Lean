@@ -34,8 +34,8 @@ class OptionUniverseFilterGreeksRegressionAlgorithm(QCAlgorithm):
         self._max_gamma = 0.0006
         self._min_vega = 0.01
         self._max_vega = 1.5
-        self._min_theta = -2.0
-        self._max_theta = -0.5
+        self._min_theta = -730.0
+        self._max_theta = -182.5
         self._min_rho = 0.5
         self._max_rho = 3.0
         self._min_iv = 1.0

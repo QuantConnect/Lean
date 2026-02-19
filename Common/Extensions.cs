@@ -3613,6 +3613,27 @@ namespace QuantConnect
         }
 
         /// <summary>
+        /// Helper method to get the mirror option symbol for a given option symbol
+        /// </summary>
+        /// <param name="contractSymbol">The original option contract symbol</param>
+        /// <returns>The mirror option contract symbol</returns>
+        public static Symbol GetMirrorOptionSymbol(this Symbol contractSymbol)
+        {
+            if (!contractSymbol.SecurityType.IsOption() || contractSymbol.IsCanonical())
+            {
+                throw new ArgumentException(Messages.Extensions.NotAValidOptionSymbolForMirror);
+            }
+
+            return Symbol.CreateOption(contractSymbol.Underlying,
+                contractSymbol.ID.Symbol,
+                contractSymbol.ID.Market,
+                contractSymbol.ID.OptionStyle,
+                contractSymbol.ID.OptionRight.Invert(),
+                contractSymbol.ID.StrikePrice,
+                contractSymbol.ID.Date);
+        }
+
+        /// <summary>
         /// Helper method to unsubscribe a given configuration, handling any required mapping
         /// </summary>
         public static void UnsubscribeWithMapping(this IDataQueueHandler dataQueueHandler, SubscriptionDataConfig dataConfig)

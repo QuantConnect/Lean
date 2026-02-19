@@ -257,6 +257,11 @@ namespace QuantConnect
             public static string GreatestCommonDivisorEmptyList = "The list of values cannot be empty";
 
             /// <summary>
+            /// Returns a string message saying that the symbol for which a mirror contract is being created is not a valid option symbol
+            /// </summary>
+            public static string NotAValidOptionSymbolForMirror = "Cannot create mirror contract for non-option symbol or canonical option symbol";
+
+            /// <summary>
             /// Returns a string message saying the process of downloading data from the given url failed
             /// </summary>
             [MethodImpl(MethodImplOptions.AggressiveInlining)]

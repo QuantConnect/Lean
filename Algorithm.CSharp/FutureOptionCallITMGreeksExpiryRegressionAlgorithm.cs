@@ -61,7 +61,7 @@ namespace QuantConnect.Algorithm.CSharp
                 .Take(1)
                 .Single(), Resolution.Minute);
 
-            _esOption.PriceModel = OptionPriceModels.BjerksundStensland();
+            _esOption.PriceModel = OptionPriceModels.QuantLib.BjerksundStensland();
 
             _expectedOptionContract = QuantConnect.Symbol.CreateOption(_es19m20.Symbol, Market.CME, OptionStyle.American, OptionRight.Call, 3200m, new DateTime(2020, 6, 19));
             if (_esOption.Symbol != _expectedOptionContract)

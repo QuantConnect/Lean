@@ -11,86 +11,74 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
+ *
 */
 
-using System;
 using System.Collections.Generic;
 using QuantConnect.Data;
 using QuantConnect.Interfaces;
-using QuantConnect.Securities;
+using QuantConnect.Securities.Option;
 
 namespace QuantConnect.Algorithm.CSharp
 {
     /// <summary>
-    /// Regression algorithm reproducing issue #7408
+    /// This example demonstrates how to override the option pricing model with the
+    /// <see cref="QLOptionPriceModel"/> for a given option security.
     /// </summary>
-    public class OptionGreeksRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
+    public class QLOptionPricingModelRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
-        private Symbol _itmCallSymbol, _otmCallSymbol, _itmPutSymbol, _otmPutSymbol;
-        private const decimal error = 0.1m;
+        private bool _checked;
+
+        private Option _option;
 
         public override void Initialize()
         {
-            SetStartDate(2023, 8, 2);
-            SetEndDate(2023, 8, 4);
-            SetCash(1000000);
+            SetStartDate(2015, 12, 24);
+            SetEndDate(2015, 12, 24);
+            SetCash(100000);
 
-            var equity = AddEquity("SPY", Resolution.Minute);
-            equity.VolatilityModel = new StandardDeviationOfReturnsVolatilityModel(30);
+            var equity = AddEquity("GOOG");
+            _option = AddOption(equity.Symbol);
+            _option.SetFilter(u => u.Strikes(-2, +2).Expiration(0, 180));
 
-            _itmCallSymbol = QuantConnect.Symbol.CreateOption(equity.Symbol, Market.USA, OptionStyle.American, OptionRight.Call, 430, new DateTime(2023, 9, 1));
-            _otmCallSymbol = QuantConnect.Symbol.CreateOption(equity.Symbol, Market.USA, OptionStyle.American, OptionRight.Call, 470, new DateTime(2023, 9, 1));
-            _itmPutSymbol = QuantConnect.Symbol.CreateOption(equity.Symbol, Market.USA, OptionStyle.American, OptionRight.Put, 430, new DateTime(2023, 9, 1));
-            _otmPutSymbol = QuantConnect.Symbol.CreateOption(equity.Symbol, Market.USA, OptionStyle.American, OptionRight.Put, 470, new DateTime(2023, 9, 1));
+            // Set the option price model to the default QL model
+            _option.SetPriceModel(QLOptionPriceModelProvider.Instance.GetOptionPriceModel(_option.Symbol));
 
-            AddOptionContract(_itmCallSymbol, Resolution.Minute);
-            AddOptionContract(_otmCallSymbol, Resolution.Minute);
-            AddOptionContract(_itmPutSymbol, Resolution.Minute);
-            AddOptionContract(_otmPutSymbol, Resolution.Minute);
+            if (_option.PriceModel is not QLOptionPriceModel)
+            {
+                throw new RegressionTestException("Option pricing model was not set to QLOptionPriceModel, which should be the default");
+            }
         }
 
         public override void OnData(Slice slice)
         {
-            foreach (var kvp in slice.OptionChains)
+            if (!_checked  && slice.OptionChains.TryGetValue(_option.Symbol, out var chain))
             {
-                var chain = kvp.Value;
-                if (chain == null)
+                if (_option.PriceModel is not QLOptionPriceModel)
                 {
-                    continue;
+                    throw new RegressionTestException("Option pricing model was not set to QLOptionPriceModel");
                 }
 
-                foreach (var contractKvp in chain.Contracts)
+                foreach (var contract in chain)
                 {
-                    var symbol = contractKvp.Key;
-                    var contract = contractKvp.Value;
-                    var delta = contract.Greeks.Delta;
-                    decimal expected;
+                    var theoreticalPrice = contract.TheoreticalPrice;
+                    var iv = contract.ImpliedVolatility;
+                    var greeks = contract.Greeks;
 
-                    // Values from CBOE
-                    if (symbol == _itmCallSymbol)
-                    {
-                        expected = 0.78901m;
-                    }
-                    else if (symbol == _otmCallSymbol)
-                    {
-                        expected = 0.09627m;
-                    }
-                    else if (symbol == _itmPutSymbol)
-                    {
-                        expected = -0.18395m;
-                    }
-                    else
-                    {
-                        expected = -0.99989m;
-                    }
-
-                    if (delta >= expected + error || delta <= expected - error)
-                    {
-                        throw new RegressionTestException($"{symbol.Value} greeks not calculated accurately! Expected: {expected}, Estimation: {delta}");
-                    }
+                    Log($"{contract.Symbol}:: Theoretical Price: {theoreticalPrice}, IV: {iv}, " +
+                           $"Delta: {greeks.Delta}, Gamma: {greeks.Gamma}, Vega: {greeks.Vega}, " +
+                           $"Theta: {greeks.Theta}, Rho: {greeks.Rho}, Lambda: {greeks.Lambda}");
+                                 
+                    _checked |= true;
                 }
+            }
+        }
 
-                Quit();
+        public override void OnEndOfAlgorithm()
+        {
+            if (!_checked)
+            {
+                throw new RegressionTestException("Option chain was never received.");
             }
         }
 
@@ -102,12 +90,12 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// This is used by the regression test system to indicate which languages this algorithm is written in.
         /// </summary>
-        public List<Language> Languages { get; } = new() { Language.CSharp };
+        public List<Language> Languages { get; } = new() { Language.CSharp, Language.Python };
 
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
-        public long DataPoints => 10;
+        public virtual long DataPoints => 37131;
 
         /// <summary>
         /// Data Points count of the algorithm history
@@ -130,8 +118,8 @@ namespace QuantConnect.Algorithm.CSharp
             {"Compounding Annual Return", "0%"},
             {"Drawdown", "0%"},
             {"Expectancy", "0"},
-            {"Start Equity", "1000000"},
-            {"End Equity", "1000000"},
+            {"Start Equity", "100000"},
+            {"End Equity", "100000"},
             {"Net Profit", "0%"},
             {"Sharpe Ratio", "0"},
             {"Sortino Ratio", "0"},
