@@ -55,14 +55,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds.DataDownloader
         private readonly IDataDownloader _dataDownloader;
 
         /// <summary>
-        /// Prevents duplicate contract downloads across multiple canonical symbol chains.
-        /// </summary>
-        /// <remarks>
-        /// <see cref="DownloaderDataProvider"/> may request the same contract multiple times when canonical symbols share contracts in their chains.
-        /// </remarks>
-        private readonly HashSet<ContractDownloadParameters> _contractsCache = [];
-
-        /// <summary>
         /// Controls parallelism for concurrent operations, 
         /// limiting execution to a configurable number of threads (default: 4) on the default task scheduler.
         /// </summary>
@@ -165,7 +157,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.DataDownloader
         /// </summary>
         private IEnumerable<BaseData>? GetContractsData(DataDownloaderGetParameters parameters)
         {
-            var contracts = GetContracts(parameters);
+            var contracts = GetContracts(parameters.Symbol, parameters.StartUtc, parameters.EndUtc);
 
             var blockingCollection = new BlockingCollection<BaseData>();
 
@@ -180,12 +172,11 @@ namespace QuantConnect.Lean.Engine.DataFeeds.DataDownloader
                         contract =>
                         {
                             Interlocked.Increment(ref processedContracts);
-                            var (start, end) = AdjustDateRangeForContract(contract);
                             var contractParameters = new DataDownloaderGetParameters(
                                 contract,
                                 parameters.Resolution,
-                                start,
-                                end,
+                                parameters.StartUtc,
+                                parameters.EndUtc,
                                 parameters.TickType);
 
                             try
@@ -199,7 +190,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.DataDownloader
                             }
                             catch (Exception ex)
                             {
-                                Log.Debug($"{nameof(CanonicalDataDownloaderDecorator)}.{nameof(GetContractsData)}: " +
+                                Log.Error($"{nameof(CanonicalDataDownloaderDecorator)}.{nameof(GetContractsData)}: " +
                                     $"Error downloading data for {contractParameters}. Exception: {ex.Message}. Continuing...");
                                 return;
                             }
@@ -227,31 +218,10 @@ namespace QuantConnect.Lean.Engine.DataFeeds.DataDownloader
         }
 
         /// <summary>
-        /// Adjusts the date range for a contract to reduce unnecessary history:
-        /// options look back 1 year, futures 2 years, others just 1 day before expiry.
-        /// </summary>
-        private static (DateTime, DateTime) AdjustDateRangeForContract(Symbol contract)
-        {
-            var expiry = contract.ID.Date;
-            var lookBack = expiry.AddDays(-1);
-            if (contract.ID.SecurityType.IsOption())
-            {
-                lookBack = contract.ID.Date.Date.AddYears(-1);
-            }
-            else if (contract.ID.SecurityType == SecurityType.Future)
-            {
-                lookBack = contract.ID.Date.Date.AddYears(-2);
-            }
-
-            return (lookBack, expiry.AddDays(1));
-        }
-
-        /// <summary>
         /// Retrieves unique contracts for the given canonical symbol across the specified date range.
         /// </summary>
-        private IEnumerable<Symbol> GetContracts(DataDownloaderGetParameters parameters)
+        private IEnumerable<Symbol> GetContracts(Symbol symbol, DateTime startUtc, DateTime endUtc)
         {
-            var symbol = parameters.Symbol;
             var chainProvider = default(Func<Symbol, DateTime, IEnumerable<Symbol>>);
             if (symbol.SecurityType == SecurityType.Future)
             {
@@ -266,13 +236,13 @@ namespace QuantConnect.Lean.Engine.DataFeeds.DataDownloader
                 throw new ArgumentException($"Unsupported security type {symbol.SecurityType} for canonical data downloader", nameof(symbol));
             }
 
-            foreach (var date in Time.EachDay(parameters.StartUtc.Date, parameters.EndUtc.Date))
+            var uniqueContracts = new HashSet<Symbol>();
+            foreach (var date in Time.EachDay(startUtc.Date, endUtc.Date))
             {
                 foreach (var contract in chainProvider(symbol, date))
                 {
-                    if (_contractsCache.Add(new(contract, parameters.TickType, parameters.Resolution)))
+                    if (uniqueContracts.Add(contract))
                     {
-                        Log.Trace($"Contract: [{contract}]({contract.ID.Date}) {parameters.TickType}, {parameters.Resolution}. Count: {_contractsCache.Count}");
                         yield return contract;
                     }
                 }
