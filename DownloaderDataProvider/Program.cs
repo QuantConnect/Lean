@@ -63,11 +63,8 @@ public static class Program
             Config.MergeCommandLineArgumentsWithConfiguration(DownloaderDataProviderArgumentParser.ParseArguments(args));
         }
 
-        Log.DebuggingEnabled = Config.GetBool("debug-mode", false);
-        Log.LogHandler = Composer.Instance.GetExportedValueByTypeName<ILogHandler>(Config.Get("log-handler", "ConsoleLogHandler"));
+        var dataDownloaderSelector = InitializeConfigurations();
 
-        var dataDownloader = Composer.Instance.GetExportedValueByTypeName<IDataDownloader>(Config.Get(DownloaderCommandArguments.CommandDownloaderDataDownloader));
-        var dataDownloaderSelector = new DataDownloaderSelector(dataDownloader);
         var commandDataType = Config.Get(DownloaderCommandArguments.CommandDataType).ToUpperInvariant();
 
         var dataDownloadConfig = default(BaseDataDownloadConfig);
@@ -191,5 +188,36 @@ public static class Program
     {
         var entry = _marketHoursDatabase.GetEntry(symbol.ID.Market, symbol, symbol.SecurityType);
         return (entry.DataTimeZone, entry.ExchangeHours.TimeZone);
+    }
+
+    /// <summary>
+    /// Initializes various configurations for the application.
+    /// This method sets up logging, data providers, map file providers, and factor file providers.
+    /// </summary>
+    /// <remarks>
+    /// The method reads configuration values to determine whether debugging is enabled,
+    /// which log handler to use, and which data, map file, and factor file providers to initialize.
+    /// </remarks>
+    /// <seealso cref="Log"/>
+    /// <seealso cref="Config"/>
+    /// <seealso cref="Composer"/>
+    /// <seealso cref="ILogHandler"/>
+    /// <seealso cref="IDataProvider"/>
+    /// <seealso cref="IMapFileProvider"/>
+    /// <seealso cref="IFactorFileProvider"/>
+    public static DataDownloaderSelector InitializeConfigurations()
+    {
+        Log.DebuggingEnabled = Config.GetBool("debug-mode", false);
+        Log.LogHandler = Composer.Instance.GetExportedValueByTypeName<ILogHandler>(Config.Get("log-handler", "CompositeLogHandler"));
+
+        var dataProvider = Composer.Instance.GetExportedValueByTypeName<IDataProvider>("DefaultDataProvider");
+        var mapFileProvider = Composer.Instance.GetExportedValueByTypeName<IMapFileProvider>(Config.Get("map-file-provider", "LocalDiskMapFileProvider"));
+        var factorFileProvider = Composer.Instance.GetExportedValueByTypeName<IFactorFileProvider>(Config.Get("factor-file-provider", "LocalDiskFactorFileProvider"));
+
+        mapFileProvider.Initialize(dataProvider);
+        factorFileProvider.Initialize(mapFileProvider, dataProvider);
+
+        var dataDownloader = Composer.Instance.GetExportedValueByTypeName<IDataDownloader>(Config.Get(DownloaderCommandArguments.CommandDownloaderDataDownloader));
+        return new DataDownloaderSelector(dataDownloader, mapFileProvider, dataProvider, factorFileProvider);
     }
 }

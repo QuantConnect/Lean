@@ -16,6 +16,8 @@
 
 using System;
 using QuantConnect.Util;
+using QuantConnect.Interfaces;
+using QuantConnect.Configuration;
 
 namespace QuantConnect.Lean.Engine.DataFeeds.DataDownloader
 {
@@ -27,10 +29,20 @@ namespace QuantConnect.Lean.Engine.DataFeeds.DataDownloader
 
         /// <summary>Initializes a new instance of the <see cref="DataDownloaderSelector"/> class.</summary>
         /// <param name="baseDataDownloader">The base data downloader instance.</param>
-        public DataDownloaderSelector(IDataDownloader baseDataDownloader)
+        /// <param name="mapFileProvider">The map file provider used for initializing chain providers.</param>
+        /// <param name="dataProvider">The data provider used for initializing chain providers.</param>
+        /// <param name="factorFileProvider">The factor file provider used for initializing chain providers.</param>
+        public DataDownloaderSelector(
+            IDataDownloader baseDataDownloader,
+            IMapFileProvider mapFileProvider,
+            IDataProvider dataProvider = null,
+            IFactorFileProvider factorFileProvider = null)
         {
+            dataProvider ??= Composer.Instance.GetExportedValueByTypeName<IDataProvider>("DefaultDataProvider");
+            factorFileProvider ??= Composer.Instance.GetExportedValueByTypeName<IFactorFileProvider>(Config.Get("factor-file-provider", "LocalDiskFactorFileProvider"));
+
             _baseDataDownloader = baseDataDownloader;
-            _canonicalDataDownloaderDecorator = new CanonicalDataDownloaderDecorator(_baseDataDownloader);
+            _canonicalDataDownloaderDecorator = new CanonicalDataDownloaderDecorator(_baseDataDownloader, dataProvider, mapFileProvider, factorFileProvider);
         }
 
         /// <summary>Disposes the base downloader and the decorator if it was initialized.</summary>

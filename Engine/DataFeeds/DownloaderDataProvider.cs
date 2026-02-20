@@ -56,7 +56,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             var dataDownloaderConfig = Config.Get("data-downloader");
             if (!string.IsNullOrEmpty(dataDownloaderConfig))
             {
-                _dataDownloader = new DataDownloaderSelector(Composer.Instance.GetExportedValueByTypeName<IDataDownloader>(dataDownloaderConfig));
+                _dataDownloader = new DataDownloaderSelector(Composer.Instance.GetExportedValueByTypeName<IDataDownloader>(dataDownloaderConfig), _mapFileProvider);
             }
             else
             {
@@ -69,7 +69,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// </summary>
         public DownloaderDataProvider(IDataDownloader dataDownloader)
         {
-            _dataDownloader = new DataDownloaderSelector(dataDownloader);
+            _dataDownloader = new DataDownloaderSelector(dataDownloader, _mapFileProvider);
         }
 
         /// <summary>

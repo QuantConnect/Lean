@@ -42,12 +42,12 @@ namespace QuantConnect.Lean.Engine.DataFeeds.DataDownloader
         /// <summary>
         /// Lazily initialized option chain provider for resolving option contract lists.
         /// </summary>
-        private readonly Lazy<IOptionChainProvider> _optionChainProvider;
+        private readonly IOptionChainProvider _optionChainProvider;
 
         /// <summary>
         /// Lazily initialized future chain provider for resolving future contract lists.
         /// </summary>
-        private readonly Lazy<IFutureChainProvider> _futureChainProvider;
+        private readonly IFutureChainProvider _futureChainProvider;
 
         /// <summary>
         /// The underlying data downloader that performs the actual data retrieval.
@@ -78,16 +78,12 @@ namespace QuantConnect.Lean.Engine.DataFeeds.DataDownloader
         /// Initializes a new instance of the <see cref="CanonicalDataDownloaderDecorator"/> class.
         /// </summary>
         /// <param name="dataDownloader">The underlying data downloader to decorate with canonical symbol support.</param>
-        public CanonicalDataDownloaderDecorator(IDataDownloader dataDownloader)
+        /// <param name="dataProvider">The data provider used for initializing chain providers.</param>
+        /// <param name="mapFileProvider">The map file provider used for initializing chain providers.</param>
+        /// <param name="factorFileProvider">The factor file provider used for initializing chain providers.</param>
+        public CanonicalDataDownloaderDecorator(IDataDownloader dataDownloader, IDataProvider dataProvider, IMapFileProvider mapFileProvider, IFactorFileProvider factorFileProvider)
         {
             _dataDownloader = dataDownloader;
-
-            var dataProvider = Composer.Instance.GetExportedValueByTypeName<IDataProvider>("DefaultDataProvider");
-            var mapFileProvider = Composer.Instance.GetExportedValueByTypeName<IMapFileProvider>(Config.Get("map-file-provider", "LocalDiskMapFileProvider"));
-            var factorFileProvider = Composer.Instance.GetExportedValueByTypeName<IFactorFileProvider>(Config.Get("factor-file-provider", "LocalDiskFactorFileProvider"));
-
-            mapFileProvider.Initialize(dataProvider);
-            factorFileProvider.Initialize(mapFileProvider, dataProvider);
 
             var historyManager = new HistoryProviderManager();
             historyManager.Initialize(
@@ -104,31 +100,23 @@ namespace QuantConnect.Lean.Engine.DataFeeds.DataDownloader
                     objectStore: null,
                     new AlgorithmSettings()));
 
-            _optionChainProvider = new(() =>
+            var optionChainProvider = Composer.Instance.GetPart<IOptionChainProvider>();
+            if (optionChainProvider == null)
             {
-                var optionChainProvider = Composer.Instance.GetPart<IOptionChainProvider>();
-                if (optionChainProvider == null)
-                {
-                    var baseOptionChainProvider = new LiveOptionChainProvider();
-                    baseOptionChainProvider.Initialize(new(mapFileProvider, historyManager));
-                    optionChainProvider = new CachingOptionChainProvider(baseOptionChainProvider);
-                    Composer.Instance.AddPart(optionChainProvider);
-                }
-                return optionChainProvider;
-            });
+                var baseOptionChainProvider = new LiveOptionChainProvider();
+                baseOptionChainProvider.Initialize(new(mapFileProvider, historyManager));
+                optionChainProvider = new CachingOptionChainProvider(baseOptionChainProvider);
+                Composer.Instance.AddPart(optionChainProvider);
+            }
 
-            _futureChainProvider = new(() =>
+            var futureChainProvider = Composer.Instance.GetPart<IFutureChainProvider>();
+            if (futureChainProvider == null)
             {
-                var futureChainProvider = Composer.Instance.GetPart<IFutureChainProvider>();
-                if (futureChainProvider == null)
-                {
-                    var baseFutureChainProvider = new BacktestingFutureChainProvider();
-                    baseFutureChainProvider.Initialize(new(mapFileProvider, historyManager));
-                    futureChainProvider = new CachingFutureChainProvider(baseFutureChainProvider);
-                    Composer.Instance.AddPart(futureChainProvider);
-                }
-                return futureChainProvider;
-            });
+                var baseFutureChainProvider = new BacktestingFutureChainProvider();
+                baseFutureChainProvider.Initialize(new(mapFileProvider, historyManager));
+                futureChainProvider = new CachingFutureChainProvider(baseFutureChainProvider);
+                Composer.Instance.AddPart(futureChainProvider);
+            }
         }
 
         /// <summary>
@@ -277,11 +265,11 @@ namespace QuantConnect.Lean.Engine.DataFeeds.DataDownloader
             var chainProvider = default(Func<Symbol, DateTime, IEnumerable<Symbol>>);
             if (symbol.SecurityType == SecurityType.Future)
             {
-                chainProvider = _futureChainProvider.Value.GetFutureContractList;
+                chainProvider = _futureChainProvider.GetFutureContractList;
             }
             else if (symbol.SecurityType.IsOption())
             {
-                chainProvider = _optionChainProvider.Value.GetOptionContractList;
+                chainProvider = _optionChainProvider.GetOptionContractList;
             }
             else
             {
