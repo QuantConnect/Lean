@@ -103,11 +103,10 @@ namespace Common.Data.Consolidators
         /// <param name="currentLocalTime">The current local time.</param>
         public void ValidateAndScan(DateTime currentLocalTime)
         {
-            if (!_initialized)
-            {
-                return;
-            }
-            if (currentLocalTime.Date != WorkingInstance?.Time.Date)
+            // When DailyPreciseEndTime is false, ValidateAndScan runs before the last data point of the day arrives, which occurs at midnight
+            // To prevent skipping it, only scan if the time is past midnight
+            // All other validations are handled by Scan().
+            if (currentLocalTime.TimeOfDay > TimeSpan.Zero)
             {
                 Scan(currentLocalTime);
             }
