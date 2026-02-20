@@ -65,19 +65,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds.DataDownloader
         };
 
         /// <summary>
-        /// Prevents duplicate contract downloads across multiple canonical symbol chains.
-        /// </summary>
-        /// <remarks>
-        /// <see cref="DownloaderDataProvider"/> may request the same contract multiple times when canonical symbols share contracts in their chains.
-        /// </remarks>
-        private readonly HashSet<Symbol> _contractsCache = [];
-
-        /// <summary>
-        /// Tracks the number of contracts processed across all canonical symbol data retrievals, used for logging.
-        /// </summary>
-        private long _processedContracts;
-
-        /// <summary>
         /// Initializes a new instance of the <see cref="CanonicalDataDownloaderDecorator"/> class.
         /// </summary>
         /// <param name="dataDownloader">The underlying data downloader to decorate with canonical symbol support.</param>
@@ -166,40 +153,40 @@ namespace QuantConnect.Lean.Engine.DataFeeds.DataDownloader
         }
 
         /// <summary>
-        /// Adjusts the date range for a given contract based on its security type and expiry date.
+        /// Tries to adjust the date range for a given contract based on its security type and expiry date.
         /// The start date is clamped to a minimum look-back period and the end date is clamped to the contract expiry date.
+        /// Returns false if the minimum look-back period exceeds the requested end date, meaning no valid range exists.
         /// </summary>
         /// <param name="contract">The contract symbol containing the security type and expiry date.</param>
         /// <param name="originalStartDateUtc">The requested start date in UTC.</param>
         /// <param name="originalEndDateUtc">The requested end date in UTC.</param>
-        /// <returns>A tuple of the adjusted start and end dates in UTC.</returns>
-        public static (DateTime, DateTime) AdjustDateRangeForContract(Symbol contract, DateTime originalStartDateUtc, DateTime originalEndDateUtc)
+        /// <param name="adjustedStartDateUtc">The adjusted start date in UTC, or default if no valid range exists.</param>
+        /// <param name="adjustedEndDateUtc">The adjusted end date in UTC, or default if no valid range exists.</param>
+        /// <returns>True if a valid adjusted date range was found, false otherwise.</returns>
+        public static bool TryAdjustDateRangeForContract(Symbol contract, DateTime originalStartDateUtc, DateTime originalEndDateUtc,
+            out DateTime adjustedStartDateUtc, out DateTime adjustedEndDateUtc)
         {
             var expiryDate = contract.ID.Date;
-
-            var minLookBack = expiryDate.AddDays(-1);
+            var minLookBack = expiryDate;
             if (contract.ID.SecurityType.IsOption())
             {
-                minLookBack = expiryDate.AddYears(-1);
+                minLookBack = expiryDate.AddYears(-Config.GetInt("options-lookback-years", 1));
             }
             else if (contract.ID.SecurityType == SecurityType.Future)
             {
-                minLookBack = expiryDate.AddYears(-2);
+                minLookBack = expiryDate.AddYears(-Config.GetInt("futures-lookback-years", 2));
             }
 
-            var startDate = originalStartDateUtc;
-            if (minLookBack >= originalStartDateUtc)
+            if (minLookBack > originalEndDateUtc || expiryDate < originalStartDateUtc)
             {
-                startDate = minLookBack;
+                adjustedStartDateUtc = default;
+                adjustedEndDateUtc = default;
+                return false;
             }
 
-            var endDate = originalEndDateUtc;
-            if (expiryDate <= originalEndDateUtc)
-            {
-                endDate = expiryDate.AddDays(1);
-            }
-
-            return (startDate, endDate);
+            adjustedStartDateUtc = minLookBack >= originalStartDateUtc ? minLookBack : originalStartDateUtc;
+            adjustedEndDateUtc = expiryDate <= originalEndDateUtc ? expiryDate.AddDays(1) : originalEndDateUtc;
+            return true;
         }
 
         /// <summary>
@@ -211,6 +198,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.DataDownloader
 
             var blockingCollection = new BlockingCollection<BaseData>();
 
+            var processedContracts = 0L;
             var producerTask = Task.Run(() =>
             {
                 try
@@ -220,13 +208,17 @@ namespace QuantConnect.Lean.Engine.DataFeeds.DataDownloader
                         _parallelOptions,
                         contract =>
                         {
-                            Interlocked.Increment(ref _processedContracts);
-                            var (start, end) = AdjustDateRangeForContract(contract, parameters.StartUtc, parameters.EndUtc);
+                            Interlocked.Increment(ref processedContracts);
+                            if (!TryAdjustDateRangeForContract(contract, parameters.StartUtc, parameters.EndUtc, out var adjustedStartDateUtc, out var adjustedEndDateUtc))
+                            {
+                                return;
+                            }
+
                             var contractParameters = new DataDownloaderGetParameters(
                                 contract,
                                 parameters.Resolution,
-                                start,
-                                end,
+                                adjustedStartDateUtc,
+                                adjustedEndDateUtc,
                                 parameters.TickType);
 
                             try
@@ -240,7 +232,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.DataDownloader
                             }
                             catch (Exception ex)
                             {
-                                Log.Error($"{nameof(CanonicalDataDownloaderDecorator)}.{nameof(GetContractsData)}: " +
+                                Log.Debug($"{nameof(CanonicalDataDownloaderDecorator)}.{nameof(GetContractsData)}: " +
                                     $"Error downloading data for {contractParameters}. Exception: {ex.Message}. Continuing...");
                                 return;
                             }
@@ -248,7 +240,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.DataDownloader
                 }
                 finally
                 {
-                    Log.Trace($"{nameof(CanonicalDataDownloaderDecorator)}.{nameof(GetContractsData)}: Finished downloading {_processedContracts} for canonical symbol.");
+                    Log.Debug($"{nameof(CanonicalDataDownloaderDecorator)}.{nameof(GetContractsData)}: Finished downloading {processedContracts} for canonical symbol.");
                     blockingCollection.CompleteAdding();
                 }
             });
@@ -257,7 +249,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.DataDownloader
 
             if (!consumingEnumerable.Any())
             {
-                if (Interlocked.Read(ref _processedContracts) == 0)
+                if (Interlocked.Read(ref processedContracts) == 0)
                 {
                     Log.Error($"{nameof(CanonicalDataDownloaderDecorator)}.{nameof(GetContractsData)}: No contracts were found. Do you have universe data?");
                 }
@@ -286,11 +278,12 @@ namespace QuantConnect.Lean.Engine.DataFeeds.DataDownloader
                 throw new ArgumentException($"Unsupported security type {symbol.SecurityType} for canonical data downloader", nameof(symbol));
             }
 
+            var contractsCache = new HashSet<Symbol>();
             foreach (var date in Time.EachDay(startUtc.Date, endUtc.Date))
             {
                 foreach (var contract in chainProvider(symbol, date))
                 {
-                    if (_contractsCache.Add(contract))
+                    if (contractsCache.Add(contract))
                     {
                         yield return contract;
                     }
