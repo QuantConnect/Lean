@@ -23,25 +23,20 @@ namespace QuantConnect.Lean.Engine.DataFeeds.DataDownloader
     public class DataDownloaderSelector : IDisposable
     {
         private readonly IDataDownloader _baseDataDownloader;
-        private readonly Lazy<CanonicalDataDownloaderDecorator> _canonicalDataDownloaderDecorator;
+        private readonly CanonicalDataDownloaderDecorator _canonicalDataDownloaderDecorator;
 
         /// <summary>Initializes a new instance of the <see cref="DataDownloaderSelector"/> class.</summary>
         /// <param name="baseDataDownloader">The base data downloader instance.</param>
         public DataDownloaderSelector(IDataDownloader baseDataDownloader)
         {
             _baseDataDownloader = baseDataDownloader;
-            _canonicalDataDownloaderDecorator =
-                new Lazy<CanonicalDataDownloaderDecorator>(() => new CanonicalDataDownloaderDecorator(_baseDataDownloader));
+            _canonicalDataDownloaderDecorator = new CanonicalDataDownloaderDecorator(_baseDataDownloader);
         }
 
         /// <summary>Disposes the base downloader and the decorator if it was initialized.</summary>
         public void Dispose()
         {
             (_baseDataDownloader as IDisposable)?.DisposeSafely();
-            if (_canonicalDataDownloaderDecorator.IsValueCreated)
-            {
-                (_canonicalDataDownloaderDecorator.Value as IDisposable)?.DisposeSafely();
-            }
         }
 
         /// <summary>Returns the appropriate downloader for the given data type.</summary>
@@ -49,7 +44,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.DataDownloader
         /// <returns>The base downloader for common lean data types, otherwise the canonical decorator.</returns>
         public IDataDownloader GetDataDownloader(Type dataType)
         {
-            return LeanData.IsCommonLeanDataType(dataType) ? _canonicalDataDownloaderDecorator.Value : _baseDataDownloader;
+            return LeanData.IsCommonLeanDataType(dataType) ? _canonicalDataDownloaderDecorator : _baseDataDownloader;
         }
     }
 }
