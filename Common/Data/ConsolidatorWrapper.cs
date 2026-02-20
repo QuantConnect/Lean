@@ -49,7 +49,7 @@ namespace QuantConnect.Data
         /// <summary>
         /// Get enqueue time
         /// </summary>
-        public ConsolidatorScanPriority Priority => new (UtcScanTime, _id);
+        public ConsolidatorScanPriority Priority => new(UtcScanTime, _id);
 
         /// <summary>
         /// Creates a new instance
@@ -65,7 +65,6 @@ namespace QuantConnect.Data
             _minimumIncrement = configIncrement < Time.OneSecond ? Time.OneSecond : configIncrement;
 
             _consolidator.DataConsolidated += AdvanceScanTime;
-            AdvanceScanTime();
         }
 
         /// <summary>
@@ -89,7 +88,7 @@ namespace QuantConnect.Data
         /// <summary>
         /// Helper method to set the next scan time
         /// </summary>
-        private void AdvanceScanTime(object _ = null, IBaseData consolidated = null)
+        public void AdvanceScanTime(object _ = null, IBaseData consolidated = null)
         {
             if (consolidated == null && UtcScanTime > _timeKeeper.UtcTime)
             {
