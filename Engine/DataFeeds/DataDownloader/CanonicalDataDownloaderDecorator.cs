@@ -65,6 +65,16 @@ namespace QuantConnect.Lean.Engine.DataFeeds.DataDownloader
         };
 
         /// <summary>
+        /// Configurable look-back period for canonical option symbols, used to limit the date range of underlying contract data downloads.
+        /// </summary>
+        private static readonly int _optionLookbackYeard = Config.GetInt("options-lookback-years", 1);
+
+        /// <summary>
+        /// Configurable look-back period for canonical future symbols, used to limit the date range of underlying contract data downloads.
+        /// </summary>
+        private static readonly int _futureLookbackYeard = Config.GetInt("futures-lookback-years", 2);
+
+        /// <summary>
         /// Initializes a new instance of the <see cref="CanonicalDataDownloaderDecorator"/> class.
         /// </summary>
         /// <param name="dataDownloader">The underlying data downloader to decorate with canonical symbol support.</param>
@@ -170,11 +180,11 @@ namespace QuantConnect.Lean.Engine.DataFeeds.DataDownloader
             var minLookBack = expiryDate;
             if (contract.ID.SecurityType.IsOption())
             {
-                minLookBack = expiryDate.AddYears(-Config.GetInt("options-lookback-years", 1));
+                minLookBack = expiryDate.AddYears(-_optionLookbackYeard);
             }
             else if (contract.ID.SecurityType == SecurityType.Future)
             {
-                minLookBack = expiryDate.AddYears(-Config.GetInt("futures-lookback-years", 2));
+                minLookBack = expiryDate.AddYears(-_futureLookbackYeard);
             }
 
             if (minLookBack > originalEndDateUtc || expiryDate < originalStartDateUtc)
