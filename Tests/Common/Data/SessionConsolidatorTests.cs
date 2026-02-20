@@ -41,7 +41,7 @@ namespace QuantConnect.Tests.Common.Data
             consolidator.Update(tradeBar2);
             consolidator.Update(tradeBar3);
 
-            var eventTime = new DateTime(2025, 8, 26, 0, 0, 0);
+            var eventTime = new DateTime(2025, 8, 26, 0, 0, 1);
             // This should fire the scan, because is the end of the day
             consolidator.ValidateAndScan(eventTime);
 
@@ -150,7 +150,7 @@ namespace QuantConnect.Tests.Common.Data
             consolidator.Update(tradeBar);
             Assert.AreEqual(symbol, consolidator.WorkingData.Symbol);
 
-            var eventTime = new DateTime(2025, 8, 26, 0, 0, 0);
+            var eventTime = new DateTime(2025, 8, 26, 0, 0, 1);
             // This should fire the scan, because is the end of the day
             consolidator.ValidateAndScan(eventTime);
             Assert.AreEqual(symbol, consolidator.Consolidated.Symbol);
@@ -272,7 +272,7 @@ namespace QuantConnect.Tests.Common.Data
             }
 
 
-            var eventTime = new DateTime(2025, 8, 26, 0, 0, 0);
+            var eventTime = new DateTime(2025, 8, 26, 0, 0, 1);
             // This should fire the scan, because is the end of the day
             consolidator.ValidateAndScan(eventTime);
 
