@@ -70,5 +70,15 @@ namespace QuantConnect.Tests.Engine.DataFeeds.DataDownloader
             Assert.AreEqual(expectedStart, start);
             Assert.AreEqual(expectedEnd, end);
         }
+
+        [Test]
+        public void ShouldNotAdjustNonOptionOrFutureContract()
+        {
+            var aapl = Symbol.Create("AAPL", SecurityType.Equity, Market.USA);
+            var res = CanonicalDataDownloaderDecorator.TryAdjustDateRangeForContract(aapl, new DateTime(2025, 03, 01), new DateTime(2025, 12, 31), out var start, out var end);
+            Assert.IsFalse(res);
+            Assert.AreEqual(default(DateTime), start);
+            Assert.AreEqual(default(DateTime), end);
+        }
     }
 }
