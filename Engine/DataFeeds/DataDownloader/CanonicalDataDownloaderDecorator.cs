@@ -100,22 +100,22 @@ namespace QuantConnect.Lean.Engine.DataFeeds.DataDownloader
                     objectStore: null,
                     new AlgorithmSettings()));
 
-            var optionChainProvider = Composer.Instance.GetPart<IOptionChainProvider>();
-            if (optionChainProvider == null)
+            _optionChainProvider = Composer.Instance.GetPart<IOptionChainProvider>();
+            if (_optionChainProvider == null)
             {
                 var baseOptionChainProvider = new LiveOptionChainProvider();
                 baseOptionChainProvider.Initialize(new(mapFileProvider, historyManager));
-                optionChainProvider = new CachingOptionChainProvider(baseOptionChainProvider);
-                Composer.Instance.AddPart(optionChainProvider);
+                _optionChainProvider = new CachingOptionChainProvider(baseOptionChainProvider);
+                Composer.Instance.AddPart(_optionChainProvider);
             }
 
-            var futureChainProvider = Composer.Instance.GetPart<IFutureChainProvider>();
-            if (futureChainProvider == null)
+            _futureChainProvider = Composer.Instance.GetPart<IFutureChainProvider>();
+            if (_futureChainProvider == null)
             {
                 var baseFutureChainProvider = new BacktestingFutureChainProvider();
                 baseFutureChainProvider.Initialize(new(mapFileProvider, historyManager));
-                futureChainProvider = new CachingFutureChainProvider(baseFutureChainProvider);
-                Composer.Instance.AddPart(futureChainProvider);
+                _futureChainProvider = new CachingFutureChainProvider(baseFutureChainProvider);
+                Composer.Instance.AddPart(_futureChainProvider);
             }
         }
 
