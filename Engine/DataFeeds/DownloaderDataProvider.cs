@@ -27,6 +27,7 @@ using System.Collections.Generic;
 using QuantConnect.Configuration;
 using System.Collections.Concurrent;
 using QuantConnect.Data.UniverseSelection;
+using QuantConnect.Lean.Engine.DataFeeds.DataDownloader;
 
 namespace QuantConnect.Lean.Engine.DataFeeds
 {
@@ -43,7 +44,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         private bool _customDataDownloadError;
         private readonly ConcurrentDictionary<Symbol, Symbol> _marketHoursWarning = new();
         private readonly MarketHoursDatabase _marketHoursDatabase = MarketHoursDatabase.FromDataFolder();
-        private readonly IDataDownloader _dataDownloader;
+        private readonly DataDownloaderSelector _dataDownloader;
         private readonly IDataCacheProvider _dataCacheProvider = new DiskDataCacheProvider(DiskSynchronizer);
         private readonly IMapFileProvider _mapFileProvider = Composer.Instance.GetPart<IMapFileProvider>();
 
@@ -55,7 +56,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             var dataDownloaderConfig = Config.Get("data-downloader");
             if (!string.IsNullOrEmpty(dataDownloaderConfig))
             {
-                _dataDownloader = Composer.Instance.GetExportedValueByTypeName<IDataDownloader>(dataDownloaderConfig);
+                _dataDownloader = new DataDownloaderSelector(Composer.Instance.GetExportedValueByTypeName<IDataDownloader>(dataDownloaderConfig), _mapFileProvider, this);
             }
             else
             {
@@ -68,7 +69,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// </summary>
         public DownloaderDataProvider(IDataDownloader dataDownloader)
         {
-            _dataDownloader = dataDownloader;
+            _dataDownloader = new DataDownloaderSelector(dataDownloader, _mapFileProvider, this);
         }
 
         /// <summary>
@@ -172,7 +173,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                         if (dataType == typeof(OptionUniverse))
                         {
                             var processingDate = date.ConvertToUtc(dataTimeZone);
-                            UniverseExtensions.RunUniverseDownloader(_dataDownloader, new DataUniverseDownloaderGetParameters(symbol, processingDate, processingDate.AddDays(1), entry.ExchangeHours));
+                            UniverseExtensions.RunUniverseDownloader(_dataDownloader.GetDataDownloader(dataType), new DataUniverseDownloaderGetParameters(symbol, processingDate, processingDate.AddDays(1), entry.ExchangeHours));
                             return;
                         }
 
@@ -225,7 +226,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
             foreach (var downloaderDataParameter in downloaderDataParameters)
             {
-                var downloadedData = _dataDownloader.Get(downloaderDataParameter);
+                var downloadedData = _dataDownloader.GetDataDownloader(dataType).Get(downloaderDataParameter);
 
                 if (downloadedData == null)
                 {
