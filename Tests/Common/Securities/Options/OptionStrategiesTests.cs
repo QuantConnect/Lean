@@ -14,6 +14,7 @@
 */
 
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using NUnit.Framework;
 
@@ -1579,6 +1580,53 @@ namespace QuantConnect.Tests.Common.Securities.Options
             Assert.AreEqual(OptionRight.Put, lowStrikeLeg.Right);
             Assert.AreEqual(expiration, lowStrikeLeg.Expiration);
             Assert.AreEqual(-2, lowStrikeLeg.Quantity);
+        }
+
+        private static IEnumerable<TestCaseData> GetSymbolsTestCases
+        {
+            get
+            {
+                // Equity option
+                var spyCanonicalOptionSymbol = Symbols.SPY_Option_Chain;
+                var spyContract = Symbol.CreateOption(Symbols.SPY, spyCanonicalOptionSymbol.ID.Market, 
+                    spyCanonicalOptionSymbol.ID.OptionStyle, OptionRight.Call, 300m, new DateTime(2023, 08, 18));
+                yield return new TestCaseData(spyCanonicalOptionSymbol, spyContract);
+
+                // Index options
+                var spxCanonicalOptionSymbol = Symbol.CreateCanonicalOption(Symbols.SPX);
+                var spxContract = Symbol.CreateOption(Symbols.SPX, spxCanonicalOptionSymbol.ID.Market, 
+                    spxCanonicalOptionSymbol.ID.OptionStyle, OptionRight.Put, 4000m, new DateTime(2023, 08, 18));
+                yield return new TestCaseData(spxCanonicalOptionSymbol, spxContract);
+
+                // Index weekly option
+                var spxwCanonicalOptionSymbol = Symbol.CreateCanonicalOption(Symbols.SPX, targetOption: "SPXW");
+                var spxwContract = Symbol.CreateOption(Symbols.SPX, "SPXW", spxwCanonicalOptionSymbol.ID.Market,
+                    spxwCanonicalOptionSymbol.ID.OptionStyle, OptionRight.Call, 4000m, new DateTime(2023, 08, 18));
+                yield return new TestCaseData(spxwCanonicalOptionSymbol, spxwContract);
+
+                // Future option
+                var esFutureContractSymbol = Symbol.CreateFuture("ES", Market.CME, new DateTime(2023, 09, 15));
+                var esCanonicalOptionSymbol = Symbol.CreateCanonicalOption(esFutureContractSymbol);
+                var esOptionContract = Symbol.CreateOption(esFutureContractSymbol, esFutureContractSymbol.ID.Market,
+                    OptionStyle.American, OptionRight.Put, 4000m, new DateTime(2023, 08, 18));
+                yield return new TestCaseData(esCanonicalOptionSymbol, esOptionContract);
+            }
+        }
+
+        [TestCaseSource(nameof(GetSymbolsTestCases))]
+        public void SetsOptionLegsSymbols(Symbol canonicalSymbol, Symbol contractSymbol)
+        {
+            var strategy = new OptionStrategy("Test Strategy", canonicalSymbol, new List<OptionStrategy.OptionLegData>
+            {
+                new OptionStrategy.OptionLegData
+                {
+                    Right = contractSymbol.ID.OptionRight,
+                    Strike = contractSymbol.ID.StrikePrice,
+                    Expiration = contractSymbol.ID.Date
+                }
+            });
+            var leg = strategy.OptionLegs.Single();
+            Assert.AreEqual(contractSymbol, leg.Symbol);
         }
     }
 }

@@ -79,10 +79,8 @@ namespace QuantConnect.Securities.Option.StrategyMatcher
         public OptionStrategy CreateStrategy()
         {
             var legs = Legs.Select(leg => leg.CreateOptionStrategyLeg(Multiplier));
-            var strategy = new OptionStrategy {
-                Name = Definition.Name,
-                Underlying = Legs[0].Position.Underlying
-            };
+            var canonicalSymbol = Legs.First(leg => leg.Position.Symbol.HasUnderlying).Position.Symbol.Canonical;
+            var strategy = new OptionStrategy(Definition.Name, canonicalSymbol);
 
             foreach (var optionLeg in legs)
             {

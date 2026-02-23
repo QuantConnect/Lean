@@ -73,13 +73,8 @@ namespace QuantConnect.Securities.Option.StrategyMatcher
         /// </summary>
         public OptionStrategy CreateStrategy(IReadOnlyList<OptionStrategyLegDefinitionMatch> legs)
         {
-            var underlying = legs[0].Position.Symbol;
-            if (underlying.HasUnderlying)
-            {
-                underlying = underlying.Underlying;
-            }
-
-            var strategy = new OptionStrategy {Name = Name, Underlying = underlying};
+            var canonicalSymbol = legs.First(leg => leg.Position.Symbol.HasUnderlying).Position.Symbol.Canonical;
+            var strategy = new OptionStrategy(Name, canonicalSymbol);
             for (int i = 0; i < Math.Min(Legs.Count, legs.Count); i++)
             {
                 var leg = Legs[i].CreateLegData(legs[i]);

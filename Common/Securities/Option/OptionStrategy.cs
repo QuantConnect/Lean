@@ -16,6 +16,7 @@
 using System;
 using QuantConnect.Orders;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace QuantConnect.Securities.Option
 {
@@ -42,12 +43,68 @@ namespace QuantConnect.Securities.Option
         /// <summary>
         /// Option strategy legs
         /// </summary>
-        public List<OptionLegData> OptionLegs { get; set; } = new List<OptionLegData>();
+        public List<OptionLegData> OptionLegs { get; set; }
 
         /// <summary>
         /// Option strategy underlying legs (usually 0 or 1 legs)
         /// </summary>
-        public List<UnderlyingLegData> UnderlyingLegs { get; set; } = new List<UnderlyingLegData>();
+        public List<UnderlyingLegData> UnderlyingLegs { get; set; }
+
+        /// <summary>
+        /// Creates a new instance of <see cref="OptionStrategy"/> with the specified parameters
+        /// </summary>
+        /// <param name="name">The strategy name</param>
+        /// <param name="canonicalSymbol">The canonical option symbol</param>
+        /// <param name="optionLegs">The option legs data</param>
+        /// <param name="underlyingLegs">The underlying legs data</param>
+        public OptionStrategy(string name, Symbol canonicalSymbol, List<OptionLegData> optionLegs = null, List<UnderlyingLegData> underlyingLegs = null)
+        {
+            Name = name;
+            CanonicalOption = canonicalSymbol;
+            Underlying = canonicalSymbol.Underlying;
+            OptionLegs = optionLegs ?? new List<OptionLegData>();
+            UnderlyingLegs = underlyingLegs ?? new List<UnderlyingLegData>();
+
+            SetSymbols();
+        }
+
+        /// <summary>
+        /// Creates a new instance of <see cref="OptionStrategy"/> with default parameters
+        /// </summary>
+        public OptionStrategy()
+        {
+        }
+
+        /// <summary>
+        /// Sets the option legs symbols based on the canonical symbol and the leg data. 
+        /// If the canonical symbol is not set, it will be created using the underlying symbol.
+        /// </summary>
+        public void SetSymbols()
+        {
+            if (CanonicalOption == null)
+            {
+                if (Underlying == null)
+                {
+                    // Let's be polite and try to get the underlying symbol from the underlying legs as a last resort
+                    var underlyingLeg = UnderlyingLegs.Count > 0 ? UnderlyingLegs[0] : null;
+                    if (underlyingLeg == null || underlyingLeg.Symbol == null)
+                    {
+                        return;
+                    }
+
+                    Underlying = underlyingLeg.Symbol;
+                }
+
+                CanonicalOption = Symbol.CreateCanonicalOption(Underlying);
+            }
+
+            foreach (var optionLeg in OptionLegs.Where(leg => leg.Symbol == null))
+            {
+                var targetOption = CanonicalOption.ID.Symbol;
+                optionLeg.Symbol = Symbol.CreateOption(Underlying, targetOption, Underlying.ID.Market, CanonicalOption.ID.OptionStyle,
+                    optionLeg.Right, optionLeg.Strike, optionLeg.Expiration);
+            }
+        }
 
         /// <summary>
         /// Defines common properties between <see cref="OptionLegData"/> and <see cref="UnderlyingLegData"/>
