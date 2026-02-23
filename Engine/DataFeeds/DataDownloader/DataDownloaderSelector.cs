@@ -38,7 +38,11 @@ namespace QuantConnect.Lean.Engine.DataFeeds.DataDownloader
             IDataProvider dataProvider,
             IFactorFileProvider factorFileProvider = null)
         {
-            factorFileProvider ??= Composer.Instance.GetExportedValueByTypeName<IFactorFileProvider>(Config.Get("factor-file-provider", "LocalDiskFactorFileProvider"));
+            if (factorFileProvider == null)
+            {
+                factorFileProvider = Composer.Instance.GetExportedValueByTypeName<IFactorFileProvider>(Config.Get("factor-file-provider", "LocalDiskFactorFileProvider"));
+                factorFileProvider.Initialize(mapFileProvider, dataProvider);
+            }
 
             _baseDataDownloader = baseDataDownloader;
             _canonicalDataDownloaderDecorator = new CanonicalDataDownloaderDecorator(_baseDataDownloader, dataProvider, mapFileProvider, factorFileProvider);
