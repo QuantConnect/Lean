@@ -69,7 +69,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// </summary>
         public DownloaderDataProvider(IDataDownloader dataDownloader)
         {
-            _dataDownloader = new DataDownloaderSelector(dataDownloader, _mapFileProvider);
+            _dataDownloader = new DataDownloaderSelector(dataDownloader, _mapFileProvider, this);
         }
 
         /// <summary>
