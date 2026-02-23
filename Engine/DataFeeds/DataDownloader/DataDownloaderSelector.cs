@@ -38,6 +38,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.DataDownloader
             IDataProvider dataProvider,
             IFactorFileProvider factorFileProvider = null)
         {
+            factorFileProvider ??= Composer.Instance.GetPart<IFactorFileProvider>();
             if (factorFileProvider == null)
             {
                 factorFileProvider = Composer.Instance.GetExportedValueByTypeName<IFactorFileProvider>(Config.Get("factor-file-provider", "LocalDiskFactorFileProvider"));
