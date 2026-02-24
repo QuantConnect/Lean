@@ -16,6 +16,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using QuantConnect.Orders;
 using QuantConnect.Securities.Option.StrategyMatcher;
 
 namespace QuantConnect.Securities.Option
@@ -1215,7 +1216,7 @@ namespace QuantConnect.Securities.Option
         private static OptionStrategy InvertStrategy(OptionStrategy strategy, string invertedStrategyName)
         {
             strategy.Name = invertedStrategyName;
-            foreach (var leg in strategy.OptionLegs.Cast<OptionStrategy.LegData>().Concat(strategy.UnderlyingLegs))
+            foreach (var leg in strategy.OptionLegs.Cast<Leg>().Concat(strategy.UnderlyingLegs))
             {
                 leg.Quantity *= -1;
             }

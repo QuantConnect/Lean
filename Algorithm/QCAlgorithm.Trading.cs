@@ -904,8 +904,7 @@ namespace QuantConnect.Algorithm
             {
                 if (!Securities.TryGetValue(leg.Symbol, out var security))
                 {
-                    throw new InvalidOperationException("Couldn't find one of the strategy's securities in the algorithm securities list. " +
-                        Invariant($"Leg: {leg.Symbol}"));
+                    throw new InvalidOperationException(Invariant($"Couldn't find one of the strategy's securities in the algorithm securities list. {leg}"));
                 }
 
                 if (leg.OrderPrice.HasValue)

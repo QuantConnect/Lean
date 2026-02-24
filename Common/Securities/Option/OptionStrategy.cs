@@ -143,20 +143,9 @@ namespace QuantConnect.Securities.Option
         }
 
         /// <summary>
-        /// Defines common properties between <see cref="OptionLegData"/> and <see cref="UnderlyingLegData"/>
-        /// </summary>
-        public abstract class LegData : Leg
-        {
-            /// <summary>
-            /// Invokes the correct handler based on the runtime type.
-            /// </summary>
-            public abstract void Invoke(Action<UnderlyingLegData> underlyingHandler, Action<OptionLegData> optionHandler);
-        }
-
-        /// <summary>
         /// This class is a POCO containing basic data for the option legs of the strategy
         /// </summary>
-        public class OptionLegData : LegData
+        public class OptionLegData : Leg
         {
             /// <summary>
             /// Option right (type) of the option leg
@@ -190,18 +179,18 @@ namespace QuantConnect.Securities.Option
             }
 
             /// <summary>
-            /// Invokes the <paramref name="optionHandler"/>
+            /// Returns a string that represents the option leg
             /// </summary>
-            public override void Invoke(Action<UnderlyingLegData> underlyingHandler, Action<OptionLegData> optionHandler)
+            public override string ToString()
             {
-                optionHandler(this);
+                return $"Leg: {Quantity}. Right: {Right}. Strike: {Strike}. Expiration: {Expiration:yyyyMMdd}";
             }
         }
 
         /// <summary>
         /// This class is a POCO containing basic data for the underlying leg of the strategy
         /// </summary>
-        public class UnderlyingLegData : LegData
+        public class UnderlyingLegData : Leg
         {
             /// <summary>
             /// Creates a new instance of <see cref="UnderlyingLegData"/> for the specified <paramref name="quantity"/> of underlying shares.
@@ -226,11 +215,11 @@ namespace QuantConnect.Securities.Option
             }
 
             /// <summary>
-            /// Invokes the <paramref name="underlyingHandler"/>
+            /// Returns a string that represents the underlying leg.
             /// </summary>
-            public override void Invoke(Action<UnderlyingLegData> underlyingHandler, Action<OptionLegData> optionHandler)
+            public override string ToString()
             {
-                underlyingHandler(this);
+                return Symbol != null ? $"Leg: {Quantity}. {Symbol}" : string.Empty;
             }
         }
     }

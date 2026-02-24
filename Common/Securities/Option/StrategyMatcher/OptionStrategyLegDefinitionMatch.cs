@@ -13,6 +13,7 @@
  * limitations under the License.
 */
 
+using QuantConnect.Orders;
 using System;
 
 namespace QuantConnect.Securities.Option.StrategyMatcher
@@ -50,13 +51,13 @@ namespace QuantConnect.Securities.Option.StrategyMatcher
         }
 
         /// <summary>
-        /// Creates the appropriate type of <see cref="OptionStrategy.LegData"/> for this matched position
+        /// Creates the appropriate type of <see cref="Leg"/> for this matched position
         /// </summary>
         /// <param name="multiplier">The multiplier to use for creating the leg data. This multiplier will be
         /// the minimum multiplier of all legs within a strategy definition match. Each leg defines its own
         /// multiplier which is the max matches for that leg and the strategy definition's multiplier is the
         /// min of the individual legs.</param>
-        public OptionStrategy.LegData CreateOptionStrategyLeg(int multiplier)
+        public Leg CreateOptionStrategyLeg(int multiplier)
         {
             var quantity = Position.Quantity;
             if (Multiplier != multiplier)
@@ -72,7 +73,7 @@ namespace QuantConnect.Securities.Option.StrategyMatcher
             }
 
             return Position.IsUnderlying
-                ? (OptionStrategy.LegData) OptionStrategy.UnderlyingLegData.Create(quantity, Position.Symbol)
+                ? (Leg) OptionStrategy.UnderlyingLegData.Create(quantity, Position.Symbol)
                 : OptionStrategy.OptionLegData.Create(quantity, Position.Symbol);
         }
 
