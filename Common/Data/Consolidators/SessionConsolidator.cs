@@ -91,7 +91,6 @@ namespace Common.Data.Consolidators
             if (!_initialized)
             {
                 _workingBar.Time = data.Time.Date;
-                _workingBar.Period = Time.OneDay;
                 _initialized = true;
             }
             base.Update(data);
@@ -151,7 +150,6 @@ namespace Common.Data.Consolidators
             _workingBar = new SessionBar(_sourceTickType)
             {
                 Time = time,
-                Period = Time.OneDay,
                 Symbol = _symbol
             };
             _initialized = false;

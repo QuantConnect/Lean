@@ -71,12 +71,15 @@ namespace QuantConnect.Data.Market
         /// <summary>
         /// The period of this session bar
         /// </summary>
-        public override TimeSpan Period { get; set; } = QuantConnect.Time.OneDay;
+        public override TimeSpan Period { get; set; }
 
         /// <summary>
         /// Initializes a new instance of SessionBar with default values
         /// </summary>
-        public SessionBar() { }
+        public SessionBar()
+        {
+            Period = QuantConnect.Time.OneDay;
+        }
 
         /// <summary>
         /// Initializes a new instance of SessionBar with a specific tick type
@@ -84,6 +87,7 @@ namespace QuantConnect.Data.Market
         public SessionBar(TickType sourceTickType)
         {
             _sourceTickType = sourceTickType;
+            Period = QuantConnect.Time.OneDay;
         }
 
         /// <summary>
