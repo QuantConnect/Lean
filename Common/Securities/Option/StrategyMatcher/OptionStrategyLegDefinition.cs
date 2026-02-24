@@ -13,6 +13,7 @@
  * limitations under the License.
 */
 
+using QuantConnect.Orders;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -116,9 +117,9 @@ namespace QuantConnect.Securities.Option.StrategyMatcher
         }
 
         /// <summary>
-        /// Creates the appropriate <see cref="OptionStrategy.LegData"/> for the specified <paramref name="match"/>
+        /// Creates the appropriate <see cref="Leg"/> for the specified <paramref name="match"/>
         /// </summary>
-        public OptionStrategy.LegData CreateLegData(OptionStrategyLegDefinitionMatch match)
+        public Leg CreateLegData(OptionStrategyLegDefinitionMatch match)
         {
             return CreateLegData(
                 match.Position.Symbol,
@@ -129,7 +130,7 @@ namespace QuantConnect.Securities.Option.StrategyMatcher
         /// <summary>
         /// Creates the appropriate <see cref="OptionStrategy.LegData"/> with the specified <paramref name="quantity"/>
         /// </summary>
-        public static OptionStrategy.LegData CreateLegData(Symbol symbol, int quantity)
+        public static Leg CreateLegData(Symbol symbol, int quantity)
         {
             if (symbol.SecurityType == SecurityType.Option)
             {
@@ -143,7 +144,7 @@ namespace QuantConnect.Securities.Option.StrategyMatcher
         /// Determines whether or not this leg definition matches the specified <paramref name="position"/>,
         /// and if so, what the resulting quantity of the <see cref="OptionStrategy.OptionLegData"/> should be.
         /// </summary>
-        public bool TryMatch(OptionPosition position, out OptionStrategy.LegData leg)
+        public bool TryMatch(OptionPosition position, out Leg leg)
         {
             if (Right != position.Right ||
                 Math.Sign(Quantity) != Math.Sign(position.Quantity))
@@ -160,7 +161,7 @@ namespace QuantConnect.Securities.Option.StrategyMatcher
             }
 
             leg = position.Symbol.SecurityType == SecurityType.Option
-                ? (OptionStrategy.LegData) OptionStrategy.OptionLegData.Create(quantity, position.Symbol)
+                ? (Leg) OptionStrategy.OptionLegData.Create(quantity, position.Symbol)
                 : OptionStrategy.UnderlyingLegData.Create(quantity);
 
             return true;

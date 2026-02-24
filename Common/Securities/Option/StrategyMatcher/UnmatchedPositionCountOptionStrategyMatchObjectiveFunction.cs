@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -13,6 +13,7 @@
  * limitations under the License.
 */
 
+using QuantConnect.Orders;
 using System.Linq;
 
 namespace QuantConnect.Securities.Option.StrategyMatcher
@@ -31,7 +32,7 @@ namespace QuantConnect.Securities.Option.StrategyMatcher
             var value = 0m;
             foreach (var strategy in match.Strategies)
             {
-                foreach (var leg in strategy.OptionLegs.Concat<OptionStrategy.LegData>(strategy.UnderlyingLegs))
+                foreach (var leg in strategy.OptionLegs.Concat<Leg>(strategy.UnderlyingLegs))
                 {
                     value += leg.Quantity;
                 }

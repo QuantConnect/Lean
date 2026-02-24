@@ -874,40 +874,13 @@ namespace QuantConnect.Algorithm
 
         private List<OrderTicket> GenerateOptionStrategyOrders(OptionStrategy strategy, int strategyQuantity, bool asynchronous, string tag, IOrderProperties orderProperties)
         {
-            // if the option strategy canonical is set let's use it to make sure we target the right option, for example SPXW for SPX underlying,
-            // it could be null if the user created the option strategy manually and just set the underlying, in which case we use the default option target by using 'null'
-            var targetOption = strategy.CanonicalOption != null ? strategy.CanonicalOption.Canonical.ID.Symbol : null;
+            // Make sure the strategy is initialized, that is, canonical and leg symbols are set.
+            strategy.SetSymbols();
 
             // setting up the tag text for all orders of one strategy
             tag ??= $"{strategy.Name} ({strategyQuantity.ToStringInvariant()})";
 
-            var legs = new List<Leg>(strategy.UnderlyingLegs);
-
-            // WHY: the option strategy doesn't specify the option style (and in consequence the symbol), so we figure it out at runtime
-            foreach (var optionLeg in strategy.OptionLegs)
-            {
-                Leg leg = null;
-                // search for both american/european style -- much better than looping through all securities
-                foreach (var optionStyle in new[] { OptionStyle.American, OptionStyle.European })
-                {
-                    var option = QuantConnect.Symbol.CreateOption(strategy.Underlying, targetOption, strategy.Underlying.ID.Market, optionStyle, optionLeg.Right, optionLeg.Strike, optionLeg.Expiration);
-                    if (Securities.ContainsKey(option))
-                    {
-                        // we found it, we add it a break/stop searching
-                        leg = new Leg { Symbol = option, OrderPrice = optionLeg.OrderPrice, Quantity = optionLeg.Quantity };
-                        break;
-                    }
-                }
-
-                if (leg == null)
-                {
-                    throw new InvalidOperationException("Couldn't find the option contract in algorithm securities list. " +
-                        Invariant($"Underlying: {strategy.Underlying}, option {optionLeg.Right}, strike {optionLeg.Strike}, ") +
-                        Invariant($"expiration: {optionLeg.Expiration}")
-                    );
-                }
-                legs.Add(leg);
-            }
+            var legs = strategy.UnderlyingLegs.Cast<Leg>().Concat(strategy.OptionLegs).ToList();
 
             return SubmitComboOrder(legs, strategyQuantity, 0, asynchronous, tag, orderProperties);
         }
@@ -929,7 +902,10 @@ namespace QuantConnect.Algorithm
             List<SubmitOrderRequest> submitRequests = new(capacity: legs.Count);
             foreach (var leg in legs)
             {
-                var security = Securities[leg.Symbol];
+                if (!Securities.TryGetValue(leg.Symbol, out var security))
+                {
+                    throw new InvalidOperationException(Invariant($"Couldn't find one of the strategy's securities in the algorithm securities list. {leg}"));
+                }
 
                 if (leg.OrderPrice.HasValue)
                 {
