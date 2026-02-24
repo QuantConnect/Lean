@@ -16,6 +16,7 @@
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
 using QuantConnect.Securities.Option;
+using System;
 
 namespace QuantConnect.Indicators
 {
@@ -51,9 +52,9 @@ namespace QuantConnect.Indicators
         public Vega Vega { get; }
 
         /// <summary>
-        /// Gets the theta indicator
+        /// Gets the daily theta indicator
         /// </summary>
-        public Theta Theta { get; }
+        public Theta ThetaPerDay { get; }
 
         /// <summary>
         /// Gets the rho indicator
@@ -73,7 +74,24 @@ namespace QuantConnect.Indicators
         /// <summary>
         /// Gets the current greeks values
         /// </summary>
-        public Greeks Greeks => new Greeks(Delta, Gamma, Vega, Theta * 365m, Rho, 0m);
+        public Greeks Greeks
+        {
+            get
+            {
+                var theta = 0m;
+                var thetaPerDay = ThetaPerDay.Current.Value;
+                try
+                {
+                    theta = thetaPerDay * 365m;
+                }
+                catch (OverflowException)
+                {
+                    theta = thetaPerDay < 0 ? decimal.MinValue : decimal.MaxValue;
+                }
+
+                return new Greeks(Delta, Gamma, Vega, theta, Rho, 0m);
+            }
+        }
 
         /// <summary>
         /// Whether the mirror option is set and will be used in the calculations.
@@ -99,7 +117,7 @@ namespace QuantConnect.Indicators
         /// Creates a new instance of the <see cref="GreeksIndicators"/> class
         /// </summary>
         public GreeksIndicators(Symbol optionSymbol, Symbol mirrorOptionSymbol, OptionPricingModelType? optionModel = null,
-            OptionPricingModelType? ivModel = null, IDividendYieldModel dividendYieldModel = null, 
+            OptionPricingModelType? ivModel = null, IDividendYieldModel dividendYieldModel = null,
             IRiskFreeInterestRateModel riskFreeInterestRateModel = null)
         {
             _optionSymbol = optionSymbol;
@@ -112,13 +130,13 @@ namespace QuantConnect.Indicators
             Delta = new Delta(_optionSymbol, riskFreeInterestRateModel, dividendYieldModel, _mirrorOptionSymbol, optionModel, ivModel);
             Gamma = new Gamma(_optionSymbol, riskFreeInterestRateModel, dividendYieldModel, _mirrorOptionSymbol, optionModel, ivModel);
             Vega = new Vega(_optionSymbol, riskFreeInterestRateModel, dividendYieldModel, _mirrorOptionSymbol, optionModel, ivModel);
-            Theta = new Theta(_optionSymbol, riskFreeInterestRateModel, dividendYieldModel, _mirrorOptionSymbol, optionModel, ivModel);
+            ThetaPerDay = new Theta(_optionSymbol, riskFreeInterestRateModel, dividendYieldModel, _mirrorOptionSymbol, optionModel, ivModel);
             Rho = new Rho(_optionSymbol, riskFreeInterestRateModel, dividendYieldModel, _mirrorOptionSymbol, optionModel, ivModel);
 
             Delta.ImpliedVolatility = ImpliedVolatility;
             Gamma.ImpliedVolatility = ImpliedVolatility;
             Vega.ImpliedVolatility = ImpliedVolatility;
-            Theta.ImpliedVolatility = ImpliedVolatility;
+            ThetaPerDay.ImpliedVolatility = ImpliedVolatility;
             Rho.ImpliedVolatility = ImpliedVolatility;
         }
 
@@ -131,7 +149,7 @@ namespace QuantConnect.Indicators
             Delta.Update(data);
             Gamma.Update(data);
             Vega.Update(data);
-            Theta.Update(data);
+            ThetaPerDay.Update(data);
             Rho.Update(data);
         }
 
@@ -144,7 +162,7 @@ namespace QuantConnect.Indicators
             Delta.Reset();
             Gamma.Reset();
             Vega.Reset();
-            Theta.Reset();
+            ThetaPerDay.Reset();
             Rho.Reset();
         }
     }
