@@ -19,6 +19,7 @@ using QuantConnect.Data;
 using QuantConnect.Securities;
 using QuantConnect.Data.Market;
 using QuantConnect.Data.Consolidators;
+using QuantConnect.Util;
 
 namespace Common.Data.Consolidators
 {
@@ -64,13 +65,6 @@ namespace Common.Data.Consolidators
         /// <param name="data">The new data</param>
         protected override void AggregateBar(ref SessionBar workingBar, BaseData data)
         {
-            if (!_initialized)
-            {
-                workingBar.Time = data.Time.Date;
-                workingBar.Period = TimeSpan.FromDays(1);
-                _initialized = true;
-            }
-
             // Handle open interest
             if (data.DataType == MarketDataType.Tick && data is Tick oiTick && oiTick.TickType == TickType.OpenInterest)
             {
@@ -89,6 +83,20 @@ namespace Common.Data.Consolidators
         }
 
         /// <summary>
+        /// Updates the session with new market data and initializes the consolidator if needed
+        /// </summary>
+        /// <param name="data">The new data to update the session with</param>
+        public override void Update(BaseData data)
+        {
+            if (!_initialized)
+            {
+                _workingBar.Time = data.Time.Date;
+                _initialized = true;
+            }
+            base.Update(data);
+        }
+
+        /// <summary>
         /// Validates the current local time and triggers Scan() if a new day is detected.
         /// </summary>
         /// <param name="currentLocalTime">The current local time.</param>
@@ -98,7 +106,8 @@ namespace Common.Data.Consolidators
             {
                 return;
             }
-            if (currentLocalTime.Date != WorkingInstance?.Time.Date)
+
+            if (currentLocalTime.Date != WorkingInstance.Time.Date)
             {
                 Scan(currentLocalTime);
             }
@@ -133,9 +142,14 @@ namespace Common.Data.Consolidators
 
         private void InitializeWorkingBar()
         {
+            var time = DateTime.MaxValue;
+            if (Consolidated != null)
+            {
+                time = _exchangeHours.GetNextTradingDay(Consolidated.Time).Date;
+            }
             _workingBar = new SessionBar(_sourceTickType)
             {
-                Time = DateTime.MaxValue,
+                Time = time,
                 Symbol = _symbol
             };
             _initialized = false;
