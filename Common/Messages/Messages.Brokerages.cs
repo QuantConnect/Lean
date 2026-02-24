@@ -479,6 +479,15 @@ namespace QuantConnect
             }
 
             /// <summary>
+            /// Returns a string message saying the given brokerage model does not support four-leg combo leg limit orders
+            /// </summary>
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public static string UnsupportedFourLegComboLegLimitOrders(Brokerages.InteractiveBrokersBrokerageModel brokerageModel)
+            {
+                return Invariant($"The {brokerageModel.GetType().Name} does not support four-leg ComboLegLimit orders. Use ComboLimit orders for four-leg combinations or more.");
+            }
+
+            /// <summary>
             /// Returns a string message containing the minimum and maximum limits for the allowable order size as well as the currency
             /// </summary>
             [MethodImpl(MethodImplOptions.AggressiveInlining)]

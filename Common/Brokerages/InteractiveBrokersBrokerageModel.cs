@@ -174,6 +174,13 @@ namespace QuantConnect.Brokerages
                 return false;
             }
 
+            if (order.Type == OrderType.ComboLegLimit && order.GroupOrderManager?.Count >= 4)
+            {
+                message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
+                    Messages.InteractiveBrokersBrokerageModel.UnsupportedFourLegComboLegLimitOrders(this));
+                return false;
+            }
+
             // validate security type
             if (security.Type != SecurityType.Equity &&
                 security.Type != SecurityType.Forex &&
