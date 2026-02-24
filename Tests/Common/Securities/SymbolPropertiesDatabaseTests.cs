@@ -165,6 +165,25 @@ namespace QuantConnect.Tests.Common.Securities
         }
 
         [Test]
+        public void DatabaseUpdatedEventFiredOnRefresh()
+        {
+            var database = SymbolPropertiesDatabase.FromDataFolder();
+            var eventFired = false;
+            EventHandler handler = (_, _) => eventFired = true;
+            BaseSecurityDatabase<SymbolPropertiesDatabase, SymbolProperties>.DatabaseUpdated += handler;
+
+            try
+            {
+                database.UpdateDataFolderDatabase();
+                Assert.IsTrue(eventFired);
+            }
+            finally
+            {
+                BaseSecurityDatabase<SymbolPropertiesDatabase, SymbolProperties>.DatabaseUpdated -= handler;
+            }
+        }
+
+        [Test]
         public void CanQueryMarketAfterRefresh()
         {
             var database = SymbolPropertiesDatabase.FromDataFolder();

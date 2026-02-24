@@ -61,6 +61,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         // 12 UTC - 4 => 8am NY
         private readonly TimeSpan _scheduledUniverseUtcTimeShift = TimeSpan.FromMinutes(11 * 60 + DateTime.UtcNow.Second);
         private readonly HashSet<string> _unsupportedConfigurations = new();
+        private EventHandler _databaseUpdatedHandler;
 
         /// <summary>
         /// Public flag indicator that the thread is still busy.
@@ -167,6 +168,10 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 {
                     manager.UnsupportedConfiguration -= HandleUnsupportedConfigurationEvent;
                 }
+                if (_databaseUpdatedHandler != null)
+                {
+                    BaseSecurityDatabase<SymbolPropertiesDatabase, SymbolProperties>.DatabaseUpdated -= _databaseUpdatedHandler;
+                }
                 _customExchange?.Stop();
                 Log.Trace("LiveTradingDataFeed.Exit(): Exit Finished.");
 
@@ -183,6 +188,11 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         {
             var result = new DataQueueHandlerManager(_algorithm.Settings);
             result.UnsupportedConfiguration += HandleUnsupportedConfigurationEvent;
+            _databaseUpdatedHandler = (_, _) =>
+            {
+                lock (_unsupportedConfigurations) { _unsupportedConfigurations.Clear(); }
+            };
+            BaseSecurityDatabase<SymbolPropertiesDatabase, SymbolProperties>.DatabaseUpdated += _databaseUpdatedHandler;
             return result;
         }
 

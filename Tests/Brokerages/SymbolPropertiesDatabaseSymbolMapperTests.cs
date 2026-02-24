@@ -16,6 +16,7 @@
 using System;
 using NUnit.Framework;
 using QuantConnect.Brokerages;
+using QuantConnect.Securities;
 
 namespace QuantConnect.Tests.Brokerages
 {
@@ -204,5 +205,35 @@ namespace QuantConnect.Tests.Brokerages
         {
             new TestCaseData("ETH-USD", SecurityType.Crypto, Market.USA)
         };
+
+        [Test]
+        public void MapperRefreshesAfterDatabaseUpdated()
+        {
+            var database = SymbolPropertiesDatabase.FromDataFolder();
+            var mapper = new SymbolPropertiesDatabaseSymbolMapper(Market.Binance);
+
+            // Add a new symbol to the database that was not there at mapper construction time
+            const string newTicker = "FAKECOINUSDT";
+            var newSymbol = Symbol.Create(newTicker, SecurityType.Crypto, Market.Binance);
+            var properties = new SymbolProperties("FakeCoin Tether", "USDT", 1m, 0.01m, 0.01m, newTicker);
+            database.SetEntry(Market.Binance, newTicker, SecurityType.Crypto, properties);
+
+            // Before database update the mapper should not know about the new symbol
+            Assert.IsFalse(mapper.IsKnownLeanSymbol(newSymbol));
+
+            try
+            {
+                // Trigger a database reload which should raise the DatabaseUpdated event
+                database.UpdateDataFolderDatabase();
+
+                // After the reload the mapper should recognise the new symbol because it auto-refreshed
+                Assert.IsTrue(mapper.IsKnownLeanSymbol(newSymbol));
+            }
+            finally
+            {
+                // Reset the database so other tests are not affected
+                SymbolPropertiesDatabase.Reset();
+            }
+        }
     }
 }

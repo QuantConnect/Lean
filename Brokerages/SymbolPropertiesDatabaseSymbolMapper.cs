@@ -28,10 +28,10 @@ namespace QuantConnect.Brokerages
         private readonly string _market;
 
         // map Lean symbols to symbol properties
-        private readonly Dictionary<Symbol, SymbolProperties> _symbolPropertiesMap;
+        private Dictionary<Symbol, SymbolProperties> _symbolPropertiesMap;
 
         // map brokerage symbols to Lean symbols we do it per security type because they could overlap, for example binance futures and spot
-        private readonly Dictionary<SecurityType, Dictionary<string, Symbol>> _symbolMap;
+        private Dictionary<SecurityType, Dictionary<string, Symbol>> _symbolMap;
 
         /// <summary>
         /// Creates a new instance of the <see cref="SymbolPropertiesDatabaseSymbolMapper"/> class.
@@ -40,7 +40,20 @@ namespace QuantConnect.Brokerages
         public SymbolPropertiesDatabaseSymbolMapper(string market)
         {
             _market = market;
+            BuildMappings();
+            BaseSecurityDatabase<SymbolPropertiesDatabase, SymbolProperties>.DatabaseUpdated += (_, _) => Refresh();
+        }
 
+        /// <summary>
+        /// Refreshes the symbol mappings from the latest symbol properties database.
+        /// </summary>
+        public void Refresh()
+        {
+            BuildMappings();
+        }
+
+        private void BuildMappings()
+        {
             var symbolPropertiesList =
                 SymbolPropertiesDatabase
                     .FromDataFolder()
@@ -54,13 +67,14 @@ namespace QuantConnect.Brokerages
                         x => Symbol.Create(x.Key.Symbol, x.Key.SecurityType, x.Key.Market),
                         x => x.Value);
 
-            _symbolMap = new();
+            var symbolMap = new Dictionary<SecurityType, Dictionary<string, Symbol>>();
             foreach (var group in _symbolPropertiesMap.GroupBy(x => x.Key.SecurityType))
             {
-                _symbolMap[group.Key] = group.ToDictionary(
+                symbolMap[group.Key] = group.ToDictionary(
                             x => x.Value.MarketTicker,
                             x => x.Key);
             }
+            _symbolMap = symbolMap;
         }
 
         /// <summary>

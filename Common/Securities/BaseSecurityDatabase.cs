@@ -83,6 +83,13 @@ namespace QuantConnect.Securities
         }
 
         /// <summary>
+        /// Event raised when the data folder database has been updated.
+        /// </summary>
+#pragma warning disable CA1000 // Do not declare static members on generic types
+        public static event EventHandler DatabaseUpdated;
+#pragma warning restore CA1000 // Do not declare static members on generic types
+
+        /// <summary>
         /// Reload entries dictionary from file and merge them with previous custom ones
         /// </summary>
         internal void UpdateDataFolderDatabase()
@@ -95,6 +102,7 @@ namespace QuantConnect.Securities
                 // Make sure we keep this as the data folder database
                 DataFolderDatabase = (T)this;
             }
+            DatabaseUpdated?.Invoke(this, EventArgs.Empty);
         }
 
         /// <summary>
