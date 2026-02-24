@@ -146,7 +146,7 @@ namespace Common.Data.Consolidators
             var time = DateTime.MaxValue;
             if (Consolidated != null)
             {
-                time = LeanData.GetNextDailyEndTime(Consolidated.Symbol, Consolidated.EndTime, _exchangeHours).Date;
+                time = _exchangeHours.GetNextTradingDay(Consolidated.Time).Date;
             }
             _workingBar = new SessionBar(_sourceTickType)
             {
