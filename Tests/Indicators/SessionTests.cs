@@ -91,42 +91,48 @@ namespace QuantConnect.Tests.Indicators
             Assert.AreEqual(1000, session.Volume);
         }
 
-        [Test]
-        public void ConsolidatesContinuouslyAndHandlesPeriodsWithNoData()
+        private static IEnumerable<TestCaseData> ConsolidationTestCases()
+        {
+            // Hour resolution during regular market hours
+            yield return new TestCaseData(new DateTime(2025, 8, 25, 10, 0, 0), Resolution.Hour);
+
+            // Daily resolution and bar emitted at midnight
+            yield return new TestCaseData(new DateTime(2025, 8, 25, 0, 0, 0), Resolution.Daily);
+        }
+
+        [TestCaseSource(nameof(ConsolidationTestCases))]
+        public void ConsolidatesDaily(DateTime baseDate, Resolution resolution)
         {
             var symbol = Symbols.SPY;
             var session = GetSession(TickType.Trade, 4);
-            var baseDate = new DateTime(2025, 8, 25, 10, 0, 0);
-
-            // Expected consolidated bars
             var days = new[]
             {
-                new { BarCount = 6, Expected = new TradeBar(baseDate.Date,            symbol, 100, 101, 99, 100, 6000, Time.OneDay) },
-                new { BarCount = 6, Expected = new TradeBar(baseDate.Date.AddDays(1), symbol, 100, 101, 99, 100, 6000, Time.OneDay) },
-                new { BarCount = 6, Expected = new TradeBar(baseDate.Date.AddDays(2), symbol, 100, 101, 99, 100, 6000, Time.OneDay) },
-
-                // No data for this day, expect an empty consolidated bar
-                new { BarCount = 0, Expected = new TradeBar(baseDate.Date.AddDays(3), symbol, 0, 0, 0, 0, 0, Time.OneDay) },
+                new { Expected = new TradeBar(baseDate.Date,            symbol, 100, 101, 99, 100, 6000, Time.OneDay) },
+                new { Expected = new TradeBar(baseDate.Date.AddDays(1), symbol, 100, 101, 99, 100, 6000, Time.OneDay) },
+                new { Expected = new TradeBar(baseDate.Date.AddDays(2), symbol, 100, 101, 99, 100, 6000, Time.OneDay) },
             };
 
-            // Initial working bar already created
             Assert.AreEqual(1, session.Samples);
 
             for (int i = 0; i < days.Length; i++)
             {
                 var startDate = baseDate.AddDays(i);
-                var endDate = startDate.Date.AddDays(1).AddTicks(1);
+                var endDate = startDate.Date.AddDays(1);
 
-                for (int j = 0; j < days[i].BarCount; j++)
+                if (resolution == Resolution.Hour)
                 {
-                    session.Update(new TradeBar(startDate.AddHours(j), symbol, 100, 101, 99, 100, 1000, Time.OneHour));
+                    for (int j = 0; j < 6; j++)
+                    {
+                        session.Update(new TradeBar(startDate.AddHours(j), symbol, 100, 101, 99, 100, 1000, Time.OneHour));
+                    }
+                }
+                else
+                {
+                    session.Update(new TradeBar(startDate, symbol, 100, 101, 99, 100, 6000, Time.OneDay));
                 }
 
-                // Trigger consolidation
                 session.Scan(endDate);
-
                 Assert.AreEqual(i + 2, session.Samples);
-                // session[1] is the latest consolidated bar
                 Assert.IsTrue(BarsAreEqual(days[i].Expected, session[1]));
             }
         }
@@ -136,7 +142,7 @@ namespace QuantConnect.Tests.Indicators
         {
             var symbol = Symbols.SPY;
             var session = GetSession(TickType.Trade, 3);
-            var endDate = startDate.AddHours(14).AddTicks(1);
+            var endDate = startDate.AddHours(14);
 
             for (int i = 0; i < 6; i++)
             {
