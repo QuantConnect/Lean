@@ -174,8 +174,7 @@ namespace QuantConnect.Brokerages
                 return false;
             }
 
-            // IB rejects four-leg ComboLegLimit orders with the current model routing/settings.
-            if (order.Type == OrderType.ComboLegLimit && order.GroupOrderManager?.Count == 4)
+            if (order.Type == OrderType.ComboLegLimit && order.GroupOrderManager?.Count >= 4)
             {
                 message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
                     Messages.InteractiveBrokersBrokerageModel.UnsupportedFourLegComboLegLimitOrders(this));

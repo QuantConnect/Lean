@@ -484,8 +484,7 @@ namespace QuantConnect
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public static string UnsupportedFourLegComboLegLimitOrders(Brokerages.InteractiveBrokersBrokerageModel brokerageModel)
             {
-                return Invariant($"The {brokerageModel.GetType().Name} does not support four-leg ComboLegLimit orders. " +
-                    "Use ComboLimit orders for four-leg combinations.");
+                return Invariant($"The {brokerageModel.GetType().Name} does not support four-leg ComboLegLimit orders. Use ComboLimit orders for four-leg combinations or more.");
             }
 
             /// <summary>
