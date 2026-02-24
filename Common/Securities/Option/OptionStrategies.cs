@@ -224,9 +224,7 @@ namespace QuantConnect.Securities.Option
                     {
                         Right = OptionRight.Put, Strike = strike, Quantity = -1, Expiration = expiration
                     }
-                },
-                new List<OptionStrategy.UnderlyingLegData>()    // no underlying legs
-                );
+                });
         }
 
         /// <summary>

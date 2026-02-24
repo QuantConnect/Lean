@@ -78,24 +78,17 @@ namespace QuantConnect.Securities.Option.StrategyMatcher
         /// </summary>
         public OptionStrategy CreateStrategy()
         {
-            var legs = Legs.Select(leg => leg.CreateOptionStrategyLeg(Multiplier));
-            var canonicalSymbol = Legs.First(leg => leg.Position.Symbol.HasUnderlying).Position.Symbol.Canonical;
-            var strategy = new OptionStrategy(Definition.Name, canonicalSymbol);
-
-            foreach (var optionLeg in legs)
-            {
-                optionLeg.Invoke(strategy.UnderlyingLegs.Add, strategy.OptionLegs.Add);
-            }
+            var legs = Legs
+                // if Definition.UnderlyingLots is not 0, we will create the underlying leg separately
+                .Where(leg => leg.Position.Symbol.HasUnderlying || Definition.UnderlyingLots == 0)
+                .Select(leg => leg.CreateOptionStrategyLeg(Multiplier));
 
             if (Definition.UnderlyingLots != 0)
             {
-                strategy.UnderlyingLegs = new List<OptionStrategy.UnderlyingLegData>
-                {
-                    OptionStrategy.UnderlyingLegData.Create(Definition.UnderlyingLots * Multiplier, Legs[0].Position.Underlying)
-                };
+                legs = legs.Concat([OptionStrategy.UnderlyingLegData.Create(Definition.UnderlyingLots * Multiplier, Legs[0].Position.Underlying)]);
             }
 
-            return strategy;
+            return OptionStrategy.Create(Definition.Name, legs);
         }
 
         /// <summary>Indicates whether the current object is equal to another object of the same type.</summary>

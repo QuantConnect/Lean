@@ -73,6 +73,8 @@ namespace QuantConnect.Securities.Option
         /// </summary>
         public OptionStrategy()
         {
+            OptionLegs = new List<OptionLegData>();
+            UnderlyingLegs = new List<UnderlyingLegData>();
         }
 
         /// <summary>
@@ -104,6 +106,40 @@ namespace QuantConnect.Securities.Option
                 optionLeg.Symbol = Symbol.CreateOption(Underlying, targetOption, Underlying.ID.Market, CanonicalOption.ID.OptionStyle,
                     optionLeg.Right, optionLeg.Strike, optionLeg.Expiration);
             }
+        }
+
+        /// <summary>
+        /// Creates a new instance of <see cref="OptionStrategy"/> with the specified name and legs data.
+        /// The method will try to infer the canonical symbol and underlying symbol from the legs data, but they can also be set manually after the strategy creation.
+        /// </summary>
+        public static OptionStrategy Create(string name, IEnumerable<Leg> legs)
+        {
+            var underlyingLegs = new List<UnderlyingLegData>();
+            var optionLegs = new List<OptionLegData>();
+            Symbol canonicalSymbol = null;
+
+            foreach (var leg in legs)
+            {
+                if (leg is UnderlyingLegData underlyingLeg)
+                {
+                    underlyingLegs.Add(underlyingLeg);
+                }
+                else if (leg is OptionLegData optionLeg)
+                {
+                    optionLegs.Add(optionLeg);
+
+                    if (canonicalSymbol == null)
+                    {
+                        canonicalSymbol = optionLeg.Symbol.Canonical;
+                    }
+                }
+                else
+                {
+                    throw new ArgumentException($"Invalid leg type: {leg.GetType().FullName}");
+                }
+            }
+
+            return new OptionStrategy(name, canonicalSymbol, optionLegs, underlyingLegs);
         }
 
         /// <summary>

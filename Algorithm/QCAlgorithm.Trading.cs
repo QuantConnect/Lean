@@ -880,20 +880,7 @@ namespace QuantConnect.Algorithm
             // setting up the tag text for all orders of one strategy
             tag ??= $"{strategy.Name} ({strategyQuantity.ToStringInvariant()})";
 
-            var legs = new List<Leg>(strategy.UnderlyingLegs);
-
-            foreach (var optionLeg in strategy.OptionLegs)
-            {
-                if (!Securities.TryGetValue(optionLeg.Symbol, out var option))
-                {
-                    throw new InvalidOperationException("Couldn't find the option contract in algorithm securities list. " +
-                        Invariant($"Underlying: {strategy.Underlying}, option {optionLeg.Right}, strike {optionLeg.Strike}, ") +
-                        Invariant($"expiration: {optionLeg.Expiration}")
-                    );
-                }
-
-                legs.Add(new Leg { Symbol = optionLeg.Symbol, OrderPrice = optionLeg.OrderPrice, Quantity = optionLeg.Quantity });
-            }
+            var legs = strategy.UnderlyingLegs.Cast<Leg>().Concat(strategy.OptionLegs).ToList();
 
             return SubmitComboOrder(legs, strategyQuantity, 0, asynchronous, tag, orderProperties);
         }
@@ -915,7 +902,11 @@ namespace QuantConnect.Algorithm
             List<SubmitOrderRequest> submitRequests = new(capacity: legs.Count);
             foreach (var leg in legs)
             {
-                var security = Securities[leg.Symbol];
+                if (!Securities.TryGetValue(leg.Symbol, out var security))
+                {
+                    throw new InvalidOperationException("Couldn't find one of the strategy's securities in the algorithm securities list. " +
+                        Invariant($"Leg: {leg.Symbol}"));
+                }
 
                 if (leg.OrderPrice.HasValue)
                 {
