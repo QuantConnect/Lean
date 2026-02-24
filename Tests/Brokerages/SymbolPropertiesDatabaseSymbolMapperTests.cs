@@ -13,9 +13,12 @@
  * limitations under the License.
 */
 
-using System;
 using NUnit.Framework;
 using QuantConnect.Brokerages;
+using QuantConnect.Securities;
+using System;
+using System.IO;
+using System.Linq;
 
 namespace QuantConnect.Tests.Brokerages
 {
@@ -103,6 +106,49 @@ namespace QuantConnect.Tests.Brokerages
 
             Assert.Throws<ArgumentException>(() => mapper.GetLeanSymbol(brokerageSymbol, type, market));
             Assert.Throws<ArgumentException>(() => mapper.GetBrokerageSymbol(Symbol.Create(brokerageSymbol.Replace("-", ""), type, market)));
+        }
+
+        [Test]
+        public void SymbolMapperRefreshesMappingsPeriodically()
+        {
+            // Test symbol that is not in the SPDB
+            const string market = Market.Binance;
+            const string newSymbol = "CUSTOMCRIPTOUSDT";
+            const SecurityType securityType = SecurityType.Crypto;
+
+            var mapper = new SymbolPropertiesDatabaseSymbolMapper(market);
+
+            // This should throw an exception because the symbol is not in the SPDB
+            Assert.Throws<ArgumentException>(() => mapper.GetLeanSymbol(newSymbol, securityType, market));
+
+            // Add manually the new symbol to the SPDB
+            var path = Path.Combine(Globals.DataFolder, "symbol-properties", "symbol-properties-database.csv");
+            var newEntry = $"{Environment.NewLine}binance,CUSTOMCRIPTOUSDT,crypto,CUSTOMCRIPTOUSDT,USDT,1,0.00000001,0.01,CUSTOMCRIPTOUSDT,0.01";
+            File.AppendAllText(path, newEntry);
+
+            try
+            {
+                // Reset the SPDB
+                SymbolPropertiesDatabase.Reset();
+
+                // Simulate that 15 minutes have passed since the last reload
+                var lastReloadField = typeof(SymbolPropertiesDatabaseSymbolMapper).GetField("_lastReloadTime", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+                lastReloadField.SetValue(mapper, DateTime.UtcNow.AddMinutes(-16));
+
+                // Get the symbol, now exists in the SPDB
+                var symbol = mapper.GetLeanSymbol(newSymbol, securityType, market);
+                Assert.IsNotNull(symbol);
+                Assert.AreEqual(newSymbol, symbol.Value);
+                Assert.AreEqual(securityType, symbol.SecurityType);
+                Assert.AreEqual(market, symbol.ID.Market);
+            }
+            finally
+            {
+                // Clean up the SPDB
+                var lines = File.ReadAllLines(path).Where(l => !l.Contains(newSymbol)).ToArray();
+                File.WriteAllText(path, string.Join(Environment.NewLine, lines));
+                SymbolPropertiesDatabase.Reset();
+            }
         }
 
         private static TestCaseData[] BrokerageSymbols => new[]
