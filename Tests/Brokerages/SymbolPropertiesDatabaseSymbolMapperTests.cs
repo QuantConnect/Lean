@@ -108,8 +108,12 @@ namespace QuantConnect.Tests.Brokerages
             Assert.Throws<ArgumentException>(() => mapper.GetBrokerageSymbol(Symbol.Create(brokerageSymbol.Replace("-", ""), type, market)));
         }
 
-        [Test]
-        public void SymbolMapperRefreshesMappingsPeriodically()
+        [TestCase("GetLeanSymbol")]
+        [TestCase("GetBrokerageSymbol")]
+        [TestCase("IsKnownLeanSymbol")]
+        [TestCase("GetBrokerageSecurityType")]
+        [TestCase("IsKnownBrokerageSymbol")]
+        public void SymbolMapperRefreshesMappingsPeriodically(string methodName)
         {
             // Test symbol that is not in the SPDB
             const string market = Market.Binance;
@@ -117,9 +121,27 @@ namespace QuantConnect.Tests.Brokerages
             const SecurityType securityType = SecurityType.Crypto;
 
             var mapper = new SymbolPropertiesDatabaseSymbolMapper(market);
+            var testSymbol = Symbol.Create(newSymbol, securityType, market);
 
-            // This should throw an exception because the symbol is not in the SPDB
-            Assert.Throws<ArgumentException>(() => mapper.GetLeanSymbol(newSymbol, securityType, market));
+            // Verify symbol doesn't exist initially using the appropriate method
+            switch (methodName)
+            {
+                case "GetLeanSymbol":
+                    Assert.Throws<ArgumentException>(() => mapper.GetLeanSymbol(newSymbol, securityType, market));
+                    break;
+                case "GetBrokerageSymbol":
+                    Assert.Throws<ArgumentException>(() => mapper.GetBrokerageSymbol(testSymbol));
+                    break;
+                case "IsKnownLeanSymbol":
+                    Assert.IsFalse(mapper.IsKnownLeanSymbol(testSymbol));
+                    break;
+                case "GetBrokerageSecurityType":
+                    Assert.Throws<ArgumentException>(() => mapper.GetBrokerageSecurityType(newSymbol));
+                    break;
+                case "IsKnownBrokerageSymbol":
+                    Assert.IsFalse(mapper.IsKnownBrokerageSymbol(newSymbol));
+                    break;
+            }
 
             // Add manually the new symbol to the SPDB
             var path = Path.Combine(Globals.DataFolder, "symbol-properties", "symbol-properties-database.csv");
@@ -135,12 +157,29 @@ namespace QuantConnect.Tests.Brokerages
                 var lastReloadField = typeof(SymbolPropertiesDatabaseSymbolMapper).GetField("_lastReloadTime", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
                 lastReloadField.SetValue(mapper, DateTime.UtcNow.AddMinutes(-16));
 
-                // Get the symbol, now exists in the SPDB
-                var symbol = mapper.GetLeanSymbol(newSymbol, securityType, market);
-                Assert.IsNotNull(symbol);
-                Assert.AreEqual(newSymbol, symbol.Value);
-                Assert.AreEqual(securityType, symbol.SecurityType);
-                Assert.AreEqual(market, symbol.ID.Market);
+                // Now verify each method can find the symbol
+                switch (methodName)
+                {
+                    case "GetLeanSymbol":
+                        var symbol = mapper.GetLeanSymbol(newSymbol, securityType, market);
+                        Assert.IsNotNull(symbol);
+                        Assert.AreEqual(newSymbol, symbol.Value);
+                        Assert.AreEqual(securityType, symbol.SecurityType);
+                        Assert.AreEqual(market, symbol.ID.Market);
+                        break;
+                    case "GetBrokerageSymbol":
+                        Assert.AreEqual(newSymbol, mapper.GetBrokerageSymbol(testSymbol));
+                        break;
+                    case "IsKnownLeanSymbol":
+                        Assert.IsTrue(mapper.IsKnownLeanSymbol(testSymbol));
+                        break;
+                    case "GetBrokerageSecurityType":
+                        Assert.AreEqual(securityType, mapper.GetBrokerageSecurityType(newSymbol));
+                        break;
+                    case "IsKnownBrokerageSymbol":
+                        Assert.IsTrue(mapper.IsKnownBrokerageSymbol(newSymbol));
+                        break;
+                }
             }
             finally
             {

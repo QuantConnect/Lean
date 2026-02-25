@@ -17,7 +17,6 @@ using System;
 using System.Linq;
 using QuantConnect.Securities;
 using System.Collections.Generic;
-using QuantConnect.Logging;
 
 namespace QuantConnect.Brokerages
 {
@@ -35,10 +34,10 @@ namespace QuantConnect.Brokerages
         private Dictionary<SecurityType, Dictionary<string, Symbol>> _symbolMap;
 
         // Timestamp of the last successful reload
-        private DateTime _lastReloadTime = DateTime.MinValue;
+        private DateTime _lastReloadTime;
 
         // Minimum time between reloads
-        private static readonly TimeSpan MinReloadInterval = TimeSpan.FromMinutes(15);
+        private static readonly TimeSpan _minReloadInterval = TimeSpan.FromMinutes(15);
 
         /// <summary>
         /// Creates a new instance of the <see cref="SymbolPropertiesDatabaseSymbolMapper"/> class.
@@ -47,37 +46,7 @@ namespace QuantConnect.Brokerages
         public SymbolPropertiesDatabaseSymbolMapper(string market)
         {
             _market = market;
-            BuildMappings();
-        }
-
-        /// <summary>
-        /// Builds the internal mappings from the symbol properties database
-        /// </summary>
-        private void BuildMappings()
-        {
-            var symbolPropertiesList =
-                SymbolPropertiesDatabase
-                    .FromDataFolder()
-                    .GetSymbolPropertiesList(_market)
-                    .Where(x => !string.IsNullOrWhiteSpace(x.Value.MarketTicker))
-                    .ToList();
-
-            _symbolPropertiesMap =
-                symbolPropertiesList
-                    .ToDictionary(
-                        x => Symbol.Create(x.Key.Symbol, x.Key.SecurityType, x.Key.Market),
-                        x => x.Value);
-
-            _symbolMap = new();
-            foreach (var group in _symbolPropertiesMap.GroupBy(x => x.Key.SecurityType))
-            {
-                _symbolMap[group.Key] = group.ToDictionary(
-                            x => x.Value.MarketTicker,
-                            x => x.Key);
-            }
-
-            // Update the last reload time
-            _lastReloadTime = DateTime.UtcNow;
+            TryRefreshMappings();
         }
 
         /// <summary>
@@ -87,22 +56,38 @@ namespace QuantConnect.Brokerages
         private bool TryRefreshMappings()
         {
             // Check if enough time has passed since the last reload
-            if (DateTime.UtcNow - _lastReloadTime < MinReloadInterval)
+            if (DateTime.UtcNow - _lastReloadTime < _minReloadInterval)
             {
                 return false;
             }
 
-            try
+            var symbolPropertiesList =
+                SymbolPropertiesDatabase
+                    .FromDataFolder()
+                    .GetSymbolPropertiesList(_market)
+                    .Where(x => !string.IsNullOrWhiteSpace(x.Value.MarketTicker))
+                    .ToList();
+
+            var symbolPropertiesMap =
+                symbolPropertiesList
+                    .ToDictionary(
+                        x => Symbol.Create(x.Key.Symbol, x.Key.SecurityType, x.Key.Market),
+                        x => x.Value);
+
+            var symbolMap = new Dictionary<SecurityType, Dictionary<string, Symbol>>();
+            foreach (var group in symbolPropertiesMap.GroupBy(x => x.Key.SecurityType))
             {
-                // Rebuild mappings
-                BuildMappings();
-                return true;
+                symbolMap[group.Key] = group.ToDictionary(
+                            x => x.Value.MarketTicker,
+                            x => x.Key);
             }
-            catch (Exception ex)
-            {
-                Log.Error($"TryRefreshMappings(): Failed to rebuild mappings: {ex.Message}");
-                return false;
-            }
+
+            _symbolPropertiesMap = symbolPropertiesMap;
+            _symbolMap = symbolMap;
+
+            // Update the last reload time
+            _lastReloadTime = DateTime.UtcNow;
+            return true;
         }
 
         /// <summary>
