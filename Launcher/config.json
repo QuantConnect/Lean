@@ -146,6 +146,7 @@
   // spot/margin
   "binance-api-url": "https://api.binance.com",
   "binance-websocket-url": "wss://stream.binance.com:9443/ws",
+  "binance-orders-websocket-url": "wss://ws-api.binance.com:9443/ws-api/v3",
   // USDT futures
   "binance-fapi-url": "https://fapi.binance.com",
   "binance-fwebsocket-url": "wss://fstream.binance.com/ws",
