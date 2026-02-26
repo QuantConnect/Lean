@@ -593,7 +593,7 @@ namespace QuantConnect.AlgorithmFactory.Python.Wrappers
         /// <param name="extendedMarketHours">Use extended market hours data</param>
         /// <param name="dataMappingMode">The contract mapping mode to use for the security</param>
         /// <param name="dataNormalizationMode">The price scaling mode to use for the security</param>
-        public Security AddSecurity(SecurityType securityType, string symbol, Resolution? resolution, string market, bool fillForward, decimal leverage, bool extendedMarketHours,
+        public Security AddSecurity(SecurityType securityType, string symbol, Resolution? resolution, string market, bool? fillForward, decimal leverage, bool? extendedMarketHours,
             DataMappingMode? dataMappingMode = null, DataNormalizationMode? dataNormalizationMode = null)
             => _baseAlgorithm.AddSecurity(securityType, symbol, resolution, market, fillForward, leverage, extendedMarketHours, dataMappingMode, dataNormalizationMode);
 
@@ -611,7 +611,7 @@ namespace QuantConnect.AlgorithmFactory.Python.Wrappers
         /// <param name="contractDepthOffset">The continuous contract desired offset from the current front month.
         /// For example, 0 (default) will use the front month, 1 will use the back month contract</param>
         /// <returns>The new Security that was added to the algorithm</returns>
-        public Security AddSecurity(Symbol symbol, Resolution? resolution = null, bool fillForward = true, decimal leverage = Security.NullLeverage, bool extendedMarketHours = false,
+        public Security AddSecurity(Symbol symbol, Resolution? resolution = null, bool? fillForward = null, decimal leverage = Security.NullLeverage, bool? extendedMarketHours = null,
             DataMappingMode? dataMappingMode = null, DataNormalizationMode? dataNormalizationMode = null, int contractDepthOffset = 0)
             => _baseAlgorithm.AddSecurity(symbol, resolution, fillForward, leverage, extendedMarketHours, dataMappingMode, dataNormalizationMode, contractDepthOffset);
 

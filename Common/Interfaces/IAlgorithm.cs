@@ -710,7 +710,7 @@ namespace QuantConnect.Interfaces
         /// <param name="extendedMarketHours">ExtendedMarketHours send in data from 4am - 8pm, not used for FOREX</param>
         /// <param name="dataMappingMode">The contract mapping mode to use for the security</param>
         /// <param name="dataNormalizationMode">The price scaling mode to use for the security</param>
-        Security AddSecurity(SecurityType securityType, string symbol, Resolution? resolution, string market, bool fillForward, decimal leverage, bool extendedMarketHours,
+        Security AddSecurity(SecurityType securityType, string symbol, Resolution? resolution, string market, bool? fillForward, decimal leverage, bool? extendedMarketHours,
             DataMappingMode? dataMappingMode = null, DataNormalizationMode? dataNormalizationMode = null);
 
         /// <summary>
@@ -726,7 +726,7 @@ namespace QuantConnect.Interfaces
         /// <param name="contractDepthOffset">The continuous contract desired offset from the current front month.
         /// For example, 0 (default) will use the front month, 1 will use the back month contract</param>
         /// <returns>The new Security that was added to the algorithm</returns>
-        Security AddSecurity(Symbol symbol, Resolution? resolution = null, bool fillForward = true, decimal leverage = Security.NullLeverage, bool extendedMarketHours = false,
+        Security AddSecurity(Symbol symbol, Resolution? resolution = null, bool? fillForward = null, decimal leverage = Security.NullLeverage, bool? extendedMarketHours = null,
             DataMappingMode? dataMappingMode = null, DataNormalizationMode? dataNormalizationMode = null, int contractDepthOffset = 0);
 
         /// <summary>
