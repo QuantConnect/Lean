@@ -6,10 +6,10 @@
   // two predefined environments, 'backtesting' and 'live', feel free
   // to add more!
 
-  "environment": "backtesting", // "live-paper", "backtesting", "live-interactive", "live-interactive-iqfeed"
+  "environment": "live-ig", // "live-paper", "backtesting", "live-interactive", "live-interactive-iqfeed", "live-ig"
 
   // algorithm class selector
-  "algorithm-type-name": "BasicTemplateFrameworkAlgorithm",
+  "algorithm-type-name": "IGLiveTestAlgorithm",
 
   // Algorithm language selector - options CSharp, Python
   "algorithm-language": "CSharp",
@@ -122,6 +122,14 @@
   "fxcm-user-name": "",
   "fxcm-password": "",
   "fxcm-account-id": "",
+
+  // ig markets configuration
+  "ig-environment": "demo", // "demo" or "live"
+  "ig-api-url": "https://demo-api.ig.com/gateway/deal",
+  "ig-username": "fabo9981",
+  "ig-password": "Herbwert2qfst3gbhr,",
+  "ig-api-key": "aea342855b902e0447395a39f867c04175dd7089",
+  "ig-account-id": "Z684C1",
 
   // iqfeed configuration
   "iqfeed-host": "127.0.0.1",
@@ -452,6 +460,21 @@
       // real brokerage implementations require the BrokerageTransactionHandler
       "live-mode-brokerage": "FxcmBrokerage",
       "data-queue-handler": [ "FxcmBrokerage" ],
+      "setup-handler": "QuantConnect.Lean.Engine.Setup.BrokerageSetupHandler",
+      "result-handler": "QuantConnect.Lean.Engine.Results.LiveTradingResultHandler",
+      "data-feed-handler": "QuantConnect.Lean.Engine.DataFeeds.LiveTradingDataFeed",
+      "real-time-handler": "QuantConnect.Lean.Engine.RealTime.LiveTradingRealTimeHandler",
+      "transaction-handler": "QuantConnect.Lean.Engine.TransactionHandlers.BrokerageTransactionHandler",
+      "history-provider": [ "BrokerageHistoryProvider", "SubscriptionDataReaderHistoryProvider" ]
+    },
+
+    // defines the 'live-ig' environment
+    "live-ig": {
+      "live-mode": true,
+
+      // IG Markets brokerage implementation
+      "live-mode-brokerage": "IGBrokerage",
+      "data-queue-handler": [ "IGBrokerage" ],
       "setup-handler": "QuantConnect.Lean.Engine.Setup.BrokerageSetupHandler",
       "result-handler": "QuantConnect.Lean.Engine.Results.LiveTradingResultHandler",
       "data-feed-handler": "QuantConnect.Lean.Engine.DataFeeds.LiveTradingDataFeed",
