@@ -13,16 +13,17 @@
  * limitations under the License.
 */
 
-using System;
-using System.Linq;
-using QuantConnect.Orders;
-using QuantConnect.Interfaces;
-using QuantConnect.Securities;
-using System.Collections.Generic;
-using QuantConnect.Securities.Option;
-using static QuantConnect.StringExtensions;
 using QuantConnect.Algorithm.Framework.Portfolio;
+using QuantConnect.Interfaces;
+using QuantConnect.Orders;
 using QuantConnect.Orders.TimeInForces;
+using QuantConnect.Securities;
+using QuantConnect.Securities.Future;
+using QuantConnect.Securities.Option;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using static QuantConnect.StringExtensions;
 
 namespace QuantConnect.Algorithm
 {
@@ -237,7 +238,8 @@ namespace QuantConnect.Algorithm
         [DocumentationAttribute(TradingAndOrders)]
         public OrderTicket MarketOrder(Symbol symbol, decimal quantity, bool asynchronous = false, string tag = "", IOrderProperties orderProperties = null)
         {
-            var security = Securities[symbol];
+            var security = GetSecurityForOrder(symbol);
+
             // check the exchange is open before sending a market order, if it's not open then convert it into a market on open order.
             // For futures and FOPs, market orders can be submitted on extended hours, so we let them through.
             if ((security.Type != SecurityType.Future && security.Type != SecurityType.FutureOption) && !security.Exchange.ExchangeOpen)
@@ -314,7 +316,7 @@ namespace QuantConnect.Algorithm
             var properties = orderProperties ?? DefaultOrderProperties?.Clone();
             InvalidateGoodTilDateTimeInForce(properties);
 
-            var security = Securities[symbol];
+            var security = GetSecurityForOrder(symbol);
             var request = CreateSubmitOrderRequest(OrderType.MarketOnOpen, security, quantity, tag, properties, asynchronous);
 
             return SubmitOrderRequest(request);
@@ -365,7 +367,7 @@ namespace QuantConnect.Algorithm
             var properties = orderProperties ?? DefaultOrderProperties?.Clone();
             InvalidateGoodTilDateTimeInForce(properties);
 
-            var security = Securities[symbol];
+            var security = GetSecurityForOrder(symbol);
             var request = CreateSubmitOrderRequest(OrderType.MarketOnClose, security, quantity, tag, properties, asynchronous);
 
             return SubmitOrderRequest(request);
@@ -416,7 +418,7 @@ namespace QuantConnect.Algorithm
         [DocumentationAttribute(TradingAndOrders)]
         public OrderTicket LimitOrder(Symbol symbol, decimal quantity, decimal limitPrice, bool asynchronous = false, string tag = "", IOrderProperties orderProperties = null)
         {
-            var security = Securities[symbol];
+            var security = GetSecurityForOrder(symbol);
             var request = CreateSubmitOrderRequest(OrderType.Limit, security, quantity, tag,
                 orderProperties ?? DefaultOrderProperties?.Clone(), asynchronous, limitPrice: limitPrice);
 
@@ -468,7 +470,7 @@ namespace QuantConnect.Algorithm
         [DocumentationAttribute(TradingAndOrders)]
         public OrderTicket StopMarketOrder(Symbol symbol, decimal quantity, decimal stopPrice, bool asynchronous = false, string tag = "", IOrderProperties orderProperties = null)
         {
-            var security = Securities[symbol];
+            var security = GetSecurityForOrder(symbol);
             var request = CreateSubmitOrderRequest(OrderType.StopMarket, security, quantity, tag,
                 orderProperties ?? DefaultOrderProperties?.Clone(), asynchronous, stopPrice: stopPrice);
 
@@ -529,7 +531,7 @@ namespace QuantConnect.Algorithm
         public OrderTicket TrailingStopOrder(Symbol symbol, decimal quantity, decimal trailingAmount, bool trailingAsPercentage,
             bool asynchronous = false, string tag = "", IOrderProperties orderProperties = null)
         {
-            var security = Securities[symbol];
+            var security = GetSecurityForOrder(symbol);
             var stopPrice = Orders.TrailingStopOrder.CalculateStopPrice(security.Price, trailingAmount, trailingAsPercentage,
                 quantity > 0 ? OrderDirection.Buy : OrderDirection.Sell);
             return TrailingStopOrder(symbol, quantity, stopPrice, trailingAmount, trailingAsPercentage, asynchronous, tag, orderProperties);
@@ -589,7 +591,7 @@ namespace QuantConnect.Algorithm
         public OrderTicket TrailingStopOrder(Symbol symbol, decimal quantity, decimal stopPrice, decimal trailingAmount, bool trailingAsPercentage,
             bool asynchronous = false, string tag = "", IOrderProperties orderProperties = null)
         {
-            var security = Securities[symbol];
+            var security = GetSecurityForOrder(symbol);
             var request = CreateSubmitOrderRequest(
                 OrderType.TrailingStop,
                 security,
@@ -655,7 +657,7 @@ namespace QuantConnect.Algorithm
         public OrderTicket StopLimitOrder(Symbol symbol, decimal quantity, decimal stopPrice, decimal limitPrice,
             bool asynchronous = false, string tag = "", IOrderProperties orderProperties = null)
         {
-            var security = Securities[symbol];
+            var security = GetSecurityForOrder(symbol);
             var request = CreateSubmitOrderRequest(OrderType.StopLimit, security, quantity, tag, stopPrice: stopPrice,
                 limitPrice: limitPrice, properties: orderProperties ?? DefaultOrderProperties?.Clone(), asynchronous: asynchronous);
 
@@ -713,7 +715,7 @@ namespace QuantConnect.Algorithm
         public OrderTicket LimitIfTouchedOrder(Symbol symbol, decimal quantity, decimal triggerPrice, decimal limitPrice,
             bool asynchronous = false, string tag = "", IOrderProperties orderProperties = null)
         {
-            var security = Securities[symbol];
+            var security = GetSecurityForOrder(symbol);
             var request = CreateSubmitOrderRequest(OrderType.LimitIfTouched, security, quantity, tag,
                 triggerPrice: triggerPrice, limitPrice: limitPrice, properties: orderProperties ?? DefaultOrderProperties?.Clone(),
                 asynchronous: asynchronous);
@@ -733,7 +735,7 @@ namespace QuantConnect.Algorithm
         [DocumentationAttribute(TradingAndOrders)]
         public OrderTicket ExerciseOption(Symbol optionSymbol, int quantity, bool asynchronous = false, string tag = "", IOrderProperties orderProperties = null)
         {
-            var option = (Option)Securities[optionSymbol];
+            var option = (Option)GetSecurityForOrder(optionSymbol);
 
             // SubmitOrderRequest.Quantity indicates the change in holdings quantity, therefore manual exercise quantities must be negative
             // PreOrderChecksImpl confirms that we don't hold a short position, so we're lenient here and accept +/- quantity values
@@ -902,10 +904,7 @@ namespace QuantConnect.Algorithm
             List<SubmitOrderRequest> submitRequests = new(capacity: legs.Count);
             foreach (var leg in legs)
             {
-                if (!Securities.TryGetValue(leg.Symbol, out var security))
-                {
-                    throw new InvalidOperationException(Invariant($"Couldn't find one of the strategy's securities in the algorithm securities list. {leg}"));
-                }
+                var security = GetSecurityForOrder(leg.Symbol);
 
                 if (leg.OrderPrice.HasValue)
                 {
@@ -1203,6 +1202,52 @@ namespace QuantConnect.Algorithm
 
             // passes all initial order checks
             return OrderResponse.Success(request);
+        }
+
+        /// <summary>
+        /// Gets the security for the given symbol.
+        /// This method is intended to get a security that is going to be traded, so it will try to
+        /// add the security if it's not found in the algorithm's securities collection and it meets 
+        /// the requirements to be added (e.g. not delisted, not expired, etc).
+        /// The added security will be seeded with data so that it can be traded immediately.
+        /// </summary>
+        private Security GetSecurityForOrder(Symbol symbol)
+        {
+            if (Securities.TryGetValue(symbol, out var security) && ActiveSecurities.ContainsKey(symbol))
+            {
+                return security;
+            }
+
+            if (security == null || !security.IsDelisted)
+            {
+                // Try to add and seed the security
+                if (!symbol.HasUnderlying ||
+                    (symbol.SecurityType.IsOption() && !OptionSymbol.IsOptionContractExpired(symbol, UtcTime)) ||
+                    (symbol.SecurityType == SecurityType.Future && !symbol.IsCanonical() && !FuturesExpiryUtilityFunctions.IsFutureContractExpired(symbol, UtcTime, MarketHoursDatabase)))
+                {
+                    // Send one time warning
+                    security = AddSecurity(symbol);
+
+                    // Just in case
+                    if (security.IsTradable)
+                    {
+                        if (!Settings.SeedInitialPrices)
+                        {
+                            AlgorithmUtils.SeedSecurities([security], this);
+                        }
+
+                        return security;
+                    }
+                    else
+                    {
+                        // will not be used, let's revert it
+                        RemoveSecurity(symbol);
+                    }
+                }
+            }
+
+            throw new InvalidOperationException($"The symbol {symbol} is not found in the algorithm's securities collection " +
+                    "and cannot be re-added due to it being delisted or no longer tradable.");
         }
 
         /// <summary>
