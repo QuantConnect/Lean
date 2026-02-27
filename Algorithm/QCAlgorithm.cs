@@ -2002,8 +2002,8 @@ namespace QuantConnect.Algorithm
             }
 
             var isCanonical = symbol.IsCanonical();
-            var securityFillForward = fillForward ?? true;
-            var securityExtendedMarketHours = extendedMarketHours ?? false;
+            var securityFillForward = fillForward ?? UniverseSettings.FillForward;
+            var securityExtendedMarketHours = extendedMarketHours ?? UniverseSettings.ExtendedMarketHours;
 
             // Short-circuit to AddOptionContract because it will add the underlying if required
             if (!isCanonical && symbol.SecurityType.IsOption())
