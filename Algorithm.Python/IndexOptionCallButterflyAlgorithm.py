@@ -65,6 +65,5 @@ class IndexOptionCallButterflyAlgorithm(QCAlgorithm):
         call_butterfly = OptionStrategies.call_butterfly(self.spxw, otm_strike, atm_strike, itm_strike, expiry)
         price = sum([abs(self.securities[x.symbol].price * x.quantity) * self.multiplier for x in call_butterfly.underlying_legs])
         if price > 0:
-            quantity = self.portfolio.total_portfolio_value // price
+            quantity = int(self.portfolio.total_portfolio_value // price)
             self.tickets = self.buy(call_butterfly, quantity, asynchronous=True)
-        
