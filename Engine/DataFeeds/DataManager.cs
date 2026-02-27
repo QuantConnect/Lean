@@ -41,6 +41,9 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         private readonly IRegisteredSecurityDataTypesProvider _registeredTypesProvider;
         private readonly IDataPermissionManager _dataPermissionManager;
         private List<SubscriptionDataConfig> _subscriptionDataConfigsEnumerator;
+        private readonly IAlgorithm _algorithm;
+
+        private bool _unsupportedUniverseSettingsResolutionWarningSent;
 
         /// There is no ConcurrentHashSet collection in .NET,
         /// so we use ConcurrentDictionary with byte value to minimize memory usage
@@ -78,6 +81,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             _liveMode = liveMode;
             _registeredTypesProvider = registeredTypesProvider;
             _dataPermissionManager = dataPermissionManager;
+            _algorithm = algorithm;
 
             // wire ourselves up to receive notifications when universes are added/removed
             algorithm.UniverseManager.CollectionChanged += (sender, args) =>
@@ -596,7 +600,27 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 baseInstance.Symbol = symbol;
                 if (!resolutionWasProvided)
                 {
-                    var defaultResolution = baseInstance.DefaultResolution();
+                    Resolution? defaultResolution = null;
+                    if (LeanData.IsCommonLeanDataType(typeTuple.Item1))
+                    {
+                        var res = _algorithm.UniverseSettings.Resolution;
+
+                        if (!_liveMode && !baseInstance.SupportedResolutions().Contains(res))
+                        {
+                            if (!_unsupportedUniverseSettingsResolutionWarningSent)
+                            {
+                                _algorithm.Log($"Warning: Resolution {_algorithm.UniverseSettings.Resolution} for {symbol} and type {typeTuple.Item1} is not supported. " +
+                                    $"The data type default resolution will be tried instead");
+                                _unsupportedUniverseSettingsResolutionWarningSent = true;
+                            }
+                        }
+                        else
+                        {
+                            defaultResolution = res;
+                        }
+                    }
+
+                    defaultResolution ??= baseInstance.DefaultResolution();
                     if (resolution.HasValue && resolution != defaultResolution)
                     {
                         // we are here because there are multiple 'dataTypes'.
