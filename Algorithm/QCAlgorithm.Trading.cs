@@ -1213,38 +1213,33 @@ namespace QuantConnect.Algorithm
         /// </summary>
         private Security GetSecurityForOrder(Symbol symbol)
         {
-            if (Securities.TryGetValue(symbol, out var security) &&
-                // Let delisted securities through instead of throwing. An invalid ticket will be returned later on when trying to submit the order.
-                (security.IsTradable || security.IsDelisted))
+            var isCanonical = symbol.IsCanonical();
+            if (Securities.TryGetValue(symbol, out var security) && 
+                // Let canonical and delisted securities through instead of throwing. An invalid ticket will be returned later on when trying to submit the order.
+                (isCanonical || security.IsTradable || security.IsDelisted))
             {
                 return security;
             }
 
-            if (security == null || !security.IsDelisted)
+            if (security == null || !security.IsTradable)
             {
-                // Try to add and seed the security
-                if (!symbol.HasUnderlying ||
-                    (symbol.SecurityType.IsOption() && !OptionSymbol.IsOptionContractExpired(symbol, UtcTime)) ||
-                    (symbol.SecurityType == SecurityType.Future && !symbol.IsCanonical() && !FuturesExpiryUtilityFunctions.IsFutureContractExpired(symbol, UtcTime, MarketHoursDatabase)))
+                // Try to add and seed the security, but don't is it's a canonical symbol
+                if (!isCanonical &&
+                    // Indexes are not tradable by default
+                    symbol.SecurityType != SecurityType.Index &&
+                    (!symbol.HasUnderlying ||
+                     (symbol.SecurityType.IsOption() && !OptionSymbol.IsOptionContractExpired(symbol, UtcTime)) ||
+                     (symbol.SecurityType == SecurityType.Future && !FuturesExpiryUtilityFunctions.IsFutureContractExpired(symbol, UtcTime, MarketHoursDatabase))))
                 {
                     // Send one time warning
                     security = AddSecurity(symbol);
 
-                    // Just in case
-                    if (security.IsTradable)
+                    if (!Settings.SeedInitialPrices)
                     {
-                        if (!Settings.SeedInitialPrices)
-                        {
-                            AlgorithmUtils.SeedSecurities([security], this);
-                        }
+                        AlgorithmUtils.SeedSecurities([security], this);
+                    }
 
-                        return security;
-                    }
-                    else
-                    {
-                        // will not be used, let's revert it
-                        RemoveSecurity(symbol);
-                    }
+                    return security;
                 }
             }
 

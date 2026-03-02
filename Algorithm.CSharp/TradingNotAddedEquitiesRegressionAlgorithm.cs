@@ -22,6 +22,8 @@ using QuantConnect.Orders;
 namespace QuantConnect.Algorithm.CSharp
 {
     /// <summary>
+    /// Regression algorithm asserting that equities can be traded even if they are not added to the algorithm.
+    /// They will be automatically added as tradable securities an seeded when an order is placed for them.
     /// </summary>
     public class TradingNotAddedEquitiesRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {

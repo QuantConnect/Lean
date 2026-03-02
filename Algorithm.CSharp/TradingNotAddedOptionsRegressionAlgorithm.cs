@@ -18,13 +18,14 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using QuantConnect.Data;
-using QuantConnect.Interfaces;
 using QuantConnect.Orders;
 using QuantConnect.Securities.Option;
 
 namespace QuantConnect.Algorithm.CSharp
 {
     /// <summary>
+    /// Regression algorithm asserting that options can be traded even if they are not added to the algorithm.
+    /// They will be automatically added as tradable securities an seeded when an order is placed for them.
     /// </summary>
     public class TradingNotAddedOptionsRegressionAlgorithm : TradingNotAddedEquitiesRegressionAlgorithm
     {
@@ -134,11 +135,6 @@ namespace QuantConnect.Algorithm.CSharp
                     // We are done testing
                     Quit();
                 }
-            }
-
-            foreach (var kpv in slice.Bars)
-            {
-                Log($"---> OnData: {Time}, {kpv.Key.Value}, {kpv.Value.Close:0.00}");
             }
         }
 

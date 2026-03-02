@@ -67,9 +67,9 @@ namespace QuantConnect.Algorithm.CSharp
                     throw new RegressionTestException($"{matched.Count}/{slice.Keys.Count} were unexpected expiry date(s): " + string.Join(", ", matched.Select(x => x.ID.Date)));
                 }
 
-                foreach (var symbol in slice.Keys.Where(x => !x.IsCanonical()))
+                foreach (var symbol in slice.Keys)
                 {
-                    var ticket = MarketOrder(symbol, 1);
+                    MarketOrder(symbol, 1);
                 }
             }
             else if (Portfolio.Any(p => p.Value.Invested))

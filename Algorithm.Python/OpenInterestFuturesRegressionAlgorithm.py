@@ -41,8 +41,6 @@ class OpenInterestFuturesRegressionAlgorithm(QCAlgorithm):
                 raise AssertionError(f"{len(matched)}/{len(data.keys())} were unexpected expiry date(s): " + ", ".join(list(map(lambda x: x.id.date, matched))))
 
             for symbol in data.keys():
-                if symbol.is_canonical():
-                    continue
                 self.market_order(symbol, 1)
         elif any(p.value.invested for p in self.portfolio):
             self.liquidate()
