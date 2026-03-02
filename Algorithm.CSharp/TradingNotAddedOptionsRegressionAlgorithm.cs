@@ -165,7 +165,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of the algorithm history
         /// </summary>
-        public override int AlgorithmHistoryDataPoints => 0;
+        public override int AlgorithmHistoryDataPoints => 22;
 
         /// <summary>
         /// Final status of the algorithm
@@ -177,34 +177,34 @@ namespace QuantConnect.Algorithm.CSharp
         /// </summary>
         public override Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
         {
-            {"Total Orders", "0"},
+            {"Total Orders", "8"},
             {"Average Win", "0%"},
-            {"Average Loss", "0%"},
-            {"Compounding Annual Return", "0%"},
-            {"Drawdown", "0%"},
-            {"Expectancy", "0"},
+            {"Average Loss", "-0.02%"},
+            {"Compounding Annual Return", "-5.436%"},
+            {"Drawdown", "0.100%"},
+            {"Expectancy", "-1"},
             {"Start Equity", "1000000"},
-            {"End Equity", "1000000"},
-            {"Net Profit", "0%"},
-            {"Sharpe Ratio", "0"},
+            {"End Equity", "999327"},
+            {"Net Profit", "-0.067%"},
+            {"Sharpe Ratio", "-9.644"},
             {"Sortino Ratio", "0"},
-            {"Probabilistic Sharpe Ratio", "0%"},
-            {"Loss Rate", "0%"},
+            {"Probabilistic Sharpe Ratio", "1.216%"},
+            {"Loss Rate", "100%"},
             {"Win Rate", "0%"},
             {"Profit-Loss Ratio", "0"},
             {"Alpha", "0"},
             {"Beta", "0"},
-            {"Annual Standard Deviation", "0"},
+            {"Annual Standard Deviation", "0.005"},
             {"Annual Variance", "0"},
-            {"Information Ratio", "0"},
-            {"Tracking Error", "0"},
+            {"Information Ratio", "-7.772"},
+            {"Tracking Error", "0.005"},
             {"Treynor Ratio", "0"},
-            {"Total Fees", "$0.00"},
+            {"Total Fees", "$8.00"},
             {"Estimated Strategy Capacity", "$0"},
-            {"Lowest Capacity Asset", ""},
-            {"Portfolio Turnover", "0%"},
+            {"Lowest Capacity Asset", "GOOCV WBGM92QHN8ZQ|GOOCV VP83T1ZUHROL"},
+            {"Portfolio Turnover", "0.86%"},
             {"Drawdown Recovery", "0"},
-            {"OrderListHash", "d41d8cd98f00b204e9800998ecf8427e"}
+            {"OrderListHash", "fc224d8177907f98e3381d2d58067b48"}
         };
     }
 }

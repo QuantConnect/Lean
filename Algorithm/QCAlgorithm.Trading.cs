@@ -1213,7 +1213,9 @@ namespace QuantConnect.Algorithm
         /// </summary>
         private Security GetSecurityForOrder(Symbol symbol)
         {
-            if (Securities.TryGetValue(symbol, out var security) && ActiveSecurities.ContainsKey(symbol))
+            if (Securities.TryGetValue(symbol, out var security) &&
+                // Let delisted securities through instead of throwing. An invalid ticket will be returned later on when trying to submit the order.
+                (security.IsTradable || security.IsDelisted))
             {
                 return security;
             }
