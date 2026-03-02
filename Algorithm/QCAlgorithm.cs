@@ -2002,13 +2002,13 @@ namespace QuantConnect.Algorithm
             }
 
             var isCanonical = symbol.IsCanonical();
-            var securityFillForward = fillForward ?? UniverseSettings.FillForward;
-            var securityExtendedMarketHours = extendedMarketHours ?? UniverseSettings.ExtendedMarketHours;
+            var securityFillForward = fillForward ??= UniverseSettings.FillForward;
+            extendedMarketHours ??= UniverseSettings.ExtendedMarketHours;
 
             // Short-circuit to AddOptionContract because it will add the underlying if required
             if (!isCanonical && symbol.SecurityType.IsOption())
             {
-                return AddOptionContract(symbol, resolution, securityFillForward, leverage, securityExtendedMarketHours);
+                return AddOptionContract(symbol, resolution, securityFillForward, leverage, extendedMarketHours.Value);
             }
 
             var securityResolution = resolution;
@@ -2028,7 +2028,7 @@ namespace QuantConnect.Algorithm
                 configs = SubscriptionManager.SubscriptionDataConfigService.Add(symbol,
                     securityResolution,
                     securityFillForward,
-                    securityExtendedMarketHours,
+                    extendedMarketHours.Value,
                     isFilteredSubscription,
                     dataNormalizationMode: dataNormalizationMode.Value,
                     contractDepthOffset: (uint)contractDepthOffset);
@@ -2038,7 +2038,7 @@ namespace QuantConnect.Algorithm
                 configs = SubscriptionManager.SubscriptionDataConfigService.Add(symbol,
                    securityResolution,
                    securityFillForward,
-                   securityExtendedMarketHours,
+                   extendedMarketHours.Value,
                    isFilteredSubscription,
                    contractDepthOffset: (uint)contractDepthOffset);
             }
@@ -2056,9 +2056,7 @@ namespace QuantConnect.Algorithm
                 {
                     var canonicalConfig = configs.First();
                     var universeSettingsResolution = resolution ?? UniverseSettings.Resolution;
-                    var universeSettingsFillForward = fillForward ?? UniverseSettings.FillForward;
-                    var universeSettingsExtendedMarketHours = extendedMarketHours ?? UniverseSettings.ExtendedMarketHours;
-                    var settings = new UniverseSettings(universeSettingsResolution, leverage, universeSettingsFillForward, universeSettingsExtendedMarketHours, UniverseSettings.MinimumTimeInUniverse)
+                    var settings = new UniverseSettings(universeSettingsResolution, leverage, fillForward.Value, extendedMarketHours.Value, UniverseSettings.MinimumTimeInUniverse)
                     {
                         Asynchronous = UniverseSettings.Asynchronous
                     };
@@ -2074,8 +2072,8 @@ namespace QuantConnect.Algorithm
                             GetResolution(symbol, resolution, null), isCanonical: false);
                         var continuousUniverseSettings = new UniverseSettings(settings)
                         {
-                            ExtendedMarketHours = universeSettingsExtendedMarketHours,
-                            FillForward = universeSettingsFillForward,
+                            ExtendedMarketHours = extendedMarketHours.Value,
+                            FillForward = fillForward.Value,
                             DataMappingMode = dataMappingMode ?? UniverseSettings.GetUniverseMappingModeOrDefault(symbol.SecurityType, symbol.ID.Market),
                             DataNormalizationMode = dataNormalizationMode ?? UniverseSettings.GetUniverseNormalizationModeOrDefault(symbol.SecurityType),
                             ContractDepthOffset = (int)contractOffset,

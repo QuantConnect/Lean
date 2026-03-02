@@ -600,7 +600,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 baseInstance.Symbol = symbol;
                 if (!resolutionWasProvided)
                 {
-                    Resolution? defaultResolution = null;
+                    var defaultResolution = baseInstance.DefaultResolution();
                     if (LeanData.IsCommonLeanDataType(typeTuple.Item1))
                     {
                         var res = _algorithm.UniverseSettings.Resolution;
@@ -610,7 +610,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                             if (!_unsupportedUniverseSettingsResolutionWarningSent)
                             {
                                 _algorithm.Log($"Warning: Resolution {_algorithm.UniverseSettings.Resolution} for {symbol} and type {typeTuple.Item1} is not supported. " +
-                                    $"The data type default resolution will be tried instead");
+                                    $"The data type default resolution '{defaultResolution}' will be used instead");
                                 _unsupportedUniverseSettingsResolutionWarningSent = true;
                             }
                         }
@@ -620,7 +620,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                         }
                     }
 
-                    defaultResolution ??= baseInstance.DefaultResolution();
                     if (resolution.HasValue && resolution != defaultResolution)
                     {
                         // we are here because there are multiple 'dataTypes'.
