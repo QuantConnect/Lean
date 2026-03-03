@@ -996,7 +996,10 @@ namespace QuantConnect.Tests.Common
                 ErrorCurrencyConverter.Instance,
                 RegisteredSecurityDataTypesProvider.Null
             );
-            equity.SetMarketPrice(new Tick { Value = underlyingPrice });
+            if (underlyingPrice > 0)
+            {
+                equity.SetMarketPrice(new Tick { Value = underlyingPrice });
+            }
             equity.VolatilityModel = new DummyVolatilityModel(underlyingVol);
 
             return equity;

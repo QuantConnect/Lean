@@ -153,7 +153,7 @@ namespace QuantConnect.Lean.Engine
                         new SecurityCacheProvider(algorithm.Portfolio),
                         mapFilePrimaryExchangeProvider,
                         algorithm,
-                        IndicatorBasedOptionPriceModelProvider.Instance);
+                        new IndicatorBasedOptionPriceModelProvider(algorithm.Securities));
 
                     algorithm.Securities.SetSecurityService(securityService);
 

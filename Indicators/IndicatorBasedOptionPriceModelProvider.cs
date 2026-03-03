@@ -14,6 +14,7 @@
 */
 
 using QuantConnect.Data;
+using QuantConnect.Securities;
 using QuantConnect.Securities.Option;
 
 namespace QuantConnect.Indicators
@@ -24,12 +25,16 @@ namespace QuantConnect.Indicators
     public class IndicatorBasedOptionPriceModelProvider : IOptionPriceModelProvider
     {
         /// <summary>
-        /// Singleton instance of the <see cref="IndicatorBasedOptionPriceModelProvider"/>
+        /// Gets the security manager instance to use
         /// </summary>
-        public static IndicatorBasedOptionPriceModelProvider Instance { get; } = new();
+        public SecurityManager Securities { get; }
 
-        private IndicatorBasedOptionPriceModelProvider()
+        /// <summary>
+        /// Creates a new instance of the <see cref="IndicatorBasedOptionPriceModelProvider"/> class
+        /// </summary>
+        public IndicatorBasedOptionPriceModelProvider(SecurityManager securities)
         {
+            Securities = securities;
         }
 
         /// <summary>
@@ -40,7 +45,7 @@ namespace QuantConnect.Indicators
         /// <returns>The option price model for the given symbol</returns>
         public IOptionPriceModel GetOptionPriceModel(Symbol symbol, OptionPricingModelType? pricingModelType = null)
         {
-            return new IndicatorBasedOptionPriceModel(pricingModelType, pricingModelType);
+            return new IndicatorBasedOptionPriceModel(pricingModelType, pricingModelType, securityProvider: Securities);
         }
 
         /// <summary>
@@ -57,7 +62,7 @@ namespace QuantConnect.Indicators
             IRiskFreeInterestRateModel riskFreeInterestRateModel = null,
             bool useMirrorContract = true)
         {
-            return new IndicatorBasedOptionPriceModel(optionModel, ivModel, dividendYieldModel, riskFreeInterestRateModel, useMirrorContract);
+            return new IndicatorBasedOptionPriceModel(optionModel, ivModel, dividendYieldModel, riskFreeInterestRateModel, useMirrorContract, securityProvider: Securities);
         }
     }
 }

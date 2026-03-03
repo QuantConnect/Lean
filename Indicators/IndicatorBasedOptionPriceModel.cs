@@ -14,11 +14,9 @@
 */
 
 using QuantConnect.Data;
-using QuantConnect.Data.Market;
 using QuantConnect.Logging;
+using QuantConnect.Securities;
 using QuantConnect.Securities.Option;
-using System;
-using System.Linq;
 
 namespace QuantConnect.Indicators
 {
@@ -37,6 +35,7 @@ namespace QuantConnect.Indicators
         private readonly bool _userSpecifiedDividendYieldModel;
         private readonly bool _useMirrorContract;
         private GreeksIndicators _indicators;
+        private readonly SecurityManager _securityProvider;
 
         /// <summary>
         /// Creates a new instance of the <see cref="IndicatorBasedOptionPriceModel"/> class
@@ -46,9 +45,11 @@ namespace QuantConnect.Indicators
         /// <param name="dividendYieldModel">The dividend yield model to be used by the indicators</param>
         /// <param name="riskFreeInterestRateModel">The risk free interest rate model to be used by the indicators</param>
         /// <param name="useMirrorContract">Whether to use the mirror contract when possible</param>
+        /// <param name="securityProvider">The security provider used to fetch the mirror contract</param>
         public IndicatorBasedOptionPriceModel(OptionPricingModelType? optionModel = null,
             OptionPricingModelType? ivModel = null, IDividendYieldModel dividendYieldModel = null,
-            IRiskFreeInterestRateModel riskFreeInterestRateModel = null, bool useMirrorContract = true)
+            IRiskFreeInterestRateModel riskFreeInterestRateModel = null, bool useMirrorContract = true,
+            SecurityManager securityProvider = null)
         {
             _optionPricingModelType = optionModel;
             _ivModelType = ivModel;
@@ -56,6 +57,7 @@ namespace QuantConnect.Indicators
             _riskFreeInterestRateModel = riskFreeInterestRateModel;
             _useMirrorContract = useMirrorContract;
             _userSpecifiedDividendYieldModel = dividendYieldModel != null;
+            _securityProvider = securityProvider;
         }
 
         /// <summary>
@@ -70,8 +72,6 @@ namespace QuantConnect.Indicators
         public override OptionPriceModelResult Evaluate(OptionPriceModelParameters parameters)
         {
             var contract = parameters.Contract;
-            var slice = parameters.Slice;
-
             // expired options have no price
             if (contract.Time.Date > contract.Expiry.Date)
             {
@@ -82,15 +82,28 @@ namespace QuantConnect.Indicators
                 return OptionPriceModelResult.None;
             }
 
+            var option = parameters.Security as Option;
+            var underlying = option.Underlying;
+
+            if (option.Price == 0 || underlying.Price == 0)
+            {
+                if (Log.DebuggingEnabled)
+                {
+                    Log.Debug($"IndicatorBasedOptionPriceModel.Evaluate(). Missing data for {option.Symbol} or {underlying.Symbol}.");
+                }
+                return OptionPriceModelResult.None;
+            }
+
+            var symbolsChanged = false;
             var contractSymbol = _contractSymbol;
             var mirrorContractSymbol = _mirrorContractSymbol;
-            var symbolsChanged = false;
+            Security mirrorOption = null;
+
             // These models are supposed to be one per contract (security instance), so we cache the symbols to avoid calling 
             // GetMirrorOptionSymbol multiple times. If the contract changes by any reason, we just update the cached symbols.
-            if (contractSymbol != contract.Symbol)
+            if (_contractSymbol != contract.Symbol)
             {
                 contractSymbol = _contractSymbol = contract.Symbol;
-
                 if (_useMirrorContract)
                 {
                     mirrorContractSymbol = _mirrorContractSymbol = contractSymbol.GetMirrorOptionSymbol();
@@ -104,79 +117,16 @@ namespace QuantConnect.Indicators
                 symbolsChanged = true;
             }
 
-            BaseData underlyingData = null;
-            BaseData optionData = null;
-            BaseData mirrorOptionData = null;
-
-            foreach (var useBars in new[] { true, false })
-            {
-                if (useBars)
-                {
-                    TradeBar underlyingTradeBar = null;
-                    QuoteBar underlyingQuoteBar = null;
-                    if ((slice.Bars.TryGetValue(contractSymbol.Underlying, out underlyingTradeBar) || 
-                         slice.QuoteBars.TryGetValue(contractSymbol.Underlying, out underlyingQuoteBar)) &&
-                        slice.QuoteBars.TryGetValue(contractSymbol, out var optionQuoteBar))
-                    {
-                        underlyingData = (BaseData)underlyingTradeBar ?? underlyingQuoteBar;
-                        optionData = optionQuoteBar;
-
-                        if (_useMirrorContract && slice.QuoteBars.TryGetValue(mirrorContractSymbol, out var mirrorOptionQuoteBar))
-                        {
-                            mirrorOptionData = mirrorOptionQuoteBar;
-                        }
-
-                        break;
-                    }
-                }
-                else
-                {
-                    if (slice.Ticks.TryGetValue(contractSymbol.Underlying, out var underlyingTicks) &&
-                        slice.Ticks.TryGetValue(contractSymbol, out var optionTicks))
-                    {
-                        // Get last underlying trade tick
-                        underlyingData = underlyingTicks.LastOrDefault(x => x.TickType == TickType.Trade);
-                        if (underlyingData == null)
-                        {
-                            continue;
-                        }
-
-                        // Get last option quote tick
-                        optionData = optionTicks.LastOrDefault(x => x.TickType == TickType.Quote);
-                        if (optionData == null)
-                        {
-                            underlyingData = null;
-                            continue;
-                        }
-
-                        // Try to get last mirror option quote tick
-                        if (_useMirrorContract && slice.Ticks.TryGetValue(_mirrorContractSymbol, out var mirrorOptionTicks))
-                        {
-                            mirrorOptionData = mirrorOptionTicks.LastOrDefault(x => x.TickType == TickType.Quote);
-                        }
-
-                        break;
-                    }
-                }
-            }
-
-            if (underlyingData == null || optionData == null)
+            if (!_securityProvider.TryGetValue(mirrorContractSymbol, out mirrorOption) || mirrorOption.Price == 0)
             {
                 if (Log.DebuggingEnabled)
                 {
-                    Log.Debug($"IndicatorBasedOptionPriceModel.Evaluate(). Missing data for {contractSymbol} or {contractSymbol.Underlying}.");
+                    Log.Debug($"IndicatorBasedOptionPriceModel.Evaluate(). Mirror contract {mirrorContractSymbol} not found or missing data. Using contract symbol only.");
                 }
-                return OptionPriceModelResult.None;
-            }
 
-            if (mirrorOptionData == null)
-            {
-                if (Log.DebuggingEnabled)
-                {
-                    Log.Debug($"IndicatorBasedOptionPriceModel.Evaluate(). Missing data for mirror option {mirrorContractSymbol}. Using contract symbol only.");
-                }
                 // Null so that the indicators don't consider the mirror option and don't expect data for it
                 mirrorContractSymbol = null;
+                mirrorOption = null;
             }
 
             if (_indicators == null || symbolsChanged ||
@@ -188,11 +138,12 @@ namespace QuantConnect.Indicators
                     _dividendYieldModel, _riskFreeInterestRateModel);
             }
 
-            _indicators.Update(underlyingData);
-            _indicators.Update(optionData);
-            if (mirrorOptionData != null)
+            var time = option.LocalTime;
+            _indicators.Update(new IndicatorDataPoint(underlying.Symbol, time, underlying.Price));
+            _indicators.Update(new IndicatorDataPoint(option.Symbol, time, option.Price));
+            if (mirrorOption != null)
             {
-                _indicators.Update(mirrorOptionData);
+                _indicators.Update(new IndicatorDataPoint(mirrorOption.Symbol, time, mirrorOption.Price));
             }
 
             var result = _indicators.CurrentResult;

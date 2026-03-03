@@ -14,41 +14,43 @@
 */
 
 using NUnit.Framework;
-using QuantConnect.Data;
 using QuantConnect.Data.Market;
 using QuantConnect.Indicators;
+using QuantConnect.Securities;
 using QuantConnect.Securities.Option;
 using QuantConnect.Tests.Common;
 using System;
-using System.Collections.Generic;
 
 namespace QuantConnect.Tests.Indicators
 {
     [TestFixture]
     public class IndicatorBasedOptionPriceModelTests
     {
-        [TestCase(true, 6.05391914652262, 0.3564563, 0.7560627, 0.0430897, 0.0662474, -4.3932945 * 365, 0.0000902)]
-        [TestCase(false, 5.05413609164657, 0.1428964, 0.9574846, 0.0311305, 0.0205564, -0.4502054 * 365, 0.0000057)]
+        [TestCase(true, 6.05392693521696, 0.3559978, 0.7560627, 0.0430897, 0.0663327, -1599.430292, 0.0000904)]
+        [TestCase(false, 5.05414551764534, 0.1427122, 0.957485, 0.0311303, 0.020584, -163.902082, 0.0000057)]
         public void WorksWithAndWithoutMirrorContract([Values] bool withMirrorContract, decimal expectedTheoreticalPrice,
             decimal expectedIv, decimal expectedDelta, decimal expectedGamma, decimal expectedVega,
             decimal expectedTheta, decimal expectedRho)
         {
-            GetTestData(true, true, withMirrorContract, out var option, out var contract, out var slice);
+            GetTestData(true, true, withMirrorContract, out var option, out var contract, out var securities);
 
-            var model = new IndicatorBasedOptionPriceModel();
+            var model = new IndicatorBasedOptionPriceModel(securityProvider: securities);
 
-            var result = model.Evaluate(option, slice, contract);
+            var result = model.Evaluate(new OptionPriceModelParameters(option, null, contract));
             var theoreticalPrice = result.TheoreticalPrice;
             var iv = result.ImpliedVolatility;
             var greeks = result.Greeks;
 
-            Assert.AreEqual(expectedTheoreticalPrice, theoreticalPrice);
-            Assert.AreEqual(expectedIv, iv);
-            Assert.AreEqual(expectedDelta, greeks.Delta);
-            Assert.AreEqual(expectedGamma, greeks.Gamma);
-            Assert.AreEqual(expectedVega, greeks.Vega);
-            Assert.AreEqual(expectedTheta, greeks.Theta);
-            Assert.AreEqual(expectedRho, greeks.Rho);
+            Assert.Multiple(() =>
+            {
+                Assert.AreEqual(expectedTheoreticalPrice, theoreticalPrice);
+                Assert.AreEqual(expectedIv, iv);
+                Assert.AreEqual(expectedDelta, greeks.Delta);
+                Assert.AreEqual(expectedGamma, greeks.Gamma);
+                Assert.AreEqual(expectedVega, greeks.Vega);
+                Assert.AreEqual(expectedTheta, greeks.Theta);
+                Assert.AreEqual(expectedRho, greeks.Rho);
+            });
         }
 
         [TestCase(false, false)]
@@ -56,16 +58,16 @@ namespace QuantConnect.Tests.Indicators
         [TestCase(false, true)]
         public void WontCalculateIfMissindData(bool withUnderlyingData, bool withOptionData)
         {
-            GetTestData(withUnderlyingData, withOptionData, true, out var option, out var contract, out var slice);
+            GetTestData(withUnderlyingData, withOptionData, true, out var option, out var contract, out var securities);
             
-            var model = new IndicatorBasedOptionPriceModel();
-            var result = model.Evaluate(option, slice, contract);
+            var model = new IndicatorBasedOptionPriceModel(securityProvider: securities);
+            var result = model.Evaluate(new OptionPriceModelParameters(option, null, contract));
 
             Assert.AreEqual(OptionPriceModelResult.None, result);
         }
 
         private static void GetTestData(bool withUnderlying, bool withOption, bool withMirrorOption,
-            out Option option, out OptionContract contract, out Slice slice)
+            out Option option, out OptionContract contract, out SecurityManager securities)
         {
             var underlyingSymbol = Symbols.GOOG;
             var date = new DateTime(2015, 11, 24);
@@ -74,33 +76,28 @@ namespace QuantConnect.Tests.Indicators
             var tz = TimeZones.NewYork;
             var underlyingPrice = 750m;
             var underlyingVolume = 10000;
-            var contractPrice = 5m;
-            var underlying = OptionPriceModelTests.GetEquity(underlyingSymbol, underlyingPrice, underlyingVolume, tz);
+            var contractPrice = 5.05m;
+            var mirrorContractPrice = 1.05m;
+            var underlying = OptionPriceModelTests.GetEquity(underlyingSymbol, 0m, underlyingVolume, tz);
             option = OptionPriceModelTests.GetOption(contractSymbol, underlying, tz);
             contract = OptionPriceModelTests.GetOptionContract(contractSymbol, underlyingSymbol, date);
 
             var time = date.Add(new TimeSpan(9, 31, 0));
-
-            var data = new List<BaseData>();
+            var timeKeeper = new TimeKeeper(time.ConvertToUtc(tz));
+            securities = new SecurityManager(timeKeeper);
 
             if (withUnderlying)
             {
-                var underlyingData = new TradeBar(time, underlyingSymbol, underlyingPrice, underlyingPrice, underlyingPrice, underlyingPrice, underlyingVolume, TimeSpan.FromMinutes(1));
-                data.Add(underlyingData);
+                var underlyingData = new Tick { Symbol = underlying.Symbol, Time = time, Value = underlyingPrice, Quantity = underlyingVolume, TickType = TickType.Trade };
                 underlying.SetMarketPrice(underlyingData);
+                securities.Add(underlying);
             }
 
             if (withOption)
             {
-                var contractData = new QuoteBar(time,
-                    contractSymbol,
-                    new Bar(contractPrice, contractPrice, contractPrice, contractPrice),
-                    10,
-                    new Bar(contractPrice + 0.1m, contractPrice + 0.1m, contractPrice + 0.1m, contractPrice + 0.1m),
-                    10,
-                    TimeSpan.FromMinutes(1));
-                data.Add(contractData);
+                var contractData = new Tick { Symbol = contractSymbol, Time = time, Value = contractPrice, Quantity = 10, TickType = TickType.Trade };
                 option.SetMarketPrice(contractData);
+                securities.Add(option);
             }
 
             if (withMirrorOption)
@@ -112,17 +109,11 @@ namespace QuantConnect.Tests.Indicators
                     contractSymbol.ID.OptionRight == OptionRight.Call ? OptionRight.Put : OptionRight.Call,
                     contractSymbol.ID.StrikePrice,
                     contractSymbol.ID.Date);
-                var mirrorContractPrice = 1m;
-                data.Add(new QuoteBar(time,
-                    mirrorContractSymbol,
-                    new Bar(mirrorContractPrice, mirrorContractPrice, mirrorContractPrice, mirrorContractPrice),
-                    10,
-                    new Bar(mirrorContractPrice + 0.1m, mirrorContractPrice + 0.1m, mirrorContractPrice + 0.1m, mirrorContractPrice + 0.1m),
-                    10,
-                    TimeSpan.FromMinutes(1)));
+                var mirrorContractData = new Tick { Symbol = mirrorContractSymbol, Time = time, Value = mirrorContractPrice, Quantity = 10, TickType = TickType.Trade };
+                var mirrorOption = OptionPriceModelTests.GetOption(mirrorContractSymbol, underlying, tz);
+                mirrorOption.SetMarketPrice(mirrorContractData);
+                securities.Add(mirrorOption);
             }
-
-            slice = new Slice(time, data, time.ConvertToUtc(tz));
         }
     }
 }
