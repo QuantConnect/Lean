@@ -72,7 +72,10 @@ namespace QuantConnect.Algorithm.CSharp
                         throw new RegressionTestException("No configuration for underlying was found!");
                     }
 
-                    if (!Portfolio.Invested)
+                    if (!Portfolio.Invested &&
+                        // This security will be liquidated due to impending split, let's not trade it again after the contract is removed.
+                        // Trying to trade it will make the security to be re-added
+                        Securities[_contract2].IsTradable)
                     {
                         Buy(_contract2, 1);
                     }

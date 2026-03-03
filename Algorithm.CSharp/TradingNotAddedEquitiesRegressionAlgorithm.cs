@@ -11,6 +11,7 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
+ *
 */
 
 using System.Collections.Generic;
@@ -21,70 +22,92 @@ using QuantConnect.Orders;
 namespace QuantConnect.Algorithm.CSharp
 {
     /// <summary>
-    /// Related to GH issue 4275, reproduces a failed string to symbol implicit conversion asserting the exception
-    /// thrown contains the used ticker
+    /// Regression algorithm asserting that equities can be traded even if they are not added to the algorithm.
+    /// They will be automatically added as tradable securities an seeded when an order is placed for them.
     /// </summary>
-    public class StringToSymbolImplicitConversionRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
+    public class TradingNotAddedEquitiesRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
-        /// <summary>
-        /// Initialise the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must initialized.
-        /// </summary>
+        private readonly Symbol _equitySymbol = QuantConnect.Symbol.Create("SPY", SecurityType.Equity, Market.USA);
+
         public override void Initialize()
         {
-            SetStartDate(2013, 10, 07);
-            SetEndDate(2013, 10, 08);
+            SetStartDate(2013, 10, 04);
+            SetEndDate(2013, 10, 04);
+            SetCash(1000000);
 
-            AddEquity("SPY", Resolution.Minute);
+            // We won't trade IBM, but we need data to trigger the SPY trade in OnData
+            AddEquity("IBM");
         }
 
-        /// <summary>
-        /// OnData event is the primary entry point for your algorithm. Each new data point will be pumped in here.
-        /// </summary>
-        /// <param name="data">Slice object keyed by symbol containing the stock data</param>
+        protected void AssertSecurityIsAdded(Symbol symbol)
+        {
+            if (!Securities.TryGetValue(symbol, out var security) || ActiveSecurities.ContainsKey(symbol) || !security.IsTradable)
+            {
+                throw new RegressionTestException($"Contract {symbol} was not added as tradable security");
+            }
+        }
+
+        protected void AssertSecurityIsNotAdded(Symbol symbol)
+        {
+            if (Securities.TryGetValue(symbol, out var security) && ActiveSecurities.ContainsKey(symbol) && security.IsTradable)
+            {
+                throw new RegressionTestException($"Contract {symbol} was added as tradable security when it should not have been");
+            }
+        }
+
         public override void OnData(Slice slice)
         {
-            var ticket = MarketOrder("PEPE", 1);
-
-            if (ticket.Status != OrderStatus.Invalid)
-            {
-                throw new RegressionTestException($"Expected order to be invalid since PEPE is not a valid ticker, but was {ticket.Status}");
-            }
-
             if (!Portfolio.Invested)
             {
-                SetHoldings("SPY", 1);
+                AssertSecurityIsNotAdded(_equitySymbol);
+                
+                var ticket = Buy(_equitySymbol, 1);
+                if (ticket.Status == OrderStatus.Invalid)
+                {
+                    throw new RegressionTestException($"Order for {_equitySymbol} was rejected");
+                }
+
+                AssertSecurityIsAdded(_equitySymbol);
+
+                // We are done
+                Quit();
             }
+        }
+
+        public override void OnOrderEvent(OrderEvent orderEvent)
+        {
+            Log(orderEvent.ToString());
         }
 
         /// <summary>
         /// This is used by the regression test system to indicate if the open source Lean repository has the required data to run this algorithm.
         /// </summary>
-        public bool CanRunLocally { get; } = true;
+        public virtual bool CanRunLocally { get; } = true;
 
         /// <summary>
         /// This is used by the regression test system to indicate which languages this algorithm is written in.
         /// </summary>
-        public List<Language> Languages { get; } = new() { Language.CSharp, Language.Python };
+        public virtual List<Language> Languages { get; } = new() { Language.CSharp };
 
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
-        public long DataPoints => 1583;
+        public virtual long DataPoints => 10;
 
         /// <summary>
         /// Data Points count of the algorithm history
         /// </summary>
-        public int AlgorithmHistoryDataPoints => 0;
+        public virtual int AlgorithmHistoryDataPoints => 7;
 
         /// <summary>
         /// Final status of the algorithm
         /// </summary>
-        public AlgorithmStatus AlgorithmStatus => AlgorithmStatus.Completed;
+        public virtual AlgorithmStatus AlgorithmStatus => AlgorithmStatus.Completed;
 
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
         /// </summary>
-        public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
+        public virtual Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
         {
             {"Total Orders", "1"},
             {"Average Win", "0%"},
@@ -92,8 +115,8 @@ namespace QuantConnect.Algorithm.CSharp
             {"Compounding Annual Return", "0%"},
             {"Drawdown", "0%"},
             {"Expectancy", "0"},
-            {"Start Equity", "100000"},
-            {"End Equity", "98824.68"},
+            {"Start Equity", "1000000"},
+            {"End Equity", "999999"},
             {"Net Profit", "0%"},
             {"Sharpe Ratio", "0"},
             {"Sortino Ratio", "0"},
@@ -108,12 +131,12 @@ namespace QuantConnect.Algorithm.CSharp
             {"Information Ratio", "0"},
             {"Tracking Error", "0"},
             {"Treynor Ratio", "0"},
-            {"Total Fees", "$3.44"},
-            {"Estimated Strategy Capacity", "$56000000.00"},
+            {"Total Fees", "$1.00"},
+            {"Estimated Strategy Capacity", "$0"},
             {"Lowest Capacity Asset", "SPY R735QTJ8XC9X"},
-            {"Portfolio Turnover", "49.82%"},
+            {"Portfolio Turnover", "0.01%"},
             {"Drawdown Recovery", "0"},
-            {"OrderListHash", "3da9fa60bf95b9ed148b95e02e0cfc9e"}
+            {"OrderListHash", "0bb919a1b4258ad8983506f2843f4db5"}
         };
     }
 }
