@@ -1,0 +1,12 @@
+{
+    /*
+        Recommended VS Code extensions for the LEAN engine
+    */
+    "recommendations": [
+        "ms-dotnettools.csharp",
+        "ms-dotnettools.csdevkit",
+        "ms-vscode-remote.remote-containers",
+        "ms-dotnettools.vscodeintellicode-csharp",
+        "ms-python.python"
+    ]
+}
