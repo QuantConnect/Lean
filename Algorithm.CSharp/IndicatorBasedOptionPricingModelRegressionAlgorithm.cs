@@ -99,8 +99,7 @@ namespace QuantConnect.Algorithm.CSharp
                     }
 
                     // Manually evaluate the price model, just in case
-                    var security = Securities[contract.Symbol] as Option;
-                    var result = security.EvaluatePriceModel(slice, contract);
+                    var result = contractSecurity.EvaluatePriceModel(slice, contract);
 
                     if (result == null ||
                         result.TheoreticalPrice != theoreticalPrice ||

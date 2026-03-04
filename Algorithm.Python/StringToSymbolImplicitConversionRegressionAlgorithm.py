@@ -33,7 +33,7 @@ class StringToSymbolImplicitConversionRegressionAlgorithm(QCAlgorithm):
         '''
         ticket = self.market_order("PEPE", 1)
 
-        if ticket.status != OrderStatus.Invalid:
+        if ticket.status != OrderStatus.INVALID:
             raise Exception(f"Expected order to be invalid since PEPE is not a valid ticker, but was {ticket.status}")
 
         if not self.portfolio.invested:
