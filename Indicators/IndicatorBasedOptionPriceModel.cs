@@ -26,15 +26,12 @@ namespace QuantConnect.Indicators
     /// </summary>
     public class IndicatorBasedOptionPriceModel : OptionPriceModel
     {
-        private Symbol _contractSymbol;
-        private Symbol _mirrorContractSymbol;
         private readonly OptionPricingModelType? _optionPricingModelType;
         private readonly OptionPricingModelType? _ivModelType;
         private IDividendYieldModel _dividendYieldModel;
         private readonly IRiskFreeInterestRateModel _riskFreeInterestRateModel;
         private readonly bool _userSpecifiedDividendYieldModel;
         private readonly bool _useMirrorContract;
-        private GreeksIndicators _indicators;
         private readonly SecurityManager _securityProvider;
 
         /// <summary>
@@ -85,43 +82,49 @@ namespace QuantConnect.Indicators
             var option = parameters.Security as Option;
             var underlying = option.Underlying;
 
-            if (option.Price == 0 || underlying.Price == 0)
+            if (option.Price == 0)
             {
                 if (Log.DebuggingEnabled)
                 {
-                    Log.Debug($"IndicatorBasedOptionPriceModel.Evaluate(). Missing data for {option.Symbol} or {underlying.Symbol}.");
+                    Log.Debug($"IndicatorBasedOptionPriceModel.Evaluate(). Missing data for the option security {option.Symbol}.");
                 }
                 return OptionPriceModelResult.None;
             }
 
-            var symbolsChanged = false;
-            var contractSymbol = _contractSymbol;
-            var mirrorContractSymbol = _mirrorContractSymbol;
-            Security mirrorOption = null;
-
-            // These models are supposed to be one per contract (security instance), so we cache the symbols to avoid calling 
-            // GetMirrorOptionSymbol multiple times. If the contract changes by any reason, we just update the cached symbols.
-            if (_contractSymbol != contract.Symbol)
+            if (underlying.Price == 0)
             {
-                contractSymbol = _contractSymbol = contract.Symbol;
-                if (_useMirrorContract)
+                if (Log.DebuggingEnabled)
                 {
-                    mirrorContractSymbol = _mirrorContractSymbol = contractSymbol.GetMirrorOptionSymbol();
+                    Log.Debug($"IndicatorBasedOptionPriceModel.Evaluate(). Missing data for the underlying security {underlying.Symbol}.");
                 }
+                return OptionPriceModelResult.None;
+                }
+
+            var contractSymbol = contract.Symbol;
+            Symbol mirrorContractSymbol = null;
 
                 if (!_userSpecifiedDividendYieldModel)
                 {
                     _dividendYieldModel = GreeksIndicators.GetDividendYieldModel(contractSymbol);
                 }
 
-                symbolsChanged = true;
+            if (_useMirrorContract)
+            {
+                mirrorContractSymbol = contractSymbol.GetMirrorOptionSymbol();
             }
 
-            if (!_securityProvider.TryGetValue(mirrorContractSymbol, out mirrorOption) || mirrorOption.Price == 0)
+            if (!_securityProvider.TryGetValue(mirrorContractSymbol, out var mirrorOption) || mirrorOption.Price == 0)
             {
                 if (Log.DebuggingEnabled)
                 {
-                    Log.Debug($"IndicatorBasedOptionPriceModel.Evaluate(). Mirror contract {mirrorContractSymbol} not found or missing data. Using contract symbol only.");
+                    if (mirrorOption == null)
+                    {
+                        Log.Debug($"IndicatorBasedOptionPriceModel.Evaluate(). Mirror contract {mirrorContractSymbol} not found. Using contract symbol only.");
+                }
+                    else
+                    {
+                        Log.Debug($"IndicatorBasedOptionPriceModel.Evaluate(). Missing data for the mirror option contract {mirrorContractSymbol}. Using contract symbol only.");
+                    }
                 }
 
                 // Null so that the indicators don't consider the mirror option and don't expect data for it
@@ -129,27 +132,18 @@ namespace QuantConnect.Indicators
                 mirrorOption = null;
             }
 
-            if (_indicators == null || symbolsChanged ||
-                // The mirror contract can go from null to non-null and vice versa, so we need to check if the symbol has changed in that case as well
-                (_indicators.UseMirrorOption && mirrorContractSymbol == null) || (!_indicators.UseMirrorOption && mirrorContractSymbol != null))
-            {
-                // We'll try to reuse the indicators instance whenever possible
-                _indicators = new GreeksIndicators(contractSymbol, mirrorContractSymbol, _optionPricingModelType, _ivModelType,
+            var indicators = new GreeksIndicators(contractSymbol, mirrorContractSymbol, _optionPricingModelType, _ivModelType,
                     _dividendYieldModel, _riskFreeInterestRateModel);
-            }
 
             var time = option.LocalTime;
-            _indicators.Update(new IndicatorDataPoint(underlying.Symbol, time, underlying.Price));
-            _indicators.Update(new IndicatorDataPoint(option.Symbol, time, option.Price));
+            indicators.Update(new IndicatorDataPoint(underlying.Symbol, time, underlying.Price));
+            indicators.Update(new IndicatorDataPoint(option.Symbol, time, option.Price));
             if (mirrorOption != null)
             {
-                _indicators.Update(new IndicatorDataPoint(mirrorOption.Symbol, time, mirrorOption.Price));
+                indicators.Update(new IndicatorDataPoint(mirrorOption.Symbol, time, mirrorOption.Price));
             }
 
-            var result = _indicators.CurrentResult;
-            _indicators.Reset();
-
-            return result;
+            return indicators.CurrentResult;
         }
     }
 }
