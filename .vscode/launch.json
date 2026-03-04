@@ -2,24 +2,22 @@
     /*
         VS Code Launch configurations for the LEAN engine
 
-        Launch:
-        Builds the project with dotnet 6 and then launches the program using coreclr; supports debugging.
-        In order to use this you need dotnet 6 on your system path, As well as the C# extension from the 
-        marketplace.
+        Launch LEAN:
+        Builds the project and then launches the program using coreclr; supports debugging.
+        Requires the C# extension from the marketplace.
+
+        Run Tests:
+        Builds and runs tests with an optional filter prompt.
 
         Attach to Python:
         Will attempt to attach to LEAN running locally using DebugPy. Requires that the process is
         actively running and config is set: "debugging": true, "debugging-method": "DebugPy",
-        Requires Python extension from the marketplace. Currently only works with algorithms in
-        Algorithm.Python directory. This is because we map that directory to our build directory
-        that contains the py file at runtime. If using another location change "localRoot" value 
-        to the directory in use.
+        Requires Python extension from the marketplace.
     */
-
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "Launch",
+            "name": "Launch LEAN",
             "type": "coreclr",
             "request": "launch",
             "preLaunchTask": "build",
@@ -34,14 +32,33 @@
             "internalConsoleOptions": "neverOpen"
         },
         {
+            "name": "Run Tests",
+            "type": "coreclr",
+            "request": "launch",
+            "preLaunchTask": "build",
+            "program": "dotnet",
+            "args": [
+                "test",
+                "${workspaceFolder}/Tests/QuantConnect.Tests.csproj",
+                "--no-build",
+                "--filter",
+                "TestCategory!=TravisExclude&TestCategory!=ResearchRegressionTests"
+            ],
+            "cwd": "${workspaceFolder}",
+            "console": "integratedTerminal",
+            "internalConsoleOptions": "neverOpen"
+        },
+        {
             "name": "Attach to Python",
             "type": "python",
             "request": "attach",
             "port": 5678,
-            "pathMappings":[{ 
-                "localRoot": "${workspaceFolder}", 
-                "remoteRoot": "${workspaceFolder}"
-            }]
+            "pathMappings": [
+                {
+                    "localRoot": "${workspaceFolder}",
+                    "remoteRoot": "${workspaceFolder}"
+                }
+            ]
         }
     ]
 }
