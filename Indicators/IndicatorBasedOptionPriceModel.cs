@@ -98,15 +98,15 @@ namespace QuantConnect.Indicators
                     Log.Debug($"IndicatorBasedOptionPriceModel.Evaluate(). Missing data for the underlying security {underlying.Symbol}.");
                 }
                 return OptionPriceModelResult.None;
-                }
+            }
 
             var contractSymbol = contract.Symbol;
             Symbol mirrorContractSymbol = null;
 
-                if (!_userSpecifiedDividendYieldModel)
-                {
-                    _dividendYieldModel = GreeksIndicators.GetDividendYieldModel(contractSymbol);
-                }
+            if (!_userSpecifiedDividendYieldModel)
+            {
+                _dividendYieldModel = GreeksIndicators.GetDividendYieldModel(contractSymbol);
+            }
 
             if (_useMirrorContract)
             {
@@ -120,7 +120,7 @@ namespace QuantConnect.Indicators
                     if (mirrorOption == null)
                     {
                         Log.Debug($"IndicatorBasedOptionPriceModel.Evaluate(). Mirror contract {mirrorContractSymbol} not found. Using contract symbol only.");
-                }
+                    }
                     else
                     {
                         Log.Debug($"IndicatorBasedOptionPriceModel.Evaluate(). Missing data for the mirror option contract {mirrorContractSymbol}. Using contract symbol only.");
