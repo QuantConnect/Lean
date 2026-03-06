@@ -51,6 +51,8 @@ namespace QuantConnect.Brokerages
             OrderType.ComboLimit
         };
 
+        private readonly Dictionary<int, List<SecurityType>> _pendingComboLegs = new();
+
         /// <summary>
         /// Initializes a new instance of the <see cref="InteractiveBrokersFixModel"/> class
         /// </summary>
@@ -74,12 +76,36 @@ namespace QuantConnect.Brokerages
         /// <returns>True if the brokerage could process the order, false otherwise</returns>
         public override bool CanSubmitOrder(Security security, Order order, out BrokerageMessageEvent message)
         {
-            if (security.Symbol.SecurityType == SecurityType.FutureOption && order is ComboOrder)
+            // only accumulate supported combo order types to avoid stale entries in the dict
+            if (order is ComboOrder && order.GroupOrderManager != null && SupportedOrderTypes.Contains(order.Type))
             {
-                message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
-                    Messages.InteractiveBrokersFixModel.UnsupportedComboOrdersForFutureOptions(this, order));
-                return false;
+                var groupManager = order.GroupOrderManager;
+                lock (_pendingComboLegs)
+                {
+                    if (!_pendingComboLegs.TryGetValue(groupManager.Id, out var securityTypes))
+                    {
+                        securityTypes = new List<SecurityType>();
+                        _pendingComboLegs[groupManager.Id] = securityTypes;
+                    }
+                    securityTypes.Add(security.Symbol.SecurityType);
+
+                    // true if we have the full combo
+                    if (securityTypes.Count >= groupManager.Count)
+                    {
+                        // remove to avoid stale entries once the combo is complete
+                        _pendingComboLegs.Remove(groupManager.Id);
+
+                        // reject combos that mix FutureOption and Future legs
+                        if (securityTypes.Contains(SecurityType.FutureOption) && securityTypes.Contains(SecurityType.Future))
+                        {
+                            message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
+                                Messages.InteractiveBrokersFixModel.UnsupportedFopFutureComboOrders(this, order));
+                            return false;
+                        }
+                    }
+                }
             }
+
             return base.CanSubmitOrder(security, order, out message);
         }
     }
