@@ -30,15 +30,15 @@ jobs:
       - name: Write ToolBox config.json
         run: |
           printf '{\n  "data-folder": "%s/Lean/Data/",\n  "temp-output-directory": "%s/Lean/Data"\n}\n' \
-            "${{ github.workspace }}" "${{ github.workspace }}" > config.json
+            "${{ github.workspace }}" "${{ github.workspace }}" \
+            > Lean.Brokerages.ByBit/QuantConnect.BybitBrokerage.ToolBox/config.json
 
       - name: Run Bybit SPDB updater
-        run: |
-          dotnet run --project Lean.Brokerages.ByBit/QuantConnect.BybitBrokerage.ToolBox \
-            -- --app updater
+        working-directory: Lean.Brokerages.ByBit/QuantConnect.BybitBrokerage.ToolBox
+        run: dotnet run -- --app updater
 
       - name: Cleanup config.json
-        run: rm -f config.json
+        run: rm -f Lean.Brokerages.ByBit/QuantConnect.BybitBrokerage.ToolBox/config.json
 
       - name: Check for changes
         id: diff
