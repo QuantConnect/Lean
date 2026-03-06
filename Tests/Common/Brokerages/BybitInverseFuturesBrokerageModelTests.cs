@@ -13,10 +13,15 @@
  * limitations under the License.
  */
 
+using System;
 using NUnit.Framework;
 using QuantConnect.Brokerages;
+using QuantConnect.Data.Market;
+using QuantConnect.Orders;
 using QuantConnect.Orders.Fees;
+using QuantConnect.Securities;
 using QuantConnect.Tests.Brokerages;
+using QuantConnect.Tests.Engine.DataFeeds;
 
 namespace QuantConnect.Tests.Common.Brokerages
 {
@@ -67,6 +72,37 @@ namespace QuantConnect.Tests.Common.Brokerages
 
             var model = new BybitInverseFuturesBrokerageModel(accountType);
             Assert.AreEqual(expectedLeverage, model.GetLeverage(security));
+        }
+
+        [TestCase(10, 0.40, Description = "leverage=10 => initialMargin ≈ 4 / 0.267 / 10 * 0.267 = 0.40 USD")]
+        [TestCase(25, 0.16, Description = "leverage=25 => initialMargin ≈ 4 / 0.267 / 25 * 0.267 = 0.16 USD")]
+        public void GetBuyingPowerUsesUsdBalance_WithDifferentLeverage(decimal leverage, double expectedInitialMarginUsd)
+        {
+            // Reproduces the live trading scenario: Bybit UTA reports TotalAvailableBalance as USD
+            // (no ADA in account), so the margin model must use USD as collateral.
+            var algo = new AlgorithmStub();
+            algo.SetBrokerageModel(BrokerageName.BybitInverseFutures, AccountType.Margin);
+            algo.SetFinishedWarmingUp();
+
+            var adaUsd = algo.AddCryptoFuture("ADAUSD");
+            adaUsd.SetLeverage(leverage);
+
+            const decimal adaPrice = 0.267m;
+            const decimal usdBalance = 100m;
+
+            adaUsd.QuoteCurrency.SetAmount(usdBalance); // USD = 100 (from GetCashBalance)
+            adaUsd.BaseCurrency.SetAmount(0m);           // ADA = 0 (no base asset in account)
+            adaUsd.BaseCurrency.ConversionRate = adaPrice;
+            adaUsd.QuoteCurrency.ConversionRate = 1m;
+            adaUsd.SetMarketPrice(new TradeBar(new DateTime(2026, 1, 1), adaUsd.Symbol, adaPrice, adaPrice, adaPrice, adaPrice, volume: 1m));
+
+            // Buying power = USD balance regardless of leverage
+            var buyingPower = adaUsd.BuyingPowerModel.GetBuyingPower(new BuyingPowerParameters(algo.Portfolio, adaUsd, OrderDirection.Buy));
+            Assert.AreEqual((double)usdBalance, (double)buyingPower.Value, delta: 0.01);
+
+            // Initial margin scales inversely with leverage
+            var initialMargin = adaUsd.BuyingPowerModel.GetInitialMarginRequirement(new InitialMarginParameters(adaUsd, 4));
+            Assert.AreEqual(expectedInitialMarginUsd, (double)initialMargin.Value, delta: 0.05);
         }
     }
 }
