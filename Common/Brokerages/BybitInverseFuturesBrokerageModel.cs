@@ -16,6 +16,7 @@
 using QuantConnect.Benchmarks;
 using QuantConnect.Orders.Fees;
 using QuantConnect.Securities;
+using QuantConnect.Securities.CryptoFuture;
 
 namespace QuantConnect.Brokerages;
 
@@ -52,5 +53,19 @@ public class BybitInverseFuturesBrokerageModel : BybitBrokerageModel
     public override IFeeModel GetFeeModel(Security security)
     {
         return new BybitFuturesFeeModel();
+    }
+
+    /// <summary>
+    /// Gets a new buying power model for the security
+    /// </summary>
+    /// <param name="security">The security to get a buying power model for</param>
+    /// <returns>The buying power model for this brokerage/security</returns>
+    public override IBuyingPowerModel GetBuyingPowerModel(Security security)
+    {
+        if (security.Type == SecurityType.CryptoFuture)
+        {
+            return new BybitInverseFuturesMarginModel(GetLeverage(security));
+        }
+        return base.GetBuyingPowerModel(security);
     }
 }
