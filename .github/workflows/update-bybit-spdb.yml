@@ -1,0 +1,76 @@
+name: Update Bybit SPDB
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  update-spdb:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Lean
+        uses: actions/checkout@v4
+        with:
+          path: Lean
+
+      - name: Checkout Lean.Brokerages.ByBit
+        uses: actions/checkout@v4
+        with:
+          repository: QuantConnect/Lean.Brokerages.ByBit
+          path: Lean.Brokerages.ByBit
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '6.0.x'
+
+      - name: Write ToolBox config.json
+        run: |
+          cat > Lean.Brokerages.ByBit/QuantConnect.BybitBrokerage.ToolBox/config.json <<'EOF'
+          {
+            "data-folder": "${{ github.workspace }}/Lean/Data/",
+            "temp-output-directory": "${{ github.workspace }}/Lean/Data"
+          }
+          EOF
+
+      - name: Run Bybit SPDB updater
+        run: |
+          dotnet run --project Lean.Brokerages.ByBit/QuantConnect.BybitBrokerage.ToolBox \
+            -- --app updater
+
+      - name: Cleanup config.json
+        run: rm -f Lean.Brokerages.ByBit/QuantConnect.BybitBrokerage.ToolBox/config.json
+
+      - name: Check for changes
+        id: diff
+        working-directory: Lean
+        run: |
+          git diff --quiet Data/symbol-properties/symbol-properties-database.csv \
+            && echo "changed=false" >> $GITHUB_OUTPUT \
+            || echo "changed=true" >> $GITHUB_OUTPUT
+
+      - name: Create branch and PR
+        if: steps.diff.outputs.changed == 'true'
+        working-directory: Lean
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          BRANCH="update-bybit-spdb-$(date +%Y%m%d)"
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git checkout -b "$BRANCH"
+          git add Data/symbol-properties/symbol-properties-database.csv
+          git commit -m "Update SPDB - Bybit"
+          git push origin "$BRANCH"
+          gh pr create \
+            --title "Update SPDB - Bybit" \
+            --body "Automated update of Bybit entries in symbol-properties-database.csv via Bybit API." \
+            --base master \
+            --head "$BRANCH"
+
+      - name: No changes
+        if: steps.diff.outputs.changed == 'false'
+        run: echo "symbol-properties-database.csv is already up to date."
