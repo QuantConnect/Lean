@@ -29,12 +29,8 @@ jobs:
 
       - name: Write ToolBox config.json
         run: |
-          cat > Lean.Brokerages.ByBit/QuantConnect.BybitBrokerage.ToolBox/config.json <<'EOF'
-          {
-            "data-folder": "${{ github.workspace }}/Lean/Data/",
-            "temp-output-directory": "${{ github.workspace }}/Lean/Data"
-          }
-          EOF
+          printf '{\n  "data-folder": "%s/Lean/Data/",\n  "temp-output-directory": "%s/Lean/Data"\n}\n' \
+            "${{ github.workspace }}" "${{ github.workspace }}" > config.json
 
       - name: Run Bybit SPDB updater
         run: |
@@ -42,7 +38,7 @@ jobs:
             -- --app updater
 
       - name: Cleanup config.json
-        run: rm -f Lean.Brokerages.ByBit/QuantConnect.BybitBrokerage.ToolBox/config.json
+        run: rm -f config.json
 
       - name: Check for changes
         id: diff
