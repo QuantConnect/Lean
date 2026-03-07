@@ -73,7 +73,7 @@ As a **contributor** you will push your completed **local** topic branch to **or
 
 The upstream repository holds a single primary branch that we maintain:
 
-* **upstream/master** - This is the where main development takes place
+* **upstream/master** - This is where main development takes place
 
 ## Topic Branches
 
@@ -103,10 +103,10 @@ $ git add --all
 $ git commit
 ```
 
-You can push your changes to your fork's master branch using:
+You can push your changes to your fork's topic branch using:
 
 ```bash
-$ git push origin master
+$ git push origin bug-123-short-issue-description
 ```
 
 When committing, be sure to follow [best practices](https://github.com/erlang/otp/wiki/Writing-good-commit-messages) writing good commit descriptions.
