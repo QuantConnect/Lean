@@ -1,0 +1,195 @@
+/*
+ * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
+ * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+*/
+
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using QuantConnect.Brokerages;
+using QuantConnect.Data;
+using QuantConnect.Data.Market;
+using QuantConnect.Interfaces;
+using QuantConnect.Orders;
+using QuantConnect.Securities.Option;
+
+namespace QuantConnect.Algorithm.CSharp
+{
+    /// <summary>
+    /// Regression algorithm asserting that InteractiveBrokers brokerage model does not support index options exercise
+    /// </summary>
+    public class InteractiveBrokersBrokerageDisablesIndexOptionsExerciseRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
+    {
+        private Option _option;
+
+        private OptionContract _contract;
+
+        private bool _marketOrderDone;
+
+        private bool _triedExercise;
+
+        private bool _automaticallyExercised;
+
+        private decimal _initialCash = 200000;
+
+        public override void Initialize()
+        {
+            SetStartDate(2021, 1, 4);
+            SetEndDate(2021, 1, 30);
+            SetCash(_initialCash);
+
+            SetBrokerageModel(new InteractiveBrokersBrokerageModel());
+
+            var index = AddIndex("SPX", Resolution.Hour, fillForward: true);
+            var indexOption = AddIndexOption(index.Symbol, Resolution.Hour, fillForward: true);
+            indexOption.SetFilter(filterFunc => filterFunc.CallsOnly());
+
+            _option = indexOption;
+        }
+
+        public override void OnData(Slice slice)
+        {
+            if (_triedExercise || !_option.Exchange.ExchangeOpen)
+            {
+                return;
+            }
+
+            if (_contract == null)
+            {
+                OptionChain contracts;
+                if (!slice.OptionChains.TryGetValue(_option.Symbol, out contracts) || !contracts.Any())
+                {
+                    return;
+                }
+
+                _contract = contracts.First();
+            }
+
+            var expiry = _contract.Expiry.ConvertToUtc(_option.Exchange.TimeZone).Date;
+
+            if (UtcTime.Date < expiry && !_marketOrderDone)
+            {
+                if (MarketOrder(_contract.Symbol, 1).Status != OrderStatus.Filled)
+                {
+                    throw new RegressionTestException("Expected market order to fill immediately");
+                }
+
+                _marketOrderDone = true;
+
+                return;
+            }
+
+            if (!_triedExercise && UtcTime.Date == expiry)
+            {
+                if (ExerciseOption(_contract.Symbol, 1).Status == OrderStatus.Filled)
+                {
+                    throw new RegressionTestException($"Expected index option to not be exercisable on its expiration date. " +
+                                        $"Time: {UtcTime}. Expiry: {_contract.Expiry.ConvertToUtc(_option.Exchange.TimeZone)}");
+                }
+
+                _triedExercise = true;
+            }
+        }
+
+        public override void OnOrderEvent(OrderEvent orderEvent)
+        {
+            // The manual exercise failed and we are not placing any other orders, so this is the automatic exercise
+            if (orderEvent.Status == OrderStatus.Filled &&
+                _marketOrderDone &&
+                _triedExercise &&
+                UtcTime.Date >= _contract.Expiry.ConvertToUtc(_option.Exchange.TimeZone).Date)
+            {
+                var profit = Portfolio.TotalPortfolioValue - _initialCash;
+                if (profit < 0)
+                {
+                    throw new RegressionTestException($"Expected profit to be positive. Actual: {profit}");
+                }
+
+                _automaticallyExercised = true;
+            }
+        }
+
+        public override void OnEndOfAlgorithm()
+        {
+            if (!_triedExercise)
+            {
+                throw new RegressionTestException("Expected to try to exercise index option before and on expiry");
+            }
+
+            if (!_automaticallyExercised || Portfolio.Cash <= _initialCash)
+            {
+                throw new RegressionTestException("Expected index option to have ben automatically exercised on expiry and to have received cash");
+            }
+        }
+
+        /// <summary>
+        /// This is used by the regression test system to indicate if the open source Lean repository has the required data to run this algorithm.
+        /// </summary>
+        public bool CanRunLocally { get; } = true;
+
+        /// <summary>
+        /// This is used by the regression test system to indicate which languages this algorithm is written in.
+        /// </summary>
+        public List<Language> Languages { get; } = new() { Language.CSharp };
+
+        /// <summary>
+        /// Data Points count of all time slices of algorithm
+        /// </summary>
+        public long DataPoints => 1108;
+
+        /// <summary>
+        /// Data Points count of the algorithm history
+        /// </summary>
+        public int AlgorithmHistoryDataPoints => 0;
+
+        /// <summary>
+        /// Final status of the algorithm
+        /// </summary>
+        public AlgorithmStatus AlgorithmStatus => AlgorithmStatus.Completed;
+
+        /// <summary>
+        /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
+        /// </summary>
+        public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
+        {
+            {"Total Orders", "3"},
+            {"Average Win", "2.19%"},
+            {"Average Loss", "0%"},
+            {"Compounding Annual Return", "36.041%"},
+            {"Drawdown", "3.600%"},
+            {"Expectancy", "0"},
+            {"Start Equity", "200000"},
+            {"End Equity", "204383"},
+            {"Net Profit", "2.192%"},
+            {"Sharpe Ratio", "4.088"},
+            {"Sortino Ratio", "0"},
+            {"Probabilistic Sharpe Ratio", "89.872%"},
+            {"Loss Rate", "0%"},
+            {"Win Rate", "100%"},
+            {"Profit-Loss Ratio", "0"},
+            {"Alpha", "0"},
+            {"Beta", "0"},
+            {"Annual Standard Deviation", "0.177"},
+            {"Annual Variance", "0.031"},
+            {"Information Ratio", "4.102"},
+            {"Tracking Error", "0.177"},
+            {"Treynor Ratio", "0"},
+            {"Total Fees", "$1.00"},
+            {"Estimated Strategy Capacity", "$420000.00"},
+            {"Lowest Capacity Asset", "SPX XL80P3GHIA9A|SPX 31"},
+            {"Portfolio Turnover", "1.09%"},
+            {"Drawdown Recovery", "10"},
+            {"OrderListHash", "e913c917ccb2641d70e8fffb47df4f02"}
+        };
+    }
+}

@@ -1,0 +1,213 @@
+/*
+ * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
+ * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+*/
+
+using System;
+using System.Linq;
+using Newtonsoft.Json;
+using QuantConnect.Data;
+using QuantConnect.Util;
+using QuantConnect.Logging;
+using QuantConnect.Packets;
+using QuantConnect.Interfaces;
+using QuantConnect.Brokerages;
+using System.Collections.Generic;
+using QuantConnect.Configuration;
+using QuantConnect.AlgorithmFactory;
+using QuantConnect.Lean.Engine.DataFeeds;
+using QuantConnect.Data.UniverseSelection;
+using QuantConnect.Lean.Engine.DataFeeds.WorkScheduling;
+using QuantConnect.Securities;
+
+namespace QuantConnect.Lean.Engine.Setup
+{
+    /// <summary>
+    ///  Base class that provides shared code for
+    /// the <see cref="ISetupHandler"/> implementations
+    /// </summary>
+    public static class BaseSetupHandler
+    {
+        /// <summary>
+        /// Get the maximum time that the initialization of an algorithm can take
+        /// </summary>
+        public static TimeSpan InitializationTimeout { get; } = TimeSpan.FromSeconds(Config.GetDouble("initialization-timeout", 300));
+
+        /// <summary>
+        /// Get the maximum time that the creation of an algorithm can take
+        /// </summary>
+        public static TimeSpan AlgorithmCreationTimeout { get; } = TimeSpan.FromSeconds(Config.GetDouble("algorithm-creation-timeout", 90));
+
+        /// <summary>
+        /// Primary entry point to setup a new algorithm
+        /// </summary>
+        /// <param name="parameters">The parameters object to use</param>
+        /// <returns>True on successfully setting up the algorithm state, or false on error.</returns>
+        public static bool Setup(SetupHandlerParameters parameters)
+        {
+            var algorithm = parameters.Algorithm;
+            var job = parameters.AlgorithmNodePacket;
+
+            algorithm?.SetDeploymentTarget(job.DeploymentTarget);
+
+            Log.Trace($"BaseSetupHandler.Setup({job.DeploymentTarget}): UID: {job.UserId.ToStringInvariant()}, " +
+                $"PID: {job.ProjectId.ToStringInvariant()}, Version: {job.Version}, Source: {job.RequestSource}"
+            );
+            return true;
+        }
+
+        /// <summary>
+        /// Will first check and add all the required conversion rate securities
+        /// and later will seed an initial value to them.
+        /// </summary>
+        /// <param name="algorithm">The algorithm instance</param>
+        /// <param name="universeSelection">The universe selection instance</param>
+        /// <param name="currenciesToUpdateWhiteList">
+        /// If passed, the currencies in the CashBook that are contained in this list will be updated.
+        /// By default, if not passed (null), all currencies in the cashbook without a properly set up currency conversion will be updated.
+        /// This is not intended for actual algorithms but for tests or for this method to be used as a helper.
+        /// </param>
+        public static void SetupCurrencyConversions(
+            IAlgorithm algorithm,
+            UniverseSelection universeSelection,
+            IReadOnlyCollection<string> currenciesToUpdateWhiteList = null)
+        {
+            // this is needed to have non-zero currency conversion rates during warmup
+            // will also set the Cash.ConversionRateSecurity
+            universeSelection.EnsureCurrencyDataFeeds(SecurityChanges.None);
+
+            // now set conversion rates
+            Func<Cash, bool> cashToUpdateFilter = currenciesToUpdateWhiteList == null
+                ? (x) => x.CurrencyConversion != null && x.ConversionRate == 0
+                : (x) => currenciesToUpdateWhiteList.Contains(x.Symbol);
+            var cashToUpdate = algorithm.Portfolio.CashBook.Values.Where(cashToUpdateFilter).ToList();
+
+            var securitiesToUpdate = cashToUpdate
+                .SelectMany(x => x.CurrencyConversion.ConversionRateSecurities)
+                .Distinct()
+                .ToList();
+
+            AlgorithmUtils.SeedSecurities(securitiesToUpdate, algorithm);
+
+            foreach (var cash in cashToUpdate)
+            {
+                cash.Update();
+            }
+
+            Log.Trace($"BaseSetupHandler.SetupCurrencyConversions():{Environment.NewLine}" +
+                $"Account Type: {algorithm.BrokerageModel.AccountType}{Environment.NewLine}{Environment.NewLine}{algorithm.Portfolio.CashBook}");
+            // this is useful for debugging
+            algorithm.Portfolio.LogMarginInformation();
+        }
+
+        /// <summary>
+        /// Initialize the debugger
+        /// </summary>
+        /// <param name="algorithmNodePacket">The algorithm node packet</param>
+        /// <param name="workerThread">The worker thread instance to use</param>
+        public static bool InitializeDebugging(AlgorithmNodePacket algorithmNodePacket, WorkerThread workerThread)
+        {
+            var isolator = new Isolator();
+            return isolator.ExecuteWithTimeLimit(TimeSpan.FromMinutes(5),
+                () =>
+                {
+                    DebuggerHelper.Initialize(algorithmNodePacket.Language, out var workersInitializationCallback);
+
+                    if (workersInitializationCallback != null)
+                    {
+                        // initialize workers for debugging if required
+                        WeightedWorkScheduler.Instance.AddSingleCallForAll(workersInitializationCallback);
+                    }
+                },
+                algorithmNodePacket.RamAllocation,
+                sleepIntervalMillis: 100,
+                workerThread: workerThread);
+        }
+
+        /// <summary>
+        /// Sets the initial cash for the algorithm if set in the job packet.
+        /// </summary>
+        /// <remarks>Should be called after initialize <see cref="LoadBacktestJobAccountCurrency"/></remarks>
+        public static void LoadBacktestJobCashAmount(IAlgorithm algorithm, BacktestNodePacket job)
+        {
+            // set initial cash, if present in the job
+            if (job.CashAmount.HasValue)
+            {
+                // Zero the CashBook - we'll populate directly from job
+                foreach (var kvp in algorithm.Portfolio.CashBook)
+                {
+                    kvp.Value.SetAmount(0);
+                }
+
+                algorithm.SetCash(job.CashAmount.Value.Amount);
+            }
+        }
+
+        /// <summary>
+        /// Sets the account currency the algorithm should use if set in the job packet
+        /// </summary>
+        /// <remarks>Should be called before initialize <see cref="LoadBacktestJobCashAmount"/></remarks>
+        public static void LoadBacktestJobAccountCurrency(IAlgorithm algorithm, BacktestNodePacket job)
+        {
+            // set account currency if present in the job
+            if (job.CashAmount.HasValue)
+            {
+                algorithm.SetAccountCurrency(job.CashAmount.Value.Currency);
+            }
+        }
+
+        /// <summary>
+        /// Get the available data feeds from config.json,
+        /// </summary>
+        public static Dictionary<SecurityType, List<TickType>> GetConfiguredDataFeeds()
+        {
+            var dataFeedsConfigString = Config.Get("security-data-feeds");
+
+            if (!dataFeedsConfigString.IsNullOrEmpty())
+            {
+                var dataFeeds = JsonConvert.DeserializeObject<Dictionary<SecurityType, List<TickType>>>(dataFeedsConfigString);
+                return dataFeeds;
+            }
+
+            return null;
+        }
+
+        /// <summary>
+        /// Set the number of trading days per year based on the specified brokerage model.
+        /// </summary>
+        /// <param name="algorithm">The algorithm instance</param>
+        /// <returns>
+        /// The number of trading days per year. For specific brokerages (Coinbase, Binance, Bitfinex, Bybit, FTX, Kraken),
+        /// the value is 365. For other brokerages, the default value is 252.
+        /// </returns>
+        public static void SetBrokerageTradingDayPerYear(IAlgorithm algorithm)
+        {
+            if (algorithm == null)
+            {
+                throw new ArgumentNullException(nameof(algorithm));
+            }
+
+            algorithm.Settings.TradingDaysPerYear ??= algorithm.BrokerageModel switch
+            {
+                CoinbaseBrokerageModel
+                or BinanceBrokerageModel
+                or BitfinexBrokerageModel
+                or BybitBrokerageModel
+                or FTXBrokerageModel
+                or KrakenBrokerageModel => 365,
+                _ => 252
+            };
+        }
+    }
+}

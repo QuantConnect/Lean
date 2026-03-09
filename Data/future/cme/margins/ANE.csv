@@ -1,0 +1,36 @@
+date,initial,maintenance
+# Values are converted from NZD to USD
+# https://www.cmegroup.com/tools-information/lookups/advisories/clearing/Chadv12-019.html
+20120117,3459,2562
+# https://www.cmegroup.com/tools-information/lookups/advisories/clearing/Chadv12-318.html
+20120727,2734,2025
+# https://www.cmegroup.com/tools-information/lookups/advisories/clearing/Chadv12-380.html
+20120907,2234,2031
+# https://www.cmegroup.com/tools-information/lookups/advisories/clearing/Chadv13-014.html
+20130115,2083,1894
+# https://www.cmegroup.com/tools-information/lookups/advisories/clearing/Chadv13-126.html
+20130319,2265,2059
+# https://www.cmegroup.com/tools-information/lookups/advisories/clearing/Chadv13-225.html
+20130517,3193,2903
+# https://www.cmegroup.com/tools-information/lookups/advisories/clearing/Chadv13-457.html
+20131003,2557,2325
+# https://www.cmegroup.com/tools-information/lookups/advisories/clearing/Chadv14-480.html
+20141212,2740,2491
+# https://www.cmegroup.com/tools-information/lookups/advisories/clearing/Chadv15-007.html
+20150109,3105,2823
+# https://www.cmegroup.com/tools-information/lookups/advisories/clearing/Chadv15-153.html
+20150605,3333,3030
+# https://www.cmegroup.com/tools-information/lookups/advisories/clearing/Chadv15-242.html
+20150814,3380,3072
+# https://www.cmegroup.com/tools-information/lookups/advisories/clearing/Chadv15-300.html
+20150918,3661,3328
+# https://www.cmegroup.com/notices/clearing/2017/01/Chadv17-028.html
+20170113,3295,2996
+# https://www.cmegroup.com/notices/clearing/2017/05/Chadv17-167.html
+20170512,2720,2473
+# https://www.cmegroup.com/notices/clearing/2017/10/Chadv17-404.html
+20171020,2626,2297
+# https://www.cmegroup.com/notices/clearing/2017/12/Chadv17-474.html
+20171208,2258,2052
+# https://www.cmegroup.com/notices/clearing/2019/07/Chadv19-230.html
+20190719,1861,1691

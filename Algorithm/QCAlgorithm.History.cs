@@ -1,0 +1,1559 @@
+/*
+ * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
+ * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+*/
+
+using System;
+using NodaTime;
+using System.Linq;
+using QuantConnect.Data;
+using QuantConnect.Util;
+using QuantConnect.Interfaces;
+using QuantConnect.Securities;
+using QuantConnect.Data.Market;
+using System.Collections.Generic;
+using QuantConnect.Python;
+using Python.Runtime;
+using QuantConnect.Data.UniverseSelection;
+using QuantConnect.Configuration;
+
+namespace QuantConnect.Algorithm
+{
+    public partial class QCAlgorithm
+    {
+        private static readonly int SeedLookbackPeriod = Config.GetInt("seed-lookback-period", 5);
+        private static readonly int SeedRetryMinuteLookbackPeriod = Config.GetInt("seed-retry-minute-lookback-period", 24 * 60);
+        private static readonly int SeedRetryHourLookbackPeriod = Config.GetInt("seed-retry-hour-lookback-period", 24);
+        private static readonly int SeedRetryDailyLookbackPeriod = Config.GetInt("seed-retry-daily-lookback-period", 10);
+
+        private bool _dataDictionaryTickWarningSent;
+
+        /// <summary>
+        /// Gets or sets the history provider for the algorithm
+        /// </summary>
+        public IHistoryProvider HistoryProvider
+        {
+            get;
+            set;
+        }
+
+        /// <summary>
+        /// Gets whether or not this algorithm is still warming up
+        /// </summary>
+        [DocumentationAttribute(HistoricalData)]
+        public bool IsWarmingUp
+        {
+            get;
+            private set;
+        }
+
+        /// <summary>
+        /// Sets the warm up period to the specified value
+        /// </summary>
+        /// <param name="timeSpan">The amount of time to warm up, this does not take into account market hours/weekends</param>
+        [DocumentationAttribute(HistoricalData)]
+        public void SetWarmup(TimeSpan timeSpan)
+        {
+            SetWarmUp(timeSpan, null);
+        }
+
+        /// <summary>
+        /// Sets the warm up period to the specified value
+        /// </summary>
+        /// <param name="timeSpan">The amount of time to warm up, this does not take into account market hours/weekends</param>
+        [DocumentationAttribute(HistoricalData)]
+        public void SetWarmUp(TimeSpan timeSpan)
+        {
+            SetWarmup(timeSpan);
+        }
+
+        /// <summary>
+        /// Sets the warm up period to the specified value
+        /// </summary>
+        /// <param name="timeSpan">The amount of time to warm up, this does not take into account market hours/weekends</param>
+        /// <param name="resolution">The resolution to request</param>
+        [DocumentationAttribute(HistoricalData)]
+        public void SetWarmup(TimeSpan timeSpan, Resolution? resolution)
+        {
+            SetWarmup(null, timeSpan, resolution);
+        }
+
+        /// <summary>
+        /// Sets the warm up period to the specified value
+        /// </summary>
+        /// <param name="timeSpan">The amount of time to warm up, this does not take into account market hours/weekends</param>
+        /// <param name="resolution">The resolution to request</param>
+        [DocumentationAttribute(HistoricalData)]
+        public void SetWarmUp(TimeSpan timeSpan, Resolution? resolution)
+        {
+            SetWarmup(timeSpan, resolution);
+        }
+
+        /// <summary>
+        /// Sets the warm up period by resolving a start date that would send that amount of data into
+        /// the algorithm. The highest (smallest) resolution in the securities collection will be used.
+        /// For example, if an algorithm has minute and daily data and 200 bars are requested, that would
+        /// use 200 minute bars.
+        /// </summary>
+        /// <param name="barCount">The number of data points requested for warm up</param>
+        [DocumentationAttribute(HistoricalData)]
+        public void SetWarmup(int barCount)
+        {
+            SetWarmUp(barCount, null);
+        }
+
+        /// <summary>
+        /// Sets the warm up period by resolving a start date that would send that amount of data into
+        /// the algorithm. The highest (smallest) resolution in the securities collection will be used.
+        /// For example, if an algorithm has minute and daily data and 200 bars are requested, that would
+        /// use 200 minute bars.
+        /// </summary>
+        /// <param name="barCount">The number of data points requested for warm up</param>
+        [DocumentationAttribute(HistoricalData)]
+        public void SetWarmUp(int barCount)
+        {
+            SetWarmup(barCount);
+        }
+
+        /// <summary>
+        /// Sets the warm up period by resolving a start date that would send that amount of data into
+        /// the algorithm.
+        /// </summary>
+        /// <param name="barCount">The number of data points requested for warm up</param>
+        /// <param name="resolution">The resolution to request</param>
+        [DocumentationAttribute(HistoricalData)]
+        public void SetWarmup(int barCount, Resolution? resolution)
+        {
+            SetWarmup(barCount, null, resolution);
+        }
+
+        /// <summary>
+        /// Sets the warm up period by resolving a start date that would send that amount of data into
+        /// the algorithm.
+        /// </summary>
+        /// <param name="barCount">The number of data points requested for warm up</param>
+        /// <param name="resolution">The resolution to request</param>
+        [DocumentationAttribute(HistoricalData)]
+        public void SetWarmUp(int barCount, Resolution? resolution)
+        {
+            SetWarmup(barCount, resolution);
+        }
+
+        /// <summary>
+        /// Sets <see cref="IAlgorithm.IsWarmingUp"/> to false to indicate this algorithm has finished its warm up
+        /// </summary>
+        [DocumentationAttribute(HistoricalData)]
+        public void SetFinishedWarmingUp()
+        {
+            IsWarmingUp = false;
+        }
+
+        /// <summary>
+        /// Message for exception that is thrown when the implicit conversion between symbol and string fails
+        /// </summary>
+        private readonly string _symbolEmptyErrorMessage = "Cannot create history for the given ticker. " +
+                                                           "Either explicitly use a symbol object to make the history request " +
+                                                           "or ensure the symbol has been added using the AddSecurity() method before making the history request.";
+
+        /// <summary>
+        /// Gets the history requests required for provide warm up data for the algorithm
+        /// </summary>
+        /// <returns></returns>
+        [DocumentationAttribute(HistoricalData)]
+        private bool TryGetWarmupHistoryStartTime(out DateTime result)
+        {
+            result = Time;
+
+            if (_warmupBarCount.HasValue)
+            {
+                var symbols = Securities.Keys;
+                if (symbols.Count != 0)
+                {
+                    var startTimeUtc = CreateBarCountHistoryRequests(symbols, _warmupBarCount.Value, Settings.WarmupResolution)
+                        .DefaultIfEmpty()
+                        .Min(request => request == null ? default : request.StartTimeUtc);
+                    if (startTimeUtc != default)
+                    {
+                        result = startTimeUtc.ConvertFromUtc(TimeZone);
+                        return true;
+                    }
+                }
+
+                var defaultResolutionToUse = UniverseSettings.Resolution;
+                if (Settings.WarmupResolution.HasValue)
+                {
+                    defaultResolutionToUse = Settings.WarmupResolution.Value;
+                }
+
+                // if the algorithm has no added security, let's take a look at the universes to determine
+                // what the start date should be used. Defaulting to always open
+                result = Time - _warmupBarCount.Value * defaultResolutionToUse.ToTimeSpan();
+
+                foreach (var universe in UniverseManager.Values)
+                {
+                    var config = universe.Configuration;
+                    var resolution = universe.Configuration.Resolution;
+                    if (Settings.WarmupResolution.HasValue)
+                    {
+                        resolution = Settings.WarmupResolution.Value;
+                    }
+                    var exchange = MarketHoursDatabase.GetExchangeHours(config);
+                    var start = _historyRequestFactory.GetStartTimeAlgoTz(config.Symbol, _warmupBarCount.Value, resolution, exchange, config.DataTimeZone, config.Type);
+                    // we choose the min start
+                    result = result < start ? result : start;
+                }
+                return true;
+            }
+            if (_warmupTimeSpan.HasValue)
+            {
+                result = Time - _warmupTimeSpan.Value;
+                return true;
+            }
+
+            return false;
+        }
+
+        /// <summary>
+        /// Get the history for all configured securities over the requested span.
+        /// This will use the resolution and other subscription settings for each security.
+        /// The symbols must exist in the Securities collection.
+        /// </summary>
+        /// <param name="span">The span over which to request data. This is a calendar span, so take into consideration weekends and such</param>
+        /// <param name="resolution">The resolution to request</param>
+        /// <param name="fillForward">True to fill forward missing data, false otherwise</param>
+        /// <param name="extendedMarketHours">True to include extended market hours data, false otherwise</param>
+        /// <param name="dataMappingMode">The contract mapping mode to use for the security history request</param>
+        /// <param name="dataNormalizationMode">The price scaling mode to use for the securities history</param>
+        /// <param name="contractDepthOffset">The continuous contract desired offset from the current front month.
+        /// For example, 0 will use the front month, 1 will use the back month contract</param>
+        /// <returns>An enumerable of slice containing data over the most recent span for all configured securities</returns>
+        [DocumentationAttribute(HistoricalData)]
+        public IEnumerable<Slice> History(TimeSpan span, Resolution? resolution = null, bool? fillForward = null, bool? extendedMarketHours = null,
+            DataMappingMode? dataMappingMode = null, DataNormalizationMode? dataNormalizationMode = null, int? contractDepthOffset = null)
+        {
+            return History(Securities.Keys, Time - span, Time, resolution, fillForward, extendedMarketHours, dataMappingMode,
+                dataNormalizationMode, contractDepthOffset).Memoize();
+        }
+
+        /// <summary>
+        /// Get the history for all configured securities over the requested span.
+        /// This will use the resolution and other subscription settings for each security.
+        /// The symbols must exist in the Securities collection.
+        /// </summary>
+        /// <param name="periods">The number of bars to request</param>
+        /// <param name="resolution">The resolution to request</param>
+        /// <param name="fillForward">True to fill forward missing data, false otherwise</param>
+        /// <param name="extendedMarketHours">True to include extended market hours data, false otherwise</param>
+        /// <param name="dataMappingMode">The contract mapping mode to use for the security history request</param>
+        /// <param name="dataNormalizationMode">The price scaling mode to use for the securities history</param>
+        /// <param name="contractDepthOffset">The continuous contract desired offset from the current front month.
+        /// For example, 0 will use the front month, 1 will use the back month contract</param>
+        /// <returns>An enumerable of slice containing data over the most recent span for all configured securities</returns>
+        [DocumentationAttribute(HistoricalData)]
+        public IEnumerable<Slice> History(int periods, Resolution? resolution = null, bool? fillForward = null, bool? extendedMarketHours = null,
+            DataMappingMode? dataMappingMode = null, DataNormalizationMode? dataNormalizationMode = null, int? contractDepthOffset = null)
+        {
+            return History(Securities.Keys, periods, resolution, fillForward, extendedMarketHours, dataMappingMode, dataNormalizationMode,
+                contractDepthOffset).Memoize();
+        }
+
+        /// <summary>
+        /// Get the history for all configured securities over the requested span.
+        /// This will use the resolution and other subscription settings for each security.
+        /// The symbols must exist in the Securities collection.
+        /// </summary>
+        /// <param name="universe">The universe to fetch the data for</param>
+        /// <param name="periods">The number of bars to request</param>
+        /// <param name="resolution">The resolution to request</param>
+        /// <param name="fillForward">True to fill forward missing data, false otherwise</param>
+        /// <param name="extendedMarketHours">True to include extended market hours data, false otherwise</param>
+        /// <param name="dataMappingMode">The contract mapping mode to use for the security history request</param>
+        /// <param name="dataNormalizationMode">The price scaling mode to use for the securities history</param>
+        /// <param name="contractDepthOffset">The continuous contract desired offset from the current front month.
+        /// For example, 0 will use the front month, 1 will use the back month contract</param>
+        /// <returns>An enumerable of slice containing data over the most recent span for all configured securities</returns>
+        [DocumentationAttribute(HistoricalData)]
+        public IEnumerable<BaseDataCollection> History(Universe universe, int periods, Resolution? resolution = null, bool? fillForward = null, bool? extendedMarketHours = null,
+            DataMappingMode? dataMappingMode = null, DataNormalizationMode? dataNormalizationMode = null, int? contractDepthOffset = null)
+        {
+            var symbols = new[] { universe.Configuration.Symbol };
+            resolution ??= universe.Configuration.Resolution;
+            CheckPeriodBasedHistoryRequestResolution(symbols, resolution, universe.Configuration.Type);
+            var requests = CreateBarCountHistoryRequests(symbols, universe.Configuration.Type, periods, resolution, fillForward, extendedMarketHours, dataMappingMode,
+                dataNormalizationMode, contractDepthOffset);
+            return GetDataTypedHistory<BaseDataCollection>(requests).Select(x => x.Values.Single());
+        }
+
+        /// <summary>
+        /// Gets the historical data for all symbols of the requested type over the requested span.
+        /// The symbol's configured values for resolution and fill forward behavior will be used
+        /// The symbols must exist in the Securities collection.
+        /// </summary>
+        /// <param name="universe">The universe to fetch the data for</param>
+        /// <param name="span">The span over which to request data. This is a calendar span, so take into consideration weekends and such</param>
+        /// <param name="resolution">The resolution to request</param>
+        /// <param name="fillForward">True to fill forward missing data, false otherwise</param>
+        /// <param name="extendedMarketHours">True to include extended market hours data, false otherwise</param>
+        /// <param name="dataMappingMode">The contract mapping mode to use for the security history request</param>
+        /// <param name="dataNormalizationMode">The price scaling mode to use for the securities history</param>
+        /// <param name="contractDepthOffset">The continuous contract desired offset from the current front month.
+        /// For example, 0 will use the front month, 1 will use the back month contract</param>
+        /// <returns>An enumerable of slice containing the requested historical data</returns>
+        [DocumentationAttribute(HistoricalData)]
+        public IEnumerable<BaseDataCollection> History(Universe universe, TimeSpan span, Resolution? resolution = null, bool? fillForward = null,
+            bool? extendedMarketHours = null, DataMappingMode? dataMappingMode = null, DataNormalizationMode? dataNormalizationMode = null,
+            int? contractDepthOffset = null)
+        {
+            return History(universe, Time - span, Time, resolution, fillForward, extendedMarketHours, dataMappingMode, dataNormalizationMode, contractDepthOffset);
+        }
+
+        /// <summary>
+        /// Gets the historical data for the specified symbols between the specified dates. The symbols must exist in the Securities collection.
+        /// </summary>
+        /// <param name="universe">The universe to fetch the data for</param>
+        /// <param name="start">The start time in the algorithm's time zone</param>
+        /// <param name="end">The end time in the algorithm's time zone</param>
+        /// <param name="resolution">The resolution to request</param>
+        /// <param name="fillForward">True to fill forward missing data, false otherwise</param>
+        /// <param name="extendedMarketHours">True to include extended market hours data, false otherwise</param>
+        /// <param name="dataMappingMode">The contract mapping mode to use for the security history request</param>
+        /// <param name="dataNormalizationMode">The price scaling mode to use for the securities history</param>
+        /// <param name="contractDepthOffset">The continuous contract desired offset from the current front month.
+        /// For example, 0 will use the front month, 1 will use the back month contract</param>
+        /// <returns>An enumerable of slice containing the requested historical data</returns>
+        [DocumentationAttribute(HistoricalData)]
+        public IEnumerable<BaseDataCollection> History(Universe universe, DateTime start, DateTime end, Resolution? resolution = null,
+            bool? fillForward = null, bool? extendedMarketHours = null, DataMappingMode? dataMappingMode = null,
+            DataNormalizationMode? dataNormalizationMode = null, int? contractDepthOffset = null)
+        {
+            resolution ??= universe.Configuration.Resolution;
+            var requests = CreateDateRangeHistoryRequests(new[] { universe.Symbol }, universe.DataType, start, end, resolution, fillForward, extendedMarketHours,
+                dataMappingMode, dataNormalizationMode, contractDepthOffset);
+            return GetDataTypedHistory<BaseDataCollection>(requests).Select(x => x.Values.Single());
+        }
+
+        /// <summary>
+        /// Gets the historical data for all symbols of the requested type over the requested span.
+        /// The symbol's configured values for resolution and fill forward behavior will be used
+        /// The symbols must exist in the Securities collection.
+        /// </summary>
+        /// <param name="span">The span over which to retrieve recent historical data</param>
+        /// <param name="resolution">The resolution to request</param>
+        /// <param name="fillForward">True to fill forward missing data, false otherwise</param>
+        /// <param name="extendedMarketHours">True to include extended market hours data, false otherwise</param>
+        /// <param name="dataMappingMode">The contract mapping mode to use for the security history request</param>
+        /// <param name="dataNormalizationMode">The price scaling mode to use for the securities history</param>
+        /// <param name="contractDepthOffset">The continuous contract desired offset from the current front month.
+        /// For example, 0 will use the front month, 1 will use the back month contract</param>
+        /// <returns>An enumerable of slice containing the requested historical data</returns>
+        [DocumentationAttribute(HistoricalData)]
+        public IEnumerable<DataDictionary<T>> History<T>(TimeSpan span, Resolution? resolution = null, bool? fillForward = null,
+            bool? extendedMarketHours = null, DataMappingMode? dataMappingMode = null, DataNormalizationMode? dataNormalizationMode = null,
+            int? contractDepthOffset = null)
+            where T : IBaseData
+        {
+            return History<T>(Securities.Keys, span, resolution, fillForward, extendedMarketHours, dataMappingMode, dataNormalizationMode,
+                contractDepthOffset).Memoize();
+        }
+
+        /// <summary>
+        /// Gets the historical data for the specified symbols over the requested span.
+        /// The symbols must exist in the Securities collection.
+        /// </summary>
+        /// <typeparam name="T">The data type of the symbols</typeparam>
+        /// <param name="symbols">The symbols to retrieve historical data for</param>
+        /// <param name="span">The span over which to retrieve recent historical data</param>
+        /// <param name="resolution">The resolution to request</param>
+        /// <param name="fillForward">True to fill forward missing data, false otherwise</param>
+        /// <param name="extendedMarketHours">True to include extended market hours data, false otherwise</param>
+        /// <param name="dataMappingMode">The contract mapping mode to use for the security history request</param>
+        /// <param name="dataNormalizationMode">The price scaling mode to use for the securities history</param>
+        /// <param name="contractDepthOffset">The continuous contract desired offset from the current front month.
+        /// For example, 0 will use the front month, 1 will use the back month contract</param>
+        /// <returns>An enumerable of slice containing the requested historical data</returns>
+        [DocumentationAttribute(HistoricalData)]
+        public IEnumerable<DataDictionary<T>> History<T>(IEnumerable<Symbol> symbols, TimeSpan span, Resolution? resolution = null,
+            bool? fillForward = null, bool? extendedMarketHours = null, DataMappingMode? dataMappingMode = null,
+            DataNormalizationMode? dataNormalizationMode = null, int? contractDepthOffset = null)
+            where T : IBaseData
+        {
+            return History<T>(symbols, Time - span, Time, resolution, fillForward, extendedMarketHours, dataMappingMode,
+                dataNormalizationMode, contractDepthOffset).Memoize();
+        }
+
+        /// <summary>
+        /// Gets the historical data for the specified symbols. The exact number of bars will be returned for
+        /// each symbol. This may result in some data start earlier/later than others due to when various
+        /// exchanges are open. The symbols must exist in the Securities collection.
+        /// </summary>
+        /// <typeparam name="T">The data type of the symbols</typeparam>
+        /// <param name="symbols">The symbols to retrieve historical data for</param>
+        /// <param name="periods">The number of bars to request</param>
+        /// <param name="resolution">The resolution to request</param>
+        /// <param name="fillForward">True to fill forward missing data, false otherwise</param>
+        /// <param name="extendedMarketHours">True to include extended market hours data, false otherwise</param>
+        /// <param name="dataMappingMode">The contract mapping mode to use for the security history request</param>
+        /// <param name="dataNormalizationMode">The price scaling mode to use for the securities history</param>
+        /// <param name="contractDepthOffset">The continuous contract desired offset from the current front month.
+        /// For example, 0 will use the front month, 1 will use the back month contract</param>
+        /// <returns>An enumerable of slice containing the requested historical data</returns>
+        [DocumentationAttribute(HistoricalData)]
+        public IEnumerable<DataDictionary<T>> History<T>(IEnumerable<Symbol> symbols, int periods, Resolution? resolution = null,
+            bool? fillForward = null, bool? extendedMarketHours = null, DataMappingMode? dataMappingMode = null,
+            DataNormalizationMode? dataNormalizationMode = null, int? contractDepthOffset = null)
+            where T : IBaseData
+        {
+            CheckPeriodBasedHistoryRequestResolution(symbols, resolution, typeof(T));
+            var requests = CreateBarCountHistoryRequests(symbols, typeof(T), periods, resolution, fillForward, extendedMarketHours, dataMappingMode,
+                dataNormalizationMode, contractDepthOffset);
+            return GetDataTypedHistory<T>(requests);
+        }
+
+        /// <summary>
+        /// Gets the historical data for the specified symbols between the specified dates. The symbols must exist in the Securities collection.
+        /// </summary>
+        /// <typeparam name="T">The data type of the symbols</typeparam>
+        /// <param name="symbols">The symbols to retrieve historical data for</param>
+        /// <param name="start">The start time in the algorithm's time zone</param>
+        /// <param name="end">The end time in the algorithm's time zone</param>
+        /// <param name="resolution">The resolution to request</param>
+        /// <param name="fillForward">True to fill forward missing data, false otherwise</param>
+        /// <param name="extendedMarketHours">True to include extended market hours data, false otherwise</param>
+        /// <param name="dataMappingMode">The contract mapping mode to use for the security history request</param>
+        /// <param name="dataNormalizationMode">The price scaling mode to use for the securities history</param>
+        /// <param name="contractDepthOffset">The continuous contract desired offset from the current front month.
+        /// For example, 0 will use the front month, 1 will use the back month contract</param>
+        /// <returns>An enumerable of slice containing the requested historical data</returns>
+        [DocumentationAttribute(HistoricalData)]
+        public IEnumerable<DataDictionary<T>> History<T>(IEnumerable<Symbol> symbols, DateTime start, DateTime end, Resolution? resolution = null,
+            bool? fillForward = null, bool? extendedMarketHours = null, DataMappingMode? dataMappingMode = null,
+            DataNormalizationMode? dataNormalizationMode = null, int? contractDepthOffset = null)
+            where T : IBaseData
+        {
+            var requests = CreateDateRangeHistoryRequests(symbols, typeof(T), start, end, resolution, fillForward, extendedMarketHours,
+                dataMappingMode, dataNormalizationMode, contractDepthOffset);
+            return GetDataTypedHistory<T>(requests);
+        }
+
+        /// <summary>
+        /// Gets the historical data for the specified symbol over the request span. The symbol must exist in the Securities collection.
+        /// </summary>
+        /// <typeparam name="T">The data type of the symbol</typeparam>
+        /// <param name="symbol">The symbol to retrieve historical data for</param>
+        /// <param name="span">The span over which to retrieve recent historical data</param>
+        /// <param name="resolution">The resolution to request</param>
+        /// <param name="fillForward">True to fill forward missing data, false otherwise</param>
+        /// <param name="extendedMarketHours">True to include extended market hours data, false otherwise</param>
+        /// <param name="dataMappingMode">The contract mapping mode to use for the security history request</param>
+        /// <param name="dataNormalizationMode">The price scaling mode to use for the securities history</param>
+        /// <param name="contractDepthOffset">The continuous contract desired offset from the current front month.
+        /// For example, 0 will use the front month, 1 will use the back month contract</param>
+        /// <returns>An enumerable of slice containing the requested historical data</returns>
+        [DocumentationAttribute(HistoricalData)]
+        public IEnumerable<T> History<T>(Symbol symbol, TimeSpan span, Resolution? resolution = null, bool? fillForward = null,
+            bool? extendedMarketHours = null, DataMappingMode? dataMappingMode = null, DataNormalizationMode? dataNormalizationMode = null,
+            int? contractDepthOffset = null)
+            where T : IBaseData
+        {
+            return History<T>(symbol, Time - span, Time, resolution, fillForward, extendedMarketHours, dataMappingMode,
+                dataNormalizationMode, contractDepthOffset).Memoize();
+        }
+
+        /// <summary>
+        /// Gets the historical data for the specified symbol. The exact number of bars will be returned.
+        /// The symbol must exist in the Securities collection.
+        /// </summary>
+        /// <param name="symbol">The symbol to retrieve historical data for</param>
+        /// <param name="periods">The number of bars to request</param>
+        /// <param name="resolution">The resolution to request</param>
+        /// <param name="fillForward">True to fill forward missing data, false otherwise</param>
+        /// <param name="extendedMarketHours">True to include extended market hours data, false otherwise</param>
+        /// <param name="dataMappingMode">The contract mapping mode to use for the security history request</param>
+        /// <param name="dataNormalizationMode">The price scaling mode to use for the securities history</param>
+        /// <param name="contractDepthOffset">The continuous contract desired offset from the current front month.
+        /// For example, 0 will use the front month, 1 will use the back month contract</param>
+        /// <returns>An enumerable of slice containing the requested historical data</returns>
+        [DocumentationAttribute(HistoricalData)]
+        public IEnumerable<TradeBar> History(Symbol symbol, int periods, Resolution? resolution = null, bool? fillForward = null,
+            bool? extendedMarketHours = null, DataMappingMode? dataMappingMode = null, DataNormalizationMode? dataNormalizationMode = null,
+            int? contractDepthOffset = null)
+        {
+            if (symbol == null) throw new ArgumentException(_symbolEmptyErrorMessage);
+
+            resolution = GetResolution(symbol, resolution, typeof(TradeBar));
+            CheckPeriodBasedHistoryRequestResolution(new[] { symbol }, resolution, typeof(TradeBar));
+            var marketHours = GetMarketHours(symbol);
+            var start = _historyRequestFactory.GetStartTimeAlgoTz(symbol, periods, resolution.Value, marketHours.ExchangeHours,
+                marketHours.DataTimeZone, typeof(TradeBar), extendedMarketHours);
+
+            return History(symbol, start, Time, resolution, fillForward, extendedMarketHours, dataMappingMode, dataNormalizationMode,
+                contractDepthOffset);
+        }
+
+        /// <summary>
+        /// Gets the historical data for the specified symbol. The exact number of bars will be returned.
+        /// The symbol must exist in the Securities collection.
+        /// </summary>
+        /// <typeparam name="T">The data type of the symbol</typeparam>
+        /// <param name="symbol">The symbol to retrieve historical data for</param>
+        /// <param name="periods">The number of bars to request</param>
+        /// <param name="resolution">The resolution to request</param>
+        /// <param name="fillForward">True to fill forward missing data, false otherwise</param>
+        /// <param name="extendedMarketHours">True to include extended market hours data, false otherwise</param>
+        /// <param name="dataMappingMode">The contract mapping mode to use for the security history request</param>
+        /// <param name="dataNormalizationMode">The price scaling mode to use for the securities history</param>
+        /// <param name="contractDepthOffset">The continuous contract desired offset from the current front month.
+        /// For example, 0 will use the front month, 1 will use the back month contract</param>
+        /// <returns>An enumerable of slice containing the requested historical data</returns>
+        [DocumentationAttribute(HistoricalData)]
+        public IEnumerable<T> History<T>(Symbol symbol, int periods, Resolution? resolution = null, bool? fillForward = null,
+            bool? extendedMarketHours = null, DataMappingMode? dataMappingMode = null, DataNormalizationMode? dataNormalizationMode = null,
+            int? contractDepthOffset = null)
+            where T : IBaseData
+        {
+            resolution = GetResolution(symbol, resolution, typeof(T));
+            CheckPeriodBasedHistoryRequestResolution(new[] { symbol }, resolution, typeof(T));
+            var requests = CreateBarCountHistoryRequests(new[] { symbol }, typeof(T), periods, resolution, fillForward, extendedMarketHours,
+                dataMappingMode, dataNormalizationMode, contractDepthOffset);
+            return GetDataTypedHistory<T>(requests, symbol);
+        }
+
+        /// <summary>
+        /// Gets the historical data for the specified symbol between the specified dates. The symbol must exist in the Securities collection.
+        /// </summary>
+        /// <param name="symbol">The symbol to retrieve historical data for</param>
+        /// <param name="start">The start time in the algorithm's time zone</param>
+        /// <param name="end">The end time in the algorithm's time zone</param>
+        /// <param name="resolution">The resolution to request</param>
+        /// <param name="fillForward">True to fill forward missing data, false otherwise</param>
+        /// <param name="extendedMarketHours">True to include extended market hours data, false otherwise</param>
+        /// <param name="dataMappingMode">The contract mapping mode to use for the security history request</param>
+        /// <param name="dataNormalizationMode">The price scaling mode to use for the securities history</param>
+        /// <param name="contractDepthOffset">The continuous contract desired offset from the current front month.
+        /// For example, 0 will use the front month, 1 will use the back month contract</param>
+        /// <returns>An enumerable of slice containing the requested historical data</returns>
+        [DocumentationAttribute(HistoricalData)]
+        public IEnumerable<T> History<T>(Symbol symbol, DateTime start, DateTime end, Resolution? resolution = null, bool? fillForward = null,
+            bool? extendedMarketHours = null, DataMappingMode? dataMappingMode = null, DataNormalizationMode? dataNormalizationMode = null,
+            int? contractDepthOffset = null)
+            where T : IBaseData
+        {
+            var requests = CreateDateRangeHistoryRequests(new[] { symbol }, typeof(T), start, end, resolution, fillForward, extendedMarketHours,
+                dataMappingMode, dataNormalizationMode, contractDepthOffset);
+            return GetDataTypedHistory<T>(requests, symbol);
+        }
+
+        /// <summary>
+        /// Gets the historical data for the specified symbol over the request span. The symbol must exist in the Securities collection.
+        /// </summary>
+        /// <param name="symbol">The symbol to retrieve historical data for</param>
+        /// <param name="span">The span over which to retrieve recent historical data</param>
+        /// <param name="resolution">The resolution to request</param>
+        /// <param name="fillForward">True to fill forward missing data, false otherwise</param>
+        /// <param name="extendedMarketHours">True to include extended market hours data, false otherwise</param>
+        /// <param name="dataMappingMode">The contract mapping mode to use for the security history request</param>
+        /// <param name="dataNormalizationMode">The price scaling mode to use for the securities history</param>
+        /// <param name="contractDepthOffset">The continuous contract desired offset from the current front month.
+        /// For example, 0 will use the front month, 1 will use the back month contract</param>
+        /// <returns>An enumerable of slice containing the requested historical data</returns>
+        [DocumentationAttribute(HistoricalData)]
+        public IEnumerable<TradeBar> History(Symbol symbol, TimeSpan span, Resolution? resolution = null, bool? fillForward = null,
+            bool? extendedMarketHours = null, DataMappingMode? dataMappingMode = null, DataNormalizationMode? dataNormalizationMode = null,
+            int? contractDepthOffset = null)
+        {
+            return History(symbol, Time - span, Time, resolution, fillForward, extendedMarketHours, dataMappingMode, dataNormalizationMode,
+                contractDepthOffset);
+        }
+
+        /// <summary>
+        /// Gets the historical data for the specified symbol over the request span. The symbol must exist in the Securities collection.
+        /// </summary>
+        /// <param name="symbol">The symbol to retrieve historical data for</param>
+        /// <param name="start">The start time in the algorithm's time zone</param>
+        /// <param name="end">The end time in the algorithm's time zone</param>
+        /// <param name="resolution">The resolution to request</param>
+        /// <param name="fillForward">True to fill forward missing data, false otherwise</param>
+        /// <param name="extendedMarketHours">True to include extended market hours data, false otherwise</param>
+        /// <param name="dataMappingMode">The contract mapping mode to use for the security history request</param>
+        /// <param name="dataNormalizationMode">The price scaling mode to use for the securities history</param>
+        /// <param name="contractDepthOffset">The continuous contract desired offset from the current front month.
+        /// For example, 0 will use the front month, 1 will use the back month contract</param>
+        /// <returns>An enumerable of slice containing the requested historical data</returns>
+        [DocumentationAttribute(HistoricalData)]
+        public IEnumerable<TradeBar> History(Symbol symbol, DateTime start, DateTime end, Resolution? resolution = null, bool? fillForward = null,
+            bool? extendedMarketHours = null, DataMappingMode? dataMappingMode = null, DataNormalizationMode? dataNormalizationMode = null,
+            int? contractDepthOffset = null)
+        {
+            var securityType = symbol.ID.SecurityType;
+            if (securityType == SecurityType.Forex || securityType == SecurityType.Cfd)
+            {
+                Error("Calling History<TradeBar> method on a Forex or CFD security will return an empty result. Please use the generic version with QuoteBar type parameter.");
+            }
+
+            var resolutionToUse = resolution ?? GetResolution(symbol, resolution, typeof(TradeBar));
+            if (resolutionToUse == Resolution.Tick)
+            {
+                throw new InvalidOperationException("Calling History<TradeBar> method with Resolution.Tick will return an empty result." +
+                                                    " Please use the generic version with Tick type parameter or provide a list of Symbols to use the Slice history request API.");
+            }
+
+            return History(new[] { symbol }, start, end, resolutionToUse, fillForward, extendedMarketHours, dataMappingMode, dataNormalizationMode,
+                contractDepthOffset).Get(symbol).Memoize();
+        }
+
+        /// <summary>
+        /// Gets the historical data for the specified symbols over the requested span.
+        /// The symbol's configured values for resolution and fill forward behavior will be used
+        /// The symbols must exist in the Securities collection.
+        /// </summary>
+        /// <param name="symbols">The symbols to retrieve historical data for</param>
+        /// <param name="span">The span over which to retrieve recent historical data</param>
+        /// <param name="resolution">The resolution to request</param>
+        /// <param name="fillForward">True to fill forward missing data, false otherwise</param>
+        /// <param name="extendedMarketHours">True to include extended market hours data, false otherwise</param>
+        /// <param name="dataMappingMode">The contract mapping mode to use for the security history request</param>
+        /// <param name="dataNormalizationMode">The price scaling mode to use for the securities history</param>
+        /// <param name="contractDepthOffset">The continuous contract desired offset from the current front month.
+        /// For example, 0 will use the front month, 1 will use the back month contract</param>
+        /// <returns>An enumerable of slice containing the requested historical data</returns>
+        [DocumentationAttribute(HistoricalData)]
+        public IEnumerable<Slice> History(IEnumerable<Symbol> symbols, TimeSpan span, Resolution? resolution = null, bool? fillForward = null,
+            bool? extendedMarketHours = null, DataMappingMode? dataMappingMode = null, DataNormalizationMode? dataNormalizationMode = null,
+            int? contractDepthOffset = null)
+        {
+            return History(symbols, Time - span, Time, resolution, fillForward, extendedMarketHours, dataMappingMode,
+                dataNormalizationMode, contractDepthOffset).Memoize();
+        }
+
+        /// <summary>
+        /// Gets the historical data for the specified symbols. The exact number of bars will be returned for
+        /// each symbol. This may result in some data start earlier/later than others due to when various
+        /// exchanges are open. The symbols must exist in the Securities collection.
+        /// </summary>
+        /// <param name="symbols">The symbols to retrieve historical data for</param>
+        /// <param name="periods">The number of bars to request</param>
+        /// <param name="resolution">The resolution to request</param>
+        /// <param name="fillForward">True to fill forward missing data, false otherwise</param>
+        /// <param name="extendedMarketHours">True to include extended market hours data, false otherwise</param>
+        /// <param name="dataMappingMode">The contract mapping mode to use for the security history request</param>
+        /// <param name="dataNormalizationMode">The price scaling mode to use for the securities history</param>
+        /// <param name="contractDepthOffset">The continuous contract desired offset from the current front month.
+        /// For example, 0 will use the front month, 1 will use the back month contract</param>
+        /// <returns>An enumerable of slice containing the requested historical data</returns>
+        [DocumentationAttribute(HistoricalData)]
+        public IEnumerable<Slice> History(IEnumerable<Symbol> symbols, int periods, Resolution? resolution = null, bool? fillForward = null,
+            bool? extendedMarketHours = null, DataMappingMode? dataMappingMode = null, DataNormalizationMode? dataNormalizationMode = null,
+            int? contractDepthOffset = null)
+        {
+            CheckPeriodBasedHistoryRequestResolution(symbols, resolution, null);
+            return History(CreateBarCountHistoryRequests(symbols, periods, resolution, fillForward, extendedMarketHours, dataMappingMode,
+                dataNormalizationMode, contractDepthOffset)).Memoize();
+        }
+
+        /// <summary>
+        /// Gets the historical data for the specified symbols between the specified dates. The symbols must exist in the Securities collection.
+        /// </summary>
+        /// <param name="symbols">The symbols to retrieve historical data for</param>
+        /// <param name="start">The start time in the algorithm's time zone</param>
+        /// <param name="end">The end time in the algorithm's time zone</param>
+        /// <param name="resolution">The resolution to request</param>
+        /// <param name="fillForward">True to fill forward missing data, false otherwise</param>
+        /// <param name="extendedMarketHours">True to include extended market hours data, false otherwise</param>
+        /// <param name="dataMappingMode">The contract mapping mode to use for the security history request</param>
+        /// <param name="dataNormalizationMode">The price scaling mode to use for the securities history</param>
+        /// <param name="contractDepthOffset">The continuous contract desired offset from the current front month.
+        /// For example, 0 will use the front month, 1 will use the back month contract</param>
+        /// <returns>An enumerable of slice containing the requested historical data</returns>
+        [DocumentationAttribute(HistoricalData)]
+        public IEnumerable<Slice> History(IEnumerable<Symbol> symbols, DateTime start, DateTime end, Resolution? resolution = null,
+            bool? fillForward = null, bool? extendedMarketHours = null, DataMappingMode? dataMappingMode = null,
+            DataNormalizationMode? dataNormalizationMode = null, int? contractDepthOffset = null)
+        {
+            return History(CreateDateRangeHistoryRequests(symbols, start, end, resolution, fillForward, extendedMarketHours, dataMappingMode,
+                dataNormalizationMode, contractDepthOffset)).Memoize();
+        }
+
+        /// <summary>
+        /// Executes the specified history request
+        /// </summary>
+        /// <param name="request">the history request to execute</param>
+        /// <returns>An enumerable of slice satisfying the specified history request</returns>
+        [DocumentationAttribute(HistoricalData)]
+        public IEnumerable<Slice> History(HistoryRequest request)
+        {
+            return History(new[] { request }).Memoize();
+        }
+
+        /// <summary>
+        /// Executes the specified history requests
+        /// </summary>
+        /// <param name="requests">the history requests to execute</param>
+        /// <returns>An enumerable of slice satisfying the specified history request</returns>
+        [DocumentationAttribute(HistoricalData)]
+        public IEnumerable<Slice> History(IEnumerable<HistoryRequest> requests)
+        {
+            return History(requests, TimeZone).Memoize();
+        }
+
+        /// <summary>
+        /// Yields data to warmup a security for all it's subscribed data types
+        /// </summary>
+        /// <param name="security"><see cref="Security"/> object for which to retrieve historical data</param>
+        /// <returns>Securities historical data</returns>
+        [DocumentationAttribute(AddingData)]
+        [DocumentationAttribute(HistoricalData)]
+        public IEnumerable<BaseData> GetLastKnownPrices(Security security)
+        {
+            return GetLastKnownPrices(security.Symbol);
+        }
+
+        /// <summary>
+        /// Yields data to warm up a security for all its subscribed data types
+        /// </summary>
+        /// <param name="symbol">The symbol we want to get seed data for</param>
+        /// <returns>Securities historical data</returns>
+        [DocumentationAttribute(AddingData)]
+        [DocumentationAttribute(HistoricalData)]
+        public IEnumerable<BaseData> GetLastKnownPrices(Symbol symbol)
+        {
+            if (!HistoryRequestValid(symbol) || HistoryProvider == null)
+            {
+                return Enumerable.Empty<BaseData>();
+            }
+
+            var data = GetLastKnownPrices([symbol]);
+            return data.Values.FirstOrDefault() ?? Enumerable.Empty<BaseData>();
+        }
+
+        /// <summary>
+        /// Yields data to warm up multiple securities for all their subscribed data types
+        /// </summary>
+        /// <param name="securities">The securities we want to get seed data for</param>
+        /// <returns>Securities historical data</returns>
+        [DocumentationAttribute(AddingData)]
+        [DocumentationAttribute(HistoricalData)]
+        public DataDictionary<IEnumerable<BaseData>> GetLastKnownPrices(IEnumerable<Security> securities)
+        {
+            return GetLastKnownPrices(securities.Select(s => s.Symbol));
+        }
+
+        /// <summary>
+        /// Yields data to warm up multiple securities for all their subscribed data types
+        /// </summary>
+        /// <param name="symbols">The symbols we want to get seed data for</param>
+        /// <returns>Securities historical data</returns>
+        [DocumentationAttribute(AddingData)]
+        [DocumentationAttribute(HistoricalData)]
+        public DataDictionary<IEnumerable<BaseData>> GetLastKnownPrices(IEnumerable<Symbol> symbols)
+        {
+            if (HistoryProvider == null)
+            {
+                return new DataDictionary<IEnumerable<BaseData>>();
+            }
+
+            var data = new Dictionary<(Symbol, Type, TickType), BaseData>();
+            GetLastKnownPricesImpl(symbols, data);
+
+            return data
+                .GroupBy(kvp => kvp.Key.Item1)
+                .ToDataDictionary(
+                    g => g.Key,
+                    g => g.OrderBy(kvp => kvp.Value.Time)
+                        .ThenBy(kvp => GetTickTypeOrder(kvp.Key.Item1.SecurityType, kvp.Key.Item3))
+                        .Select(kvp => kvp.Value)
+                );
+        }
+
+        /// <summary>
+        /// Get the last known price using the history provider.
+        /// Useful for seeding securities with the correct price
+        /// </summary>
+        /// <param name="security"><see cref="Security"/> object for which to retrieve historical data</param>
+        /// <returns>A single <see cref="BaseData"/> object with the last known price</returns>
+        [Obsolete("This method is obsolete please use 'GetLastKnownPrices' which will return the last data point" +
+            " for each type associated with the requested security")]
+        [DocumentationAttribute(AddingData)]
+        [DocumentationAttribute(HistoricalData)]
+        public BaseData GetLastKnownPrice(Security security)
+        {
+            return GetLastKnownPrice(security.Symbol);
+        }
+
+        /// <summary>
+        /// Get the last known price using the history provider.
+        /// Useful for seeding securities with the correct price
+        /// </summary>
+        /// <param name="symbol">Symbol for which to retrieve historical data</param>
+        /// <returns>A single <see cref="BaseData"/> object with the last known price</returns>
+        [Obsolete("This method is obsolete please use 'GetLastKnownPrices' which will return the last data point" +
+            " for each type associated with the requested security")]
+        [DocumentationAttribute(AddingData)]
+        [DocumentationAttribute(HistoricalData)]
+        public BaseData GetLastKnownPrice(Symbol symbol)
+        {
+            return GetLastKnownPrices(symbol)
+                // since we are returning a single data point let's respect order
+                .OrderByDescending(data => GetTickTypeOrder(data.Symbol.SecurityType, LeanData.GetCommonTickTypeForCommonDataTypes(data.GetType(), data.Symbol.SecurityType)))
+                .LastOrDefault();
+        }
+
+        private void GetLastKnownPricesImpl(IEnumerable<Symbol> symbols, Dictionary<(Symbol, Type, TickType), BaseData> result,
+            int attempts = 0, IEnumerable<HistoryRequest> failedRequests = null)
+        {
+            IEnumerable<HistoryRequest> historyRequests;
+            var isRetry = failedRequests != null;
+
+            symbols = symbols?.Where(x => !x.IsCanonical() || x.SecurityType == SecurityType.Future);
+
+            if (attempts == 0)
+            {
+                historyRequests = CreateBarCountHistoryRequests(symbols, SeedLookbackPeriod,
+                    fillForward: false, useAllSubscriptions: true)
+                    .SelectMany(request =>
+                    {
+                        // Make open interest request daily, higher resolutions will need greater periods to return data
+                        if (request.DataType == typeof(OpenInterest) && request.Resolution < Resolution.Daily)
+                        {
+                            return CreateBarCountHistoryRequests([request.Symbol], typeof(OpenInterest), SeedLookbackPeriod,
+                                Resolution.Daily, fillForward: false, useAllSubscriptions: true);
+                        }
+
+                        if (request.Resolution < Resolution.Minute)
+                        {
+                            var dataType = request.DataType;
+                            if (dataType == typeof(Tick))
+                            {
+                                dataType = request.TickType == TickType.Trade ? typeof(TradeBar) : typeof(QuoteBar);
+                            }
+
+                            return CreateBarCountHistoryRequests([request.Symbol], dataType, SeedLookbackPeriod,
+                                Resolution.Minute, fillForward: false, useAllSubscriptions: true);
+                        }
+
+                        return [request];
+                    });
+            }
+            else if (attempts == 1)
+            {
+                // If the first attempt to get the last know price returns no data, it maybe the case of an illiquid security.
+                // We increase the look-back period for this case accordingly to the resolution to cover a longer period
+                historyRequests = failedRequests
+                    .GroupBy(request => request.Symbol)
+                    .Select(group =>
+                    {
+                        var symbolRequests = group.ToArray();
+                        var resolution = symbolRequests[0].Resolution;
+                        var periods = resolution == Resolution.Daily
+                            ? SeedRetryDailyLookbackPeriod
+                            : resolution == Resolution.Hour ? SeedRetryHourLookbackPeriod : SeedRetryMinuteLookbackPeriod;
+                        return CreateBarCountHistoryRequests([group.Key], periods, resolution, fillForward: false, useAllSubscriptions: true)
+                            .Where(request => symbolRequests.Any(x => x.DataType == request.DataType));
+                    })
+                    .SelectMany(x => x);
+            }
+            else
+            {
+                // Fall back to bigger daily requests as a last resort
+                historyRequests = CreateBarCountHistoryRequests(failedRequests.Select(x => x.Symbol).Distinct(),
+                    Math.Min(60, 5 * SeedRetryDailyLookbackPeriod), Resolution.Daily, fillForward: false, useAllSubscriptions: true);
+            }
+
+            var requests = historyRequests.ToArray();
+            if (requests.Length == 0)
+            {
+                return;
+            }
+
+            foreach (var slice in History(requests))
+            {
+                for (var i = 0; i < requests.Length; i++)
+                {
+                    var historyRequest = requests[i];
+
+                    // keep the last data point per tick type
+                    BaseData data = null;
+
+                    if (historyRequest.DataType == typeof(QuoteBar))
+                    {
+                        if (slice.QuoteBars.TryGetValue(historyRequest.Symbol, out var quoteBar))
+                        {
+                            data = quoteBar;
+                        }
+                    }
+                    else if (historyRequest.DataType == typeof(TradeBar))
+                    {
+                        if (slice.Bars.TryGetValue(historyRequest.Symbol, out var quoteBar))
+                        {
+                            data = quoteBar;
+                        }
+                    }
+                    else if (historyRequest.DataType == typeof(OpenInterest))
+                    {
+                        if (slice.Ticks.TryGetValue(historyRequest.Symbol, out var openInterests))
+                        {
+                            data = openInterests[0];
+                        }
+                    }
+                    // No Tick data, resolution is limited to Minute as minimum
+                    else
+                    {
+                        var typeData = slice.Get(historyRequest.DataType);
+                        if (typeData.ContainsKey(historyRequest.Symbol))
+                        {
+                            data = typeData[historyRequest.Symbol];
+                        }
+                    }
+
+                    if (data != null)
+                    {
+                        result[(historyRequest.Symbol, historyRequest.DataType, historyRequest.TickType)] = data;
+                    }
+                }
+            }
+
+            if (attempts < 2)
+            {
+                // Give it another try to get data for all symbols and all data types
+                GetLastKnownPricesImpl(null, result, attempts + 1,
+                    requests.Where((request, i) => !result.ContainsKey((request.Symbol, request.DataType, request.TickType))));
+            }
+        }
+
+        /// <summary>
+        /// Centralized logic to get data typed history given a list of requests for the specified symbol.
+        /// This method is used to keep backwards compatibility for those History methods that expect an ArgumentException to be thrown
+        /// when the security and the requested data type do not match
+        /// </summary>
+        /// <remarks>
+        /// This method will check for Python custom data types in order to call the right Slice.Get dynamic method
+        /// </remarks>
+        private IEnumerable<T> GetDataTypedHistory<T>(IEnumerable<HistoryRequest> requests, Symbol symbol)
+            where T : IBaseData
+        {
+            var type = typeof(T);
+
+            var historyRequests = requests.Where(x => x != null).ToList();
+            if (historyRequests.Count == 0)
+            {
+                throw new ArgumentException($"No history data could be fetched. " +
+                    $"This could be due to the specified security not being of the requested type. Symbol: {symbol} Requested Type: {type.Name}");
+            }
+
+            var slices = History(historyRequests, TimeZone);
+
+            IEnumerable<T> result = null;
+
+            // If T is a custom data coming from Python (a class derived from PythonData), T will get here as PythonData
+            // and not the actual custom type. We take care of this especial case by using a dynamic version of GetDataTypedHistory that
+            // receives the Python type, and we get it from the history requests.
+            if (type == typeof(PythonData))
+            {
+                result = GetPythonCustomDataTypeHistory(slices, historyRequests, symbol).OfType<T>();
+            }
+            // TODO: This is a patch to fix the issue with the Slice.GetImpl method returning only the last tick
+            //       for each symbol instead of the whole list of ticks.
+            //       The actual issue is Slice.GetImpl, so patch this can be removed right after it is properly addressed.
+            //       A proposed solution making the Tick class a BaseDataCollection and make the Ticks class a dictionary Symbol->Tick instead of
+            //       Symbol->List<Tick> so we can use the Slice.Get methods to collect all ticks in every slice instead of only the last one.
+            else if (type == typeof(Tick))
+            {
+                result = (IEnumerable<T>)slices.Select(x => x.Ticks).Where(x => x.ContainsKey(symbol)).SelectMany(x => x[symbol]);
+            }
+            else
+            {
+                result = slices.Get<T>(symbol);
+            }
+
+            return result.Memoize();
+        }
+
+        /// <summary>
+        /// Centralized logic to get data typed history for a given list of requests.
+        /// </summary>
+        /// <remarks>
+        /// This method will check for Python custom data types in order to call the right Slice.Get dynamic method
+        /// </remarks>
+        protected IEnumerable<DataDictionary<T>> GetDataTypedHistory<T>(IEnumerable<HistoryRequest> requests)
+            where T : IBaseData
+        {
+            var historyRequests = requests.Where(x => x != null).ToList();
+            var slices = History(historyRequests, TimeZone);
+
+            IEnumerable<DataDictionary<T>> result = null;
+
+            if (typeof(T) == typeof(PythonData))
+            {
+                result = GetPythonCustomDataTypeHistory(slices, historyRequests).OfType<DataDictionary<T>>();
+            }
+            else
+            {
+                if (typeof(T) == typeof(Tick) && !_dataDictionaryTickWarningSent)
+                {
+                    _dataDictionaryTickWarningSent = true;
+                    Debug("Warning: Multiple symbols Tick history will return the last tick per timestep. To access all ticks remove the 'Tick' type to use the History() returning Slice, all ticks can be accessed with Slice.Ticks.");
+                }
+
+                if (typeof(T) == typeof(BaseDataCollection) && historyRequests[0].DataType != typeof(BaseDataCollection))
+                {
+                    result = (IEnumerable<DataDictionary<T>>)slices.GetUniverseData();
+                }
+                else
+                {
+                    result = slices.Get<T>();
+                }
+            }
+
+            return result.Memoize();
+        }
+
+        private IEnumerable<Slice> History(IEnumerable<HistoryRequest> requests, DateTimeZone timeZone)
+        {
+            // filter out any universe securities that may have made it this far
+            var filteredRequests = GetFilterestRequests(requests);
+
+            // filter out future data to prevent look ahead bias
+            var history = HistoryProvider.GetHistory(filteredRequests, timeZone);
+
+            if (PythonEngine.IsInitialized)
+            {
+                // add protection against potential python deadlocks
+                // with parallel history requests we reuse the data stack threads to serve the history calls because of this we need to make sure to release
+                // the GIL before waiting on the history request because there could be a work/job in the data stack queues which needs the GIL
+                return WrapPythonDataHistory(history);
+            }
+
+            return history;
+        }
+
+        private IEnumerable<HistoryRequest> GetFilterestRequests(IEnumerable<HistoryRequest> requests)
+        {
+            var sentMessage = false;
+            foreach (var request in requests.Where(hr => HistoryRequestValid(hr.Symbol)))
+            {
+                // prevent future requests
+                if (request.EndTimeUtc > UtcTime)
+                {
+                    var endTimeUtc = UtcTime;
+                    var startTimeUtc = request.StartTimeUtc;
+                    if (request.StartTimeUtc > request.EndTimeUtc)
+                    {
+                        startTimeUtc = request.EndTimeUtc;
+                    }
+
+                    yield return new HistoryRequest(startTimeUtc, endTimeUtc,
+                        request.DataType, request.Symbol, request.Resolution, request.ExchangeHours,
+                        request.DataTimeZone, request.FillForwardResolution, request.IncludeExtendedMarketHours,
+                        request.IsCustomData, request.DataNormalizationMode, request.TickType, request.DataMappingMode,
+                        request.ContractDepthOffset);
+
+                    if (!sentMessage)
+                    {
+                        sentMessage = true;
+                        Debug("Request for future history modified to end now.");
+                    }
+                }
+                else
+                {
+                    yield return request;
+                }
+            }
+        }
+
+        /// <summary>
+        /// Helper method to create history requests from a date range
+        /// </summary>
+        protected IEnumerable<HistoryRequest> CreateDateRangeHistoryRequests(IEnumerable<Symbol> symbols, DateTime startAlgoTz, DateTime endAlgoTz,
+            Resolution? resolution = null, bool? fillForward = null, bool? extendedMarketHours = null, DataMappingMode? dataMappingMode = null,
+            DataNormalizationMode? dataNormalizationMode = null, int? contractDepthOffset = null)
+        {
+            // Materialize the symbols to avoid multiple enumeration
+            var symbolsArray = symbols.ToArray();
+            return CreateDateRangeHistoryRequests(
+                symbolsArray,
+                Extensions.GetCustomDataTypeFromSymbols(symbolsArray),
+                startAlgoTz,
+                endAlgoTz,
+                resolution,
+                fillForward,
+                extendedMarketHours,
+                dataMappingMode,
+                dataNormalizationMode,
+                contractDepthOffset);
+        }
+
+        /// <summary>
+        /// Helper method to create history requests from a date range with custom data type
+        /// </summary>
+        protected IEnumerable<HistoryRequest> CreateDateRangeHistoryRequests(IEnumerable<Symbol> symbols, Type requestedType, DateTime startAlgoTz, DateTime endAlgoTz,
+            Resolution? resolution = null, bool? fillForward = null, bool? extendedMarketHours = null, DataMappingMode? dataMappingMode = null,
+            DataNormalizationMode? dataNormalizationMode = null, int? contractDepthOffset = null)
+        {
+            return symbols.Where(HistoryRequestValid).SelectMany(x =>
+            {
+                var requests = new List<HistoryRequest>();
+
+                foreach (var config in GetMatchingSubscriptions(x, requestedType, resolution))
+                {
+                    var request = _historyRequestFactory.CreateHistoryRequest(config, startAlgoTz, endAlgoTz, GetExchangeHours(x, requestedType), resolution,
+                        fillForward, extendedMarketHours, dataMappingMode, dataNormalizationMode, contractDepthOffset);
+                    requests.Add(request);
+                }
+
+                return requests;
+            });
+        }
+
+        /// <summary>
+        /// Helper methods to create a history request for the specified symbols and bar count
+        /// </summary>
+        private IEnumerable<HistoryRequest> CreateBarCountHistoryRequests(IEnumerable<Symbol> symbols, int periods, Resolution? resolution = null,
+            bool? fillForward = null, bool? extendedMarketHours = null, DataMappingMode? dataMappingMode = null,
+            DataNormalizationMode? dataNormalizationMode = null, int? contractDepthOffset = null, bool useAllSubscriptions = false)
+        {
+            // Materialize the symbols to avoid multiple enumeration
+            var symbolsArray = symbols.ToArray();
+            return CreateBarCountHistoryRequests(
+                symbolsArray,
+                Extensions.GetCustomDataTypeFromSymbols(symbolsArray),
+                periods,
+                resolution,
+                fillForward,
+                extendedMarketHours,
+                dataMappingMode,
+                dataNormalizationMode,
+                contractDepthOffset,
+                useAllSubscriptions);
+        }
+
+        /// <summary>
+        /// Helper methods to create a history request for the specified symbols and bar count with custom data type
+        /// </summary>
+        private IEnumerable<HistoryRequest> CreateBarCountHistoryRequests(IEnumerable<Symbol> symbols, Type requestedType, int periods,
+            Resolution? resolution = null, bool? fillForward = null, bool? extendedMarketHours = null, DataMappingMode? dataMappingMode = null,
+            DataNormalizationMode? dataNormalizationMode = null, int? contractDepthOffset = null, bool useAllSubscriptions = false)
+        {
+            return symbols.Where(HistoryRequestValid).SelectMany(symbol =>
+            {
+                // Match or create configs for the symbol
+                var configs = GetMatchingSubscriptions(symbol, requestedType, resolution, useAllSubscriptions).ToList();
+                if (configs.Count == 0)
+                {
+                    return Enumerable.Empty<HistoryRequest>();
+                }
+
+                return configs.Select(config =>
+                {
+                    // If no requested type was passed, use the config type to get the resolution (if not provided) and the exchange hours
+                    var type = requestedType ?? config.Type;
+                    var res = resolution ?? config.Resolution;
+                    var exchange = GetExchangeHours(symbol, type);
+                    var start = _historyRequestFactory.GetStartTimeAlgoTz(symbol, periods, res, exchange, config.DataTimeZone,
+                        config.Type, extendedMarketHours);
+                    var end = Time;
+
+                    return _historyRequestFactory.CreateHistoryRequest(config, start, end, exchange, res, fillForward,
+                        extendedMarketHours, dataMappingMode, dataNormalizationMode, contractDepthOffset);
+                });
+            });
+        }
+
+        private int GetTickTypeOrder(SecurityType securityType, TickType tickType)
+        {
+            return SubscriptionManager.AvailableDataTypes[securityType].IndexOf(tickType);
+        }
+
+        private IEnumerable<SubscriptionDataConfig> GetMatchingSubscriptions(Symbol symbol, Type type, Resolution? resolution = null, bool useAllSubscriptions = false)
+        {
+            var subscriptions = SubscriptionManager.SubscriptionDataConfigService
+                // we add internal subscription so that history requests are covered, this allows us to warm them up too
+                .GetSubscriptionDataConfigs(symbol, includeInternalConfigs: true)
+                // find all subscriptions matching the requested type with a higher resolution than requested
+                .OrderByDescending(s => s.Resolution)
+                // lets make sure to respect the order of the data types
+                .ThenByDescending(config => GetTickTypeOrder(config.SecurityType, config.TickType));
+
+            var matchingSubscriptions = Enumerable.Empty<SubscriptionDataConfig>();
+
+            if (type == typeof(Tick))
+            {
+                // If type is Tick, don't rely on matchingSubscriptions
+                // Instead, we generate all available Tick subscriptions for the given resolution,
+                // to avoid cases where, for example with a FutureContract, only OpenInterest would match,
+                // when we actually need to generate Trade, Quote, and OpenInterest.
+                matchingSubscriptions = subscriptions.Where(s => LeanData.IsCommonLeanDataType(s.Type))
+                    .Select(s => s.Type == type ? s : new SubscriptionDataConfig(s, type, resolution: Resolution.Tick,
+                        tickType: LeanData.GetCommonTickTypeForCommonDataTypes(s.Type, s.SecurityType)));
+            }
+            else
+            {
+                // Filter subscriptions matching the requested type
+                matchingSubscriptions = subscriptions.Where(s => SubscriptionDataConfigTypeFilter(type, s.Type, filterOutOpenInterest: !useAllSubscriptions));
+            }
+
+            var internalConfig = new List<SubscriptionDataConfig>();
+            var userConfig = new List<SubscriptionDataConfig>();
+            foreach (var config in matchingSubscriptions)
+            {
+                if (config.IsInternalFeed)
+                {
+                    internalConfig.Add(config);
+                }
+                else
+                {
+                    userConfig.Add(config);
+                }
+            }
+
+            // if we have any user defined subscription configuration we use it, else we use internal ones if any
+            List<SubscriptionDataConfig> configs = null;
+            if (userConfig.Count != 0)
+            {
+                configs = userConfig;
+            }
+            if ((useAllSubscriptions || configs == null) && internalConfig.Count != 0)
+            {
+                if (configs == null)
+                {
+                    configs = internalConfig;
+                }
+                else
+                {
+                    configs.AddRange(internalConfig);
+                }
+            }
+
+            // we use the subscription manager registered configurations here, we can not rely on the Securities collection
+            // since this might be called when creating a security and warming it up
+            if (configs != null && configs.Count != 0)
+            {
+                if (resolution.HasValue && symbol.SecurityType == SecurityType.Equity)
+                {
+                    // Check if resolution is set and not Daily or Hourly for an Equity symbol
+                    if (resolution == Resolution.Daily || resolution == Resolution.Hour)
+                    {
+                        // for Daily and Hour resolution, for equities, we have to
+                        // filter out any existing subscriptions that could be of Quote type
+                        // This could happen if they were Resolution.Minute/Second/Tick
+                        return configs.Where(s => s.TickType != TickType.Quote);
+                    }
+
+                    // If no existing configuration for the Quote tick type, add the new config
+                    if ((type == null || type == typeof(Tick)) && !configs.Any(config => config.TickType == TickType.Quote))
+                    {
+                        type = LeanData.GetDataType(resolution.Value, TickType.Quote);
+                        var entry = MarketHoursDatabase.GetEntry(symbol, new[] { type });
+                        var baseFillForward = configs[0].FillDataForward;
+                        var baseExtendedMarketHours = configs[0].ExtendedMarketHours;
+
+                        // Create a new SubscriptionDataConfig
+                        var newConfig = new SubscriptionDataConfig(
+                            type,
+                            symbol,
+                            resolution.Value,
+                            entry.DataTimeZone,
+                            entry.ExchangeHours.TimeZone,
+                            baseFillForward,
+                            baseExtendedMarketHours,
+                            false, tickType: TickType.Quote);
+
+                        configs.Add(newConfig);
+
+                        // Sort the configs in descending order based on tick type
+                        return configs.OrderByDescending(config => GetTickTypeOrder(config.SecurityType, config.TickType));
+                    }
+                }
+
+                if (symbol.IsCanonical() && configs.Count > 1)
+                {
+                    // option/future (canonicals) might add in a ZipEntryName auxiliary data type used for selection, we filter it out from history requests by default
+                    return configs.Where(s => !s.Type.IsAssignableTo(typeof(BaseChainUniverseData)));
+                }
+
+                return configs;
+            }
+            else
+            {
+                // let's try to respect already added user settings, even if resolution/type don't match, like Tick vs Bars
+                var userConfigIfAny = subscriptions.FirstOrDefault(x => LeanData.IsCommonLeanDataType(x.Type) && !x.IsInternalFeed);
+
+                // Inherit values from existing subscriptions or use defaults
+                var extendedMarketHours = userConfigIfAny?.ExtendedMarketHours ?? UniverseSettings.ExtendedMarketHours;
+                var dataNormalizationMode = userConfigIfAny?.DataNormalizationMode ?? UniverseSettings.GetUniverseNormalizationModeOrDefault(symbol.SecurityType);
+                var dataMappingMode = userConfigIfAny?.DataMappingMode ?? UniverseSettings.GetUniverseMappingModeOrDefault(symbol.SecurityType, symbol.ID.Market);
+                var contractDepthOffset = userConfigIfAny?.ContractDepthOffset ?? (uint)Math.Abs(UniverseSettings.ContractDepthOffset);
+
+                // If type was specified and not a lean data type and also not abstract, we create a new subscription
+                if (type != null && !LeanData.IsCommonLeanDataType(type) && !type.IsAbstract)
+                {
+                    // we already know it's not a common lean data type
+                    var isCustom = Extensions.IsCustomDataType(symbol, type);
+                    var entry = MarketHoursDatabase.GetEntry(symbol, new[] { type });
+
+                    // Retrieve the associated data type from the universe if available, otherwise, use the provided type
+                    var dataType = UniverseManager.TryGetValue(symbol, out var universe) && type.IsAssignableFrom(universe.DataType)
+                        ? universe.DataType
+                        : type;
+
+                    // Determine resolution using the data type
+                    resolution = GetResolution(symbol, resolution, dataType);
+
+                    // we were giving a specific type let's fetch it
+                    return new[] { new SubscriptionDataConfig(
+                        dataType,
+                        symbol,
+                        resolution.Value,
+                        entry.DataTimeZone,
+                        entry.ExchangeHours.TimeZone,
+                        UniverseSettings.FillForward,
+                        extendedMarketHours,
+                        true,
+                        isCustom,
+                        LeanData.GetCommonTickTypeForCommonDataTypes(dataType, symbol.SecurityType),
+                        true,
+                        dataNormalizationMode,
+                        dataMappingMode,
+                        contractDepthOffset)};
+                }
+
+                var res = GetResolution(symbol, resolution, type);
+                return SubscriptionManager
+                    .LookupSubscriptionConfigDataTypes(symbol.SecurityType, res,
+                        // for continuous contracts, if we are given a type (or none) that's common (like trade/quote), we respect it
+                        symbol.IsCanonical() && (symbol.SecurityType != SecurityType.Future || type != null && !LeanData.IsCommonLeanDataType(type)))
+                    .Where(tuple => SubscriptionDataConfigTypeFilter(type, tuple.Item1, filterOutOpenInterest: !useAllSubscriptions))
+                    .Select(x =>
+                    {
+                        var configType = x.Item1;
+                        // Use the config type to get an accurate mhdb entry
+                        var entry = MarketHoursDatabase.GetEntry(symbol, new[] { configType });
+                        var res = GetResolution(symbol, resolution, configType);
+
+                        return new SubscriptionDataConfig(
+                            configType,
+                            symbol,
+                            res,
+                            entry.DataTimeZone,
+                            entry.ExchangeHours.TimeZone,
+                            UniverseSettings.FillForward,
+                            extendedMarketHours,
+                            true,
+                            false,
+                            x.Item2,
+                            true,
+                            dataNormalizationMode,
+                            dataMappingMode,
+                            contractDepthOffset);
+                    })
+                    // lets make sure to respect the order of the data types, if used on a history request will affect outcome when using pushthrough for example
+                    .OrderByDescending(config => GetTickTypeOrder(config.SecurityType, config.TickType));
+            }
+        }
+
+        /// <summary>
+        /// Helper method to determine if the provided config type passes the filter of the target type
+        /// </summary>
+        /// <remarks>If the target type is <see cref="BaseData"/>, <see cref="OpenInterest"/> config types will return false.
+        /// This is useful to filter OpenInterest by default from history requests unless it's explicitly requested</remarks>
+        private bool SubscriptionDataConfigTypeFilter(Type targetType, Type configType, bool filterOutOpenInterest = true)
+        {
+            if (targetType == null)
+            {
+                return !filterOutOpenInterest || configType != typeof(OpenInterest);
+            }
+
+            var targetIsGenericType = targetType == typeof(BaseData);
+
+            return targetType.IsAssignableFrom(configType) && (!targetIsGenericType || !filterOutOpenInterest || configType != typeof(OpenInterest));
+        }
+
+        private SecurityExchangeHours GetExchangeHours(Symbol symbol, Type type = null)
+        {
+            return GetMarketHours(symbol, type).ExchangeHours;
+        }
+
+        private MarketHoursDatabase.Entry GetMarketHours(Symbol symbol, Type type = null)
+        {
+            var hoursEntry = type != null
+                ? MarketHoursDatabase.GetEntry(symbol, new[] { type })
+                : MarketHoursDatabase.GetEntry(symbol.ID.Market, symbol, symbol.ID.SecurityType);
+
+
+            // user can override the exchange hours in algorithm, i.e. HistoryAlgorithm
+            Security security;
+            if (Securities.TryGetValue(symbol, out security))
+            {
+                return new MarketHoursDatabase.Entry(hoursEntry.DataTimeZone, security.Exchange.Hours);
+            }
+
+            return hoursEntry;
+        }
+
+        private Resolution GetResolution(Symbol symbol, Resolution? resolution, Type type)
+        {
+            if (resolution != null)
+            {
+                return resolution.Value;
+            }
+
+            Resolution? result = null;
+            var hasNonInternal = false;
+            foreach (var config in SubscriptionManager.SubscriptionDataConfigService
+                .GetSubscriptionDataConfigs(symbol, includeInternalConfigs: true)
+                // we process non internal configs first
+                .OrderBy(config => config.IsInternalFeed ? 1 : 0))
+            {
+                if (!config.IsInternalFeed || !hasNonInternal)
+                {
+                    // once we find a non internal config we ignore internals
+                    hasNonInternal |= !config.IsInternalFeed;
+                    if (!result.HasValue || config.Resolution < result)
+                    {
+                        result = config.Resolution;
+                    }
+                }
+            }
+
+            // if resolution is tick, type should be tick or not common, meaning should not use resolution tick with quoteBar/tradeBar/openinterest types
+            if (result != null && (result.Value != Resolution.Tick || type == typeof(Tick) || !LeanData.IsCommonLeanDataType(type)))
+            {
+                return (Resolution)result;
+            }
+            else
+            {
+                if (resolution != null)
+                {
+                    return resolution.Value;
+                }
+
+                if (type == null || LeanData.IsCommonLeanDataType(type) || type.IsAbstract)
+                {
+                    return UniverseSettings.Resolution;
+                }
+
+                try
+                {
+                    // for custom data types let's try to fetch the default resolution from the type definition
+                    var instance = type.GetBaseDataInstance();
+                    return instance.DefaultResolution();
+                }
+                catch
+                {
+                    // just in case
+                    return UniverseSettings.Resolution;
+                }
+            }
+        }
+
+        /// <summary>
+        /// Validate a symbol for a history request.
+        /// Universe and canonical symbols are only valid for future security types
+        /// </summary>
+        private bool HistoryRequestValid(Symbol symbol)
+        {
+            return symbol.SecurityType == SecurityType.Future ||
+                symbol.SecurityType == SecurityType.Option ||
+                symbol.SecurityType == SecurityType.IndexOption ||
+                symbol.SecurityType == SecurityType.FutureOption ||
+                !symbol.IsCanonical();
+        }
+
+        /// <summary>
+        /// Will set warmup settings validating the algorithm has not finished initialization yet
+        /// </summary>
+        private void SetWarmup(int? barCount, TimeSpan? timeSpan, Resolution? resolution)
+        {
+            if (_locked)
+            {
+                throw new InvalidOperationException("QCAlgorithm.SetWarmup(): This method cannot be used after algorithm initialized");
+            }
+
+            _warmupTimeSpan = timeSpan;
+            _warmupBarCount = barCount;
+            Settings.WarmupResolution = resolution;
+        }
+
+        /// <summary>
+        /// Throws if a period bases history request is made for tick resolution, which is not allowed.
+        /// </summary>
+        private void CheckPeriodBasedHistoryRequestResolution(IEnumerable<Symbol> symbols, Resolution? resolution, Type requestedType)
+        {
+            if (symbols.Any(symbol => GetResolution(symbol, resolution, requestedType) == Resolution.Tick))
+            {
+                throw new InvalidOperationException("History functions that accept a 'periods' parameter can not be used with Resolution.Tick");
+            }
+        }
+
+        /// <summary>
+        /// Centralized logic to get data typed history given a list of requests for the specified symbol.
+        /// This method is used to keep backwards compatibility for those History methods that expect an ArgumentException to be thrown
+        /// when the security and the requested data type do not match
+        /// </summary>
+        /// <remarks>
+        /// This method is only used for Python algorithms, specially for those requesting custom data type history.
+        /// The reason for using this method is that custom data type Python history calls to
+        /// <see cref="History{T}(QuantConnect.Symbol, int, Resolution?, bool?, bool?, DataMappingMode?, DataNormalizationMode?, int?)"/> will always use <see cref="PythonData"/> (the custom data base class)
+        /// as the T argument, because the custom data class is a Python type, which will cause the history data in the slices to not be matched
+        /// to the actual requested type, resulting in an empty list of slices.
+        /// </remarks>
+        private static IEnumerable<dynamic> GetPythonCustomDataTypeHistory(IEnumerable<Slice> slices, List<HistoryRequest> requests,
+            Symbol symbol = null)
+        {
+            if (requests.Count == 0 || requests.Any(x => x.DataType != requests[0].DataType))
+            {
+                throw new ArgumentException("QCAlgorithm.GetPythonCustomDataTypeHistory(): All history requests must be for the same data type");
+            }
+
+            var pythonType = requests[0].DataType;
+
+            if (symbol == null)
+            {
+                return slices.Get(pythonType);
+            }
+
+            return slices.Get(pythonType, symbol);
+        }
+
+        /// <summary>
+        /// Wraps the resulting history enumerable in case of a Python custom data history request.
+        /// We need to get and release the Python GIL when parallel history requests are enabled to avoid deadlocks
+        /// in the custom data readers.
+        /// </summary>
+        private static IEnumerable<Slice> WrapPythonDataHistory(IEnumerable<Slice> history)
+        {
+            using var enumerator = history.GetEnumerator();
+
+            var hasData = true;
+            while (hasData)
+            {
+                // When yielding in tasks there's no guarantee it will continue in the same thread, but we need that guarantee
+                using (Py.GIL())
+                {
+                    var state = PythonEngine.BeginAllowThreads();
+                    try
+                    {
+                        hasData = enumerator.MoveNext();
+                    }
+                    finally
+                    {
+                        // we always need to reset the state so that we can dispose of the GIL
+                        PythonEngine.EndAllowThreads(state);
+                    }
+                }
+                if (hasData)
+                {
+                    yield return enumerator.Current;
+                }
+            }
+        }
+    }
+}

@@ -1,0 +1,20 @@
+{
+  "map-file-provider": "LocalDiskMapFileProvider",
+  "data-provider": "DefaultDataProvider",
+  "log-handler": "ConsoleLogHandler",
+  "factor-file-provider": "LocalDiskFactorFileProvider",
+
+  // The root directory of the data folder for this application
+  "data-folder": "../../../Data/",
+
+  // To get your api access token go to quantconnect.com/account
+  "job-user-id": "0",
+  "api-access-token": "",
+  "job-organization-id": "",
+
+  // Data downloader provider
+  "data-downloader": "",
+
+  // Specifies the name of the brokerage service used for data downloading (optional).
+  "data-downloader-brokerage": ""
+}

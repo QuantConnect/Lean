@@ -1,0 +1,51 @@
+name: API Tests
+
+on:
+  push:
+    branches: ['*']
+    tags: ['*']
+  pull_request:
+    branches: [master]
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    # Only run on push events (not on pull_request) for security reasons in order to be able to use secrets
+    if: ${{ github.event_name == 'push' }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+        
+      - name: Liberate disk space
+        uses: jlumbroso/free-disk-space@main
+        with:
+          tool-cache: true
+          large-packages: false
+          docker-images: false
+          swap-storage: false
+
+      - name: Define docker helper
+        run: |
+          echo 'runInContainer() { docker exec test-container "$@"; }' > $HOME/ci_functions.sh
+          echo "BASH_ENV=$HOME/ci_functions.sh" >> $GITHUB_ENV
+
+      - name: Start container
+        run: |
+          docker run -d \
+            --workdir /__w/Lean/Lean \
+            -v /home/runner/work:/__w \
+            -e GITHUB_REF="${{ github.ref }}" \
+            -e QC_JOB_USER_ID="${{ secrets.QC_JOB_USER_ID }}" \
+            -e QC_API_ACCESS_TOKEN="${{ secrets.QC_API_ACCESS_TOKEN }}" \
+            -e QC_JOB_ORGANIZATION_ID="${{ secrets.QC_JOB_ORGANIZATION_ID }}" \
+            --name test-container \
+            quantconnect/lean:foundation \
+            tail -f /dev/null
+
+      - name: Run API Tests
+        run: |
+          # Build
+          runInContainer dotnet build /p:Configuration=Release /v:quiet /p:WarningLevel=1 QuantConnect.Lean.sln
+          
+          # Run Projects tests
+          runInContainer dotnet test ./Tests/bin/Release/QuantConnect.Tests.dll --blame-hang-timeout 7minutes --blame-crash --logger "console;verbosity=detailed" --filter "FullyQualifiedName=QuantConnect.Tests.API.ProjectTests|FullyQualifiedName=QuantConnect.Tests.API.ObjectStoreTests" -- TestRunParameters.Parameter\(name=\"log-handler\", value=\"ConsoleErrorLogHandler\"\)

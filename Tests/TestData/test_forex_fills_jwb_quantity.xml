@@ -1,0 +1,17 @@
+<?xml version="1.0"?>
+<ArrayOfDecimal xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+  <decimal>0</decimal>
+  <decimal>-100</decimal>
+  <decimal>0</decimal>
+  <decimal>300</decimal>
+  <decimal>500</decimal>
+  <decimal>250</decimal>
+  <decimal>-350</decimal>
+  <decimal>-700</decimal>
+  <decimal>-300</decimal>
+  <decimal>600</decimal>
+  <decimal>1100</decimal>
+  <decimal>550</decimal>
+  <decimal>-650</decimal>
+  <decimal>0</decimal>
+</ArrayOfDecimal>

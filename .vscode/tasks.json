@@ -1,0 +1,91 @@
+{
+    /*
+        VS Code Tasks for the LEAN engine
+        In order to use the build tasks you need dotnet on your system path.
+    */
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "build",
+            "type": "shell",
+            "command": "dotnet",
+            "args": [
+                "build",
+                "${workspaceFolder}/QuantConnect.Lean.sln",
+                "/p:Configuration=Debug",
+                "/p:DebugType=portable",
+                "/p:WarningLevel=1"
+            ],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "presentation": {
+                "reveal": "silent"
+            },
+            "problemMatcher": "$msCompile"
+        },
+        {
+            "label": "rebuild",
+            "type": "shell",
+            "command": "dotnet",
+            "args": [
+                "build",
+                "${workspaceFolder}/QuantConnect.Lean.sln",
+                "--no-incremental",
+                "/p:Configuration=Debug",
+                "/p:DebugType=portable",
+                "/p:WarningLevel=1"
+            ],
+            "group": "build",
+            "presentation": {
+                "reveal": "silent"
+            },
+            "problemMatcher": "$msCompile"
+        },
+        {
+            "label": "clean",
+            "type": "shell",
+            "command": "dotnet",
+            "args": [
+                "clean",
+                "${workspaceFolder}/QuantConnect.Lean.sln"
+            ],
+            "group": "build",
+            "presentation": {
+                "reveal": "silent"
+            },
+            "problemMatcher": "$msCompile"
+        },
+        {
+            "label": "test",
+            "type": "shell",
+            "command": "dotnet",
+            "args": [
+                "test",
+                "${workspaceFolder}/Tests/QuantConnect.Tests.csproj",
+                "--no-build"
+            ],
+            "group": {
+                "kind": "test",
+                "isDefault": true
+            },
+            "presentation": {
+                "reveal": "always"
+            },
+            "problemMatcher": "$msCompile"
+        },
+        {
+            "label": "start research",
+            "type": "shell",
+            "dependsOn": ["build"],
+            "group": "build",
+            "isBackground": true,
+            "command": "${workspaceFolder}/.vscode/launch_research.sh",
+            "args": [
+                "${workspaceFolder}/Launcher/bin/Debug"
+            ],
+            "problemMatcher": "$msCompile"
+        }
+    ]
+}

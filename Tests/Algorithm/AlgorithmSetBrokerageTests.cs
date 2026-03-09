@@ -1,0 +1,371 @@
+/*
+ * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
+ * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+*/
+
+using System.Collections.Generic;
+using System.Linq;
+using NUnit.Framework;
+using Python.Runtime;
+using QuantConnect.Brokerages;
+using QuantConnect.Algorithm;
+using QuantConnect.Data.Market;
+using QuantConnect.Orders;
+using QuantConnect.Tests.Engine.DataFeeds;
+using QuantConnect.Securities;
+using QuantConnect.Benchmarks;
+using QuantConnect.Orders.Fees;
+using QuantConnect.Orders.Fills;
+using QuantConnect.Interfaces;
+using QuantConnect.Orders.Slippage;
+
+namespace QuantConnect.Tests.Algorithm
+{
+    /// <summary>
+    /// Test class for
+    ///  - SetBrokerageModel() in QCAlgorithm
+    ///  - Default market for new securities
+    /// </summary>
+    [TestFixture]
+    public class AlgorithmSetBrokerageTests
+    {
+        private QCAlgorithm _algo;
+        private const string ForexSym = "EURUSD";
+        private const string Sym = "SPY";
+
+        /// <summary>
+        /// Instatiate a new algorithm before each test.
+        /// Clear the <see cref="SymbolCache"/> so that no symbols and associated brokerage models are cached between test
+        /// </summary>
+        [SetUp]
+        public void Setup()
+        {
+            _algo = new QCAlgorithm();
+            _algo.SubscriptionManager.SetDataManager(new DataManagerStub(_algo));
+            SymbolCache.TryRemove(ForexSym);
+            SymbolCache.TryRemove(Sym);
+        }
+
+        /// <summary>
+        /// The default market for FOREX should be Oanda
+        /// </summary>
+        [Test]
+        public void DefaultBrokerageModel_IsOanda_ForForex()
+        {
+            var forex = _algo.AddForex(ForexSym);
+
+
+            Assert.IsTrue(forex.Symbol.ID.Market == Market.Oanda);
+            Assert.IsTrue(_algo.BrokerageModel.GetType() == typeof(DefaultBrokerageModel));
+        }
+
+        [Test]
+        public void PythonCallPureCSharpSetBrokerageModel()
+        {
+            using (Py.GIL())
+            {
+                var model = new AlphaStreamsBrokerageModel().ToPython();
+                _algo.SetBrokerageModel(model);
+                Assert.DoesNotThrow(() => _algo.BrokerageModel.ApplySplit(new List<OrderTicket>(), new Split()));
+            }
+        }
+
+        [Test]
+        public void PythonCallSetBrokerageModel()
+        {
+            using (Py.GIL())
+            {
+                var model = PyModule.FromString("testModule",
+                    @"
+from AlgorithmImports import *
+
+class Test(AlphaStreamsBrokerageModel):
+    def GetLeverage(self, security):
+        return 12").GetAttr("Test");
+                _algo.SetBrokerageModel(model.Invoke());
+
+                var equity = _algo.AddEquity(Sym);
+                Assert.DoesNotThrow(() => _algo.BrokerageModel.ApplySplit(new List<OrderTicket>(), new Split()));
+                Assert.AreEqual(12m, _algo.BrokerageModel.GetLeverage(equity));
+            }
+        }
+
+        /// <summary>
+        /// The default market for equities should be USA
+        /// </summary>
+        [Test]
+        public void DefaultBrokerageModel_IsUSA_ForEquity()
+        {
+            var equity = _algo.AddEquity(Sym);
+
+
+            Assert.IsTrue(equity.Symbol.ID.Market == Market.USA);
+            Assert.IsTrue(_algo.BrokerageModel.GetType() == typeof(DefaultBrokerageModel));
+        }
+
+        /// <summary>
+        /// The default market for options should be USA
+        /// </summary>
+        [Test]
+        public void DefaultBrokerageModel_IsUSA_ForOption()
+        {
+            var option = _algo.AddOption(Sym);
+
+
+            Assert.IsTrue(option.Symbol.ID.Market == Market.USA);
+            Assert.IsTrue(_algo.BrokerageModel.GetType() == typeof(DefaultBrokerageModel));
+        }
+
+        /// <summary>
+        /// Brokerage model for an algorithm can be changed using <see cref="QCAlgorithm.SetBrokerageModel(IBrokerageModel)"/>
+        /// This changes the brokerage models used when forex currency pairs are added via AddForex and no brokerage is specified.
+        /// </summary>
+        [Test]
+        public void BrokerageModel_CanBeSpecifiedWith_SetBrokerageModel()
+        {
+            _algo.SetBrokerageModel(BrokerageName.OandaBrokerage);
+            var forex = _algo.AddForex(ForexSym);
+
+            string brokerage = GetDefaultBrokerageForSecurityType(SecurityType.Forex);
+
+
+            Assert.IsTrue(forex.Symbol.ID.Market == Market.Oanda);
+            Assert.IsTrue(_algo.BrokerageModel.GetType() == typeof(OandaBrokerageModel));
+            Assert.IsTrue(brokerage == Market.Oanda);
+        }
+
+        /// <summary>
+        /// Specifying the market in <see cref="QCAlgorithm.AddForex"/> will change the market of the security created.
+        /// </summary>
+        [Test]
+        public void BrokerageModel_CanBeSpecifiedWith_AddForex()
+        {
+            var forex = _algo.AddForex(ForexSym, Resolution.Minute, Market.FXCM);
+
+            string brokerage = GetDefaultBrokerageForSecurityType(SecurityType.Forex);
+
+
+            Assert.IsTrue(forex.Symbol.ID.Market == Market.FXCM);
+            Assert.IsTrue(_algo.BrokerageModel.GetType() == typeof(DefaultBrokerageModel));
+            Assert.IsTrue(brokerage == Market.Oanda);  // Doesn't change brokerage defined in BrokerageModel.DefaultMarkets
+        }
+
+        /// <summary>
+        /// The method <see cref="QCAlgorithm.AddSecurity(SecurityType, string, Resolution, bool, bool)"/> should use the default brokerage for the sepcific security.
+        /// Setting the brokerage with <see cref="QCAlgorithm.SetBrokerageModel(IBrokerageModel)"/> will affect the market of securities added with  <see cref="QCAlgorithm.AddSecurity(SecurityType, string, Resolution, bool, bool)"/>
+        /// </summary>
+        [Test]
+        public void AddSecurity_Follows_SetBrokerageModel()
+        {
+            // No brokerage set
+            var equity = _algo.AddSecurity(SecurityType.Equity, Sym);
+
+            string equityBrokerage = GetDefaultBrokerageForSecurityType(SecurityType.Equity);
+
+
+            Assert.IsTrue(equity.Symbol.ID.Market == Market.USA);
+            Assert.IsTrue(_algo.BrokerageModel.GetType() == typeof(DefaultBrokerageModel));
+            Assert.IsTrue(equityBrokerage == Market.USA);
+
+            // Set Brokerage
+            _algo.SetBrokerageModel(BrokerageName.OandaBrokerage);
+
+            var sec = _algo.AddSecurity(SecurityType.Forex, ForexSym, Resolution.Daily, false, 1, false);
+
+            string forexBrokerage = GetDefaultBrokerageForSecurityType(SecurityType.Forex);
+
+
+            Assert.IsTrue(sec.Symbol.ID.Market == Market.Oanda);
+            Assert.IsTrue(_algo.BrokerageModel.GetType() == typeof(OandaBrokerageModel));
+            Assert.IsTrue(forexBrokerage ==  Market.Oanda);
+        }
+
+        [Test]
+        public void AddSecurityCanAddWithSameTickerAndDifferentMarket()
+        {
+            var fxcmSecurity = _algo.AddSecurity(SecurityType.Forex, "EURUSD", Resolution.Minute, Market.FXCM, true, 1m, true);
+            var oandaSecurity = _algo.AddSecurity(SecurityType.Forex, "EURUSD", Resolution.Minute, Market.Oanda, true, 1m, true);
+
+            Assert.AreEqual(2, _algo.Securities.Count);
+            Assert.IsNotNull(_algo.Securities.Single(pair => pair.Key.ID.Market == Market.FXCM));
+            Assert.IsNotNull(_algo.Securities.Single(pair => pair.Key.ID.Market == Market.Oanda));
+            Assert.AreEqual(Market.FXCM, fxcmSecurity.Symbol.ID.Market);
+            Assert.AreEqual(Market.Oanda, oandaSecurity.Symbol.ID.Market);
+        }
+
+        [Test]
+        public void AddForexCanAddWithSameTickerAndDifferentMarket()
+        {
+            var fxcmSecurity = _algo.AddForex("EURUSD", Resolution.Minute, Market.FXCM);
+            var oandaSecurity = _algo.AddForex("EURUSD", Resolution.Minute, Market.Oanda);
+
+            Assert.AreEqual(2, _algo.Securities.Count);
+            Assert.IsNotNull(_algo.Securities.Single(pair => pair.Key.ID.Market == Market.FXCM));
+            Assert.IsNotNull(_algo.Securities.Single(pair => pair.Key.ID.Market == Market.Oanda));
+            Assert.AreEqual(Market.FXCM, fxcmSecurity.Symbol.ID.Market);
+            Assert.AreEqual(Market.Oanda, oandaSecurity.Symbol.ID.Market);
+        }
+
+        [TestCase(Language.CSharp)]
+        [TestCase(Language.Python)]
+        public void BrokerageNameFollowsSetBrokerageModel(Language language)
+        {
+            if (language == Language.CSharp)
+            {
+                Assert.AreEqual(BrokerageName.Default, _algo.BrokerageName);
+
+                _algo.SetBrokerageModel(BrokerageName.OandaBrokerage);
+                Assert.AreEqual(BrokerageName.OandaBrokerage, _algo.BrokerageName);
+
+                _algo.SetBrokerageModel(new InteractiveBrokersBrokerageModel());
+                Assert.AreEqual(BrokerageName.InteractiveBrokersBrokerage, _algo.BrokerageName);
+
+                _algo.SetBrokerageModel(new CustomBrokerageModel());
+                Assert.AreEqual(BrokerageName.Default, _algo.BrokerageName);
+            }
+            else
+            {
+                using (Py.GIL())
+                {
+                    var testModule = PyModule.FromString("testModule",
+                        @"
+from AlgorithmImports import *
+
+def getAlgorithm():
+    return QCAlgorithm()
+
+def setBrokerageModel(algorithm, brokerageModel):
+    algorithm.SetBrokerageModel(brokerageModel)
+
+def getBrokerageName(algorithm):
+    return algorithm.BrokerageName
+        ");
+
+                    var getAlgorithm = testModule.GetAttr("getAlgorithm");
+                    var algorithm = getAlgorithm.Invoke();
+
+                    var setBrokerageModel = testModule.GetAttr("setBrokerageModel");
+                    var getBrokerageName = testModule.GetAttr("getBrokerageName");
+
+                    Assert.AreEqual(BrokerageName.Default, getBrokerageName.Invoke(algorithm).AsManagedObject(typeof(BrokerageName)));
+
+                    setBrokerageModel.Invoke(algorithm, BrokerageName.OandaBrokerage.ToPython());
+                    Assert.AreEqual(BrokerageName.OandaBrokerage, getBrokerageName.Invoke(algorithm).AsManagedObject(typeof(BrokerageName)));
+
+                    setBrokerageModel.Invoke(algorithm, new InteractiveBrokersBrokerageModel().ToPython());
+                    Assert.AreEqual(BrokerageName.InteractiveBrokersBrokerage, getBrokerageName.Invoke(algorithm).AsManagedObject(typeof(BrokerageName)));
+
+                    setBrokerageModel.Invoke(algorithm, new CustomBrokerageModel().ToPython());
+                    Assert.AreEqual(BrokerageName.Default, getBrokerageName.Invoke(algorithm).AsManagedObject(typeof(BrokerageName)));
+                }
+            }
+        }
+
+        /// <summary>
+        /// Returns the default market for a security type
+        /// </summary>
+        /// <param name="secType">The type of security</param>
+        /// <returns>A string representing the default market of a security</returns>
+        private string GetDefaultBrokerageForSecurityType(SecurityType secType)
+        {
+            string brokerage;
+            _algo.BrokerageModel.DefaultMarkets.TryGetValue(secType, out brokerage);
+            return brokerage;
+        }
+
+        private class CustomBrokerageModel : IBrokerageModel
+        {
+            public AccountType AccountType => throw new System.NotImplementedException();
+
+            public decimal RequiredFreeBuyingPowerPercent => throw new System.NotImplementedException();
+
+            public IReadOnlyDictionary<SecurityType, string> DefaultMarkets => throw new System.NotImplementedException();
+
+            public void ApplySplit(List<OrderTicket> tickets, Split split)
+            {
+                throw new System.NotImplementedException();
+            }
+
+            public bool CanExecuteOrder(Security security, Order order)
+            {
+                throw new System.NotImplementedException();
+            }
+
+            public bool CanSubmitOrder(Security security, Order order, out BrokerageMessageEvent message)
+            {
+                throw new System.NotImplementedException();
+            }
+
+            public bool CanUpdateOrder(Security security, Order order, UpdateOrderRequest request, out BrokerageMessageEvent message)
+            {
+                throw new System.NotImplementedException();
+            }
+
+            public IBenchmark GetBenchmark(SecurityManager securities)
+            {
+                throw new System.NotImplementedException();
+            }
+
+            public IBuyingPowerModel GetBuyingPowerModel(Security security)
+            {
+                throw new System.NotImplementedException();
+            }
+
+            public IBuyingPowerModel GetBuyingPowerModel(Security security, AccountType accountType)
+            {
+                throw new System.NotImplementedException();
+            }
+
+            public IFeeModel GetFeeModel(Security security)
+            {
+                throw new System.NotImplementedException();
+            }
+
+            public IFillModel GetFillModel(Security security)
+            {
+                throw new System.NotImplementedException();
+            }
+
+            public decimal GetLeverage(Security security)
+            {
+                throw new System.NotImplementedException();
+            }
+
+            public IMarginInterestRateModel GetMarginInterestRateModel(Security security)
+            {
+                throw new System.NotImplementedException();
+            }
+
+            public ISettlementModel GetSettlementModel(Security security)
+            {
+                throw new System.NotImplementedException();
+            }
+
+            public ISettlementModel GetSettlementModel(Security security, AccountType accountType)
+            {
+                throw new System.NotImplementedException();
+            }
+
+            public IShortableProvider GetShortableProvider(Security security)
+            {
+                throw new System.NotImplementedException();
+            }
+
+            public ISlippageModel GetSlippageModel(Security security)
+            {
+                throw new System.NotImplementedException();
+            }
+        }
+    }
+}

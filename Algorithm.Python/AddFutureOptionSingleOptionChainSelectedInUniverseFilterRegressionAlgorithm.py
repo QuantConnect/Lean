@@ -1,0 +1,118 @@
+# QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
+# Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+from AlgorithmImports import *
+
+### <summary>
+### This regression algorithm tests that we only receive the option chain for a single future contract
+### in the option universe filter.
+### </summary>
+class AddFutureOptionSingleOptionChainSelectedInUniverseFilterRegressionAlgorithm(QCAlgorithm):
+    def initialize(self):
+        self.invested = False
+        self.on_data_reached = False
+        self.option_filter_ran = False
+        self.symbols_received = []
+        self.expected_symbols_received = []
+        self.data_received = {}
+
+        self.set_start_date(2020, 1, 4)
+        self.set_end_date(2020, 1, 8)
+
+        self.es = self.add_future(Futures.Indices.SP_500_E_MINI, Resolution.MINUTE, Market.CME)
+        self.es.set_filter(lambda future_filter: future_filter.expiration(0, 365).expiration_cycle([3, 6]))
+
+        self.add_future_option(self.es.symbol, self.option_contract_universe_filter_function)
+
+    def option_contract_universe_filter_function(self, option_contracts: OptionFilterUniverse) -> OptionFilterUniverse:
+        self.option_filter_ran = True
+
+        expiry_dates = list(set([x.symbol.underlying.id.date for x in option_contracts]))
+        expiry = None if not any(expiry_dates) else expiry_dates[0]
+
+        symbols = [x.symbol.underlying for x in option_contracts]
+        symbol = None if not any(symbols) else symbols[0]
+
+        if expiry is None or symbol is None:
+            raise AssertionError("Expected a single Option contract in the chain, found 0 contracts")
+
+        self.expected_symbols_received.extend([x.symbol for x in option_contracts])
+
+        return option_contracts
+
+    def on_data(self, data: Slice):
+        if not data.has_data:
+            return
+
+        self.on_data_reached = True
+        has_option_quote_bars = False
+
+        for qb in data.quote_bars.values():
+            if qb.symbol.security_type != SecurityType.FUTURE_OPTION:
+                continue
+
+            has_option_quote_bars = True
+
+            self.symbols_received.append(qb.symbol)
+            if qb.symbol not in self.data_received:
+                self.data_received[qb.symbol] = []
+
+            self.data_received[qb.symbol].append(qb)
+
+        if self.invested or not has_option_quote_bars:
+            return
+
+        for chain in sorted(data.option_chains.values(), key=lambda chain: chain.symbol.underlying.id.date):
+            future_invested = False
+            option_invested = False
+
+            for option in chain.contracts.keys():
+                if future_invested and option_invested:
+                    return
+
+                future = option.underlying
+
+                if not option_invested and data.contains_key(option):
+                    self.market_order(option, 1)
+                    self.invested = True
+                    option_invested = True
+
+                if not future_invested and data.contains_key(future):
+                    self.market_order(future, 1)
+                    self.invested = True
+                    future_invested = True
+
+    def on_end_of_algorithm(self):
+        super().on_end_of_algorithm()
+        self.symbols_received = list(set(self.symbols_received))
+        self.expected_symbols_received = list(set(self.expected_symbols_received))
+
+        if not self.option_filter_ran:
+            raise AssertionError("Option chain filter was never ran")
+        if not self.on_data_reached:
+            raise AssertionError("OnData() was never called.")
+        if len(self.symbols_received) != len(self.expected_symbols_received):
+            raise AssertionError(f"Expected {len(self.expected_symbols_received)} option contracts Symbols, found {len(self.symbols_received)}")
+
+        missing_symbols = [expected_symbol for expected_symbol in self.expected_symbols_received if expected_symbol not in self.symbols_received]
+        if any(missing_symbols):
+            raise AssertionError(f'Symbols: "{", ".join(missing_symbols)}" were not found in OnData')
+
+        for expected_symbol in self.expected_symbols_received:
+            data = self.data_received[expected_symbol]
+            for data_point in data:
+                data_point.end_time = datetime(1970, 1, 1)
+
+            non_dupe_data_count = len(set(data))
+            if non_dupe_data_count < 1000:
+                raise AssertionError(f"Received too few data points. Expected >=1000, found {non_dupe_data_count} for {expected_symbol}")

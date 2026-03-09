@@ -1,0 +1,40 @@
+date,initial,maintenance
+# Values are converted from SEK to USD
+# https://www.cmegroup.com/tools-information/lookups/advisories/clearing/Chadv12-270.html
+20120629,2341,1734
+# https://www.cmegroup.com/tools-information/lookups/advisories/clearing/Chadv12-380.html
+20120907,2335,2123
+# https://www.cmegroup.com/tools-information/lookups/advisories/clearing/Chadv13-069.html
+20130208,2048,1862
+# https://www.cmegroup.com/tools-information/lookups/advisories/clearing/Chadv13-188.html
+20130423,2317,2106
+# https://www.cmegroup.com/tools-information/lookups/advisories/clearing/Chadv14-286.html
+20140718,2413,2193
+# https://www.cmegroup.com/tools-information/lookups/advisories/clearing/Chadv15-007.html
+20150109,2462,2238
+# https://www.cmegroup.com/tools-information/lookups/advisories/clearing/Chadv15-023.html
+20150123,2907,2643
+# https://www.cmegroup.com/tools-information/lookups/advisories/clearing/Chadv15-145.html
+20150529,3100,2818
+# https://www.cmegroup.com/tools-information/lookups/advisories/clearing/Chadv16-075.html
+20160212,2357,2142
+# https://www.cmegroup.com/notices/clearing/2016/06/Chadv16-234.html
+20160617,2640,2400
+# https://www.cmegroup.com/notices/clearing/2016/09/Chadv16-367.html
+20160909,2329,2117
+# https://www.cmegroup.com/notices/clearing/2017/05/Chadv17-194.html
+20170601,2091,1901
+# https://www.cmegroup.com/notices/clearing/2017/10/Chadv17-404.html
+20171020,1887,1715
+# https://www.cmegroup.com/notices/clearing/2017/12/Chadv17-474.html
+20171208,2123,1930
+# https://www.cmegroup.com/notices/clearing/2018/02/Chadv18-080.html
+20180223,2357,2142
+# Chadv18-186v1
+20180511,2495,2268
+# https://www.cmegroup.com/notices/clearing/2018/08/Chadv18-325.html
+20180817,2523,2294
+# https://www.cmegroup.com/notices/clearing/2018/08/Chadv18-344.html
+20180830,3014,2740
+# https://www.cmegroup.com/notices/clearing/2019/01/Chadv19-018.html
+20190111,2462,2238

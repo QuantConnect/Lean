@@ -1,0 +1,12 @@
+market,symbol,type,description,quote_currency,contract_multiplier,minimum_price_variation,lot_size,market_ticker,minimum_order_size,price_magnifier,strike_multiplier
+
+#
+# Use # signs for comments
+#
+
+# Deliberately putting AU200AUD oanda first to test that the first market is used for wilcard entries 
+# (to deterministically get market) after a reload of the database
+
+oanda,AU200AUD,cfd,Australia 200,AUD,1,0.1,0.1
+
+fxcm,AU200AUD,cfd,S&P/ASX index of Australian listed shares,USD,0.1,0.1,1

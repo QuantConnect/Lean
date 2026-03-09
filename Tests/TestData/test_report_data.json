@@ -1,0 +1,550 @@
+{
+    "RollingWindow": {},
+    "AlphaRuntimeStatistics": {},
+    "Charts": {
+        "Benchmark": {
+            "Name": "Benchmark",
+            "ChartType": 0,
+            "Series": {
+                "Benchmark": {
+                    "Name": "Benchmark",
+                    "Unit": "$",
+                    "Index": 0,
+                    "Values": [
+                        { "x": 1609736400, "y": 366.2371 },
+                        { "x": 1609822800, "y": 361.2511 },
+                        { "x": 1609909200, "y": 363.7392 }
+                    ],
+                    "SeriesType": 0,
+                    "Color": "",
+                    "ScatterMarkerSymbol": "none"
+                }
+            }
+        },
+        "Drawdown": {
+            "Name": "Drawdown",
+            "ChartType": 0,
+            "Series": {
+                "Equity Drawdown": {
+                    "Name": "Equity Drawdown",
+                    "Unit": "%",
+                    "Index": 0,
+                    "Values": [
+                        { "x": 1609736400, "y": 0.0 },
+                        { "x": 1609822800, "y": 0.0 },
+                        { "x": 1609909200, "y": -0.01 }
+                    ],
+                    "SeriesType": 0,
+                    "Color": "",
+                    "ScatterMarkerSymbol": "none"
+                }
+            }
+        },
+        "Capacity": {
+            "Name": "Capacity",
+            "ChartType": 0,
+            "Series": {
+                "Strategy Capacity": {
+                    "Name": "Strategy Capacity",
+                    "Unit": "$",
+                    "Index": 0,
+                    "Values": [
+                        { "x": 1609736400, "y": 0.0 },
+                        { "x": 1609822800, "y": 0.0 },
+                        { "x": 1609909200, "y": 0.0 }
+                    ],
+                    "SeriesType": 0,
+                    "Color": "",
+                    "ScatterMarkerSymbol": "none"
+                }
+            }
+        },
+        "Strategy Equity": {
+            "Name": "Strategy Equity",
+            "ChartType": 0,
+            "Series": {
+                "Equity": {
+                    "Name": "Equity",
+                    "Unit": "$",
+                    "Index": 0,
+                    "Values": [
+                        { "x": 1609736400, "y": 1000000.0 },
+                        { "x": 1609748160, "y": 1000000.0 },
+                        { "x": 1609748820, "y": 1000000.0 }
+                    ],
+                    "SeriesType": 2,
+                    "Color": "",
+                    "ScatterMarkerSymbol": "none"
+                },
+                "Daily Performance": {
+                    "Name": "Daily Performance",
+                    "Unit": "%",
+                    "Index": 1,
+                    "Values": [
+                        { "x": 1609736400, "y": 0.0 },
+                        { "x": 1609822800, "y": 0.0 },
+                        { "x": 1609909200, "y": -0.013 }
+                    ],
+                    "SeriesType": 3,
+                    "Color": "",
+                    "ScatterMarkerSymbol": "none"
+                }
+            }
+        },
+        "Exposure": {
+            "Name": "Exposure",
+            "ChartType": 0,
+            "Series": {
+                "Equity": {
+                    "Name": "Equity",
+                    "Unit": "",
+                    "Index": 0,
+                    "SeriesType": 0,
+                    "Color": "",
+                    "ScatterMarkerSymbol": "none",
+                    "Values": [
+                        { "x": 1609822800, "y": 0.019 },
+                        { "x": 1609909200, "y": 0.014 },
+                        { "x": 1609995600, "y": 0.013 }
+                    ]
+                },
+                "Option": {
+                    "Name": "Option",
+                    "Unit": "",
+                    "Index": 1,
+                    "SeriesType": 0,
+                    "Color": "",
+                    "ScatterMarkerSymbol": "none",
+                    "Values": [
+                        { "x": 1609822800, "y": 0.020 },
+                        { "x": 1609909200, "y": 0.004 },
+                        { "x": 1609995600, "y": 0.011 }
+                    ]
+                },
+                "Commodity": {
+                    "Name": "Commodity",
+                    "Unit": "",
+                    "Index": 2,
+                    "SeriesType": 0,
+                    "Color": "",
+                    "ScatterMarkerSymbol": "none",
+                    "Values": [
+                        { "x": 1609822800, "y": 0.016 },
+                        { "x": 1609909200, "y": 0.012 },
+                        { "x": 1609995600, "y": 0.010 }
+                    ]
+                },
+                "Forex": {
+                    "Name": "Forex",
+                    "Unit": "",
+                    "Index": 3,
+                    "SeriesType": 0,
+                    "Color": "",
+                    "ScatterMarkerSymbol": "none",
+                    "Values": [
+                        { "x": 1609822800, "y": 0.012 },
+                        { "x": 1609909200, "y": 0.019 },
+                        { "x": 1609995600, "y": 0.020 }
+                    ]
+                },
+                "Future": {
+                    "Name": "Future",
+                    "Unit": "",
+                    "Index": 4,
+                    "SeriesType": 0,
+                    "Color": "",
+                    "ScatterMarkerSymbol": "none",
+                    "Values": [
+                        { "x": 1609822800, "y": 0.013 },
+                        { "x": 1609909200, "y": 0.015 },
+                        { "x": 1609995600, "y": 0.017 }
+                    ]
+                },
+                "Cfd": {
+                    "Name": "Cfd",
+                    "Unit": "",
+                    "Index": 5,
+                    "SeriesType": 0,
+                    "Color": "",
+                    "ScatterMarkerSymbol": "none",
+                    "Values": [
+                        { "x": 1609822800, "y": 0.014 },
+                        { "x": 1609909200, "y": 0.015 },
+                        { "x": 1609995600, "y": 0.014 }
+                    ]
+                },
+                "Crypto": {
+                    "Name": "Crypto",
+                    "Unit": "",
+                    "Index": 6,
+                    "SeriesType": 0,
+                    "Color": "",
+                    "ScatterMarkerSymbol": "none",
+                    "Values": [
+                        { "x": 1609822800, "y": 0.013 },
+                        { "x": 1609909200, "y": 0.015 },
+                        { "x": 1609995600, "y": 0.017 }
+                    ]
+                },
+                "FutureOption": {
+                    "Name": "FutureOption",
+                    "Unit": "",
+                    "Index": 7,
+                    "SeriesType": 0,
+                    "Color": "",
+                    "ScatterMarkerSymbol": "none",
+                    "Values": [
+                        { "x": 1609822800, "y": 0.022 },
+                        { "x": 1609909200, "y": 0.014 },
+                        { "x": 1609995600, "y": 0.020 }
+                    ]
+                },
+                "IndexOption": {
+                    "Name": "IndexOption",
+                    "Unit": "",
+                    "Index": 8,
+                    "SeriesType": 0,
+                    "Color": "",
+                    "ScatterMarkerSymbol": "none",
+                    "Values": [
+                        { "x": 1609822800, "y": 0.017 },
+                        { "x": 1609909200, "y": 0.015 },
+                        { "x": 1609995600, "y": 0.015 }
+                    ]
+                }
+            }
+        },
+        "Assets Sales Volume": {
+            "Name": "Assets Sales Volume",
+            "ChartType": 0,
+            "Series": {
+                "VIX   210120C00010000": {
+                    "Name": "VIX   210120C00010000",
+                    "Unit": "$",
+                    "Index": 0,
+                    "Values": [
+                        { "x": 1609822800, "y": 1670.0 },
+                        { "x": 1609909200, "y": 1670.0 },
+                        { "x": 1609995600, "y": 1670.0 }
+                    ],
+                    "SeriesType": 7,
+                    "Color": "",
+                    "ScatterMarkerSymbol": "none"
+                },
+                "VIX   210217C00010000": {
+                    "Name": "VIX   210217C00010000",
+                    "Unit": "$",
+                    "Index": 0,
+                    "Values": [
+                        { "x": 1611291600, "y": 1490.0 },
+                        { "x": 1611378000, "y": 1490.0 },
+                        { "x": 1611464400, "y": 1490.0 }
+                    ],
+                    "SeriesType": 7,
+                    "Color": "",
+                    "ScatterMarkerSymbol": "none"
+                }
+            }
+        }
+    },
+    "Orders": {
+        "1": {
+            "Type": 0,
+            "Id": 1,
+            "ContingentId": 0,
+            "BrokerId": [
+                "1"
+            ],
+            "Symbol": {
+                "Value": "BTCUSD",
+                "ID": "BTCUSD XJ",
+                "Permtick": "BTCUSD"
+            },
+            "Price": 32843.35,
+            "PriceCurrency": "USD",
+            "Time": "2021-01-24T05:00:00Z",
+            "CreatedTime": "2021-01-24T05:00:00Z",
+            "LastFillTime": "2021-01-24T05:00:00Z",
+            "Quantity": 0.1,
+            "Status": 3,
+            "Properties": {
+                "TimeInForce": {}
+            },
+            "SecurityType": 7,
+            "Direction": 0,
+            "Value": 3284.335,
+            "OrderSubmissionData": {
+                "BidPrice": 32840.47,
+                "AskPrice": 32843.35,
+                "LastPrice": 32841.91
+            },
+            "IsMarketable": true
+        },
+        "2": {
+            "Type": 0,
+            "Id": 2,
+            "ContingentId": 0,
+            "BrokerId": [
+                "2"
+            ],
+            "Symbol": {
+                "Value": "EURUSD",
+                "ID": "EURUSD 8G",
+                "Permtick": "EURUSD"
+            },
+            "Price": 1.21761,
+            "PriceCurrency": "USD",
+            "Time": "2021-01-24T22:01:00Z",
+            "CreatedTime": "2021-01-24T22:01:00Z",
+            "LastFillTime": "2021-01-24T22:01:00Z",
+            "Quantity": 4097282612.0,
+            "Status": 3,
+            "Properties": {
+                "TimeInForce": {}
+            },
+            "SecurityType": 4,
+            "Direction": 0,
+            "Value": 4988892281.19732,
+            "OrderSubmissionData": {
+                "BidPrice": 1.21696,
+                "AskPrice": 1.21761,
+                "LastPrice": 1.217285
+            },
+            "IsMarketable": true
+        },
+        "3": {
+            "Type": 0,
+            "Id": 3,
+            "ContingentId": 0,
+            "BrokerId": [
+                "3"
+            ],
+            "Symbol": {
+                "Value": "ES19H21",
+                "ID": "ES XMXYBDF3IXHD",
+                "Permtick": "ES19H21"
+            },
+            "Price": 3838.75,
+            "PriceCurrency": "USD",
+            "Time": "2021-01-24T23:01:00Z",
+            "CreatedTime": "2021-01-24T23:01:00Z",
+            "LastFillTime": "2021-01-24T23:01:00Z",
+            "Quantity": 1.0,
+            "Status": 3,
+            "Properties": {
+                "TimeInForce": {}
+            },
+            "SecurityType": 5,
+            "Direction": 0,
+            "Value": 3838.75,
+            "OrderSubmissionData": {
+                "BidPrice": 3838.5,
+                "AskPrice": 3838.75,
+                "LastPrice": 3838.625
+            },
+            "IsMarketable": true
+        },
+        "4": {
+            "Type": 0,
+            "Id": 4,
+            "ContingentId": 0,
+            "BrokerId": [
+                "4"
+            ],
+            "Symbol": {
+                "Value": "DE30EUR",
+                "ID": "DE30EUR 8I",
+                "Permtick": "DE30EUR"
+            },
+            "Price": 13882.3,
+            "PriceCurrency": "EUR",
+            "Time": "2021-01-25T00:16:00Z",
+            "CreatedTime": "2021-01-25T00:16:00Z",
+            "LastFillTime": "2021-01-25T00:16:00Z",
+            "Quantity": 3.0,
+            "Status": 3,
+            "Tag": "Warning: fill at stale price (01/22/2021 22:00:00 Europe/Berlin)",
+            "Properties": {
+                "TimeInForce": {}
+            },
+            "SecurityType": 6,
+            "Direction": 0,
+            "Value": 41646.9,
+            "OrderSubmissionData": {
+                "BidPrice": 13878.8,
+                "AskPrice": 13882.3,
+                "LastPrice": 13880.55
+            },
+            "IsMarketable": true
+        },
+        "5": {
+            "Type": 4,
+            "Id": 5,
+            "ContingentId": 0,
+            "BrokerId": [
+                "5"
+            ],
+            "Symbol": {
+                "Value": "SPX   231215C03825000",
+                "ID": "SPX YEBOD23D7ZOU|SPX 31",
+                "Permtick": "SPX   231215C03825000",
+                "Underlying": {
+                    "Value": "SPX",
+                    "ID": "SPX 31",
+                    "Permtick": "SPX"
+                }
+            },
+            "Price": 515.3,
+            "PriceCurrency": "USD",
+            "Time": "2021-01-25T12:30:00Z",
+            "CreatedTime": "2021-01-25T12:30:00Z",
+            "LastFillTime": "2021-01-25T15:31:00Z",
+            "Quantity": 1.0,
+            "Status": 3,
+            "Properties": {
+                "TimeInForce": {}
+            },
+            "SecurityType": 10,
+            "Direction": 0,
+            "Value": 515.3,
+            "OrderSubmissionData": {
+                "BidPrice": 480.5000,
+                "AskPrice": 525.5000,
+                "LastPrice": 503.0000
+            },
+            "IsMarketable": false
+        },
+        "6": {
+            "Type": 0,
+            "Id": 6,
+            "ContingentId": 0,
+            "BrokerId": [
+                "6"
+            ],
+            "Symbol": {
+                "Value": "SPY",
+                "ID": "SPY R735QTJ8XC9X",
+                "Permtick": "SPY"
+            },
+            "Price": 384.02,
+            "PriceCurrency": "USD",
+            "Time": "2021-01-25T14:31:00Z",
+            "CreatedTime": "2021-01-25T14:31:00Z",
+            "LastFillTime": "2021-01-25T14:31:00Z",
+            "Quantity": 1.0,
+            "Status": 3,
+            "Properties": {
+                "TimeInForce": {}
+            },
+            "SecurityType": 1,
+            "Direction": 0,
+            "Value": 384.02,
+            "OrderSubmissionData": {
+                "BidPrice": 384.0000,
+                "AskPrice": 384.0200,
+                "LastPrice": 384.0300
+            },
+            "IsMarketable": true
+        },
+        "7": {
+            "Type": 0,
+            "Id": 7,
+            "ContingentId": 0,
+            "BrokerId": [
+                "7"
+            ],
+            "Symbol": {
+                "Value": "SPY   210716P00385000",
+                "ID": "SPY 31PB4NZP2BWX2|SPY R735QTJ8XC9X",
+                "Permtick": "SPY   210716P00385000",
+                "Underlying": {
+                    "Value": "SPY",
+                    "ID": "SPY R735QTJ8XC9X",
+                    "Permtick": "SPY"
+                }
+            },
+            "Price": 23.42,
+            "PriceCurrency": "USD",
+            "Time": "2021-01-25T14:31:00Z",
+            "CreatedTime": "2021-01-25T14:31:00Z",
+            "LastFillTime": "2021-01-25T14:31:00Z",
+            "Quantity": 2.0,
+            "Status": 3,
+            "Properties": {
+                "TimeInForce": {}
+            },
+            "SecurityType": 2,
+            "Direction": 0,
+            "Value": 46.84,
+            "OrderSubmissionData": {
+                "BidPrice": 23.1300,
+                "AskPrice": 23.4200,
+                "LastPrice": 23.2750
+            },
+            "IsMarketable": true
+        },
+        "8": {
+            "Type": 0,
+            "Id": 8,
+            "ContingentId": 0,
+            "BrokerId": [
+                "8"
+            ],
+            "Symbol": {
+                "Value": "OG    220328C01835000",
+                "ID": "OG XX67IKNPHUOW|GC XXZQX57AFQ8T",
+                "Permtick": "OG    220328C01835000",
+                "Underlying": {
+                    "Value": "GC27J22",
+                    "ID": "GC XXZQX57AFQ8T",
+                    "Permtick": "GC27J22"
+                }
+            },
+            "Price": 49.0,
+            "PriceCurrency": "USD",
+            "Time": "2022-01-02T23:01:00Z",
+            "CreatedTime": "2022-01-02T23:01:00Z",
+            "LastFillTime": "2022-01-02T23:01:00Z",
+            "Quantity": 1.0,
+            "Status": 3,
+            "Properties": {
+                "TimeInForce": {}
+            },
+            "SecurityType": 8,
+            "Direction": 0,
+            "Value": 49.0,
+            "OrderSubmissionData": {
+                "BidPrice": 48.2,
+                "AskPrice": 49.0,
+                "LastPrice": 48.6
+            },
+            "IsMarketable": true
+        }
+    },
+    "ProfitLoss": {},
+    "Statistics": {
+        "Total Orders": "7",
+        "Average Win": "11.29%",
+        "Average Loss": "-1.24%",
+        "Compounding Annual Return": "114.572%",
+        "Drawdown": "31.300%",
+        "Expectancy": "1.491",
+        "Net Profit": "361.374%",
+        "Sharpe Ratio": "2.034",
+        "Probabilistic Sharpe Ratio": "80.811%",
+        "Loss Rate": "75%",
+        "Win Rate": "25%",
+        "Profit-Loss Ratio": "9.12",
+        "Alpha": "0",
+        "Beta": "0",
+        "Annual Standard Deviation": "0.396",
+        "Annual Variance": "0.157",
+        "Information Ratio": "2.034",
+        "Tracking Error": "0.396",
+        "Treynor Ratio": "0",
+        "Total Fees": "$0.65",
+        "Estimated Strategy Capacity": "$0",
+        "Lowest Capacity Asset": "ETHBTC 2MN"
+    },
+    "RuntimeStatistics": {}
+}

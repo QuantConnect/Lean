@@ -1,0 +1,83 @@
+# QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
+# Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+from AlgorithmImports import *
+
+class SmaCrossUniverseSelectionAlgorithm(QCAlgorithm):
+    '''Provides an example where WarmUpIndicator method is used to warm up indicators
+    after their security is added and before (Universe Selection scenario)'''
+
+    _count = 10
+    _tolerance = 0.01
+    _target_percent = 1 / _count
+    _averages = dict()
+
+    def initialize(self) -> None:
+        self.universe_settings.leverage = 2
+        self.universe_settings.resolution = Resolution.DAILY
+
+        self.set_start_date(2018, 1, 1)
+        self.set_end_date(2019, 1, 1)
+        self.set_cash(1000000)
+
+        self.settings.automatic_indicator_warm_up = True
+
+        ibm = self.add_equity("IBM", Resolution.HOUR).symbol
+        ibm_sma = self.sma(ibm, 40)
+        self.log(f"{ibm_sma.name}: {ibm_sma.current.time} - {ibm_sma}. IsReady? {ibm_sma.is_ready}")
+
+        spy = self.add_equity("SPY", Resolution.HOUR).symbol
+        spy_sma = self.sma(spy, 10)     # Data point indicator
+        spy_atr = self.atr(spy, 10,)    # Bar indicator
+        spy_vwap = self.vwap(spy, 10)   # TradeBar indicator
+        self.log(f"SPY    - Is ready? SMA: {spy_sma.is_ready}, ATR: {spy_atr.is_ready}, VWAP: {spy_vwap.is_ready}")
+
+        eur = self.add_forex("EURUSD", Resolution.HOUR).symbol
+        eur_sma = self.sma(eur, 20, Resolution.DAILY)
+        eur_atr = self.atr(eur, 20, MovingAverageType.SIMPLE, Resolution.DAILY)
+        self.log(f"EURUSD - Is ready? SMA: {eur_sma.is_ready}, ATR: {eur_atr.is_ready}")
+
+        self.add_universe(self.coarse_sma_selector)
+
+        # Since the indicators are ready, we will receive error messages
+        # reporting that the algorithm manager is trying to add old information
+        self.set_warm_up(10)
+
+    def coarse_sma_selector(self, coarse: list[Fundamental]) -> list[Symbol]:
+        score = dict()
+        for cf in coarse:
+            if not cf.has_fundamental_data:
+               continue
+            symbol = cf.symbol
+            price = cf.adjusted_price
+            # grab the SMA instance for this symbol
+            avg = self._averages.setdefault(symbol, SimpleMovingAverage(100))
+            self.warm_up_indicator(symbol, avg, Resolution.DAILY)
+            # Update returns true when the indicators are ready, so don't accept until they are
+            if avg.update(cf.end_time, price):
+               value = avg.current.value
+               # only pick symbols who have their price over their 100 day sma
+               if value > price * self._tolerance:
+                    score[symbol] = (value - price) / ((value + price) / 2)
+
+        # prefer symbols with a larger delta by percentage between the two _averages
+        sorted_score = sorted(score.items(), key=lambda kvp: kvp[1], reverse=True)
+        return [x[0] for x in sorted_score[:self._count]]
+
+    def on_securities_changed(self, changes: SecurityChanges) -> None:
+        for security in changes.removed_securities:
+            if security.invested:
+                self.liquidate(security.symbol)
+
+        for security in changes.added_securities:
+            self.set_holdings(security.symbol, self._target_percent)

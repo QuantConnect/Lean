@@ -1,0 +1,298 @@
+/*
+ * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
+ * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+*/
+
+using System;
+using System.Collections.Generic;
+using QuantConnect.Securities;
+using NUnit.Framework;
+using QuantConnect.Data;
+using QuantConnect.ToolBox.RandomDataGenerator;
+using QuantConnect.Data.Market;
+using QuantConnect.Lean.Engine.DataFeeds.Enumerators;
+using QuantConnect.Configuration;
+using QuantConnect.Data.Auxiliary;
+using QuantConnect.Interfaces;
+using QuantConnect.Securities.Option;
+using QuantConnect.Util;
+using static QuantConnect.ToolBox.RandomDataGenerator.RandomDataGenerator;
+using QuantConnect.Algorithm;
+using System.Linq;
+using System.IO;
+
+namespace QuantConnect.Tests.ToolBox.RandomDataGenerator
+{
+    [TestFixture]
+    public class RandomDataGeneratorTests
+    {
+        [Test]
+        [TestCase("2020, 1, 1 00:00:00", "2020, 1, 1 00:00:00", "2020, 1, 1 00:00:00")]
+        [TestCase("2020, 1, 1 00:00:00", "2020, 2, 1 00:00:00", "2020, 1, 16 12:00:00")] // (31 days / 2) = 15.5 = 16 Rounds up to 12 pm
+        [TestCase("2020, 1, 1 00:00:00", "2020, 3, 1 00:00:00", "2020, 1, 31 00:00:00")] // (60 days / 2) = 30
+        [TestCase("2020, 1, 1 00:00:00", "2020, 6, 1 00:00:00", "2020, 3, 17 00:00:00")] // (152 days / 2) = 76
+
+        public void NextRandomGeneratedData(DateTime start, DateTime end, DateTime expectedMidPoint)
+        {
+            var randomValueGenerator = new RandomValueGenerator();
+            var midPoint = QuantConnect.ToolBox.RandomDataGenerator.RandomDataGenerator.GetDateMidpoint(start, end);
+            var delistDate = QuantConnect.ToolBox.RandomDataGenerator.RandomDataGenerator.GetDelistingDate(start, end, randomValueGenerator);
+
+            // midPoint and expectedMidPoint must be the same
+            Assert.AreEqual(expectedMidPoint, midPoint);
+
+            // start must be less than or equal to end
+            Assert.LessOrEqual(start, end);
+
+            // delistDate must be less than or equal to end
+            Assert.LessOrEqual(delistDate, end);
+            Assert.GreaterOrEqual(delistDate, midPoint);
+        }
+
+        [TestCase("20220101", "20230101")]
+        public void RandomGeneratorProducesValuesBoundedForEquitiesWhenSplit(string start, string end)
+        {
+            var settings = RandomDataGeneratorSettings.FromCommandLineArguments(
+                start,
+                end,
+                "1",
+                "usa",
+                "Equity",
+                "Minute",
+                "Dense",
+                "true",
+                "1",
+                null,
+                "5.0",
+                "30.0",
+                "100.0",
+                "60.0",
+                "30.0",
+                "BaroneAdesiWhaleyApproximationEngine",
+                "Daily",
+                "1",
+                new List<string>(),
+                100
+            );
+
+            var securityManager = new SecurityManager(new TimeKeeper(settings.Start, new[] { TimeZones.Utc }));
+            var securityService = GetSecurityService(settings, securityManager);
+            securityManager.SetSecurityService(securityService);
+
+            var security = securityManager.CreateSecurity(Symbols.AAPL, new List<SubscriptionDataConfig>(), underlying: null);
+            var randomValueGenerator = new RandomValueGenerator();
+            var tickGenerator = new TickGenerator(settings, new TickType[1] { TickType.Trade }, security, randomValueGenerator).GenerateTicks().GetEnumerator();
+            using var sync = new SynchronizingBaseDataEnumerator(tickGenerator);
+            var tickHistory = new List<Tick>();
+
+            while (sync.MoveNext())
+            {
+                var dataPoint = sync.Current;
+                tickHistory.Add(dataPoint as Tick);
+            }
+
+            var dividendsSplitsMaps = new DividendSplitMapGenerator(
+                        Symbols.AAPL,
+                        settings,
+                        randomValueGenerator,
+                        BaseSymbolGenerator.Create(settings, randomValueGenerator),
+                        new Random(),
+                        GetDelistingDate(settings.Start, settings.End, randomValueGenerator),
+                        false);
+
+            dividendsSplitsMaps.GenerateSplitsDividends(tickHistory);
+            Assert.IsTrue(0.099m <= dividendsSplitsMaps.FinalSplitFactor && dividendsSplitsMaps.FinalSplitFactor <= 1.5m);
+
+            foreach (var tick in tickHistory)
+            {
+                tick.Value = tick.Value / dividendsSplitsMaps.FinalSplitFactor;
+                Assert.IsTrue(0.001m <= tick.Value && tick.Value <= 1000000000, $"The tick value was {tick.Value} but should have been bounded by 0.001 and 1 000 000 000");
+            }
+        }
+
+        [TestCase(Resolution.Tick, 3.0, 33)]
+        [TestCase(Resolution.Second, 3.0, 33)]
+        [TestCase(Resolution.Minute, 3.0, 33)]
+        [TestCase(Resolution.Hour, 3.0, 33)]
+        [TestCase(Resolution.Daily, 3.0, 33)]
+        [TestCase(Resolution.Minute, 5.0, 20)]
+        [TestCase(Resolution.Minute, 10.0, 10)]
+        public void GetProgressAsPercentageShouldLogWhenProgressExceedsThreshold(Resolution resolution, double thresholdPercent, int expectedLogCount)
+        {
+            TimeSpan step = resolution switch
+            {
+                Resolution.Tick => TimeSpan.FromTicks(1),
+                Resolution.Second => TimeSpan.FromSeconds(1),
+                Resolution.Minute => TimeSpan.FromMinutes(1),
+                Resolution.Hour => TimeSpan.FromHours(1),
+                Resolution.Daily => TimeSpan.FromDays(1),
+                _ => throw new ArgumentOutOfRangeException(nameof(resolution), resolution, null)
+            };
+
+            var start = new DateTime(2024, 1, 1, 0, 0, 0);
+            var end = start.AddTicks(step.Ticks * 100);
+
+            var current = start;
+            var logs = new List<double>();
+            var lastLoggedProgress = 0.0;
+
+            while (current <= end)
+            {
+                var progress = RandomDataGeneratorHelper.GetProgressAsPercentage(start, end, current);
+
+                if (progress - lastLoggedProgress >= thresholdPercent)
+                {
+                    logs.Add(progress);
+                    lastLoggedProgress = progress;
+                }
+
+                current = current.Add(step);
+            }
+
+            Assert.AreEqual(expectedLogCount, logs.Count);
+            Assert.IsTrue(logs.All(p => p >= 0 && p <= 100));
+        }
+
+        [Test]
+        public void RandomDataGeneratorCompletesSuccessfully()
+        {
+            var tempFolder = Path.Combine(Path.GetTempPath(), $"LeanTest_{Guid.NewGuid()}");
+            var originalDataFolder = Config.Get("data-folder");
+            try
+            {
+                Directory.CreateDirectory(tempFolder);
+                Config.Set("data-folder", tempFolder);
+                Globals.Reset();
+
+                var hourPath = Path.Combine(tempFolder, "equity", "usa", "hour");
+                var dailyPath = Path.Combine(tempFolder, "equity", "usa", "daily");
+                var factorFilesPath = Path.Combine(tempFolder, "equity", "usa", "factor_files");
+                var mapFilesPath = Path.Combine(tempFolder, "equity", "usa", "map_files");
+
+                // Create the required folders
+                Directory.CreateDirectory(hourPath);
+                Directory.CreateDirectory(dailyPath);
+                Directory.CreateDirectory(factorFilesPath);
+                Directory.CreateDirectory(mapFilesPath);
+
+                var settings = new RandomDataGeneratorSettings
+                {
+                    Start = new DateTime(2024, 1, 1, 9, 30, 0),
+                    End = new DateTime(2024, 1, 2, 16, 0, 0),
+                    SymbolCount = 1,
+                    Market = "usa",
+                    SecurityType = SecurityType.Equity,
+                    Resolution = Resolution.Hour,
+                    DataDensity = DataDensity.Dense,
+                    IncludeCoarse = false,
+                    QuoteTradeRatio = 1.0,
+                    RandomSeed = 123456,
+                    HasDividendsPercentage = 0,
+                    HasSplitsPercentage = 0,
+                    HasIpoPercentage = 0,
+                    HasRenamePercentage = 0,
+                    Tickers = new List<string>() { "AAPL" }
+                };
+
+                var generator = GetGenerator(settings);
+
+                Assert.DoesNotThrow(() => generator.Run());
+
+                var allFiles = Directory.GetFiles(tempFolder, "*", SearchOption.AllDirectories);
+                Assert.Greater(allFiles.Length, 0);
+
+                var hourFiles = Directory.GetFiles(hourPath, "*.zip");
+                Assert.Greater(hourFiles.Length, 0);
+            }
+            finally
+            {
+                Config.Set("data-folder", originalDataFolder);
+                Globals.Reset();
+                Directory.Delete(tempFolder, true);
+            }
+        }
+
+        private static QuantConnect.ToolBox.RandomDataGenerator.RandomDataGenerator GetGenerator(RandomDataGeneratorSettings settings)
+        {
+            var securityManager = new SecurityManager(new TimeKeeper(settings.Start, new[] { TimeZones.Utc }));
+
+            var securityService = new SecurityService(
+                new CashBook(),
+                MarketHoursDatabase.FromDataFolder(),
+                SymbolPropertiesDatabase.FromDataFolder(),
+                new SecurityInitializerProvider(new FuncSecurityInitializer(security =>
+                {
+                    // init price
+                    security.SetMarketPrice(new Tick(settings.Start, security.Symbol, 100, 100));
+                    security.SetMarketPrice(new OpenInterest(settings.Start, security.Symbol, 10000));
+
+                    // from settings
+                    security.VolatilityModel = new StandardDeviationOfReturnsVolatilityModel(settings.VolatilityModelResolution);
+
+                    // from settings
+                    if (security is Option option)
+                    {
+                        option.PriceModel = OptionPriceModels.QuantLib.Create(settings.OptionPriceEngineName,
+                            _interestRateProvider.GetRiskFreeRate(settings.Start, settings.End));
+                    }
+                })),
+                RegisteredSecurityDataTypesProvider.Null,
+                new SecurityCacheProvider(
+                    new SecurityPortfolioManager(securityManager, new SecurityTransactionManager(null, securityManager), new AlgorithmSettings())),
+                new MapFilePrimaryExchangeProvider(Composer.Instance.GetExportedValueByTypeName<IMapFileProvider>(Config.Get("map-file-provider", "LocalDiskMapFileProvider")))
+            );
+
+            securityManager.SetSecurityService(securityService);
+
+            var generator = new QuantConnect.ToolBox.RandomDataGenerator.RandomDataGenerator();
+            generator.Init(settings, securityManager);
+            return generator;
+        }
+
+        private static readonly IRiskFreeInterestRateModel _interestRateProvider = new InterestRateProvider();
+
+        private static SecurityService GetSecurityService(RandomDataGeneratorSettings settings, SecurityManager securityManager)
+        {
+            var algorithm = new QCAlgorithm();
+            algorithm.Securities = securityManager;
+            var securityService = new SecurityService(
+                new CashBook(),
+                MarketHoursDatabase.FromDataFolder(),
+                SymbolPropertiesDatabase.FromDataFolder(),
+                new SecurityInitializerProvider(new FuncSecurityInitializer(security =>
+                {
+                    // init price
+                    security.SetMarketPrice(new Tick(settings.Start, security.Symbol, 100, 100));
+                    security.SetMarketPrice(new OpenInterest(settings.Start, security.Symbol, 10000));
+
+                    // from settings
+                    security.VolatilityModel = new StandardDeviationOfReturnsVolatilityModel(settings.VolatilityModelResolution);
+
+                    // from settings
+                    if (security is Option option)
+                    {
+                        option.PriceModel = OptionPriceModels.QuantLib.Create(settings.OptionPriceEngineName,
+                            _interestRateProvider.GetRiskFreeRate(settings.Start, settings.End));
+                    }
+                })),
+                RegisteredSecurityDataTypesProvider.Null,
+                new SecurityCacheProvider(
+                    new SecurityPortfolioManager(securityManager, new SecurityTransactionManager(null, securityManager), new AlgorithmSettings())),
+                new MapFilePrimaryExchangeProvider(Composer.Instance.GetExportedValueByTypeName<IMapFileProvider>(Config.Get("map-file-provider", "LocalDiskMapFileProvider"))),
+                algorithm: algorithm);
+            securityManager.SetSecurityService(securityService);
+
+            return securityService;
+        }
+    }
+}

@@ -1,0 +1,183 @@
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003" ToolsVersion="4.0">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <SchemaVersion>2.0</SchemaVersion>
+    <ProjectGuid>4a5ded1f-3e34-40e2-b1f2-9a8a02195508</ProjectGuid>
+    <ProjectHome>.</ProjectHome>
+    <StartupFile>
+    </StartupFile>
+    <SearchPath>
+    </SearchPath>
+    <WorkingDirectory>.</WorkingDirectory>
+    <OutputPath>.</OutputPath>
+    <Name>QuantConnect.Algorithm.PythonTools</Name>
+    <RootNamespace>QuantConnect.Algorithm.PythonTools</RootNamespace>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
+    <DebugSymbols>true</DebugSymbols>
+    <EnableUnmanagedDebugging>false</EnableUnmanagedDebugging>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
+    <DebugSymbols>true</DebugSymbols>
+    <EnableUnmanagedDebugging>false</EnableUnmanagedDebugging>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="AccumulativeInsightPortfolioRegressionAlgorithm.py" />
+    <Compile Include="AddAlphaModelAlgorithm.py" />
+    <Compile Include="AddRemoveSecurityRegressionAlgorithm.py" />
+    <Compile Include="AddRiskManagementAlgorithm.py" />
+    <Compile Include="AddUniverseSelectionModelAlgorithm.py" />
+    <Compile Include="BasicCSharpIntegrationTemplateAlgorithm.py" />
+    <Compile Include="BasicSetAccountCurrencyAlgorithm.py" />
+    <Compile Include="BasicTemplateConstituentUniverseAlgorithm.py" />
+    <Compile Include="BasicTemplateCryptoAlgorithm.py" />
+    <Compile Include="BasicTemplateFuturesFrameworkAlgorithm.py" />
+    <Compile Include="BasicTemplateIntrinioEconomicData.py" />
+    <Compile Include="BasicTemplateOptionsConsolidationAlgorithm.py" />
+    <Compile Include="BasicTemplateOptionsFrameworkAlgorithm.py" />
+    <Compile Include="BasicTemplateOptionsPriceModel.py" />
+    <Compile Include="BlackLittermanPortfolioOptimizationFrameworkAlgorithm.py" />
+    <Compile Include="CapmAlphaRankingFrameworkAlgorithm.py" />
+    <Compile Include="CoarseFundamentalTop3Algorithm.py" />
+    <Compile Include="CompositeAlphaModelFrameworkAlgorithm.py" />
+    <Compile Include="CompositeRiskManagementModelFrameworkAlgorithm.py" />
+    <Compile Include="ConfidenceWeightedFrameworkAlgorithm.py" />
+    <Compile Include="ConsolidateRegressionAlgorithm.py" />
+    <Compile Include="ConstituentsUniverseRegressionAlgorithm.py" />
+    <Compile Include="ConvertToFrameworkAlgorithm.py" />
+    <Compile Include="CustomBuyingPowerModelAlgorithm.py" />
+    <Compile Include="CustomDataLinkedIconicTypeAddDataCoarseSelectionRegressionAlgorithm.py" />
+    <Compile Include="CustomDataLinkedIconicTypeAddDataOnSecuritiesChangedRegressionAlgorithm.py" />
+    <Compile Include="CustomDataIconicTypesAddDataRegressionAlgorithm.py" />
+    <Compile Include="CustomDataIndicatorExtensionsAlgorithm.py" />
+    <Compile Include="CustomDataUsingMapFileRegressionAlgorithm.py" />
+    <Compile Include="CustomIndicatorAlgorithm.py" />
+    <Compile Include="CustomVolatilityModelAlgorithm.py" />
+    <Compile Include="BasicTemplateAlgorithm.py" />
+    <Compile Include="BasicTemplateDailyAlgorithm.py" />
+    <Compile Include="BasicTemplateFillForwardAlgorithm.py" />
+    <Compile Include="BasicTemplateForexAlgorithm.py" />
+    <Compile Include="BasicTemplateFrameworkAlgorithm.py" />
+    <Compile Include="BasicTemplateFuturesAlgorithm.py" />
+    <Compile Include="BasicTemplateFuturesConsolidationAlgorithm.py" />
+    <Compile Include="BasicTemplateFuturesHistoryAlgorithm.py" />
+    <Compile Include="BasicTemplateLibrary.py" />
+    <Compile Include="BasicTemplateOptionsAlgorithm.py" />
+    <Compile Include="BasicTemplateOptionsFilterUniverseAlgorithm.py" />
+    <Compile Include="BasicTemplateOptionsHistoryAlgorithm.py" />
+    <Compile Include="BasicTemplateOptionStrategyAlgorithm.py" />
+    <Compile Include="BasicTemplateOptionTradesAlgorithm.py" />
+    <Compile Include="BrokerageModelAlgorithm.py" />
+    <Compile Include="BubbleAlgorithm.py" />
+    <Compile Include="CoarseFineFundamentalComboAlgorithm.py" />
+    <Compile Include="CoarseFineFundamentalRegressionAlgorithm.py" />
+    <Compile Include="CustomBenchmarkAlgorithm.py" />
+    <Compile Include="CustomChartingAlgorithm.py" />
+    <Compile Include="CustomDataBitcoinAlgorithm.py" />
+    <Compile Include="CustomDataNIFTYAlgorithm.py" />
+    <Compile Include="CustomDataRegressionAlgorithm.py" />
+    <Compile Include="CustomDataUniverseAlgorithm.py" />
+    <Compile Include="CustomModelsAlgorithm.py" />
+    <Compile Include="CustomSecurityInitializerAlgorithm.py" />
+    <Compile Include="DailyAlgorithm.py" />
+    <Compile Include="DataConsolidationAlgorithm.py" />
+    <Compile Include="DelistingEventsAlgorithm.py" />
+    <Compile Include="DisplacedMovingAverageRibbon.py" />
+    <Compile Include="DividendAlgorithm.py" />
+    <Compile Include="DropboxBaseDataUniverseSelectionAlgorithm.py" />
+    <Compile Include="DropboxCoarseFineAlgorithm.py" />
+    <Compile Include="DropboxUniverseSelectionAlgorithm.py" />
+    <Compile Include="EmaCrossFuturesFrontMonthAlgorithm.py" />
+    <Compile Include="EmaCrossUniverseSelectionAlgorithm.py" />
+    <Compile Include="EmaCrossUniverseSelectionFrameworkAlgorithm.py" />
+    <Compile Include="ETFGlobalRotationAlgorithm.py" />
+    <Compile Include="ExpiryHelperAlphaModelFrameworkAlgorithm.py" />
+    <Compile Include="FilteredIdentityAlgorithm.py" />
+    <Compile Include="FinancialAdvisorDemoAlgorithm.py" />
+    <Compile Include="FractionalQuantityRegressionAlgorithm.py" />
+    <Compile Include="FuturesMomentumAlgorithm.py" />
+    <Compile Include="G10CurrencySelectionModelFrameworkAlgorithm.py" />
+    <Compile Include="HistoryAlgorithm.py" />
+    <Compile Include="HourReverseSplitRegressionAlgorithm.py" />
+    <Compile Include="HourSplitRegressionAlgorithm.py" />
+    <Compile Include="InceptionDateSelectionRegressionAlgorithm.py" />
+    <Compile Include="IndicatorSuiteAlgorithm.py" />
+    <Compile Include="IndicatorWarmupAlgorithm.py" />
+    <Compile Include="InsightWeightingFrameworkAlgorithm.py" />
+    <Compile Include="KerasNeuralNetworkAlgorithm.py" />
+    <Compile Include="LimitFillRegressionAlgorithm.py" />
+    <Compile Include="LiquidETFUniverseFrameworkAlgorithm.py" />
+    <Compile Include="LiveFeaturesAlgorithm.py" />
+    <Compile Include="LongOnlyAlphaStreamAlgorithm.py" />
+    <Compile Include="MACDTrendAlgorithm.py" />
+    <Compile Include="main.py" />
+    <Compile Include="MarginCallEventsAlgorithm.py" />
+    <Compile Include="MarketOnOpenOnCloseAlgorithm.py" />
+    <Compile Include="MaximumPortfolioDrawdownFrameworkAlgorithm.py" />
+    <Compile Include="MeanVarianceOptimizationFrameworkAlgorithm.py" />
+    <Compile Include="MovingAverageCrossAlgorithm.py" />
+    <Compile Include="MultipleSymbolConsolidationAlgorithm.py" />
+    <Compile Include="NLTKSentimentTradingAlgorithm.py" />
+    <Compile Include="ObjectStoreExampleAlgorithm.py" />
+    <Compile Include="OnEndOfDayRegressionAlgorithm.py" />
+    <Compile Include="OptionChainConsistencyRegressionAlgorithm.py" />
+    <Compile Include="OptionChainProviderAlgorithm.py" />
+    <Compile Include="OptionDataNullReferenceRegressionAlgorithm.py" />
+    <Compile Include="OptionExerciseAssignRegressionAlgorithm.py" />
+    <Compile Include="OptionOpenInterestRegressionAlgorithm.py" />
+    <Compile Include="OptionRenameRegressionAlgorithm.py" />
+    <Compile Include="OptionSplitRegressionAlgorithm.py" />
+    <Compile Include="OrderTicketDemoAlgorithm.py" />
+    <Compile Include="PandasDataFrameHistoryAlgorithm.py" />
+    <Compile Include="ParameterizedAlgorithm.py" />
+    <Compile Include="PearsonCorrelationPairsTradingAlphaModelFrameworkAlgorithm.py" />
+    <Compile Include="PortfolioRebalanceOnCustomFuncRegressionAlgorithm.py" />
+    <Compile Include="PortfolioRebalanceOnDateRulesRegressionAlgorithm.py" />
+    <Compile Include="PythonDictionaryFeatureRegressionAlgorithm.py" />
+    <Compile Include="PytorchNeuralNetworkAlgorithm.py" />
+    <Compile Include="QuandlFuturesDataAlgorithm.py" />
+    <Compile Include="QuandlImporterAlgorithm.py" />
+    <Compile Include="RawPricesCoarseUniverseAlgorithm.py" />
+    <Compile Include="RawPricesUniverseRegressionAlgorithm.py" />
+    <Compile Include="RegisterIndicatorRegressionAlgorithm.py" />
+    <Compile Include="RegressionAlgorithm.py" />
+    <Compile Include="RegressionChannelAlgorithm.py" />
+    <Compile Include="RenkoConsolidatorAlgorithm.py" />
+    <Compile Include="RollingWindowAlgorithm.py" />
+    <Compile Include="ScheduledEventsAlgorithm.py" />
+    <Compile Include="ScheduledUniverseSelectionModelRegressionAlgorithm.py" />
+    <Compile Include="ScikitLearnLinearRegressionAlgorithm.py" />
+    <Compile Include="SectorExposureRiskFrameworkAlgorithm.py" />
+    <Compile Include="SectorWeightingFrameworkAlgorithm.py" />
+    <Compile Include="SetHoldingsLiquidateExistingHoldingsMultipleTargetsRegressionAlgorithm.py" />
+    <Compile Include="SetHoldingsMultipleTargetsRegressionAlgorithm.py" />
+    <Compile Include="SmaCrossUniverseSelectionAlgorithm.py" />
+    <Compile Include="StandardDeviationExecutionModelRegressionAlgorithm.py" />
+    <Compile Include="TalibIndicatorsAlgorithm.py" />
+    <Compile Include="TensorFlowNeuralNetworkAlgorithm.py" />
+    <Compile Include="TiingoPriceAlgorithm.py" />
+    <Compile Include="TimeInForceAlgorithm.py" />
+    <Compile Include="TrailingStopRiskFrameworkAlgorithm.py" />
+    <Compile Include="TrainingExampleAlgorithm.py" />
+    <Compile Include="TrainingInitializeRegressionAlgorithm.py" />
+    <Compile Include="UncorrelatedUniverseSelectionFrameworkAlgorithm.py" />
+    <Compile Include="UniverseSelectionDefinitionsAlgorithm.py" />
+    <Compile Include="UniverseSelectionRegressionAlgorithm.py" />
+    <Compile Include="UniverseUnchangedRegressionAlgorithm.py" />
+    <Compile Include="UpdateOrderRegressionAlgorithm.py" />
+    <Compile Include="UserDefinedUniverseAlgorithm.py" />
+    <Compile Include="VolumeWeightedAveragePriceExecutionModelRegressionAlgorithm.py" />
+    <Compile Include="WarmupAlgorithm.py" />
+    <Compile Include="WarmupHistoryAlgorithm.py" />
+    <Compile Include="WeeklyUniverseSelectionRegressionAlgorithm.py" />
+  </ItemGroup>
+  <Import Project="$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\Python Tools\Microsoft.PythonTools.targets" />
+  <!-- Uncomment the CoreCompile target to enable the Build command in
+       Visual Studio and specify your pre- and post-build commands in
+       the BeforeBuild and AfterBuild targets below. -->
+  <!--<Target Name="CoreCompile" />-->
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+</Project>

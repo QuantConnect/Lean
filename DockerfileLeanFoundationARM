@@ -1,0 +1,277 @@
+# This is a version of DockerfileLeanFoundation for ARM
+# Some packages from the AMD image are excluded because they are not available on ARM or take too long to build
+
+# Use base system for cleaning up wayward processes
+FROM phusion/baseimage:jammy-1.0.1
+
+MAINTAINER QuantConnect <contact@quantconnect.com>
+
+# Use baseimage-docker's init system.
+CMD ["/sbin/my_init"]
+
+# Install OS Packages:
+# Misc tools for running Python.NET and IB inside a headless container.
+RUN add-apt-repository ppa:ubuntu-toolchain-r/test && apt-get update \
+    && apt-get install -y git libgtk2.0.0 bzip2 curl unzip wget python3-pip python3-opengl zlib1g-dev \
+    xvfb libxrender1 libxtst6 libxi6 libglib2.0-dev libopenmpi-dev libstdc++6 openmpi-bin \
+    r-base pandoc libcurl4-openssl-dev \
+    openjdk-11-jdk openjdk-11-jre bbe \
+    && apt-get clean && apt-get autoclean && apt-get autoremove --purge -y \
+    && rm -rf /var/lib/apt/lists/*
+
+# Set PythonDLL variable for PythonNet
+ENV PYTHONNET_PYDLL="/opt/miniconda3/lib/libpython3.11.so"
+
+# Install miniconda
+ENV CONDA="Miniconda3-py311_24.9.2-0-Linux-aarch64.sh"
+ENV PATH="/opt/miniconda3/bin:${PATH}"
+RUN wget -q https://cdn.quantconnect.com/miniconda/${CONDA} && \
+    bash ${CONDA} -b -p /opt/miniconda3 && rm -rf ${CONDA}
+
+# Install java runtime for h2o lib
+RUN apt-get update && apt-get install -y alien dpkg-dev debhelper build-essential && wget https://download.oracle.com/java/17/archive/jdk-17.0.12_linux-aarch64_bin.rpm \
+    && alien -i jdk-17.0.12_linux-aarch64_bin.rpm \
+    && update-alternatives --install /usr/bin/java java /usr/lib/jvm/jdk-17.0.12-oracle-aarch64/bin/java 1 \
+    && rm jdk-17.0.12_linux-aarch64_bin.rpm
+
+# Avoid pip install read timeouts
+ENV PIP_DEFAULT_TIMEOUT=120
+
+# Install numpy first to avoid it not being resolved when installing libraries that depend on it next
+RUN pip install --no-cache-dir numpy==1.26.4
+
+# Install newer (than provided by ubuntu) cmake required by scikit build process
+RUN conda install -c conda-forge cmake==3.28.4 && conda clean -y --all
+
+# The list of packages in this image is shorter than the list in the AMD images
+# This list only includes packages that can be installed within 2 minutes on ARM
+RUN pip install --no-cache-dir      \
+    cython==3.2.3                   \
+    pandas==2.3.3                   \
+    scipy==1.13.1                   \
+    numpy==1.26.4                   \
+    wrapt==1.17.3                   \
+    astropy==7.2.0                  \
+    beautifulsoup4==4.14.3          \
+    dill==0.3.8                     \
+    jsonschema==4.25.1              \
+    lxml==6.0.2                     \
+    msgpack==1.1.2                  \
+    numba==0.61.2                   \
+    xarray==2025.12.0               \
+    plotly==5.24.1                  \
+    jupyterlab==4.5.1               \
+    ipywidgets==8.1.8               \
+    jupyterlab-widgets==3.0.16      \
+    tensorflow==2.19.1              \
+    docutils==0.22.4                \
+    gensim==4.4.0                   \
+    keras==3.13.0                   \
+    lightgbm==4.6.0                 \
+    nltk==3.9.2                     \
+    graphviz==0.21                  \
+    cmdstanpy==1.3.0                \
+    copulae==0.7.9                  \
+    featuretools==1.31.0            \
+    PuLP==3.3.0                     \
+    pymc==5.25.1                    \
+    rauth==0.7.3                    \
+    scikit-learn==1.6.1             \
+    scikit-optimize==0.10.2         \
+    tsfresh==0.20.2                 \
+    tslearn==0.7.0                  \
+    tweepy==4.16.0                  \
+    PyWavelets==1.9.0               \
+    umap-learn==0.5.9.post2         \
+    fastai==2.8.6                   \
+    arch==8.0.0                     \
+    copulas==0.12.3                 \
+    cufflinks==0.17.3               \
+    gym==0.26.2                     \
+    deap==1.4.3                     \
+    pykalman==0.11.0                \
+    cvxpy==1.7.5                    \
+    pyro-ppl==1.9.1                 \
+    sklearn-json==0.1.0             \
+    dtw-python==1.5.3               \
+    gluonts==0.16.2                 \
+    jax==0.7.1                      \
+    pennylane==0.43.1               \
+    PennyLane-Lightning==0.43.0     \
+    PennyLane-qiskit==0.43.0        \
+    mplfinance==0.12.10b0           \
+    hmmlearn==0.3.3                 \
+    ta==0.11.0                      \
+    seaborn==0.13.2                 \
+    optuna==4.6.0                   \
+    findiff==0.12.2                 \
+    sktime==0.40.1                  \
+    hyperopt==0.2.7                 \
+    bayesian-optimization==3.1.0    \
+    matplotlib==3.8.4               \
+    sdeint==0.3.0                   \
+    pandas_market_calendars==5.2.2  \
+    ruptures==1.1.10                \
+    simpy==4.1.1                    \
+    scikit-learn-extra==0.3.0       \
+    ray==2.53.0                     \
+    "ray[tune]"==2.53.0             \
+    "ray[rllib]"==2.53.0            \
+    "ray[data]"==2.53.0             \
+    "ray[train]"==2.53.0            \
+    fastText==0.9.3                 \
+    h2o==3.46.0.9                   \
+    prophet==1.2.1                  \
+    Riskfolio-Lib==7.0.1            \
+    torch==2.8.0                    \
+    torchvision==0.23.0             \
+    ax-platform==1.2.1              \
+    alphalens-reloaded==0.4.6       \
+    pyfolio-reloaded==0.9.9         \
+    altair==6.0.0                   \
+    modin==0.37.1                   \
+    persim==0.3.8                   \
+    ripser==0.6.14                  \
+    pydmd==2025.8.1                 \
+    EMD-signal==1.6.4               \
+    spacy==3.8.11                   \
+    pytorch-ignite==0.5.3           \
+    tensorly==0.9.0                 \
+    mlxtend==0.23.4                 \
+    shap==0.48.0                    \
+    lime==0.2.0.1                   \
+    mpmath==1.3.0                   \
+    polars==1.36.1                  \
+    stockstats==0.6.5               \
+    QuantStats==0.0.77              \
+    hurst==0.0.5                    \
+    numerapi==2.21.0                \
+    pymdptoolbox==4.0-b3            \
+    panel==1.7.5                    \
+    hvplot==0.12.2                  \
+    py-heat==0.0.6                  \
+    py-heat-magic==0.0.2            \
+    bokeh==3.6.3                    \
+    river==0.21.0                   \
+    stumpy==1.13.0                  \
+    pyvinecopulib==0.6.5            \
+    ijson==3.4.0.post0              \
+    jupyter-resource-usage==1.2.0   \
+    injector==0.22.0                \
+    openpyxl==3.1.5                 \
+    xlrd==2.0.2                     \
+    mljar-supervised==1.1.18        \
+    dm-tree==0.1.9                  \
+    lz4==4.4.4                      \
+    ortools==9.12.4544              \
+    py_vollib==1.0.1                \
+    thundergbm==0.3.17              \
+    yellowbrick==1.5                \
+    livelossplot==0.5.6             \
+    gymnasium==1.1.1                \
+    interpret==0.7.2                \
+    DoubleML==0.10.1                \
+    jupyter-bokeh==4.0.5            \
+    imbalanced-learn==0.14.1        \
+    openai==2.14.0                  \
+    lazypredict==0.2.16             \
+    darts==0.39.0                   \
+    fastparquet==2025.12.0          \
+    tables==3.10.2                  \
+    dimod==0.12.21                  \
+    dwave-samplers==1.7.0           \
+    python-statemachine==2.5.0      \
+    pymannkendall==1.4.3            \
+    Pyomo==6.9.5                    \
+    gpflow==2.10.0                  \
+    pyarrow==19.0.1                 \
+    dwave-ocean-sdk==9.2.0          \
+    chardet==5.2.0                  \
+    stable-baselines3==2.7.1        \
+    sb3-contrib==2.7.1              \
+    Shimmy==2.0.0                   \
+    FixedEffectModel==0.0.5         \
+    transformers==4.57.3            \
+    langchain==0.3.27               \
+    pomegranate==1.1.2              \
+    MAPIE==1.2.0                    \
+    mlforecast==1.0.2               \
+    x-transformers==2.11.24         \
+    Werkzeug==3.1.4                 \
+    nolds==0.6.2                    \
+    feature-engine==1.9.3           \
+    pytorch-tabnet==4.1.0           \
+    opencv-contrib-python-headless==4.11.0.86 \
+    POT==0.9.6.post1                \
+    datasets==3.6.0                 \
+    scikeras==0.13.0                \
+    contourpy==1.3.3                \
+    click==8.2.1
+
+# Install dwave tool
+RUN dwave install --all -y
+
+# Install 'ipopt' solver for 'Pyomo'
+RUN conda install -c conda-forge ipopt==3.14.19 \
+    && conda clean -y --all
+
+# We install need to install separately else fails to find numpy
+RUN pip install --no-cache-dir iisignature==0.24
+
+# Install spacy models
+RUN python -m spacy download en_core_web_md && python -m spacy download en_core_web_sm
+
+RUN conda config --set solver classic && conda install -y -c conda-forge \
+    openmpi=5.0.8                   \
+    && conda clean -y --all
+
+# Install nltk data
+RUN python -m nltk.downloader -d /usr/share/nltk_data punkt && \
+    python -m nltk.downloader -d /usr/share/nltk_data punkt_tab && \
+    python -m nltk.downloader -d /usr/share/nltk_data vader_lexicon && \
+    python -m nltk.downloader -d /usr/share/nltk_data stopwords && \
+    python -m nltk.downloader -d /usr/share/nltk_data wordnet
+
+# Install Pyrb
+RUN wget -q https://cdn.quantconnect.com/pyrb/pyrb-master-250054e.zip && \
+    unzip -q pyrb-master-250054e.zip && cd pyrb-master && \
+    pip install . && cd .. && rm -rf pyrb-master && rm pyrb-master-250054e.zip
+
+# Install SSM
+RUN wget -q https://cdn.quantconnect.com/ssm/ssm-master-646e188.zip && \
+    unzip -q ssm-master-646e188.zip && cd ssm-master && \
+    pip install . && cd .. && rm -rf ssm-master && rm ssm-master-646e188.zip
+
+# Install uni2ts
+RUN wget -q https://cdn.quantconnect.com/uni2ts/uni2ts-main-ffe78db.zip && \
+    unzip -q uni2ts-main-ffe78db.zip && cd uni2ts-main && \
+    pip install . && cd .. && rm -rf uni2ts-main && rm uni2ts-main-ffe78db.zip
+
+# Install chronos-forecasting
+RUN wget -q https://cdn.quantconnect.com/chronos-forecasting/chronos-forecasting-main-b0bdbd9.zip && \
+    unzip -q chronos-forecasting-main-b0bdbd9.zip && cd chronos-forecasting-main && \
+    pip install ".[training]" && cd .. && rm -rf chronos-forecasting-main && rm chronos-forecasting-main-b0bdbd9.zip
+
+RUN echo "{\"argv\":[\"python\",\"-m\",\"ipykernel_launcher\",\"-f\",\"{connection_file}\"],\"display_name\":\"Foundation-Py-Default\",\"language\":\"python\",\"metadata\":{\"debugger\":true}}" > /opt/miniconda3/share/jupyter/kernels/python3/kernel.json
+
+# Install wkhtmltopdf and xvfb to support HTML to PDF conversion of reports
+RUN apt-get update && apt install -y xvfb wkhtmltopdf && \
+    apt-get clean && apt-get autoclean && apt-get autoremove --purge -y && rm -rf /var/lib/apt/lists/*
+
+# Install fonts for matplotlib
+RUN wget -q https://cdn.quantconnect.com/fonts/foundation.zip && unzip -q foundation.zip && rm foundation.zip \
+    && mv "lean fonts/"* /usr/share/fonts/truetype/ && rm -rf "lean fonts/" "__MACOSX/"
+
+# Install dotnet 9 sdk & runtime
+# The .deb packages don't support ARM, the install script does
+ENV PATH="/root/.dotnet:${PATH}"
+RUN wget https://dot.net/v1/dotnet-install.sh && \
+    chmod 777 dotnet-install.sh && \
+    ./dotnet-install.sh -c 10.0 && \
+    rm dotnet-install.sh
+ENV DOTNET_ROOT="/root/.dotnet"
+
+# label definitions
+LABEL strict_python_version=3.11.11
+LABEL python_version=3.11
+LABEL target_framework=net10.0

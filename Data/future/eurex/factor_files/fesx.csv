@@ -1,0 +1,4 @@
+{"Date":"2024-02-29T00:00:00","BackwardsRatioScale":[0.9913489916535321268273586766,1.0164323896258166699663432984,1.0],"BackwardsPanamaCanalScale":[-42.66,83.0,0.0],"ForwardPanamaCanalScale":[-123866.99,774.5,33.0],"DataMappingMode":1}
+{"Date":"2024-03-14T00:00:00","BackwardsRatioScale":[0.9944097809171575660198252019,1.0088791461489374296086137569,1.0],"BackwardsPanamaCanalScale":[-27.80,44.0,0.0],"ForwardPanamaCanalScale":[-122928.36,1387.0,151.0],"DataMappingMode":0}
+{"Date":"2024-05-31T00:00:00","BackwardsRatioScale":[0.9982410719579438328820727682,1.0164323896258166699663432984,1.0],"BackwardsPanamaCanalScale":[-8.9,83.0,0.0],"ForwardPanamaCanalScale":[-123858.09,691.5,33.0],"DataMappingMode":1}
+{"Date":"2024-06-20T00:00:00","BackwardsRatioScale":[0.9999378547042986502442711058,1.0044105854049719326383319968,1.0],"BackwardsPanamaCanalScale":[-0.31,22.0,0.0],"ForwardPanamaCanalScale":[-122928.05,1365.0,151.0],"DataMappingMode":0}

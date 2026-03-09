@@ -1,0 +1,48 @@
+name: Report Generator Tests
+
+on:
+  push:
+    branches: ['*']
+    tags: ['*']
+  pull_request:
+    branches: [master]
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+        
+      - name: Liberate disk space
+        uses: jlumbroso/free-disk-space@main
+        with:
+          tool-cache: true
+          large-packages: false
+          docker-images: false
+          swap-storage: false
+
+      - name: Define docker helper
+        run: |
+          echo 'runInContainer() { docker exec test-container "$@"; }' > $HOME/ci_functions.sh
+          echo "BASH_ENV=$HOME/ci_functions.sh" >> $GITHUB_ENV
+
+      - name: Start container
+        run: |
+          docker run -d \
+            --workdir /__w/Lean/Lean \
+            -v /home/runner/work:/__w \
+            --name test-container \
+            quantconnect/lean:foundation \
+            tail -f /dev/null
+
+      - name: Build and Run Report Generator Tests
+        run: |
+          # Build
+          runInContainer dotnet build /p:Configuration=Release /v:quiet /p:WarningLevel=1 QuantConnect.Lean.sln
+          
+          # Run Backtest
+          runInContainer bash -c "cd ./Launcher/bin/Release && dotnet QuantConnect.Lean.Launcher.dll"
+          
+          # Run Report
+          runInContainer bash -c "cd ./Report/bin/Release && dotnet ./QuantConnect.Report.dll --backtest-data-source-file ../../../Launcher/bin/Release/BasicTemplateFrameworkAlgorithm.json --close-automatically true"
