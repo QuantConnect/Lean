@@ -13,7 +13,6 @@
  * limitations under the License.
 */
 
-using Moq;
 using System;
 using NUnit.Framework;
 using QuantConnect.Data;
@@ -29,16 +28,45 @@ namespace QuantConnect.Tests.Common.Brokerages
     [TestFixture, Parallelizable(ParallelScope.All)]
     public class InteractiveBrokersFixModelTests
     {
-        private readonly InteractiveBrokersFixModel _interactiveBrokersFixModel = new();
-
-        [TestCase(OrderType.ComboLimit)]
-        [TestCase(OrderType.ComboMarket)]
-        [TestCase(OrderType.ComboLegLimit)]
-        public void FopComboOrders(OrderType orderType)
+        [TestCase(OrderType.ComboLimit, SecurityType.FutureOption, SecurityType.Future, false)]
+        [TestCase(OrderType.ComboMarket, SecurityType.FutureOption, SecurityType.Future, false)]
+        [TestCase(OrderType.ComboLimit, SecurityType.Future, SecurityType.Future, true)]
+        [TestCase(OrderType.ComboLimit, SecurityType.FutureOption, SecurityType.FutureOption, true)]
+        [TestCase(OrderType.ComboMarket, SecurityType.Future, SecurityType.Future, true)]
+        [TestCase(OrderType.ComboMarket, SecurityType.FutureOption, SecurityType.FutureOption, true)]
+        [TestCase(OrderType.ComboLegLimit, SecurityType.FutureOption, SecurityType.Future, false)]
+        [TestCase(OrderType.ComboLegLimit, SecurityType.Future, SecurityType.Future, false)]
+        [TestCase(OrderType.ComboLegLimit, SecurityType.FutureOption, SecurityType.FutureOption, false)]
+        public void ComboOrderValidatesSecurityTypes(OrderType orderType, SecurityType securityType1, SecurityType securityType2, bool expected)
         {
-            var underlying = Symbol.CreateFuture("ES", Market.CME, new DateTime(2025, 12, 19));
-            var symbol = Symbol.CreateOption(underlying, Market.CME, OptionStyle.American, OptionRight.Call, 6000m, new DateTime(2025, 12, 19));
-            var security = new Security(
+            var model = new InteractiveBrokersFixModel();
+            var groupManager = new GroupOrderManager(1, 2, 2);
+
+            var leg1 = CreateSecurity(securityType1, 0);
+            var leg2 = CreateSecurity(securityType2, 1);
+
+            var order1 = new SubmitOrderRequest(orderType, securityType1, leg1.Symbol, 1, 1, 1, new DateTime(2025, 7, 10), "", groupOrderManager: groupManager);
+            order1.SetOrderId(1);
+            var leg1Order = Order.CreateOrder(order1);
+
+            var order2 = new SubmitOrderRequest(orderType, securityType2, leg2.Symbol, -1, 1, 1, new DateTime(2025, 7, 10), "", groupOrderManager: groupManager);
+            order2.SetOrderId(2);
+            var leg2Order = Order.CreateOrder(order2);
+
+            var canSubmit = model.CanSubmitOrder(leg1, leg1Order, out _) && model.CanSubmitOrder(leg2, leg2Order, out _);
+            Assert.AreEqual(expected, canSubmit);
+        }
+
+        private static Security CreateSecurity(SecurityType securityType, int type)
+        {
+            var futureSymbol = Symbol.CreateFuture("ES", Market.CME, new DateTime(2025, 12, 19));
+            var symbol = securityType == SecurityType.FutureOption
+                ? Symbol.CreateOption(futureSymbol, Market.CME, OptionStyle.American,
+                    type == 0 ? OptionRight.Call : OptionRight.Put,
+                    type == 0 ? 6000m : 5900m, new DateTime(2025, 12, 19))
+                : futureSymbol;
+
+            return new Security(
                 SecurityExchangeHoursTests.CreateUsEquitySecurityExchangeHours(),
                 new SubscriptionDataConfig(typeof(TradeBar), symbol, Resolution.Minute, TimeZones.Utc, TimeZones.Utc, false, true, false),
                 new Cash(Currencies.USD, 0, 1m),
@@ -47,12 +75,6 @@ namespace QuantConnect.Tests.Common.Brokerages
                 RegisteredSecurityDataTypesProvider.Null,
                 new SecurityCache()
             );
-
-            var order = Order.CreateOrder(new SubmitOrderRequest(orderType, SecurityType.FutureOption, symbol, 1, 1, 1, new DateTime(2025, 7, 10), "",
-                groupOrderManager: new(2, 2)));
-            var canSubmit = _interactiveBrokersFixModel.CanSubmitOrder(security, order, out var message);
-
-            Assert.IsFalse(canSubmit, message.Message);
         }
     }
 }
