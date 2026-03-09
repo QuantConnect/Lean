@@ -1,7 +1,28 @@
 {
     "files.eol": "\n",
+    "files.exclude": {
+        "**/bin": true,
+        "**/obj": true,
+        "**/.git": true
+    },
+    "search.exclude": {
+        "**/bin": true,
+        "**/obj": true
+    },
+    "omnisharp.enableRoslynAnalyzers": true,
+    "omnisharp.enableEditorConfigSupport": true,
+    "dotnet.defaultSolution": "QuantConnect.Lean.sln",
+    "editor.formatOnSave": true,
+    "editor.rulers": [
+        150
+    ],
+    "[csharp]": {
+        "editor.defaultFormatter": "ms-dotnettools.csharp",
+        "editor.tabSize": 4,
+        "editor.insertSpaces": true
+    },
     "python.analysis.extraPaths": [
-        "/Lean/Algorithm.Python",
-        "/opt/miniconda3/lib/python3.8/site-packages"
+        "./Algorithm.Python",
+        "/opt/miniconda3/lib/python3.11/site-packages",
     ]
 }
