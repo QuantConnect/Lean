@@ -45,10 +45,13 @@ namespace QuantConnect.Tests.Common.Brokerages
             var leg1 = CreateSecurity(securityType1, 0);
             var leg2 = CreateSecurity(securityType2, 1);
 
-            var leg1Order = Order.CreateOrder(new SubmitOrderRequest(orderType, securityType1, leg1.Symbol, 1, 1, 1,
-                new DateTime(2025, 7, 10), "", groupOrderManager: groupManager));
-            var leg2Order = Order.CreateOrder(new SubmitOrderRequest(orderType, securityType2, leg2.Symbol, -1, 1, 1,
-                new DateTime(2025, 7, 10), "", groupOrderManager: groupManager));
+            var order1 = new SubmitOrderRequest(orderType, securityType1, leg1.Symbol, 1, 1, 1, new DateTime(2025, 7, 10), "", groupOrderManager: groupManager);
+            order1.SetOrderId(1);
+            var leg1Order = Order.CreateOrder(order1);
+
+            var order2 = new SubmitOrderRequest(orderType, securityType2, leg2.Symbol, -1, 1, 1, new DateTime(2025, 7, 10), "", groupOrderManager: groupManager);
+            order2.SetOrderId(2);
+            var leg2Order = Order.CreateOrder(order2);
 
             var canSubmit = model.CanSubmitOrder(leg1, leg1Order, out _) && model.CanSubmitOrder(leg2, leg2Order, out _);
             Assert.AreEqual(expected, canSubmit);
