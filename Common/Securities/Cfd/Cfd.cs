@@ -62,6 +62,8 @@ namespace QuantConnect.Securities.Cfd
                 Securities.MarginInterestRateModel.Null
                 )
         {
+            _symbolProperties = new CfdSymbolProperties(symbolProperties);
+            SymbolProperties = _symbolProperties;
             Holdings = new CfdHolding(this, currencyConverter);
         }
 
@@ -102,15 +104,20 @@ namespace QuantConnect.Securities.Cfd
                 Securities.MarginInterestRateModel.Null
                 )
         {
+            _symbolProperties = new CfdSymbolProperties(symbolProperties);
+            SymbolProperties = _symbolProperties;
             Holdings = new CfdHolding(this, currencyConverter);
         }
 
+        private readonly CfdSymbolProperties _symbolProperties;
+
         /// <summary>
-        /// Gets the contract multiplier for this CFD security
+        /// Gets or sets the contract multiplier for this CFD security
         /// </summary>
         public decimal ContractMultiplier
         {
-            get { return SymbolProperties.ContractMultiplier; }
+            get { return _symbolProperties.ContractMultiplier; }
+            set { _symbolProperties.SetContractMultiplier(value); }
         }
 
         /// <summary>
