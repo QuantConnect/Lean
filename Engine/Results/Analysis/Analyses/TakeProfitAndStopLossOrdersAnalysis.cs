@@ -100,10 +100,10 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
 
             foreach (var orders in combos)
             {
-                var filledOrders    = orders.Where(o => o.Status == OrderStatus.Filled).ToList();
+                var filledOrders = orders.Where(o => o.Status == OrderStatus.Filled).ToList();
                 if (filledOrders.Count != 1) continue; // both-filled case handled separately
 
-                var filledOrder     = filledOrders[0];
+                var filledOrder = filledOrders[0];
                 var cancelledOrders = orders.Where(o => o.Status == OrderStatus.Canceled).ToList();
 
                 if (cancelledOrders.Count == 0)

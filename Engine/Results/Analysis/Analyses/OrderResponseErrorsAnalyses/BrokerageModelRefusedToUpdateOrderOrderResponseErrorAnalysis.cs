@@ -15,10 +15,11 @@
 */
 using System.Collections.Generic;
 using System.Linq;
+using QuantConnect.Lean.Engine.Results.Analysis.Analyses.Messages;
 using QuantConnect.Orders;
 
-using Default = QuantConnect.Lean.Engine.Results.Analysis.Messages.DefaultBrokerageModel;
-using IB = QuantConnect.Lean.Engine.Results.Analysis.Messages.InteractiveBrokersBrokerageModel;
+using Default = QuantConnect.Lean.Engine.Results.Analysis.Analyses.Messages.DefaultBrokerageModel;
+using IB = QuantConnect.Lean.Engine.Results.Analysis.Analyses.Messages.InteractiveBrokersBrokerageModel;
 
 namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
 {

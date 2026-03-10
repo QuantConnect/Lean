@@ -15,17 +15,18 @@
 */
 using System.Collections.Generic;
 using System.Linq;
+using QuantConnect.Lean.Engine.Results.Analysis.Analyses.Messages;
 using QuantConnect.Orders;
 
-using Alpaca = QuantConnect.Lean.Engine.Results.Analysis.Messages.AlpacaBrokerageModel;
-using Binance = QuantConnect.Lean.Engine.Results.Analysis.Messages.BinanceBrokerageModel;
-using Coinbase = QuantConnect.Lean.Engine.Results.Analysis.Messages.CoinbaseBrokerageModel;
-using DefaultBrokerage = QuantConnect.Lean.Engine.Results.Analysis.Messages.DefaultBrokerageModel;
-using IB = QuantConnect.Lean.Engine.Results.Analysis.Messages.InteractiveBrokersBrokerageModel;
-using Rbi = QuantConnect.Lean.Engine.Results.Analysis.Messages.RbiBrokerageModel;
-using Tradier = QuantConnect.Lean.Engine.Results.Analysis.Messages.TradierBrokerageModel;
-using TradingTech = QuantConnect.Lean.Engine.Results.Analysis.Messages.TradingTechnologiesBrokerageModel;
-using Wolverine = QuantConnect.Lean.Engine.Results.Analysis.Messages.WolverineBrokerageModel;
+using Alpaca = QuantConnect.Lean.Engine.Results.Analysis.Analyses.Messages.AlpacaBrokerageModel;
+using Binance = QuantConnect.Lean.Engine.Results.Analysis.Analyses.Messages.BinanceBrokerageModel;
+using Coinbase = QuantConnect.Lean.Engine.Results.Analysis.Analyses.Messages.CoinbaseBrokerageModel;
+using DefaultBrokerage = QuantConnect.Lean.Engine.Results.Analysis.Analyses.Messages.DefaultBrokerageModel;
+using IB = QuantConnect.Lean.Engine.Results.Analysis.Analyses.Messages.InteractiveBrokersBrokerageModel;
+using Rbi = QuantConnect.Lean.Engine.Results.Analysis.Analyses.Messages.RbiBrokerageModel;
+using Tradier = QuantConnect.Lean.Engine.Results.Analysis.Analyses.Messages.TradierBrokerageModel;
+using TradingTech = QuantConnect.Lean.Engine.Results.Analysis.Analyses.Messages.TradingTechnologiesBrokerageModel;
+using Wolverine = QuantConnect.Lean.Engine.Results.Analysis.Analyses.Messages.WolverineBrokerageModel;
 
 namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
 {

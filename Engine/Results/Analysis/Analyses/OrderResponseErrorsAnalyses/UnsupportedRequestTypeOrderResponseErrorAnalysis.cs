@@ -13,6 +13,7 @@
  * limitations under the License.
  *
 */
+using QuantConnect.Lean.Engine.Results.Analysis.Analyses.Messages;
 using System.Collections.Generic;
 using System.Linq;
 

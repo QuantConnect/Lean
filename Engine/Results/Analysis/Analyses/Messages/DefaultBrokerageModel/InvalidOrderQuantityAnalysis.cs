@@ -16,27 +16,27 @@
 using System.Collections.Generic;
 using QuantConnect.Lean.Engine.Results.Analysis.Utils;
 
-namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
+namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses.Messages.DefaultBrokerageModel
 {
-    /// <summary>
-    /// Detects orders placed during the algorithm warm-up period.
-    /// Error code: OrderResponseErrorCode.ALGORITHM_WARMING_UP (-24)
-    /// </summary>
-    public class AlgorithmWarmingUpOrderResponseErrorAnalysis : OrderResponseErrorAnalysis
+
+    public class InvalidOrderQuantityAnalysis : MessageAnalysis
     {
         protected override string[] ExpectedMessageText { get; } =
         [
-            "This operation is not allowed in Initialize or during warm up: OrderRequest.",
-            ". Please move this code to the OnWarmupFinished() method.",
+            "The minimum order size (in quote currency) for ",
+            " is ",
+            ". Order quantity was ",
         ];
+
 
         protected override List<string> PotentialSolutions(Language language) =>
         [
-            "This error occurs in the following situations:\n" +
-            " - When you try to place, update, or cancel an order during the warm-up period\n" +
-            " - When the Option assignment simulator assigns you to an Option during the warm-up period\n\n" +
-            $"To avoid the error, move the invalid operation to `{CodeByLanguage.OnWarmupFinished[language]}` " +
-            $"or protect them with an `{CodeByLanguage.IsWarmingUp[language]}` guard.",
+            "This message occurs when the absolute order size (in the quote currency) is less than the security's minimum order size in the Symbol Properties Database. " +
+            "Before placing orders, ensure their size exceeds the minimum order size.",
+
+            "Increase the starting cash so trades are larger.",
+
+            $"Increase the {CodeByLanguage.MinimumOrderMarginPortfolioPercentage[language]} setting.",
         ];
     }
 }
