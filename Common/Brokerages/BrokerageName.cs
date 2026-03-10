@@ -155,11 +155,6 @@ namespace QuantConnect.Brokerages
         Bybit,
 
         /// <summary>
-        /// Bybit Inverse Futures COIN-Margined contracts are settled and collateralized in their base cryptocurrency.
-        /// </summary>
-        BybitInverseFutures,
-
-        /// <summary>
         /// Transaction and submit/execution rules will use Eze models
         /// </summary>
         Eze,
@@ -202,6 +197,11 @@ namespace QuantConnect.Brokerages
         /// <summary>
         /// Transaction and submit/execution rules will use dYdX models
         /// </summary>
-        DYDX
+        DYDX,
+
+        /// <summary>
+        /// Bybit Inverse Futures COIN-Margined contracts are settled and collateralized in their base cryptocurrency.
+        /// </summary>
+        BybitInverseFutures,
     }
 }
