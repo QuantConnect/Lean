@@ -1,0 +1,57 @@
+/*
+ * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
+ * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+*/
+using System.Collections.Generic;
+using System.Linq;
+
+namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
+{
+    /// <summary>
+    /// Detects unsupported option exercise requests.
+    /// Error code: OrderResponseErrorCode.UNSUPPORTED_REQUEST_TYPE (-12)
+    /// </summary>
+    public class UnsupportedRequestTypeOrderResponseErrorAnalysis : MessageAnalysis
+    {
+        private static readonly string[] ShortMessageText =
+        [
+            "The security with symbol ",
+            " has a short option position. Only long option positions are exercisable.",
+        ];
+
+        private static readonly string[] QuantityMessageText =
+        [
+            "Cannot exercise more contracts of ",
+            " than is currently available in the portfolio.",
+        ];
+
+        protected override string[] ExpectedMessageText => [];
+
+        protected override List<string> GetMatches(List<string> messages)
+        {
+            return Match(messages, ShortMessageText).Concat(Match(messages, QuantityMessageText)).ToList();
+        }
+
+        protected override List<string> PotentialSolutions(Language language) =>
+        [
+            "This error occurs occurs in the following situations:\n" +
+            " - When you try to exercise an Option contract for which you hold a short position\n" +
+            " - When you try to exercise more Option contracts than you hold\n\n" +
+            "To avoid this order response error, check the quantity of your holdings before you try to exercise an Option contract.\n" +
+            (language == Language.Python
+                ? "```\nholding_quantity = self.portfolio[self._contract_symbol].quantity\nif holding_quantity > 0:\n    self.exercise_option(self._contract_symbol, max(holding_quantity, exercise_quantity))\n```"
+                : "```\nvar holdingQuantity = Portfolio[_contractSymbol].Quantity;\nif (holdingQuantity > 0)\n{\n    ExerciseOption(_contractSymbol, Math.Max(holdingQuantity, exerciseQuantity));\n}\n```"),
+        ];
+    }
+}

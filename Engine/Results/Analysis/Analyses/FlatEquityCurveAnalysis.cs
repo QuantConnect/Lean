@@ -1,0 +1,68 @@
+/*
+ * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
+ * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+*/
+using System;
+using System.Collections.Generic;
+using System.Linq;
+
+namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
+{
+    /// <summary>Detects prolonged flat (zero-change) segments in the equity curve.</summary>
+    public class FlatEquityCurveAnalysis : BaseBacktestAnalysis
+    {
+        public IReadOnlyList<BacktestAnalysisResult> Run(SortedList<DateTime, decimal> equityCurve)
+        {
+            // Find consecutive runs of identical equity values.
+            var keys = equityCurve.Keys.ToArray();
+            var vals = equityCurve.Values.ToArray();
+
+            var segments = new List<object>();
+            int i = 0;
+            while (i < vals.Length)
+            {
+                var v = vals[i];
+                var j = i + 1;
+                while (j < vals.Length && vals[j] == v) j++;
+
+                var tradingDays = j - i;
+                if (tradingDays > 1)
+                {
+                    segments.Add(new
+                    {
+                        start = keys[i].ToString(),
+                        end = keys[j - 1].ToString(),
+                        trading_days = tradingDays,
+                    });
+                }
+                i = j;
+            }
+
+            var potentialSolutions = segments.Count > 0 ? PotentialSolutions() : [];
+            return SingleResponse(segments.Count > 0 ? (object)segments : null, potentialSolutions);
+        }
+
+        private static List<string> PotentialSolutions() =>
+        [
+            "Check if you need to warm-up some data structures, including indicators, RollingWindow objects, and training data.",
+
+            "Check if the algorithm subscribes to any assets. " +
+            "Is the universe selection actually selecting anything?",
+
+            "Check if the trading logic ever leads to a trade.",
+
+            "Check if there is enough cash to satisify the minimum order sizes.",
+        ];
+    }
+}
