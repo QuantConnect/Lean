@@ -23,11 +23,17 @@ using System.Net.Http.Headers;
 namespace QuantConnect.Brokerages.Authentication
 {
     /// <summary>
-    /// Provides base functionality for token-based HTTP request handling, 
+    /// Provides base functionality for token-based HTTP request handling,
     /// including automatic retries and token refresh on unauthorized responses.
     /// </summary>
     public abstract class TokenHandler : DelegatingHandler
     {
+        /// <summary>
+        /// Raised when authentication fails after all retry attempts are exhausted.
+        /// Subscribers can use this to trigger graceful application shutdown.
+        /// </summary>
+        public event EventHandler<Exception> AuthenticationFailed;
+
         /// <summary>
         /// The maximum number of retry attempts for an authenticated request.
         /// </summary>
@@ -113,8 +119,9 @@ namespace QuantConnect.Brokerages.Authentication
                     }
                     continue;
                 }
-                catch
+                catch (Exception ex)
                 {
+                    AuthenticationFailed?.Invoke(this, ex);
                     throw;
                 }
 

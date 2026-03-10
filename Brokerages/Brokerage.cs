@@ -26,6 +26,8 @@ using QuantConnect.Securities;
 using QuantConnect.Orders.Fees;
 using System.Collections.Generic;
 using System.Collections.Concurrent;
+using QuantConnect.Api;
+using QuantConnect.Brokerages.Authentication;
 using QuantConnect.Brokerages.CrossZero;
 using QuantConnect.Util;
 
@@ -324,6 +326,25 @@ namespace QuantConnect.Brokerages
             {
                 Log.Error(err);
             }
+        }
+
+        /// <summary>
+        /// Creates an <see cref="OAuthTokenHandler{TRequest,TResponse}"/> and automatically wires it so that
+        /// authentication failures trigger a brokerage error message, causing Lean to shut down gracefully.
+        /// </summary>
+        /// <typeparam name="TRequest">The request type used to acquire the access token.</typeparam>
+        /// <typeparam name="TResponse">The response type containing access token metadata.</typeparam>
+        /// <param name="apiClient">The API client used to communicate with the Lean platform.</param>
+        /// <param name="modelRequest">The request model used to generate the access token.</param>
+        /// <returns>A configured <see cref="OAuthTokenHandler{TRequest,TResponse}"/> instance.</returns>
+        protected OAuthTokenHandler<TRequest, TResponse> CreateOAuthTokenHandler<TRequest, TResponse>(ApiConnection apiClient, TRequest modelRequest)
+            where TRequest : AccessTokenMetaDataRequest
+            where TResponse : AccessTokenMetaDataResponse
+        {
+            var handler = new OAuthTokenHandler<TRequest, TResponse>(apiClient, modelRequest);
+            handler.AuthenticationFailed += (_, ex) =>
+                OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Error, "authentication-failed", ex.Message));
+            return handler;
         }
 
         /// <summary>
