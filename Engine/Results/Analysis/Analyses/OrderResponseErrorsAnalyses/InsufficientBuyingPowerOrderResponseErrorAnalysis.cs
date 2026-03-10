@@ -14,7 +14,6 @@
  *
 */
 using System.Collections.Generic;
-using QuantConnect;
 using QuantConnect.Lean.Engine.Results.Analysis.Utils;
 
 namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses

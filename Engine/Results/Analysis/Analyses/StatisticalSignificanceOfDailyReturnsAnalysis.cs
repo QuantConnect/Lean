@@ -33,12 +33,12 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
             Series<DateTime, double> backtestEquity,
             Series<DateTime, double> benchmarkEquity)
         {
-            var backtestReturns  = backtestEquity.PctChange();
+            var backtestReturns = backtestEquity.PctChange();
             var benchmarkReturns = benchmarkEquity.PctChange();
 
             // Excess daily returns (drop the first NaN row)
-            var backtestKeys  = backtestReturns.Keys.ToArray();
-            var backtestVals  = backtestReturns.Values.ToArray();
+            var backtestKeys = backtestReturns.Keys.ToArray();
+            var backtestVals = backtestReturns.Values.ToArray();
             var benchmarkDict = benchmarkReturns.Keys
                 .Zip(benchmarkReturns.Values)
                 .ToDictionary(t => t.First, t => t.Second);
@@ -68,14 +68,14 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
         {
             if (sample.Length < 2) return 1.0;
 
-            double mean   = sample.Average();
-            double diff   = mean - popmean;
+            double mean = sample.Average();
+            double diff = mean - popmean;
             double stdErr = SampleStdDev(sample) / Math.Sqrt(sample.Length);
             if (stdErr == 0) return 1.0;
 
-            double t   = diff / stdErr;
-            int    df  = sample.Length - 1;
-            var    dist = new StudentT(0, 1, df);
+            double t = diff / stdErr;
+            int df = sample.Length - 1;
+            var dist = new StudentT(0, 1, df);
 
             // Two-tailed p-value
             return 2.0 * dist.CumulativeDistribution(-Math.Abs(t));
@@ -84,7 +84,7 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
         private static double SampleStdDev(double[] data)
         {
             double mean = data.Average();
-            double sum  = data.Sum(v => (v - mean) * (v - mean));
+            double sum = data.Sum(v => (v - mean) * (v - mean));
             return Math.Sqrt(sum / (data.Length - 1));
         }
 

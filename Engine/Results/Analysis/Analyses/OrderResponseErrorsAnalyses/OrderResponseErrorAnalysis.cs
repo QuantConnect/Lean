@@ -13,6 +13,7 @@
  * limitations under the License.
  *
 */
+using QuantConnect.Lean.Engine.Results.Analysis.Analyses.Messages;
 using QuantConnect.Orders;
 using System;
 using System.Collections.Generic;
@@ -20,30 +21,6 @@ using System.Linq;
 
 namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
 {
-    public abstract class MessageAnalysis : BaseBacktestAnalysis
-    {
-        protected abstract string[] ExpectedMessageText { get; }
-
-        protected IEnumerable<string> Match(List<string> messages, string[] expectedMessages)
-        {
-            return messages
-                .Where(message => expectedMessages.All(messagePart => message.Contains(messagePart, StringComparison.InvariantCultureIgnoreCase)));
-        }
-
-        protected virtual List<string> GetMatches(List<string> messages)
-        {
-            return Match(messages, ExpectedMessageText).ToList();
-        }
-
-        public virtual IReadOnlyList<BacktestAnalysisResult> Run(List<string> messages, Language language)
-        {
-            var foundMessages = GetMatches(messages);
-            var potentialSolutions = foundMessages.Count > 0 ? PotentialSolutions(language) : [];
-            return SingleResponse(foundMessages.Count > 0 ? (object)foundMessages : null, potentialSolutions);
-        }
-
-        protected abstract List<string> PotentialSolutions(Language language);
-    }
 
     public abstract class OrderResponseErrorAnalysis : MessageAnalysis
     {
