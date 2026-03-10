@@ -276,6 +276,9 @@ namespace QuantConnect.Brokerages
                 case BrokerageName.Bybit:
                     return new BybitBrokerageModel(accountType);
 
+                case BrokerageName.BybitInverseFutures:
+                    return new BybitInverseFuturesBrokerageModel(accountType);
+
                 case BrokerageName.Eze:
                     return new EzeBrokerageModel(accountType);
 
@@ -378,6 +381,9 @@ namespace QuantConnect.Brokerages
 
                 case RBIBrokerageModel _:
                     return BrokerageName.RBI;
+
+                case BybitInverseFuturesBrokerageModel _:
+                    return BrokerageName.BybitInverseFutures;
 
                 case BybitBrokerageModel _:
                     return BrokerageName.Bybit;
