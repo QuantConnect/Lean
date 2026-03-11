@@ -25,10 +25,22 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
     /// Immutable result returned by every test. Mirrors the Python dict
     /// <c>{'name': ..., 'result': ..., 'potentialSolutions': [...]}</c>.
     /// </summary>
-    public sealed record BacktestAnalysisResult(
-        string Name,
-        object? Result,
-        List<string> PotentialSolutions);
+    public class BacktestAnalysisResult
+    {
+        public string Name { get; set; }
+
+        public object Result { get; set; }
+        
+        public List<string> PotentialSolutions { get; set; }
+
+        public BacktestAnalysisResult(string name, object result, List<string> potentialSolutions)
+        {
+            Name = name;
+            Result = result;
+            PotentialSolutions = potentialSolutions;
+        }
+    }
+
 
     /// <summary>
     /// Abstract base class for all backtest diagnostic tests.
@@ -50,8 +62,8 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
         /// </summary>
         protected IReadOnlyList<BacktestAnalysisResult> CreateAggregatedResponse(IEnumerable<BacktestAnalysisResult> responses)
             => responses
-                .Where(r => r.PotentialSolutions.Count > 0)
-                .Select(r => r with { Name = GetType().Name + " / " + r.Name })
+                .Where(x => x.PotentialSolutions.Count > 0)
+                .Select(x => new BacktestAnalysisResult(GetType().Name + " / " + x.Name, x.Result, x.PotentialSolutions))
                 .ToList();
 
         // ── Pretty-print ──────────────────────────────────────────────────────────
