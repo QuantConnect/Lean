@@ -39,7 +39,7 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
 
         protected override string[] ExpectedMessageText => [];
 
-        protected override List<string> GetMatches(List<string> messages)
+        protected override List<string> GetMatches(IReadOnlyList<string> messages)
         {
             return Match(messages, ShortMessageText).Concat(Match(messages, QuantityMessageText)).ToList();
         }

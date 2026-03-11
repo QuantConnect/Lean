@@ -14,6 +14,7 @@
  *
 */
 using System.Collections.Generic;
+using QuantConnect.Lean.Engine.Results.Analysis.Analyses.Messages;
 using QuantConnect.Lean.Engine.Results.Analysis.Utils;
 
 namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
@@ -22,7 +23,7 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
     /// Detects orders placed during the algorithm warm-up period.
     /// Error code: OrderResponseErrorCode.ALGORITHM_WARMING_UP (-24)
     /// </summary>
-    public class AlgorithmWarmingUpOrderResponseErrorAnalysis : OrderResponseErrorAnalysis
+    public class AlgorithmWarmingUpOrderResponseErrorAnalysis : MessageAnalysis
     {
         protected override string[] ExpectedMessageText { get; } =
         [

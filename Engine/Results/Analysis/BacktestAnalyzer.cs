@@ -29,25 +29,25 @@ namespace QuantConnect.Lean.Engine.Results.Analysis
     {
         private readonly QCAlgorithm _algorithm;
         private readonly Language _language;
-        private List<string> _timingLogs;
-
+        private readonly IReadOnlyList<string> _logs;
         private SortedList<DateTime, decimal> _equityCurve;
         private SortedList<DateTime, decimal> _benchmarkEquityCurve;
         private Result _result;
 
-        public BacktestAnalyzer(Result result, QCAlgorithm algorithm, Language language, List<string> timingLogs)
+        public BacktestAnalyzer(Result result, QCAlgorithm algorithm, Language language, IReadOnlyList<string> logs)
         {
             _result = result;
-            _timingLogs = timingLogs;
             _algorithm = algorithm;
             _language = language;
+            _logs = logs;
         }
 
         // ── Test chain ────────────────────────────────────────────────────────────
 
         public List<BacktestAnalysisResult> RunTestChain(int timeLimitSeconds = 5, int maxFailedTests = 3)
         {
-            (_equityCurve, _benchmarkEquityCurve) = Charts.ReadEquityCurve(_result, _algorithm, ref _timingLogs);
+            var timingLogs = new List<string>();
+            (_equityCurve, _benchmarkEquityCurve) = Charts.ReadEquityCurve(_result, _algorithm, ref timingLogs);
 
             var tests = new List<Func<IReadOnlyList<BacktestAnalysisResult>>>
             {
@@ -103,7 +103,7 @@ namespace QuantConnect.Lean.Engine.Results.Analysis
                 }
             }
 
-            _timingLogs.Add($"{DateTime.UtcNow - startTime} - Total analysis time");
+            timingLogs.Add($"{DateTime.UtcNow - startTime} - Total analysis time");
             return responses;
         }
 
@@ -119,7 +119,7 @@ namespace QuantConnect.Lean.Engine.Results.Analysis
             => new InsufficientBuyingPowerOrderResponseErrorAnalysis().Run(_result.OrderEvents, _language);
 
         public IReadOnlyList<BacktestAnalysisResult> CheckAlgorithmWarmingUpOrderResponseError()
-            => new AlgorithmWarmingUpOrderResponseErrorAnalysis().Run(_result.OrderEvents, _language);
+            => new AlgorithmWarmingUpOrderResponseErrorAnalysis().Run(_logs, _language);
 
         public IReadOnlyList<BacktestAnalysisResult> CheckBrokerageModelRefusedToSubmitOrderOrderResponseError()
             => new BrokerageModelRefusedToSubmitOrderOrderResponseErrorAnalysis().Run(_result.OrderEvents, _language);
