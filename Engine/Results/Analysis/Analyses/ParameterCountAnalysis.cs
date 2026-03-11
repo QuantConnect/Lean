@@ -42,7 +42,7 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
             //    result = $"{parameters} Parameters Detected";
 
             var potentialSolutions = result is not null ? PotentialSolutions(language) : [];
-            return SingleResponse(result, potentialSolutions);
+            return SingleResponse(new BacktestAnalysysContext(result), potentialSolutions);
         }
 
         private static List<string> PotentialSolutions(Language language) =>

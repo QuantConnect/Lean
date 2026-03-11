@@ -16,7 +16,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using QuantConnect.Orders;
-using QuantConnect.Lean.Engine.Results.Analysis.Utils;
+using System;
 
 namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
 {
@@ -33,15 +33,15 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
             " requested ",
         ];
 
-        public IReadOnlyList<BacktestAnalysisResult> Run(List<OrderEvent> orderEvents, Language language)
+        public IReadOnlyList<BacktestAnalysisResult> Run(IReadOnlyList<OrderEvent> orderEvents, Language language)
         {
             var result = orderEvents
-                .Where(e => e.Message != null && MessageText.All(t => e.Message.Contains(t)))
-                .Select(OrdersReader.ParseOrderEvent)
+                .Where(e => e.Message != null && MessageText.All(t => e.Message.Contains(t, StringComparison.InvariantCultureIgnoreCase)))
+                //.Select(OrdersReader.ParseOrderEvent)
                 .ToList();
 
             var potentialSolutions = result.Count > 0 ? PotentialSolutions(language) : [];
-            return SingleResponse(result.Count > 0 ? (object)result : null, potentialSolutions);
+            return SingleResponse(new BacktestAnalysysRepeatedContext(result), potentialSolutions);
         }
 
         private static List<string> PotentialSolutions(Language language) =>

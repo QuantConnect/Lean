@@ -32,9 +32,9 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
 
         public IReadOnlyList<BacktestAnalysisResult> Run(List<string> logs, Language language)
         {
-            var result = logs.Where(l => MessageText.All(t => l.Contains(t))).ToList();
-            var potentialSolutions = result.Count > 0 ? PotentialSolutions(language) : [];
-            return SingleResponse(result.Count > 0 ? (object)result : null, potentialSolutions);
+            var results = logs.Where(l => MessageText.All(t => l.Contains(t))).ToList();
+            var potentialSolutions = results.Count > 0 ? PotentialSolutions(language) : [];
+            return SingleResponse(new BacktestAnalysysRepeatedContext(results), potentialSolutions);
         }
 
         private static List<string> PotentialSolutions(Language language) =>

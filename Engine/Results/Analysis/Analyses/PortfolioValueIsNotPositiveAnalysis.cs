@@ -25,7 +25,7 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
         {
             var hasEquity = result.TotalPerformance.PortfolioStatistics.EndEquity > 0;
             var potentialSolutions = hasEquity ? [] : PotentialSolutions();
-            return SingleResponse(!hasEquity, potentialSolutions);
+            return SingleResponse(new BacktestAnalysysContext(!hasEquity), potentialSolutions);
         }
 
         private static List<string> PotentialSolutions() =>

@@ -26,9 +26,9 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
 
         public IReadOnlyList<BacktestAnalysisResult> Run(List<string> logs)
         {
-            var result = logs.Any(line => line.Contains(Marker));
-            var potentialSolutions = result ? PotentialSolutions() : [];
-            return SingleResponse(result, potentialSolutions);
+            var result = logs.Where(line => line.Contains(Marker)).ToList();
+            var potentialSolutions = result.Count > 0 ? PotentialSolutions() : [];
+            return SingleResponse(new BacktestAnalysysRepeatedContext(result), potentialSolutions);
         }
 
         private static List<string> PotentialSolutions() =>

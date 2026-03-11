@@ -13,6 +13,7 @@
  * limitations under the License.
  *
 */
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -21,6 +22,50 @@ using System.Text.Json.Serialization;
 
 namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
 {
+    public interface IBacktestAnalysisContext
+    {
+    }
+
+    public class BacktestAnalysysContext : IBacktestAnalysisContext
+    {
+        public object Sample { get; set; }
+
+        public BacktestAnalysysContext(object sample)
+        {
+            Sample = sample;
+        }
+    }
+
+    public class BacktestAnalysysRepeatedContext : BacktestAnalysysContext
+    {
+        public int Occurrences { get; set; }
+
+        public BacktestAnalysysRepeatedContext(IReadOnlyList<object> samples) : base(samples.Count > 0 ? samples[0] : null)
+        {
+            Occurrences = samples.Count;
+        }
+    }
+
+    public class BacktestAnalysysAggregateContext : IBacktestAnalysisContext, IEnumerable<IBacktestAnalysisContext>
+    {
+        private IReadOnlyList<IBacktestAnalysisContext> _contexts { get; set; }
+
+        public BacktestAnalysysAggregateContext(IReadOnlyList<IBacktestAnalysisContext> contexts)
+        {
+            _contexts = contexts;
+        }
+
+        public IEnumerator<IBacktestAnalysisContext> GetEnumerator()
+        {
+            return _contexts.GetEnumerator();
+        }
+
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+            return GetEnumerator();
+        }
+    }
+
     /// <summary>
     /// Immutable result returned by every test. Mirrors the Python dict
     /// <c>{'name': ..., 'result': ..., 'potentialSolutions': [...]}</c>.
@@ -29,14 +74,14 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
     {
         public string Name { get; set; }
 
-        public object Result { get; set; }
+        public IBacktestAnalysisContext Context { get; set; }
         
         public List<string> PotentialSolutions { get; set; }
 
-        public BacktestAnalysisResult(string name, object result, List<string> potentialSolutions)
+        public BacktestAnalysisResult(string name, IBacktestAnalysisContext context, List<string> potentialSolutions)
         {
             Name = name;
-            Result = result;
+            Context = context;
             PotentialSolutions = potentialSolutions;
         }
     }
@@ -50,11 +95,11 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
     {
         // ── Factory helpers ───────────────────────────────────────────────────────
 
-        protected IReadOnlyList<BacktestAnalysisResult> SingleResponse(object result, List<string> potentialSolutions = null)
-            => [CreateResponse(result, potentialSolutions)];
+        protected IReadOnlyList<BacktestAnalysisResult> SingleResponse(IBacktestAnalysisContext context, List<string> potentialSolutions = null)
+            => [CreateResponse(context, potentialSolutions)];
 
-        protected BacktestAnalysisResult CreateResponse(object result, List<string> potentialSolutions = null)
-            => new(GetType().Name, result, potentialSolutions ?? []);
+        protected BacktestAnalysisResult CreateResponse(IBacktestAnalysisContext context, List<string> potentialSolutions = null)
+            => new(GetType().Name, context, potentialSolutions ?? []);
 
         /// <summary>
         /// Filters <paramref name="responses"/> to those with solutions,
@@ -63,7 +108,7 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
         protected IReadOnlyList<BacktestAnalysisResult> CreateAggregatedResponse(IEnumerable<BacktestAnalysisResult> responses)
             => responses
                 .Where(x => x.PotentialSolutions.Count > 0)
-                .Select(x => new BacktestAnalysisResult(GetType().Name + " / " + x.Name, x.Result, x.PotentialSolutions))
+                .Select(x => new BacktestAnalysisResult(GetType().Name + " / " + x.Name, x.Context, x.PotentialSolutions))
                 .ToList();
 
         // ── Pretty-print ──────────────────────────────────────────────────────────
@@ -86,7 +131,7 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
                 sb.AppendLine($"# {r.Name}");
                 sb.AppendLine("### Result");
                 sb.AppendLine("```");
-                sb.AppendLine(JsonSerializer.Serialize(r.Result, JsonOptions));
+                sb.AppendLine(JsonSerializer.Serialize(r.Context, JsonOptions));
                 sb.AppendLine("```");
 
                 if (r.PotentialSolutions.Count > 0)

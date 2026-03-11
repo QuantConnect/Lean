@@ -27,7 +27,8 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
         protected IEnumerable<string> GetMatchingOrderEventsMessages(List<OrderEvent> orderEvents)
         {
             return orderEvents
-                .Where(orderEvent => orderEvent.Status == OrderStatus.Invalid && ExpectedMessageText.All(messagePart => orderEvent.Message.Contains(messagePart, StringComparison.InvariantCultureIgnoreCase)))
+                .Where(orderEvent => orderEvent.Status == OrderStatus.Invalid && orderEvent.Message != null && 
+                    ExpectedMessageText.All(messagePart => orderEvent.Message.Contains(messagePart, StringComparison.InvariantCultureIgnoreCase)))
                 .Select(x => x.Message);
         }
 

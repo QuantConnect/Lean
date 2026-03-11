@@ -39,9 +39,23 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
 
         protected override string[] ExpectedMessageText => [];
 
-        protected override List<string> GetMatches(IReadOnlyList<string> messages)
+        public virtual IReadOnlyList<BacktestAnalysisResult> Run(IReadOnlyList<string> messages, Language language)
         {
-            return Match(messages, ShortMessageText).Concat(Match(messages, QuantityMessageText)).ToList();
+            var shortFoundMessages = Match(messages, ShortMessageText).ToList();
+            var quantityFoundMessages = Match(messages, QuantityMessageText).ToList();
+            var potentialSolutions = shortFoundMessages.Count > 0 || quantityFoundMessages.Count > 0 ? PotentialSolutions(language) : [];
+
+            var contexts = new List<IBacktestAnalysisContext>();
+            if (shortFoundMessages.Count > 0)
+            {
+                contexts.Add(new BacktestAnalysysRepeatedContext(shortFoundMessages));
+            }
+            if (quantityFoundMessages.Count > 0)
+            {
+                contexts.Add(new BacktestAnalysysRepeatedContext(quantityFoundMessages));
+            }
+
+            return SingleResponse(new BacktestAnalysysAggregateContext(contexts), potentialSolutions);
         }
 
         protected override List<string> PotentialSolutions(Language language) =>
