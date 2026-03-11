@@ -14,7 +14,7 @@
  *
 */
 using System.Collections.Generic;
-using System.Linq;
+using QuantConnect.Lean.Engine.Results.Analysis.Analyses.Messages;
 
 namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
 {
@@ -22,22 +22,15 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
     /// Detects orders placed for non-tradable securities.
     /// Error code: OrderResponseErrorCode.NON_TRADABLE_SECURITY (-28)
     /// </summary>
-    public class NonTradableSecurityOrderResponseErrorAnalysis : BaseBacktestAnalysis
+    public class NonTradableSecurityOrderResponseErrorAnalysis : MessageAnalysis
     {
-        private static readonly string[] MessageText =
+        protected override string[] ExpectedMessageText { get; } =
         [
             "The security with symbol ",
             " is marked as non-tradable.",
         ];
 
-        public IReadOnlyList<BacktestAnalysisResult> Run(IReadOnlyList<string> logs, Language language)
-        {
-            var result = logs.Where(l => MessageText.All(t => l.Contains(t))).ToList();
-            var potentialSolutions = result.Count > 0 ? PotentialSolutions(language) : [];
-            return SingleResponse(new BacktestAnalysysRepeatedContext(result), potentialSolutions);
-        }
-
-        private static List<string> PotentialSolutions(Language language) =>
+        protected override List<string> PotentialSolutions(Language language) =>
         [
             "This error occurs when you place an order for a security that's not tradable. " +
             "To avoid this order response error, check if a security is tradable before you trade it.\n" +

@@ -14,7 +14,7 @@
  *
 */
 using System.Collections.Generic;
-using System.Linq;
+using QuantConnect.Lean.Engine.Results.Analysis.Analyses.Messages;
 
 namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
 {
@@ -22,21 +22,14 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
     /// Detects MarketOnOpen orders submitted during regular trading hours.
     /// Error code: OrderResponseErrorCode.MARKET_ON_OPEN_NOT_ALLOWED_DURING_REGULAR_HOURS (-36)
     /// </summary>
-    public class MarketOnOpenNotAllowedDuringRegularHoursOrderResponseErrorAnalysis : BaseBacktestAnalysis
+    public class MarketOnOpenNotAllowedDuringRegularHoursOrderResponseErrorAnalysis : MessageAnalysis
     {
-        private static readonly string[] MessageText =
+        protected override string[] ExpectedMessageText { get; } =
         [
             "Cannot submit a MarketOnOpen order while the market is open.",
         ];
 
-        public IReadOnlyList<BacktestAnalysisResult> Run(List<string> logs, Language language)
-        {
-            var result = logs.Where(l => MessageText.All(t => l.Contains(t))).ToList();
-            var potentialSolutions = result.Count > 0 ? PotentialSolutions(language) : [];
-            return SingleResponse(new BacktestAnalysysRepeatedContext(result), potentialSolutions);
-        }
-
-        private static List<string> PotentialSolutions(Language language) =>
+        protected override List<string> PotentialSolutions(Language language) =>
         [
             "This error occurs when you try to place a market on open order for an asset when it's during regular trading hours. " +
             "To avoid this order response error, place the order when the market is closed.\n" +

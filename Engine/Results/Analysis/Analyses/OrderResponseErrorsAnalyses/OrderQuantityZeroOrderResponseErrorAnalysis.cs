@@ -14,7 +14,7 @@
  *
 */
 using System.Collections.Generic;
-using System.Linq;
+using QuantConnect.Lean.Engine.Results.Analysis.Analyses.Messages;
 using QuantConnect.Lean.Engine.Results.Analysis.Utils;
 
 namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
@@ -23,23 +23,16 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
     /// Detects zero-quantity order errors.
     /// Error code: OrderResponseErrorCode.ORDER_QUANTITY_ZERO (-11)
     /// </summary>
-    public class OrderQuantityZeroOrderResponseErrorAnalysis : BaseBacktestAnalysis
+    public class OrderQuantityZeroOrderResponseErrorAnalysis : MessageAnalysis
     {
-        private static readonly string[] MessageText =
+        protected override string[] ExpectedMessageText { get; } =
         [
             "Unable to ",
             " order with id ",
             " that has zero quantity.",
         ];
 
-        public IReadOnlyList<BacktestAnalysisResult> Run(List<string> logs, Language language)
-        {
-            var result = logs.Where(l => MessageText.All(t => l.Contains(t))).ToList();
-            var potentialSolutions = result.Count > 0 ? PotentialSolutions(language) : [];
-            return SingleResponse(new BacktestAnalysysRepeatedContext(result), potentialSolutions);
-        }
-
-        private static List<string> PotentialSolutions(Language language) =>
+        protected override List<string> PotentialSolutions(Language language) =>
         [
             "This error occurs when you place an order that has zero quantity or when you update an order to have a zero quantity. " +
             $"This error commonly occurs if you use the `{CodeByLanguage.SetHoldings[language]}` method but the portfolio weight you provide to the method is too small to translate into a non-zero order quantity.\n" +

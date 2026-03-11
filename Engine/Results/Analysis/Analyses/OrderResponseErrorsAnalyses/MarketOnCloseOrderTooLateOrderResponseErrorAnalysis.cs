@@ -14,7 +14,7 @@
  *
 */
 using System.Collections.Generic;
-using System.Linq;
+using QuantConnect.Lean.Engine.Results.Analysis.Analyses.Messages;
 
 namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
 {
@@ -22,22 +22,15 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
     /// Detects MarketOnClose orders submitted too early in the day.
     /// Error code: OrderResponseErrorCode.MARKET_ON_CLOSE_ORDER_TOO_LATE (-21)
     /// </summary>
-    public class MarketOnCloseOrderTooLateOrderResponseErrorAnalysis : BaseBacktestAnalysis
+    public class MarketOnCloseOrderTooLateOrderResponseErrorAnalysis : MessageAnalysis
     {
-        private static readonly string[] MessageText =
+        protected override string[] ExpectedMessageText { get; } =
         [
             "MarketOnClose orders must be placed within ",
             " before market close. Override this TimeSpan buffer by setting Orders.MarketOnCloseOrder.SubmissionTimeBuffer in QCAlgorithm.Initialize().",
         ];
 
-        public IReadOnlyList<BacktestAnalysisResult> Run(List<string> logs, Language language)
-        {
-            var result = logs.Where(l => MessageText.All(t => l.Contains(t))).ToList();
-            var potentialSolutions = result.Count > 0 ? PotentialSolutions(language) : [];
-            return SingleResponse(new BacktestAnalysysRepeatedContext(result), potentialSolutions);
-        }
-
-        private static List<string> PotentialSolutions(Language language)
+        protected override List<string> PotentialSolutions(Language language)
         {
             string bufferProp = language == Language.Python ? "submission_time_buffer" : "SubmissionTimeBuffer";
             string exampleCode = language == Language.Python

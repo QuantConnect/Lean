@@ -13,91 +13,118 @@
  * limitations under the License.
  *
 */
-//using System;
-//using System.Collections.Generic;
-//using System.Linq;
-//using Deedle;
-//using QuantConnect;
-//using QuantConnect.Research;
-//using BacktestAnalyzerrr.Utils;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using QuantConnect.Algorithm;
+using QuantConnect.Data;
+using QuantConnect.Lean.Engine.Results.Analysis.Utils;
+using QuantConnect.Util;
+using MathNet.Numerics.Statistics;
 
-//namespace BacktestAnalyzerrr.Tests;
+namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
+{
+    /// <summary>
+    /// Compares the strategy's Sharpe ratio to the benchmark's across known
+    /// crisis / market-stress periods.
+    /// Source: https://github.com/QuantConnect/Lean/blob/master/Report/Crisis.cs
+    /// </summary>
+    public class CrisisEventsAnalysis : BaseBacktestAnalysis
+    {
+        private static readonly (string Name, DateTime Start, DateTime End)[] CrisisEvents =
+        [
+            ("DotCom Bubble 2000",                   new(2000,  2, 26), new(2000,  9, 10)),
+            ("September 11, 2001",                   new(2001,  9,  5), new(2001, 10, 10)),
+            ("U.S. Housing Bubble 2003",             new(2003,  1,  1), new(2003,  2, 20)),
+            ("Global Financial Crisis 2007",         new(2007, 10,  1), new(2011, 12,  1)),
+            ("Flash Crash 2010",                     new(2010,  5,  1), new(2010,  5, 22)),
+            ("Fukushima Meltdown 2011",              new(2011,  3,  1), new(2011,  4, 22)),
+            ("U.S. Credit Downgrade 2011",           new(2011,  8,  5), new(2011,  9,  1)),
+            ("ECB IR Event 2012",                    new(2012,  9,  5), new(2012, 10, 12)),
+            ("European Debt Crisis 2014",            new(2014, 10,  1), new(2014, 10, 29)),
+            ("Market Sell-Off 2015",                 new(2015,  8, 10), new(2015, 10, 10)),
+            ("Recovery 2010-2012",                   new(2010,  1,  1), new(2012, 10,  1)),
+            ("New Normal 2014-2019",                 new(2014,  1,  1), new(2019,  1,  1)),
+            ("COVID-19 Pandemic 2020",               new(2020,  2, 10), new(2020,  9, 20)),
+            ("Post-COVID Run-up 2020-2021",          new(2020,  4,  1), new(2022,  1,  1)),
+            ("Meme Season 2021",                     new(2021,  1,  1), new(2021,  5, 15)),
+            ("Russia Invades Ukraine 2022-2023",     new(2022,  2,  1), new(2024,  1,  1)),
+            ("AI Boom 2022-Present",                 new(2022, 11, 30), DateTime.Now),
+        ];
 
-///// <summary>
-///// Compares the strategy's Sharpe ratio to the benchmark's across known
-///// crisis / market-stress periods.
-///// Source: https://github.com/QuantConnect/Lean/blob/master/Report/Crisis.cs
-///// </summary>
-//public class CrisisEventsAnalysis : BacktestResultAnalysis
-//{
-//    private static readonly (string Name, DateTime Start, DateTime End)[] CrisisEvents =
-//    [
-//        ("DotCom Bubble 2000",                   new(2000,  2, 26), new(2000,  9, 10)),
-//        ("September 11, 2001",                   new(2001,  9,  5), new(2001, 10, 10)),
-//        ("U.S. Housing Bubble 2003",             new(2003,  1,  1), new(2003,  2, 20)),
-//        ("Global Financial Crisis 2007",         new(2007, 10,  1), new(2011, 12,  1)),
-//        ("Flash Crash 2010",                     new(2010,  5,  1), new(2010,  5, 22)),
-//        ("Fukushima Meltdown 2011",              new(2011,  3,  1), new(2011,  4, 22)),
-//        ("U.S. Credit Downgrade 2011",           new(2011,  8,  5), new(2011,  9,  1)),
-//        ("ECB IR Event 2012",                    new(2012,  9,  5), new(2012, 10, 12)),
-//        ("European Debt Crisis 2014",            new(2014, 10,  1), new(2014, 10, 29)),
-//        ("Market Sell-Off 2015",                 new(2015,  8, 10), new(2015, 10, 10)),
-//        ("Recovery 2010-2012",                   new(2010,  1,  1), new(2012, 10,  1)),
-//        ("New Normal 2014-2019",                 new(2014,  1,  1), new(2019,  1,  1)),
-//        ("COVID-19 Pandemic 2020",               new(2020,  2, 10), new(2020,  9, 20)),
-//        ("Post-COVID Run-up 2020-2021",          new(2020,  4,  1), new(2022,  1,  1)),
-//        ("Meme Season 2021",                     new(2021,  1,  1), new(2021,  5, 15)),
-//        ("Russia Invades Ukraine 2022-2023",     new(2022,  2,  1), new(2024,  1,  1)),
-//        ("AI Boom 2022-Present",                 new(2022, 11, 30), DateTime.Now),
-//    ];
+        public IReadOnlyList<BacktestAnalysisResult> Run(QCAlgorithm algorithm,
+            SortedList<DateTime, decimal> backtestEquity,
+            SortedList<DateTime, decimal> benchmarkEquity)
+        {
+            if (backtestEquity.Count == 0 || benchmarkEquity.Count == 0)
+            {
+                return SingleResponse(new BacktestAnalysysRepeatedContext([]));
+            }
 
-//    public IReadOnlyList<TestResult> Run(
-//        QCAlgorithm qb,
-//        Series<DateTime, double> backtestEquity,
-//        Series<DateTime, double> benchmarkEquity)
-//    {
-//        var backtestStart = backtestEquity.Keys.First();
-//        var backtestEnd   = backtestEquity.Keys.Last();
+            var backtestStart = backtestEquity.Keys[0];
+            var backtestEnd = backtestEquity.Keys[backtestEquity.Count - 1];
 
-//        var result = new List<object>();
+            var result = new List<object>();
 
-//        foreach (var (name, startDate, endDate) in CrisisEvents)
-//        {
-//            // Only include crisis events fully inside the backtest period.
-//            if (startDate < backtestStart || endDate > backtestEnd)
-//                continue;
+            foreach (var (name, startDate, endDate) in CrisisEvents)
+            {
+                // Only include crisis events fully inside the backtest period.
+                if (startDate < backtestStart || endDate > backtestEnd)
+                {
+                    continue;
+                }
 
-//            var filteredBacktest  = backtestEquity.FilterByDate(startDate, endDate);
-//            var filteredBenchmark = benchmarkEquity.FilterByDate(startDate, endDate);
+                var filteredBacktest = FilterByDate(backtestEquity, startDate, endDate);
+                var filteredBenchmark = FilterByDate(benchmarkEquity, startDate, endDate);
 
-//            var backtestReturns  = filteredBacktest.PctChange();
-//            var benchmarkReturns = filteredBenchmark.PctChange();
+                var backtestReturns = PercentChange(filteredBacktest);
+                var benchmarkReturns = PercentChange(filteredBenchmark);
 
-//            double rfr = RiskFreeInterestRateModelExtensions.GetRiskFreeRate(
-//                qb.RiskFreeInterestRateModel, startDate, endDate);
+                var riskFreeRate = (double)algorithm.RiskFreeInterestRateModel.GetRiskFreeRate(startDate, endDate);
 
-//            double backtestSharpe  = Statistics.SharpeRatio(backtestReturns.Mean(),  backtestReturns.StdDev(),  rfr);
-//            double benchmarkSharpe = Statistics.SharpeRatio(benchmarkReturns.Mean(), benchmarkReturns.StdDev(), rfr);
+                var backtestSharpe = Statistics.Statistics.SharpeRatio(backtestReturns.Mean(), backtestReturns.StandardDeviation(), riskFreeRate);
+                var benchmarkSharpe = Statistics.Statistics.SharpeRatio(benchmarkReturns.Mean(), benchmarkReturns.StandardDeviation(), riskFreeRate);
 
-//            if (backtestSharpe < benchmarkSharpe)
-//            {
-//                result.Add(new
-//                {
-//                    crisis_event      = name,
-//                    backtest_sharpe   = backtestSharpe,
-//                    benchmark_sharpe  = benchmarkSharpe,
-//                });
-//            }
-//        }
+                if (backtestSharpe < benchmarkSharpe)
+                {
+                    result.Add(new
+                    {
+                        CrisisEvent = name,
+                        BacktestSharpe = backtestSharpe,
+                        BenchmarkSharpe = benchmarkSharpe,
+                    });
+                }
+            }
 
-//        var potentialSolutions = result.Count > 0 ? PotentialSolutions() : [];
-//        return SingleResponse(result.Count > 0 ? (object)result : null, potentialSolutions);
-//    }
+            var potentialSolutions = result.Count > 0 ? PotentialSolutions() : [];
+            return SingleResponse(new BacktestAnalysysRepeatedContext(result), potentialSolutions);
+        }
 
-//    private static List<string> PotentialSolutions() =>
-//    [
-//        "The strategy underperformed the benchmark during some crisis events. " +
-//        "Consider adding risk management techniques such as stop-loss orders, position sizing, " +
-//        "Option hedging, and diversification to mitigate losses during turbulent periods.",
-//    ];
-//}
+        /// <summary>
+        /// Keeps only entries whose key falls in [<paramref name="from"/>, <paramref name="to"/>].
+        /// Exploits the sorted order to break early.
+        /// </summary>
+        private static double[] FilterByDate(SortedList<DateTime, decimal> series, DateTime from, DateTime to)
+        {
+            return series
+                .Where(kvp => kvp.Key >= from && kvp.Key <= to)
+                .Select(kvp => (double)kvp.Value)
+                .ToArray();
+        }
+
+        /// <summary>
+        /// Returns a new sorted list of (v[i] / v[i-1] - 1) values.  The first key is dropped.
+        /// </summary>
+        public static double[] PercentChange(double[] values)
+        {
+            return values.Skip(1).Zip(values, (current, previous) => current / previous - 1).ToArray();
+        }
+
+        private static List<string> PotentialSolutions() =>
+        [
+            "The strategy underperformed the benchmark during some crisis events. " +
+            "Consider adding risk management techniques such as stop-loss orders, position sizing, " +
+            "Option hedging, and diversification to mitigate losses during turbulent periods.",
+        ];
+    }
+}

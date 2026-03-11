@@ -14,22 +14,20 @@
  *
 */
 using System.Collections.Generic;
-using System.Linq;
+using QuantConnect.Lean.Engine.Results.Analysis.Analyses.Messages;
 using QuantConnect.Lean.Engine.Results.Analysis.Utils;
 
 namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
 {
     /// <summary>Detects margin-call events in the backtest logs.</summary>
-    public class MarginCallsAnalysis : BaseBacktestAnalysis
+    public class MarginCallsAnalysis : MessageAnalysis
     {
-        public IReadOnlyList<BacktestAnalysisResult> Run(List<string> logs, Language language)
-        {
-            var result = logs.Where(l => l.Contains("Executed MarginCallOrder")).ToList();
-            var potentialSolutions = result.Count > 0 ? PotentialSolutions(language) : [];
-            return SingleResponse(new BacktestAnalysysRepeatedContext(result), potentialSolutions);
-        }
+        protected override string[] ExpectedMessageText { get; } =
+        [
+            "Executed MarginCallOrder",
+        ];
 
-        private static List<string> PotentialSolutions(Language language) =>
+        protected override List<string> PotentialSolutions(Language language) =>
         [
             "Adjust the ordering and rebalancing logic to reduce margin usage.",
 

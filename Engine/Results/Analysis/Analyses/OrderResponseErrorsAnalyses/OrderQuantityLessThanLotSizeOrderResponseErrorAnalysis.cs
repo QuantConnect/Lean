@@ -14,7 +14,7 @@
  *
 */
 using System.Collections.Generic;
-using System.Linq;
+using QuantConnect.Lean.Engine.Results.Analysis.Analyses.Messages;
 
 namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
 {
@@ -22,9 +22,9 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
     /// Detects orders with quantity below the security's lot size.
     /// Error code: OrderResponseErrorCode.ORDER_QUANTITY_LESS_THAN_LOT_SIZE (-30)
     /// </summary>
-    public class OrderQuantityLessThanLotSizeOrderResponseErrorAnalysis : BaseBacktestAnalysis
+    public class OrderQuantityLessThanLotSizeOrderResponseErrorAnalysis : MessageAnalysis
     {
-        private static readonly string[] MessageText =
+        protected override string[] ExpectedMessageText { get; } =
         [
             "Unable to ",
             " order with id ",
@@ -32,14 +32,7 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
             ") is less than lot size (",
         ];
 
-        public IReadOnlyList<BacktestAnalysisResult> Run(List<string> logs, Language language)
-        {
-            var result = logs.Where(l => MessageText.All(t => l.Contains(t))).ToList();
-            var potentialSolutions = result.Count > 0 ? PotentialSolutions(language) : [];
-            return SingleResponse(new BacktestAnalysysRepeatedContext(result), potentialSolutions);
-        }
-
-        private static List<string> PotentialSolutions(Language language) =>
+        protected override List<string> PotentialSolutions(Language language) =>
         [
             "This error occurs when you place an order with a quantity that's less than the lot size of the security. " +
             "To avoid this order response error, check if the order quantity is greater than or equal to the security lot size before you place an order.\n" +

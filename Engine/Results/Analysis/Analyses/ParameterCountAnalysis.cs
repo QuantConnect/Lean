@@ -14,6 +14,7 @@
  *
 */
 using System.Collections.Generic;
+using QuantConnect.Algorithm;
 using QuantConnect.Lean.Engine.Results.Analysis.Utils;
 
 namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
@@ -22,25 +23,21 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
     public class ParameterCountAnalysis : BaseBacktestAnalysis
     {
         private const string DetectedParametersTable = """
+| Parameter Types | Example Instances |
+|-|-|
+| Numeric Comparison | Numeric operators used to compare numeric arguments: <= < > >= |
+| Time Span | Setting the interval of `TimeSpan` or `timedelta` |
+| Order Event | Inputting numeric arguments when placing orders |
+| Scheduled Event | Inputting numeric arguments when scheduling an algorithm event to occur |
+| Variable Assignment | Assigning numeric values to variables |
+| Mathematical Operation | Any mathematical operation involving explicit numbers |
+| Lean API | Numeric arguments passed to Indicators, Consolidators, Rolling Windows, etc. |
+""";
 
-        | Parameter Types | Example Instances |
-        |-|-|
-        | Numeric Comparison | Numeric operators used to compare numeric arguments: <= < > >= |
-        | Time Span | Setting the interval of `TimeSpan` or `timedelta` |
-        | Order Event | Inputting numeric arguments when placing orders |
-        | Scheduled Event | Inputting numeric arguments when scheduling an algorithm event to occur |
-        | Variable Assignment | Assigning numeric values to variables |
-        | Mathematical Operation | Any mathematical operation involving explicit numbers |
-        | Lean API | Numeric arguments passed to Indicators, Consolidators, Rolling Windows, etc. |
-        """;
-
-        public IReadOnlyList<BacktestAnalysisResult> Run(int parameterCount, Language language)
-        {
-            string? result = null;
-            //int parameters = backtest.ResearchGuide.Parameters;
-            //if (parameters > 10)
-            //    result = $"{parameters} Parameters Detected";
-
+        public IReadOnlyList<BacktestAnalysisResult> Run(QCAlgorithm algorithm, Language language)
+        { 
+            var parametersCount = algorithm.GetParameters().Count;
+            var result = parametersCount > 10 ? $"{parametersCount} Parameters Detected" : null;
             var potentialSolutions = result is not null ? PotentialSolutions(language) : [];
             return SingleResponse(new BacktestAnalysysContext(result), potentialSolutions);
         }
@@ -49,20 +46,19 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
         [
             "Using parameters is almost unavoidable, but a strategy trends toward being overfitted as more parameters get added or fine-tuned. " +
             "Try to remove some parameters to make the strategy more robust. " +
-            $"The following table shows the criteria for parameters: \n{DetectedParametersTable}\n" +
+            $"The following table shows the criteria for parameters:{DetectedParametersTable}" +
             "The following table shows common expressions that are not parameters:" +
             GetNotParametersTable(language),
         ];
 
         private static string GetNotParametersTable(Language language) => $"""
-
-        | Non-Parameter Types | Example Instances |
-        |---------------------|-------------------|
-        | Common APIs | `{CodeByLanguage.SetStartDate[language]}`, `{CodeByLanguage.SetEndDate[language]}`, `{CodeByLanguage.SetCash[language]}`, etc. |
-        | Boolean Comparison | Testing for True or False conditions |
-        | String Numbers | Numbers formatted as part of `{CodeByLanguage.Log[language]}` or `{CodeByLanguage.Debug[language]}` method statements |
-        | Variable Names | Any variable names that use numbers as part of the name (for example, `smaIndicator200`) |
-        | Common Functions | Rounding, array indexing, boolean comparison using 1/0 for True/False, etc. |
-        """;
+| Non-Parameter Types | Example Instances |
+|---------------------|-------------------|
+| Common APIs | `{CodeByLanguage.SetStartDate[language]}`, `{CodeByLanguage.SetEndDate[language]}`, `{CodeByLanguage.SetCash[language]}`, etc. |
+| Boolean Comparison | Testing for True or False conditions |
+| String Numbers | Numbers formatted as part of `{CodeByLanguage.Log[language]}` or `{CodeByLanguage.Debug[language]}` method statements |
+| Variable Names | Any variable names that use numbers as part of the name (for example, `smaIndicator200`) |
+| Common Functions | Rounding, array indexing, boolean comparison using 1/0 for True/False, etc. |
+""";
     }
 }

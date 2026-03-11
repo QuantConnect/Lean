@@ -14,7 +14,7 @@
  *
 */
 using System.Collections.Generic;
-using System.Linq;
+using QuantConnect.Lean.Engine.Results.Analysis.Analyses.Messages;
 
 namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
 {
@@ -22,21 +22,14 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
     /// Detects Option orders placed when the underlying stock had a split.
     /// Error code: OrderResponseErrorCode.OPTION_ORDER_ON_STOCK_SPLIT (-34)
     /// </summary>
-    public class OptionOrderOnStockSplitOrderResponseErrorAnalysis : BaseBacktestAnalysis
+    public class OptionOrderOnStockSplitOrderResponseErrorAnalysis : MessageAnalysis
     {
-        private static readonly string[] MessageText =
+        protected override string[] ExpectedMessageText { get; } =
         [
             "Options orders are not allowed when a split occurred for its underlying stock",
         ];
 
-        public IReadOnlyList<BacktestAnalysisResult> Run(List<string> logs, Language language)
-        {
-            var result = logs.Where(l => MessageText.All(t => l.Contains(t))).ToList();
-            var potentialSolutions = result.Count > 0 ? PotentialSolutions(language) : [];
-            return SingleResponse(new BacktestAnalysysRepeatedContext(result), potentialSolutions);
-        }
-
-        private static List<string> PotentialSolutions(Language language) =>
+        protected override List<string> PotentialSolutions(Language language) =>
         [
             "The OrderResponseErrorCode.OptionOrderOnStockSplit (-34) error occurs when you try to submit an order for an Equity Option contract when the current time slice contains a split for the underlying Equity. " +
             "To avoid this order response error, check if the time slice has a split event for the underlying Equity of the contract before you place an order for the contract.\n" +

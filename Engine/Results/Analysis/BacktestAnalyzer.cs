@@ -56,28 +56,28 @@ namespace QuantConnect.Lean.Engine.Results.Analysis
                 CheckInsufficientBuyingPowerOrderResponseError,
                 CheckAlgorithmWarmingUpOrderResponseError,
                 CheckBrokerageModelRefusedToSubmitOrderOrderResponseError,
-                //CheckExceedsShortableQuantityOrderResponseError,
-                //CheckNonTradableSecurityOrderResponseError,
-                //CheckOrderQuantityZeroOrderResponseError,
-                //CheckSecurityPriceZeroOrderResponseError,
-                //CheckUnsupportedRequestTypeOrderResponseError,
-                //CheckExchangeNotOpenOrderResponseError,
-                //CheckForexConversionRateZeroOrderResponseError,
-                //CheckExceededMaximumOrdersOrderResponseError,
-                //CheckBrokerageModelRefusedToUpdateOrderOrderResponseError,
-                //CheckOrderQuantityLessThanLotSizeOrderResponseError,
-                //CheckEuropeanOptionNotExpiredOnExerciseOrderResponseError,
-                //CheckOptionOrderOnStockSplitOrderResponseError,
-                //CheckMarketOnOpenNotAllowedDuringRegularHoursOrderResponseError,
-                //CheckInsightsEmittedForDelistedSecurities,
+                CheckExceedsShortableQuantityOrderResponseError,
+                CheckNonTradableSecurityOrderResponseError,
+                CheckOrderQuantityZeroOrderResponseError,
+                CheckSecurityPriceZeroOrderResponseError,
+                CheckUnsupportedRequestTypeOrderResponseError,
+                CheckExchangeNotOpenOrderResponseError,
+                CheckForexConversionRateZeroOrderResponseError,
+                CheckExceededMaximumOrdersOrderResponseError,
+                CheckBrokerageModelRefusedToUpdateOrderOrderResponseError,
+                CheckOrderQuantityLessThanLotSizeOrderResponseError,
+                CheckEuropeanOptionNotExpiredOnExerciseOrderResponseError,
+                CheckOptionOrderOnStockSplitOrderResponseError,
+                CheckMarketOnOpenNotAllowedDuringRegularHoursOrderResponseError,
+                CheckInsightsEmittedForDelistedSecurities,
                 //CheckTakeProfitAndStopLossOrders,
-                //CheckMarginCalls,
-                //CheckExecutionSpeed,
-                //CheckStaleOrderFills,
-                //CheckForOrderFillsDuringExtendedMarketHours,
+                CheckMarginCalls,
+                CheckExecutionSpeed,
+                CheckStaleOrderFills,
+                CheckForOrderFillsDuringExtendedMarketHours,
                 //CheckPortfolioMarginUsage,
-                //CheckParameterCount,
-                //CheckCrisisEvents,
+                CheckParameterCount,
+                CheckCrisisEvents,
                 //CheckStatisticalSignificanceOfDailyReturns,
                 //CheckPerformanceRelativeToBenchmark,
                 //CheckMonteCarloPercentile,
@@ -127,68 +127,68 @@ namespace QuantConnect.Lean.Engine.Results.Analysis
         public IReadOnlyList<BacktestAnalysisResult> CheckExceedsShortableQuantityOrderResponseError()
             => new ExceedsShortableQuantityOrderResponseErrorAnalysis().Run(_result.OrderEvents, _language);
 
-        //public IReadOnlyList<BacktestAnalysisResult> CheckNonTradableSecurityOrderResponseError()
-        //    => new NonTradableSecurityOrderResponseErrorAnalysis().Run(LazyLogs, _language);
+        public IReadOnlyList<BacktestAnalysisResult> CheckNonTradableSecurityOrderResponseError()
+            => new NonTradableSecurityOrderResponseErrorAnalysis().Run(_logs, _language);
 
-        //public IReadOnlyList<BacktestAnalysisResult> CheckOrderQuantityZeroOrderResponseError()
-        //    => new OrderQuantityZeroOrderResponseErrorAnalysis().Run(LazyLogs, _language);
+        public IReadOnlyList<BacktestAnalysisResult> CheckOrderQuantityZeroOrderResponseError()
+            => new OrderQuantityZeroOrderResponseErrorAnalysis().Run(_logs, _language);
 
-        //public IReadOnlyList<BacktestAnalysisResult> CheckSecurityPriceZeroOrderResponseError()
-        //    => new SecurityPriceZeroOrderResponseErrorAnalysis().Run(LazyLogs, _language);
+        public IReadOnlyList<BacktestAnalysisResult> CheckSecurityPriceZeroOrderResponseError()
+            => new SecurityPriceZeroOrderResponseErrorAnalysis().Run(_logs, _language);
 
-        //public IReadOnlyList<BacktestAnalysisResult> CheckUnsupportedRequestTypeOrderResponseError()
-        //    => new UnsupportedRequestTypeOrderResponseErrorAnalysis().Run(LazyLogs, _language);
+        public IReadOnlyList<BacktestAnalysisResult> CheckUnsupportedRequestTypeOrderResponseError()
+            => new UnsupportedRequestTypeOrderResponseErrorAnalysis().Run(_logs, _language);
 
-        //public IReadOnlyList<BacktestAnalysisResult> CheckExchangeNotOpenOrderResponseError()
-        //    => new ExchangeNotOpenOrderResponseErrorAnalysis().Run(LazyLogs, _language);
+        public IReadOnlyList<BacktestAnalysisResult> CheckExchangeNotOpenOrderResponseError()
+            => new ExchangeNotOpenOrderResponseErrorAnalysis().Run(_logs, _language);
 
-        //public IReadOnlyList<BacktestAnalysisResult> CheckForexConversionRateZeroOrderResponseError()
-        //    => new ForexConversionRateZeroOrderResponseErrorAnalysis().Run(LazyLogs);
+        public IReadOnlyList<BacktestAnalysisResult> CheckForexConversionRateZeroOrderResponseError()
+            => new ForexConversionRateZeroOrderResponseErrorAnalysis().Run(_logs, _language);
 
-        //public IReadOnlyList<BacktestAnalysisResult> CheckExceededMaximumOrdersOrderResponseError()
-        //    => new ExceededMaximumOrdersOrderResponseErrorAnalysis().Run(LazyLogs);
+        public IReadOnlyList<BacktestAnalysisResult> CheckExceededMaximumOrdersOrderResponseError()
+            => new ExceededMaximumOrdersOrderResponseErrorAnalysis().Run(_logs, _language);
 
-        //public IReadOnlyList<BacktestAnalysisResult> CheckBrokerageModelRefusedToUpdateOrderOrderResponseError()
-        //    => new BrokerageModelRefusedToUpdateOrderOrderResponseErrorAnalysis().Run(LazyLogs, _language);
+        public IReadOnlyList<BacktestAnalysisResult> CheckBrokerageModelRefusedToUpdateOrderOrderResponseError()
+            => new BrokerageModelRefusedToUpdateOrderOrderResponseErrorAnalysis().Run(_logs, _language);
 
-        //public IReadOnlyList<BacktestAnalysisResult> CheckOrderQuantityLessThanLotSizeOrderResponseError()
-        //    => new OrderQuantityLessThanLotSizeOrderResponseErrorAnalysis().Run(LazyLogs, _language);
+        public IReadOnlyList<BacktestAnalysisResult> CheckOrderQuantityLessThanLotSizeOrderResponseError()
+            => new OrderQuantityLessThanLotSizeOrderResponseErrorAnalysis().Run(_logs, _language);
 
-        //public IReadOnlyList<BacktestAnalysisResult> CheckEuropeanOptionNotExpiredOnExerciseOrderResponseError()
-        //    => new EuropeanOptionNotExpiredOnExerciseOrderResponseErrorAnalysis().Run(LazyLogs, _language);
+        public IReadOnlyList<BacktestAnalysisResult> CheckEuropeanOptionNotExpiredOnExerciseOrderResponseError()
+            => new EuropeanOptionNotExpiredOnExerciseOrderResponseErrorAnalysis().Run(_logs, _language);
 
-        //public IReadOnlyList<BacktestAnalysisResult> CheckOptionOrderOnStockSplitOrderResponseError()
-        //    => new OptionOrderOnStockSplitOrderResponseErrorAnalysis().Run(LazyLogs, _language);
+        public IReadOnlyList<BacktestAnalysisResult> CheckOptionOrderOnStockSplitOrderResponseError()
+            => new OptionOrderOnStockSplitOrderResponseErrorAnalysis().Run(_logs, _language);
 
-        //public IReadOnlyList<BacktestAnalysisResult> CheckMarketOnOpenNotAllowedDuringRegularHoursOrderResponseError()
-        //    => new MarketOnOpenNotAllowedDuringRegularHoursOrderResponseErrorAnalysis().Run(LazyLogs, _language);
+        public IReadOnlyList<BacktestAnalysisResult> CheckMarketOnOpenNotAllowedDuringRegularHoursOrderResponseError()
+            => new MarketOnOpenNotAllowedDuringRegularHoursOrderResponseErrorAnalysis().Run(_logs, _language);
 
-        //public IReadOnlyList<BacktestAnalysisResult> CheckInsightsEmittedForDelistedSecurities()
-        //    => new InsightsEmittedForDelistedSecuritiesAnalysis().Run(LazyLogs);
+        public IReadOnlyList<BacktestAnalysisResult> CheckInsightsEmittedForDelistedSecurities()
+            => new InsightsEmittedForDelistedSecuritiesAnalysis().Run(_logs, _language);
 
         //public IReadOnlyList<BacktestAnalysisResult> CheckTakeProfitAndStopLossOrders()
         //    => new TakeProfitAndStopLossOrdersAnalysis().Run(_result.Orders.Values.ToList(), _language);
 
-        //public IReadOnlyList<BacktestAnalysisResult> CheckMarginCalls()
-        //    => new MarginCallsAnalysis().Run(LazyLogs, _language);
+        public IReadOnlyList<BacktestAnalysisResult> CheckMarginCalls()
+            => new MarginCallsAnalysis().Run(_logs, _language);
 
-        //public IReadOnlyList<BacktestAnalysisResult> CheckExecutionSpeed()
-        //    => new ExecutionSpeedAnalysis().Run(LazyLogs);
+        public IReadOnlyList<BacktestAnalysisResult> CheckExecutionSpeed()
+            => new ExecutionSpeedAnalysis().Run(_logs);
 
-        //public IReadOnlyList<BacktestAnalysisResult> CheckStaleOrderFills()
-        //    => new StaleOrderFillsAnalysis().Run(_result.OrderEvents, _language);
+        public IReadOnlyList<BacktestAnalysisResult> CheckStaleOrderFills()
+            => new StaleOrderFillsAnalysis().Run(_result.OrderEvents, _language);
 
-        //public IReadOnlyList<BacktestAnalysisResult> CheckForOrderFillsDuringExtendedMarketHours()
-        //    => new OrderFillsDuringExtendedMarketHoursAnalysis().Run(_algorithm, _result.OrderEvents, _language);
+        public IReadOnlyList<BacktestAnalysisResult> CheckForOrderFillsDuringExtendedMarketHours()
+            => new OrderFillsDuringExtendedMarketHoursAnalysis().Run(_algorithm, _result.OrderEvents, _language);
 
         //public IReadOnlyList<BacktestAnalysisResult> CheckPortfolioMarginUsage()
         //    => new PortfolioMarginUsageAnalysis().Run(_api, _backtest);
 
-        //public IReadOnlyList<BacktestAnalysisResult> CheckParameterCount()
-        //    => new ParameterCountAnalysis().Run(_backtest, _language);
+        public IReadOnlyList<BacktestAnalysisResult> CheckParameterCount()
+            => new ParameterCountAnalysis().Run(_algorithm, _language);
 
-        //public IReadOnlyList<BacktestAnalysisResult> CheckCrisisEvents()
-        //    => new CrisisEventsAnalysis().Run(_algorithm, _equityCurve, LazyBenchmarkEquityCurve);
+        public IReadOnlyList<BacktestAnalysisResult> CheckCrisisEvents()
+            => new CrisisEventsAnalysis().Run(_algorithm, _equityCurve, _benchmarkEquityCurve);
 
         //public IReadOnlyList<BacktestAnalysisResult> CheckStatisticalSignificanceOfDailyReturns()
         //    => new StatisticalSignificanceOfDailyReturnsAnalysis().Run(_equityCurve, LazyBenchmarkEquityCurve);

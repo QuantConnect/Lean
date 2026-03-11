@@ -14,7 +14,7 @@
  *
 */
 using System.Collections.Generic;
-using System.Linq;
+using QuantConnect.Lean.Engine.Results.Analysis.Analyses.Messages;
 using QuantConnect.Lean.Engine.Results.Analysis.Utils;
 
 namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
@@ -23,18 +23,14 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
     /// Detects orders placed when the security price is zero.
     /// Error code: OrderResponseErrorCode.SECURITY_PRICE_ZERO (-16)
     /// </summary>
-    public class SecurityPriceZeroOrderResponseErrorAnalysis : BaseBacktestAnalysis
+    public class SecurityPriceZeroOrderResponseErrorAnalysis : MessageAnalysis
     {
-        public IReadOnlyList<BacktestAnalysisResult> Run(List<string> logs, Language language)
-        {
-            var result = logs
-                .Where(l => l.Contains("The security does not have an accurate price as it has not yet received a bar of data."))
-                .ToList();
-            var potentialSolutions = result.Count > 0 ? PotentialSolutions(language) : [];
-            return SingleResponse(new BacktestAnalysysRepeatedContext(result), potentialSolutions);
-        }
+        protected override string[] ExpectedMessageText { get; } =
+        [
+            "The security does not have an accurate price as it has not yet received a bar of data.",
+        ];
 
-        private static List<string> PotentialSolutions(Language language) =>
+        protected override List<string> PotentialSolutions(Language language) =>
         [
             "This occurs when you place an order or exercise an Option contract while the security price is $0. " +
             "The security price can be $0 if the algorithm hasn't received data for the security yet. " +
