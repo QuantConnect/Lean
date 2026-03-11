@@ -14,24 +14,19 @@
  *
 */
 using System.Collections.Generic;
-using System.Linq;
+using QuantConnect.Lean.Engine.Results.Analysis.Analyses.Messages;
 
 namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
 {
     /// <summary>Detects the QC warning about emitting insights for delisted securities.</summary>
-    public class InsightsEmittedForDelistedSecuritiesAnalysis : BaseBacktestAnalysis
+    public class InsightsEmittedForDelistedSecuritiesAnalysis : MessageAnalysis
     {
-        private const string Marker =
-            "QCAlgorithm.EmitInsights(): Warning: cannot emit insights for delisted securities, these will be discarded";
+        protected override string[] ExpectedMessageText { get; } =
+        [
+            "QCAlgorithm.EmitInsights(): Warning: cannot emit insights for delisted securities, these will be discarded",
+        ];
 
-        public IReadOnlyList<BacktestAnalysisResult> Run(List<string> logs)
-        {
-            var result = logs.Where(line => line.Contains(Marker)).ToList();
-            var potentialSolutions = result.Count > 0 ? PotentialSolutions() : [];
-            return SingleResponse(new BacktestAnalysysRepeatedContext(result), potentialSolutions);
-        }
-
-        private static List<string> PotentialSolutions() =>
+        protected override List<string> PotentialSolutions(Language language) =>
         [
             "Before you emit an insight for a security, check if it's tradable.",
         ];

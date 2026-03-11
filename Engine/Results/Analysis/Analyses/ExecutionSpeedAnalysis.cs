@@ -1,41 +1,77 @@
-//using System;
-//using System.Collections.Generic;
+/*
+ * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
+ * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+*/
+using System.Collections.Generic;
+using System.Globalization;
+using System.Text.RegularExpressions;
 
-//namespace BacktestAnalyzerrr.Tests;
+namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
+{
+    /// <summary>
+    /// Detects slow execution by parsing the last log line.
+    /// Benchmark speeds: https://www.quantconnect.com/performance
+    /// </summary>
+    public class ExecutionSpeedAnalysis : BaseBacktestAnalysis
+    {
+        private static readonly Regex DataPointsPerSecondRegex = new(
+            @"Algorithm Id:\([^)]+\) completed in ([\d.]+) seconds at (\d+)k data points per second\. Processing total of [\d,]+ data points\.",
+            RegexOptions.Compiled);
 
-///// <summary>
-///// Detects slow execution by parsing the last log line.
-///// Benchmark speeds: https://www.quantconnect.com/performance
-///// </summary>
-//public class ExecutionSpeedAnalysis : BacktestResultAnalysis
-//{
-//    public IReadOnlyList<TestResult> Run(List<string> logs)
-//    {
-//        string? result = null;
+        public IReadOnlyList<BacktestAnalysisResult> Run(IReadOnlyList<string> logs)
+        {
+            var result = TryGetDataPointsPerSecond(logs, out var timeInSeconds, out var dataPointsPerSecond) && timeInSeconds >= 10 && dataPointsPerSecond < 40
+                ? $"The algorithm is slowly executing at only {dataPointsPerSecond}k data points per second"
+                : null;
 
-//        var parts = logs[^1].Split(' ');
-//        int idx = Array.IndexOf(parts, "Algorithm");
-//        if (idx >= 0)
-//        {
-//            int seconds = (int)double.Parse(parts[idx + 4]);
-//            if (seconds >= 10)
-//            {
-//                // Remove trailing comma from e.g. "123K,"
-//                string kStr = parts[idx + 7].TrimEnd(',');
-//                if (int.TryParse(kStr, out int dataPointsPerSecond) && dataPointsPerSecond < 40)
-//                    result = $"The algorithm is slowly executing at only {dataPointsPerSecond}K data points per second";
-//            }
-//        }
+            var potentialSolutions = result is not null ? PotentialSolutions() : [];
+            return SingleResponse(new BacktestAnalysysContext(result), potentialSolutions);
+        }
 
-//        var potentialSolutions = result is not null ? PotentialSolutions() : [];
-//        return SingleResponse(result, potentialSolutions);
-//    }
+        /// <summary>
+        /// Searches <paramref name="logs"/> in reverse order for a completion line and extracts
+        /// the execution time and data points per second (in thousands).
+        /// Example match: "Algorithm Id:(Foo) completed in 25.68 seconds at 85k data points per second."
+        /// returns seconds=25.68, dataPointsPerSecond=85.
+        /// </summary>
+        private static bool TryGetDataPointsPerSecond(IReadOnlyList<string> logs, out double? timeInSeconds, out int? dataPointsPerSecond)
+        {
+            for (int i = logs.Count - 1; i >= 0; i--)
+            {
+                var match = DataPointsPerSecondRegex.Match(logs[i]);
+                if (match.Success)
+                {
+                    timeInSeconds = double.Parse(match.Groups[1].Value, NumberFormatInfo.InvariantInfo);
+                    dataPointsPerSecond = int.Parse(match.Groups[2].Value, NumberFormatInfo.InvariantInfo);
+                    return true;
+                }
+            }
 
-//    private static List<string> PotentialSolutions() =>
-//    [
-//        "Review the algorithm code for inefficiencies.",
-//        "If there is a universe, reduce its size.",
-//        "Reduce the data resolution.",
-//        "If the algorithm is training a model, reduce the amount of training data or reduce the number of epochs in the training process.",
-//    ];
-//}
+            timeInSeconds = null;
+            dataPointsPerSecond = null;
+            return false;
+        }
+
+        private static List<string> PotentialSolutions() =>
+        [
+            "Review the algorithm code for inefficiencies.",
+
+            "If there is a universe, reduce its size.",
+
+            "Reduce the data resolution.",
+
+            "If the algorithm is training a model, reduce the amount of training data or reduce the number of epochs in the training process.",
+        ];
+    }
+}

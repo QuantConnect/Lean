@@ -15,22 +15,20 @@
 */
 using System.Collections.Generic;
 using System.Linq;
-using QuantConnect;
+using QuantConnect.Lean.Engine.Results.Analysis.Analyses.Messages;
 
 namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
 {
     // ── Sub-test: exercise while exchange not open ────────────────────────────────
 
-    internal class ExerciseOptionWhileExchangeNotOpenAnalysis : BaseBacktestAnalysis
+    internal class ExerciseOptionWhileExchangeNotOpenAnalysis : MessageAnalysis
     {
-        public IReadOnlyList<BacktestAnalysisResult> Run(List<string> logs, Language language)
-        {
-            var result = logs.Where(l => l.Contains(" order and exchange not open.")).ToList();
-            var potentialSolutions = result.Count > 0 ? PotentialSolutions(language) : [];
-            return SingleResponse(new BacktestAnalysysRepeatedContext(result), potentialSolutions);
-        }
+        protected override string[] ExpectedMessageText { get; } =
+        [
+            " order and exchange not open.",
+        ];
 
-        private static List<string> PotentialSolutions(Language language) =>
+        protected override List<string> PotentialSolutions(Language language) =>
         [
             "This error occurs when you try to exercise an Option while the exchange is not open. " +
             "To avoid the order response error in this case, check if the exchange is open before you exercise an Option contract.\n" +
@@ -42,16 +40,14 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
 
     // ── Sub-test: MOC order for Future / FOP ─────────────────────────────────────
 
-    internal class MOCOrderForFutureOrFOPAnalysis : BaseBacktestAnalysis
+    internal class MOCOrderForFutureOrFOPAnalysis : MessageAnalysis
     {
-        public IReadOnlyList<BacktestAnalysisResult> Run(List<string> logs, Language language)
-        {
-            var result = logs.Where(l => l.Contains(" orders not supported for ")).ToList();
-            var potentialSolutions = result.Count > 0 ? PotentialSolutions() : [];
-            return SingleResponse(new BacktestAnalysysRepeatedContext(result), potentialSolutions);
-        }
+        protected override string[] ExpectedMessageText { get; } =
+        [
+            " orders not supported for ",
+        ];
 
-        private static List<string> PotentialSolutions() =>
+        protected override List<string> PotentialSolutions(Language language) =>
         [
             "This error occurs when you try to place a market on open order for a Futures contract or a Future Option contract. " +
             "To avoid the order response error in this case, check if the exchange is open before you place the order.",
@@ -66,20 +62,17 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
     /// </summary>
     public class ExchangeNotOpenOrderResponseErrorAnalysis : BaseBacktestAnalysis
     {
-        private static readonly (BaseBacktestAnalysis Test, bool NeedsLanguage)[] MessageTests =
+        private static readonly MessageAnalysis[] SubTests =
         [
-            (new ExerciseOptionWhileExchangeNotOpenAnalysis(), true),
-            (new MOCOrderForFutureOrFOPAnalysis(),             false),
+            new ExerciseOptionWhileExchangeNotOpenAnalysis(),
+            new MOCOrderForFutureOrFOPAnalysis(),
         ];
 
-        public IReadOnlyList<BacktestAnalysisResult> Run(List<string> logs, Language language)
+        public IReadOnlyList<BacktestAnalysisResult> Run(IReadOnlyList<string> logs, Language language)
         {
-            foreach (var (test, needsLanguage) in MessageTests)
+            foreach (var subTest in SubTests)
             {
-                IReadOnlyList<BacktestAnalysisResult> results = test is ExerciseOptionWhileExchangeNotOpenAnalysis et
-                    ? et.Run(logs, language)
-                    : ((MOCOrderForFutureOrFOPAnalysis)test).Run(logs, language);
-
+                var results = subTest.Run(logs, language);
                 if (results.Any(r => r.Context is not null))
                     return results;
             }

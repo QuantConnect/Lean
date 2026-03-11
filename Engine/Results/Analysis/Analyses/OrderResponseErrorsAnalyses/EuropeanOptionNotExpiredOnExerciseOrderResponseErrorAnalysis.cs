@@ -14,7 +14,7 @@
  *
 */
 using System.Collections.Generic;
-using System.Linq;
+using QuantConnect.Lean.Engine.Results.Analysis.Analyses.Messages;
 
 namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
 {
@@ -22,22 +22,15 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
     /// Detects attempts to exercise a European option before expiry.
     /// Error code: OrderResponseErrorCode.EUROPEAN_OPTION_NOT_EXPIRED_ON_EXERCISE (-33)
     /// </summary>
-    public class EuropeanOptionNotExpiredOnExerciseOrderResponseErrorAnalysis : BaseBacktestAnalysis
+    public class EuropeanOptionNotExpiredOnExerciseOrderResponseErrorAnalysis : MessageAnalysis
     {
-        private static readonly string[] MessageText =
+        protected override string[] ExpectedMessageText { get; } =
         [
             "Cannot exercise European style option with symbol ",
             " before its expiration date.",
         ];
 
-        public IReadOnlyList<BacktestAnalysisResult> Run(List<string> logs, Language language)
-        {
-            var results = logs.Where(l => MessageText.All(t => l.Contains(t))).ToList();
-            var potentialSolutions = results.Count > 0 ? PotentialSolutions(language) : [];
-            return SingleResponse(new BacktestAnalysysRepeatedContext(results), potentialSolutions);
-        }
-
-        private static List<string> PotentialSolutions(Language language) =>
+        protected override List<string> PotentialSolutions(Language language) =>
         [
             "This error occurs when you try to exercise a European Option contract before its expiry date. " +
             "To avoid this order response error, check the type and expiry date of the contract before you exercise it.\n" +

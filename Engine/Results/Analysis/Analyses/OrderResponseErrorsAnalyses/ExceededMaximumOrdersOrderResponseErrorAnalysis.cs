@@ -14,7 +14,7 @@
  *
 */
 using System.Collections.Generic;
-using System.Linq;
+using QuantConnect.Lean.Engine.Results.Analysis.Analyses.Messages;
 
 namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
 {
@@ -22,22 +22,15 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
     /// Detects the "exceeded maximum orders" error.
     /// Error code: OrderResponseErrorCode.EXCEEDED_MAXIMUM_ORDERS (-20)
     /// </summary>
-    public class ExceededMaximumOrdersOrderResponseErrorAnalysis : BaseBacktestAnalysis
+    public class ExceededMaximumOrdersOrderResponseErrorAnalysis : MessageAnalysis
     {
-        private static readonly string[] MessageText =
+        protected override string[] ExpectedMessageText { get; } =
         [
             "You have exceeded maximum number of orders (",
             "), for unlimited orders upgrade your account.",
         ];
 
-        public IReadOnlyList<BacktestAnalysisResult> Run(List<string> logs)
-        {
-            var result = logs.Where(l => MessageText.All(t => l.Contains(t))).ToList();
-            var potentialSolutions = result.Count > 0 ? PotentialSolutions() : [];
-            return SingleResponse(new BacktestAnalysysRepeatedContext(result), potentialSolutions);
-        }
-
-        private static List<string> PotentialSolutions() =>
+        protected override List<string> PotentialSolutions(Language language) =>
         [
             "Switch to an organization on the Team tier or higher.",
 

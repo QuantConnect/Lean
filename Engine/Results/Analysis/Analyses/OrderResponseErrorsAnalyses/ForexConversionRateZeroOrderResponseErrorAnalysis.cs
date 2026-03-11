@@ -14,7 +14,7 @@
  *
 */
 using System.Collections.Generic;
-using System.Linq;
+using QuantConnect.Lean.Engine.Results.Analysis.Analyses.Messages;
 
 namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
 {
@@ -22,23 +22,16 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
     /// Detects zero Forex conversion rate errors.
     /// Error code: OrderResponseErrorCode.FOREX_CONVERSION_RATE_ZERO (-18)
     /// </summary>
-    public class ForexConversionRateZeroOrderResponseErrorAnalysis : BaseBacktestAnalysis
+    public class ForexConversionRateZeroOrderResponseErrorAnalysis : MessageAnalysis
     {
-        private static readonly string[] MessageText =
+        protected override string[] ExpectedMessageText { get; } =
         [
             ": requires ",
             " and ",
             " to have non-zero conversion rates. This can be caused by lack of data.",
         ];
 
-        public IReadOnlyList<BacktestAnalysisResult> Run(List<string> logs)
-        {
-            var result = logs.Where(l => MessageText.All(t => l.Contains(t))).ToList();
-            var potentialSolutions = result.Count > 0 ? PotentialSolutions() : [];
-            return SingleResponse(new BacktestAnalysysRepeatedContext(result), potentialSolutions);
-        }
-
-        private static List<string> PotentialSolutions() =>
+        protected override List<string> PotentialSolutions(Language language) =>
         [
             "This error occurs when you place a trade for a Forex or Crypto pair and LEAN can't convert the value of the base currency to your account currency. " +
             "This error usually indicates a lack of data. Check if there is some data missing.",
