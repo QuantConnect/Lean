@@ -1,0 +1,100 @@
+name: Update Bybit Symbol Properties
+
+on:
+  workflow_dispatch:
+
+jobs:
+  update-symbol-properties:
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+      pull-requests: write
+
+    steps:
+      - name: Connect to VPN
+        run: |
+          sudo apt-get install -y openvpn
+          echo "${{ secrets.OVPN_CONFIG }}" > /tmp/vpn.ovpn
+          printf '%s\n%s\n' "${{ secrets.OVPN_USERNAME }}" "${{ secrets.OVPN_PASSWORD }}" > /tmp/vpn-auth.txt
+          sed -i 's|^auth-user-pass$|auth-user-pass /tmp/vpn-auth.txt|g' /tmp/vpn.ovpn
+          sudo openvpn --config /tmp/vpn.ovpn --daemon --log /tmp/vpn.log
+          sleep 15
+          ip addr show tun0 || (echo "VPN failed:" && cat /tmp/vpn.log && exit 1)
+          rm -f /tmp/vpn-auth.txt
+
+      - name: Checkout Romazes/Lean
+        uses: actions/checkout@v4
+
+      - name: Checkout QuantConnect/Lean.Brokerages.ByBit
+        uses: actions/checkout@v4
+        with:
+          repository: QuantConnect/Lean.Brokerages.ByBit
+          path: Lean.Brokerages.ByBit
+
+      - name: Move ByBit brokerage to sibling directory
+        run: mv Lean.Brokerages.ByBit ../Lean.Brokerages.ByBit
+
+      - name: Setup .NET 10
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Build ToolBox
+        run: |
+          dotnet build ../Lean.Brokerages.ByBit/QuantConnect.BybitBrokerage.ToolBox/QuantConnect.BybitBrokerage.ToolBox.csproj \
+            /p:Configuration=Release /v:quiet /p:WarningLevel=1
+
+      - name: Create ToolBox config
+        run: |
+          echo '{
+            "data-folder": "../../../../Lean/Data/",
+            "bybit-api-url": "https://api.bybit.com",
+            "temp-output-directory": "/tmp/lean-symbol-updater"
+          }' > ../Lean.Brokerages.ByBit/QuantConnect.BybitBrokerage.ToolBox/bin/Release/config.json
+
+      - name: Run Symbol Properties Updater
+        working-directory: ../Lean.Brokerages.ByBit/QuantConnect.BybitBrokerage.ToolBox/bin/Release
+        run: dotnet QuantConnect.Brokerages.Bybit.ToolBox.dll --app updater
+
+      - name: Copy updated CSV to Lean data directory
+        run: |
+          cp /tmp/lean-symbol-updater/symbol-properties/symbol-properties-database.csv \
+            Data/symbol-properties/symbol-properties-database.csv
+
+      - name: Check for changes
+        id: check-changes
+        run: |
+          if git diff --quiet HEAD -- Data/symbol-properties/symbol-properties-database.csv; then
+            echo "has_changes=false" >> $GITHUB_OUTPUT
+          else
+            echo "has_changes=true" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Create branch, commit and push
+        id: create-branch
+        if: steps.check-changes.outputs.has_changes == 'true'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          BRANCH="feature/update-bybit-symbol-properties-$(date +%Y%m%d-%H%M%S)"
+          git checkout -b $BRANCH
+          git add -f Data/symbol-properties/symbol-properties-database.csv
+          git commit -m "Update Bybit symbol properties $(date +%Y-%m-%d)"
+          git push origin $BRANCH
+          echo "branch=$BRANCH" >> $GITHUB_OUTPUT
+
+      - name: Create Pull Request
+        if: steps.check-changes.outputs.has_changes == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh pr create \
+            --title "Update Bybit symbol properties $(date +%Y-%m-%d)" \
+            --body "Auto-update Bybit symbol properties from live Bybit API.
+            Related: QuantConnect/Lean.Brokerages.ByBit#34" \
+            --base master \
+            --head ${{ steps.create-branch.outputs.branch }}
+
+      - name: No changes detected
+        if: steps.check-changes.outputs.has_changes == 'false'
+        run: echo "Symbol properties database is already up to date. No PR needed."
