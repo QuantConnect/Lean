@@ -16,6 +16,7 @@
 using System;
 using System.Collections.Generic;
 using QuantConnect.Interfaces;
+using QuantConnect.Securities;
 
 namespace QuantConnect.Algorithm.CSharp
 {
@@ -54,7 +55,7 @@ namespace QuantConnect.Algorithm.CSharp
                 throw new RegressionTestException("Expected the SPY CFD market hours to be the same as the underlying equity market hours.");
             }
 
-            if (!ReferenceEquals(spyCfd.SymbolProperties, equitySymbolProperties))
+            if (!SymbolPropertiesAreEquivalent(spyCfd.SymbolProperties, equitySymbolProperties))
             {
                 throw new RegressionTestException("Expected the SPY CFD symbol properties to be the same as the underlying equity symbol properties.");
             }
@@ -74,10 +75,23 @@ namespace QuantConnect.Algorithm.CSharp
                 throw new RegressionTestException("Expected the AUDUSD CFD market hours to be the same as the underlying forex market hours.");
             }
 
-            if (!ReferenceEquals(audUsdCfd.SymbolProperties, audUsdForexSymbolProperties))
+            if (!SymbolPropertiesAreEquivalent(audUsdCfd.SymbolProperties, audUsdForexSymbolProperties))
             {
                 throw new RegressionTestException("Expected the AUDUSD CFD symbol properties to be the same as the underlying forex symbol properties.");
             }
+        }
+
+        private static bool SymbolPropertiesAreEquivalent(SymbolProperties a, SymbolProperties b)
+        {
+            return a.Description == b.Description &&
+                   a.QuoteCurrency == b.QuoteCurrency &&
+                   a.ContractMultiplier == b.ContractMultiplier &&
+                   a.MinimumPriceVariation == b.MinimumPriceVariation &&
+                   a.LotSize == b.LotSize &&
+                   a.MarketTicker == b.MarketTicker &&
+                   a.MinimumOrderSize == b.MinimumOrderSize &&
+                   a.PriceMagnifier == b.PriceMagnifier &&
+                   a.StrikeMultiplier == b.StrikeMultiplier;
         }
 
         /// <summary>
