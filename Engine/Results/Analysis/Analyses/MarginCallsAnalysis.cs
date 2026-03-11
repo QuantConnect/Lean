@@ -26,7 +26,7 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
         {
             var result = logs.Where(l => l.Contains("Executed MarginCallOrder")).ToList();
             var potentialSolutions = result.Count > 0 ? PotentialSolutions(language) : [];
-            return SingleResponse(result.Count > 0 ? (object)result : null, potentialSolutions);
+            return SingleResponse(new BacktestAnalysysRepeatedContext(result), potentialSolutions);
         }
 
         private static List<string> PotentialSolutions(Language language) =>

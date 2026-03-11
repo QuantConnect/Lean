@@ -57,7 +57,7 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
 
             object? result = pValue > 0.05 ? new { pValue } : null;
             var potentialSolutions = result is not null ? PotentialSolutions() : [];
-            return SingleResponse(result, potentialSolutions);
+            return SingleResponse(new BacktestAnalysysContext(result), potentialSolutions);
         }
 
         /// <summary>

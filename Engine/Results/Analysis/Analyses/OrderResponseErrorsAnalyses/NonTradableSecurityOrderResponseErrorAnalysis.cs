@@ -30,11 +30,11 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
             " is marked as non-tradable.",
         ];
 
-        public IReadOnlyList<BacktestAnalysisResult> Run(List<string> logs, Language language)
+        public IReadOnlyList<BacktestAnalysisResult> Run(IReadOnlyList<string> logs, Language language)
         {
             var result = logs.Where(l => MessageText.All(t => l.Contains(t))).ToList();
             var potentialSolutions = result.Count > 0 ? PotentialSolutions(language) : [];
-            return SingleResponse(result.Count > 0 ? (object)result : null, potentialSolutions);
+            return SingleResponse(new BacktestAnalysysRepeatedContext(result), potentialSolutions);
         }
 
         private static List<string> PotentialSolutions(Language language) =>

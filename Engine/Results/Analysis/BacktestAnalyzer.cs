@@ -124,8 +124,8 @@ namespace QuantConnect.Lean.Engine.Results.Analysis
         public IReadOnlyList<BacktestAnalysisResult> CheckBrokerageModelRefusedToSubmitOrderOrderResponseError()
             => new BrokerageModelRefusedToSubmitOrderOrderResponseErrorAnalysis().Run(_result.OrderEvents, _language);
 
-        //public IReadOnlyList<BacktestAnalysisResult> CheckExceedsShortableQuantityOrderResponseError()
-        //    => new ExceedsShortableQuantityOrderResponseErrorAnalysis().Run(_result.OrderEvents, _language);
+        public IReadOnlyList<BacktestAnalysisResult> CheckExceedsShortableQuantityOrderResponseError()
+            => new ExceedsShortableQuantityOrderResponseErrorAnalysis().Run(_result.OrderEvents, _language);
 
         //public IReadOnlyList<BacktestAnalysisResult> CheckNonTradableSecurityOrderResponseError()
         //    => new NonTradableSecurityOrderResponseErrorAnalysis().Run(LazyLogs, _language);

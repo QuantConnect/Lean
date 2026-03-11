@@ -31,7 +31,7 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
                 .Where(l => l.Contains("The security does not have an accurate price as it has not yet received a bar of data."))
                 .ToList();
             var potentialSolutions = result.Count > 0 ? PotentialSolutions(language) : [];
-            return SingleResponse(result.Count > 0 ? (object)result : null, potentialSolutions);
+            return SingleResponse(new BacktestAnalysysRepeatedContext(result), potentialSolutions);
         }
 
         private static List<string> PotentialSolutions(Language language) =>

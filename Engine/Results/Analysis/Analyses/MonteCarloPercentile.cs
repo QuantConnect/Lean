@@ -41,7 +41,7 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
 
             object? result = percentile > 90 ? new { percentile } : null;
             var potentialSolutions = result is not null ? PotentialSolutions() : [];
-            return SingleResponse(result, potentialSolutions);
+            return SingleResponse(new BacktestAnalysysContext(result), potentialSolutions);
         }
 
         private static double[] RunSimulation(double[] returns, int nSims = 5000, int blockSize = 20)

@@ -27,7 +27,7 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
         {
             var result = logs.Where(l => l.Contains(" order and exchange not open.")).ToList();
             var potentialSolutions = result.Count > 0 ? PotentialSolutions(language) : [];
-            return SingleResponse(result.Count > 0 ? (object)result : null, potentialSolutions);
+            return SingleResponse(new BacktestAnalysysRepeatedContext(result), potentialSolutions);
         }
 
         private static List<string> PotentialSolutions(Language language) =>
@@ -48,7 +48,7 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
         {
             var result = logs.Where(l => l.Contains(" orders not supported for ")).ToList();
             var potentialSolutions = result.Count > 0 ? PotentialSolutions() : [];
-            return SingleResponse(result.Count > 0 ? (object)result : null, potentialSolutions);
+            return SingleResponse(new BacktestAnalysysRepeatedContext(result), potentialSolutions);
         }
 
         private static List<string> PotentialSolutions() =>
@@ -80,7 +80,7 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
                     ? et.Run(logs, language)
                     : ((MOCOrderForFutureOrFOPAnalysis)test).Run(logs, language);
 
-                if (results.Any(r => r.Result is not null))
+                if (results.Any(r => r.Context is not null))
                     return results;
             }
 

@@ -50,7 +50,7 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
             }
 
             var potentialSolutions = segments.Count > 0 ? PotentialSolutions() : [];
-            return SingleResponse(segments.Count > 0 ? (object)segments : null, potentialSolutions);
+            return SingleResponse(new BacktestAnalysysContext(segments.Count > 0 ? segments : null), potentialSolutions);
         }
 
         private static List<string> PotentialSolutions() =>

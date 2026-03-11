@@ -33,7 +33,7 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
                 .ToList<object>();
 
             var potentialSolutions = result.Count > 0 ? PotentialSolutions(language) : [];
-            return SingleResponse(result.Count > 0 ? (object)result : null, potentialSolutions);
+            return SingleResponse(new BacktestAnalysysRepeatedContext(result), potentialSolutions);
         }
 
         private static List<string> PotentialSolutions(Language language) =>
@@ -118,7 +118,7 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
             }
 
             var potentialSolutions = result.Count > 0 ? PotentialSolutions(language) : [];
-            return SingleResponse(result.Count > 0 ? (object)result : null, potentialSolutions);
+            return SingleResponse(new BacktestAnalysysRepeatedContext(result), potentialSolutions);
         }
 
         private static List<string> PotentialSolutions(Language language) =>
