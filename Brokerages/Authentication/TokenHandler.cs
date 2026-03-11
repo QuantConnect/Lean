@@ -14,7 +14,6 @@
 */
 
 using System;
-using System.Net;
 using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
@@ -23,8 +22,7 @@ using System.Net.Http.Headers;
 namespace QuantConnect.Brokerages.Authentication
 {
     /// <summary>
-    /// Provides base functionality for token-based HTTP request handling,
-    /// including automatic retries and token refresh on unauthorized responses.
+    /// Provides base functionality for token-based HTTP request handling.
     /// </summary>
     public abstract class TokenHandler : DelegatingHandler
     {
@@ -35,16 +33,6 @@ namespace QuantConnect.Brokerages.Authentication
         public event EventHandler<Exception> AuthenticationFailed;
 
         /// <summary>
-        /// The maximum number of retry attempts for an authenticated request.
-        /// </summary>
-        private readonly int _maxRetryCount = 3;
-
-        /// <summary>
-        /// The time interval to wait between retry attempts for an authenticated request.
-        /// </summary>
-        private readonly TimeSpan _retryInterval;
-
-        /// <summary>
         /// A delegate used to construct an <see cref="AuthenticationHeaderValue"/> from a token type and access token string.
         /// </summary>
         private readonly Func<TokenType, string, AuthenticationHeaderValue> _createAuthHeader;
@@ -53,18 +41,13 @@ namespace QuantConnect.Brokerages.Authentication
         /// Initializes a new instance of the <see cref="TokenHandler"/> class.
         /// </summary>
         /// <param name="createAuthHeader">
-        /// An optional delegate for creating an <see cref="AuthenticationHeaderValue"/> 
+        /// An optional delegate for creating an <see cref="AuthenticationHeaderValue"/>
         /// from the token type and access token. If not provided, a default implementation is used.
         /// </param>
-        /// <param name="retryInterval">
-        /// An optional time interval to wait between retry attempts when fetching the token or retrying a failed request.
-        /// If <c>null</c>, the default interval of 5 seconds is used.
-        /// </param>
-        protected TokenHandler(Func<TokenType, string, AuthenticationHeaderValue> createAuthHeader = null, TimeSpan? retryInterval = null)
+        protected TokenHandler(Func<TokenType, string, AuthenticationHeaderValue> createAuthHeader = null)
             : base(new HttpClientHandler())
         {
             _createAuthHeader = createAuthHeader ?? ((tokenType, accessToken) => new AuthenticationHeaderValue(tokenType.ToString(), accessToken));
-            _retryInterval = retryInterval ?? TimeSpan.FromSeconds(5);
         }
 
         /// <summary>
@@ -77,6 +60,16 @@ namespace QuantConnect.Brokerages.Authentication
         /// A <see cref="TokenCredentials"/> instance containing the token type and access token string.
         /// </returns>
         public abstract TokenCredentials GetAccessToken(CancellationToken cancellationToken);
+
+        /// <summary>
+        /// Invokes the <see cref="AuthenticationFailed"/> event.
+        /// Derived classes call this when authentication fails after exhausting all retry attempts.
+        /// </summary>
+        /// <param name="exception">The exception that caused the authentication failure.</param>
+        protected void OnAuthenticationFailed(Exception exception)
+        {
+            AuthenticationFailed?.Invoke(this, exception);
+        }
 
         /// <summary>
         /// Sends an HTTP request asynchronously by internally invoking the synchronous <see cref="Send(HttpRequestMessage, CancellationToken)"/> method.
@@ -93,59 +86,16 @@ namespace QuantConnect.Brokerages.Authentication
         }
 
         /// <summary>
-        /// Sends an HTTP request synchronously with retry support.
-        /// This override includes token-based authentication and refresh logic on 401 Unauthorized responses.
+        /// Sends an HTTP request synchronously, applying token-based authentication.
         /// </summary>
         /// <param name="request">The HTTP request message to send.</param>
         /// <param name="cancellationToken">A cancellation token to cancel operation.</param>
         /// <returns>The HTTP response message.</returns>
         protected override HttpResponseMessage Send(HttpRequestMessage request, CancellationToken cancellationToken)
         {
-            HttpResponseMessage response = default;
-
-            for (var retryCount = 0; retryCount <= _maxRetryCount; retryCount++)
-            {
-                var accessToken = default(TokenCredentials);
-
-                try
-                {
-                    accessToken = GetAccessToken(cancellationToken);
-                }
-                catch when (retryCount < _maxRetryCount)
-                {
-                    if (cancellationToken.WaitHandle.WaitOne(_retryInterval))
-                    {
-                        throw new OperationCanceledException($"{nameof(TokenHandler)}.{nameof(Send)}: Token fetch canceled during wait.", cancellationToken);
-                    }
-                    continue;
-                }
-                catch (Exception ex)
-                {
-                    AuthenticationFailed?.Invoke(this, ex);
-                    throw;
-                }
-
-                request.Headers.Authorization = _createAuthHeader(accessToken.TokenType, accessToken.AccessToken);
-
-                response = base.Send(request, cancellationToken);
-
-                if (response.IsSuccessStatusCode)
-                {
-                    break;
-                }
-
-                if (response.StatusCode != HttpStatusCode.Unauthorized)
-                {
-                    break;
-                }
-
-                if (cancellationToken.WaitHandle.WaitOne(_retryInterval))
-                {
-                    break;
-                }
-            }
-
-            return response;
+            var accessToken = GetAccessToken(cancellationToken);
+            request.Headers.Authorization = _createAuthHeader(accessToken.TokenType, accessToken.AccessToken);
+            return base.Send(request, cancellationToken);
         }
     }
 }

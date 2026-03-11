@@ -30,14 +30,30 @@ namespace QuantConnect.Brokerages.Authentication
         where TResponse : AccessTokenMetaDataResponse
     {
         /// <summary>
+        /// The maximum number of retry attempts when fetching an access token.
+        /// </summary>
+        private readonly int _maxRetryCount = 3;
+
+        /// <summary>
+        /// The time interval to wait between retry attempts when fetching an access token.
+        /// </summary>
+        private readonly TimeSpan _retryInterval = TimeSpan.FromSeconds(5);
+
+        /// <summary>
+        /// Lock object used to synchronize token refresh across threads.
+        /// </summary>
+        private readonly object _lock = new();
+
+        /// <summary>
         /// The serialized JSON body representing the token request model.
         /// </summary>
         private readonly string _jsonBodyRequest;
 
         /// <summary>
         /// Stores metadata about the Lean access token and its expiration details.
+        /// Written inside <see cref="_lock"/>; read outside the lock via volatile fast path.
         /// </summary>
-        private TResponse _accessTokenMetaData;
+        private volatile TResponse _accessTokenMetaData;
 
         /// <summary>
         /// API client for communicating with the Lean platform.
@@ -63,37 +79,64 @@ namespace QuantConnect.Brokerages.Authentication
         /// <summary>
         /// Retrieves a valid access token from the Lean platform.
         /// Caches and reuses tokens until expiration to minimize unnecessary requests.
+        /// Retries up to <see cref="_maxRetryCount"/> times on failure, and is thread-safe via double-checked locking.
         /// </summary>
         /// <param name="cancellationToken">A token used to observe cancellation requests.</param>
-        /// <returns>A tuple containing the token type and access token string.</returns>
+        /// <returns>A <see cref="TokenCredentials"/> containing the token type and access token string.</returns>
         public override TokenCredentials GetAccessToken(CancellationToken cancellationToken)
         {
+            // Fast path: return cached token without acquiring the lock
             if (_accessTokenMetaData != null && DateTime.UtcNow < _accessTokenMetaData.Expiration)
             {
                 return _tokenCredentials;
             }
 
-            try
+            lock (_lock)
             {
-                using var request = ApiUtils.CreateJsonPostRequest("live/auth0/refresh", _jsonBodyRequest);
-
-                if (_apiClient.TryRequest<TResponse>(request, out var response))
+                // Second check: another thread may have refreshed while we waited for the lock
+                if (_accessTokenMetaData != null && DateTime.UtcNow < _accessTokenMetaData.Expiration)
                 {
-                    if (response.Success && !string.IsNullOrEmpty(response.AccessToken))
+                    return _tokenCredentials;
+                }
+
+                for (var retryCount = 0; retryCount <= _maxRetryCount; retryCount++)
+                {
+                    try
                     {
-                        _accessTokenMetaData = response;
-                        _tokenCredentials = new(response.TokenType, response.AccessToken);
-                        return _tokenCredentials;
+                        using var request = ApiUtils.CreateJsonPostRequest("live/auth0/refresh", _jsonBodyRequest);
+
+                        if (_apiClient.TryRequest<TResponse>(request, out var response))
+                        {
+                            if (response.Success && !string.IsNullOrEmpty(response.AccessToken))
+                            {
+                                _accessTokenMetaData = response;
+                                _tokenCredentials = new(response.TokenType, response.AccessToken);
+                                return _tokenCredentials;
+                            }
+                        }
+
+                        Logging.Log.Error($"{nameof(OAuthTokenHandler<TRequest, TResponse>)}.{nameof(GetAccessToken)}: Failed to retrieve access token. Response: {response}. Last known expiration: {_accessTokenMetaData?.Expiration.ToStringInvariant() ?? "Not requested yet"}.");
+                        throw new InvalidOperationException($"Authentication failed. " +
+                            $"Details: {(response?.Errors?.Count > 0 ? string.Join(",", response.Errors) : "empty")}");
+                    }
+                    catch when (retryCount < _maxRetryCount)
+                    {
+                        if (cancellationToken.WaitHandle.WaitOne(_retryInterval))
+                        {
+                            throw new OperationCanceledException(
+                                $"{nameof(OAuthTokenHandler<TRequest, TResponse>)}.{nameof(GetAccessToken)}: Token fetch canceled during wait.",
+                                cancellationToken);
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        OnAuthenticationFailed(ex);
+                        throw;
                     }
                 }
 
-                Logging.Log.Error($"{nameof(OAuthTokenHandler<TRequest, TResponse>)}.{nameof(GetAccessToken)}: Failed to retrieve access token. Response: {response}. Last known expiration: {_accessTokenMetaData?.Expiration.ToStringInvariant() ?? "Not requested yet"}.");
-                throw new InvalidOperationException($"Authentication failed. " +
-                    $"Details: {(response?.Errors?.Count > 0 ? string.Join(",", response.Errors) : "empty")}");
-            }
-            catch (Exception ex)
-            {
-                throw new InvalidOperationException($"{nameof(OAuthTokenHandler<TRequest, TResponse>)}.{nameof(GetAccessToken)}: {ex.Message}");
+                // Unreachable — the loop always returns or throws
+                throw new InvalidOperationException($"{nameof(OAuthTokenHandler<TRequest, TResponse>)}.{nameof(GetAccessToken)}: Unexpected state in token retry loop.");
             }
         }
     }

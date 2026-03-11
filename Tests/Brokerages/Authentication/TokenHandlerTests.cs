@@ -19,7 +19,6 @@ using NUnit.Framework;
 using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
-using System.Collections.Generic;
 using QuantConnect.Brokerages.Authentication;
 
 namespace QuantConnect.Tests.Brokerages.Authentication
@@ -28,46 +27,40 @@ namespace QuantConnect.Tests.Brokerages.Authentication
     public class TokenHandlerTests
     {
         [Test]
-        public async Task TokenHandlerRetriesOnUnauthorizedThenReturnsSuccess()
-        {
-            var responseSequence = new Queue<HttpResponseMessage>([
-                new(HttpStatusCode.Unauthorized),
-                new(HttpStatusCode.Unauthorized),
-                new(HttpStatusCode.OK)
-            ]);
-
-            using var innerHandler = new SequencedHandler(responseSequence);
-            using var tokenHandler = new ValidTokenHandler(innerHandler);
-            using var client = new HttpClient(tokenHandler);
-
-            using var request = new HttpRequestMessage(HttpMethod.Get, "https://example.com/test");
-
-            var response = await client.SendAsync(request).ConfigureAwait(false);
-
-            Assert.AreEqual(HttpStatusCode.OK, response.StatusCode);
-            Assert.AreEqual(3, innerHandler.CallCount);
-        }
-
-        [Test]
-        public void TokenHandlerRetriesHttpOnUnauthorizedSucceedsEventually()
-        {
-            using var innerHandler = new CountingHandler(2, HttpStatusCode.Unauthorized, HttpStatusCode.OK);
-            using var tokenHandler = new ValidTokenHandler(innerHandler);
-            using var client = new HttpClient(tokenHandler);
-
-            using var request = new HttpRequestMessage(HttpMethod.Get, "https://example.com/test");
-
-            var response = client.Send(request);
-
-            Assert.AreEqual(HttpStatusCode.OK, response.StatusCode);
-            Assert.AreEqual(3, innerHandler.CallCount);
-        }
-
-        [Test]
-        public void TokenHandlerRetriesOnTokenFetchFailureSucceedsEventually()
+        public void TokenHandlerThrowsWhenGetAccessTokenAlwaysFails()
         {
             using var innerHandler = new CountingHandler(0, HttpStatusCode.OK);
-            using var tokenHandler = new FailingTokenHandler(innerHandler, failCount: 2);
+            using var tokenHandler = new AlwaysFailingTokenHandler(innerHandler);
+            using var client = new HttpClient(tokenHandler);
+
+            using var request = new HttpRequestMessage(HttpMethod.Get, "https://example.com/test");
+
+            Assert.Throws<InvalidOperationException>(() => client.Send(request));
+            Assert.AreEqual(0, innerHandler.CallCount);
+        }
+
+        [Test]
+        public void TokenHandlerInvokesAuthenticationFailedEventOnFinalFailure()
+        {
+            using var innerHandler = new CountingHandler(0, HttpStatusCode.OK);
+            using var tokenHandler = new AlwaysFailingTokenHandler(innerHandler);
+
+            Exception capturedEx = null;
+            tokenHandler.AuthenticationFailed += (_, ex) => capturedEx = ex;
+
+            using var client = new HttpClient(tokenHandler);
+            using var request = new HttpRequestMessage(HttpMethod.Get, "https://example.com/test");
+
+            Assert.Throws<InvalidOperationException>(() => client.Send(request));
+            Assert.IsNotNull(capturedEx);
+            Assert.IsInstanceOf<InvalidOperationException>(capturedEx);
+        }
+
+        [Test]
+        public void TokenHandlerSendsRequestWithValidToken()
+        {
+            using var innerHandler = new CountingHandler(0, HttpStatusCode.OK);
+            using var tokenHandler = new ValidTokenHandler(innerHandler);
             using var client = new HttpClient(tokenHandler);
 
             using var request = new HttpRequestMessage(HttpMethod.Get, "https://example.com/test");
@@ -76,27 +69,21 @@ namespace QuantConnect.Tests.Brokerages.Authentication
 
             Assert.AreEqual(HttpStatusCode.OK, response.StatusCode);
             Assert.AreEqual(1, innerHandler.CallCount);
-            Assert.AreEqual(3, tokenHandler.AccessTokenCallCount);
         }
 
-        private class SequencedHandler : HttpMessageHandler
+        [Test]
+        public async Task TokenHandlerSendsRequestWithValidTokenAsync()
         {
-            private readonly Queue<HttpResponseMessage> _responses;
-            public int CallCount { get; private set; }
+            using var innerHandler = new CountingHandler(0, HttpStatusCode.OK);
+            using var tokenHandler = new ValidTokenHandler(innerHandler);
+            using var client = new HttpClient(tokenHandler);
 
-            public SequencedHandler(Queue<HttpResponseMessage> responses) => _responses = responses;
+            using var request = new HttpRequestMessage(HttpMethod.Get, "https://example.com/test");
 
-            protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
-            {
-                return Task.FromResult(Send(request, cancellationToken));
-            }
+            var response = await client.SendAsync(request).ConfigureAwait(false);
 
-            protected override HttpResponseMessage Send(HttpRequestMessage request, CancellationToken cancellationToken)
-            {
-                CallCount++;
-                AssertAuthorization(request);
-                return _responses.Dequeue();
-            }
+            Assert.AreEqual(HttpStatusCode.OK, response.StatusCode);
+            Assert.AreEqual(1, innerHandler.CallCount);
         }
 
         private class CountingHandler : HttpMessageHandler
@@ -141,7 +128,7 @@ namespace QuantConnect.Tests.Brokerages.Authentication
 
         private class ValidTokenHandler : TokenHandler
         {
-            public ValidTokenHandler(HttpMessageHandler innerHandler) : base(retryInterval: TimeSpan.Zero)
+            public ValidTokenHandler(HttpMessageHandler innerHandler)
             {
                 InnerHandler = innerHandler;
             }
@@ -152,29 +139,18 @@ namespace QuantConnect.Tests.Brokerages.Authentication
             }
         }
 
-        private class FailingTokenHandler : TokenHandler
+        private class AlwaysFailingTokenHandler : TokenHandler
         {
-            private readonly HttpMessageHandler _inner;
-            private readonly int _failCount;
-            public int AccessTokenCallCount { get; private set; }
-
-            public FailingTokenHandler(HttpMessageHandler innerHandler, int failCount) : base(retryInterval: TimeSpan.Zero)
+            public AlwaysFailingTokenHandler(HttpMessageHandler innerHandler)
             {
-                _inner = innerHandler;
-                _failCount = failCount;
-                InnerHandler = _inner;
+                InnerHandler = innerHandler;
             }
 
             public override TokenCredentials GetAccessToken(CancellationToken cancellationToken)
             {
-                AccessTokenCallCount++;
-
-                if (AccessTokenCallCount <= _failCount)
-                {
-                    throw new Exception("Simulated token failure");
-                }
-
-                return new TokenCredentials(TokenType.Bearer, "123456");
+                var exception = new InvalidOperationException("Simulated persistent token failure");
+                OnAuthenticationFailed(exception);
+                throw exception;
             }
         }
     }
