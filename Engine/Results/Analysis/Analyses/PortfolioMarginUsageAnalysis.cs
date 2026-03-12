@@ -13,70 +13,63 @@
  * limitations under the License.
  *
 */
-//using System;
-//using System.Collections.Generic;
-//using System.Linq;
-//using Deedle;
-//using QuantConnect.Api;
-//using BacktestAnalyzerrr.Utils;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using Deedle;
 
-//namespace BacktestAnalyzerrr.Tests;
+namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
+{
+    /// <summary>
+    /// Detects periods where the portfolio under-utilises available margin
+    /// (3-day SMA of margin usage drops below 50 %).
+    /// </summary>
+    public class PortfolioMarginUsageAnalysis : BaseBacktestAnalysis
+    {
+        public IReadOnlyList<BacktestAnalysisResult> Run(Result backtestResult)
+        {
+            // 1 – Get the Portfolio Margin chart.
+            if (!backtestResult.Charts.TryGetValue("Portfolio Margin", out var chart))
+            {
+                return SingleResponse(new BacktestAnalysysContext(null));
+            }
 
-///// <summary>
-///// Detects periods where the portfolio under-utilises available margin
-///// (3-day SMA of margin usage drops below 50 %).
-///// </summary>
-//public class PortfolioMarginUsageAnalysis : BacktestResultAnalysis
-//{
-//    public IReadOnlyList<TestResult> Run(IApi api, backtest backtest)
-//    {
-//        // 1 – Get the Portfolio Margin chart.
-//        var chart = api.ReadBacktestChart(
-//            backtest.ProjectId,
-//            "Portfolio Margin",
-//            (long)backtest.BacktestStart.Subtract(DateTime.UnixEpoch).TotalSeconds,
-//            (long)backtest.BacktestEnd.Subtract(DateTime.UnixEpoch).TotalSeconds,
-//            99999999,
-//            backtest.BacktestId);
+            // 2 - Load each series from the Portfolio Margin plot.
+            //     Each series maps DateTime -> margin value.
+            var marginPerAsset = chart.Series
+                .Select(kvp => kvp.Value.Values.Cast<ChartPoint>()
+                    .ToDictionary(pt => pt.Time, pt => pt.Y))
+                .ToList();
 
-//        // 2 – Build one Series per asset series in the chart, then combine into a Frame.
-//        var columns = new Dictionary<string, Series<DateTime, double>>();
-//        foreach (var kvp in chart.Chart.Series)
-//        {
-//            var seriesData = new Dictionary<DateTime, double>();
-//            foreach (var point in kvp.Value.Values)
-//            {
-//                var utcTime = DateTimeOffset.FromUnixTimeSeconds((long)point.X).UtcDateTime;
-//                var eastern = Timestamps.EasternTime(utcTime);
-//                seriesData[eastern] = (double)point.Y;
-//            }
-//            columns[kvp.Key] = seriesData.ToSeries();
-//        }
+            // 3 - Collect all distinct timestamps across all series (the "index" union).
+            var allTimestamps = marginPerAsset
+                .SelectMany(s => s.Keys)
+                .Distinct()
+                .Order()
+                .ToArray();
 
-//        var frame = Frame.ofColumns(columns);
+            // 4 - Sum series together -> total portfolio margin per timestamp.
+            var portfolioMargin = allTimestamps
+                .Select(t => marginPerAsset.Sum(s => s.TryGetValue(t, out var margin) && margin != null ? (double)margin.Value : 0.0))
+                .ToArray();
 
-//        // 3 – Fill missing, sum columns → total portfolio margin usage.
-//        var filled    = frame.FillMissing(0.0);
-//        var portfolio = filled.SumRows();
+            // 5 - 3-day SMA, then count days below 50%.
+            var countBelow50 = MathNet.Numerics.Statistics.Statistics.MovingAverage(portfolioMargin, 3).Count(x => x < 50);
 
-//        // 4 – 3-day SMA; count days below 50 %.
-//        var rolling3 = portfolio.RollingMean(3);
-//        int belowCount = rolling3.Values.Count(v => v < 50);
+            var result = countBelow50 > 0
+                ? $"Number of days when the 3-day SMA of the margin usage drops below 50%: {countBelow50}"
+                : null;
+            var potentialSolutions = result != null ? PotentialSolutions() : [];
+            return SingleResponse(new BacktestAnalysysContext(result), potentialSolutions);
+        }
 
-//        object? result = belowCount > 0
-//            ? $"Number of days when the 3-day SMA of the margin usage drops below 50%: {belowCount}"
-//            : null;
+        private static List<string> PotentialSolutions() =>
+        [
+            "The algorithm sometimes only utilizes a small proportion of the margin available. " +
+            "Adjust the strategy logic or position sizing to utilize more margin.",
 
-//        var potentialSolutions = result is not null ? PotentialSolutions() : [];
-//        return SingleResponse(result, potentialSolutions);
-//    }
-
-//    private static List<string> PotentialSolutions() =>
-//    [
-//        "The algorithm sometimes only utilizes a small proportion of the margin available. " +
-//        "Adjust the strategy logic or position sizing to utilize more margin.",
-
-//        "If the algorithm logic leads to periods of time when the portfolio sits in cash, " +
-//        "consider holding a \"risk-free\" asset during these periods.",
-//    ];
-//}
+            "If the algorithm logic leads to periods of time when the portfolio sits in cash, " +
+            "consider holding a \"risk-free\" asset during these periods.",
+        ];
+    }
+}

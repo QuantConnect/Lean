@@ -75,7 +75,7 @@ namespace QuantConnect.Lean.Engine.Results.Analysis
                 CheckExecutionSpeed,
                 CheckStaleOrderFills,
                 CheckForOrderFillsDuringExtendedMarketHours,
-                //CheckPortfolioMarginUsage,
+                CheckPortfolioMarginUsage,
                 CheckParameterCount,
                 CheckCrisisEvents,
                 CheckStatisticalSignificanceOfDailyReturns,
@@ -181,8 +181,8 @@ namespace QuantConnect.Lean.Engine.Results.Analysis
         public IReadOnlyList<BacktestAnalysisResult> CheckForOrderFillsDuringExtendedMarketHours()
             => new OrderFillsDuringExtendedMarketHoursAnalysis().Run(_algorithm, _result.OrderEvents, _language);
 
-        //public IReadOnlyList<BacktestAnalysisResult> CheckPortfolioMarginUsage()
-        //    => new PortfolioMarginUsageAnalysis().Run(_api, _backtest);
+        public IReadOnlyList<BacktestAnalysisResult> CheckPortfolioMarginUsage()
+            => new PortfolioMarginUsageAnalysis().Run(_result);
 
         public IReadOnlyList<BacktestAnalysisResult> CheckParameterCount()
             => new ParameterCountAnalysis().Run(_algorithm, _language);
