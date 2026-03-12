@@ -18,6 +18,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Deedle;
 using MathNet.Numerics.Distributions;
+using MathNet.Numerics.Statistics;
 using QuantConnect.Lean.Engine.Results.Analysis.Utils;
 
 namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
@@ -29,33 +30,26 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
     /// </summary>
     public class StatisticalSignificanceOfDailyReturnsAnalysis : BaseBacktestAnalysis
     {
-        public IReadOnlyList<BacktestAnalysisResult> Run(
-            Series<DateTime, double> backtestEquity,
-            Series<DateTime, double> benchmarkEquity)
+        public IReadOnlyList<BacktestAnalysisResult> Run(SortedList<DateTime, decimal> backtestEquity,
+            SortedList<DateTime, decimal> benchmarkEquity)
         {
-            var backtestReturns = backtestEquity.PctChange();
-            var benchmarkReturns = benchmarkEquity.PctChange();
+            var backtestReturns = backtestEquity.PercentChange();
+            var benchmarkReturns = benchmarkEquity.PercentChange();
 
             // Excess daily returns (drop the first NaN row)
-            var backtestKeys = backtestReturns.Keys.ToArray();
-            var backtestVals = backtestReturns.Values.ToArray();
-            var benchmarkDict = benchmarkReturns.Keys
-                .Zip(benchmarkReturns.Values)
-                .ToDictionary(t => t.First, t => t.Second);
-
-            var excess = backtestKeys
-                .Skip(1)   // mirrors pct_change()[1:]
-                .Where(k => benchmarkDict.ContainsKey(k))
-                .Select(k => benchmarkDict.TryGetValue(k, out var bv)
-                    ? backtestVals[Array.IndexOf(backtestKeys, k)] - bv
+            var excess = backtestReturns.Keys
+                .Skip(1)   // mirrors PercentChange()[1:]
+                .Where(benchmarkReturns.ContainsKey)
+                .Select(k => benchmarkReturns.TryGetValue(k, out var bv)
+                    ? (double)(backtestReturns[k] - bv)
                     : double.NaN)
                 .Where(v => !double.IsNaN(v))
                 .ToArray();
 
-            double pValue = OneSampleTAnalysis(excess, 0.0);
-            pValue /= 2; // one-tailed (positive direction)
+            var pValue = OneSampleTAnalysis(excess, 0.0);
+            pValue /= 2.0; // one-tailed (positive direction)
 
-            object? result = pValue > 0.05 ? new { pValue } : null;
+            var result = pValue > 0.05 ? new { pValue } : null;
             var potentialSolutions = result is not null ? PotentialSolutions() : [];
             return SingleResponse(new BacktestAnalysysContext(result), potentialSolutions);
         }
@@ -66,26 +60,22 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
         /// </summary>
         private static double OneSampleTAnalysis(double[] sample, double popmean)
         {
-            if (sample.Length < 2) return 1.0;
+            if (sample.Length < 2)
+            {
+                return 1.0;
+            }
 
-            double mean = sample.Average();
-            double diff = mean - popmean;
-            double stdErr = SampleStdDev(sample) / Math.Sqrt(sample.Length);
+            var mean = sample.Mean();
+            var diff = mean - popmean;
+            var stdErr = sample.StandardDeviation() / Math.Sqrt(sample.Length);
             if (stdErr == 0) return 1.0;
 
-            double t = diff / stdErr;
-            int df = sample.Length - 1;
+            var t = diff / stdErr;
+            var df = sample.Length - 1;
             var dist = new StudentT(0, 1, df);
 
             // Two-tailed p-value
             return 2.0 * dist.CumulativeDistribution(-Math.Abs(t));
-        }
-
-        private static double SampleStdDev(double[] data)
-        {
-            double mean = data.Average();
-            double sum = data.Sum(v => (v - mean) * (v - mean));
-            return Math.Sqrt(sum / (data.Length - 1));
         }
 
         private static List<string> PotentialSolutions() =>

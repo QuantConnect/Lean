@@ -4559,6 +4559,19 @@ namespace QuantConnect
         }
 
         /// <summary>
+        /// Returns a new sorted list of (v[i] / v[i-1] - 1) values. The first key is dropped.
+        /// </summary>
+        public static SortedList<DateTime, decimal> PercentChange(this SortedList<DateTime, decimal> values)
+        {
+            var result = new SortedList<DateTime, decimal>();
+            foreach (var (current, previous) in values.Skip(1).Zip(values, (current, previous) => (current, previous)))
+            {
+                result.Add(current.Key, current.Value / previous.Value - 1);
+            }
+            return result;
+        }
+
+        /// <summary>
         /// Gets the greatest common divisor of two numbers
         /// </summary>
         private static int GreatestCommonDivisor(int a, int b)
