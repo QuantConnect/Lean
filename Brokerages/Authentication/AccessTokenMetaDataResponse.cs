@@ -13,42 +13,23 @@
  * limitations under the License.
 */
 
-using System;
 using QuantConnect.Api;
 
 namespace QuantConnect.Brokerages.Authentication
 {
     /// <summary>
-    /// Represents a response containing metadata about an access token issued by Lean.
+    /// Represents a response containing the access token metadata returned by the Lean platform.
     /// </summary>
-    public abstract class AccessTokenMetaDataResponse : RestResponse
+    public class AccessTokenMetaDataResponse : RestResponse
     {
         /// <summary>
-        /// Gets the access token provided by Lean.
+        /// Gets or sets the access token provided by the Lean platform.
         /// </summary>
-        public string AccessToken { get; }
+        public string AccessToken { get; set; }
 
         /// <summary>
-        /// Gets the type of the token (e.g., "Bearer").
+        /// Gets or sets the type of the token (e.g., "Bearer").
         /// </summary>
-        public TokenType TokenType { get; }
-
-        /// <summary>
-        /// Gets the UTC expiration timestamp of the access token, with a 1-minute safety buffer applied.
-        /// </summary>
-        public DateTime Expiration { get; protected set; }
-
-        /// <summary>
-        /// Initializes a new instance of the <see cref="AccessTokenMetaDataResponse"/> class.
-        /// </summary>
-        /// <param name="accessToken">The access token string provided by the authentication service.</param>
-        /// <param name="tokenType">The type of the token (e.g., Bearer).</param>
-        /// <param name="expires">The expiration time of the access token (in UTC), with safety buffer applied.</param>
-        protected AccessTokenMetaDataResponse(string accessToken, TokenType tokenType, DateTime expires)
-        {
-            AccessToken = accessToken;
-            TokenType = tokenType;
-            Expiration = expires;
-        }
+        public TokenType TokenType { get; set; }
     }
 }

@@ -19,9 +19,10 @@ using Newtonsoft.Json.Serialization;
 namespace QuantConnect.Brokerages.Authentication
 {
     /// <summary>
-    /// Represents the base request for obtaining an access token, including brokerage and account information.
+    /// Represents a Lean platform token request, including all fields required by the
+    /// <c>live/auth0/refresh</c> endpoint. Optional fields are omitted from JSON when null.
     /// </summary>
-    public abstract class AccessTokenMetaDataRequest
+    public class LeanAccessTokenMetaDataRequest
     {
         /// <summary>
         /// Gets the name of the brokerage associated with the access token request.
@@ -30,25 +31,47 @@ namespace QuantConnect.Brokerages.Authentication
         public string Brokerage { get; }
 
         /// <summary>
-        /// Gets the account identifier (e.g., account number) associated with the brokerage.
+        /// Gets the account identifier associated with the brokerage.
         /// </summary>
         public string AccountId { get; }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="AccessTokenMetaDataRequest"/> class.
+        /// Gets the OAuth refresh token used to obtain a new access token.
+        /// Omitted from JSON when null.
         /// </summary>
-        /// <param name="brokerage">The name of the brokerage making the request. Will be normalized to lowercase.</param>
-        /// <param name="accountId">The account number or identifier associated with the brokerage.</param>
-        protected AccessTokenMetaDataRequest(string brokerage, string accountId)
+        public string RefreshToken { get; }
+
+        /// <summary>
+        /// Gets the Lean deploy identifier for brokerages that require it.
+        /// Omitted from JSON when null.
+        /// </summary>
+        public string DeployId { get; }
+
+        /// <summary>
+        /// Initializes a new instance of <see cref="LeanAccessTokenMetaDataRequest"/> with all fields.
+        /// Use named parameters to supply only the fields required by the target brokerage.
+        /// </summary>
+        /// <param name="brokerage">The brokerage name. Normalized to lowercase.</param>
+        /// <param name="accountId">The account number or identifier.</param>
+        /// <param name="refreshToken">OAuth refresh token; omitted from JSON when null.</param>
+        /// <param name="deployId">Lean deploy identifier; omitted from JSON when null.</param>
+        public LeanAccessTokenMetaDataRequest(
+            string brokerage,
+            string accountId,
+            string refreshToken = null,
+            string deployId = null)
         {
 #pragma warning disable CA1308 // Normalize strings to uppercase
             Brokerage = brokerage.ToLowerInvariant();
 #pragma warning restore CA1308 // Normalize strings to uppercase
             AccountId = accountId;
+            RefreshToken = refreshToken;
+            DeployId = deployId;
         }
 
         /// <summary>
-        /// Serializes the request into a compact JSON string with camelCase property naming.
+        /// Serializes the request into a compact camelCase JSON string.
+        /// Null properties are excluded from the output.
         /// </summary>
         /// <returns>A JSON string representing the current request.</returns>
         public string ToJson()
@@ -56,6 +79,7 @@ namespace QuantConnect.Brokerages.Authentication
             return JsonConvert.SerializeObject(this, new JsonSerializerSettings()
             {
                 ContractResolver = new CamelCasePropertyNamesContractResolver(),
+                NullValueHandling = NullValueHandling.Ignore,
                 Formatting = Formatting.None
             });
         }

@@ -329,21 +329,22 @@ namespace QuantConnect.Brokerages
         }
 
         /// <summary>
-        /// Creates an <see cref="OAuthTokenHandler{TRequest,TResponse}"/> and automatically wires it so that
+        /// Creates an <see cref="OAuthTokenHandler"/> and automatically wires it so that
         /// authentication failures trigger a brokerage error message, causing Lean to shut down gracefully.
         /// </summary>
-        /// <typeparam name="TRequest">The request type used to acquire the access token.</typeparam>
-        /// <typeparam name="TResponse">The response type containing access token metadata.</typeparam>
         /// <param name="apiClient">The API client used to communicate with the Lean platform.</param>
-        /// <param name="modelRequest">The request model used to generate the access token.</param>
-        /// <returns>A configured <see cref="OAuthTokenHandler{TRequest,TResponse}"/> instance.</returns>
-        protected OAuthTokenHandler<TRequest, TResponse> CreateOAuthTokenHandler<TRequest, TResponse>(ApiConnection apiClient, TRequest modelRequest)
-            where TRequest : AccessTokenMetaDataRequest
-            where TResponse : AccessTokenMetaDataResponse
+        /// <param name="request">The request model used to generate the access token.</param>
+        /// <param name="tokenLifetime">
+        /// The expected lifetime of a fetched token. A 1-minute safety buffer is applied before expiry.
+        /// Must be provided explicitly — each brokerage has a different token lifetime.
+        /// </param>
+        /// <returns>A configured <see cref="OAuthTokenHandler"/> instance.</returns>
+        protected OAuthTokenHandler CreateOAuthTokenHandler(ApiConnection apiClient, LeanAccessTokenMetaDataRequest request,
+            TimeSpan tokenLifetime)
         {
-            var handler = new OAuthTokenHandler<TRequest, TResponse>(apiClient, modelRequest);
+            var handler = new OAuthTokenHandler(apiClient, request, tokenLifetime);
             handler.AuthenticationFailed += (_, ex) =>
-                OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Error, "authentication-failed", ex.Message));
+                OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Error, "OAuthenticationFailed", ex.Message));
             return handler;
         }
 

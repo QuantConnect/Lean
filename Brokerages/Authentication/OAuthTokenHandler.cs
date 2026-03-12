@@ -23,11 +23,7 @@ namespace QuantConnect.Brokerages.Authentication
     /// Handles OAuth token retrieval and caching by interacting with the Lean platform.
     /// Implements retry and expiration logic for secure HTTP communication.
     /// </summary>
-    /// <typeparam name="TRequest">The request type used to acquire the access token.</typeparam>
-    /// <typeparam name="TResponse">The response type containing access token metadata.</typeparam>
-    public sealed class OAuthTokenHandler<TRequest, TResponse> : TokenHandler
-        where TRequest : AccessTokenMetaDataRequest
-        where TResponse : AccessTokenMetaDataResponse
+    public sealed class OAuthTokenHandler : TokenHandler
     {
         /// <summary>
         /// The maximum number of retry attempts when fetching an access token.
@@ -50,10 +46,10 @@ namespace QuantConnect.Brokerages.Authentication
         private readonly string _jsonBodyRequest;
 
         /// <summary>
-        /// Stores metadata about the Lean access token and its expiration details.
-        /// Written inside <see cref="_lock"/>; read outside the lock via volatile fast path.
+        /// The total lifetime of a fetched token, used to compute the expiry timestamp.
+        /// A 1-minute safety buffer is subtracted before the token is considered expired.
         /// </summary>
-        private volatile TResponse _accessTokenMetaData;
+        private readonly TimeSpan _tokenLifetime;
 
         /// <summary>
         /// API client for communicating with the Lean platform.
@@ -62,18 +58,32 @@ namespace QuantConnect.Brokerages.Authentication
 
         /// <summary>
         /// Stores the current access token and its type used for authenticating requests to the Lean platform.
+        /// Written inside <see cref="_lock"/>; read outside the lock via volatile fast path.
         /// </summary>
-        private TokenCredentials _tokenCredentials;
+        private volatile TokenCredentials _tokenCredentials;
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="OAuthTokenHandler{TRequest, TResponse}"/> class.
+        /// The UTC timestamp after which the cached token should be refreshed.
+        /// Always written inside <see cref="_lock"/> before <see cref="_tokenCredentials"/> is set,
+        /// so that a volatile read of <see cref="_tokenCredentials"/> guarantees visibility of this field.
+        /// </summary>
+        private DateTime _tokenExpiresAt;
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="OAuthTokenHandler"/> class.
         /// </summary>
         /// <param name="apiClient">The API client used to communicate with the Lean platform.</param>
-        /// <param name="modelRequest">The request model used to generate the access token.</param>
-        public OAuthTokenHandler(ApiConnection apiClient, TRequest modelRequest)
+        /// <param name="request">The request model used to generate the access token.</param>
+        /// <param name="tokenLifetime">
+        /// The expected lifetime of a fetched token. A 1-minute safety buffer is applied before expiry.
+        /// Must be provided explicitly — each brokerage has a different token lifetime.
+        /// </param>
+        public OAuthTokenHandler(ApiConnection apiClient, LeanAccessTokenMetaDataRequest request,
+            TimeSpan tokenLifetime)
         {
             _apiClient = apiClient;
-            _jsonBodyRequest = modelRequest.ToJson();
+            _jsonBodyRequest = request.ToJson();
+            _tokenLifetime = tokenLifetime;
         }
 
         /// <summary>
@@ -86,7 +96,7 @@ namespace QuantConnect.Brokerages.Authentication
         public override TokenCredentials GetAccessToken(CancellationToken cancellationToken)
         {
             // Fast path: return cached token without acquiring the lock
-            if (_accessTokenMetaData != null && DateTime.UtcNow < _accessTokenMetaData.Expiration)
+            if (_tokenCredentials != null && DateTime.UtcNow < _tokenExpiresAt)
             {
                 return _tokenCredentials;
             }
@@ -94,7 +104,7 @@ namespace QuantConnect.Brokerages.Authentication
             lock (_lock)
             {
                 // Second check: another thread may have refreshed while we waited for the lock
-                if (_accessTokenMetaData != null && DateTime.UtcNow < _accessTokenMetaData.Expiration)
+                if (_tokenCredentials != null && DateTime.UtcNow < _tokenExpiresAt)
                 {
                     return _tokenCredentials;
                 }
@@ -105,17 +115,19 @@ namespace QuantConnect.Brokerages.Authentication
                     {
                         using var request = ApiUtils.CreateJsonPostRequest("live/auth0/refresh", _jsonBodyRequest);
 
-                        if (_apiClient.TryRequest<TResponse>(request, out var response))
+                        if (_apiClient.TryRequest<AccessTokenMetaDataResponse>(request, out var response))
                         {
                             if (response.Success && !string.IsNullOrEmpty(response.AccessToken))
                             {
-                                _accessTokenMetaData = response;
+                                // Write expiry before credentials — the volatile write of _tokenCredentials
+                                // acts as a release fence, ensuring the fast-path reader sees _tokenExpiresAt.
+                                _tokenExpiresAt = DateTime.UtcNow + _tokenLifetime - TimeSpan.FromMinutes(1);
                                 _tokenCredentials = new(response.TokenType, response.AccessToken);
                                 return _tokenCredentials;
                             }
                         }
 
-                        Logging.Log.Error($"{nameof(OAuthTokenHandler<TRequest, TResponse>)}.{nameof(GetAccessToken)}: Failed to retrieve access token. Response: {response}. Last known expiration: {_accessTokenMetaData?.Expiration.ToStringInvariant() ?? "Not requested yet"}.");
+                        Logging.Log.Error($"{nameof(OAuthTokenHandler)}.{nameof(GetAccessToken)}: Failed to retrieve access token. Response: {response}. Last known expiry: {_tokenExpiresAt.ToStringInvariant()}.");
                         throw new InvalidOperationException($"Authentication failed. " +
                             $"Details: {(response?.Errors?.Count > 0 ? string.Join(",", response.Errors) : "empty")}");
                     }
@@ -124,7 +136,7 @@ namespace QuantConnect.Brokerages.Authentication
                         if (cancellationToken.WaitHandle.WaitOne(_retryInterval))
                         {
                             throw new OperationCanceledException(
-                                $"{nameof(OAuthTokenHandler<TRequest, TResponse>)}.{nameof(GetAccessToken)}: Token fetch canceled during wait.",
+                                $"{nameof(OAuthTokenHandler)}.{nameof(GetAccessToken)}: Token fetch canceled during wait.",
                                 cancellationToken);
                         }
                     }
@@ -136,7 +148,7 @@ namespace QuantConnect.Brokerages.Authentication
                 }
 
                 // Unreachable — the loop always returns or throws
-                throw new InvalidOperationException($"{nameof(OAuthTokenHandler<TRequest, TResponse>)}.{nameof(GetAccessToken)}: Unexpected state in token retry loop.");
+                throw new InvalidOperationException($"{nameof(OAuthTokenHandler)}.{nameof(GetAccessToken)}: Unexpected state in token retry loop.");
             }
         }
     }
