@@ -31,6 +31,8 @@ namespace QuantConnect.Securities
         /// </remarks>
         private SymbolPropertiesHolder _properties;
 
+        private decimal? _contractMultiplier;
+
         /// <summary>
         /// The description of the security
         /// </summary>
@@ -46,8 +48,16 @@ namespace QuantConnect.Securities
         /// </summary>
         public virtual decimal ContractMultiplier
         {
-            get => _properties.ContractMultiplier;
+            get => _contractMultiplier ?? _properties.ContractMultiplier;
             internal set => _properties.ContractMultiplier = value;
+        }
+
+        /// <summary>
+        /// Sets a custom contract multiplier that persists through symbol properties database updates
+        /// </summary>
+        internal void SetContractMultiplier(decimal multiplier)
+        {
+            _contractMultiplier = multiplier;
         }
 
         /// <summary>
