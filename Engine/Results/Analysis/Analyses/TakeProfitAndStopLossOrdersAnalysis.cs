@@ -19,23 +19,59 @@ using QuantConnect.Orders;
 
 namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
 {
-    // ── Sub-test 1: both TP and SL filled ────────────────────────────────────────
-
-    internal class TakeProfitAndStopLossBothFilledAnalysis : BaseBacktestAnalysis
+    /// <summary>
+    /// Detects TP/SL order pairs where both filled, or where the surviving leg
+    /// was not cancelled when the other filled.
+    /// </summary>
+    public class TakeProfitAndStopLossOrdersAnalysis : BaseBacktestAnalysis
     {
-        public IReadOnlyList<BacktestAnalysisResult> Run(List<List<Order>> combos, Language language)
+        private static readonly OrderType[] TpTypes = [OrderType.Limit, OrderType.LimitIfTouched];
+
+        private static readonly OrderType[] SlTypes = [OrderType.StopMarket, OrderType.TrailingStop, OrderType.StopLimit];
+
+        private static readonly ISubAnalysis[] SubAnalyses =
+        [
+            new TakeProfitAndStopLossBothFilledAnalysis(),
+            new TakeProfitOrStopLossNotCanceledAnalysis(),
+        ];
+
+        public IReadOnlyList<BacktestAnalysisResult> Run(ICollection<Order> orders, Language language)
         {
-            var result = combos
-                .Where(orders => orders.All(o => o.Status == OrderStatus.Filled))
+            // Group orders by (symbol, quantity, created_time) – the TP/SL fingerprint.
+            var combos = orders
+                .GroupBy(o => (o.Symbol, o.Quantity, o.CreatedTime))
+                .Select(g => g.Take(2).ToList())
+                .Where(g => g.Count == 2)
+                .Where(g =>
+                    g.Any(o => TpTypes.Contains(o.Type)) &&
+                    g.Any(o => SlTypes.Contains(o.Type)))
                 .ToList();
 
-            var potentialSolutions = result.Count > 0 ? PotentialSolutions(language) : [];
-            return SingleResponse(new BacktestAnalysysRepeatedContext(result), potentialSolutions);
+            return CreateAggregatedResponse(SubAnalyses.SelectMany(x => x.Run(combos, language)));
         }
 
-        private static List<string> PotentialSolutions(Language language) =>
-        [
-            "There are some cases where both TP and SL orders filled, which can lead to an unintended position. " +
+        private interface ISubAnalysis
+        {
+            public IReadOnlyList<BacktestAnalysisResult> Run(List<List<Order>> combos, Language language);
+        }
+
+        // ── Sub-analysis 1: both TP and SL filled ────────────────────────────────────────
+
+        private class TakeProfitAndStopLossBothFilledAnalysis : BaseBacktestAnalysis, ISubAnalysis
+        {
+            public IReadOnlyList<BacktestAnalysisResult> Run(List<List<Order>> combos, Language language)
+            {
+                var result = combos
+                    .Where(orders => orders.All(o => o.Status == OrderStatus.Filled))
+                    .ToList();
+
+                var potentialSolutions = result.Count > 0 ? PotentialSolutions(language) : [];
+                return SingleResponse(new BacktestAnalysysRepeatedContext(result), potentialSolutions);
+            }
+
+            private static List<string> PotentialSolutions(Language language) =>
+            [
+                "There are some cases where both TP and SL orders filled, which can lead to an unintended position. " +
             "To avoid this issue, try increasing the data resolution.",
 
             "Set the take profit and stop loss orders further away from the current market price.",
@@ -84,41 +120,41 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
                   ```
                   """),
         ];
-    }
-
-    // ── Sub-test 2: filled order's counterpart was not (or too late) cancelled ───
-
-    internal class TakeProfitOrStopLossNotCanceledAnalysis : BaseBacktestAnalysis
-    {
-        public IReadOnlyList<BacktestAnalysisResult> Run(List<List<Order>> combos, Language language)
-        {
-            var result = new List<object>();
-
-            foreach (var orders in combos)
-            {
-                var filledOrders = orders.Where(o => o.Status == OrderStatus.Filled).ToList();
-                // both-filled case handled separately
-                if (filledOrders.Count != 1)
-                {
-                    continue;
-                }
-
-                var filledOrder = filledOrders[0];
-                var cancelledOrders = orders.Where(o => o.Status == OrderStatus.Canceled).ToList();
-
-                if (cancelledOrders.Count == 0 || cancelledOrders[0].CanceledTime != filledOrder.LastFillTime)
-                {
-                    result.Add(orders);
-                }
-            }
-
-            var potentialSolutions = result.Count > 0 ? PotentialSolutions(language) : [];
-            return SingleResponse(new BacktestAnalysysRepeatedContext(result), potentialSolutions);
         }
 
-        private static List<string> PotentialSolutions(Language language) =>
-        [
-            "There are some cases where one of the TP/SL orders fills and the other one is left idle in the market. " +
+        // ── Sub-analysis 2: filled order's counterpart was not (or too late) cancelled ───
+
+        private class TakeProfitOrStopLossNotCanceledAnalysis : BaseBacktestAnalysis, ISubAnalysis
+        {
+            public IReadOnlyList<BacktestAnalysisResult> Run(List<List<Order>> combos, Language language)
+            {
+                var result = new List<object>();
+
+                foreach (var orders in combos)
+                {
+                    var filledOrders = orders.Where(o => o.Status == OrderStatus.Filled).ToList();
+                    // both-filled case handled separately
+                    if (filledOrders.Count != 1)
+                    {
+                        continue;
+                    }
+
+                    var filledOrder = filledOrders[0];
+                    var cancelledOrders = orders.Where(o => o.Status == OrderStatus.Canceled).ToList();
+
+                    if (cancelledOrders.Count == 0 || cancelledOrders[0].CanceledTime != filledOrder.LastFillTime)
+                    {
+                        result.Add(orders);
+                    }
+                }
+
+                var potentialSolutions = result.Count > 0 ? PotentialSolutions(language) : [];
+                return SingleResponse(new BacktestAnalysysRepeatedContext(result), potentialSolutions);
+            }
+
+            private static List<string> PotentialSolutions(Language language) =>
+            [
+                "There are some cases where one of the TP/SL orders fills and the other one is left idle in the market. " +
             "To avoid dangling orders that can lead to unindended positions, immediately cancel one of the orders when the other one fills.\n" +
             (language == Language.Python
                 ? """
@@ -166,43 +202,6 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
                   ```
                   """),
         ];
-    }
-
-    // ── Orchestrator ──────────────────────────────────────────────────────────────
-
-    /// <summary>
-    /// Detects TP/SL order pairs where both filled, or where the surviving leg
-    /// was not cancelled when the other filled.
-    /// </summary>
-    public class TakeProfitAndStopLossOrdersAnalysis : BaseBacktestAnalysis
-    {
-        private static readonly OrderType[] TpTypes = [OrderType.Limit, OrderType.LimitIfTouched];
-
-        private static readonly OrderType[] SlTypes = [OrderType.StopMarket, OrderType.TrailingStop, OrderType.StopLimit];
-
-        private static readonly BaseBacktestAnalysis[] SubTests =
-        [
-            new TakeProfitAndStopLossBothFilledAnalysis(),
-            new TakeProfitOrStopLossNotCanceledAnalysis(),
-        ];
-
-        public IReadOnlyList<BacktestAnalysisResult> Run(ICollection<Order> orders, Language language)
-        {
-            // Group orders by (symbol, quantity, created_time) – the TP/SL fingerprint.
-            var combos = orders
-                .GroupBy(o => (o.Symbol, o.Quantity, o.CreatedTime))
-                .Select(g => g.Take(2).ToList())
-                .Where(g => g.Count == 2)
-                .Where(g =>
-                    g.Any(o => TpTypes.Contains(o.Type)) &&
-                    g.Any(o => SlTypes.Contains(o.Type)))
-                .ToList();
-
-            return CreateAggregatedResponse(
-                SubTests.SelectMany(t =>
-                    t is TakeProfitAndStopLossBothFilledAnalysis bt
-                        ? bt.Run(combos, language)
-                        : ((TakeProfitOrStopLossNotCanceledAnalysis)t).Run(combos, language)));
         }
     }
 }
