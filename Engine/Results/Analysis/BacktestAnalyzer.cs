@@ -70,7 +70,7 @@ namespace QuantConnect.Lean.Engine.Results.Analysis
                 CheckOptionOrderOnStockSplitOrderResponseError,
                 CheckMarketOnOpenNotAllowedDuringRegularHoursOrderResponseError,
                 CheckInsightsEmittedForDelistedSecurities,
-                //CheckTakeProfitAndStopLossOrders,
+                CheckTakeProfitAndStopLossOrders,
                 CheckMarginCalls,
                 CheckExecutionSpeed,
                 CheckStaleOrderFills,
@@ -82,7 +82,6 @@ namespace QuantConnect.Lean.Engine.Results.Analysis
                 CheckPerformanceRelativeToBenchmark,
                 CheckMonteCarloPercentile,
             };
-            //var tests = new List<Func<IReadOnlyList<BacktestAnalysisResult>>>();
 
             var responses = new List<BacktestAnalysisResult>();
             var startTime = DateTime.UtcNow;
@@ -166,8 +165,8 @@ namespace QuantConnect.Lean.Engine.Results.Analysis
         public IReadOnlyList<BacktestAnalysisResult> CheckInsightsEmittedForDelistedSecurities()
             => new InsightsEmittedForDelistedSecuritiesAnalysis().Run(_logs, _language);
 
-        //public IReadOnlyList<BacktestAnalysisResult> CheckTakeProfitAndStopLossOrders()
-        //    => new TakeProfitAndStopLossOrdersAnalysis().Run(_result.Orders.Values.ToList(), _language);
+        public IReadOnlyList<BacktestAnalysisResult> CheckTakeProfitAndStopLossOrders()
+            => new TakeProfitAndStopLossOrdersAnalysis().Run(_result.Orders.Values, _language);
 
         public IReadOnlyList<BacktestAnalysisResult> CheckMarginCalls()
             => new MarginCallsAnalysis().Run(_logs, _language);

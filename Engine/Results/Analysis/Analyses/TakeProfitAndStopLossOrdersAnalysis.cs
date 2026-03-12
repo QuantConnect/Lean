@@ -16,7 +16,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using QuantConnect.Orders;
-using QuantConnect.Lean.Engine.Results.Analysis.Utils;
 
 namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
 {
@@ -24,13 +23,11 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
 
     internal class TakeProfitAndStopLossBothFilledAnalysis : BaseBacktestAnalysis
     {
-        public IReadOnlyList<BacktestAnalysisResult> Run(
-            List<List<Order>> combos, Language language)
+        public IReadOnlyList<BacktestAnalysisResult> Run(List<List<Order>> combos, Language language)
         {
             var result = combos
-                .Where(orders => orders.Count(o => o.Status == OrderStatus.Filled) > 1)
-                .Select(orders => orders.Select(OrdersReader.ParseOrder).ToList())
-                .ToList<object>();
+                .Where(orders => orders.All(o => o.Status == OrderStatus.Filled))
+                .ToList();
 
             var potentialSolutions = result.Count > 0 ? PotentialSolutions(language) : [];
             return SingleResponse(new BacktestAnalysysRepeatedContext(result), potentialSolutions);
@@ -93,28 +90,26 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
 
     internal class TakeProfitOrStopLossNotCanceledAnalysis : BaseBacktestAnalysis
     {
-        public IReadOnlyList<BacktestAnalysisResult> Run(
-            List<List<Order>> combos, Language language)
+        public IReadOnlyList<BacktestAnalysisResult> Run(List<List<Order>> combos, Language language)
         {
             var result = new List<object>();
 
             foreach (var orders in combos)
             {
                 var filledOrders = orders.Where(o => o.Status == OrderStatus.Filled).ToList();
-                if (filledOrders.Count != 1) continue; // both-filled case handled separately
+                // both-filled case handled separately
+                if (filledOrders.Count != 1)
+                {
+                    continue;
+                }
 
                 var filledOrder = filledOrders[0];
                 var cancelledOrders = orders.Where(o => o.Status == OrderStatus.Canceled).ToList();
 
-                if (cancelledOrders.Count == 0)
+                if (cancelledOrders.Count == 0 || cancelledOrders[0].CanceledTime != filledOrder.LastFillTime)
                 {
-                    result.Add(orders.Select(OrdersReader.ParseOrder).ToList());
-                    continue;
+                    result.Add(orders);
                 }
-
-                var cancelledOrder = cancelledOrders[0];
-                if (cancelledOrder.CanceledTime != filledOrder.LastFillTime)
-                    result.Add(orders.Select(OrdersReader.ParseOrder).ToList());
             }
 
             var potentialSolutions = result.Count > 0 ? PotentialSolutions(language) : [];
@@ -181,11 +176,9 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
     /// </summary>
     public class TakeProfitAndStopLossOrdersAnalysis : BaseBacktestAnalysis
     {
-        private static readonly OrderType[] TpTypes =
-            [OrderType.Limit, OrderType.LimitIfTouched];
+        private static readonly OrderType[] TpTypes = [OrderType.Limit, OrderType.LimitIfTouched];
 
-        private static readonly OrderType[] SlTypes =
-            [OrderType.StopMarket, OrderType.TrailingStop, OrderType.StopLimit];
+        private static readonly OrderType[] SlTypes = [OrderType.StopMarket, OrderType.TrailingStop, OrderType.StopLimit];
 
         private static readonly BaseBacktestAnalysis[] SubTests =
         [
@@ -193,12 +186,12 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
             new TakeProfitOrStopLossNotCanceledAnalysis(),
         ];
 
-        public IReadOnlyList<BacktestAnalysisResult> Run(List<Order> orders, Language language)
+        public IReadOnlyList<BacktestAnalysisResult> Run(ICollection<Order> orders, Language language)
         {
             // Group orders by (symbol, quantity, created_time) – the TP/SL fingerprint.
             var combos = orders
                 .GroupBy(o => (o.Symbol, o.Quantity, o.CreatedTime))
-                .Select(g => g.ToList())
+                .Select(g => g.Take(2).ToList())
                 .Where(g => g.Count == 2)
                 .Where(g =>
                     g.Any(o => TpTypes.Contains(o.Type)) &&
