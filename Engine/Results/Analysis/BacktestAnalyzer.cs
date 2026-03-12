@@ -79,8 +79,8 @@ namespace QuantConnect.Lean.Engine.Results.Analysis
                 CheckParameterCount,
                 CheckCrisisEvents,
                 CheckStatisticalSignificanceOfDailyReturns,
-                //CheckPerformanceRelativeToBenchmark,
-                //CheckMonteCarloPercentile,
+                CheckPerformanceRelativeToBenchmark,
+                CheckMonteCarloPercentile,
             };
             //var tests = new List<Func<IReadOnlyList<BacktestAnalysisResult>>>();
 
@@ -193,10 +193,10 @@ namespace QuantConnect.Lean.Engine.Results.Analysis
         public IReadOnlyList<BacktestAnalysisResult> CheckStatisticalSignificanceOfDailyReturns()
             => new StatisticalSignificanceOfDailyReturnsAnalysis().Run(_equityCurve, _benchmarkEquityCurve);
 
-        //public IReadOnlyList<BacktestAnalysisResult> CheckPerformanceRelativeToBenchmark()
-        //    => new PerformanceRelativeToBenchmark().Run(_algorithm, _equityCurve, _benchmarkEquityCurve);
+        public IReadOnlyList<BacktestAnalysisResult> CheckPerformanceRelativeToBenchmark()
+            => new PerformanceRelativeToBenchmark().Run(_algorithm, _equityCurve, _benchmarkEquityCurve);
 
-        //public IReadOnlyList<BacktestAnalysisResult> CheckMonteCarloPercentile()
-        //    => new MonteCarloPercentile().Run(_equityCurve);
+        public IReadOnlyList<BacktestAnalysisResult> CheckMonteCarloPercentile()
+            => new MonteCarloPercentile().Run(_equityCurve);
     }
 }

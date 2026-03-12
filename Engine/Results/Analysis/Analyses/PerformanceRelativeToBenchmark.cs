@@ -13,46 +13,33 @@
  * limitations under the License.
  *
 */
-//using System;
-//using System.Collections.Generic;
-//using System.Linq;
-//using Deedle;
-//using QuantConnect;
-//using QuantConnect.Research;
-//using BacktestAnalyzerrr.Utils;
+using System;
+using System.Collections.Generic;
+using QuantConnect.Algorithm;
 
-//namespace BacktestAnalyzerrr.Tests;
+namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
+{
+    /// <summary>Compares the full-period Sharpe ratio of the strategy to the benchmark.</summary>
+    public class PerformanceRelativeToBenchmark : BaseBacktestAnalysis
+    {
+        public IReadOnlyList<BacktestAnalysisResult> Run(QCAlgorithm algorithm, SortedList<DateTime, decimal> backtestEquity,
+            SortedList<DateTime, decimal> benchmarkEquity)
+        {
+            var (backtestSharpe, benchmarkSharpe) = CrisisEventsAnalysis.CalculateSharpeRatio(backtestEquity, benchmarkEquity, 
+                algorithm.RiskFreeInterestRateModel);
 
-///// <summary>Compares the full-period Sharpe ratio of the strategy to the benchmark.</summary>
-//public class PerformanceRelativeToBenchmark : BacktestResultAnalysis
-//{
-//    public IReadOnlyList<TestResult> Run(
-//        QCAlgorithm qb,
-//        Series<DateTime, double> backtestEquity,
-//        Series<DateTime, double> benchmarkEquity)
-//    {
-//        var backtestReturns  = backtestEquity.PctChange();
-//        var benchmarkReturns = benchmarkEquity.PctChange();
+            var result = backtestSharpe < benchmarkSharpe
+                ? new { BacktestSharpe = backtestSharpe, BenchmarkSharpe = benchmarkSharpe }
+                : null;
 
-//        double rfr = RiskFreeInterestRateModelExtensions.GetRiskFreeRate(
-//            qb.RiskFreeInterestRateModel,
-//            backtestReturns.Keys.First(),
-//            backtestReturns.Keys.Last());
+            var potentialSolutions = result is not null ? PotentialSolutions() : [];
+            return SingleResponse(new BacktestAnalysysContext(result), potentialSolutions);
+        }
 
-//        double backtestSharpe  = Statistics.SharpeRatio(backtestReturns.Mean(),  backtestReturns.StdDev(),  rfr);
-//        double benchmarkSharpe = Statistics.SharpeRatio(benchmarkReturns.Mean(), benchmarkReturns.StdDev(), rfr);
-
-//        object? result = backtestSharpe < benchmarkSharpe
-//            ? new { BacktestSharpe = backtestSharpe, BenchmarkSharpe = benchmarkSharpe }
-//            : null;
-
-//        var potentialSolutions = result is not null ? PotentialSolutions() : [];
-//        return SingleResponse(result, potentialSolutions);
-//    }
-
-//    private static List<string> PotentialSolutions() =>
-//    [
-//        "The strategy has a lower Sharpe ratio than the benchmark. " +
-//        "Try adjusting the trading rules and/or the universe to get a strategy that outperforms the benchmark.",
-//    ];
-//}
+        private static List<string> PotentialSolutions() =>
+        [
+            "The strategy has a lower Sharpe ratio than the benchmark. " +
+            "Try adjusting the trading rules and/or the universe to get a strategy that outperforms the benchmark.",
+        ];
+    }
+}
