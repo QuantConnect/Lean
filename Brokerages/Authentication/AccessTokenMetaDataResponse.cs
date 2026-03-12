@@ -30,6 +30,6 @@ namespace QuantConnect.Brokerages.Authentication
         /// <summary>
         /// Gets or sets the type of the token (e.g., "Bearer").
         /// </summary>
-        public TokenType TokenType { get; set; }
+        public TokenType TokenType { get; set; } = TokenType.Bearer;
     }
 }

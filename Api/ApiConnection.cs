@@ -154,7 +154,7 @@ namespace QuantConnect.Api
         /// <param name="result">Result object from the </param>
         /// <param name="timeout">Timeout for the request</param>
         /// <returns>T typed object response</returns>
-        public bool TryRequest<T>(HttpRequestMessage request, out T result, TimeSpan? timeout = null)
+        public virtual bool TryRequest<T>(HttpRequestMessage request, out T result, TimeSpan? timeout = null)
             where T : RestResponse
         {
             var resultTuple = TryRequestAsync<T>(request, timeout).SynchronouslyAwaitTaskResult();
