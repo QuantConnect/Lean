@@ -77,8 +77,8 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
                 var filteredBacktest = FilterByDate(backtestEquity, startDate, endDate);
                 var filteredBenchmark = FilterByDate(benchmarkEquity, startDate, endDate);
 
-                var backtestReturns = PercentChange(filteredBacktest);
-                var benchmarkReturns = PercentChange(filteredBenchmark);
+                var backtestReturns = filteredBacktest.PercentChange().Values.Select(x => (double)x).ToArray();
+                var benchmarkReturns = filteredBenchmark.PercentChange().Values.Select(x => (double)x).ToArray();
 
                 var riskFreeRate = (double)algorithm.RiskFreeInterestRateModel.GetRiskFreeRate(startDate, endDate);
 
@@ -104,20 +104,23 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
         /// Keeps only entries whose key falls in [<paramref name="from"/>, <paramref name="to"/>].
         /// Exploits the sorted order to break early.
         /// </summary>
-        private static double[] FilterByDate(SortedList<DateTime, decimal> series, DateTime from, DateTime to)
+        private static SortedList<DateTime, decimal> FilterByDate(SortedList<DateTime, decimal> series, DateTime from, DateTime to)
         {
-            return series
-                .Where(kvp => kvp.Key >= from && kvp.Key <= to)
-                .Select(kvp => (double)kvp.Value)
-                .ToArray();
-        }
+            var result = new SortedList<DateTime, decimal>();
+            foreach (var kvp in series)
+            {
+                if (kvp.Key < from)
+                {
+                    continue;
+                }
+                if (kvp.Key > to)
+                {
+                    break;
+                }
+                result.Add(kvp.Key, kvp.Value);
+            }
 
-        /// <summary>
-        /// Returns a new sorted list of (v[i] / v[i-1] - 1) values.  The first key is dropped.
-        /// </summary>
-        public static double[] PercentChange(double[] values)
-        {
-            return values.Skip(1).Zip(values, (current, previous) => current / previous - 1).ToArray();
+            return result;
         }
 
         private static List<string> PotentialSolutions() =>
