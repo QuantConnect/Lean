@@ -15,9 +15,10 @@
 */
 using QuantConnect.Algorithm;
 using QuantConnect.Lean.Engine.Results.Analysis.Analyses;
-using QuantConnect.Lean.Engine.Results.Analysis.Utils;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
+using System.Linq;
 
 namespace QuantConnect.Lean.Engine.Results.Analysis
 {
@@ -47,7 +48,7 @@ namespace QuantConnect.Lean.Engine.Results.Analysis
         public List<BacktestAnalysisResult> RunTestChain(int timeLimitSeconds = 5, int maxFailedTests = 3)
         {
             var timingLogs = new List<string>();
-            (_equityCurve, _benchmarkEquityCurve) = Charts.ReadEquityCurve(_result, _algorithm, ref timingLogs);
+            (_equityCurve, _benchmarkEquityCurve) = ReadEquityCurve(_result, _algorithm, timingLogs);
 
             var tests = new List<Func<IReadOnlyList<BacktestAnalysisResult>>>
             {
@@ -103,6 +104,9 @@ namespace QuantConnect.Lean.Engine.Results.Analysis
             }
 
             timingLogs.Add($"{DateTime.UtcNow - startTime} - Total analysis time");
+
+            // TODO: Remove timing logs, just logs if necessary
+
             return responses;
         }
 
@@ -197,5 +201,50 @@ namespace QuantConnect.Lean.Engine.Results.Analysis
 
         public IReadOnlyList<BacktestAnalysisResult> CheckMonteCarloPercentile()
             => new MonteCarloPercentile().Run(_equityCurve);
+
+        public static (SortedList<DateTime, decimal> BacktestEquity, SortedList<DateTime, decimal> BenchmarkEquity) ReadEquityCurve(Result result, QCAlgorithm algorithm, List<string> timingLogs)
+        {
+            // ── 1. backtest equity from "Strategy Equity" chart ──────────────────
+            var timer = Stopwatch.StartNew();
+
+            SortedList<DateTime, decimal> equitySeries;
+            if (result.Charts.TryGetValue("Strategy Equity", out var chart) &&
+                chart.Series.TryGetValue("Equity", out var series))
+            {
+                equitySeries = new SortedList<DateTime, decimal>(
+                    series.Values.Cast<Candlestick>()
+                        .ToDictionary(
+                            candle => candle.Time.ConvertFromUtc(TimeZones.EasternStandard),
+                            candle => candle.Close ?? 0m));
+            }
+            else
+            {
+                equitySeries = new SortedList<DateTime, decimal>();
+            }
+
+            timingLogs.Add($"{timer.Elapsed} - Loading equity curve");
+
+            // ── 2. Benchmark from SPY history ─────────────────────────────────────
+            timer.Restart();
+            var spy = algorithm.Symbol("SPY");
+
+            timingLogs.Add($"{timer.Elapsed} - Creating SPY symbol");
+
+            algorithm.Settings.DailyPreciseEndTime = false; // ensures history bars are aligned to midnight Eastern
+            var historyStart = algorithm.StartDate - TimeSpan.FromDays(3);
+            var historyEnd = algorithm.EndDate + TimeSpan.FromDays(1);
+            var benchmarkSeries = new SortedList<DateTime, decimal>(
+                algorithm.History(spy, historyStart, historyEnd, Resolution.Daily)
+                    .ToDictionary(x => x.EndTime, x => x.Close));
+
+            timingLogs.Add($"{timer.Elapsed} - Fetching SPY history");
+
+            // ── 3. Align the two curves on the same timestamps ───────────────────
+            var commonKeys = equitySeries.Keys.Intersect(benchmarkSeries.Keys).ToHashSet();
+            var alignedEquity = new SortedList<DateTime, decimal>(equitySeries.Where(kv => commonKeys.Contains(kv.Key)).ToDictionary(kv => kv.Key, kv => kv.Value));
+            var alignedBenchmark = new SortedList<DateTime, decimal>(benchmarkSeries.Where(kv => commonKeys.Contains(kv.Key)).ToDictionary(kv => kv.Key, kv => kv.Value));
+
+            return (alignedEquity, alignedBenchmark);
+        }
     }
 }
