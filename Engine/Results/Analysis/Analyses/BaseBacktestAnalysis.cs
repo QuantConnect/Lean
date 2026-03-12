@@ -13,88 +13,16 @@
  * limitations under the License.
  *
 */
-using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Text.Json;
-using System.Text.Json.Serialization;
 
 namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
 {
-    public interface IBacktestAnalysisContext
-    {
-    }
-
-    public class BacktestAnalysysContext : IBacktestAnalysisContext
-    {
-        public object Sample { get; set; }
-
-        public BacktestAnalysysContext(object sample)
-        {
-            Sample = sample;
-        }
-    }
-
-    public class BacktestAnalysysRepeatedContext : BacktestAnalysysContext
-    {
-        public int Occurrences { get; set; }
-
-        public BacktestAnalysysRepeatedContext(IReadOnlyList<object> samples) : base(samples.Count > 0 ? samples[0] : null)
-        {
-            Occurrences = samples.Count;
-        }
-    }
-
-    public class BacktestAnalysysAggregateContext : IBacktestAnalysisContext, IEnumerable<IBacktestAnalysisContext>
-    {
-        private IReadOnlyList<IBacktestAnalysisContext> _contexts { get; set; }
-
-        public BacktestAnalysysAggregateContext(IReadOnlyList<IBacktestAnalysisContext> contexts)
-        {
-            _contexts = contexts;
-        }
-
-        public IEnumerator<IBacktestAnalysisContext> GetEnumerator()
-        {
-            return _contexts.GetEnumerator();
-        }
-
-        IEnumerator IEnumerable.GetEnumerator()
-        {
-            return GetEnumerator();
-        }
-    }
-
-    /// <summary>
-    /// Immutable result returned by every test. Mirrors the Python dict
-    /// <c>{'name': ..., 'result': ..., 'potentialSolutions': [...]}</c>.
-    /// </summary>
-    public class BacktestAnalysisResult
-    {
-        public string Name { get; set; }
-
-        public IBacktestAnalysisContext Context { get; set; }
-        
-        public List<string> PotentialSolutions { get; set; }
-
-        public BacktestAnalysisResult(string name, IBacktestAnalysisContext context, List<string> potentialSolutions)
-        {
-            Name = name;
-            Context = context;
-            PotentialSolutions = potentialSolutions;
-        }
-    }
-
-
     /// <summary>
     /// Abstract base class for all backtest diagnostic tests.
-    /// Mirrors <c>tests/base.py : BacktestResultAnalysis</c>.
     /// </summary>
     public abstract class BaseBacktestAnalysis
     {
-        // ── Factory helpers ───────────────────────────────────────────────────────
-
         protected IReadOnlyList<BacktestAnalysisResult> SingleResponse(IBacktestAnalysisContext context, List<string> potentialSolutions = null)
             => [CreateResponse(context, potentialSolutions)];
 
@@ -110,41 +38,5 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
                 .Where(x => x.PotentialSolutions.Count > 0)
                 .Select(x => new BacktestAnalysisResult(GetType().Name + " / " + x.Name, x.Context, x.PotentialSolutions))
                 .ToList();
-
-        // ── Pretty-print ──────────────────────────────────────────────────────────
-
-        private static readonly JsonSerializerOptions JsonOptions = new()
-        {
-            WriteIndented = true,
-            DefaultIgnoreCondition = JsonIgnoreCondition.Never,
-        };
-
-        /// <summary>
-        /// Renders a list of test results as Markdown, matching the Python
-        /// <c>pretty_print()</c> output format exactly.
-        /// </summary>
-        public static string PrettyPrint(IEnumerable<BacktestAnalysisResult> results)
-        {
-            var sb = new StringBuilder();
-            foreach (var r in results)
-            {
-                sb.AppendLine($"# {r.Name}");
-                sb.AppendLine("### Result");
-                sb.AppendLine("```");
-                sb.AppendLine(JsonSerializer.Serialize(r.Context, JsonOptions));
-                sb.AppendLine("```");
-
-                if (r.PotentialSolutions.Count > 0)
-                {
-                    sb.AppendLine("### Potential Solutions");
-                    for (int i = 0; i < r.PotentialSolutions.Count; i++)
-                    {
-                        sb.AppendLine($"#### Solution {i + 1}");
-                        sb.AppendLine(r.PotentialSolutions[i]);
-                    }
-                }
-            }
-            return sb.ToString();
-        }
     }
 }

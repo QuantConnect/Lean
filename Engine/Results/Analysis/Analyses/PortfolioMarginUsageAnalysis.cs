@@ -16,7 +16,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using Deedle;
 
 namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
 {
