@@ -77,13 +77,7 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
                 var filteredBacktest = FilterByDate(backtestEquity, startDate, endDate);
                 var filteredBenchmark = FilterByDate(benchmarkEquity, startDate, endDate);
 
-                var backtestReturns = filteredBacktest.PercentChange().Values.Select(x => (double)x).ToArray();
-                var benchmarkReturns = filteredBenchmark.PercentChange().Values.Select(x => (double)x).ToArray();
-
-                var riskFreeRate = (double)algorithm.RiskFreeInterestRateModel.GetRiskFreeRate(startDate, endDate);
-
-                var backtestSharpe = Statistics.Statistics.SharpeRatio(backtestReturns.Mean(), backtestReturns.StandardDeviation(), riskFreeRate);
-                var benchmarkSharpe = Statistics.Statistics.SharpeRatio(benchmarkReturns.Mean(), benchmarkReturns.StandardDeviation(), riskFreeRate);
+                var (backtestSharpe, benchmarkSharpe) = CalculateSharpeRatio(filteredBacktest, filteredBenchmark, algorithm.RiskFreeInterestRateModel);
 
                 if (backtestSharpe < benchmarkSharpe)
                 {
@@ -102,7 +96,6 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
 
         /// <summary>
         /// Keeps only entries whose key falls in [<paramref name="from"/>, <paramref name="to"/>].
-        /// Exploits the sorted order to break early.
         /// </summary>
         private static SortedList<DateTime, decimal> FilterByDate(SortedList<DateTime, decimal> series, DateTime from, DateTime to)
         {
@@ -121,6 +114,25 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
             }
 
             return result;
+        }
+
+        internal static (double, double) CalculateSharpeRatio(SortedList<DateTime, decimal> backtest, SortedList<DateTime, decimal> benchmark,
+            IRiskFreeInterestRateModel riskFreeInterestRateModel)
+        {
+            if (backtest.Count == 0 || benchmark.Count == 0)
+            {
+                return (0, 0);
+            }
+
+            var backtestReturns = backtest.PercentChange().Values.Select(x => (double)x).ToArray();
+            var benchmarkReturns = benchmark.PercentChange().Values.Select(x => (double)x).ToArray();
+
+            var riskFreeRate = (double)riskFreeInterestRateModel.GetRiskFreeRate(backtest.First().Key, backtest.Last().Key);
+
+            var backtestSharpe = Statistics.Statistics.SharpeRatio(backtestReturns.Mean(), backtestReturns.StandardDeviation(), riskFreeRate);
+            var benchmarkSharpe = Statistics.Statistics.SharpeRatio(benchmarkReturns.Mean(), benchmarkReturns.StandardDeviation(), riskFreeRate);
+
+            return (backtestSharpe, benchmarkSharpe);
         }
 
         private static List<string> PotentialSolutions() =>

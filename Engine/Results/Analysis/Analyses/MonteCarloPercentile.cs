@@ -16,8 +16,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using Deedle;
-using QuantConnect.Lean.Engine.Results.Analysis.Utils;
 
 namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
 {
@@ -27,46 +25,53 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
     /// </summary>
     public class MonteCarloPercentile : BaseBacktestAnalysis
     {
-        public IReadOnlyList<BacktestAnalysisResult> Run(Series<DateTime, double> backtestEquity)
+        public IReadOnlyList<BacktestAnalysisResult> Run(SortedList<DateTime, decimal> backtestEquity)
         {
-            var returns = backtestEquity.PctChange().Values.ToArray(); // skip first (NaN) handled by PctChange
+            if (backtestEquity.Count == 0)
+            {
+                return SingleResponse(new BacktestAnalysysContext(null));
+            }
+
+            var returns = backtestEquity.PercentChange().Values.ToArray();
 
             var simulatedTotalReturns = RunSimulation(returns, nSims: 5);
 
             var backtestVals = backtestEquity.Values.ToArray();
-            double backtestTotalReturn = backtestVals[^1] / backtestVals[0] - 1.0;
+            var backtestTotalReturn = backtestVals[^1] / backtestVals[0] - 1m;
 
-            double percentile = simulatedTotalReturns.Count(r => r < backtestTotalReturn)
-                                / (double)simulatedTotalReturns.Length * 100.0;
+            var percentile = simulatedTotalReturns.Count(r => r < backtestTotalReturn) / simulatedTotalReturns.Length * 100m;
 
-            object? result = percentile > 90 ? new { percentile } : null;
+            var result = percentile > 90m ? new { Percentile = percentile } : null;
             var potentialSolutions = result is not null ? PotentialSolutions() : [];
             return SingleResponse(new BacktestAnalysysContext(result), potentialSolutions);
         }
 
-        private static double[] RunSimulation(double[] returns, int nSims = 5000, int blockSize = 20)
+        private static decimal[] RunSimulation(decimal[] returns, int nSims = 5000, int blockSize = 20)
         {
             var rng = new Random(42);
-            int n = returns.Length;
-            var simulatedTotalReturns = new double[nSims];
+            var n = returns.Length;
+            var nBlocks = n / blockSize + 1;
+            var simulatedTotalReturns = new decimal[nSims];
 
-            for (int sim = 0; sim < nSims; sim++)
+            for (var sim = 0; sim < nSims; sim++)
             {
-                int nBlocks = n / blockSize + 1;
-                var simReturns = new List<double>(nBlocks * blockSize);
+                var simReturns = new decimal[n];
+                var filled = 0;
 
-                for (int b = 0; b < nBlocks; b++)
+                for (var b = 0; b < nBlocks && filled < n; b++)
                 {
-                    int start = rng.Next(0, n - blockSize + 1);
-                    for (int k = start; k < start + blockSize; k++)
-                        simReturns.Add(returns[k]);
+                    var start = rng.Next(0, n - blockSize + 1);
+                    var toCopy = Math.Min(blockSize, n - filled);
+                    Array.Copy(returns, start, simReturns, filled, toCopy);
+                    filled += toCopy;
                 }
 
-                // Trim to original length then compute total return.
-                double totalReturn = 1.0;
-                for (int i = 0; i < n; i++)
-                    totalReturn *= 1.0 + simReturns[i];
-                simulatedTotalReturns[sim] = totalReturn - 1.0;
+                var totalReturn = 1m;
+                for (var i = 0; i < n; i++)
+                {
+                    totalReturn *= (1m + simReturns[i]);
+                }
+                simulatedTotalReturns[sim] = totalReturn - 1m;
             }
 
             return simulatedTotalReturns;

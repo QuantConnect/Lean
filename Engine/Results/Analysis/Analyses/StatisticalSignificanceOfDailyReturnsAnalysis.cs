@@ -49,7 +49,7 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
             var pValue = OneSampleTAnalysis(excess, 0.0);
             pValue /= 2.0; // one-tailed (positive direction)
 
-            var result = pValue > 0.05 ? new { pValue } : null;
+            var result = pValue > 0.05 ? new { PValue = pValue } : null;
             var potentialSolutions = result is not null ? PotentialSolutions() : [];
             return SingleResponse(new BacktestAnalysysContext(result), potentialSolutions);
         }
