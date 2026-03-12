@@ -106,11 +106,12 @@ namespace QuantConnect.Securities.Cfd
         }
 
         /// <summary>
-        /// Gets the contract multiplier for this CFD security
+        /// Gets or sets the contract multiplier for this CFD security
         /// </summary>
         public decimal ContractMultiplier
         {
             get { return SymbolProperties.ContractMultiplier; }
+            set { SymbolProperties.SetContractMultiplier(value); }
         }
 
         /// <summary>
