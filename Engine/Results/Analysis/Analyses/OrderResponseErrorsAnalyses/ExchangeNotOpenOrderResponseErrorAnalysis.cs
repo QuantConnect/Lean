@@ -20,7 +20,7 @@ using QuantConnect.Lean.Engine.Results.Analysis.Analyses.Messages;
 namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
 {
     /// <summary>
-    /// Detects "exchange not open" order response errors (error code -15).
+    /// Detects "exchange not open" order response errors.
     /// Returns the first sub-test that fires.
     /// </summary>
     public class ExchangeNotOpenOrderResponseErrorAnalysis : BaseBacktestAnalysis
@@ -31,13 +31,22 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
             new MOCOrderForFutureOrFOPAnalysis(),
         ];
 
+        /// <summary>
+        /// Runs the first sub-analysis that produces a match, covering exercise-while-closed
+        /// and MOC-on-Futures scenarios.
+        /// </summary>
+        /// <param name="logs">The log lines produced by the backtest.</param>
+        /// <param name="language">The programming language the algorithm is written in.</param>
+        /// <returns>The results of the first matching sub-analysis, or a single empty response when none match.</returns>
         public IReadOnlyList<BacktestAnalysisResult> Run(IReadOnlyList<string> logs, Language language)
         {
             foreach (var subTest in SubAnalyses)
             {
                 var results = subTest.Run(logs, language);
                 if (results.Any(r => r.Context is not null))
+                {
                     return results;
+                }
             }
 
             return SingleResponse(null);

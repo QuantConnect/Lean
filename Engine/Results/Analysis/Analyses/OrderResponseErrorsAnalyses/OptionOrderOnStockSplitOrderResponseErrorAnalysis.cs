@@ -20,7 +20,6 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
 {
     /// <summary>
     /// Detects Option orders placed when the underlying stock had a split.
-    /// Error code: OrderResponseErrorCode.OPTION_ORDER_ON_STOCK_SPLIT (-34)
     /// </summary>
     public class OptionOrderOnStockSplitOrderResponseErrorAnalysis : MessageAnalysis
     {

@@ -21,7 +21,6 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
 {
     /// <summary>
     /// Detects unsupported option exercise requests.
-    /// Error code: OrderResponseErrorCode.UNSUPPORTED_REQUEST_TYPE (-12)
     /// </summary>
     public class UnsupportedRequestTypeOrderResponseErrorAnalysis : MessageAnalysis
     {
@@ -39,6 +38,13 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
 
         protected override string[] ExpectedMessageText => [];
 
+        /// <summary>
+        /// Scans <paramref name="messages"/> for both short-option and excess-quantity exercise errors
+        /// and returns combined results.
+        /// </summary>
+        /// <param name="messages">The log or order event messages to scan.</param>
+        /// <param name="language">The programming language the algorithm is written in.</param>
+        /// <returns>Analysis results when either unsupported request type pattern is detected.</returns>
         public virtual IReadOnlyList<BacktestAnalysisResult> Run(IReadOnlyList<string> messages, Language language)
         {
             var shortFoundMessages = Match(messages, ShortMessageText).ToList();

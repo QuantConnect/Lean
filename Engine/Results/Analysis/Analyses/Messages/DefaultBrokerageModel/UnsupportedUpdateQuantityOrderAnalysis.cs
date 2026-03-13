@@ -18,6 +18,9 @@ using System.Collections.Generic;
 namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses.Messages.DefaultBrokerageModel
 {
 
+    /// <summary>
+    /// Detects brokerage model rejections where the order type does not allow its quantity to be updated.
+    /// </summary>
     public class UnsupportedUpdateQuantityOrderAnalysis : MessageAnalysis
     {
         protected override string[] ExpectedMessageText { get; } =

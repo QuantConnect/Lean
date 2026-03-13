@@ -19,6 +19,9 @@ using QuantConnect.Lean.Engine.Results.Analysis.Utils;
 namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses.Messages.TradierBrokerageModel
 {
 
+    /// <summary>
+    /// Detects Tradier brokerage model rejections where an extended-hours order was placed outside a valid extended trading session.
+    /// </summary>
     public class ExtendedMarketHoursTradingNotSupportedOutsideExtendedSessionAnalysis : MessageAnalysis
     {
         protected override string[] ExpectedMessageText { get; } =

@@ -18,6 +18,9 @@ using System.Collections.Generic;
 namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses.Messages.TradierBrokerageModel
 {
 
+    /// <summary>
+    /// Detects Tradier brokerage model rejections where a GTC time-in-force was used for a short-sell order.
+    /// </summary>
     public class ShortOrderIsGtcAnalysis : MessageAnalysis
     {
         protected override string[] ExpectedMessageText { get; } =

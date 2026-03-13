@@ -20,7 +20,6 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
 {
     /// <summary>
     /// Detects MarketOnClose orders submitted too early in the day.
-    /// Error code: OrderResponseErrorCode.MARKET_ON_CLOSE_ORDER_TOO_LATE (-21)
     /// </summary>
     public class MarketOnCloseOrderTooLateOrderResponseErrorAnalysis : MessageAnalysis
     {
@@ -32,8 +31,8 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
 
         protected override List<string> PotentialSolutions(Language language)
         {
-            string bufferProp = language == Language.Python ? "submission_time_buffer" : "SubmissionTimeBuffer";
-            string exampleCode = language == Language.Python
+            var bufferProp = language == Language.Python ? "submission_time_buffer" : "SubmissionTimeBuffer";
+            var exampleCode = language == Language.Python
                 ? "```\nMarketOnCloseOrder.submission_time_buffer = timedelta(minutes=10)\n```"
                 : "```\nOrders.MarketOnCloseOrder.SubmissionTimeBuffer = TimeSpan.FromMinutes(10);\n```";
 

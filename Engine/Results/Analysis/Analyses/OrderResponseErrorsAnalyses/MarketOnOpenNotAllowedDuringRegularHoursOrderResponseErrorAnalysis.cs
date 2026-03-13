@@ -20,7 +20,6 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
 {
     /// <summary>
     /// Detects MarketOnOpen orders submitted during regular trading hours.
-    /// Error code: OrderResponseErrorCode.MARKET_ON_OPEN_NOT_ALLOWED_DURING_REGULAR_HOURS (-36)
     /// </summary>
     public class MarketOnOpenNotAllowedDuringRegularHoursOrderResponseErrorAnalysis : MessageAnalysis
     {

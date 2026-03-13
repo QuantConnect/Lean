@@ -19,9 +19,18 @@ using QuantConnect.Algorithm;
 
 namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
 {
-    /// <summary>Detects order fills that occurred outside regular market hours.</summary>
+    /// <summary>
+    /// Detects order fills that occurred outside regular market hours.
+    /// </summary>
     public class OrderFillsDuringExtendedMarketHoursAnalysis : BaseBacktestAnalysis
     {
+        /// <summary>
+        /// Iterates filled order events and flags those that occurred when the exchange was not open.
+        /// </summary>
+        /// <param name="algorithm">The algorithm instance used to check market-open status at the fill time.</param>
+        /// <param name="orderEvents">The list of order events from the backtest result.</param>
+        /// <param name="language">The programming language the algorithm is written in.</param>
+        /// <returns>Analysis results when fills outside regular hours are detected.</returns>
         public IReadOnlyList<BacktestAnalysisResult> Run(QCAlgorithm algorithm, IReadOnlyList<OrderEvent> orderEvents, Language language)
         {
             var result = new List<OrderEvent>();

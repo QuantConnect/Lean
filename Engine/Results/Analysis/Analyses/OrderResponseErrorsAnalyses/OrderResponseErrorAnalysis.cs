@@ -22,8 +22,18 @@ using System.Linq;
 namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
 {
 
+    /// <summary>
+    /// Abstract base class for analyses that detect specific order-response errors
+    /// by inspecting invalid order events for known message text fragments.
+    /// </summary>
     public abstract class OrderResponseErrorAnalysis : MessageAnalysis
     {
+        /// <summary>
+        /// Filters <paramref name="orderEvents"/> to those with <see cref="OrderStatus.Invalid"/> status
+        /// whose message contains all <see cref="MessageAnalysis.ExpectedMessageText"/> fragments.
+        /// </summary>
+        /// <param name="orderEvents">The order events to inspect.</param>
+        /// <returns>An enumerable of matching message strings.</returns>
         protected IEnumerable<string> GetMatchingOrderEventsMessages(List<OrderEvent> orderEvents)
         {
             return orderEvents
@@ -32,6 +42,13 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
                 .Select(x => x.Message);
         }
 
+        /// <summary>
+        /// Runs the analysis against a list of order events, extracting matching invalid-event messages
+        /// and delegating to the message-based <see cref="MessageAnalysis.Run(IReadOnlyList{string}, Language)"/> overload.
+        /// </summary>
+        /// <param name="orderEvents">The order events from the backtest result.</param>
+        /// <param name="language">The programming language the algorithm is written in.</param>
+        /// <returns>Analysis results when any matching order response errors are found.</returns>
         public virtual IReadOnlyList<BacktestAnalysisResult> Run(List<OrderEvent> orderEvents, Language language)
         {
             return Run(GetMatchingOrderEventsMessages(orderEvents).ToList(), language);

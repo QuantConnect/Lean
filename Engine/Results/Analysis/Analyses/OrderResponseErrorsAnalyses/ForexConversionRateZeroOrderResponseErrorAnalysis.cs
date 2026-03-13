@@ -20,7 +20,6 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
 {
     /// <summary>
     /// Detects zero Forex conversion rate errors.
-    /// Error code: OrderResponseErrorCode.FOREX_CONVERSION_RATE_ZERO (-18)
     /// </summary>
     public class ForexConversionRateZeroOrderResponseErrorAnalysis : MessageAnalysis
     {

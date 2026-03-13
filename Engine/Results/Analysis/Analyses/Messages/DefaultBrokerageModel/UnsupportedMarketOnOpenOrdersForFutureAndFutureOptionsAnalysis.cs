@@ -18,6 +18,9 @@ using System.Collections.Generic;
 namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses.Messages.DefaultBrokerageModel
 {
 
+    /// <summary>
+    /// Detects brokerage model rejections where a MarketOnOpen order was placed for a Futures or Future Options contract.
+    /// </summary>
     public class UnsupportedMarketOnOpenOrdersForFutureAndFutureOptionsAnalysis : MessageAnalysis
     {
         protected override string[] ExpectedMessageText { get; } =

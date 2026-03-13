@@ -19,9 +19,18 @@ using QuantConnect.Algorithm;
 
 namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
 {
-    /// <summary>Compares the full-period Sharpe ratio of the strategy to the benchmark.</summary>
+    /// <summary>
+    /// Compares the full-period Sharpe ratio of the strategy to the benchmark.
+    /// </summary>
     public class PerformanceRelativeToBenchmark : BaseBacktestAnalysis
     {
+        /// <summary>
+        /// Calculates the Sharpe ratio of the strategy over the full backtest period and compares it to the benchmark.
+        /// </summary>
+        /// <param name="algorithm">The algorithm instance used to obtain the risk-free rate model.</param>
+        /// <param name="backtestEquity">Daily equity values for the strategy, keyed by date.</param>
+        /// <param name="benchmarkEquity">Daily equity values for the benchmark (SPY), keyed by date.</param>
+        /// <returns>Analysis results when the strategy's Sharpe ratio is lower than the benchmark's.</returns>
         public IReadOnlyList<BacktestAnalysisResult> Run(QCAlgorithm algorithm, SortedList<DateTime, decimal> backtestEquity,
             SortedList<DateTime, decimal> benchmarkEquity)
         {

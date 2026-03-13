@@ -20,7 +20,6 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
 {
     /// <summary>
     /// Detects orders placed for non-tradable securities.
-    /// Error code: OrderResponseErrorCode.NON_TRADABLE_SECURITY (-28)
     /// </summary>
     public class NonTradableSecurityOrderResponseErrorAnalysis : MessageAnalysis
     {

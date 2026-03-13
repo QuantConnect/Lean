@@ -18,6 +18,10 @@ using System.Collections.Generic;
 namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses.Messages.TradingTechnologiesBrokerageModel
 {
 
+    /// <summary>
+    /// Detects Trading Technologies brokerage model rejections where a stop-market order's stop price
+    /// is on the wrong side of the current market price.
+    /// </summary>
     public class InvalidStopMarketOrderPriceAnalysis : MessageAnalysis
     {
         protected override string[] ExpectedMessageText { get; } =

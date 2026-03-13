@@ -18,6 +18,9 @@ using System.Collections.Generic;
 namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses.Messages.TradierBrokerageModel
 {
 
+    /// <summary>
+    /// Detects Tradier brokerage model rejections where the security type is not supported (only Equity and Option are supported).
+    /// </summary>
     public class TradierUnsupportedSecurityTypeAnalysis : MessageAnalysis
     {
         protected override string[] ExpectedMessageText { get; } =

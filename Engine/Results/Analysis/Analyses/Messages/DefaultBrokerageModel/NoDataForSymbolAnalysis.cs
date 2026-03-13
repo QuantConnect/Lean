@@ -18,6 +18,9 @@ using System.Collections.Generic;
 namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses.Messages.DefaultBrokerageModel
 {
 
+    /// <summary>
+    /// Detects brokerage model rejections where no data is available for the ordered security.
+    /// </summary>
     public class NoDataForSymbolAnalysis : MessageAnalysis
     {
         protected override string[] ExpectedMessageText { get; } =

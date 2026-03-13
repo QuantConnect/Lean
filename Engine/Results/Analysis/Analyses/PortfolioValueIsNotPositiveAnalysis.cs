@@ -17,9 +17,16 @@ using System.Collections.Generic;
 
 namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
 {
-    /// <summary>Flags backtests whose ending equity is zero or negative.</summary>
+    /// <summary>
+    /// Flags backtests whose ending equity is zero or negative.
+    /// </summary>
     public class PortfolioValueIsNotPositiveAnalysis : BaseBacktestAnalysis
     {
+        /// <summary>
+        /// Checks whether the backtest's ending equity is positive.
+        /// </summary>
+        /// <param name="result">The backtest result containing portfolio statistics.</param>
+        /// <returns>Analysis results flagging the issue when ending equity is zero or negative.</returns>
         public IReadOnlyList<BacktestAnalysisResult> Run(Result result)
         {
             var hasEquity = result.TotalPerformance.PortfolioStatistics.EndEquity > 0;

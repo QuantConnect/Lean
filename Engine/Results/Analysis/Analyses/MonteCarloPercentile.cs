@@ -25,6 +25,11 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
     /// </summary>
     public class MonteCarloPercentile : BaseBacktestAnalysis
     {
+        /// <summary>
+        /// Runs the Monte Carlo percentile test against the given equity curve.
+        /// </summary>
+        /// <param name="backtestEquity">Daily equity values from the backtest, keyed by date.</param>
+        /// <returns>Analysis results indicating whether the strategy's return is suspiciously high.</returns>
         public IReadOnlyList<BacktestAnalysisResult> Run(SortedList<DateTime, decimal> backtestEquity)
         {
             if (backtestEquity.Count == 0)

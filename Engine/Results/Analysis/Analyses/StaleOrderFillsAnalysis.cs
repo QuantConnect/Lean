@@ -21,9 +21,17 @@ using System;
 
 namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
 {
-    /// <summary>Detects orders filled at stale (outdated) prices.</summary>
+    /// <summary>
+    /// Detects orders filled at stale (outdated) prices.
+    /// </summary>
     public class StaleOrderFillsAnalysis : BaseBacktestAnalysis
     {
+        /// <summary>
+        /// Searches order events for fill messages that contain a stale-price warning.
+        /// </summary>
+        /// <param name="orderEvents">The list of order events from the backtest result.</param>
+        /// <param name="language">The programming language the algorithm is written in.</param>
+        /// <returns>Analysis results when stale fill events are detected.</returns>
         public IReadOnlyList<BacktestAnalysisResult> Run(IReadOnlyList<OrderEvent> orderEvents, Language language)
         {
             var result = orderEvents

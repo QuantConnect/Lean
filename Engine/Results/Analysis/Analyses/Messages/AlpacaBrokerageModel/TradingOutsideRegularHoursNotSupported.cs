@@ -17,6 +17,9 @@ using System.Collections.Generic;
 
 namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses.Messages.AlpacaBrokerageModel
 {
+    /// <summary>
+    /// Detects Alpaca brokerage model rejections due to an attempt to trade outside regular market hours.
+    /// </summary>
     public class TradingOutsideRegularHoursNotSupported : MessageAnalysis
     {
         protected override string[] ExpectedMessageText { get; } =

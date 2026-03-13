@@ -35,6 +35,13 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
             new TakeProfitOrStopLossNotCanceledAnalysis(),
         ];
 
+        /// <summary>
+        /// Groups orders into TP/SL pairs by symbol, quantity, and creation time, then
+        /// delegates to sub-analyses that check for both-filled and dangling-order scenarios.
+        /// </summary>
+        /// <param name="orders">All orders from the backtest result.</param>
+        /// <param name="language">The programming language the algorithm is written in.</param>
+        /// <returns>Aggregated analysis results from all sub-analyses that detected issues.</returns>
         public IReadOnlyList<BacktestAnalysisResult> Run(ICollection<Order> orders, Language language)
         {
             // Group orders by (symbol, quantity, created_time) – the TP/SL fingerprint.

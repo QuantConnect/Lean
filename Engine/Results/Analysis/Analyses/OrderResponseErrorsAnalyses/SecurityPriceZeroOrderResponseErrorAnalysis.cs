@@ -21,7 +21,6 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
 {
     /// <summary>
     /// Detects orders placed when the security price is zero.
-    /// Error code: OrderResponseErrorCode.SECURITY_PRICE_ZERO (-16)
     /// </summary>
     public class SecurityPriceZeroOrderResponseErrorAnalysis : MessageAnalysis
     {

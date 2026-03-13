@@ -18,6 +18,10 @@ using System.Collections.Generic;
 namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses.Messages.DefaultBrokerageModel
 {
 
+    /// <summary>
+    /// Detects brokerage model rejections where a MarketOnOpen order was placed without the required
+    /// minimum time gap before the intended fill bar.
+    /// </summary>
     public class UnsupportedMarketOnOpenOrderTimeAnalysis : MessageAnalysis
     {
         protected override string[] ExpectedMessageText { get; } =

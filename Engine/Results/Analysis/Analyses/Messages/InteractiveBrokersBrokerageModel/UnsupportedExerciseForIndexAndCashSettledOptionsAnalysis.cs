@@ -18,6 +18,10 @@ using System.Collections.Generic;
 namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses.Messages.InteractiveBrokersBrokerageModel
 {
 
+    /// <summary>
+    /// Detects Interactive Brokers brokerage model rejections where a manual exercise was attempted
+    /// for index or cash-settled options, which IB handles automatically at expiry.
+    /// </summary>
     public class UnsupportedExerciseForIndexAndCashSettledOptionsAnalysis : MessageAnalysis
     {
         protected override string[] ExpectedMessageText { get; } =

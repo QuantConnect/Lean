@@ -19,7 +19,9 @@ using QuantConnect.Lean.Engine.Results.Analysis.Utils;
 
 namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
 {
-    /// <summary>Warns when too many numeric parameters are detected in the algorithm.</summary>
+    /// <summary>
+    /// Warns when too many numeric parameters are detected in the algorithm.
+    /// </summary>
     public class ParameterCountAnalysis : BaseBacktestAnalysis
     {
         private const string DetectedParametersTable = """
@@ -34,8 +36,14 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
 | Lean API | Numeric arguments passed to Indicators, Consolidators, Rolling Windows, etc. |
 """;
 
+        /// <summary>
+        /// Counts the algorithm's parameters and flags the backtest when more than 10 are detected.
+        /// </summary>
+        /// <param name="algorithm">The algorithm instance whose parameters are inspected.</param>
+        /// <param name="language">The programming language the algorithm is written in.</param>
+        /// <returns>Analysis results when the parameter count exceeds the threshold.</returns>
         public IReadOnlyList<BacktestAnalysisResult> Run(QCAlgorithm algorithm, Language language)
-        { 
+        {
             var parametersCount = algorithm.GetParameters().Count;
             var result = parametersCount > 10 ? $"{parametersCount} Parameters Detected" : null;
             var potentialSolutions = result is not null ? PotentialSolutions(language) : [];

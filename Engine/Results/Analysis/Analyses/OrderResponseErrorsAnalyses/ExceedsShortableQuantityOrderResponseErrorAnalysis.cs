@@ -22,7 +22,6 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
 {
     /// <summary>
     /// Detects orders rejected because they exceed the available shortable quantity.
-    /// Error code: OrderResponseErrorCode.EXCEEDS_SHORTABLE_QUANTITY (-31)
     /// </summary>
     public class ExceedsShortableQuantityOrderResponseErrorAnalysis : BaseBacktestAnalysis
     {
@@ -33,6 +32,12 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
             " requested ",
         ];
 
+        /// <summary>
+        /// Searches order events for exceeds-shortable-quantity rejection messages.
+        /// </summary>
+        /// <param name="orderEvents">The order events from the backtest result.</param>
+        /// <param name="language">The programming language the algorithm is written in.</param>
+        /// <returns>Analysis results when shortable quantity violations are detected.</returns>
         public IReadOnlyList<BacktestAnalysisResult> Run(IReadOnlyList<OrderEvent> orderEvents, Language language)
         {
             var result = orderEvents

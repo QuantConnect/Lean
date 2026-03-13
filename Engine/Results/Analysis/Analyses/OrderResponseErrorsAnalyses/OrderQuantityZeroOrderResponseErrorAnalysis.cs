@@ -21,7 +21,6 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
 {
     /// <summary>
     /// Detects zero-quantity order errors.
-    /// Error code: OrderResponseErrorCode.ORDER_QUANTITY_ZERO (-11)
     /// </summary>
     public class OrderQuantityZeroOrderResponseErrorAnalysis : MessageAnalysis
     {

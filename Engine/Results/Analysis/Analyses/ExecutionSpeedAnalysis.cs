@@ -29,6 +29,11 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
             @"Algorithm Id:\([^)]+\) completed in ([\d.]+) seconds at (\d+)k data points per second\. Processing total of [\d,]+ data points\.",
             RegexOptions.Compiled);
 
+        /// <summary>
+        /// Parses the backtest logs to determine execution speed and flags backtests that ran slowly.
+        /// </summary>
+        /// <param name="logs">The full list of log lines produced by the backtest.</param>
+        /// <returns>Analysis results flagging slow execution when below 40k data points per second and runtime is at least 10 seconds.</returns>
         public IReadOnlyList<BacktestAnalysisResult> Run(IReadOnlyList<string> logs)
         {
             var result = TryGetDataPointsPerSecond(logs, out var timeInSeconds, out var dataPointsPerSecond) && timeInSeconds >= 10 && dataPointsPerSecond < 40

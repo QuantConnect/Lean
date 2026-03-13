@@ -18,6 +18,9 @@ using System.Collections.Generic;
 namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses.Messages.InteractiveBrokersBrokerageModel
 {
 
+    /// <summary>
+    /// Detects Interactive Brokers brokerage model rejections where a Forex order is below the minimum required size.
+    /// </summary>
     public class InvalidForexOrderSizeAnalysis : MessageAnalysis
     {
         protected override string[] ExpectedMessageText { get; } =
