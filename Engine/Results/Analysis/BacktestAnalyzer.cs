@@ -100,10 +100,6 @@ namespace QuantConnect.Lean.Engine.Results.Analysis
                 CheckMonteCarloPercentile,
             };
 
-            // TODO: REMOVE THIS!
-            timeLimitSeconds = 100;
-            maxFailedTests = 100;
-
             var responses = new ConcurrentBag<BacktestAnalysisResult>();
             using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(timeLimitSeconds));
             var timer = Stopwatch.StartNew();
