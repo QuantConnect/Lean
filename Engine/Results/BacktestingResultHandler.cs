@@ -14,19 +14,22 @@
  *
 */
 
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
+using QuantConnect.Algorithm;
+using QuantConnect.AlgorithmFactory.Python.Wrappers;
 using QuantConnect.Brokerages;
 using QuantConnect.Configuration;
 using QuantConnect.Interfaces;
+using QuantConnect.Lean.Engine.Results.Analysis;
 using QuantConnect.Logging;
 using QuantConnect.Orders;
 using QuantConnect.Packets;
 using QuantConnect.Securities.Positions;
 using QuantConnect.Statistics;
 using QuantConnect.Util;
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
 
 namespace QuantConnect.Lean.Engine.Results
 {
@@ -323,7 +326,8 @@ namespace QuantConnect.Lean.Engine.Results
                             null, // null order events, we store them separately
                             result.Results.TotalPerformance,
                             result.Results.AlgorithmConfiguration,
-                            result.Results.State));
+                            result.Results.State,
+                            result.Results.AnalysisResult));
 
                         if (result.Results.Charts.TryGetValue(PortfolioMarginKey, out var marginChart))
                         {
@@ -395,6 +399,16 @@ namespace QuantConnect.Lean.Engine.Results
 
                 // Save summary results
                 SaveResults($"{AlgorithmId}-summary.json", CreateResultSummary(result));
+
+                // Run backtest analyzer
+                var algorithm = _job.Language == Language.Python ? (Algorithm as AlgorithmPythonWrapper)?.BaseAlgorithm : Algorithm as QCAlgorithm;
+                List<string> logs;
+                lock (LogStore)
+                {
+                    logs = LogStore.Select(x => x.Message).ToList();
+                }
+                var analyzer = new BacktestAnalyzer(result.Results, algorithm, _job.Language, logs);
+                result.Results.AnalysisResult = analyzer.RunTestChain();
 
                 //Place result into storage.
                 StoreResult(result);

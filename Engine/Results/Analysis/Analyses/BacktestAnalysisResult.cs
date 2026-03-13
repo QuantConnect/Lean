@@ -19,13 +19,6 @@ using System.Collections.Generic;
 namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
 {
     /// <summary>
-    /// Marker interface for context objects attached to a <see cref="BacktestAnalysisResult"/>.
-    /// </summary>
-    public interface IBacktestAnalysisContext
-    {
-    }
-
-    /// <summary>
     /// A simple context that holds a single diagnostic sample object.
     /// </summary>
     public class BacktestAnalysysContext : IBacktestAnalysisContext
@@ -102,7 +95,7 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
     /// Represents the outcome of a single backtest diagnostic analysis,
     /// containing the analysis name, diagnostic context, and a list of potential solutions.
     /// </summary>
-    public class BacktestAnalysisResult
+    public class BacktestAnalysisResult : IBacktestAnalysisResult
     {
         /// <summary>
         /// Gets or sets the name of the analysis that produced this result.
@@ -117,7 +110,7 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
         /// <summary>
         /// Gets or sets human-readable suggestions for resolving the detected issue.
         /// </summary>
-        public List<string> PotentialSolutions { get; set; }
+        public IReadOnlyList<string> PotentialSolutions { get; set; }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="BacktestAnalysisResult"/> class.
@@ -125,7 +118,7 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
         /// <param name="name">The name of the analysis that produced this result.</param>
         /// <param name="context">The diagnostic context object describing the detected issue.</param>
         /// <param name="potentialSolutions">A list of human-readable remediation suggestions.</param>
-        public BacktestAnalysisResult(string name, IBacktestAnalysisContext context, List<string> potentialSolutions)
+        public BacktestAnalysisResult(string name, IBacktestAnalysisContext context, IReadOnlyList<string> potentialSolutions)
         {
             Name = name;
             Context = context;

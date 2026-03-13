@@ -30,7 +30,7 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
         /// <param name="context">The context object carrying diagnostic sample data.</param>
         /// <param name="potentialSolutions">Optional list of human-readable remediation suggestions.</param>
         /// <returns>A one-element read-only list containing the constructed result.</returns>
-        protected IReadOnlyList<BacktestAnalysisResult> SingleResponse(IBacktestAnalysisContext context, List<string> potentialSolutions = null)
+        protected IReadOnlyList<BacktestAnalysisResult> SingleResponse(IBacktestAnalysisContext context, IReadOnlyList<string> potentialSolutions = null)
             => [CreateResponse(context, potentialSolutions)];
 
         /// <summary>
@@ -39,7 +39,7 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
         /// <param name="context">The context object carrying diagnostic sample data.</param>
         /// <param name="potentialSolutions">Optional list of human-readable remediation suggestions.</param>
         /// <returns>A new <see cref="BacktestAnalysisResult"/> instance.</returns>
-        protected BacktestAnalysisResult CreateResponse(IBacktestAnalysisContext context, List<string> potentialSolutions = null)
+        protected BacktestAnalysisResult CreateResponse(IBacktestAnalysisContext context, IReadOnlyList<string> potentialSolutions = null)
             => new(GetType().Name, context, potentialSolutions ?? []);
 
         /// <summary>
