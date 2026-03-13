@@ -14,8 +14,8 @@
  *
 */
 using System.Collections.Generic;
+using QuantConnect.Interfaces;
 using QuantConnect.Lean.Engine.Results.Analysis.Analyses.Messages;
-using QuantConnect.Lean.Engine.Results.Analysis.Utils;
 
 namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
 {
@@ -36,8 +36,8 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
             "This error occurs in the following situations:\n" +
             " - When you try to place, update, or cancel an order during the warm-up period\n" +
             " - When the Option assignment simulator assigns you to an Option during the warm-up period\n\n" +
-            $"To avoid the error, move the invalid operation to `{CodeByLanguage.OnWarmupFinished[language]}` " +
-            $"or protect them with an `{CodeByLanguage.IsWarmingUp[language]}` guard.",
+            $"To avoid the error, move the invalid operation to `{FormatCode(nameof(IAlgorithm.OnWarmupFinished), language)}` " +
+            $"or protect them with an `{FormatCode(nameof(IAlgorithm.IsWarmingUp), language)}` guard.",
         ];
     }
 }

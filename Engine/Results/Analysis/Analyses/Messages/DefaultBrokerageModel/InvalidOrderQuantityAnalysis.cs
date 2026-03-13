@@ -14,7 +14,6 @@
  *
 */
 using System.Collections.Generic;
-using QuantConnect.Lean.Engine.Results.Analysis.Utils;
 
 namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses.Messages.DefaultBrokerageModel
 {
@@ -39,7 +38,7 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses.Messages.DefaultBro
 
             "Increase the starting cash so trades are larger.",
 
-            $"Increase the {CodeByLanguage.MinimumOrderMarginPortfolioPercentage[language]} setting.",
+            $"Increase the {FormatCode(nameof(AlgorithmSettings.MinimumOrderMarginPortfolioPercentage), language)} setting.",
         ];
     }
 }

@@ -14,8 +14,8 @@
  *
 */
 using System.Collections.Generic;
+using QuantConnect.Algorithm;
 using QuantConnect.Lean.Engine.Results.Analysis.Analyses.Messages;
-using QuantConnect.Lean.Engine.Results.Analysis.Utils;
 
 namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
 {
@@ -33,7 +33,7 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
         [
             "Adjust the ordering and rebalancing logic to reduce margin usage.",
 
-            $"Add an `{CodeByLanguage.OnMarginCallWarning[language]}` method to reduce margin used before margin calls occur. " +
+            $"Add an `{FormatCode(nameof(QCAlgorithm.OnMarginCallWarning), language)}` method to reduce margin used before margin calls occur. " +
             "The `DefaultMarginCallModel` issues margin call warnings when the margin remaining in your portfolio is less than or equal to 5% of the total portfolio value. " +
             "When your total margin used exceeds 10% of the total portfolio value, this model creates margin call orders.",
 

@@ -15,7 +15,6 @@
 */
 using System.Collections.Generic;
 using QuantConnect.Algorithm;
-using QuantConnect.Lean.Engine.Results.Analysis.Utils;
 
 namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
 {
@@ -62,9 +61,9 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
         private static string GetNotParametersTable(Language language) => $"""
 | Non-Parameter Types | Example Instances |
 |---------------------|-------------------|
-| Common APIs | `{CodeByLanguage.SetStartDate[language]}`, `{CodeByLanguage.SetEndDate[language]}`, `{CodeByLanguage.SetCash[language]}`, etc. |
+| Common APIs | `{FormatCode(nameof(QCAlgorithm.SetStartDate), language)}`, `{FormatCode(nameof(QCAlgorithm.SetEndDate), language)}`, `{FormatCode(nameof(QCAlgorithm.SetCash), language)}`, etc. |
 | Boolean Comparison | Testing for True or False conditions |
-| String Numbers | Numbers formatted as part of `{CodeByLanguage.Log[language]}` or `{CodeByLanguage.Debug[language]}` method statements |
+| String Numbers | Numbers formatted as part of `{FormatCode(nameof(QCAlgorithm.Log), language)}` or `{FormatCode(nameof(QCAlgorithm.Debug), language)}` method statements |
 | Variable Names | Any variable names that use numbers as part of the name (for example, `smaIndicator200`) |
 | Common Functions | Rounding, array indexing, boolean comparison using 1/0 for True/False, etc. |
 """;
