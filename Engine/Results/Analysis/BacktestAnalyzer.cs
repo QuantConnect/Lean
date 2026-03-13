@@ -251,7 +251,7 @@ namespace QuantConnect.Lean.Engine.Results.Analysis
 
             // ── 2. Benchmark from SPY history ─────────────────────────────────────
             timer.Restart();
-            var spy = algorithm.Symbol("SPY");
+            var spy = Symbol.Create("SPY", SecurityType.Equity, Market.USA);
 
             timingLogs.Add($"{timer.Elapsed} - Creating SPY symbol");
 

@@ -53,6 +53,7 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
 
         private static decimal[] RunSimulation(decimal[] returns, int nSims = 5000, int blockSize = 20)
         {
+            blockSize = Math.Min(blockSize, returns.Length);
             var rng = new Random(42);
             var n = returns.Length;
             var nBlocks = n / blockSize + 1;
