@@ -25,7 +25,7 @@ using QuantConnect.Brokerages.Authentication;
 namespace QuantConnect.Tests.Brokerages.Authentication
 {
     [TestFixture]
-    public class OAuthTokenHandlerTests
+    public class LeanOAuthTokenHandlerTests
     {
         // CharlesSchwab: no tokenType field in the response body — relies on the TokenType.Bearer default.
         [Test]
@@ -34,8 +34,8 @@ namespace QuantConnect.Tests.Brokerages.Authentication
             const string responseJson = "{\"accessToken\":\"cs-token-xyz\",\"refreshToken\":\"\",\"success\":true}";
 
             using var apiClient = new FakeApiConnection(responseJson);
-            var request = new LeanAccessTokenMetaDataRequest("charlesschwab", "ACC123", deployId: "deploy-1");
-            using var handler = new OAuthTokenHandler(apiClient, request, TimeSpan.FromMinutes(30));
+            var request = new OAuthTokenRequest("charlesschwab", "ACC123", deployId: "deploy-1");
+            using var handler = new LeanOAuthTokenHandler(apiClient, request, TimeSpan.FromMinutes(30));
 
             var credentials = handler.GetAccessToken(CancellationToken.None);
 
@@ -50,8 +50,8 @@ namespace QuantConnect.Tests.Brokerages.Authentication
             const string responseJson = "{\"accessToken\":\"tt-token-abc\",\"tokenType\":\"Bearer\",\"expiresIn\":900,\"tokenId\":\"id-1\",\"success\":true}";
 
             using var apiClient = new FakeApiConnection(responseJson);
-            var request = new LeanAccessTokenMetaDataRequest("tastytrade", "ACC456", refreshToken: "rt-token");
-            using var handler = new OAuthTokenHandler(apiClient, request, TimeSpan.FromMinutes(15));
+            var request = new OAuthTokenRequest("tastytrade", "ACC456", refreshToken: "rt-token");
+            using var handler = new LeanOAuthTokenHandler(apiClient, request, TimeSpan.FromMinutes(15));
 
             var credentials = handler.GetAccessToken(CancellationToken.None);
 

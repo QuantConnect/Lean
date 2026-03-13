@@ -329,7 +329,7 @@ namespace QuantConnect.Brokerages
         }
 
         /// <summary>
-        /// Creates an <see cref="OAuthTokenHandler"/> and automatically wires it so that
+        /// Creates a <see cref="LeanOAuthTokenHandler"/> and automatically wires it so that
         /// authentication failures trigger a brokerage error message, causing Lean to shut down gracefully.
         /// </summary>
         /// <param name="apiClient">The API client used to communicate with the Lean platform.</param>
@@ -338,11 +338,11 @@ namespace QuantConnect.Brokerages
         /// The expected lifetime of a fetched token. A 1-minute safety buffer is applied before expiry.
         /// Must be provided explicitly — each brokerage has a different token lifetime.
         /// </param>
-        /// <returns>A configured <see cref="OAuthTokenHandler"/> instance.</returns>
-        protected OAuthTokenHandler CreateOAuthTokenHandler(ApiConnection apiClient, LeanAccessTokenMetaDataRequest request,
+        /// <returns>A configured <see cref="LeanOAuthTokenHandler"/> instance.</returns>
+        protected LeanOAuthTokenHandler CreateOAuthTokenHandler(ApiConnection apiClient, OAuthTokenRequest request,
             TimeSpan tokenLifetime)
         {
-            var handler = new OAuthTokenHandler(apiClient, request, tokenLifetime);
+            var handler = new LeanOAuthTokenHandler(apiClient, request, tokenLifetime);
             handler.AuthenticationFailed += (_, ex) =>
                 OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Error, "OAuthenticationFailed", ex.Message));
             return handler;

@@ -23,6 +23,8 @@ namespace QuantConnect.Brokerages.Authentication
 {
     /// <summary>
     /// Provides base functionality for token-based HTTP request handling.
+    /// Token acquisition and retry logic are delegated entirely to <see cref="GetAccessToken"/>,
+    /// implemented by derived classes (e.g., <see cref="LeanOAuthTokenHandler"/>).
     /// </summary>
     public abstract class TokenHandler : DelegatingHandler
     {

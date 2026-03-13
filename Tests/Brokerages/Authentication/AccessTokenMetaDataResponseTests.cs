@@ -21,20 +21,20 @@ using QuantConnect.Brokerages.Authentication;
 namespace QuantConnect.Tests.Brokerages.Authentication
 {
     [TestFixture]
-    public class AccessTokenMetaDataResponseTests
+    public class OAuthTokenResponseTests
     {
         // CharlesSchwab omits tokenType entirely; Tastytrade includes it explicitly.
         // In both cases the result must be Bearer — either from the JSON value or the property default.
         [TestCase("{\"accessToken\":\"abc\",\"success\":true}", TokenType.Bearer, TestName = "DefaultsToBearerWhenTokenTypeAbsent")]
         [TestCase("{\"accessToken\":\"abc\",\"tokenType\":\"Bearer\",\"success\":true}", TokenType.Bearer, TestName = "DeserializesBearerWhenTokenTypePresent")]
-        public void AccessTokenMetaDataResponseTokenTypeIsBearer(string json, TokenType expectedTokenType)
+        public void OAuthTokenResponseTokenTypeIsBearer(string json, TokenType expectedTokenType)
         {
             var settings = new JsonSerializerSettings
             {
                 ContractResolver = new CamelCasePropertyNamesContractResolver()
             };
 
-            var response = JsonConvert.DeserializeObject<AccessTokenMetaDataResponse>(json, settings);
+            var response = JsonConvert.DeserializeObject<OAuthTokenResponse>(json, settings);
 
             Assert.AreEqual(expectedTokenType, response.TokenType);
             Assert.AreEqual("abc", response.AccessToken);

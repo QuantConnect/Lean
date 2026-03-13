@@ -22,7 +22,7 @@ namespace QuantConnect.Brokerages.Authentication
     /// Represents a Lean platform token request, including all fields required by the
     /// <c>live/auth0/refresh</c> endpoint. Optional fields are omitted from JSON when null.
     /// </summary>
-    public class LeanAccessTokenMetaDataRequest
+    public class OAuthTokenRequest
     {
         /// <summary>
         /// Gets the name of the brokerage associated with the access token request.
@@ -48,14 +48,14 @@ namespace QuantConnect.Brokerages.Authentication
         public string DeployId { get; }
 
         /// <summary>
-        /// Initializes a new instance of <see cref="LeanAccessTokenMetaDataRequest"/> with all fields.
+        /// Initializes a new instance of <see cref="OAuthTokenRequest"/> with all fields.
         /// Use named parameters to supply only the fields required by the target brokerage.
         /// </summary>
         /// <param name="brokerage">The brokerage name. Normalized to lowercase.</param>
         /// <param name="accountId">The account number or identifier.</param>
         /// <param name="refreshToken">OAuth refresh token; omitted from JSON when null.</param>
         /// <param name="deployId">Lean deploy identifier; omitted from JSON when null.</param>
-        public LeanAccessTokenMetaDataRequest(
+        public OAuthTokenRequest(
             string brokerage,
             string accountId,
             string refreshToken = null,
