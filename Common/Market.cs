@@ -71,7 +71,8 @@ namespace QuantConnect
             Tuple.Create(InteractiveBrokers, 39),
             Tuple.Create(EUREX, 40),
             Tuple.Create(OSE, 41),
-            Tuple.Create(DYDX, 42)
+            Tuple.Create(DYDX, 42),
+            Tuple.Create(IG, 43)
         };
 
         static Market()
@@ -103,6 +104,11 @@ namespace QuantConnect
         /// Dukascopy Market
         /// </summary>
         public const string Dukascopy = "dukascopy";
+
+        /// <summary>
+        /// IG Markets
+        /// </summary>
+        public const string IG = "ig";
 
         /// <summary>
         /// Bitfinex market
