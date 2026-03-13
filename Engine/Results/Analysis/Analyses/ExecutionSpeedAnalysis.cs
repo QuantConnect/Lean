@@ -52,7 +52,7 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
         /// </summary>
         private static bool TryGetDataPointsPerSecond(IReadOnlyList<string> logs, out double? timeInSeconds, out int? dataPointsPerSecond)
         {
-            for (int i = logs.Count - 1; i >= 0; i--)
+            for (var i = logs.Count - 1; i >= 0; i--)
             {
                 var match = DataPointsPerSecondRegex.Match(logs[i]);
                 if (match.Success)
