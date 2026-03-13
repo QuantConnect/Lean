@@ -55,24 +55,26 @@ class MaximumSharpeRatioPortfolioOptimizer:
 
         size = covariance.columns.size   # K x 1
         x0 = np.array(size * [1. / size])
-        k = expected_returns.dot(x0)
 
-        # Sharpe Maximization under Quadratic Constraints
-        # https://quant.stackexchange.com/questions/18521/sharpe-maximization-under-quadratic-constraints
-        # (µ − r_f)^T w = k
-        constraints = [
-            {'type': 'eq', 'fun': lambda weights: expected_returns.dot(weights) - k}]
+        cov_matrix = covariance.values
+
+        # Maximize Sharpe ratio: minimize -mu'w / sqrt(w'Sigma*w)
+        def neg_sharpe(weights):
+            port_return = expected_returns.values.dot(weights)
+            port_variance = weights.T.dot(cov_matrix).dot(weights)
+            if port_variance <= 0:
+                return 0
+            return -port_return / np.sqrt(port_variance)
 
         # Σw = 1
-        constraints.append(
-            {'type': 'eq', 'fun': lambda weights: self.get_budget_constraint(weights)})
+        constraints = [
+            {'type': 'eq', 'fun': lambda weights: self.get_budget_constraint(weights)}]
 
-        opt = minimize(lambda weights: self.portfolio_variance(weights, covariance),   # Objective function
+        opt = minimize(neg_sharpe,                                                # Objective function
                        x0,                                                        # Initial guess
                        bounds = self.get_boundary_conditions(size),               # Bounds for variables: lw ≤ w ≤ up
                        constraints = constraints,                                 # Constraints definition
                        method='SLSQP')        # Optimization method:  Sequential Least SQuares Programming
-        sharpe_ratio = expected_returns.dot(opt['x']) / opt.fun
 
         return opt['x'] if opt['success'] else x0
 
