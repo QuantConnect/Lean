@@ -16,9 +16,12 @@
 using QuantConnect.Algorithm;
 using QuantConnect.Lean.Engine.Results.Analysis.Analyses;
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace QuantConnect.Lean.Engine.Results.Analysis
 {
@@ -58,12 +61,12 @@ namespace QuantConnect.Lean.Engine.Results.Analysis
         /// <param name="timeLimitSeconds">Wall-clock seconds allowed for the full chain before early exit.</param>
         /// <param name="maxFailedTests">Maximum number of analyses with solutions before early exit.</param>
         /// <returns>A list of <see cref="BacktestAnalysisResult"/> entries that have at least one potential solution.</returns>
-        public List<BacktestAnalysisResult> RunTestChain(int timeLimitSeconds = 5, int maxFailedTests = 3)
+        public IReadOnlyList<BacktestAnalysisResult> RunTestChain(int timeLimitSeconds = 5, int maxFailedTests = 3)
         {
             var timingLogs = new List<string>();
             (_equityCurve, _benchmarkEquityCurve) = ReadEquityCurve(_result, _algorithm, timingLogs);
 
-            var tests = new List<Func<IReadOnlyList<BacktestAnalysisResult>>>
+            var analyses = new List<Func<IReadOnlyList<BacktestAnalysisResult>>>
             {
                 CheckFlatEquityCurve,
                 CheckPortfolioValueIsNotPositive,
@@ -97,34 +100,34 @@ namespace QuantConnect.Lean.Engine.Results.Analysis
                 CheckMonteCarloPercentile,
             };
 
-            var responses = new List<BacktestAnalysisResult>();
-            var startTime = DateTime.UtcNow;
-
             // TODO: REMOVE THIS!
             timeLimitSeconds = 100;
             maxFailedTests = 100;
 
-            foreach (var test in tests)
+            var responses = new ConcurrentBag<BacktestAnalysisResult>();
+            using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(timeLimitSeconds));
+            var timer = Stopwatch.StartNew();
+
+            try
             {
-                var results = test();
-                foreach (var r in results)
+                Parallel.ForEach(analyses, new ParallelOptions { MaxDegreeOfParallelism = 4, CancellationToken = cts.Token }, analysis =>
                 {
-                    if (r.PotentialSolutions.Count > 0)
-                        responses.Add(r);
-
-                    if ((DateTime.UtcNow - startTime).TotalSeconds >= timeLimitSeconds)
-                        return responses;
-
-                    if (responses.Count >= maxFailedTests)
-                        return responses;
-                }
+                    foreach (var result in analysis())
+                    {
+                        if (result.PotentialSolutions.Count > 0)
+                        {
+                            responses.Add(result);
+                            if (responses.Count >= maxFailedTests || timer.Elapsed.TotalSeconds >= timeLimitSeconds)
+                            {
+                                cts.Cancel();
+                            }
+                        }
+                    }
+                });
             }
+            catch (OperationCanceledException) { }
 
-            timingLogs.Add($"{DateTime.UtcNow - startTime} - Total analysis time");
-
-            // TODO: Remove timing logs, just logs if necessary
-
-            return responses;
+            return [.. responses.Take(maxFailedTests)];
         }
 
         private IReadOnlyList<BacktestAnalysisResult> CheckFlatEquityCurve()
