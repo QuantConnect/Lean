@@ -1716,12 +1716,15 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
         {
             // generate the order events reusing the option exercise model
             var option = (Option)security;
-            var orderEvents = option.OptionExerciseModel.OptionExercise(option, order);
+            var orderEvents = option.OptionExerciseModel.OptionExercise(option, order).ToList();
 
             foreach (var orderEvent in orderEvents)
             {
                 HandleOrderEvent(orderEvent);
+            }
 
+            foreach (var orderEvent in orderEvents)
+            {
                 if (orderEvent.IsAssignment)
                 {
                     if (!string.IsNullOrEmpty(order.Tag))
