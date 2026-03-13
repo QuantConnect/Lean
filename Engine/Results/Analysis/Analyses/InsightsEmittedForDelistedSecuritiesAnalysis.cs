@@ -18,7 +18,9 @@ using QuantConnect.Lean.Engine.Results.Analysis.Analyses.Messages;
 
 namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
 {
-    /// <summary>Detects the QC warning about emitting insights for delisted securities.</summary>
+    /// <summary>
+    /// Detects the QC warning about emitting insights for delisted securities.
+    /// </summary>
     public class InsightsEmittedForDelistedSecuritiesAnalysis : MessageAnalysis
     {
         protected override string[] ExpectedMessageText { get; } =

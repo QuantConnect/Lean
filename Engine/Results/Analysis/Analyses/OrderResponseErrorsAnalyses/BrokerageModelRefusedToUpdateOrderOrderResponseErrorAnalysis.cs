@@ -25,7 +25,6 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
 {
     /// <summary>
     /// Detects brokerage-model-refused-to-update-order errors.
-    /// Error code: OrderResponseErrorCode.BROKERAGE_MODEL_REFUSED_TO_UPDATE_ORDER (-25)
     /// </summary>
     public class BrokerageModelRefusedToUpdateOrderOrderResponseErrorAnalysis : OrderResponseErrorAnalysis
     {
@@ -47,6 +46,13 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
             "BrokerageModel declared unable to update order: ",
         ];
 
+        /// <summary>
+        /// Filters order events for brokerage-refused-to-update errors and dispatches the matched
+        /// messages to each per-brokerage sub-analysis to surface specific solutions.
+        /// </summary>
+        /// <param name="orderEvents">The order events from the backtest result.</param>
+        /// <param name="language">The programming language the algorithm is written in.</param>
+        /// <returns>Aggregated analysis results from all sub-analyses that detected a matching message.</returns>
         public override IReadOnlyList<BacktestAnalysisResult> Run(List<OrderEvent> orderEvents, Language language)
         {
             var matchedMessages = GetMatchingOrderEventsMessages(orderEvents).ToList();

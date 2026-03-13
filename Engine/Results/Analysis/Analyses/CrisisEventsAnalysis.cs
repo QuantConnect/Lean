@@ -18,7 +18,6 @@ using System.Collections.Generic;
 using System.Linq;
 using QuantConnect.Algorithm;
 using QuantConnect.Data;
-using QuantConnect.Lean.Engine.Results.Analysis.Utils;
 using QuantConnect.Util;
 using MathNet.Numerics.Statistics;
 
@@ -52,6 +51,14 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
             ("AI Boom 2022-Present",                 new(2022, 11, 30), DateTime.Now),
         ];
 
+        /// <summary>
+        /// Compares the strategy's Sharpe ratio to the benchmark's across all crisis events
+        /// that fall entirely within the backtest period.
+        /// </summary>
+        /// <param name="algorithm">The algorithm instance used to obtain the risk-free rate model.</param>
+        /// <param name="backtestEquity">Daily equity values for the strategy, keyed by date.</param>
+        /// <param name="benchmarkEquity">Daily equity values for the benchmark (SPY), keyed by date.</param>
+        /// <returns>Analysis results listing crisis periods where the strategy underperformed the benchmark.</returns>
         public IReadOnlyList<BacktestAnalysisResult> Run(QCAlgorithm algorithm,
             SortedList<DateTime, decimal> backtestEquity,
             SortedList<DateTime, decimal> benchmarkEquity)
@@ -116,6 +123,14 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
             return result;
         }
 
+        /// <summary>
+        /// Calculates annualised Sharpe ratios for the backtest and benchmark equity series
+        /// using the supplied risk-free rate model.
+        /// </summary>
+        /// <param name="backtest">Daily equity values for the strategy.</param>
+        /// <param name="benchmark">Daily equity values for the benchmark.</param>
+        /// <param name="riskFreeInterestRateModel">Model used to obtain the risk-free rate over the period.</param>
+        /// <returns>A tuple of (backtestSharpe, benchmarkSharpe); both are 0 when a series is empty.</returns>
         internal static (double, double) CalculateSharpeRatio(SortedList<DateTime, decimal> backtest, SortedList<DateTime, decimal> benchmark,
             IRiskFreeInterestRateModel riskFreeInterestRateModel)
         {

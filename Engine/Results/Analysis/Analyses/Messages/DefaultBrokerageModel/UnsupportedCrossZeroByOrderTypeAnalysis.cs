@@ -18,6 +18,9 @@ using System.Collections.Generic;
 namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses.Messages.DefaultBrokerageModel
 {
 
+    /// <summary>
+    /// Detects brokerage model rejections where the order type does not support crossing zero (flipping position direction in a single order).
+    /// </summary>
     public class UnsupportedCrossZeroByOrderTypeAnalysis : MessageAnalysis
     {
         protected override string[] ExpectedMessageText { get; } =

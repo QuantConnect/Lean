@@ -18,6 +18,9 @@ using System.Collections.Generic;
 namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses.Messages.DefaultBrokerageModel
 {
 
+    /// <summary>
+    /// Detects brokerage model rejections where the security type is not supported.
+    /// </summary>
     public class UnsupportedSecurityTypeAnalysis : MessageAnalysis
     {
         protected override string[] ExpectedMessageText { get; } =

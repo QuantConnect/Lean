@@ -19,6 +19,9 @@ using QuantConnect.Lean.Engine.Results.Analysis.Utils;
 namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses.Messages.DefaultBrokerageModel
 {
 
+    /// <summary>
+    /// Detects brokerage model rejections where the order quantity (in quote currency) is below the security's minimum order size.
+    /// </summary>
     public class InvalidOrderQuantityAnalysis : MessageAnalysis
     {
         protected override string[] ExpectedMessageText { get; } =

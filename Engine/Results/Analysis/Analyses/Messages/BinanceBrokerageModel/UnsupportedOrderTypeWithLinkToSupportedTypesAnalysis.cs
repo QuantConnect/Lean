@@ -18,6 +18,9 @@ using System.Collections.Generic;
 namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses.Messages.BinanceBrokerageModel
 {
 
+    /// <summary>
+    /// Detects Binance brokerage model rejections due to an unsupported order type.
+    /// </summary>
     public class UnsupportedOrderTypeWithLinkToSupportedTypesAnalysis : MessageAnalysis
     {
         protected override string[] ExpectedMessageText { get; } =

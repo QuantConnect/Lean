@@ -18,6 +18,9 @@ using System.Collections.Generic;
 namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses.Messages.DefaultBrokerageModel
 {
 
+    /// <summary>
+    /// Detects brokerage model rejections where an order update would cause the position to cross zero.
+    /// </summary>
     public class UnsupportedCrossZeroOrderUpdateAnalysis : MessageAnalysis
     {
         protected override string[] ExpectedMessageText { get; } =

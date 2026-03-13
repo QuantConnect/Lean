@@ -18,6 +18,9 @@ using System.Collections.Generic;
 namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses.Messages.CoinbaseBrokerageModel
 {
 
+    /// <summary>
+    /// Detects Coinbase brokerage model rejections due to Stop Market orders, which are no longer supported.
+    /// </summary>
     public class StopMarketOrdersNoLongerSupportedAnalysis : MessageAnalysis
     {
         protected override string[] ExpectedMessageText { get; } =

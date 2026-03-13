@@ -20,7 +20,6 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
 {
     /// <summary>
     /// Detects insufficient-buying-power order rejections.
-    /// Error code: OrderResponseErrorCode.INSUFFICIENT_BUYING_POWER (-3)
     /// </summary>
     public class InsufficientBuyingPowerOrderResponseErrorAnalysis : OrderResponseErrorAnalysis
     {

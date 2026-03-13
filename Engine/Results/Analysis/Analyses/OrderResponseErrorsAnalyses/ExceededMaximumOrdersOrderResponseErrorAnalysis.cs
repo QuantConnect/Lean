@@ -20,7 +20,6 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
 {
     /// <summary>
     /// Detects the "exceeded maximum orders" error.
-    /// Error code: OrderResponseErrorCode.EXCEEDED_MAXIMUM_ORDERS (-20)
     /// </summary>
     public class ExceededMaximumOrdersOrderResponseErrorAnalysis : MessageAnalysis
     {

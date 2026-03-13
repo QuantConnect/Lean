@@ -28,6 +28,13 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
     /// </summary>
     public class StatisticalSignificanceOfDailyReturnsAnalysis : BaseBacktestAnalysis
     {
+        /// <summary>
+        /// Computes excess daily returns (strategy minus benchmark) and applies a one-tailed
+        /// one-sample t-test at the 5 % significance level.
+        /// </summary>
+        /// <param name="backtestEquity">Daily equity values for the strategy, keyed by date.</param>
+        /// <param name="benchmarkEquity">Daily equity values for the benchmark (SPY), keyed by date.</param>
+        /// <returns>Analysis results when the strategy's excess returns are not statistically significant.</returns>
         public IReadOnlyList<BacktestAnalysisResult> Run(SortedList<DateTime, decimal> backtestEquity,
             SortedList<DateTime, decimal> benchmarkEquity)
         {

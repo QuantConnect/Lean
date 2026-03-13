@@ -19,9 +19,16 @@ using System.Linq;
 
 namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
 {
-    /// <summary>Detects prolonged flat (zero-change) segments in the equity curve.</summary>
+    /// <summary>
+    /// Detects prolonged flat (zero-change) segments in the equity curve.
+    /// </summary>
     public class FlatEquityCurveAnalysis : BaseBacktestAnalysis
     {
+        /// <summary>
+        /// Scans the equity curve for consecutive flat (unchanged) segments.
+        /// </summary>
+        /// <param name="equityCurve">Daily equity values from the backtest, keyed by date.</param>
+        /// <returns>Analysis results describing any detected flat segments.</returns>
         public IReadOnlyList<BacktestAnalysisResult> Run(SortedList<DateTime, decimal> equityCurve)
         {
             // Find consecutive runs of identical equity values.
@@ -29,7 +36,7 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
             var vals = equityCurve.Values.ToArray();
 
             var segments = new List<object>();
-            int i = 0;
+            var i = 0;
             while (i < vals.Length)
             {
                 var v = vals[i];
@@ -41,8 +48,8 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
                 {
                     segments.Add(new
                     {
-                        start = keys[i].ToString(),
-                        end = keys[j - 1].ToString(),
+                        start = keys[i],
+                        end = keys[j - 1],
                         trading_days = tradingDays,
                     });
                 }

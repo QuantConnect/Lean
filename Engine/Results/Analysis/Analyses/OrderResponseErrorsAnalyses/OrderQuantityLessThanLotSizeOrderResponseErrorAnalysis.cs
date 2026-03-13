@@ -20,7 +20,6 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
 {
     /// <summary>
     /// Detects orders with quantity below the security's lot size.
-    /// Error code: OrderResponseErrorCode.ORDER_QUANTITY_LESS_THAN_LOT_SIZE (-30)
     /// </summary>
     public class OrderQuantityLessThanLotSizeOrderResponseErrorAnalysis : MessageAnalysis
     {

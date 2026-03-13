@@ -18,6 +18,9 @@ using System.Collections.Generic;
 namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses.Messages.TradierBrokerageModel
 {
 
+    /// <summary>
+    /// Detects Tradier brokerage model rejections where the time-in-force type is not Day or GTC.
+    /// </summary>
     public class UnsupportedTimeInForceTypeAnalysis : MessageAnalysis
     {
         protected override string[] ExpectedMessageText { get; } =

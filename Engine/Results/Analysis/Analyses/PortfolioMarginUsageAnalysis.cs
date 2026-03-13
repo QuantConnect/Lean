@@ -25,6 +25,12 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
     /// </summary>
     public class PortfolioMarginUsageAnalysis : BaseBacktestAnalysis
     {
+        /// <summary>
+        /// Reads the "Portfolio Margin" chart from the backtest result and counts trading days
+        /// where the 3-day SMA of total margin usage drops below 50%.
+        /// </summary>
+        /// <param name="backtestResult">The backtest result whose charts are inspected.</param>
+        /// <returns>Analysis results when any such days are detected.</returns>
         public IReadOnlyList<BacktestAnalysisResult> Run(Result backtestResult)
         {
             // 1 – Get the Portfolio Margin chart.

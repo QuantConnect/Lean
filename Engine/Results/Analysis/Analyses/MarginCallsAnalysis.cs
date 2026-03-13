@@ -19,7 +19,9 @@ using QuantConnect.Lean.Engine.Results.Analysis.Utils;
 
 namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
 {
-    /// <summary>Detects margin-call events in the backtest logs.</summary>
+    /// <summary>
+    /// Detects margin-call events in the backtest logs.
+    /// </summary>
     public class MarginCallsAnalysis : MessageAnalysis
     {
         protected override string[] ExpectedMessageText { get; } =
