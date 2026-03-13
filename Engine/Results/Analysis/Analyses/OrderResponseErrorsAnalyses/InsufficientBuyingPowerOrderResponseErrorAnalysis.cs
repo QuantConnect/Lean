@@ -13,8 +13,8 @@
  * limitations under the License.
  *
 */
+using QuantConnect.Algorithm;
 using System.Collections.Generic;
-using QuantConnect.Lean.Engine.Results.Analysis.Utils;
 
 namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
 {
@@ -38,14 +38,14 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
                 : "```\npublic override void OnData(Slice slice)\n{\n    var security = Securities[\"SPY\"];\n    var quantity = 100m;\n    var parameter = new InitialMarginParameters(security, quantity);\n    var initialMargin = security.BuyingPowerModel.GetInitialMarginRequirement(parameter);\n    if (Portfolio.MarginRemaining >= initialMargin.Value)\n    {\n        MarketOrder(security.Symbol, quantity);\n    }\n    else\n    {\n        Debug(\"You don't have sufficient margin for this order.\");\n    }\n}\n```"),
 
             "This error also commonly occurs when you place a market on open order with daily data. " +
-            $"If you place the order with `{CodeByLanguage.SetHoldings[language]}` or use `{CodeByLanguage.CalculateOrderQuantity[language]}` to determine the order quantity, LEAN calculates the order quantity based on the market close price. " +
+            $"If you place the order with `{FormatCode(nameof(QCAlgorithm.SetHoldings), language)}` or use `{FormatCode(nameof(QCAlgorithm.CalculateOrderQuantity), language)}` to determine the order quantity, LEAN calculates the order quantity based on the market close price. " +
             "If the open price on the following day makes your order more expensive, then you may have insufficient buying power. " +
             "To avoid the order response error in this case, either use intraday data and place trades when the market is open or adjust your buying power buffer.\n" +
             (language == Language.Python
                 ? "```\n# Set the cash buffer to 5%\nself.settings.free_portfolio_value_percentage = 0.05\n\n# Set the cash buffer to $10,000\nself.settings.free_portfolio_value = 10000\n```"
                 : "```\n// Set the cash buffer to 5%\nSettings.FreePortfolioValuePercentage = 0.05m;\n\n// Set the cash buffer to $10,000\nSettings.FreePortfolioValue = 10000m;\n```") + "\n" +
-            $"If you use `{CodeByLanguage.FreePortfolioValuePercentage[language]}`, you must set it in the `{CodeByLanguage.Initialize[language]}` or `{CodeByLanguage.PostInitialize[language]}` event handler. " +
-            $"If you use `{CodeByLanguage.FreePortfolioValue[language]}`, you must set it after the `{CodeByLanguage.PostInitialize[language]}` event handler.",
+            $"If you use `{FormatCode(nameof(AlgorithmSettings.FreePortfolioValuePercentage), language)}`, you must set it in the `{FormatCode(nameof(QCAlgorithm.Initialize), language)}` or `{FormatCode(nameof(QCAlgorithm.PostInitialize), language)}` event handler. " +
+            $"If you use `{FormatCode(nameof(AlgorithmSettings.FreePortfolioValue), language)}`, you must set it after the `{FormatCode(nameof(QCAlgorithm.PostInitialize), language)}` event handler.",
         ];
     }
 }

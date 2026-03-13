@@ -13,6 +13,7 @@
  * limitations under the License.
  *
 */
+using Python.Runtime;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -50,5 +51,21 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
                 .Where(x => x.PotentialSolutions.Count > 0)
                 .Select(x => new BacktestAnalysisResult(GetType().Name + " / " + x.Name, x.Context, x.PotentialSolutions))
                 .ToList();
+
+        /// <summary>
+        /// Formats the specified code string according to the conventions of the given programming language.
+        /// </summary>
+        /// <param name="code">The code string to be formatted.</param>
+        /// <param name="language">The programming language whose formatting rules should be applied to the code string.</param>
+        /// <returns>A string containing the formatted code. If the language is Python, the code is converted to snake_case;
+        /// otherwise, the original code is returned.</returns>
+        protected static string FormatCode(string code, Language language)
+        {
+            return language switch
+            {
+                Language.Python => code.ToSnakeCase(),
+                _ => code
+            };
+        }
     }
 }

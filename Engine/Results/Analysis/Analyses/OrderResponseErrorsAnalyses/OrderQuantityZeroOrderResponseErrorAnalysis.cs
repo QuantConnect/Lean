@@ -14,8 +14,8 @@
  *
 */
 using System.Collections.Generic;
+using QuantConnect.Algorithm;
 using QuantConnect.Lean.Engine.Results.Analysis.Analyses.Messages;
-using QuantConnect.Lean.Engine.Results.Analysis.Utils;
 
 namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
 {
@@ -34,9 +34,9 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
         protected override List<string> PotentialSolutions(Language language) =>
         [
             "This error occurs when you place an order that has zero quantity or when you update an order to have a zero quantity. " +
-            $"This error commonly occurs if you use the `{CodeByLanguage.SetHoldings[language]}` method but the portfolio weight you provide to the method is too small to translate into a non-zero order quantity.\n" +
+            $"This error commonly occurs if you use the `{FormatCode("SetHoldings", language)}` method but the portfolio weight you provide to the method is too small to translate into a non-zero order quantity.\n" +
             "To avoid this order response error, check if the quantity of the order is non-zero before you place the order. " +
-            $"If you use the `{CodeByLanguage.SetHoldings[language]}` method, replace it with a combination of the `{CodeByLanguage.CalculateOrderQuantity[language]}` and `{CodeByLanguage.MarketOrder[language]}` methods.\n" +
+            $"If you use the `{FormatCode(nameof(QCAlgorithm.SetHoldings), language)}` method, replace it with a combination of the `{FormatCode(nameof(QCAlgorithm.CalculateOrderQuantity), language)}` and `{FormatCode(nameof(QCAlgorithm.MarketOrder), language)}` methods.\n" +
             (language == Language.Python
                 ? "```\nquantity = self.calculate_order_quantity(self._symbol, 0.05)\nif quantity:\n    self.market_order(self._symbol, quantity)\n```"
                 : "```\nvar quantity = CalculateOrderQuantity(_symbol, 0.05);\nif (quantity != 0)\n{\n    MarketOrder(_symbol, quantity);\n}\n```"),

@@ -16,7 +16,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using QuantConnect.Orders;
-using QuantConnect.Lean.Engine.Results.Analysis.Utils;
 using System;
 
 namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
@@ -49,7 +48,7 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
             "Stale fills usually only occur if you trade illiquid assets or if your algorithm uses daily data but you trade intraday with Scheduled Events. " +
             "If your order is filled with stale data, the fill price may not be realistic. " +
             "The pre-built fill models can only fill market orders with stale data. " +
-            $"To adjust the length of time that needs to pass before an order is considered stale, set the `{CodeByLanguage.StalePriceTimeSpan[language]}` setting.\n" +
+            $"To adjust the length of time that needs to pass before an order is considered stale, set the `{FormatCode(nameof(AlgorithmSettings.StalePriceTimeSpan), language)}` setting.\n" +
             (language == Language.Python
                 ? "```\ndef initialize(self) -> None:\n    # Adjust the stale price time span to be 10 minutes.\n    self.settings.stale_price_time_span = timedelta(minutes=10)\n```"
                 : "```\npublic override void Initialize()\n{\n    // Adjust the stale price time span to be 10 minutes.\n    Settings.StalePriceTimeSpan = TimeSpan.FromMinutes(10);\n}\n```"),

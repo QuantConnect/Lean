@@ -13,8 +13,8 @@
  * limitations under the License.
  *
 */
+using QuantConnect.Orders;
 using System.Collections.Generic;
-using QuantConnect.Lean.Engine.Results.Analysis.Utils;
 
 namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses.Messages.TradierBrokerageModel
 {
@@ -33,7 +33,7 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses.Messages.TradierBro
         protected override List<string> PotentialSolutions(Language language) =>
         [
             "Tradier only supports extended hours trading during the pre-market and after-hours sessions. " +
-            $"Use the `{CodeByLanguage.OutsideRegularTradingHours[language]}` order property to place extended-hours orders, " +
+            $"Use the `{FormatCode(nameof(TradierOrderProperties.OutsideRegularTradingHours), language)}` order property to place extended-hours orders, " +
             "and only submit them during the extended trading sessions.",
         ];
     }

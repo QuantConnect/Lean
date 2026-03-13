@@ -15,7 +15,6 @@
 */
 using System.Collections.Generic;
 using QuantConnect.Lean.Engine.Results.Analysis.Analyses.Messages;
-using QuantConnect.Lean.Engine.Results.Analysis.Utils;
 
 namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
 {
@@ -34,7 +33,7 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
             "This occurs when you place an order or exercise an Option contract while the security price is $0. " +
             "The security price can be $0 if the algorithm hasn't received data for the security yet. " +
             "If you subscribe to a security and place an order for the security in the same time step, you'll get this error. " +
-            $"To avoid this order response error, enable the `{CodeByLanguage.SeedInitialPrices[language]}` setting to seed new assets with their last known price.\n" +
+            $"To avoid this order response error, enable the `{FormatCode(nameof(AlgorithmSettings.SeedInitialPrices), language)}` setting to seed new assets with their last known price.\n" +
             (language == Language.Python
                 ? "```\nself.settings.seed_initial_prices = True\n```"
                 : "```\nSettings.SeedInitialPrices = true;\n```"),
