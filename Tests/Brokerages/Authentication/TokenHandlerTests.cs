@@ -126,27 +126,27 @@ namespace QuantConnect.Tests.Brokerages.Authentication
             Assert.AreEqual("123456", request.Headers.Authorization.Parameter);
         }
 
-        private class ValidTokenHandler : TokenHandler
+        private class ValidTokenHandler : LeanTokenHandler<LeanTokenCredentials>
         {
             public ValidTokenHandler(HttpMessageHandler innerHandler)
             {
                 InnerHandler = innerHandler;
             }
 
-            public override TokenCredentials GetAccessToken(CancellationToken cancellationToken)
+            public override LeanTokenCredentials GetAccessToken(CancellationToken cancellationToken)
             {
-                return new TokenCredentials(TokenType.Bearer, "123456");
+                return new LeanTokenCredentials(TokenType.Bearer, "123456");
             }
         }
 
-        private class AlwaysFailingTokenHandler : TokenHandler
+        private class AlwaysFailingTokenHandler : LeanTokenHandler<LeanTokenCredentials>
         {
             public AlwaysFailingTokenHandler(HttpMessageHandler innerHandler)
             {
                 InnerHandler = innerHandler;
             }
 
-            public override TokenCredentials GetAccessToken(CancellationToken cancellationToken)
+            public override LeanTokenCredentials GetAccessToken(CancellationToken cancellationToken)
             {
                 var exception = new InvalidOperationException("Simulated persistent token failure");
                 OnAuthenticationFailed(exception);

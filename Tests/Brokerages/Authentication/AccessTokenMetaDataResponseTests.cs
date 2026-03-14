@@ -34,7 +34,7 @@ namespace QuantConnect.Tests.Brokerages.Authentication
                 ContractResolver = new CamelCasePropertyNamesContractResolver()
             };
 
-            var response = JsonConvert.DeserializeObject<OAuthTokenResponse>(json, settings);
+            var response = JsonConvert.DeserializeObject<LeanTokenCredentials>(json, settings);
 
             Assert.AreEqual(expectedTokenType, response.TokenType);
             Assert.AreEqual("abc", response.AccessToken);

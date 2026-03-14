@@ -28,24 +28,24 @@ namespace QuantConnect.Brokerages.Authentication
         /// Gets the name of the brokerage associated with the access token request.
         /// The value is normalized to lowercase.
         /// </summary>
-        public string Brokerage { get; }
+        public string Brokerage { get; set; }
 
         /// <summary>
         /// Gets the account identifier associated with the brokerage.
         /// </summary>
-        public string AccountId { get; }
+        public string AccountId { get; set; }
 
         /// <summary>
         /// Gets the OAuth refresh token used to obtain a new access token.
         /// Omitted from JSON when null.
         /// </summary>
-        public string RefreshToken { get; }
+        public string RefreshToken { get; set; }
 
         /// <summary>
         /// Gets the Lean deploy identifier for brokerages that require it.
         /// Omitted from JSON when null.
         /// </summary>
-        public string DeployId { get; }
+        public string DeployId { get; set; }
 
         /// <summary>
         /// Initializes a new instance of <see cref="OAuthTokenRequest"/> with all fields.

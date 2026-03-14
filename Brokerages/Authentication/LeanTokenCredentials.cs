@@ -13,33 +13,42 @@
  * limitations under the License.
 */
 
+using QuantConnect.Api;
+
 namespace QuantConnect.Brokerages.Authentication
 {
     /// <summary>
     /// Represents credentials required for token-based authentication,
     /// including the access token and its type (e.g., Bearer).
     /// </summary>
-    public class TokenCredentials
+    public class LeanTokenCredentials : RestResponse
     {
         /// <summary>
         /// Gets the type of the token (e.g., Bearer).
         /// </summary>
-        public TokenType TokenType { get; }
+        public TokenType TokenType { get; set; }
 
         /// <summary>
         /// Gets the token string used for authentication.
         /// </summary>
-        public string AccessToken { get; }
+        public string AccessToken { get; set; }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="TokenCredentials"/> class.
+        /// Initializes a new instance of the <see cref="LeanTokenCredentials"/> class.
         /// </summary>
         /// <param name="tokenType">The type of the token.</param>
         /// <param name="accessToken">The token string.</param>
-        public TokenCredentials(TokenType tokenType, string accessToken)
+        public LeanTokenCredentials(TokenType tokenType, string accessToken)
         {
             TokenType = tokenType;
             AccessToken = accessToken;
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="LeanTokenCredentials"/> class.
+        /// </summary>
+        public LeanTokenCredentials()
+        {
         }
     }
 }

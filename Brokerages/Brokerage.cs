@@ -339,12 +339,11 @@ namespace QuantConnect.Brokerages
         /// Must be provided explicitly — each brokerage has a different token lifetime.
         /// </param>
         /// <returns>A configured <see cref="LeanOAuthTokenHandler"/> instance.</returns>
-        protected LeanOAuthTokenHandler CreateOAuthTokenHandler(ApiConnection apiClient, OAuthTokenRequest request,
-            TimeSpan tokenLifetime)
+        protected LeanOAuthTokenHandler<T> CreateOAuthTokenHandler<T>(ApiConnection apiClient, OAuthTokenRequest request, TimeSpan tokenLifetime)
+            where T : LeanTokenCredentials
         {
-            var handler = new LeanOAuthTokenHandler(apiClient, request, tokenLifetime);
-            handler.AuthenticationFailed += (_, ex) =>
-                OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Error, "OAuthenticationFailed", ex.Message));
+            var handler = new LeanOAuthTokenHandler<T>(apiClient, request, tokenLifetime);
+            handler.AuthenticationFailed += (_, ex) => OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Error, "OAuthenticationFailed", ex.Message));
             return handler;
         }
 
