@@ -1908,6 +1908,97 @@ namespace QuantConnect.Tests.Engine.BrokerageTransactionHandlerTests
             Assert.AreEqual(1, tickets.Count);
         }
 
+        // Short Call --> ITM (assigned), underlying should be delivered before OnAssignmentOrderEvent
+        [TestCase(-1, OptionRight.Call, 450, 100, 455, 0)]
+        // Short Put --> ITM (assigned), underlying should be delivered before OnAssignmentOrderEvent
+        [TestCase(-1, OptionRight.Put, 455, 100, 450, 200)]
+        public void OptionAssignmentEventFiredAfterPortfolioUpdate(
+            int initialOptionPosition,
+            OptionRight optionRight,
+            decimal strikePrice,
+            int initialUnderlyingPosition,
+            decimal underlyingPrice,
+            int expectedUnderlyingPositionOnAssignment
+            )
+        {
+            var algorithm = new TestAlgorithm();
+            var equity = algorithm.AddEquity("SPY");
+            var optionSymbol = Symbol.CreateOption(equity.Symbol, equity.Symbol.ID.Market, OptionStyle.American, optionRight, strikePrice,
+                new DateTime(2021, 9, 8));
+            var option = algorithm.AddOptionContract(optionSymbol);
+
+            algorithm.Portfolio[equity.Symbol].SetHoldings(underlyingPrice, initialUnderlyingPosition);
+            algorithm.Portfolio[option.Symbol].SetHoldings(0.01m, initialOptionPosition);
+
+            equity.SetMarketPrice(new Tick { Value = underlyingPrice });
+
+            using var brokerage = new NoSubmitTestBrokerage(algorithm);
+            _transactionHandler = new TestBrokerageTransactionHandler();
+            _transactionHandler.Initialize(algorithm, brokerage, new BacktestingResultHandler());
+            algorithm.Transactions.SetOrderProcessor(_transactionHandler);
+
+            // 9 PM ET
+            _transactionHandler.TestCurrentTimeUtc = new DateTime(2021, 9, 9, 1, 0, 0);
+
+            var parameters = new object[] { new OptionNotificationEventArgs(optionSymbol, 0) };
+            _handleOptionNotification.Invoke(_transactionHandler, parameters);
+
+            _transactionHandler.Exit();
+
+            Assert.AreEqual(1, algorithm.AssignmentEvents.Count);
+            Assert.IsTrue(algorithm.UnderlyingQuantityOnAssignment.ContainsKey(equity.Symbol));
+            Assert.AreEqual(expectedUnderlyingPositionOnAssignment, algorithm.UnderlyingQuantityOnAssignment[equity.Symbol]);
+            Assert.IsTrue(algorithm.UnderlyingOrderEventReceivedBeforeAssignment);
+        }
+
+        // Short Call --> ITM (early assignment - full)
+        [TestCase(-1, OptionRight.Call, 450, 100, 455, 0, 0)]
+        // Short Put --> ITM (early assignment - full)
+        [TestCase(-1, OptionRight.Put, 455, 100, 450, 0, 200)]
+        // Short Call --> ITM (early assignment - partial)
+        [TestCase(-3, OptionRight.Call, 450, 300, 455, -1, 100)]
+        // Short Put --> ITM (early assignment - partial)
+        [TestCase(-3, OptionRight.Put, 455, 100, 450, -1, 300)]
+        public void EarlyAssignmentEventFiredAfterPortfolioUpdate(
+            int initialOptionPosition,
+            OptionRight optionRight,
+            decimal strikePrice,
+            int initialUnderlyingPosition,
+            decimal underlyingPrice,
+            int expectedOptionPosition,
+            int expectedUnderlyingPositionOnAssignment
+            )
+        {
+            var algorithm = new TestAlgorithm();
+            var equity = algorithm.AddEquity("SPY");
+            var optionSymbol = Symbol.CreateOption(equity.Symbol, equity.Symbol.ID.Market, OptionStyle.American, optionRight, strikePrice,
+                new DateTime(2021, 9, 8));
+            var option = algorithm.AddOptionContract(optionSymbol);
+
+            algorithm.Portfolio[equity.Symbol].SetHoldings(underlyingPrice, initialUnderlyingPosition);
+            algorithm.Portfolio[option.Symbol].SetHoldings(0.01m, initialOptionPosition);
+
+            equity.SetMarketPrice(new Tick { Value = underlyingPrice });
+
+            using var brokerage = new NoSubmitTestBrokerage(algorithm);
+            _transactionHandler = new TestBrokerageTransactionHandler();
+            _transactionHandler.Initialize(algorithm, brokerage, new BacktestingResultHandler());
+            algorithm.Transactions.SetOrderProcessor(_transactionHandler);
+
+            // 10 AM ET, before expiry
+            _transactionHandler.TestCurrentTimeUtc = new DateTime(2021, 9, 8, 14, 0, 0);
+
+            var parameters = new object[] { new OptionNotificationEventArgs(optionSymbol, expectedOptionPosition) };
+            _handleOptionNotification.Invoke(_transactionHandler, parameters);
+
+            _transactionHandler.Exit();
+
+            Assert.AreEqual(1, algorithm.AssignmentEvents.Count);
+            Assert.IsTrue(algorithm.UnderlyingQuantityOnAssignment.ContainsKey(equity.Symbol));
+            Assert.AreEqual(expectedUnderlyingPositionOnAssignment, algorithm.UnderlyingQuantityOnAssignment[equity.Symbol]);
+            Assert.IsTrue(algorithm.UnderlyingOrderEventReceivedBeforeAssignment);
+        }
+
         // Long Call --> ITM (exercised early - full)
         [TestCase(1, OptionRight.Call, 450, 100, 455, 2, 0, 200, "Automatic Exercise")]
         // Long Put --> ITM (exercised early - full)
@@ -2667,6 +2758,9 @@ namespace QuantConnect.Tests.Engine.BrokerageTransactionHandlerTests
         internal class TestAlgorithm : QCAlgorithm
         {
             public List<OrderEvent> OrderEvents = new List<OrderEvent>();
+            public List<OrderEvent> AssignmentEvents = new List<OrderEvent>();
+            public Dictionary<Symbol, decimal> UnderlyingQuantityOnAssignment = new Dictionary<Symbol, decimal>();
+            public bool UnderlyingOrderEventReceivedBeforeAssignment { get; private set; }
             public TestAlgorithm()
             {
                 SubscriptionManager.SetDataManager(new DataManagerStub(this));
@@ -2675,6 +2769,16 @@ namespace QuantConnect.Tests.Engine.BrokerageTransactionHandlerTests
             public override void OnOrderEvent(OrderEvent orderEvent)
             {
                 OrderEvents.Add(orderEvent);
+            }
+            public override void OnAssignmentOrderEvent(OrderEvent assignmentEvent)
+            {
+                AssignmentEvents.Add(assignmentEvent);
+                var underlying = assignmentEvent.Symbol.Underlying;
+                if (underlying != null)
+                {
+                    UnderlyingQuantityOnAssignment[underlying] = Portfolio[underlying].Quantity;
+                    UnderlyingOrderEventReceivedBeforeAssignment = OrderEvents.Any(e => e.Symbol == underlying);
+                }
             }
         }
 
