@@ -13,6 +13,7 @@
  * limitations under the License.
 */
 
+using System;
 using NUnit.Framework;
 using QuantConnect.Indicators;
 
@@ -29,5 +30,22 @@ namespace QuantConnect.Tests.Indicators
         protected override string TestFileName => "spy_var.txt";
 
         protected override string TestColumnName => "Var";
+
+        [Test]
+        public void DoesNotThrowOnDecimalOverflow()
+        {
+            var variance = new Variance(3);
+            var time = new DateTime(2020, 1, 1);
+
+            variance.Update(time, 100m);
+            variance.Update(time.AddSeconds(1), 200m);
+            variance.Update(time.AddSeconds(2), 150m);
+            var previousValue = variance.Current.Value;
+
+            var overflowValue = 300000000000000m; // 3e14 squared will exceed decimal.MaxValue
+
+            Assert.DoesNotThrow(() => variance.Update(time.AddSeconds(3), overflowValue));
+            Assert.AreEqual(previousValue, variance.Current.Value);
+        }
     }
 }

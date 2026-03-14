@@ -57,8 +57,20 @@ namespace QuantConnect.Indicators
         /// <returns>A new value for this indicator</returns>
         protected override decimal ComputeNextValue(IReadOnlyWindow<IndicatorDataPoint> window, IndicatorDataPoint input)
         {
-            _rollingSum += input.Value;
-            _rollingSumOfSquares += input.Value * input.Value;
+            var previousRollingSum = _rollingSum;
+            var previousRollingSumOfSquares = _rollingSumOfSquares;
+            try
+            {
+                _rollingSum += input.Value;
+                _rollingSumOfSquares += input.Value * input.Value;
+            }
+            catch (OverflowException)
+            {
+                _rollingSum = previousRollingSum;
+                _rollingSumOfSquares = previousRollingSumOfSquares;
+                //Log.Error($"Variance.ComputeNextValue: Decimal overflow detected when adding value {input.Value}. The previous variance value will be returned.");
+                return Current.Value;
+            }
 
             if (Samples < 2)
                 return 0m;
