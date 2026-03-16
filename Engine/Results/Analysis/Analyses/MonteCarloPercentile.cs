@@ -39,6 +39,11 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
 
             var returns = backtestEquity.PercentChange().Values.ToArray();
 
+            if (returns.Length == 0)
+            {
+                return SingleResponse(new BacktestAnalysysContext(null));
+            }
+
             var simulatedTotalReturns = RunSimulation(returns, nSims: 5);
 
             var backtestVals = backtestEquity.Values.ToArray();
