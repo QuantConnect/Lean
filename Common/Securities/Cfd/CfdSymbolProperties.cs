@@ -13,12 +13,12 @@
  * limitations under the License.
 */
 
-namespace QuantConnect.Securities.Option
+namespace QuantConnect.Securities.Cfd
 {
     /// <summary>
-    /// Represents common properties for a specific option contract
+    /// Represents common properties for a specific CFD contract
     /// </summary>
-    public class OptionSymbolProperties : SymbolProperties
+    public class CfdSymbolProperties : SymbolProperties
     {
         /// <summary>
         /// The contract multiplier for the security.
@@ -36,34 +36,11 @@ namespace QuantConnect.Securities.Option
         public override decimal ContractMultiplier => _contractMultiplier ?? base.ContractMultiplier;
 
         /// <summary>
-        /// When the holder of an equity option exercises one contract, or when the writer of an equity option is assigned
-        /// an exercise notice on one contract, this unit of trade, usually 100 shares of the underlying security, changes hands.
+        /// Creates an instance of the <see cref="CfdSymbolProperties"/> class from <see cref="SymbolProperties"/> class
         /// </summary>
-        public int ContractUnitOfTrade
-        {
-            get; protected set;
-        }
-
-        /// <summary>
-        /// Creates an instance of the <see cref="OptionSymbolProperties"/> class
-        /// </summary>
-        public OptionSymbolProperties(string description, string quoteCurrency, decimal contractMultiplier, decimal pipSize, decimal lotSize)
-            : this(new SymbolProperties(description, quoteCurrency, contractMultiplier, pipSize, lotSize, string.Empty))
-        {
-        }
-
-        /// <summary>
-        /// Creates an instance of the <see cref="OptionSymbolProperties"/> class from <see cref="SymbolProperties"/> class
-        /// </summary>
-        public OptionSymbolProperties(SymbolProperties properties)
+        public CfdSymbolProperties(SymbolProperties properties)
             : base(properties)
         {
-            ContractUnitOfTrade = (int)properties.ContractMultiplier;
-        }
-
-        internal void SetContractUnitOfTrade(int unitOfTrade)
-        {
-            ContractUnitOfTrade = unitOfTrade;
         }
 
         internal void SetContractMultiplier(decimal multiplier)
