@@ -45,7 +45,7 @@ namespace QuantConnect.Securities.Cfd
             IRegisteredSecurityDataTypesProvider registeredTypes)
             : base(config,
                 quoteCurrency,
-                new CfdSymbolProperties(symbolProperties),
+                new ContractSymbolProperties(symbolProperties),
                 new CfdExchange(exchangeHours),
                 new CfdCache(),
                 new SecurityPortfolioModel(),
@@ -63,7 +63,7 @@ namespace QuantConnect.Securities.Cfd
                 )
         {
             Holdings = new CfdHolding(this, currencyConverter);
-            _symbolProperties = (CfdSymbolProperties)SymbolProperties;
+            _symbolProperties = (ContractSymbolProperties)SymbolProperties;
         }
 
         /// <summary>
@@ -86,7 +86,7 @@ namespace QuantConnect.Securities.Cfd
             SecurityCache securityCache)
             : base(symbol,
                 quoteCurrency,
-                new CfdSymbolProperties(symbolProperties),
+                new ContractSymbolProperties(symbolProperties),
                 new CfdExchange(exchangeHours),
                 securityCache,
                 new SecurityPortfolioModel(),
@@ -104,10 +104,10 @@ namespace QuantConnect.Securities.Cfd
                 )
         {
             Holdings = new CfdHolding(this, currencyConverter);
-            _symbolProperties = (CfdSymbolProperties)SymbolProperties;
+            _symbolProperties = (ContractSymbolProperties)SymbolProperties;
         }
 
-        private readonly CfdSymbolProperties _symbolProperties;
+        private readonly ContractSymbolProperties _symbolProperties;
 
         /// <summary>
         /// Gets or sets the contract multiplier for this CFD security

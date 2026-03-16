@@ -13,12 +13,12 @@
  * limitations under the License.
 */
 
-namespace QuantConnect.Securities.Cfd
+namespace QuantConnect.Securities
 {
     /// <summary>
-    /// Represents common properties for a specific CFD contract
+    /// Represents common properties for contract-based securities such as options and CFDs
     /// </summary>
-    public class CfdSymbolProperties : SymbolProperties
+    public class ContractSymbolProperties : SymbolProperties
     {
         /// <summary>
         /// The contract multiplier for the security.
@@ -36,13 +36,27 @@ namespace QuantConnect.Securities.Cfd
         public override decimal ContractMultiplier => _contractMultiplier ?? base.ContractMultiplier;
 
         /// <summary>
-        /// Creates an instance of the <see cref="CfdSymbolProperties"/> class from <see cref="SymbolProperties"/> class
+        /// Creates an instance of the <see cref="ContractSymbolProperties"/> class from a <see cref="SymbolProperties"/> instance
         /// </summary>
-        public CfdSymbolProperties(SymbolProperties properties)
+        public ContractSymbolProperties(SymbolProperties properties)
             : base(properties)
         {
         }
 
+        /// <summary>
+        /// Creates an instance of the <see cref="ContractSymbolProperties"/> class
+        /// </summary>
+        public ContractSymbolProperties(string description, string quoteCurrency, decimal contractMultiplier,
+            decimal minimumPriceVariation, decimal lotSize, string marketTicker,
+            decimal? minimumOrderSize = null, decimal priceMagnifier = 1, decimal strikeMultiplier = 1)
+            : base(description, quoteCurrency, contractMultiplier, minimumPriceVariation, lotSize, marketTicker,
+                minimumOrderSize, priceMagnifier, strikeMultiplier)
+        {
+        }
+
+        /// <summary>
+        /// Sets a custom contract multiplier that persists through symbol properties database updates
+        /// </summary>
         internal void SetContractMultiplier(decimal multiplier)
         {
             _contractMultiplier = multiplier;
