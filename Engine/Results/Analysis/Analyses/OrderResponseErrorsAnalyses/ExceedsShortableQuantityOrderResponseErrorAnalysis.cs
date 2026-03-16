@@ -46,7 +46,7 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
                 .ToList();
 
             var potentialSolutions = result.Count > 0 ? PotentialSolutions(language) : [];
-            return SingleResponse(new BacktestAnalysysRepeatedContext(result), potentialSolutions);
+            return SingleResponse(new BacktestAnalysisRepeatedContext(result), potentialSolutions);
         }
 
         private static List<string> PotentialSolutions(Language language) =>

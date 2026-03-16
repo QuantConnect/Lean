@@ -51,7 +51,7 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses.Messages
         {
             var foundMessages = Match(messages, ExpectedMessageText).ToList();
             var potentialSolutions = foundMessages.Count > 0 ? PotentialSolutions(language) : [];
-            return SingleResponse(new BacktestAnalysysRepeatedContext(foundMessages), potentialSolutions);
+            return SingleResponse(new BacktestAnalysisRepeatedContext(foundMessages), potentialSolutions);
         }
 
         protected abstract List<string> PotentialSolutions(Language language);

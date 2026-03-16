@@ -36,7 +36,7 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
             // 1 – Get the Portfolio Margin chart.
             if (!backtestResult.Charts.TryGetValue("Portfolio Margin", out var chart))
             {
-                return SingleResponse(new BacktestAnalysysContext(null));
+                return SingleResponse(new BacktestAnalysisContext(null));
             }
 
             // 2 - Load each series from the Portfolio Margin plot.
@@ -65,7 +65,7 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
                 ? $"Number of days when the 3-day SMA of the margin usage drops below 50%: {countBelow50}"
                 : null;
             var potentialSolutions = result != null ? PotentialSolutions() : [];
-            return SingleResponse(new BacktestAnalysysContext(result), potentialSolutions);
+            return SingleResponse(new BacktestAnalysisContext(result), potentialSolutions);
         }
 
         private static List<string> PotentialSolutions() =>

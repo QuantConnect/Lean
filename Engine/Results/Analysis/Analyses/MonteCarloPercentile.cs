@@ -34,14 +34,14 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
         {
             if (backtestEquity.Count == 0)
             {
-                return SingleResponse(new BacktestAnalysysContext(null));
+                return SingleResponse(new BacktestAnalysisContext(null));
             }
 
             var returns = backtestEquity.PercentChange().Values.ToArray();
 
             if (returns.Length == 0)
             {
-                return SingleResponse(new BacktestAnalysysContext(null));
+                return SingleResponse(new BacktestAnalysisContext(null));
             }
 
             var simulatedTotalReturns = RunSimulation(returns, nSims: 5);
@@ -53,7 +53,7 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
 
             var result = percentile > 90m ? new { Percentile = percentile } : null;
             var potentialSolutions = result is not null ? PotentialSolutions() : [];
-            return SingleResponse(new BacktestAnalysysContext(result), potentialSolutions);
+            return SingleResponse(new BacktestAnalysisContext(result), potentialSolutions);
         }
 
         private static decimal[] RunSimulation(decimal[] returns, int nSims = 5000, int blockSize = 20)

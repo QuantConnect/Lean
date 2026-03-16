@@ -54,14 +54,14 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
             var contexts = new List<IBacktestAnalysisContext>();
             if (shortFoundMessages.Count > 0)
             {
-                contexts.Add(new BacktestAnalysysRepeatedContext(shortFoundMessages));
+                contexts.Add(new BacktestAnalysisRepeatedContext(shortFoundMessages));
             }
             if (quantityFoundMessages.Count > 0)
             {
-                contexts.Add(new BacktestAnalysysRepeatedContext(quantityFoundMessages));
+                contexts.Add(new BacktestAnalysisRepeatedContext(quantityFoundMessages));
             }
 
-            return SingleResponse(new BacktestAnalysysAggregateContext(contexts), potentialSolutions);
+            return SingleResponse(new BacktestAnalysisAggregateContext(contexts), potentialSolutions);
         }
 
         protected override List<string> PotentialSolutions(Language language) =>

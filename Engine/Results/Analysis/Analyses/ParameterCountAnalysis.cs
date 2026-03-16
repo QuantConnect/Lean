@@ -46,7 +46,7 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
             var parametersCount = algorithm.GetParameters().Count;
             var result = parametersCount > 10 ? $"{parametersCount} Parameters Detected" : null;
             var potentialSolutions = result is not null ? PotentialSolutions(language) : [];
-            return SingleResponse(new BacktestAnalysysContext(result), potentialSolutions);
+            return SingleResponse(new BacktestAnalysisContext(result), potentialSolutions);
         }
 
         private static List<string> PotentialSolutions(Language language) =>
