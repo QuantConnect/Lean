@@ -13,10 +13,13 @@
  * limitations under the License.
  *
 */
+
+using Newtonsoft.Json;
+using QuantConnect.Util;
 using System.Collections;
 using System.Collections.Generic;
 
-namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
+namespace QuantConnect
 {
     /// <summary>
     /// A simple context that holds a single diagnostic sample object.
@@ -95,7 +98,8 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
     /// Represents the outcome of a single backtest diagnostic analysis,
     /// containing the analysis name, diagnostic context, and a list of potential solutions.
     /// </summary>
-    public class BacktestAnalysisResult : IBacktestAnalysisResult
+    [JsonConverter(typeof(BacktestAnalysisResultJsonConverter))]
+    public class BacktestAnalysisResult
     {
         /// <summary>
         /// Gets or sets the name of the analysis that produced this result.

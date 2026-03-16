@@ -212,7 +212,7 @@ namespace QuantConnect.Packets
         /// Backtest analysis results.
         /// </summary>
         [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
-        public IReadOnlyList<IBacktestAnalysisResult> AnalysisResult { get; set; }
+        public IReadOnlyList<BacktestAnalysisResult> AnalysisResult { get; set; }
 
         /// <summary>
         /// Default Constructor
