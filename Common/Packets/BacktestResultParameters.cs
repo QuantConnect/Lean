@@ -34,7 +34,7 @@ namespace QuantConnect.Packets
         /// <summary>
         /// Backtest analysis results.
         /// </summary>
-        public IReadOnlyList<IBacktestAnalysisResult> AnalysisResult { get; set; }
+        public IReadOnlyList<BacktestAnalysisResult> AnalysisResult { get; set; }
 
         /// <summary>
         /// Creates a new instance
@@ -49,7 +49,7 @@ namespace QuantConnect.Packets
             AlgorithmPerformance totalPerformance = null,
             AlgorithmConfiguration algorithmConfiguration = null,
             IDictionary<string, string> state = null,
-            IReadOnlyList<IBacktestAnalysisResult> analysisResult = null)
+            IReadOnlyList<BacktestAnalysisResult> analysisResult = null)
             : base(charts, orders, profitLoss, statistics, runtimeStatistics, orderEvents, totalPerformance, algorithmConfiguration, state)
         {
             RollingWindow = rollingWindow;
