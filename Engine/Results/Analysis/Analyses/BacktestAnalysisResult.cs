@@ -21,7 +21,7 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
     /// <summary>
     /// A simple context that holds a single diagnostic sample object.
     /// </summary>
-    public class BacktestAnalysysContext : IBacktestAnalysisContext
+    public class BacktestAnalysisContext : IBacktestAnalysisContext
     {
         /// <summary>
         /// Gets or sets a representative sample value produced by the analysis.
@@ -29,10 +29,10 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
         public object Sample { get; set; }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="BacktestAnalysysContext"/> class.
+        /// Initializes a new instance of the <see cref="BacktestAnalysisContext"/> class.
         /// </summary>
         /// <param name="sample">A representative sample produced by the analysis, or <c>null</c> when no issue was found.</param>
-        public BacktestAnalysysContext(object sample)
+        public BacktestAnalysisContext(object sample)
         {
             Sample = sample;
         }
@@ -42,7 +42,7 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
     /// A context that represents multiple occurrences of the same diagnostic issue,
     /// exposing the first sample and the total occurrence count.
     /// </summary>
-    public class BacktestAnalysysRepeatedContext : BacktestAnalysysContext
+    public class BacktestAnalysisRepeatedContext : BacktestAnalysisContext
     {
         /// <summary>
         /// Gets or sets the total number of matching occurrences found by the analysis.
@@ -50,10 +50,10 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
         public int Occurrences { get; set; }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="BacktestAnalysysRepeatedContext"/> class.
+        /// Initializes a new instance of the <see cref="BacktestAnalysisRepeatedContext"/> class.
         /// </summary>
-        /// <param name="samples">All matching sample objects; the first element is stored as <see cref="BacktestAnalysysContext.Sample"/>.</param>
-        public BacktestAnalysysRepeatedContext(IReadOnlyList<object> samples) : base(samples.Count > 0 ? samples[0] : null)
+        /// <param name="samples">All matching sample objects; the first element is stored as <see cref="BacktestAnalysisContext.Sample"/>.</param>
+        public BacktestAnalysisRepeatedContext(IReadOnlyList<object> samples) : base(samples.Count > 0 ? samples[0] : null)
         {
             Occurrences = samples.Count;
         }
@@ -63,15 +63,15 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
     /// A composite context that aggregates several <see cref="IBacktestAnalysisContext"/> instances
     /// into a single enumerable context.
     /// </summary>
-    public class BacktestAnalysysAggregateContext : IBacktestAnalysisContext, IEnumerable<IBacktestAnalysisContext>
+    public class BacktestAnalysisAggregateContext : IBacktestAnalysisContext, IEnumerable<IBacktestAnalysisContext>
     {
         private IReadOnlyList<IBacktestAnalysisContext> _contexts { get; set; }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="BacktestAnalysysAggregateContext"/> class.
+        /// Initializes a new instance of the <see cref="BacktestAnalysisAggregateContext"/> class.
         /// </summary>
         /// <param name="contexts">The individual contexts to aggregate.</param>
-        public BacktestAnalysysAggregateContext(IReadOnlyList<IBacktestAnalysisContext> contexts)
+        public BacktestAnalysisAggregateContext(IReadOnlyList<IBacktestAnalysisContext> contexts)
         {
             _contexts = contexts;
         }

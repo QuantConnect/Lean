@@ -42,7 +42,7 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
                 : null;
 
             var potentialSolutions = result is not null ? PotentialSolutions() : [];
-            return SingleResponse(new BacktestAnalysysContext(result), potentialSolutions);
+            return SingleResponse(new BacktestAnalysisContext(result), potentialSolutions);
         }
 
         private static List<string> PotentialSolutions() =>
