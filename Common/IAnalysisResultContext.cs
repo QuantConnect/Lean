@@ -17,9 +17,9 @@
 namespace QuantConnect
 {
     /// <summary>
-    /// Marker interface for context objects attached to a <see cref="BacktestAnalysisResult"/>.
+    /// Marker interface for context objects attached to a <see cref="AnalysisResult"/>.
     /// </summary>
-    public interface IBacktestAnalysisContext
+    public interface IResultsAnalysisContext
     {
     }
 }

@@ -23,7 +23,7 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
     /// <summary>
     /// Detects orders rejected because they exceed the available shortable quantity.
     /// </summary>
-    public class ExceedsShortableQuantityOrderResponseErrorAnalysis : BaseBacktestAnalysis
+    public class ExceedsShortableQuantityOrderResponseErrorAnalysis : BaseResultsAnalysis
     {
         private static readonly string[] MessageText =
         [
@@ -38,7 +38,7 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
         /// <param name="orderEvents">The order events from the backtest result.</param>
         /// <param name="language">The programming language the algorithm is written in.</param>
         /// <returns>Analysis results when shortable quantity violations are detected.</returns>
-        public IReadOnlyList<BacktestAnalysisResult> Run(IReadOnlyList<OrderEvent> orderEvents, Language language)
+        public IReadOnlyList<AnalysisResult> Run(IReadOnlyList<OrderEvent> orderEvents, Language language)
         {
             var result = orderEvents
                 .Where(e => e.Message != null && MessageText.All(t => e.Message.Contains(t, StringComparison.InvariantCultureIgnoreCase)))
@@ -46,7 +46,7 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
                 .ToList();
 
             var potentialSolutions = result.Count > 0 ? PotentialSolutions(language) : [];
-            return SingleResponse(new BacktestAnalysisRepeatedContext(result), potentialSolutions);
+            return SingleResponse(new ResultsAnalysisRepeatedContext(result), potentialSolutions);
         }
 
         private static List<string> PotentialSolutions(Language language) =>

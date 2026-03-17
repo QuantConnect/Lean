@@ -23,25 +23,25 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
     /// Block-bootstrap Monte Carlo test: flags strategies whose total return
     /// is in the top 10 % of simulated outcomes (potentially lucky).
     /// </summary>
-    public class MonteCarloPercentile : BaseBacktestAnalysis
+    public class MonteCarloPercentile : BaseResultsAnalysis
     {
         /// <summary>
         /// Runs the Monte Carlo percentile test against the given equity curve.
         /// </summary>
         /// <param name="backtestEquity">Daily equity values from the backtest, keyed by date.</param>
         /// <returns>Analysis results indicating whether the strategy's return is suspiciously high.</returns>
-        public IReadOnlyList<BacktestAnalysisResult> Run(SortedList<DateTime, decimal> backtestEquity)
+        public IReadOnlyList<AnalysisResult> Run(SortedList<DateTime, decimal> backtestEquity)
         {
             if (backtestEquity.Count == 0)
             {
-                return SingleResponse(new BacktestAnalysisContext(null));
+                return SingleResponse(new ResultsAnalysisContext(null));
             }
 
             var returns = backtestEquity.PercentChange().Values.ToArray();
 
             if (returns.Length == 0)
             {
-                return SingleResponse(new BacktestAnalysisContext(null));
+                return SingleResponse(new ResultsAnalysisContext(null));
             }
 
             var simulatedTotalReturns = RunSimulation(returns, nSims: 5);
@@ -53,7 +53,7 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
 
             var result = percentile > 90m ? new { Percentile = percentile } : null;
             var potentialSolutions = result is not null ? PotentialSolutions() : [];
-            return SingleResponse(new BacktestAnalysisContext(result), potentialSolutions);
+            return SingleResponse(new ResultsAnalysisContext(result), potentialSolutions);
         }
 
         private static decimal[] RunSimulation(decimal[] returns, int nSims = 5000, int blockSize = 20)

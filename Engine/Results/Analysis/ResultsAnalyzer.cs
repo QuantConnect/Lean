@@ -28,7 +28,7 @@ namespace QuantConnect.Lean.Engine.Results.Analysis
     /// <summary>
     /// Runs the full suite of backtest diagnostic tests against a single backtest.
     /// </summary>
-    public class BacktestAnalyzer
+    public class ResultsAnalyzer
     {
         private readonly QCAlgorithm _algorithm;
         private readonly Language _language;
@@ -38,13 +38,13 @@ namespace QuantConnect.Lean.Engine.Results.Analysis
         private Result _result;
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="BacktestAnalyzer"/> class.
+        /// Initializes a new instance of the <see cref="ResultsAnalyzer"/> class.
         /// </summary>
         /// <param name="result">The backtest result to analyze.</param>
         /// <param name="algorithm">The algorithm instance used for history requests and settings.</param>
         /// <param name="language">The programming language the algorithm is written in.</param>
         /// <param name="logs">The full list of log lines produced by the backtest.</param>
-        public BacktestAnalyzer(Result result, QCAlgorithm algorithm, Language language, IReadOnlyList<string> logs)
+        public ResultsAnalyzer(Result result, QCAlgorithm algorithm, Language language, IReadOnlyList<string> logs)
         {
             _result = result;
             _algorithm = algorithm;
@@ -60,13 +60,13 @@ namespace QuantConnect.Lean.Engine.Results.Analysis
         /// </summary>
         /// <param name="timeLimitSeconds">Wall-clock seconds allowed for the full chain before early exit.</param>
         /// <param name="maxFailedTests">Maximum number of analyses with solutions before early exit.</param>
-        /// <returns>A list of <see cref="BacktestAnalysisResult"/> entries that have at least one potential solution.</returns>
-        public IReadOnlyList<BacktestAnalysisResult> RunTestChain(int timeLimitSeconds = 5, int maxFailedTests = 3)
+        /// <returns>A list of <see cref="AnalysisResult"/> entries that have at least one potential solution.</returns>
+        public IReadOnlyList<AnalysisResult> RunTestChain(int timeLimitSeconds = 5, int maxFailedTests = 3)
         {
             var timingLogs = new List<string>();
             (_equityCurve, _benchmarkEquityCurve) = ReadEquityCurve(_result, _algorithm, timingLogs);
 
-            var analyses = new List<Func<IReadOnlyList<BacktestAnalysisResult>>>
+            var analyses = new List<Func<IReadOnlyList<AnalysisResult>>>
             {
                 CheckFlatEquityCurve,
                 CheckPortfolioValueIsNotPositive,
@@ -100,7 +100,7 @@ namespace QuantConnect.Lean.Engine.Results.Analysis
                 CheckMonteCarloPercentile,
             };
 
-            var responses = new ConcurrentBag<BacktestAnalysisResult>();
+            var responses = new ConcurrentBag<AnalysisResult>();
             using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(timeLimitSeconds));
             var timer = Stopwatch.StartNew();
 
@@ -126,94 +126,94 @@ namespace QuantConnect.Lean.Engine.Results.Analysis
             return [.. responses.Take(maxFailedTests)];
         }
 
-        private IReadOnlyList<BacktestAnalysisResult> CheckFlatEquityCurve()
+        private IReadOnlyList<AnalysisResult> CheckFlatEquityCurve()
             => new FlatEquityCurveAnalysis().Run(_equityCurve);
 
-        private IReadOnlyList<BacktestAnalysisResult> CheckPortfolioValueIsNotPositive()
+        private IReadOnlyList<AnalysisResult> CheckPortfolioValueIsNotPositive()
             => new PortfolioValueIsNotPositiveAnalysis().Run(_result);
 
-        private IReadOnlyList<BacktestAnalysisResult> CheckInsufficientBuyingPowerOrderResponseError()
+        private IReadOnlyList<AnalysisResult> CheckInsufficientBuyingPowerOrderResponseError()
             => new InsufficientBuyingPowerOrderResponseErrorAnalysis().Run(_result.OrderEvents, _language);
 
-        private IReadOnlyList<BacktestAnalysisResult> CheckAlgorithmWarmingUpOrderResponseError()
+        private IReadOnlyList<AnalysisResult> CheckAlgorithmWarmingUpOrderResponseError()
             => new AlgorithmWarmingUpOrderResponseErrorAnalysis().Run(_logs, _language);
 
-        private IReadOnlyList<BacktestAnalysisResult> CheckBrokerageModelRefusedToSubmitOrderOrderResponseError()
+        private IReadOnlyList<AnalysisResult> CheckBrokerageModelRefusedToSubmitOrderOrderResponseError()
             => new BrokerageModelRefusedToSubmitOrderOrderResponseErrorAnalysis().Run(_result.OrderEvents, _language);
 
-        private IReadOnlyList<BacktestAnalysisResult> CheckExceedsShortableQuantityOrderResponseError()
+        private IReadOnlyList<AnalysisResult> CheckExceedsShortableQuantityOrderResponseError()
             => new ExceedsShortableQuantityOrderResponseErrorAnalysis().Run(_result.OrderEvents, _language);
 
-        private IReadOnlyList<BacktestAnalysisResult> CheckNonTradableSecurityOrderResponseError()
+        private IReadOnlyList<AnalysisResult> CheckNonTradableSecurityOrderResponseError()
             => new NonTradableSecurityOrderResponseErrorAnalysis().Run(_logs, _language);
 
-        private IReadOnlyList<BacktestAnalysisResult> CheckOrderQuantityZeroOrderResponseError()
+        private IReadOnlyList<AnalysisResult> CheckOrderQuantityZeroOrderResponseError()
             => new OrderQuantityZeroOrderResponseErrorAnalysis().Run(_logs, _language);
 
-        private IReadOnlyList<BacktestAnalysisResult> CheckSecurityPriceZeroOrderResponseError()
+        private IReadOnlyList<AnalysisResult> CheckSecurityPriceZeroOrderResponseError()
             => new SecurityPriceZeroOrderResponseErrorAnalysis().Run(_logs, _language);
 
-        private IReadOnlyList<BacktestAnalysisResult> CheckUnsupportedRequestTypeOrderResponseError()
+        private IReadOnlyList<AnalysisResult> CheckUnsupportedRequestTypeOrderResponseError()
             => new UnsupportedRequestTypeOrderResponseErrorAnalysis().Run(_logs, _language);
 
-        private IReadOnlyList<BacktestAnalysisResult> CheckExchangeNotOpenOrderResponseError()
+        private IReadOnlyList<AnalysisResult> CheckExchangeNotOpenOrderResponseError()
             => new ExchangeNotOpenOrderResponseErrorAnalysis().Run(_logs, _language);
 
-        private IReadOnlyList<BacktestAnalysisResult> CheckForexConversionRateZeroOrderResponseError()
+        private IReadOnlyList<AnalysisResult> CheckForexConversionRateZeroOrderResponseError()
             => new ForexConversionRateZeroOrderResponseErrorAnalysis().Run(_logs, _language);
 
-        private IReadOnlyList<BacktestAnalysisResult> CheckExceededMaximumOrdersOrderResponseError()
+        private IReadOnlyList<AnalysisResult> CheckExceededMaximumOrdersOrderResponseError()
             => new ExceededMaximumOrdersOrderResponseErrorAnalysis().Run(_logs, _language);
 
-        private IReadOnlyList<BacktestAnalysisResult> CheckBrokerageModelRefusedToUpdateOrderOrderResponseError()
+        private IReadOnlyList<AnalysisResult> CheckBrokerageModelRefusedToUpdateOrderOrderResponseError()
             => new BrokerageModelRefusedToUpdateOrderOrderResponseErrorAnalysis().Run(_logs, _language);
 
-        private IReadOnlyList<BacktestAnalysisResult> CheckOrderQuantityLessThanLotSizeOrderResponseError()
+        private IReadOnlyList<AnalysisResult> CheckOrderQuantityLessThanLotSizeOrderResponseError()
             => new OrderQuantityLessThanLotSizeOrderResponseErrorAnalysis().Run(_logs, _language);
 
-        private IReadOnlyList<BacktestAnalysisResult> CheckEuropeanOptionNotExpiredOnExerciseOrderResponseError()
+        private IReadOnlyList<AnalysisResult> CheckEuropeanOptionNotExpiredOnExerciseOrderResponseError()
             => new EuropeanOptionNotExpiredOnExerciseOrderResponseErrorAnalysis().Run(_logs, _language);
 
-        private IReadOnlyList<BacktestAnalysisResult> CheckOptionOrderOnStockSplitOrderResponseError()
+        private IReadOnlyList<AnalysisResult> CheckOptionOrderOnStockSplitOrderResponseError()
             => new OptionOrderOnStockSplitOrderResponseErrorAnalysis().Run(_logs, _language);
 
-        private IReadOnlyList<BacktestAnalysisResult> CheckMarketOnOpenNotAllowedDuringRegularHoursOrderResponseError()
+        private IReadOnlyList<AnalysisResult> CheckMarketOnOpenNotAllowedDuringRegularHoursOrderResponseError()
             => new MarketOnOpenNotAllowedDuringRegularHoursOrderResponseErrorAnalysis().Run(_logs, _language);
 
-        private IReadOnlyList<BacktestAnalysisResult> CheckInsightsEmittedForDelistedSecurities()
+        private IReadOnlyList<AnalysisResult> CheckInsightsEmittedForDelistedSecurities()
             => new InsightsEmittedForDelistedSecuritiesAnalysis().Run(_logs, _language);
 
-        private IReadOnlyList<BacktestAnalysisResult> CheckTakeProfitAndStopLossOrders()
+        private IReadOnlyList<AnalysisResult> CheckTakeProfitAndStopLossOrders()
             => new TakeProfitAndStopLossOrdersAnalysis().Run(_result.Orders.Values, _language);
 
-        private IReadOnlyList<BacktestAnalysisResult> CheckMarginCalls()
+        private IReadOnlyList<AnalysisResult> CheckMarginCalls()
             => new MarginCallsAnalysis().Run(_logs, _language);
 
-        private IReadOnlyList<BacktestAnalysisResult> CheckExecutionSpeed()
+        private IReadOnlyList<AnalysisResult> CheckExecutionSpeed()
             => new ExecutionSpeedAnalysis().Run(_logs);
 
-        private IReadOnlyList<BacktestAnalysisResult> CheckStaleOrderFills()
+        private IReadOnlyList<AnalysisResult> CheckStaleOrderFills()
             => new StaleOrderFillsAnalysis().Run(_result.OrderEvents, _language);
 
-        private IReadOnlyList<BacktestAnalysisResult> CheckForOrderFillsDuringExtendedMarketHours()
+        private IReadOnlyList<AnalysisResult> CheckForOrderFillsDuringExtendedMarketHours()
             => new OrderFillsDuringExtendedMarketHoursAnalysis().Run(_algorithm, _result.OrderEvents, _language);
 
-        private IReadOnlyList<BacktestAnalysisResult> CheckPortfolioMarginUsage()
+        private IReadOnlyList<AnalysisResult> CheckPortfolioMarginUsage()
             => new PortfolioMarginUsageAnalysis().Run(_result);
 
-        private IReadOnlyList<BacktestAnalysisResult> CheckParameterCount()
+        private IReadOnlyList<AnalysisResult> CheckParameterCount()
             => new ParameterCountAnalysis().Run(_algorithm, _language);
 
-        private IReadOnlyList<BacktestAnalysisResult> CheckCrisisEvents()
+        private IReadOnlyList<AnalysisResult> CheckCrisisEvents()
             => new CrisisEventsAnalysis().Run(_algorithm, _equityCurve, _benchmarkEquityCurve);
 
-        private IReadOnlyList<BacktestAnalysisResult> CheckStatisticalSignificanceOfDailyReturns()
+        private IReadOnlyList<AnalysisResult> CheckStatisticalSignificanceOfDailyReturns()
             => new StatisticalSignificanceOfDailyReturnsAnalysis().Run(_equityCurve, _benchmarkEquityCurve);
 
-        private IReadOnlyList<BacktestAnalysisResult> CheckPerformanceRelativeToBenchmark()
+        private IReadOnlyList<AnalysisResult> CheckPerformanceRelativeToBenchmark()
             => new PerformanceRelativeToBenchmark().Run(_algorithm, _equityCurve, _benchmarkEquityCurve);
 
-        private IReadOnlyList<BacktestAnalysisResult> CheckMonteCarloPercentile()
+        private IReadOnlyList<AnalysisResult> CheckMonteCarloPercentile()
             => new MonteCarloPercentile().Run(_equityCurve);
 
         /// <summary>

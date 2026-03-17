@@ -20,15 +20,15 @@ using NUnit.Framework;
 namespace QuantConnect.Tests.Common.Util
 {
     [TestFixture]
-    public class BacktestAnalysisResultJsonConverterTests
+    public class AnalysisResultJsonConverterTests
     {
         // ── Helpers ────────────────────────────────────────────────────────────
 
-        private static string Serialize(BacktestAnalysisResult result)
+        private static string Serialize(AnalysisResult result)
             => JsonConvert.SerializeObject(result);
 
-        private static BacktestAnalysisResult Deserialize(string json)
-            => JsonConvert.DeserializeObject<BacktestAnalysisResult>(json);
+        private static AnalysisResult Deserialize(string json)
+            => JsonConvert.DeserializeObject<AnalysisResult>(json);
 
         // ── Context type detection ─────────────────────────────────────────────
 
@@ -43,8 +43,8 @@ namespace QuantConnect.Tests.Common.Util
 
             var result = Deserialize(json);
 
-            Assert.IsInstanceOf<BacktestAnalysisContext>(result.Context);
-            Assert.AreEqual("some-value", ((BacktestAnalysisContext)result.Context).Sample.ToString());
+            Assert.IsInstanceOf<ResultsAnalysisContext>(result.Context);
+            Assert.AreEqual("some-value", ((ResultsAnalysisContext)result.Context).Sample.ToString());
         }
 
         [Test]
@@ -58,8 +58,8 @@ namespace QuantConnect.Tests.Common.Util
 
             var result = Deserialize(json);
 
-            Assert.IsInstanceOf<BacktestAnalysisRepeatedContext>(result.Context);
-            var ctx = (BacktestAnalysisRepeatedContext)result.Context;
+            Assert.IsInstanceOf<ResultsAnalysisRepeatedContext>(result.Context);
+            var ctx = (ResultsAnalysisRepeatedContext)result.Context;
             Assert.AreEqual("first", ctx.Sample.ToString());
             Assert.AreEqual(42, ctx.Occurrences);
         }
@@ -78,15 +78,15 @@ namespace QuantConnect.Tests.Common.Util
 
             var result = Deserialize(json);
 
-            Assert.IsInstanceOf<BacktestAnalysisAggregateContext>(result.Context);
-            var agg = (BacktestAnalysisAggregateContext)result.Context;
-            var inner = new List<IBacktestAnalysisContext>(agg);
+            Assert.IsInstanceOf<ResultsAnalysisAggregateContext>(result.Context);
+            var agg = (ResultsAnalysisAggregateContext)result.Context;
+            var inner = new List<IResultsAnalysisContext>(agg);
             Assert.AreEqual(2, inner.Count);
-            Assert.IsInstanceOf<BacktestAnalysisContext>(inner[0]);
-            Assert.AreEqual("a", ((BacktestAnalysisContext)inner[0]).Sample.ToString());
-            Assert.IsInstanceOf<BacktestAnalysisRepeatedContext>(inner[1]);
-            Assert.AreEqual("b", ((BacktestAnalysisRepeatedContext)inner[1]).Sample.ToString());
-            Assert.AreEqual(3, ((BacktestAnalysisRepeatedContext)inner[1]).Occurrences);
+            Assert.IsInstanceOf<ResultsAnalysisContext>(inner[0]);
+            Assert.AreEqual("a", ((ResultsAnalysisContext)inner[0]).Sample.ToString());
+            Assert.IsInstanceOf<ResultsAnalysisRepeatedContext>(inner[1]);
+            Assert.AreEqual("b", ((ResultsAnalysisRepeatedContext)inner[1]).Sample.ToString());
+            Assert.AreEqual(3, ((ResultsAnalysisRepeatedContext)inner[1]).Occurrences);
         }
 
         [Test]
@@ -143,12 +143,12 @@ namespace QuantConnect.Tests.Common.Util
                 { ""Name"": ""B"", ""Context"": { ""Sample"": 2, ""Occurrences"": 5 }, ""PotentialSolutions"": [""Fix""] }
             ]";
 
-            var results = JsonConvert.DeserializeObject<IReadOnlyList<BacktestAnalysisResult>>(json);
+            var results = JsonConvert.DeserializeObject<IReadOnlyList<AnalysisResult>>(json);
 
             Assert.AreEqual(2, results.Count);
-            Assert.IsInstanceOf<BacktestAnalysisContext>(results[0].Context);
-            Assert.IsInstanceOf<BacktestAnalysisRepeatedContext>(results[1].Context);
-            Assert.AreEqual(5, ((BacktestAnalysisRepeatedContext)results[1].Context).Occurrences);
+            Assert.IsInstanceOf<ResultsAnalysisContext>(results[0].Context);
+            Assert.IsInstanceOf<ResultsAnalysisRepeatedContext>(results[1].Context);
+            Assert.AreEqual(5, ((ResultsAnalysisRepeatedContext)results[1].Context).Occurrences);
         }
 
         // ── Round-trip ─────────────────────────────────────────────────────────
@@ -156,9 +156,9 @@ namespace QuantConnect.Tests.Common.Util
         [Test]
         public void RoundTripWithPlainContext()
         {
-            var original = new BacktestAnalysisResult(
+            var original = new AnalysisResult(
                 "SomeAnalysis",
-                new BacktestAnalysisContext("sample-string"),
+                new ResultsAnalysisContext("sample-string"),
                 ["Fix this", "Or that"]);
 
             var json = Serialize(original);
@@ -168,25 +168,25 @@ namespace QuantConnect.Tests.Common.Util
             Assert.AreEqual(2, result.PotentialSolutions.Count);
             Assert.AreEqual(original.PotentialSolutions[0], result.PotentialSolutions[0]);
             Assert.AreEqual(original.PotentialSolutions[1], result.PotentialSolutions[1]);
-            Assert.IsInstanceOf<BacktestAnalysisContext>(result.Context);
+            Assert.IsInstanceOf<ResultsAnalysisContext>(result.Context);
             Assert.AreEqual(
-                ((BacktestAnalysisContext)original.Context).Sample.ToString(),
-                ((BacktestAnalysisContext)result.Context).Sample.ToString());
+                ((ResultsAnalysisContext)original.Context).Sample.ToString(),
+                ((ResultsAnalysisContext)result.Context).Sample.ToString());
         }
 
         [Test]
         public void RoundTripWithRepeatedContext()
         {
-            var original = new BacktestAnalysisResult(
+            var original = new AnalysisResult(
                 "RepeatedAnalysis",
-                new BacktestAnalysisRepeatedContext(["first", "second", "third"]),
+                new ResultsAnalysisRepeatedContext(["first", "second", "third"]),
                 ["Reduce frequency"]);
 
             var json = Serialize(original);
             var result = Deserialize(json);
 
-            Assert.IsInstanceOf<BacktestAnalysisRepeatedContext>(result.Context);
-            var ctx = (BacktestAnalysisRepeatedContext)result.Context;
+            Assert.IsInstanceOf<ResultsAnalysisRepeatedContext>(result.Context);
+            var ctx = (ResultsAnalysisRepeatedContext)result.Context;
             Assert.AreEqual(3, ctx.Occurrences);
             Assert.AreEqual("first", ctx.Sample.ToString());
         }
@@ -194,23 +194,23 @@ namespace QuantConnect.Tests.Common.Util
         [Test]
         public void RoundTripWithAggregateContext()
         {
-            var original = new BacktestAnalysisResult(
+            var original = new AnalysisResult(
                 "AggregateAnalysis",
-                new BacktestAnalysisAggregateContext([
-                    new BacktestAnalysisContext("ctx-a"),
-                    new BacktestAnalysisRepeatedContext(["x", "y"])
+                new ResultsAnalysisAggregateContext([
+                    new ResultsAnalysisContext("ctx-a"),
+                    new ResultsAnalysisRepeatedContext(["x", "y"])
                 ]),
                 []);
 
             var json = Serialize(original);
             var result = Deserialize(json);
 
-            Assert.IsInstanceOf<BacktestAnalysisAggregateContext>(result.Context);
-            var inner = new List<IBacktestAnalysisContext>((BacktestAnalysisAggregateContext)result.Context);
+            Assert.IsInstanceOf<ResultsAnalysisAggregateContext>(result.Context);
+            var inner = new List<IResultsAnalysisContext>((ResultsAnalysisAggregateContext)result.Context);
             Assert.AreEqual(2, inner.Count);
-            Assert.IsInstanceOf<BacktestAnalysisContext>(inner[0]);
-            Assert.IsInstanceOf<BacktestAnalysisRepeatedContext>(inner[1]);
-            Assert.AreEqual(2, ((BacktestAnalysisRepeatedContext)inner[1]).Occurrences);
+            Assert.IsInstanceOf<ResultsAnalysisContext>(inner[0]);
+            Assert.IsInstanceOf<ResultsAnalysisRepeatedContext>(inner[1]);
+            Assert.AreEqual(2, ((ResultsAnalysisRepeatedContext)inner[1]).Occurrences);
         }
     }
 }

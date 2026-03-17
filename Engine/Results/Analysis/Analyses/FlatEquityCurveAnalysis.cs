@@ -22,14 +22,14 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
     /// <summary>
     /// Detects prolonged flat (zero-change) segments in the equity curve.
     /// </summary>
-    public class FlatEquityCurveAnalysis : BaseBacktestAnalysis
+    public class FlatEquityCurveAnalysis : BaseResultsAnalysis
     {
         /// <summary>
         /// Scans the equity curve for consecutive flat (unchanged) segments.
         /// </summary>
         /// <param name="equityCurve">Daily equity values from the backtest, keyed by date.</param>
         /// <returns>Analysis results describing any detected flat segments.</returns>
-        public IReadOnlyList<BacktestAnalysisResult> Run(SortedList<DateTime, decimal> equityCurve)
+        public IReadOnlyList<AnalysisResult> Run(SortedList<DateTime, decimal> equityCurve)
         {
             // Find consecutive runs of identical equity values.
             var keys = equityCurve.Keys.ToArray();
@@ -57,7 +57,7 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
             }
 
             var potentialSolutions = segments.Count > 0 ? PotentialSolutions() : [];
-            return SingleResponse(new BacktestAnalysisContext(segments.Count > 0 ? segments : null), potentialSolutions);
+            return SingleResponse(new ResultsAnalysisContext(segments.Count > 0 ? segments : null), potentialSolutions);
         }
 
         private static List<string> PotentialSolutions() =>

@@ -28,7 +28,7 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
     /// crisis / market-stress periods.
     /// Source: https://github.com/QuantConnect/Lean/blob/master/Report/Crisis.cs
     /// </summary>
-    public class CrisisEventsAnalysis : BaseBacktestAnalysis
+    public class CrisisEventsAnalysis : BaseResultsAnalysis
     {
         private static readonly (string Name, DateTime Start, DateTime End)[] CrisisEvents =
         [
@@ -59,13 +59,13 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
         /// <param name="backtestEquity">Daily equity values for the strategy, keyed by date.</param>
         /// <param name="benchmarkEquity">Daily equity values for the benchmark (SPY), keyed by date.</param>
         /// <returns>Analysis results listing crisis periods where the strategy underperformed the benchmark.</returns>
-        public IReadOnlyList<BacktestAnalysisResult> Run(QCAlgorithm algorithm,
+        public IReadOnlyList<AnalysisResult> Run(QCAlgorithm algorithm,
             SortedList<DateTime, decimal> backtestEquity,
             SortedList<DateTime, decimal> benchmarkEquity)
         {
             if (backtestEquity.Count == 0 || benchmarkEquity.Count == 0)
             {
-                return SingleResponse(new BacktestAnalysisRepeatedContext([]));
+                return SingleResponse(new ResultsAnalysisRepeatedContext([]));
             }
 
             var backtestStart = backtestEquity.Keys[0];
@@ -98,7 +98,7 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
             }
 
             var potentialSolutions = result.Count > 0 ? PotentialSolutions() : [];
-            return SingleResponse(new BacktestAnalysisRepeatedContext(result), potentialSolutions);
+            return SingleResponse(new ResultsAnalysisRepeatedContext(result), potentialSolutions);
         }
 
         /// <summary>

@@ -23,7 +23,7 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses.Messages
     /// Abstract base class for analyses that detect issues by scanning log or order event messages
     /// for one or more expected text fragments.
     /// </summary>
-    public abstract class MessageAnalysis : BaseBacktestAnalysis
+    public abstract class MessageAnalysis : BaseResultsAnalysis
     {
         protected abstract string[] ExpectedMessageText { get; }
 
@@ -47,11 +47,11 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses.Messages
         /// <param name="messages">The log or message strings to scan.</param>
         /// <param name="language">The programming language the algorithm is written in.</param>
         /// <returns>Analysis results containing potential solutions when any matching messages are found.</returns>
-        public virtual IReadOnlyList<BacktestAnalysisResult> Run(IReadOnlyList<string> messages, Language language)
+        public virtual IReadOnlyList<AnalysisResult> Run(IReadOnlyList<string> messages, Language language)
         {
             var foundMessages = Match(messages, ExpectedMessageText).ToList();
             var potentialSolutions = foundMessages.Count > 0 ? PotentialSolutions(language) : [];
-            return SingleResponse(new BacktestAnalysisRepeatedContext(foundMessages), potentialSolutions);
+            return SingleResponse(new ResultsAnalysisRepeatedContext(foundMessages), potentialSolutions);
         }
 
         protected abstract List<string> PotentialSolutions(Language language);

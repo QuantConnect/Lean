@@ -26,7 +26,7 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
     /// (over benchmark) have a mean significantly greater than zero.
     /// Mirrors <c>tests/statistical_significance_of_daily_returns.py</c>.
     /// </summary>
-    public class StatisticalSignificanceOfDailyReturnsAnalysis : BaseBacktestAnalysis
+    public class StatisticalSignificanceOfDailyReturnsAnalysis : BaseResultsAnalysis
     {
         /// <summary>
         /// Computes excess daily returns (strategy minus benchmark) and applies a one-tailed
@@ -35,7 +35,7 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
         /// <param name="backtestEquity">Daily equity values for the strategy, keyed by date.</param>
         /// <param name="benchmarkEquity">Daily equity values for the benchmark (SPY), keyed by date.</param>
         /// <returns>Analysis results when the strategy's excess returns are not statistically significant.</returns>
-        public IReadOnlyList<BacktestAnalysisResult> Run(SortedList<DateTime, decimal> backtestEquity,
+        public IReadOnlyList<AnalysisResult> Run(SortedList<DateTime, decimal> backtestEquity,
             SortedList<DateTime, decimal> benchmarkEquity)
         {
             var backtestReturns = backtestEquity.PercentChange();
@@ -56,7 +56,7 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
 
             var result = pValue > 0.05 ? new { PValue = pValue } : null;
             var potentialSolutions = result is not null ? PotentialSolutions() : [];
-            return SingleResponse(new BacktestAnalysisContext(result), potentialSolutions);
+            return SingleResponse(new ResultsAnalysisContext(result), potentialSolutions);
         }
 
         /// <summary>

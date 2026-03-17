@@ -23,7 +23,7 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
     /// Detects "exchange not open" order response errors.
     /// Returns the first sub-test that fires.
     /// </summary>
-    public class ExchangeNotOpenOrderResponseErrorAnalysis : BaseBacktestAnalysis
+    public class ExchangeNotOpenOrderResponseErrorAnalysis : BaseResultsAnalysis
     {
         private static readonly MessageAnalysis[] SubAnalyses =
         [
@@ -38,7 +38,7 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
         /// <param name="logs">The log lines produced by the backtest.</param>
         /// <param name="language">The programming language the algorithm is written in.</param>
         /// <returns>The results of the first matching sub-analysis, or a single empty response when none match.</returns>
-        public IReadOnlyList<BacktestAnalysisResult> Run(IReadOnlyList<string> logs, Language language)
+        public IReadOnlyList<AnalysisResult> Run(IReadOnlyList<string> logs, Language language)
         {
             foreach (var subTest in SubAnalyses)
             {

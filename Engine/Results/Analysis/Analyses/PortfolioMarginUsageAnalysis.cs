@@ -23,7 +23,7 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
     /// Detects periods where the portfolio under-utilises available margin
     /// (3-day SMA of margin usage drops below 50 %).
     /// </summary>
-    public class PortfolioMarginUsageAnalysis : BaseBacktestAnalysis
+    public class PortfolioMarginUsageAnalysis : BaseResultsAnalysis
     {
         /// <summary>
         /// Reads the "Portfolio Margin" chart from the backtest result and counts trading days
@@ -31,12 +31,12 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
         /// </summary>
         /// <param name="backtestResult">The backtest result whose charts are inspected.</param>
         /// <returns>Analysis results when any such days are detected.</returns>
-        public IReadOnlyList<BacktestAnalysisResult> Run(Result backtestResult)
+        public IReadOnlyList<AnalysisResult> Run(Result backtestResult)
         {
             // 1 – Get the Portfolio Margin chart.
             if (!backtestResult.Charts.TryGetValue("Portfolio Margin", out var chart))
             {
-                return SingleResponse(new BacktestAnalysisContext(null));
+                return SingleResponse(new ResultsAnalysisContext(null));
             }
 
             // 2 - Load each series from the Portfolio Margin plot.
@@ -65,7 +65,7 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
                 ? $"Number of days when the 3-day SMA of the margin usage drops below 50%: {countBelow50}"
                 : null;
             var potentialSolutions = result != null ? PotentialSolutions() : [];
-            return SingleResponse(new BacktestAnalysisContext(result), potentialSolutions);
+            return SingleResponse(new ResultsAnalysisContext(result), potentialSolutions);
         }
 
         private static List<string> PotentialSolutions() =>

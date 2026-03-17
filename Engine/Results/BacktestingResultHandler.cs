@@ -407,8 +407,15 @@ namespace QuantConnect.Lean.Engine.Results
                 {
                     logs = LogStore.Select(x => x.Message).ToList();
                 }
-                var analyzer = new BacktestAnalyzer(result.Results, algorithm, _job.Language, logs);
-                result.Results.AnalysisResult = analyzer.RunTestChain();
+                var analyzer = new ResultsAnalyzer(result.Results, algorithm, _job.Language, logs);
+                try
+                {
+                    result.Results.AnalysisResult = analyzer.RunTestChain();
+                }
+                catch (Exception ex)
+                {
+                    Log.Error(ex, "Error running backtest analysis");
+                }
 
                 //Place result into storage.
                 StoreResult(result);

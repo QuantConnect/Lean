@@ -45,23 +45,23 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
         /// <param name="messages">The log or order event messages to scan.</param>
         /// <param name="language">The programming language the algorithm is written in.</param>
         /// <returns>Analysis results when either unsupported request type pattern is detected.</returns>
-        public virtual IReadOnlyList<BacktestAnalysisResult> Run(IReadOnlyList<string> messages, Language language)
+        public virtual IReadOnlyList<AnalysisResult> Run(IReadOnlyList<string> messages, Language language)
         {
             var shortFoundMessages = Match(messages, ShortMessageText).ToList();
             var quantityFoundMessages = Match(messages, QuantityMessageText).ToList();
             var potentialSolutions = shortFoundMessages.Count > 0 || quantityFoundMessages.Count > 0 ? PotentialSolutions(language) : [];
 
-            var contexts = new List<IBacktestAnalysisContext>();
+            var contexts = new List<IResultsAnalysisContext>();
             if (shortFoundMessages.Count > 0)
             {
-                contexts.Add(new BacktestAnalysisRepeatedContext(shortFoundMessages));
+                contexts.Add(new ResultsAnalysisRepeatedContext(shortFoundMessages));
             }
             if (quantityFoundMessages.Count > 0)
             {
-                contexts.Add(new BacktestAnalysisRepeatedContext(quantityFoundMessages));
+                contexts.Add(new ResultsAnalysisRepeatedContext(quantityFoundMessages));
             }
 
-            return SingleResponse(new BacktestAnalysisAggregateContext(contexts), potentialSolutions);
+            return SingleResponse(new ResultsAnalysisAggregateContext(contexts), potentialSolutions);
         }
 
         protected override List<string> PotentialSolutions(Language language) =>

@@ -32,11 +32,6 @@ namespace QuantConnect.Packets
         public Dictionary<string, AlgorithmPerformance> RollingWindow { get; set; }
 
         /// <summary>
-        /// Backtest analysis results.
-        /// </summary>
-        public IReadOnlyList<BacktestAnalysisResult> AnalysisResult { get; set; }
-
-        /// <summary>
         /// Creates a new instance
         /// </summary>
         public BacktestResultParameters(IDictionary<string, Chart> charts,
@@ -49,11 +44,10 @@ namespace QuantConnect.Packets
             AlgorithmPerformance totalPerformance = null,
             AlgorithmConfiguration algorithmConfiguration = null,
             IDictionary<string, string> state = null,
-            IReadOnlyList<BacktestAnalysisResult> analysisResult = null)
-            : base(charts, orders, profitLoss, statistics, runtimeStatistics, orderEvents, totalPerformance, algorithmConfiguration, state)
+            IReadOnlyList<AnalysisResult> analysisResult = null)
+            : base(charts, orders, profitLoss, statistics, runtimeStatistics, orderEvents, totalPerformance, algorithmConfiguration, state, analysisResult)
         {
             RollingWindow = rollingWindow;
-            AnalysisResult = analysisResult;
         }
     }
 }

@@ -23,7 +23,7 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
     /// Detects slow execution by parsing the last log line.
     /// Benchmark speeds: https://www.quantconnect.com/performance
     /// </summary>
-    public class ExecutionSpeedAnalysis : BaseBacktestAnalysis
+    public class ExecutionSpeedAnalysis : BaseResultsAnalysis
     {
         private static readonly Regex DataPointsPerSecondRegex = new(
             @"Algorithm Id:\([^)]+\) completed in ([\d.]+) seconds at (\d+)k data points per second\. Processing total of [\d,]+ data points\.",
@@ -34,14 +34,14 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
         /// </summary>
         /// <param name="logs">The full list of log lines produced by the backtest.</param>
         /// <returns>Analysis results flagging slow execution when below 40k data points per second and runtime is at least 10 seconds.</returns>
-        public IReadOnlyList<BacktestAnalysisResult> Run(IReadOnlyList<string> logs)
+        public IReadOnlyList<AnalysisResult> Run(IReadOnlyList<string> logs)
         {
             var result = TryGetDataPointsPerSecond(logs, out var timeInSeconds, out var dataPointsPerSecond) && timeInSeconds >= 10 && dataPointsPerSecond < 40
                 ? $"The algorithm is slowly executing at only {dataPointsPerSecond}k data points per second"
                 : null;
 
             var potentialSolutions = result is not null ? PotentialSolutions() : [];
-            return SingleResponse(new BacktestAnalysisContext(result), potentialSolutions);
+            return SingleResponse(new ResultsAnalysisContext(result), potentialSolutions);
         }
 
         /// <summary>
