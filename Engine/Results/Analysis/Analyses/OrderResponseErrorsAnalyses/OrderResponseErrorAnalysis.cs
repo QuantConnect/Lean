@@ -49,7 +49,7 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
         /// <param name="orderEvents">The order events from the backtest result.</param>
         /// <param name="language">The programming language the algorithm is written in.</param>
         /// <returns>Analysis results when any matching order response errors are found.</returns>
-        public virtual IReadOnlyList<BacktestAnalysisResult> Run(List<OrderEvent> orderEvents, Language language)
+        public virtual IReadOnlyList<AnalysisResult> Run(List<OrderEvent> orderEvents, Language language)
         {
             return Run(GetMatchingOrderEventsMessages(orderEvents).ToList(), language);
         }

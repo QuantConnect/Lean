@@ -23,7 +23,7 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
     /// Detects TP/SL order pairs where both filled, or where the surviving leg
     /// was not cancelled when the other filled.
     /// </summary>
-    public class TakeProfitAndStopLossOrdersAnalysis : BaseBacktestAnalysis
+    public class TakeProfitAndStopLossOrdersAnalysis : BaseResultsAnalysis
     {
         private static readonly OrderType[] TpTypes = [OrderType.Limit, OrderType.LimitIfTouched];
 
@@ -42,7 +42,7 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
         /// <param name="orders">All orders from the backtest result.</param>
         /// <param name="language">The programming language the algorithm is written in.</param>
         /// <returns>Aggregated analysis results from all sub-analyses that detected issues.</returns>
-        public IReadOnlyList<BacktestAnalysisResult> Run(ICollection<Order> orders, Language language)
+        public IReadOnlyList<AnalysisResult> Run(ICollection<Order> orders, Language language)
         {
             // Group orders by (symbol, quantity, created_time) – the TP/SL fingerprint.
             var combos = orders
@@ -59,21 +59,21 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
 
         private interface ISubAnalysis
         {
-            public IReadOnlyList<BacktestAnalysisResult> Run(List<List<Order>> combos, Language language);
+            public IReadOnlyList<AnalysisResult> Run(List<List<Order>> combos, Language language);
         }
 
         // ── Sub-analysis 1: both TP and SL filled ────────────────────────────────────────
 
-        private class TakeProfitAndStopLossBothFilledAnalysis : BaseBacktestAnalysis, ISubAnalysis
+        private class TakeProfitAndStopLossBothFilledAnalysis : BaseResultsAnalysis, ISubAnalysis
         {
-            public IReadOnlyList<BacktestAnalysisResult> Run(List<List<Order>> combos, Language language)
+            public IReadOnlyList<AnalysisResult> Run(List<List<Order>> combos, Language language)
             {
                 var result = combos
                     .Where(orders => orders.All(o => o.Status == OrderStatus.Filled))
                     .ToList();
 
                 var potentialSolutions = result.Count > 0 ? PotentialSolutions(language) : [];
-                return SingleResponse(new BacktestAnalysisRepeatedContext(result), potentialSolutions);
+                return SingleResponse(new ResultsAnalysisRepeatedContext(result), potentialSolutions);
             }
 
             private static List<string> PotentialSolutions(Language language) =>
@@ -131,9 +131,9 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
 
         // ── Sub-analysis 2: filled order's counterpart was not (or too late) cancelled ───
 
-        private class TakeProfitOrStopLossNotCanceledAnalysis : BaseBacktestAnalysis, ISubAnalysis
+        private class TakeProfitOrStopLossNotCanceledAnalysis : BaseResultsAnalysis, ISubAnalysis
         {
-            public IReadOnlyList<BacktestAnalysisResult> Run(List<List<Order>> combos, Language language)
+            public IReadOnlyList<AnalysisResult> Run(List<List<Order>> combos, Language language)
             {
                 var result = new List<object>();
 
@@ -156,7 +156,7 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
                 }
 
                 var potentialSolutions = result.Count > 0 ? PotentialSolutions(language) : [];
-                return SingleResponse(new BacktestAnalysisRepeatedContext(result), potentialSolutions);
+                return SingleResponse(new ResultsAnalysisRepeatedContext(result), potentialSolutions);
             }
 
             private static List<string> PotentialSolutions(Language language) =>

@@ -21,7 +21,7 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
     /// <summary>
     /// Warns when too many numeric parameters are detected in the algorithm.
     /// </summary>
-    public class ParameterCountAnalysis : BaseBacktestAnalysis
+    public class ParameterCountAnalysis : BaseResultsAnalysis
     {
         private const string DetectedParametersTable = """
 | Parameter Types | Example Instances |
@@ -41,12 +41,12 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
         /// <param name="algorithm">The algorithm instance whose parameters are inspected.</param>
         /// <param name="language">The programming language the algorithm is written in.</param>
         /// <returns>Analysis results when the parameter count exceeds the threshold.</returns>
-        public IReadOnlyList<BacktestAnalysisResult> Run(QCAlgorithm algorithm, Language language)
+        public IReadOnlyList<AnalysisResult> Run(QCAlgorithm algorithm, Language language)
         {
             var parametersCount = algorithm.GetParameters().Count;
             var result = parametersCount > 10 ? $"{parametersCount} Parameters Detected" : null;
             var potentialSolutions = result is not null ? PotentialSolutions(language) : [];
-            return SingleResponse(new BacktestAnalysisContext(result), potentialSolutions);
+            return SingleResponse(new ResultsAnalysisContext(result), potentialSolutions);
         }
 
         private static List<string> PotentialSolutions(Language language) =>

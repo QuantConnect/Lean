@@ -24,7 +24,7 @@ namespace QuantConnect
     /// <summary>
     /// A simple context that holds a single diagnostic sample object.
     /// </summary>
-    public class BacktestAnalysisContext : IBacktestAnalysisContext
+    public class ResultsAnalysisContext : IResultsAnalysisContext
     {
         /// <summary>
         /// Gets or sets a representative sample value produced by the analysis.
@@ -32,10 +32,10 @@ namespace QuantConnect
         public object Sample { get; set; }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="BacktestAnalysisContext"/> class.
+        /// Initializes a new instance of the <see cref="ResultsAnalysisContext"/> class.
         /// </summary>
         /// <param name="sample">A representative sample produced by the analysis, or <c>null</c> when no issue was found.</param>
-        public BacktestAnalysisContext(object sample)
+        public ResultsAnalysisContext(object sample)
         {
             Sample = sample;
         }
@@ -45,7 +45,7 @@ namespace QuantConnect
     /// A context that represents multiple occurrences of the same diagnostic issue,
     /// exposing the first sample and the total occurrence count.
     /// </summary>
-    public class BacktestAnalysisRepeatedContext : BacktestAnalysisContext
+    public class ResultsAnalysisRepeatedContext : ResultsAnalysisContext
     {
         /// <summary>
         /// Gets or sets the total number of matching occurrences found by the analysis.
@@ -53,28 +53,28 @@ namespace QuantConnect
         public int Occurrences { get; set; }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="BacktestAnalysisRepeatedContext"/> class.
+        /// Initializes a new instance of the <see cref="ResultsAnalysisRepeatedContext"/> class.
         /// </summary>
-        /// <param name="samples">All matching sample objects; the first element is stored as <see cref="BacktestAnalysisContext.Sample"/>.</param>
-        public BacktestAnalysisRepeatedContext(IReadOnlyList<object> samples) : base(samples.Count > 0 ? samples[0] : null)
+        /// <param name="samples">All matching sample objects; the first element is stored as <see cref="ResultsAnalysisContext.Sample"/>.</param>
+        public ResultsAnalysisRepeatedContext(IReadOnlyList<object> samples) : base(samples.Count > 0 ? samples[0] : null)
         {
             Occurrences = samples.Count;
         }
     }
 
     /// <summary>
-    /// A composite context that aggregates several <see cref="IBacktestAnalysisContext"/> instances
+    /// A composite context that aggregates several <see cref="IResultsAnalysisContext"/> instances
     /// into a single enumerable context.
     /// </summary>
-    public class BacktestAnalysisAggregateContext : IBacktestAnalysisContext, IEnumerable<IBacktestAnalysisContext>
+    public class ResultsAnalysisAggregateContext : IResultsAnalysisContext, IEnumerable<IResultsAnalysisContext>
     {
-        private IReadOnlyList<IBacktestAnalysisContext> _contexts { get; set; }
+        private IReadOnlyList<IResultsAnalysisContext> _contexts { get; set; }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="BacktestAnalysisAggregateContext"/> class.
+        /// Initializes a new instance of the <see cref="ResultsAnalysisAggregateContext"/> class.
         /// </summary>
         /// <param name="contexts">The individual contexts to aggregate.</param>
-        public BacktestAnalysisAggregateContext(IReadOnlyList<IBacktestAnalysisContext> contexts)
+        public ResultsAnalysisAggregateContext(IReadOnlyList<IResultsAnalysisContext> contexts)
         {
             _contexts = contexts;
         }
@@ -83,7 +83,7 @@ namespace QuantConnect
         /// Returns an enumerator that iterates over each contained context.
         /// </summary>
         /// <returns>An enumerator for the inner context list.</returns>
-        public IEnumerator<IBacktestAnalysisContext> GetEnumerator()
+        public IEnumerator<IResultsAnalysisContext> GetEnumerator()
         {
             return _contexts.GetEnumerator();
         }
@@ -98,8 +98,8 @@ namespace QuantConnect
     /// Represents the outcome of a single backtest diagnostic analysis,
     /// containing the analysis name, diagnostic context, and a list of potential solutions.
     /// </summary>
-    [JsonConverter(typeof(BacktestAnalysisResultJsonConverter))]
-    public class BacktestAnalysisResult
+    [JsonConverter(typeof(AnalysisResultJsonConverter))]
+    public class AnalysisResult
     {
         /// <summary>
         /// Gets or sets the name of the analysis that produced this result.
@@ -109,7 +109,7 @@ namespace QuantConnect
         /// <summary>
         /// Gets or sets the diagnostic context carrying sample data about the detected issue.
         /// </summary>
-        public IBacktestAnalysisContext Context { get; set; }
+        public IResultsAnalysisContext Context { get; set; }
 
         /// <summary>
         /// Gets or sets human-readable suggestions for resolving the detected issue.
@@ -117,12 +117,12 @@ namespace QuantConnect
         public IReadOnlyList<string> PotentialSolutions { get; set; }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="BacktestAnalysisResult"/> class.
+        /// Initializes a new instance of the <see cref="AnalysisResult"/> class.
         /// </summary>
         /// <param name="name">The name of the analysis that produced this result.</param>
         /// <param name="context">The diagnostic context object describing the detected issue.</param>
         /// <param name="potentialSolutions">A list of human-readable remediation suggestions.</param>
-        public BacktestAnalysisResult(string name, IBacktestAnalysisContext context, IReadOnlyList<string> potentialSolutions)
+        public AnalysisResult(string name, IResultsAnalysisContext context, IReadOnlyList<string> potentialSolutions)
         {
             Name = name;
             Context = context;

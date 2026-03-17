@@ -209,12 +209,6 @@ namespace QuantConnect.Packets
         public Dictionary<string, AlgorithmPerformance> RollingWindow { get; set; } = new Dictionary<string, AlgorithmPerformance>();
 
         /// <summary>
-        /// Backtest analysis results.
-        /// </summary>
-        [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
-        public IReadOnlyList<BacktestAnalysisResult> AnalysisResult { get; set; }
-
-        /// <summary>
         /// Default Constructor
         /// </summary>
         public BacktestResult()

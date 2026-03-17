@@ -22,7 +22,7 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
     /// <summary>
     /// Compares the full-period Sharpe ratio of the strategy to the benchmark.
     /// </summary>
-    public class PerformanceRelativeToBenchmark : BaseBacktestAnalysis
+    public class PerformanceRelativeToBenchmark : BaseResultsAnalysis
     {
         /// <summary>
         /// Calculates the Sharpe ratio of the strategy over the full backtest period and compares it to the benchmark.
@@ -31,7 +31,7 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
         /// <param name="backtestEquity">Daily equity values for the strategy, keyed by date.</param>
         /// <param name="benchmarkEquity">Daily equity values for the benchmark (SPY), keyed by date.</param>
         /// <returns>Analysis results when the strategy's Sharpe ratio is lower than the benchmark's.</returns>
-        public IReadOnlyList<BacktestAnalysisResult> Run(QCAlgorithm algorithm, SortedList<DateTime, decimal> backtestEquity,
+        public IReadOnlyList<AnalysisResult> Run(QCAlgorithm algorithm, SortedList<DateTime, decimal> backtestEquity,
             SortedList<DateTime, decimal> benchmarkEquity)
         {
             var (backtestSharpe, benchmarkSharpe) = CrisisEventsAnalysis.CalculateSharpeRatio(backtestEquity, benchmarkEquity, 
@@ -42,7 +42,7 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
                 : null;
 
             var potentialSolutions = result is not null ? PotentialSolutions() : [];
-            return SingleResponse(new BacktestAnalysisContext(result), potentialSolutions);
+            return SingleResponse(new ResultsAnalysisContext(result), potentialSolutions);
         }
 
         private static List<string> PotentialSolutions() =>

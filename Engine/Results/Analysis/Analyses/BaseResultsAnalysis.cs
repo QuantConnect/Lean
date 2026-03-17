@@ -22,34 +22,34 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
     /// <summary>
     /// Abstract base class for all backtest diagnostic tests.
     /// </summary>
-    public abstract class BaseBacktestAnalysis
+    public abstract class BaseResultsAnalysis
     {
         /// <summary>
-        /// Wraps a single <see cref="BacktestAnalysisResult"/> in a one-element read-only list.
+        /// Wraps a single <see cref="AnalysisResult"/> in a one-element read-only list.
         /// </summary>
         /// <param name="context">The context object carrying diagnostic sample data.</param>
         /// <param name="potentialSolutions">Optional list of human-readable remediation suggestions.</param>
         /// <returns>A one-element read-only list containing the constructed result.</returns>
-        protected IReadOnlyList<BacktestAnalysisResult> SingleResponse(IBacktestAnalysisContext context, IReadOnlyList<string> potentialSolutions = null)
+        protected IReadOnlyList<AnalysisResult> SingleResponse(IResultsAnalysisContext context, IReadOnlyList<string> potentialSolutions = null)
             => [CreateResponse(context, potentialSolutions)];
 
         /// <summary>
-        /// Creates a single <see cref="BacktestAnalysisResult"/> named after the concrete analysis type.
+        /// Creates a single <see cref="AnalysisResult"/> named after the concrete analysis type.
         /// </summary>
         /// <param name="context">The context object carrying diagnostic sample data.</param>
         /// <param name="potentialSolutions">Optional list of human-readable remediation suggestions.</param>
-        /// <returns>A new <see cref="BacktestAnalysisResult"/> instance.</returns>
-        protected BacktestAnalysisResult CreateResponse(IBacktestAnalysisContext context, IReadOnlyList<string> potentialSolutions = null)
+        /// <returns>A new <see cref="AnalysisResult"/> instance.</returns>
+        protected AnalysisResult CreateResponse(IResultsAnalysisContext context, IReadOnlyList<string> potentialSolutions = null)
             => new(GetType().Name, context, potentialSolutions ?? []);
 
         /// <summary>
         /// Filters <paramref name="responses"/> to those with solutions,
         /// prefixes the class name, and returns a flat list.
         /// </summary>
-        protected IReadOnlyList<BacktestAnalysisResult> CreateAggregatedResponse(IEnumerable<BacktestAnalysisResult> responses)
+        protected IReadOnlyList<AnalysisResult> CreateAggregatedResponse(IEnumerable<AnalysisResult> responses)
             => responses
                 .Where(x => x.PotentialSolutions.Count > 0)
-                .Select(x => new BacktestAnalysisResult(GetType().Name + " / " + x.Name, x.Context, x.PotentialSolutions))
+                .Select(x => new AnalysisResult(GetType().Name + " / " + x.Name, x.Context, x.PotentialSolutions))
                 .ToList();
 
         /// <summary>

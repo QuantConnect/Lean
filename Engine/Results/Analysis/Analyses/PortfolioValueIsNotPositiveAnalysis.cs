@@ -20,18 +20,18 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
     /// <summary>
     /// Flags backtests whose ending equity is zero or negative.
     /// </summary>
-    public class PortfolioValueIsNotPositiveAnalysis : BaseBacktestAnalysis
+    public class PortfolioValueIsNotPositiveAnalysis : BaseResultsAnalysis
     {
         /// <summary>
         /// Checks whether the backtest's ending equity is positive.
         /// </summary>
         /// <param name="result">The backtest result containing portfolio statistics.</param>
         /// <returns>Analysis results flagging the issue when ending equity is zero or negative.</returns>
-        public IReadOnlyList<BacktestAnalysisResult> Run(Result result)
+        public IReadOnlyList<AnalysisResult> Run(Result result)
         {
             var hasEquity = result.TotalPerformance.PortfolioStatistics.EndEquity > 0;
             var potentialSolutions = hasEquity ? [] : PotentialSolutions();
-            return SingleResponse(new BacktestAnalysisContext(!hasEquity), potentialSolutions);
+            return SingleResponse(new ResultsAnalysisContext(!hasEquity), potentialSolutions);
         }
 
         private static List<string> PotentialSolutions() =>

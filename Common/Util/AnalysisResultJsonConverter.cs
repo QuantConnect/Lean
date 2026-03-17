@@ -22,16 +22,16 @@ using Newtonsoft.Json.Linq;
 namespace QuantConnect.Util
 {
     /// <summary>
-    /// JSON converter for <see cref="BacktestAnalysisResult"/>.
-    /// Deserializes into a <see cref="BacktestAnalysisResult"/> and detects the concrete
-    /// <see cref="IBacktestAnalysisContext"/> type from the shape of the JSON:
+    /// JSON converter for <see cref="AnalysisResult"/>.
+    /// Deserializes into a <see cref="AnalysisResult"/> and detects the concrete
+    /// <see cref="IResultsAnalysisContext"/> type from the shape of the JSON:
     /// <list type="bullet">
-    ///   <item>JSON array -> <see cref="BacktestAnalysisAggregateContext"/></item>
-    ///   <item>JSON object with an <c>Occurrences</c> property -> <see cref="BacktestAnalysisRepeatedContext"/></item>
-    ///   <item>Any other JSON object -> <see cref="BacktestAnalysisContext"/></item>
+    ///   <item>JSON array -> <see cref="ResultsAnalysisAggregateContext"/></item>
+    ///   <item>JSON object with an <c>Occurrences</c> property -> <see cref="ResultsAnalysisRepeatedContext"/></item>
+    ///   <item>Any other JSON object -> <see cref="ResultsAnalysisContext"/></item>
     /// </list>
     /// </summary>
-    public class BacktestAnalysisResultJsonConverter : JsonConverter
+    public class AnalysisResultJsonConverter : JsonConverter
     {
         /// <summary>
         /// Serialization is handled by the default JSON.NET serializer.
@@ -47,8 +47,8 @@ namespace QuantConnect.Util
         }
 
         /// <summary>
-        /// Deserializes a JSON object into a <see cref="BacktestAnalysisResult"/>, resolving the
-        /// concrete <see cref="IBacktestAnalysisContext"/> type from the structure of the
+        /// Deserializes a JSON object into a <see cref="AnalysisResult"/>, resolving the
+        /// concrete <see cref="IResultsAnalysisContext"/> type from the structure of the
         /// <c>Context</c> JSON token.
         /// </summary>
         public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer)
@@ -59,7 +59,7 @@ namespace QuantConnect.Util
             var potentialSolutions = jObject["PotentialSolutions"]?.ToObject<List<string>>() ?? [];
             var context = DeserializeContext(jObject["Context"]);
 
-            return new BacktestAnalysisResult(name, context, potentialSolutions);
+            return new AnalysisResult(name, context, potentialSolutions);
         }
 
         /// <summary>
@@ -67,14 +67,14 @@ namespace QuantConnect.Util
         /// </summary>
         public override bool CanConvert(Type objectType)
         {
-            return typeof(BacktestAnalysisResult).IsAssignableFrom(objectType);
+            return typeof(AnalysisResult).IsAssignableFrom(objectType);
         }
 
         /// <summary>
         /// Recursively deserializes a context token into the correct
-        /// <see cref="IBacktestAnalysisContext"/> concrete type.
+        /// <see cref="IResultsAnalysisContext"/> concrete type.
         /// </summary>
-        private static IBacktestAnalysisContext DeserializeContext(JToken contextToken)
+        private static IResultsAnalysisContext DeserializeContext(JToken contextToken)
         {
             if (contextToken == null || contextToken.Type == JTokenType.Null)
             {
@@ -83,12 +83,12 @@ namespace QuantConnect.Util
 
             if (contextToken.Type == JTokenType.Array)
             {
-                var innerContexts = new List<IBacktestAnalysisContext>();
+                var innerContexts = new List<IResultsAnalysisContext>();
                 foreach (var item in (JArray)contextToken)
                 {
                     innerContexts.Add(DeserializeContext(item));
                 }
-                return new BacktestAnalysisAggregateContext(innerContexts);
+                return new ResultsAnalysisAggregateContext(innerContexts);
             }
 
             if (contextToken.Type == JTokenType.Object)
@@ -98,14 +98,14 @@ namespace QuantConnect.Util
 
                 if (jObj.ContainsKey("Occurrences"))
                 {
-                    return new BacktestAnalysisRepeatedContext([])
+                    return new ResultsAnalysisRepeatedContext([])
                     {
                         Sample = sample,
                         Occurrences = jObj["Occurrences"]?.Value<int>() ?? 0
                     };
                 }
 
-                return new BacktestAnalysisContext(sample);
+                return new ResultsAnalysisContext(sample);
             }
 
             return null;

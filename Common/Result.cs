@@ -91,6 +91,12 @@ namespace QuantConnect
         public AlgorithmPerformance TotalPerformance { get; set; }
 
         /// <summary>
+        /// Backtest analysis results.
+        /// </summary>
+        [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
+        public IReadOnlyList<AnalysisResult> AnalysisResult { get; set; }
+
+        /// <summary>
         /// Creates new empty instance
         /// </summary>
         public Result()

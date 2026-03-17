@@ -23,7 +23,7 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
     /// <summary>
     /// Detects orders filled at stale (outdated) prices.
     /// </summary>
-    public class StaleOrderFillsAnalysis : BaseBacktestAnalysis
+    public class StaleOrderFillsAnalysis : BaseResultsAnalysis
     {
         /// <summary>
         /// Searches order events for fill messages that contain a stale-price warning.
@@ -31,7 +31,7 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
         /// <param name="orderEvents">The list of order events from the backtest result.</param>
         /// <param name="language">The programming language the algorithm is written in.</param>
         /// <returns>Analysis results when stale fill events are detected.</returns>
-        public IReadOnlyList<BacktestAnalysisResult> Run(IReadOnlyList<OrderEvent> orderEvents, Language language)
+        public IReadOnlyList<AnalysisResult> Run(IReadOnlyList<OrderEvent> orderEvents, Language language)
         {
             var result = orderEvents
                 .Where(e => e.Message != null && e.Message.Contains("Warning: fill at stale price", StringComparison.InvariantCultureIgnoreCase))
@@ -39,7 +39,7 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
                 .ToList();
 
             var potentialSolutions = result.Count > 0 ? PotentialSolutions(language) : [];
-            return SingleResponse(new BacktestAnalysisRepeatedContext(result), potentialSolutions);
+            return SingleResponse(new ResultsAnalysisRepeatedContext(result), potentialSolutions);
         }
 
         private static List<string> PotentialSolutions(Language language) =>

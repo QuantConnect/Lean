@@ -53,7 +53,7 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
         /// <param name="orderEvents">The order events from the backtest result.</param>
         /// <param name="language">The programming language the algorithm is written in.</param>
         /// <returns>Aggregated analysis results from all sub-analyses that detected a matching message.</returns>
-        public override IReadOnlyList<BacktestAnalysisResult> Run(List<OrderEvent> orderEvents, Language language)
+        public override IReadOnlyList<AnalysisResult> Run(List<OrderEvent> orderEvents, Language language)
         {
             var matchedMessages = GetMatchingOrderEventsMessages(orderEvents).ToList();
             if (matchedMessages.Count == 0)
