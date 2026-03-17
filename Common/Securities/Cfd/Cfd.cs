@@ -27,6 +27,8 @@ namespace QuantConnect.Securities.Cfd
     /// <seealso cref="Security"/>
     public class Cfd : Security
     {
+        private readonly ContractSymbolProperties _symbolProperties;
+
         /// <summary>
         /// Constructor for the CFD security
         /// </summary>
@@ -106,8 +108,6 @@ namespace QuantConnect.Securities.Cfd
             Holdings = new CfdHolding(this, currencyConverter);
             _symbolProperties = (ContractSymbolProperties)SymbolProperties;
         }
-
-        private readonly ContractSymbolProperties _symbolProperties;
 
         /// <summary>
         /// Gets or sets the contract multiplier for this CFD security
