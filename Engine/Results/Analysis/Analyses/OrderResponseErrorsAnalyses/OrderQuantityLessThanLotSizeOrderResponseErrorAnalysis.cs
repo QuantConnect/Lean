@@ -23,8 +23,9 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
     /// </summary>
     public class OrderQuantityLessThanLotSizeOrderResponseErrorAnalysis : MessageAnalysis
     {
-        public override string Issue => "Order quantity below minimum lot size";
-        public override int Weight => 40;
+        public override string Issue { get; } = "Order quantity below minimum lot size";
+
+        public override int Weight { get; } = 40;
 
         protected override string[] ExpectedMessageText { get; } =
         [

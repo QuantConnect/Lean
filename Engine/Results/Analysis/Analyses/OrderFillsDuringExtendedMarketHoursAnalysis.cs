@@ -24,8 +24,9 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
     /// </summary>
     public class OrderFillsDuringExtendedMarketHoursAnalysis : BaseResultsAnalysis
     {
-        public override string Issue => "Fills occurred outside regular market hours";
-        public override int Weight => 55;
+        public override string Issue { get; } = "Fills occurred outside regular market hours";
+
+        public override int Weight { get; } = 55;
         public override IReadOnlyList<AnalysisResult> Run(ResultsAnalysisRunParameters parameters) => Run(parameters.Algorithm, parameters.Result.OrderEvents, parameters.Language);
 
         /// <summary>

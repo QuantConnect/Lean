@@ -23,8 +23,9 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
     /// </summary>
     public class OptionOrderOnStockSplitOrderResponseErrorAnalysis : MessageAnalysis
     {
-        public override string Issue => "Option order submitted during stock split";
-        public override int Weight => 45;
+        public override string Issue { get; } = "Option order submitted during stock split";
+
+        public override int Weight { get; } = 45;
 
         protected override string[] ExpectedMessageText { get; } =
         [

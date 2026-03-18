@@ -24,8 +24,9 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
     /// </summary>
     public class UnsupportedRequestTypeOrderResponseErrorAnalysis : MessageAnalysis
     {
-        public override string Issue => "Unsupported order request type submitted";
-        public override int Weight => 50;
+        public override string Issue { get; } = "Unsupported order request type submitted";
+
+        public override int Weight { get; } = 50;
 
         private static readonly string[] ShortMessageText =
         [

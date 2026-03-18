@@ -23,8 +23,9 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
     /// </summary>
     public class ForexConversionRateZeroOrderResponseErrorAnalysis : MessageAnalysis
     {
-        public override string Issue => "Forex conversion rate was zero";
-        public override int Weight => 58;
+        public override string Issue { get; } = "Forex conversion rate was zero";
+
+        public override int Weight { get; } = 58;
 
         protected override string[] ExpectedMessageText { get; } =
         [

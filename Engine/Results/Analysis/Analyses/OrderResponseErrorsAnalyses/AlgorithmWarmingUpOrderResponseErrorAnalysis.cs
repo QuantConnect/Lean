@@ -25,8 +25,9 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
     /// </summary>
     public class AlgorithmWarmingUpOrderResponseErrorAnalysis : MessageAnalysis
     {
-        public override string Issue => "Orders placed during algorithm warm-up period";
-        public override int Weight => 62;
+        public override string Issue { get; } = "Orders placed during algorithm warm-up period";
+
+        public override int Weight { get; } = 62;
 
         protected override string[] ExpectedMessageText { get; } =
         [

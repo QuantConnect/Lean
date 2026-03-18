@@ -22,8 +22,9 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses.Messages.DefaultBro
     /// </summary>
     public class UnsupportedMarketOnOpenOrdersForFutureAndFutureOptionsAnalysis : MessageAnalysis
     {
-        public override string Issue => "MOO orders not supported for Futures or FutureOptions";
-        public override int Weight => 60;
+        public override string Issue { get; } = "MOO orders not supported for Futures or FutureOptions";
+
+        public override int Weight { get; } = 60;
 
         protected override string[] ExpectedMessageText { get; } =
         [

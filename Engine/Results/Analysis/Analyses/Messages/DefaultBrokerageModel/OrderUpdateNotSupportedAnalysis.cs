@@ -22,8 +22,9 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses.Messages.DefaultBro
     /// </summary>
     public class OrderUpdateNotSupportedAnalysis : MessageAnalysis
     {
-        public override string Issue => "Order updates not supported by brokerage";
-        public override int Weight => 62;
+        public override string Issue { get; } = "Order updates not supported by brokerage";
+
+        public override int Weight { get; } = 62;
 
         protected override string[] ExpectedMessageText { get; } =
         [

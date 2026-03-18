@@ -22,8 +22,9 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses.Messages.Interactiv
     /// </summary>
     public class InvalidForexOrderSizeAnalysis : MessageAnalysis
     {
-        public override string Issue => "Forex order size invalid for Interactive Brokers";
-        public override int Weight => 68;
+        public override string Issue { get; } = "Forex order size invalid for Interactive Brokers";
+
+        public override int Weight { get; } = 68;
 
         protected override string[] ExpectedMessageText { get; } =
         [

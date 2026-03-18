@@ -22,8 +22,9 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses.Messages.DefaultBro
     /// </summary>
     public class InvalidOrderQuantityAnalysis : MessageAnalysis
     {
-        public override string Issue => "Invalid order quantity rejected by brokerage";
-        public override int Weight => 72;
+        public override string Issue { get; } = "Invalid order quantity rejected by brokerage";
+
+        public override int Weight { get; } = 72;
 
         protected override string[] ExpectedMessageText { get; } =
         [

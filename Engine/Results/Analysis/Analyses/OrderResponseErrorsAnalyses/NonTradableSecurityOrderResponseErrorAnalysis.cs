@@ -23,8 +23,9 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
     /// </summary>
     public class NonTradableSecurityOrderResponseErrorAnalysis : MessageAnalysis
     {
-        public override string Issue => "Attempted to trade non-tradable security";
-        public override int Weight => 75;
+        public override string Issue { get; } = "Attempted to trade non-tradable security";
+
+        public override int Weight { get; } = 75;
 
         protected override string[] ExpectedMessageText { get; } =
         [

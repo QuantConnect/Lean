@@ -25,8 +25,9 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
     /// </summary>
     public class StaleOrderFillsAnalysis : BaseResultsAnalysis
     {
-        public override string Issue => "Orders filled at stale outdated prices";
-        public override int Weight => 65;
+        public override string Issue { get; } = "Orders filled at stale outdated prices";
+
+        public override int Weight { get; } = 65;
         public override IReadOnlyList<AnalysisResult> Run(ResultsAnalysisRunParameters parameters) => Run(parameters.Result.OrderEvents, parameters.Language);
 
         /// <summary>
