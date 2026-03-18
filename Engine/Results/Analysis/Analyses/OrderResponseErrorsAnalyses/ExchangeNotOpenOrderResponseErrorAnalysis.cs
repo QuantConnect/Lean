@@ -27,6 +27,7 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
     {
         public override string Issue => "Orders placed when exchange was closed";
         public override int Weight => 60;
+        public override IReadOnlyList<AnalysisResult> Run(ResultsAnalysisRunParameters parameters) => Run(parameters.Logs, parameters.Language);
 
         private static readonly MessageAnalysis[] SubAnalyses =
         [

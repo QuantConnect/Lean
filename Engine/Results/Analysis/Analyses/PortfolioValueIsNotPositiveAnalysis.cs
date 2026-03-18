@@ -24,6 +24,7 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
     {
         public override string Issue => "Portfolio equity dropped to zero or below";
         public override int Weight => 100;
+        public override IReadOnlyList<AnalysisResult> Run(ResultsAnalysisRunParameters parameters) => Run(parameters.Result);
 
         /// <summary>
         /// Checks whether the backtest's ending equity is positive.

@@ -42,6 +42,11 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
                 .Select(x => x.Message);
         }
 
+        /// <inheritdoc/>
+        /// <remarks>Overrides the log-based default from <see cref="MessageAnalysis"/> to scan order events instead.</remarks>
+        public override IReadOnlyList<AnalysisResult> Run(ResultsAnalysisRunParameters parameters)
+            => Run([.. parameters.Result.OrderEvents], parameters.Language);
+
         /// <summary>
         /// Runs the analysis against a list of order events, extracting matching invalid-event messages
         /// and delegating to the message-based <see cref="MessageAnalysis.Run(IReadOnlyList{string}, Language)"/> overload.

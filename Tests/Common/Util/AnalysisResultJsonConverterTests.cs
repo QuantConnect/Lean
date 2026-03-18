@@ -38,7 +38,7 @@ namespace QuantConnect.Tests.Common.Util
             var json = @"{
                 ""Name"": ""TestAnalysis"",
                 ""Context"": { ""Sample"": ""some-value"" },
-                ""PotentialSolutions"": [""Fix A""]
+                ""Solutions"": [""Fix A""]
             }";
 
             var result = Deserialize(json);
@@ -53,7 +53,7 @@ namespace QuantConnect.Tests.Common.Util
             var json = @"{
                 ""Name"": ""TestAnalysis"",
                 ""Context"": { ""Sample"": ""first"", ""Occurrences"": 42 },
-                ""PotentialSolutions"": []
+                ""Solutions"": []
             }";
 
             var result = Deserialize(json);
@@ -73,7 +73,7 @@ namespace QuantConnect.Tests.Common.Util
                     { ""Sample"": ""a"" },
                     { ""Sample"": ""b"", ""Occurrences"": 3 }
                 ],
-                ""PotentialSolutions"": []
+                ""Solutions"": []
             }";
 
             var result = Deserialize(json);
@@ -95,7 +95,7 @@ namespace QuantConnect.Tests.Common.Util
             var json = @"{
                 ""Name"": ""TestAnalysis"",
                 ""Context"": null,
-                ""PotentialSolutions"": []
+                ""Solutions"": []
             }";
 
             var result = Deserialize(json);
@@ -106,31 +106,31 @@ namespace QuantConnect.Tests.Common.Util
         // ── Fields ─────────────────────────────────────────────────────────────
 
         [Test]
-        public void DeserializesNameAndPotentialSolutions()
+        public void DeserializesNameAndSolutions()
         {
             var json = @"{
                 ""Name"": ""FlatEquityCurveAnalysis"",
                 ""Context"": { ""Sample"": 0 },
-                ""PotentialSolutions"": [""Solution 1"", ""Solution 2""]
+                ""Solutions"": [""Solution 1"", ""Solution 2""]
             }";
 
             var result = Deserialize(json);
 
             Assert.AreEqual("FlatEquityCurveAnalysis", result.Name);
-            Assert.AreEqual(2, result.PotentialSolutions.Count);
-            Assert.AreEqual("Solution 1", result.PotentialSolutions[0]);
-            Assert.AreEqual("Solution 2", result.PotentialSolutions[1]);
+            Assert.AreEqual(2, result.Solutions.Count);
+            Assert.AreEqual("Solution 1", result.Solutions[0]);
+            Assert.AreEqual("Solution 2", result.Solutions[1]);
         }
 
         [Test]
-        public void MissingPotentialSolutionsDeserializesAsEmptyList()
+        public void MissingSolutionsDeserializesAsEmptyList()
         {
             var json = @"{ ""Name"": ""X"", ""Context"": null }";
 
             var result = Deserialize(json);
 
-            Assert.IsNotNull(result.PotentialSolutions);
-            Assert.AreEqual(0, result.PotentialSolutions.Count);
+            Assert.IsNotNull(result.Solutions);
+            Assert.AreEqual(0, result.Solutions.Count);
         }
 
         // ── Interface / list integration ───────────────────────────────────────
@@ -139,8 +139,8 @@ namespace QuantConnect.Tests.Common.Util
         public void ConverterIsUsedWhenDeserializingListOfInterface()
         {
             var json = @"[
-                { ""Name"": ""A"", ""Context"": { ""Sample"": 1 }, ""PotentialSolutions"": [] },
-                { ""Name"": ""B"", ""Context"": { ""Sample"": 2, ""Occurrences"": 5 }, ""PotentialSolutions"": [""Fix""] }
+                { ""Name"": ""A"", ""Context"": { ""Sample"": 1 }, ""Solutions"": [] },
+                { ""Name"": ""B"", ""Context"": { ""Sample"": 2, ""Occurrences"": 5 }, ""Solutions"": [""Fix""] }
             ]";
 
             var results = JsonConvert.DeserializeObject<IReadOnlyList<AnalysisResult>>(json);
@@ -158,6 +158,7 @@ namespace QuantConnect.Tests.Common.Util
         {
             var original = new AnalysisResult(
                 "SomeAnalysis",
+                "Issue",
                 new ResultsAnalysisContext("sample-string"),
                 ["Fix this", "Or that"]);
 
@@ -165,9 +166,9 @@ namespace QuantConnect.Tests.Common.Util
             var result = Deserialize(json);
 
             Assert.AreEqual(original.Name, result.Name);
-            Assert.AreEqual(2, result.PotentialSolutions.Count);
-            Assert.AreEqual(original.PotentialSolutions[0], result.PotentialSolutions[0]);
-            Assert.AreEqual(original.PotentialSolutions[1], result.PotentialSolutions[1]);
+            Assert.AreEqual(2, result.Solutions.Count);
+            Assert.AreEqual(original.Solutions[0], result.Solutions[0]);
+            Assert.AreEqual(original.Solutions[1], result.Solutions[1]);
             Assert.IsInstanceOf<ResultsAnalysisContext>(result.Context);
             Assert.AreEqual(
                 ((ResultsAnalysisContext)original.Context).Sample.ToString(),
@@ -179,6 +180,7 @@ namespace QuantConnect.Tests.Common.Util
         {
             var original = new AnalysisResult(
                 "RepeatedAnalysis",
+                "Issue",
                 new ResultsAnalysisRepeatedContext(["first", "second", "third"]),
                 ["Reduce frequency"]);
 
@@ -196,6 +198,7 @@ namespace QuantConnect.Tests.Common.Util
         {
             var original = new AnalysisResult(
                 "AggregateAnalysis",
+                "Issue",
                 new ResultsAnalysisAggregateContext([
                     new ResultsAnalysisContext("ctx-a"),
                     new ResultsAnalysisRepeatedContext(["x", "y"])

@@ -27,6 +27,7 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
     {
         public override string Issue => "Portfolio under-utilized available margin";
         public override int Weight => 15;
+        public override IReadOnlyList<AnalysisResult> Run(ResultsAnalysisRunParameters parameters) => Run(parameters.Result);
 
         /// <summary>
         /// Reads the "Portfolio Margin" chart from the backtest result and counts trading days

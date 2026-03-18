@@ -112,12 +112,6 @@ namespace QuantConnect
         public string Issue { get; set; }
 
         /// <summary>
-        /// Gets or sets the weight (0–100) representing the severity/impact of this analysis.
-        /// Higher values are shown first.
-        /// </summary>
-        public int Weight { get; set; }
-
-        /// <summary>
         /// Gets or sets the diagnostic context carrying sample data about the detected issue.
         /// </summary>
         public IResultsAnalysisContext Context { get; set; }
@@ -130,11 +124,10 @@ namespace QuantConnect
         /// <summary>
         /// Initializes a new instance of the <see cref="AnalysisResult"/> class.
         /// </summary>
-        public AnalysisResult(string name, string issue, int weight, IResultsAnalysisContext context, IReadOnlyList<string> solutions)
+        public AnalysisResult(string name, string issue, IResultsAnalysisContext context, IReadOnlyList<string> solutions)
         {
             Name = name;
             Issue = issue;
-            Weight = weight;
             Context = context;
             Solutions = solutions;
         }

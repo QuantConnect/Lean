@@ -26,6 +26,7 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
     {
         public override string Issue => "Algorithm produced no equity curve movement";
         public override int Weight => 95;
+        public override IReadOnlyList<AnalysisResult> Run(ResultsAnalysisRunParameters parameters) => Run(parameters.EquityCurve);
 
         /// <summary>
         /// Scans the equity curve for consecutive flat (unchanged) segments.

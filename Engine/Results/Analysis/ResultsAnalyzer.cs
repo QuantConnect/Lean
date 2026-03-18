@@ -63,159 +63,65 @@ namespace QuantConnect.Lean.Engine.Results.Analysis
             var timingLogs = new List<string>();
             (_equityCurve, _benchmarkEquityCurve) = ReadEquityCurve(_result, _algorithm, timingLogs);
 
-            // Each tuple pairs the analysis's declared Weight with its check lambda so the list
-            // self-sorts — changing a Weight on the analysis class automatically reorders execution.
-            var analyses = new (int Weight, Func<IReadOnlyList<AnalysisResult>> Check)[]
+            var parameters = new ResultsAnalysisRunParameters(_result, _algorithm, _language, _logs, _equityCurve, _benchmarkEquityCurve);
+
+            // Instances are sorted by their own Weight — changing a weight automatically reorders execution.
+            var analyses = new BaseResultsAnalysis[]
             {
-                (new PortfolioValueIsNotPositiveAnalysis().Weight,                               CheckPortfolioValueIsNotPositive),
-                (new FlatEquityCurveAnalysis().Weight,                                          CheckFlatEquityCurve),
-                (new InsufficientBuyingPowerOrderResponseErrorAnalysis().Weight,                 CheckInsufficientBuyingPowerOrderResponseError),
-                (new MarginCallsAnalysis().Weight,                                              CheckMarginCalls),
-                (new ExceedsShortableQuantityOrderResponseErrorAnalysis().Weight,               CheckExceedsShortableQuantityOrderResponseError),
-                (new SecurityPriceZeroOrderResponseErrorAnalysis().Weight,                      CheckSecurityPriceZeroOrderResponseError),
-                (new OrderQuantityZeroOrderResponseErrorAnalysis().Weight,                      CheckOrderQuantityZeroOrderResponseError),
-                (new NonTradableSecurityOrderResponseErrorAnalysis().Weight,                    CheckNonTradableSecurityOrderResponseError),
-                (new BrokerageModelRefusedToSubmitOrderOrderResponseErrorAnalysis().Weight,     CheckBrokerageModelRefusedToSubmitOrderOrderResponseError),
-                (new BrokerageModelRefusedToUpdateOrderOrderResponseErrorAnalysis().Weight,     CheckBrokerageModelRefusedToUpdateOrderOrderResponseError),
-                (new TakeProfitAndStopLossOrdersAnalysis().Weight,                             CheckTakeProfitAndStopLossOrders),
-                (new StaleOrderFillsAnalysis().Weight,                                          CheckStaleOrderFills),
-                (new AlgorithmWarmingUpOrderResponseErrorAnalysis().Weight,                     CheckAlgorithmWarmingUpOrderResponseError),
-                (new ExchangeNotOpenOrderResponseErrorAnalysis().Weight,                        CheckExchangeNotOpenOrderResponseError),
-                (new ForexConversionRateZeroOrderResponseErrorAnalysis().Weight,               CheckForexConversionRateZeroOrderResponseError),
-                (new OrderFillsDuringExtendedMarketHoursAnalysis().Weight,                     CheckForOrderFillsDuringExtendedMarketHours),
-                (new ExceededMaximumOrdersOrderResponseErrorAnalysis().Weight,                  CheckExceededMaximumOrdersOrderResponseError),
-                (new UnsupportedRequestTypeOrderResponseErrorAnalysis().Weight,                 CheckUnsupportedRequestTypeOrderResponseError),
-                (new EuropeanOptionNotExpiredOnExerciseOrderResponseErrorAnalysis().Weight,     CheckEuropeanOptionNotExpiredOnExerciseOrderResponseError),
-                (new OptionOrderOnStockSplitOrderResponseErrorAnalysis().Weight,               CheckOptionOrderOnStockSplitOrderResponseError),
-                (new MarketOnOpenNotAllowedDuringRegularHoursOrderResponseErrorAnalysis().Weight, CheckMarketOnOpenNotAllowedDuringRegularHoursOrderResponseError),
-                (new OrderQuantityLessThanLotSizeOrderResponseErrorAnalysis().Weight,          CheckOrderQuantityLessThanLotSizeOrderResponseError),
-                (new InsightsEmittedForDelistedSecuritiesAnalysis().Weight,                    CheckInsightsEmittedForDelistedSecurities),
-                (new StatisticalSignificanceOfDailyReturnsAnalysis().Weight,                   CheckStatisticalSignificanceOfDailyReturns),
-                (new PerformanceRelativeToBenchmark().Weight,                                  CheckPerformanceRelativeToBenchmark),
-                (new CrisisEventsAnalysis().Weight,                                             CheckCrisisEvents),
-                (new ExecutionSpeedAnalysis().Weight,                                           CheckExecutionSpeed),
-                (new PortfolioMarginUsageAnalysis().Weight,                                    CheckPortfolioMarginUsage),
-                (new ParameterCountAnalysis().Weight,                                           CheckParameterCount),
-                (new MonteCarloPercentile().Weight,                                             CheckMonteCarloPercentile),
-            }.OrderByDescending(x => x.Weight)
-             .Select(x => x.Check)
-             .ToList();
+                new PortfolioValueIsNotPositiveAnalysis(),
+                new FlatEquityCurveAnalysis(),
+                new InsufficientBuyingPowerOrderResponseErrorAnalysis(),
+                new MarginCallsAnalysis(),
+                new ExceedsShortableQuantityOrderResponseErrorAnalysis(),
+                new SecurityPriceZeroOrderResponseErrorAnalysis(),
+                new OrderQuantityZeroOrderResponseErrorAnalysis(),
+                new NonTradableSecurityOrderResponseErrorAnalysis(),
+                new BrokerageModelRefusedToSubmitOrderOrderResponseErrorAnalysis(),
+                new BrokerageModelRefusedToUpdateOrderOrderResponseErrorAnalysis(),
+                new TakeProfitAndStopLossOrdersAnalysis(),
+                new StaleOrderFillsAnalysis(),
+                new AlgorithmWarmingUpOrderResponseErrorAnalysis(),
+                new ExchangeNotOpenOrderResponseErrorAnalysis(),
+                new ForexConversionRateZeroOrderResponseErrorAnalysis(),
+                new OrderFillsDuringExtendedMarketHoursAnalysis(),
+                new ExceededMaximumOrdersOrderResponseErrorAnalysis(),
+                new UnsupportedRequestTypeOrderResponseErrorAnalysis(),
+                new EuropeanOptionNotExpiredOnExerciseOrderResponseErrorAnalysis(),
+                new OptionOrderOnStockSplitOrderResponseErrorAnalysis(),
+                new MarketOnOpenNotAllowedDuringRegularHoursOrderResponseErrorAnalysis(),
+                new OrderQuantityLessThanLotSizeOrderResponseErrorAnalysis(),
+                new InsightsEmittedForDelistedSecuritiesAnalysis(),
+                new StatisticalSignificanceOfDailyReturnsAnalysis(),
+                new PerformanceRelativeToBenchmark(),
+                new CrisisEventsAnalysis(),
+                new ExecutionSpeedAnalysis(),
+                new PortfolioMarginUsageAnalysis(),
+                new ParameterCountAnalysis(),
+                new MonteCarloPercentile(),
+            }.OrderByDescending(a => a.Weight);
 
             var responses = new List<AnalysisResult>();
-            var deadline = DateTime.UtcNow.AddSeconds(timeLimitSeconds);
+            var timer = Stopwatch.StartNew();
+            var timeLimit = TimeSpan.FromSeconds(timeLimitSeconds);
 
             foreach (var analysis in analyses)
             {
-                if (responses.Count >= maxFailedTests || DateTime.UtcNow >= deadline)
+                if (responses.Count >= maxFailedTests || timer.Elapsed >= timeLimit)
                 {
                     break;
                 }
 
-                try
+                foreach (var result in analysis.Run(parameters))
                 {
-                    foreach (var result in analysis())
+                    if (result.Solutions.Count > 0)
                     {
-                        if (result.Solutions.Count > 0)
-                        {
-                            responses.Add(result);
-                        }
+                        responses.Add(result);
                     }
                 }
-                catch (Exception ex) when (ex is not OutOfMemoryException and not StackOverflowException) { }
             }
 
-            return [.. responses.OrderByDescending(x => x.Weight).Take(maxFailedTests)];
+            return responses;
         }
-
-        private IReadOnlyList<AnalysisResult> CheckFlatEquityCurve()
-            => new FlatEquityCurveAnalysis().Run(_equityCurve);
-
-        private IReadOnlyList<AnalysisResult> CheckPortfolioValueIsNotPositive()
-            => new PortfolioValueIsNotPositiveAnalysis().Run(_result);
-
-        private IReadOnlyList<AnalysisResult> CheckInsufficientBuyingPowerOrderResponseError()
-            => new InsufficientBuyingPowerOrderResponseErrorAnalysis().Run(_result.OrderEvents, _language);
-
-        private IReadOnlyList<AnalysisResult> CheckAlgorithmWarmingUpOrderResponseError()
-            => new AlgorithmWarmingUpOrderResponseErrorAnalysis().Run(_logs, _language);
-
-        private IReadOnlyList<AnalysisResult> CheckBrokerageModelRefusedToSubmitOrderOrderResponseError()
-            => new BrokerageModelRefusedToSubmitOrderOrderResponseErrorAnalysis().Run(_result.OrderEvents, _language);
-
-        private IReadOnlyList<AnalysisResult> CheckExceedsShortableQuantityOrderResponseError()
-            => new ExceedsShortableQuantityOrderResponseErrorAnalysis().Run(_result.OrderEvents, _language);
-
-        private IReadOnlyList<AnalysisResult> CheckNonTradableSecurityOrderResponseError()
-            => new NonTradableSecurityOrderResponseErrorAnalysis().Run(_logs, _language);
-
-        private IReadOnlyList<AnalysisResult> CheckOrderQuantityZeroOrderResponseError()
-            => new OrderQuantityZeroOrderResponseErrorAnalysis().Run(_logs, _language);
-
-        private IReadOnlyList<AnalysisResult> CheckSecurityPriceZeroOrderResponseError()
-            => new SecurityPriceZeroOrderResponseErrorAnalysis().Run(_logs, _language);
-
-        private IReadOnlyList<AnalysisResult> CheckUnsupportedRequestTypeOrderResponseError()
-            => new UnsupportedRequestTypeOrderResponseErrorAnalysis().Run(_logs, _language);
-
-        private IReadOnlyList<AnalysisResult> CheckExchangeNotOpenOrderResponseError()
-            => new ExchangeNotOpenOrderResponseErrorAnalysis().Run(_logs, _language);
-
-        private IReadOnlyList<AnalysisResult> CheckForexConversionRateZeroOrderResponseError()
-            => new ForexConversionRateZeroOrderResponseErrorAnalysis().Run(_logs, _language);
-
-        private IReadOnlyList<AnalysisResult> CheckExceededMaximumOrdersOrderResponseError()
-            => new ExceededMaximumOrdersOrderResponseErrorAnalysis().Run(_logs, _language);
-
-        private IReadOnlyList<AnalysisResult> CheckBrokerageModelRefusedToUpdateOrderOrderResponseError()
-            => new BrokerageModelRefusedToUpdateOrderOrderResponseErrorAnalysis().Run(_logs, _language);
-
-        private IReadOnlyList<AnalysisResult> CheckOrderQuantityLessThanLotSizeOrderResponseError()
-            => new OrderQuantityLessThanLotSizeOrderResponseErrorAnalysis().Run(_logs, _language);
-
-        private IReadOnlyList<AnalysisResult> CheckEuropeanOptionNotExpiredOnExerciseOrderResponseError()
-            => new EuropeanOptionNotExpiredOnExerciseOrderResponseErrorAnalysis().Run(_logs, _language);
-
-        private IReadOnlyList<AnalysisResult> CheckOptionOrderOnStockSplitOrderResponseError()
-            => new OptionOrderOnStockSplitOrderResponseErrorAnalysis().Run(_logs, _language);
-
-        private IReadOnlyList<AnalysisResult> CheckMarketOnOpenNotAllowedDuringRegularHoursOrderResponseError()
-            => new MarketOnOpenNotAllowedDuringRegularHoursOrderResponseErrorAnalysis().Run(_logs, _language);
-
-        private IReadOnlyList<AnalysisResult> CheckInsightsEmittedForDelistedSecurities()
-            => new InsightsEmittedForDelistedSecuritiesAnalysis().Run(_logs, _language);
-
-        private IReadOnlyList<AnalysisResult> CheckTakeProfitAndStopLossOrders()
-            => new TakeProfitAndStopLossOrdersAnalysis().Run(_result.Orders.Values, _language);
-
-        private IReadOnlyList<AnalysisResult> CheckMarginCalls()
-            => new MarginCallsAnalysis().Run(_logs, _language);
-
-        private IReadOnlyList<AnalysisResult> CheckExecutionSpeed()
-            => new ExecutionSpeedAnalysis().Run(_logs);
-
-        private IReadOnlyList<AnalysisResult> CheckStaleOrderFills()
-            => new StaleOrderFillsAnalysis().Run(_result.OrderEvents, _language);
-
-        private IReadOnlyList<AnalysisResult> CheckForOrderFillsDuringExtendedMarketHours()
-            => new OrderFillsDuringExtendedMarketHoursAnalysis().Run(_algorithm, _result.OrderEvents, _language);
-
-        private IReadOnlyList<AnalysisResult> CheckPortfolioMarginUsage()
-            => new PortfolioMarginUsageAnalysis().Run(_result);
-
-        private IReadOnlyList<AnalysisResult> CheckParameterCount()
-            => new ParameterCountAnalysis().Run(_algorithm, _language);
-
-        private IReadOnlyList<AnalysisResult> CheckCrisisEvents()
-            => new CrisisEventsAnalysis().Run(_algorithm, _equityCurve, _benchmarkEquityCurve);
-
-        private IReadOnlyList<AnalysisResult> CheckStatisticalSignificanceOfDailyReturns()
-            => new StatisticalSignificanceOfDailyReturnsAnalysis().Run(_equityCurve, _benchmarkEquityCurve);
-
-        private IReadOnlyList<AnalysisResult> CheckPerformanceRelativeToBenchmark()
-            => new PerformanceRelativeToBenchmark().Run(_algorithm, _equityCurve, _benchmarkEquityCurve);
-
-        private IReadOnlyList<AnalysisResult> CheckMonteCarloPercentile()
-            => new MonteCarloPercentile().Run(_equityCurve);
 
         /// <summary>
         /// Reads the backtest's "Strategy Equity" chart and fetches SPY daily history to build
