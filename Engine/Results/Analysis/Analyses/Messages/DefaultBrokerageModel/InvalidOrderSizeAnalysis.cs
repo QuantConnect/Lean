@@ -17,7 +17,6 @@ using System.Collections.Generic;
 
 namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses.Messages.DefaultBrokerageModel
 {
-
     /// <summary>
     /// Detects brokerage model rejections where the order value (price × |quantity|) is below the security's minimum order size.
     /// </summary>
@@ -32,7 +31,6 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses.Messages.DefaultBro
             " is ",
             ". Order size was ",
         ];
-
 
         protected override List<string> Solutions(Language _) =>
         [

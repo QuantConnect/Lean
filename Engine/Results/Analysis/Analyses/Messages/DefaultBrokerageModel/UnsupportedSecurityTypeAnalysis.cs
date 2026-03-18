@@ -17,7 +17,6 @@ using System.Collections.Generic;
 
 namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses.Messages.DefaultBrokerageModel
 {
-
     /// <summary>
     /// Detects brokerage model rejections where the security type is not supported.
     /// </summary>
@@ -31,7 +30,6 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses.Messages.DefaultBro
             " does not support ",
             " security type.",
         ];
-
 
         protected override List<string> Solutions(Language _) =>
         [

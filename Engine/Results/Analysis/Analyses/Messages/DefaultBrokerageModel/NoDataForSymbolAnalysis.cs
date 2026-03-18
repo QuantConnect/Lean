@@ -17,7 +17,6 @@ using System.Collections.Generic;
 
 namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses.Messages.DefaultBrokerageModel
 {
-
     /// <summary>
     /// Detects brokerage model rejections where no data is available for the ordered security.
     /// </summary>
@@ -30,7 +29,6 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses.Messages.DefaultBro
         [
             "There is no data for the provided symbol ",
         ];
-
 
         protected override List<string> Solutions(Language _) =>
         [

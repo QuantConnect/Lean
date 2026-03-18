@@ -17,7 +17,6 @@ using System.Collections.Generic;
 
 namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses.Messages.TradierBrokerageModel
 {
-
     /// <summary>
     /// Detects Tradier brokerage model rejections where a short-sell order was placed for a security priced below $5.
     /// </summary>
@@ -31,7 +30,6 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses.Messages.TradierBro
         [
             "Tradier does not support sell-short orders when the last price is below $5.",
         ];
-
 
         protected override List<string> Solutions(Language _) =>
         [

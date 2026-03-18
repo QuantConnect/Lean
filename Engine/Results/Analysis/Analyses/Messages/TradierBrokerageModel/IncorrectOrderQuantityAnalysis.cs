@@ -17,7 +17,6 @@ using System.Collections.Generic;
 
 namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses.Messages.TradierBrokerageModel
 {
-
     /// <summary>
     /// Detects Tradier brokerage model rejections where the order quantity is not a whole number.
     /// </summary>
@@ -30,7 +29,6 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses.Messages.TradierBro
         [
             "Tradier order quantity must be a whole number, but received ",
         ];
-
 
         protected override List<string> Solutions(Language _) =>
         [

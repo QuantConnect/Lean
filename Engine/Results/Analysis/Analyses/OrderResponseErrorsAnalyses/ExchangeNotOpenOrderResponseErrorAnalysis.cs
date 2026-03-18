@@ -56,7 +56,6 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
             return SingleResponse(null);
         }
 
-
         // ── Sub-analysis: exercise while exchange not open ────────────────────────────────
 
         private class ExerciseOptionWhileExchangeNotOpenAnalysis : MessageAnalysis

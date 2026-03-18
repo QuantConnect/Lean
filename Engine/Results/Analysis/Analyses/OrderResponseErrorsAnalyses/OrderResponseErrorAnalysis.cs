@@ -21,7 +21,6 @@ using System.Linq;
 
 namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
 {
-
     /// <summary>
     /// Abstract base class for analyses that detect specific order-response errors
     /// by inspecting invalid order events for known message text fragments.

@@ -18,7 +18,6 @@ using System.Collections.Generic;
 
 namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses.Messages.TradierBrokerageModel
 {
-
     /// <summary>
     /// Detects Tradier brokerage model rejections where an extended-hours order was placed outside a valid extended trading session.
     /// </summary>
@@ -31,7 +30,6 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses.Messages.TradierBro
         [
             "Tradier does not support extended market hours trading outside of the extended session.",
         ];
-
 
         protected override List<string> Solutions(Language language) =>
         [
