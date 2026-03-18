@@ -96,7 +96,7 @@ namespace QuantConnect
 
     /// <summary>
     /// Represents the outcome of a single backtest diagnostic analysis,
-    /// containing the analysis name, diagnostic context, and a list of potential solutions.
+    /// containing the analysis name, diagnostic context, and a list of solutions.
     /// </summary>
     [JsonConverter(typeof(AnalysisResultJsonConverter))]
     public class AnalysisResult
@@ -107,6 +107,17 @@ namespace QuantConnect
         public string Name { get; set; }
 
         /// <summary>
+        /// Gets or sets a short description of why the analysis was triggered.
+        /// </summary>
+        public string Issue { get; set; }
+
+        /// <summary>
+        /// Gets or sets the weight (0–100) representing the severity/impact of this analysis.
+        /// Higher values are shown first.
+        /// </summary>
+        public int Weight { get; set; }
+
+        /// <summary>
         /// Gets or sets the diagnostic context carrying sample data about the detected issue.
         /// </summary>
         public IResultsAnalysisContext Context { get; set; }
@@ -114,19 +125,18 @@ namespace QuantConnect
         /// <summary>
         /// Gets or sets human-readable suggestions for resolving the detected issue.
         /// </summary>
-        public IReadOnlyList<string> PotentialSolutions { get; set; }
+        public IReadOnlyList<string> Solutions { get; set; }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="AnalysisResult"/> class.
         /// </summary>
-        /// <param name="name">The name of the analysis that produced this result.</param>
-        /// <param name="context">The diagnostic context object describing the detected issue.</param>
-        /// <param name="potentialSolutions">A list of human-readable remediation suggestions.</param>
-        public AnalysisResult(string name, IResultsAnalysisContext context, IReadOnlyList<string> potentialSolutions)
+        public AnalysisResult(string name, string issue, int weight, IResultsAnalysisContext context, IReadOnlyList<string> solutions)
         {
             Name = name;
+            Issue = issue;
+            Weight = weight;
             Context = context;
-            PotentialSolutions = potentialSolutions;
+            Solutions = solutions;
         }
     }
 }

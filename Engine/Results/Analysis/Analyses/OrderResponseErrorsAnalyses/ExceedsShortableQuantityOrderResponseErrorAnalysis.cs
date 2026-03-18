@@ -25,6 +25,9 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
     /// </summary>
     public class ExceedsShortableQuantityOrderResponseErrorAnalysis : BaseResultsAnalysis
     {
+        public override string Issue => "Short sell quantity exceeded available shares";
+        public override int Weight => 82;
+
         private static readonly string[] MessageText =
         [
             "Order exceeds shortable quantity ",
@@ -45,11 +48,11 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
                 //.Select(OrdersReader.ParseOrderEvent)
                 .ToList();
 
-            var potentialSolutions = result.Count > 0 ? PotentialSolutions(language) : [];
+            var potentialSolutions = result.Count > 0 ? Solutions(language) : [];
             return SingleResponse(new ResultsAnalysisRepeatedContext(result), potentialSolutions);
         }
 
-        private static List<string> PotentialSolutions(Language language) =>
+        private static List<string> Solutions(Language language) =>
         [
             "This error occurs when you place an order to short a security but the shortable provider of the brokerage model states there isn't enough shares to borrow. " +
             "To avoid this order response error, check if there are enough shares available before you place an order to short a security.\n" +

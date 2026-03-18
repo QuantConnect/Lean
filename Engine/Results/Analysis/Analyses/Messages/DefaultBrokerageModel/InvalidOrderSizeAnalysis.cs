@@ -23,6 +23,9 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses.Messages.DefaultBro
     /// </summary>
     public class InvalidOrderSizeAnalysis : MessageAnalysis
     {
+        public override string Issue => "Invalid order size rejected by brokerage";
+        public override int Weight => 70;
+
         protected override string[] ExpectedMessageText { get; } =
         [
             "The minimum order size (in quote currency) for ",
@@ -31,7 +34,7 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses.Messages.DefaultBro
         ];
 
 
-        protected override List<string> PotentialSolutions(Language _) =>
+        protected override List<string> Solutions(Language _) =>
         [
             "This message occurs when the value (price * abs(quantity)) of an order you place through one of the Binance brokerage models is <= the security's minimum order size. " +
             "Check if it's a data issue or increase the starting cash so trades are larger.",

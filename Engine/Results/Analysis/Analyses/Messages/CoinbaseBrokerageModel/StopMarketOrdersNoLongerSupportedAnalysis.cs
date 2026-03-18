@@ -23,13 +23,16 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses.Messages.CoinbaseBr
     /// </summary>
     public class StopMarketOrdersNoLongerSupportedAnalysis : MessageAnalysis
     {
+        public override string Issue => "Stop market orders no longer supported on Coinbase";
+        public override int Weight => 62;
+
         protected override string[] ExpectedMessageText { get; } =
         [
             "Stop Market orders are no longer supported since ",
         ];
 
 
-        protected override List<string> PotentialSolutions(Language _) =>
+        protected override List<string> Solutions(Language _) =>
         [
             "Coinbase no longer supports Stop Market orders. " +
             "Use a Stop Limit order instead.",

@@ -24,6 +24,9 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
     /// </summary>
     public class PerformanceRelativeToBenchmark : BaseResultsAnalysis
     {
+        public override string Issue => "Strategy Sharpe ratio below benchmark Sharpe";
+        public override int Weight => 25;
+
         /// <summary>
         /// Calculates the Sharpe ratio of the strategy over the full backtest period and compares it to the benchmark.
         /// </summary>
@@ -41,11 +44,11 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
                 ? new { BacktestSharpe = backtestSharpe, BenchmarkSharpe = benchmarkSharpe }
                 : null;
 
-            var potentialSolutions = result is not null ? PotentialSolutions() : [];
+            var potentialSolutions = result is not null ? Solutions() : [];
             return SingleResponse(new ResultsAnalysisContext(result), potentialSolutions);
         }
 
-        private static List<string> PotentialSolutions() =>
+        private static List<string> Solutions() =>
         [
             "The strategy has a lower Sharpe ratio than the benchmark. " +
             "Try adjusting the trading rules and/or the universe to get a strategy that outperforms the benchmark.",

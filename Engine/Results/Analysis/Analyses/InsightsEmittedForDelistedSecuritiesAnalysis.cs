@@ -23,12 +23,15 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
     /// </summary>
     public class InsightsEmittedForDelistedSecuritiesAnalysis : MessageAnalysis
     {
+        public override string Issue => "Insights emitted for delisted securities";
+        public override int Weight => 35;
+
         protected override string[] ExpectedMessageText { get; } =
         [
             "QCAlgorithm.EmitInsights(): Warning: cannot emit insights for delisted securities, these will be discarded",
         ];
 
-        protected override List<string> PotentialSolutions(Language language) =>
+        protected override List<string> Solutions(Language language) =>
         [
             "Before you emit an insight for a security, check if it's tradable.",
         ];

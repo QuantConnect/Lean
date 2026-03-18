@@ -24,6 +24,9 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses.Messages.DefaultBro
     /// </summary>
     public class UnsupportedMarketOnOpenOrderTimeAnalysis : MessageAnalysis
     {
+        public override string Issue => "Market on open order placed at wrong time";
+        public override int Weight => 58;
+
         protected override string[] ExpectedMessageText { get; } =
         [
             "MarketOnOpen orders must be placed with at least a ",
@@ -31,7 +34,7 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses.Messages.DefaultBro
         ];
 
 
-        protected override List<string> PotentialSolutions(Language _) =>
+        protected override List<string> Solutions(Language _) =>
         [
             "MarketOnOpen orders require a minimum time gap between submission and the intended fill. " +
             "Place the order at least one bar before the market open.",

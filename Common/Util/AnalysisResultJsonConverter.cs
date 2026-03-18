@@ -56,10 +56,12 @@ namespace QuantConnect.Util
             var jObject = JObject.Load(reader);
 
             var name = jObject["Name"]?.Value<string>();
-            var potentialSolutions = jObject["PotentialSolutions"]?.ToObject<List<string>>() ?? [];
+            var issue = jObject["Issue"]?.Value<string>();
+            var weight = jObject["Weight"]?.Value<int>() ?? 0;
+            var solutions = jObject["Solutions"]?.ToObject<List<string>>() ?? [];
             var context = DeserializeContext(jObject["Context"]);
 
-            return new AnalysisResult(name, context, potentialSolutions);
+            return new AnalysisResult(name, issue, weight, context, solutions);
         }
 
         /// <summary>

@@ -23,6 +23,9 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses.Messages.TradierBro
     /// </summary>
     public class UnsupportedTimeInForceTypeAnalysis : MessageAnalysis
     {
+        public override string Issue => "Time-in-force type not supported by Tradier";
+        public override int Weight => 58;
+
         protected override string[] ExpectedMessageText { get; } =
         [
             "Tradier does not support the ",
@@ -30,7 +33,7 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses.Messages.TradierBro
         ];
 
 
-        protected override List<string> PotentialSolutions(Language _) =>
+        protected override List<string> Solutions(Language _) =>
         [
             "Tradier only supports Day and GTC time-in-force types. " +
             "Change the time-in-force to Day or GTC.",

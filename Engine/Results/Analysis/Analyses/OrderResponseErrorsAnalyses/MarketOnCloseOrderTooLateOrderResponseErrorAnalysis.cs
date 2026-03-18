@@ -23,13 +23,16 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
     /// </summary>
     public class MarketOnCloseOrderTooLateOrderResponseErrorAnalysis : MessageAnalysis
     {
+        public override string Issue => "Market on close order submitted too late";
+        public override int Weight => 52;
+
         protected override string[] ExpectedMessageText { get; } =
         [
             "MarketOnClose orders must be placed within ",
             " before market close. Override this TimeSpan buffer by setting Orders.MarketOnCloseOrder.SubmissionTimeBuffer in QCAlgorithm.Initialize().",
         ];
 
-        protected override List<string> PotentialSolutions(Language language)
+        protected override List<string> Solutions(Language language)
         {
             var bufferProp = language == Language.Python ? "submission_time_buffer" : "SubmissionTimeBuffer";
             var exampleCode = language == Language.Python

@@ -25,6 +25,9 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
     /// </summary>
     public class TakeProfitAndStopLossOrdersAnalysis : BaseResultsAnalysis
     {
+        public override string Issue => "TP/SL order pairs not managed correctly";
+        public override int Weight => 68;
+
         private static readonly OrderType[] TpTypes = [OrderType.Limit, OrderType.LimitIfTouched];
 
         private static readonly OrderType[] SlTypes = [OrderType.StopMarket, OrderType.TrailingStop, OrderType.StopLimit];
@@ -66,17 +69,20 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
 
         private class TakeProfitAndStopLossBothFilledAnalysis : BaseResultsAnalysis, ISubAnalysis
         {
+            public override string Issue => "Both TP and SL orders filled simultaneously";
+            public override int Weight => 68;
+
             public IReadOnlyList<AnalysisResult> Run(List<List<Order>> combos, Language language)
             {
                 var result = combos
                     .Where(orders => orders.All(o => o.Status == OrderStatus.Filled))
                     .ToList();
 
-                var potentialSolutions = result.Count > 0 ? PotentialSolutions(language) : [];
+                var potentialSolutions = result.Count > 0 ? Solutions(language) : [];
                 return SingleResponse(new ResultsAnalysisRepeatedContext(result), potentialSolutions);
             }
 
-            private static List<string> PotentialSolutions(Language language) =>
+            private static List<string> Solutions(Language language) =>
             [
                 "There are some cases where both TP and SL orders filled, which can lead to an unintended position. " +
             "To avoid this issue, try increasing the data resolution.",
@@ -133,6 +139,9 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
 
         private class TakeProfitOrStopLossNotCanceledAnalysis : BaseResultsAnalysis, ISubAnalysis
         {
+            public override string Issue => "TP/SL counterpart order left dangling after fill";
+            public override int Weight => 68;
+
             public IReadOnlyList<AnalysisResult> Run(List<List<Order>> combos, Language language)
             {
                 var result = new List<object>();
@@ -155,11 +164,11 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
                     }
                 }
 
-                var potentialSolutions = result.Count > 0 ? PotentialSolutions(language) : [];
+                var potentialSolutions = result.Count > 0 ? Solutions(language) : [];
                 return SingleResponse(new ResultsAnalysisRepeatedContext(result), potentialSolutions);
             }
 
-            private static List<string> PotentialSolutions(Language language) =>
+            private static List<string> Solutions(Language language) =>
             [
                 "There are some cases where one of the TP/SL orders fills and the other one is left idle in the market. " +
             "To avoid dangling orders that can lead to unindended positions, immediately cancel one of the orders when the other one fills.\n" +

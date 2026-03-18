@@ -31,9 +31,6 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses.Messages
         /// Returns messages from <paramref name="messages"/> that contain all strings in <paramref name="expectedMessages"/>
         /// (case-insensitive).
         /// </summary>
-        /// <param name="messages">The candidate messages to search.</param>
-        /// <param name="expectedMessages">All substrings that must be present in a message for it to match.</param>
-        /// <returns>An enumerable of matching messages.</returns>
         protected IEnumerable<string> Match(IReadOnlyList<string> messages, string[] expectedMessages)
         {
             return messages
@@ -44,16 +41,13 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses.Messages
         /// Runs the analysis by scanning <paramref name="messages"/> for the expected text fragments
         /// and returns results with solutions when matches are found.
         /// </summary>
-        /// <param name="messages">The log or message strings to scan.</param>
-        /// <param name="language">The programming language the algorithm is written in.</param>
-        /// <returns>Analysis results containing potential solutions when any matching messages are found.</returns>
         public virtual IReadOnlyList<AnalysisResult> Run(IReadOnlyList<string> messages, Language language)
         {
             var foundMessages = Match(messages, ExpectedMessageText).ToList();
-            var potentialSolutions = foundMessages.Count > 0 ? PotentialSolutions(language) : [];
-            return SingleResponse(new ResultsAnalysisRepeatedContext(foundMessages), potentialSolutions);
+            var solutions = foundMessages.Count > 0 ? Solutions(language) : [];
+            return SingleResponse(new ResultsAnalysisRepeatedContext(foundMessages), solutions);
         }
 
-        protected abstract List<string> PotentialSolutions(Language language);
+        protected abstract List<string> Solutions(Language language);
     }
 }

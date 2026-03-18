@@ -24,6 +24,9 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
     /// </summary>
     public class OrderFillsDuringExtendedMarketHoursAnalysis : BaseResultsAnalysis
     {
+        public override string Issue => "Fills occurred outside regular market hours";
+        public override int Weight => 55;
+
         /// <summary>
         /// Iterates filled order events and flags those that occurred when the exchange was not open.
         /// </summary>
@@ -45,11 +48,11 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
                 result.Add(orderEvent);
             }
 
-            var potentialSolutions = result.Count > 0 ? PotentialSolutions(language) : [];
+            var potentialSolutions = result.Count > 0 ? Solutions(language) : [];
             return SingleResponse(new ResultsAnalysisRepeatedContext(orderEvents), potentialSolutions);
         }
 
-        private static List<string> PotentialSolutions(Language language) =>
+        private static List<string> Solutions(Language language) =>
         [
             "Filling orders during extended market hours can cause a lot of slippage since there is less liquidity than during regular trading hours. " +
             "If you don't intend to trading during extended market hours, add a guard before you place orders.\n" +

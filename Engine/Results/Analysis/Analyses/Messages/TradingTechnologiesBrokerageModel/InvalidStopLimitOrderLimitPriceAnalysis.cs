@@ -24,6 +24,9 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses.Messages.TradingTec
     /// </summary>
     public class InvalidStopLimitOrderLimitPriceAnalysis : MessageAnalysis
     {
+        public override string Issue => "Stop limit order limit price is invalid";
+        public override int Weight => 62;
+
         protected override string[] ExpectedMessageText { get; } =
         [
             "Trading Technologies does not support a",
@@ -31,7 +34,7 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses.Messages.TradingTec
         ];
 
 
-        protected override List<string> PotentialSolutions(Language _) =>
+        protected override List<string> Solutions(Language _) =>
         [
             "Trading Technologies requires the limit price of a stop-limit order to be worse than the stop price (further from the market). " +
             "For a buy order the limit price must be above the stop price; for a sell order it must be below.",

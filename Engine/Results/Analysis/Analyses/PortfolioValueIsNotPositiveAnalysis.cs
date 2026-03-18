@@ -22,6 +22,9 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
     /// </summary>
     public class PortfolioValueIsNotPositiveAnalysis : BaseResultsAnalysis
     {
+        public override string Issue => "Portfolio equity dropped to zero or below";
+        public override int Weight => 100;
+
         /// <summary>
         /// Checks whether the backtest's ending equity is positive.
         /// </summary>
@@ -30,11 +33,11 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
         public IReadOnlyList<AnalysisResult> Run(Result result)
         {
             var hasEquity = result.TotalPerformance.PortfolioStatistics.EndEquity > 0;
-            var potentialSolutions = hasEquity ? [] : PotentialSolutions();
+            var potentialSolutions = hasEquity ? [] : Solutions();
             return SingleResponse(new ResultsAnalysisContext(!hasEquity), potentialSolutions);
         }
 
-        private static List<string> PotentialSolutions() =>
+        private static List<string> Solutions() =>
         [
             "Add extended market hours or reduce the data resolution to potentially reduce the impact of gaps between bars.",
 

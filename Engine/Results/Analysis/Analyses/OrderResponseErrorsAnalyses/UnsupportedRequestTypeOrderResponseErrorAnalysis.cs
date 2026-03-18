@@ -24,6 +24,9 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
     /// </summary>
     public class UnsupportedRequestTypeOrderResponseErrorAnalysis : MessageAnalysis
     {
+        public override string Issue => "Unsupported order request type submitted";
+        public override int Weight => 50;
+
         private static readonly string[] ShortMessageText =
         [
             "The security with symbol ",
@@ -49,7 +52,7 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
         {
             var shortFoundMessages = Match(messages, ShortMessageText).ToList();
             var quantityFoundMessages = Match(messages, QuantityMessageText).ToList();
-            var potentialSolutions = shortFoundMessages.Count > 0 || quantityFoundMessages.Count > 0 ? PotentialSolutions(language) : [];
+            var potentialSolutions = shortFoundMessages.Count > 0 || quantityFoundMessages.Count > 0 ? Solutions(language) : [];
 
             var contexts = new List<IResultsAnalysisContext>();
             if (shortFoundMessages.Count > 0)
@@ -64,7 +67,7 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
             return SingleResponse(new ResultsAnalysisAggregateContext(contexts), potentialSolutions);
         }
 
-        protected override List<string> PotentialSolutions(Language language) =>
+        protected override List<string> Solutions(Language language) =>
         [
             "This error occurs occurs in the following situations:\n" +
             " - When you try to exercise an Option contract for which you hold a short position\n" +

@@ -24,6 +24,9 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
     /// </summary>
     public class OrderQuantityZeroOrderResponseErrorAnalysis : MessageAnalysis
     {
+        public override string Issue => "Order quantity computed as zero";
+        public override int Weight => 78;
+
         protected override string[] ExpectedMessageText { get; } =
         [
             "Unable to ",
@@ -31,7 +34,7 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
             " that has zero quantity.",
         ];
 
-        protected override List<string> PotentialSolutions(Language language) =>
+        protected override List<string> Solutions(Language language) =>
         [
             "This error occurs when you place an order that has zero quantity or when you update an order to have a zero quantity. " +
             $"This error commonly occurs if you use the `{FormatCode("SetHoldings", language)}` method but the portfolio weight you provide to the method is too small to translate into a non-zero order quantity.\n" +

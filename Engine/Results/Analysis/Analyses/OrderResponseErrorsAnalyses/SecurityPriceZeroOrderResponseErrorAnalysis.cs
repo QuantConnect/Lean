@@ -23,12 +23,15 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
     /// </summary>
     public class SecurityPriceZeroOrderResponseErrorAnalysis : MessageAnalysis
     {
+        public override string Issue => "Security price was zero at order time";
+        public override int Weight => 80;
+
         protected override string[] ExpectedMessageText { get; } =
         [
             "The security does not have an accurate price as it has not yet received a bar of data.",
         ];
 
-        protected override List<string> PotentialSolutions(Language language) =>
+        protected override List<string> Solutions(Language language) =>
         [
             "This occurs when you place an order or exercise an Option contract while the security price is $0. " +
             "The security price can be $0 if the algorithm hasn't received data for the security yet. " +

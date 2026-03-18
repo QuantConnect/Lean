@@ -23,13 +23,16 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses.Messages.TradierBro
     /// </summary>
     public class ShortOrderIsGtcAnalysis : MessageAnalysis
     {
+        public override string Issue => "Short order with GTC time-in-force rejected";
+        public override int Weight => 55;
+
         protected override string[] ExpectedMessageText { get; } =
         [
             "Tradier does not support GTC orders for short sales.",
         ];
 
 
-        protected override List<string> PotentialSolutions(Language _) =>
+        protected override List<string> Solutions(Language _) =>
         [
             "Tradier does not support Good-Till-Cancelled (GTC) orders for short sales. " +
             "Use a day order instead of a GTC order for short positions.",

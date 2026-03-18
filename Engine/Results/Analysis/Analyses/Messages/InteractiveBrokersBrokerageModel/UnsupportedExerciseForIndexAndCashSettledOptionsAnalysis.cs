@@ -24,13 +24,16 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses.Messages.Interactiv
     /// </summary>
     public class UnsupportedExerciseForIndexAndCashSettledOptionsAnalysis : MessageAnalysis
     {
+        public override string Issue => "Exercise not supported for index or cash-settled options";
+        public override int Weight => 55;
+
         protected override string[] ExpectedMessageText { get; } =
         [
             "InteractiveBrokers does not support exercising index and cash-settled options.",
         ];
 
 
-        protected override List<string> PotentialSolutions(Language _) =>
+        protected override List<string> Solutions(Language _) =>
         [
             "Interactive Brokers does not support manually exercising index and cash-settled options. " +
             "These options are automatically exercised at expiry. Remove the manual exercise call.",

@@ -25,40 +25,39 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
     public abstract class BaseResultsAnalysis
     {
         /// <summary>
+        /// Gets a short (3–8 word) description of why the analysis was triggered.
+        /// </summary>
+        public abstract string Issue { get; }
+
+        /// <summary>
+        /// Gets the severity/impact weight (0–100). Higher values run first and rank higher in results.
+        /// </summary>
+        public abstract int Weight { get; }
+
+        /// <summary>
         /// Wraps a single <see cref="AnalysisResult"/> in a one-element read-only list.
         /// </summary>
-        /// <param name="context">The context object carrying diagnostic sample data.</param>
-        /// <param name="potentialSolutions">Optional list of human-readable remediation suggestions.</param>
-        /// <returns>A one-element read-only list containing the constructed result.</returns>
-        protected IReadOnlyList<AnalysisResult> SingleResponse(IResultsAnalysisContext context, IReadOnlyList<string> potentialSolutions = null)
-            => [CreateResponse(context, potentialSolutions)];
+        protected IReadOnlyList<AnalysisResult> SingleResponse(IResultsAnalysisContext context, IReadOnlyList<string> solutions = null)
+            => [CreateResponse(context, solutions)];
 
         /// <summary>
         /// Creates a single <see cref="AnalysisResult"/> named after the concrete analysis type.
         /// </summary>
-        /// <param name="context">The context object carrying diagnostic sample data.</param>
-        /// <param name="potentialSolutions">Optional list of human-readable remediation suggestions.</param>
-        /// <returns>A new <see cref="AnalysisResult"/> instance.</returns>
-        protected AnalysisResult CreateResponse(IResultsAnalysisContext context, IReadOnlyList<string> potentialSolutions = null)
-            => new(GetType().Name, context, potentialSolutions ?? []);
+        protected AnalysisResult CreateResponse(IResultsAnalysisContext context, IReadOnlyList<string> solutions = null)
+            => new(GetType().Name, Issue, Weight, context, solutions ?? []);
 
         /// <summary>
         /// Filters <paramref name="responses"/> to those with solutions,
         /// prefixes the class name, and returns a flat list.
         /// </summary>
         protected IReadOnlyList<AnalysisResult> CreateAggregatedResponse(IEnumerable<AnalysisResult> responses)
-            => responses
-                .Where(x => x.PotentialSolutions.Count > 0)
-                .Select(x => new AnalysisResult(GetType().Name + " / " + x.Name, x.Context, x.PotentialSolutions))
-                .ToList();
+            => [.. responses
+                .Where(x => x.Solutions.Count > 0)
+                .Select(x => new AnalysisResult(GetType().Name + " / " + x.Name, x.Issue, x.Weight, x.Context, x.Solutions))];
 
         /// <summary>
         /// Formats the specified code string according to the conventions of the given programming language.
         /// </summary>
-        /// <param name="code">The code string to be formatted.</param>
-        /// <param name="language">The programming language whose formatting rules should be applied to the code string.</param>
-        /// <returns>A string containing the formatted code. If the language is Python, the code is converted to snake_case;
-        /// otherwise, the original code is returned.</returns>
         protected static string FormatCode(string code, Language language)
         {
             return language switch

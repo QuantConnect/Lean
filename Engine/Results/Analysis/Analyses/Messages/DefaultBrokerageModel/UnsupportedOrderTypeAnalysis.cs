@@ -23,6 +23,9 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses.Messages.DefaultBro
     /// </summary>
     public class UnsupportedOrderTypeAnalysis : MessageAnalysis
     {
+        public override string Issue => "Order type not supported by brokerage model";
+        public override int Weight => 65;
+
         protected override string[] ExpectedMessageText { get; } =
         [
             " does not support ",
@@ -30,7 +33,7 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses.Messages.DefaultBro
         ];
 
 
-        protected override List<string> PotentialSolutions(Language _) =>
+        protected override List<string> Solutions(Language _) =>
         [
             "Only submit or update order types that the brokerage model supports.",
             "Change the brokerage model to one that supports the types of orders you're placing.",

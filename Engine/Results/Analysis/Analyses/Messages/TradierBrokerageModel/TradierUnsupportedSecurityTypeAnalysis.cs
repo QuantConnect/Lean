@@ -23,6 +23,9 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses.Messages.TradierBro
     /// </summary>
     public class TradierUnsupportedSecurityTypeAnalysis : MessageAnalysis
     {
+        public override string Issue => "Security type not supported by Tradier brokerage";
+        public override int Weight => 65;
+
         protected override string[] ExpectedMessageText { get; } =
         [
             "Tradier does not support ",
@@ -30,7 +33,7 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses.Messages.TradierBro
         ];
 
 
-        protected override List<string> PotentialSolutions(Language _) =>
+        protected override List<string> Solutions(Language _) =>
         [
             "The Tradier brokerage model does not support this security type. " +
             "Only trade security types that Tradier supports (Equity and Option).",
