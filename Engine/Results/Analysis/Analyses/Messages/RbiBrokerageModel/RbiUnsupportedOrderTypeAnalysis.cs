@@ -23,6 +23,9 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses.Messages.RbiBrokera
     /// </summary>
     public class RbiUnsupportedOrderTypeAnalysis : MessageAnalysis
     {
+        public override string Issue => "Order type not supported by RBI brokerage model";
+        public override int Weight => 60;
+
         protected override string[] ExpectedMessageText { get; } =
         [
             "RBI does not support ",
@@ -30,7 +33,7 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses.Messages.RbiBrokera
         ];
 
 
-        protected override List<string> PotentialSolutions(Language _) =>
+        protected override List<string> Solutions(Language _) =>
         [
             "The RBI brokerage model does not support this order type. " +
             "Only submit order types that the RBI brokerage model supports.",

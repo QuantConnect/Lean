@@ -25,6 +25,9 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
     /// </summary>
     public class ExecutionSpeedAnalysis : BaseResultsAnalysis
     {
+        public override string Issue => "Algorithm ran below 40k data points per second";
+        public override int Weight => 20;
+
         private static readonly Regex DataPointsPerSecondRegex = new(
             @"Algorithm Id:\([^)]+\) completed in ([\d.]+) seconds at (\d+)k data points per second\. Processing total of [\d,]+ data points\.",
             RegexOptions.Compiled);
@@ -40,7 +43,7 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
                 ? $"The algorithm is slowly executing at only {dataPointsPerSecond}k data points per second"
                 : null;
 
-            var potentialSolutions = result is not null ? PotentialSolutions() : [];
+            var potentialSolutions = result is not null ? Solutions() : [];
             return SingleResponse(new ResultsAnalysisContext(result), potentialSolutions);
         }
 
@@ -68,7 +71,7 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
             return false;
         }
 
-        private static List<string> PotentialSolutions() =>
+        private static List<string> Solutions() =>
         [
             "Review the algorithm code for inefficiencies.",
 

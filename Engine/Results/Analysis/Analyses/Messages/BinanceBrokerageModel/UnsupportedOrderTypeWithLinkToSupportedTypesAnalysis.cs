@@ -23,6 +23,9 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses.Messages.BinanceBro
     /// </summary>
     public class UnsupportedOrderTypeWithLinkToSupportedTypesAnalysis : MessageAnalysis
     {
+        public override string Issue => "Order type not supported by Binance brokerage";
+        public override int Weight => 60;
+
         protected override string[] ExpectedMessageText { get; } =
         [
             "The Binance brokerage does not support ",
@@ -30,7 +33,7 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses.Messages.BinanceBro
         ];
 
 
-        protected override List<string> PotentialSolutions(Language _) =>
+        protected override List<string> Solutions(Language _) =>
         [
             "The Binance brokerage model does not support this order type. " +
             "Only submit order types that Binance supports. " +

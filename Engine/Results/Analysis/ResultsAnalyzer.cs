@@ -16,12 +16,9 @@
 using QuantConnect.Algorithm;
 using QuantConnect.Lean.Engine.Results.Analysis.Analyses;
 using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
 
 namespace QuantConnect.Lean.Engine.Results.Analysis
 {
@@ -55,75 +52,79 @@ namespace QuantConnect.Lean.Engine.Results.Analysis
         // ── Test chain ────────────────────────────────────────────────────────────
 
         /// <summary>
-        /// Runs all registered diagnostic checks against the backtest in order,
+        /// Runs all registered diagnostic checks against the backtest in weight order,
         /// stopping early when the time limit or maximum failure count is reached.
         /// </summary>
         /// <param name="timeLimitSeconds">Wall-clock seconds allowed for the full chain before early exit.</param>
-        /// <param name="maxFailedTests">Maximum number of analyses with solutions before early exit.</param>
-        /// <returns>A list of <see cref="AnalysisResult"/> entries that have at least one potential solution.</returns>
-        public IReadOnlyList<AnalysisResult> RunTestChain(int timeLimitSeconds = 5, int maxFailedTests = 3)
+        /// <param name="maxFailedTests">Maximum number of failing analyses to collect before stopping; also the max returned.</param>
+        /// <returns>Up to <paramref name="maxFailedTests"/> <see cref="AnalysisResult"/> entries with solutions, ranked by weight.</returns>
+        public IReadOnlyList<AnalysisResult> RunTestChain(int timeLimitSeconds = 5, int maxFailedTests = 10)
         {
             var timingLogs = new List<string>();
             (_equityCurve, _benchmarkEquityCurve) = ReadEquityCurve(_result, _algorithm, timingLogs);
 
-            var analyses = new List<Func<IReadOnlyList<AnalysisResult>>>
+            // Each tuple pairs the analysis's declared Weight with its check lambda so the list
+            // self-sorts — changing a Weight on the analysis class automatically reorders execution.
+            var analyses = new (int Weight, Func<IReadOnlyList<AnalysisResult>> Check)[]
             {
-                CheckFlatEquityCurve,
-                CheckPortfolioValueIsNotPositive,
-                CheckInsufficientBuyingPowerOrderResponseError,
-                CheckAlgorithmWarmingUpOrderResponseError,
-                CheckBrokerageModelRefusedToSubmitOrderOrderResponseError,
-                CheckExceedsShortableQuantityOrderResponseError,
-                CheckNonTradableSecurityOrderResponseError,
-                CheckOrderQuantityZeroOrderResponseError,
-                CheckSecurityPriceZeroOrderResponseError,
-                CheckUnsupportedRequestTypeOrderResponseError,
-                CheckExchangeNotOpenOrderResponseError,
-                CheckForexConversionRateZeroOrderResponseError,
-                CheckExceededMaximumOrdersOrderResponseError,
-                CheckBrokerageModelRefusedToUpdateOrderOrderResponseError,
-                CheckOrderQuantityLessThanLotSizeOrderResponseError,
-                CheckEuropeanOptionNotExpiredOnExerciseOrderResponseError,
-                CheckOptionOrderOnStockSplitOrderResponseError,
-                CheckMarketOnOpenNotAllowedDuringRegularHoursOrderResponseError,
-                CheckInsightsEmittedForDelistedSecurities,
-                CheckTakeProfitAndStopLossOrders,
-                CheckMarginCalls,
-                CheckExecutionSpeed,
-                CheckStaleOrderFills,
-                CheckForOrderFillsDuringExtendedMarketHours,
-                CheckPortfolioMarginUsage,
-                CheckParameterCount,
-                CheckCrisisEvents,
-                CheckStatisticalSignificanceOfDailyReturns,
-                CheckPerformanceRelativeToBenchmark,
-                CheckMonteCarloPercentile,
-            };
+                (new PortfolioValueIsNotPositiveAnalysis().Weight,                               CheckPortfolioValueIsNotPositive),
+                (new FlatEquityCurveAnalysis().Weight,                                          CheckFlatEquityCurve),
+                (new InsufficientBuyingPowerOrderResponseErrorAnalysis().Weight,                 CheckInsufficientBuyingPowerOrderResponseError),
+                (new MarginCallsAnalysis().Weight,                                              CheckMarginCalls),
+                (new ExceedsShortableQuantityOrderResponseErrorAnalysis().Weight,               CheckExceedsShortableQuantityOrderResponseError),
+                (new SecurityPriceZeroOrderResponseErrorAnalysis().Weight,                      CheckSecurityPriceZeroOrderResponseError),
+                (new OrderQuantityZeroOrderResponseErrorAnalysis().Weight,                      CheckOrderQuantityZeroOrderResponseError),
+                (new NonTradableSecurityOrderResponseErrorAnalysis().Weight,                    CheckNonTradableSecurityOrderResponseError),
+                (new BrokerageModelRefusedToSubmitOrderOrderResponseErrorAnalysis().Weight,     CheckBrokerageModelRefusedToSubmitOrderOrderResponseError),
+                (new BrokerageModelRefusedToUpdateOrderOrderResponseErrorAnalysis().Weight,     CheckBrokerageModelRefusedToUpdateOrderOrderResponseError),
+                (new TakeProfitAndStopLossOrdersAnalysis().Weight,                             CheckTakeProfitAndStopLossOrders),
+                (new StaleOrderFillsAnalysis().Weight,                                          CheckStaleOrderFills),
+                (new AlgorithmWarmingUpOrderResponseErrorAnalysis().Weight,                     CheckAlgorithmWarmingUpOrderResponseError),
+                (new ExchangeNotOpenOrderResponseErrorAnalysis().Weight,                        CheckExchangeNotOpenOrderResponseError),
+                (new ForexConversionRateZeroOrderResponseErrorAnalysis().Weight,               CheckForexConversionRateZeroOrderResponseError),
+                (new OrderFillsDuringExtendedMarketHoursAnalysis().Weight,                     CheckForOrderFillsDuringExtendedMarketHours),
+                (new ExceededMaximumOrdersOrderResponseErrorAnalysis().Weight,                  CheckExceededMaximumOrdersOrderResponseError),
+                (new UnsupportedRequestTypeOrderResponseErrorAnalysis().Weight,                 CheckUnsupportedRequestTypeOrderResponseError),
+                (new EuropeanOptionNotExpiredOnExerciseOrderResponseErrorAnalysis().Weight,     CheckEuropeanOptionNotExpiredOnExerciseOrderResponseError),
+                (new OptionOrderOnStockSplitOrderResponseErrorAnalysis().Weight,               CheckOptionOrderOnStockSplitOrderResponseError),
+                (new MarketOnOpenNotAllowedDuringRegularHoursOrderResponseErrorAnalysis().Weight, CheckMarketOnOpenNotAllowedDuringRegularHoursOrderResponseError),
+                (new OrderQuantityLessThanLotSizeOrderResponseErrorAnalysis().Weight,          CheckOrderQuantityLessThanLotSizeOrderResponseError),
+                (new InsightsEmittedForDelistedSecuritiesAnalysis().Weight,                    CheckInsightsEmittedForDelistedSecurities),
+                (new StatisticalSignificanceOfDailyReturnsAnalysis().Weight,                   CheckStatisticalSignificanceOfDailyReturns),
+                (new PerformanceRelativeToBenchmark().Weight,                                  CheckPerformanceRelativeToBenchmark),
+                (new CrisisEventsAnalysis().Weight,                                             CheckCrisisEvents),
+                (new ExecutionSpeedAnalysis().Weight,                                           CheckExecutionSpeed),
+                (new PortfolioMarginUsageAnalysis().Weight,                                    CheckPortfolioMarginUsage),
+                (new ParameterCountAnalysis().Weight,                                           CheckParameterCount),
+                (new MonteCarloPercentile().Weight,                                             CheckMonteCarloPercentile),
+            }.OrderByDescending(x => x.Weight)
+             .Select(x => x.Check)
+             .ToList();
 
-            var responses = new ConcurrentBag<AnalysisResult>();
-            using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(timeLimitSeconds));
-            var timer = Stopwatch.StartNew();
+            var responses = new List<AnalysisResult>();
+            var deadline = DateTime.UtcNow.AddSeconds(timeLimitSeconds);
 
-            try
+            foreach (var analysis in analyses)
             {
-                Parallel.ForEach(analyses, new ParallelOptions { MaxDegreeOfParallelism = 4, CancellationToken = cts.Token }, analysis =>
+                if (responses.Count >= maxFailedTests || DateTime.UtcNow >= deadline)
+                {
+                    break;
+                }
+
+                try
                 {
                     foreach (var result in analysis())
                     {
-                        if (result.PotentialSolutions.Count > 0)
+                        if (result.Solutions.Count > 0)
                         {
                             responses.Add(result);
-                            if (responses.Count >= maxFailedTests || timer.Elapsed.TotalSeconds >= timeLimitSeconds)
-                            {
-                                cts.Cancel();
-                            }
                         }
                     }
-                });
+                }
+                catch (Exception ex) when (ex is not OutOfMemoryException and not StackOverflowException) { }
             }
-            catch (OperationCanceledException) { }
 
-            return [.. responses.Take(maxFailedTests)];
+            return [.. responses.OrderByDescending(x => x.Weight).Take(maxFailedTests)];
         }
 
         private IReadOnlyList<AnalysisResult> CheckFlatEquityCurve()

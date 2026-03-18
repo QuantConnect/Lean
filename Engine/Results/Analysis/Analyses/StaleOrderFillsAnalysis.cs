@@ -25,6 +25,9 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
     /// </summary>
     public class StaleOrderFillsAnalysis : BaseResultsAnalysis
     {
+        public override string Issue => "Orders filled at stale outdated prices";
+        public override int Weight => 65;
+
         /// <summary>
         /// Searches order events for fill messages that contain a stale-price warning.
         /// </summary>
@@ -38,11 +41,11 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
                 //.Select(OrdersReader.ParseOrderEvent)
                 .ToList();
 
-            var potentialSolutions = result.Count > 0 ? PotentialSolutions(language) : [];
+            var potentialSolutions = result.Count > 0 ? Solutions(language) : [];
             return SingleResponse(new ResultsAnalysisRepeatedContext(result), potentialSolutions);
         }
 
-        private static List<string> PotentialSolutions(Language language) =>
+        private static List<string> Solutions(Language language) =>
         [
             "Stale fills occur when you fill an order with price data that is timestamped an hour or more into the past. " +
             "Stale fills usually only occur if you trade illiquid assets or if your algorithm uses daily data but you trade intraday with Scheduled Events. " +

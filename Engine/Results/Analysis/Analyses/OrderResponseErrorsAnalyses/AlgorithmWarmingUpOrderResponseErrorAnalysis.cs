@@ -25,13 +25,16 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
     /// </summary>
     public class AlgorithmWarmingUpOrderResponseErrorAnalysis : MessageAnalysis
     {
+        public override string Issue => "Orders placed during algorithm warm-up period";
+        public override int Weight => 62;
+
         protected override string[] ExpectedMessageText { get; } =
         [
             "This operation is not allowed in Initialize or during warm up: OrderRequest.",
             ". Please move this code to the OnWarmupFinished() method.",
         ];
 
-        protected override List<string> PotentialSolutions(Language language) =>
+        protected override List<string> Solutions(Language language) =>
         [
             "This error occurs in the following situations:\n" +
             " - When you try to place, update, or cancel an order during the warm-up period\n" +

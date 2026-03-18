@@ -24,12 +24,15 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
     /// </summary>
     public class MarginCallsAnalysis : MessageAnalysis
     {
+        public override string Issue => "Margin calls executed during backtest";
+        public override int Weight => 85;
+
         protected override string[] ExpectedMessageText { get; } =
         [
             "Executed MarginCallOrder",
         ];
 
-        protected override List<string> PotentialSolutions(Language language) =>
+        protected override List<string> Solutions(Language language) =>
         [
             "Adjust the ordering and rebalancing logic to reduce margin usage.",
 

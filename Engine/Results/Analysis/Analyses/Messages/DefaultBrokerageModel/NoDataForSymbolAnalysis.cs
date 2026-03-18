@@ -23,13 +23,16 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses.Messages.DefaultBro
     /// </summary>
     public class NoDataForSymbolAnalysis : MessageAnalysis
     {
+        public override string Issue => "No market data available for symbol";
+        public override int Weight => 80;
+
         protected override string[] ExpectedMessageText { get; } =
         [
             "There is no data for the provided symbol ",
         ];
 
 
-        protected override List<string> PotentialSolutions(Language _) =>
+        protected override List<string> Solutions(Language _) =>
         [
             "This error occurs when you try to place an order for a security but there is no data for the security. " +
             "Check if you've subscribed to the correct security and if the data is available.",

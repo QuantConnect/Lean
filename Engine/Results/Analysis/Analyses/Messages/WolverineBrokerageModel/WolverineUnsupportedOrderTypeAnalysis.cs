@@ -23,6 +23,9 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses.Messages.WolverineB
     /// </summary>
     public class WolverineUnsupportedOrderTypeAnalysis : MessageAnalysis
     {
+        public override string Issue => "Order type not supported by Wolverine brokerage";
+        public override int Weight => 60;
+
         protected override string[] ExpectedMessageText { get; } =
         [
             "Wolverine does not support ",
@@ -30,7 +33,7 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses.Messages.WolverineB
         ];
 
 
-        protected override List<string> PotentialSolutions(Language _) =>
+        protected override List<string> Solutions(Language _) =>
         [
             "The Wolverine brokerage model only supports Market orders. " +
             "Change your order type to Market.",

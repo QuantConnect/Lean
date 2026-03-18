@@ -25,6 +25,9 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
     /// </summary>
     public class MonteCarloPercentile : BaseResultsAnalysis
     {
+        public override string Issue => "Returns suspiciously high versus simulated outcomes";
+        public override int Weight => 10;
+
         /// <summary>
         /// Runs the Monte Carlo percentile test against the given equity curve.
         /// </summary>
@@ -52,7 +55,7 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
             var percentile = simulatedTotalReturns.Count(r => r < backtestTotalReturn) / simulatedTotalReturns.Length * 100m;
 
             var result = percentile > 90m ? new { Percentile = percentile } : null;
-            var potentialSolutions = result is not null ? PotentialSolutions() : [];
+            var potentialSolutions = result is not null ? Solutions() : [];
             return SingleResponse(new ResultsAnalysisContext(result), potentialSolutions);
         }
 
@@ -88,7 +91,7 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
             return simulatedTotalReturns;
         }
 
-        private static List<string> PotentialSolutions() =>
+        private static List<string> Solutions() =>
         [
             "The equity curve is very optimistic. " +
             "It has a greater ending equity than more than 90% of the simulated equity curves, indicating the performance was unusually lucky due to a sequence of favorable days. " +

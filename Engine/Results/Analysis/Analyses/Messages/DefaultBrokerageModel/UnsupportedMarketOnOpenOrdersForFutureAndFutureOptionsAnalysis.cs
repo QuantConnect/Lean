@@ -23,13 +23,16 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses.Messages.DefaultBro
     /// </summary>
     public class UnsupportedMarketOnOpenOrdersForFutureAndFutureOptionsAnalysis : MessageAnalysis
     {
+        public override string Issue => "MOO orders not supported for Futures or FutureOptions";
+        public override int Weight => 60;
+
         protected override string[] ExpectedMessageText { get; } =
         [
             "MarketOnOpen orders are not supported for futures and future options.",
         ];
 
 
-        protected override List<string> PotentialSolutions(Language _) =>
+        protected override List<string> Solutions(Language _) =>
         [
             "MarketOnOpen orders are not supported for Futures and Future Options. " +
             "Use a regular market order or a limit order instead.",

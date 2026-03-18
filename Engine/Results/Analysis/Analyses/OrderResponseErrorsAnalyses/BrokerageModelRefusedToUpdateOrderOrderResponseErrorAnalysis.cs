@@ -28,6 +28,9 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
     /// </summary>
     public class BrokerageModelRefusedToUpdateOrderOrderResponseErrorAnalysis : OrderResponseErrorAnalysis
     {
+        public override string Issue => "Brokerage model refused to update orders";
+        public override int Weight => 70;
+
         private static readonly MessageAnalysis[] Analyses =
         [
             // DefaultBrokerageModel
@@ -64,6 +67,6 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
             return CreateAggregatedResponse(Analyses.SelectMany(analysis => analysis.Run(matchedMessages, language)));
         }
 
-        protected override List<string> PotentialSolutions(Language language) => [];
+        protected override List<string> Solutions(Language language) => [];
     }
 }

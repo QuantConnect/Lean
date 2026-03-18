@@ -24,13 +24,16 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
     /// </summary>
     public class EuropeanOptionNotExpiredOnExerciseOrderResponseErrorAnalysis : MessageAnalysis
     {
+        public override string Issue => "European option exercised before expiration date";
+        public override int Weight => 48;
+
         protected override string[] ExpectedMessageText { get; } =
         [
             "Cannot exercise European style option with symbol ",
             " before its expiration date.",
         ];
 
-        protected override List<string> PotentialSolutions(Language language) =>
+        protected override List<string> Solutions(Language language) =>
         [
             "This error occurs when you try to exercise a European Option contract before its expiry date. " +
             "To avoid this order response error, check the type and expiry date of the contract before you exercise it.\n" +

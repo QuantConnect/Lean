@@ -23,13 +23,16 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
     /// </summary>
     public class NonTradableSecurityOrderResponseErrorAnalysis : MessageAnalysis
     {
+        public override string Issue => "Attempted to trade non-tradable security";
+        public override int Weight => 75;
+
         protected override string[] ExpectedMessageText { get; } =
         [
             "The security with symbol ",
             " is marked as non-tradable.",
         ];
 
-        protected override List<string> PotentialSolutions(Language language) =>
+        protected override List<string> Solutions(Language language) =>
         [
             "This error occurs when you place an order for a security that's not tradable. " +
             "To avoid this order response error, check if a security is tradable before you trade it.\n" +

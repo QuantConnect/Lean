@@ -28,6 +28,9 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
     /// </summary>
     public class StatisticalSignificanceOfDailyReturnsAnalysis : BaseResultsAnalysis
     {
+        public override string Issue => "Returns lack statistical significance over benchmark";
+        public override int Weight => 28;
+
         /// <summary>
         /// Computes excess daily returns (strategy minus benchmark) and applies a one-tailed
         /// one-sample t-test at the 5 % significance level.
@@ -55,7 +58,7 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
             pValue /= 2.0; // one-tailed (positive direction)
 
             var result = pValue > 0.05 ? new { PValue = pValue } : null;
-            var potentialSolutions = result is not null ? PotentialSolutions() : [];
+            var potentialSolutions = result is not null ? Solutions() : [];
             return SingleResponse(new ResultsAnalysisContext(result), potentialSolutions);
         }
 
@@ -83,7 +86,7 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
             return 2.0 * dist.CumulativeDistribution(-Math.Abs(t));
         }
 
-        private static List<string> PotentialSolutions() =>
+        private static List<string> Solutions() =>
         [
             "The distribution of the strategy's daily returns in excess of the benchmark's daily returns has a p-value above 0.05. " +
             "Therefore, we fail to reject the null hypothesis that the mean of this distribution is above zero. " +

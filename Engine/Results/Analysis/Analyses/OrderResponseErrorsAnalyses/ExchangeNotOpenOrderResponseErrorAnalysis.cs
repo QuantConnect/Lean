@@ -25,6 +25,9 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
     /// </summary>
     public class ExchangeNotOpenOrderResponseErrorAnalysis : BaseResultsAnalysis
     {
+        public override string Issue => "Orders placed when exchange was closed";
+        public override int Weight => 60;
+
         private static readonly MessageAnalysis[] SubAnalyses =
         [
             new ExerciseOptionWhileExchangeNotOpenAnalysis(),
@@ -57,12 +60,15 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
 
         private class ExerciseOptionWhileExchangeNotOpenAnalysis : MessageAnalysis
         {
+            public override string Issue => "Option exercised while exchange was closed";
+            public override int Weight => 60;
+
             protected override string[] ExpectedMessageText { get; } =
             [
                 " order and exchange not open.",
             ];
 
-            protected override List<string> PotentialSolutions(Language language) =>
+            protected override List<string> Solutions(Language language) =>
             [
                 "This error occurs when you try to exercise an Option while the exchange is not open. " +
                 "To avoid the order response error in this case, check if the exchange is open before you exercise an Option contract.\n" +
@@ -76,12 +82,15 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
 
         private class MOCOrderForFutureOrFOPAnalysis : MessageAnalysis
         {
+            public override string Issue => "MOC order placed for Futures or FutureOptions";
+            public override int Weight => 60;
+
             protected override string[] ExpectedMessageText { get; } =
             [
                 " orders not supported for ",
             ];
 
-            protected override List<string> PotentialSolutions(Language language) =>
+            protected override List<string> Solutions(Language language) =>
             [
                 "This error occurs when you try to place a market on open order for a Futures contract or a Future Option contract. " +
                 "To avoid the order response error in this case, check if the exchange is open before you place the order.",

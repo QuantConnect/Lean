@@ -23,6 +23,9 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
     /// </summary>
     public class OrderQuantityLessThanLotSizeOrderResponseErrorAnalysis : MessageAnalysis
     {
+        public override string Issue => "Order quantity below minimum lot size";
+        public override int Weight => 40;
+
         protected override string[] ExpectedMessageText { get; } =
         [
             "Unable to ",
@@ -31,7 +34,7 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
             ") is less than lot size (",
         ];
 
-        protected override List<string> PotentialSolutions(Language language) =>
+        protected override List<string> Solutions(Language language) =>
         [
             "This error occurs when you place an order with a quantity that's less than the lot size of the security. " +
             "To avoid this order response error, check if the order quantity is greater than or equal to the security lot size before you place an order.\n" +

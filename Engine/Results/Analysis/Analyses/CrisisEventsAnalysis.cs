@@ -30,6 +30,9 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
     /// </summary>
     public class CrisisEventsAnalysis : BaseResultsAnalysis
     {
+        public override string Issue => "Strategy underperformed benchmark during crisis periods";
+        public override int Weight => 22;
+
         private static readonly (string Name, DateTime Start, DateTime End)[] CrisisEvents =
         [
             ("DotCom Bubble 2000",                   new(2000,  2, 26), new(2000,  9, 10)),
@@ -97,7 +100,7 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
                 }
             }
 
-            var potentialSolutions = result.Count > 0 ? PotentialSolutions() : [];
+            var potentialSolutions = result.Count > 0 ? Solutions() : [];
             return SingleResponse(new ResultsAnalysisRepeatedContext(result), potentialSolutions);
         }
 
@@ -150,7 +153,7 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
             return (backtestSharpe, benchmarkSharpe);
         }
 
-        private static List<string> PotentialSolutions() =>
+        private static List<string> Solutions() =>
         [
             "The strategy underperformed the benchmark during some crisis events. " +
             "Consider adding risk management techniques such as stop-loss orders, position sizing, " +

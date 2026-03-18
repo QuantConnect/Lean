@@ -23,13 +23,16 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses.Messages.TradierBro
     /// </summary>
     public class SellShortOrderLastPriceBelow5Analysis : MessageAnalysis
     {
+        public override string Issue => "Short sell rejected, last price below $5";
+        public override int Weight => 60;
+
         protected override string[] ExpectedMessageText { get; } =
         [
             "Tradier does not support sell-short orders when the last price is below $5.",
         ];
 
 
-        protected override List<string> PotentialSolutions(Language _) =>
+        protected override List<string> Solutions(Language _) =>
         [
             "Tradier does not allow short-selling stocks priced below $5. " +
             "Only short securities with a last price at or above $5.",

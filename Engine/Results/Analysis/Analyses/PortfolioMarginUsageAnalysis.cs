@@ -25,6 +25,9 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
     /// </summary>
     public class PortfolioMarginUsageAnalysis : BaseResultsAnalysis
     {
+        public override string Issue => "Portfolio under-utilized available margin";
+        public override int Weight => 15;
+
         /// <summary>
         /// Reads the "Portfolio Margin" chart from the backtest result and counts trading days
         /// where the 3-day SMA of total margin usage drops below 50%.
@@ -64,11 +67,11 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
             var result = countBelow50 > 0
                 ? $"Number of days when the 3-day SMA of the margin usage drops below 50%: {countBelow50}"
                 : null;
-            var potentialSolutions = result != null ? PotentialSolutions() : [];
+            var potentialSolutions = result != null ? Solutions() : [];
             return SingleResponse(new ResultsAnalysisContext(result), potentialSolutions);
         }
 
-        private static List<string> PotentialSolutions() =>
+        private static List<string> Solutions() =>
         [
             "The algorithm sometimes only utilizes a small proportion of the margin available. " +
             "Adjust the strategy logic or position sizing to utilize more margin.",

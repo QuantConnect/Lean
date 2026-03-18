@@ -24,6 +24,9 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
     /// </summary>
     public class FlatEquityCurveAnalysis : BaseResultsAnalysis
     {
+        public override string Issue => "Algorithm produced no equity curve movement";
+        public override int Weight => 95;
+
         /// <summary>
         /// Scans the equity curve for consecutive flat (unchanged) segments.
         /// </summary>
@@ -56,11 +59,11 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
                 i = j;
             }
 
-            var potentialSolutions = segments.Count > 0 ? PotentialSolutions() : [];
+            var potentialSolutions = segments.Count > 0 ? Solutions() : [];
             return SingleResponse(new ResultsAnalysisContext(segments.Count > 0 ? segments : null), potentialSolutions);
         }
 
-        private static List<string> PotentialSolutions() =>
+        private static List<string> Solutions() =>
         [
             "Check if you need to warm-up some data structures, including indicators, RollingWindow objects, and training data.",
 

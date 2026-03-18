@@ -23,6 +23,9 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
     /// </summary>
     public class ParameterCountAnalysis : BaseResultsAnalysis
     {
+        public override string Issue => "Too many numeric parameters, risk of overfitting";
+        public override int Weight => 12;
+
         private const string DetectedParametersTable = """
 | Parameter Types | Example Instances |
 |-|-|
@@ -45,11 +48,11 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
         {
             var parametersCount = algorithm.GetParameters().Count;
             var result = parametersCount > 10 ? $"{parametersCount} Parameters Detected" : null;
-            var potentialSolutions = result is not null ? PotentialSolutions(language) : [];
+            var potentialSolutions = result is not null ? Solutions(language) : [];
             return SingleResponse(new ResultsAnalysisContext(result), potentialSolutions);
         }
 
-        private static List<string> PotentialSolutions(Language language) =>
+        private static List<string> Solutions(Language language) =>
         [
             "Using parameters is almost unavoidable, but a strategy trends toward being overfitted as more parameters get added or fine-tuned. " +
             "Try to remove some parameters to make the strategy more robust. " +

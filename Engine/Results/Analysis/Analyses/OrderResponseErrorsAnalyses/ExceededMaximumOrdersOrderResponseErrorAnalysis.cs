@@ -23,13 +23,16 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
     /// </summary>
     public class ExceededMaximumOrdersOrderResponseErrorAnalysis : MessageAnalysis
     {
+        public override string Issue => "Maximum order count limit exceeded";
+        public override int Weight => 52;
+
         protected override string[] ExpectedMessageText { get; } =
         [
             "You have exceeded maximum number of orders (",
             "), for unlimited orders upgrade your account.",
         ];
 
-        protected override List<string> PotentialSolutions(Language language) =>
+        protected override List<string> Solutions(Language language) =>
         [
             "Switch to an organization on the Team tier or higher.",
 

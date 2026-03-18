@@ -23,13 +23,16 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses.Messages.DefaultBro
     /// </summary>
     public class UnsupportedTimeInForceAnalysis : MessageAnalysis
     {
+        public override string Issue => "Time-in-force not supported by brokerage model";
+        public override int Weight => 60;
+
         protected override string[] ExpectedMessageText { get; } =
         [
             " does not support time in force of ",
         ];
 
 
-        protected override List<string> PotentialSolutions(Language _) =>
+        protected override List<string> Solutions(Language _) =>
         [
             "The brokerage model does not support the time-in-force setting you are using. " +
             "Change the time-in-force to one that the brokerage model supports.",

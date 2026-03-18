@@ -23,12 +23,15 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
     /// </summary>
     public class InsufficientBuyingPowerOrderResponseErrorAnalysis : OrderResponseErrorAnalysis
     {
+        public override string Issue => "Orders rejected due to insufficient buying power";
+        public override int Weight => 90;
+
         protected override string[] ExpectedMessageText { get; } =
         [
             "Insufficient buying power to complete order",
         ];
 
-        protected override List<string> PotentialSolutions(Language language) =>
+        protected override List<string> Solutions(Language language) =>
         [
             "This error occurs when you place an order but the buying power model determines you can't afford it.\n" +
             "To avoid this order response error, ensure you have enough margin remaining to cover the initial margin requirements of the order before placing it.\n" +
