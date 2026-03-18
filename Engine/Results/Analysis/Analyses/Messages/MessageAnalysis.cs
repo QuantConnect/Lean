@@ -37,6 +37,10 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses.Messages
                 .Where(message => expectedMessages.All(messagePart => message.Contains(messagePart, StringComparison.InvariantCultureIgnoreCase)));
         }
 
+        /// <inheritdoc/>
+        public override IReadOnlyList<AnalysisResult> Run(ResultsAnalysisRunParameters parameters)
+            => Run(parameters.Logs, parameters.Language);
+
         /// <summary>
         /// Runs the analysis by scanning <paramref name="messages"/> for the expected text fragments
         /// and returns results with solutions when matches are found.

@@ -27,6 +27,7 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
     {
         public override string Issue => "Returns suspiciously high versus simulated outcomes";
         public override int Weight => 10;
+        public override IReadOnlyList<AnalysisResult> Run(ResultsAnalysisRunParameters parameters) => Run(parameters.EquityCurve);
 
         /// <summary>
         /// Runs the Monte Carlo percentile test against the given equity curve.

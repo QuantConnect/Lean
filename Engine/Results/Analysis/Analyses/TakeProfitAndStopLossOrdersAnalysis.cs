@@ -13,6 +13,7 @@
  * limitations under the License.
  *
 */
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using QuantConnect.Orders;
@@ -27,6 +28,7 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
     {
         public override string Issue => "TP/SL order pairs not managed correctly";
         public override int Weight => 68;
+        public override IReadOnlyList<AnalysisResult> Run(ResultsAnalysisRunParameters parameters) => Run(parameters.Result.Orders.Values, parameters.Language);
 
         private static readonly OrderType[] TpTypes = [OrderType.Limit, OrderType.LimitIfTouched];
 
@@ -71,6 +73,7 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
         {
             public override string Issue => "Both TP and SL orders filled simultaneously";
             public override int Weight => 68;
+            public override IReadOnlyList<AnalysisResult> Run(ResultsAnalysisRunParameters parameters) => throw new NotSupportedException("Use TakeProfitAndStopLossOrdersAnalysis.");
 
             public IReadOnlyList<AnalysisResult> Run(List<List<Order>> combos, Language language)
             {
@@ -141,6 +144,7 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
         {
             public override string Issue => "TP/SL counterpart order left dangling after fill";
             public override int Weight => 68;
+            public override IReadOnlyList<AnalysisResult> Run(ResultsAnalysisRunParameters parameters) => throw new NotSupportedException("Use TakeProfitAndStopLossOrdersAnalysis.");
 
             public IReadOnlyList<AnalysisResult> Run(List<List<Order>> combos, Language language)
             {

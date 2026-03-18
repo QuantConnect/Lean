@@ -24,6 +24,7 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses.Messages.TradierBro
     public class SellShortOrderLastPriceBelow5Analysis : MessageAnalysis
     {
         public override string Issue => "Short sell rejected, last price below $5";
+
         public override int Weight => 60;
 
         protected override string[] ExpectedMessageText { get; } =

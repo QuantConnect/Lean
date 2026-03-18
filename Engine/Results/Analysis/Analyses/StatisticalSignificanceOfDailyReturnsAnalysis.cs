@@ -30,6 +30,7 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
     {
         public override string Issue => "Returns lack statistical significance over benchmark";
         public override int Weight => 28;
+        public override IReadOnlyList<AnalysisResult> Run(ResultsAnalysisRunParameters parameters) => Run(parameters.EquityCurve, parameters.BenchmarkEquityCurve);
 
         /// <summary>
         /// Computes excess daily returns (strategy minus benchmark) and applies a one-tailed

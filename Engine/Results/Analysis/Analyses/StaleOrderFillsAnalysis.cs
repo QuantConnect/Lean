@@ -27,6 +27,7 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
     {
         public override string Issue => "Orders filled at stale outdated prices";
         public override int Weight => 65;
+        public override IReadOnlyList<AnalysisResult> Run(ResultsAnalysisRunParameters parameters) => Run(parameters.Result.OrderEvents, parameters.Language);
 
         /// <summary>
         /// Searches order events for fill messages that contain a stale-price warning.

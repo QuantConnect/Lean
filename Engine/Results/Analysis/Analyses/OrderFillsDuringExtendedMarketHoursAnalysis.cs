@@ -26,6 +26,7 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
     {
         public override string Issue => "Fills occurred outside regular market hours";
         public override int Weight => 55;
+        public override IReadOnlyList<AnalysisResult> Run(ResultsAnalysisRunParameters parameters) => Run(parameters.Algorithm, parameters.Result.OrderEvents, parameters.Language);
 
         /// <summary>
         /// Iterates filled order events and flags those that occurred when the exchange was not open.

@@ -35,6 +35,11 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
         public abstract int Weight { get; }
 
         /// <summary>
+        /// Runs the analysis against all backtest data provided in <paramref name="parameters"/>.
+        /// </summary>
+        public abstract IReadOnlyList<AnalysisResult> Run(ResultsAnalysisRunParameters parameters);
+
+        /// <summary>
         /// Wraps a single <see cref="AnalysisResult"/> in a one-element read-only list.
         /// </summary>
         protected IReadOnlyList<AnalysisResult> SingleResponse(IResultsAnalysisContext context, IReadOnlyList<string> solutions = null)
@@ -44,7 +49,7 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
         /// Creates a single <see cref="AnalysisResult"/> named after the concrete analysis type.
         /// </summary>
         protected AnalysisResult CreateResponse(IResultsAnalysisContext context, IReadOnlyList<string> solutions = null)
-            => new(GetType().Name, Issue, Weight, context, solutions ?? []);
+            => new(GetType().Name, Issue, context, solutions ?? []);
 
         /// <summary>
         /// Filters <paramref name="responses"/> to those with solutions,
@@ -53,7 +58,7 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
         protected IReadOnlyList<AnalysisResult> CreateAggregatedResponse(IEnumerable<AnalysisResult> responses)
             => [.. responses
                 .Where(x => x.Solutions.Count > 0)
-                .Select(x => new AnalysisResult(GetType().Name + " / " + x.Name, x.Issue, x.Weight, x.Context, x.Solutions))];
+                .Select(x => new AnalysisResult(GetType().Name + " / " + x.Name, x.Issue, x.Context, x.Solutions))];
 
         /// <summary>
         /// Formats the specified code string according to the conventions of the given programming language.

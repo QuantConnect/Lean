@@ -26,6 +26,7 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
     {
         public override string Issue => "Strategy Sharpe ratio below benchmark Sharpe";
         public override int Weight => 25;
+        public override IReadOnlyList<AnalysisResult> Run(ResultsAnalysisRunParameters parameters) => Run(parameters.Algorithm, parameters.EquityCurve, parameters.BenchmarkEquityCurve);
 
         /// <summary>
         /// Calculates the Sharpe ratio of the strategy over the full backtest period and compares it to the benchmark.
