@@ -118,7 +118,7 @@ public static class Program
             if (downloadedData == null)
             {
                 completeSymbolCount++;
-                Log.Trace($"DownloaderDataProvider.Main(): No data available for the following parameters: {downloadParameters}");
+                Log.Trace($"DownloaderDataProvider.RunDownload(): No data returned for {downloadParameters.Symbol}. The brokerage does not support this request (unsupported resolution, tick type, or asset type).");
                 continue;
             }
 
@@ -136,9 +136,11 @@ public static class Program
                 downloadParameters.EndUtc);
 
             var lastLogStatusTime = DateTime.UtcNow;
+            var dataWasWritten = false;
 
             foreach (var data in groupedData)
             {
+                dataWasWritten = true;
                 writer.Write(data.Select(data =>
                 {
                     var utcNow = DateTime.UtcNow;
@@ -155,8 +157,16 @@ public static class Program
             var symbolPercentComplete = (double)completeSymbolCount / totalDownloadSymbols * 100;
             Log.Trace($"DownloaderDataProvider.RunDownload(): {symbolPercentComplete:F2}% complete ({completeSymbolCount} out of {totalDownloadSymbols} symbols)");
 
-            Log.Trace($"DownloaderDataProvider.RunDownload(): Download completed for {downloadParameters.Symbol} at {downloadParameters.Resolution} resolution, " +
-                $"covering the period from {dataDownloadConfig.StartDate} to {dataDownloadConfig.EndDate}.");
+            if (!dataWasWritten)
+            {
+                Log.Trace($"DownloaderDataProvider.RunDownload(): No data found for {downloadParameters.Symbol} between " +
+                    $"{dataDownloadConfig.StartDate:yyyy-MM-dd} and {dataDownloadConfig.EndDate:yyyy-MM-dd}.");
+            }
+            else
+            {
+                Log.Trace($"DownloaderDataProvider.RunDownload(): Download completed for {downloadParameters.Symbol} at {downloadParameters.Resolution} resolution, " +
+                    $"covering the period from {dataDownloadConfig.StartDate} to {dataDownloadConfig.EndDate}.");
+            }
         }
         Log.Trace($"All downloads completed in {(DateTime.UtcNow - startDownloadUtcTime).TotalSeconds:F2} seconds.");
     }
