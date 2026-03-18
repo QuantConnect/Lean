@@ -55,10 +55,10 @@ namespace QuantConnect.Util
         {
             var jObject = JObject.Load(reader);
 
-            var name = jObject["Name"]?.Value<string>();
-            var issue = jObject["Issue"]?.Value<string>();
-            var solutions = jObject["Solutions"]?.ToObject<List<string>>() ?? [];
-            var context = DeserializeContext(jObject["Context"]);
+            var name = GetProperty(jObject, "Name")?.Value<string>();
+            var issue = GetProperty(jObject, "Issue")?.Value<string>();
+            var solutions = GetProperty(jObject, "Solutions")?.ToObject<List<string>>() ?? [];
+            var context = DeserializeContext(GetProperty(jObject, "Context"));
 
             return new AnalysisResult(name, issue, context, solutions);
         }
@@ -69,6 +69,14 @@ namespace QuantConnect.Util
         public override bool CanConvert(Type objectType)
         {
             return typeof(AnalysisResult).IsAssignableFrom(objectType);
+        }
+
+        /// <summary>
+        /// Gets a property from a <see cref="JObject"/> using a case-insensitive lookup.
+        /// </summary>
+        private static JToken GetProperty(JObject jObject, string propertyName)
+        {
+            return jObject.GetValue(propertyName, StringComparison.OrdinalIgnoreCase);
         }
 
         /// <summary>
@@ -95,14 +103,15 @@ namespace QuantConnect.Util
             if (contextToken.Type == JTokenType.Object)
             {
                 var jObj = (JObject)contextToken;
-                var sample = jObj["Sample"]?.ToObject<object>();
+                var sample = GetProperty(jObj, "Sample")?.ToObject<object>();
+                var occurrencesToken = GetProperty(jObj, "Occurrences");
 
-                if (jObj.ContainsKey("Occurrences"))
+                if (occurrencesToken != null)
                 {
                     return new ResultsAnalysisRepeatedContext([])
                     {
                         Sample = sample,
-                        Occurrences = jObj["Occurrences"]?.Value<int>() ?? 0
+                        Occurrences = occurrencesToken.Value<int>()
                     };
                 }
 

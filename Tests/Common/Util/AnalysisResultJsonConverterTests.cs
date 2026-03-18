@@ -151,6 +151,31 @@ namespace QuantConnect.Tests.Common.Util
             Assert.AreEqual(5, ((ResultsAnalysisRepeatedContext)results[1].Context).Occurrences);
         }
 
+        // ── Case-insensitive deserialization ─────────────────────────────────────
+
+        [Test]
+        public void DeserializesCaseInsensitivePropertyNames()
+        {
+            var json = @"{
+                ""name"": ""FlatEquityCurveAnalysis"",
+                ""issue"": ""Equity curve is flat"",
+                ""context"": { ""sample"": ""some-value"", ""occurrences"": 7 },
+                ""solutions"": [""Fix A"", ""Fix B""]
+            }";
+
+            var result = Deserialize(json);
+
+            Assert.AreEqual("FlatEquityCurveAnalysis", result.Name);
+            Assert.AreEqual("Equity curve is flat", result.Issue);
+            Assert.AreEqual(2, result.Solutions.Count);
+            Assert.AreEqual("Fix A", result.Solutions[0]);
+            Assert.AreEqual("Fix B", result.Solutions[1]);
+            Assert.IsInstanceOf<ResultsAnalysisRepeatedContext>(result.Context);
+            var ctx = (ResultsAnalysisRepeatedContext)result.Context;
+            Assert.AreEqual("some-value", ctx.Sample.ToString());
+            Assert.AreEqual(7, ctx.Occurrences);
+        }
+
         // ── Round-trip ─────────────────────────────────────────────────────────
 
         [Test]
