@@ -22,8 +22,9 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses.Messages.WolverineB
     /// </summary>
     public class WolverineUnsupportedOrderTypeAnalysis : MessageAnalysis
     {
-        public override string Issue => "Order type not supported by Wolverine brokerage";
-        public override int Weight => 60;
+        public override string Issue { get; } = "Order type not supported by Wolverine brokerage";
+
+        public override int Weight { get; } = 60;
 
         protected override string[] ExpectedMessageText { get; } =
         [

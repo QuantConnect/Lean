@@ -23,8 +23,9 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses.Messages.Interactiv
     /// </summary>
     public class UnsupportedExerciseForIndexAndCashSettledOptionsAnalysis : MessageAnalysis
     {
-        public override string Issue => "Exercise not supported for index or cash-settled options";
-        public override int Weight => 55;
+        public override string Issue { get; } = "Exercise not supported for index or cash-settled options";
+
+        public override int Weight { get; } = 55;
 
         protected override string[] ExpectedMessageText { get; } =
         [

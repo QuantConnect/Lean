@@ -30,8 +30,9 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
     /// </summary>
     public class CrisisEventsAnalysis : BaseResultsAnalysis
     {
-        public override string Issue => "Strategy underperformed benchmark during crisis periods";
-        public override int Weight => 22;
+        public override string Issue { get; } = "Strategy underperformed benchmark during crisis periods";
+
+        public override int Weight { get; } = 22;
         public override IReadOnlyList<AnalysisResult> Run(ResultsAnalysisRunParameters parameters) => Run(parameters.Algorithm, parameters.EquityCurve, parameters.BenchmarkEquityCurve);
 
         private static readonly (string Name, DateTime Start, DateTime End)[] CrisisEvents =

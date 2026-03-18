@@ -36,8 +36,9 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
     /// </summary>
     public class BrokerageModelRefusedToSubmitOrderOrderResponseErrorAnalysis : OrderResponseErrorAnalysis
     {
-        public override string Issue => "Brokerage model refused to submit orders";
-        public override int Weight => 72;
+        public override string Issue { get; } = "Brokerage model refused to submit orders";
+
+        public override int Weight { get; } = 72;
 
         private static readonly MessageAnalysis[] Analyses =
         [

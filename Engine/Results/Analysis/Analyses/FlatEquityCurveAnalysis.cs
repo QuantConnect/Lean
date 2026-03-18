@@ -24,8 +24,9 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
     /// </summary>
     public class FlatEquityCurveAnalysis : BaseResultsAnalysis
     {
-        public override string Issue => "Algorithm produced no equity curve movement";
-        public override int Weight => 95;
+        public override string Issue { get; } = "Algorithm produced no equity curve movement";
+
+        public override int Weight { get; } = 95;
         public override IReadOnlyList<AnalysisResult> Run(ResultsAnalysisRunParameters parameters) => Run(parameters.EquityCurve);
 
         /// <summary>

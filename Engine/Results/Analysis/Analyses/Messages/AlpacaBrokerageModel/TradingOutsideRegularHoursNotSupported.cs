@@ -22,8 +22,9 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses.Messages.AlpacaBrok
     /// </summary>
     public class TradingOutsideRegularHoursNotSupported : MessageAnalysis
     {
-        public override string Issue => "Trading outside regular hours not supported";
-        public override int Weight => 55;
+        public override string Issue { get; } = "Trading outside regular hours not supported";
+
+        public override int Weight { get; } = 55;
 
         protected override string[] ExpectedMessageText { get; } =
         [

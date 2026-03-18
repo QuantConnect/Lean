@@ -22,8 +22,9 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses.Messages.DefaultBro
     /// </summary>
     public class NoDataForSymbolAnalysis : MessageAnalysis
     {
-        public override string Issue => "No market data available for symbol";
-        public override int Weight => 80;
+        public override string Issue { get; } = "No market data available for symbol";
+
+        public override int Weight { get; } = 80;
 
         protected override string[] ExpectedMessageText { get; } =
         [

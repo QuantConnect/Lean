@@ -25,8 +25,9 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
     /// </summary>
     public class ExchangeNotOpenOrderResponseErrorAnalysis : BaseResultsAnalysis
     {
-        public override string Issue => "Orders placed when exchange was closed";
-        public override int Weight => 60;
+        public override string Issue { get; } = "Orders placed when exchange was closed";
+
+        public override int Weight { get; } = 60;
         public override IReadOnlyList<AnalysisResult> Run(ResultsAnalysisRunParameters parameters) => Run(parameters.Logs, parameters.Language);
 
         private static readonly MessageAnalysis[] SubAnalyses =
@@ -60,8 +61,9 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
 
         private class ExerciseOptionWhileExchangeNotOpenAnalysis : MessageAnalysis
         {
-            public override string Issue => "Option exercised while exchange was closed";
-            public override int Weight => 60;
+            public override string Issue { get; } = "Option exercised while exchange was closed";
+
+            public override int Weight { get; } = 60;
 
             protected override string[] ExpectedMessageText { get; } =
             [
@@ -82,8 +84,9 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
 
         private class MOCOrderForFutureOrFOPAnalysis : MessageAnalysis
         {
-            public override string Issue => "MOC order placed for Futures or FutureOptions";
-            public override int Weight => 60;
+            public override string Issue { get; } = "MOC order placed for Futures or FutureOptions";
+
+            public override int Weight { get; } = 60;
 
             protected override string[] ExpectedMessageText { get; } =
             [

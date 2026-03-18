@@ -23,8 +23,9 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
     /// </summary>
     public class ExceededMaximumOrdersOrderResponseErrorAnalysis : MessageAnalysis
     {
-        public override string Issue => "Maximum order count limit exceeded";
-        public override int Weight => 52;
+        public override string Issue { get; } = "Maximum order count limit exceeded";
+
+        public override int Weight { get; } = 52;
 
         protected override string[] ExpectedMessageText { get; } =
         [

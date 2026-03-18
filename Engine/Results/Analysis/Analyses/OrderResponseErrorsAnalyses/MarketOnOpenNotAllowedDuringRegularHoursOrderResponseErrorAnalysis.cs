@@ -23,8 +23,9 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
     /// </summary>
     public class MarketOnOpenNotAllowedDuringRegularHoursOrderResponseErrorAnalysis : MessageAnalysis
     {
-        public override string Issue => "MOO orders not allowed during regular hours";
-        public override int Weight => 42;
+        public override string Issue { get; } = "MOO orders not allowed during regular hours";
+
+        public override int Weight { get; } = 42;
 
         protected override string[] ExpectedMessageText { get; } =
         [

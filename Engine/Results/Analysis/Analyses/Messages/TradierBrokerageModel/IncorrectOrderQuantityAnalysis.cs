@@ -22,8 +22,9 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses.Messages.TradierBro
     /// </summary>
     public class IncorrectOrderQuantityAnalysis : MessageAnalysis
     {
-        public override string Issue => "Incorrect order quantity for Tradier brokerage";
-        public override int Weight => 68;
+        public override string Issue { get; } = "Incorrect order quantity for Tradier brokerage";
+
+        public override int Weight { get; } = 68;
 
         protected override string[] ExpectedMessageText { get; } =
         [

@@ -25,8 +25,9 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
     /// </summary>
     public class PortfolioMarginUsageAnalysis : BaseResultsAnalysis
     {
-        public override string Issue => "Portfolio under-utilized available margin";
-        public override int Weight => 15;
+        public override string Issue { get; } = "Portfolio under-utilized available margin";
+
+        public override int Weight { get; } = 15;
         public override IReadOnlyList<AnalysisResult> Run(ResultsAnalysisRunParameters parameters) => Run(parameters.Result);
 
         /// <summary>

@@ -24,8 +24,9 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
     /// </summary>
     public class OrderQuantityZeroOrderResponseErrorAnalysis : MessageAnalysis
     {
-        public override string Issue => "Order quantity computed as zero";
-        public override int Weight => 78;
+        public override string Issue { get; } = "Order quantity computed as zero";
+
+        public override int Weight { get; } = 78;
 
         protected override string[] ExpectedMessageText { get; } =
         [

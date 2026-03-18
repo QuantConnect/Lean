@@ -28,8 +28,9 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
     /// </summary>
     public class StatisticalSignificanceOfDailyReturnsAnalysis : BaseResultsAnalysis
     {
-        public override string Issue => "Returns lack statistical significance over benchmark";
-        public override int Weight => 28;
+        public override string Issue { get; } = "Returns lack statistical significance over benchmark";
+
+        public override int Weight { get; } = 28;
         public override IReadOnlyList<AnalysisResult> Run(ResultsAnalysisRunParameters parameters) => Run(parameters.EquityCurve, parameters.BenchmarkEquityCurve);
 
         /// <summary>

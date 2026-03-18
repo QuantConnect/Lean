@@ -22,8 +22,9 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses.Messages.DefaultBro
     /// </summary>
     public class UnsupportedCrossZeroOrderUpdateAnalysis : MessageAnalysis
     {
-        public override string Issue => "Cross-zero position update not supported";
-        public override int Weight => 55;
+        public override string Issue { get; } = "Cross-zero position update not supported";
+
+        public override int Weight { get; } = 55;
 
         protected override string[] ExpectedMessageText { get; } =
         [

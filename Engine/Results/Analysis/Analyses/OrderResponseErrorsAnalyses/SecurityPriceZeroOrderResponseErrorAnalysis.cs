@@ -23,8 +23,9 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
     /// </summary>
     public class SecurityPriceZeroOrderResponseErrorAnalysis : MessageAnalysis
     {
-        public override string Issue => "Security price was zero at order time";
-        public override int Weight => 80;
+        public override string Issue { get; } = "Security price was zero at order time";
+
+        public override int Weight { get; } = 80;
 
         protected override string[] ExpectedMessageText { get; } =
         [

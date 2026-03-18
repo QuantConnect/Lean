@@ -24,8 +24,9 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
     /// </summary>
     public class EuropeanOptionNotExpiredOnExerciseOrderResponseErrorAnalysis : MessageAnalysis
     {
-        public override string Issue => "European option exercised before expiration date";
-        public override int Weight => 48;
+        public override string Issue { get; } = "European option exercised before expiration date";
+
+        public override int Weight { get; } = 48;
 
         protected override string[] ExpectedMessageText { get; } =
         [

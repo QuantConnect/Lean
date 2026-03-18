@@ -25,8 +25,9 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
     /// </summary>
     public class MonteCarloPercentile : BaseResultsAnalysis
     {
-        public override string Issue => "Returns suspiciously high versus simulated outcomes";
-        public override int Weight => 10;
+        public override string Issue { get; } = "Returns suspiciously high versus simulated outcomes";
+
+        public override int Weight { get; } = 10;
         public override IReadOnlyList<AnalysisResult> Run(ResultsAnalysisRunParameters parameters) => Run(parameters.EquityCurve);
 
         /// <summary>

@@ -22,8 +22,9 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses.Messages.TradierBro
     /// </summary>
     public class ShortOrderIsGtcAnalysis : MessageAnalysis
     {
-        public override string Issue => "Short order with GTC time-in-force rejected";
-        public override int Weight => 55;
+        public override string Issue { get; } = "Short order with GTC time-in-force rejected";
+
+        public override int Weight { get; } = 55;
 
         protected override string[] ExpectedMessageText { get; } =
         [
