@@ -17,7 +17,6 @@ using System.Collections.Generic;
 
 namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses.Messages.DefaultBrokerageModel
 {
-
     /// <summary>
     /// Detects brokerage model rejections where a MarketOnOpen order was placed without the required
     /// minimum time gap before the intended fill bar.
@@ -32,7 +31,6 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses.Messages.DefaultBro
             "MarketOnOpen orders must be placed with at least a ",
             " bar between order and intended fill.",
         ];
-
 
         protected override List<string> Solutions(Language _) =>
         [

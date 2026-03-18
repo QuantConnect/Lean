@@ -17,7 +17,6 @@ using System.Collections.Generic;
 
 namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses.Messages.InteractiveBrokersBrokerageModel
 {
-
     /// <summary>
     /// Detects Interactive Brokers brokerage model rejections where a Forex order is below the minimum required size.
     /// </summary>
@@ -30,7 +29,6 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses.Messages.Interactiv
         [
             "The minimum order size for IBKR Forex orders is ",
         ];
-
 
         protected override List<string> Solutions(Language _) =>
         [

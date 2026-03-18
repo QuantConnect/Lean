@@ -17,7 +17,6 @@ using System.Collections.Generic;
 
 namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses.Messages.DefaultBrokerageModel
 {
-
     /// <summary>
     /// Detects brokerage model rejections where an order update would cause the position to cross zero.
     /// </summary>
@@ -31,7 +30,6 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses.Messages.DefaultBro
             "Unable to update order with id ",
             " that would cross zero.",
         ];
-
 
         protected override List<string> Solutions(Language _) =>
         [

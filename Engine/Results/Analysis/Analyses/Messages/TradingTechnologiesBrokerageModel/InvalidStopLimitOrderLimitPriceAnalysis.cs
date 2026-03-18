@@ -17,7 +17,6 @@ using System.Collections.Generic;
 
 namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses.Messages.TradingTechnologiesBrokerageModel
 {
-
     /// <summary>
     /// Detects Trading Technologies brokerage model rejections where a stop-limit order's limit price
     /// is on the wrong side of the stop price.
@@ -32,7 +31,6 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses.Messages.TradingTec
             "Trading Technologies does not support a",
             "stop-limit order with a limit price",
         ];
-
 
         protected override List<string> Solutions(Language _) =>
         [

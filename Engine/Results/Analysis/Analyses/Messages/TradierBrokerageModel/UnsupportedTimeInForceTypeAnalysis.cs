@@ -17,7 +17,6 @@ using System.Collections.Generic;
 
 namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses.Messages.TradierBrokerageModel
 {
-
     /// <summary>
     /// Detects Tradier brokerage model rejections where the time-in-force type is not Day or GTC.
     /// </summary>
@@ -31,7 +30,6 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses.Messages.TradierBro
             "Tradier does not support the ",
             " time-in-force type.",
         ];
-
 
         protected override List<string> Solutions(Language _) =>
         [

@@ -17,7 +17,6 @@ using System.Collections.Generic;
 
 namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses.Messages.BinanceBrokerageModel
 {
-
     /// <summary>
     /// Detects Binance brokerage model rejections due to an unsupported order type.
     /// </summary>
@@ -31,7 +30,6 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses.Messages.BinanceBro
             "The Binance brokerage does not support ",
             " order type. Supported order types are: ",
         ];
-
 
         protected override List<string> Solutions(Language _) =>
         [

@@ -17,7 +17,6 @@ using System.Collections.Generic;
 
 namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses.Messages.DefaultBrokerageModel
 {
-
     /// <summary>
     /// Detects brokerage model rejections where the order's time-in-force setting is not supported.
     /// </summary>
@@ -30,7 +29,6 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses.Messages.DefaultBro
         [
             " does not support time in force of ",
         ];
-
 
         protected override List<string> Solutions(Language _) =>
         [

@@ -17,7 +17,6 @@ using System.Collections.Generic;
 
 namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses.Messages.WolverineBrokerageModel
 {
-
     /// <summary>
     /// Detects Wolverine brokerage model rejections due to an unsupported order type (only Market orders are supported).
     /// </summary>
@@ -31,7 +30,6 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses.Messages.WolverineB
             "Wolverine does not support ",
             " order type.",
         ];
-
 
         protected override List<string> Solutions(Language _) =>
         [

@@ -17,7 +17,6 @@ using System.Collections.Generic;
 
 namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses.Messages.RbiBrokerageModel
 {
-
     /// <summary>
     /// Detects RBI brokerage model rejections due to an unsupported order type.
     /// </summary>
@@ -31,7 +30,6 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses.Messages.RbiBrokera
             "RBI does not support ",
             " order type.",
         ];
-
 
         protected override List<string> Solutions(Language _) =>
         [

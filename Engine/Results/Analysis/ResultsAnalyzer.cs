@@ -60,8 +60,7 @@ namespace QuantConnect.Lean.Engine.Results.Analysis
         /// <returns>Up to <paramref name="maxFailedTests"/> <see cref="AnalysisResult"/> entries with solutions, ranked by weight.</returns>
         public IReadOnlyList<AnalysisResult> RunTestChain(int timeLimitSeconds = 5, int maxFailedTests = 10)
         {
-            var timingLogs = new List<string>();
-            (_equityCurve, _benchmarkEquityCurve) = ReadEquityCurve(_result, _algorithm, timingLogs);
+            (_equityCurve, _benchmarkEquityCurve) = ReadEquityCurve(_result, _algorithm);
 
             var parameters = new ResultsAnalysisRunParameters(_result, _algorithm, _language, _logs, _equityCurve, _benchmarkEquityCurve);
 
@@ -134,11 +133,9 @@ namespace QuantConnect.Lean.Engine.Results.Analysis
         /// A tuple of two <see cref="SortedList{TKey,TValue}"/> instances sharing the same timestamp keys:
         /// the first is the backtest equity curve, the second is the SPY benchmark curve.
         /// </returns>
-        private static (SortedList<DateTime, decimal> BacktestEquity, SortedList<DateTime, decimal> BenchmarkEquity) ReadEquityCurve(Result result, QCAlgorithm algorithm, List<string> timingLogs)
+        private static (SortedList<DateTime, decimal> BacktestEquity, SortedList<DateTime, decimal> BenchmarkEquity) ReadEquityCurve(Result result, QCAlgorithm algorithm)
         {
             // ── 1. backtest equity from "Strategy Equity" chart ──────────────────
-            var timer = Stopwatch.StartNew();
-
             SortedList<DateTime, decimal> equitySeries;
             if (result.Charts.TryGetValue("Strategy Equity", out var chart) &&
                 chart.Series.TryGetValue("Equity", out var series))
@@ -154,13 +151,8 @@ namespace QuantConnect.Lean.Engine.Results.Analysis
                 equitySeries = new SortedList<DateTime, decimal>();
             }
 
-            timingLogs.Add($"{timer.Elapsed} - Loading equity curve");
-
             // ── 2. Benchmark from SPY history ─────────────────────────────────────
-            timer.Restart();
             var spy = Symbol.Create("SPY", SecurityType.Equity, Market.USA);
-
-            timingLogs.Add($"{timer.Elapsed} - Creating SPY symbol");
 
             algorithm.Settings.DailyPreciseEndTime = false; // ensures history bars are aligned to midnight Eastern
             var historyStart = algorithm.StartDate - TimeSpan.FromDays(3);
@@ -168,8 +160,6 @@ namespace QuantConnect.Lean.Engine.Results.Analysis
             var benchmarkSeries = new SortedList<DateTime, decimal>(
                 algorithm.History(spy, historyStart, historyEnd, Resolution.Daily)
                     .ToDictionary(x => x.EndTime, x => x.Close));
-
-            timingLogs.Add($"{timer.Elapsed} - Fetching SPY history");
 
             // ── 3. Align the two curves on the same timestamps ───────────────────
             var commonKeys = equitySeries.Keys.Intersect(benchmarkSeries.Keys).ToHashSet();
