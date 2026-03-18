@@ -23,7 +23,7 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
     /// </summary>
     public class OrderQuantityLessThanLotSizeOrderResponseErrorAnalysis : MessageAnalysis
     {
-        public override string Issue { get; } = "Order quantity below minimum lot size";
+        public override string Issue { get; } = "The algorithm tried to place an order with a quantity that's less than the lot size of the security.";
 
         public override int Weight { get; } = 40;
 
@@ -37,8 +37,7 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
 
         protected override List<string> Solutions(Language language) =>
         [
-            "This error occurs when you place an order with a quantity that's less than the lot size of the security. " +
-            "To avoid this order response error, check if the order quantity is greater than or equal to the security lot size before you place an order.\n" +
+            "Check if the order quantity is greater than or equal to the security lot size before you place an order.\n" +
             (language == Language.Python
                 ? "```\nlot_size = self.securities[self._symbol].symbol_properties.lot_size\nif quantity >= lot_size:\n    self.market_order(self._symbol, quantity)\n```"
                 : "```\nvar lotSize = Securities[_symbol].SymbolProperties.LotSize;\nif (quantity >= lotSize)\n{\n    MarketOrder(_symbol, quantity);\n}\n```"),

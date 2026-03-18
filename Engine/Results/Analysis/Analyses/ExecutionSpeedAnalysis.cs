@@ -25,7 +25,7 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
     /// </summary>
     public class ExecutionSpeedAnalysis : BaseResultsAnalysis
     {
-        public override string Issue { get; } = "Algorithm ran below 40k data points per second";
+        public override string Issue { get; } = "The algorithm ran below 40k data points per second.";
 
         public override int Weight { get; } = 20;
         public override IReadOnlyList<AnalysisResult> Run(ResultsAnalysisRunParameters parameters) => Run(parameters.Logs);

@@ -25,7 +25,7 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
     /// </summary>
     public class PortfolioMarginUsageAnalysis : BaseResultsAnalysis
     {
-        public override string Issue { get; } = "Portfolio under-utilized available margin";
+        public override string Issue { get; } = "The algorithm sometimes only utilizes a small proportion of the margin available.";
 
         public override int Weight { get; } = 15;
         public override IReadOnlyList<AnalysisResult> Run(ResultsAnalysisRunParameters parameters) => Run(parameters.Result);
@@ -75,7 +75,6 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
 
         private static List<string> Solutions() =>
         [
-            "The algorithm sometimes only utilizes a small proportion of the margin available. " +
             "Adjust the strategy logic or position sizing to utilize more margin.",
 
             "If the algorithm logic leads to periods of time when the portfolio sits in cash, " +

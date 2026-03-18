@@ -22,7 +22,7 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses.Messages.DefaultBro
     /// </summary>
     public class UnsupportedSecurityTypeAnalysis : MessageAnalysis
     {
-        public override string Issue { get; } = "Security type not supported by brokerage model";
+        public override string Issue { get; } = "The algorithm tried to trade a security type that isn't supported by the brokerage model.";
 
         public override int Weight { get; } = 68;
 
@@ -34,7 +34,6 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses.Messages.DefaultBro
 
         protected override List<string> Solutions(Language _) =>
         [
-            "The brokerage model does not support the security type you are trying to trade. " +
             "Change the brokerage model to one that supports the security type.",
         ];
     }

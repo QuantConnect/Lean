@@ -23,7 +23,7 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
     /// </summary>
     public class ExceededMaximumOrdersOrderResponseErrorAnalysis : MessageAnalysis
     {
-        public override string Issue { get; } = "Maximum order count limit exceeded";
+        public override string Issue { get; } = "The algorithm hit the organization's quota for the number of orders allowed in a backtest.";
 
         public override int Weight { get; } = 52;
 
@@ -37,10 +37,10 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
         [
             "Switch to an organization on the Team tier or higher.",
 
-            "Reduce the number of order in the algorithm. " +
+            "Reduce the number of orders in the algorithm. " +
             "To accomplish this, you could try the following: \n" +
             " - Reduce the universe size\n" +
-            " - Trading less frequently\n" +
+            " - Trade less frequently\n" +
             " - Make the trading signal more strict\n" +
             " - Shorten the backtest period",
         ];

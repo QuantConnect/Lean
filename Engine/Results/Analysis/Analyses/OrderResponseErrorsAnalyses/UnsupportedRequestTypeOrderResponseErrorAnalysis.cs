@@ -24,7 +24,9 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
     /// </summary>
     public class UnsupportedRequestTypeOrderResponseErrorAnalysis : MessageAnalysis
     {
-        public override string Issue { get; } = "Unsupported order request type submitted";
+        public override string Issue { get; } = "One of the following cases occurred:\n" +
+            " - The algorithm tried to exercise an Option contract for which it holds a short position\n" +
+            " - The algorithm tried to exercise more Option contracts than it holds\n\n";
 
         public override int Weight { get; } = 50;
 
@@ -70,10 +72,7 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
 
         protected override List<string> Solutions(Language language) =>
         [
-            "This error occurs occurs in the following situations:\n" +
-            " - When you try to exercise an Option contract for which you hold a short position\n" +
-            " - When you try to exercise more Option contracts than you hold\n\n" +
-            "To avoid this order response error, check the quantity of your holdings before you try to exercise an Option contract.\n" +
+            "Check the quantity of your holdings before you try to exercise an Option contract.\n" +
             (language == Language.Python
                 ? "```\nholding_quantity = self.portfolio[self._contract_symbol].quantity\nif holding_quantity > 0:\n    self.exercise_option(self._contract_symbol, max(holding_quantity, exercise_quantity))\n```"
                 : "```\nvar holdingQuantity = Portfolio[_contractSymbol].Quantity;\nif (holdingQuantity > 0)\n{\n    ExerciseOption(_contractSymbol, Math.Max(holdingQuantity, exerciseQuantity));\n}\n```"),

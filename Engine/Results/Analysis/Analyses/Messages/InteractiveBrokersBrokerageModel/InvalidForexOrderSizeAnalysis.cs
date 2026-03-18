@@ -22,7 +22,7 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses.Messages.Interactiv
     /// </summary>
     public class InvalidForexOrderSizeAnalysis : MessageAnalysis
     {
-        public override string Issue { get; } = "Forex order size invalid for Interactive Brokers";
+        public override string Issue { get; } = "The algorithm tried to place a Forex order with a size below the minimum required by Interactive Brokers.";
 
         public override int Weight { get; } = 68;
 
@@ -33,7 +33,6 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses.Messages.Interactiv
 
         protected override List<string> Solutions(Language _) =>
         [
-            "Interactive Brokers requires a minimum order size for Forex orders. " +
             "Increase the order size to meet the minimum requirement.",
         ];
     }

@@ -26,7 +26,7 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
     /// </summary>
     public class TakeProfitAndStopLossOrdersAnalysis : BaseResultsAnalysis
     {
-        public override string Issue { get; } = "TP/SL order pairs not managed correctly";
+        public override string Issue { get; } = "The algorithm isn't correctly handling take-profit and stop-loss order pairs.";
 
         public override int Weight { get; } = 68;
         public override IReadOnlyList<AnalysisResult> Run(ResultsAnalysisRunParameters parameters) => Run(parameters.Result.Orders.Values, parameters.Language);
@@ -72,7 +72,7 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
 
         private class TakeProfitAndStopLossBothFilledAnalysis : BaseResultsAnalysis, ISubAnalysis
         {
-            public override string Issue { get; } = "Both TP and SL orders filled simultaneously";
+            public override string Issue { get; } = "There are some cases where both of the TP and SL orders filled, which can lead to an unintended position.";
 
             public override int Weight { get; } = 68;
             public override IReadOnlyList<AnalysisResult> Run(ResultsAnalysisRunParameters parameters) => throw new NotSupportedException("Use TakeProfitAndStopLossOrdersAnalysis.");
@@ -89,8 +89,7 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
 
             private static List<string> Solutions(Language language) =>
             [
-                "There are some cases where both TP and SL orders filled, which can lead to an unintended position. " +
-            "To avoid this issue, try increasing the data resolution.",
+                "To avoid this issue, try increasing the data resolution.",
 
             "Set the take profit and stop loss orders further away from the current market price.",
 
@@ -144,7 +143,7 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
 
         private class TakeProfitOrStopLossNotCanceledAnalysis : BaseResultsAnalysis, ISubAnalysis
         {
-            public override string Issue { get; } = "TP/SL counterpart order left dangling after fill";
+            public override string Issue { get; } = "There are some cases where one of the TP/SL orders filled and the other one was left idle in the market.";
 
             public override int Weight { get; } = 68;
             public override IReadOnlyList<AnalysisResult> Run(ResultsAnalysisRunParameters parameters) => throw new NotSupportedException("Use TakeProfitAndStopLossOrdersAnalysis.");
@@ -177,8 +176,7 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
 
             private static List<string> Solutions(Language language) =>
             [
-                "There are some cases where one of the TP/SL orders fills and the other one is left idle in the market. " +
-            "To avoid dangling orders that can lead to unindended positions, immediately cancel one of the orders when the other one fills.\n" +
+                "To avoid dangling orders that can lead to unintended positions, immediately cancel one of the orders when the other one fills.\n" +
             (language == Language.Python
                 ? """
                   ```

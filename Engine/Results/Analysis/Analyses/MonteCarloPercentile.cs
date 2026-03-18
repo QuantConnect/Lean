@@ -25,7 +25,8 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
     /// </summary>
     public class MonteCarloPercentile : BaseResultsAnalysis
     {
-        public override string Issue { get; } = "Returns suspiciously high versus simulated outcomes";
+        public override string Issue { get; } =  "The equity curve is very optimistic. " +
+            "It has a greater ending equity than more than 90% of the simulated equity curves, indicating the performance was unusually lucky due to a sequence of favorable days.";
 
         public override int Weight { get; } = 10;
         public override IReadOnlyList<AnalysisResult> Run(ResultsAnalysisRunParameters parameters) => Run(parameters.EquityCurve);
@@ -95,8 +96,6 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
 
         private static List<string> Solutions() =>
         [
-            "The equity curve is very optimistic. " +
-            "It has a greater ending equity than more than 90% of the simulated equity curves, indicating the performance was unusually lucky due to a sequence of favorable days. " +
             "Try to scale position sizes based on recent volatility, so the algorithm has smaller position sizes during volatile periods.",
         ];
     }

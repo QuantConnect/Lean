@@ -24,7 +24,8 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
     /// </summary>
     public class OrderFillsDuringExtendedMarketHoursAnalysis : BaseResultsAnalysis
     {
-        public override string Issue { get; } = "Fills occurred outside regular market hours";
+        public override string Issue { get; } = "The algorithm filled orders during extended market hours." + 
+            "Filling orders during extended market hours can cause a lot of slippage since there is less liquidity than during regular trading hours.";
 
         public override int Weight { get; } = 55;
         public override IReadOnlyList<AnalysisResult> Run(ResultsAnalysisRunParameters parameters) => Run(parameters.Algorithm, parameters.Result.OrderEvents, parameters.Language);
@@ -56,7 +57,6 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
 
         private static List<string> Solutions(Language language) =>
         [
-            "Filling orders during extended market hours can cause a lot of slippage since there is less liquidity than during regular trading hours. " +
             "If you don't intend to trading during extended market hours, add a guard before you place orders.\n" +
             (language == Language.Python
                 ? "```\nif self.is_market_open(self._symbol):\n    self.market_order(self._symbol, quantity)\n```"

@@ -24,7 +24,7 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
     /// </summary>
     public class OrderQuantityZeroOrderResponseErrorAnalysis : MessageAnalysis
     {
-        public override string Issue { get; } = "Order quantity computed as zero";
+        public override string Issue { get; } = "The algorithm tried to place an order that has zero quantity or tried to update an order to have a zero quantity.";
 
         public override int Weight { get; } = 78;
 
@@ -37,9 +37,8 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
 
         protected override List<string> Solutions(Language language) =>
         [
-            "This error occurs when you place an order that has zero quantity or when you update an order to have a zero quantity. " +
             $"This error commonly occurs if you use the `{FormatCode("SetHoldings", language)}` method but the portfolio weight you provide to the method is too small to translate into a non-zero order quantity.\n" +
-            "To avoid this order response error, check if the quantity of the order is non-zero before you place the order. " +
+            "Check if the quantity of the order is non-zero before you place the order. " +
             $"If you use the `{FormatCode(nameof(QCAlgorithm.SetHoldings), language)}` method, replace it with a combination of the `{FormatCode(nameof(QCAlgorithm.CalculateOrderQuantity), language)}` and `{FormatCode(nameof(QCAlgorithm.MarketOrder), language)}` methods.\n" +
             (language == Language.Python
                 ? "```\nquantity = self.calculate_order_quantity(self._symbol, 0.05)\nif quantity:\n    self.market_order(self._symbol, quantity)\n```"

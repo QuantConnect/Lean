@@ -23,7 +23,7 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses.Messages.TradingTec
     /// </summary>
     public class InvalidStopLimitOrderPriceAnalysis : MessageAnalysis
     {
-        public override string Issue { get; } = "Stop limit order stop price is invalid";
+        public override string Issue { get; } = "The algorithm tried to place a stop-limit order where the stop price is on the wrong side of the current market price.";
 
         public override int Weight { get; } = 65;
 

@@ -24,7 +24,7 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
     /// </summary>
     public class EuropeanOptionNotExpiredOnExerciseOrderResponseErrorAnalysis : MessageAnalysis
     {
-        public override string Issue { get; } = "European option exercised before expiration date";
+        public override string Issue { get; } = "The algorithm tried to exercise a European Option before its expiration date.";
 
         public override int Weight { get; } = 48;
 
@@ -36,8 +36,7 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
 
         protected override List<string> Solutions(Language language) =>
         [
-            "This error occurs when you try to exercise a European Option contract before its expiry date. " +
-            "To avoid this order response error, check the type and expiry date of the contract before you exercise it.\n" +
+            "Check the type and expiry date of the contract before you exercise it.\n" +
             (language == Language.Python
                 ? "```\nif self.contract_symbol.id.option_style == OptionStyle.EUROPEAN && self.contract_symbol.id.date == self.time.date:\n    self.exercise_option(self.contract_symbol, quantity)\n```"
                 : "```\nif (_contractSymbol.ID.OptionStyle == OptionStyle.European && _contractSymbol.ID.Date == Time.Date)\n{\n    ExerciseOption(_contractSymbol, quantity);\n}\n```"),

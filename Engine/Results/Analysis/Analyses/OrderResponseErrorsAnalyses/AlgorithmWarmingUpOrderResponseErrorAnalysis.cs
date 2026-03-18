@@ -25,7 +25,9 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
     /// </summary>
     public class AlgorithmWarmingUpOrderResponseErrorAnalysis : MessageAnalysis
     {
-        public override string Issue { get; } = "Orders placed during algorithm warm-up period";
+        public override string Issue { get; } = "One of the following cases occurred:\n" +
+            " - The algorithm tried to place, update, or cancel an order during the warm-up period\n" +
+            " - The Option assignment simulator assigned you to an Option during the warm-up period";
 
         public override int Weight { get; } = 62;
 
@@ -37,10 +39,7 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
 
         protected override List<string> Solutions(Language language) =>
         [
-            "This error occurs in the following situations:\n" +
-            " - When you try to place, update, or cancel an order during the warm-up period\n" +
-            " - When the Option assignment simulator assigns you to an Option during the warm-up period\n\n" +
-            $"To avoid the error, move the invalid operation to `{FormatCode(nameof(IAlgorithm.OnWarmupFinished), language)}` " +
+            $"Move the invalid operation to `{FormatCode(nameof(IAlgorithm.OnWarmupFinished), language)}` " +
             $"or protect them with an `{FormatCode(nameof(IAlgorithm.IsWarmingUp), language)}` guard.",
         ];
     }

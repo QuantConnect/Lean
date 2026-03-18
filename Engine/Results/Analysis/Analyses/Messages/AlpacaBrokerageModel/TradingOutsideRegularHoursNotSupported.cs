@@ -22,7 +22,7 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses.Messages.AlpacaBrok
     /// </summary>
     public class TradingOutsideRegularHoursNotSupported : MessageAnalysis
     {
-        public override string Issue { get; } = "Trading outside regular hours not supported";
+        public override string Issue { get; } = "The algorithm tried to place an order outside regular market hours, which is not supported by the Alpaca brokerage model.";
 
         public override int Weight { get; } = 55;
 
@@ -33,7 +33,6 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses.Messages.AlpacaBrok
 
         protected override List<string> Solutions(Language language) =>
         [
-            "The Alpaca brokerage model does not support trading outside regular hours. " +
             "Only place orders during regular trading hours when using the Alpaca brokerage model.",
         ];
     }

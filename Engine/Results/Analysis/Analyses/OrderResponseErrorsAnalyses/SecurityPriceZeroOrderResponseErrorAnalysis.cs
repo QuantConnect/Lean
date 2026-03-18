@@ -23,7 +23,7 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
     /// </summary>
     public class SecurityPriceZeroOrderResponseErrorAnalysis : MessageAnalysis
     {
-        public override string Issue { get; } = "Security price was zero at order time";
+        public override string Issue { get; } = "The algorithm tried to place an order or exercise an Option contract while the security price was $0.";
 
         public override int Weight { get; } = 80;
 
@@ -34,7 +34,6 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
 
         protected override List<string> Solutions(Language language) =>
         [
-            "This occurs when you place an order or exercise an Option contract while the security price is $0. " +
             "The security price can be $0 if the algorithm hasn't received data for the security yet. " +
             "If you subscribe to a security and place an order for the security in the same time step, you'll get this error. " +
             $"To avoid this order response error, enable the `{FormatCode(nameof(AlgorithmSettings.SeedInitialPrices), language)}` setting to seed new assets with their last known price.\n" +

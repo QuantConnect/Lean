@@ -24,7 +24,7 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
     /// </summary>
     public class MarginCallsAnalysis : MessageAnalysis
     {
-        public override string Issue { get; } = "Margin calls executed during backtest";
+        public override string Issue { get; } = "The algorithm encountered a margin call.";
 
         public override int Weight { get; } = 85;
 

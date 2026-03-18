@@ -23,7 +23,9 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
     /// </summary>
     public class InsufficientBuyingPowerOrderResponseErrorAnalysis : OrderResponseErrorAnalysis
     {
-        public override string Issue { get; } = "Orders rejected due to insufficient buying power";
+        public override string Issue { get; } = "One of the following cases occurred:\n" +
+            " - The algorithm tried to place an order but the buying power model determined you couldn't afford it\n" +
+            " - The algorithm tried to place a market on open order with daily data";
 
         public override int Weight { get; } = 90;
 

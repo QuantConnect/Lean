@@ -23,7 +23,7 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
     /// </summary>
     public class InsightsEmittedForDelistedSecuritiesAnalysis : MessageAnalysis
     {
-        public override string Issue { get; } = "Insights emitted for delisted securities";
+        public override string Issue { get; } = "The algorithm emitted insights for delisted securities.";
 
         public override int Weight { get; } = 35;
 

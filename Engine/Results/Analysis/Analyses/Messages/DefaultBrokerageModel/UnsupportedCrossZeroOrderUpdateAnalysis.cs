@@ -22,7 +22,7 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses.Messages.DefaultBro
     /// </summary>
     public class UnsupportedCrossZeroOrderUpdateAnalysis : MessageAnalysis
     {
-        public override string Issue { get; } = "Cross-zero position update not supported";
+        public override string Issue { get; } = "The algorithm tried to update an order that would cause the position to cross zero, which is not supported.";
 
         public override int Weight { get; } = 55;
 
@@ -34,7 +34,6 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses.Messages.DefaultBro
 
         protected override List<string> Solutions(Language _) =>
         [
-            "Updating the order quantity would cross zero (flip the position direction). " +
             "Cancel the existing order and submit a new one with the desired quantity instead.",
         ];
     }

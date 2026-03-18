@@ -30,7 +30,7 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
     /// </summary>
     public class CrisisEventsAnalysis : BaseResultsAnalysis
     {
-        public override string Issue { get; } = "Strategy underperformed benchmark during crisis periods";
+        public override string Issue { get; } = "The strategy underperformed the benchmark during some crisis events in terms of risk-adjusted returns.";
 
         public override int Weight { get; } = 22;
         public override IReadOnlyList<AnalysisResult> Run(ResultsAnalysisRunParameters parameters) => Run(parameters.Algorithm, parameters.EquityCurve, parameters.BenchmarkEquityCurve);
@@ -157,7 +157,6 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
 
         private static List<string> Solutions() =>
         [
-            "The strategy underperformed the benchmark during some crisis events. " +
             "Consider adding risk management techniques such as stop-loss orders, position sizing, " +
             "Option hedging, and diversification to mitigate losses during turbulent periods.",
         ];

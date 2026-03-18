@@ -25,7 +25,7 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
     /// </summary>
     public class ExceedsShortableQuantityOrderResponseErrorAnalysis : BaseResultsAnalysis
     {
-        public override string Issue { get; } = "Short sell quantity exceeded available shares";
+        public override string Issue { get; } = "The algorithm tried to short a security but the shortable provider of the brokerage model stated there wasn't enough shares to borrow.";
 
         public override int Weight { get; } = 82;
         public override IReadOnlyList<AnalysisResult> Run(ResultsAnalysisRunParameters parameters) => Run(parameters.Result.OrderEvents, parameters.Language);
@@ -56,8 +56,7 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
 
         private static List<string> Solutions(Language language) =>
         [
-            "This error occurs when you place an order to short a security but the shortable provider of the brokerage model states there isn't enough shares to borrow. " +
-            "To avoid this order response error, check if there are enough shares available before you place an order to short a security.\n" +
+            "Check if there are enough shares available before you place an order to short a security.\n" +
             (language == Language.Python
                 ? "```\nif quantity_to_borrow <= self.shortable_quantity(self._symbol):\n    self.market_order(self._symbol, -quantity_to_borrow)\n```"
                 : "```\nif (quantityToBorrow <= ShortableQuantity(_symbol))\n{\n    MarketOrder(_symbol, -quantityToBorrow);\n}\n```"),

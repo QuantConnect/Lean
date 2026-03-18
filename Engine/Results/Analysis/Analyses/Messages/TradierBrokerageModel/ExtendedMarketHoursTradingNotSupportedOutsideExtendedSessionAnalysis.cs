@@ -23,7 +23,7 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses.Messages.TradierBro
     /// </summary>
     public class ExtendedMarketHoursTradingNotSupportedOutsideExtendedSessionAnalysis : MessageAnalysis
     {
-        public override string Issue { get; } = "Extended hours trading outside session not supported";
+        public override string Issue { get; } = "The algorithm tried to submit an extended-hours order outside of the pre-market or after-hours sessions, which is not supported by Tradier.";
 
         public override int Weight { get; } = 55;
 

@@ -22,7 +22,7 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses.Messages.DefaultBro
     /// </summary>
     public class UnsupportedUpdateQuantityOrderAnalysis : MessageAnalysis
     {
-        public override string Issue { get; } = "Order quantity update not supported by brokerage";
+        public override string Issue { get; } = "The algorithm tried to update the quantity of an order, but the brokerage model does not support quantity updates for the order type.";
 
         public override int Weight { get; } = 55;
 
@@ -34,7 +34,6 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses.Messages.DefaultBro
 
         protected override List<string> Solutions(Language _) =>
         [
-            "The brokerage model does not support updating the quantity of this order type. " +
             "Cancel the existing order and submit a new one with the desired quantity.",
         ];
     }

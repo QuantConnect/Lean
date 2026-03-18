@@ -22,7 +22,7 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
     /// </summary>
     public class PortfolioValueIsNotPositiveAnalysis : BaseResultsAnalysis
     {
-        public override string Issue { get; } = "Portfolio equity dropped to zero or below";
+        public override string Issue { get; } = "The portfolio equity dropped to zero or below.";
 
         public override int Weight { get; } = 100;
         public override IReadOnlyList<AnalysisResult> Run(ResultsAnalysisRunParameters parameters) => Run(parameters.Result);

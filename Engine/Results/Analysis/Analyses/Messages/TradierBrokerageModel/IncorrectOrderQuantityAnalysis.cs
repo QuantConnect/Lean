@@ -22,7 +22,7 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses.Messages.TradierBro
     /// </summary>
     public class IncorrectOrderQuantityAnalysis : MessageAnalysis
     {
-        public override string Issue { get; } = "Incorrect order quantity for Tradier brokerage";
+        public override string Issue { get; } = "The algorithm tried to place an order with a non-integer quantity, which is not supported by Tradier.";
 
         public override int Weight { get; } = 68;
 
@@ -33,7 +33,6 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses.Messages.TradierBro
 
         protected override List<string> Solutions(Language _) =>
         [
-            "Tradier requires whole-number order quantities. " +
             "Round the order quantity to the nearest whole number before placing the order.",
         ];
     }

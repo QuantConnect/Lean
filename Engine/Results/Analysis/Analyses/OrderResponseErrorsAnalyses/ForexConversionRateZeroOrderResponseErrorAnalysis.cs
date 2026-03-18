@@ -23,7 +23,7 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
     /// </summary>
     public class ForexConversionRateZeroOrderResponseErrorAnalysis : MessageAnalysis
     {
-        public override string Issue { get; } = "Forex conversion rate was zero";
+        public override string Issue { get; } = "The algorithm tried to place an order for a Forex or Crypto pair but LEAN could't convert the value of the base currency to your account currency.";
 
         public override int Weight { get; } = 58;
 
@@ -36,7 +36,6 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
 
         protected override List<string> Solutions(Language language) =>
         [
-            "This error occurs when you place a trade for a Forex or Crypto pair and LEAN can't convert the value of the base currency to your account currency. " +
             "This error usually indicates a lack of data. Check if there is some data missing.",
         ];
     }

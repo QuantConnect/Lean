@@ -23,7 +23,7 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
     /// </summary>
     public class MarketOnOpenNotAllowedDuringRegularHoursOrderResponseErrorAnalysis : MessageAnalysis
     {
-        public override string Issue { get; } = "MOO orders not allowed during regular hours";
+        public override string Issue { get; } = "The algorithm tried to place a market on open order for an asset when it's during regular trading hours.";
 
         public override int Weight { get; } = 42;
 
@@ -34,8 +34,7 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
 
         protected override List<string> Solutions(Language language) =>
         [
-            "This error occurs when you try to place a market on open order for an asset when it's during regular trading hours. " +
-            "To avoid this order response error, place the order when the market is closed.\n" +
+            "Place the order when the market is closed.\n" +
             (language == Language.Python
                 ? "```\nif not self.is_market_open(self._symbol):\n    self.market_on_open_order(self._symbol, quantity)\n```"
                 : "```\nif (!IsMarketOpen(_symbol))\n{\n    MarketOnOpenOrder(_symbol, quantity);\n}\n```"),

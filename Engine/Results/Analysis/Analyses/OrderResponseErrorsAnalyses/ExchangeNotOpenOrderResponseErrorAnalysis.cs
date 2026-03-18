@@ -25,7 +25,9 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
     /// </summary>
     public class ExchangeNotOpenOrderResponseErrorAnalysis : BaseResultsAnalysis
     {
-        public override string Issue { get; } = "Orders placed when exchange was closed";
+        public override string Issue { get; } = "One of the following cases occurred:\n" +
+            " - The algorithm tried to exercise an Option while the exchange was closed.\n" +
+            " - The algorithm tried to place a market on open order for a Futures contract or a Future Option contract";
 
         public override int Weight { get; } = 60;
         public override IReadOnlyList<AnalysisResult> Run(ResultsAnalysisRunParameters parameters) => Run(parameters.Logs, parameters.Language);
@@ -61,7 +63,7 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
 
         private class ExerciseOptionWhileExchangeNotOpenAnalysis : MessageAnalysis
         {
-            public override string Issue { get; } = "Option exercised while exchange was closed";
+            public override string Issue { get; } = "The algorithm tried to exercise an Option while the exchange was closed.";
 
             public override int Weight { get; } = 60;
 
@@ -72,8 +74,7 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
 
             protected override List<string> Solutions(Language language) =>
             [
-                "This error occurs when you try to exercise an Option while the exchange is not open. " +
-                "To avoid the order response error in this case, check if the exchange is open before you exercise an Option contract.\n" +
+                "Check if the exchange is open before you exercise an Option contract.\n" +
                 (language == Language.Python
                     ? "```\nif self.is_market_open(self.contract_symbol):\n    self.exercise_option(self.contract_symbol, quantity)\n```"
                     : "```\nif (IsMarketOpen(_contractSymbol))\n{\n    ExerciseOption(_contractSymbol, quantity);\n}\n```"),
@@ -84,7 +85,7 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
 
         private class MOCOrderForFutureOrFOPAnalysis : MessageAnalysis
         {
-            public override string Issue { get; } = "MOC order placed for Futures or FutureOptions";
+            public override string Issue { get; } = "The algorithm tried to place a market on open order for a Futures contract or a Future Option contract.";
 
             public override int Weight { get; } = 60;
 
@@ -95,8 +96,7 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
 
             protected override List<string> Solutions(Language language) =>
             [
-                "This error occurs when you try to place a market on open order for a Futures contract or a Future Option contract. " +
-                "To avoid the order response error in this case, check if the exchange is open before you place the order.",
+                "Check if the exchange is open before you place the order.",
             ];
         }
     }

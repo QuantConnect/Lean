@@ -22,7 +22,7 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses.Messages.DefaultBro
     /// </summary>
     public class InvalidOrderQuantityAnalysis : MessageAnalysis
     {
-        public override string Issue { get; } = "Invalid order quantity rejected by brokerage";
+        public override string Issue { get; } = "The algorithm tried to place an order which had an absolute order size (in the quote currency) that was less than the security's minimum order size in the Symbol Properties Database.";
 
         public override int Weight { get; } = 72;
 
@@ -35,7 +35,6 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses.Messages.DefaultBro
 
         protected override List<string> Solutions(Language language) =>
         [
-            "This message occurs when the absolute order size (in the quote currency) is less than the security's minimum order size in the Symbol Properties Database. " +
             "Before placing orders, ensure their size exceeds the minimum order size.",
 
             "Increase the starting cash so trades are larger.",

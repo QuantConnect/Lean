@@ -23,7 +23,7 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses.Messages.Interactiv
     /// </summary>
     public class UnsupportedExerciseForIndexAndCashSettledOptionsAnalysis : MessageAnalysis
     {
-        public override string Issue { get; } = "Exercise not supported for index or cash-settled options";
+        public override string Issue { get; } = "The algorithm tried to manually exercise an Option contract that is either an Index Option or a cash-settled Option, which is not supported by Interactive Brokers.";
 
         public override int Weight { get; } = 55;
 
@@ -34,8 +34,7 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses.Messages.Interactiv
 
         protected override List<string> Solutions(Language _) =>
         [
-            "Interactive Brokers does not support manually exercising index and cash-settled options. " +
-            "These options are automatically exercised at expiry. Remove the manual exercise call.",
+            "These Options are automatically exercised at expiry. Remove the manual exercise call.",
         ];
     }
 }

@@ -22,7 +22,7 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses.Messages.DefaultBro
     /// </summary>
     public class OrderUpdateNotSupportedAnalysis : MessageAnalysis
     {
-        public override string Issue { get; } = "Order updates not supported by brokerage";
+        public override string Issue { get; } = "The algorithm tried to update an order, which the brokerage model does not support.";
 
         public override int Weight { get; } = 62;
 
@@ -33,7 +33,6 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses.Messages.DefaultBro
 
         protected override List<string> Solutions(Language _) =>
         [
-            "The brokerage model does not support order updates. " +
             "To update an order, cancel it and place a new one.",
         ];
     }

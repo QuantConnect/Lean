@@ -23,7 +23,7 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
     /// </summary>
     public class NonTradableSecurityOrderResponseErrorAnalysis : MessageAnalysis
     {
-        public override string Issue { get; } = "Attempted to trade non-tradable security";
+        public override string Issue { get; } = "The algorithm tried to place an order for a security that's not tradable.";
 
         public override int Weight { get; } = 75;
 
@@ -35,8 +35,7 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
 
         protected override List<string> Solutions(Language language) =>
         [
-            "This error occurs when you place an order for a security that's not tradable. " +
-            "To avoid this order response error, check if a security is tradable before you trade it.\n" +
+            "Check if a security is tradable before you trade it.\n" +
             (language == Language.Python
                 ? "```\nif self.securities[self._symbol].is_tradable:\n    self.market_order(self._symbol, quantity)\n```"
                 : "```\nif (Securities[_symbol].IsTradable)\n{\n    MarketOrder(_symbol, quantity);\n}\n```") + "\n" +

@@ -24,7 +24,7 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
     /// </summary>
     public class PerformanceRelativeToBenchmark : BaseResultsAnalysis
     {
-        public override string Issue { get; } = "Strategy Sharpe ratio below benchmark Sharpe";
+        public override string Issue { get; } = "The strategy has a lower Sharpe ratio than the benchmark.";
 
         public override int Weight { get; } = 25;
         public override IReadOnlyList<AnalysisResult> Run(ResultsAnalysisRunParameters parameters) => Run(parameters.Algorithm, parameters.EquityCurve, parameters.BenchmarkEquityCurve);
@@ -52,7 +52,6 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
 
         private static List<string> Solutions() =>
         [
-            "The strategy has a lower Sharpe ratio than the benchmark. " +
             "Try adjusting the trading rules and/or the universe to get a strategy that outperforms the benchmark.",
         ];
     }

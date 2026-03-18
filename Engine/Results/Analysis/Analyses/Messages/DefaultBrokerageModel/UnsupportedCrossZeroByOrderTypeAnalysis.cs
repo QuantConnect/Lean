@@ -22,7 +22,7 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses.Messages.DefaultBro
     /// </summary>
     public class UnsupportedCrossZeroByOrderTypeAnalysis : MessageAnalysis
     {
-        public override string Issue { get; } = "Cross-zero position not supported for order type";
+        public override string Issue { get; } = "The algorithm tried to a position from long to short (or vice versa) in a single order, but the brokerage model does not support crossing zero.";
 
         public override int Weight { get; } = 58;
 
@@ -34,7 +34,6 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses.Messages.DefaultBro
 
         protected override List<string> Solutions(Language _) =>
         [
-            "The brokerage model does not allow an order to cross from a short to a long position (or vice versa) in a single order. " +
             "Submit two separate orders: one to close the existing position and one to open the new position.",
         ];
     }

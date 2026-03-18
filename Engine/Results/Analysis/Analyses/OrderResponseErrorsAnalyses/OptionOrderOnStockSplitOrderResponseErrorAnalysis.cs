@@ -23,7 +23,7 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
     /// </summary>
     public class OptionOrderOnStockSplitOrderResponseErrorAnalysis : MessageAnalysis
     {
-        public override string Issue { get; } = "Option order submitted during stock split";
+        public override string Issue { get; } = "The algorithm tried to submit an order for an Equity Option contract when the current time slice contained a split for the underlying Equity.";
 
         public override int Weight { get; } = 45;
 
@@ -34,8 +34,7 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
 
         protected override List<string> Solutions(Language language) =>
         [
-            "The OrderResponseErrorCode.OptionOrderOnStockSplit (-34) error occurs when you try to submit an order for an Equity Option contract when the current time slice contains a split for the underlying Equity. " +
-            "To avoid this order response error, check if the time slice has a split event for the underlying Equity of the contract before you place an order for the contract.\n" +
+            "Check if the time slice has a split event for the underlying Equity of the contract before you place an order for the contract.\n" +
             (language == Language.Python
                 ? "```\nif self.contract_symbol.underlying not in slice.splits:\n    self.market_order(self.contract_symbol, quantity)\n```"
                 : "```\nif (!slice.Splits.ContainsKey(_contractSymbol.Underlying))\n{\n    MarketOrder(_contractSymbol, quantity);\n}\n```"),

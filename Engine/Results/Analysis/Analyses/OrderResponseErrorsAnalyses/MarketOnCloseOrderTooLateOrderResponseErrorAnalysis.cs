@@ -23,7 +23,7 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
     /// </summary>
     public class MarketOnCloseOrderTooLateOrderResponseErrorAnalysis : MessageAnalysis
     {
-        public override string Issue { get; } = "Market on close order submitted too late";
+        public override string Issue { get; } = "The algorithm tried to place a market on close (MOC) order too early in the trading day.";
 
         public override int Weight { get; } = 52;
 
@@ -42,8 +42,7 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
 
             return
             [
-                "This error occurs when you try to place a market on close (MOC) order too early in the trading day. " +
-                "To avoid this order response error, place the MOC order closer to the market close or adjust the submission time buffer. " +
+                "Place the MOC order closer to the market close or adjust the submission time buffer. " +
                 "By default, you must place MOC orders at least 15.5 minutes before the close, but some exchanges let you submit them closer to the market closing time. " +
                 $"To adjust the buffer period that's required, set the `MarketOnCloseOrder.{bufferProp}` property.\n" +
                 exampleCode,
