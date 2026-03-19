@@ -25,7 +25,7 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
     {
         public override string Issue { get; } = "The algorithm tried to place an order or exercise an Option contract while the security price was $0.";
 
-        public override int Weight { get; } = 80;
+        public override int Weight { get; } = 91;
 
         protected override string[] ExpectedMessageText { get; } =
         [

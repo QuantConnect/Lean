@@ -27,7 +27,7 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
     {
         public override string Issue { get; } = "The algorithm tried to short a security but the shortable provider of the brokerage model stated there wasn't enough shares to borrow.";
 
-        public override int Weight { get; } = 82;
+        public override int Weight { get; } = 94;
         public override IReadOnlyList<AnalysisResult> Run(ResultsAnalysisRunParameters parameters) => Run(parameters.Result.OrderEvents, parameters.Language);
 
         private static readonly string[] MessageText =

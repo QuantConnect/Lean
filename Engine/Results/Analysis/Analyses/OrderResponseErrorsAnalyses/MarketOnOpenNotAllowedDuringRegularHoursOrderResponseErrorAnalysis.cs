@@ -25,7 +25,7 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
     {
         public override string Issue { get; } = "The algorithm tried to place a market on open order for an asset when it's during regular trading hours.";
 
-        public override int Weight { get; } = 42;
+        public override int Weight { get; } = 82;
 
         protected override string[] ExpectedMessageText { get; } =
         [

@@ -28,7 +28,7 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
     {
         public override string Issue { get; } = "The algorithm isn't correctly handling take-profit and stop-loss order pairs.";
 
-        public override int Weight { get; } = 68;
+        public override int Weight { get; } = 79;
         public override IReadOnlyList<AnalysisResult> Run(ResultsAnalysisRunParameters parameters) => Run(parameters.Result.Orders.Values, parameters.Language);
 
         private static readonly OrderType[] TpTypes = [OrderType.Limit, OrderType.LimitIfTouched];

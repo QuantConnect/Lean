@@ -26,7 +26,7 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
     {
         public override string Issue { get; } = "The equity curve is flat for several days in a row.";
 
-        public override int Weight { get; } = 95;
+        public override int Weight { get; } = 99;
         public override IReadOnlyList<AnalysisResult> Run(ResultsAnalysisRunParameters parameters) => Run(parameters.EquityCurve);
 
         /// <summary>

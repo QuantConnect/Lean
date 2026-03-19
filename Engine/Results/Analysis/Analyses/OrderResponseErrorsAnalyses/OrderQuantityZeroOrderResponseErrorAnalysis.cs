@@ -26,7 +26,7 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
     {
         public override string Issue { get; } = "The algorithm tried to place an order that has zero quantity or tried to update an order to have a zero quantity.";
 
-        public override int Weight { get; } = 78;
+        public override int Weight { get; } = 92;
 
         protected override string[] ExpectedMessageText { get; } =
         [

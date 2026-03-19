@@ -25,7 +25,7 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
     {
         public override string Issue { get; } = "The algorithm tried to place a market on close (MOC) order too early in the trading day.";
 
-        public override int Weight { get; } = 52;
+        public override int Weight { get; } = 81;
 
         protected override string[] ExpectedMessageText { get; } =
         [

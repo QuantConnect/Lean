@@ -26,7 +26,7 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
     {
         public override string Issue { get; } = "The algorithm tried to exercise a European Option before its expiration date.";
 
-        public override int Weight { get; } = 48;
+        public override int Weight { get; } = 84;
 
         protected override string[] ExpectedMessageText { get; } =
         [

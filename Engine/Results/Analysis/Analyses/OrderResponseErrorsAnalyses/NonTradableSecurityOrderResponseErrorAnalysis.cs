@@ -25,7 +25,7 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
     {
         public override string Issue { get; } = "The algorithm tried to place an order for a security that's not tradable.";
 
-        public override int Weight { get; } = 75;
+        public override int Weight { get; } = 93;
 
         protected override string[] ExpectedMessageText { get; } =
         [

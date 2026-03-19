@@ -27,7 +27,7 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
     {
         public override string Issue { get; } = "The algorithm sometimes only utilizes a small proportion of the margin available.";
 
-        public override int Weight { get; } = 15;
+        public override int Weight { get; } = 74;
         public override IReadOnlyList<AnalysisResult> Run(ResultsAnalysisRunParameters parameters) => Run(parameters.Result);
 
         /// <summary>

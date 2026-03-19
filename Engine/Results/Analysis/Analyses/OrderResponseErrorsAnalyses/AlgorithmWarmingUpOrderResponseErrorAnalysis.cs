@@ -29,7 +29,7 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
             " - The algorithm tried to place, update, or cancel an order during the warm-up period\n" +
             " - The Option assignment simulator assigned you to an Option during the warm-up period";
 
-        public override int Weight { get; } = 62;
+        public override int Weight { get; } = 96;
 
         protected override string[] ExpectedMessageText { get; } =
         [

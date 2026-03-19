@@ -25,7 +25,7 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
     {
         public override string Issue { get; } = "The algorithm hit the organization's quota for the number of orders allowed in a backtest.";
 
-        public override int Weight { get; } = 52;
+        public override int Weight { get; } = 87;
 
         protected override string[] ExpectedMessageText { get; } =
         [

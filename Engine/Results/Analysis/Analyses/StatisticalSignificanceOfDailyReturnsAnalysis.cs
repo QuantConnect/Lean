@@ -31,7 +31,7 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
         public override string Issue { get; } = "The distribution of the strategy's daily returns in excess of the benchmark's daily returns has a p-value above 0.05. " +
             "Therefore, we fail to reject the null hypothesis that the mean of this distribution is above zero.";
 
-        public override int Weight { get; } = 28;
+        public override int Weight { get; } = 70;
         public override IReadOnlyList<AnalysisResult> Run(ResultsAnalysisRunParameters parameters) => Run(parameters.EquityCurve, parameters.BenchmarkEquityCurve);
 
         /// <summary>

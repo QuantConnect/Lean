@@ -27,7 +27,7 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
     {
         public override string Issue { get; } = "The algorithm ran below 40k data points per second.";
 
-        public override int Weight { get; } = 20;
+        public override int Weight { get; } = 77;
         public override IReadOnlyList<AnalysisResult> Run(ResultsAnalysisRunParameters parameters) => Run(parameters.Logs);
 
         private static readonly Regex DataPointsPerSecondRegex = new(

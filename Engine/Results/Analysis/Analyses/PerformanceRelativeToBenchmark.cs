@@ -26,7 +26,7 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
     {
         public override string Issue { get; } = "The strategy has a lower Sharpe ratio than the benchmark.";
 
-        public override int Weight { get; } = 25;
+        public override int Weight { get; } = 72;
         public override IReadOnlyList<AnalysisResult> Run(ResultsAnalysisRunParameters parameters) => Run(parameters.Algorithm, parameters.EquityCurve, parameters.BenchmarkEquityCurve);
 
         /// <summary>

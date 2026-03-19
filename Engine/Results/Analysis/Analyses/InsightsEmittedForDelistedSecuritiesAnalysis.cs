@@ -25,7 +25,7 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
     {
         public override string Issue { get; } = "The algorithm emitted insights for delisted securities.";
 
-        public override int Weight { get; } = 35;
+        public override int Weight { get; } = 80;
 
         protected override string[] ExpectedMessageText { get; } =
         [

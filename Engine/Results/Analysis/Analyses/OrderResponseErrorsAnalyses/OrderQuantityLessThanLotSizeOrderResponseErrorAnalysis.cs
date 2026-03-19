@@ -25,7 +25,7 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
     {
         public override string Issue { get; } = "The algorithm tried to place an order with a quantity that's less than the lot size of the security.";
 
-        public override int Weight { get; } = 40;
+        public override int Weight { get; } = 85;
 
         protected override string[] ExpectedMessageText { get; } =
         [

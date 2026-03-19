@@ -25,7 +25,7 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
     {
         public override string Issue { get; } = "The algorithm tried to place an order for a Forex or Crypto pair but LEAN could't convert the value of the base currency to your account currency.";
 
-        public override int Weight { get; } = 58;
+        public override int Weight { get; } = 88;
 
         protected override string[] ExpectedMessageText { get; } =
         [

@@ -29,7 +29,7 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
             " - The algorithm tried to exercise an Option while the exchange was closed.\n" +
             " - The algorithm tried to place a market on open order for a Futures contract or a Future Option contract";
 
-        public override int Weight { get; } = 60;
+        public override int Weight { get; } = 89;
         public override IReadOnlyList<AnalysisResult> Run(ResultsAnalysisRunParameters parameters) => Run(parameters.Logs, parameters.Language);
 
         private static readonly MessageAnalysis[] SubAnalyses =

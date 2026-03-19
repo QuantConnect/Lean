@@ -27,7 +27,7 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
             " - The algorithm tried to place an order but the buying power model determined you couldn't afford it\n" +
             " - The algorithm tried to place a market on open order with daily data";
 
-        public override int Weight { get; } = 90;
+        public override int Weight { get; } = 97;
 
         protected override string[] ExpectedMessageText { get; } =
         [

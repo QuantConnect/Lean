@@ -25,7 +25,7 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
     {
         public override string Issue { get; } = "The algorithm has so many numeric parameters it's at risk of overfitting.";
 
-        public override int Weight { get; } = 12;
+        public override int Weight { get; } = 73;
         public override IReadOnlyList<AnalysisResult> Run(ResultsAnalysisRunParameters parameters) => Run(parameters.Algorithm, parameters.Language);
 
         private const string DetectedParametersTable = """

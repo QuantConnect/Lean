@@ -25,7 +25,7 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
     {
         public override string Issue { get; } = "The algorithm tried to submit an order for an Equity Option contract when the current time slice contained a split for the underlying Equity.";
 
-        public override int Weight { get; } = 45;
+        public override int Weight { get; } = 83;
 
         protected override string[] ExpectedMessageText { get; } =
         [

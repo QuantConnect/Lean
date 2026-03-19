@@ -38,7 +38,7 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
     {
         public override string Issue { get; } = "Brokerage model refused to submit orders";
 
-        public override int Weight { get; } = 72;
+        public override int Weight { get; } = 95;
 
         private static readonly MessageAnalysis[] Analyses =
         [

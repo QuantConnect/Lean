@@ -27,7 +27,7 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
         public override string Issue { get; } = "The algorithm filled orders during extended market hours." + 
             "Filling orders during extended market hours can cause a lot of slippage since there is less liquidity than during regular trading hours.";
 
-        public override int Weight { get; } = 55;
+        public override int Weight { get; } = 75;
         public override IReadOnlyList<AnalysisResult> Run(ResultsAnalysisRunParameters parameters) => Run(parameters.Algorithm, parameters.Result.OrderEvents, parameters.Language);
 
         /// <summary>

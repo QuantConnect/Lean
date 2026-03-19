@@ -26,7 +26,7 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
     {
         public override string Issue { get; } = "The algorithm encountered a margin call.";
 
-        public override int Weight { get; } = 85;
+        public override int Weight { get; } = 78;
 
         protected override string[] ExpectedMessageText { get; } =
         [

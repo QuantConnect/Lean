@@ -28,7 +28,7 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
             " - The algorithm tried to exercise an Option contract for which it holds a short position\n" +
             " - The algorithm tried to exercise more Option contracts than it holds\n\n";
 
-        public override int Weight { get; } = 50;
+        public override int Weight { get; } = 90;
 
         private static readonly string[] ShortMessageText =
         [
