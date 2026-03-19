@@ -25,9 +25,19 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
     /// </summary>
     public class ExecutionSpeedAnalysis : BaseResultsAnalysis
     {
+        /// <summary>
+        /// Gets the description of the slow execution issue.
+        /// </summary>
         public override string Issue { get; } = "The algorithm ran below 40k data points per second.";
 
+        /// <summary>
+        /// Gets the severity weight for the execution speed analysis.
+        /// </summary>
         public override int Weight { get; } = 77;
+
+        /// <summary>
+        /// Runs the execution speed analysis against the provided backtest parameters.
+        /// </summary>
         public override IReadOnlyList<AnalysisResult> Run(ResultsAnalysisRunParameters parameters) => Run(parameters.Logs);
 
         private static readonly Regex DataPointsPerSecondRegex = new(
@@ -73,6 +83,9 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
             return false;
         }
 
+        /// <summary>
+        /// Returns suggested solutions for improving execution speed.
+        /// </summary>
         private static List<string> Solutions() =>
         [
             "Review the algorithm code for inefficiencies.",

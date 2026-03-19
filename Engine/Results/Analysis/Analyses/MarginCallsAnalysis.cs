@@ -24,15 +24,27 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
     /// </summary>
     public class MarginCallsAnalysis : MessageAnalysis
     {
+        /// <summary>
+        /// Description of the margin-call issue detected by this analysis.
+        /// </summary>
         public override string Issue { get; } = "The algorithm encountered a margin call.";
 
+        /// <summary>
+        /// Relative weight indicating the severity of margin-call events.
+        /// </summary>
         public override int Weight { get; } = 78;
 
+        /// <summary>
+        /// Log messages indicating that a margin-call order was executed.
+        /// </summary>
         protected override string[] ExpectedMessageText { get; } =
         [
             "Executed MarginCallOrder",
         ];
 
+        /// <summary>
+        /// Returns suggested solutions for preventing or handling margin calls.
+        /// </summary>
         protected override List<string> Solutions(Language language) =>
         [
             "Adjust the ordering and rebalancing logic to reduce margin usage.",

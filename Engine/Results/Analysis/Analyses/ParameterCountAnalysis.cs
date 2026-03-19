@@ -23,9 +23,19 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
     /// </summary>
     public class ParameterCountAnalysis : BaseResultsAnalysis
     {
+        /// <summary>
+        /// Gets the description of the excessive parameter count issue.
+        /// </summary>
         public override string Issue { get; } = "The algorithm has so many numeric parameters it's at risk of overfitting.";
 
+        /// <summary>
+        /// Gets the severity weight for the parameter count analysis.
+        /// </summary>
         public override int Weight { get; } = 73;
+
+        /// <summary>
+        /// Runs the parameter count analysis against the provided backtest parameters.
+        /// </summary>
         public override IReadOnlyList<AnalysisResult> Run(ResultsAnalysisRunParameters parameters) => Run(parameters.Algorithm, parameters.Language);
 
         private const string DetectedParametersTable = """
@@ -54,6 +64,9 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
             return SingleResponse(new ResultsAnalysisContext(result), potentialSolutions);
         }
 
+        /// <summary>
+        /// Returns suggested solutions for reducing the number of parameters.
+        /// </summary>
         private static List<string> Solutions(Language language) =>
         [
             "Try to remove some parameters to make the strategy more robust. " +

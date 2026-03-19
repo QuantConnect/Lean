@@ -23,10 +23,19 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
     /// </summary>
     public class ForexConversionRateZeroOrderResponseErrorAnalysis : MessageAnalysis
     {
+        /// <summary>
+        /// Gets a description of the zero Forex conversion rate issue.
+        /// </summary>
         public override string Issue { get; } = "The algorithm tried to place an order for a Forex or Crypto pair but LEAN could't convert the value of the base currency to your account currency.";
 
+        /// <summary>
+        /// Gets the priority weight for this analysis.
+        /// </summary>
         public override int Weight { get; } = 88;
 
+        /// <summary>
+        /// Gets the message fragments that identify a zero conversion rate error.
+        /// </summary>
         protected override string[] ExpectedMessageText { get; } =
         [
             ": requires ",
@@ -34,6 +43,9 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
             " to have non-zero conversion rates. This can be caused by lack of data.",
         ];
 
+        /// <summary>
+        /// Gets solutions suggesting investigation of missing data.
+        /// </summary>
         protected override List<string> Solutions(Language language) =>
         [
             "This error usually indicates a lack of data. Check if there is some data missing.",

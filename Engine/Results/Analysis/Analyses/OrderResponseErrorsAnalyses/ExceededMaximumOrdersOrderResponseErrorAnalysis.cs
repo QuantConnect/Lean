@@ -23,16 +23,28 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
     /// </summary>
     public class ExceededMaximumOrdersOrderResponseErrorAnalysis : MessageAnalysis
     {
+        /// <summary>
+        /// Gets a description of the exceeded maximum orders issue.
+        /// </summary>
         public override string Issue { get; } = "The algorithm hit the organization's quota for the number of orders allowed in a backtest.";
 
+        /// <summary>
+        /// Gets the priority weight for this analysis.
+        /// </summary>
         public override int Weight { get; } = 87;
 
+        /// <summary>
+        /// Gets the message fragments that identify the exceeded-maximum-orders error.
+        /// </summary>
         protected override string[] ExpectedMessageText { get; } =
         [
             "You have exceeded maximum number of orders (",
             "), for unlimited orders upgrade your account.",
         ];
 
+        /// <summary>
+        /// Gets solutions for upgrading the account tier or reducing order count.
+        /// </summary>
         protected override List<string> Solutions(Language language) =>
         [
             "Switch to an organization on the Team tier or higher.",

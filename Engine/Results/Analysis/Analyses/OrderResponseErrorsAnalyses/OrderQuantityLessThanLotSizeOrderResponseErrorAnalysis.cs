@@ -23,10 +23,19 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
     /// </summary>
     public class OrderQuantityLessThanLotSizeOrderResponseErrorAnalysis : MessageAnalysis
     {
+        /// <summary>
+        /// Gets a description of the order quantity below lot size issue.
+        /// </summary>
         public override string Issue { get; } = "The algorithm tried to place an order with a quantity that's less than the lot size of the security.";
 
+        /// <summary>
+        /// Gets the priority weight for this analysis.
+        /// </summary>
         public override int Weight { get; } = 85;
 
+        /// <summary>
+        /// Gets the message fragments that identify a quantity-less-than-lot-size error.
+        /// </summary>
         protected override string[] ExpectedMessageText { get; } =
         [
             "Unable to ",
@@ -35,6 +44,9 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
             ") is less than lot size (",
         ];
 
+        /// <summary>
+        /// Gets solutions for validating order quantity against the lot size.
+        /// </summary>
         protected override List<string> Solutions(Language language) =>
         [
             "Check if the order quantity is greater than or equal to the security lot size before you place an order.\n" +

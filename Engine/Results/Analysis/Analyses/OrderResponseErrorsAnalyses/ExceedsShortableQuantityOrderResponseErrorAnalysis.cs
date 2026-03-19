@@ -25,9 +25,19 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
     /// </summary>
     public class ExceedsShortableQuantityOrderResponseErrorAnalysis : BaseResultsAnalysis
     {
+        /// <summary>
+        /// Gets a description of the exceeded shortable quantity issue.
+        /// </summary>
         public override string Issue { get; } = "The algorithm tried to short a security but the shortable provider of the brokerage model stated there wasn't enough shares to borrow.";
 
+        /// <summary>
+        /// Gets the priority weight for this analysis.
+        /// </summary>
         public override int Weight { get; } = 94;
+
+        /// <summary>
+        /// Runs the exceeds shortable quantity analysis against the provided backtest parameters.
+        /// </summary>
         public override IReadOnlyList<AnalysisResult> Run(ResultsAnalysisRunParameters parameters) => Run(parameters.Result.OrderEvents, parameters.Language);
 
         private static readonly string[] MessageText =
@@ -54,6 +64,9 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
             return SingleResponse(new ResultsAnalysisRepeatedContext(result), potentialSolutions);
         }
 
+        /// <summary>
+        /// Gets solutions for checking shortable quantity before placing short orders.
+        /// </summary>
         private static List<string> Solutions(Language language) =>
         [
             "Check if there are enough shares available before you place an order to short a security.\n" +

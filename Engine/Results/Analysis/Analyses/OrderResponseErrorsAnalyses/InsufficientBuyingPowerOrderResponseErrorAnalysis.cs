@@ -23,17 +23,29 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
     /// </summary>
     public class InsufficientBuyingPowerOrderResponseErrorAnalysis : OrderResponseErrorAnalysis
     {
+        /// <summary>
+        /// Gets a description of the insufficient buying power issue.
+        /// </summary>
         public override string Issue { get; } = "One of the following cases occurred:\n" +
             " - The algorithm tried to place an order but the buying power model determined you couldn't afford it\n" +
             " - The algorithm tried to place a market on open order with daily data";
 
+        /// <summary>
+        /// Gets the priority weight for this analysis.
+        /// </summary>
         public override int Weight { get; } = 97;
 
+        /// <summary>
+        /// Gets the message fragment that identifies an insufficient buying power error.
+        /// </summary>
         protected override string[] ExpectedMessageText { get; } =
         [
             "Insufficient buying power to complete order",
         ];
 
+        /// <summary>
+        /// Gets solutions for ensuring sufficient margin or adjusting the buying power buffer.
+        /// </summary>
         protected override List<string> Solutions(Language language) =>
         [
             "This error occurs when you place an order but the buying power model determines you can't afford it.\n" +

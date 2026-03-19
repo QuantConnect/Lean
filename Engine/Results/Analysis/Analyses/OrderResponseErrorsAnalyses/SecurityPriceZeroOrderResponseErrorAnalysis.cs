@@ -23,15 +23,27 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
     /// </summary>
     public class SecurityPriceZeroOrderResponseErrorAnalysis : MessageAnalysis
     {
+        /// <summary>
+        /// Gets a description of the zero security price ordering issue.
+        /// </summary>
         public override string Issue { get; } = "The algorithm tried to place an order or exercise an Option contract while the security price was $0.";
 
+        /// <summary>
+        /// Gets the priority weight for this analysis.
+        /// </summary>
         public override int Weight { get; } = 91;
 
+        /// <summary>
+        /// Gets the message fragment that identifies a zero security price error.
+        /// </summary>
         protected override string[] ExpectedMessageText { get; } =
         [
             "The security does not have an accurate price as it has not yet received a bar of data.",
         ];
 
+        /// <summary>
+        /// Gets solutions for seeding initial prices or investigating missing data.
+        /// </summary>
         protected override List<string> Solutions(Language language) =>
         [
             "The security price can be $0 if the algorithm hasn't received data for the security yet. " +

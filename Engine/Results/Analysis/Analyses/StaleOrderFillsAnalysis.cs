@@ -25,9 +25,19 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
     /// </summary>
     public class StaleOrderFillsAnalysis : BaseResultsAnalysis
     {
+        /// <summary>
+        /// Gets the description of the stale order fill issue.
+        /// </summary>
         public override string Issue { get; } = "Some orders filled at stale prices.";
 
+        /// <summary>
+        /// Gets the severity weight for this stale fills analysis.
+        /// </summary>
         public override int Weight { get; } = 76;
+
+        /// <summary>
+        /// Runs the stale order fills analysis against the provided backtest parameters.
+        /// </summary>
         public override IReadOnlyList<AnalysisResult> Run(ResultsAnalysisRunParameters parameters) => Run(parameters.Result.OrderEvents, parameters.Language);
 
         /// <summary>
@@ -47,6 +57,9 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
             return SingleResponse(new ResultsAnalysisRepeatedContext(result), potentialSolutions);
         }
 
+        /// <summary>
+        /// Returns suggested solutions for resolving stale order fills.
+        /// </summary>
         private static List<string> Solutions(Language language) =>
         [
             "Stale fills occur when you fill an order with price data that is timestamped an hour or more into the past. " +

@@ -23,16 +23,28 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
     /// </summary>
     public class MarketOnCloseOrderTooLateOrderResponseErrorAnalysis : MessageAnalysis
     {
+        /// <summary>
+        /// Gets a description of the MOC order submitted too late issue.
+        /// </summary>
         public override string Issue { get; } = "The algorithm tried to place a market on close (MOC) order too early in the trading day.";
 
+        /// <summary>
+        /// Gets the priority weight for this analysis.
+        /// </summary>
         public override int Weight { get; } = 81;
 
+        /// <summary>
+        /// Gets the message fragments that identify a MOC order timing error.
+        /// </summary>
         protected override string[] ExpectedMessageText { get; } =
         [
             "MarketOnClose orders must be placed within ",
             " before market close. Override this TimeSpan buffer by setting Orders.MarketOnCloseOrder.SubmissionTimeBuffer in QCAlgorithm.Initialize().",
         ];
 
+        /// <summary>
+        /// Gets solutions for adjusting MOC order timing or the submission time buffer.
+        /// </summary>
         protected override List<string> Solutions(Language language)
         {
             var bufferProp = language == Language.Python ? "submission_time_buffer" : "SubmissionTimeBuffer";

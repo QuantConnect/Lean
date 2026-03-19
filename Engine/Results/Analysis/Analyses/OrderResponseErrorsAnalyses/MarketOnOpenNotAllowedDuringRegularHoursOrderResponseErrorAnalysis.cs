@@ -23,15 +23,27 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
     /// </summary>
     public class MarketOnOpenNotAllowedDuringRegularHoursOrderResponseErrorAnalysis : MessageAnalysis
     {
+        /// <summary>
+        /// Gets a description of the market-on-open during regular hours issue.
+        /// </summary>
         public override string Issue { get; } = "The algorithm tried to place a market on open order for an asset when it's during regular trading hours.";
 
+        /// <summary>
+        /// Gets the priority weight for this analysis.
+        /// </summary>
         public override int Weight { get; } = 82;
 
+        /// <summary>
+        /// Gets the message fragment that identifies a market-on-open during regular hours error.
+        /// </summary>
         protected override string[] ExpectedMessageText { get; } =
         [
             "Cannot submit a MarketOnOpen order while the market is open.",
         ];
 
+        /// <summary>
+        /// Gets solutions for placing market-on-open orders outside regular hours.
+        /// </summary>
         protected override List<string> Solutions(Language language) =>
         [
             "Place the order when the market is closed.\n" +

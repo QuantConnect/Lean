@@ -24,9 +24,19 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
     /// </summary>
     public class PerformanceRelativeToBenchmark : BaseResultsAnalysis
     {
+        /// <summary>
+        /// Gets the description of the underperformance relative to benchmark issue.
+        /// </summary>
         public override string Issue { get; } = "The strategy has a lower Sharpe ratio than the benchmark.";
 
+        /// <summary>
+        /// Gets the severity weight for the benchmark comparison analysis.
+        /// </summary>
         public override int Weight { get; } = 72;
+
+        /// <summary>
+        /// Runs the performance relative to benchmark analysis against the provided backtest parameters.
+        /// </summary>
         public override IReadOnlyList<AnalysisResult> Run(ResultsAnalysisRunParameters parameters) => Run(parameters.Algorithm, parameters.EquityCurve, parameters.BenchmarkEquityCurve);
 
         /// <summary>
@@ -50,6 +60,9 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
             return SingleResponse(new ResultsAnalysisContext(result), potentialSolutions);
         }
 
+        /// <summary>
+        /// Returns suggested solutions for improving performance relative to the benchmark.
+        /// </summary>
         private static List<string> Solutions() =>
         [
             "Try adjusting the trading rules and/or the universe to get a strategy that outperforms the benchmark.",

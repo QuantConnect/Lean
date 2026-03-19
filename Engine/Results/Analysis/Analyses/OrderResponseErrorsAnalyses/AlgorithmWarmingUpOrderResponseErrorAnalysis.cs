@@ -25,18 +25,30 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
     /// </summary>
     public class AlgorithmWarmingUpOrderResponseErrorAnalysis : MessageAnalysis
     {
+        /// <summary>
+        /// Gets a description of the warm-up period ordering violation.
+        /// </summary>
         public override string Issue { get; } = "One of the following cases occurred:\n" +
             " - The algorithm tried to place, update, or cancel an order during the warm-up period\n" +
             " - The Option assignment simulator assigned you to an Option during the warm-up period";
 
+        /// <summary>
+        /// Gets the priority weight for this analysis.
+        /// </summary>
         public override int Weight { get; } = 96;
 
+        /// <summary>
+        /// Gets the message fragments that identify a warm-up period order error.
+        /// </summary>
         protected override string[] ExpectedMessageText { get; } =
         [
             "This operation is not allowed in Initialize or during warm up: OrderRequest.",
             ". Please move this code to the OnWarmupFinished() method.",
         ];
 
+        /// <summary>
+        /// Gets solutions suggesting moving orders out of the warm-up period.
+        /// </summary>
         protected override List<string> Solutions(Language language) =>
         [
             $"Move the invalid operation to `{FormatCode(nameof(IAlgorithm.OnWarmupFinished), language)}` " +

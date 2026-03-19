@@ -36,8 +36,14 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
     /// </summary>
     public class BrokerageModelRefusedToSubmitOrderOrderResponseErrorAnalysis : OrderResponseErrorAnalysis
     {
+        /// <summary>
+        /// Gets a description of the brokerage-refused-to-submit-order issue.
+        /// </summary>
         public override string Issue { get; } = "Brokerage model refused to submit orders";
 
+        /// <summary>
+        /// Gets the priority weight for this analysis.
+        /// </summary>
         public override int Weight { get; } = 95;
 
         private static readonly MessageAnalysis[] Analyses =
@@ -79,6 +85,9 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
             new Wolverine.WolverineUnsupportedOrderTypeAnalysis(),
         ];
 
+        /// <summary>
+        /// Gets the message fragment that identifies a brokerage submit-order refusal.
+        /// </summary>
         protected override string[] ExpectedMessageText { get; } =
         [
             "BrokerageModel declared unable to submit order: ",
@@ -102,6 +111,9 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
             return CreateAggregatedResponse(Analyses.SelectMany(analysis => analysis.Run(matchedMessages, language)));
         }
 
+        /// <summary>
+        /// Returns an empty list because solutions are provided by the per-brokerage sub-analyses.
+        /// </summary>
         protected override List<string> Solutions(Language language) => [];
     }
 }

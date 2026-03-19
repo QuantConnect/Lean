@@ -25,11 +25,21 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
     /// </summary>
     public class ExchangeNotOpenOrderResponseErrorAnalysis : BaseResultsAnalysis
     {
+        /// <summary>
+        /// Gets a description of the exchange-not-open ordering issue.
+        /// </summary>
         public override string Issue { get; } = "One of the following cases occurred:\n" +
             " - The algorithm tried to exercise an Option while the exchange was closed.\n" +
             " - The algorithm tried to place a market on open order for a Futures contract or a Future Option contract";
 
+        /// <summary>
+        /// Gets the priority weight for this analysis.
+        /// </summary>
         public override int Weight { get; } = 89;
+
+        /// <summary>
+        /// Runs the exchange not open analysis against the provided backtest parameters.
+        /// </summary>
         public override IReadOnlyList<AnalysisResult> Run(ResultsAnalysisRunParameters parameters) => Run(parameters.Logs, parameters.Language);
 
         private static readonly MessageAnalysis[] SubAnalyses =

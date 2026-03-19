@@ -28,8 +28,14 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
     /// </summary>
     public class BrokerageModelRefusedToUpdateOrderOrderResponseErrorAnalysis : OrderResponseErrorAnalysis
     {
+        /// <summary>
+        /// Gets a description of the brokerage-refused-to-update-order issue.
+        /// </summary>
         public override string Issue { get; } = "Brokerage model refused to update orders";
 
+        /// <summary>
+        /// Gets the priority weight for this analysis.
+        /// </summary>
         public override int Weight { get; } = 86;
 
         private static readonly MessageAnalysis[] Analyses =
@@ -45,6 +51,9 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
             new IB.InvalidForexOrderSizeAnalysis(),
         ];
 
+        /// <summary>
+        /// Gets the message fragment that identifies a brokerage update-order refusal.
+        /// </summary>
         protected override string[] ExpectedMessageText { get; } =
         [
             "BrokerageModel declared unable to update order: ",
@@ -68,6 +77,9 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
             return CreateAggregatedResponse(Analyses.SelectMany(analysis => analysis.Run(matchedMessages, language)));
         }
 
+        /// <summary>
+        /// Returns an empty list because solutions are provided by the per-brokerage sub-analyses.
+        /// </summary>
         protected override List<string> Solutions(Language language) => [];
     }
 }

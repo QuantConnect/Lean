@@ -22,9 +22,19 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
     /// </summary>
     public class PortfolioValueIsNotPositiveAnalysis : BaseResultsAnalysis
     {
+        /// <summary>
+        /// Gets the description of the non-positive portfolio equity issue.
+        /// </summary>
         public override string Issue { get; } = "The portfolio equity dropped to zero or below.";
 
+        /// <summary>
+        /// Gets the severity weight for this portfolio value analysis.
+        /// </summary>
         public override int Weight { get; } = 98;
+
+        /// <summary>
+        /// Runs the portfolio value positivity analysis against the provided backtest parameters.
+        /// </summary>
         public override IReadOnlyList<AnalysisResult> Run(ResultsAnalysisRunParameters parameters) => Run(parameters.Result);
 
         /// <summary>
@@ -39,6 +49,9 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
             return SingleResponse(new ResultsAnalysisContext(!hasEquity), potentialSolutions);
         }
 
+        /// <summary>
+        /// Returns suggested solutions for recovering from non-positive equity.
+        /// </summary>
         private static List<string> Solutions() =>
         [
             "Add extended market hours or reduce the data resolution to potentially reduce the impact of gaps between bars.",

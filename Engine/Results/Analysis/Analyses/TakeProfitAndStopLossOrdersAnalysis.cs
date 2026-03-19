@@ -26,9 +26,19 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
     /// </summary>
     public class TakeProfitAndStopLossOrdersAnalysis : BaseResultsAnalysis
     {
+        /// <summary>
+        /// Gets the description of the TP/SL order handling issue.
+        /// </summary>
         public override string Issue { get; } = "The algorithm isn't correctly handling take-profit and stop-loss order pairs.";
 
+        /// <summary>
+        /// Gets the severity weight for this TP/SL orders analysis.
+        /// </summary>
         public override int Weight { get; } = 79;
+
+        /// <summary>
+        /// Runs the take-profit and stop-loss orders analysis against the provided backtest parameters.
+        /// </summary>
         public override IReadOnlyList<AnalysisResult> Run(ResultsAnalysisRunParameters parameters) => Run(parameters.Result.Orders.Values, parameters.Language);
 
         private static readonly OrderType[] TpTypes = [OrderType.Limit, OrderType.LimitIfTouched];
@@ -72,9 +82,19 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
 
         private class TakeProfitAndStopLossBothFilledAnalysis : BaseResultsAnalysis, ISubAnalysis
         {
+            /// <summary>
+            /// Gets the description of the both-filled TP/SL issue.
+            /// </summary>
             public override string Issue { get; } = "There are some cases where both of the TP and SL orders filled, which can lead to an unintended position.";
 
+            /// <summary>
+            /// Gets the severity weight for this sub-analysis (zero; parent carries the weight).
+            /// </summary>
             public override int Weight { get; } = 0;
+
+            /// <summary>
+            /// Runs the both-filled TP/SL analysis against the provided backtest parameters.
+            /// </summary>
             public override IReadOnlyList<AnalysisResult> Run(ResultsAnalysisRunParameters parameters) => throw new NotSupportedException("Use TakeProfitAndStopLossOrdersAnalysis.");
 
             public IReadOnlyList<AnalysisResult> Run(List<List<Order>> combos, Language language)
@@ -87,6 +107,9 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
                 return SingleResponse(new ResultsAnalysisRepeatedContext(result), potentialSolutions);
             }
 
+            /// <summary>
+            /// Returns suggested solutions for preventing both TP and SL orders from filling.
+            /// </summary>
             private static List<string> Solutions(Language language) =>
             [
                 "To avoid this issue, try increasing the data resolution.",
@@ -143,9 +166,19 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
 
         private class TakeProfitOrStopLossNotCanceledAnalysis : BaseResultsAnalysis, ISubAnalysis
         {
+            /// <summary>
+            /// Gets the description of the dangling TP/SL order issue.
+            /// </summary>
             public override string Issue { get; } = "There are some cases where one of the TP/SL orders filled and the other one was left idle in the market.";
 
+            /// <summary>
+            /// Gets the severity weight for this sub-analysis (zero; parent carries the weight).
+            /// </summary>
             public override int Weight { get; } = 0;
+
+            /// <summary>
+            /// Runs the dangling TP/SL order analysis against the provided backtest parameters.
+            /// </summary>
             public override IReadOnlyList<AnalysisResult> Run(ResultsAnalysisRunParameters parameters) => throw new NotSupportedException("Use TakeProfitAndStopLossOrdersAnalysis.");
 
             public IReadOnlyList<AnalysisResult> Run(List<List<Order>> combos, Language language)
@@ -174,6 +207,9 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
                 return SingleResponse(new ResultsAnalysisRepeatedContext(result), potentialSolutions);
             }
 
+            /// <summary>
+            /// Returns suggested solutions for cancelling dangling TP/SL orders.
+            /// </summary>
             private static List<string> Solutions(Language language) =>
             [
                 "To avoid dangling orders that can lead to unintended positions, immediately cancel one of the orders when the other one fills.\n" +

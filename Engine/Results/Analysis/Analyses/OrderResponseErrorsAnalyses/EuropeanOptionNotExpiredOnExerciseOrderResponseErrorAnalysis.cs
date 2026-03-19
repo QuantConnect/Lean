@@ -24,16 +24,28 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
     /// </summary>
     public class EuropeanOptionNotExpiredOnExerciseOrderResponseErrorAnalysis : MessageAnalysis
     {
+        /// <summary>
+        /// Gets a description of the premature European option exercise issue.
+        /// </summary>
         public override string Issue { get; } = "The algorithm tried to exercise a European Option before its expiration date.";
 
+        /// <summary>
+        /// Gets the priority weight for this analysis.
+        /// </summary>
         public override int Weight { get; } = 84;
 
+        /// <summary>
+        /// Gets the message fragments that identify a European option early exercise error.
+        /// </summary>
         protected override string[] ExpectedMessageText { get; } =
         [
             "Cannot exercise European style option with symbol ",
             " before its expiration date.",
         ];
 
+        /// <summary>
+        /// Gets solutions for verifying option style and expiry before exercising.
+        /// </summary>
         protected override List<string> Solutions(Language language) =>
         [
             "Check the type and expiry date of the contract before you exercise it.\n" +

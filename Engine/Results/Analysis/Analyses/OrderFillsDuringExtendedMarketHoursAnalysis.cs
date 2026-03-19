@@ -24,10 +24,20 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
     /// </summary>
     public class OrderFillsDuringExtendedMarketHoursAnalysis : BaseResultsAnalysis
     {
-        public override string Issue { get; } = "The algorithm filled orders during extended market hours." + 
+        /// <summary>
+        /// Gets the description of the extended market hours fill issue.
+        /// </summary>
+        public override string Issue { get; } = "The algorithm filled orders during extended market hours." +
             "Filling orders during extended market hours can cause a lot of slippage since there is less liquidity than during regular trading hours.";
 
+        /// <summary>
+        /// Gets the severity weight for the extended market hours analysis.
+        /// </summary>
         public override int Weight { get; } = 75;
+
+        /// <summary>
+        /// Runs the extended market hours order fill analysis against the provided backtest parameters.
+        /// </summary>
         public override IReadOnlyList<AnalysisResult> Run(ResultsAnalysisRunParameters parameters) => Run(parameters.Algorithm, parameters.Result.OrderEvents, parameters.Language);
 
         /// <summary>
@@ -55,6 +65,9 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
             return SingleResponse(new ResultsAnalysisRepeatedContext(orderEvents), potentialSolutions);
         }
 
+        /// <summary>
+        /// Returns suggested solutions for avoiding fills during extended market hours.
+        /// </summary>
         private static List<string> Solutions(Language language) =>
         [
             "If you don't intend to trading during extended market hours, add a guard before you place orders.\n" +

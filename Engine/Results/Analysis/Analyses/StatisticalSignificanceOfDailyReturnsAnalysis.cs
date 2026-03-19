@@ -28,10 +28,20 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
     /// </summary>
     public class StatisticalSignificanceOfDailyReturnsAnalysis : BaseResultsAnalysis
     {
+        /// <summary>
+        /// Gets the description of the statistical insignificance issue.
+        /// </summary>
         public override string Issue { get; } = "The distribution of the strategy's daily returns in excess of the benchmark's daily returns has a p-value above 0.05. " +
             "Therefore, we fail to reject the null hypothesis that the mean of this distribution is above zero.";
 
+        /// <summary>
+        /// Gets the severity weight for this statistical significance analysis.
+        /// </summary>
         public override int Weight { get; } = 70;
+
+        /// <summary>
+        /// Runs the statistical significance of daily returns analysis against the provided backtest parameters.
+        /// </summary>
         public override IReadOnlyList<AnalysisResult> Run(ResultsAnalysisRunParameters parameters) => Run(parameters.EquityCurve, parameters.BenchmarkEquityCurve);
 
         /// <summary>
@@ -89,6 +99,9 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
             return 2.0 * dist.CumulativeDistribution(-Math.Abs(t));
         }
 
+        /// <summary>
+        /// Returns suggested solutions for achieving statistically significant returns.
+        /// </summary>
         private static List<string> Solutions() =>
         [
             "Try adjusting the trading rules and/or the universe to get a strategy that outperforms the benchmark.",

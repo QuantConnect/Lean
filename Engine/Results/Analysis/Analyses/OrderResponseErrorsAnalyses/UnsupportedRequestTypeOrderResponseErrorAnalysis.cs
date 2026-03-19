@@ -24,10 +24,16 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
     /// </summary>
     public class UnsupportedRequestTypeOrderResponseErrorAnalysis : MessageAnalysis
     {
+        /// <summary>
+        /// Gets a description of the unsupported option exercise request issue.
+        /// </summary>
         public override string Issue { get; } = "One of the following cases occurred:\n" +
             " - The algorithm tried to exercise an Option contract for which it holds a short position\n" +
             " - The algorithm tried to exercise more Option contracts than it holds\n\n";
 
+        /// <summary>
+        /// Gets the priority weight for this analysis.
+        /// </summary>
         public override int Weight { get; } = 90;
 
         private static readonly string[] ShortMessageText =
@@ -42,6 +48,9 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
             " than is currently available in the portfolio.",
         ];
 
+        /// <summary>
+        /// Returns an empty array because this analysis uses custom message matching logic.
+        /// </summary>
         protected override string[] ExpectedMessageText => [];
 
         /// <summary>
@@ -70,6 +79,9 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
             return SingleResponse(new ResultsAnalysisAggregateContext(contexts), potentialSolutions);
         }
 
+        /// <summary>
+        /// Gets solutions for validating option holdings before exercising.
+        /// </summary>
         protected override List<string> Solutions(Language language) =>
         [
             "Check the quantity of your holdings before you try to exercise an Option contract.\n" +

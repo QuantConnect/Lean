@@ -25,9 +25,19 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
     /// </summary>
     public class PortfolioMarginUsageAnalysis : BaseResultsAnalysis
     {
+        /// <summary>
+        /// Gets the description of the detected margin under-utilisation issue.
+        /// </summary>
         public override string Issue { get; } = "The algorithm sometimes only utilizes a small proportion of the margin available.";
 
+        /// <summary>
+        /// Gets the severity weight for this margin usage analysis.
+        /// </summary>
         public override int Weight { get; } = 74;
+
+        /// <summary>
+        /// Runs the portfolio margin usage analysis against the provided backtest parameters.
+        /// </summary>
         public override IReadOnlyList<AnalysisResult> Run(ResultsAnalysisRunParameters parameters) => Run(parameters.Result);
 
         /// <summary>
@@ -73,6 +83,9 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
             return SingleResponse(new ResultsAnalysisContext(result), potentialSolutions);
         }
 
+        /// <summary>
+        /// Returns suggested solutions for improving margin utilisation.
+        /// </summary>
         private static List<string> Solutions() =>
         [
             "Adjust the strategy logic or position sizing to utilize more margin.",

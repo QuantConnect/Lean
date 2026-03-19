@@ -25,10 +25,20 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
     /// </summary>
     public class MonteCarloPercentile : BaseResultsAnalysis
     {
+        /// <summary>
+        /// Gets the description of the overly optimistic equity curve issue.
+        /// </summary>
         public override string Issue { get; } =  "The equity curve is very optimistic. " +
             "It has a greater ending equity than more than 90% of the simulated equity curves, indicating the performance was unusually lucky due to a sequence of favorable days.";
 
+        /// <summary>
+        /// Gets the severity weight for the Monte Carlo percentile analysis.
+        /// </summary>
         public override int Weight { get; } = 69;
+
+        /// <summary>
+        /// Runs the Monte Carlo percentile analysis against the provided backtest parameters.
+        /// </summary>
         public override IReadOnlyList<AnalysisResult> Run(ResultsAnalysisRunParameters parameters) => Run(parameters.EquityCurve);
 
         /// <summary>
@@ -94,6 +104,9 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
             return simulatedTotalReturns;
         }
 
+        /// <summary>
+        /// Returns suggested solutions for reducing luck-driven performance.
+        /// </summary>
         private static List<string> Solutions() =>
         [
             "Try to scale position sizes based on recent volatility, so the algorithm has smaller position sizes during volatile periods.",

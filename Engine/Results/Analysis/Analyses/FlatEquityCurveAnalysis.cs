@@ -24,9 +24,19 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
     /// </summary>
     public class FlatEquityCurveAnalysis : BaseResultsAnalysis
     {
+        /// <summary>
+        /// Gets the description of the flat equity curve issue.
+        /// </summary>
         public override string Issue { get; } = "The equity curve is flat for several days in a row.";
 
+        /// <summary>
+        /// Gets the severity weight for the flat equity curve analysis.
+        /// </summary>
         public override int Weight { get; } = 99;
+
+        /// <summary>
+        /// Runs the flat equity curve analysis against the provided backtest parameters.
+        /// </summary>
         public override IReadOnlyList<AnalysisResult> Run(ResultsAnalysisRunParameters parameters) => Run(parameters.EquityCurve);
 
         /// <summary>
@@ -65,6 +75,9 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
             return SingleResponse(new ResultsAnalysisContext(segments.Count > 0 ? segments : null), potentialSolutions);
         }
 
+        /// <summary>
+        /// Returns suggested solutions for resolving flat equity curve segments.
+        /// </summary>
         private static List<string> Solutions() =>
         [
             "Check if you need to warm-up some data structures, including indicators, RollingWindow objects, and training data.",

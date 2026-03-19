@@ -30,9 +30,19 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
     /// </summary>
     public class CrisisEventsAnalysis : BaseResultsAnalysis
     {
+        /// <summary>
+        /// Gets the description indicating that the strategy underperformed the benchmark during crisis events.
+        /// </summary>
         public override string Issue { get; } = "The strategy underperformed the benchmark during some crisis events in terms of risk-adjusted returns.";
 
+        /// <summary>
+        /// Gets the severity weight for crisis event underperformance analysis.
+        /// </summary>
         public override int Weight { get; } = 71;
+
+        /// <summary>
+        /// Runs the crisis events analysis against the provided backtest parameters.
+        /// </summary>
         public override IReadOnlyList<AnalysisResult> Run(ResultsAnalysisRunParameters parameters) => Run(parameters.Algorithm, parameters.EquityCurve, parameters.BenchmarkEquityCurve);
 
         private static readonly (string Name, DateTime Start, DateTime End)[] CrisisEvents =
@@ -155,6 +165,9 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
             return (backtestSharpe, benchmarkSharpe);
         }
 
+        /// <summary>
+        /// Returns suggested solutions for mitigating underperformance during crisis events.
+        /// </summary>
         private static List<string> Solutions() =>
         [
             "Consider adding risk management techniques such as stop-loss orders, position sizing, " +

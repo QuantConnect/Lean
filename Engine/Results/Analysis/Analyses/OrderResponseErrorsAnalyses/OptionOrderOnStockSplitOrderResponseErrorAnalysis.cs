@@ -23,15 +23,27 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
     /// </summary>
     public class OptionOrderOnStockSplitOrderResponseErrorAnalysis : MessageAnalysis
     {
+        /// <summary>
+        /// Gets a description of the option order during stock split issue.
+        /// </summary>
         public override string Issue { get; } = "The algorithm tried to submit an order for an Equity Option contract when the current time slice contained a split for the underlying Equity.";
 
+        /// <summary>
+        /// Gets the priority weight for this analysis.
+        /// </summary>
         public override int Weight { get; } = 83;
 
+        /// <summary>
+        /// Gets the message fragment that identifies an option-order-on-stock-split error.
+        /// </summary>
         protected override string[] ExpectedMessageText { get; } =
         [
             "Options orders are not allowed when a split occurred for its underlying stock",
         ];
 
+        /// <summary>
+        /// Gets solutions for checking underlying split events before placing option orders.
+        /// </summary>
         protected override List<string> Solutions(Language language) =>
         [
             "Check if the time slice has a split event for the underlying Equity of the contract before you place an order for the contract.\n" +
