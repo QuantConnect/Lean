@@ -24,7 +24,7 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses.Messages.TradierBro
     {
         public override string Issue { get; } = "The algorithm tried to place an order with a non-integer quantity, which is not supported by Tradier.";
 
-        public override int Weight { get; } = 68;
+        public override int Weight { get; } = 0;
 
         protected override string[] ExpectedMessageText { get; } =
         [

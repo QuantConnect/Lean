@@ -24,7 +24,7 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses.Messages.BinanceBro
     {
         public override string Issue { get; } = "The algorithm tried to place an order type that is not supported by the Binance brokerage model.";
 
-        public override int Weight { get; } = 60;
+        public override int Weight { get; } = 0;
 
         protected override string[] ExpectedMessageText { get; } =
         [

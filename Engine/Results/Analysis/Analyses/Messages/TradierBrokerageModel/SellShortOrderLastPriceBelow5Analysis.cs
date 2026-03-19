@@ -24,7 +24,7 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses.Messages.TradierBro
     {
         public override string Issue { get; } = "The algorithm tried to short a security that's trading below $5, which is not supported by Tradier.";
 
-        public override int Weight { get; } = 60;
+        public override int Weight { get; } = 0;
 
         protected override string[] ExpectedMessageText { get; } =
         [

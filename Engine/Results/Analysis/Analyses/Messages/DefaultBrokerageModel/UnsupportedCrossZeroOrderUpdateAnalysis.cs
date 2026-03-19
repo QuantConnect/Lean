@@ -24,7 +24,7 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses.Messages.DefaultBro
     {
         public override string Issue { get; } = "The algorithm tried to update an order that would cause the position to cross zero, which is not supported.";
 
-        public override int Weight { get; } = 55;
+        public override int Weight { get; } = 0;
 
         protected override string[] ExpectedMessageText { get; } =
         [

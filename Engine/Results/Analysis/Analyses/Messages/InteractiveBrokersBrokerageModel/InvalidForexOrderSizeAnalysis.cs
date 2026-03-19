@@ -24,7 +24,7 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses.Messages.Interactiv
     {
         public override string Issue { get; } = "The algorithm tried to place a Forex order with a size below the minimum required by Interactive Brokers.";
 
-        public override int Weight { get; } = 68;
+        public override int Weight { get; } = 0;
 
         protected override string[] ExpectedMessageText { get; } =
         [

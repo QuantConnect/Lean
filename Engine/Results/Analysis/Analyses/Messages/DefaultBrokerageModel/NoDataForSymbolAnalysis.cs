@@ -24,7 +24,7 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses.Messages.DefaultBro
     {
         public override string Issue { get; } = "The algorithm tried to place an order for a security but there is no data for the security.";
 
-        public override int Weight { get; } = 80;
+        public override int Weight { get; } = 0;
 
         protected override string[] ExpectedMessageText { get; } =
         [

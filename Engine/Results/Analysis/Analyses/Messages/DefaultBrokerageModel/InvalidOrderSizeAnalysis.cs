@@ -24,7 +24,7 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses.Messages.DefaultBro
     {
         public override string Issue { get; } = "The algorithm tried to place an order through one of the Binance brokerage models with a value (price * abs(quantity)) that was <= the security's minimum order size.";
 
-        public override int Weight { get; } = 70;
+        public override int Weight { get; } = 0;
 
         protected override string[] ExpectedMessageText { get; } =
         [

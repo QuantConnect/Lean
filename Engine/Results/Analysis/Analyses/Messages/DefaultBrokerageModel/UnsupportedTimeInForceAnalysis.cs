@@ -24,7 +24,7 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses.Messages.DefaultBro
     {
         public override string Issue { get; } = "The algorithm tried to use a time-in-force setting that isn't supported by the brokerage model.";
 
-        public override int Weight { get; } = 60;
+        public override int Weight { get; } = 0;
 
         protected override string[] ExpectedMessageText { get; } =
         [

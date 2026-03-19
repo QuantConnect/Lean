@@ -24,7 +24,7 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses.Messages.TradierBro
     {
         public override string Issue { get; } = "The algorithm tried to place a GTC order for a short position, which is not supported by Tradier.";
 
-        public override int Weight { get; } = 55;
+        public override int Weight { get; } = 0;
 
         protected override string[] ExpectedMessageText { get; } =
         [

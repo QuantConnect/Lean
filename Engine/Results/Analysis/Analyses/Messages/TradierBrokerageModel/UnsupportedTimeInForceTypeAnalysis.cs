@@ -24,7 +24,7 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses.Messages.TradierBro
     {
         public override string Issue { get; } = "The algorithm used a time-in-force type that is not supported by Tradier.";
 
-        public override int Weight { get; } = 58;
+        public override int Weight { get; } = 0;
 
         protected override string[] ExpectedMessageText { get; } =
         [

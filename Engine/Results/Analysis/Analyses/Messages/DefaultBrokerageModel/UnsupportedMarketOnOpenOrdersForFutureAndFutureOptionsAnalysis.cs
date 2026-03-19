@@ -24,7 +24,7 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses.Messages.DefaultBro
     {
         public override string Issue { get; } = "The algorithm tried to place a market on open order for a Future or Future Option contract, which isn't supported by the brokerage model.";
 
-        public override int Weight { get; } = 60;
+        public override int Weight { get; } = 0;
 
         protected override string[] ExpectedMessageText { get; } =
         [

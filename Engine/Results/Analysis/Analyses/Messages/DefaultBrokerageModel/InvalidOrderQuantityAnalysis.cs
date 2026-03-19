@@ -24,7 +24,7 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses.Messages.DefaultBro
     {
         public override string Issue { get; } = "The algorithm tried to place an order which had an absolute order size (in the quote currency) that was less than the security's minimum order size in the Symbol Properties Database.";
 
-        public override int Weight { get; } = 72;
+        public override int Weight { get; } = 0;
 
         protected override string[] ExpectedMessageText { get; } =
         [

@@ -25,7 +25,7 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses.Messages.Interactiv
     {
         public override string Issue { get; } = "The algorithm tried to manually exercise an Option contract that is either an Index Option or a cash-settled Option, which is not supported by Interactive Brokers.";
 
-        public override int Weight { get; } = 55;
+        public override int Weight { get; } = 0;
 
         protected override string[] ExpectedMessageText { get; } =
         [

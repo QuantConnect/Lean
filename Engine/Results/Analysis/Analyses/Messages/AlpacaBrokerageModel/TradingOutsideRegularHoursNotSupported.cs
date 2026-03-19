@@ -24,7 +24,7 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses.Messages.AlpacaBrok
     {
         public override string Issue { get; } = "The algorithm tried to place an order outside regular market hours, which is not supported by the Alpaca brokerage model.";
 
-        public override int Weight { get; } = 55;
+        public override int Weight { get; } = 0;
 
         protected override string[] ExpectedMessageText { get; } =
         [

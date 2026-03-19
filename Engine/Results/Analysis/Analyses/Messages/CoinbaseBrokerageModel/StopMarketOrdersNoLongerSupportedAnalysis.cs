@@ -24,7 +24,7 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses.Messages.CoinbaseBr
     {
         public override string Issue { get; } = "The algorithm tried to place a stop-market order, but the Coinbase brokerage model doesn't support these orders after 2019-03-23.";
 
-        public override int Weight { get; } = 62;
+        public override int Weight { get; } = 0;
 
         protected override string[] ExpectedMessageText { get; } =
         [
