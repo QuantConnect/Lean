@@ -63,6 +63,11 @@ namespace QuantConnect.Lean.Engine.Results
         private int _projectId;
 
         /// <summary>
+        /// Whether or not to run the results analysis at the end of the backtest.
+        /// </summary>
+        protected bool RunResultsAnalysis { get; set; } = true;
+
+        /// <summary>
         /// A dictionary containing summary statistics
         /// </summary>
         public Dictionary<string, string> FinalStatistics { get; private set; }
@@ -401,20 +406,23 @@ namespace QuantConnect.Lean.Engine.Results
                 SaveResults($"{AlgorithmId}-summary.json", CreateResultSummary(result));
 
                 // Run backtest analyzer
-                var algorithm = _job.Language == Language.Python ? (Algorithm as AlgorithmPythonWrapper)?.BaseAlgorithm : Algorithm as QCAlgorithm;
-                List<string> logs;
-                lock (LogStore)
+                if (RunResultsAnalysis)
                 {
-                    logs = LogStore.Select(x => x.Message).ToList();
-                }
-                var analyzer = new ResultsAnalyzer(result.Results, algorithm, _job.Language, logs);
-                try
-                {
-                    result.Results.AnalysisResult = analyzer.RunTestChain();
-                }
-                catch (Exception ex)
-                {
-                    Log.Error(ex, "Error running backtest analysis");
+                    var algorithm = _job.Language == Language.Python ? (Algorithm as AlgorithmPythonWrapper)?.BaseAlgorithm : Algorithm as QCAlgorithm;
+                    List<string> logs;
+                    lock (LogStore)
+                    {
+                        logs = LogStore.Select(x => x.Message).ToList();
+                    }
+                    var analyzer = new ResultsAnalyzer(result.Results, algorithm, _job.Language, logs);
+                    try
+                    {
+                        result.Results.AnalysisResult = analyzer.RunTestChain();
+                    }
+                    catch (Exception ex)
+                    {
+                        Log.Error(ex, "Error running backtest analysis");
+                    }
                 }
 
                 //Place result into storage.
