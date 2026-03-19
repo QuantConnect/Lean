@@ -221,7 +221,6 @@ namespace QuantConnect.Packets
         public BacktestResult(BacktestResultParameters parameters) : base(parameters)
         {
             RollingWindow = parameters.RollingWindow;
-            AnalysisResult = parameters.AnalysisResult;
         }
     }
 } // End of Namespace:

@@ -407,10 +407,17 @@ namespace QuantConnect.Lean.Engine.Results
                 {
                     logs = LogStore.Select(x => x.Message).ToList();
                 }
+
+                Log.Trace("BacktestingResultHandler.SendFinalResult(): Instantiating analysis of backtest results");
+
                 var analyzer = new ResultsAnalyzer(result.Results, algorithm, _job.Language, logs);
                 try
                 {
+                    Log.Trace("BacktestingResultHandler.SendFinalResult(): Running analysis of backtest results");
+
                     result.Results.AnalysisResult = analyzer.RunTestChain();
+
+                    Log.Trace("BacktestingResultHandler.SendFinalResult(): Finished analysis of backtest results. Result contains " + result.Results.AnalysisResult.Count + " items.");
                 }
                 catch (Exception ex)
                 {

@@ -128,7 +128,6 @@ namespace QuantConnect.Lean.Engine.Results.Analysis
         /// </summary>
         /// <param name="result">The backtest result containing the charts.</param>
         /// <param name="algorithm">The algorithm instance used to retrieve SPY history.</param>
-        /// <param name="timingLogs">List that receives timing log messages for each step.</param>
         /// <returns>
         /// A tuple of two <see cref="SortedList{TKey,TValue}"/> instances sharing the same timestamp keys:
         /// the first is the backtest equity curve, the second is the SPY benchmark curve.

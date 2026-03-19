@@ -117,6 +117,7 @@ namespace QuantConnect
             AlgorithmConfiguration = parameters.AlgorithmConfiguration;
             State = parameters.State;
             TotalPerformance = parameters.TotalPerformance;
+            AnalysisResult = parameters.AnalysisResult;
         }
     }
 }
