@@ -366,7 +366,7 @@ namespace QuantConnect
             public static string WarmingUp(Orders.OrderRequest request)
             {
                 return Invariant($@"This operation is not allowed in {FormatCode("Initialize")} or during warm up: OrderRequest.{
-                    FormatCode(request.OrderRequestType.ToString())}. Please move this code to the {FormatCode("OnWarmupFinished")}() method.");
+                    FormatCode(request.OrderRequestType)}. Please move this code to the {FormatCode("OnWarmupFinished")}() method.");
             }
         }
 
