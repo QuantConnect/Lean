@@ -26,6 +26,12 @@ namespace QuantConnect.Tests.Common.Orders
     {
         private DateTime _requestTime = new DateTime(2022, 08, 25, 15, 0, 0);
 
+        [TearDown]
+        public void TearDown()
+        {
+            Messages.SetAlgorithmLanguage(Language.CSharp);
+        }
+
         [Test]
         public void TestInvalidUpdateOrderId()
         {
@@ -105,7 +111,6 @@ namespace QuantConnect.Tests.Common.Orders
             Messages.SetAlgorithmLanguage(Language.Python);
             var pythonResponse = OrderResponse.WarmingUp(orderRequest);
             Assert.AreEqual("This operation is not allowed in initialize or during warm up: OrderRequest.submit. Please move this code to the on_warmup_finished() method.", pythonResponse.ErrorMessage);
-            Messages.SetAlgorithmLanguage(Language.CSharp);
         }
 
         [TestCase(8, 0, true, Description = "8 AM - valid submission")]
