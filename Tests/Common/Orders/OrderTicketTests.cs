@@ -29,7 +29,7 @@ namespace QuantConnect.Tests.Common.Orders
         [Test]
         public void TestInvalidUpdateOrderId()
         {
-            var updateFields = new UpdateOrderFields { Quantity = 99, Tag = "Pepe", StopPrice = 77 , LimitPrice = 55 };
+            var updateFields = new UpdateOrderFields { Quantity = 99, Tag = "Pepe", StopPrice = 77, LimitPrice = 55 };
             var updateRequest = new UpdateOrderRequest(_requestTime, 11, updateFields);
             var ticket = OrderTicket.InvalidUpdateOrderId(null, updateRequest);
             Assert.AreEqual(11, ticket.OrderId);
@@ -101,6 +101,11 @@ namespace QuantConnect.Tests.Common.Orders
             Assert.AreEqual(1000, ticket.SubmitRequest.Quantity);
             Assert.AreEqual("Pepe", ticket.SubmitRequest.Tag);
             Assert.AreEqual("This operation is not allowed in Initialize or during warm up: OrderRequest.Submit. Please move this code to the OnWarmupFinished() method.", ticket.SubmitRequest.Response.ErrorMessage);
+            // Verify Python snake_case formatting
+            Messages.SetAlgorithmLanguage(Language.Python);
+            var pythonResponse = OrderResponse.WarmingUp(orderRequest);
+            Assert.AreEqual("This operation is not allowed in initialize or during warm up: OrderRequest.submit. Please move this code to the on_warmup_finished() method.", pythonResponse.ErrorMessage);
+            Messages.SetAlgorithmLanguage(Language.CSharp);
         }
 
         [TestCase(8, 0, true, Description = "8 AM - valid submission")]

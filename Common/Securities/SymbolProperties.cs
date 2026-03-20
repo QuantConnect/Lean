@@ -171,7 +171,7 @@ namespace QuantConnect.Securities
 
                 if (LotSize <= 0)
                 {
-                    throw new ArgumentException(Messages.SymbolProperties.InvalidLotSize);
+                    throw new ArgumentException(Messages.SymbolProperties.InvalidLotSize());
                 }
 
                 MarketTicker = marketTicker;
@@ -180,13 +180,13 @@ namespace QuantConnect.Securities
                 PriceMagnifier = priceMagnifier;
                 if (PriceMagnifier <= 0)
                 {
-                    throw new ArgumentException(Messages.SymbolProperties.InvalidPriceMagnifier);
+                    throw new ArgumentException(Messages.SymbolProperties.InvalidPriceMagnifier());
                 }
 
                 StrikeMultiplier = strikeMultiplier;
                 if (strikeMultiplier <= 0)
                 {
-                    throw new ArgumentException(Messages.SymbolProperties.InvalidStrikeMultiplier);
+                    throw new ArgumentException(Messages.SymbolProperties.InvalidStrikeMultiplier());
                 }
             }
         }
