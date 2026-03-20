@@ -354,7 +354,7 @@ namespace QuantConnect
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public static string MissingSecurity(Orders.SubmitOrderRequest request)
             {
-                return Invariant($"You haven't requested {request.Symbol} data. Add this with AddSecurity() in the Initialize() Method.");
+                return Invariant($"You haven't requested {request.Symbol} data. Add this with {FormatCode("AddSecurity")}() in the {FormatCode("Initialize")}() method.");
             }
 
             /// <summary>
@@ -365,8 +365,8 @@ namespace QuantConnect
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public static string WarmingUp(Orders.OrderRequest request)
             {
-                return Invariant($@"This operation is not allowed in Initialize or during warm up: OrderRequest.{
-                    request.OrderRequestType}. Please move this code to the OnWarmupFinished() method.");
+                return Invariant($@"This operation is not allowed in {FormatCode("Initialize")} or during warm up: OrderRequest.{
+                    FormatCode(request.OrderRequestType.ToString())}. Please move this code to the {FormatCode("OnWarmupFinished")}() method.");
             }
         }
 

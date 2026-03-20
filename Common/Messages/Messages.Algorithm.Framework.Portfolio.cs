@@ -39,8 +39,8 @@ namespace QuantConnect
             public static string InvalidTargetPercent(IAlgorithm algorithm, decimal percent)
             {
                 return Invariant($@"The portfolio target percent: {
-                    percent}, does not comply with the current 'Algorithm.Settings' 'MaxAbsolutePortfolioTargetPercentage': {
-                    algorithm.Settings.MaxAbsolutePortfolioTargetPercentage} or 'MinAbsolutePortfolioTargetPercentage': {
+                    percent}, does not comply with the current 'Algorithm.Settings' '{FormatCode("MaxAbsolutePortfolioTargetPercentage")}': {
+                    algorithm.Settings.MaxAbsolutePortfolioTargetPercentage} or '{FormatCode("MinAbsolutePortfolioTargetPercentage")}': {
                     algorithm.Settings.MinAbsolutePortfolioTargetPercentage}. Skipping");
             }
 

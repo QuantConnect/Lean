@@ -648,7 +648,7 @@ namespace QuantConnect.Securities
             if (Securities.Count > 0)
             {
                 throw new InvalidOperationException("SecurityPortfolioManager.SetAccountCurrency(): " +
-                    Messages.SecurityPortfolioManager.CannotChangeAccountCurrencyAfterAddingSecurity);
+                    Messages.SecurityPortfolioManager.CannotChangeAccountCurrencyAfterAddingSecurity());
             }
 
             // Capture the previous base cash and amount if SetCash() was called earlier so we can
