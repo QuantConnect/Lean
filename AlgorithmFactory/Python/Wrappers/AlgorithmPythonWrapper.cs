@@ -177,6 +177,8 @@ namespace QuantConnect.AlgorithmFactory.Python.Wrappers
                     {
                         throw new Exception("Please ensure that one class inherits from QCAlgorithm.");
                     }
+
+                    Messages.SetAlgorithmLanguage(Language.Python);
                 }
             }
             catch (Exception e)

@@ -642,13 +642,13 @@ namespace QuantConnect.Securities
             if (Securities.Count > 0)
             {
                 throw new InvalidOperationException("SecurityPortfolioManager.SetAccountCurrency(): " +
-                    Messages.SecurityPortfolioManager.CannotChangeAccountCurrencyAfterAddingSecurity);
+                    Messages.SecurityPortfolioManager.CannotChangeAccountCurrencyAfterAddingSecurity());
             }
 
             if (_setCashWasCalled)
             {
                 throw new InvalidOperationException("SecurityPortfolioManager.SetAccountCurrency(): " +
-                    Messages.SecurityPortfolioManager.CannotChangeAccountCurrencyAfterSettingCash);
+                    Messages.SecurityPortfolioManager.CannotChangeAccountCurrencyAfterSettingCash());
             }
 
             Log.Trace("SecurityPortfolioManager.SetAccountCurrency(): " +
