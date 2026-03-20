@@ -15,6 +15,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Runtime.CompilerServices;
 
 using Python.Runtime;
@@ -51,6 +52,11 @@ namespace QuantConnect
                 Language.Python => code.ToSnakeCase(),
                 _ => code
             };
+        }
+
+        private static string FormatCode<T>(T value) where T : Enum
+        {
+            return string.Join(", ", value.ToString().Split(", ").Select(FormatCode));
         }
 
         /// <summary>
