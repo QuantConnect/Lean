@@ -1315,7 +1315,7 @@ namespace QuantConnect.Algorithm
         {
             if (_locked)
             {
-                throw new InvalidOperationException("Algorithm.SetTimeZone(): Cannot change time zone after algorithm running.");
+                throw new InvalidOperationException(Messages.QCAlgorithm.SetTimeZoneAlreadyRunning());
             }
 
             if (timeZone == null) throw new ArgumentNullException(nameof(timeZone));
@@ -1450,7 +1450,7 @@ namespace QuantConnect.Algorithm
         {
             if (_locked)
             {
-                throw new InvalidOperationException("Algorithm.SetBenchmark(): Cannot change Benchmark after algorithm initialized.");
+                throw new InvalidOperationException(Messages.QCAlgorithm.SetBenchmarkAlreadyInitialized());
             }
 
             var market = GetMarket(null, symbol, securityType, defaultMarket: Market.USA);
@@ -1503,7 +1503,7 @@ namespace QuantConnect.Algorithm
         {
             if (_locked)
             {
-                throw new InvalidOperationException("Algorithm.SetBenchmark(): Cannot change Benchmark after algorithm initialized.");
+                throw new InvalidOperationException(Messages.QCAlgorithm.SetBenchmarkAlreadyInitialized());
             }
 
             // Create our security benchmark
@@ -1522,7 +1522,7 @@ namespace QuantConnect.Algorithm
         {
             if (_locked)
             {
-                throw new InvalidOperationException("Algorithm.SetBenchmark(): Cannot change Benchmark after algorithm initialized.");
+                throw new InvalidOperationException(Messages.QCAlgorithm.SetBenchmarkAlreadyInitialized());
             }
 
             Benchmark = new FuncBenchmark(benchmark);
@@ -1599,8 +1599,7 @@ namespace QuantConnect.Algorithm
         {
             if (_locked)
             {
-                throw new InvalidOperationException("Algorithm.SetAccountCurrency(): " +
-                    "Cannot change AccountCurrency after algorithm initialized.");
+                throw new InvalidOperationException(Messages.QCAlgorithm.SetAccountCurrencyAlreadyInitialized());
             }
 
             if (startingCash == null)
@@ -1653,7 +1652,7 @@ namespace QuantConnect.Algorithm
             }
             else
             {
-                throw new InvalidOperationException("Algorithm.SetCash(): Cannot change cash available after algorithm initialized.");
+                throw new InvalidOperationException(Messages.QCAlgorithm.SetCashAlreadyInitialized());
             }
         }
 
@@ -1672,7 +1671,7 @@ namespace QuantConnect.Algorithm
             }
             else
             {
-                throw new InvalidOperationException("Algorithm.SetCash(): Cannot change cash available after algorithm initialized.");
+                throw new InvalidOperationException(Messages.QCAlgorithm.SetCashAlreadyInitialized());
             }
         }
 
@@ -1778,7 +1777,7 @@ namespace QuantConnect.Algorithm
             }
             else
             {
-                throw new InvalidOperationException("Algorithm.SetStartDate(): Cannot change start date after algorithm initialized.");
+                throw new InvalidOperationException(Messages.QCAlgorithm.SetStartDateAlreadyInitialized());
             }
         }
 
@@ -1797,7 +1796,7 @@ namespace QuantConnect.Algorithm
             //1. Check not locked already:
             if (_locked)
             {
-                throw new InvalidOperationException("Algorithm.SetEndDate(): Cannot change end date after algorithm initialized.");
+                throw new InvalidOperationException(Messages.QCAlgorithm.SetEndDateAlreadyInitialized());
             }
 
             //Validate:
