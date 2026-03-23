@@ -748,7 +748,7 @@ namespace QuantConnect
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public static string MarketNotFound(string market)
             {
-                return $@"The specified market wasn't found in the markets lookup. Requested: {market}. You can add markets by calling QuantConnect.Market.{FormatCode("Add")}(string,int)";
+                return $@"The specified market wasn't found in the markets lookup. Requested: {market}. You can add markets by calling QuantConnect.Market.Add(string,int)";
             }
         }
 
