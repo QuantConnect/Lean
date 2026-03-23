@@ -13,6 +13,8 @@
  * limitations under the License.
 */
 
+using System.Runtime.CompilerServices;
+
 namespace QuantConnect
 {
     /// <summary>
@@ -28,54 +30,61 @@ namespace QuantConnect
             /// <summary>
             /// Returns a string message saying the time zone cannot be changed after the algorithm is running
             /// </summary>
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public static string SetTimeZoneAlreadyRunning()
             {
-                return $"Algorithm.{FormatCode("SetTimeZone")}(): Cannot change time zone after algorithm running.";
+                return $"QCAlgorithm.{FormatCode("SetTimeZone")}(): Cannot change time zone after algorithm running.";
             }
 
             /// <summary>
             /// Returns a string message saying the benchmark cannot be changed after the algorithm is initialized
             /// </summary>
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public static string SetBenchmarkAlreadyInitialized()
             {
-                return $"Algorithm.{FormatCode("SetBenchmark")}(): Cannot change Benchmark after algorithm initialized.";
+                return $"QCAlgorithm.{FormatCode("SetBenchmark")}(): Cannot change Benchmark after algorithm initialized.";
             }
 
             /// <summary>
             /// Returns a string message saying the account currency cannot be changed after the algorithm is initialized
             /// </summary>
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public static string SetAccountCurrencyAlreadyInitialized()
             {
-                return $"Algorithm.{FormatCode("SetAccountCurrency")}(): Cannot change AccountCurrency after algorithm initialized.";
+                return $"QCAlgorithm.{FormatCode("SetAccountCurrency")}(): Cannot change AccountCurrency after algorithm initialized.";
             }
 
             /// <summary>
             /// Returns a string message saying the cash cannot be changed after the algorithm is initialized
             /// </summary>
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public static string SetCashAlreadyInitialized()
             {
-                return $"Algorithm.{FormatCode("SetCash")}(): Cannot change cash available after algorithm initialized.";
+                return $"QCAlgorithm.{FormatCode("SetCash")}(): Cannot change cash available after algorithm initialized.";
             }
 
             /// <summary>
             /// Returns a string message saying the start date cannot be changed after the algorithm is initialized
             /// </summary>
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public static string SetStartDateAlreadyInitialized()
             {
-                return $"Algorithm.{FormatCode("SetStartDate")}(): Cannot change start date after algorithm initialized.";
+                return $"QCAlgorithm.{FormatCode("SetStartDate")}(): Cannot change start date after algorithm initialized.";
             }
 
             /// <summary>
             /// Returns a string message saying the end date cannot be changed after the algorithm is initialized
             /// </summary>
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public static string SetEndDateAlreadyInitialized()
             {
-                return $"Algorithm.{FormatCode("SetEndDate")}(): Cannot change end date after algorithm initialized.";
+                return $"QCAlgorithm.{FormatCode("SetEndDate")}(): Cannot change end date after algorithm initialized.";
             }
 
             /// <summary>
             /// Returns a string message saying SetWarmup cannot be used after the algorithm is initialized
             /// </summary>
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public static string SetWarmupAlreadyInitialized()
             {
                 return $"QCAlgorithm.{FormatCode("SetWarmup")}(): This method cannot be used after algorithm initialized";
@@ -91,6 +100,7 @@ namespace QuantConnect
             /// <summary>
             /// Returns a string message saying OnMarginCall must return a non-empty list of SubmitOrderRequest
             /// </summary>
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public static string OnMarginCallMustReturnNonEmptyList()
             {
                 return $"{FormatCode("OnMarginCall")} must return a non-empty list of SubmitOrderRequest";
