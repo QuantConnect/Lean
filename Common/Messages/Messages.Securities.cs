@@ -983,7 +983,7 @@ namespace QuantConnect
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public static string OrderCanceledByCancelOpenOrders(DateTime time)
             {
-                return Invariant($"Canceled by {FormatCode("CancelOpenOrders")}() at {time:o}");
+                return Invariant($"Canceled by CancelOpenOrders() at {time:o}");
             }
 
             /// <summary>
