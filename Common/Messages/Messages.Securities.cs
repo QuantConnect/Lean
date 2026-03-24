@@ -886,6 +886,7 @@ namespace QuantConnect
             /// Returns a string message saying the AccountCurrency cannot be changed after adding a Security and that the method
             /// SetAccountCurrency() should be moved before AddSecurity()
             /// </summary>
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public static string CannotChangeAccountCurrencyAfterAddingSecurity()
             {
                 return $"Cannot change AccountCurrency after adding a Security. Please move {FormatCode("SetAccountCurrency")}() before {FormatCode("AddSecurity")}().";
@@ -895,6 +896,7 @@ namespace QuantConnect
             /// Returns a string message saying the AccountCurrency cannot be changed after setting cash and that the method
             /// SetAccountCurrency() should be moved before SetCash()
             /// </summary>
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public static string CannotChangeAccountCurrencyAfterSettingCash()
             {
                 return $"Cannot change AccountCurrency after setting cash. Please move {FormatCode("SetAccountCurrency")}() before {FormatCode("SetCash")}().";
@@ -962,6 +964,7 @@ namespace QuantConnect
             /// <summary>
             /// Returns a string message saying CancelOpenOrders operation is not allowed in Initialize or during warm up
             /// </summary>
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public static string CancelOpenOrdersNotAllowedOnInitializeOrWarmUp()
             {
                 return $"This operation is not allowed in {FormatCode("Initialize")} or during warm up: {FormatCode("CancelOpenOrders")}. Please move this code to the {FormatCode("OnWarmupFinished")}() method.";
@@ -1003,6 +1006,7 @@ namespace QuantConnect
             /// <summary>
             /// String message saying the SymbolProperties LotSize can not be less than or equal to 0
             /// </summary>
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public static string InvalidLotSize()
             {
                 return $"{FormatCode("SymbolProperties")} {FormatCode("LotSize")} can not be less than or equal to 0";
@@ -1011,6 +1015,7 @@ namespace QuantConnect
             /// <summary>
             /// String message saying the SymbolProperties PriceMagnifier can not be less than or equal to 0
             /// </summary>
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public static string InvalidPriceMagnifier()
             {
                 return $"{FormatCode("SymbolProperties")} {FormatCode("PriceMagnifier")} can not be less than or equal to 0";
@@ -1019,6 +1024,7 @@ namespace QuantConnect
             /// <summary>
             /// String message saying the SymbolProperties StrikeMultiplier can not be less than or equal to 0
             /// </summary>
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public static string InvalidStrikeMultiplier()
             {
                 return $"{FormatCode("SymbolProperties")} {FormatCode("StrikeMultiplier")} can not be less than or equal to 0";
