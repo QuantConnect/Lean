@@ -23,7 +23,7 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
     /// Block-bootstrap Monte Carlo test: flags strategies whose total return
     /// is in the top 10 % of simulated outcomes (potentially lucky).
     /// </summary>
-    public class MonteCarloPercentile : BaseResultsAnalysis
+    public class MonteCarloPercentileAnalysis : BaseResultsAnalysis
     {
         /// <summary>
         /// Gets the description of the overly optimistic equity curve issue.

@@ -22,7 +22,7 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
     /// <summary>
     /// Compares the full-period Sharpe ratio of the strategy to the benchmark.
     /// </summary>
-    public class PerformanceRelativeToBenchmark : BaseResultsAnalysis
+    public class PerformanceRelativeToBenchmarkAnalysis : BaseResultsAnalysis
     {
         /// <summary>
         /// Gets the description of the underperformance relative to benchmark issue.

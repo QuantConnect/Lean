@@ -91,12 +91,12 @@ namespace QuantConnect.Lean.Engine.Results.Analysis
                 new OrderQuantityLessThanLotSizeOrderResponseErrorAnalysis(),
                 new InsightsEmittedForDelistedSecuritiesAnalysis(),
                 new StatisticalSignificanceOfDailyReturnsAnalysis(),
-                new PerformanceRelativeToBenchmark(),
+                new PerformanceRelativeToBenchmarkAnalysis(),
                 new CrisisEventsAnalysis(),
                 new ExecutionSpeedAnalysis(),
                 new PortfolioMarginUsageAnalysis(),
                 new ParameterCountAnalysis(),
-                new MonteCarloPercentile(),
+                new MonteCarloPercentileAnalysis(),
             }.OrderByDescending(a => a.Weight);
 
             var responses = new List<QuantConnect.Analysis>();

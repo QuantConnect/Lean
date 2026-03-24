@@ -20,7 +20,7 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses.Messages.AlpacaBrok
     /// <summary>
     /// Detects Alpaca brokerage model rejections due to an attempt to trade outside regular market hours.
     /// </summary>
-    public class TradingOutsideRegularHoursNotSupported : MessageAnalysis
+    public class TradingOutsideRegularHoursNotSupportedAnalysis : MessageAnalysis
     {
         public override string Issue { get; } = "The algorithm tried to place an order outside regular market hours, which is not supported by the Alpaca brokerage model.";
 

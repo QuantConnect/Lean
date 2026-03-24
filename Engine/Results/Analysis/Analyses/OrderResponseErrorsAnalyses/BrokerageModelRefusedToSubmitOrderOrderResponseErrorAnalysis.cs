@@ -49,7 +49,7 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
         private static readonly MessageAnalysis[] Analyses =
         [
             // AlpacaBrokerageModel
-            new Alpaca.TradingOutsideRegularHoursNotSupported(),
+            new Alpaca.TradingOutsideRegularHoursNotSupportedAnalysis(),
             // BinanceBrokerageModel
             new Binance.UnsupportedOrderTypeWithLinkToSupportedTypesAnalysis(),
             // CoinbaseBrokerageModel
