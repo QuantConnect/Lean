@@ -494,22 +494,18 @@ namespace QuantConnect.Securities
                 feesInAccountCurrency = _currencyConverter.ConvertToAccountCurrency(liquidationFees).Amount;
             }
 
-            // Outside market hours, use last trade price to avoid unreliable bid/ask spreads.
-            decimal price;
-            if (!_security.Exchange.ExchangeOpen && _security.Type != SecurityType.Future)
-            {
-                price = _security.Price;
-            }
-            else
+            // Outside market hours, bid/ask spreads are unreliable so price stays 0 and falls back to last trade price. Futures are excluded since they support extended hours trading.
+            var price = 0m;
+            if (_security.Type == SecurityType.Future || _security.Exchange.ExchangeOpen)
             {
                 // if we are long, we would need to sell against the bid
                 price = IsLong ? _security.BidPrice : _security.AskPrice;
-                if (price == 0)
-                {
-                    // Bid/Ask prices can both be equal to 0. This usually happens when we request our holdings from
-                    // the brokerage, but only the last trade price was provided.
-                    price = _security.Price;
-                }
+            }
+            if (price == 0)
+            {
+                // Bid/Ask prices can both be equal to 0. This usually happens when we request our holdings from
+                // the brokerage, but only the last trade price was provided.
+                price = _security.Price;
             }
 
             var entryValue = GetQuantityValue(quantityToUse, entryPrice ?? AveragePrice).InAccountCurrency;

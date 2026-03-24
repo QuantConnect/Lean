@@ -89,23 +89,28 @@ namespace QuantConnect.Tests.Common.Securities
             var security = GetSecurity<QuantConnect.Securities.Equity.Equity>(Symbols.SPY, Resolution.Daily, isMarketOpen);
             var holding = new SecurityHolding(security, new IdentityCurrencyConverter(Currencies.USD));
 
-            var last = 100m;
+            var averagePrice = 100m;
             var bid = 90m;
             var ask = 110m;
+            var lastTradePrice = 105m;
 
-            security.SetMarketPrice(new Tick(DateTime.Now, security.Symbol, last, bid, ask));
+            var quoteTick = new Tick(DateTime.Now, security.Symbol, 0m, bid, ask);
+            var tradeTick = new Tick { Time = DateTime.Now, Symbol = security.Symbol, TickType = TickType.Trade, Value = lastTradePrice };
 
-            var expectedLong = isMarketOpen ? (bid - last) * 100m : 0m;
-            var expectedShort = isMarketOpen ? (ask - last) * -100m : 0m;
+            security.SetMarketPrice(quoteTick);
+            security.SetMarketPrice(tradeTick);
 
-            holding.SetHoldings(last, 100m);
+            var expectedLong = isMarketOpen ? (bid - averagePrice) * 100m : (lastTradePrice - averagePrice) * 100m;
+            var expectedShort = isMarketOpen ? (ask - averagePrice) * -100m : (lastTradePrice - averagePrice) * -100m;
+
+            holding.SetHoldings(averagePrice, 100m);
             Assert.AreEqual(expectedLong, holding.TotalCloseProfit(includeFees: false));
 
-            holding.SetHoldings(last, -100m);
+            holding.SetHoldings(averagePrice, -100m);
             Assert.AreEqual(expectedShort, holding.TotalCloseProfit(includeFees: false));
         }
 
-        private Security GetSecurity<T>(Symbol symbol, Resolution resolution, bool isMarketOpen = true)
+        private Security GetSecurity<T>(Symbol symbol, Resolution resolution, bool marketAlwaysOpen = true)
         {
             var subscriptionDataConfig = new SubscriptionDataConfig(
                 typeof(T),
@@ -118,7 +123,7 @@ namespace QuantConnect.Tests.Common.Securities
                 false);
 
             SecurityExchangeHours exchangeHours;
-            if (isMarketOpen)
+            if (marketAlwaysOpen)
             {
                 exchangeHours = SecurityExchangeHours.AlwaysOpen(TimeZones.Utc);
             }
