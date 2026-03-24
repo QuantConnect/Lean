@@ -332,7 +332,7 @@ namespace QuantConnect.Lean.Engine.Results
                             result.Results.TotalPerformance,
                             result.Results.AlgorithmConfiguration,
                             result.Results.State,
-                            result.Results.AnalysisResult));
+                            result.Results.Analysis));
 
                         if (result.Results.Charts.TryGetValue(PortfolioMarginKey, out var marginChart))
                         {
@@ -417,7 +417,7 @@ namespace QuantConnect.Lean.Engine.Results
                     var analyzer = new ResultsAnalyzer(result.Results, algorithm, _job.Language, logs);
                     try
                     {
-                        result.Results.AnalysisResult = analyzer.RunTestChain();
+                        result.Results.Analysis = analyzer.Run();
                     }
                     catch (Exception ex)
                     {

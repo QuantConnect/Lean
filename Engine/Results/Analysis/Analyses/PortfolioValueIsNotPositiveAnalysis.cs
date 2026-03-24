@@ -35,14 +35,14 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
         /// <summary>
         /// Runs the portfolio value positivity analysis against the provided backtest parameters.
         /// </summary>
-        public override IReadOnlyList<AnalysisResult> Run(ResultsAnalysisRunParameters parameters) => Run(parameters.Result);
+        public override IReadOnlyList<QuantConnect.Analysis> Run(ResultsAnalysisRunParameters parameters) => Run(parameters.Result);
 
         /// <summary>
         /// Checks whether the backtest's ending equity is positive.
         /// </summary>
         /// <param name="result">The backtest result containing portfolio statistics.</param>
         /// <returns>Analysis results flagging the issue when ending equity is zero or negative.</returns>
-        public IReadOnlyList<AnalysisResult> Run(Result result)
+        public IReadOnlyList<QuantConnect.Analysis> Run(Result result)
         {
             var hasEquity = result.TotalPerformance.PortfolioStatistics.EndEquity > 0;
             var potentialSolutions = hasEquity ? [] : Solutions();

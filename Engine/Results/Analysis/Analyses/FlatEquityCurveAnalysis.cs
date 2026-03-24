@@ -37,14 +37,14 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
         /// <summary>
         /// Runs the flat equity curve analysis against the provided backtest parameters.
         /// </summary>
-        public override IReadOnlyList<AnalysisResult> Run(ResultsAnalysisRunParameters parameters) => Run(parameters.EquityCurve);
+        public override IReadOnlyList<QuantConnect.Analysis> Run(ResultsAnalysisRunParameters parameters) => Run(parameters.EquityCurve);
 
         /// <summary>
         /// Scans the equity curve for consecutive flat (unchanged) segments.
         /// </summary>
         /// <param name="equityCurve">Daily equity values from the backtest, keyed by date.</param>
         /// <returns>Analysis results describing any detected flat segments.</returns>
-        public IReadOnlyList<AnalysisResult> Run(SortedList<DateTime, decimal> equityCurve)
+        public IReadOnlyList<QuantConnect.Analysis> Run(SortedList<DateTime, decimal> equityCurve)
         {
             // Find consecutive runs of identical equity values.
             var keys = equityCurve.Keys.ToArray();

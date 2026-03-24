@@ -38,7 +38,7 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
         /// <summary>
         /// Runs the exceeds shortable quantity analysis against the provided backtest parameters.
         /// </summary>
-        public override IReadOnlyList<AnalysisResult> Run(ResultsAnalysisRunParameters parameters) => Run(parameters.Result.OrderEvents, parameters.Language);
+        public override IReadOnlyList<QuantConnect.Analysis> Run(ResultsAnalysisRunParameters parameters) => Run(parameters.Result.OrderEvents, parameters.Language);
 
         private static readonly string[] MessageText =
         [
@@ -53,7 +53,7 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
         /// <param name="orderEvents">The order events from the backtest result.</param>
         /// <param name="language">The programming language the algorithm is written in.</param>
         /// <returns>Analysis results when shortable quantity violations are detected.</returns>
-        public IReadOnlyList<AnalysisResult> Run(IReadOnlyList<OrderEvent> orderEvents, Language language)
+        public IReadOnlyList<QuantConnect.Analysis> Run(IReadOnlyList<OrderEvent> orderEvents, Language language)
         {
             var result = orderEvents
                 .Where(e => e.Message != null && MessageText.All(t => e.Message.Contains(t, StringComparison.InvariantCultureIgnoreCase)))

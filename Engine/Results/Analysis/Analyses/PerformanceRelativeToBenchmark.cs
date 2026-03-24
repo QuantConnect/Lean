@@ -37,7 +37,7 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
         /// <summary>
         /// Runs the performance relative to benchmark analysis against the provided backtest parameters.
         /// </summary>
-        public override IReadOnlyList<AnalysisResult> Run(ResultsAnalysisRunParameters parameters) => Run(parameters.Algorithm, parameters.EquityCurve, parameters.BenchmarkEquityCurve);
+        public override IReadOnlyList<QuantConnect.Analysis> Run(ResultsAnalysisRunParameters parameters) => Run(parameters.Algorithm, parameters.EquityCurve, parameters.BenchmarkEquityCurve);
 
         /// <summary>
         /// Calculates the Sharpe ratio of the strategy over the full backtest period and compares it to the benchmark.
@@ -46,7 +46,7 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
         /// <param name="backtestEquity">Daily equity values for the strategy, keyed by date.</param>
         /// <param name="benchmarkEquity">Daily equity values for the benchmark (SPY), keyed by date.</param>
         /// <returns>Analysis results when the strategy's Sharpe ratio is lower than the benchmark's.</returns>
-        public IReadOnlyList<AnalysisResult> Run(QCAlgorithm algorithm, SortedList<DateTime, decimal> backtestEquity,
+        public IReadOnlyList<QuantConnect.Analysis> Run(QCAlgorithm algorithm, SortedList<DateTime, decimal> backtestEquity,
             SortedList<DateTime, decimal> benchmarkEquity)
         {
             var (backtestSharpe, benchmarkSharpe) = CrisisEventsAnalysis.CalculateSharpeRatio(backtestEquity, benchmarkEquity, 

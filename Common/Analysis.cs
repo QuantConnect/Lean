@@ -98,8 +98,8 @@ namespace QuantConnect
     /// Represents the outcome of a single backtest diagnostic analysis,
     /// containing the analysis name, diagnostic context, and a list of solutions.
     /// </summary>
-    [JsonConverter(typeof(AnalysisResultJsonConverter))]
-    public class AnalysisResult
+    [JsonConverter(typeof(AnalysisJsonConverter))]
+    public class Analysis
     {
         /// <summary>
         /// Gets or sets the name of the analysis that produced this result.
@@ -122,9 +122,9 @@ namespace QuantConnect
         public IReadOnlyList<string> Solutions { get; set; }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="AnalysisResult"/> class.
+        /// Initializes a new instance of the <see cref="Analysis"/> class.
         /// </summary>
-        public AnalysisResult(string name, string issue, IResultsAnalysisContext context, IReadOnlyList<string> solutions)
+        public Analysis(string name, string issue, IResultsAnalysisContext context, IReadOnlyList<string> solutions)
         {
             Name = name;
             Issue = issue;

@@ -38,7 +38,7 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
         /// <summary>
         /// Runs the execution speed analysis against the provided backtest parameters.
         /// </summary>
-        public override IReadOnlyList<AnalysisResult> Run(ResultsAnalysisRunParameters parameters) => Run(parameters.Logs);
+        public override IReadOnlyList<QuantConnect.Analysis> Run(ResultsAnalysisRunParameters parameters) => Run(parameters.Logs);
 
         private static readonly Regex DataPointsPerSecondRegex = new(
             @"Algorithm Id:\([^)]+\) completed in ([\d.]+) seconds at (\d+)k data points per second\. Processing total of [\d,]+ data points\.",
@@ -49,7 +49,7 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
         /// </summary>
         /// <param name="logs">The full list of log lines produced by the backtest.</param>
         /// <returns>Analysis results flagging slow execution when below 40k data points per second and runtime is at least 10 seconds.</returns>
-        public IReadOnlyList<AnalysisResult> Run(IReadOnlyList<string> logs)
+        public IReadOnlyList<QuantConnect.Analysis> Run(IReadOnlyList<string> logs)
         {
             var result = TryGetDataPointsPerSecond(logs, out var timeInSeconds, out var dataPointsPerSecond) && timeInSeconds >= 10 && dataPointsPerSecond < 40
                 ? $"The algorithm is slowly executing at only {dataPointsPerSecond}k data points per second"

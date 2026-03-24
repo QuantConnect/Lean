@@ -22,8 +22,8 @@ using Newtonsoft.Json.Linq;
 namespace QuantConnect.Util
 {
     /// <summary>
-    /// JSON converter for <see cref="AnalysisResult"/>.
-    /// Deserializes into a <see cref="AnalysisResult"/> and detects the concrete
+    /// JSON converter for <see cref="Analysis"/>.
+    /// Deserializes into a <see cref="Analysis"/> and detects the concrete
     /// <see cref="IResultsAnalysisContext"/> type from the shape of the JSON:
     /// <list type="bullet">
     ///   <item>JSON array -> <see cref="ResultsAnalysisAggregateContext"/></item>
@@ -31,7 +31,7 @@ namespace QuantConnect.Util
     ///   <item>Any other JSON object -> <see cref="ResultsAnalysisContext"/></item>
     /// </list>
     /// </summary>
-    public class AnalysisResultJsonConverter : JsonConverter
+    public class AnalysisJsonConverter : JsonConverter
     {
         /// <summary>
         /// Serialization is handled by the default JSON.NET serializer.
@@ -47,7 +47,7 @@ namespace QuantConnect.Util
         }
 
         /// <summary>
-        /// Deserializes a JSON object into a <see cref="AnalysisResult"/>, resolving the
+        /// Deserializes a JSON object into a <see cref="Analysis"/>, resolving the
         /// concrete <see cref="IResultsAnalysisContext"/> type from the structure of the
         /// <c>Context</c> JSON token.
         /// </summary>
@@ -60,7 +60,7 @@ namespace QuantConnect.Util
             var solutions = jObject["Solutions"]?.ToObject<List<string>>() ?? [];
             var context = DeserializeContext(jObject["Context"]);
 
-            return new AnalysisResult(name, issue, context, solutions);
+            return new Analysis(name, issue, context, solutions);
         }
 
         /// <summary>
@@ -68,7 +68,7 @@ namespace QuantConnect.Util
         /// </summary>
         public override bool CanConvert(Type objectType)
         {
-            return typeof(AnalysisResult).IsAssignableFrom(objectType);
+            return typeof(Analysis).IsAssignableFrom(objectType);
         }
 
         /// <summary>

@@ -38,7 +38,7 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
         /// <summary>
         /// Runs the portfolio margin usage analysis against the provided backtest parameters.
         /// </summary>
-        public override IReadOnlyList<AnalysisResult> Run(ResultsAnalysisRunParameters parameters) => Run(parameters.Result);
+        public override IReadOnlyList<QuantConnect.Analysis> Run(ResultsAnalysisRunParameters parameters) => Run(parameters.Result);
 
         /// <summary>
         /// Reads the "Portfolio Margin" chart from the backtest result and counts trading days
@@ -46,7 +46,7 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
         /// </summary>
         /// <param name="backtestResult">The backtest result whose charts are inspected.</param>
         /// <returns>Analysis results when any such days are detected.</returns>
-        public IReadOnlyList<AnalysisResult> Run(Result backtestResult)
+        public IReadOnlyList<QuantConnect.Analysis> Run(Result backtestResult)
         {
             // 1 – Get the Portfolio Margin chart.
             if (!backtestResult.Charts.TryGetValue("Portfolio Margin", out var chart))

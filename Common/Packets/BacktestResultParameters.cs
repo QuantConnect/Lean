@@ -44,7 +44,7 @@ namespace QuantConnect.Packets
             AlgorithmPerformance totalPerformance = null,
             AlgorithmConfiguration algorithmConfiguration = null,
             IDictionary<string, string> state = null,
-            IReadOnlyList<AnalysisResult> analysisResult = null)
+            IReadOnlyList<Analysis> analysisResult = null)
             : base(charts, orders, profitLoss, statistics, runtimeStatistics, orderEvents, totalPerformance, algorithmConfiguration, state, analysisResult)
         {
             RollingWindow = rollingWindow;

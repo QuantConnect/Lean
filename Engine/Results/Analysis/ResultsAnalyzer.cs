@@ -57,8 +57,8 @@ namespace QuantConnect.Lean.Engine.Results.Analysis
         /// </summary>
         /// <param name="timeLimitSeconds">Wall-clock seconds allowed for the full chain before early exit.</param>
         /// <param name="maxFailedTests">Maximum number of failing analyses to collect before stopping; also the max returned.</param>
-        /// <returns>Up to <paramref name="maxFailedTests"/> <see cref="AnalysisResult"/> entries with solutions, ranked by weight.</returns>
-        public IReadOnlyList<AnalysisResult> RunTestChain(int timeLimitSeconds = 5, int maxFailedTests = 10)
+        /// <returns>Up to <paramref name="maxFailedTests"/> <see cref="QuantConnect.Analysis"/> entries with solutions, ranked by weight.</returns>
+        public IReadOnlyList<QuantConnect.Analysis> Run(int timeLimitSeconds = 5, int maxFailedTests = 10)
         {
             (_equityCurve, _benchmarkEquityCurve) = ReadEquityCurve(_result, _algorithm);
 
@@ -99,7 +99,7 @@ namespace QuantConnect.Lean.Engine.Results.Analysis
                 new MonteCarloPercentile(),
             }.OrderByDescending(a => a.Weight);
 
-            var responses = new List<AnalysisResult>();
+            var responses = new List<QuantConnect.Analysis>();
             var timer = Stopwatch.StartNew();
             var timeLimit = TimeSpan.FromSeconds(timeLimitSeconds);
 
@@ -128,7 +128,6 @@ namespace QuantConnect.Lean.Engine.Results.Analysis
         /// </summary>
         /// <param name="result">The backtest result containing the charts.</param>
         /// <param name="algorithm">The algorithm instance used to retrieve SPY history.</param>
-        /// <param name="timingLogs">List that receives timing log messages for each step.</param>
         /// <returns>
         /// A tuple of two <see cref="SortedList{TKey,TValue}"/> instances sharing the same timestamp keys:
         /// the first is the backtest equity curve, the second is the SPY benchmark curve.

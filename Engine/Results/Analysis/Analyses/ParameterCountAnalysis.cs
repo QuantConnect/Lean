@@ -36,7 +36,7 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
         /// <summary>
         /// Runs the parameter count analysis against the provided backtest parameters.
         /// </summary>
-        public override IReadOnlyList<AnalysisResult> Run(ResultsAnalysisRunParameters parameters) => Run(parameters.Algorithm, parameters.Language);
+        public override IReadOnlyList<QuantConnect.Analysis> Run(ResultsAnalysisRunParameters parameters) => Run(parameters.Algorithm, parameters.Language);
 
         private const string DetectedParametersTable = """
 | Parameter Types | Example Instances |
@@ -56,7 +56,7 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
         /// <param name="algorithm">The algorithm instance whose parameters are inspected.</param>
         /// <param name="language">The programming language the algorithm is written in.</param>
         /// <returns>Analysis results when the parameter count exceeds the threshold.</returns>
-        public IReadOnlyList<AnalysisResult> Run(QCAlgorithm algorithm, Language language)
+        public IReadOnlyList<QuantConnect.Analysis> Run(QCAlgorithm algorithm, Language language)
         {
             var parametersCount = algorithm.GetParameters().Count;
             var result = parametersCount > 10 ? $"{parametersCount} Parameters Detected" : null;

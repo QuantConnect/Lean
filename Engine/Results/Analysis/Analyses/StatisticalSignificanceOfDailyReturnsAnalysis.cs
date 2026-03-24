@@ -42,7 +42,7 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
         /// <summary>
         /// Runs the statistical significance of daily returns analysis against the provided backtest parameters.
         /// </summary>
-        public override IReadOnlyList<AnalysisResult> Run(ResultsAnalysisRunParameters parameters) => Run(parameters.EquityCurve, parameters.BenchmarkEquityCurve);
+        public override IReadOnlyList<QuantConnect.Analysis> Run(ResultsAnalysisRunParameters parameters) => Run(parameters.EquityCurve, parameters.BenchmarkEquityCurve);
 
         /// <summary>
         /// Computes excess daily returns (strategy minus benchmark) and applies a one-tailed
@@ -51,7 +51,7 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
         /// <param name="backtestEquity">Daily equity values for the strategy, keyed by date.</param>
         /// <param name="benchmarkEquity">Daily equity values for the benchmark (SPY), keyed by date.</param>
         /// <returns>Analysis results when the strategy's excess returns are not statistically significant.</returns>
-        public IReadOnlyList<AnalysisResult> Run(SortedList<DateTime, decimal> backtestEquity,
+        public IReadOnlyList<QuantConnect.Analysis> Run(SortedList<DateTime, decimal> backtestEquity,
             SortedList<DateTime, decimal> benchmarkEquity)
         {
             var backtestReturns = backtestEquity.PercentChange();

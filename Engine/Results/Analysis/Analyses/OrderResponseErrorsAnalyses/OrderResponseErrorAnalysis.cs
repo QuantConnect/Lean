@@ -43,7 +43,7 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
 
         /// <inheritdoc/>
         /// <remarks>Overrides the log-based default from <see cref="MessageAnalysis"/> to scan order events instead.</remarks>
-        public override IReadOnlyList<AnalysisResult> Run(ResultsAnalysisRunParameters parameters)
+        public override IReadOnlyList<QuantConnect.Analysis> Run(ResultsAnalysisRunParameters parameters)
             => Run([.. parameters.Result.OrderEvents], parameters.Language);
 
         /// <summary>
@@ -53,7 +53,7 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
         /// <param name="orderEvents">The order events from the backtest result.</param>
         /// <param name="language">The programming language the algorithm is written in.</param>
         /// <returns>Analysis results when any matching order response errors are found.</returns>
-        public virtual IReadOnlyList<AnalysisResult> Run(List<OrderEvent> orderEvents, Language language)
+        public virtual IReadOnlyList<QuantConnect.Analysis> Run(List<OrderEvent> orderEvents, Language language)
         {
             return Run(GetMatchingOrderEventsMessages(orderEvents).ToList(), language);
         }

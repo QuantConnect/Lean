@@ -39,14 +39,14 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
         /// <summary>
         /// Runs the Monte Carlo percentile analysis against the provided backtest parameters.
         /// </summary>
-        public override IReadOnlyList<AnalysisResult> Run(ResultsAnalysisRunParameters parameters) => Run(parameters.EquityCurve);
+        public override IReadOnlyList<QuantConnect.Analysis> Run(ResultsAnalysisRunParameters parameters) => Run(parameters.EquityCurve);
 
         /// <summary>
         /// Runs the Monte Carlo percentile test against the given equity curve.
         /// </summary>
         /// <param name="backtestEquity">Daily equity values from the backtest, keyed by date.</param>
         /// <returns>Analysis results indicating whether the strategy's return is suspiciously high.</returns>
-        public IReadOnlyList<AnalysisResult> Run(SortedList<DateTime, decimal> backtestEquity)
+        public IReadOnlyList<QuantConnect.Analysis> Run(SortedList<DateTime, decimal> backtestEquity)
         {
             if (backtestEquity.Count == 0)
             {

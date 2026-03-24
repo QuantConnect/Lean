@@ -38,14 +38,14 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses.Messages
         }
 
         /// <inheritdoc/>
-        public override IReadOnlyList<AnalysisResult> Run(ResultsAnalysisRunParameters parameters)
+        public override IReadOnlyList<QuantConnect.Analysis> Run(ResultsAnalysisRunParameters parameters)
             => Run(parameters.Logs, parameters.Language);
 
         /// <summary>
         /// Runs the analysis by scanning <paramref name="messages"/> for the expected text fragments
         /// and returns results with solutions when matches are found.
         /// </summary>
-        public virtual IReadOnlyList<AnalysisResult> Run(IReadOnlyList<string> messages, Language language)
+        public virtual IReadOnlyList<QuantConnect.Analysis> Run(IReadOnlyList<string> messages, Language language)
         {
             var foundMessages = Match(messages, ExpectedMessageText).ToList();
             var solutions = foundMessages.Count > 0 ? Solutions(language) : [];

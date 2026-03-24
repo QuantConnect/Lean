@@ -17,7 +17,7 @@
 namespace QuantConnect
 {
     /// <summary>
-    /// Marker interface for context objects attached to a <see cref="AnalysisResult"/>.
+    /// Marker interface for context objects attached to a <see cref="Analysis"/>.
     /// </summary>
     public interface IResultsAnalysisContext
     {

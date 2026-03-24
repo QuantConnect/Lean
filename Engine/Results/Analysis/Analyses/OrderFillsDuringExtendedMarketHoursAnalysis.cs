@@ -38,7 +38,7 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
         /// <summary>
         /// Runs the extended market hours order fill analysis against the provided backtest parameters.
         /// </summary>
-        public override IReadOnlyList<AnalysisResult> Run(ResultsAnalysisRunParameters parameters) => Run(parameters.Algorithm, parameters.Result.OrderEvents, parameters.Language);
+        public override IReadOnlyList<QuantConnect.Analysis> Run(ResultsAnalysisRunParameters parameters) => Run(parameters.Algorithm, parameters.Result.OrderEvents, parameters.Language);
 
         /// <summary>
         /// Iterates filled order events and flags those that occurred when the exchange was not open.
@@ -47,7 +47,7 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
         /// <param name="orderEvents">The list of order events from the backtest result.</param>
         /// <param name="language">The programming language the algorithm is written in.</param>
         /// <returns>Analysis results when fills outside regular hours are detected.</returns>
-        public IReadOnlyList<AnalysisResult> Run(QCAlgorithm algorithm, IReadOnlyList<OrderEvent> orderEvents, Language language)
+        public IReadOnlyList<QuantConnect.Analysis> Run(QCAlgorithm algorithm, IReadOnlyList<OrderEvent> orderEvents, Language language)
         {
             var result = new List<OrderEvent>();
 

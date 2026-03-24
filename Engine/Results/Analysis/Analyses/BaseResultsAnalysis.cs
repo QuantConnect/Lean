@@ -37,28 +37,28 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
         /// <summary>
         /// Runs the analysis against all backtest data provided in <paramref name="parameters"/>.
         /// </summary>
-        public abstract IReadOnlyList<AnalysisResult> Run(ResultsAnalysisRunParameters parameters);
+        public abstract IReadOnlyList<QuantConnect.Analysis> Run(ResultsAnalysisRunParameters parameters);
 
         /// <summary>
-        /// Wraps a single <see cref="AnalysisResult"/> in a one-element read-only list.
+        /// Wraps a single <see cref="QuantConnect.Analysis"/> in a one-element read-only list.
         /// </summary>
-        protected IReadOnlyList<AnalysisResult> SingleResponse(IResultsAnalysisContext context, IReadOnlyList<string> solutions = null)
+        protected IReadOnlyList<QuantConnect.Analysis> SingleResponse(IResultsAnalysisContext context, IReadOnlyList<string> solutions = null)
             => [CreateResponse(context, solutions)];
 
         /// <summary>
-        /// Creates a single <see cref="AnalysisResult"/> named after the concrete analysis type.
+        /// Creates a single <see cref="QuantConnect.Analysis"/> named after the concrete analysis type.
         /// </summary>
-        protected AnalysisResult CreateResponse(IResultsAnalysisContext context, IReadOnlyList<string> solutions = null)
+        protected QuantConnect.Analysis CreateResponse(IResultsAnalysisContext context, IReadOnlyList<string> solutions = null)
             => new(GetType().Name, Issue, context, solutions ?? []);
 
         /// <summary>
         /// Filters <paramref name="responses"/> to those with solutions,
         /// prefixes the class name, and returns a flat list.
         /// </summary>
-        protected IReadOnlyList<AnalysisResult> CreateAggregatedResponse(IEnumerable<AnalysisResult> responses)
+        protected IReadOnlyList<QuantConnect.Analysis> CreateAggregatedResponse(IEnumerable<QuantConnect.Analysis> responses)
             => [.. responses
                 .Where(x => x.Solutions.Count > 0)
-                .Select(x => new AnalysisResult(GetType().Name + " / " + x.Name, x.Issue, x.Context, x.Solutions))];
+                .Select(x => new QuantConnect.Analysis(GetType().Name + " / " + x.Name, x.Issue, x.Context, x.Solutions))];
 
         /// <summary>
         /// Formats the specified code string according to the conventions of the given programming language.

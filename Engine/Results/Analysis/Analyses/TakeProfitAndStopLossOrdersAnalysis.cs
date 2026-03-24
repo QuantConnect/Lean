@@ -39,7 +39,7 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
         /// <summary>
         /// Runs the take-profit and stop-loss orders analysis against the provided backtest parameters.
         /// </summary>
-        public override IReadOnlyList<AnalysisResult> Run(ResultsAnalysisRunParameters parameters) => Run(parameters.Result.Orders.Values, parameters.Language);
+        public override IReadOnlyList<QuantConnect.Analysis> Run(ResultsAnalysisRunParameters parameters) => Run(parameters.Result.Orders.Values, parameters.Language);
 
         private static readonly OrderType[] TpTypes = [OrderType.Limit, OrderType.LimitIfTouched];
 
@@ -58,7 +58,7 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
         /// <param name="orders">All orders from the backtest result.</param>
         /// <param name="language">The programming language the algorithm is written in.</param>
         /// <returns>Aggregated analysis results from all sub-analyses that detected issues.</returns>
-        public IReadOnlyList<AnalysisResult> Run(ICollection<Order> orders, Language language)
+        public IReadOnlyList<QuantConnect.Analysis> Run(ICollection<Order> orders, Language language)
         {
             // Group orders by (symbol, quantity, created_time) – the TP/SL fingerprint.
             var combos = orders
@@ -75,7 +75,7 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
 
         private interface ISubAnalysis
         {
-            public IReadOnlyList<AnalysisResult> Run(List<List<Order>> combos, Language language);
+            public IReadOnlyList<QuantConnect.Analysis> Run(List<List<Order>> combos, Language language);
         }
 
         // ── Sub-analysis 1: both TP and SL filled ────────────────────────────────────────
@@ -95,9 +95,9 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
             /// <summary>
             /// Runs the both-filled TP/SL analysis against the provided backtest parameters.
             /// </summary>
-            public override IReadOnlyList<AnalysisResult> Run(ResultsAnalysisRunParameters parameters) => throw new NotSupportedException("Use TakeProfitAndStopLossOrdersAnalysis.");
+            public override IReadOnlyList<QuantConnect.Analysis> Run(ResultsAnalysisRunParameters parameters) => throw new NotSupportedException("Use TakeProfitAndStopLossOrdersAnalysis.");
 
-            public IReadOnlyList<AnalysisResult> Run(List<List<Order>> combos, Language language)
+            public IReadOnlyList<QuantConnect.Analysis> Run(List<List<Order>> combos, Language language)
             {
                 var result = combos
                     .Where(orders => orders.All(o => o.Status == OrderStatus.Filled))
@@ -179,9 +179,9 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
             /// <summary>
             /// Runs the dangling TP/SL order analysis against the provided backtest parameters.
             /// </summary>
-            public override IReadOnlyList<AnalysisResult> Run(ResultsAnalysisRunParameters parameters) => throw new NotSupportedException("Use TakeProfitAndStopLossOrdersAnalysis.");
+            public override IReadOnlyList<QuantConnect.Analysis> Run(ResultsAnalysisRunParameters parameters) => throw new NotSupportedException("Use TakeProfitAndStopLossOrdersAnalysis.");
 
-            public IReadOnlyList<AnalysisResult> Run(List<List<Order>> combos, Language language)
+            public IReadOnlyList<QuantConnect.Analysis> Run(List<List<Order>> combos, Language language)
             {
                 var result = new List<object>();
 

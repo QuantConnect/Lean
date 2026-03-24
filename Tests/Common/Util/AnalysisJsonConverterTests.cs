@@ -20,15 +20,15 @@ using NUnit.Framework;
 namespace QuantConnect.Tests.Common.Util
 {
     [TestFixture]
-    public class AnalysisResultJsonConverterTests
+    public class AnalysisJsonConverterTests
     {
         // ── Helpers ────────────────────────────────────────────────────────────
 
-        private static string Serialize(AnalysisResult result)
+        private static string Serialize(Analysis result)
             => JsonConvert.SerializeObject(result);
 
-        private static AnalysisResult Deserialize(string json)
-            => JsonConvert.DeserializeObject<AnalysisResult>(json);
+        private static Analysis Deserialize(string json)
+            => JsonConvert.DeserializeObject<Analysis>(json);
 
         // ── Context type detection ─────────────────────────────────────────────
 
@@ -143,7 +143,7 @@ namespace QuantConnect.Tests.Common.Util
                 { ""Name"": ""B"", ""Context"": { ""Sample"": 2, ""Occurrences"": 5 }, ""Solutions"": [""Fix""] }
             ]";
 
-            var results = JsonConvert.DeserializeObject<IReadOnlyList<AnalysisResult>>(json);
+            var results = JsonConvert.DeserializeObject<IReadOnlyList<Analysis>>(json);
 
             Assert.AreEqual(2, results.Count);
             Assert.IsInstanceOf<ResultsAnalysisContext>(results[0].Context);
@@ -156,7 +156,7 @@ namespace QuantConnect.Tests.Common.Util
         [Test]
         public void RoundTripWithPlainContext()
         {
-            var original = new AnalysisResult(
+            var original = new Analysis(
                 "SomeAnalysis",
                 "Issue",
                 new ResultsAnalysisContext("sample-string"),
@@ -178,7 +178,7 @@ namespace QuantConnect.Tests.Common.Util
         [Test]
         public void RoundTripWithRepeatedContext()
         {
-            var original = new AnalysisResult(
+            var original = new Analysis(
                 "RepeatedAnalysis",
                 "Issue",
                 new ResultsAnalysisRepeatedContext(["first", "second", "third"]),
@@ -196,7 +196,7 @@ namespace QuantConnect.Tests.Common.Util
         [Test]
         public void RoundTripWithAggregateContext()
         {
-            var original = new AnalysisResult(
+            var original = new Analysis(
                 "AggregateAnalysis",
                 "Issue",
                 new ResultsAnalysisAggregateContext([

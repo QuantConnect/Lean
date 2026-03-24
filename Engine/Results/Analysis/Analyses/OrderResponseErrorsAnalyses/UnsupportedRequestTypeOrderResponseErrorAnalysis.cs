@@ -60,7 +60,7 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
         /// <param name="messages">The log or order event messages to scan.</param>
         /// <param name="language">The programming language the algorithm is written in.</param>
         /// <returns>Analysis results when either unsupported request type pattern is detected.</returns>
-        public virtual IReadOnlyList<AnalysisResult> Run(IReadOnlyList<string> messages, Language language)
+        public virtual IReadOnlyList<QuantConnect.Analysis> Run(IReadOnlyList<string> messages, Language language)
         {
             var shortFoundMessages = Match(messages, ShortMessageText).ToList();
             var quantityFoundMessages = Match(messages, QuantityMessageText).ToList();
