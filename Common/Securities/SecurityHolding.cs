@@ -179,7 +179,7 @@ namespace QuantConnect.Securities
         /// </summary>
         public virtual decimal UnleveredHoldingsCost
         {
-            get { return HoldingsCost/Leverage; }
+            get { return HoldingsCost / Leverage; }
         }
 
         /// <summary>
@@ -358,7 +358,7 @@ namespace QuantConnect.Securities
             get
             {
                 if (AbsoluteHoldingsCost == 0) return 0m;
-                return UnrealizedProfit/AbsoluteHoldingsCost;
+                return UnrealizedProfit / AbsoluteHoldingsCost;
             }
         }
 
@@ -420,7 +420,7 @@ namespace QuantConnect.Securities
         /// </summary>
         public virtual void SetHoldings(decimal averagePrice, int quantity)
         {
-            SetHoldings(averagePrice, (decimal) quantity);
+            SetHoldings(averagePrice, (decimal)quantity);
         }
 
         /// <summary>
@@ -494,13 +494,22 @@ namespace QuantConnect.Securities
                 feesInAccountCurrency = _currencyConverter.ConvertToAccountCurrency(liquidationFees).Amount;
             }
 
-            // if we are long, we would need to sell against the bid
-            var price = IsLong ? _security.BidPrice : _security.AskPrice;
-            if (price == 0)
+            // Outside market hours, use last trade price to avoid unreliable bid/ask spreads.
+            decimal price;
+            if (!_security.Exchange.ExchangeOpen && _security.Type != SecurityType.Future)
             {
-                // Bid/Ask prices can both be equal to 0. This usually happens when we request our holdings from
-                // the brokerage, but only the last trade price was provided.
                 price = _security.Price;
+            }
+            else
+            {
+                // if we are long, we would need to sell against the bid
+                price = IsLong ? _security.BidPrice : _security.AskPrice;
+                if (price == 0)
+                {
+                    // Bid/Ask prices can both be equal to 0. This usually happens when we request our holdings from
+                    // the brokerage, but only the last trade price was provided.
+                    price = _security.Price;
+                }
             }
 
             var entryValue = GetQuantityValue(quantityToUse, entryPrice ?? AveragePrice).InAccountCurrency;

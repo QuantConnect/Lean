@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -82,7 +82,30 @@ namespace QuantConnect.Tests.Common.Securities
             Assert.AreEqual(firstPrice, second.PreviousAveragePrice);
         }
 
-        private Security GetSecurity<T>(Symbol symbol, Resolution resolution)
+        [TestCase(true)]
+        [TestCase(false)]
+        public void TotalCloseProfitRespectMarketHours(bool isMarketOpen)
+        {
+            var security = GetSecurity<QuantConnect.Securities.Equity.Equity>(Symbols.SPY, Resolution.Daily, isMarketOpen);
+            var holding = new SecurityHolding(security, new IdentityCurrencyConverter(Currencies.USD));
+
+            var last = 100m;
+            var bid = 90m;
+            var ask = 110m;
+
+            security.SetMarketPrice(new Tick(DateTime.Now, security.Symbol, last, bid, ask));
+
+            var expectedLong = isMarketOpen ? (bid - last) * 100m : 0m;
+            var expectedShort = isMarketOpen ? (ask - last) * -100m : 0m;
+
+            holding.SetHoldings(last, 100m);
+            Assert.AreEqual(expectedLong, holding.TotalCloseProfit(includeFees: false));
+
+            holding.SetHoldings(last, -100m);
+            Assert.AreEqual(expectedShort, holding.TotalCloseProfit(includeFees: false));
+        }
+
+        private Security GetSecurity<T>(Symbol symbol, Resolution resolution, bool isMarketOpen = true)
         {
             var subscriptionDataConfig = new SubscriptionDataConfig(
                 typeof(T),
@@ -94,8 +117,24 @@ namespace QuantConnect.Tests.Common.Securities
                 true,
                 false);
 
+            SecurityExchangeHours exchangeHours;
+            if (isMarketOpen)
+            {
+                exchangeHours = SecurityExchangeHours.AlwaysOpen(TimeZones.Utc);
+            }
+            else
+            {
+                var days = Enum.GetValues(typeof(DayOfWeek)).Cast<DayOfWeek>();
+                exchangeHours = new SecurityExchangeHours(
+                    TimeZones.Utc,
+                    Enumerable.Empty<DateTime>(),
+                    days.ToDictionary(d => d, d => LocalMarketHours.ClosedAllDay(d)),
+                    new Dictionary<DateTime, TimeSpan>(),
+                    new Dictionary<DateTime, TimeSpan>());
+            }
+
             var security = new Security(
-                SecurityExchangeHours.AlwaysOpen(TimeZones.Utc),
+                exchangeHours,
                 subscriptionDataConfig,
                 new Cash(Currencies.USD, 0, 1m),
                 SymbolProperties.GetDefault(Currencies.USD),
