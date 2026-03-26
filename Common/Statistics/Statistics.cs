@@ -312,6 +312,96 @@ namespace QuantConnect.Statistics
                 return new DrawdownMetrics(0m, 0);
             }
         }
+
+        /// <summary>
+        /// Calculates the maximum drawdown and recovery time using OHLC equity series points.
+        /// Uses High for peak tracking and Low for drawdown measurement.
+        /// </summary>
+        /// <param name="equityPoints">Time series of equity OHLC data points</param>
+        /// <param name="rounding">Number of decimals to round the results to</param>
+        /// <returns>A <see cref="DrawdownMetrics"/> object containing MaxDrawdown (percentage) and MaxRecoveryTime (in days)</returns>
+        public static DrawdownMetrics CalculateDrawdownMetrics(IEnumerable<ISeriesPoint> equityPoints, int rounding = 2)
+        {
+            decimal maxDrawdown = 0m;
+            decimal maxRecoveryTime = 0m;
+
+            try
+            {
+                var pointsList = equityPoints?.ToList();
+                if (pointsList == null || pointsList.Count < 2) return new DrawdownMetrics(0m, 0);
+
+                var peakEquity = GetHigh(pointsList[0]);
+                var peakDate = pointsList[0].Time;
+                DateTime? drawdownStartDate = null;
+
+                foreach (var point in pointsList)
+                {
+                    var high = GetHigh(point);
+                    var low = GetLow(point);
+
+                    // Update peak equity using the high price
+                    if (high >= peakEquity)
+                    {
+                        // If we were in a drawdown, calculate recovery time
+                        if (drawdownStartDate.HasValue)
+                        {
+                            var recoveryDays = (decimal)(point.Time - drawdownStartDate.Value).TotalDays;
+                            maxRecoveryTime = Math.Max(maxRecoveryTime, recoveryDays);
+                            drawdownStartDate = null;
+                        }
+                        peakEquity = high;
+                        peakDate = point.Time;
+                    }
+
+                    // Calculate current drawdown from peak using the low price
+                    var currentDrawdown = (low / peakEquity) - 1;
+                    if (currentDrawdown < 0)
+                    {
+                        maxDrawdown = Math.Min(maxDrawdown, currentDrawdown);
+
+                        // Mark the start of the drawdown period
+                        if (!drawdownStartDate.HasValue)
+                        {
+                            drawdownStartDate = peakDate;
+                        }
+                    }
+                }
+
+                // Return absolute drawdown percentage and max recovery time in days
+                return new DrawdownMetrics(Math.Round(Math.Abs(maxDrawdown), rounding), (int)maxRecoveryTime);
+            }
+            catch (Exception err)
+            {
+                Log.Error(err);
+                return new DrawdownMetrics(0m, 0);
+            }
+        }
+
+        private static decimal GetHigh(ISeriesPoint point)
+        {
+            if (point is Candlestick candlestick)
+            {
+                return candlestick.High ?? candlestick.Close ?? 0m;
+            }
+            if (point is ChartPoint chartPoint)
+            {
+                return chartPoint.y ?? 0m;
+            }
+            return 0m;
+        }
+
+        private static decimal GetLow(ISeriesPoint point)
+        {
+            if (point is Candlestick candlestick)
+            {
+                return candlestick.Low ?? candlestick.Close ?? 0m;
+            }
+            if (point is ChartPoint chartPoint)
+            {
+                return chartPoint.y ?? 0m;
+            }
+            return 0m;
+        }
     } // End of Statistics
 
 } // End of Namespace
