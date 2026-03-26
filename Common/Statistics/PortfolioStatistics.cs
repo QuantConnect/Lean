@@ -208,6 +208,7 @@ namespace QuantConnect.Statistics
         /// If this and <paramref name="lossCount"/> are null, they will be calculated from <paramref name="profitLoss"/>
         /// </param>
         /// <param name="lossCount">The number of losses</param>
+        /// <param name="equityPoints">The OHLC equity series points used for drawdown calculation</param>
         public PortfolioStatistics(
             SortedDictionary<DateTime, decimal> profitLoss,
             SortedDictionary<DateTime, decimal> equity,
@@ -218,7 +219,8 @@ namespace QuantConnect.Statistics
             IRiskFreeInterestRateModel riskFreeInterestRateModel,
             int tradingDaysPerYear,
             int? winCount = null,
-            int? lossCount = null)
+            int? lossCount = null,
+            List<ISeriesPoint> equityPoints = null)
         {
             StartEquity = startingCapital;
             EndEquity = equity.LastOrDefault().Value;
@@ -314,7 +316,9 @@ namespace QuantConnect.Statistics
             ValueAtRisk99 = GetValueAtRisk(listPerformance, tradingDaysPerYear, 0.99d);
             ValueAtRisk95 = GetValueAtRisk(listPerformance, tradingDaysPerYear, 0.95d);
 
-            var drawdownMetrics = Statistics.CalculateDrawdownMetrics(equity, 3);
+            var drawdownMetrics = equityPoints != null
+                ? Statistics.CalculateDrawdownMetrics(equityPoints, 3)
+                : Statistics.CalculateDrawdownMetrics(equity, 3);
             Drawdown = drawdownMetrics.Drawdown;
             DrawdownRecovery = drawdownMetrics.DrawdownRecovery;
         }
