@@ -148,7 +148,7 @@ namespace QuantConnect.Tests.Common.Statistics
             var riskFreeInterestRateModel = new InterestRateProvider();
             var tradingDaysPerYear = 252;
 
-            Assert.DoesNotThrow(() => new PortfolioStatistics(profitLoss, equity, portfolioTurnover, listPerformance, listBenchmark, startingCapital, riskFreeInterestRateModel, tradingDaysPerYear));
+            Assert.DoesNotThrow(() => new PortfolioStatistics(profitLoss, new List<ISeriesPoint>(), portfolioTurnover, listPerformance, listBenchmark, startingCapital, riskFreeInterestRateModel, tradingDaysPerYear));
         }
 
         /// <summary>
@@ -165,7 +165,7 @@ namespace QuantConnect.Tests.Common.Statistics
             var profitLoss = new SortedDictionary<DateTime, decimal>(trades.ToDictionary(x => x.ExitTime, x => x.ProfitLoss));
             var winCount = trades.Count(x => x.IsWin);
             var lossCount = trades.Count - winCount;
-            return new PortfolioStatistics(profitLoss, new SortedDictionary<DateTime, decimal>(),
+            return new PortfolioStatistics(profitLoss, new List<ISeriesPoint>(),
                 new SortedDictionary<DateTime, decimal>(), listPerformance, listBenchmark, 100000,
                 new InterestRateProvider(), tradingDaysPerYear, winCount, lossCount);
         }

@@ -315,6 +315,19 @@ namespace QuantConnect.Statistics
             }
         }
 
+        internal static decimal GetClose(ISeriesPoint point)
+        {
+            if (point is Candlestick candlestick)
+            {
+                return candlestick.Close ?? 0m;
+            }
+            if (point is ChartPoint chartPoint)
+            {
+                return chartPoint.y ?? 0m;
+            }
+            return 0m;
+        }
+
         private static decimal GetHigh(ISeriesPoint point)
         {
             if (point is Candlestick candlestick)
