@@ -51,9 +51,10 @@ namespace QuantConnect.Report.ReportElements
                 Result = backtestDrawdownRecovery;
                 return backtestDrawdownRecovery?.ToStringInvariant() ?? "-";
             }
-            var equityCurve = new SortedDictionary<DateTime, decimal>(DrawdownCollection.NormalizeResults(_backtestResult, _liveResult)
+            var equityCurve = DrawdownCollection.NormalizeResults(_backtestResult, _liveResult)
                 .Observations
-                .ToDictionary(kvp => kvp.Key, kvp => (decimal)kvp.Value));
+                .Select(kvp => (ISeriesPoint)new ChartPoint(kvp.Key, (decimal)kvp.Value))
+                .ToList();
 
             var maxDrawdownRecovery = Statistics.Statistics.CalculateDrawdownMetrics(equityCurve).DrawdownRecovery;
             Result = maxDrawdownRecovery;

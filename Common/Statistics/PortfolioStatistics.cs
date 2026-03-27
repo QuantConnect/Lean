@@ -316,9 +316,8 @@ namespace QuantConnect.Statistics
             ValueAtRisk99 = GetValueAtRisk(listPerformance, tradingDaysPerYear, 0.99d);
             ValueAtRisk95 = GetValueAtRisk(listPerformance, tradingDaysPerYear, 0.95d);
 
-            var drawdownMetrics = equityPoints != null
-                ? Statistics.CalculateDrawdownMetrics(equityPoints, 3)
-                : Statistics.CalculateDrawdownMetrics(equity, 3);
+            var points = equityPoints ?? equity.Select(kvp => (ISeriesPoint)new ChartPoint(kvp.Key, kvp.Value)).ToList();
+            var drawdownMetrics = Statistics.CalculateDrawdownMetrics(points, 3);
             Drawdown = drawdownMetrics.Drawdown;
             DrawdownRecovery = drawdownMetrics.DrawdownRecovery;
         }
