@@ -53,9 +53,10 @@ namespace QuantConnect.Report.ReportElements
                 return backtestDrawdown?.ToString("P1") ?? "-";
             }
 
-            var equityCurve = new SortedDictionary<DateTime, decimal>(DrawdownCollection.NormalizeResults(_backtest, _live)
+            var equityCurve = DrawdownCollection.NormalizeResults(_backtest, _live)
                 .Observations
-                .ToDictionary(kvp => kvp.Key, kvp => (decimal)kvp.Value));
+                .Select(kvp => (ISeriesPoint)new ChartPoint(kvp.Key, (decimal)kvp.Value))
+                .ToList();
 
             var maxDrawdown = Statistics.Statistics.CalculateDrawdownMetrics(equityCurve).Drawdown;
             Result = maxDrawdown;
