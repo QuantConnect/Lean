@@ -196,7 +196,7 @@ namespace QuantConnect.Statistics
         /// Initializes a new instance of the <see cref="PortfolioStatistics"/> class
         /// </summary>
         /// <param name="profitLoss">Trade record of profits and losses</param>
-        /// <param name="equity">The list of daily equity values</param>
+        /// <param name="equityPoints">The equity curve series points</param>
         /// <param name="portfolioTurnover">The algorithm portfolio turnover</param>
         /// <param name="listPerformance">The list of algorithm performance values</param>
         /// <param name="listBenchmark">The list of benchmark values</param>
@@ -208,10 +208,9 @@ namespace QuantConnect.Statistics
         /// If this and <paramref name="lossCount"/> are null, they will be calculated from <paramref name="profitLoss"/>
         /// </param>
         /// <param name="lossCount">The number of losses</param>
-        /// <param name="equityPoints">The OHLC equity series points used for drawdown calculation</param>
         public PortfolioStatistics(
             SortedDictionary<DateTime, decimal> profitLoss,
-            SortedDictionary<DateTime, decimal> equity,
+            List<ISeriesPoint> equityPoints,
             SortedDictionary<DateTime, decimal> portfolioTurnover,
             List<double> listPerformance,
             List<double> listBenchmark,
@@ -219,11 +218,10 @@ namespace QuantConnect.Statistics
             IRiskFreeInterestRateModel riskFreeInterestRateModel,
             int tradingDaysPerYear,
             int? winCount = null,
-            int? lossCount = null,
-            List<ISeriesPoint> equityPoints = null)
+            int? lossCount = null)
         {
             StartEquity = startingCapital;
-            EndEquity = equity.LastOrDefault().Value;
+            EndEquity = Statistics.GetClose(equityPoints.LastOrDefault());
 
             if (portfolioTurnover.Count > 0)
             {
@@ -278,13 +276,16 @@ namespace QuantConnect.Statistics
             LossRate = totalTrades == 0 ? 0 : (decimal)totalLosses / totalTrades;
             Expectancy = WinRate * ProfitLossRatio - LossRate;
 
+            var lastEquityValue = Statistics.GetClose(equityPoints.LastOrDefault());
             if (startingCapital != 0)
             {
-                TotalNetProfit = equity.Values.LastOrDefault() / startingCapital - 1;
+                TotalNetProfit = lastEquityValue / startingCapital - 1;
             }
 
-            var fractionOfYears = (decimal)(equity.Keys.LastOrDefault() - equity.Keys.FirstOrDefault()).TotalDays / 365;
-            CompoundingAnnualReturn = Statistics.CompoundingAnnualPerformance(startingCapital, equity.Values.LastOrDefault(), fractionOfYears);
+            var lastTime = equityPoints.LastOrDefault()?.Time ?? default;
+            var firstTime = equityPoints.FirstOrDefault()?.Time ?? default;
+            var fractionOfYears = (decimal)(lastTime - firstTime).TotalDays / 365;
+            CompoundingAnnualReturn = Statistics.CompoundingAnnualPerformance(startingCapital, lastEquityValue, fractionOfYears);
 
             AnnualVariance = Statistics.AnnualVariance(listPerformance, tradingDaysPerYear).SafeDecimalCast();
             AnnualStandardDeviation = (decimal)Math.Sqrt((double)AnnualVariance);
@@ -292,7 +293,7 @@ namespace QuantConnect.Statistics
             var benchmarkAnnualPerformance = GetAnnualPerformance(listBenchmark, tradingDaysPerYear);
             var annualPerformance = GetAnnualPerformance(listPerformance, tradingDaysPerYear);
 
-            var riskFreeRate = riskFreeInterestRateModel.GetAverageRiskFreeRate(equity.Select(x => x.Key));
+            var riskFreeRate = riskFreeInterestRateModel.GetAverageRiskFreeRate(equityPoints.Select(x => x.Time));
             SharpeRatio = AnnualStandardDeviation == 0 ? 0 : Statistics.SharpeRatio(annualPerformance, AnnualStandardDeviation, riskFreeRate);
 
             var annualDownsideDeviation = Statistics.AnnualDownsideStandardDeviation(listPerformance, tradingDaysPerYear).SafeDecimalCast();
@@ -316,8 +317,7 @@ namespace QuantConnect.Statistics
             ValueAtRisk99 = GetValueAtRisk(listPerformance, tradingDaysPerYear, 0.99d);
             ValueAtRisk95 = GetValueAtRisk(listPerformance, tradingDaysPerYear, 0.95d);
 
-            var points = equityPoints ?? equity.Select(kvp => (ISeriesPoint)new ChartPoint(kvp.Key, kvp.Value)).ToList();
-            var drawdownMetrics = Statistics.CalculateDrawdownMetrics(points, 3);
+            var drawdownMetrics = Statistics.CalculateDrawdownMetrics(equityPoints, 3);
             Drawdown = drawdownMetrics.Drawdown;
             DrawdownRecovery = drawdownMetrics.DrawdownRecovery;
         }

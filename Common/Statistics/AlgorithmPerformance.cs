@@ -44,7 +44,6 @@ namespace QuantConnect.Statistics
         /// </summary>
         /// <param name="trades">The list of closed trades</param>
         /// <param name="profitLoss">Trade record of profits and losses</param>
-        /// <param name="equity">The list of daily equity values</param>
         /// <param name="portfolioTurnover">The algorithm portfolio turnover</param>
         /// <param name="listPerformance">The list of algorithm performance values</param>
         /// <param name="listBenchmark">The list of benchmark values</param>
@@ -53,11 +52,10 @@ namespace QuantConnect.Statistics
         /// <param name="losingTransactions">Number of losing transactions</param>
         /// <param name="riskFreeInterestRateModel">The risk free interest rate model to use</param>
         /// <param name="tradingDaysPerYear">The number of trading days per year</param>
-        /// <param name="equityPoints">The OHLC equity series points used for drawdown calculation</param>
+        /// <param name="equityPoints">The equity curve series points</param>
         public AlgorithmPerformance(
             List<Trade> trades,
             SortedDictionary<DateTime, decimal> profitLoss,
-            SortedDictionary<DateTime, decimal> equity,
             SortedDictionary<DateTime, decimal> portfolioTurnover,
             List<double> listPerformance,
             List<double> listBenchmark,
@@ -68,10 +66,9 @@ namespace QuantConnect.Statistics
             int tradingDaysPerYear,
             List<ISeriesPoint> equityPoints = null)
         {
-
             TradeStatistics = new TradeStatistics(trades);
-            PortfolioStatistics = new PortfolioStatistics(profitLoss, equity, portfolioTurnover, listPerformance, listBenchmark, startingCapital,
-                riskFreeInterestRateModel, tradingDaysPerYear, winningTransactions, losingTransactions, equityPoints);
+            PortfolioStatistics = new PortfolioStatistics(profitLoss, equityPoints, portfolioTurnover, listPerformance, listBenchmark, startingCapital,
+                riskFreeInterestRateModel, tradingDaysPerYear, winningTransactions, losingTransactions);
             ClosedTrades = trades;
         }
 

@@ -64,14 +64,12 @@ namespace QuantConnect.Statistics
             IRiskFreeInterestRateModel riskFreeInterestRateModel,
             int tradingDaysPerYear)
         {
-            var equity = ChartPointToDictionary(pointsEquity);
+            var firstDate = pointsEquity.FirstOrDefault()?.Time.Date ?? default;
+            var lastDate = pointsEquity.LastOrDefault()?.Time.Date ?? default;
 
-            var firstDate = equity.Keys.FirstOrDefault().Date;
-            var lastDate = equity.Keys.LastOrDefault().Date;
-
-            var totalPerformance = GetAlgorithmPerformance(firstDate, lastDate, trades, profitLoss, equity, pointsEquity, pointsPerformance, pointsBenchmark,
+            var totalPerformance = GetAlgorithmPerformance(firstDate, lastDate, trades, profitLoss, pointsEquity, pointsPerformance, pointsBenchmark,
                 pointsPortfolioTurnover, startingCapital, transactions, riskFreeInterestRateModel, tradingDaysPerYear);
-            var rollingPerformances = GetRollingPerformances(firstDate, lastDate, trades, profitLoss, equity, pointsEquity, pointsPerformance, pointsBenchmark,
+            var rollingPerformances = GetRollingPerformances(firstDate, lastDate, trades, profitLoss, pointsEquity, pointsPerformance, pointsBenchmark,
                 pointsPortfolioTurnover, startingCapital, transactions, riskFreeInterestRateModel, tradingDaysPerYear);
             var summary = GetSummary(totalPerformance, estimatedStrategyCapacity, totalFees, totalOrders, accountCurrencySymbol);
 
@@ -85,8 +83,7 @@ namespace QuantConnect.Statistics
         /// <param name="toDate">The final date of the range</param>
         /// <param name="trades">The list of closed trades</param>
         /// <param name="profitLoss">Trade record of profits and losses</param>
-        /// <param name="equity">The list of daily equity values</param>
-        /// <param name="pointsEquity">The list of OHLC equity series points used for drawdown calculation</param>
+        /// <param name="pointsEquity">The equity curve series points</param>
         /// <param name="pointsPerformance">The list of algorithm performance values</param>
         /// <param name="pointsBenchmark">The list of benchmark values</param>
         /// <param name="pointsPortfolioTurnover">The list of portfolio turnover daily samples</param>
@@ -102,7 +99,6 @@ namespace QuantConnect.Statistics
             DateTime toDate,
             List<Trade> trades,
             SortedDictionary<DateTime, decimal> profitLoss,
-            SortedDictionary<DateTime, decimal> equity,
             List<ISeriesPoint> pointsEquity,
             List<ISeriesPoint> pointsPerformance,
             List<ISeriesPoint> pointsBenchmark,
@@ -112,15 +108,13 @@ namespace QuantConnect.Statistics
             IRiskFreeInterestRateModel riskFreeInterestRateModel,
             int tradingDaysPerYear)
         {
-            var periodEquity = new SortedDictionary<DateTime, decimal>(equity.Where(x => x.Key.Date >= fromDate && x.Key.Date < toDate.AddDays(1)).ToDictionary(x => x.Key, y => y.Value));
+            var periodEquityPoints = pointsEquity?.Where(x => x.Time.Date >= fromDate && x.Time.Date < toDate.AddDays(1)).ToList();
 
             // No portfolio equity for the period means that there is no performance to be computed
-            if (periodEquity.IsNullOrEmpty())
+            if (periodEquityPoints.IsNullOrEmpty())
             {
                 return new AlgorithmPerformance();
             }
-
-            var periodEquityPoints = pointsEquity?.Where(x => x.Time.Date >= fromDate && x.Time.Date < toDate.AddDays(1)).ToList();
             var periodTrades = trades.Where(x => x.ExitTime.Date >= fromDate && x.ExitTime < toDate.AddDays(1)).ToList();
             var periodProfitLoss = new SortedDictionary<DateTime, decimal>(profitLoss.Where(x => x.Key >= fromDate && x.Key.Date < toDate.AddDays(1)).ToDictionary(x => x.Key, y => y.Value));
             var periodWinCount = transactions.WinningTransactions.Count(x => x.Key >= fromDate && x.Key.Date < toDate.AddDays(1));
@@ -145,9 +139,9 @@ namespace QuantConnect.Statistics
             var listBenchmark = benchmarkEnumerable.Select(x => x.Value).ToList();
             var listPerformance = PreprocessPerformanceValues(performance).Select(x => x.Value).ToList();
 
-            var runningCapital = equity.Count == periodEquity.Count ? startingCapital : periodEquity.Values.FirstOrDefault();
+            var runningCapital = pointsEquity.Count == periodEquityPoints.Count ? startingCapital : Statistics.GetClose(periodEquityPoints.FirstOrDefault());
 
-            return new AlgorithmPerformance(periodTrades, periodProfitLoss, periodEquity, portfolioTurnover, listPerformance, listBenchmark,
+            return new AlgorithmPerformance(periodTrades, periodProfitLoss, portfolioTurnover, listPerformance, listBenchmark,
                 runningCapital, periodWinCount, periodLossCount, riskFreeInterestRateModel, tradingDaysPerYear, periodEquityPoints);
         }
 
@@ -158,8 +152,7 @@ namespace QuantConnect.Statistics
         /// <param name="lastDate">The last date of the total period</param>
         /// <param name="trades">The list of closed trades</param>
         /// <param name="profitLoss">Trade record of profits and losses</param>
-        /// <param name="equity">The list of daily equity values</param>
-        /// <param name="pointsEquity">The list of OHLC equity series points used for drawdown calculation</param>
+        /// <param name="pointsEquity">The equity curve series points</param>
         /// <param name="pointsPerformance">The list of algorithm performance values</param>
         /// <param name="pointsBenchmark">The list of benchmark values</param>
         /// <param name="pointsPortfolioTurnover">The list of portfolio turnover daily samples</param>
@@ -175,7 +168,6 @@ namespace QuantConnect.Statistics
             DateTime lastDate,
             List<Trade> trades,
             SortedDictionary<DateTime, decimal> profitLoss,
-            SortedDictionary<DateTime, decimal> equity,
             List<ISeriesPoint> pointsEquity,
             List<ISeriesPoint> pointsPerformance,
             List<ISeriesPoint> pointsBenchmark,
@@ -195,7 +187,7 @@ namespace QuantConnect.Statistics
                 foreach (var period in ranges)
                 {
                     var key = $"M{monthPeriod}_{period.EndDate.ToStringInvariant("yyyyMMdd")}";
-                    var periodPerformance = GetAlgorithmPerformance(period.StartDate, period.EndDate, trades, profitLoss, equity, pointsEquity, pointsPerformance,
+                    var periodPerformance = GetAlgorithmPerformance(period.StartDate, period.EndDate, trades, profitLoss, pointsEquity, pointsPerformance,
                         pointsBenchmark, pointsPortfolioTurnover, startingCapital, transactions, riskFreeInterestRateModel, tradingDaysPerYear);
                     rollingPerformances[key] = periodPerformance;
                 }
