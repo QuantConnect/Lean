@@ -16,6 +16,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using MathNet.Numerics.Distributions;
 using MathNet.Numerics.Statistics;
 using QuantConnect.Logging;
@@ -267,14 +268,14 @@ namespace QuantConnect.Statistics
             {
                 if (equityPoints == null || equityPoints.Count < 2) return new DrawdownMetrics(0m, 0);
 
-                var peakEquity = GetHigh(equityPoints[0]);
+                GetHighLow(equityPoints[0], out var peakEquity, out _);
                 var peakDate = equityPoints[0].Time;
                 DateTime? drawdownStartDate = null;
 
-                foreach (var point in equityPoints)
+                for (var i = 0; i < equityPoints.Count; i++)
                 {
-                    var high = GetHigh(point);
-                    var low = GetLow(point);
+                    var point = equityPoints[i];
+                    GetHighLow(point, out var high, out var low);
 
                     // Update peak equity using the high price
                     if (high >= peakEquity)
@@ -314,43 +315,40 @@ namespace QuantConnect.Statistics
             }
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         internal static decimal GetClose(ISeriesPoint point)
         {
-            if (point is Candlestick candlestick)
+            switch (point)
             {
-                return candlestick.Close ?? 0m;
+                case Candlestick candlestick:
+                    return candlestick.Close ?? 0m;
+                case ChartPoint chartPoint:
+                    return chartPoint.y ?? 0m;
+                default:
+                    return 0m;
             }
-            if (point is ChartPoint chartPoint)
-            {
-                return chartPoint.y ?? 0m;
-            }
-            return 0m;
         }
 
-        private static decimal GetHigh(ISeriesPoint point)
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private static void GetHighLow(ISeriesPoint point, out decimal high, out decimal low)
         {
             if (point is Candlestick candlestick)
             {
-                return candlestick.High ?? candlestick.Close ?? 0m;
+                var close = candlestick.Close ?? 0m;
+                high = candlestick.High ?? close;
+                low = candlestick.Low ?? close;
+                return;
             }
             if (point is ChartPoint chartPoint)
             {
-                return chartPoint.y ?? 0m;
+                var value = chartPoint.y ?? 0m;
+                high = value;
+                low = value;
+                return;
             }
-            return 0m;
-        }
 
-        private static decimal GetLow(ISeriesPoint point)
-        {
-            if (point is Candlestick candlestick)
-            {
-                return candlestick.Low ?? candlestick.Close ?? 0m;
-            }
-            if (point is ChartPoint chartPoint)
-            {
-                return chartPoint.y ?? 0m;
-            }
-            return 0m;
+            high = 0m;
+            low = 0m;
         }
     } // End of Statistics
 
