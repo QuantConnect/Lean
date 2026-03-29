@@ -3362,7 +3362,8 @@ namespace QuantConnect.Algorithm
         {
             if (AssertIndicatorHasWarmupPeriod(indicator))
             {
-                IndicatorHistory(indicator, symbols, 0, resolution, selector);
+                var end = GetIndicatorWarmUpHistoryEndTime();
+                IndicatorHistory(indicator, symbols, end, end, resolution, selector);
             }
         }
 
@@ -3435,7 +3436,8 @@ namespace QuantConnect.Algorithm
         {
             if (AssertIndicatorHasWarmupPeriod(indicator))
             {
-                IndicatorHistory(indicator, symbols, 0, resolution, selector);
+                var end = GetIndicatorWarmUpHistoryEndTime();
+                IndicatorHistory(indicator, symbols, end, end, resolution, selector);
             }
         }
 
@@ -3545,6 +3547,19 @@ namespace QuantConnect.Algorithm
                 return false;
             }
             return true;
+        }
+
+        private DateTime GetIndicatorWarmUpHistoryEndTime()
+        {
+            // During Initialize, if algorithm warm-up is configured, requesting indicator warm-up history
+            // up to Time causes an overlap with the replayed warm-up stream at the warm-up boundary.
+            // We end at the warm-up start frontier instead to avoid duplicate boundary updates.
+            if (!_locked && TryGetWarmupHistoryStartTime(out var warmupStart))
+            {
+                return warmupStart;
+            }
+
+            return Time;
         }
 
         private void WarmUpIndicatorImpl<T>(IEnumerable<Symbol> symbols, TimeSpan period, Action<T> handler, IEnumerable<Slice> history, bool identityConsolidator)

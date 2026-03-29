@@ -16,6 +16,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using Moq;
 using NUnit.Framework;
 using Python.Runtime;
@@ -640,6 +641,57 @@ class GoodCustomIndicator:
                 Assert.AreEqual(currentLen, indicatorTypeLen);
                 Assert.AreEqual(currentLen, descriptionLen);
             }
+        }
+
+        [Test]
+        public void WarmUpIndicatorDuringInitializeDoesNotCreateBoundaryDuplicateWithAlgorithmWarmup()
+        {
+            _algorithm.SetWarmUp(30);
+
+            const int windowSize = 6;
+            var warmedIndicator = new MidPrice(2);
+            warmedIndicator.Window.Size = windowSize;
+            var referenceIndicator = new MidPrice(2);
+            referenceIndicator.Window.Size = windowSize;
+
+            _algorithm.RegisterIndicator(_equity, warmedIndicator, Resolution.Minute);
+            _algorithm.RegisterIndicator(_equity, referenceIndicator, Resolution.Minute);
+
+            _algorithm.WarmUpIndicator(_equity, warmedIndicator, Resolution.Minute);
+
+            var warmupStart = GetWarmupStartTime(_algorithm);
+            var history = _algorithm.History(new[] { _equity }, warmupStart, _algorithm.Time, Resolution.Minute);
+
+            var warmedConsolidator = warmedIndicator.Consolidators.Single();
+            var referenceConsolidator = referenceIndicator.Consolidators.Single();
+            foreach (var slice in history)
+            {
+                if (slice.Bars.TryGetValue(_equity, out var bar))
+                {
+                    warmedConsolidator.Update(bar);
+                    referenceConsolidator.Update(bar);
+                }
+            }
+
+            Assert.AreEqual(windowSize, warmedIndicator.Window.Count);
+            Assert.AreEqual(windowSize, referenceIndicator.Window.Count);
+            for (var i = 0; i < windowSize; i++)
+            {
+                Assert.AreEqual(referenceIndicator.Window[i].EndTime, warmedIndicator.Window[i].EndTime);
+                Assert.AreEqual(referenceIndicator.Window[i].Value, warmedIndicator.Window[i].Value);
+            }
+        }
+
+        private static DateTime GetWarmupStartTime(QCAlgorithm algorithm)
+        {
+            var method = typeof(QCAlgorithm).GetMethod("TryGetWarmupHistoryStartTime", BindingFlags.NonPublic | BindingFlags.Instance);
+            Assert.IsNotNull(method, "Could not find TryGetWarmupHistoryStartTime private method");
+
+            var args = new object[] { default(DateTime) };
+            var hasWarmup = (bool)method.Invoke(algorithm, args);
+            Assert.IsTrue(hasWarmup, "Expected warm-up to be configured");
+
+            return (DateTime)args[0];
         }
 
         private enum TestIndicatorType
