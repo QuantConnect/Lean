@@ -276,16 +276,18 @@ namespace QuantConnect.Statistics
             LossRate = totalTrades == 0 ? 0 : (decimal)totalLosses / totalTrades;
             Expectancy = WinRate * ProfitLossRatio - LossRate;
 
-            var lastEquityValue = Statistics.GetClose(equityPoints.LastOrDefault());
             if (startingCapital != 0)
             {
-                TotalNetProfit = lastEquityValue / startingCapital - 1;
+                TotalNetProfit = EndEquity / startingCapital - 1;
             }
 
-            var lastTime = equityPoints.LastOrDefault()?.Time ?? default;
-            var firstTime = equityPoints.FirstOrDefault()?.Time ?? default;
-            var fractionOfYears = (decimal)(lastTime - firstTime).TotalDays / 365;
-            CompoundingAnnualReturn = Statistics.CompoundingAnnualPerformance(startingCapital, lastEquityValue, fractionOfYears);
+            if (equityPoints.Count >= 2)
+            {
+                var lastTime = equityPoints.Last().Time;
+                var firstTime = equityPoints.First().Time;
+                var fractionOfYears = (decimal)(lastTime - firstTime).TotalDays / 365;
+                CompoundingAnnualReturn = Statistics.CompoundingAnnualPerformance(startingCapital, EndEquity, fractionOfYears);
+            }
 
             AnnualVariance = Statistics.AnnualVariance(listPerformance, tradingDaysPerYear).SafeDecimalCast();
             AnnualStandardDeviation = (decimal)Math.Sqrt((double)AnnualVariance);

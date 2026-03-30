@@ -258,21 +258,20 @@ namespace QuantConnect.Statistics
         /// <param name="equityPoints">Time series of equity OHLC data points</param>
         /// <param name="rounding">Number of decimals to round the results to</param>
         /// <returns>A <see cref="DrawdownMetrics"/> object containing MaxDrawdown (percentage) and MaxRecoveryTime (in days)</returns>
-        public static DrawdownMetrics CalculateDrawdownMetrics(IEnumerable<ISeriesPoint> equityPoints, int rounding = 2)
+        public static DrawdownMetrics CalculateDrawdownMetrics(List<ISeriesPoint> equityPoints, int rounding = 2)
         {
             decimal maxDrawdown = 0m;
             decimal maxRecoveryTime = 0m;
 
             try
             {
-                var pointsList = equityPoints?.ToList();
-                if (pointsList == null || pointsList.Count < 2) return new DrawdownMetrics(0m, 0);
+                if (equityPoints == null || equityPoints.Count < 2) return new DrawdownMetrics(0m, 0);
 
-                var peakEquity = GetHigh(pointsList[0]);
-                var peakDate = pointsList[0].Time;
+                var peakEquity = GetHigh(equityPoints[0]);
+                var peakDate = equityPoints[0].Time;
                 DateTime? drawdownStartDate = null;
 
-                foreach (var point in pointsList)
+                foreach (var point in equityPoints)
                 {
                     var high = GetHigh(point);
                     var low = GetLow(point);
