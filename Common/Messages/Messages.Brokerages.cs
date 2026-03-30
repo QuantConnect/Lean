@@ -596,6 +596,39 @@ namespace QuantConnect
         }
 
         /// <summary>
+        /// Provides user-facing messages for the <see cref="Brokerages.WebullBrokerageModel"/> class and its consumers or related classes
+        /// </summary>
+        public static class WebullBrokerageModel
+        {
+            /// <summary>
+            /// Returns a message explaining that Options and IndexOptions sell orders only support Day time in force.
+            /// </summary>
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public static string InvalidTimeInForceForOptionSellOrder(Orders.Order order)
+            {
+                return Invariant($"{order.Symbol.SecurityType} sell orders only support {nameof(DayTimeInForce)} time in force, but {order.TimeInForce.GetType().Name} was specified.");
+            }
+
+            /// <summary>
+            /// Returns a message explaining that Options and IndexOptions buy orders only support GoodTilCanceled time in force.
+            /// </summary>
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public static string InvalidTimeInForceForOptionBuyOrder(Orders.Order order)
+            {
+                return Invariant($"{order.Symbol.SecurityType} buy orders only support {nameof(GoodTilCanceledTimeInForce)} time in force, but {order.TimeInForce.GetType().Name} was specified.");
+            }
+
+            /// <summary>
+            /// Returns a message explaining that OutsideRegularTradingHours is only supported for Equity orders.
+            /// </summary>
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public static string OutsideRegularTradingHoursNotSupportedForSecurityType(Securities.Security security)
+            {
+                return Invariant($"{nameof(WebullOrderProperties.OutsideRegularTradingHours)} is only supported for {nameof(SecurityType.Equity)} orders, but {security.Type} was specified.");
+            }
+        }
+
+        /// <summary>
         /// Provides user-facing messages for the <see cref="Brokerages.RBIBrokerageModel"/> class and its consumers or related classes
         /// </summary>
         public static class RBIBrokerageModel

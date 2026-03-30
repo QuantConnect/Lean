@@ -13,10 +13,11 @@
  * limitations under the License.
 */
 
+using System.Collections.Generic;
 using QuantConnect.Orders;
 using QuantConnect.Orders.Fees;
+using QuantConnect.Orders.TimeInForces;
 using QuantConnect.Securities;
-using System.Collections.Generic;
 
 namespace QuantConnect.Brokerages
 {
@@ -26,27 +27,56 @@ namespace QuantConnect.Brokerages
     public class WebullBrokerageModel : DefaultBrokerageModel
     {
         /// <summary>
-        /// HashSet containing the security types supported by Webull.
+        /// Maps each supported security type to the order types Webull allows for it.
         /// </summary>
-        private readonly HashSet<SecurityType> _supportSecurityTypes = new(
-            new[]
+        private static readonly Dictionary<SecurityType, HashSet<OrderType>> _supportedOrderTypesBySecurityType =
+            new Dictionary<SecurityType, HashSet<OrderType>>
             {
-                SecurityType.Equity,
-                SecurityType.Option,
-                SecurityType.IndexOption
-            });
-
-        /// <summary>
-        /// HashSet containing the order types supported by the <see cref="CanSubmitOrder"/> operation in Webull.
-        /// </summary>
-        private readonly HashSet<OrderType> _supportOrderTypes = new(
-            new[]
-            {
-                OrderType.Market,
-                OrderType.Limit,
-                OrderType.StopMarket,
-                OrderType.StopLimit
-            });
+                {
+                    SecurityType.Equity, new HashSet<OrderType>
+                    {
+                        OrderType.Market,
+                        OrderType.Limit,
+                        OrderType.StopMarket,
+                        OrderType.StopLimit,
+                        OrderType.TrailingStop
+                    }
+                },
+                {
+                    SecurityType.Option, new HashSet<OrderType>
+                    {
+                        OrderType.Limit,
+                        OrderType.StopMarket,
+                        OrderType.StopLimit
+                    }
+                },
+                {
+                    SecurityType.IndexOption, new HashSet<OrderType>
+                    {
+                        OrderType.Limit,
+                        OrderType.StopMarket,
+                        OrderType.StopLimit
+                    }
+                },
+                {
+                    SecurityType.Future, new HashSet<OrderType>
+                    {
+                        OrderType.Market,
+                        OrderType.Limit,
+                        OrderType.StopMarket,
+                        OrderType.StopLimit,
+                        OrderType.TrailingStop
+                    }
+                },
+                {
+                    SecurityType.Crypto, new HashSet<OrderType>
+                    {
+                        OrderType.Market,
+                        OrderType.Limit,
+                        OrderType.StopLimit
+                    }
+                }
+            };
 
         /// <summary>
         /// Constructor for Webull brokerage model.
@@ -82,17 +112,46 @@ namespace QuantConnect.Brokerages
         {
             message = default;
 
-            if (!_supportSecurityTypes.Contains(security.Type))
+            if (!_supportedOrderTypesBySecurityType.TryGetValue(security.Type, out var supportedOrderTypes))
             {
                 message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
                     Messages.DefaultBrokerageModel.UnsupportedSecurityType(this, security));
                 return false;
             }
 
-            if (!_supportOrderTypes.Contains(order.Type))
+            if (!supportedOrderTypes.Contains(order.Type))
             {
                 message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
-                    Messages.DefaultBrokerageModel.UnsupportedOrderType(this, order, _supportOrderTypes));
+                    Messages.DefaultBrokerageModel.UnsupportedOrderType(this, order, supportedOrderTypes));
+                return false;
+            }
+
+            // Options and IndexOptions have per-direction TimeInForce restrictions.
+            // https://developer.webull.com/apis/docs/trade-api/options#time-in-force
+            // - Sell orders: Day only
+            // - Buy orders: GoodTilCanceled only
+            if (security.Type == SecurityType.Option || security.Type == SecurityType.IndexOption)
+            {
+                if (order.Direction == OrderDirection.Sell && order.TimeInForce is not DayTimeInForce)
+                {
+                    message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
+                        Messages.WebullBrokerageModel.InvalidTimeInForceForOptionSellOrder(order));
+                    return false;
+                }
+
+                if (order.Direction == OrderDirection.Buy && order.TimeInForce is not GoodTilCanceledTimeInForce)
+                {
+                    message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
+                        Messages.WebullBrokerageModel.InvalidTimeInForceForOptionBuyOrder(order));
+                    return false;
+                }
+            }
+
+            if (order.Properties is WebullOrderProperties { OutsideRegularTradingHours: true } &&
+                security.Type != SecurityType.Equity)
+            {
+                message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
+                    Messages.WebullBrokerageModel.OutsideRegularTradingHoursNotSupportedForSecurityType(security));
                 return false;
             }
 

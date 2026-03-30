@@ -18,6 +18,7 @@ using NUnit.Framework;
 using QuantConnect.Orders;
 using QuantConnect.Brokerages;
 using QuantConnect.Orders.Fees;
+using QuantConnect.Orders.TimeInForces;
 using QuantConnect.Securities;
 using QuantConnect.Tests.Brokerages;
 
@@ -30,25 +31,40 @@ namespace QuantConnect.Tests.Common.Brokerages
 
         // ── CanSubmitOrder — valid combinations ───────────────────────────────────
 
+        // Equity: all five order types supported
         [TestCase(SecurityType.Equity, OrderType.Market)]
         [TestCase(SecurityType.Equity, OrderType.Limit)]
         [TestCase(SecurityType.Equity, OrderType.StopMarket)]
         [TestCase(SecurityType.Equity, OrderType.StopLimit)]
-        [TestCase(SecurityType.Option, OrderType.Market)]
+        [TestCase(SecurityType.Equity, OrderType.TrailingStop)]
+        // Option: Market and TrailingStop are not supported
         [TestCase(SecurityType.Option, OrderType.Limit)]
         [TestCase(SecurityType.Option, OrderType.StopMarket)]
         [TestCase(SecurityType.Option, OrderType.StopLimit)]
-        [TestCase(SecurityType.IndexOption, OrderType.Market)]
+        // IndexOption: same restrictions as Option
         [TestCase(SecurityType.IndexOption, OrderType.Limit)]
         [TestCase(SecurityType.IndexOption, OrderType.StopMarket)]
         [TestCase(SecurityType.IndexOption, OrderType.StopLimit)]
+        // Future: all five order types supported
+        [TestCase(SecurityType.Future, OrderType.Market)]
+        [TestCase(SecurityType.Future, OrderType.Limit)]
+        [TestCase(SecurityType.Future, OrderType.StopMarket)]
+        [TestCase(SecurityType.Future, OrderType.StopLimit)]
+        [TestCase(SecurityType.Future, OrderType.TrailingStop)]
+        // Crypto: StopMarket and TrailingStop are not supported
+        [TestCase(SecurityType.Crypto, OrderType.Market)]
+        [TestCase(SecurityType.Crypto, OrderType.Limit)]
+        [TestCase(SecurityType.Crypto, OrderType.StopLimit)]
         public void CanSubmitOrder_ValidSecurityAndOrderType_ReturnsTrue(SecurityType securityType, OrderType orderType)
         {
-            var security = TestsHelpers.GetSecurity(securityType: securityType, symbol: "AAPL", market: Market.USA);
+            // Arrange
+            var security = GetSecurityForType(securityType);
             var order = CreateOrder(orderType, security.Symbol);
 
+            // Act
             var canSubmit = _brokerageModel.CanSubmitOrder(security, order, out var message);
 
+            // Assert
             Assert.That(canSubmit, Is.True);
             Assert.That(message, Is.Null);
         }
@@ -56,35 +72,158 @@ namespace QuantConnect.Tests.Common.Brokerages
         // ── CanSubmitOrder — unsupported security types ───────────────────────────
 
         [TestCase(SecurityType.Forex)]
-        [TestCase(SecurityType.Future)]
-        [TestCase(SecurityType.Crypto)]
         [TestCase(SecurityType.Cfd)]
         public void CanSubmitOrder_UnsupportedSecurityType_ReturnsFalse(SecurityType securityType)
         {
+            // Arrange
             var security = TestsHelpers.GetSecurity(securityType: securityType, symbol: "EURUSD", market: Market.Oanda);
             var order = new MarketOrder(security.Symbol, 1m, DateTime.UtcNow);
 
+            // Act
             var canSubmit = _brokerageModel.CanSubmitOrder(security, order, out var message);
 
+            // Assert
             Assert.That(canSubmit, Is.False);
             Assert.That(message, Is.Not.Null);
         }
 
-        // ── CanSubmitOrder — unsupported order types ──────────────────────────────
+        // ── CanSubmitOrder — order types unsupported for specific security types ──
 
-        [TestCase(OrderType.MarketOnClose)]
-        [TestCase(OrderType.MarketOnOpen)]
-        [TestCase(OrderType.TrailingStop)]
-        [TestCase(OrderType.ComboMarket)]
-        public void CanSubmitOrder_UnsupportedOrderType_ReturnsFalse(OrderType orderType)
+        // Equity does not support exchange-session orders or combo orders
+        [TestCase(SecurityType.Equity, OrderType.MarketOnClose)]
+        [TestCase(SecurityType.Equity, OrderType.MarketOnOpen)]
+        [TestCase(SecurityType.Equity, OrderType.ComboMarket)]
+        // Option does not support Market or TrailingStop
+        [TestCase(SecurityType.Option, OrderType.Market)]
+        [TestCase(SecurityType.Option, OrderType.TrailingStop)]
+        // IndexOption has the same restrictions as Option
+        [TestCase(SecurityType.IndexOption, OrderType.Market)]
+        [TestCase(SecurityType.IndexOption, OrderType.TrailingStop)]
+        // Crypto does not support StopMarket or TrailingStop
+        [TestCase(SecurityType.Crypto, OrderType.StopMarket)]
+        [TestCase(SecurityType.Crypto, OrderType.TrailingStop)]
+        public void CanSubmitOrder_UnsupportedOrderTypeForSecurityType_ReturnsFalse(
+            SecurityType securityType, OrderType orderType)
         {
-            var security = TestsHelpers.GetSecurity(securityType: SecurityType.Equity, symbol: "AAPL", market: Market.USA);
+            // Arrange
+            var security = GetSecurityForType(securityType);
             var order = CreateOrder(orderType, security.Symbol);
 
+            // Act
             var canSubmit = _brokerageModel.CanSubmitOrder(security, order, out var message);
 
+            // Assert
             Assert.That(canSubmit, Is.False);
             Assert.That(message, Is.Not.Null);
+        }
+
+        // ── CanSubmitOrder — Option/IndexOption TimeInForce restrictions ────────
+        // https://developer.webull.com/apis/docs/trade-api/options#time-in-force
+        // Sell → Day only | Buy → GoodTilCanceled only
+
+        [TestCase(SecurityType.Option,      OrderDirection.Sell)]   // Sell + Day
+        [TestCase(SecurityType.Option,      OrderDirection.Buy)]    // Buy  + GTC
+        [TestCase(SecurityType.IndexOption, OrderDirection.Sell)]
+        [TestCase(SecurityType.IndexOption, OrderDirection.Buy)]
+        public void CanSubmitOrder_OptionOrderWithValidTimeInForce_ReturnsTrue(
+            SecurityType securityType, OrderDirection direction)
+        {
+            // Arrange
+            var security = GetSecurityForType(securityType);
+            var tif = direction == OrderDirection.Sell
+                ? TimeInForce.Day
+                : TimeInForce.GoodTilCanceled;
+            var order = CreateLimitOrder(security.Symbol, direction, tif);
+
+            // Act
+            var canSubmit = _brokerageModel.CanSubmitOrder(security, order, out var message);
+
+            // Assert
+            Assert.That(canSubmit, Is.True);
+            Assert.That(message, Is.Null);
+        }
+
+        [TestCase(SecurityType.Option,      OrderDirection.Sell)]   // Sell + GTC  → rejected
+        [TestCase(SecurityType.Option,      OrderDirection.Buy)]    // Buy  + Day  → rejected
+        [TestCase(SecurityType.IndexOption, OrderDirection.Sell)]
+        [TestCase(SecurityType.IndexOption, OrderDirection.Buy)]
+        public void CanSubmitOrder_OptionOrderWithInvalidTimeInForce_ReturnsFalse(
+            SecurityType securityType, OrderDirection direction)
+        {
+            // Arrange
+            var security = GetSecurityForType(securityType);
+            // Deliberately use the wrong TIF for the direction
+            var tif = direction == OrderDirection.Sell
+                ? TimeInForce.GoodTilCanceled
+                : TimeInForce.Day;
+            var order = CreateLimitOrder(security.Symbol, direction, tif);
+
+            // Act
+            var canSubmit = _brokerageModel.CanSubmitOrder(security, order, out var message);
+
+            // Assert
+            Assert.That(canSubmit, Is.False);
+            Assert.That(message, Is.Not.Null);
+            Assert.That(message.Message, Does.Contain(tif.GetType().Name));
+            Assert.That(message.Message, Does.Contain(security.Type.ToString()));
+        }
+
+        // ── CanSubmitOrder — OutsideRegularTradingHours ──────────────────────────
+        // https://developer.webull.com/apis/docs/trade-api — Applicable to U.S. stock market orders only.
+
+        [Test]
+        public void CanSubmitOrder_OutsideRegularTradingHoursOnEquity_ReturnsTrue()
+        {
+            // Arrange
+            var security = GetSecurityForType(SecurityType.Equity);
+            var properties = new WebullOrderProperties { OutsideRegularTradingHours = true };
+            var order = new MarketOrder(security.Symbol, 1m, DateTime.UtcNow, properties: properties);
+
+            // Act
+            var canSubmit = _brokerageModel.CanSubmitOrder(security, order, out var message);
+
+            // Assert
+            Assert.That(canSubmit, Is.True);
+            Assert.That(message, Is.Null);
+        }
+
+        [TestCase(SecurityType.Option)]
+        [TestCase(SecurityType.IndexOption)]
+        [TestCase(SecurityType.Future)]
+        [TestCase(SecurityType.Crypto)]
+        public void CanSubmitOrder_OutsideRegularTradingHoursOnNonEquity_ReturnsFalse(SecurityType securityType)
+        {
+            // Arrange
+            var security = GetSecurityForType(securityType);
+            var properties = new WebullOrderProperties { OutsideRegularTradingHours = true };
+            var order = new LimitOrder(security.Symbol, 1m, 100m, DateTime.UtcNow, properties: properties);
+
+            // Act
+            var canSubmit = _brokerageModel.CanSubmitOrder(security, order, out var message);
+
+            // Assert
+            Assert.That(canSubmit, Is.False);
+            Assert.That(message, Is.Not.Null);
+            Assert.That(message.Message, Does.Contain(nameof(WebullOrderProperties.OutsideRegularTradingHours)));
+            Assert.That(message.Message, Does.Contain(securityType.ToString()));
+        }
+
+        [TestCase(SecurityType.Option)]
+        [TestCase(SecurityType.Future)]
+        [TestCase(SecurityType.Crypto)]
+        public void CanSubmitOrder_OutsideRegularTradingHoursFalseOnNonEquity_ReturnsTrue(SecurityType securityType)
+        {
+            // Arrange
+            var security = GetSecurityForType(securityType);
+            var properties = new WebullOrderProperties { OutsideRegularTradingHours = false };
+            var order = new LimitOrder(security.Symbol, 1m, 100m, DateTime.UtcNow, properties: properties);
+
+            // Act
+            var canSubmit = _brokerageModel.CanSubmitOrder(security, order, out var message);
+
+            // Assert
+            Assert.That(canSubmit, Is.True);
+            Assert.That(message, Is.Null);
         }
 
         // ── GetFeeModel ───────────────────────────────────────────────────────────
@@ -92,12 +231,41 @@ namespace QuantConnect.Tests.Common.Brokerages
         [Test]
         public void GetFeeModel_ReturnsWebullFeeModel()
         {
+            // Arrange
             var security = TestsHelpers.GetSecurity(securityType: SecurityType.Equity, symbol: "AAPL", market: Market.USA);
 
+            // Act / Assert
             Assert.That(_brokerageModel.GetFeeModel(security), Is.InstanceOf<WebullFeeModel>());
         }
 
         // ── Helpers ───────────────────────────────────────────────────────────────
+
+        private static Security GetSecurityForType(SecurityType securityType)
+        {
+            switch (securityType)
+            {
+                case SecurityType.Future:
+                    return TestsHelpers.GetSecurity(securityType: SecurityType.Future,
+                        symbol: Futures.Indices.SP500EMini, market: Market.CME);
+                case SecurityType.Crypto:
+                    return TestsHelpers.GetSecurity(securityType: SecurityType.Crypto,
+                        symbol: "BTCUSD", market: Market.Coinbase);
+                case SecurityType.Forex:
+                case SecurityType.Cfd:
+                    return TestsHelpers.GetSecurity(securityType: securityType,
+                        symbol: "EURUSD", market: Market.Oanda);
+                default:
+                    return TestsHelpers.GetSecurity(securityType: securityType,
+                        symbol: "AAPL", market: Market.USA);
+            }
+        }
+
+        private static LimitOrder CreateLimitOrder(Symbol symbol, OrderDirection direction, TimeInForce timeInForce)
+        {
+            var quantity = direction == OrderDirection.Buy ? 1m : -1m;
+            var properties = new OrderProperties { TimeInForce = timeInForce };
+            return new LimitOrder(symbol, quantity, 100m, DateTime.UtcNow, properties: properties);
+        }
 
         private static Order CreateOrder(OrderType orderType, Symbol symbol)
         {
