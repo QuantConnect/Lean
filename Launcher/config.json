@@ -257,7 +257,6 @@
 
   // Webull configuration
   "webull-api-url": "https://api.webull.com",
-  "webull-data-mqtt-url": "wss://data-api.webull.com:8883/mqtt",
   "webull-trade-grpc-url": "https://events-api.webull.com",
   "webull-app-key": "",
   "webull-app-secret": "",
