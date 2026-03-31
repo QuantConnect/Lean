@@ -82,6 +82,19 @@ namespace QuantConnect.Tests.Engine.Results
             Assert.AreEqual(Path.Combine(tempPath, $"{id}-log.txt"), saveLocation);
         }
 
+        [Test]
+        public void SetAlgorithmStateSetsAlgorithmRuntimeErrorStatus()
+        {
+            _baseResultsHandler = new BaseResultsHandlerTestable(AlgorithmId);
+            var algorithm = new QCAlgorithm();
+            algorithm.SetStatus(AlgorithmStatus.Running);
+            _baseResultsHandler.SetAlgorithm(algorithm, 100000);
+
+            _baseResultsHandler.SetAlgorithmStateForTest("error", "stack");
+
+            Assert.AreEqual(AlgorithmStatus.RuntimeError, algorithm.Status);
+        }
+
         [TestCase(100)]
         [TestCase(-100)]
         [TestCase(0)]
@@ -199,6 +212,12 @@ namespace QuantConnect.Tests.Engine.Results
                 ResultsDestinationFolder = folder;
             }
             public string GetResultsDestinationFolder => ResultsDestinationFolder;
+
+            public void SetAlgorithmStateForTest(string error, string stack)
+            {
+                SetAlgorithmState(error, stack);
+            }
+
             protected override void Run()
             {
                 throw new NotImplementedException();

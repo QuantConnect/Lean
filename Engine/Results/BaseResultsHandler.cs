@@ -951,6 +951,7 @@ namespace QuantConnect.Lean.Engine.Results
         {
             State["RuntimeError"] = error;
             State["StackTrace"] = stack;
+            Algorithm?.SetStatus(AlgorithmStatus.RuntimeError);
         }
 
         /// <summary>

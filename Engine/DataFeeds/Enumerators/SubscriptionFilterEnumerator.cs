@@ -62,7 +62,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
             filter.DataFilterError += (sender, exception) =>
             {
                 Log.Error(exception, "WrapForDataFeed");
-                resultHandler.RuntimeError("Runtime error applying data filter. Assuming filter pass: " + exception.Message, exception.StackTrace);
+                resultHandler.ErrorMessage("Runtime error applying data filter. Assuming filter pass: " + exception.Message, exception.StackTrace);
             };
             return filter;
         }
