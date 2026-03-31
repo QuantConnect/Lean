@@ -80,7 +80,7 @@ namespace QuantConnect.Data
         /// <param name="transportMedium">The transport medium to be used to retrieve the subscription's data from the source</param>
         /// <param name="format">The format of the data within the source</param>
         public SubscriptionDataSource(string source, SubscriptionTransportMedium transportMedium, FileFormat format)
-            : this(source, transportMedium, format, null)
+            : this(source, transportMedium, format, (IEnumerable<KeyValuePair<string, string>>)null)
         {
         }
 
