@@ -80,12 +80,14 @@ namespace QuantConnect.Tests.Common.Data
         public void ThrowsForInvalidPythonHeadersType()
         {
             using (Py.GIL())
-            using var invalidHeaders = "invalid-headers".ToPython();
+            {
+                using var invalidHeaders = "invalid-headers".ToPython();
 
-            var exception = Assert.Throws<ArgumentException>(() =>
-                new SubscriptionDataSource("https://example.com", SubscriptionTransportMedium.RemoteFile, FileFormat.Csv, invalidHeaders));
+                var exception = Assert.Throws<ArgumentException>(() =>
+                    new SubscriptionDataSource("https://example.com", SubscriptionTransportMedium.RemoteFile, FileFormat.Csv, invalidHeaders));
 
-            StringAssert.Contains("is not a dict", exception.Message);
+                StringAssert.Contains("is not a dict", exception.Message);
+            }
         }
     }
 }
