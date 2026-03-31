@@ -86,7 +86,7 @@ namespace QuantConnect.Tests.Common.Data
                 var exception = Assert.Throws<ArgumentException>(() =>
                     new SubscriptionDataSource("https://example.com", SubscriptionTransportMedium.RemoteFile, FileFormat.Csv, invalidHeaders));
 
-                StringAssert.Contains("is not a dict", exception.Message);
+                StringAssert.Contains("ConvertToDictionary cannot be used", exception.Message);
             }
         }
     }
