@@ -44,6 +44,7 @@ namespace QuantConnect.Tests.Common
         [TestCase("V     231211P00220000", SecurityType.Option, OptionStyle.American, "V", "V", "V", 220.00, "2023-12-11")]
         [TestCase("JPM   240501C00130750", SecurityType.Option, OptionStyle.American, "JPM", "JPM", "JPM", 130.75, "2024-05-01")]
         [TestCase("IBM   250212P00145000", SecurityType.Option, OptionStyle.American, "IBM", "IBM", "IBM", 145.00, "2025-02-12")]
+        [TestCase("BRK.B 260206C00495000", SecurityType.Option, OptionStyle.American, "BRK.B", "BRK.B", "BRK.B", 495.00, "2026-02-06")]
         [TestCase("DIS   230630C00075000", SecurityType.Option, OptionStyle.American, "DIS", "DIS", "DIS", 75.00, "2023-06-30")]
         [TestCase("ORCL  231030C00065000", SecurityType.Option, OptionStyle.American, "ORCL", "ORCL", "ORCL", 65.00, "2023-10-30")]
         [TestCase("CSCO  230501P00045000", SecurityType.Option, OptionStyle.American, "CSCO", "CSCO", "CSCO", 45.00, "2023-05-01")]
