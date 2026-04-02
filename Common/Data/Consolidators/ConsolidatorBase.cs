@@ -30,10 +30,22 @@ namespace QuantConnect.Data.Consolidators
         /// </summary>
         public static int DefaultWindowSize { get; } = 2;
 
+        private RollingWindow<IBaseData> _window;
+
         /// <summary>
         /// A rolling window keeping a history of the consolidated bars. The most recent bar is at index 0.
         /// </summary>
-        public RollingWindow<IBaseData> Window { get; } = new RollingWindow<IBaseData>(DefaultWindowSize);
+        public RollingWindow<IBaseData> Window
+        {
+            get
+            {
+                if (_window == null)
+                {
+                    _window = new RollingWindow<IBaseData>(DefaultWindowSize);
+                }
+                return _window;
+            }
+        }
 
         /// <summary>
         /// Gets the most recently consolidated piece of data. This will be null if this consolidator
@@ -73,7 +85,7 @@ namespace QuantConnect.Data.Consolidators
         public virtual void Reset()
         {
             Consolidated = null;
-            Window.Reset();
+            _window?.Reset();
         }
     }
 }
