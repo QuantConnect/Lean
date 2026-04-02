@@ -113,8 +113,7 @@ namespace QuantConnect
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public static string ToString(QuantConnect.Candlestick instance)
             {
-                return Invariant($@"{instance.Time:o} - (O:{instance.Open} H: {instance.High} L: {
-                    instance.Low} C: {instance.Close})");
+                return Invariant($@"{instance.Time:o} - (O:{instance.Open} H: {instance.High} L: {instance.Low} C: {instance.Close})");
             }
         }
 
@@ -154,6 +153,11 @@ namespace QuantConnect
             /// </summary>
             public static string IndexerBySymbolNotImplemented =
                 "Types deriving from 'ExtendedDictionary' must implement the 'T this[Symbol] method.";
+
+            /// <summary>
+            /// Returns a string with the error message we receive from Python when we try to pop a key with a null value in the ExtendedDictionary. It also shows a recommendation for solving this problem
+            /// </summary>
+            public static string KeyNotFoundDueToNone = $"KeyError: None. Please check if the key is None before trying to access it or use data.pop(key, default) to return a default value instead of raising an exception.";
 
             /// <summary>
             /// Returns a string message saying Clear/clear method call is an invalid operation. It also says that the given instance
@@ -338,8 +342,7 @@ namespace QuantConnect
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public static string CannotCastNonFiniteFloatingPointValueToDecimal(double input)
             {
-                return Invariant($@"It is not possible to cast a non-finite floating-point value ({
-                    input}) as decimal. Please review math operations and verify the result is valid.");
+                return Invariant($@"It is not possible to cast a non-finite floating-point value ({input}) as decimal. Please review math operations and verify the result is valid.");
             }
 
             /// <summary>
@@ -471,8 +474,7 @@ namespace QuantConnect
                 {
                     currencySymbol = "$";
                 }
-                var value = Invariant($@"{instance.Symbol?.Value}: {instance.Quantity} @ {
-                    currencySymbol}{instance.AveragePrice} - Market: {currencySymbol}{instance.MarketPrice}");
+                var value = Invariant($@"{instance.Symbol?.Value}: {instance.Quantity} @ {currencySymbol}{instance.AveragePrice} - Market: {currencySymbol}{instance.MarketPrice}");
 
                 if (instance.ConversionRate.HasValue && instance.ConversionRate != 1m)
                 {
@@ -526,8 +528,7 @@ namespace QuantConnect
             public static string MemoryUsageInfo(string memoryUsed, string lastSample, string memoryUsedByApp, TimeSpan currentTimeStepElapsed,
                 int cpuUsage)
             {
-                return Invariant($@"Used: {memoryUsed}, Sample: {lastSample}, App: {memoryUsedByApp}, CurrentTimeStepElapsed: {
-                    currentTimeStepElapsed:mm':'ss'.'fff}. CPU: {cpuUsage}%");
+                return Invariant($@"Used: {memoryUsed}, Sample: {lastSample}, App: {memoryUsedByApp}, CurrentTimeStepElapsed: {currentTimeStepElapsed:mm':'ss'.'fff}. CPU: {cpuUsage}%");
             }
 
             /// <summary>
@@ -537,8 +538,7 @@ namespace QuantConnect
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public static string MemoryUsageMonitorTaskTimedOut(TimeSpan timeout)
             {
-                return $@"Execution Security Error: Operation timed out - {
-                    timeout.TotalMinutes.ToStringInvariant()} minutes max. Check for recursive loops.";
+                return $@"Execution Security Error: Operation timed out - {timeout.TotalMinutes.ToStringInvariant()} minutes max. Check for recursive loops.";
             }
         }
 
@@ -724,8 +724,7 @@ namespace QuantConnect
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public static string MarketNotFound(string market)
             {
-                return $@"The specified market wasn't found in the markets lookup. Requested: {
-                    market}. You can add markets by calling QuantConnect.Market.Add(string,int)";
+                return $@"The specified market wasn't found in the markets lookup. Requested: {market}. You can add markets by calling QuantConnect.Market.Add(string,int)";
             }
         }
 
@@ -940,9 +939,7 @@ namespace QuantConnect
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public static string InvalidTotalDays(int totalDays)
             {
-                return Invariant($@"Total days is negative ({
-                    totalDays
-                    }), indicating reverse start and end times. Check your usage of TradingCalendar to ensure proper arrangement of variables");
+                return Invariant($@"Total days is negative ({totalDays}), indicating reverse start and end times. Check your usage of TradingCalendar to ensure proper arrangement of variables");
             }
         }
     }
