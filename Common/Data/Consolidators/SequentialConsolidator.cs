@@ -22,7 +22,7 @@ namespace QuantConnect.Data.Consolidators
     /// such that data flows from the First to Second consolidator. It's output comes
     /// from the Second.
     /// </summary>
-    public class SequentialConsolidator : IDataConsolidator
+    public class SequentialConsolidator : ConsolidatorBase, IDataConsolidator
     {
         /// <summary>
         /// Gets the first consolidator to receive data
@@ -39,17 +39,6 @@ namespace QuantConnect.Data.Consolidators
         public IDataConsolidator Second
         {
             get; private set;
-        }
-
-        /// <summary>
-        /// Gets the most recently consolidated piece of data. This will be null if this consolidator
-        /// has not produced any data yet.
-        ///
-        /// For a SequentialConsolidator, this is the output from the 'Second' consolidator.
-        /// </summary>
-        public IBaseData Consolidated
-        {
-            get { return Second.Consolidated; }
         }
 
         /// <summary>
@@ -131,6 +120,7 @@ namespace QuantConnect.Data.Consolidators
         {
             var handler = DataConsolidated;
             if (handler != null) handler(this, consolidated);
+            UpdateConsolidated(consolidated);
         }
 
         /// <summary>Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.</summary>
@@ -145,10 +135,11 @@ namespace QuantConnect.Data.Consolidators
         /// <summary>
         /// Resets the consolidator
         /// </summary>
-        public void Reset()
+        public override void Reset()
         {
             First.Reset();
             Second.Reset();
+            base.Reset();
         }
     }
 }
