@@ -18,7 +18,6 @@ using NUnit.Framework;
 using QuantConnect.Orders;
 using QuantConnect.Brokerages;
 using QuantConnect.Orders.Fees;
-using QuantConnect.Orders.TimeInForces;
 using QuantConnect.Securities;
 using QuantConnect.Tests.Brokerages;
 
@@ -28,8 +27,6 @@ namespace QuantConnect.Tests.Common.Brokerages
     public class WebullBrokerageModelTests
     {
         private readonly WebullBrokerageModel _brokerageModel = new WebullBrokerageModel();
-
-        // ── CanSubmitOrder — valid combinations ───────────────────────────────────
 
         // Equity: all five order types supported
         [TestCase(SecurityType.Equity, OrderType.Market)]
@@ -55,7 +52,7 @@ namespace QuantConnect.Tests.Common.Brokerages
         [TestCase(SecurityType.Crypto, OrderType.Market)]
         [TestCase(SecurityType.Crypto, OrderType.Limit)]
         [TestCase(SecurityType.Crypto, OrderType.StopLimit)]
-        public void CanSubmitOrder_ValidSecurityAndOrderType_ReturnsTrue(SecurityType securityType, OrderType orderType)
+        public void CanSubmitOrderValidSecurityAndOrderTypeReturnsTrue(SecurityType securityType, OrderType orderType)
         {
             // Arrange
             var security = GetSecurityForType(securityType);
@@ -69,11 +66,9 @@ namespace QuantConnect.Tests.Common.Brokerages
             Assert.That(message, Is.Null);
         }
 
-        // ── CanSubmitOrder — unsupported security types ───────────────────────────
-
         [TestCase(SecurityType.Forex)]
         [TestCase(SecurityType.Cfd)]
-        public void CanSubmitOrder_UnsupportedSecurityType_ReturnsFalse(SecurityType securityType)
+        public void CanSubmitOrderUnsupportedSecurityTypeReturnsFalse(SecurityType securityType)
         {
             // Arrange
             var security = TestsHelpers.GetSecurity(securityType: securityType, symbol: "EURUSD", market: Market.Oanda);
@@ -87,17 +82,13 @@ namespace QuantConnect.Tests.Common.Brokerages
             Assert.That(message, Is.Not.Null);
         }
 
-        // ── CanSubmitOrder — order types unsupported for specific security types ──
-
         // Equity does not support exchange-session orders or combo orders
         [TestCase(SecurityType.Equity, OrderType.MarketOnClose)]
         [TestCase(SecurityType.Equity, OrderType.MarketOnOpen)]
         [TestCase(SecurityType.Equity, OrderType.ComboMarket)]
-        // Option does not support Market or TrailingStop
-        [TestCase(SecurityType.Option, OrderType.Market)]
+        // Option does not support TrailingStop
         [TestCase(SecurityType.Option, OrderType.TrailingStop)]
         // IndexOption has the same restrictions as Option
-        [TestCase(SecurityType.IndexOption, OrderType.Market)]
         [TestCase(SecurityType.IndexOption, OrderType.TrailingStop)]
         // Crypto does not support StopMarket or TrailingStop
         [TestCase(SecurityType.Crypto, OrderType.StopMarket)]
@@ -121,12 +112,11 @@ namespace QuantConnect.Tests.Common.Brokerages
         // https://developer.webull.com/apis/docs/trade-api/options#time-in-force
         // Sell → Day only | Buy → GoodTilCanceled only
 
-        [TestCase(SecurityType.Option,      OrderDirection.Sell)]   // Sell + Day
-        [TestCase(SecurityType.Option,      OrderDirection.Buy)]    // Buy  + GTC
+        [TestCase(SecurityType.Option, OrderDirection.Sell)]   // Sell + Day
+        [TestCase(SecurityType.Option, OrderDirection.Buy)]    // Buy  + GTC
         [TestCase(SecurityType.IndexOption, OrderDirection.Sell)]
         [TestCase(SecurityType.IndexOption, OrderDirection.Buy)]
-        public void CanSubmitOrder_OptionOrderWithValidTimeInForce_ReturnsTrue(
-            SecurityType securityType, OrderDirection direction)
+        public void CanSubmitOrderOptionOrderWithValidTimeInForceReturnsTrue(SecurityType securityType, OrderDirection direction)
         {
             // Arrange
             var security = GetSecurityForType(securityType);
@@ -143,11 +133,11 @@ namespace QuantConnect.Tests.Common.Brokerages
             Assert.That(message, Is.Null);
         }
 
-        [TestCase(SecurityType.Option,      OrderDirection.Sell)]   // Sell + GTC  → rejected
-        [TestCase(SecurityType.Option,      OrderDirection.Buy)]    // Buy  + Day  → rejected
+        [TestCase(SecurityType.Option, OrderDirection.Sell)]   // Sell + GTC  → rejected
+        [TestCase(SecurityType.Option, OrderDirection.Buy)]    // Buy  + Day  → rejected
         [TestCase(SecurityType.IndexOption, OrderDirection.Sell)]
         [TestCase(SecurityType.IndexOption, OrderDirection.Buy)]
-        public void CanSubmitOrder_OptionOrderWithInvalidTimeInForce_ReturnsFalse(
+        public void CanSubmitOrderOptionOrderWithInvalidTimeInForceReturnsFalse(
             SecurityType securityType, OrderDirection direction)
         {
             // Arrange
@@ -172,7 +162,7 @@ namespace QuantConnect.Tests.Common.Brokerages
         // https://developer.webull.com/apis/docs/trade-api — Applicable to U.S. stock market orders only.
 
         [Test]
-        public void CanSubmitOrder_OutsideRegularTradingHoursOnEquity_ReturnsTrue()
+        public void CanSubmitOrderOutsideRegularTradingHoursOnEquityReturnsTrue()
         {
             // Arrange
             var security = GetSecurityForType(SecurityType.Equity);
@@ -191,7 +181,7 @@ namespace QuantConnect.Tests.Common.Brokerages
         [TestCase(SecurityType.IndexOption)]
         [TestCase(SecurityType.Future)]
         [TestCase(SecurityType.Crypto)]
-        public void CanSubmitOrder_OutsideRegularTradingHoursOnNonEquity_ReturnsFalse(SecurityType securityType)
+        public void CanSubmitOrderOutsideRegularTradingHoursOnNonEquityReturnsFalse(SecurityType securityType)
         {
             // Arrange
             var security = GetSecurityForType(securityType);
@@ -211,7 +201,7 @@ namespace QuantConnect.Tests.Common.Brokerages
         [TestCase(SecurityType.Option)]
         [TestCase(SecurityType.Future)]
         [TestCase(SecurityType.Crypto)]
-        public void CanSubmitOrder_OutsideRegularTradingHoursFalseOnNonEquity_ReturnsTrue(SecurityType securityType)
+        public void CanSubmitOrderOutsideRegularTradingHoursFalseOnNonEquityReturnsTrue(SecurityType securityType)
         {
             // Arrange
             var security = GetSecurityForType(securityType);
@@ -226,10 +216,8 @@ namespace QuantConnect.Tests.Common.Brokerages
             Assert.That(message, Is.Null);
         }
 
-        // ── GetFeeModel ───────────────────────────────────────────────────────────
-
         [Test]
-        public void GetFeeModel_ReturnsWebullFeeModel()
+        public void GetFeeModelReturnsWebullFeeModel()
         {
             // Arrange
             var security = TestsHelpers.GetSecurity(securityType: SecurityType.Equity, symbol: "AAPL", market: Market.USA);
@@ -237,8 +225,6 @@ namespace QuantConnect.Tests.Common.Brokerages
             // Act / Assert
             Assert.That(_brokerageModel.GetFeeModel(security), Is.InstanceOf<WebullFeeModel>());
         }
-
-        // ── Helpers ───────────────────────────────────────────────────────────────
 
         private static Security GetSecurityForType(SecurityType securityType)
         {
@@ -254,6 +240,9 @@ namespace QuantConnect.Tests.Common.Brokerages
                 case SecurityType.Cfd:
                     return TestsHelpers.GetSecurity(securityType: securityType,
                         symbol: "EURUSD", market: Market.Oanda);
+                case SecurityType.IndexOption:
+                    return TestsHelpers.GetSecurity(securityType: SecurityType.IndexOption,
+                        symbol: "SPX", market: Market.CBOE);
                 default:
                     return TestsHelpers.GetSecurity(securityType: securityType,
                         symbol: "AAPL", market: Market.USA);

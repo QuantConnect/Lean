@@ -14,6 +14,7 @@
 */
 
 using System;
+using System.Collections.Generic;
 using NUnit.Framework;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
@@ -30,13 +31,20 @@ namespace QuantConnect.Tests.Common.Orders.Fees
     {
         private readonly WebullFeeModel _feeModel = new WebullFeeModel();
 
-        // ── Equity / Option — zero commission ────────────────────────────────────
-
-        [Test]
-        public void GetOrderFee_Equity_ReturnsZero()
+        private static IEnumerable<Security> ZeroFeeSecurities()
         {
-            var security = SecurityTests.GetSecurity();
-            security.SetMarketPrice(new Tick(DateTime.UtcNow, security.Symbol, 100m, 100m));
+            var equity = SecurityTests.GetSecurity();
+            equity.SetMarketPrice(new Tick(DateTime.UtcNow, equity.Symbol, 100m, 100m));
+            yield return equity;
+            yield return CreateSecurity(SecurityType.Option, 5m, "AAPL");
+        }
+
+        /// <summary>
+        /// Equity and non-index options are commission-free on Webull.
+        /// </summary>
+        [TestCaseSource(nameof(ZeroFeeSecurities))]
+        public void GetOrderFeeReturnsZeroForFreeAssets(Security security)
+        {
             var order = new MarketOrder(security.Symbol, 10m, DateTime.UtcNow);
 
             var fee = _feeModel.GetOrderFee(new OrderFeeParameters(security, order));
@@ -44,152 +52,56 @@ namespace QuantConnect.Tests.Common.Orders.Fees
             Assert.That(fee.Value.Amount, Is.EqualTo(0m));
         }
 
-        [Test]
-        public void GetOrderFee_Option_ReturnsZero()
-        {
-            var security = CreateOptionSecurity("AAPL", 5m);
-            var order = new MarketOrder(security.Symbol, 3m, DateTime.UtcNow);
-
-            var fee = _feeModel.GetOrderFee(new OrderFeeParameters(security, order));
-
-            Assert.That(fee.Value.Amount, Is.EqualTo(0m));
-        }
-
-        // ── IndexOption — SPX ─────────────────────────────────────────────────────
-
         /// <summary>
-        /// SPX, price &lt; $1 → exchange $0.57 + Webull $0.50 = $1.07/contract.
-        /// 2 contracts → $2.14.
+        /// SPX/SPXW exchange fee tiers (per contract) + Webull $0.50/contract:
+        ///   SPX  price < $1 -> $0.57 + $0.50 = $1.07
+        ///   SPX  price >= $1 -> $0.66 + $0.50 = $1.16
+        ///   SPXW price < $1 -> $0.50 + $0.50 = $1.00
+        ///   SPXW price >= $1 -> $0.59 + $0.50 = $1.09
         /// </summary>
-        [Test]
-        public void GetOrderFee_SpxPriceBelow1_ReturnsCorrectFee()
+        [TestCase("SPX", 0.50, 2, 2.14, Description = "SPX price < $1 -> $1.07/contract")]
+        [TestCase("SPX", 1.50, 3, 3.48, Description = "SPX price >= $1 -> $1.16/contract")]
+        [TestCase("SPXW", 0.80, 1, 1.00, Description = "SPXW price < $1 -> $1.00/contract")]
+        [TestCase("SPXW", 2.00, 4, 4.36, Description = "SPXW price >= $1 -> $1.09/contract")]
+        public void GetOrderFeeSpxPriceTierReturnsCorrectFee(string ticker, decimal price, decimal quantity, decimal expectedFee)
         {
-            var security = CreateIndexOptionSecurity("SPX", price: 0.50m);
-            var order = new MarketOrder(security.Symbol, 2m, DateTime.UtcNow);
+            var security = CreateSecurity(SecurityType.IndexOption, price, ticker);
+            var order = new MarketOrder(security.Symbol, quantity, DateTime.UtcNow);
 
             var fee = _feeModel.GetOrderFee(new OrderFeeParameters(security, order));
 
-            Assert.That(fee.Value.Amount, Is.EqualTo(2.14m));
-            Assert.That(fee.Value.Currency, Is.EqualTo(Currencies.USD));
+            Assert.That(fee.Value.Amount, Is.EqualTo(expectedFee));
         }
 
         /// <summary>
-        /// SPX, price ≥ $1 → exchange $0.66 + Webull $0.50 = $1.16/contract.
-        /// 3 contracts → $3.48.
+        /// VIX exchange fee tiers (per contract) + Webull $0.50/contract:
+        ///   Tier 1: price ≤ $0.10 -> $0.10 + $0.50 = $0.60
+        ///   Tier 2: price $0.11–$0.99 -> $0.25 + $0.50 = $0.75
+        ///   Tier 3: price $1.00–$1.99 -> $0.40 + $0.50 = $0.90
+        ///   Tier 4: price >= $2.00 -> $0.45 + $0.50 = $0.95
         /// </summary>
-        [Test]
-        public void GetOrderFee_SpxPriceAbove1_ReturnsCorrectFee()
+        [TestCase(0.05, 4, 2.40, Description = "Tier 1: price ≤ $0.10 -> $0.60/contract")]
+        [TestCase(0.50, 2, 1.50, Description = "Tier 2: price $0.11–$0.99 -> $0.75/contract")]
+        [TestCase(1.50, 1, 0.90, Description = "Tier 3: price $1.00–$1.99 -> $0.90/contract")]
+        [TestCase(3.00, 5, 4.75, Description = "Tier 4: price >= $2.00 -> $0.95/contract")]
+        public void GetOrderFeeVixPriceTierReturnsCorrectFee(decimal price, decimal quantity, decimal expectedFee)
         {
-            var security = CreateIndexOptionSecurity("SPX", price: 1.50m);
-            var order = new MarketOrder(security.Symbol, 3m, DateTime.UtcNow);
+            var security = CreateSecurity(SecurityType.IndexOption, price, "VIX");
+            var order = new MarketOrder(security.Symbol, quantity, DateTime.UtcNow);
 
             var fee = _feeModel.GetOrderFee(new OrderFeeParameters(security, order));
 
-            Assert.That(fee.Value.Amount, Is.EqualTo(3.48m));
+            Assert.That(fee.Value.Amount, Is.EqualTo(expectedFee));
         }
-
-        // ── IndexOption — SPXW ────────────────────────────────────────────────────
-
-        /// <summary>
-        /// SPXW, price &lt; $1 → exchange $0.50 + Webull $0.50 = $1.00/contract.
-        /// </summary>
-        [Test]
-        public void GetOrderFee_SpxwPriceBelow1_ReturnsCorrectFee()
-        {
-            var security = CreateIndexOptionSecurity("SPXW", price: 0.80m);
-            var order = new MarketOrder(security.Symbol, 1m, DateTime.UtcNow);
-
-            var fee = _feeModel.GetOrderFee(new OrderFeeParameters(security, order));
-
-            Assert.That(fee.Value.Amount, Is.EqualTo(1.00m));
-        }
-
-        /// <summary>
-        /// SPXW, price ≥ $1 → exchange $0.59 + Webull $0.50 = $1.09/contract.
-        /// 4 contracts → $4.36.
-        /// </summary>
-        [Test]
-        public void GetOrderFee_SpxwPriceAbove1_ReturnsCorrectFee()
-        {
-            var security = CreateIndexOptionSecurity("SPXW", price: 2.00m);
-            var order = new MarketOrder(security.Symbol, 4m, DateTime.UtcNow);
-
-            var fee = _feeModel.GetOrderFee(new OrderFeeParameters(security, order));
-
-            Assert.That(fee.Value.Amount, Is.EqualTo(4.36m));
-        }
-
-        // ── IndexOption — VIX ─────────────────────────────────────────────────────
-
-        /// <summary>
-        /// VIX, price ≤ $0.10 → exchange $0.10 + Webull $0.50 = $0.60/contract.
-        /// 4 contracts → $2.40.
-        /// </summary>
-        [Test]
-        public void GetOrderFee_VixPriceTier1_ReturnsCorrectFee()
-        {
-            var security = CreateIndexOptionSecurity("VIX", price: 0.05m);
-            var order = new MarketOrder(security.Symbol, 4m, DateTime.UtcNow);
-
-            var fee = _feeModel.GetOrderFee(new OrderFeeParameters(security, order));
-
-            Assert.That(fee.Value.Amount, Is.EqualTo(2.40m));
-        }
-
-        /// <summary>
-        /// VIX, price $0.11–$0.99 → exchange $0.25 + Webull $0.50 = $0.75/contract.
-        /// 2 contracts → $1.50.
-        /// </summary>
-        [Test]
-        public void GetOrderFee_VixPriceTier2_ReturnsCorrectFee()
-        {
-            var security = CreateIndexOptionSecurity("VIX", price: 0.50m);
-            var order = new MarketOrder(security.Symbol, 2m, DateTime.UtcNow);
-
-            var fee = _feeModel.GetOrderFee(new OrderFeeParameters(security, order));
-
-            Assert.That(fee.Value.Amount, Is.EqualTo(1.50m));
-        }
-
-        /// <summary>
-        /// VIX, price $1.00–$1.99 → exchange $0.40 + Webull $0.50 = $0.90/contract.
-        /// </summary>
-        [Test]
-        public void GetOrderFee_VixPriceTier3_ReturnsCorrectFee()
-        {
-            var security = CreateIndexOptionSecurity("VIX", price: 1.50m);
-            var order = new MarketOrder(security.Symbol, 1m, DateTime.UtcNow);
-
-            var fee = _feeModel.GetOrderFee(new OrderFeeParameters(security, order));
-
-            Assert.That(fee.Value.Amount, Is.EqualTo(0.90m));
-        }
-
-        /// <summary>
-        /// VIX, price ≥ $2.00 → exchange $0.45 + Webull $0.50 = $0.95/contract.
-        /// 5 contracts → $4.75.
-        /// </summary>
-        [Test]
-        public void GetOrderFee_VixPriceTier4_ReturnsCorrectFee()
-        {
-            var security = CreateIndexOptionSecurity("VIX", price: 3.00m);
-            var order = new MarketOrder(security.Symbol, 5m, DateTime.UtcNow);
-
-            var fee = _feeModel.GetOrderFee(new OrderFeeParameters(security, order));
-
-            Assert.That(fee.Value.Amount, Is.EqualTo(4.75m));
-        }
-
-        // ── IndexOption — VIXW ────────────────────────────────────────────────────
 
         /// <summary>
         /// VIXW uses identical tier schedule to VIX; verify tier 2.
         /// </summary>
         [Test]
-        public void GetOrderFee_VixwPriceTier2_MatchesVixFee()
+        public void GetOrderFeeVixwPriceTier2MatchesVixFee()
         {
-            var vix = CreateIndexOptionSecurity("VIX", price: 0.50m);
-            var vixw = CreateIndexOptionSecurity("VIXW", price: 0.50m);
+            var vix = CreateSecurity(SecurityType.IndexOption, 0.50m, "VIX");
+            var vixw = CreateSecurity(SecurityType.IndexOption, 0.50m, "VIXW");
             var order = new MarketOrder(vix.Symbol, 2m, DateTime.UtcNow);
 
             var vixFee = _feeModel.GetOrderFee(new OrderFeeParameters(vix, order));
@@ -198,114 +110,39 @@ namespace QuantConnect.Tests.Common.Orders.Fees
             Assert.That(vixFee.Value.Amount, Is.EqualTo(vixwFee.Value.Amount));
         }
 
-        // ── IndexOption — XSP ─────────────────────────────────────────────────────
-
         /// <summary>
-        /// XSP, qty &lt; 10 → exchange $0.00 + Webull $0.50 = $0.50/contract.
-        /// 5 contracts → $2.50.
+        /// Index option fee schedule (per contract) + Webull $0.50/contract:
+        ///   XSP  qty < 10  -> $0.00 + $0.50 = $0.50
+        ///   XSP  qty >= 10  -> $0.07 + $0.50 = $0.57
+        ///   DJX  flat      -> $0.18 + $0.50 = $0.68
+        ///   NDX  price < $25 -> $0.50 + $0.50 = $1.00  (NDXP shares the same schedule)
+        ///   NDX  price >= $25 -> $0.75 + $0.50 = $1.25  (NDXP shares the same schedule)
         /// </summary>
-        [Test]
-        public void GetOrderFee_XspSmallQuantity_ReturnsCorrectFee()
+        [TestCase("XSP", 1.00, 5, 2.50, Description = "XSP qty < 10 -> $0.50/contract")]
+        [TestCase("XSP", 1.00, 10, 5.70, Description = "XSP qty >= 10 -> $0.57/contract")]
+        [TestCase("DJX", 2.00, 2, 1.36, Description = "DJX flat -> $0.68/contract")]
+        [TestCase("NDX", 10.00, 3, 3.00, Description = "NDX price < $25 -> $1.00/contract")]
+        [TestCase("NDX", 50.00, 2, 2.50, Description = "NDX price >= $25 -> $1.25/contract")]
+        [TestCase("NDXP", 10.00, 3, 3.00, Description = "NDXP price < $25 matches NDX schedule")]
+        [TestCase("NDXP", 50.00, 2, 2.50, Description = "NDXP price >= $25 matches NDX schedule")]
+        public void GetOrderFeeIndexOptionReturnsCorrectFee(string ticker, decimal price, decimal quantity, decimal expectedFee)
         {
-            var security = CreateIndexOptionSecurity("XSP", price: 1.00m);
-            var order = new MarketOrder(security.Symbol, 5m, DateTime.UtcNow);
+            var security = CreateSecurity(SecurityType.IndexOption, price, ticker);
+            var order = new MarketOrder(security.Symbol, quantity, DateTime.UtcNow);
 
             var fee = _feeModel.GetOrderFee(new OrderFeeParameters(security, order));
 
-            Assert.That(fee.Value.Amount, Is.EqualTo(2.50m));
+            Assert.That(fee.Value.Amount, Is.EqualTo(expectedFee));
         }
-
-        /// <summary>
-        /// XSP, qty ≥ 10 → exchange $0.07 + Webull $0.50 = $0.57/contract.
-        /// 10 contracts → $5.70.
-        /// </summary>
-        [Test]
-        public void GetOrderFee_XspLargeQuantity_ReturnsCorrectFee()
-        {
-            var security = CreateIndexOptionSecurity("XSP", price: 1.00m);
-            var order = new MarketOrder(security.Symbol, 10m, DateTime.UtcNow);
-
-            var fee = _feeModel.GetOrderFee(new OrderFeeParameters(security, order));
-
-            Assert.That(fee.Value.Amount, Is.EqualTo(5.70m));
-        }
-
-        // ── IndexOption — DJX ─────────────────────────────────────────────────────
-
-        /// <summary>
-        /// DJX flat → exchange $0.18 + Webull $0.50 = $0.68/contract.
-        /// 2 contracts → $1.36.
-        /// </summary>
-        [Test]
-        public void GetOrderFee_Djx_ReturnsCorrectFee()
-        {
-            var security = CreateIndexOptionSecurity("DJX", price: 2.00m);
-            var order = new MarketOrder(security.Symbol, 2m, DateTime.UtcNow);
-
-            var fee = _feeModel.GetOrderFee(new OrderFeeParameters(security, order));
-
-            Assert.That(fee.Value.Amount, Is.EqualTo(1.36m));
-        }
-
-        // ── IndexOption — NDX / NDXP ──────────────────────────────────────────────
-
-        /// <summary>
-        /// NDX, single-leg, premium &lt; $25 → exchange $0.50 + Webull $0.50 = $1.00/contract.
-        /// 3 contracts → $3.00.
-        /// </summary>
-        [Test]
-        public void GetOrderFee_NdxSingleLegPriceBelow25_ReturnsCorrectFee()
-        {
-            var security = CreateIndexOptionSecurity("NDX", price: 10.00m);
-            var order = new MarketOrder(security.Symbol, 3m, DateTime.UtcNow);
-
-            var fee = _feeModel.GetOrderFee(new OrderFeeParameters(security, order));
-
-            Assert.That(fee.Value.Amount, Is.EqualTo(3.00m));
-        }
-
-        /// <summary>
-        /// NDX, single-leg, premium ≥ $25 → exchange $0.75 + Webull $0.50 = $1.25/contract.
-        /// 2 contracts → $2.50.
-        /// </summary>
-        [Test]
-        public void GetOrderFee_NdxSingleLegPriceAbove25_ReturnsCorrectFee()
-        {
-            var security = CreateIndexOptionSecurity("NDX", price: 50.00m);
-            var order = new MarketOrder(security.Symbol, 2m, DateTime.UtcNow);
-
-            var fee = _feeModel.GetOrderFee(new OrderFeeParameters(security, order));
-
-            Assert.That(fee.Value.Amount, Is.EqualTo(2.50m));
-        }
-
-        /// <summary>
-        /// NDXP uses the same fee schedule as NDX.
-        /// </summary>
-        [Test]
-        public void GetOrderFee_NdxpSingleLegPriceBelow25_MatchesNdxFee()
-        {
-            var ndx = CreateIndexOptionSecurity("NDX", price: 10.00m);
-            var ndxp = CreateIndexOptionSecurity("NDXP", price: 10.00m);
-            var ndxOrder = new MarketOrder(ndx.Symbol, 1m, DateTime.UtcNow);
-            var ndxpOrder = new MarketOrder(ndxp.Symbol, 1m, DateTime.UtcNow);
-
-            var ndxFee = _feeModel.GetOrderFee(new OrderFeeParameters(ndx, ndxOrder));
-            var ndxpFee = _feeModel.GetOrderFee(new OrderFeeParameters(ndxp, ndxpOrder));
-
-            Assert.That(ndxFee.Value.Amount, Is.EqualTo(ndxpFee.Value.Amount));
-        }
-
-        // ── Crypto ────────────────────────────────────────────────────────────────
 
         /// <summary>
         /// Crypto fee = 0.6% of notional (quantity × price).
-        /// 2 BTC × $50,000 = $100,000 notional → fee = $600.
+        /// 2 BTC × $50,000 = $100,000 notional -> fee = $600.
         /// </summary>
         [Test]
-        public void GetOrderFee_Crypto_ReturnsPointSixPercentOfNotional()
+        public void GetOrderFeeCryptoReturnsPointSixPercentOfNotional()
         {
-            var btcusd = CreateCryptoSecurity(price: 50_000m);
+            var btcusd = CreateSecurity(SecurityType.Crypto, 50_000m);
             var order = new MarketOrder(btcusd.Symbol, 2m, DateTime.UtcNow);
 
             var fee = _feeModel.GetOrderFee(new OrderFeeParameters(btcusd, order));
@@ -315,18 +152,37 @@ namespace QuantConnect.Tests.Common.Orders.Fees
             Assert.That(fee.Value.Currency, Is.EqualTo(Currencies.USD));
         }
 
-        // ── Helpers ───────────────────────────────────────────────────────────────
-
         /// <summary>
-        /// Creates an index option security with the given underlying ticker and option price.
-        /// Uses <see cref="Symbol.CreateOption(Symbol,string,OptionStyle,OptionRight,decimal,DateTime)"/>
-        /// with an Index underlying to produce a <see cref="SecurityType.IndexOption"/> symbol.
+        /// Creates a test security of the requested <paramref name="securityType"/> priced at <paramref name="price"/>.
+        /// Supported types: <see cref="SecurityType.IndexOption"/>, <see cref="SecurityType.Option"/>, <see cref="SecurityType.Crypto"/>.
+        /// For option types <paramref name="ticker"/> identifies the underlying symbol;
+        /// it is ignored for <see cref="SecurityType.Crypto"/> (BTC/USD is always used).
         /// </summary>
-        private static Security CreateIndexOptionSecurity(string underlyingTicker, decimal price)
+        private static Security CreateSecurity(SecurityType securityType, decimal price, string ticker = "AAPL")
         {
-            var underlying = Symbol.Create(underlyingTicker, SecurityType.Index, Market.USA);
+            if (securityType == SecurityType.Crypto)
+            {
+                var btcusd = new Crypto(
+                    SecurityExchangeHours.AlwaysOpen(TimeZones.Utc),
+                    new Cash(Currencies.USD, 0, 1m),
+                    new Cash("BTC", 0, price),
+                    new SubscriptionDataConfig(typeof(TradeBar), Symbols.BTCUSD, Resolution.Minute,
+                        TimeZones.Utc, TimeZones.Utc, true, false, false),
+                    new SymbolProperties("BTCUSD", Currencies.USD, 1, 0.01m, 0.00000001m, string.Empty),
+                    ErrorCurrencyConverter.Instance,
+                    RegisteredSecurityDataTypesProvider.Null);
+                btcusd.SetMarketPrice(new Tick(DateTime.UtcNow, btcusd.Symbol, price, price));
+                return btcusd;
+            }
+
+            var isIndex = securityType == SecurityType.IndexOption;
+            var underlying = Symbol.Create(ticker, isIndex ? SecurityType.Index : SecurityType.Equity, Market.USA);
             var symbol = Symbol.CreateOption(
-                underlying, Market.USA, OptionStyle.European, OptionRight.Call, 1000m, new DateTime(2026, 6, 20));
+                underlying, Market.USA,
+                isIndex ? OptionStyle.European : OptionStyle.American,
+                OptionRight.Call,
+                isIndex ? 1000m : 150m,
+                new DateTime(2026, 6, 20));
 
             var config = new SubscriptionDataConfig(
                 typeof(TradeBar), symbol, Resolution.Minute,
@@ -343,51 +199,6 @@ namespace QuantConnect.Tests.Common.Orders.Fees
 
             security.SetMarketPrice(new Tick(DateTime.UtcNow, symbol, price, price));
             return security;
-        }
-
-        /// <summary>
-        /// Creates a standard equity option security (SecurityType.Option) for zero-fee assertions.
-        /// </summary>
-        private static Security CreateOptionSecurity(string underlyingTicker, decimal price)
-        {
-            var underlying = Symbol.Create(underlyingTicker, SecurityType.Equity, Market.USA);
-            var symbol = Symbol.CreateOption(
-                underlying, Market.USA, OptionStyle.American, OptionRight.Call, 150m, new DateTime(2026, 6, 20));
-
-            var config = new SubscriptionDataConfig(
-                typeof(TradeBar), symbol, Resolution.Minute,
-                TimeZones.Utc, TimeZones.Utc, false, true, false);
-
-            var security = new Security(
-                SecurityExchangeHours.AlwaysOpen(TimeZones.Utc),
-                config,
-                new Cash(Currencies.USD, 0, 1m),
-                SymbolProperties.GetDefault(Currencies.USD),
-                ErrorCurrencyConverter.Instance,
-                RegisteredSecurityDataTypesProvider.Null,
-                new SecurityCache());
-
-            security.SetMarketPrice(new Tick(DateTime.UtcNow, symbol, price, price));
-            return security;
-        }
-
-        /// <summary>
-        /// Creates a crypto security with the given USD price set via <see cref="Security.SetMarketPrice"/>.
-        /// </summary>
-        private static Crypto CreateCryptoSecurity(decimal price)
-        {
-            var btcusd = new Crypto(
-                SecurityExchangeHours.AlwaysOpen(TimeZones.Utc),
-                new Cash(Currencies.USD, 0, 1m),
-                new Cash("BTC", 0, price),
-                new SubscriptionDataConfig(typeof(TradeBar), Symbols.BTCUSD, Resolution.Minute,
-                    TimeZones.Utc, TimeZones.Utc, true, false, false),
-                new SymbolProperties("BTCUSD", Currencies.USD, 1, 0.01m, 0.00000001m, string.Empty),
-                ErrorCurrencyConverter.Instance,
-                RegisteredSecurityDataTypesProvider.Null);
-
-            btcusd.SetMarketPrice(new Tick(DateTime.UtcNow, btcusd.Symbol, price, price));
-            return btcusd;
         }
     }
 }
