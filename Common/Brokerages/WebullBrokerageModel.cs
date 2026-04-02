@@ -45,6 +45,7 @@ namespace QuantConnect.Brokerages
                 {
                     SecurityType.Option, new HashSet<OrderType>
                     {
+                        OrderType.Market,
                         OrderType.Limit,
                         OrderType.StopMarket,
                         OrderType.StopLimit
@@ -53,6 +54,7 @@ namespace QuantConnect.Brokerages
                 {
                     SecurityType.IndexOption, new HashSet<OrderType>
                     {
+                        OrderType.Market,
                         OrderType.Limit,
                         OrderType.StopMarket,
                         OrderType.StopLimit
