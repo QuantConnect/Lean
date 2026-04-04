@@ -118,6 +118,11 @@ namespace QuantConnect.Orders.Fills
                         ? PythonWrapper.ComboLegLimitFill(parameters.Order, parameters)
                         : ComboLegLimitFill(parameters.Order, parameters);
                     break;
+                case OrderType.PeggedToMidpoint:
+                    orderEvents.Add(PythonWrapper != null
+                        ? PythonWrapper.PeggedToMidpointFill(parameters.Security, parameters.Order as PeggedToMidpointOrder)
+                        : PeggedToMidpointFill(parameters.Security, parameters.Order as PeggedToMidpointOrder));
+                    break;
                 default:
                     throw new ArgumentOutOfRangeException();
             }
@@ -639,6 +644,59 @@ namespace QuantConnect.Orders.Fills
                         }
                     }
                     break;
+            }
+
+            return fill;
+        }
+
+        /// <summary>
+        /// Pegged to midpoint fill model. Fills at the NBBO midpoint adjusted by <see cref="PeggedToMidpointOrder.LimitPriceOffset"/>.
+        /// If <see cref="PeggedToMidpointOrder.LimitPrice"/> is set it acts as a cap for buy orders and a floor for sell orders;
+        /// the order will not fill if the effective midpoint price would exceed the cap (buy) or fall below the floor (sell).
+        /// </summary>
+        /// <param name="asset">Security asset we're filling</param>
+        /// <param name="order">Order packet to model</param>
+        /// <returns>Order fill information detailing the average price and quantity filled.</returns>
+        public virtual OrderEvent PeggedToMidpointFill(Security asset, PeggedToMidpointOrder order)
+        {
+            var utcTime = asset.LocalTime.ConvertToUtc(asset.Exchange.TimeZone);
+            var fill = new OrderEvent(order, utcTime, OrderFee.Zero);
+
+            if (order.Status == OrderStatus.Canceled) return fill;
+
+            if (!IsExchangeOpen(asset)) return fill;
+
+            var askPrice = GetAskPrice(asset, out var askEndTime);
+            var bidPrice = GetBidPrice(asset, out var bidEndTime);
+            var pricesEndTime = askEndTime > bidEndTime ? askEndTime : bidEndTime;
+
+            // Do not fill on stale data
+            if (pricesEndTime <= order.Time) return fill;
+
+            var midpoint = (bidPrice + askPrice) / 2m;
+
+            switch (order.Direction)
+            {
+                case OrderDirection.Buy:
+                {
+                    var fillPrice = midpoint + order.LimitPriceOffset;
+                    // LimitPrice acts as a cap: skip fill if effective price exceeds it
+                    if (order.LimitPrice > 0 && fillPrice > order.LimitPrice) break;
+                    fill.Status = OrderStatus.Filled;
+                    fill.FillPrice = fillPrice;
+                    fill.FillQuantity = order.Quantity;
+                    break;
+                }
+                case OrderDirection.Sell:
+                {
+                    var fillPrice = midpoint - order.LimitPriceOffset;
+                    // LimitPrice acts as a floor: skip fill if effective price falls below it
+                    if (order.LimitPrice > 0 && fillPrice < order.LimitPrice) break;
+                    fill.Status = OrderStatus.Filled;
+                    fill.FillPrice = fillPrice;
+                    fill.FillQuantity = order.Quantity;
+                    break;
+                }
             }
 
             return fill;
