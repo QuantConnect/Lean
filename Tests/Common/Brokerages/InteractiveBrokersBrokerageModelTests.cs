@@ -198,6 +198,19 @@ namespace QuantConnect.Tests.Common.Brokerages
             Assert.IsTrue(canSubmit);
         }
 
+        [TestCase("SPY", SecurityType.Equity)]
+        [TestCase("SPY", SecurityType.Option)]
+        public void CanSubmitPeggedToMidpointOrder(string ticker, SecurityType securityType)
+        {
+            var algo = new AlgorithmStub();
+            var security = algo.AddSecurity(securityType, ticker);
+            var order = new PeggedToMidpointOrder(security.Symbol, 1, 100m, 0.01m, new DateTime(2024, 1, 1));
+
+            var result = _interactiveBrokersBrokerageModel.CanSubmitOrder(security, order, out var message);
+
+            Assert.IsTrue(result);
+        }
+
         private static List<Security> GetUnsupportedOptions()
         {
             // Index option
