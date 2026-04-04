@@ -82,6 +82,7 @@ namespace QuantConnect.Tests.Engine.BrokerageTransactionHandlerTests
                 OrderType.ComboLimit => new SubmitOrderRequest(OrderType.ComboLimit, security.Type, security.Symbol, 1, 295, 0, date, "", groupOrderManager: groupOrderManager),
                 OrderType.ComboLegLimit => new SubmitOrderRequest(OrderType.ComboLegLimit, security.Type, security.Symbol, 1, 295, 0, date, "", groupOrderManager: groupOrderManager),
                 OrderType.TrailingStop => new SubmitOrderRequest(OrderType.TrailingStop, security.Type, security.Symbol, 1, 305, 0, 305, date, ""),
+                OrderType.PeggedToMidpoint => new SubmitOrderRequest(OrderType.PeggedToMidpoint, security.Type, security.Symbol, 1, 0, 300, 0, date, ""),
                 _ => throw new ArgumentOutOfRangeException(nameof(orderType), orderType, null)
             };
         }
