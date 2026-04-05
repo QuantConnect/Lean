@@ -31,7 +31,8 @@ namespace QuantConnect.Util
         public static bool ShouldAddCashBalance(CashAmount balance, string accountCurrency)
         {
             // Don't add zero quantity currencies except the account currency
-            return balance.Amount != 0 || balance.Currency == accountCurrency;
+            // we do add 'BNFCR' even if zero as it's used to track brokerage fees, we need lean to setup conversion rates for it
+            return balance.Amount != 0 || balance.Currency == accountCurrency || balance.Currency == "BNFCR";
         }
     }
 }

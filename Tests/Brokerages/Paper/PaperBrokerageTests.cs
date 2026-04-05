@@ -131,30 +131,35 @@ namespace QuantConnect.Tests.Brokerages.Paper
             results.Initialize(new(job, eventMessagingHandler, api, transactions, null));
             results.SetAlgorithm(algorithm, algorithm.Portfolio.TotalPortfolioValue);
             transactions.Initialize(algorithm, brokerage, results);
-
             var realTime = new BacktestingRealTimeHandler();
-            using var nullLeanManager = new AlgorithmManagerTests.NullLeanManager();
 
-            using var tokenSource = new CancellationTokenSource();
-            // run algorithm manager
-            manager.Run(job,
-                algorithm,
-                synchronizer,
-                transactions,
-                results,
-                realTime,
-                nullLeanManager,
-                tokenSource,
-                new()
-            );
+            try
+            {
+                using var nullLeanManager = new AlgorithmManagerTests.NullLeanManager();
 
-            var postDividendCash = algorithm.Portfolio.CashBook[Currencies.USD].Amount;
+                using var tokenSource = new CancellationTokenSource();
+                // run algorithm manager
+                manager.Run(job,
+                    algorithm,
+                    synchronizer,
+                    transactions,
+                    results,
+                    realTime,
+                    nullLeanManager,
+                    tokenSource,
+                    new()
+                );
 
-            realTime.Exit();
-            results.Exit();
-            Assert.AreEqual(initializedCash + dividend.Distribution, postDividendCash);
+                var postDividendCash = algorithm.Portfolio.CashBook[Currencies.USD].Amount;
 
-            transactions.Exit();
+                Assert.AreEqual(initializedCash + dividend.Distribution, postDividendCash);
+            }
+            finally
+            {
+                realTime.Exit();
+                results.Exit();
+                transactions.Exit();
+            }
         }
 
         [Test]

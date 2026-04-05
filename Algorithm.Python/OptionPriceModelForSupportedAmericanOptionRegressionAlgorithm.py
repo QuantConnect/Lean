@@ -27,7 +27,7 @@ class OptionPriceModelForSupportedAmericanOptionRegressionAlgorithm(OptionPriceM
         option.set_filter(lambda u: u.standards_only().strikes(-1, 1).expiration(0, 35))
 
         # BaroneAdesiWhaley model supports American style options
-        option.price_model = OptionPriceModels.barone_adesi_whaley()
+        option.price_model = OptionPriceModels.QuantLib.barone_adesi_whaley()
 
         self.set_warmup(2, Resolution.DAILY)
 

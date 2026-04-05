@@ -59,7 +59,9 @@ namespace QuantConnect.Algorithm.CSharp
         /// <param name="slice">Slice object keyed by symbol containing the stock data</param>
         public override void OnData(Slice slice)
         {
-            if (!Portfolio.Invested)
+            if (!Portfolio.Invested &&
+                // Wait for the security to be re-added in the OnSecuritiesChanged event before trying to trade it
+                Securities.TryGetValue(_spy, out var security) && security.IsTradable)
             {
                 MarketOrder(_spy, 651); // QTY 651 is equal to `SetHoldings(_spy, 1)`
                 Debug("Purchased Stock");

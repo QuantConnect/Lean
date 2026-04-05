@@ -21,14 +21,14 @@ using QuantConnect.Logging;
 using QuantConnect.Interfaces;
 using QuantConnect.Securities;
 using QuantConnect.Configuration;
-using QuantConnect.Lean.Engine.DataFeeds;
 using QuantConnect.Data.UniverseSelection;
 using DataFeeds = QuantConnect.Lean.Engine.DataFeeds;
+using QuantConnect.Lean.Engine.DataFeeds.DataDownloader;
 using QuantConnect.DownloaderDataProvider.Launcher.Models;
 using QuantConnect.DownloaderDataProvider.Launcher.Models.Constants;
-using QuantConnect.Lean.Engine.HistoricalData;
 
 namespace QuantConnect.DownloaderDataProvider.Launcher;
+
 public static class Program
 {
     /// <summary>
@@ -63,30 +63,29 @@ public static class Program
             Config.MergeCommandLineArgumentsWithConfiguration(DownloaderDataProviderArgumentParser.ParseArguments(args));
         }
 
-        InitializeConfigurations();
+        var dataDownloaderSelector = InitializeConfigurations();
 
-        var dataDownloader = Composer.Instance.GetExportedValueByTypeName<IDataDownloader>(Config.Get(DownloaderCommandArguments.CommandDownloaderDataDownloader));
         var commandDataType = Config.Get(DownloaderCommandArguments.CommandDataType).ToUpperInvariant();
 
+        var dataDownloadConfig = default(BaseDataDownloadConfig);
         switch (commandDataType)
         {
             case "UNIVERSE":
-                RunUniverseDownloader(dataDownloader, new DataUniverseDownloadConfig());
+                dataDownloadConfig = new DataUniverseDownloadConfig();
+                RunUniverseDownloader(dataDownloaderSelector.GetDataDownloader(dataDownloadConfig.DataType), dataDownloadConfig);
                 break;
             case "TRADE":
             case "QUOTE":
             case "OPENINTEREST":
-                RunDownload(dataDownloader, new DataDownloadConfig(), Globals.DataFolder, _dataCacheProvider);
+                dataDownloadConfig = new DataDownloadConfig();
+                RunDownload(dataDownloaderSelector.GetDataDownloader(dataDownloadConfig.DataType), dataDownloadConfig, Globals.DataFolder, _dataCacheProvider);
                 break;
             default:
                 Log.Error($"QuantConnect.DownloaderDataProvider.Launcher: Unsupported command data type '{commandDataType}'. Valid options: UNIVERSE, TRADE, QUOTE, OPENINTEREST.");
                 break;
         }
 
-        if (dataDownloader is BrokerageDataDownloader brokerageDataDownloader)
-        {
-            brokerageDataDownloader.DisposeSafely();
-        }
+        dataDownloaderSelector.Dispose();
     }
 
     /// <summary>
@@ -98,7 +97,7 @@ public static class Program
     /// <param name="dataCacheProvider">The provider used to cache history data files</param>
     /// <param name="mapSymbol">True if the symbol should be mapped while writing the data</param>
     /// <exception cref="ArgumentNullException">Thrown when <paramref name="dataDownloader"/> is null.</exception>
-    public static void RunDownload(IDataDownloader dataDownloader, DataDownloadConfig dataDownloadConfig, string dataDirectory, IDataCacheProvider dataCacheProvider, bool mapSymbol = true)
+    public static void RunDownload(IDataDownloader dataDownloader, BaseDataDownloadConfig dataDownloadConfig, string dataDirectory, IDataCacheProvider dataCacheProvider, bool mapSymbol = true)
     {
         if (dataDownloader == null)
         {
@@ -167,7 +166,7 @@ public static class Program
     /// </summary>
     /// <param name="dataDownloader">The data downloader instance.</param>
     /// <param name="dataUniverseDownloadConfig">The universe download configuration.</param>
-    private static void RunUniverseDownloader(IDataDownloader dataDownloader, DataUniverseDownloadConfig dataUniverseDownloadConfig)
+    private static void RunUniverseDownloader(IDataDownloader dataDownloader, BaseDataDownloadConfig dataUniverseDownloadConfig)
     {
         foreach (var symbol in dataUniverseDownloadConfig.Symbols)
         {
@@ -206,28 +205,19 @@ public static class Program
     /// <seealso cref="IDataProvider"/>
     /// <seealso cref="IMapFileProvider"/>
     /// <seealso cref="IFactorFileProvider"/>
-    public static void InitializeConfigurations()
+    public static DataDownloaderSelector InitializeConfigurations()
     {
         Log.DebuggingEnabled = Config.GetBool("debug-mode", false);
-        Log.LogHandler = Composer.Instance.GetExportedValueByTypeName<ILogHandler>(Config.Get("log-handler", "CompositeLogHandler"));
+        Log.LogHandler = Composer.Instance.GetExportedValueByTypeName<ILogHandler>(Config.Get("log-handler", "ConsoleLogHandler"));
 
         var dataProvider = Composer.Instance.GetExportedValueByTypeName<IDataProvider>("DefaultDataProvider");
         var mapFileProvider = Composer.Instance.GetExportedValueByTypeName<IMapFileProvider>(Config.Get("map-file-provider", "LocalDiskMapFileProvider"));
         var factorFileProvider = Composer.Instance.GetExportedValueByTypeName<IFactorFileProvider>(Config.Get("factor-file-provider", "LocalDiskFactorFileProvider"));
 
-        var optionChainProvider = Composer.Instance.GetPart<IOptionChainProvider>();
-        if (optionChainProvider == null)
-        {
-            var historyManager = Composer.Instance.GetExportedValueByTypeName<HistoryProviderManager>(nameof(HistoryProviderManager));
-            historyManager.Initialize(new HistoryProviderInitializeParameters(null, null, dataProvider, _dataCacheProvider,
-                mapFileProvider, factorFileProvider, _ => { }, false, new DataPermissionManager(), null, new AlgorithmSettings()));
-            var baseOptionChainProvider = new LiveOptionChainProvider();
-            baseOptionChainProvider.Initialize(new(mapFileProvider, historyManager));
-            optionChainProvider = new CachingOptionChainProvider(baseOptionChainProvider);
-            Composer.Instance.AddPart(optionChainProvider);
-        }
-
         mapFileProvider.Initialize(dataProvider);
         factorFileProvider.Initialize(mapFileProvider, dataProvider);
+
+        var dataDownloader = Composer.Instance.GetExportedValueByTypeName<IDataDownloader>(Config.Get(DownloaderCommandArguments.CommandDownloaderDataDownloader));
+        return new DataDownloaderSelector(dataDownloader, mapFileProvider, dataProvider, factorFileProvider);
     }
 }

@@ -37,8 +37,8 @@ namespace QuantConnect.Tests.Indicators
         {
             var rvi = CreateIndicator();
             TestHelper.TestIndicator(rvi, TestFileName, "RVI_S",
-                (ind, expected) => Assert.AreEqual(expected, 
-                    (double) ((RelativeVigorIndex) ind).Signal.Current.Value, 0.06));
+                (ind, expected) => Assert.AreEqual(expected,
+                    (double)((RelativeVigorIndex)ind).Signal.Current.Value, 0.06));
         }
 
         [Test]
@@ -48,17 +48,40 @@ namespace QuantConnect.Tests.Indicators
             for (int i = 0; i < 13; i++)
             {
                 var tradeBar = new TradeBar
-                    {
-                        Open = 0m,
-                        Close = 0m,
-                        High = 0m,
-                        Low = 0m,
-                        Volume = 1
-                    };
-                    rvi.Update(tradeBar);
+                {
+                    Open = 0m,
+                    Close = 0m,
+                    High = 0m,
+                    Low = 0m,
+                    Volume = 1
+                };
+                rvi.Update(tradeBar);
             }
             Assert.AreEqual(rvi.Current.Value, 0m);
-            Assert.AreEqual(((RelativeVigorIndex) rvi).Signal.Current.Value, 0m);
+            Assert.AreEqual(((RelativeVigorIndex)rvi).Signal.Current.Value, 0m);
+        }
+
+        [Test]
+        public void SignalUpdatesOnFlatMarket()
+        {
+            var rvi = new RelativeVigorIndex("RVI", 10);
+            var referenceTime = System.DateTime.Today;
+
+            for (int i = 0; i < 30; i++)
+            {
+                rvi.Update(new TradeBar
+                {
+                    Time = referenceTime.AddMinutes(i),
+                    Open = 105m,
+                    High = 105m,
+                    Low = 105m,
+                    Close = 105m,
+                    Volume = 1000
+                });
+            }
+
+            var signalSamples = rvi.Signal.Samples;
+            Assert.AreEqual(18, signalSamples);
         }
     }
 }

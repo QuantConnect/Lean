@@ -13,8 +13,6 @@
  * limitations under the License.
 */
 
-using System;
-
 namespace QuantConnect.Brokerages.Authentication
 {
     /// <summary>

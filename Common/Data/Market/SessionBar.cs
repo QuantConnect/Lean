@@ -52,14 +52,34 @@ namespace QuantConnect.Data.Market
         public override decimal Close => _bar?.Close ?? 0m;
 
         /// <summary>
+        /// The closing time of this bar, computed via the Time and Period
+        /// </summary>
+        public override DateTime EndTime
+        {
+            get
+            {
+                if (Time == DateTime.MaxValue)
+                {
+                    // Prevent overflow from Time + Period when Time is DateTime.MaxValue
+                    return Time;
+                }
+
+                return base.EndTime;
+            }
+        }
+
+        /// <summary>
         /// The period of this session bar
         /// </summary>
-        public override TimeSpan Period { get; set; } = QuantConnect.Time.OneDay;
+        public override TimeSpan Period { get; set; }
 
         /// <summary>
         /// Initializes a new instance of SessionBar with default values
         /// </summary>
-        public SessionBar() { }
+        public SessionBar()
+        {
+            Period = QuantConnect.Time.OneDay;
+        }
 
         /// <summary>
         /// Initializes a new instance of SessionBar with a specific tick type
@@ -67,6 +87,7 @@ namespace QuantConnect.Data.Market
         public SessionBar(TickType sourceTickType)
         {
             _sourceTickType = sourceTickType;
+            Period = QuantConnect.Time.OneDay;
         }
 
         /// <summary>

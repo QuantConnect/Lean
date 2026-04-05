@@ -80,9 +80,17 @@ namespace QuantConnect.Algorithm.CSharp
                 throw new RegressionTestException($"Unexpected {nameof(Fundamental)} data count {history[0].Values.Count}, expected 2!");
             }
 
+            // assert all fundamental API data match
             foreach (var ticker in new[] {"AAPL", "SPY"})
             {
-                if (!history[0].TryGetValue(ticker, out var fundamental) || fundamental.Price == 0)
+                var fundamentalThroughSecurity = Securities[ticker].Fundamentals;
+                var fundamentalThroughAlgo = Fundamentals(ticker);
+
+                if (!history[1].TryGetValue(ticker, out var fundamental) || fundamental.Price == 0
+                    || fundamentalThroughSecurity.Price != fundamental.Price
+                    || fundamentalThroughSecurity.EndTime != fundamental.EndTime
+                    || fundamentalThroughAlgo.Price != fundamental.Price
+                    || fundamentalThroughAlgo.EndTime != fundamental.EndTime)
                 {
                     throw new RegressionTestException($"Unexpected {ticker} fundamental data");
                 }
@@ -142,7 +150,31 @@ namespace QuantConnect.Algorithm.CSharp
             var sortedByPeRatio = sortedByDollarVolume.OrderByDescending(x => x.ValuationRatios.PERatio);
 
             // take the top entries from our sorted collection
-            var topFine = sortedByPeRatio.Take(NumberOfSymbolsFundamental);
+            var topFine = sortedByPeRatio.Take(NumberOfSymbolsFundamental).ToArray();
+
+            // selection fundamental data should match all other APIs
+            foreach (var fundamentalPoint in topFine)
+            {
+                var symbol = fundamentalPoint.Symbol;
+                if (fundamentalPoint.Price == 0)
+                {
+                    throw new RegressionTestException($"Unexpected {symbol} fundamental data in selection");
+                }
+
+                if (UniverseSettings.Asynchronous.HasValue && UniverseSettings.Asynchronous.Value)
+                {
+                    continue;
+                }
+                var fundamentalThroughSecurity = Securities.ContainsKey(symbol) ? Securities[symbol].Fundamentals : null;
+                var fundamentalThroughAlgo = Fundamentals(symbol);
+                if (fundamentalThroughSecurity != null && (fundamentalThroughSecurity.Price != fundamentalPoint.Price
+                    || fundamentalThroughSecurity.EndTime != fundamentalPoint.EndTime)
+                    || fundamentalThroughAlgo != null && (fundamentalThroughAlgo.Price != fundamentalPoint.Price
+                    || fundamentalThroughAlgo.EndTime != fundamentalPoint.EndTime))
+                {
+                    throw new RegressionTestException($"Unexpected {symbol} fundamental data in selection");
+                }
+            }
 
             // we need to return only the symbol objects
             return topFine.Select(x => x.Symbol);
@@ -190,7 +222,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
-        public long DataPoints => 77169;
+        public long DataPoints => 70972;
 
         /// <summary>
         /// Data Points count of the algorithm history
@@ -207,34 +239,34 @@ namespace QuantConnect.Algorithm.CSharp
         /// </summary>
         public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
         {
-            {"Total Orders", "2"},
+            {"Total Orders", "3"},
             {"Average Win", "0%"},
             {"Average Loss", "0%"},
-            {"Compounding Annual Return", "-1.016%"},
+            {"Compounding Annual Return", "-1.169%"},
             {"Drawdown", "0.100%"},
             {"Expectancy", "0"},
             {"Start Equity", "100000"},
-            {"End Equity", "99963.64"},
-            {"Net Profit", "-0.036%"},
-            {"Sharpe Ratio", "-4.731"},
-            {"Sortino Ratio", "-6.776"},
-            {"Probabilistic Sharpe Ratio", "24.373%"},
+            {"End Equity", "99958.14"},
+            {"Net Profit", "-0.042%"},
+            {"Sharpe Ratio", "-3.451"},
+            {"Sortino Ratio", "-4.933"},
+            {"Probabilistic Sharpe Ratio", "27.530%"},
             {"Loss Rate", "0%"},
             {"Win Rate", "0%"},
             {"Profit-Loss Ratio", "0"},
             {"Alpha", "-0.013"},
-            {"Beta", "0.023"},
-            {"Annual Standard Deviation", "0.003"},
+            {"Beta", "0.043"},
+            {"Annual Standard Deviation", "0.005"},
             {"Annual Variance", "0"},
             {"Information Ratio", "0.607"},
-            {"Tracking Error", "0.095"},
-            {"Treynor Ratio", "-0.654"},
-            {"Total Fees", "$2.00"},
+            {"Tracking Error", "0.093"},
+            {"Treynor Ratio", "-0.381"},
+            {"Total Fees", "$3.00"},
             {"Estimated Strategy Capacity", "$1900000000.00"},
             {"Lowest Capacity Asset", "IBM R735QTJ8XC9X"},
-            {"Portfolio Turnover", "0.30%"},
-            {"Drawdown Recovery", "5"},
-            {"OrderListHash", "9b3bf202c3d5707779f25e9c7f7fdc92"}
+            {"Portfolio Turnover", "0.45%"},
+            {"Drawdown Recovery", "4"},
+            {"OrderListHash", "63a37fcfe86bca2e037d9dbb9c531e43"}
         };
     }
 }

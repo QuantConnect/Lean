@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -47,7 +47,7 @@ namespace QuantConnect.Algorithm.CSharp
 
             // set the pricing model for Greeks and volatility
             // find more pricing models https://www.quantconnect.com/lean/documentation/topic27704.html
-            option.PriceModel = OptionPriceModels.CrankNicolsonFD();
+            option.PriceModel = OptionPriceModels.BlackScholes();
             // set the warm-up period for the pricing model
             SetWarmup(TimeSpan.FromDays(4));
             // set the benchmark to be the initial cash

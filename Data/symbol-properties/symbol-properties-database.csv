@@ -253,7 +253,7 @@ cme,ANE,future,Australian Dollar/New Zealand Dollar Futures,NZD,200000.0,0.0001,
 cme,BIO,future,E-mini Nasdaq-100 Biotechnology Index Futures,USD,25.0,0.5,1.0
 cme,BTC,future,Bitcoin Futures,USD,5.0,5.0,1.0
 cme,CJY,future,Canadian Dollar/Japanese Yen Futures,JPY,200000.0,0.01,1.0
-cme,CNH,future,Standard-Size USD/Offshore RMB (CNH) Futures,CNY,100000.0,0.0001,1.0
+cme,CNH,future,Standard-Size USD/Offshore RMB (CNH) Futures,CNH,100000.0,0.0001,1.0
 cme,E3G,future,E-mini FTSE 100 GBP Futures,GBP,500.0,0.05,1.0
 cme,E7,future,E-mini Euro FX Futures,USD,62500.0,0.0001,1.0
 cme,EAD,future,Euro/Australian Dollar Futures,AUD,125000.0,0.0001,1.0

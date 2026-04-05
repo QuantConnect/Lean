@@ -151,38 +151,43 @@ namespace QuantConnect.Tests.Engine.Results
             var resultHandler = new LiveTradingResultHandler();
             resultHandler.Initialize(new (new LiveNodePacket(), messagging, api, new BacktestingTransactionHandler(), null));
 
-            var algo = new AlgorithmStub(createDataManager:false);
-            algo.SetFinishedWarmingUp();
-            var dataManager = new DataManagerStub(new TestDataFeed(), algo);
-            algo.SubscriptionManager.SetDataManager(dataManager);
-            var aapl = algo.AddEquity("AAPL", extendedMarketHours: extendedMarketHoursEnabled);
-            algo.PostInitialize();
-            resultHandler.SetAlgorithm(algo, 100000);
-            resultHandler.OnSecuritiesChanged(SecurityChangesTests.AddedNonInternal(aapl));
+            try
+            {
+                var algo = new AlgorithmStub(createDataManager: false);
+                algo.SetFinishedWarmingUp();
+                var dataManager = new DataManagerStub(new TestDataFeed(), algo);
+                algo.SubscriptionManager.SetDataManager(dataManager);
+                var aapl = algo.AddEquity("AAPL", extendedMarketHours: extendedMarketHoursEnabled);
+                algo.PostInitialize();
+                resultHandler.SetAlgorithm(algo, 100000);
+                resultHandler.OnSecuritiesChanged(SecurityChangesTests.AddedNonInternal(aapl));
 
-            // Add values during market hours, should always update
-            algo.Portfolio.CashBook["USD"].AddAmount(1000);
-            algo.Portfolio.InvalidateTotalPortfolioValue();
+                // Add values during market hours, should always update
+                algo.Portfolio.CashBook["USD"].AddAmount(1000);
+                algo.Portfolio.InvalidateTotalPortfolioValue();
 
-            resultHandler.Sample(referenceDate.AddHours(15));
-            Assert.IsTrue(resultHandler.Charts.ContainsKey("Strategy Equity"));
-            Assert.AreEqual(1, resultHandler.Charts["Strategy Equity"].Series["Equity"].Values.Count);
+                resultHandler.Sample(referenceDate.AddHours(15));
+                Assert.IsTrue(resultHandler.Charts.ContainsKey("Strategy Equity"));
+                Assert.AreEqual(1, resultHandler.Charts["Strategy Equity"].Series["Equity"].Values.Count);
 
-            var currentEquityValue = (Candlestick)resultHandler.Charts["Strategy Equity"].Series["Equity"].Values.Last();
-            Assert.AreEqual(101000, currentEquityValue.Close);
+                var currentEquityValue = (Candlestick)resultHandler.Charts["Strategy Equity"].Series["Equity"].Values.Last();
+                Assert.AreEqual(101000, currentEquityValue.Close);
 
-            // Add value to portfolio, see if portfolio updates with new sample
-            // will be changed to 'extendedMarketHoursEnabled' = true
-            algo.Portfolio.CashBook["USD"].AddAmount(10000);
-            algo.Portfolio.InvalidateTotalPortfolioValue();
+                // Add value to portfolio, see if portfolio updates with new sample
+                // will be changed to 'extendedMarketHoursEnabled' = true
+                algo.Portfolio.CashBook["USD"].AddAmount(10000);
+                algo.Portfolio.InvalidateTotalPortfolioValue();
 
-            resultHandler.Sample(referenceDate.AddHours(22));
-            Assert.AreEqual(2, resultHandler.Charts["Strategy Equity"].Series["Equity"].Values.Count);
+                resultHandler.Sample(referenceDate.AddHours(22));
+                Assert.AreEqual(2, resultHandler.Charts["Strategy Equity"].Series["Equity"].Values.Count);
 
-            currentEquityValue = (Candlestick)resultHandler.Charts["Strategy Equity"].Series["Equity"].Values.Last();
-            Assert.AreEqual(extendedMarketHoursEnabled ? 111000 : 101000, currentEquityValue.Close);
-
-            resultHandler.Exit();
+                currentEquityValue = (Candlestick)resultHandler.Charts["Strategy Equity"].Series["Equity"].Values.Last();
+                Assert.AreEqual(extendedMarketHoursEnabled ? 111000 : 101000, currentEquityValue.Close);
+            }
+            finally
+            {
+                resultHandler.Exit();
+            }
         }
 
         private class TestDataFeed : IDataFeed

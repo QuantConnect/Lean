@@ -527,7 +527,7 @@ namespace QuantConnect
             {
                 // create a proxy order object to steal its ToString method
                 var proxy = Orders.Order.CreateOrder(request);
-                return Invariant($"{request.Time} UTC: Submit Order: ({request.OrderId}) - {proxy} {request.Tag} Status: {request.Status}");
+                return Invariant($"{request.Time} UTC: Submit Order: ({request.OrderId}) - {proxy} {request.Tag} Status: {request.Status} Async: {request.Asynchronous}");
             }
         }
 

@@ -141,6 +141,7 @@ namespace QuantConnect.Tests.Algorithm.Framework.Execution
             }
             finally
             {
+                orderProcessor.Exit();
                 brokerage?.Dispose();
             }
         }

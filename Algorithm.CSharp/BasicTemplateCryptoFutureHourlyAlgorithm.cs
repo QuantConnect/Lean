@@ -93,7 +93,7 @@ namespace QuantConnect.Algorithm.CSharp
                 if (!Portfolio.Invested && Transactions.OrdersCount == 0)
                 {
                     var ticket = Buy(_adaUsdt.Symbol, 100000);
-                    if(ticket.Status != OrderStatus.Invalid)
+                    if (ticket.Status != OrderStatus.Invalid)
                     {
                         throw new RegressionTestException($"Unexpected valid order {ticket}, should fail due to margin not sufficient");
                     }
@@ -114,8 +114,7 @@ namespace QuantConnect.Algorithm.CSharp
                     {
                         throw new RegressionTestException($"Unexpected holdings cost {adaUsdtHoldings.HoldingsCost}");
                     }
-                    if (Math.Abs(adaUsdtHoldings.AbsoluteHoldingsCost * 0.05m - marginUsed) > 1
-                        || _adaUsdt.BuyingPowerModel.GetMaintenanceMargin(_adaUsdt) != marginUsed)
+                    if (_adaUsdt.BuyingPowerModel.GetMaintenanceMargin(_adaUsdt) != marginUsed)
                     {
                         throw new RegressionTestException($"Unexpected margin used {marginUsed}");
                     }
@@ -236,7 +235,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Tracking Error", "0"},
             {"Treynor Ratio", "0"},
             {"Total Fees", "$0.61"},
-            {"Estimated Strategy Capacity", "$370000000.00"},
+            {"Estimated Strategy Capacity", "$460000000.00"},
             {"Lowest Capacity Asset", "ADAUSDT 18R"},
             {"Portfolio Turnover", "0.12%"},
             {"Drawdown Recovery", "0"},

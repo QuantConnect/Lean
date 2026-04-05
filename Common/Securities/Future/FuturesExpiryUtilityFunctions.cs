@@ -25,6 +25,8 @@ namespace QuantConnect.Securities.Future
     /// </summary>
     public static class FuturesExpiryUtilityFunctions
     {
+        private static readonly MarketHoursDatabase MarketHoursDatabase = MarketHoursDatabase.FromDataFolder();
+
         /// <summary>
         /// Get holiday list from the MHDB given the market and the symbol of the security
         /// </summary>
@@ -115,7 +117,7 @@ namespace QuantConnect.Securities.Future
             var lastDayOfMonth = new DateTime(time.Year, time.Month, daysInMonth);
             var holidays = holidayList.Select(x => x.Date);
 
-            if(n > daysInMonth)
+            if (n > daysInMonth)
             {
                 throw new ArgumentOutOfRangeException(nameof(n), Invariant(
                     $"Number of days ({n}) is larger than the size of month({daysInMonth})"
@@ -380,6 +382,21 @@ namespace QuantConnect.Securities.Future
             var thirdFriday = ThirdFriday(time);
             var holidays = GetExpirationHolidays(contract.ID.Market, contract.ID.Symbol);
             return AddBusinessDaysIfHoliday(thirdFriday, -1, holidays);
+        }
+
+        /// <summary>
+        /// Checks if the future contract is expired.
+        /// </summary>
+        public static bool IsFutureContractExpired(Symbol symbol, DateTime currentUtcTime, MarketHoursDatabase marketHoursDatabase = null)
+        {
+            var exchangeHours = (marketHoursDatabase ?? MarketHoursDatabase).GetExchangeHours(symbol.ID.Market, symbol, symbol.SecurityType);
+            var currentTimeInExchangeTz = currentUtcTime.ConvertFromUtc(exchangeHours.TimeZone);
+            if (currentTimeInExchangeTz >= symbol.ID.Date)
+            {
+                return true;
+            }
+
+            return false;
         }
 
         private static readonly Dictionary<string, int> ExpiriesPriorMonth = new Dictionary<string, int>

@@ -197,6 +197,6 @@ namespace QuantConnect.Brokerages
         /// <summary>
         /// Transaction and submit/execution rules will use dYdX models
         /// </summary>
-        dYdX
+        DYDX
     }
 }

@@ -40,6 +40,11 @@ namespace QuantConnect.Securities.CryptoFuture
         /// <returns>The value of the quantity of shares in the account currency</returns>
         public override ConvertibleCashAmount GetQuantityValue(decimal quantity, decimal price)
         {
+            if (Symbol.ID.Market == Market.DYDX)
+            {
+                // common math quantity * quote price
+                return base.GetQuantityValue(quantity, price);
+            }
             var cryptoFuture = (CryptoFuture)Security;
 
             Cash cash;

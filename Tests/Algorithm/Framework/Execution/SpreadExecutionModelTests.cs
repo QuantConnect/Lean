@@ -120,6 +120,7 @@ namespace QuantConnect.Tests.Algorithm.Framework.Execution
             }
             finally
             {
+                orderProcessor.Exit();
                 brokerage.Dispose();
             }
         }
@@ -174,6 +175,7 @@ namespace QuantConnect.Tests.Algorithm.Framework.Execution
             }
             finally
             {
+                orderProcessor.Exit();
                 brokerage.Dispose();
             }
         }

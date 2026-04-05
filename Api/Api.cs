@@ -1067,7 +1067,7 @@ namespace QuantConnect.Api
                 var message = $"Api.DownloadBytes(): Failed to download data from {address}";
                 if (!userName.IsNullOrEmpty() || !password.IsNullOrEmpty())
                 {
-                    message += $" with username: {userName} and password {password}";
+                    message += $" with username: {userName} and password: {(string.IsNullOrEmpty(password) ? "" : new string('*', password.Length))}";
                 }
 
                 throw new WebException($"{message}. Please verify the source for missing http:// or https://", exception);

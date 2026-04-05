@@ -31,8 +31,10 @@ class StringToSymbolImplicitConversionRegressionAlgorithm(QCAlgorithm):
         Arguments:
             data: Slice object keyed by symbol containing the stock data
         '''
-        try:
-            self.market_order("PEPE", 1)
-        except Exception as exception:
-            if "PEPE was not found" in str(exception) and not self.portfolio.invested:
-                self.set_holdings("SPY", 1)
+        ticket = self.market_order("PEPE", 1)
+
+        if ticket.status != OrderStatus.INVALID:
+            raise Exception(f"Expected order to be invalid since PEPE is not a valid ticker, but was {ticket.status}")
+
+        if not self.portfolio.invested:
+            self.set_holdings("SPY", 1)

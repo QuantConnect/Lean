@@ -310,5 +310,10 @@ namespace QuantConnect.Packets
         /// Language model agent message
         /// </summary>
         LanguageModelAgentMessage,
+
+        /// <summary>
+        /// Agent job packet
+        /// </summary>
+        AgentNode
     }
 }

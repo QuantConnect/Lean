@@ -288,7 +288,7 @@ namespace QuantConnect.Brokerages
                 case BrokerageName.Tastytrade:
                     return new TastytradeBrokerageModel(accountType);
 
-                case BrokerageName.dYdX:
+                case BrokerageName.DYDX:
                     return new dYdXBrokerageModel(accountType);
 
                 default:

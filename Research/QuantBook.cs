@@ -38,6 +38,7 @@ using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Lean.Engine.Setup;
 using QuantConnect.Indicators;
 using QuantConnect.Scheduling;
+using QuantConnect.Lean.Engine.RealTime;
 
 namespace QuantConnect.Research
 {
@@ -142,6 +143,10 @@ namespace QuantConnect.Research
                     new AlgorithmManager(false));
                 systemHandlers.LeanManager.SetAlgorithm(this);
 
+                var realTimeHandler = composer.GetPart<IRealTimeHandler>();
+                var algorithmManager = new AlgorithmManager(false, algorithmPacket);
+                realTimeHandler.Setup(this, algorithmPacket, algorithmHandlers.Results, systemHandlers.Api, algorithmManager.TimeLimit);
+                Schedule.SetEventSchedule(realTimeHandler);
 
                 algorithmHandlers.DataPermissionsManager.Initialize(algorithmPacket);
 

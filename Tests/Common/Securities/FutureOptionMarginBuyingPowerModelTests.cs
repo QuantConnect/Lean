@@ -163,28 +163,35 @@ namespace QuantConnect.Tests.Common.Securities
             algorithm.Transactions.SetOrderProcessor(backtestingTransactionHandler);
             backtestingTransactionHandler.Initialize(algorithm, brokerage, new TestResultHandler());
 
-            const decimal price = 2600m;
-            var time = new DateTime(2020, 10, 14);
-            var expDate = new DateTime(2021, 3, 19);
+            try
+            {
+                const decimal price = 2600m;
+                var time = new DateTime(2020, 10, 14);
+                var expDate = new DateTime(2021, 3, 19);
 
-            // For this symbol we dont have any history, but only one date and margins line
-            var ticker = QuantConnect.Securities.Futures.Indices.SP500EMini;
-            var future = Symbol.CreateFuture(ticker, Market.CME, expDate);
-            var symbol = Symbol.CreateOption(future, Market.CME, OptionStyle.American, OptionRight.Call, 2550m,
-                new DateTime(2021, 3, 19));
+                // For this symbol we dont have any history, but only one date and margins line
+                var ticker = QuantConnect.Securities.Futures.Indices.SP500EMini;
+                var future = Symbol.CreateFuture(ticker, Market.CME, expDate);
+                var symbol = Symbol.CreateOption(future, Market.CME, OptionStyle.American, OptionRight.Call, 2550m,
+                    new DateTime(2021, 3, 19));
 
-            var optionSecurity = algorithm.AddOptionContract(symbol);
-            optionSecurity.Underlying = algorithm.AddFutureContract(future);
+                var optionSecurity = algorithm.AddOptionContract(symbol);
+                optionSecurity.Underlying = algorithm.AddFutureContract(future);
 
-            optionSecurity.Underlying.SetMarketPrice(new Tick { Value = price, Time = time });
-            optionSecurity.SetMarketPrice(new Tick { Value = 150, Time = time });
-            optionSecurity.Holdings.SetHoldings(1.5m, 10);
+                optionSecurity.Underlying.SetMarketPrice(new Tick { Value = price, Time = time });
+                optionSecurity.SetMarketPrice(new Tick { Value = 150, Time = time });
+                optionSecurity.Holdings.SetHoldings(1.5m, 10);
 
-            algorithm.SetDateTime(time.AddHours(14)); // 10am
-            var ticket = algorithm.ExerciseOption(optionSecurity.Symbol, 10, true);
-            // Process orders
-            backtestingTransactionHandler.ProcessSynchronousEvents();
-            Assert.AreEqual(OrderStatus.Filled, ticket.Status);
+                algorithm.SetDateTime(time.AddHours(14)); // 10am
+                var ticket = algorithm.ExerciseOption(optionSecurity.Symbol, 10, true);
+                // Process orders
+                backtestingTransactionHandler.ProcessSynchronousEvents();
+                Assert.AreEqual(OrderStatus.Filled, ticket.Status);
+            }
+            finally
+            {
+                backtestingTransactionHandler.Exit();
+            }
         }
 
         [Test]

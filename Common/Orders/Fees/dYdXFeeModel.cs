@@ -14,7 +14,6 @@
  */
 
 using QuantConnect.Securities;
-using QuantConnect.Util;
 
 namespace QuantConnect.Orders.Fees;
 

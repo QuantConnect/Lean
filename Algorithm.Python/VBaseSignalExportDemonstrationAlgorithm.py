@@ -29,7 +29,8 @@ class VBaseSignalExportDemonstrationAlgorithm(QCAlgorithm):
         self.vbase_collection_name = "YOUR VBASE COLLECTION NAME"
 
         self._symbols = [
-            Symbol.create("SPY", SecurityType.EQUITY, Market.USA)
+            Symbol.create("SPY", SecurityType.EQUITY, Market.USA),
+            Symbol.create("IBM", SecurityType.EQUITY, Market.USA)
         ]
 
         for symbol in self._symbols:
@@ -44,6 +45,8 @@ class VBaseSignalExportDemonstrationAlgorithm(QCAlgorithm):
         self._sentSignal = True
 
         self.targets = []
-        for symbol in self._symbols:
-            self.targets.append(PortfolioTarget(symbol, 0.25))
+
+        self.targets.append(PortfolioTarget(self._symbols[0], 0.25)) # SPY 25% of the portfolio
+        self.targets.append(PortfolioTarget(self._symbols[1], 0.75)) # IBM 75% of the portfolio
+
         self.signal_export.set_target_portfolio(self.targets)

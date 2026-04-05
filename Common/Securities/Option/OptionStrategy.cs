@@ -16,6 +16,7 @@
 using System;
 using QuantConnect.Orders;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace QuantConnect.Securities.Option
 {
@@ -42,28 +43,109 @@ namespace QuantConnect.Securities.Option
         /// <summary>
         /// Option strategy legs
         /// </summary>
-        public List<OptionLegData> OptionLegs { get; set; } = new List<OptionLegData>();
+        public List<OptionLegData> OptionLegs { get; set; }
 
         /// <summary>
         /// Option strategy underlying legs (usually 0 or 1 legs)
         /// </summary>
-        public List<UnderlyingLegData> UnderlyingLegs { get; set; } = new List<UnderlyingLegData>();
+        public List<UnderlyingLegData> UnderlyingLegs { get; set; }
 
         /// <summary>
-        /// Defines common properties between <see cref="OptionLegData"/> and <see cref="UnderlyingLegData"/>
+        /// Creates a new instance of <see cref="OptionStrategy"/> with the specified parameters
         /// </summary>
-        public abstract class LegData : Leg
+        /// <param name="name">The strategy name</param>
+        /// <param name="canonicalSymbol">The canonical option symbol</param>
+        /// <param name="optionLegs">The option legs data</param>
+        /// <param name="underlyingLegs">The underlying legs data</param>
+        public OptionStrategy(string name, Symbol canonicalSymbol, List<OptionLegData> optionLegs = null, List<UnderlyingLegData> underlyingLegs = null)
         {
-            /// <summary>
-            /// Invokes the correct handler based on the runtime type.
-            /// </summary>
-            public abstract void Invoke(Action<UnderlyingLegData> underlyingHandler, Action<OptionLegData> optionHandler);
+            Name = name;
+            CanonicalOption = canonicalSymbol;
+            Underlying = canonicalSymbol.Underlying;
+            OptionLegs = optionLegs ?? new List<OptionLegData>();
+            UnderlyingLegs = underlyingLegs ?? new List<UnderlyingLegData>();
+
+            SetSymbols();
+        }
+
+        /// <summary>
+        /// Creates a new instance of <see cref="OptionStrategy"/> with default parameters
+        /// </summary>
+        public OptionStrategy()
+        {
+            OptionLegs = new List<OptionLegData>();
+            UnderlyingLegs = new List<UnderlyingLegData>();
+        }
+
+        /// <summary>
+        /// Sets the option legs symbols based on the canonical symbol and the leg data. 
+        /// If the canonical symbol is not set, it will be created using the underlying symbol.
+        /// </summary>
+        public void SetSymbols()
+        {
+            if (CanonicalOption == null)
+            {
+                if (Underlying == null)
+                {
+                    // Let's be polite and try to get the underlying symbol from the underlying legs as a last resort
+                    var underlyingLeg = UnderlyingLegs.Count > 0 ? UnderlyingLegs[0] : null;
+                    if (underlyingLeg == null || underlyingLeg.Symbol == null)
+                    {
+                        return;
+                    }
+
+                    Underlying = underlyingLeg.Symbol;
+                }
+
+                CanonicalOption = Symbol.CreateCanonicalOption(Underlying);
+            }
+
+            foreach (var optionLeg in OptionLegs.Where(leg => leg.Symbol == null))
+            {
+                var targetOption = CanonicalOption.ID.Symbol;
+                optionLeg.Symbol = Symbol.CreateOption(Underlying, targetOption, Underlying.ID.Market, CanonicalOption.ID.OptionStyle,
+                    optionLeg.Right, optionLeg.Strike, optionLeg.Expiration);
+            }
+        }
+
+        /// <summary>
+        /// Creates a new instance of <see cref="OptionStrategy"/> with the specified name and legs data.
+        /// The method will try to infer the canonical symbol and underlying symbol from the legs data, but they can also be set manually after the strategy creation.
+        /// </summary>
+        public static OptionStrategy Create(string name, IEnumerable<Leg> legs)
+        {
+            var underlyingLegs = new List<UnderlyingLegData>();
+            var optionLegs = new List<OptionLegData>();
+            Symbol canonicalSymbol = null;
+
+            foreach (var leg in legs)
+            {
+                if (leg is UnderlyingLegData underlyingLeg)
+                {
+                    underlyingLegs.Add(underlyingLeg);
+                }
+                else if (leg is OptionLegData optionLeg)
+                {
+                    optionLegs.Add(optionLeg);
+
+                    if (canonicalSymbol == null)
+                    {
+                        canonicalSymbol = optionLeg.Symbol.Canonical;
+                    }
+                }
+                else
+                {
+                    throw new ArgumentException($"Invalid leg type: {leg.GetType().FullName}");
+                }
+            }
+
+            return new OptionStrategy(name, canonicalSymbol, optionLegs, underlyingLegs);
         }
 
         /// <summary>
         /// This class is a POCO containing basic data for the option legs of the strategy
         /// </summary>
-        public class OptionLegData : LegData
+        public class OptionLegData : Leg
         {
             /// <summary>
             /// Option right (type) of the option leg
@@ -97,18 +179,18 @@ namespace QuantConnect.Securities.Option
             }
 
             /// <summary>
-            /// Invokes the <paramref name="optionHandler"/>
+            /// Returns a string that represents the option leg
             /// </summary>
-            public override void Invoke(Action<UnderlyingLegData> underlyingHandler, Action<OptionLegData> optionHandler)
+            public override string ToString()
             {
-                optionHandler(this);
+                return $"Leg: {Quantity}. Right: {Right}. Strike: {Strike}. Expiration: {Expiration:yyyyMMdd}";
             }
         }
 
         /// <summary>
         /// This class is a POCO containing basic data for the underlying leg of the strategy
         /// </summary>
-        public class UnderlyingLegData : LegData
+        public class UnderlyingLegData : Leg
         {
             /// <summary>
             /// Creates a new instance of <see cref="UnderlyingLegData"/> for the specified <paramref name="quantity"/> of underlying shares.
@@ -133,11 +215,11 @@ namespace QuantConnect.Securities.Option
             }
 
             /// <summary>
-            /// Invokes the <paramref name="underlyingHandler"/>
+            /// Returns a string that represents the underlying leg.
             /// </summary>
-            public override void Invoke(Action<UnderlyingLegData> underlyingHandler, Action<OptionLegData> optionHandler)
+            public override string ToString()
             {
-                underlyingHandler(this);
+                return Symbol != null ? $"Leg: {Quantity}. {Symbol}" : string.Empty;
             }
         }
     }

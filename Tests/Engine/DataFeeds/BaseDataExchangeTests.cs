@@ -74,10 +74,15 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             using var finishedRunning = new AutoResetEvent(false);
             Task.Run(() => { exchange.Start(); finishedRunning.Set(); } );
 
-            Assert.IsTrue(lastUpdated.WaitOne(DefaultTimeout));
-
-            exchange.Stop();
-            cancellationToken.Cancel();
+            try
+            {
+                Assert.IsTrue(lastUpdated.WaitOne(DefaultTimeout));
+            }
+            finally
+            {
+                exchange.Stop();
+                cancellationToken.Cancel();
+            }           
 
             Assert.IsTrue(finishedRunning.WaitOne(DefaultTimeout));
 
@@ -119,11 +124,16 @@ namespace QuantConnect.Tests.Engine.DataFeeds
 
             Task.Run(() => exchange.Start());
 
-            Assert.IsTrue(lastUpdated.WaitOne(DefaultTimeout));
-
-            exchange.Stop();
-            cancellationToken.Cancel();
-            enqueable.Dispose();
+            try
+            {
+                Assert.IsTrue(lastUpdated.WaitOne(DefaultTimeout));
+            }
+            finally
+            {
+                exchange.Stop();
+                cancellationToken.Cancel();
+                enqueable.Dispose();
+            }
         }
 
         [Test]
@@ -164,14 +174,17 @@ namespace QuantConnect.Tests.Engine.DataFeeds
 
             Task.Run(() => exchange.Start());
 
-            Assert.IsTrue(errorCaught.WaitOne(DefaultTimeout));
-
-            exchange.Stop();
-
-            Assert.IsNull(last);
-
-            enqueable.Dispose();
-            cancellationToken.Cancel();
+            try
+            {
+                Assert.IsTrue(errorCaught.WaitOne(DefaultTimeout));
+                Assert.IsNull(last);
+            }
+            finally
+            {
+                exchange.Stop();
+                enqueable.Dispose();
+                cancellationToken.Cancel();
+            }
         }
 
         [Test]
@@ -189,10 +202,15 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 isCompletedEvent.Set();
             });
 
-            isCompletedEvent.WaitOne();
-            Assert.IsFalse(isFaultedEvent.WaitOne(0));
-
-            exchange.Stop();
+            try
+            {
+                isCompletedEvent.WaitOne();
+                Assert.IsFalse(isFaultedEvent.WaitOne(0));
+            }
+            finally
+            {
+                exchange.Stop();
+            }
         }
 
         [Test]

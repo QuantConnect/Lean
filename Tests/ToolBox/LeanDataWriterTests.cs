@@ -233,6 +233,25 @@ namespace QuantConnect.Tests.ToolBox
             Assert.AreEqual(data.First().Value.Count, 3);
         }
 
+        [Test]
+        public void LeanDataWriter_CanSupportUtf8Chars()
+        {
+            var symbol = Symbol.Create("币安人生usdt", SecurityType.CryptoFuture, Market.Binance);
+            var filePath = LeanData.GenerateZipFilePath(_dataDirectory, symbol, _date, Resolution.Tick, TickType.Trade);
+
+            var leanDataWriter = new LeanDataWriter(Resolution.Tick, symbol, _dataDirectory);
+            leanDataWriter.Write(GetTicks(symbol));
+
+            Assert.IsTrue(File.Exists(filePath));
+            Assert.IsFalse(File.Exists(filePath + ".tmp"));
+
+            var data = QuantConnect.Compression.Unzip(filePath);
+
+            var entry = data.First();
+            Assert.AreEqual(entry.Key, "20170316_币安人生usdt_tick_trade_perp.csv");
+            Assert.AreEqual(entry.Value.Count, 3);
+        }
+
         [TestCase("CON")]
         [TestCase("PRN")]
         [TestCase("AUX")]

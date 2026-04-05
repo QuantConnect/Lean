@@ -54,7 +54,9 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
         private int _totalOrderCount;
 
         // this bool is used to check if the warning message for the rounding of order quantity has been displayed for the first time
-        private bool _firstRoundOffMessage = false;
+        private bool _firstRoundOffMessage;
+        // this bool is used to check if the warning message for price rounding has been displayed for the first time
+        private bool _hasLoggedPriceRoundingWarning;
 
         // this value is used for determining how confident we are in our cash balance update
         private long _lastFillTimeTicks;
@@ -331,7 +333,7 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
                 order.OrderSubmissionData = new OrderSubmissionData(security.BidPrice, security.AskPrice, security.Close);
                 _openOrders[order.Id] = new OpenOrderState(order, ticket, security);
 
-                EnqueueOrderRequest(request);
+                EnqueueOrderRequest(request, order);
 
                 WaitForOrderSubmission(ticket);
             }
@@ -447,7 +449,7 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
                 else
                 {
                     request.SetResponse(OrderResponse.Success(request), OrderRequestStatus.Processing);
-                    EnqueueOrderRequest(request);
+                    EnqueueOrderRequest(request, order);
                 }
             }
             catch (Exception err)
@@ -519,7 +521,7 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
 
                     // send the request to be processed
                     request.SetResponse(OrderResponse.Success(request), OrderRequestStatus.Processing);
-                    EnqueueOrderRequest(request);
+                    EnqueueOrderRequest(request, order);
                 }
             }
             catch (Exception err)
@@ -1535,7 +1537,7 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
                 {
                     Log.Trace(
                         $"BrokerageTransactionHandler.HandleDelistingNotification(): UtcTime: {CurrentTimeUtc} clearing position for delisted holding: " +
-                        $"Symbol: {e.Symbol.Value}, " +
+                        $"{e}, " +
                         $"Quantity: {security.Holdings.Quantity}");
                 }
 
@@ -1914,11 +1916,12 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
 
         private void SendWarningOnPriceChange(string priceType, decimal priceRound, decimal priceOriginal)
         {
-            if (!priceOriginal.Equals(priceRound))
+            if (!priceOriginal.Equals(priceRound) && !_hasLoggedPriceRoundingWarning)
             {
                 _algorithm.Error(
                     $"Warning: To meet brokerage precision requirements, order {priceType.ToStringInvariant()} was rounded to {priceRound.ToStringInvariant()} from {priceOriginal.ToStringInvariant()}"
                 );
+                _hasLoggedPriceRoundingWarning = true;
             }
         }
 
@@ -1928,9 +1931,14 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
             return $"Order exceeds shortable quantity {shortableQuantity} for Symbol {symbol} requested {quantity})";
         }
 
-        private void EnqueueOrderRequest(OrderRequest request)
+        private void EnqueueOrderRequest(OrderRequest request, Order order)
         {
-            _orderRequestQueues[request.OrderId % _orderRequestQueues.Count].Add(request);
+            var queueKey = request.OrderId;
+            if (order.GroupOrderManager?.Id > 0)
+            {
+                queueKey = order.GroupOrderManager.Id;
+            }
+            _orderRequestQueues[queueKey % _orderRequestQueues.Count].Add(request);
         }
 
         /// <summary>
@@ -1953,4 +1961,3 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
         }
     }
 }
-

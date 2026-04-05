@@ -141,6 +141,7 @@ namespace QuantConnect.Tests.Engine
 
             realtime.Exit();
             results.Exit();
+            transactions.Exit();
             var thousands = nullSynchronizer.Count / 1000d;
             var seconds = sw.Elapsed.TotalSeconds;
             Log.Trace("COUNT: " + nullSynchronizer.Count + "  KPS: " + thousands/seconds);

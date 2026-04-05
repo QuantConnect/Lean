@@ -13,10 +13,10 @@
  * limitations under the License.
 */
 
-using System;
 using System.Collections.Generic;
 using QuantConnect.Data;
 using QuantConnect.Interfaces;
+using QuantConnect.Orders;
 
 namespace QuantConnect.Algorithm.CSharp
 {
@@ -43,16 +43,16 @@ namespace QuantConnect.Algorithm.CSharp
         /// <param name="data">Slice object keyed by symbol containing the stock data</param>
         public override void OnData(Slice slice)
         {
-            try
+            var ticket = MarketOrder("PEPE", 1);
+
+            if (ticket.Status != OrderStatus.Invalid)
             {
-                MarketOrder("PEPE", 1);
+                throw new RegressionTestException($"Expected order to be invalid since PEPE is not a valid ticker, but was {ticket.Status}");
             }
-            catch (Exception exception)
+
+            if (!Portfolio.Invested)
             {
-                if (exception.Message.Contains("PEPE was not found", StringComparison.InvariantCultureIgnoreCase) && !Portfolio.Invested)
-                {
-                    SetHoldings("SPY", 1);
-                }
+                SetHoldings("SPY", 1);
             }
         }
 
@@ -69,7 +69,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
-        public long DataPoints => 1582;
+        public long DataPoints => 1583;
 
         /// <summary>
         /// Data Points count of the algorithm history

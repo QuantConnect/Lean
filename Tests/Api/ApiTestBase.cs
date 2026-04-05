@@ -96,7 +96,7 @@ namespace QuantConnect.Tests.API
 
             // Create a backtest
             Log.Debug("ApiTestBase.Setup(): Creating test backtest");
-            var backtestName = $"{DateTime.UtcNow.ToStringInvariant("u")} API Backtest";
+            var backtestName = $"{DateTime.UtcNow.ToStringInvariant("yyyy-MM-dd HH-mm-ss")} API Backtest";
             var backtest = ApiClient.CreateBacktest(TestProject.ProjectId, compile.CompileId, backtestName);
             if (!backtest.Success)
             {

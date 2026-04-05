@@ -347,6 +347,17 @@ namespace QuantConnect
             {
                 return Invariant($"DefaultBrokerageMessageHandler.Handle(): TimeUntilNextMarketOpen: {timeUntilNextMarketOpen}");
             }
+
+            /// <summary>
+            /// Returns a string message notify about unrecognized orders that are not being observed by Lean
+            /// </summary>
+            /// <param name="brokerageOrderId">The brokerage order id.</param>
+            /// <returns>The string represent unrecognized message</returns>
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public static string IgnoreUnrecognizedOrder(string brokerageOrderId)
+            {
+                return $"Ignoring unrecognized order (BrokerId: {brokerageOrderId}). Please use 'SetBrokerageMessageHandler(...)' to set a custom brokerage message handler to optionally accept unknown orders.";
+            }
         }
 
         /// <summary>
@@ -440,13 +451,13 @@ namespace QuantConnect
         public static class InteractiveBrokersFixModel
         {
             /// <summary>
-            /// Returns a string message saying the given brokerage model does not support order exercises
-            /// for index and cash-settled options
+            /// Returns a string message saying the given brokerage model does not support combo orders
+            /// that mix future options and futures legs
             /// </summary>
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public static string UnsupportedComboOrdersForFutureOptions(Brokerages.InteractiveBrokersFixModel brokerageModel, Orders.Order order)
+            public static string UnsupportedFopFutureComboOrders(Brokerages.InteractiveBrokersFixModel brokerageModel, Orders.Order order)
             {
-                return Invariant($@"The {brokerageModel.GetType().Name} does not support {order.Type} for future options.");
+                return Invariant($@"The {brokerageModel.GetType().Name} does not support {order.Type} combining future options and futures legs.");
             }
         }
 
@@ -465,6 +476,15 @@ namespace QuantConnect
             {
                 return Invariant($@"The {brokerageModel.GetType().Name} does not support {
                     order.Type} exercises for index and cash-settled options.");
+            }
+
+            /// <summary>
+            /// Returns a string message saying the given brokerage model does not support four-leg combo leg limit orders
+            /// </summary>
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public static string UnsupportedFourLegComboLegLimitOrders(Brokerages.InteractiveBrokersBrokerageModel brokerageModel)
+            {
+                return Invariant($"The {brokerageModel.GetType().Name} does not support four-leg ComboLegLimit orders. Use ComboLimit orders for four-leg combinations or more.");
             }
 
             /// <summary>
