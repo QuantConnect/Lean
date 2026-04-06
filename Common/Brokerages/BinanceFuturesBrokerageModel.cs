@@ -82,13 +82,22 @@ namespace QuantConnect.Brokerages
         /// <returns>The buying power model for this brokerage/security</returns>
         public override IBuyingPowerModel GetBuyingPowerModel(Security security)
         {
-            switch (security?.Type)
+            if (security?.Type != SecurityType.CryptoFuture)
             {
-                case SecurityType.CryptoFuture:
-                    return new BinanceCryptoFutureMarginModel(GetLeverage(security));
-                default:
-                    return base.GetBuyingPowerModel(security);
+                throw new ArgumentException($"Unexpected security type {security?.Type}. Expected {SecurityType.CryptoFuture}.");
             }
+
+            return CreateCryptoFutureMarginModel(security);
+        }
+
+        /// <summary>
+        /// Creates the crypto future margin model for the given security
+        /// </summary>
+        /// <param name="security">The security to create the margin model for</param>
+        /// <returns>The margin model instance</returns>
+        protected virtual IBuyingPowerModel CreateCryptoFutureMarginModel(Security security)
+        {
+            return new BinanceCryptoFutureMarginModel(GetLeverage(security));
         }
     }
 }

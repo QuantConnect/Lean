@@ -16,6 +16,7 @@
 using QuantConnect.Benchmarks;
 using QuantConnect.Orders.Fees;
 using QuantConnect.Securities;
+using QuantConnect.Securities.CryptoFuture;
 
 namespace QuantConnect.Brokerages
 {
@@ -50,6 +51,16 @@ namespace QuantConnect.Brokerages
         public override IFeeModel GetFeeModel(Security security)
         {
             return new BinanceCoinFuturesFeeModel();
+        }
+
+        /// <summary>
+        /// Creates the crypto future margin model for the given security
+        /// </summary>
+        /// <param name="security">The security to create the margin model for</param>
+        /// <returns>The margin model instance</returns>
+        protected override IBuyingPowerModel CreateCryptoFutureMarginModel(Security security)
+        {
+            return new CryptoFutureMarginModel(GetLeverage(security));
         }
     }
 }
