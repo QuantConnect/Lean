@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -49,16 +49,33 @@ namespace QuantConnect.Indicators
     /// </summary>
     public class SwissArmyKnife : Indicator, IIndicatorWarmUpPeriodProvider
     {
-        private readonly RollingWindow<double> _price;
-        private readonly RollingWindow<double> _filt;
         private readonly int _period;
-        private readonly double _a0 = 1;
-        private readonly double _a1 = 0;
-        private readonly double _a2 = 0;
-        private readonly double _b0 = 1;
-        private readonly double _b1 = 0;
-        private readonly double _b2 = 0;
-        private readonly double _c0 = 1;
+        private readonly SwissArmyKnifeTool _tool;
+
+        /// <summary>
+        /// Gets the Gaussian Filter sub-indicator
+        /// </summary>
+        public IndicatorBase<IndicatorDataPoint> Gauss { get; }
+
+        /// <summary>
+        /// Gets the Butterworth Filter sub-indicator
+        /// </summary>
+        public IndicatorBase<IndicatorDataPoint> Butter { get; }
+
+        /// <summary>
+        /// Gets the High Pass Filter sub-indicator
+        /// </summary>
+        public IndicatorBase<IndicatorDataPoint> HighPass { get; }
+
+        /// <summary>
+        /// Gets the Two Pole High Pass Filter sub-indicator
+        /// </summary>
+        public IndicatorBase<IndicatorDataPoint> TwoPoleHighPass { get; }
+
+        /// <summary>
+        /// Gets the BandPass Filter sub-indicator
+        /// </summary>
+        public IndicatorBase<IndicatorDataPoint> BandPass { get; }
 
         /// <summary>
         /// Swiss Army Knife indicator by John Ehlers
@@ -81,52 +98,14 @@ namespace QuantConnect.Indicators
         public SwissArmyKnife(string name, int period, double delta, SwissArmyKnifeTool tool)
             : base(name)
         {
-            _filt = new RollingWindow<double>(2) {0, 0};
-            _price = new RollingWindow<double>(3);
             _period = period;
-            var beta = 2.415 * (1 - Math.Cos(2 * Math.PI / period));
-            var alpha = -beta + Math.Sqrt(Math.Pow(beta, 2) + 2d * beta);
+            _tool = tool;
 
-            switch (tool)
-            {
-                case SwissArmyKnifeTool.Gauss:
-                    _c0 = alpha * alpha;
-                    _a1 = 2d * (1 - alpha);
-                    _a2 = -(1 - alpha) * (1 - alpha);
-                    break;
-                case SwissArmyKnifeTool.Butter:
-                    _c0 = alpha * alpha / 4d;
-                    _b1 = 2;
-                    _b2 = 1;
-                    _a1 = 2d * (1 - alpha);
-                    _a2 = -(1 - alpha) * (1 - alpha);
-                    break;
-                case SwissArmyKnifeTool.HighPass:
-                    alpha = (Math.Cos(2 * Math.PI / period) + Math.Sin(2 * Math.PI / period) - 1) / Math.Cos(2 * Math.PI / period);
-                    _c0 = (1 + alpha) / 2;
-                    _b1 = -1;
-                    _a1 = 1 - alpha;
-                    break;
-                case SwissArmyKnifeTool.TwoPoleHighPass:
-                    _c0 = (1 + alpha) * (1 + alpha) / 4;
-                    _b1 = -2;
-                    _b2 = 1;
-                    _a1 = 2d * (1 - alpha);
-                    _a2 = -(1 - alpha) * (1 - alpha);
-                    break;
-                case SwissArmyKnifeTool.BandPass:
-                    beta = Math.Cos(2 * Math.PI / period);
-                    var gamma = (1 / Math.Cos(4 * Math.PI * delta / period));
-                    alpha = gamma - Math.Sqrt(Math.Pow(gamma, 2) - 1);
-                    _c0 = (1 - alpha) / 2d;
-                    _b0 = 1;
-                    _b2 = -1;
-                    _a1 = -beta * (1 - alpha);
-                    _a2 = alpha;
-                    break;
-                default:
-                    throw new ArgumentOutOfRangeException(nameof(tool), tool, "Invalid SwissArmyKnifeTool");
-            }
+            Gauss = new SingleToolFilter($"{name}_Gauss", period, delta, SwissArmyKnifeTool.Gauss);
+            Butter = new SingleToolFilter($"{name}_Butter", period, delta, SwissArmyKnifeTool.Butter);
+            HighPass = new SingleToolFilter($"{name}_HP", period, delta, SwissArmyKnifeTool.HighPass);
+            TwoPoleHighPass = new SingleToolFilter($"{name}_2PHP", period, delta, SwissArmyKnifeTool.TwoPoleHighPass);
+            BandPass = new SingleToolFilter($"{name}_BP", period, delta, SwissArmyKnifeTool.BandPass);
         }
 
         /// <summary>
@@ -146,19 +125,21 @@ namespace QuantConnect.Indicators
         /// <returns>A new value for this indicator</returns>
         protected override decimal ComputeNextValue(IndicatorDataPoint input)
         {
-            _price.Add((double)input.Price);
+            Gauss.Update(input);
+            Butter.Update(input);
+            HighPass.Update(input);
+            TwoPoleHighPass.Update(input);
+            BandPass.Update(input);
 
-            if (_price.Samples == 1)
+            switch (_tool)
             {
-                _price.Add(_price[0]);
-                _price.Add(_price[0]);
+                case SwissArmyKnifeTool.Gauss: return Gauss.Current.Value;
+                case SwissArmyKnifeTool.Butter: return Butter.Current.Value;
+                case SwissArmyKnifeTool.HighPass: return HighPass.Current.Value;
+                case SwissArmyKnifeTool.TwoPoleHighPass: return TwoPoleHighPass.Current.Value;
+                case SwissArmyKnifeTool.BandPass: return BandPass.Current.Value;
+                default: throw new ArgumentOutOfRangeException(nameof(_tool), _tool, "Invalid SwissArmyKnifeTool");
             }
-
-            var signal = _a0 * _c0 * (_b0 * _price[0] + _b1 * _price[1] + _b2 * _price[2]) + _a0 * (_a1 * _filt[0] + _a2 * _filt[1]);
-
-            _filt.Add(signal);
-
-            return (decimal)signal;
         }
 
         /// <summary>
@@ -166,11 +147,108 @@ namespace QuantConnect.Indicators
         /// </summary>
         public override void Reset()
         {
-            _price.Reset();
-            _filt.Reset();
-            _filt.Add(0);
-            _filt.Add(0);
+            Gauss.Reset();
+            Butter.Reset();
+            HighPass.Reset();
+            TwoPoleHighPass.Reset();
+            BandPass.Reset();
             base.Reset();
+        }
+
+        /// <summary>
+        /// Single-tool digital filter used internally by SwissArmyKnife
+        /// </summary>
+        private class SingleToolFilter : Indicator
+        {
+            private readonly RollingWindow<double> _price;
+            private readonly RollingWindow<double> _filt;
+            private readonly int _period;
+            private readonly double _a0 = 1;
+            private readonly double _a1 = 0;
+            private readonly double _a2 = 0;
+            private readonly double _b0 = 1;
+            private readonly double _b1 = 0;
+            private readonly double _b2 = 0;
+            private readonly double _c0 = 1;
+
+            public SingleToolFilter(string name, int period, double delta, SwissArmyKnifeTool tool)
+                : base(name)
+            {
+                _filt = new RollingWindow<double>(2) {0, 0};
+                _price = new RollingWindow<double>(3);
+                _period = period;
+                var beta = 2.415 * (1 - Math.Cos(2 * Math.PI / period));
+                var alpha = -beta + Math.Sqrt(Math.Pow(beta, 2) + 2d * beta);
+
+                switch (tool)
+                {
+                    case SwissArmyKnifeTool.Gauss:
+                        _c0 = alpha * alpha;
+                        _a1 = 2d * (1 - alpha);
+                        _a2 = -(1 - alpha) * (1 - alpha);
+                        break;
+                    case SwissArmyKnifeTool.Butter:
+                        _c0 = alpha * alpha / 4d;
+                        _b1 = 2;
+                        _b2 = 1;
+                        _a1 = 2d * (1 - alpha);
+                        _a2 = -(1 - alpha) * (1 - alpha);
+                        break;
+                    case SwissArmyKnifeTool.HighPass:
+                        alpha = (Math.Cos(2 * Math.PI / period) + Math.Sin(2 * Math.PI / period) - 1) / Math.Cos(2 * Math.PI / period);
+                        _c0 = (1 + alpha) / 2;
+                        _b1 = -1;
+                        _a1 = 1 - alpha;
+                        break;
+                    case SwissArmyKnifeTool.TwoPoleHighPass:
+                        _c0 = (1 + alpha) * (1 + alpha) / 4;
+                        _b1 = -2;
+                        _b2 = 1;
+                        _a1 = 2d * (1 - alpha);
+                        _a2 = -(1 - alpha) * (1 - alpha);
+                        break;
+                    case SwissArmyKnifeTool.BandPass:
+                        beta = Math.Cos(2 * Math.PI / period);
+                        var gamma = (1 / Math.Cos(4 * Math.PI * delta / period));
+                        alpha = gamma - Math.Sqrt(Math.Pow(gamma, 2) - 1);
+                        _c0 = (1 - alpha) / 2d;
+                        _b0 = 1;
+                        _b2 = -1;
+                        _a1 = -beta * (1 - alpha);
+                        _a2 = alpha;
+                        break;
+                    default:
+                        throw new ArgumentOutOfRangeException(nameof(tool), tool, "Invalid SwissArmyKnifeTool");
+                }
+            }
+
+            public override bool IsReady => Samples >= _period;
+
+            protected override decimal ComputeNextValue(IndicatorDataPoint input)
+            {
+                _price.Add((double)input.Price);
+
+                if (_price.Samples == 1)
+                {
+                    _price.Add(_price[0]);
+                    _price.Add(_price[0]);
+                }
+
+                var signal = _a0 * _c0 * (_b0 * _price[0] + _b1 * _price[1] + _b2 * _price[2]) + _a0 * (_a1 * _filt[0] + _a2 * _filt[1]);
+
+                _filt.Add(signal);
+
+                return (decimal)signal;
+            }
+
+            public override void Reset()
+            {
+                _price.Reset();
+                _filt.Reset();
+                _filt.Add(0);
+                _filt.Add(0);
+                base.Reset();
+            }
         }
     }
 }
