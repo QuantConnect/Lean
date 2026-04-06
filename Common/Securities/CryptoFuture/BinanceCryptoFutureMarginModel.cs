@@ -41,6 +41,7 @@ namespace QuantConnect.Securities.CryptoFuture
         /// Gets the total collateral amount for a Binance crypto future, including supplementary
         /// stable coin currencies that can serve as alternative collateral
         /// (e.g. BNFCR for USDT-quoted futures on Binance).
+        /// For coin futures (e.g. BTCUSD), only the primary collateral (base currency) is used.
         /// </summary>
         /// <param name="portfolio">The algorithm's portfolio</param>
         /// <param name="security">The crypto future security</param>
@@ -50,6 +51,14 @@ namespace QuantConnect.Securities.CryptoFuture
             SecurityPortfolioManager portfolio, Security security, Cash primaryCollateral)
         {
             var total = primaryCollateral.Amount;
+
+            // Coin futures (e.g. BTCUSD) use only base currency as collateral - stable coins don't apply
+            var cryptoFuture = (CryptoFuture)security;
+            if (cryptoFuture.IsCryptoCoinFuture())
+            {
+                return total;
+            }
+
             var market = security.Symbol.ID.Market;
             var accountCurrency = portfolio.CashBook.AccountCurrency;
             foreach (var kvp in portfolio.CashBook)

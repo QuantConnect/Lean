@@ -82,12 +82,12 @@ namespace QuantConnect.Brokerages
         /// <returns>The buying power model for this brokerage/security</returns>
         public override IBuyingPowerModel GetBuyingPowerModel(Security security)
         {
-            if (security?.Type != SecurityType.CryptoFuture)
+            if (security?.Type == SecurityType.CryptoFuture)
             {
-                throw new ArgumentException($"Unexpected security type {security?.Type}. Expected {SecurityType.CryptoFuture}.");
+                return CreateCryptoFutureMarginModel(security);
             }
 
-            return CreateCryptoFutureMarginModel(security);
+            return base.GetBuyingPowerModel(security);
         }
 
         /// <summary>
