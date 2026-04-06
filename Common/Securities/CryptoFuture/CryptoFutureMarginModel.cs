@@ -86,7 +86,7 @@ namespace QuantConnect.Securities.CryptoFuture
         protected override decimal GetMarginRemaining(SecurityPortfolioManager portfolio, Security security, OrderDirection direction)
         {
             var collateralCurrency = GetCollateralCash(security);
-            var totalCollateralCurrency = collateralCurrency.Amount;
+            var totalCollateralCurrency = GetTotalCollateralAmount(portfolio, security, collateralCurrency);
             var result = totalCollateralCurrency;
 
             foreach (var kvp in portfolio.Where(holdings => holdings.Value.Invested && holdings.Value.Type == SecurityType.CryptoFuture && holdings.Value.Symbol != security.Symbol))
@@ -142,7 +142,7 @@ namespace QuantConnect.Securities.CryptoFuture
         /// <summary>
         /// Helper method to determine what's the collateral currency for the given crypto future
         /// </summary>
-        private static Cash GetCollateralCash(Security security)
+        protected static Cash GetCollateralCash(Security security)
         {
             var cryptoFuture = (CryptoFuture)security;
 
@@ -153,6 +153,20 @@ namespace QuantConnect.Securities.CryptoFuture
             }
 
             return collateralCurrency;
+        }
+
+        /// <summary>
+        /// Gets the total collateral amount for the given crypto future position.
+        /// The base implementation returns only the primary collateral amount.
+        /// Override in subclasses to include supplementary collateral currencies.
+        /// </summary>
+        /// <param name="portfolio">The algorithm's portfolio</param>
+        /// <param name="security">The crypto future security</param>
+        /// <param name="primaryCollateral">The primary collateral cash (e.g. USDT for non-coin futures, BTC for coin futures)</param>
+        /// <returns>Total collateral amount in terms of the primary collateral currency</returns>
+        protected virtual decimal GetTotalCollateralAmount(SecurityPortfolioManager portfolio, Security security, Cash primaryCollateral)
+        {
+            return primaryCollateral.Amount;
         }
     }
 }

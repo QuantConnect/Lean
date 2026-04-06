@@ -72,5 +72,21 @@ namespace QuantConnect.Brokerages
             }
             return base.GetMarginInterestRateModel(security);
         }
+
+        /// <summary>
+        /// Gets a new buying power model for the security.
+        /// For <see cref="SecurityType.CryptoFuture"/>, returns a <see cref="BinanceCryptoFutureMarginModel"/>
+        /// that recognizes supplementary stable coin collateral (e.g. BNFCR for EU Credits Trading Mode).
+        /// </summary>
+        /// <param name="security">The security to get a buying power model for</param>
+        /// <returns>The buying power model for this brokerage/security</returns>
+        public override IBuyingPowerModel GetBuyingPowerModel(Security security)
+        {
+            return security?.Type switch
+            {
+                SecurityType.CryptoFuture => new BinanceCryptoFutureMarginModel(GetLeverage(security)),
+                _ => base.GetBuyingPowerModel(security)
+            };
+        }
     }
 }
