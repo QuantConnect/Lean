@@ -13,72 +13,19 @@
  * limitations under the License.
 */
 
-using System.Collections;
-using System.Collections.Generic;
-using QuantConnect.Indicators;
-
 namespace QuantConnect.Data.Consolidators
 {
     /// <summary>
     /// Provides a base implementation for consolidators, including a built-in rolling window
     /// that stores the history of consolidated bars.
     /// </summary>
-    public abstract class ConsolidatorBase : IEnumerable<IBaseData>
+    public abstract class ConsolidatorBase : WindowBase<IBaseData>
     {
-        /// <summary>
-        /// The default number of consolidated bars to keep in the rolling window history
-        /// </summary>
-        public static int DefaultWindowSize { get; } = 2;
-
-        private RollingWindow<IBaseData> _window;
-
-        /// <summary>
-        /// A rolling window keeping a history of the consolidated bars. The most recent bar is at index 0.
-        /// </summary>
-        public RollingWindow<IBaseData> Window
-        {
-            get
-            {
-                if (_window == null)
-                {
-                    _window = new RollingWindow<IBaseData>(DefaultWindowSize);
-                }
-                return _window;
-            }
-        }
-
         /// <summary>
         /// Gets the most recently consolidated piece of data. This will be null if this consolidator
         /// has not produced any data yet.
         /// </summary>
         public IBaseData Consolidated { get; protected set; }
-
-        /// <summary>
-        /// Gets the most recently consolidated piece of data. Alias of <see cref="Consolidated"/>.
-        /// </summary>
-        public IBaseData Current => Consolidated;
-
-        /// <summary>
-        /// Gets the previously consolidated piece of data, or null if fewer than two bars have been produced.
-        /// </summary>
-        public IBaseData Previous => Window.Count > 1 ? Window[1] : null;
-
-        /// <summary>
-        /// Indexes the history window, where index 0 is the most recently consolidated bar.
-        /// </summary>
-        /// <param name="i">The index</param>
-        /// <returns>The ith most recently consolidated bar</returns>
-        public IBaseData this[int i] => Window[i];
-
-        /// <summary>
-        /// Returns an enumerator that iterates through the history window.
-        /// </summary>
-        public IEnumerator<IBaseData> GetEnumerator() => Window.GetEnumerator();
-
-        /// <summary>
-        /// Returns an enumerator that iterates through the history window.
-        /// </summary>
-        IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
 
         /// <summary>
         /// Updates <see cref="Consolidated"/> and adds the bar to the rolling window.
@@ -95,7 +42,7 @@ namespace QuantConnect.Data.Consolidators
         public virtual void Reset()
         {
             Consolidated = null;
-            _window?.Reset();
+            ResetWindow();
         }
     }
 }
