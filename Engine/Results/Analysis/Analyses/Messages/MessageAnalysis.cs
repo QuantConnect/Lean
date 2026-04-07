@@ -49,7 +49,7 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses.Messages
         {
             var foundMessages = Match(messages, ExpectedMessageText).ToList();
             var solutions = foundMessages.Count > 0 ? Solutions(language) : [];
-            return SingleResponse(new ResultsAnalysisRepeatedContext(foundMessages), solutions);
+            return SingleResponse(foundMessages.Count > 0 ? foundMessages[0] : null, foundMessages.Count > 1 ? foundMessages.Count : null, solutions);
         }
 
         protected abstract List<string> Solutions(Language language);

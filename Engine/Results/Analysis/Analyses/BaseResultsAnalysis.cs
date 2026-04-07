@@ -42,23 +42,24 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
         /// <summary>
         /// Wraps a single <see cref="QuantConnect.Analysis"/> in a one-element read-only list.
         /// </summary>
-        protected IReadOnlyList<QuantConnect.Analysis> SingleResponse(IResultsAnalysisContext context, IReadOnlyList<string> solutions = null)
-            => [CreateResponse(context, solutions)];
+        protected IReadOnlyList<QuantConnect.Analysis> SingleResponse(object sample, IReadOnlyList<string> solutions = null)
+            => SingleResponse(sample, null, solutions);
 
         /// <summary>
-        /// Creates a single <see cref="QuantConnect.Analysis"/> named after the concrete analysis type.
+        /// Wraps a single <see cref="QuantConnect.Analysis"/> in a one-element read-only list.
         /// </summary>
-        protected QuantConnect.Analysis CreateResponse(IResultsAnalysisContext context, IReadOnlyList<string> solutions = null)
-            => new(GetType().Name, Issue, context, solutions ?? []);
+        protected IReadOnlyList<QuantConnect.Analysis> SingleResponse(object sample, int? count, IReadOnlyList<string> solutions = null)
+            => [new(GetType().Name, Issue, sample, count, solutions ?? [])];
 
         /// <summary>
         /// Filters <paramref name="responses"/> to those with solutions,
         /// prefixes the class name, and returns a flat list.
         /// </summary>
         protected IReadOnlyList<QuantConnect.Analysis> CreateAggregatedResponse(IEnumerable<QuantConnect.Analysis> responses)
-            => [.. responses
+            => responses
                 .Where(x => x.Solutions.Count > 0)
-                .Select(x => new QuantConnect.Analysis(GetType().Name + " / " + x.Name, x.Issue, x.Context, x.Solutions))];
+                .Select(x => new QuantConnect.Analysis(GetType().Name + " / " + x.Name, x.Issue, x.Sample, x.Count, x.Solutions))
+                .ToList();
 
         /// <summary>
         /// Formats the specified code string according to the conventions of the given programming language.

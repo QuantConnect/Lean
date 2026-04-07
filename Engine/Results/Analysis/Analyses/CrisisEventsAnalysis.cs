@@ -80,7 +80,7 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
         {
             if (backtestEquity.Count == 0 || benchmarkEquity.Count == 0)
             {
-                return SingleResponse(new ResultsAnalysisRepeatedContext([]));
+                return SingleResponse(null);
             }
 
             var backtestStart = backtestEquity.Keys[0];
@@ -113,7 +113,7 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
             }
 
             var potentialSolutions = result.Count > 0 ? Solutions() : [];
-            return SingleResponse(new ResultsAnalysisRepeatedContext(result), potentialSolutions);
+            return SingleResponse(result.Count > 0 ? result[0] : null, result.Count > 1 ? result.Count : null, potentialSolutions);
         }
 
         /// <summary>

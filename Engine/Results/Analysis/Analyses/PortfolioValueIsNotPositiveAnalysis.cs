@@ -46,7 +46,7 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
         {
             var hasEquity = result.TotalPerformance.PortfolioStatistics.EndEquity > 0;
             var potentialSolutions = hasEquity ? [] : Solutions();
-            return SingleResponse(new ResultsAnalysisContext(!hasEquity), potentialSolutions);
+            return SingleResponse(!hasEquity, potentialSolutions);
         }
 
         /// <summary>

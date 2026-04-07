@@ -61,7 +61,7 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
             var parametersCount = algorithm.GetParameters().Count;
             var result = parametersCount > 10 ? $"{parametersCount} Parameters Detected" : null;
             var potentialSolutions = result is not null ? Solutions(language) : [];
-            return SingleResponse(new ResultsAnalysisContext(result), potentialSolutions);
+            return SingleResponse(result, potentialSolutions);
         }
 
         /// <summary>

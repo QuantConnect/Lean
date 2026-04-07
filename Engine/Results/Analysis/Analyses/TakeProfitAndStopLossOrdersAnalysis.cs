@@ -104,7 +104,7 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
                     .ToList();
 
                 var potentialSolutions = result.Count > 0 ? Solutions(language) : [];
-                return SingleResponse(new ResultsAnalysisRepeatedContext(result), potentialSolutions);
+                return SingleResponse(result.Count > 0 ? result[0] : null, result.Count > 1 ? result.Count : null, potentialSolutions);
             }
 
             /// <summary>
@@ -204,7 +204,7 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
                 }
 
                 var potentialSolutions = result.Count > 0 ? Solutions(language) : [];
-                return SingleResponse(new ResultsAnalysisRepeatedContext(result), potentialSolutions);
+                return SingleResponse(result.Count > 0 ? result[0] : null, result.Count > 1 ? result.Count : null, potentialSolutions);
             }
 
             /// <summary>

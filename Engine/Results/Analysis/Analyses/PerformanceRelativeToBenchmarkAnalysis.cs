@@ -57,7 +57,7 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
                 : null;
 
             var potentialSolutions = result is not null ? Solutions() : [];
-            return SingleResponse(new ResultsAnalysisContext(result), potentialSolutions);
+            return SingleResponse(result, potentialSolutions);
         }
 
         /// <summary>

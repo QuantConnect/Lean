@@ -60,7 +60,7 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
             foreach (var subTest in SubAnalyses)
             {
                 var results = subTest.Run(logs, language);
-                if (results.Any(r => r.Context is not null))
+                if (results.Any(r => r.Sample is not null))
                 {
                     return results;
                 }

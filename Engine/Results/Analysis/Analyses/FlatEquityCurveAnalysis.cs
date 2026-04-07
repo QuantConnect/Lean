@@ -72,7 +72,7 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
             }
 
             var potentialSolutions = segments.Count > 0 ? Solutions() : [];
-            return SingleResponse(new ResultsAnalysisContext(segments.Count > 0 ? segments : null), potentialSolutions);
+            return SingleResponse(segments.Count > 0 ? segments : null, potentialSolutions);
         }
 
         /// <summary>

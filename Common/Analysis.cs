@@ -15,121 +15,43 @@
 */
 
 using Newtonsoft.Json;
-using QuantConnect.Util;
-using System.Collections;
 using System.Collections.Generic;
 
 namespace QuantConnect
 {
     /// <summary>
-    /// A simple context that holds a single diagnostic sample object.
-    /// </summary>
-    public class ResultsAnalysisContext : IResultsAnalysisContext
-    {
-        /// <summary>
-        /// Gets or sets a representative sample value produced by the analysis.
-        /// </summary>
-        public object Sample { get; set; }
-
-        /// <summary>
-        /// Initializes a new instance of the <see cref="ResultsAnalysisContext"/> class.
-        /// </summary>
-        /// <param name="sample">A representative sample produced by the analysis, or <c>null</c> when no issue was found.</param>
-        public ResultsAnalysisContext(object sample)
-        {
-            Sample = sample;
-        }
-    }
-
-    /// <summary>
-    /// A context that represents multiple occurrences of the same diagnostic issue,
-    /// exposing the first sample and the total occurrence count.
-    /// </summary>
-    public class ResultsAnalysisRepeatedContext : ResultsAnalysisContext
-    {
-        /// <summary>
-        /// Gets or sets the total number of matching occurrences found by the analysis.
-        /// </summary>
-        public int Occurrences { get; set; }
-
-        /// <summary>
-        /// Initializes a new instance of the <see cref="ResultsAnalysisRepeatedContext"/> class.
-        /// </summary>
-        /// <param name="samples">All matching sample objects; the first element is stored as <see cref="ResultsAnalysisContext.Sample"/>.</param>
-        public ResultsAnalysisRepeatedContext(IReadOnlyList<object> samples) : base(samples.Count > 0 ? samples[0] : null)
-        {
-            Occurrences = samples.Count;
-        }
-    }
-
-    /// <summary>
-    /// A composite context that aggregates several <see cref="IResultsAnalysisContext"/> instances
-    /// into a single enumerable context.
-    /// </summary>
-    public class ResultsAnalysisAggregateContext : IResultsAnalysisContext, IEnumerable<IResultsAnalysisContext>
-    {
-        private IReadOnlyList<IResultsAnalysisContext> _contexts { get; set; }
-
-        /// <summary>
-        /// Initializes a new instance of the <see cref="ResultsAnalysisAggregateContext"/> class.
-        /// </summary>
-        /// <param name="contexts">The individual contexts to aggregate.</param>
-        public ResultsAnalysisAggregateContext(IReadOnlyList<IResultsAnalysisContext> contexts)
-        {
-            _contexts = contexts;
-        }
-
-        /// <summary>
-        /// Returns an enumerator that iterates over each contained context.
-        /// </summary>
-        /// <returns>An enumerator for the inner context list.</returns>
-        public IEnumerator<IResultsAnalysisContext> GetEnumerator()
-        {
-            return _contexts.GetEnumerator();
-        }
-
-        IEnumerator IEnumerable.GetEnumerator()
-        {
-            return GetEnumerator();
-        }
-    }
-
-    /// <summary>
     /// Represents the outcome of a single backtest diagnostic analysis,
     /// containing the analysis name, diagnostic context, and a list of solutions.
     /// </summary>
-    [JsonConverter(typeof(AnalysisJsonConverter))]
-    public class Analysis
+    public class Analysis(string name, string issue, object sample, int? count, IReadOnlyList<string> solutions)
     {
         /// <summary>
         /// Gets or sets the name of the analysis that produced this result.
         /// </summary>
-        public string Name { get; set; }
+        public string Name { get; set; } = name;
 
         /// <summary>
         /// Gets or sets a short description of why the analysis was triggered.
         /// </summary>
-        public string Issue { get; set; }
+        public string Issue { get; set; } = issue;
 
         /// <summary>
-        /// Gets or sets the diagnostic context carrying sample data about the detected issue.
+        /// Gets or sets a representative sample value of the issue detected by the analysis.
+        /// It can be something like a log message, an order or an order event.
         /// </summary>
-        public IResultsAnalysisContext Context { get; set; }
+        public object Sample { get; set; } = sample;
+
+        /// <summary>
+        /// Gets or sets the total number of matching occurrences found by the analysis.
+        /// If null, the analysis is reporting a single issue with the provided sample;
+        /// if not null, the sample represents one of multiple occurrences of the same issue.
+        /// </summary>
+        [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
+        public int? Count { get; set; } = count;
 
         /// <summary>
         /// Gets or sets human-readable suggestions for resolving the detected issue.
         /// </summary>
-        public IReadOnlyList<string> Solutions { get; set; }
-
-        /// <summary>
-        /// Initializes a new instance of the <see cref="Analysis"/> class.
-        /// </summary>
-        public Analysis(string name, string issue, IResultsAnalysisContext context, IReadOnlyList<string> solutions)
-        {
-            Name = name;
-            Issue = issue;
-            Context = context;
-            Solutions = solutions;
-        }
+        public IReadOnlyList<string> Solutions { get; set; } = solutions;
     }
 }
