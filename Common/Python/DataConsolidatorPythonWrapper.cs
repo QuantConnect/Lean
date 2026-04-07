@@ -60,6 +60,16 @@ namespace QuantConnect.Python
         }
 
         /// <summary>
+        /// Gets the most recently consolidated piece of data. Alias of <see cref="Consolidated"/>.
+        /// </summary>
+        public IBaseData Current => Consolidated;
+
+        /// <summary>
+        /// Gets the previously consolidated piece of data, or null if fewer than two bars have been produced.
+        /// </summary>
+        public IBaseData Previous => Window.Count > 1 ? Window[1] : null;
+
+        /// <summary>
         /// Gets a clone of the data being currently consolidated
         /// </summary>
         public IBaseData WorkingData

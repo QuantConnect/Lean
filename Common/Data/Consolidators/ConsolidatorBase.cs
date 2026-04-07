@@ -54,6 +54,16 @@ namespace QuantConnect.Data.Consolidators
         public IBaseData Consolidated { get; protected set; }
 
         /// <summary>
+        /// Gets the most recently consolidated piece of data. Alias of <see cref="Consolidated"/>.
+        /// </summary>
+        public IBaseData Current => Consolidated;
+
+        /// <summary>
+        /// Gets the previously consolidated piece of data, or null if fewer than two bars have been produced.
+        /// </summary>
+        public IBaseData Previous => Window.Count > 1 ? Window[1] : null;
+
+        /// <summary>
         /// Indexes the history window, where index 0 is the most recently consolidated bar.
         /// </summary>
         /// <param name="i">The index</param>
