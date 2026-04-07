@@ -91,6 +91,12 @@ namespace QuantConnect
         public AlgorithmPerformance TotalPerformance { get; set; }
 
         /// <summary>
+        /// Backtest analysis results.
+        /// </summary>
+        [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
+        public IReadOnlyList<Analysis> Analysis { get; set; }
+
+        /// <summary>
         /// Creates new empty instance
         /// </summary>
         public Result()
@@ -111,6 +117,7 @@ namespace QuantConnect
             AlgorithmConfiguration = parameters.AlgorithmConfiguration;
             State = parameters.State;
             TotalPerformance = parameters.TotalPerformance;
+            Analysis = parameters.Analysis;
         }
     }
 }

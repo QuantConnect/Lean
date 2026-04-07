@@ -72,6 +72,11 @@ namespace QuantConnect.Packets
         public AlgorithmPerformance TotalPerformance { get; set; }
 
         /// <summary>
+        /// Backtest analysis results.
+        /// </summary>
+        public IReadOnlyList<Analysis> Analysis { get; set; }
+
+        /// <summary>
         /// Creates a new instance
         /// </summary>
         public BaseResultParameters(IDictionary<string, Chart> charts,
@@ -82,7 +87,8 @@ namespace QuantConnect.Packets
             List<OrderEvent> orderEvents,
             AlgorithmPerformance totalPerformance = null,
             AlgorithmConfiguration algorithmConfiguration = null,
-            IDictionary<string, string> state = null)
+            IDictionary<string, string> state = null,
+            IReadOnlyList<Analysis> analysisResult = null)
         {
             Charts = charts;
             Orders = orders;
@@ -93,6 +99,7 @@ namespace QuantConnect.Packets
             AlgorithmConfiguration = algorithmConfiguration;
             State = state;
             TotalPerformance = totalPerformance;
+            Analysis = analysisResult;
         }
     }
 }
