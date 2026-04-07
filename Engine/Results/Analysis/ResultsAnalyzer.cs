@@ -16,6 +16,7 @@
 using QuantConnect.Algorithm;
 using QuantConnect.Lean.Engine.Results.Analysis.Analyses;
 using QuantConnect.Logging;
+using QuantConnect.Securities;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -143,35 +144,70 @@ namespace QuantConnect.Lean.Engine.Results.Analysis
         private static (SortedList<DateTime, decimal> BacktestEquity, SortedList<DateTime, decimal> BenchmarkEquity) ReadEquityCurve(Result result, QCAlgorithm algorithm)
         {
             // ── 1. backtest equity from "Strategy Equity" chart ──────────────────
-            SortedList<DateTime, decimal> equitySeries;
+            BaseSeries equitySeries;
             if (result.Charts.TryGetValue("Strategy Equity", out var chart) &&
                 chart.Series.TryGetValue("Equity", out var series))
             {
-                equitySeries = new SortedList<DateTime, decimal>(
-                    series.Values.Cast<Candlestick>()
-                        .ToDictionary(
-                            candle => candle.Time.ConvertFromUtc(TimeZones.EasternStandard),
-                            candle => candle.Close ?? 0m));
+                equitySeries = series;
             }
             else
             {
-                equitySeries = new SortedList<DateTime, decimal>();
+                return (new(), new());
             }
 
             // ── 2. Benchmark from SPY history ─────────────────────────────────────
-            var spy = Symbol.Create("SPY", SecurityType.Equity, Market.USA);
+            var spySymbol = Symbol.Create("SPY", SecurityType.Equity, Market.USA);
+            var algorithmHasSpy = true;
+            if (!algorithm.Securities.TryGetValue(spySymbol, out var spy))
+            {
+                // SPY not in securities, create a temporary one for history retrieval
+                spy = algorithm.AddSecurity(SecurityType.Equity, "SPY", Resolution.Daily);
+                algorithmHasSpy = false;
+            }
 
-            algorithm.Settings.DailyPreciseEndTime = false; // ensures history bars are aligned to midnight Eastern
-            var historyStart = algorithm.StartDate - TimeSpan.FromDays(3);
-            var historyEnd = algorithm.EndDate + TimeSpan.FromDays(1);
-            var benchmarkSeries = new SortedList<DateTime, decimal>(
-                algorithm.History(spy, historyStart, historyEnd, Resolution.Daily)
-                    .ToDictionary(x => x.EndTime, x => x.Close));
+            var originalDailyPreciseEndTime = algorithm.Settings.DailyPreciseEndTime;
+            var benchmarkSeries = new SortedList<DateTime, decimal>();
+            try
+            {
+                algorithm.Settings.DailyPreciseEndTime = false; // ensures history bars are aligned to midnight Eastern
+                var historyStart = algorithm.StartDate - TimeSpan.FromDays(3);
+                var historyEnd = algorithm.EndDate + TimeSpan.FromDays(1);
+                foreach (var bar in algorithm.History(spy, historyStart, historyEnd, Resolution.Daily))
+                {
+                    benchmarkSeries.Add(bar.EndTime.ConvertToUtc(spy.Exchange.TimeZone), bar.Close);
+                }
+            }
+            finally
+            {
+                // Restore original setting in case we changed it
+                algorithm.Settings.DailyPreciseEndTime = originalDailyPreciseEndTime;
+                // Remove temporary SPY security if we added it
+                if (!algorithmHasSpy)
+                {
+                    algorithm.RemoveSecurity(spy.Symbol);
+                }
+            }
 
-            // ── 3. Align the two curves on the same timestamps ───────────────────
-            var commonKeys = equitySeries.Keys.Intersect(benchmarkSeries.Keys).ToHashSet();
-            var alignedEquity = new SortedList<DateTime, decimal>(equitySeries.Where(kv => commonKeys.Contains(kv.Key)).ToDictionary(kv => kv.Key, kv => kv.Value));
-            var alignedBenchmark = new SortedList<DateTime, decimal>(benchmarkSeries.Where(kv => commonKeys.Contains(kv.Key)).ToDictionary(kv => kv.Key, kv => kv.Value));
+            // ── 3. Resample both to daily data points ────────────────────────────
+            var sampler = new SeriesSampler(TimeSpan.FromDays(1));
+            var start = new DateTime(
+                Math.Max(equitySeries.Values.First().Time.Ticks, benchmarkSeries.Keys.First().Ticks));
+            var stop = new DateTime(
+                Math.Min(equitySeries.Values.Last().Time.Ticks, benchmarkSeries.Keys.Last().Ticks));
+
+            var sampledEquity = sampler.Sample(equitySeries, start, stop);
+
+            // ── 4. Align the two curves on the same timestamps ───────────────────
+            var equityByTime = new SortedList<DateTime, decimal>(
+                sampledEquity.Values.ToDictionary(
+                    p => p.Time,
+                    p => p is Candlestick c ? c.Close ?? 0m : ((ChartPoint)p).Y ?? 0m));
+
+            var commonKeys = equityByTime.Keys.Intersect(benchmarkSeries.Keys).ToHashSet();
+            var alignedEquity = new SortedList<DateTime, decimal>(
+                equityByTime.Where(kv => commonKeys.Contains(kv.Key)).ToDictionary(kv => kv.Key, kv => kv.Value));
+            var alignedBenchmark = new SortedList<DateTime, decimal>(
+                benchmarkSeries.Where(kv => commonKeys.Contains(kv.Key)).ToDictionary(kv => kv.Key, kv => kv.Value));
 
             return (alignedEquity, alignedBenchmark);
         }
