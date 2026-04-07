@@ -32,6 +32,9 @@ class ConsolidatorRollingWindowRegressionAlgorithm(QCAlgorithm):
     def _on_data_consolidated(self, sender, bar):
         self._consolidation_count += 1
 
+        if self._consolidator.current != self._consolidator[0]:
+            raise AssertionError("Expected current to be the same as window[0]")
+
         # consolidator[0] must always match the bar just fired
         currentBar = self._consolidator[0]
         if currentBar.time != bar.time:
@@ -42,6 +45,8 @@ class ConsolidatorRollingWindowRegressionAlgorithm(QCAlgorithm):
         # After the second consolidation the previous bar must be at index 1
         if self._consolidator.window.count >= 2:
             previous = self._consolidator[1]
+            if self._consolidator.previous != self._consolidator[1]:
+                raise AssertionError("Expected previous to be the same as window[1]")
             if previous.time >= bar.time:
                 raise AssertionError(
                     f"consolidator[1].time ({previous.time}) should be earlier "
