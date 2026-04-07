@@ -777,7 +777,12 @@ namespace QuantConnect
         /// <summary>
         /// History status update (11)
         /// </summary>
-        History
+        History,
+
+        /// <summary>
+        /// Awaiting additional input (12)
+        /// </summary>
+        PendingInput
     }
 
     /// <summary>
