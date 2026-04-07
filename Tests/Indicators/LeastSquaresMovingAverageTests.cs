@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -107,6 +107,102 @@ namespace QuantConnect.Tests.Indicators
 
             indicator.Update(time.AddMinutes(period.Value - 1), Prices[period.Value - 1]);
             Assert.IsTrue(indicator.IsReady);
+        }
+
+        [Test]
+        public void WithReferenceIsNotReadyUntilBothWindowsFull()
+        {
+            var reference = Symbols.SPY;
+            var lsma = new LeastSquaresMovingAverage("LSMA", reference, 5);
+            var time = DateTime.Now;
+
+            for (var i = 0; i < 5; i++)
+            {
+                lsma.Update(new IndicatorDataPoint(Symbols.AAPL, time.AddMinutes(i), 100m + i));
+            }
+
+            Assert.IsFalse(lsma.IsReady, "Should not be ready without reference data");
+
+            for (var i = 0; i < 4; i++)
+            {
+                lsma.Update(new IndicatorDataPoint(reference, time.AddMinutes(i), 200m + i));
+            }
+
+            Assert.IsFalse(lsma.IsReady, "Should not be ready with insufficient reference data");
+
+            lsma.Update(new IndicatorDataPoint(reference, time.AddMinutes(4), 204m));
+            Assert.IsTrue(lsma.IsReady, "Should be ready when both windows are full");
+        }
+
+        [Test]
+        public void WithReferenceRegressesAgainstBenchmark()
+        {
+            var target = Symbols.AAPL;
+            var reference = Symbols.SPY;
+            var lsma = new LeastSquaresMovingAverage("LSMA", reference, 5);
+            var time = DateTime.Now;
+
+            // y = 2*x + 1 (target = 2*reference + 1)
+            // reference: 1, 2, 3, 4, 5
+            // target:    3, 5, 7, 9, 11
+            for (var i = 0; i < 5; i++)
+            {
+                var refValue = (decimal)(i + 1);
+                var targetValue = 2m * refValue + 1m;
+                lsma.Update(new IndicatorDataPoint(target, time.AddMinutes(i), targetValue));
+                lsma.Update(new IndicatorDataPoint(reference, time.AddMinutes(i), refValue));
+            }
+
+            Assert.IsTrue(lsma.IsReady);
+
+            // slope should be 2, intercept should be 1
+            Assert.AreEqual(2.0, (double)lsma.Slope.Current.Value, 0.0001);
+            Assert.AreEqual(1.0, (double)lsma.Intercept.Current.Value, 0.0001);
+
+            // projected value = intercept + slope * latest_reference = 1 + 2*5 = 11
+            Assert.AreEqual(11.0, (double)lsma.Current.Value, 0.0001);
+        }
+
+        [Test]
+        public void WithReferenceResetsProperly()
+        {
+            var target = Symbols.AAPL;
+            var reference = Symbols.SPY;
+            var lsma = new LeastSquaresMovingAverage("LSMA", reference, 3);
+            var time = DateTime.Now;
+
+            for (var i = 0; i < 3; i++)
+            {
+                lsma.Update(new IndicatorDataPoint(target, time.AddMinutes(i), 10m + i));
+                lsma.Update(new IndicatorDataPoint(reference, time.AddMinutes(i), 20m + i));
+            }
+
+            Assert.IsTrue(lsma.IsReady);
+
+            lsma.Reset();
+
+            Assert.IsFalse(lsma.IsReady);
+            Assert.AreEqual(0m, lsma.Current.Value);
+            Assert.AreEqual(0m, lsma.Intercept.Current.Value);
+            Assert.AreEqual(0m, lsma.Slope.Current.Value);
+        }
+
+        [Test]
+        public void WithoutReferenceBehavesIdentically()
+        {
+            var withRef = new LeastSquaresMovingAverage(20);
+            var without = new LeastSquaresMovingAverage(20);
+            var time = DateTime.Now;
+
+            for (var i = 0; i < Prices.Length; i++)
+            {
+                withRef.Update(time.AddMinutes(i), Prices[i]);
+                without.Update(time.AddMinutes(i), Prices[i]);
+
+                Assert.AreEqual(
+                    Math.Round(without.Current.Value, 4),
+                    Math.Round(withRef.Current.Value, 4));
+            }
         }
     }
 }
