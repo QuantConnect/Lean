@@ -33,7 +33,7 @@ namespace QuantConnect.Python
         /// <summary>
         /// A rolling window keeping a history of the consolidated bars. The most recent bar is at index 0.
         /// </summary>
-        public RollingWindow<IBaseData> Window { get; } = new RollingWindow<IBaseData>(ConsolidatorBase.DefaultWindowSize);
+        public RollingWindow<IBaseData> Window { get; } = new RollingWindow<IBaseData>(WindowBase<IBaseData>.DefaultWindowSize);
 
         /// <summary>
         /// Indexes the history window, where index 0 is the most recently consolidated bar.
