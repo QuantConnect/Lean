@@ -294,6 +294,25 @@ namespace QuantConnect.Tests.Common.Data
             Assert.AreEqual(100, consolidatedData.High);
         }
 
+        [Test]
+        public void WindowIsPopulatedOnConsolidation()
+        {
+            var symbol = Symbols.SPY;
+            using var consolidator = new MarketHourAwareConsolidator(false, Resolution.Daily, typeof(TradeBar), TickType.Trade, false);
+
+            consolidator.Update(new TradeBar() { Time = new DateTime(2015, 04, 13, 12, 0, 0), Period = Time.OneMinute, Symbol = symbol, Close = 100 });
+            consolidator.Scan(new DateTime(2015, 04, 14, 0, 0, 0));
+
+            Assert.AreEqual(1, consolidator.Window.Count);
+
+            consolidator.Update(new TradeBar() { Time = new DateTime(2015, 04, 14, 12, 0, 0), Period = Time.OneMinute, Symbol = symbol, Close = 200 });
+            consolidator.Scan(new DateTime(2015, 04, 15, 0, 0, 0));
+
+            Assert.AreEqual(2, consolidator.Window.Count);
+            Assert.AreEqual(200, ((TradeBar)consolidator.Window[0]).Close);
+            Assert.AreEqual(100, ((TradeBar)consolidator.Window[1]).Close);
+        }
+
         protected override IDataConsolidator CreateConsolidator()
         {
             return new MarketHourAwareConsolidator(true, Resolution.Hour, typeof(TradeBar), TickType.Trade, false);
