@@ -782,7 +782,12 @@ namespace QuantConnect
         /// <summary>
         /// Awaiting additional input (12)
         /// </summary>
-        PendingInput
+        PendingInput,
+
+        /// <summary>
+        /// Algorithm is in an idle state, waiting to be started (13)
+        /// </summary>
+        Idle
     }
 
     /// <summary>
