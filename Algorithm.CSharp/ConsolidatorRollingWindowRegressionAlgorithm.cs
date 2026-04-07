@@ -49,6 +49,11 @@ namespace QuantConnect.Algorithm.CSharp
         {
             _consolidationCount++;
 
+            if (_consolidator.Current != _consolidator[0])
+            {
+                throw new RegressionTestException("Expected Current to be the same as Window[0]");
+            }
+
             // Window[0] must always be the bar just consolidated
             var currentBar = (TradeBar)_consolidator[0];
             if (currentBar.Time != bar.Time)
@@ -64,6 +69,10 @@ namespace QuantConnect.Algorithm.CSharp
             if (_consolidator.Window.Count >= 2)
             {
                 var previous = (TradeBar)_consolidator[1];
+                if (_consolidator.Previous != _consolidator[1])
+                {
+                    throw new RegressionTestException("Expected Previous to be the same as Window[1]");
+                }
                 if (previous.Time >= bar.Time)
                 {
                     throw new RegressionTestException($"consolidator[1].Time ({previous.Time}) should be earlier than consolidator[0].Time ({bar.Time})");
