@@ -78,18 +78,7 @@ namespace QuantConnect.Indicators
         {
             get
             {
-                var theta = 0m;
-                var thetaPerDay = ThetaPerDay.Current.Value;
-                try
-                {
-                    theta = thetaPerDay * 365m;
-                }
-                catch (OverflowException)
-                {
-                    theta = thetaPerDay < 0 ? decimal.MinValue : decimal.MaxValue;
-                }
-
-                return new Greeks(Delta, Gamma, Vega, theta, Rho, 0m);
+                return new Greeks(Delta, Gamma, Vega, Greeks.GetSafeTheta(ThetaPerDay.Current.Value), Rho, 0m);
             }
         }
 

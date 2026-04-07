@@ -50,6 +50,7 @@ namespace QuantConnect.Tests.Common
         [TestCase("DAX   250715C01000000", SecurityType.IndexOption, OptionStyle.European, "DAX", "DAX", "DAX", 1000.00, "2025-07-15")]
         [TestCase("FTSE  230122C00750000", SecurityType.IndexOption, OptionStyle.European, "FTSE", "FTSE", "FTSE", 750.00, "2023-01-22")]
         [TestCase("ES20H20  200320P03290000", SecurityType.FutureOption, OptionStyle.American, "ES20H20", "ES", "ES20H20", 3290.00, "2020-03-20")]
+        [TestCase("BRK.B   260206C00495000", SecurityType.Option, OptionStyle.American, "BRK.B", "BRK.B", "BRK.B", 495.00, "2026-02-06")]
         public void ParseOptionTickerOSI(string optionStr, SecurityType securityType, OptionStyle optionStyle,
             string expectedTargetOptionTicker, string expectedUnderlyingTicker, string expectedUnderlyingMappedTicker,
             decimal expectedStrikePrice, string expectedDate)
