@@ -45,9 +45,29 @@ namespace QuantConnect.Securities.Cfd
             SymbolProperties symbolProperties,
             ICurrencyConverter currencyConverter,
             IRegisteredSecurityDataTypesProvider registeredTypes)
+            : this(exchangeHours, quoteCurrency, config, new ContractSymbolProperties(symbolProperties), currencyConverter, registeredTypes)
+        {
+        }
+
+        /// <summary>
+        /// Constructor for the CFD security
+        /// </summary>
+        /// <param name="exchangeHours">Defines the hours this exchange is open</param>
+        /// <param name="quoteCurrency">The cash object that represent the quote currency</param>
+        /// <param name="config">The subscription configuration for this security</param>
+        /// <param name="symbolProperties">The symbol properties for this security</param>
+        /// <param name="currencyConverter">Currency converter used to convert <see cref="CashAmount"/>
+        /// instances into units of the account currency</param>
+        /// <param name="registeredTypes">Provides all data types registered in the algorithm</param>
+        public Cfd(SecurityExchangeHours exchangeHours,
+            Cash quoteCurrency,
+            SubscriptionDataConfig config,
+            ContractSymbolProperties symbolProperties,
+            ICurrencyConverter currencyConverter,
+            IRegisteredSecurityDataTypesProvider registeredTypes)
             : base(config,
                 quoteCurrency,
-                new ContractSymbolProperties(symbolProperties),
+                symbolProperties,
                 new CfdExchange(exchangeHours),
                 new CfdCache(),
                 new SecurityPortfolioModel(),
@@ -65,7 +85,7 @@ namespace QuantConnect.Securities.Cfd
                 )
         {
             Holdings = new CfdHolding(this, currencyConverter);
-            _symbolProperties = (ContractSymbolProperties)SymbolProperties;
+            _symbolProperties = symbolProperties;
         }
 
         /// <summary>
@@ -86,9 +106,31 @@ namespace QuantConnect.Securities.Cfd
             ICurrencyConverter currencyConverter,
             IRegisteredSecurityDataTypesProvider registeredTypes,
             SecurityCache securityCache)
+            : this(symbol, exchangeHours, quoteCurrency, new ContractSymbolProperties(symbolProperties), currencyConverter, registeredTypes, securityCache)
+        {
+        }
+
+        /// <summary>
+        /// Constructor for the CFD security
+        /// </summary>
+        /// <param name="symbol">The security's symbol</param>
+        /// <param name="exchangeHours">Defines the hours this exchange is open</param>
+        /// <param name="quoteCurrency">The cash object that represent the quote currency</param>
+        /// <param name="symbolProperties">The symbol properties for this security</param>
+        /// <param name="currencyConverter">Currency converter used to convert <see cref="CashAmount"/>
+        /// instances into units of the account currency</param>
+        /// <param name="registeredTypes">Provides all data types registered in the algorithm</param>
+        /// <param name="securityCache">Cache for storing Security data</param>
+        public Cfd(Symbol symbol,
+            SecurityExchangeHours exchangeHours,
+            Cash quoteCurrency,
+            ContractSymbolProperties symbolProperties,
+            ICurrencyConverter currencyConverter,
+            IRegisteredSecurityDataTypesProvider registeredTypes,
+            SecurityCache securityCache)
             : base(symbol,
                 quoteCurrency,
-                new ContractSymbolProperties(symbolProperties),
+                symbolProperties,
                 new CfdExchange(exchangeHours),
                 securityCache,
                 new SecurityPortfolioModel(),
@@ -106,7 +148,7 @@ namespace QuantConnect.Securities.Cfd
                 )
         {
             Holdings = new CfdHolding(this, currencyConverter);
-            _symbolProperties = (ContractSymbolProperties)SymbolProperties;
+            _symbolProperties = symbolProperties;
         }
 
         /// <summary>
