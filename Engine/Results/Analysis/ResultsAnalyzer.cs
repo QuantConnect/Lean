@@ -15,6 +15,7 @@
 */
 using QuantConnect.Algorithm;
 using QuantConnect.Lean.Engine.Results.Analysis.Analyses;
+using QuantConnect.Logging;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -56,9 +57,9 @@ namespace QuantConnect.Lean.Engine.Results.Analysis
         /// stopping early when the time limit or maximum failure count is reached.
         /// </summary>
         /// <param name="timeLimitSeconds">Wall-clock seconds allowed for the full chain before early exit.</param>
-        /// <param name="maxFailedTests">Maximum number of failing analyses to collect before stopping; also the max returned.</param>
-        /// <returns>Up to <paramref name="maxFailedTests"/> <see cref="QuantConnect.Analysis"/> entries with solutions, ranked by weight.</returns>
-        public IReadOnlyList<QuantConnect.Analysis> Run(int timeLimitSeconds = 5, int maxFailedTests = 10)
+        /// <param name="maxFailedAnalyses">Maximum number of failing analyses to collect before stopping; also the max returned.</param>
+        /// <returns>Up to <paramref name="maxFailedAnalyses"/> <see cref="QuantConnect.Analysis"/> entries with solutions, ranked by weight.</returns>
+        public IReadOnlyList<QuantConnect.Analysis> Run(int timeLimitSeconds = 5, int maxFailedAnalyses = 10)
         {
             (_equityCurve, _benchmarkEquityCurve) = ReadEquityCurve(_result, _algorithm);
 
@@ -106,8 +107,14 @@ namespace QuantConnect.Lean.Engine.Results.Analysis
 
             foreach (var analysis in analyses)
             {
-                if (responses.Count >= maxFailedTests || timer.Elapsed >= timeLimit)
+                if (responses.Count >= maxFailedAnalyses)
                 {
+                    Log.Trace($"ResultsAnalyzer: reached maximum failed analyses count of {maxFailedAnalyses}, stopping analysis chain.");
+                    break;
+                }
+                if (timer.Elapsed >= timeLimit)
+                {
+                    Log.Trace($"ResultsAnalyzer: reached time limit of {timeLimitSeconds} seconds (current running time: {timer.Elapsed.TotalSeconds}s), stopping analysis chain.");
                     break;
                 }
 
