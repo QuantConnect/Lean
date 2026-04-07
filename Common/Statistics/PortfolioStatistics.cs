@@ -30,13 +30,13 @@ namespace QuantConnect.Statistics
     public class PortfolioStatistics
     {
         /// <summary>
-        /// The average rate of return for winning trades
+        /// The average rate of return for winning profit and loss entries
         /// </summary>
         [JsonConverter(typeof(JsonRoundingConverter))]
         public decimal AverageWinRate { get; set; }
 
         /// <summary>
-        /// The average rate of return for losing trades
+        /// The average rate of return for losing profit and loss entries
         /// </summary>
         [JsonConverter(typeof(JsonRoundingConverter))]
         public decimal AverageLossRate { get; set; }
@@ -49,16 +49,20 @@ namespace QuantConnect.Statistics
         public decimal ProfitLossRatio { get; set; }
 
         /// <summary>
-        /// The ratio of the number of winning trades to the total number of trades
+        /// The ratio of the number of winning transactions to the total number of transactions
         /// </summary>
-        /// <remarks>If the total number of trades is zero, WinRate is set to zero</remarks>
+        /// <remarks>If the total number of transactions is zero, WinRate is set to zero.
+        /// When win/loss counts are provided (e.g. from <see cref="Securities.SecurityTransactionManager"/>),
+        /// those counts are used instead of the profit and loss entries.</remarks>
         [JsonConverter(typeof(JsonRoundingConverter))]
         public decimal WinRate { get; set; }
 
         /// <summary>
-        /// The ratio of the number of losing trades to the total number of trades
+        /// The ratio of the number of losing transactions to the total number of transactions
         /// </summary>
-        /// <remarks>If the total number of trades is zero, LossRate is set to zero</remarks>
+        /// <remarks>If the total number of transactions is zero, LossRate is set to zero.
+        /// When win/loss counts are provided (e.g. from <see cref="Securities.SecurityTransactionManager"/>),
+        /// those counts are used instead of the profit and loss entries.</remarks>
         [JsonConverter(typeof(JsonRoundingConverter))]
         public decimal LossRate { get; set; }
 
@@ -195,7 +199,7 @@ namespace QuantConnect.Statistics
         /// <summary>
         /// Initializes a new instance of the <see cref="PortfolioStatistics"/> class
         /// </summary>
-        /// <param name="profitLoss">Trade record of profits and losses</param>
+        /// <param name="profitLoss">Record of profit and loss entries keyed by time</param>
         /// <param name="equity">The list of daily equity values</param>
         /// <param name="portfolioTurnover">The algorithm portfolio turnover</param>
         /// <param name="listPerformance">The list of algorithm performance values</param>
@@ -250,7 +254,7 @@ namespace QuantConnect.Statistics
                     totalProfit += tradeProfitLoss / runningCapital;
                     totalWins++;
                 }
-                else
+                else if (tradeProfitLoss < 0)
                 {
                     totalLoss += tradeProfitLoss / runningCapital;
                     totalLosses++;

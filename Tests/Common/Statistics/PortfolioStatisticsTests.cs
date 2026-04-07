@@ -151,6 +151,51 @@ namespace QuantConnect.Tests.Common.Statistics
             Assert.DoesNotThrow(() => new PortfolioStatistics(profitLoss, equity, portfolioTurnover, listPerformance, listBenchmark, startingCapital, riskFreeInterestRateModel, tradingDaysPerYear));
         }
 
+        [Test]
+        public void BreakevenEntriesAreNotCountedAsLosses()
+        {
+            var time = _startTime;
+            var profitLoss = new SortedDictionary<DateTime, decimal>
+            {
+                { time, 500m },
+                { time.AddMinutes(10), 0m },
+                { time.AddMinutes(20), -200m }
+            };
+            var listPerformance = new List<double> { 0.01, -0.01 };
+            var listBenchmark = new List<double> { 0.005, -0.005 };
+
+            var statistics = new PortfolioStatistics(
+                profitLoss, new SortedDictionary<DateTime, decimal>(),
+                new SortedDictionary<DateTime, decimal>(), listPerformance, listBenchmark,
+                100000, new InterestRateProvider(), _tradingDaysPerYear);
+
+            // 1 win, 1 loss, 1 breakeven (zero) — breakeven should be excluded
+            Assert.AreEqual(0.5m, statistics.WinRate);
+            Assert.AreEqual(0.5m, statistics.LossRate);
+        }
+
+        [Test]
+        public void WinLossCountOverridesProfitLossEntries()
+        {
+            var time = _startTime;
+            var profitLoss = new SortedDictionary<DateTime, decimal>
+            {
+                { time, 500m },
+                { time.AddMinutes(10), -200m }
+            };
+            var listPerformance = new List<double> { 0.01, -0.01 };
+            var listBenchmark = new List<double> { 0.005, -0.005 };
+
+            // profitLoss has 1 win, 1 loss — but we override with 3 wins, 1 loss
+            var statistics = new PortfolioStatistics(
+                profitLoss, new SortedDictionary<DateTime, decimal>(),
+                new SortedDictionary<DateTime, decimal>(), listPerformance, listBenchmark,
+                100000, new InterestRateProvider(), _tradingDaysPerYear, winCount: 3, lossCount: 1);
+
+            Assert.AreEqual(0.75m, statistics.WinRate);
+            Assert.AreEqual(0.25m, statistics.LossRate);
+        }
+
         /// <summary>
         /// Initialize and return Portfolio Statistics depends on input data
         /// </summary>
