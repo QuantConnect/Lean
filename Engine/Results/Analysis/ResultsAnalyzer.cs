@@ -156,14 +156,10 @@ namespace QuantConnect.Lean.Engine.Results.Analysis
             }
 
             // ── 2. Benchmark from SPY history ─────────────────────────────────────
-            var spySymbol = Symbol.Create("SPY", SecurityType.Equity, Market.USA);
-            var algorithmHasSpy = true;
-            if (!algorithm.Securities.TryGetValue(spySymbol, out var spy))
-            {
-                // SPY not in securities, create a temporary one for history retrieval
-                spy = algorithm.AddSecurity(SecurityType.Equity, "SPY", Resolution.Daily);
-                algorithmHasSpy = false;
-            }
+            var spy = Symbol.Create("SPY", SecurityType.Equity, Market.USA);
+            var exchangeTimeZone = MarketHoursDatabase.FromDataFolder()
+                .GetExchangeHours(spy.ID.Market, spy, spy.ID.SecurityType)
+                .TimeZone;
 
             var originalDailyPreciseEndTime = algorithm.Settings.DailyPreciseEndTime;
             var benchmarkSeries = new SortedList<DateTime, decimal>();
@@ -174,18 +170,13 @@ namespace QuantConnect.Lean.Engine.Results.Analysis
                 var historyEnd = algorithm.EndDate + TimeSpan.FromDays(1);
                 foreach (var bar in algorithm.History(spy, historyStart, historyEnd, Resolution.Daily))
                 {
-                    benchmarkSeries.Add(bar.EndTime.ConvertToUtc(spy.Exchange.TimeZone), bar.Close);
+                    benchmarkSeries.Add(bar.EndTime.ConvertToUtc(exchangeTimeZone), bar.Close);
                 }
             }
             finally
             {
                 // Restore original setting in case we changed it
                 algorithm.Settings.DailyPreciseEndTime = originalDailyPreciseEndTime;
-                // Remove temporary SPY security if we added it
-                if (!algorithmHasSpy)
-                {
-                    algorithm.RemoveSecurity(spy.Symbol);
-                }
             }
 
             // ── 3. Resample both to daily data points ────────────────────────────
