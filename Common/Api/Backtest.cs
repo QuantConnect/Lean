@@ -200,6 +200,12 @@ namespace QuantConnect.Api
         /// Number of days of out of sample days
         /// </summary>
         public int? OutOfSampleDays { get; set; }
+
+        /// <summary>
+        /// Backtest analysis results.
+        /// </summary>
+        [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
+        public IReadOnlyList<Analysis> Analysis { get; set; }
     }
 
     /// <summary>
