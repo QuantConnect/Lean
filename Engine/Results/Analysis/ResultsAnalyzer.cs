@@ -161,22 +161,13 @@ namespace QuantConnect.Lean.Engine.Results.Analysis
                 .GetExchangeHours(spy.ID.Market, spy, spy.ID.SecurityType)
                 .TimeZone;
 
-            var originalDailyPreciseEndTime = algorithm.Settings.DailyPreciseEndTime;
             var benchmarkSeries = new SortedList<DateTime, decimal>();
-            try
+            var historyStart = algorithm.StartDate - TimeSpan.FromDays(3);
+            var historyEnd = algorithm.EndDate + TimeSpan.FromDays(1);
+            foreach (var bar in algorithm.History(spy, historyStart, historyEnd, Resolution.Daily))
             {
-                algorithm.Settings.DailyPreciseEndTime = false; // ensures history bars are aligned to midnight Eastern
-                var historyStart = algorithm.StartDate - TimeSpan.FromDays(3);
-                var historyEnd = algorithm.EndDate + TimeSpan.FromDays(1);
-                foreach (var bar in algorithm.History(spy, historyStart, historyEnd, Resolution.Daily))
-                {
-                    benchmarkSeries.Add(bar.EndTime.ConvertToUtc(exchangeTimeZone), bar.Close);
-                }
-            }
-            finally
-            {
-                // Restore original setting in case we changed it
-                algorithm.Settings.DailyPreciseEndTime = originalDailyPreciseEndTime;
+                var time = algorithm.Settings.DailyPreciseEndTime ? bar.EndTime.AddDays(1).Date : bar.EndTime;
+                benchmarkSeries.Add(time.Date.ConvertToUtc(exchangeTimeZone), bar.Close);
             }
 
             // ── 3. Resample both to daily data points ────────────────────────────
