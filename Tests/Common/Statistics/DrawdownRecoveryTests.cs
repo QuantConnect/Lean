@@ -26,16 +26,51 @@ namespace QuantConnect.Tests.Common.Statistics
         public void DrawdownMetricsMaximumRecoveryTimeTests(List<decimal> data, decimal expectedRecoveryTime)
         {
             var startDate = new DateTime(2025, 1, 1);
-            var equity = new SortedDictionary<DateTime, decimal>();
+            var points = new List<ISeriesPoint>();
 
             for (int i = 0; i < data.Count; i++)
             {
-                var value = data[i];
-                equity[startDate.AddDays(i)] = value;
+                points.Add(new ChartPoint(startDate.AddDays(i), data[i]));
             }
 
-            var result = QuantConnect.Statistics.Statistics.CalculateDrawdownMetrics(equity).DrawdownRecovery;
+            var result = QuantConnect.Statistics.Statistics.CalculateDrawdownMetrics(points).DrawdownRecovery;
             Assert.AreEqual(expectedRecoveryTime, result);
+        }
+
+        [Test]
+        public void CandlestickUsesHighForPeakAndLowForDrawdown()
+        {
+            // Day 2 High=105 sets the peak: Low=80 -> drawdown = (80/105) - 1 --> 0.24
+            var startDate = new DateTime(2025, 1, 1);
+
+            var points = new List<ISeriesPoint>
+            {
+                new Candlestick(startDate, 100m, 100m, 100m, 100m),
+                new Candlestick(startDate.AddDays(1), 95m, 105m, 80m, 95m),
+                new Candlestick(startDate.AddDays(2), 95m, 106m, 100m, 100m),
+            };
+
+            var metrics = QuantConnect.Statistics.Statistics.CalculateDrawdownMetrics(points);
+
+            Assert.AreEqual(0.24m, metrics.Drawdown);
+        }
+
+        [Test]
+        public void CandlestickWithNullHighLowFallsBackToClose()
+        {
+            // When High/Low are null, Close is used for both peak and drawdown
+            var startDate = new DateTime(2025, 1, 1);
+            var points = new List<ISeriesPoint>
+            {
+                new Candlestick(startDate, null, null, null, 100m),
+                new Candlestick(startDate.AddDays(1), null, null, null, 90m),
+                new Candlestick(startDate.AddDays(2), null, null, null, 100m),
+            };
+
+            var metrics = QuantConnect.Statistics.Statistics.CalculateDrawdownMetrics(points);
+
+            Assert.AreEqual(0.1m, metrics.Drawdown);
+            Assert.AreEqual(2, metrics.DrawdownRecovery);
         }
 
         private static IEnumerable<TestCaseData> TestCases()
