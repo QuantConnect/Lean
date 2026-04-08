@@ -80,14 +80,13 @@ namespace QuantConnect.Brokerages.Authentication
 
         /// <summary>
         /// Stores the current access token and its type used for authenticating requests to the Lean platform.
-        /// Written inside <see cref="_lock"/>; read outside the lock via volatile fast path.
+        /// Always accessed inside <see cref="_lock"/>.
         /// </summary>
         private T _tokenCredentials;
 
         /// <summary>
         /// The UTC timestamp after which the cached token should be refreshed.
-        /// Always written inside <see cref="_lock"/> before <see cref="_tokenCredentials"/> is set,
-        /// so that a volatile read of <see cref="_tokenCredentials"/> guarantees visibility of this field.
+        /// Always accessed inside <see cref="_lock"/>.
         /// </summary>
         private DateTime _tokenExpiresAt;
 
@@ -115,21 +114,14 @@ namespace QuantConnect.Brokerages.Authentication
         /// <summary>
         /// Retrieves a valid access token from the Lean platform.
         /// Caches and reuses tokens until expiration to minimize unnecessary requests.
-        /// Retries up to <see cref="MaxRetryCount"/> times on failure, and is thread-safe via double-checked locking.
+        /// Retries up to <see cref="MaxRetryCount"/> times on failure. Thread-safe via a lock.
         /// </summary>
         /// <param name="cancellationToken">A token used to observe cancellation requests.</param>
         /// <returns>A <see cref="LeanTokenCredentials"/> instance containing the token type and access token string.</returns>
         public override T GetAccessToken(CancellationToken cancellationToken)
         {
-            // Fast path: return cached token without acquiring the lock
-            if (_tokenCredentials != null && DateTime.UtcNow < _tokenExpiresAt)
-            {
-                return _tokenCredentials;
-            }
-
             lock (_lock)
             {
-                // Second check: another thread may have refreshed while we waited for the lock
                 if (_tokenCredentials != null && DateTime.UtcNow < _tokenExpiresAt)
                 {
                     return _tokenCredentials;
@@ -145,8 +137,6 @@ namespace QuantConnect.Brokerages.Authentication
                         {
                             if (response.Success && !string.IsNullOrEmpty(response.AccessToken))
                             {
-                                // Write expiry before credentials — the volatile write of _tokenCredentials
-                                // acts as a release fence, ensuring the fast-path reader sees _tokenExpiresAt.
                                 _tokenExpiresAt = DateTime.UtcNow + _tokenLifetime - OffsetBeforeExpiration;
                                 return _tokenCredentials = response;
                             }
