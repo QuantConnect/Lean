@@ -135,7 +135,7 @@ namespace QuantConnect.Brokerages.Authentication
 
                         if (_apiClient.TryRequest<T>(request, out var response))
                         {
-                            if (response.Success && !string.IsNullOrEmpty(response.AccessToken))
+                            if (response.Success)
                             {
                                 _tokenExpiresAt = DateTime.UtcNow + _tokenLifetime - OffsetBeforeExpiration;
                                 return _tokenCredentials = response;
