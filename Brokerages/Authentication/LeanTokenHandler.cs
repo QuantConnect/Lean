@@ -41,12 +41,13 @@ namespace QuantConnect.Brokerages.Authentication
         private readonly Func<TokenType, string, AuthenticationHeaderValue> _createAuthHeader;
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="LeanTokenHandler"/> class.
+        /// Initializes a new instance of the <see cref="LeanTokenHandler{T}"/> class.
         /// </summary>
         /// <param name="createAuthHeader">
         /// An optional delegate for creating an <see cref="AuthenticationHeaderValue"/>
         /// from the token type and access token. If not provided, a default implementation is used.
         /// </param>
+        /// <param name="handler">An optional inner <see cref="HttpMessageHandler"/>. If not provided, a default <see cref="HttpClientHandler"/> is used.</param>
         protected LeanTokenHandler(Func<TokenType, string, AuthenticationHeaderValue> createAuthHeader = null, HttpClientHandler handler = null)
             : base(handler ?? new HttpClientHandler())
         {
@@ -59,9 +60,7 @@ namespace QuantConnect.Brokerages.Authentication
         /// with optional support for caching and refresh logic.
         /// </summary>
         /// <param name="cancellationToken">A cancellation token that can be used to cancel the token retrieval operation.</param>
-        /// <returns>
-        /// A <see cref="TokenCredentials"/> instance containing the token type and access token string.
-        /// </returns>
+        /// <returns>A <see cref="LeanTokenCredentials"/> instance containing the token type and access token string.</returns>
         public abstract T GetAccessToken(CancellationToken cancellationToken);
 
         /// <summary>
