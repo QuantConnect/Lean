@@ -1474,7 +1474,7 @@ namespace QuantConnect.Algorithm
         {
             if (_locked)
             {
-                throw new InvalidOperationException("QCAlgorithm.SetWarmup(): This method cannot be used after algorithm initialized");
+                throw new InvalidOperationException(Messages.QCAlgorithm.SetWarmupAlreadyInitialized());
             }
 
             _warmupTimeSpan = timeSpan;
