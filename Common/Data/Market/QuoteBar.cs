@@ -289,6 +289,11 @@ namespace QuantConnect.Data.Market
         [StubsIgnore]
         public override BaseData Reader(SubscriptionDataConfig config, StreamReader stream, DateTime date, bool isLiveMode)
         {
+            if (!LeanData.IsValidConfiguration(config.SecurityType, config.Resolution, TickType.Quote))
+            {
+                return null;
+            }
+
             try
             {
                 switch (config.SecurityType)
@@ -338,6 +343,11 @@ namespace QuantConnect.Data.Market
         /// <returns>Enumerable iterator for returning each line of the required data.</returns>
         public override BaseData Reader(SubscriptionDataConfig config, string line, DateTime date, bool isLiveMode)
         {
+            if (!LeanData.IsValidConfiguration(config.SecurityType, config.Resolution, TickType.Quote))
+            {
+                return null;
+            }
+
             try
             {
                 switch (config.SecurityType)
