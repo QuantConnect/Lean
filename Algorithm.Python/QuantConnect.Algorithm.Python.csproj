@@ -171,6 +171,7 @@
     <None Include="BasicTemplateOptionsHistoryAlgorithm.py" />
     <None Include="BasicTemplateOptionStrategyAlgorithm.py" />
     <None Include="BasicTemplateOptionTradesAlgorithm.py" />
+    <None Include="AdanosMarketSentimentAlgorithm.py" />
     <None Include="BrokerageModelAlgorithm.py" />
     <None Include="BubbleAlgorithm.py" />
     <None Include="build.sh">

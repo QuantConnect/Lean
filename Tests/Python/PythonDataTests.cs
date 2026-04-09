@@ -14,6 +14,8 @@
 */
 
 using System;
+using System.IO;
+using System.Linq;
 using NodaTime;
 using Python.Runtime;
 using NUnit.Framework;
@@ -225,6 +227,60 @@ class CustomDataClass(PythonDataTests.TestPythonData):
             }
         }
 
+        [Test]
+        public void AdanosSentimentGetSourceIncludesApiKeyHeader()
+        {
+            using (Py.GIL())
+            {
+                dynamic module = LoadModuleFromFile("AdanosMarketSentimentAlgorithm");
+                dynamic adanosSentimentType = module.GetAttr("AdanosSentiment");
+                adanosSentimentType.configure("test-api-key", "news", 14);
+
+                var data = new PythonData(adanosSentimentType());
+                var type = Extensions.CreateType(adanosSentimentType);
+                var config = new SubscriptionDataConfig(type, Symbols.AAPL, Resolution.Daily, DateTimeZone.Utc,
+                    DateTimeZone.Utc, false, false, false, isCustom: true);
+
+                var source = data.GetSource(config, new DateTime(2026, 4, 9), false);
+
+                Assert.AreEqual(SubscriptionTransportMedium.Rest, source.TransportMedium);
+                Assert.AreEqual("https://api.adanos.org/news/stocks/v1/stock/AAPL?days=14", source.Source);
+                Assert.IsTrue(source.Headers.Any(entry => entry.Key == "X-API-Key" && entry.Value == "test-api-key"));
+            }
+        }
+
+        [Test]
+        public void AdanosSentimentReaderParsesStructuredPayload()
+        {
+            using (Py.GIL())
+            {
+                dynamic module = LoadModuleFromFile("AdanosMarketSentimentAlgorithm");
+                dynamic adanosSentimentType = module.GetAttr("AdanosSentiment");
+                adanosSentimentType.configure("test-api-key", "news", 30);
+
+                var data = new PythonData(adanosSentimentType());
+                var type = Extensions.CreateType(adanosSentimentType);
+                var config = new SubscriptionDataConfig(type, Symbols.AAPL, Resolution.Daily, DateTimeZone.Utc,
+                    DateTimeZone.Utc, false, false, false, isCustom: true);
+
+                const string line = "{\"ticker\":\"AAPL\",\"found\":true,\"buzz_score\":67.5,\"mentions\":42," +
+                                    "\"sentiment_score\":0.35,\"bullish_pct\":61,\"source_count\":8,\"trend\":\"rising\"," +
+                                    "\"daily_trend\":[{\"date\":\"2026-04-08\",\"mentions\":12,\"sentiment_score\":0.22}]}";
+
+                var result = (PythonData)data.Reader(config, line, new DateTime(2026, 4, 9), false);
+
+                Assert.NotNull(result);
+                Assert.AreEqual(Symbols.AAPL, result.Symbol);
+                Assert.AreEqual(67.5m, result.Value);
+                Assert.AreEqual(new DateTime(2026, 4, 8), result.Time);
+                Assert.AreEqual(61, Convert.ToInt32(result["BullishPercent"]));
+                Assert.AreEqual(42, Convert.ToInt32(result["ActivityCount"]));
+                Assert.AreEqual(8, Convert.ToInt32(result["CoverageCount"]));
+                Assert.AreEqual("rising", result.GetProperty("Trend"));
+                Assert.AreEqual("AAPL", result.GetProperty("Ticker"));
+            }
+        }
+
         private static BaseData GetDataFromModule(dynamic testModule)
         {
             var type = Extensions.CreateType(testModule.GetAttr("CustomDataTest"));
@@ -232,6 +288,16 @@ class CustomDataClass(PythonDataTests.TestPythonData):
             var config = new SubscriptionDataConfig(type, Symbols.SPY, Resolution.Daily, DateTimeZone.Utc,
                 DateTimeZone.Utc, false, false, false, isCustom: true);
             return customDataTest.Reader(config, "something", DateTime.UtcNow, false);
+        }
+
+        private static dynamic LoadModuleFromFile(string moduleName)
+        {
+            var filePath = Path.GetFullPath(Path.Combine(TestContext.CurrentContext.TestDirectory, $"../../../Algorithm.Python/{moduleName}.py"));
+            dynamic importlibUtil = Py.Import("importlib.util");
+            dynamic spec = importlibUtil.spec_from_file_location(moduleName, filePath);
+            dynamic module = importlibUtil.module_from_spec(spec);
+            spec.loader.exec_module(module);
+            return module;
         }
     }
 }
