@@ -722,8 +722,18 @@ namespace QuantConnect.Lean.Engine
                         Log.Trace($"AlgorithmManager.Stream(): Subscriptions count before warm up: {algorithm.SubscriptionManager.Count}");
                         logSubscriptionCountFlag = true;
                     }
+
+                    // Backtesting subscriptions can skip directly from a warmup timestamp to a much later
+                    // post-start timestamp (for example, scheduled universes). In that case we still want
+                    // warmup completion callbacks to run at the configured algorithm start time.
+                    if (!algorithm.LiveMode
+                        && timeSlice.Time.Ticks >= warmupEndTicks
+                        && algorithm.UtcTime.Ticks < warmupEndTicks)
+                    {
+                        algorithm.SetDateTime(new DateTime(warmupEndTicks, DateTimeKind.Utc));
+                    }
                 }
-                else if (warmingUp)
+                if (!algorithm.IsWarmingUp && warmingUp)
                 {
                     // warmup finished, send an update
                     warmingUp = false;

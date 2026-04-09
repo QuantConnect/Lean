@@ -19,8 +19,10 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Reflection;
 using System.Threading;
 using NUnit.Framework;
+using QuantConnect.Algorithm;
 using QuantConnect.Algorithm.CSharp;
 using QuantConnect.Brokerages;
 using QuantConnect.Brokerages.Backtesting;
@@ -86,6 +88,47 @@ namespace QuantConnect.Tests.Engine
                 algorithmLocation: "QuantConnect.Tests.dll");
 
             Assert.AreEqual(1, AlgorithmManagerAlgorithmStatusTest.Loops);
+        }
+
+        [Test]
+        public void OnWarmupFinishedUsesStartTimeWhenFirstPostWarmupSliceArrivesLater()
+        {
+            var algorithm = new WarmupFinishedTimeTrackingAlgorithm();
+            algorithm.SetStartDate(2013, 10, 08);
+            algorithm.SetEndDate(2013, 10, 08);
+            algorithm.SetWarmup(TimeSpan.FromDays(1));
+            algorithm.PostInitialize();
+            algorithm.SetLocked();
+
+            var startTimeUtc = algorithm.StartDate.ConvertToUtc(algorithm.TimeZone);
+            var synchronizer = new ManualTimeSliceSynchronizer(new[]
+            {
+                CreateEmptyTimeSlice(startTimeUtc.AddHours(-1)),
+                CreateEmptyTimeSlice(startTimeUtc.AddHours(10)),
+                CreateEmptyTimeSlice(startTimeUtc.AddHours(10).AddMinutes(1))
+            });
+
+            var streamMethod = typeof(AlgorithmManager).GetMethod("Stream", BindingFlags.NonPublic | BindingFlags.Instance);
+            Assert.IsNotNull(streamMethod);
+
+            var stream = (IEnumerable<TimeSlice>)streamMethod.Invoke(new AlgorithmManager(false), new object[]
+            {
+                algorithm,
+                synchronizer,
+                new NullResultHandler(),
+                CancellationToken.None
+            });
+
+            foreach (var timeSlice in stream)
+            {
+                algorithm.SetDateTime(timeSlice.Time);
+                if (algorithm.WarmupFinishedTime.HasValue)
+                {
+                    break;
+                }
+            }
+
+            Assert.AreEqual(algorithm.StartDate, algorithm.WarmupFinishedTime);
         }
 
         [Test, Explicit("TravisExclude")]
@@ -371,6 +414,65 @@ namespace QuantConnect.Tests.Engine
                     _frontierUtc += _frontierStepSize;
                 }
                 while (_frontierUtc <= _endTimeUtc);
+            }
+        }
+
+        private static TimeSlice CreateEmptyTimeSlice(DateTime utcTime)
+        {
+            var slice = new Slice(utcTime, new List<BaseData>(),
+                new TradeBars(),
+                new QuoteBars(),
+                new Ticks(),
+                new OptionChains(),
+                new FuturesChains(),
+                new Splits(),
+                new Dividends(),
+                new Delistings(),
+                new SymbolChangedEvents(),
+                new MarginInterestRates(),
+                utcTime);
+
+            return new TimeSlice(utcTime,
+                0,
+                slice,
+                new List<DataFeedPacket>(),
+                new List<UpdateData<ISecurityPrice>>(),
+                new List<UpdateData<SubscriptionDataConfig>>(),
+                new List<UpdateData<ISecurityPrice>>(),
+                SecurityChanges.None,
+                new Dictionary<Universe, BaseDataCollection>());
+        }
+
+        private class ManualTimeSliceSynchronizer : ISynchronizer
+        {
+            private readonly IEnumerable<TimeSlice> _timeSlices;
+
+            public ManualTimeSliceSynchronizer(IEnumerable<TimeSlice> timeSlices)
+            {
+                _timeSlices = timeSlices;
+            }
+
+            public IEnumerable<TimeSlice> StreamData(CancellationToken cancellationToken)
+            {
+                foreach (var timeSlice in _timeSlices)
+                {
+                    if (cancellationToken.IsCancellationRequested)
+                    {
+                        yield break;
+                    }
+
+                    yield return timeSlice;
+                }
+            }
+        }
+
+        private class WarmupFinishedTimeTrackingAlgorithm : QCAlgorithm
+        {
+            public DateTime? WarmupFinishedTime { get; private set; }
+
+            public override void OnWarmupFinished()
+            {
+                WarmupFinishedTime = Time;
             }
         }
 
