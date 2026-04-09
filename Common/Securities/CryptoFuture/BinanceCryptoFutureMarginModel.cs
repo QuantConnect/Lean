@@ -20,10 +20,11 @@ namespace QuantConnect.Securities.CryptoFuture
     /// currencies as alternative collateral for non-coin (USDⓈ-M) futures.
     /// </summary>
     /// <remarks>
-    /// EU/EEA users under MiCA use Credits Trading Mode where BNFCR (pegged 1:1 to USD) replaces
-    /// USDT/USDC for margin, PNL and fees. This model aggregates USD-pegged stable coins (BNFCR,
-    /// USDC, FDUSD, etc.) as supplementary collateral. Volatile assets (BTC/ETH/BNB) are excluded
-    /// because they require exchange-specific haircut rates.
+    /// EU/EEA users under MiCA Credits Trading Mode use BNFCR (pegged 1:1 to USD) as the
+    /// cross-margin accounting currency. Binance stores the total available collateral pool
+    /// (all stablecoins combined, minus used margin) in BNFCR's availableBalance field.
+    /// This model reads that value as supplementary collateral for USDⓈ-M futures.
+    /// Non-EU users won't have BNFCR in their account — the check is a no-op for them.
     /// See: https://www.binance.com/en/support/faq/detail/0e857c392a2d47cebde0af762d9255ae
     /// </remarks>
     public class BinanceCryptoFutureMarginModel : CryptoFutureMarginModel
@@ -59,21 +60,14 @@ namespace QuantConnect.Securities.CryptoFuture
                 return total;
             }
 
-            var market = security.Symbol.ID.Market;
-            var accountCurrency = portfolio.CashBook.AccountCurrency;
-            foreach (var kvp in portfolio.CashBook)
+            // BNFCR is available only for EU/EEA accounts (MiCA Credits Trading Mode).
+            // Its CashBook amount reflects availableBalance from the Binance API — the total
+            // cross-margin available balance across all stablecoins, already aggregated by Binance.
+            // Non-EU users won't have BNFCR in their CashBook, so TryGetValue returns false.
+            var cashBook = portfolio.CashBook;
+            if (cashBook.TryGetValue("BNFCR", out var bnfcrCash) && bnfcrCash.Amount > 0)
             {
-                var cash = kvp.Value;
-                if (cash == primaryCollateral || cash.Amount <= 0)
-                {
-                    continue;
-                }
-
-                if (Currencies.IsStableCoinWithoutPair(accountCurrency, cash.Symbol, market))
-                {
-                    // convert supplementary collateral to primary collateral terms
-                    total += portfolio.CashBook.Convert(cash.Amount, cash.Symbol, primaryCollateral.Symbol);
-                }
+                total += cashBook.Convert(bnfcrCash.Amount, "BNFCR", primaryCollateral.Symbol);
             }
 
             return total;
