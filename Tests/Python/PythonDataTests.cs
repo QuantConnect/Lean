@@ -281,6 +281,46 @@ class CustomDataClass(PythonDataTests.TestPythonData):
             }
         }
 
+        [Test]
+        public void AdanosSentimentFallsBackToNewsForUnsupportedSource()
+        {
+            using (Py.GIL())
+            {
+                dynamic module = LoadModuleFromFile("AdanosMarketSentimentAlgorithm");
+                dynamic adanosSentimentType = module.GetAttr("AdanosSentiment");
+                adanosSentimentType.configure("test-api-key", "unsupported", 7);
+
+                var data = new PythonData(adanosSentimentType());
+                var type = Extensions.CreateType(adanosSentimentType);
+                var config = new SubscriptionDataConfig(type, Symbols.AAPL, Resolution.Daily, DateTimeZone.Utc,
+                    DateTimeZone.Utc, false, false, false, isCustom: true);
+
+                var source = data.GetSource(config, new DateTime(2026, 4, 9), false);
+
+                Assert.AreEqual("https://api.adanos.org/news/stocks/v1/stock/AAPL?days=7", source.Source);
+            }
+        }
+
+        [Test]
+        public void AdanosSentimentReaderReturnsNullWhenTickerIsNotFound()
+        {
+            using (Py.GIL())
+            {
+                dynamic module = LoadModuleFromFile("AdanosMarketSentimentAlgorithm");
+                dynamic adanosSentimentType = module.GetAttr("AdanosSentiment");
+                adanosSentimentType.configure("test-api-key", "news", 30);
+
+                var data = new PythonData(adanosSentimentType());
+                var type = Extensions.CreateType(adanosSentimentType);
+                var config = new SubscriptionDataConfig(type, Symbols.AAPL, Resolution.Daily, DateTimeZone.Utc,
+                    DateTimeZone.Utc, false, false, false, isCustom: true);
+
+                var result = data.Reader(config, "{\"ticker\":\"AAPL\",\"found\":false}", new DateTime(2026, 4, 9), false);
+
+                Assert.IsNull(result);
+            }
+        }
+
         private static BaseData GetDataFromModule(dynamic testModule)
         {
             var type = Extensions.CreateType(testModule.GetAttr("CustomDataTest"));

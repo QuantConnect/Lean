@@ -18,7 +18,8 @@ from AlgorithmImports import *
 ### <summary>
 ### Demonstrates consuming optional Adanos market sentiment snapshots as custom equity data.
 ### This example is intended for live or research workflows that query current structured sentiment
-### from Adanos. Historical backtests should first persist daily snapshots to a local file or ObjectStore.
+### from Adanos. Historical backtests should first persist daily snapshots to a local file or ObjectStore
+### to avoid look-ahead bias from querying a current REST endpoint.
 ### Parameters:
 ### - adanos-api-key: required to enable requests
 ### - adanos-source: one of news, reddit, x, polymarket
@@ -34,6 +35,11 @@ class AdanosMarketSentimentAlgorithm(QCAlgorithm):
         self.set_start_date(2024, 1, 1)
         self.set_end_date(2024, 1, 31)
         self.set_cash(100000)
+
+        if not self.live_mode:
+            self.debug("This example is intended for live or research use with current Adanos snapshots.")
+            self.quit()
+            return
 
         api_key = self.get_parameter("adanos-api-key")
         if not api_key:
