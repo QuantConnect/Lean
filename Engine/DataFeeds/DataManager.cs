@@ -575,7 +575,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             )
         {
             var dataTypes = subscriptionDataTypes;
-            if(dataTypes == null)
+            if (dataTypes == null)
             {
                 if (symbol.SecurityType == SecurityType.Base && SecurityIdentifier.TryGetCustomDataTypeInstance(symbol.ID.Symbol, out var type))
                 {
@@ -594,6 +594,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             }
 
             var resolutionWasProvided = resolution.HasValue;
+            var validDataTypes = new List<Tuple<Type, TickType>>();
             foreach (var typeTuple in dataTypes)
             {
                 var baseInstance = typeTuple.Item1.GetBaseDataInstance();
@@ -613,6 +614,11 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                                     $"The data type default resolution '{defaultResolution}' will be used instead");
                                 _unsupportedUniverseSettingsResolutionWarningSent = true;
                             }
+                        }
+                        else if (!_liveMode && !LeanData.IsValidConfiguration(symbol.SecurityType, res, typeTuple.Item2))
+                        {
+                            // skip data types not valid for this security type/resolution combination in backtesting
+                            continue;
                         }
                         else
                         {
@@ -637,17 +643,17 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     if (!_liveMode)
                     {
                         var supportedResolutions = baseInstance.SupportedResolutions();
-                        if (supportedResolutions.Contains(resolution.Value))
+                        if (!supportedResolutions.Contains(resolution.Value))
                         {
-                            continue;
+                            throw new ArgumentException($"Sorry {resolution.ToStringInvariant()} is not a supported resolution for {typeTuple.Item1.Name}" +
+                                                        $" and SecurityType.{symbol.SecurityType.ToStringInvariant()}." +
+                                                        $" Please change your AddData to use one of the supported resolutions ({string.Join(",", supportedResolutions)}).");
                         }
-
-                        throw new ArgumentException($"Sorry {resolution.ToStringInvariant()} is not a supported resolution for {typeTuple.Item1.Name}" +
-                                                    $" and SecurityType.{symbol.SecurityType.ToStringInvariant()}." +
-                                                    $" Please change your AddData to use one of the supported resolutions ({string.Join(",", supportedResolutions)}).");
                     }
                 }
+                validDataTypes.Add(typeTuple);
             }
+            dataTypes = validDataTypes;
             var marketHoursDbEntry = _marketHoursDatabase.GetEntry(symbol, dataTypes.Select(tuple => tuple.Item1));
 
             var exchangeHours = marketHoursDbEntry.ExchangeHours;
@@ -670,24 +676,24 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             }
 
             var result = (from subscriptionDataType in dataTypes
-                let dataType = subscriptionDataType.Item1
-                let tickType = subscriptionDataType.Item2
-                select new SubscriptionDataConfig(
-                    dataType,
-                    symbol,
-                    resolution.Value,
-                    marketHoursDbEntry.DataTimeZone,
-                    exchangeHours.TimeZone,
-                    fillForward,
-                    extendedMarketHours,
-                    // if the subscription data types were not provided and the tick type is OpenInterest we make it internal
-                    subscriptionDataTypes == null && tickType == TickType.OpenInterest || isInternalFeed,
-                    isCustomData,
-                    isFilteredSubscription: isFilteredSubscription,
-                    tickType: tickType,
-                    dataNormalizationMode: dataNormalizationMode,
-                    dataMappingMode: dataMappingMode,
-                    contractDepthOffset: contractDepthOffset)).ToList();
+                          let dataType = subscriptionDataType.Item1
+                          let tickType = subscriptionDataType.Item2
+                          select new SubscriptionDataConfig(
+                              dataType,
+                              symbol,
+                              resolution.Value,
+                              marketHoursDbEntry.DataTimeZone,
+                              exchangeHours.TimeZone,
+                              fillForward,
+                              extendedMarketHours,
+                              // if the subscription data types were not provided and the tick type is OpenInterest we make it internal
+                              subscriptionDataTypes == null && tickType == TickType.OpenInterest || isInternalFeed,
+                              isCustomData,
+                              isFilteredSubscription: isFilteredSubscription,
+                              tickType: tickType,
+                              dataNormalizationMode: dataNormalizationMode,
+                              dataMappingMode: dataMappingMode,
+                              contractDepthOffset: contractDepthOffset)).ToList();
 
             for (int i = 0; i < result.Count; i++)
             {
@@ -730,7 +736,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             var result = availableDataType
                 .Select(tickType => new Tuple<Type, TickType>(LeanData.GetDataType(resolution, tickType), tickType)).ToList();
 
-            if(symbolSecurityType == SecurityType.CryptoFuture)
+            if (symbolSecurityType == SecurityType.CryptoFuture)
             {
                 result.Add(new Tuple<Type, TickType>(typeof(MarginInterestRate), TickType.Quote));
             }
