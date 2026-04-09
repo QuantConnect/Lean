@@ -24,7 +24,7 @@ class RegisterIndicatorRegressionAlgorithm(QCAlgorithm):
         self.set_end_date(2020, 1, 10)
 
         SP500 = Symbol.create(Futures.Indices.SP_500_E_MINI, SecurityType.FUTURE, Market.CME)
-        self._symbol = _symbol = self.future_chain_provider.get_future_contract_list(SP500, (self.start_date + timedelta(days=1)))[0]
+        self._symbol = _symbol = list(self.future_chain_provider.get_future_contract_list(SP500, (self.start_date + timedelta(days=1))))[0]
         self.add_future_contract(_symbol)
 
         # this collection will hold all indicators and at the end of the algorithm we will assert that all of them are ready
@@ -43,7 +43,7 @@ class RegisterIndicatorRegressionAlgorithm(QCAlgorithm):
         # We use the TimeDelta overload to fetch the consolidator
         consolidator = self.resolve_consolidator(_symbol, timedelta(minutes=1), QuoteBar)
         # We specify a custom selector to be used
-        self.register_indicator(_symbol, indicator2, consolidator, lambda bar: self.set_selector_called(0) and bar)
+        self.register_indicator(_symbol, indicator2, consolidator, lambda bar: (self.set_selector_called(0), bar)[1])
         self._indicators.append(indicator2)
 
         # We use a IndicatorBase<IndicatorDataPoint> with QuoteBar data and a custom selector

@@ -55,5 +55,5 @@ class CustomSettlementModel:
         return None
 
 class CustomBrokerageModelWithCustomSettlementModel(CustomBrokerageModel):
-    def get_settlement_model(self, security):
+    def get_settlement_model(self, security: Security) -> ISettlementModel:
         return CustomSettlementModel()
