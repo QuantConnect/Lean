@@ -27,6 +27,8 @@ namespace QuantConnect.Securities.Cfd
     /// <seealso cref="Security"/>
     public class Cfd : Security
     {
+        private readonly ContractSymbolProperties _symbolProperties;
+
         /// <summary>
         /// Constructor for the CFD security
         /// </summary>
@@ -41,6 +43,26 @@ namespace QuantConnect.Securities.Cfd
             Cash quoteCurrency,
             SubscriptionDataConfig config,
             SymbolProperties symbolProperties,
+            ICurrencyConverter currencyConverter,
+            IRegisteredSecurityDataTypesProvider registeredTypes)
+            : this(exchangeHours, quoteCurrency, config, new ContractSymbolProperties(symbolProperties), currencyConverter, registeredTypes)
+        {
+        }
+
+        /// <summary>
+        /// Constructor for the CFD security
+        /// </summary>
+        /// <param name="exchangeHours">Defines the hours this exchange is open</param>
+        /// <param name="quoteCurrency">The cash object that represent the quote currency</param>
+        /// <param name="config">The subscription configuration for this security</param>
+        /// <param name="symbolProperties">The symbol properties for this security</param>
+        /// <param name="currencyConverter">Currency converter used to convert <see cref="CashAmount"/>
+        /// instances into units of the account currency</param>
+        /// <param name="registeredTypes">Provides all data types registered in the algorithm</param>
+        public Cfd(SecurityExchangeHours exchangeHours,
+            Cash quoteCurrency,
+            SubscriptionDataConfig config,
+            ContractSymbolProperties symbolProperties,
             ICurrencyConverter currencyConverter,
             IRegisteredSecurityDataTypesProvider registeredTypes)
             : base(config,
@@ -63,6 +85,7 @@ namespace QuantConnect.Securities.Cfd
                 )
         {
             Holdings = new CfdHolding(this, currencyConverter);
+            _symbolProperties = symbolProperties;
         }
 
         /// <summary>
@@ -80,6 +103,28 @@ namespace QuantConnect.Securities.Cfd
             SecurityExchangeHours exchangeHours,
             Cash quoteCurrency,
             SymbolProperties symbolProperties,
+            ICurrencyConverter currencyConverter,
+            IRegisteredSecurityDataTypesProvider registeredTypes,
+            SecurityCache securityCache)
+            : this(symbol, exchangeHours, quoteCurrency, new ContractSymbolProperties(symbolProperties), currencyConverter, registeredTypes, securityCache)
+        {
+        }
+
+        /// <summary>
+        /// Constructor for the CFD security
+        /// </summary>
+        /// <param name="symbol">The security's symbol</param>
+        /// <param name="exchangeHours">Defines the hours this exchange is open</param>
+        /// <param name="quoteCurrency">The cash object that represent the quote currency</param>
+        /// <param name="symbolProperties">The symbol properties for this security</param>
+        /// <param name="currencyConverter">Currency converter used to convert <see cref="CashAmount"/>
+        /// instances into units of the account currency</param>
+        /// <param name="registeredTypes">Provides all data types registered in the algorithm</param>
+        /// <param name="securityCache">Cache for storing Security data</param>
+        public Cfd(Symbol symbol,
+            SecurityExchangeHours exchangeHours,
+            Cash quoteCurrency,
+            ContractSymbolProperties symbolProperties,
             ICurrencyConverter currencyConverter,
             IRegisteredSecurityDataTypesProvider registeredTypes,
             SecurityCache securityCache)
@@ -103,14 +148,16 @@ namespace QuantConnect.Securities.Cfd
                 )
         {
             Holdings = new CfdHolding(this, currencyConverter);
+            _symbolProperties = symbolProperties;
         }
 
         /// <summary>
-        /// Gets the contract multiplier for this CFD security
+        /// Gets or sets the contract multiplier for this CFD security
         /// </summary>
         public decimal ContractMultiplier
         {
-            get { return SymbolProperties.ContractMultiplier; }
+            get { return _symbolProperties.ContractMultiplier; }
+            set { _symbolProperties.SetContractMultiplier(value); }
         }
 
         /// <summary>

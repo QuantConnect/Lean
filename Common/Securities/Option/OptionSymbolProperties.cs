@@ -18,23 +18,8 @@ namespace QuantConnect.Securities.Option
     /// <summary>
     /// Represents common properties for a specific option contract
     /// </summary>
-    public class OptionSymbolProperties : SymbolProperties
+    public class OptionSymbolProperties : ContractSymbolProperties
     {
-        /// <summary>
-        /// The contract multiplier for the security.
-        /// </summary>
-        /// <remarks>
-        /// If manually set by a consumer, this value will be used instead of the
-        /// <see cref="SymbolProperties.ContractMultiplier"/> and also allows to make
-        /// sure it is not overridden when the symbol properties database gets updated.
-        /// </remarks>
-        private decimal? _contractMultiplier;
-
-        /// <summary>
-        /// The contract multiplier for the security
-        /// </summary>
-        public override decimal ContractMultiplier => _contractMultiplier ?? base.ContractMultiplier;
-
         /// <summary>
         /// When the holder of an equity option exercises one contract, or when the writer of an equity option is assigned
         /// an exercise notice on one contract, this unit of trade, usually 100 shares of the underlying security, changes hands.
@@ -64,11 +49,6 @@ namespace QuantConnect.Securities.Option
         internal void SetContractUnitOfTrade(int unitOfTrade)
         {
             ContractUnitOfTrade = unitOfTrade;
-        }
-
-        internal void SetContractMultiplier(decimal multiplier)
-        {
-            _contractMultiplier = multiplier;
         }
     }
 }

@@ -14,7 +14,10 @@
 */
 
 using NUnit.Framework;
+using Python.Runtime;
 using QuantConnect.Data;
+using System;
+using System.Collections.Generic;
 
 namespace QuantConnect.Tests.Common.Data
 {
@@ -46,6 +49,45 @@ namespace QuantConnect.Tests.Common.Data
             var two = new SubscriptionDataSource("source", SubscriptionTransportMedium.RemoteFile);
             Assert.IsTrue(one != two);
             Assert.IsTrue(!one.Equals(two));
+        }
+
+        [Test]
+        public void SupportsPythonDictionaryHeaders()
+        {
+            using (Py.GIL())
+            {
+                using var headers = new PyDict();
+                headers.SetItem("Authorization".ToPython(), "Basic test-token".ToPython());
+                headers.SetItem("X-Api-Key".ToPython(), "abc123".ToPython());
+
+                var dataSource = new SubscriptionDataSource("https://example.com", SubscriptionTransportMedium.RemoteFile, FileFormat.Csv, headers);
+                CollectionAssert.AreEquivalent(new[]
+                {
+                    new KeyValuePair<string, string>("Authorization", "Basic test-token"),
+                    new KeyValuePair<string, string>("X-Api-Key", "abc123")
+                }, dataSource.Headers);
+            }
+        }
+
+        [Test]
+        public void SupportsNullPythonDictionaryHeaders()
+        {
+            var dataSource = new SubscriptionDataSource("https://example.com", SubscriptionTransportMedium.RemoteFile, FileFormat.Csv, (PyObject)null);
+            Assert.IsEmpty(dataSource.Headers);
+        }
+
+        [Test]
+        public void ThrowsForInvalidPythonHeadersType()
+        {
+            using (Py.GIL())
+            {
+                using var invalidHeaders = "invalid-headers".ToPython();
+
+                var exception = Assert.Throws<ArgumentException>(() =>
+                    new SubscriptionDataSource("https://example.com", SubscriptionTransportMedium.RemoteFile, FileFormat.Csv, invalidHeaders));
+
+                StringAssert.Contains("ConvertToDictionary cannot be used", exception.Message);
+            }
         }
     }
 }

@@ -13,7 +13,6 @@
  * limitations under the License.
 */
 
-using System;
 using NUnit.Framework;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
@@ -27,12 +26,24 @@ namespace QuantConnect.Tests.Common.Securities.Cfd
         [Test]
         public void ConstructorExtractsQuoteCurrency()
         {
-            var symbol = Symbol.Create("DE30EUR", SecurityType.Cfd, Market.Oanda);
-            var config = new SubscriptionDataConfig(typeof(TradeBar), symbol, Resolution.Minute, TimeZones.Utc, TimeZones.NewYork, true, true, true);
-            var symbolProperties = new SymbolProperties("Dax German index", "EUR", 1, 1, 1, string.Empty);
-            var cfd = new QuantConnect.Securities.Cfd.Cfd(SecurityExchangeHours.AlwaysOpen(config.DataTimeZone), new Cash("EUR", 0, 0), config, symbolProperties, ErrorCurrencyConverter.Instance, RegisteredSecurityDataTypesProvider.Null);
+            var cfd = CreateCfd(contractMultiplier: 1m);
             Assert.AreEqual("EUR", cfd.QuoteCurrency.Symbol);
         }
 
+        [Test]
+        public void ContractMultiplierCanBeSetByUser()
+        {
+            var cfd = CreateCfd(contractMultiplier: 1m);
+            cfd.ContractMultiplier = 5m;
+            Assert.AreEqual(5m, cfd.ContractMultiplier);
+        }
+
+        private static QuantConnect.Securities.Cfd.Cfd CreateCfd(decimal contractMultiplier)
+        {
+            var symbol = Symbol.Create("DE30EUR", SecurityType.Cfd, Market.Oanda);
+            var config = new SubscriptionDataConfig(typeof(TradeBar), symbol, Resolution.Minute, TimeZones.Utc, TimeZones.NewYork, true, true, true);
+            var symbolProperties = new SymbolProperties("Dax German index", "EUR", contractMultiplier, 1, 1, string.Empty);
+            return new QuantConnect.Securities.Cfd.Cfd(SecurityExchangeHours.AlwaysOpen(config.DataTimeZone), new Cash("EUR", 0, 0), config, symbolProperties, ErrorCurrencyConverter.Instance, RegisteredSecurityDataTypesProvider.Null);
+        }
     }
 }
