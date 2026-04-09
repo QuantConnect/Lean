@@ -54,7 +54,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Total Orders", "29"},
             {"Average Win", "0.36%"},
             {"Average Loss", "-0.49%"},
-            {"Compounding Annual Return", "30.410%"},
+            {"Compounding Annual Return", "30.800%"},
             {"Drawdown", "1.800%"},
             {"Expectancy", "0.335"},
             {"Start Equity", "100000"},
