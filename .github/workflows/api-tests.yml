@@ -11,13 +11,23 @@ jobs:
   build:
     runs-on: ubuntu-24.04
     # Only run on push events (not on pull_request) for security reasons in order to be able to use secrets.
-    # Skip this job when required secrets are missing (common on forks) instead of failing tests with empty values.
-    if: ${{ github.event_name == 'push' && secrets.QC_JOB_USER_ID != '' && secrets.QC_API_ACCESS_TOKEN != '' && secrets.QC_JOB_ORGANIZATION_ID != '' }}
+    if: ${{ github.event_name == 'push' }}
     steps:
       - name: Checkout
         uses: actions/checkout@v2
+
+      - name: Check API Test Secrets
+        id: check-secrets
+        run: |
+          if [[ -n "${{ secrets.QC_JOB_USER_ID }}" && -n "${{ secrets.QC_API_ACCESS_TOKEN }}" && -n "${{ secrets.QC_JOB_ORGANIZATION_ID }}" ]]; then
+            echo "available=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "available=false" >> "$GITHUB_OUTPUT"
+            echo "::notice::Skipping API tests because required secrets are missing."
+          fi
         
       - name: Liberate disk space
+        if: steps.check-secrets.outputs.available == 'true'
         uses: jlumbroso/free-disk-space@main
         with:
           tool-cache: true
@@ -26,11 +36,13 @@ jobs:
           swap-storage: false
 
       - name: Define docker helper
+        if: steps.check-secrets.outputs.available == 'true'
         run: |
           echo 'runInContainer() { docker exec test-container "$@"; }' > $HOME/ci_functions.sh
           echo "BASH_ENV=$HOME/ci_functions.sh" >> $GITHUB_ENV
 
       - name: Start container
+        if: steps.check-secrets.outputs.available == 'true'
         run: |
           docker run -d \
             --workdir /__w/Lean/Lean \
@@ -44,9 +56,14 @@ jobs:
             tail -f /dev/null
 
       - name: Run API Tests
+        if: steps.check-secrets.outputs.available == 'true'
         run: |
           # Build
           runInContainer dotnet build /p:Configuration=Release /v:quiet /p:WarningLevel=1 QuantConnect.Lean.sln
           
           # Run Projects tests
           runInContainer dotnet test ./Tests/bin/Release/QuantConnect.Tests.dll --blame-hang-timeout 7minutes --blame-crash --logger "console;verbosity=detailed" --filter "FullyQualifiedName=QuantConnect.Tests.API.ProjectTests|FullyQualifiedName=QuantConnect.Tests.API.ObjectStoreTests" -- TestRunParameters.Parameter\(name=\"log-handler\", value=\"ConsoleErrorLogHandler\"\)
+
+      - name: API Tests Skipped
+        if: steps.check-secrets.outputs.available != 'true'
+        run: echo "Required API secrets are not configured for this repository. Skipping API tests."
