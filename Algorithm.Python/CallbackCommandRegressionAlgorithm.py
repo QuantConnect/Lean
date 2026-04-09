@@ -11,6 +11,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from typing import Callable
 from AlgorithmImports import *
 
 class InvalidCommand():
@@ -51,6 +52,9 @@ class BoolCommand(Command):
 ### Regression algorithm asserting the behavior of different callback commands call
 ### </summary>
 class CallbackCommandRegressionAlgorithm(QCAlgorithm):
+    link: Callable[..., str]
+    broadcast_command: Callable[..., object]
+
     def initialize(self):
         '''Initialise the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must initialized.'''
 

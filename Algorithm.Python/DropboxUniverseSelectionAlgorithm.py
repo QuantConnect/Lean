@@ -51,12 +51,7 @@ class DropboxUniverseSelectionAlgorithm(QCAlgorithm):
         # backtest - first cache the entire file
         if len(self._backtest_symbols_per_day) == 0:
 
-            # No need for headers for authorization with dropbox, these two lines are for example purposes 
-            byte_key = base64.b64encode("UserName:Password".encode('ASCII'))
-            # The headers must be passed to the Download method as dictionary
-            headers = { 'Authorization' : f'Basic ({byte_key.decode("ASCII")})' }
-
-            str = self.download("https://www.dropbox.com/s/ae1couew5ir3z9y/daily-stock-picker-backtest.csv?dl=1", headers)
+            str = self.download("https://www.dropbox.com/s/ae1couew5ir3z9y/daily-stock-picker-backtest.csv?dl=1")
             for line in str.splitlines():
                 data = line.split(',')
                 self._backtest_symbols_per_day[data[0]] = data[1:]

@@ -11,6 +11,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from typing import Optional, cast
 from AlgorithmImports import *
 from CustomBrokerageModelRegressionAlgorithm import CustomBrokerageModel
 
@@ -55,5 +56,5 @@ class CustomSettlementModel:
         return None
 
 class CustomBrokerageModelWithCustomSettlementModel(CustomBrokerageModel):
-    def get_settlement_model(self, security: Security) -> ISettlementModel:
-        return CustomSettlementModel()
+    def get_settlement_model(self, security: Security, account_type: Optional[AccountType] = None) -> ISettlementModel:
+        return cast(ISettlementModel, CustomSettlementModel())

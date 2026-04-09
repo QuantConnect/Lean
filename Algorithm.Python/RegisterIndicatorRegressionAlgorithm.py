@@ -11,6 +11,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from typing import cast
 from AlgorithmImports import *
 from CustomDataRegressionAlgorithm import Bitcoin
 
@@ -43,7 +44,7 @@ class RegisterIndicatorRegressionAlgorithm(QCAlgorithm):
         # We use the TimeDelta overload to fetch the consolidator
         consolidator = self.resolve_consolidator(_symbol, timedelta(minutes=1), QuoteBar)
         # We specify a custom selector to be used
-        self.register_indicator(_symbol, indicator2, consolidator, lambda bar: (self.set_selector_called(0), bar)[1])
+        self.register_indicator(_symbol, indicator2, consolidator, lambda bar: cast(float, (self.set_selector_called(0), bar)[1]))
         self._indicators.append(indicator2)
 
         # We use a IndicatorBase<IndicatorDataPoint> with QuoteBar data and a custom selector

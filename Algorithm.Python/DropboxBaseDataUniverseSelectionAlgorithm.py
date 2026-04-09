@@ -45,7 +45,7 @@ class DropboxBaseDataUniverseSelectionAlgorithm(QCAlgorithm):
 
         self._changes = None
 
-    def stock_data_source(self, data: list[DynamicData]) -> list[Symbol]:
+    def stock_data_source(self, data) -> list[Symbol]:
         list = []
         for item in data:
             for symbol in item["Symbols"]:
