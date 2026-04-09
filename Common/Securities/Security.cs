@@ -536,6 +536,12 @@ namespace QuantConnect.Securities
         public virtual decimal Price => Cache.Price;
 
         /// <summary>
+        /// Gets the last price observed during regular market hours.
+        /// Remains frozen when the exchange is closed
+        /// </summary>
+        public decimal LastMarketPrice { get; private set; }
+
+        /// <summary>
         /// Leverage for this Security.
         /// </summary>
         public virtual decimal Leverage => Holdings.Leverage;
@@ -1130,6 +1136,10 @@ namespace QuantConnect.Securities
             if (data is OpenInterest || data.Price == 0m) return;
             Holdings.UpdateMarketPrice(Price);
             VolatilityModel.Update(this, data);
+            if (Price != 0 && _localTimeKeeper != null && Exchange.ExchangeOpen)
+            {
+                LastMarketPrice = Price;
+            }
         }
 
         /// <summary>

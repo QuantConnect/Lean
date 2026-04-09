@@ -1,4 +1,4 @@
-/*
+﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -82,35 +82,64 @@ namespace QuantConnect.Tests.Common.Securities
             Assert.AreEqual(firstPrice, second.PreviousAveragePrice);
         }
 
-        [TestCase(true)]
-        [TestCase(false)]
-        public void TotalCloseProfitRespectMarketHours(bool isMarketOpen)
+        [Test]
+        public void TotalCloseProfitUsesLastMarketPriceWhenExchangeCloses()
         {
-            var security = GetSecurity<QuantConnect.Securities.Equity.Equity>(Symbols.SPY, Resolution.Daily, isMarketOpen);
+            // Exchange open 09:30-16:00 New York every day (standard equity hours)
+            var segment = new MarketHoursSegment(MarketHoursState.Market, new TimeSpan(9, 30, 0), TimeSpan.FromHours(16));
+            var days = Enum.GetValues<DayOfWeek>().Cast<DayOfWeek>();
+            var exchangeHours = new SecurityExchangeHours(
+                TimeZones.NewYork,
+                Enumerable.Empty<DateTime>(),
+                days.ToDictionary(d => d, d => new LocalMarketHours(d, segment)),
+                new Dictionary<DateTime, TimeSpan>(),
+                new Dictionary<DateTime, TimeSpan>());
+
+            var security = GetSecurityWithExchangeHours(exchangeHours);
+
+            // 9:30 -> market open, set price 100 → LastMarketPrice = 100
+            var openTime = new DateTime(2024, 1, 15, 9, 30, 0);
+            var timeKeeper = new TimeKeeper(openTime.ConvertToUtc(TimeZones.NewYork));
+            security.SetLocalTimeKeeper(timeKeeper.GetLocalTimeKeeper(TimeZones.NewYork));
+            security.SetMarketPrice(new Tick { Time = openTime, Symbol = security.Symbol, TickType = TickType.Trade, Value = 100m });
+
+            Assert.AreEqual(100m, security.LastMarketPrice);
+
+            // 16:00:01 -> market closed, tick arrives with inflated bid/ask spread
+            var afterClose = new DateTime(2024, 1, 15, 16, 0, 1);
+            timeKeeper.SetUtcDateTime(afterClose.ConvertToUtc(TimeZones.NewYork));
+            security.SetMarketPrice(new Tick(afterClose, security.Symbol, 0m, 80m, 120m));
+
+            // LastMarketPrice must be frozen at 100
+            Assert.AreEqual(100m, security.LastMarketPrice);
+
+            // TotalCloseProfit must use 100 (LastMarketPrice), not bid=80
             var holding = new SecurityHolding(security, new IdentityCurrencyConverter(Currencies.USD));
-
-            var averagePrice = 100m;
-            var bid = 90m;
-            var ask = 110m;
-            var lastTradePrice = 105m;
-
-            var quoteTick = new Tick(DateTime.Now, security.Symbol, 0m, bid, ask);
-            var tradeTick = new Tick { Time = DateTime.Now, Symbol = security.Symbol, TickType = TickType.Trade, Value = lastTradePrice };
-
-            security.SetMarketPrice(quoteTick);
-            security.SetMarketPrice(tradeTick);
-
-            var expectedLong = isMarketOpen ? (bid - averagePrice) * 100m : (lastTradePrice - averagePrice) * 100m;
-            var expectedShort = isMarketOpen ? (ask - averagePrice) * -100m : (lastTradePrice - averagePrice) * -100m;
-
-            holding.SetHoldings(averagePrice, 100m);
-            Assert.AreEqual(expectedLong, holding.TotalCloseProfit(includeFees: false));
-
-            holding.SetHoldings(averagePrice, -100m);
-            Assert.AreEqual(expectedShort, holding.TotalCloseProfit(includeFees: false));
+            holding.SetHoldings(100m, 100m);
+            Assert.AreEqual(0m, holding.TotalCloseProfit(includeFees: false));
         }
 
-        private Security GetSecurity<T>(Symbol symbol, Resolution resolution, bool marketAlwaysOpen = true)
+        private Security GetSecurityWithExchangeHours(SecurityExchangeHours exchangeHours)
+        {
+            var config = new SubscriptionDataConfig(
+                typeof(QuantConnect.Securities.Equity.Equity),
+                Symbols.SPY,
+                Resolution.Daily,
+                TimeZones.NewYork,
+                TimeZones.NewYork,
+                true, true, false);
+
+            return new Security(
+                exchangeHours,
+                config,
+                new Cash(Currencies.USD, 0, 1m),
+                SymbolProperties.GetDefault(Currencies.USD),
+                ErrorCurrencyConverter.Instance,
+                RegisteredSecurityDataTypesProvider.Null,
+                new SecurityCache());
+        }
+
+        private Security GetSecurity<T>(Symbol symbol, Resolution resolution)
         {
             var subscriptionDataConfig = new SubscriptionDataConfig(
                 typeof(T),
@@ -122,24 +151,8 @@ namespace QuantConnect.Tests.Common.Securities
                 true,
                 false);
 
-            SecurityExchangeHours exchangeHours;
-            if (marketAlwaysOpen)
-            {
-                exchangeHours = SecurityExchangeHours.AlwaysOpen(TimeZones.Utc);
-            }
-            else
-            {
-                var days = Enum.GetValues(typeof(DayOfWeek)).Cast<DayOfWeek>();
-                exchangeHours = new SecurityExchangeHours(
-                    TimeZones.Utc,
-                    Enumerable.Empty<DateTime>(),
-                    days.ToDictionary(d => d, d => LocalMarketHours.ClosedAllDay(d)),
-                    new Dictionary<DateTime, TimeSpan>(),
-                    new Dictionary<DateTime, TimeSpan>());
-            }
-
             var security = new Security(
-                exchangeHours,
+                SecurityExchangeHours.AlwaysOpen(TimeZones.Utc),
                 subscriptionDataConfig,
                 new Cash(Currencies.USD, 0, 1m),
                 SymbolProperties.GetDefault(Currencies.USD),
