@@ -14,18 +14,41 @@
 */
 
 using System;
+using System.Collections;
+using System.Collections.Generic;
 using Python.Runtime;
 using QuantConnect.Data;
 using QuantConnect.Data.Consolidators;
+using QuantConnect.Indicators;
 
 namespace QuantConnect.Python
 {
     /// <summary>
     /// Provides an Data Consolidator that wraps a <see cref="PyObject"/> object that represents a custom Python consolidator
     /// </summary>
-    public class DataConsolidatorPythonWrapper : BasePythonWrapper<IDataConsolidator>, IDataConsolidator
+    public class DataConsolidatorPythonWrapper : BasePythonWrapper<IDataConsolidator>, IDataConsolidator, IEnumerable<IBaseData>
     {
         internal PyObject Model => Instance;
+
+        /// <summary>
+        /// A rolling window keeping a history of the consolidated bars. The most recent bar is at index 0.
+        /// </summary>
+        public RollingWindow<IBaseData> Window { get; } = new RollingWindow<IBaseData>(WindowBase<IBaseData>.DefaultWindowSize);
+
+        /// <summary>
+        /// Indexes the history window, where index 0 is the most recently consolidated bar.
+        /// </summary>
+        public IBaseData this[int i] => Window[i];
+
+        /// <summary>
+        /// Returns an enumerator that iterates through the history window.
+        /// </summary>
+        public IEnumerator<IBaseData> GetEnumerator() => Window.GetEnumerator();
+
+        /// <summary>
+        /// Returns an enumerator that iterates through the history window.
+        /// </summary>
+        IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
 
         /// <summary>
         /// Gets the most recently consolidated piece of data. This will be null if this consolidator
@@ -35,6 +58,16 @@ namespace QuantConnect.Python
         {
             get { return GetProperty<IBaseData>(nameof(Consolidated)); }
         }
+
+        /// <summary>
+        /// Gets the most recently consolidated piece of data. Alias of <see cref="Consolidated"/>.
+        /// </summary>
+        public IBaseData Current => Consolidated;
+
+        /// <summary>
+        /// Gets the previously consolidated piece of data, or null if fewer than two bars have been produced.
+        /// </summary>
+        public IBaseData Previous => Window.Count > 1 ? Window[1] : null;
 
         /// <summary>
         /// Gets a clone of the data being currently consolidated
@@ -84,6 +117,7 @@ namespace QuantConnect.Python
         public DataConsolidatorPythonWrapper(PyObject consolidator)
             : base(consolidator, true)
         {
+            DataConsolidated += (_, bar) => Window.Add(bar);
         }
 
         /// <summary>
@@ -116,6 +150,7 @@ namespace QuantConnect.Python
         public void Reset()
         {
             InvokeMethod(nameof(Reset));
+            Window.Reset();
         }
     }
 }
