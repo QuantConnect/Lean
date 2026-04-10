@@ -116,7 +116,7 @@ namespace QuantConnect.Tests.Common.Securities.CryptoFuture
             var buyingPower = cryptoFuture.BuyingPowerModel.GetBuyingPower(
                 new BuyingPowerParameters(algo.Portfolio, cryptoFuture, OrderDirection.Buy));
 
-            Assert.AreEqual(100m + algoCash, buyingPower.Value);
+            Assert.AreEqual(100m, buyingPower.Value);
         }
 
         [Test]
@@ -134,6 +134,44 @@ namespace QuantConnect.Tests.Common.Securities.CryptoFuture
 
             // Only BTC collateral counts (0 BTC), BNFCR is irrelevant for coin futures
             Assert.AreEqual(0, buyingPower.Value);
+        }
+
+        [Test]
+        public void BnfcrZeroBalanceIncludesSupplementaryCollateral()
+        {
+            var algo = GetBinanceFuturesAlgorithm();
+            var algoCash = algo.Portfolio.Cash;
+            var cryptoFuture = algo.AddCryptoFuture("BTCUSDT");
+            SetPrice(cryptoFuture, 16000);
+
+            // EU user: BNFCR present with zero balance, USDC is the real collateral
+            algo.SetCash("BNFCR", 0, 1);
+            algo.SetCash("USDC", 100, 1);
+
+            var buyingPower = cryptoFuture.BuyingPowerModel.GetBuyingPower(
+                new BuyingPowerParameters(algo.Portfolio, cryptoFuture, OrderDirection.Buy));
+
+            // BNFCR presence triggers supplementary collateral — USDC should be included
+            Assert.AreEqual(100m + algoCash, buyingPower.Value);
+        }
+
+        [Test]
+        public void BtcCollateralConvertedToQuoteCurrency()
+        {
+            var algo = GetBinanceFuturesAlgorithm();
+            var algoCash = algo.Portfolio.Cash;
+            var cryptoFuture = algo.AddCryptoFuture("BTCUSDC");
+            SetPrice(cryptoFuture, 16000);
+
+            // EU user: BNFCR present, 0.5 BTC as collateral @ $16,000
+            algo.SetCash("BNFCR", 0, 1);
+            algo.SetCash("BTC", 0.5m, 16000);
+
+            var buyingPower = cryptoFuture.BuyingPowerModel.GetBuyingPower(
+                new BuyingPowerParameters(algo.Portfolio, cryptoFuture, OrderDirection.Buy));
+
+            // 0 (USDC) + 0.5 * 16000 (BTC → USDC via USD) = 8000
+            Assert.AreEqual(8000m + algoCash, buyingPower.Value);
         }
 
         [Test]

@@ -20,11 +20,10 @@ namespace QuantConnect.Securities.CryptoFuture
     /// currencies as alternative collateral for non-coin (USDⓈ-M) futures.
     /// </summary>
     /// <remarks>
-    /// EU/EEA users under MiCA Credits Trading Mode use BNFCR (pegged 1:1 to USD) as the
-    /// cross-margin accounting currency. Binance stores the total available collateral pool
-    /// (all stablecoins combined, minus used margin) in BNFCR's availableBalance field.
-    /// This model reads that value as supplementary collateral for USDⓈ-M futures.
-    /// Non-EU users won't have BNFCR in their account — the check is a no-op for them.
+    /// EU/EEA users under MiCA Credits Trading Mode have BNFCR in their account.
+    /// When BNFCR is present, this model aggregates all supplementary collateral assets
+    /// using their walletBalance values converted to the primary collateral currency.
+    /// Non-EU accounts don't have BNFCR — the check is a no-op for them.
     /// See: https://www.binance.com/en/support/faq/detail/0e857c392a2d47cebde0af762d9255ae
     /// </remarks>
     public class BinanceCryptoFutureMarginModel : CryptoFutureMarginModel
@@ -40,8 +39,7 @@ namespace QuantConnect.Securities.CryptoFuture
 
         /// <summary>
         /// Gets the total collateral amount for a Binance crypto future, including supplementary
-        /// stable coin currencies that can serve as alternative collateral
-        /// (e.g. BNFCR for USDT-quoted futures on Binance).
+        /// collateral assets for EU/EEA accounts in MiCA Credits Trading Mode.
         /// For coin futures (e.g. BTCUSD), only the primary collateral (base currency) is used.
         /// </summary>
         /// <param name="portfolio">The algorithm's portfolio</param>
@@ -53,21 +51,34 @@ namespace QuantConnect.Securities.CryptoFuture
         {
             var total = primaryCollateral.Amount;
 
-            // Coin futures (e.g. BTCUSD) use only base currency as collateral - stable coins don't apply
+            // Coin futures (e.g. BTCUSD) use only base currency as collateral
             var cryptoFuture = (CryptoFuture)security;
             if (cryptoFuture.IsCryptoCoinFuture())
             {
                 return total;
             }
 
-            // BNFCR is available only for EU/EEA accounts (MiCA Credits Trading Mode).
-            // Its CashBook amount reflects availableBalance from the Binance API — the total
-            // cross-margin available balance across all stablecoins, already aggregated by Binance.
-            // Non-EU users won't have BNFCR in their CashBook, so TryGetValue returns false.
+            // BNFCR presence means EU/EEA account in MiCA Credits Trading Mode.
+            // Non-EU accounts don't have BNFCR in CashBook — skip entirely.
             var cashBook = portfolio.CashBook;
-            if (cashBook.TryGetValue("BNFCR", out var bnfcrCash) && bnfcrCash.Amount > 0)
+            if (!cashBook.TryGetValue("BNFCR", out _))
             {
-                total += cashBook.Convert(bnfcrCash.Amount, "BNFCR", primaryCollateral.Symbol);
+                return total;
+            }
+
+            // Aggregate all supplementary collateral assets using walletBalance values.
+            // Binance controls which assets are in the account — we sum everything
+            // that isn't the primary collateral and has a non-zero balance.
+            // Negative amounts (e.g. BNFCR fees) correctly reduce the total.
+            foreach (var kvp in cashBook)
+            {
+                var cash = kvp.Value;
+                if (cash == primaryCollateral || cash.Amount == 0)
+                {
+                    continue;
+                }
+
+                total += cashBook.Convert(cash.Amount, cash.Symbol, primaryCollateral.Symbol);
             }
 
             return total;
