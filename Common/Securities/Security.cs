@@ -1136,7 +1136,7 @@ namespace QuantConnect.Securities
             if (data is OpenInterest || data.Price == 0m) return;
             Holdings.UpdateMarketPrice(Price);
             VolatilityModel.Update(this, data);
-            if (Price != 0 && _localTimeKeeper != null && Exchange.ExchangeOpen)
+            if (_localTimeKeeper != null && Exchange.ExchangeOpen)
             {
                 LastMarketPrice = Price;
             }

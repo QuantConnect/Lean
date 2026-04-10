@@ -496,7 +496,7 @@ namespace QuantConnect.Securities
 
             // if we are long, we would need to sell against the bid
             var price = IsLong ? _security.BidPrice : _security.AskPrice;
-            if (price == 0 || (!_security.Exchange.ExchangeOpen && _security.LastMarketPrice != 0))
+            if (price == 0 || (!_security.Exchange.ExchangeOpen && _security.LastMarketPrice != 0 && _security.Type != SecurityType.Future))
             {
                 // Bid/Ask prices can both be equal to 0. This usually happens when we request our holdings from
                 // the brokerage, but only the last trade price was provided. Outside market hours, bid/ask spreads
