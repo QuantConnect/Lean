@@ -179,7 +179,7 @@ namespace QuantConnect.Securities
         /// </summary>
         public virtual decimal UnleveredHoldingsCost
         {
-            get { return HoldingsCost/Leverage; }
+            get { return HoldingsCost / Leverage; }
         }
 
         /// <summary>
@@ -358,7 +358,7 @@ namespace QuantConnect.Securities
             get
             {
                 if (AbsoluteHoldingsCost == 0) return 0m;
-                return UnrealizedProfit/AbsoluteHoldingsCost;
+                return UnrealizedProfit / AbsoluteHoldingsCost;
             }
         }
 
@@ -420,7 +420,7 @@ namespace QuantConnect.Securities
         /// </summary>
         public virtual void SetHoldings(decimal averagePrice, int quantity)
         {
-            SetHoldings(averagePrice, (decimal) quantity);
+            SetHoldings(averagePrice, (decimal)quantity);
         }
 
         /// <summary>
@@ -496,11 +496,12 @@ namespace QuantConnect.Securities
 
             // if we are long, we would need to sell against the bid
             var price = IsLong ? _security.BidPrice : _security.AskPrice;
-            if (price == 0)
+            if (price == 0 || (!_security.Exchange.ExchangeOpen && _security.LastMarketPrice != 0 && _security.Type != SecurityType.Future))
             {
                 // Bid/Ask prices can both be equal to 0. This usually happens when we request our holdings from
-                // the brokerage, but only the last trade price was provided.
-                price = _security.Price;
+                // the brokerage, but only the last trade price was provided. Outside market hours, bid/ask spreads
+                // widen significantly, so we prefer the last price observed during regular market hours
+                price = _security.LastMarketPrice != 0 ? _security.LastMarketPrice : _security.Price;
             }
 
             var entryValue = GetQuantityValue(quantityToUse, entryPrice ?? AveragePrice).InAccountCurrency;
