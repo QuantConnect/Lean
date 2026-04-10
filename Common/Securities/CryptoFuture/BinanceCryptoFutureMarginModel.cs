@@ -49,31 +49,30 @@ namespace QuantConnect.Securities.CryptoFuture
         protected override decimal GetTotalCollateralAmount(
             SecurityPortfolioManager portfolio, Security security, Cash primaryCollateral)
         {
-            var total = primaryCollateral.Amount;
-
             // Coin futures (e.g. BTCUSD) use only base currency as collateral
             var cryptoFuture = (CryptoFuture)security;
             if (cryptoFuture.IsCryptoCoinFuture())
             {
-                return total;
+                return primaryCollateral.Amount;
             }
 
             // BNFCR presence means EU/EEA account in MiCA Credits Trading Mode.
             // Non-EU accounts don't have BNFCR in CashBook — skip entirely.
             var cashBook = portfolio.CashBook;
-            if (!cashBook.TryGetValue("BNFCR", out _))
+            if (!cashBook.ContainsKey("BNFCR"))
             {
-                return total;
+                return primaryCollateral.Amount;
             }
 
-            // Aggregate all supplementary collateral assets using walletBalance values.
+            // Aggregate all collateral assets using walletBalance values.
             // Binance controls which assets are in the account — we sum everything
-            // that isn't the primary collateral and has a non-zero balance.
+            // with a non-zero balance, converting to the primary collateral currency.
             // Negative amounts (e.g. BNFCR fees) correctly reduce the total.
+            var total = 0m;
             foreach (var kvp in cashBook)
             {
                 var cash = kvp.Value;
-                if (cash == primaryCollateral || cash.Amount == 0)
+                if (cash.Amount == 0)
                 {
                     continue;
                 }
