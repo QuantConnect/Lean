@@ -14,6 +14,7 @@
 */
 
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using NUnit.Framework;
 using QuantConnect.Orders;
 using System;
@@ -123,6 +124,16 @@ namespace QuantConnect.Tests.Common.Orders
             }
             Assert.AreEqual(jsonFormat, serializedOrder);
             Assert.AreEqual(jsonFormat.GetHashCode(), serializedOrder.GetHashCode());
+        }
+
+        [Test]
+        public void SerializesOptionOrderValueUsingContractMultiplier()
+        {
+            var order = JsonConvert.DeserializeObject<ApiOrderResponse>(_camelCaseOptionExercise, _jsonSettings);
+            var serializedOrder = JsonConvert.SerializeObject(order, _jsonSettings);
+            var jObject = JObject.Parse(serializedOrder);
+
+            Assert.AreEqual(138513.986945000m, jObject["value"]?.Value<decimal>());
         }
 
         private const string _camelCaseMarketOrder = @"{
@@ -494,7 +505,7 @@ namespace QuantConnect.Tests.Common.Orders
             },
             ""securityType"": 2,
             ""direction"": 0,
-            ""value"": 1385.139869450,
+            ""value"": 138513.986945000,
             ""orderSubmissionData"": {
                 ""bidPrice"": 138.505714984,
                 ""askPrice"": 138.513986945,
@@ -1111,7 +1122,7 @@ namespace QuantConnect.Tests.Common.Orders
     },
     ""SecurityType"": 2,
     ""Direction"": 0,
-    ""Value"": 1385.139869450,
+    ""Value"": 138513.986945000,
     ""OrderSubmissionData"": {
         ""BidPrice"": 138.505714984,
         ""AskPrice"": 138.513986945,
