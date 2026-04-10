@@ -18,6 +18,7 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System.Collections.Generic;
 using QuantConnect.Orders.Serialization;
+using QuantConnect.Securities;
 
 namespace QuantConnect.Orders
 {
@@ -43,6 +44,12 @@ namespace QuantConnect.Orders
             var jObject = JObject.FromObject(orderResponse.Order);
             jObject["symbol"] = JToken.FromObject(orderResponse.Symbol);
             jObject["events"] = JToken.FromObject(orderResponse.Events);
+
+            if (TryGetSerializedOrderValue(orderResponse, out var orderValue))
+            {
+                jObject["value"] = JToken.FromObject(orderValue);
+            }
+
             jObject.WriteTo(writer);
         }
 
@@ -71,6 +78,31 @@ namespace QuantConnect.Orders
             }
 
             return new ApiOrderResponse(order, deserializedEvents ?? new(), deserializedSymbol);
+        }
+
+        private static bool TryGetSerializedOrderValue(ApiOrderResponse orderResponse, out decimal orderValue)
+        {
+            orderValue = 0;
+
+            var order = orderResponse?.Order;
+            var symbol = orderResponse?.Symbol ?? order?.Symbol;
+            if (order == null || symbol == null)
+            {
+                return false;
+            }
+
+            var defaultQuoteCurrency = string.IsNullOrWhiteSpace(order.PriceCurrency)
+                ? Currencies.USD
+                : order.PriceCurrency;
+            var symbolProperties = SymbolPropertiesDatabase.FromDataFolder().GetSymbolProperties(
+                symbol.ID.Market,
+                symbol,
+                symbol.ID.SecurityType,
+                defaultQuoteCurrency
+            );
+
+            orderValue = order.Value * symbolProperties.ContractMultiplier;
+            return true;
         }
     }
 }
