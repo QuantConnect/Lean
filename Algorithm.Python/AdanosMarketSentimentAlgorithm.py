@@ -12,6 +12,7 @@
 # limitations under the License.
 
 import json
+from typing import cast
 
 from AlgorithmImports import *
 
@@ -58,10 +59,10 @@ class AdanosMarketSentimentAlgorithm(QCAlgorithm):
         if not data.contains_key(self._sentiment_symbol):
             return
 
-        sentiment = data[self._sentiment_symbol]
+        sentiment = cast(AdanosSentiment, data[self._sentiment_symbol])
         buzz_score = float(sentiment.value)
-        bullish_percent = float(sentiment["BullishPercent"])
-        sentiment_score = float(sentiment["SentimentScore"])
+        bullish_percent = float(sentiment.bullish_percent)
+        sentiment_score = float(sentiment.sentiment_score)
 
         self.set_runtime_statistic("Adanos Buzz", f"{buzz_score:.1f}")
         self.set_runtime_statistic("Adanos Bullish %", f"{bullish_percent:.0f}")
@@ -77,6 +78,12 @@ class AdanosSentiment(PythonData):
     _lookback_days = 30
     _source_name = "news"
     _supported_sources = {"news", "reddit", "x", "polymarket"}
+    bullish_percent: int
+    sentiment_score: float
+    activity_count: int
+    coverage_count: int
+    trend: str
+    ticker: str
 
     @classmethod
     def configure(cls, api_key: str, source_name: str = "news", lookback_days: int = 30) -> None:
@@ -112,13 +119,19 @@ class AdanosSentiment(PythonData):
         point.time = self._extract_time(payload.get("daily_trend"), date)
         point.end_time = point.time + timedelta(days=1)
         point.value = float(payload.get("buzz_score") or 0.0)
+        point.sentiment_score = float(payload.get("sentiment_score") or 0.0)
+        point.bullish_percent = int(payload.get("bullish_pct") or 0)
+        point.activity_count = self._activity_count(payload)
+        point.coverage_count = self._coverage_count(payload)
+        point.trend = payload.get("trend") or "unknown"
+        point.ticker = payload.get("ticker") or self._resolve_ticker(config.symbol)
         point["BuzzScore"] = float(payload.get("buzz_score") or 0.0)
-        point["SentimentScore"] = float(payload.get("sentiment_score") or 0.0)
-        point["BullishPercent"] = int(payload.get("bullish_pct") or 0)
-        point["ActivityCount"] = self._activity_count(payload)
-        point["CoverageCount"] = self._coverage_count(payload)
-        point["Trend"] = payload.get("trend") or "unknown"
-        point["Ticker"] = payload.get("ticker") or self._resolve_ticker(config.symbol)
+        point["SentimentScore"] = point.sentiment_score
+        point["BullishPercent"] = point.bullish_percent
+        point["ActivityCount"] = point.activity_count
+        point["CoverageCount"] = point.coverage_count
+        point["Trend"] = point.trend
+        point["Ticker"] = point.ticker
         return point
 
     @staticmethod
