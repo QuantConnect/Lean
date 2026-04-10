@@ -100,7 +100,7 @@ namespace QuantConnect.Tests.Common.Orders
             Assert.AreEqual(orderRequest.OrderId, ticket.SubmitRequest.OrderId);
             Assert.AreEqual(1000, ticket.SubmitRequest.Quantity);
             Assert.AreEqual("Pepe", ticket.SubmitRequest.Tag);
-            Assert.AreEqual("This operation is not allowed in Initialize or during warm up: OrderRequest.Submit. Please move this code to the OnWarmupFinished() method.", ticket.SubmitRequest.Response.ErrorMessage);
+            Assert.AreEqual("This operation is not allowed in Initialize or during warm up: OrderRequest.Submit. Please move this code to the OnWarmupFinished() method. In Python, use on_warmup_finished().", ticket.SubmitRequest.Response.ErrorMessage);
         }
 
         [TestCase(8, 0, true, Description = "8 AM - valid submission")]

@@ -366,7 +366,7 @@ namespace QuantConnect
             public static string WarmingUp(Orders.OrderRequest request)
             {
                 return Invariant($@"This operation is not allowed in Initialize or during warm up: OrderRequest.{
-                    request.OrderRequestType}. Please move this code to the OnWarmupFinished() method.");
+                    request.OrderRequestType}. Please move this code to the OnWarmupFinished() method. In Python, use on_warmup_finished().");
             }
         }
 
