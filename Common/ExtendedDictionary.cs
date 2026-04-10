@@ -160,10 +160,8 @@ namespace QuantConnect
             var pyDict = new PyDict();
             foreach (var key in sequence.Where(k => k != null))
             {
-                value = get(key, value);
-                using var pyKey = key.ToPython();
-                using var pyValue = value.ToPython();
-                pyDict.SetItem(pyKey, pyValue);
+                var pyValue = get(key, value);
+                pyDict.SetItem(key.ToPython(), pyValue.ToPython());
             }
             return pyDict;
         }
