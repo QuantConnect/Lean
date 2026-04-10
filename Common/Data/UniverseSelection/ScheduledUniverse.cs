@@ -107,7 +107,10 @@ namespace QuantConnect.Data.UniverseSelection
         /// </summary>
         /// <param name="startTimeUtc">The start time of the range in UTC</param>
         /// <param name="endTimeUtc">The end time of the range in UTC</param>
-        /// <returns>An enumerator of UTC DateTimes that defines when this universe will be invoked</returns>
+        /// <returns>
+        /// An enumerator of UTC DateTimes that defines when this universe will be invoked,
+        /// including trigger times at both bounds when they match the configured date/time rules.
+        /// </returns>
         public IEnumerable<DateTime> GetTriggerTimes(DateTime startTimeUtc, DateTime endTimeUtc, MarketHoursDatabase marketHoursDatabase)
         {
             var startTimeLocal = startTimeUtc.ConvertFromUtc(Configuration.ExchangeTimeZone);
@@ -115,27 +118,32 @@ namespace QuantConnect.Data.UniverseSelection
 
             // define date/time rule enumerable
             var dates = _dateRule.GetDates(startTimeLocal, endTimeLocal);
-            var times = _timeRule.CreateUtcEventTimes(dates).GetEnumerator();
+            using var times = _timeRule.CreateUtcEventTimes(dates).GetEnumerator();
 
             // Make sure and filter out any times before our start time
             // GH #5440
+            var hasNext = false;
             do
             {
-                if (!times.MoveNext())
+                hasNext = times.MoveNext();
+            }
+            while (hasNext && times.Current < startTimeUtc);
+
+            if (!hasNext)
+            {
+                yield break;
+            }
+
+            // Start yielding times within the requested time range
+            do
+            {
+                if (times.Current > endTimeUtc)
                 {
-                    times.Dispose();
                     yield break;
                 }
-            }
-            while (times.Current < startTimeUtc);
-
-            // Start yielding times
-            do
-            {
                 yield return times.Current;
             }
             while (times.MoveNext());
-            times.Dispose();
         }
 
         private static SubscriptionDataConfig CreateConfiguration(DateTimeZone timeZone, IDateRule dateRule, ITimeRule timeRule)

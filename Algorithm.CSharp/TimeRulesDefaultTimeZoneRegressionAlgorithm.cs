@@ -90,7 +90,7 @@ namespace QuantConnect.Algorithm.CSharp
             {
                 throw new RegressionTestException($"Unexpected universe selection call count: {_selectionMethodCallCount}");
             }
-            if (_scheduleEventEveryCallCount != 130)
+            if (_scheduleEventEveryCallCount != 127)
             {
                 throw new RegressionTestException($"Unexpected scheduled event call count: {_scheduleEventEveryCallCount}");
             }
