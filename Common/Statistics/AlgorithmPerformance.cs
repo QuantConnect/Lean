@@ -43,7 +43,7 @@ namespace QuantConnect.Statistics
         /// Initializes a new instance of the <see cref="AlgorithmPerformance"/> class
         /// </summary>
         /// <param name="trades">The list of closed trades</param>
-        /// <param name="profitLoss">Trade record of profits and losses</param>
+        /// <param name="profitLoss">Transaction record of profits and losses</param>
         /// <param name="equity">The list of daily equity values</param>
         /// <param name="portfolioTurnover">The algorithm portfolio turnover</param>
         /// <param name="listPerformance">The list of algorithm performance values</param>

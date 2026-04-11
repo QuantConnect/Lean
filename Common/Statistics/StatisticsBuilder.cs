@@ -32,7 +32,7 @@ namespace QuantConnect.Statistics
         /// Generates the statistics and returns the results
         /// </summary>
         /// <param name="trades">The list of closed trades</param>
-        /// <param name="profitLoss">Trade record of profits and losses</param>
+        /// <param name="profitLoss">Transaction record of profits and losses</param>
         /// <param name="pointsEquity">The list of daily equity values</param>
         /// <param name="pointsPerformance">The list of algorithm performance values</param>
         /// <param name="pointsBenchmark">The list of benchmark values</param>
@@ -84,7 +84,7 @@ namespace QuantConnect.Statistics
         /// <param name="fromDate">The initial date of the range</param>
         /// <param name="toDate">The final date of the range</param>
         /// <param name="trades">The list of closed trades</param>
-        /// <param name="profitLoss">Trade record of profits and losses</param>
+        /// <param name="profitLoss">Transaction record of profits and losses</param>
         /// <param name="equity">The list of daily equity values</param>
         /// <param name="pointsPerformance">The list of algorithm performance values</param>
         /// <param name="pointsBenchmark">The list of benchmark values</param>
@@ -154,7 +154,7 @@ namespace QuantConnect.Statistics
         /// <param name="firstDate">The first date of the total period</param>
         /// <param name="lastDate">The last date of the total period</param>
         /// <param name="trades">The list of closed trades</param>
-        /// <param name="profitLoss">Trade record of profits and losses</param>
+        /// <param name="profitLoss">Transaction record of profits and losses</param>
         /// <param name="equity">The list of daily equity values</param>
         /// <param name="pointsPerformance">The list of algorithm performance values</param>
         /// <param name="pointsBenchmark">The list of benchmark values</param>

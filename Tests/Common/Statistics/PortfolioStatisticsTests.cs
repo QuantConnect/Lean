@@ -60,6 +60,42 @@ namespace QuantConnect.Tests.Common.Statistics
             Assert.AreEqual(1.4673913043478260869565217388m, statistics.ProfitLossRatio);
         }
 
+        [Test]
+        public void WinLossRatesCanDifferFromAverageRatesWhenUsingTransactionClassification()
+        {
+            var startTime = _startTime;
+            var profitLoss = new SortedDictionary<DateTime, decimal>
+            {
+                { startTime, -50m },
+                { startTime.AddMinutes(1), 50m }
+            };
+            var equity = new SortedDictionary<DateTime, decimal>
+            {
+                { startTime, 100m },
+                { startTime.AddDays(1), 100m }
+            };
+
+            var statistics = new PortfolioStatistics(
+                profitLoss,
+                equity,
+                new SortedDictionary<DateTime, decimal>(),
+                new List<double> { 0, 0 },
+                new List<double> { 0, 0 },
+                100m,
+                new InterestRateProvider(),
+                _tradingDaysPerYear,
+                winCount: 2,
+                lossCount: 0);
+
+            // Average rates are based on signed transaction profit/loss values and running capital.
+            Assert.AreEqual(1m, statistics.AverageWinRate);
+            Assert.AreEqual(-0.5m, statistics.AverageLossRate);
+
+            // Win/loss rates can use transaction classification (for example, ITM assignment).
+            Assert.AreEqual(1m, statistics.WinRate);
+            Assert.AreEqual(0m, statistics.LossRate);
+        }
+
 
         public static IEnumerable<TestCaseData> StatisticsCases
         {

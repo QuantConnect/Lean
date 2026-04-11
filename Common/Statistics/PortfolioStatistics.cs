@@ -30,13 +30,13 @@ namespace QuantConnect.Statistics
     public class PortfolioStatistics
     {
         /// <summary>
-        /// The average rate of return for winning trades
+        /// The average rate of return for winning transactions
         /// </summary>
         [JsonConverter(typeof(JsonRoundingConverter))]
         public decimal AverageWinRate { get; set; }
 
         /// <summary>
-        /// The average rate of return for losing trades
+        /// The average rate of return for losing transactions
         /// </summary>
         [JsonConverter(typeof(JsonRoundingConverter))]
         public decimal AverageLossRate { get; set; }
@@ -49,16 +49,16 @@ namespace QuantConnect.Statistics
         public decimal ProfitLossRatio { get; set; }
 
         /// <summary>
-        /// The ratio of the number of winning trades to the total number of trades
+        /// The ratio of the number of winning transactions to the total number of transactions
         /// </summary>
-        /// <remarks>If the total number of trades is zero, WinRate is set to zero</remarks>
+        /// <remarks>If the total number of transactions is zero, WinRate is set to zero</remarks>
         [JsonConverter(typeof(JsonRoundingConverter))]
         public decimal WinRate { get; set; }
 
         /// <summary>
-        /// The ratio of the number of losing trades to the total number of trades
+        /// The ratio of the number of losing transactions to the total number of transactions
         /// </summary>
-        /// <remarks>If the total number of trades is zero, LossRate is set to zero</remarks>
+        /// <remarks>If the total number of transactions is zero, LossRate is set to zero</remarks>
         [JsonConverter(typeof(JsonRoundingConverter))]
         public decimal LossRate { get; set; }
 
@@ -195,7 +195,7 @@ namespace QuantConnect.Statistics
         /// <summary>
         /// Initializes a new instance of the <see cref="PortfolioStatistics"/> class
         /// </summary>
-        /// <param name="profitLoss">Trade record of profits and losses</param>
+        /// <param name="profitLoss">Transaction record of profits and losses</param>
         /// <param name="equity">The list of daily equity values</param>
         /// <param name="portfolioTurnover">The algorithm portfolio turnover</param>
         /// <param name="listPerformance">The list of algorithm performance values</param>
@@ -204,10 +204,10 @@ namespace QuantConnect.Statistics
         /// <param name="riskFreeInterestRateModel">The risk free interest rate model to use</param>
         /// <param name="tradingDaysPerYear">The number of trading days per year</param>
         /// <param name="winCount">
-        /// The number of wins, including ITM options with profitLoss less than 0.
+        /// The number of winning transactions, including ITM options with profitLoss less than 0.
         /// If this and <paramref name="lossCount"/> are null, they will be calculated from <paramref name="profitLoss"/>
         /// </param>
-        /// <param name="lossCount">The number of losses</param>
+        /// <param name="lossCount">The number of losing transactions</param>
         public PortfolioStatistics(
             SortedDictionary<DateTime, decimal> profitLoss,
             SortedDictionary<DateTime, decimal> equity,
