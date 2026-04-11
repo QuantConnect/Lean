@@ -67,7 +67,7 @@ namespace QuantConnect.Securities
         }
 
         /// <summary>
-        /// Trade record of profits and losses for each trade statistics calculations
+        /// Transaction record of profits and losses for each statistics calculation
         /// </summary>
         /// <remarks>Will return a shallow copy, modifying the returned container
         /// will have no effect <see cref="AddTransactionRecord"/></remarks>
@@ -111,7 +111,7 @@ namespace QuantConnect.Securities
         }
 
         /// <summary>
-        /// Trade record of profits and losses for each trade statistics calculations that are considered winning trades
+        /// Transaction record of profits and losses that are considered winning transactions
         /// </summary>
         public Dictionary<DateTime, decimal> WinningTransactions
         {
@@ -125,7 +125,7 @@ namespace QuantConnect.Securities
         }
 
         /// <summary>
-        /// Trade record of profits and losses for each trade statistics calculations that are considered losing trades
+        /// Transaction record of profits and losses that are considered losing transactions
         /// </summary>
         public Dictionary<DateTime, decimal> LosingTransactions
         {
