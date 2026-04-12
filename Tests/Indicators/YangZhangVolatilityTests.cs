@@ -99,5 +99,104 @@ namespace QuantConnect.Tests.Indicators
             Assert.AreEqual(expected, (double)yzv.Current.Value, 1e-10,
                 "YZV at bar 4 should match hand-computed value");
         }
+
+        [Test]
+        public void MinimumPeriodOfTwo()
+        {
+            var yzv = new YangZhangVolatility(2);
+            var time = new DateTime(2024, 1, 1);
+
+            // Bar 1 (seed)
+            yzv.Update(new TradeBar(time, Symbols.SPY, 100m, 102m, 99m, 101m, 1000));
+            Assert.IsFalse(yzv.IsReady);
+
+            // Bar 2
+            yzv.Update(new TradeBar(time.AddDays(1), Symbols.SPY, 101.5m, 103m, 100m, 102m, 1000));
+            Assert.IsFalse(yzv.IsReady);
+
+            // Bar 3: now ready (Samples = 3 >= 2 + 1)
+            yzv.Update(new TradeBar(time.AddDays(2), Symbols.SPY, 102.5m, 104m, 101m, 103m, 1000));
+            Assert.IsTrue(yzv.IsReady);
+            Assert.Greater((double)yzv.Current.Value, 0,
+                "YZV(2) should produce a positive volatility estimate");
+        }
+
+        [Test]
+        public void FlatMarketReturnsZero()
+        {
+            // When all OHLC prices are identical every bar, all log returns are 0
+            var yzv = new YangZhangVolatility(3);
+            var time = new DateTime(2024, 1, 1);
+
+            for (int i = 0; i < 5; i++)
+            {
+                yzv.Update(new TradeBar(time.AddDays(i), Symbols.SPY, 100m, 100m, 100m, 100m, 1000));
+            }
+
+            Assert.IsTrue(yzv.IsReady);
+            Assert.AreEqual(0d, (double)yzv.Current.Value, 1e-15,
+                "Flat market with zero returns should produce zero volatility");
+        }
+
+        [Test]
+        public void LargeOvernightGap()
+        {
+            // A big gap up should produce higher volatility than steady bars
+            var yzv = new YangZhangVolatility(3);
+            var time = new DateTime(2024, 1, 1);
+
+            // Seed bar
+            yzv.Update(new TradeBar(time, Symbols.SPY, 100m, 101m, 99m, 100m, 1000));
+
+            // Steady bars
+            yzv.Update(new TradeBar(time.AddDays(1), Symbols.SPY, 100.5m, 101.5m, 99.5m, 101m, 1000));
+            yzv.Update(new TradeBar(time.AddDays(2), Symbols.SPY, 101.5m, 102.5m, 100.5m, 102m, 1000));
+
+            // Big gap up: open 20% above previous close
+            yzv.Update(new TradeBar(time.AddDays(3), Symbols.SPY, 122m, 123m, 121m, 122m, 1000));
+
+            Assert.IsTrue(yzv.IsReady);
+            Assert.Greater((double)yzv.Current.Value, 0.05,
+                "A 20% overnight gap should produce high volatility");
+        }
+
+        [Test]
+        public void PeriodBelowTwoThrows()
+        {
+            Assert.Throws<ArgumentOutOfRangeException>(() => new YangZhangVolatility(1));
+            Assert.Throws<ArgumentOutOfRangeException>(() => new YangZhangVolatility(0));
+            Assert.Throws<ArgumentOutOfRangeException>(() => new YangZhangVolatility(-5));
+        }
+
+        [Test]
+        public void ResetAndContinue()
+        {
+            var yzv = new YangZhangVolatility(3);
+            var time = new DateTime(2024, 1, 1);
+
+            // Feed to ready
+            for (int i = 0; i < 5; i++)
+            {
+                yzv.Update(new TradeBar(time.AddDays(i), Symbols.SPY,
+                    100m + i, 102m + i, 99m + i, 101m + i, 1000));
+            }
+            Assert.IsTrue(yzv.IsReady);
+            var valueBeforeReset = yzv.Current.Value;
+
+            // Reset
+            yzv.Reset();
+            Assert.IsFalse(yzv.IsReady);
+            Assert.AreEqual(0m, yzv.Current.Value);
+
+            // Feed again with same data, should get same result
+            for (int i = 0; i < 5; i++)
+            {
+                yzv.Update(new TradeBar(time.AddDays(i), Symbols.SPY,
+                    100m + i, 102m + i, 99m + i, 101m + i, 1000));
+            }
+            Assert.IsTrue(yzv.IsReady);
+            Assert.AreEqual((double)valueBeforeReset, (double)yzv.Current.Value, 1e-10,
+                "After reset, same data should produce same result");
+        }
     }
 }
