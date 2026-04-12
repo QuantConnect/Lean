@@ -3019,6 +3019,26 @@ namespace QuantConnect.Algorithm
         }
 
         /// <summary>
+        /// Creates a new YangZhangVolatility indicator for the symbol.
+        /// The indicator will be automatically updated on the given resolution.
+        /// </summary>
+        /// <param name="symbol">The symbol whose YangZhangVolatility we want</param>
+        /// <param name="period">The period of the rolling window used to compute volatility</param>
+        /// <param name="resolution">The resolution</param>
+        /// <param name="selector">Selects a value from the BaseData to send into the indicator, if null defaults to casting the input value to a TradeBar</param>
+        /// <returns>A new YangZhangVolatility indicator with the specified period</returns>
+        [DocumentationAttribute(Indicators)]
+        public YangZhangVolatility YZV(Symbol symbol, int period,
+            Resolution? resolution = null, Func<IBaseData, IBaseDataBar> selector = null)
+        {
+            var name = CreateIndicatorName(symbol, $"YZV({period})", resolution);
+            var indicator = new YangZhangVolatility(name, period);
+            InitializeIndicator(indicator, resolution, selector, symbol);
+
+            return indicator;
+        }
+
+        /// <summary>
         /// Creates a ZeroLagExponentialMovingAverage indicator for the symbol. The indicator will be automatically
         /// updated on the given resolution.
         /// </summary>
