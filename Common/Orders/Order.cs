@@ -195,7 +195,7 @@ namespace QuantConnect.Orders
         /// Deprecated
         /// </summary>
         [JsonProperty(PropertyName = "value"), Obsolete("Please use Order.GetValue(security) or security.Holdings.HoldingsValue")]
-        public decimal Value => Quantity * Price;
+        public decimal Value => Quantity * Price * GetSymbolContractMultiplier();
 
         /// <summary>
         /// Gets the price data at the time the order was submitted
@@ -312,6 +312,21 @@ namespace QuantConnect.Orders
         {
             var value = GetValueImpl(security);
             return value*security.QuoteCurrency.ConversionRate*security.SymbolProperties.ContractMultiplier;
+        }
+
+        private decimal GetSymbolContractMultiplier()
+        {
+            if (Symbol == null || Symbol == Symbol.Empty || string.IsNullOrEmpty(Symbol.ID.Market))
+            {
+                return 1m;
+            }
+
+            return SymbolPropertiesDatabase.FromDataFolder().GetSymbolProperties(
+                Symbol.ID.Market,
+                Symbol,
+                Symbol.SecurityType,
+                Currencies.NullCurrency
+            ).ContractMultiplier;
         }
 
         /// <summary>

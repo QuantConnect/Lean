@@ -44,6 +44,25 @@ namespace QuantConnect.Tests.Common.Orders
             Assert.AreEqual(parameters.ExpectedValue, value);
         }
 
+        [Test]
+        public void ValueIncludesOptionContractMultiplier()
+        {
+            var order = new MarketOrder(Symbols.SPY_C_192_Feb19_2016, -5, DateTime.UtcNow)
+            {
+                Price = 9.1m
+            };
+
+            var symbolProperties = SymbolPropertiesDatabase.FromDataFolder().GetSymbolProperties(
+                order.Symbol.ID.Market,
+                order.Symbol,
+                order.Symbol.SecurityType,
+                Currencies.USD
+            );
+
+            Assert.Greater(symbolProperties.ContractMultiplier, 1m);
+            Assert.AreEqual(order.Quantity * order.Price * symbolProperties.ContractMultiplier, order.Value);
+        }
+
         [TestCase(OrderDirection.Sell, 300, 0.1, true, 270)]
         [TestCase(OrderDirection.Sell, 300, 30, false, 270)]
         [TestCase(OrderDirection.Buy, 300, 0.1, true, 330)]
