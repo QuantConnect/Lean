@@ -14,7 +14,6 @@
 */
 
 using System;
-using QuantConnect.Data.Market;
 
 namespace QuantConnect.Indicators
 {
@@ -58,6 +57,12 @@ namespace QuantConnect.Indicators
         public YangZhangVolatility(string name, int period)
             : base(name)
         {
+            if (period < 2)
+            {
+                throw new ArgumentOutOfRangeException(nameof(period),
+                    "YangZhangVolatility requires a period of at least 2.");
+            }
+
             _period = period;
 
             // k minimizes the variance of the combined estimator
@@ -86,12 +91,18 @@ namespace QuantConnect.Indicators
         /// <returns>A new value for this indicator</returns>
         protected override decimal ComputeNextValue(IBaseDataBar input)
         {
-            if (input.Open == 0 || input.High == 0 || input.Low == 0 || input.Close == 0)
+            if (input.Open <= 0 || input.High <= 0 || input.Low <= 0 || input.Close <= 0)
             {
                 return 0m;
             }
 
             if (Samples == 1)
+            {
+                _previousClose = input.Close;
+                return 0m;
+            }
+
+            if (_previousClose <= 0)
             {
                 _previousClose = input.Close;
                 return 0m;
