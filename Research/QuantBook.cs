@@ -223,6 +223,40 @@ namespace QuantConnect.Research
         }
 
         /// <summary>
+        /// Set the start date for research and validate it against the configured end date.
+        /// </summary>
+        public new void SetStartDate(DateTime start)
+        {
+            base.SetStartDate(start);
+            ValidateStartEndDateRange();
+        }
+
+        /// <summary>
+        /// Wrapper for SetStartDate(DateTime)
+        /// </summary>
+        public new void SetStartDate(int year, int month, int day)
+        {
+            SetStartDate(new DateTime(year, month, day));
+        }
+
+        /// <summary>
+        /// Set the end date for research and validate it against the configured start date.
+        /// </summary>
+        public new void SetEndDate(DateTime end)
+        {
+            base.SetEndDate(end);
+            ValidateStartEndDateRange();
+        }
+
+        /// <summary>
+        /// Wrapper for SetEndDate(DateTime)
+        /// </summary>
+        public new void SetEndDate(int year, int month, int day)
+        {
+            SetEndDate(new DateTime(year, month, day));
+        }
+
+        /// <summary>
         /// Python implementation of GetFundamental, get fundamental data for input symbols or tickers
         /// </summary>
         /// <param name="input">The symbols or tickers to retrieve fundamental data for</param>
@@ -1086,6 +1120,14 @@ namespace QuantConnect.Research
             }
 
             return symbol;
+        }
+
+        private void ValidateStartEndDateRange()
+        {
+            if (EndDate < StartDate)
+            {
+                throw new ArgumentException("Please select an algorithm end date greater than start date.");
+            }
         }
 
         private static void RecycleMemory()

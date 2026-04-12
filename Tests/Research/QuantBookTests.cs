@@ -17,6 +17,7 @@ using NUnit.Framework;
 using QuantConnect.Research;
 using QuantConnect.Configuration;
 using Newtonsoft.Json.Linq;
+using System;
 
 namespace QuantConnect.Tests.Research
 {
@@ -49,6 +50,26 @@ namespace QuantConnect.Tests.Research
 
             var qb = new QuantBook();
             Assert.AreEqual(deploymentTarget, qb.DeploymentTarget);
+        }
+
+        [Test]
+        public void ThrowsWhenSettingStartDateAfterEndDate()
+        {
+            var qb = new QuantBook();
+            qb.SetEndDate(new DateTime(1998, 2, 1));
+
+            var ex = Assert.Throws<ArgumentException>(() => qb.SetStartDate(new DateTime(2022, 2, 1)));
+            Assert.AreEqual("Please select an algorithm end date greater than start date.", ex.Message);
+        }
+
+        [Test]
+        public void ThrowsWhenSettingStartDateAfterEndDateUsingIntegerOverloads()
+        {
+            var qb = new QuantBook();
+            qb.SetEndDate(1998, 2, 1);
+
+            var ex = Assert.Throws<ArgumentException>(() => qb.SetStartDate(2022, 2, 1));
+            Assert.AreEqual("Please select an algorithm end date greater than start date.", ex.Message);
         }
     }
 }
