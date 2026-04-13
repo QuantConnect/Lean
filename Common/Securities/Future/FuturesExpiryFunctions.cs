@@ -543,6 +543,26 @@ namespace QuantConnect.Securities.Future
                     return expiryDate.Add(new TimeSpan(13, 0, 0));
                 })
             },
+            // Mini Cboe Volatility Index Futures (VXM): https://cdn.cboe.com/resources/futures/VXM_Contract_Specifications.pdf
+            {Symbol.Create(Futures.Indices.MiniVIX, SecurityType.Future, Market.CFE), (time =>
+                {
+                    // Trading can occur up to 8:00 a.m. Chicago time on the "Wednesday that is 30 days prior to
+                    // the third Friday of the calendar month immediately following the month in which the contract expires".
+                    var market = Market.CFE;
+                    var symbol = Futures.Indices.MiniVIX;
+                    var nextThirdFriday = FuturesExpiryUtilityFunctions.ThirdFriday(time.AddMonths(1));
+                    var expiryDate = nextThirdFriday.AddDays(-30);
+                    var holidays = FuturesExpiryUtilityFunctions.GetExpirationHolidays(market, symbol);
+
+                    // If the next third Friday or the Wednesday are holidays, then it is moved to the previous day.
+                    if (holidays.Contains(expiryDate) || holidays.Contains(nextThirdFriday))
+                    {
+                        expiryDate = expiryDate.AddDays(-1);
+                    }
+                    // Trading hours for expiring VXM futures contracts end at 8:00 a.m. Chicago time on the final settlement date.
+                    return expiryDate.Add(new TimeSpan(13, 0, 0));
+                })
+            },
             // Bloomberg Commodity Index (AW): https://www.cmegroup.com/trading/agricultural/commodity-index/bloomberg-commodity-index_contract_specifications.html
             {Symbol.Create(Futures.Indices.BloombergCommodityIndex, SecurityType.Future, Market.CBOT), (time =>
                 {
