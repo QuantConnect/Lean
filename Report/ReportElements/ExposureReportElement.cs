@@ -98,16 +98,16 @@ namespace QuantConnect.Report.ReportElements
             var base64 = "";
             using (Py.GIL())
             {
-                var time = backtestFrame.RowKeys.ToList().ToPython();
-                var longSecurities = longBacktestFrame.ColumnKeys.Select(x => x.Item1.ToStringInvariant()).ToList().ToPython();
-                var shortSecurities = shortBacktestFrame.ColumnKeys.Select(x => x.Item1.ToStringInvariant()).ToList().ToPython();
-                var longData = longBacktestFrame.ColumnKeys.Select(x => longBacktestFrame[x].Values.ToList().ToPython()).ToPython();
-                var shortData = shortBacktestFrame.ColumnKeys.Select(x => shortBacktestFrame[x].Values.ToList().ToPython()).ToPython();
-                var liveTime = liveFrame.RowKeys.ToList().ToPython();
-                var liveLongSecurities = longLiveFrame.ColumnKeys.Select(x => x.Item1.ToStringInvariant()).ToList().ToPython();
-                var liveShortSecurities = shortLiveFrame.ColumnKeys.Select(x => x.Item1.ToStringInvariant()).ToList().ToPython();
-                var liveLongData = longLiveFrame.ColumnKeys.Select(x => longLiveFrame[x].Values.ToList().ToPython()).ToPython();
-                var liveShortData = shortLiveFrame.ColumnKeys.Select(x => shortLiveFrame[x].Values.ToList().ToPython()).ToPython();
+                using var time = backtestFrame.RowKeys.ToList().ToPython();
+                using var longSecurities = longBacktestFrame.ColumnKeys.Select(x => x.Item1.ToStringInvariant()).ToList().ToPython();
+                using var shortSecurities = shortBacktestFrame.ColumnKeys.Select(x => x.Item1.ToStringInvariant()).ToList().ToPython();
+                using var longData = longBacktestFrame.ColumnKeys.Select(x => longBacktestFrame[x].Values.ToList().ToPython()).ToPython();
+                using var shortData = shortBacktestFrame.ColumnKeys.Select(x => shortBacktestFrame[x].Values.ToList().ToPython()).ToPython();
+                using var liveTime = liveFrame.RowKeys.ToList().ToPython();
+                using var liveLongSecurities = longLiveFrame.ColumnKeys.Select(x => x.Item1.ToStringInvariant()).ToList().ToPython();
+                using var liveShortSecurities = shortLiveFrame.ColumnKeys.Select(x => x.Item1.ToStringInvariant()).ToList().ToPython();
+                using var liveLongData = longLiveFrame.ColumnKeys.Select(x => longLiveFrame[x].Values.ToList().ToPython()).ToPython();
+                using var liveShortData = shortLiveFrame.ColumnKeys.Select(x => shortLiveFrame[x].Values.ToList().ToPython()).ToPython();
 
                 base64 = Charting.GetExposure(
                     time,

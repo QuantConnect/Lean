@@ -63,7 +63,7 @@ namespace QuantConnect.Report.ReportElements
             var base64 = "";
             using (Py.GIL())
             {
-                var backtestResults = new PyDict();
+                using var backtestResults = new PyDict();
                 foreach (var kvp in backtestMonthlyReturns.GroupBy(kvp => kvp.Key.Year).GetObservations())
                 {
                     var key = kvp.Key.ToStringInvariant();
@@ -82,10 +82,12 @@ namespace QuantConnect.Report.ReportElements
                         values.Add(double.NaN);
                     }
 
-                    backtestResults.SetItem(key.ToPython(), values.ToPython());
+                    using var pyKey = key.ToPython();
+                    using var pyValues = values.ToPython();
+                    backtestResults.SetItem(pyKey, pyValues);
                 }
 
-                var liveResults = new PyDict();
+                using var liveResults = new PyDict();
                 foreach (var kvp in liveMonthlyReturns.GroupBy(kvp => kvp.Key.Year).GetObservations())
                 {
                     var key = kvp.Key.ToStringInvariant();
@@ -104,7 +106,9 @@ namespace QuantConnect.Report.ReportElements
                         values.Add(double.NaN);
                     }
 
-                    liveResults.SetItem(key.ToPython(), values.ToPython());
+                    using var pyKey = key.ToPython();
+                    using var pyValues = values.ToPython();
+                    liveResults.SetItem(pyKey, pyValues);
                 }
 
                 base64 = Charting.GetMonthlyReturns(backtestResults, liveResults);
