@@ -175,6 +175,40 @@ namespace QuantConnect.Tests.Common.Securities.CryptoFuture
         }
 
         [Test]
+        public void SharedCollateralDeductsMaintenanceMarginAcrossQuoteCurrencies()
+        {
+            var algo = GetBinanceFuturesAlgorithm();
+            var algoCash = algo.Portfolio.Cash;
+
+            // Two USDⓈ-M futures with DIFFERENT quote currencies
+            var btcUsdt = algo.AddCryptoFuture("BTCUSDT");
+            var ethUsdc = algo.AddCryptoFuture("ETHUSDC");
+            SetPrice(btcUsdt, 16000);
+            SetPrice(ethUsdc, 1600);
+
+            // EU user: BNFCR present — all USDⓈ-M futures share collateral pool
+            algo.SetCash("BNFCR", 10000, 1);
+
+            // Simulate an existing ETHUSDC position (10 ETH @ $1,600)
+            ethUsdc.Holdings.SetHoldings(1600, 10);
+
+            // ETHUSDC maintenance margin = (10 * 1 * 1600) / 25 * 1 = 640
+            var ethMaintenanceMargin = ethUsdc.BuyingPowerModel.GetMaintenanceMargin(
+                MaintenanceMarginParameters.ForCurrentHoldings(ethUsdc));
+
+            Assert.AreEqual(640m, ethMaintenanceMargin.Value);
+
+            // Buying power for BTCUSDT should deduct ETHUSDC's maintenance margin
+            var buyingPower = btcUsdt.BuyingPowerModel.GetBuyingPower(
+                new BuyingPowerParameters(algo.Portfolio, btcUsdt, OrderDirection.Buy));
+
+            // Expected: (10000 BNFCR + algoCash) - 640 maintenance margin
+            var expectedBuyingPower = 10000m + algoCash - ethMaintenanceMargin.Value;
+            Assert.AreEqual(expectedBuyingPower, buyingPower.Value,
+                "ETHUSDC maintenance margin should be deducted from BTCUSDT buying power when sharing EU collateral pool");
+        }
+
+        [Test]
         public void DefaultMarginModelDoesNotIncludeSupplementaryCollateral()
         {
             var algo = GetAlgorithm();

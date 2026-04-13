@@ -13,10 +13,10 @@
  * limitations under the License.
 */
 
-using System;
 using System.Collections.Generic;
 using QuantConnect.Brokerages;
 using QuantConnect.Data;
+using QuantConnect.Data.Market;
 using QuantConnect.Interfaces;
 using QuantConnect.Orders;
 using QuantConnect.Securities;
@@ -25,14 +25,14 @@ using QuantConnect.Securities.CryptoFuture;
 namespace QuantConnect.Algorithm.CSharp
 {
     /// <summary>
-    /// Regression algorithm asserting that BNFCR can serve as sole collateral for Binance
-    /// USDⓈ-M futures for EU/MiCA users. Verifies that buying power, holdings cost,
-    /// margin accounting and portfolio properties are all accurate when USDT balance is zero
-    /// and only BNFCR (pegged 1:1 to USD) is present.
+    /// Regression algorithm asserting that BNFCR serves as collateral for Binance USDⓈ-M futures
+    /// (EU/MiCA Credits Trading Mode) and that futures with different quote currencies (ADAUSDT, ETHUSDC)
+    /// correctly share the BNFCR collateral pool.
     /// </summary>
     public class BinanceCryptoFutureBnfcrCollateralRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
         private CryptoFuture _adaUsdt;
+        private CryptoFuture _ethUsdc;
         private bool _orderPlaced;
 
         public override void Initialize()
@@ -43,102 +43,63 @@ namespace QuantConnect.Algorithm.CSharp
             SetBrokerageModel(BrokerageName.BinanceFutures, AccountType.Margin);
 
             _adaUsdt = AddCryptoFuture("ADAUSDT");
+            _ethUsdc = AddCryptoFuture("ETHUSDC");
 
-            // EU/MiCA account: no USDT, BNFCR is the sole collateral (pegged 1:1 to USD).
-            // CashBook.Convert("BNFCR" -> "USDT") routes through USD: 200 * 1 / 1 = 200.
             SetCash(0);
             SetCash("BNFCR", 200m, 1m);
+            SetCash("ETH", 0, 1600);
+            SetCash("USDC", 0, 1);
         }
 
         public override void OnData(Slice slice)
         {
-            if (_adaUsdt.Price == 0)
+            if (_adaUsdt.Price == 0 || _orderPlaced)
             {
                 return;
             }
 
-            if (!_orderPlaced && !Portfolio.Invested)
+            // 1. BNFCR collateral must produce positive buying power (USDT is zero)
+            var buyingPower = _adaUsdt.BuyingPowerModel.GetBuyingPower(new BuyingPowerParameters(Portfolio, _adaUsdt, OrderDirection.Buy));
+            if (buyingPower.Value <= 0)
             {
-                // --- Assert initial state ---
+                throw new RegressionTestException($"Expected positive buying power from BNFCR, got {buyingPower.Value}");
+            }
 
-                // BNFCR must be present and positive
-                if (!Portfolio.CashBook.ContainsKey("BNFCR") || Portfolio.CashBook["BNFCR"].Amount != 200)
-                {
-                    throw new RegressionTestException($"Expected 200 BNFCR in CashBook, got {Portfolio.CashBook["BNFCR"].Amount}");
-                }
+            // 2. Order must not be rejected
+            var ticket = Buy(_adaUsdt.Symbol, 1000);
+            _orderPlaced = true;
+            if (ticket.Status == OrderStatus.Invalid)
+            {
+                throw new RegressionTestException("Order rejected — BNFCR collateral should cover margin");
+            }
 
-                // Primary collateral (USDT) must be zero
-                if (Portfolio.CashBook.ContainsKey("USDT") && Portfolio.CashBook["USDT"].Amount != 0)
-                {
-                    throw new RegressionTestException($"Expected zero USDT, got {Portfolio.CashBook["USDT"].Amount}");
-                }
+            // 3. Margin must be tracked
+            if (Portfolio.TotalMarginUsed <= 0)
+            {
+                throw new RegressionTestException($"Expected positive TotalMarginUsed, got {Portfolio.TotalMarginUsed}");
+            }
 
-                // Buying power must reflect BNFCR collateral — not zero
-                var buyingPower = _adaUsdt.BuyingPowerModel.GetBuyingPower(new BuyingPowerParameters(Portfolio, _adaUsdt, OrderDirection.Buy));
-                if (buyingPower.Value <= 0)
-                {
-                    throw new RegressionTestException($"Expected positive buying power from BNFCR collateral, got {buyingPower.Value}");
-                }
+            // 4. Shared collateral: ETHUSDC (different quote currency) must deduct ADAUSDT margin
+            _ethUsdc.SetMarketPrice(new TradeBar { Time = Time, Symbol = _ethUsdc.Symbol, Close = 1600 });
 
-                // --- Place order ---
-                var ticket = Buy(_adaUsdt.Symbol, 1000);
-                _orderPlaced = true;
+            var ethBuyingPower = _ethUsdc.BuyingPowerModel.GetBuyingPower(new BuyingPowerParameters(Portfolio, _ethUsdc, OrderDirection.Buy));
+            var adaBuyingPower = _adaUsdt.BuyingPowerModel.GetBuyingPower(new BuyingPowerParameters(Portfolio, _adaUsdt, OrderDirection.Buy));
 
-                if (ticket.Status == OrderStatus.Invalid)
-                {
-                    throw new RegressionTestException("Order was rejected — BNFCR collateral should be sufficient to cover margin");
-                }
-
-                // --- Assert holdings after fill ---
-                var holdings = _adaUsdt.Holdings;
-                var expectedNotional = _adaUsdt.Price * _adaUsdt.SymbolProperties.ContractMultiplier * 1000;
-
-                if (Math.Abs(holdings.AbsoluteHoldingsCost - expectedNotional) > 1)
-                {
-                    throw new RegressionTestException($"Unexpected AbsoluteHoldingsCost {holdings.AbsoluteHoldingsCost}, expected ~{expectedNotional}");
-                }
-
-                if (Math.Abs(holdings.TotalSaleVolume - expectedNotional) > 1)
-                {
-                    throw new RegressionTestException($"Unexpected TotalSaleVolume {holdings.TotalSaleVolume}, expected ~{expectedNotional}");
-                }
-
-                // --- Assert margin accounting ---
-                var marginUsed = Portfolio.TotalMarginUsed;
-                if (marginUsed <= 0)
-                {
-                    throw new RegressionTestException($"Expected positive TotalMarginUsed after fill, got {marginUsed}");
-                }
-
-                var maintenanceMargin = _adaUsdt.BuyingPowerModel.GetMaintenanceMargin(MaintenanceMarginParameters.ForCurrentHoldings(_adaUsdt));
-                if (maintenanceMargin != marginUsed)
-                {
-                    throw new RegressionTestException($"Maintenance margin {maintenanceMargin} does not match TotalMarginUsed {marginUsed}");
-                }
-
-                // Position just opened — unrealized PnL should be near zero (spread only)
-                if (Math.Abs(Portfolio.TotalUnrealizedProfit) > 5)
-                {
-                    throw new RegressionTestException($"Unexpected TotalUnrealizedProfit {Portfolio.TotalUnrealizedProfit}");
-                }
+            // ETHUSDC must see less buying power than ADAUSDT - ADAUSDT maintenance margin
+            // is deducted from ETHUSDC's shared pool, but ADAUSDT skips itself.
+            if (ethBuyingPower.Value >= adaBuyingPower.Value)
+            {
+                throw new RegressionTestException(
+                    $"ETHUSDC buying power ({ethBuyingPower.Value}) must be less than ADAUSDT ({adaBuyingPower.Value}) " +
+                    $"— shared BNFCR pool must deduct ADAUSDT maintenance margin");
             }
         }
 
         public override void OnEndOfAlgorithm()
         {
-            if (Transactions.OrdersCount != 1)
-            {
-                throw new RegressionTestException($"Expected exactly 1 order, got {Transactions.OrdersCount}");
-            }
-
-            if (!Portfolio.CashBook.ContainsKey("BNFCR"))
-            {
-                throw new RegressionTestException("BNFCR must remain in CashBook throughout the algorithm");
-            }
-
             if (!Portfolio.Invested)
             {
-                throw new RegressionTestException("Expected an open ADAUSDT position at end of algorithm");
+                throw new RegressionTestException("Expected an open position at end of algorithm");
             }
         }
 

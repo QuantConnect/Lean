@@ -29,6 +29,11 @@ namespace QuantConnect.Securities.CryptoFuture
     public class BinanceCryptoFutureMarginModel : CryptoFutureMarginModel
     {
         /// <summary>
+        /// Binance Futures Credits currency symbol, present in EU/EEA accounts under MiCA Credits Trading Mode.
+        /// </summary>
+        private const string BNFCRCurrency = "BNFCR";
+
+        /// <summary>
         /// Creates a new instance
         /// </summary>
         /// <param name="leverage">The leverage to use, default 25x</param>
@@ -59,7 +64,7 @@ namespace QuantConnect.Securities.CryptoFuture
             // BNFCR presence means EU/EEA account in MiCA Credits Trading Mode.
             // Non-EU accounts don't have BNFCR in CashBook — skip entirely.
             var cashBook = portfolio.CashBook;
-            if (!cashBook.ContainsKey("BNFCR"))
+            if (!cashBook.ContainsKey(BNFCRCurrency))
             {
                 return primaryCollateral.Amount;
             }
@@ -81,6 +86,15 @@ namespace QuantConnect.Securities.CryptoFuture
             }
 
             return total;
+        }
+
+        /// <summary>
+        /// When BNFCR is present (EU/MiCA mode), all USDⓈ-M futures share the same collateral
+        /// pool regardless of quote currency (USDT, USDC, etc.).
+        /// </summary>
+        protected override bool SharesCollateral(SecurityPortfolioManager portfolio, Cash collateralCurrency, Security otherCryptoFuture)
+        {
+            return portfolio.CashBook.ContainsKey(BNFCRCurrency) || base.SharesCollateral(portfolio, collateralCurrency, otherCryptoFuture);
         }
     }
 }

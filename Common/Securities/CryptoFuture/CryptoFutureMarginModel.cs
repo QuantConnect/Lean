@@ -93,7 +93,7 @@ namespace QuantConnect.Securities.CryptoFuture
             {
                 var otherCryptoFuture = portfolio.Securities[kvp.Key];
                 // check if we share the collateral
-                if (collateralCurrency == GetCollateralCash(otherCryptoFuture))
+                if (SharesCollateral(portfolio, collateralCurrency, otherCryptoFuture))
                 {
                     // we reduce the available collateral based on total usage of all other positions too
                     result -= otherCryptoFuture.BuyingPowerModel.GetMaintenanceMargin(MaintenanceMarginParameters.ForCurrentHoldings(otherCryptoFuture));
@@ -137,6 +137,18 @@ namespace QuantConnect.Securities.CryptoFuture
             // convert into account currency
             result *= collateralCurrency.ConversionRate;
             return result < 0 ? 0 : result;
+        }
+
+        /// <summary>
+        /// Determines whether the given security shares collateral with another crypto future.
+        /// </summary>
+        /// <param name="portfolio">The algorithm's portfolio</param>
+        /// <param name="collateralCurrency">The collateral cash for the current security</param>
+        /// <param name="otherCryptoFuture">The other crypto future security to check</param>
+        /// <returns>True if both securities share the same collateral</returns>
+        protected virtual bool SharesCollateral(SecurityPortfolioManager portfolio, Cash collateralCurrency, Security otherCryptoFuture)
+        {
+            return collateralCurrency == GetCollateralCash(otherCryptoFuture);
         }
 
         /// <summary>
