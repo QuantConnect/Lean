@@ -86,14 +86,14 @@ namespace QuantConnect.Securities.CryptoFuture
         protected override decimal GetMarginRemaining(SecurityPortfolioManager portfolio, Security security, OrderDirection direction)
         {
             var collateralCurrency = GetCollateralCash(security);
-            var totalCollateralCurrency = collateralCurrency.Amount;
+            var totalCollateralCurrency = GetTotalCollateralAmount(portfolio, security, collateralCurrency);
             var result = totalCollateralCurrency;
 
             foreach (var kvp in portfolio.Where(holdings => holdings.Value.Invested && holdings.Value.Type == SecurityType.CryptoFuture && holdings.Value.Symbol != security.Symbol))
             {
                 var otherCryptoFuture = portfolio.Securities[kvp.Key];
                 // check if we share the collateral
-                if (collateralCurrency == GetCollateralCash(otherCryptoFuture))
+                if (SharesCollateral(portfolio, collateralCurrency, otherCryptoFuture))
                 {
                     // we reduce the available collateral based on total usage of all other positions too
                     result -= otherCryptoFuture.BuyingPowerModel.GetMaintenanceMargin(MaintenanceMarginParameters.ForCurrentHoldings(otherCryptoFuture));
@@ -140,6 +140,18 @@ namespace QuantConnect.Securities.CryptoFuture
         }
 
         /// <summary>
+        /// Determines whether the given security shares collateral with another crypto future.
+        /// </summary>
+        /// <param name="portfolio">The algorithm's portfolio</param>
+        /// <param name="collateralCurrency">The collateral cash for the current security</param>
+        /// <param name="otherCryptoFuture">The other crypto future security to check</param>
+        /// <returns>True if both securities share the same collateral</returns>
+        protected virtual bool SharesCollateral(SecurityPortfolioManager portfolio, Cash collateralCurrency, Security otherCryptoFuture)
+        {
+            return collateralCurrency == GetCollateralCash(otherCryptoFuture);
+        }
+
+        /// <summary>
         /// Helper method to determine what's the collateral currency for the given crypto future
         /// </summary>
         private static Cash GetCollateralCash(Security security)
@@ -153,6 +165,20 @@ namespace QuantConnect.Securities.CryptoFuture
             }
 
             return collateralCurrency;
+        }
+
+        /// <summary>
+        /// Gets the total collateral amount for the given crypto future position.
+        /// The base implementation returns only the primary collateral amount.
+        /// Override in subclasses to include supplementary collateral currencies.
+        /// </summary>
+        /// <param name="portfolio">The algorithm's portfolio</param>
+        /// <param name="security">The crypto future security</param>
+        /// <param name="primaryCollateral">The primary collateral cash (e.g. USDT for non-coin futures, BTC for coin futures)</param>
+        /// <returns>Total collateral amount in terms of the primary collateral currency</returns>
+        protected virtual decimal GetTotalCollateralAmount(SecurityPortfolioManager portfolio, Security security, Cash primaryCollateral)
+        {
+            return primaryCollateral.Amount;
         }
     }
 }
