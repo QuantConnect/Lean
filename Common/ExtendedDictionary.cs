@@ -67,7 +67,7 @@ namespace QuantConnect
         /// <returns>true if the dictionary contains an element with the specified key; otherwise, false.</returns>
         public virtual bool ContainsKey(TKey key)
         {
-            return TryGetValue(key, out _);
+            return key != null && TryGetValue(key, out _);
         }
 
         /// <summary>
@@ -156,16 +156,14 @@ namespace QuantConnect
         /// Each element of the newly created dictionary is set to the provided value.</returns>
         public PyDict fromkeys(TKey[] sequence, TValue value)
         {
-            using (Py.GIL())
+            using var _ = Py.GIL();
+            var pyDict = new PyDict();
+            foreach (var key in sequence.Where(k => k != null))
             {
-                var dict = new PyDict();
-                foreach (var key in sequence)
-                {
-                    var pyValue = get(key, value);
-                    dict.SetItem(key.ToPython(), pyValue.ToPython());
-                }
-                return dict;
+                var pyValue = get(key, value);
+                pyDict.SetItem(key.ToPython(), pyValue.ToPython());
             }
+            return pyDict;
         }
 
         /// <summary>
@@ -173,29 +171,28 @@ namespace QuantConnect
         /// </summary>
         /// <param name="key">key to be searched in the dictionary</param>
         /// <returns>The value for the specified key if key is in dictionary.
-        /// None if the key is not found and value is not specified.</returns>
+        /// None if the key is not found, or if the key is None.</returns>
         public TValue get(TKey key)
         {
-            TValue data;
-            TryGetValue(key, out data);
-            return data;
+            return get(key, default);
         }
 
         /// <summary>
         /// Returns the value for the specified key if key is in dictionary.
         /// </summary>
         /// <param name="key">key to be searched in the dictionary</param>
-        /// <param name="value">Value to be returned if the key is not found. The default value is null.</param>
+        /// <param name="default_value">Value to be returned if the key is not found or if the key is None.</param>
         /// <returns>The value for the specified key if key is in dictionary.
-        /// value if the key is not found and value is specified.</returns>
-        public TValue get(TKey key, TValue value)
+        /// default_value if the key is not found, or if the key is None.</returns>
+        public TValue get(TKey key, TValue default_value)
         {
-            TValue data;
-            if (TryGetValue(key, out data))
+            if (key == null) return default_value;
+
+            if (TryGetValue(key, out TValue data))
             {
                 return data;
             }
-            return value;
+            return default_value;
         }
 
         /// <summary>
@@ -204,18 +201,16 @@ namespace QuantConnect
         /// <returns>Returns a view object that displays a list of a given dictionary's (key, value) tuple pair.</returns>
         public PyList items()
         {
-            using (Py.GIL())
+            using var _ = Py.GIL();
+            var pyList = new PyList();
+            foreach (var (key, value) in GetItems())
             {
-                var pyList = new PyList();
-                foreach (var (key, value) in GetItems())
-                {
-                    using var pyKey = key.ToPython();
-                    using var pyValue = value.ToPython();
-                    using var pyKvp = new PyTuple([pyKey, pyValue]);
-                    pyList.Append(pyKvp);
-                }
-                return pyList;
+                using var pyKey = key.ToPython();
+                using var pyValue = value.ToPython();
+                using var pyKvp = new PyTuple([pyKey, pyValue]);
+                pyList.Append(pyKvp);
             }
+            return pyList;
         }
 
         /// <summary>
@@ -249,8 +244,7 @@ namespace QuantConnect
         /// default_value if key is not in the dictionary and default_value is specified</returns>
         public TValue setdefault(TKey key, TValue default_value)
         {
-            TValue data;
-            if (TryGetValue(key, out data))
+            if (TryGetValue(key, out TValue data))
             {
                 return data;
             }
@@ -272,7 +266,15 @@ namespace QuantConnect
         /// If key is not found - KeyError exception is raised</returns>
         public TValue pop(TKey key)
         {
-            return pop(key, default);
+            if (key == null)
+            {
+                throw new KeyNotFoundException(Messages.ExtendedDictionary.KeyNotFoundDueToNone);
+            }
+            if (TryGetValue(key, out TValue data))
+            {
+                Remove(key);
+            }
+            return data;
         }
 
         /// <summary>
@@ -284,8 +286,7 @@ namespace QuantConnect
         /// If key is not found - value specified as the second argument(default)</returns>
         public TValue pop(TKey key, TValue default_value)
         {
-            TValue data;
-            if (TryGetValue(key, out data))
+            if (key != null && TryGetValue(key, out TValue data))
             {
                 Remove(key);
                 return data;

@@ -18,6 +18,7 @@ using Python.Runtime;
 using QuantConnect.Statistics;
 using System.Collections.Generic;
 using System.Linq;
+using QuantConnect.Data.Market;
 
 namespace QuantConnect.Tests.Common
 {
@@ -116,6 +117,60 @@ def pop(dictionary, key):
             var popped = module.InvokeMethod("pop", pyDict, pyExistingKey).As<int>();
             Assert.AreEqual(1, popped);
             Assert.IsFalse(module.InvokeMethod("contains", pyDict, pyExistingKey).As<bool>());
+        }
+
+        [Test]
+        public void NullKeyIsHandledGracefully()
+        {
+            using var _ = Py.GIL();
+
+            var module = PyModule.FromString("NullKeyIsHandledGracefully",
+                    @"
+def contains(dictionary, key):
+    return key in dictionary
+
+def get(dictionary, key):
+    return dictionary.get(key)
+
+def get_default(dictionary, key, default_value):
+    return dictionary.get(key, default_value)
+
+def pop(dictionary, key):
+    return dictionary.pop(key)
+
+def pop_default(dictionary, key, default_value):
+    return dictionary.pop(key, default_value)
+");
+
+            var tradeBarA = new TradeBar { Close = 1 };
+            var tradeBarB = new TradeBar { Close = 2 };
+            var dict = new TestDictionary<string, TradeBar>
+            {
+                ["a"] = tradeBarA,
+                ["b"] = tradeBarB
+            };
+            using var pyDict = dict.ToPython();
+
+            // contains with None key should return False
+            Assert.IsFalse(module.InvokeMethod("contains", pyDict, PyObject.None).As<bool>());
+
+            // get with None key should return None
+            Assert.IsTrue(module.InvokeMethod("get", pyDict, PyObject.None).IsNone());
+
+            // get with None key and default value should return the default value
+            using var pyDefault = tradeBarA.ToPython();
+            Assert.AreEqual(tradeBarA.Close, module.InvokeMethod("get_default", pyDict, PyObject.None, pyDefault).As<TradeBar>().Close);
+
+            // pop with None key and default value should return the default value
+            using var pyPopDefault = tradeBarB.ToPython();
+            Assert.AreEqual(tradeBarB.Close, module.InvokeMethod("pop_default", pyDict, PyObject.None, pyPopDefault).As<TradeBar>().Close);
+
+            // Dictionary should not be modified after pop with None key
+            Assert.AreEqual(2, dict.Count);
+
+            // pop with None key without default should raise KeyNotFoundException
+            var exception = Assert.Throws<ClrBubbledException>(() => module.InvokeMethod("pop", pyDict, PyObject.None));
+            Assert.IsInstanceOf<KeyNotFoundException>(exception.InnerException);
         }
 
         [Test]
