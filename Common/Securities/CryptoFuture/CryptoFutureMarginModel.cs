@@ -154,7 +154,7 @@ namespace QuantConnect.Securities.CryptoFuture
         /// <summary>
         /// Helper method to determine what's the collateral currency for the given crypto future
         /// </summary>
-        protected static Cash GetCollateralCash(Security security)
+        private static Cash GetCollateralCash(Security security)
         {
             var cryptoFuture = (CryptoFuture)security;
 
