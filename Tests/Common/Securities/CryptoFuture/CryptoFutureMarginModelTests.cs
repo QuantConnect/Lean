@@ -120,23 +120,6 @@ namespace QuantConnect.Tests.Common.Securities.CryptoFuture
         }
 
         [Test]
-        public void CoinFutureDoesNotIncludeBnfcrAsCollateral()
-        {
-            var algo = GetBinanceFuturesAlgorithm();
-            var cryptoFuture = algo.AddCryptoFuture("BTCUSD");
-            SetPrice(cryptoFuture, 16000);
-
-            // Coin future: BTC is collateral, BNFCR should NOT be included
-            algo.SetCash("BNFCR", 100, 1);
-
-            var buyingPower = cryptoFuture.BuyingPowerModel.GetBuyingPower(
-                new BuyingPowerParameters(algo.Portfolio, cryptoFuture, OrderDirection.Buy));
-
-            // Only BTC collateral counts (0 BTC), BNFCR is irrelevant for coin futures
-            Assert.AreEqual(0, buyingPower.Value);
-        }
-
-        [Test]
         public void BnfcrZeroBalanceIncludesSupplementaryCollateral()
         {
             var algo = GetBinanceFuturesAlgorithm();

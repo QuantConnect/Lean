@@ -54,19 +54,12 @@ namespace QuantConnect.Securities.CryptoFuture
         protected override decimal GetTotalCollateralAmount(
             SecurityPortfolioManager portfolio, Security security, Cash primaryCollateral)
         {
-            // Coin futures (e.g. BTCUSD) use only base currency as collateral
-            var cryptoFuture = (CryptoFuture)security;
-            if (cryptoFuture.IsCryptoCoinFuture())
-            {
-                return primaryCollateral.Amount;
-            }
-
             // BNFCR presence means EU/EEA account in MiCA Credits Trading Mode.
             // Non-EU accounts don't have BNFCR in CashBook — skip entirely.
             var cashBook = portfolio.CashBook;
             if (!cashBook.ContainsKey(BNFCRCurrency))
             {
-                return primaryCollateral.Amount;
+                return base.GetTotalCollateralAmount(portfolio, security, primaryCollateral);
             }
 
             // Aggregate all collateral assets using walletBalance values.
