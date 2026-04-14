@@ -15,7 +15,6 @@
 using QuantConnect.Configuration;
 using QuantConnect.Interfaces;
 using QuantConnect.Logging;
-using QuantConnect.ToolBox.AlgoSeekFuturesConverter;
 using QuantConnect.ToolBox.CoarseUniverseGenerator;
 using QuantConnect.ToolBox.KaikoDataConverter;
 using QuantConnect.ToolBox.RandomDataGenerator;
@@ -77,10 +76,6 @@ namespace QuantConnect.ToolBox
             {
                 switch (targetApp)
                 {
-                    case "asfc":
-                    case "algoseekfuturesconverter":
-                        AlgoSeekFuturesProgram.AlgoSeekFuturesConverter(GetParameterOrExit(optionsObject, "date"));
-                        break;
                     case "kdc":
                     case "kaikodataconverter":
                         KaikoDataConverterProgram.KaikoDataConverter(GetParameterOrExit(optionsObject, "source-dir"),
