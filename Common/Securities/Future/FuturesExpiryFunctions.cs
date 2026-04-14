@@ -554,8 +554,13 @@ namespace QuantConnect.Securities.Future
                     var expiryDate = nextThirdFriday.AddDays(-30);
                     var holidays = FuturesExpiryUtilityFunctions.GetExpirationHolidays(market, symbol);
 
-                    // If the Wednesday or the third Friday are holidays, then it is moved to the previous day.
-                    if (holidays.Contains(expiryDate) || holidays.Contains(nextThirdFriday))
+                    // If the reference 3rd Friday is a holiday, shift expiry back one day per spec.
+                    if (holidays.Contains(nextThirdFriday))
+                    {
+                        expiryDate = expiryDate.AddDays(-1);
+                    }
+                    // Ensure the computed expiry date is itself a valid tradable day.
+                    while (holidays.Contains(expiryDate) || !expiryDate.IsCommonBusinessDay())
                     {
                         expiryDate = expiryDate.AddDays(-1);
                     }
