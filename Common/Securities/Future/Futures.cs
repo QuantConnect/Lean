@@ -1562,12 +1562,6 @@ namespace QuantConnect.Securities
             public const string MicroSP500EMini = "MES";
 
             /// <summary>
-            /// Micro E-mini Nasdaq-100 Index Futures
-            /// </summary>
-            /// <returns>The symbol</returns>
-            public const string MicroNASDAQ100EMini = "MNQ";
-
-            /// <summary>
             /// Micro E-mini Russell 2000 Index Futures
             /// </summary>
             /// <returns>The symbol</returns>

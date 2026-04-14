@@ -415,7 +415,7 @@ namespace QuantConnect.Orders.Fees
         private static readonly Dictionary<string, decimal> _usaFuturesFees = new()
         {
             // Micro E-mini Futures
-            { "MYM", 0.25m }, { "M2K", 0.25m }, { "MES", 0.25m }, { "MNQ", 0.25m }, { "2YY", 0.25m }, { "5YY", 0.25m }, { "10Y", 0.25m },
+            { "MYM", 0.25m }, { "M2K", 0.25m }, { "MES", 0.25m }, { "2YY", 0.25m }, { "5YY", 0.25m }, { "10Y", 0.25m },
             { "30Y", 0.25m }, { "MCL", 0.25m }, { "MGC", 0.25m }, { "SIL", 0.25m },
             // Cryptocurrency Futures
             { "BTC", 5m }, { "MBT", 2.25m }, { "ETH", 3m }, { "MET", 0.20m }, { "MIB", 2.25m }, { "MRB", 0.20m },
@@ -438,7 +438,7 @@ namespace QuantConnect.Orders.Fees
         private static readonly Dictionary<string, decimal> _usaFutureOptionsFees = new()
         {
             // Micro E-mini Future Options
-            { "MYM", 0.25m }, { "M2K", 0.25m }, { "MES", 0.25m }, { "MNQ", 0.25m }, { "2YY", 0.25m }, { "5YY", 0.25m }, { "10Y", 0.25m },
+            { "MYM", 0.25m }, { "M2K", 0.25m }, { "MES", 0.25m }, { "2YY", 0.25m }, { "5YY", 0.25m }, { "10Y", 0.25m },
             { "30Y", 0.25m }, { "MCL", 0.25m }, { "MGC", 0.25m }, { "SIL", 0.25m },
             // Cryptocurrency Future Options
             { "BTC", 5m }, { "MBT", 1.25m }, { "ETH", 3m }, { "MET", 0.10m }, { "MIB", 1.25m }, { "MRB", 0.10m }
@@ -449,7 +449,7 @@ namespace QuantConnect.Orders.Fees
             // E-mini Futures
             { "ES", 1.28m }, { "NQ", 1.28m }, { "YM", 1.28m }, { "RTY", 1.28m }, { "EMD", 1.28m },
             // Micro E-mini Futures
-            { "MYM", 0.30m }, { "M2K", 0.30m }, { "MES", 0.30m }, { "MNQ", 0.30m }, { "2YY", 0.30m }, { "5YY", 0.30m }, { "10Y", 0.30m },
+            { "MYM", 0.30m }, { "M2K", 0.30m }, { "MES", 0.30m }, { "2YY", 0.30m }, { "5YY", 0.30m }, { "10Y", 0.30m },
             { "30Y", 0.30m }, { "MCL", 0.30m }, { "MGC", 0.30m }, { "SIL", 0.30m },
             // Cryptocurrency Futures
             { "BTC", 6m }, { "MBT", 2.5m }, { "ETH", 4m }, { "MET", 0.20m }, { "MIB", 2.5m }, { "MRB", 0.20m },
@@ -471,7 +471,7 @@ namespace QuantConnect.Orders.Fees
             // E-mini Future Options
             { "ES", 0.55m }, { "NQ", 0.55m }, { "YM", 0.55m }, { "RTY", 0.55m }, { "EMD", 0.55m },
             // Micro E-mini Future Options
-            { "MYM", 0.20m }, { "M2K", 0.20m }, { "MES", 0.20m }, { "MNQ", 0.20m }, { "2YY", 0.20m }, { "5YY", 0.20m }, { "10Y", 0.20m },
+            { "MYM", 0.20m }, { "M2K", 0.20m }, { "MES", 0.20m }, { "2YY", 0.20m }, { "5YY", 0.20m }, { "10Y", 0.20m },
             { "30Y", 0.20m }, { "MCL", 0.20m }, { "MGC", 0.20m }, { "SIL", 0.20m },
             // Cryptocurrency Future Options
             { "BTC", 5m }, { "MBT", 2.5m }, { "ETH", 4m }, { "MET", 0.20m }, { "MIB", 2.5m }, { "MRB", 0.20m },
