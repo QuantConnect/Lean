@@ -584,7 +584,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 }
                 else
                 {
-                    dataTypes = LookupSubscriptionConfigDataTypes(symbol.SecurityType, resolution ?? Resolution.Minute, symbol.IsCanonical());
+                    dataTypes = LookupSubscriptionConfigDataTypes(symbol.SecurityType, resolution ?? _algorithm.UniverseSettings.Resolution, symbol.IsCanonical());
                 }
             }
 
@@ -594,7 +594,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             }
 
             var resolutionWasProvided = resolution.HasValue;
-            var validDataTypes = new List<Tuple<Type, TickType>>();
             foreach (var typeTuple in dataTypes)
             {
                 var baseInstance = typeTuple.Item1.GetBaseDataInstance();
@@ -614,11 +613,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                                     $"The data type default resolution '{defaultResolution}' will be used instead");
                                 _unsupportedUniverseSettingsResolutionWarningSent = true;
                             }
-                        }
-                        else if (!_liveMode && !LeanData.IsValidConfiguration(symbol.SecurityType, res, typeTuple.Item2))
-                        {
-                            // skip data types not valid for this security type/resolution combination in backtesting
-                            continue;
                         }
                         else
                         {
@@ -651,9 +645,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                         }
                     }
                 }
-                validDataTypes.Add(typeTuple);
             }
-            dataTypes = validDataTypes;
             var marketHoursDbEntry = _marketHoursDatabase.GetEntry(symbol, dataTypes.Select(tuple => tuple.Item1));
 
             var exchangeHours = marketHoursDbEntry.ExchangeHours;
