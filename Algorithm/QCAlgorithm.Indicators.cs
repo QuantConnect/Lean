@@ -1206,6 +1206,26 @@ namespace QuantConnect.Algorithm
         }
 
         /// <summary>
+        /// Creates a new JurikMovingAverage indicator.
+        /// </summary>
+        /// <param name="symbol">The symbol whose JMA we want</param>
+        /// <param name="period">The period of the JMA</param>
+        /// <param name="phase">The phase parameter (-100 to 100), controls the tradeoff between lag and overshoot</param>
+        /// <param name="resolution">The resolution</param>
+        /// <param name="selector">Selects a value from the BaseData to send into the indicator, if null defaults to the Value property of BaseData (x => x.Value)</param>
+        /// <returns>The JurikMovingAverage indicator for the requested symbol over the specified period</returns>
+        [DocumentationAttribute(Indicators)]
+        public JurikMovingAverage JMA(Symbol symbol, int period, decimal phase = 0,
+            Resolution? resolution = null, Func<IBaseData, decimal> selector = null)
+        {
+            var name = CreateIndicatorName(symbol, $"JMA({period},{phase})", resolution);
+            var jurikMovingAverage = new JurikMovingAverage(name, period, phase);
+            InitializeIndicator(jurikMovingAverage, resolution, selector, symbol);
+
+            return jurikMovingAverage;
+        }
+
+        /// <summary>
         /// Creates a new KaufmanAdaptiveMovingAverage indicator.
         /// </summary>
         /// <param name="symbol">The symbol whose KAMA we want</param>
