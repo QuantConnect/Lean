@@ -3246,6 +3246,20 @@ namespace QuantConnect.Securities.Future
                     return thirdFriday.Add(new TimeSpan(13,30,0));
                 })
             },
+            // Micro E-mini NASDAQ-100 Index Futures (MNQ): https://www.cmegroup.com/markets/equities/nasdaq/micro-e-mini-nasdaq-100.contractSpecs.html
+            {Symbol.Create(Futures.Indices.MicroNASDAQ100EMini, SecurityType.Future, Market.CME), (time =>
+                {
+                    // Quarterly contracts (Mar, Jun, Sep, Dec) listed for 5 consecutive quarters
+                    while (!FutureExpirationCycles.HMUZ.Contains(time.Month))
+                    {
+                        time = time.AddMonths(1);
+                    }
+
+                    // Trading terminates at 9:30 a.m. ET on the 3rd Friday of the contract month.
+                    var thirdFriday = FuturesExpiryUtilityFunctions.ThirdFriday(time, Symbol.Create(Futures.Indices.MicroNASDAQ100EMini, SecurityType.Future, Market.CME));
+                    return thirdFriday.Add(new TimeSpan(13,30,0));
+                })
+            },
             // Micro E-mini Dow Jones Industrial Average Index Futures (MYM): https://www.cmegroup.com/markets/equities/dow-jones/micro-e-mini-dow.contractSpecs.html
             {Symbol.Create(Futures.Indices.MicroDow30EMini, SecurityType.Future, Market.CBOT), (time =>
                 {

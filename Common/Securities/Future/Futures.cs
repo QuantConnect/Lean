@@ -1574,6 +1574,12 @@ namespace QuantConnect.Securities
             public const string MicroDow30EMini = "MYM";
 
             /// <summary>
+            /// Micro E-mini NASDAQ-100 Index Futures
+            /// </summary>
+            /// <returns>The symbol</returns>
+            public const string MicroNASDAQ100EMini = "MNQ";
+
+            /// <summary>
             /// MSCI Europe Net Total Return (USD) Futures
             /// </summary>
             public const string MSCIEuropeNTR = "M1EU";

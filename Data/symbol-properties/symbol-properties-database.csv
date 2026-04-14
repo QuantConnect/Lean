@@ -294,6 +294,7 @@ cme,MRB,future,BTIC on Micro Ether Futures,USD,0.1,0.5,1
 cme,MIR,future,Micro INR/USD Futures,USD,1000000,0.01,100,,1,100
 cme,MJY,future,Micro Japanese Yen/U.S. Dollar (JPY/USD) Futures,USD,1250000,1e-06,1,,1
 cme,MNH,future,Micro USD/CNH Futures,USD,10000,0.0001,1
+cme,MNQ,future,Micro E-mini Nasdaq-100 Index Futures,USD,2,0.25,1,,1
 cme,MSF,future,Micro Swiss Franc/U.S. Dollar (CHF/USD) Futures,USD,12500,0.0001,1,,1
 cme,NIY,future,Nikkei/YEN Futures,JPY,500.0,5.0,1.0
 cme,NKD,future,Nikkei/USD Futures,USD,5.0,5.0,1.0
