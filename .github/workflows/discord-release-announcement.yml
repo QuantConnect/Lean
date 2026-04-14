@@ -1,0 +1,92 @@
+name: Discord Release Announcement
+
+on:
+  push:
+    tags:
+      # Lean releases are numeric tags (e.g. 17661); legacy v* tags are frozen at v2.4.0.1 (2017).
+      - '[0-9]*'
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Tag to announce (e.g. 17650)'
+        required: true
+        type: string
+
+jobs:
+  announce:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Resolve version and previous tag
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            VERSION="${{ inputs.tag }}"
+          else
+            VERSION="${GITHUB_REF#refs/tags/}"
+          fi
+          PREV_TAG="$(git describe --tags --abbrev=0 "${VERSION}^" 2>/dev/null || echo '')"
+          echo "VERSION=${VERSION}" >> "$GITHUB_ENV"
+          echo "PREV_TAG=${PREV_TAG}" >> "$GITHUB_ENV"
+
+      - name: Build summary
+        run: |
+          if [ -n "${PREV_TAG}" ]; then
+            SUMMARY="$(git log --pretty=format:'- %s' "${PREV_TAG}..${VERSION}" | head -n 15)"
+          else
+            SUMMARY=""
+          fi
+          if [ -z "${SUMMARY}" ]; then
+            SUMMARY="See full changelog on GitHub."
+          fi
+          {
+            echo 'SUMMARY<<EOF_SUMMARY'
+            echo "${SUMMARY}"
+            echo 'EOF_SUMMARY'
+          } >> "$GITHUB_ENV"
+
+      - name: Post to Discord
+        env:
+          DISCORD_ID: ${{ secrets.DISCORD_ID }}
+          DISCORD_SECRET: ${{ secrets.DISCORD_SECRET }}
+          # Hardcoded so Discord links always point to upstream even when the
+          # workflow runs on a fork during testing.
+          REPO: QuantConnect/Lean
+        run: |
+          CLOUD_VALUE="[Lean Engine Versions](https://www.quantconnect.com/docs/v2/cloud-platform/projects/lean-engine-versions)"
+          CLI_VALUE='`docker pull quantconnect/lean:latest`'
+          TIMESTAMP="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+
+          PAYLOAD="$(jq -n \
+            --arg title "🚀 Release ${VERSION}" \
+            --arg url "https://github.com/${REPO}/releases/tag/${VERSION}" \
+            --arg summary "${SUMMARY}" \
+            --arg cloud "${CLOUD_VALUE}" \
+            --arg cli "${CLI_VALUE}" \
+            --arg author_name "${REPO}" \
+            --arg author_url "https://github.com/${REPO}" \
+            --arg timestamp "${TIMESTAMP}" \
+            '{
+              username: "Lean Releases",
+              embeds: [{
+                author: { name: $author_name, url: $author_url },
+                title: $title,
+                url: $url,
+                color: 5814783,
+                fields: [
+                  { name: "✨ Changelog",  value: $summary, inline: false },
+                  { name: "☁️ Cloud",      value: $cloud,   inline: true },
+                  { name: "💻 Lean CLI",   value: $cli,     inline: true }
+                ],
+                footer: { text: "QuantConnect • Lean Engine" },
+                timestamp: $timestamp
+              }]
+            }')"
+
+          curl -sS -f -X POST \
+            -H "Content-Type: application/json" \
+            -d "${PAYLOAD}" \
+            "https://discord.com/api/webhooks/${DISCORD_ID}/${DISCORD_SECRET}"
