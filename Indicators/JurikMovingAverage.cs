@@ -34,7 +34,6 @@ namespace QuantConnect.Indicators
         private readonly int _period;
         private readonly decimal _phaseRatio;
         private readonly decimal _beta;
-        private readonly decimal _power;
 
         // Volatility band constants derived from period
         private readonly double _length1;
@@ -74,12 +73,16 @@ namespace QuantConnect.Indicators
         /// <param name="name">The name of this indicator</param>
         /// <param name="period">The period of the JMA, controls the smoothing window and volatility adaptation</param>
         /// <param name="phase">The phase parameter (-100 to 100), controls the tradeoff between lag and overshoot</param>
-        /// <param name="power">The power parameter, controls smoothing aggressiveness (default 2)</param>
-        public JurikMovingAverage(string name, int period, decimal phase = 0, decimal power = 2)
+        public JurikMovingAverage(string name, int period, decimal phase = 0)
             : base(name)
         {
+            if (period < 2)
+            {
+                throw new ArgumentOutOfRangeException(nameof(period),
+                    "JMA period must be greater than or equal to 2.");
+            }
+
             _period = period;
-            _power = power;
 
             // Compute phase ratio: clamp phase to [-100, 100] range
             if (phase < -100m)
@@ -115,9 +118,8 @@ namespace QuantConnect.Indicators
         /// </summary>
         /// <param name="period">The period of the JMA, controls the smoothing window and volatility adaptation</param>
         /// <param name="phase">The phase parameter (-100 to 100), controls the tradeoff between lag and overshoot</param>
-        /// <param name="power">The power parameter, controls smoothing aggressiveness (default 2)</param>
-        public JurikMovingAverage(int period, decimal phase = 0, decimal power = 2)
-            : this($"JMA({period},{phase},{power})", period, phase, power)
+        public JurikMovingAverage(int period, decimal phase = 0)
+            : this($"JMA({period},{phase})", period, phase)
         {
         }
 
@@ -162,7 +164,7 @@ namespace QuantConnect.Indicators
 
             // Average volatility: mean of v_sum values over available history (up to 65 bars)
             decimal avgVolty = 0;
-            var count = (int)_vSumWindow.Count;
+            var count = _vSumWindow.Count;
             if (count > 0)
             {
                 decimal sum = 0;

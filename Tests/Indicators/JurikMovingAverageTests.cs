@@ -37,7 +37,7 @@ namespace QuantConnect.Tests.Indicators
             // Values verified against pandas_ta_classic reference implementation:
             //   from pandas_ta_classic.overlap.jma import jma
             //   jma(pd.Series([10,11,12,11,10,11,12,13,12,11]), length=7, phase=0)
-            var jma = new JurikMovingAverage(7, 0, 2);
+            var jma = new JurikMovingAverage(7, 0);
             var time = new DateTime(2024, 1, 1);
             var prices = new decimal[] { 10, 11, 12, 11, 10, 11, 12, 13, 12, 11 };
 
@@ -92,6 +92,33 @@ namespace QuantConnect.Tests.Indicators
             Assert.IsTrue(jma14.IsReady);
             Assert.AreNotEqual(jma7.Current.Value, jma14.Current.Value,
                 "JMA(7) and JMA(14) should produce different values for the same input");
+        }
+
+        [Test]
+        public void PhaseAffectsOutput()
+        {
+            var jmaLag = new JurikMovingAverage(7, -100);
+            var jmaLead = new JurikMovingAverage(7, 100);
+            var time = new DateTime(2024, 1, 1);
+
+            var prices = new decimal[] { 10, 11, 12, 11, 10, 11, 12, 13, 12, 11 };
+            for (var i = 0; i < prices.Length; i++)
+            {
+                jmaLag.Update(time.AddDays(i), prices[i]);
+                jmaLead.Update(time.AddDays(i), prices[i]);
+            }
+
+            Assert.IsTrue(jmaLag.IsReady);
+            Assert.IsTrue(jmaLead.IsReady);
+            Assert.AreNotEqual(jmaLag.Current.Value, jmaLead.Current.Value,
+                "JMA with phase=-100 and phase=100 should produce different values");
+        }
+
+        [Test]
+        public void PeriodTooSmallThrows()
+        {
+            Assert.Throws<ArgumentOutOfRangeException>(() => new JurikMovingAverage(1));
+            Assert.Throws<ArgumentOutOfRangeException>(() => new JurikMovingAverage(0));
         }
     }
 }
