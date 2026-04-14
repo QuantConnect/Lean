@@ -19,9 +19,12 @@ namespace QuantConnect.Indicators
 {
     /// <summary>
     /// Represents the Jurik Moving Average (JMA) indicator.
-    /// JMA is a three-stage adaptive filter that produces smoother output with less lag
-    /// than the traditional EMA by combining an adaptive EMA, Kalman-style velocity
-    /// estimation, and error correction.
+    /// JMA is a volatility-adaptive filter that produces smoother output with less lag
+    /// than the traditional EMA. It uses volatility bands to dynamically adjust its
+    /// smoothing factor, combined with a three-stage adaptive pipeline: adaptive EMA,
+    /// Kalman-style velocity estimation, and Jurik error correction.
+    /// The period parameter controls both the base smoothing constants and the volatility
+    /// band adaptation rate. Higher periods produce smoother, more lagged output.
     /// Note: The original JMA algorithm is proprietary (Jurik Research). This implementation
     /// follows the community-standard reverse-engineered formula used by pandas_ta,
     /// TradingView, and other open-source libraries.
@@ -30,12 +33,29 @@ namespace QuantConnect.Indicators
     {
         private readonly int _period;
         private readonly decimal _phaseRatio;
-        private readonly decimal _alpha;
         private readonly decimal _beta;
+        private readonly decimal _power;
 
-        private decimal _e0;
-        private decimal _e1;
-        private decimal _e2;
+        // Volatility band constants derived from period
+        private readonly double _length1;
+        private readonly double _pow1;
+        private readonly double _bet;
+
+        // Volatility tracking
+        private const int VolatilitySumLength = 10;
+        private const int VolatilityAvgLength = 65;
+        private readonly RollingWindow<decimal> _voltyWindow;
+        private readonly RollingWindow<decimal> _vSumWindow;
+        private decimal _vSum;
+
+        // Adaptive band state
+        private decimal _upperBand;
+        private decimal _lowerBand;
+
+        // Three-stage filter state
+        private decimal _ma1;
+        private decimal _det0;
+        private decimal _det1;
         private decimal _jma;
 
         /// <summary>
@@ -52,13 +72,14 @@ namespace QuantConnect.Indicators
         /// Initializes a new instance of the <see cref="JurikMovingAverage"/> class using the specified name and period.
         /// </summary>
         /// <param name="name">The name of this indicator</param>
-        /// <param name="period">The period of the JMA</param>
+        /// <param name="period">The period of the JMA, controls the smoothing window and volatility adaptation</param>
         /// <param name="phase">The phase parameter (-100 to 100), controls the tradeoff between lag and overshoot</param>
-        /// <param name="power">The power parameter, controls smoothing aggressiveness</param>
+        /// <param name="power">The power parameter, controls smoothing aggressiveness (default 2)</param>
         public JurikMovingAverage(string name, int period, decimal phase = 0, decimal power = 2)
             : base(name)
         {
             _period = period;
+            _power = power;
 
             // Compute phase ratio: clamp phase to [-100, 100] range
             if (phase < -100m)
@@ -74,17 +95,27 @@ namespace QuantConnect.Indicators
                 _phaseRatio = phase / 100m + 1.5m;
             }
 
-            // Compute smoothing constants
+            // Base smoothing constant from period
             _beta = 0.45m * (_period - 1) / (0.45m * (_period - 1) + 2m);
-            _alpha = (decimal)Math.Pow((double)_beta, (double)power);
+
+            // Volatility band constants derived from period
+            var length = 0.5 * (_period - 1);
+            _length1 = Math.Max(Math.Log(Math.Sqrt(length)) / Math.Log(2.0) + 2.0, 0);
+            _pow1 = Math.Max(_length1 - 2.0, 0.5);
+            var length2 = _length1 * Math.Sqrt(length);
+            _bet = length2 / (length2 + 1);
+
+            // Rolling windows for volatility tracking
+            _voltyWindow = new RollingWindow<decimal>(VolatilitySumLength + 1);
+            _vSumWindow = new RollingWindow<decimal>(VolatilityAvgLength);
         }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="JurikMovingAverage"/> class using the specified period.
         /// </summary>
-        /// <param name="period">The period of the JMA</param>
+        /// <param name="period">The period of the JMA, controls the smoothing window and volatility adaptation</param>
         /// <param name="phase">The phase parameter (-100 to 100), controls the tradeoff between lag and overshoot</param>
-        /// <param name="power">The power parameter, controls smoothing aggressiveness</param>
+        /// <param name="power">The power parameter, controls smoothing aggressiveness (default 2)</param>
         public JurikMovingAverage(int period, decimal phase = 0, decimal power = 2)
             : this($"JMA({period},{phase},{power})", period, phase, power)
         {
@@ -97,33 +128,80 @@ namespace QuantConnect.Indicators
         /// <returns>A new value for this indicator</returns>
         protected override decimal ComputeNextValue(IndicatorDataPoint input)
         {
-            if (!IsReady)
+            var price = input.Value;
+
+            if (Samples == 1)
             {
-                return 0;
+                // Seed all state from first price
+                _ma1 = price;
+                _upperBand = price;
+                _lowerBand = price;
+                _jma = price;
+                _det0 = 0;
+                _det1 = 0;
+                _vSum = 0;
+                _voltyWindow.Add(0);
+                _vSumWindow.Add(0);
+                return 0m;
             }
 
-            if (Samples == _period)
+            // Compute volatility relative to adaptive bands
+            var del1 = price - _upperBand;
+            var del2 = price - _lowerBand;
+            var volty = Math.Abs(del1) != Math.Abs(del2)
+                ? Math.Max(Math.Abs(del1), Math.Abs(del2))
+                : 0m;
+
+            // Update rolling volatility sum (running average over VolatilitySumLength bars)
+            _voltyWindow.Add(volty);
+            var oldest = _voltyWindow.Count > VolatilitySumLength
+                ? _voltyWindow[VolatilitySumLength]
+                : _voltyWindow[_voltyWindow.Count - 1];
+            _vSum = _vSum + (volty - oldest) / VolatilitySumLength;
+            _vSumWindow.Add(_vSum);
+
+            // Average volatility: mean of v_sum values over available history (up to 65 bars)
+            decimal avgVolty = 0;
+            var count = (int)_vSumWindow.Count;
+            if (count > 0)
             {
-                // Seed the filter with the first price
-                _e0 = input.Value;
-                _e1 = 0;
-                _e2 = 0;
-                _jma = input.Value;
-                return input.Value;
+                decimal sum = 0;
+                for (var i = 0; i < count; i++)
+                {
+                    sum += _vSumWindow[i];
+                }
+                avgVolty = sum / count;
             }
+
+            // Relative volatility factor, clamped to [1, length1^(1/pow1)]
+            var dVolty = avgVolty == 0 ? 0m : volty / avgVolty;
+            var maxRVolty = (decimal)Math.Pow(_length1, 1.0 / _pow1);
+            var rVolty = Math.Max(1.0m, Math.Min(maxRVolty, dVolty));
+
+            // Update Jurik volatility bands using adaptive coefficient
+            var pow2 = Math.Pow((double)rVolty, _pow1);
+            var kv = (decimal)Math.Pow(_bet, Math.Sqrt(pow2));
+            _upperBand = del1 > 0 ? price : price - kv * del1;
+            _lowerBand = del2 < 0 ? price : price - kv * del2;
+
+            // Adaptive alpha: beta^(rVolty^pow1) — varies with market volatility
+            var alpha = (decimal)Math.Pow((double)_beta, pow2);
 
             // Stage 1: Adaptive EMA
-            _e0 = (1 - _alpha) * input.Value + _alpha * _e0;
+            _ma1 = (1 - alpha) * price + alpha * _ma1;
 
             // Stage 2: Kalman-style velocity estimation
-            _e1 = (input.Value - _e0) * (1 - _beta) + _beta * _e1;
+            _det0 = (price - _ma1) * (1 - _beta) + _beta * _det0;
+            var ma2 = _ma1 + _phaseRatio * _det0;
 
-            // Stage 3: Error correction with phase adjustment
-            var oneMinusAlpha = 1 - _alpha;
-            _e2 = (_e0 + _phaseRatio * _e1 - _jma) * (oneMinusAlpha * oneMinusAlpha) + _alpha * _alpha * _e2;
+            // Stage 3: Jurik adaptive error correction
+            _det1 = (ma2 - _jma) * (1 - alpha) * (1 - alpha) + alpha * alpha * _det1;
+            _jma = _jma + _det1;
 
-            // Final JMA value
-            _jma = _jma + _e2;
+            if (!IsReady)
+            {
+                return 0m;
+            }
 
             return _jma;
         }
@@ -133,10 +211,15 @@ namespace QuantConnect.Indicators
         /// </summary>
         public override void Reset()
         {
-            _e0 = 0;
-            _e1 = 0;
-            _e2 = 0;
+            _ma1 = 0;
+            _det0 = 0;
+            _det1 = 0;
             _jma = 0;
+            _upperBand = 0;
+            _lowerBand = 0;
+            _vSum = 0;
+            _voltyWindow.Reset();
+            _vSumWindow.Reset();
             base.Reset();
         }
     }
