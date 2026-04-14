@@ -107,5 +107,29 @@ namespace QuantConnect.Tests.Common.Data.UniverseSelection
             // Assert that its empty
             Assert.IsTrue(!triggerTimesUtc.Any());
         }
+
+        [Test]
+        public void TriggerTimesRespectEndTimeUtc()
+        {
+            using var universe = new ScheduledUniverse(
+                _dateRules.EveryDay(),
+                _timeRules.Every(TimeSpan.FromMinutes(1)),
+                _ => new List<Symbol>()
+            );
+
+            var start = new DateTime(2000, 1, 5, 10, 0, 0);
+            var end = new DateTime(2000, 1, 5, 15, 32, 0);
+
+            var triggerTimesLocal = universe
+                .GetTriggerTimes(start.ConvertToUtc(_timezone), end.ConvertToUtc(_timezone), MarketHoursDatabase.AlwaysOpen)
+                .Select(time => time.ConvertFromUtc(_timezone))
+                .ToList();
+
+            Assert.IsNotEmpty(triggerTimesLocal);
+            Assert.AreEqual(start, triggerTimesLocal.First(), "Start boundary should be included when it matches a trigger time");
+            Assert.AreEqual(end, triggerTimesLocal.Last(), "End boundary should be included when it matches a trigger time");
+            Assert.IsTrue(triggerTimesLocal.All(time => time >= start && time <= end), "All trigger times should be within [start, end]");
+            Assert.AreEqual((int)(end - start).TotalMinutes + 1, triggerTimesLocal.Count);
+        }
     }
 }
