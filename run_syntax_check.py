@@ -72,6 +72,8 @@ def should_ignore(line: str, prev_line_ignored: bool) -> bool:
         'Module has no attribute "JsonConvert"',
         'Too many arguments for "update" of "IndicatorBase"',
         'Signature of "update" incompatible with supertype "IndicatorBase"',
+        # stubs include the obsolete overload GetSettlementModel(Security, AccountType), mypy requires the override to be compatible with both
+        'Signature of "get_settlement_model" incompatible with supertype',
         'has incompatible type "Symbol"; expected "str"',
         # This methods take an indicator and consolidator which might be instances of custom
         # indicator/consolidator Python classes that don't inherit from PythonIndicator or IDataConsolidator
