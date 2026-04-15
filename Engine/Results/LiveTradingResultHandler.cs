@@ -1119,7 +1119,12 @@ namespace QuantConnect.Lean.Engine.Results
         /// </summary>
         public override void OnSecuritiesChanged(SecurityChanges changes)
         {
-            if (_sampleChartAlways)
+            // the security that made us sample always might have been removed, if that's the case we need to check again if we should sample always or not
+            if (_sampleChartAlways && changes.RemovedSecurities.Count > 0 && changes.RemovedSecurities.Any(x => ShouldSampleChartsAlways(x.Symbol)))
+            {
+                _sampleChartAlways = false;
+            }
+            if (_sampleChartAlways) 
             {
                 return;
             }
@@ -1133,10 +1138,7 @@ namespace QuantConnect.Lean.Engine.Results
                 }
 
                 // if the user added Crypto, Forex, Daily or an extended market hours subscription just sample always, one way trip.
-                _sampleChartAlways = symbol.SecurityType == QuantConnect.SecurityType.Crypto
-                                     || symbol.SecurityType == QuantConnect.SecurityType.Forex
-                                     || Algorithm.SubscriptionManager.SubscriptionDataConfigService.GetSubscriptionDataConfigs(symbol)
-                                         .Any(config => config.ExtendedMarketHours || config.Resolution == Resolution.Daily);
+                _sampleChartAlways = ShouldSampleChartsAlways(symbol);
                 if (_sampleChartAlways)
                 {
                     // we set it once to true
@@ -1149,6 +1151,17 @@ namespace QuantConnect.Lean.Engine.Results
                     _exchangeHours[securityChange.Symbol.ID.Market] = securityChange.Exchange.Hours;
                 }
             }
+        }
+
+        /// <summary>
+        /// Checks whether the symbol subscription would make the result handler sample charts always
+        /// </summary>
+        private bool ShouldSampleChartsAlways(Symbol symbol)
+        {
+            return symbol.SecurityType == QuantConnect.SecurityType.Crypto
+                || symbol.SecurityType == QuantConnect.SecurityType.Forex
+                || Algorithm.SubscriptionManager.SubscriptionDataConfigService.GetSubscriptionDataConfigs(symbol)
+                    .Any(config => config.ExtendedMarketHours);
         }
 
         /// <summary>
