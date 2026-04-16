@@ -14,6 +14,7 @@
 */
 
 using System;
+using QuantConnect.Configuration;
 using QuantConnect.Util;
 using QuantConnect.Logging;
 using System.Threading.Tasks;
@@ -27,6 +28,8 @@ namespace QuantConnect.Data.Auxiliary
     /// </summary>
     public class LocalZipMapFileProvider : IMapFileProvider
     {
+        // To prevent infinite recursion if something is wrong with the zip files, we look back a maximum of 30 days by default
+        private readonly int _lookback = Config.GetInt("map-file-zip-lookback-days", 30);
         private Dictionary<AuxiliaryDataKey, MapFileResolver> _cache;
         private IDataProvider _dataProvider;
         private object _lock;
@@ -50,7 +53,7 @@ namespace QuantConnect.Data.Auxiliary
         }
 
         /// <summary>
-        /// Creates a new instance of the <see cref="LocalDiskFactorFileProvider"/>
+        /// Creates a new instance of the <see cref="LocalZipMapFileProvider"/>
         /// </summary>
         public LocalZipMapFileProvider()
         {
@@ -68,7 +71,7 @@ namespace QuantConnect.Data.Auxiliary
             {
                 return;
             }
-            
+
             _dataProvider = dataProvider;
             StartExpirationTask();
         }
@@ -94,7 +97,7 @@ namespace QuantConnect.Data.Auxiliary
         }
 
         /// <summary>
-        /// Helper method that will clear any cached factor files in a daily basis, this is useful for live trading
+        /// Helper method that will clear any cached map files on a daily basis, this is useful for live trading
         /// </summary>
         protected virtual void StartExpirationTask()
         {
@@ -112,35 +115,26 @@ namespace QuantConnect.Data.Auxiliary
             var timestamp = DateTime.UtcNow.ConvertFromUtc(TimeZones.NewYork);
             var todayNewYork = timestamp.Date;
             var yesterdayNewYork = todayNewYork.AddDays(-1);
-
+            var endDate = yesterdayNewYork.AddDays(-_lookback);
+            
             // start the search with yesterday, today's file will be available tomorrow
-            var count = 0;
-            var date = yesterdayNewYork;
-            do
+            for (var date = yesterdayNewYork; date >= endDate; date = date.AddDays(-1))
             {
                 var zipFileName = MapFileZipHelper.GetMapFileZipFileName(market, date, auxiliaryDataKey.SecurityType);
 
                 // Fetch a stream for our zip from our data provider
                 var stream = _dataProvider.Fetch(zipFileName);
 
-                // If we found a file we can read it 
-                if (stream != null)
-                {
-                    Log.Trace("LocalZipMapFileProvider.Get({0}): Fetched map files for: {1} NY", market, date.ToShortDateString());
-                    var result =  new MapFileResolver(MapFileZipHelper.ReadMapFileZip(stream, market, auxiliaryDataKey.SecurityType));
-                    stream.DisposeSafely();
-                    return result;
-                }
+                // If we didn't find a file, continue to the next date
+                if (stream == null) continue;
 
-                // prevent infinite recursion if something is wrong
-                if (count++ > 30)
-                {
-                    throw new InvalidOperationException($"LocalZipMapFileProvider couldn't find any map files going all the way back to {date} for {market}");
-                }
-
-                date = date.AddDays(-1);
+                Log.Trace($"LocalZipMapFileProvider.Get({market}): Fetched map files for: {date.ToShortDateString()} NY ({(date - todayNewYork).Days} days ago).");
+                var result = new MapFileResolver(MapFileZipHelper.ReadMapFileZip(stream, market, auxiliaryDataKey.SecurityType));
+                stream.DisposeSafely();
+                return result;
             }
-            while (true);
+
+            throw new InvalidOperationException($"LocalZipMapFileProvider couldn't find any map files going all the way back to {endDate.ToShortDateString()} for {market}, lookback limit is {_lookback} days");
         }
     }
 }
