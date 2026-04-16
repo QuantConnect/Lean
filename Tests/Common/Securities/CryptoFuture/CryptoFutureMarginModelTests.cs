@@ -18,6 +18,7 @@ using NUnit.Framework;
 using QuantConnect.Algorithm;
 using QuantConnect.Data.Market;
 using QuantConnect.Orders;
+using QuantConnect.Orders.Fees;
 using QuantConnect.Securities;
 using QuantConnect.Securities.CryptoFuture;
 using QuantConnect.Brokerages;
@@ -64,6 +65,37 @@ namespace QuantConnect.Tests.Common.Securities.CryptoFuture
             }
 
             Assert.AreEqual(Math.Abs(marginRequirement), result.Value);
+        }
+
+        [TestCase("BTCUSDT", 10, 16000, 12000)]
+        [TestCase("BTCUSD", 15000, 31300, 30000)]
+        public void InitialMarginRequiredForOrderUsesLimitOrderPrice(string ticker, decimal quantity, decimal securityPrice, decimal limitPrice)
+        {
+            var algo = GetAlgorithm();
+            var cryptoFuture = algo.AddCryptoFuture(ticker);
+            SetPrice(cryptoFuture, securityPrice);
+
+            var limitOrder = new LimitOrder(cryptoFuture.Symbol, quantity, limitPrice, DateTime.UtcNow);
+            var marginModel = cryptoFuture.BuyingPowerModel;
+
+            var marginForLimitOrder = marginModel.GetInitialMarginRequiredForOrder(
+                new InitialMarginRequiredForOrderParameters(algo.Portfolio.CashBook, cryptoFuture, limitOrder)).Value;
+
+            var positionValueAtLimitPrice = cryptoFuture.Holdings.GetQuantityValue(quantity, limitPrice);
+            var expected = Math.Abs(positionValueAtLimitPrice.Amount) / marginModel.GetLeverage(cryptoFuture)
+                           * positionValueAtLimitPrice.Cash.ConversionRate;
+
+            var fees = cryptoFuture.FeeModel.GetOrderFee(new OrderFeeParameters(cryptoFuture, limitOrder)).Value;
+            var feesInAccountCurrency = algo.Portfolio.CashBook.ConvertToAccountCurrency(fees).Amount;
+            expected += feesInAccountCurrency;
+
+            Assert.AreEqual(expected, marginForLimitOrder);
+
+            var marketOrder = new MarketOrder(cryptoFuture.Symbol, quantity, DateTime.UtcNow);
+            var marginForMarketOrder = marginModel.GetInitialMarginRequiredForOrder(
+                new InitialMarginRequiredForOrderParameters(algo.Portfolio.CashBook, cryptoFuture, marketOrder)).Value;
+
+            Assert.AreNotEqual(marginForMarketOrder, marginForLimitOrder);
         }
 
         [Test]

@@ -16,6 +16,7 @@
 using System;
 using System.Linq;
 using QuantConnect.Orders;
+using QuantConnect.Orders.Fees;
 
 namespace QuantConnect.Securities.CryptoFuture
 {
@@ -56,23 +57,31 @@ namespace QuantConnect.Securities.CryptoFuture
         }
 
         /// <summary>
+        /// Gets the total margin required to execute the specified order in units of the account currency including fees
+        /// </summary>
+        /// <param name="parameters">An object containing the portfolio, the security and the order</param>
+        /// <returns>The total margin in terms of the currency quoted in the order</returns>
+        public override InitialMargin GetInitialMarginRequiredForOrder(InitialMarginRequiredForOrderParameters parameters)
+        {
+            var fees = parameters.Security.FeeModel.GetOrderFee(new OrderFeeParameters(parameters.Security, parameters.Order)).Value;
+            var feesInAccountCurrency = parameters.CurrencyConverter.ConvertToAccountCurrency(fees).Amount;
+
+            var orderMargin = GetInitialMarginRequirement(
+                parameters.Security,
+                parameters.Order.Quantity,
+                GetOrderMarginPrice(parameters.Security, parameters.Order));
+
+            return new InitialMargin(orderMargin + Math.Sign(orderMargin) * feesInAccountCurrency);
+        }
+
+        /// <summary>
         /// The margin that must be held in order to increase the position by the provided quantity
         /// </summary>
         /// <param name="parameters">An object containing the security and quantity of shares</param>
         /// <returns>The initial margin required for the option (i.e. the equity required to enter a position for this option)</returns>
         public override InitialMargin GetInitialMarginRequirement(InitialMarginParameters parameters)
         {
-            var security = parameters.Security;
-            var quantity = parameters.Quantity;
-            if (security?.GetLastData() == null || quantity == 0m)
-            {
-                return InitialMargin.Zero;
-            }
-
-            var positionValue = security.Holdings.GetQuantityValue(quantity, security.Price);
-            var marginRequirementInCollateral = Math.Abs(positionValue.Amount) / GetLeverage(security);
-
-            return new InitialMargin(marginRequirementInCollateral * positionValue.Cash.ConversionRate);
+            return new InitialMargin(GetInitialMarginRequirement(parameters.Security, parameters.Quantity, parameters.Security?.Price ?? 0m));
         }
 
         /// <summary>
@@ -179,6 +188,29 @@ namespace QuantConnect.Securities.CryptoFuture
         protected virtual decimal GetTotalCollateralAmount(SecurityPortfolioManager portfolio, Security security, Cash primaryCollateral)
         {
             return primaryCollateral.Amount;
+        }
+
+        private decimal GetInitialMarginRequirement(Security security, decimal quantity, decimal price)
+        {
+            if (security?.GetLastData() == null || quantity == 0m)
+            {
+                return 0m;
+            }
+
+            var positionValue = security.Holdings.GetQuantityValue(quantity, price);
+            var marginRequirementInCollateral = Math.Abs(positionValue.Amount) / GetLeverage(security);
+            return marginRequirementInCollateral * positionValue.Cash.ConversionRate;
+        }
+
+        private static decimal GetOrderMarginPrice(Security security, Order order)
+        {
+            var denominator = Math.Abs(order.Quantity * security.SymbolProperties.ContractMultiplier * security.QuoteCurrency.ConversionRate);
+            if (denominator == 0m)
+            {
+                return security.Price;
+            }
+
+            return Math.Abs(order.GetValue(security)) / denominator;
         }
     }
 }
