@@ -1064,11 +1064,11 @@ namespace QuantConnect.Lean.Engine.Results
                             portfolioTurnover = new Series();
                         }
 
-                        var equityForDrawdown = _equityForDrawdown.Count > 0 ? _equityForDrawdown : equity.Values;
-                        statisticsResults = StatisticsBuilder.Generate(trades, profitLoss, equityForDrawdown, performanceValues, benchmarkValues,
+                        statisticsResults = StatisticsBuilder.Generate(trades, profitLoss, equity.Values, performanceValues, benchmarkValues,
                             portfolioTurnover.Values, StartingPortfolioValue, Algorithm.Portfolio.TotalFees, TotalTradesCount(),
                             estimatedStrategyCapacity, AlgorithmCurrencySymbol, Algorithm.Transactions, Algorithm.RiskFreeInterestRateModel,
-                            Algorithm.Settings.TradingDaysPerYear.Value // already set in Brokerage|Backtesting-SetupHandler classes
+                            Algorithm.Settings.TradingDaysPerYear.Value, // already set in Brokerage|Backtesting-SetupHandler classes
+                            _equityForDrawdown.Count > 0 ? _equityForDrawdown : null
                             );
                     }
                     else
