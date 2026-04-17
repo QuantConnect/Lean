@@ -396,6 +396,43 @@ namespace QuantConnect.Tests.Common.Securities
                     0)));
         }
 
+        [Test]
+        public void GetMaximumOrderQuantityForDeltaBuyingPower_AllowsReducingLeveragedTarget()
+        {
+            var algorithm = new QCAlgorithm();
+            algorithm.SetFinishedWarmingUp();
+            algorithm.SubscriptionManager.SetDataManager(new DataManagerStub(algorithm));
+
+            var ticker = QuantConnect.Securities.Futures.Financials.EuroDollar;
+            var futureSecurity = algorithm.AddFuture(ticker);
+            Update(futureSecurity, 100, algorithm);
+
+            algorithm.Portfolio.SetCash(1000);
+            futureSecurity.Holdings.SetHoldings(100, 10);
+            algorithm.Portfolio.InvalidateTotalPortfolioValue();
+
+            var usedBuyingPower = futureSecurity.BuyingPowerModel.GetReservedBuyingPowerForPosition(
+                new ReservedBuyingPowerForPositionParameters(futureSecurity)).AbsoluteUsedBuyingPower;
+            var totalPortfolioValue = algorithm.Portfolio.TotalPortfolioValue;
+            var targetBuyingPower = 1.1m * totalPortfolioValue;
+            var deltaBuyingPower = targetBuyingPower - usedBuyingPower;
+
+            Assert.Greater(Math.Abs(usedBuyingPower / totalPortfolioValue), 1m);
+            Assert.Less(deltaBuyingPower, 0m);
+
+            Assert.DoesNotThrow(() =>
+            {
+                var result = futureSecurity.BuyingPowerModel.GetMaximumOrderQuantityForDeltaBuyingPower(
+                    new GetMaximumOrderQuantityForDeltaBuyingPowerParameters(
+                        algorithm.Portfolio,
+                        futureSecurity,
+                        deltaBuyingPower,
+                        0
+                    ));
+                Assert.Less(result.Quantity, 0m);
+            });
+        }
+
         [TestCase(1)]
         [TestCase(0.5)]
         [TestCase(-1)]
