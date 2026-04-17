@@ -111,13 +111,39 @@ namespace QuantConnect.Securities.Future
         public override GetMaximumOrderQuantityResult GetMaximumOrderQuantityForTargetBuyingPower(
             GetMaximumOrderQuantityForTargetBuyingPowerParameters parameters)
         {
-            if (Math.Abs(parameters.TargetBuyingPower) > 1)
+            if (Math.Abs(parameters.TargetBuyingPower) > 1
+                && !IsReducingExistingExposure(parameters))
             {
                 throw new InvalidOperationException(
                     "Futures do not allow specifying a leveraged target, since they are traded using margin which already is leveraged. " +
                     $"Possible target buying power goes from -1 to 1, target provided is: {parameters.TargetBuyingPower}");
             }
             return base.GetMaximumOrderQuantityForTargetBuyingPower(parameters);
+        }
+
+        /// <summary>
+        /// Futures can temporarily exceed 100% target buying power during margin call liquidation requests.
+        /// In these cases we allow leveraged targets only when they reduce existing exposure.
+        /// </summary>
+        private bool IsReducingExistingExposure(GetMaximumOrderQuantityForTargetBuyingPowerParameters parameters)
+        {
+            var totalPortfolioValue = parameters.Portfolio.TotalPortfolioValue;
+            if (totalPortfolioValue == 0)
+            {
+                return false;
+            }
+
+            var currentMargin = this.GetInitialMarginRequirement(
+                parameters.Security, parameters.Security.Holdings.Quantity
+            );
+            if (currentMargin == 0)
+            {
+                return false;
+            }
+
+            var targetMargin = parameters.TargetBuyingPower * totalPortfolioValue;
+            return Math.Sign(targetMargin) == Math.Sign(currentMargin)
+                && Math.Abs(targetMargin) <= Math.Abs(currentMargin);
         }
 
         /// <summary>
