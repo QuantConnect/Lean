@@ -23,17 +23,18 @@ namespace QuantConnect.Data.Consolidators
     {
         /// <summary>
         /// Gets the most recently consolidated piece of data. This will be null if this consolidator
-        /// has not produced any data yet.
+        /// has not produced any data yet. Setting this property adds the value to the rolling window.
         /// </summary>
-        public IBaseData Consolidated { get; protected set; }
-
-        /// <summary>
-        /// Updates <see cref="Consolidated"/> and adds the bar to the rolling window.
-        /// </summary>
-        protected void UpdateConsolidated(IBaseData consolidated)
+        public IBaseData Consolidated
         {
-            Consolidated = consolidated;
-            Window.Add(consolidated);
+            get
+            {
+                return Window.Count > 0 ? Window[0] : null;
+            }
+            protected set
+            {
+                Window.Add(value);
+            }
         }
 
         /// <summary>
@@ -41,7 +42,6 @@ namespace QuantConnect.Data.Consolidators
         /// </summary>
         public virtual void Reset()
         {
-            Consolidated = null;
             ResetWindow();
         }
     }

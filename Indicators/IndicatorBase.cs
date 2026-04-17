@@ -74,7 +74,7 @@ namespace QuantConnect.Indicators
         /// <summary>
         /// Initializes a new instance of the Indicator class.
         /// </summary>
-        protected IndicatorBase()
+        protected IndicatorBase() : base(Indicator.DefaultWindowSize)
         {
             Current = new IndicatorDataPoint(DateTime.MinValue, 0m);
         }
