@@ -257,7 +257,7 @@ namespace QuantConnect.Data.Consolidators
             DataConsolidated?.Invoke(this, consolidated);
             _currentBar = consolidated;
             _dataConsolidatedHandler?.Invoke(this, consolidated);
-            UpdateConsolidated(consolidated);
+            Consolidated = consolidated;
         }
 
         private void Rising(IBaseData data)

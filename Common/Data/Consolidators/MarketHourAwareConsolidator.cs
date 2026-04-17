@@ -276,7 +276,7 @@ namespace QuantConnect.Data.Consolidators
         protected virtual void ForwardConsolidatedBar(object sender, IBaseData consolidated)
         {
             DataConsolidated?.Invoke(this, consolidated);
-            UpdateConsolidated(consolidated);
+            Consolidated = consolidated;
         }
     }
 }

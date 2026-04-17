@@ -93,9 +93,9 @@ namespace QuantConnect.Data.Consolidators
             var handler = DataConsolidated;
             if (handler != null) handler(this, consolidated);
 
-            // assign Consolidated and push to Window after the event handlers fire,
+            // assign Consolidated (and push to Window) after the event handlers fire,
             // so handlers can compare the new bar against the previous one without extra bookkeeping
-            UpdateConsolidated(consolidated);
+            Consolidated = consolidated;
         }
 
         /// <summary>Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.</summary>
