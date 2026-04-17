@@ -485,6 +485,36 @@ namespace QuantConnect.Tests.Common.Securities
         }
 
         [Test]
+        public void EnsureCurrencyDataFeedForCryptoCurrency_UsesCryptoFuture_WhenSpotPairMissing()
+        {
+            var book = new CashBook
+            {
+                {Currencies.USD, new Cash(Currencies.USD, 100, 1) },
+                {"API3", new Cash("API3", 100, 0) }
+            };
+
+            var subscriptions = new SubscriptionManager(NullTimeKeeper.Instance);
+            var dataManager = new DataManagerStub(TimeKeeper);
+            subscriptions.SetDataManager(dataManager);
+            var securities = new SecurityManager(TimeKeeper);
+
+            var marketMapWithBybit = MarketMap.ToDictionary();
+            marketMapWithBybit[SecurityType.Crypto] = Market.Bybit;
+            marketMapWithBybit[SecurityType.CryptoFuture] = Market.Bybit;
+
+            book.EnsureCurrencyDataFeeds(securities, subscriptions, marketMapWithBybit, SecurityChanges.None, dataManager.SecurityService);
+
+            var api3Cash = book["API3"];
+            Assert.IsInstanceOf(typeof(SecurityCurrencyConversion), api3Cash.CurrencyConversion);
+            var conversionSymbols = api3Cash.CurrencyConversion
+                .ConversionRateSecurities
+                .Select(x => x.Symbol)
+                .ToHashSet();
+
+            Assert.IsTrue(conversionSymbols.Contains(Symbol.Create("API3USDT", SecurityType.CryptoFuture, Market.Bybit)));
+        }
+
+        [Test]
         public void UpdateModifiesConversionRateAsInvertedValue()
         {
             const int quantity = 100;
