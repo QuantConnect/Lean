@@ -55,12 +55,12 @@ namespace QuantConnect.Tests.Common.Securities.CryptoFuture
             decimal marginRequirement;
             if (ticker == "BTCUSD")
             {
-                // ((quantity * contract mutiplier * price) / leverage) * conversion rate (BTC -> USD)
+                // ((quantity * contract multiplier * price) / leverage) * conversion rate (BTC -> USD)
                 marginRequirement = ((parameters.Quantity * 100m * cryptoFuture.Price) / 25m) * 1 / cryptoFuture.Price;
             }
             else
             {
-                // ((quantity * contract mutiplier * price) / leverage) * conversion rate (USDT ~= USD)
+                // ((quantity * contract multiplier * price) / leverage) * conversion rate (USDT ~= USD)
                 marginRequirement = ((parameters.Quantity * 1m * cryptoFuture.Price) / 25m) * 1;
             }
 
@@ -81,13 +81,8 @@ namespace QuantConnect.Tests.Common.Securities.CryptoFuture
             var marginForLimitOrder = marginModel.GetInitialMarginRequiredForOrder(
                 new InitialMarginRequiredForOrderParameters(algo.Portfolio.CashBook, cryptoFuture, limitOrder)).Value;
 
-            var positionValueAtLimitPrice = cryptoFuture.Holdings.GetQuantityValue(quantity, limitPrice);
-            var expected = Math.Abs(positionValueAtLimitPrice.Amount) / marginModel.GetLeverage(cryptoFuture)
-                           * positionValueAtLimitPrice.Cash.ConversionRate;
-
-            var fees = cryptoFuture.FeeModel.GetOrderFee(new OrderFeeParameters(cryptoFuture, limitOrder)).Value;
-            var feesInAccountCurrency = algo.Portfolio.CashBook.ConvertToAccountCurrency(fees).Amount;
-            expected += feesInAccountCurrency;
+            var expectedLimitOrderPrice = GetOrderMarginPrice(quantity, limitPrice, securityPrice);
+            var expected = GetExpectedOrderInitialMargin(algo, cryptoFuture, limitOrder, expectedLimitOrderPrice);
 
             Assert.AreEqual(expected, marginForLimitOrder);
 
@@ -96,6 +91,58 @@ namespace QuantConnect.Tests.Common.Securities.CryptoFuture
                 new InitialMarginRequiredForOrderParameters(algo.Portfolio.CashBook, cryptoFuture, marketOrder)).Value;
 
             Assert.AreNotEqual(marginForMarketOrder, marginForLimitOrder);
+        }
+
+        [TestCase("BTCUSDT", -10, 16000, 19000)]
+        [TestCase("BTCUSD", -15000, 31300, 34000)]
+        public void InitialMarginRequiredForOrderUsesLimitOrderPriceForShortOrders(string ticker, decimal quantity, decimal securityPrice, decimal limitPrice)
+        {
+            var algo = GetAlgorithm();
+            var cryptoFuture = algo.AddCryptoFuture(ticker);
+            SetPrice(cryptoFuture, securityPrice);
+
+            var limitOrder = new LimitOrder(cryptoFuture.Symbol, quantity, limitPrice, DateTime.UtcNow);
+            var marginModel = cryptoFuture.BuyingPowerModel;
+
+            var marginForLimitOrder = marginModel.GetInitialMarginRequiredForOrder(
+                new InitialMarginRequiredForOrderParameters(algo.Portfolio.CashBook, cryptoFuture, limitOrder)).Value;
+
+            var expectedLimitOrderPrice = GetOrderMarginPrice(quantity, limitPrice, securityPrice);
+            var expected = GetExpectedOrderInitialMargin(algo, cryptoFuture, limitOrder, expectedLimitOrderPrice);
+
+            Assert.AreEqual(expected, marginForLimitOrder);
+
+            var marketOrder = new MarketOrder(cryptoFuture.Symbol, quantity, DateTime.UtcNow);
+            var marginForMarketOrder = marginModel.GetInitialMarginRequiredForOrder(
+                new InitialMarginRequiredForOrderParameters(algo.Portfolio.CashBook, cryptoFuture, marketOrder)).Value;
+
+            Assert.AreNotEqual(marginForMarketOrder, marginForLimitOrder);
+        }
+
+        [TestCase("BTCUSDT", -10, 16000, 17000, 19000)]
+        [TestCase("BTCUSD", -15000, 31300, 32000, 34000)]
+        public void InitialMarginRequiredForOrderUsesStopLimitOrderPrice(string ticker, decimal quantity, decimal securityPrice, decimal stopPrice, decimal limitPrice)
+        {
+            var algo = GetAlgorithm();
+            var cryptoFuture = algo.AddCryptoFuture(ticker);
+            SetPrice(cryptoFuture, securityPrice);
+
+            var stopLimitOrder = new StopLimitOrder(cryptoFuture.Symbol, quantity, stopPrice, limitPrice, DateTime.UtcNow);
+            var marginModel = cryptoFuture.BuyingPowerModel;
+
+            var marginForStopLimitOrder = marginModel.GetInitialMarginRequiredForOrder(
+                new InitialMarginRequiredForOrderParameters(algo.Portfolio.CashBook, cryptoFuture, stopLimitOrder)).Value;
+
+            var expectedStopLimitOrderPrice = GetOrderMarginPrice(quantity, limitPrice, securityPrice);
+            var expected = GetExpectedOrderInitialMargin(algo, cryptoFuture, stopLimitOrder, expectedStopLimitOrderPrice);
+
+            Assert.AreEqual(expected, marginForStopLimitOrder);
+
+            var marketOrder = new MarketOrder(cryptoFuture.Symbol, quantity, DateTime.UtcNow);
+            var marginForMarketOrder = marginModel.GetInitialMarginRequiredForOrder(
+                new InitialMarginRequiredForOrderParameters(algo.Portfolio.CashBook, cryptoFuture, marketOrder)).Value;
+
+            Assert.AreNotEqual(marginForMarketOrder, marginForStopLimitOrder);
         }
 
         [Test]
@@ -166,7 +213,7 @@ namespace QuantConnect.Tests.Common.Securities.CryptoFuture
             var buyingPower = cryptoFuture.BuyingPowerModel.GetBuyingPower(
                 new BuyingPowerParameters(algo.Portfolio, cryptoFuture, OrderDirection.Buy));
 
-            // BNFCR presence triggers supplementary collateral — USDC should be included
+            // BNFCR presence triggers supplementary collateral - USDC should be included
             Assert.AreEqual(100m + algoCash, buyingPower.Value);
         }
 
@@ -185,7 +232,7 @@ namespace QuantConnect.Tests.Common.Securities.CryptoFuture
             var buyingPower = cryptoFuture.BuyingPowerModel.GetBuyingPower(
                 new BuyingPowerParameters(algo.Portfolio, cryptoFuture, OrderDirection.Buy));
 
-            // 0 (USDC) + 0.5 * 16000 (BTC → USDC via USD) = 8000
+            // 0 (USDC) + 0.5 * 16000 (BTC -> USDC via USD) = 8000
             Assert.AreEqual(8000m + algoCash, buyingPower.Value);
         }
 
@@ -195,13 +242,13 @@ namespace QuantConnect.Tests.Common.Securities.CryptoFuture
             var algo = GetBinanceFuturesAlgorithm();
             var algoCash = algo.Portfolio.Cash;
 
-            // Two USDⓈ-M futures with DIFFERENT quote currencies
+            // Two USD-margined futures with DIFFERENT quote currencies
             var btcUsdt = algo.AddCryptoFuture("BTCUSDT");
             var ethUsdc = algo.AddCryptoFuture("ETHUSDC");
             SetPrice(btcUsdt, 16000);
             SetPrice(ethUsdc, 1600);
 
-            // EU user: BNFCR present — all USDⓈ-M futures share collateral pool
+            // EU user: BNFCR present - all USD-margined futures share collateral pool
             algo.SetCash("BNFCR", 10000, 1);
 
             // Simulate an existing ETHUSDC position (10 ETH @ $1,600)
@@ -270,6 +317,31 @@ namespace QuantConnect.Tests.Common.Securities.CryptoFuture
                 Low = price,
                 Close = price
             });
+        }
+
+        private static decimal GetExpectedOrderInitialMargin(QCAlgorithm algo, Security security, Order order, decimal orderPrice)
+        {
+            var marginModel = security.BuyingPowerModel;
+            var positionValue = security.Holdings.GetQuantityValue(order.Quantity, orderPrice);
+            var expected = Math.Abs(positionValue.Amount) / marginModel.GetLeverage(security)
+                           * positionValue.Cash.ConversionRate;
+
+            var fees = security.FeeModel.GetOrderFee(new OrderFeeParameters(security, order)).Value;
+            var feesInAccountCurrency = algo.Portfolio.CashBook.ConvertToAccountCurrency(fees).Amount;
+
+            return expected + feesInAccountCurrency;
+        }
+
+        private static decimal GetOrderMarginPrice(decimal quantity, decimal orderLimitPrice, decimal securityPrice)
+        {
+            if (quantity == 0m)
+            {
+                return securityPrice;
+            }
+
+            return quantity > 0m
+                ? Math.Min(orderLimitPrice, securityPrice)
+                : Math.Max(orderLimitPrice, securityPrice);
         }
     }
 }
