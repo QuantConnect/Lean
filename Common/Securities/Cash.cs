@@ -261,19 +261,28 @@ namespace QuantConnect.Securities
             var forexEntries = GetAvailableSymbolPropertiesDatabaseEntries(SecurityType.Forex, marketMap, markets);
             var cfdEntries = GetAvailableSymbolPropertiesDatabaseEntries(SecurityType.Cfd, marketMap, markets);
             var cryptoEntries = GetAvailableSymbolPropertiesDatabaseEntries(SecurityType.Crypto, marketMap, markets);
+            var cryptoFutureEntries = Enumerable.Empty<KeyValuePair<SecurityDatabaseKey, SymbolProperties>>();
 
-            if (marketMap.TryGetValue(SecurityType.CryptoFuture, out var cryptoFutureMarket) && cryptoFutureMarket == Market.DYDX)
+            if (marketMap.TryGetValue(SecurityType.CryptoFuture, out var cryptoFutureMarket))
             {
-                // Put additional logic for dYdX crypto futures as they don't have Crypto (Spot) market
-                // Also need to add them first to give the priority
-                // TODO: remove once dydx SPOT market will be imlemented
-                cryptoEntries = GetAvailableSymbolPropertiesDatabaseEntries(SecurityType.CryptoFuture, marketMap, markets).Concat(cryptoEntries);
+                cryptoFutureEntries = GetAvailableSymbolPropertiesDatabaseEntries(SecurityType.CryptoFuture, marketMap, markets);
+                if (cryptoFutureMarket == Market.DYDX)
+                {
+                    // Put additional logic for dYdX crypto futures as they don't have Crypto (Spot) market
+                    // Also need to add them first to give the priority
+                    // TODO: remove once dydx SPOT market will be imlemented
+                    cryptoEntries = cryptoFutureEntries.Concat(cryptoEntries);
+                }
             }
 
             var potentialEntries = forexEntries
                 .Concat(cfdEntries)
                 .Concat(cryptoEntries)
                 .ToList();
+
+            Func<KeyValuePair<SecurityDatabaseKey, SymbolProperties>, bool> matchesCurrency = x =>
+                Symbol == x.Key.Symbol.Substring(0, x.Key.Symbol.Length - x.Value.QuoteCurrency.Length) ||
+                Symbol == x.Value.QuoteCurrency;
 
             // Special case for crypto markets without direct pairs (They wont be found by the above)
             // This allows us to add cash for "StableCoins" that are 1-1 with our account currency without needing a conversion security.
@@ -284,9 +293,13 @@ namespace QuantConnect.Securities
                 return null;
             }
 
-            if (!potentialEntries.Any(x =>
-                    Symbol == x.Key.Symbol.Substring(0, x.Key.Symbol.Length - x.Value.QuoteCurrency.Length) ||
-                    Symbol == x.Value.QuoteCurrency))
+            if (!potentialEntries.Any(matchesCurrency) && cryptoFutureEntries.Any())
+            {
+                // Some brokerages list conversion pairs only in their crypto futures market (for example API3USDT on Bybit).
+                potentialEntries = potentialEntries.Concat(cryptoFutureEntries).ToList();
+            }
+
+            if (!potentialEntries.Any(matchesCurrency))
             {
                 // currency not found in any tradeable pair
                 Log.Error(Messages.Cash.NoTradablePairFoundForCurrencyConversion(Symbol, accountCurrency, marketMap.Where(kvp => ProvidesConversionRate(kvp.Key))));
