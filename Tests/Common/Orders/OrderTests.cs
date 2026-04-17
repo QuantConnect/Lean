@@ -80,6 +80,15 @@ namespace QuantConnect.Tests.Common.Orders
             }
         }
 
+        [Test]
+        public void PeggedToMidpointOrder_ClonesCorrectly()
+        {
+            var order = new PeggedToMidpointOrder(Symbols.SPY, 100, 10, 2, DateTime.Now);
+            var clone = (PeggedToMidpointOrder)order.Clone();
+            Assert.AreEqual(order.LimitPrice, clone.LimitPrice);
+            Assert.AreEqual(order.LimitPriceOffset, clone.LimitPriceOffset);
+        }
+
         private static TestCaseData[] GetValueTestParameters()
         {
             const decimal delta = 1m;
@@ -165,6 +174,8 @@ namespace QuantConnect.Tests.Common.Orders
                 new ValueTestParameters("EquityShortTrailingStopOrderPriceMinusDelta", equity, new TrailingStopOrder(Symbols.SPY, -quantity, priceMinusDelta, 0.1m, true, time), -quantity*price),
                 new ValueTestParameters("EquityLongLimitIfTouchedOrder", equity, new LimitIfTouchedOrder(Symbols.SPY, quantity, 1.5m*pricePlusDelta, priceMinusDelta, time), quantity*priceMinusDelta),
                 new ValueTestParameters("EquityShortLimitIfTouchedOrder", equity, new LimitIfTouchedOrder(Symbols.SPY, -quantity, .5m*priceMinusDelta, pricePlusDelta, time), -quantity*pricePlusDelta),
+                new ValueTestParameters("EquityLongPeggedToMidpointOrder", equity, new PeggedToMidpointOrder(Symbols.SPY, quantity, priceMinusDelta, 0, time), quantity*priceMinusDelta),
+                new ValueTestParameters("EquityShortPeggedToMidpointOrder", equity, new PeggedToMidpointOrder(Symbols.SPY, -quantity, pricePlusDelta, 0, time), -quantity*pricePlusDelta),
 
                 // forex orders
                 new ValueTestParameters("ForexLongMarketOrder", forex, new MarketOrder(Symbols.EURGBP, quantity, time), quantity*price*forex.QuoteCurrency.ConversionRate),

@@ -724,6 +724,64 @@ namespace QuantConnect.Algorithm
         }
 
         /// <summary>
+        /// Send a pegged-to-midpoint order to the transaction handler:
+        /// </summary>
+        /// <param name="symbol">Symbol for the asset</param>
+        /// <param name="quantity">Quantity of shares for the order</param>
+        /// <param name="limitPrice">Optional limit price cap (buy) or floor (sell)</param>
+        /// <param name="limitPriceOffset">Offset from the midpoint</param>
+        /// <param name="asynchronous">Send the order asynchronously (false). Otherwise we'll block until it is fully submitted</param>
+        /// <param name="tag">String tag for the order (optional)</param>
+        /// <param name="orderProperties">The order properties to use. Defaults to <see cref="DefaultOrderProperties"/></param>
+        /// <returns>The order ticket instance.</returns>
+        public OrderTicket PeggedToMidpointOrder(Symbol symbol, int quantity, decimal limitPrice, decimal limitPriceOffset,
+            bool asynchronous = false, string tag = "", IOrderProperties orderProperties = null)
+        {
+            return PeggedToMidpointOrder(symbol, (decimal)quantity, limitPrice, limitPriceOffset, asynchronous, tag, orderProperties);
+        }
+
+        /// <summary>
+        /// Send a pegged-to-midpoint order to the transaction handler:
+        /// </summary>
+        /// <param name="symbol">Symbol for the asset</param>
+        /// <param name="quantity">Quantity of shares for the order</param>
+        /// <param name="limitPrice">Optional limit price cap (buy) or floor (sell)</param>
+        /// <param name="limitPriceOffset">Offset from the midpoint</param>
+        /// <param name="asynchronous">Send the order asynchronously (false). Otherwise we'll block until it is fully submitted</param>
+        /// <param name="tag">String tag for the order (optional)</param>
+        /// <param name="orderProperties">The order properties to use. Defaults to <see cref="DefaultOrderProperties"/></param>
+        /// <returns>The order ticket instance.</returns>
+        public OrderTicket PeggedToMidpointOrder(Symbol symbol, double quantity, decimal limitPrice, decimal limitPriceOffset,
+            bool asynchronous = false, string tag = "", IOrderProperties orderProperties = null)
+        {
+            return PeggedToMidpointOrder(symbol, quantity.SafeDecimalCast(), limitPrice, limitPriceOffset, asynchronous, tag, orderProperties);
+        }
+
+        /// <summary>
+        /// Send a pegged-to-midpoint order to the transaction handler:
+        /// </summary>
+        /// <param name="symbol">Symbol for the asset</param>
+        /// <param name="quantity">Quantity of shares for the order</param>
+        /// <param name="limitPrice">Optional limit price cap (buy) or floor (sell)</param>
+        /// <param name="limitPriceOffset">Offset from the midpoint</param>
+        /// <param name="asynchronous">Send the order asynchronously (false). Otherwise we'll block until it is fully submitted</param>
+        /// <param name="tag">String tag for the order (optional)</param>
+        /// <param name="orderProperties">The order properties to use. Defaults to <see cref="DefaultOrderProperties"/></param>
+        /// <returns>The order ticket instance.</returns>
+        [DocumentationAttribute(TradingAndOrders)]
+        public OrderTicket PeggedToMidpointOrder(Symbol symbol, decimal quantity, decimal limitPrice, decimal limitPriceOffset,
+            bool asynchronous = false, string tag = "", IOrderProperties orderProperties = null)
+        {
+            var security = Securities[symbol];
+            var request = CreateSubmitOrderRequest(OrderType.PeggedToMidpoint, security, quantity, tag,
+                limitPrice: limitPrice, triggerPrice: limitPriceOffset,
+                properties: orderProperties ?? DefaultOrderProperties?.Clone(),
+                asynchronous: asynchronous);
+
+            return SubmitOrderRequest(request);
+        }
+
+        /// <summary>
         /// Send an exercise order to the transaction handler
         /// </summary>
         /// <param name="optionSymbol">String symbol for the option position</param>
