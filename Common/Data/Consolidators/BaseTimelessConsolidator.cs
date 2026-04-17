@@ -182,7 +182,7 @@ namespace QuantConnect.Data.Consolidators
 
             DataConsolidatedHandler?.Invoke(this, consolidated);
 
-            UpdateConsolidated(consolidated);
+            Consolidated = consolidated;
         }
 
         /// <summary>Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.</summary>

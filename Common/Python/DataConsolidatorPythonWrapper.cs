@@ -14,67 +14,25 @@
 */
 
 using System;
-using System.Collections;
-using System.Collections.Generic;
 using Python.Runtime;
 using QuantConnect.Data;
 using QuantConnect.Data.Consolidators;
-using QuantConnect.Indicators;
 
 namespace QuantConnect.Python
 {
     /// <summary>
     /// Provides an Data Consolidator that wraps a <see cref="PyObject"/> object that represents a custom Python consolidator
     /// </summary>
-    public class DataConsolidatorPythonWrapper : BasePythonWrapper<IDataConsolidator>, IDataConsolidator, IEnumerable<IBaseData>
+    public class DataConsolidatorPythonWrapper : ConsolidatorBase, IDataConsolidator
     {
-        internal PyObject Model => Instance;
-
-        /// <summary>
-        /// A rolling window keeping a history of the consolidated bars. The most recent bar is at index 0.
-        /// </summary>
-        public RollingWindow<IBaseData> Window { get; } = new RollingWindow<IBaseData>(WindowBase<IBaseData>.DefaultWindowSize);
-
-        /// <summary>
-        /// Indexes the history window, where index 0 is the most recently consolidated bar.
-        /// </summary>
-        public IBaseData this[int i] => Window[i];
-
-        /// <summary>
-        /// Returns an enumerator that iterates through the history window.
-        /// </summary>
-        public IEnumerator<IBaseData> GetEnumerator() => Window.GetEnumerator();
-
-        /// <summary>
-        /// Returns an enumerator that iterates through the history window.
-        /// </summary>
-        IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
-
-        /// <summary>
-        /// Gets the most recently consolidated piece of data. This will be null if this consolidator
-        /// has not produced any data yet.
-        /// </summary>
-        public IBaseData Consolidated
-        {
-            get { return GetProperty<IBaseData>(nameof(Consolidated)); }
-        }
-
-        /// <summary>
-        /// Gets the most recently consolidated piece of data. Alias of <see cref="Consolidated"/>.
-        /// </summary>
-        public IBaseData Current => Consolidated;
-
-        /// <summary>
-        /// Gets the previously consolidated piece of data, or null if fewer than two bars have been produced.
-        /// </summary>
-        public IBaseData Previous => Window.Count > 1 ? Window[1] : null;
+        private readonly BasePythonWrapper<IDataConsolidator> _pythonWrapper;
 
         /// <summary>
         /// Gets a clone of the data being currently consolidated
         /// </summary>
         public IBaseData WorkingData
         {
-            get { return GetProperty<IBaseData>(nameof(WorkingData)); }
+            get { return _pythonWrapper.GetProperty<IBaseData>(nameof(WorkingData)); }
         }
 
         /// <summary>
@@ -82,7 +40,7 @@ namespace QuantConnect.Python
         /// </summary>
         public Type InputType
         {
-            get { return GetProperty<Type>(nameof(InputType)); }
+            get { return _pythonWrapper.GetProperty<Type>(nameof(InputType)); }
         }
 
         /// <summary>
@@ -90,7 +48,7 @@ namespace QuantConnect.Python
         /// </summary>
         public Type OutputType
         {
-            get { return GetProperty<Type>(nameof(OutputType)); }
+            get { return _pythonWrapper.GetProperty<Type>(nameof(OutputType)); }
         }
 
         /// <summary>
@@ -100,12 +58,12 @@ namespace QuantConnect.Python
         {
             add
             {
-                var eventHandler = GetEvent(nameof(DataConsolidated));
+                var eventHandler = _pythonWrapper.GetEvent(nameof(DataConsolidated));
                 eventHandler += value;
             }
             remove
             {
-                var eventHandler = GetEvent(nameof(DataConsolidated));
+                var eventHandler = _pythonWrapper.GetEvent(nameof(DataConsolidated));
                 eventHandler -= value;
             }
         }
@@ -115,9 +73,9 @@ namespace QuantConnect.Python
         /// </summary>
         /// <param name="consolidator">Represents a custom python consolidator</param>
         public DataConsolidatorPythonWrapper(PyObject consolidator)
-            : base(consolidator, true)
         {
-            DataConsolidated += (_, bar) => Window.Add(bar);
+            _pythonWrapper = new BasePythonWrapper<IDataConsolidator>(consolidator, true);
+            DataConsolidated += (_, bar) => Consolidated = bar;
         }
 
         /// <summary>
@@ -126,7 +84,7 @@ namespace QuantConnect.Python
         /// <param name="currentLocalTime">The current time in the local time zone (same as <see cref="BaseData.Time"/>)</param>
         public void Scan(DateTime currentLocalTime)
         {
-            InvokeMethod(nameof(Scan), currentLocalTime);
+            _pythonWrapper.InvokeMethod(nameof(Scan), currentLocalTime);
         }
 
         /// <summary>
@@ -135,22 +93,24 @@ namespace QuantConnect.Python
         /// <param name="data">The new data for the consolidator</param>
         public void Update(IBaseData data)
         {
-            InvokeMethod(nameof(Update), data);
-        }
-
-        /// <summary>Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.</summary>
-        /// <filterpriority>2</filterpriority>
-        public void Dispose()
-        {
+            _pythonWrapper.InvokeMethod(nameof(Update), data);
         }
 
         /// <summary>
         /// Resets the consolidator
         /// </summary>
-        public void Reset()
+        public override void Reset()
         {
-            InvokeMethod(nameof(Reset));
-            Window.Reset();
+            _pythonWrapper.InvokeMethod(nameof(Reset));
+            base.Reset();
+        }
+
+        /// <summary>
+        /// Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.
+        /// </summary>
+        public void Dispose()
+        {
+            _pythonWrapper.Dispose();
         }
     }
 }

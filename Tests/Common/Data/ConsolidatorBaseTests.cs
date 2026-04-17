@@ -39,6 +39,9 @@ namespace QuantConnect.Tests.Common.Data
             Assert.AreEqual(2, windowConsolidator.Window.Count);
             Assert.AreEqual(expectedWindow0, windowConsolidator.Window[0].Value);
             Assert.AreEqual(expectedWindow1, windowConsolidator.Window[1].Value);
+            Assert.AreEqual(windowConsolidator.Window[0], windowConsolidator.Consolidated);
+            Assert.AreEqual(expectedWindow0, windowConsolidator[0].Value);
+            Assert.AreEqual(expectedWindow1, windowConsolidator.Previous.Value);
 
             consolidator.Dispose();
         }
