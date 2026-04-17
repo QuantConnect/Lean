@@ -23,7 +23,7 @@ namespace QuantConnect.Data.Consolidators
     /// and/or aggregated data.
     /// </summary>
     /// <typeparam name="TInput">The type consumed by the consolidator</typeparam>
-    public abstract class DataConsolidator<TInput> : IDataConsolidator
+    public abstract class DataConsolidator<TInput> : ConsolidatorBase, IDataConsolidator
         where TInput : IBaseData
     {
         /// <summary>
@@ -53,15 +53,6 @@ namespace QuantConnect.Data.Consolidators
         public event DataConsolidatedHandler DataConsolidated;
 
         /// <summary>
-        /// Gets the most recently consolidated piece of data. This will be null if this consolidator
-        /// has not produced any data yet.
-        /// </summary>
-        public IBaseData Consolidated
-        {
-            get; protected set;
-        }
-
-        /// <summary>
         /// Gets a clone of the data being currently consolidated
         /// </summary>
         public abstract IBaseData WorkingData
@@ -74,7 +65,7 @@ namespace QuantConnect.Data.Consolidators
         /// </summary>
         public Type InputType
         {
-            get { return typeof (TInput); }
+            get { return typeof(TInput); }
         }
 
         /// <summary>
@@ -102,18 +93,9 @@ namespace QuantConnect.Data.Consolidators
             var handler = DataConsolidated;
             if (handler != null) handler(this, consolidated);
 
-            // assign the Consolidated property after the event handlers are fired,
-            // this allows the event handlers to look at the new consolidated data
-            // and the previous consolidated data at the same time without extra bookkeeping
+            // assign Consolidated (and push to Window) after the event handlers fire,
+            // so handlers can compare the new bar against the previous one without extra bookkeeping
             Consolidated = consolidated;
-        }
-
-        /// <summary>
-        /// Resets the consolidator
-        /// </summary>
-        public virtual void Reset()
-        {
-            Consolidated = null;
         }
 
         /// <summary>Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.</summary>

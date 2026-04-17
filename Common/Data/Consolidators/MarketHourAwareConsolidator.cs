@@ -25,7 +25,7 @@ namespace QuantConnect.Data.Common
     /// <summary>
     /// Consolidator for open markets bar only, extended hours bar are not consolidated.
     /// </summary>
-    public class MarketHourAwareConsolidator : IDataConsolidator
+    public class MarketHourAwareConsolidator : ConsolidatorBase, IDataConsolidator
     {
         private readonly bool _dailyStrictEndTimeEnabled;
         private readonly bool _extendedMarketHours;
@@ -50,12 +50,6 @@ namespace QuantConnect.Data.Common
         /// The associated data time zone
         /// </summary>
         protected DateTimeZone DataTimeZone { get; set; }
-
-        /// <summary>
-        /// Gets the most recently consolidated piece of data. This will be null if this consolidator
-        /// has not produced any data yet.
-        /// </summary>
-        public IBaseData Consolidated => Consolidator.Consolidated;
 
         /// <summary>
         /// Gets the type consumed by this consolidator
@@ -164,12 +158,13 @@ namespace QuantConnect.Data.Common
         /// <summary>
         /// Resets the consolidator
         /// </summary>
-        public void Reset()
+        public override void Reset()
         {
             _useStrictEndTime = false;
             ExchangeHours = null;
             DataTimeZone = null;
             Consolidator.Reset();
+            base.Reset();
         }
 
         /// <summary>
@@ -214,6 +209,7 @@ namespace QuantConnect.Data.Common
         protected virtual void ForwardConsolidatedBar(object sender, IBaseData consolidated)
         {
             DataConsolidated?.Invoke(this, consolidated);
+            Consolidated = consolidated;
         }
     }
 }

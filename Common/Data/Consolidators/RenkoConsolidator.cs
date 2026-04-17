@@ -24,13 +24,12 @@ namespace QuantConnect.Data.Consolidators
     /// </summary>
     /// <remarks>This implementation replaced the original implementation that was shown to have inaccuracies in its representation
     /// of Renko charts. The original implementation has been moved to <see cref="ClassicRenkoConsolidator"/>.</remarks>
-    public class RenkoConsolidator : IDataConsolidator
+    public class RenkoConsolidator : ConsolidatorBase, IDataConsolidator
     {
         private bool _firstTick = true;
         private RenkoBar _lastWicko;
         private DataConsolidatedHandler _dataConsolidatedHandler;
         private RenkoBar _currentBar;
-        private IBaseData _consolidated;
         
         /// <summary>
         /// Time of consolidated close.
@@ -93,16 +92,6 @@ namespace QuantConnect.Data.Consolidators
         /// Gets <see cref="RenkoBar"/> which is the type emitted in the <see cref="IDataConsolidator.DataConsolidated"/> event.
         /// </summary>
         public Type OutputType => typeof(RenkoBar);
-
-        /// <summary>
-        /// Gets the most recently consolidated piece of data. This will be null if this consolidator
-        /// has not produced any data yet.
-        /// </summary>
-        public IBaseData Consolidated
-        {
-            get { return _consolidated; }
-            private set { _consolidated = value; }
-        }
 
         /// <summary>
         /// Event handler that fires when a new piece of data is produced
@@ -244,18 +233,18 @@ namespace QuantConnect.Data.Consolidators
         /// <summary>
         /// Resets the consolidator
         /// </summary>
-        public void Reset()
+        public override void Reset()
         {
             _firstTick = true;
             _lastWicko = null;
             _currentBar = null;
-            _consolidated = null;
             CloseOn = default;
             CloseRate = default;
             HighRate = default;
             LowRate = default;
             OpenOn = default;
             OpenRate = default;
+            base.Reset();
         }
 
         /// <summary>

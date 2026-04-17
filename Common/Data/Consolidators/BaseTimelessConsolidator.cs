@@ -23,7 +23,7 @@ namespace QuantConnect.Data.Consolidators
     /// Represents a timeless consolidator which depends on the given values. This consolidator
     /// is meant to consolidate data into bars that do not depend on time, e.g., RangeBar's.
     /// </summary>
-    public abstract class BaseTimelessConsolidator<T> : IDataConsolidator
+    public abstract class BaseTimelessConsolidator<T> : ConsolidatorBase, IDataConsolidator
         where T : IBaseData
     {
         /// <summary>
@@ -46,12 +46,6 @@ namespace QuantConnect.Data.Consolidators
         /// Bar being created
         /// </summary>
         protected virtual T CurrentBar {  get; set; }
-
-        /// <summary>
-        /// Gets the most recently consolidated piece of data. This will be null if this consolidator
-        /// has not produced any data yet.
-        /// </summary>
-        public IBaseData Consolidated { get; protected set; }
 
         /// <summary>
         /// Gets a clone of the data being currently consolidated
@@ -202,10 +196,10 @@ namespace QuantConnect.Data.Consolidators
         /// <summary>
         /// Resets the consolidator
         /// </summary>
-        public virtual void Reset()
+        public override void Reset()
         {
-            Consolidated = null;
             CurrentBar = default(T);
+            base.Reset();
         }
 
         /// <summary>
