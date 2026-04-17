@@ -120,7 +120,7 @@ namespace QuantConnect.Data.Consolidators
         {
             var handler = DataConsolidated;
             if (handler != null) handler(this, consolidated);
-            UpdateConsolidated(consolidated);
+            Consolidated = consolidated;
         }
 
         /// <summary>Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.</summary>

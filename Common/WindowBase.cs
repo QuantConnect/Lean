@@ -34,6 +34,19 @@ namespace QuantConnect
         public static int DefaultWindowSize { get; } = 2;
 
         /// <summary>
+        /// Initializes a new instance of the <see cref="WindowBase{T}"/> class.
+        /// </summary>
+        protected WindowBase() { }
+
+        /// <summary>
+        /// Initializes the rolling window with the given size.
+        /// </summary>
+        protected WindowBase(int windowSize)
+        {
+            _window = new RollingWindow<T>(windowSize);
+        }
+
+        /// <summary>
         /// A rolling window keeping a history of values. The most recent value is at index 0.
         /// Uses lazy initialization to survive Python subclasses that do not call base constructors.
         /// </summary>
