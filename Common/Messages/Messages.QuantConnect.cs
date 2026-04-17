@@ -54,6 +54,15 @@ namespace QuantConnect
             };
         }
 
+        private static string FormatCodeRoot(string code)
+        {
+            return _algorithmLanguage switch
+            {
+                Language.Python => "self." + code.ToSnakeCase(),
+                _ => code
+            };
+        }
+
         private static string FormatCode<T>(T value) where T : Enum
         {
             return string.Join(", ", value.ToString().Split(", ").Select(FormatCode));

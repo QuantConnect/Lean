@@ -110,7 +110,7 @@ namespace QuantConnect
             public static string TargetOrderMarginNotAboveMinimum()
             {
                 return "Warning: Portfolio rebalance result ignored as it resulted in a single share trade recommendation which can generate high fees." +
-                    $" To disable minimum order size checks please set {FormatCode("Settings")}.{FormatCode("MinimumOrderMarginPortfolioPercentage")} = 0.";
+                    $" To disable minimum order size checks please set {FormatCodeRoot("Settings")}.{FormatCode("MinimumOrderMarginPortfolioPercentage")} = 0.";
             }
 
             /// <summary>
