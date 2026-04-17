@@ -130,7 +130,7 @@ namespace QuantConnect.Algorithm.CSharp.RegressionTests
             {"Total Orders", "10"},
             {"Average Win", "0%"},
             {"Average Loss", "0.00%"},
-            {"Compounding Annual Return", "-0.468%"},
+            {"Compounding Annual Return", "-0.364%"},
             {"Drawdown", "0.000%"},
             {"Expectancy", "-1"},
             {"Start Equity", "100000"},
