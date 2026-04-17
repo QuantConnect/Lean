@@ -16,7 +16,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Runtime.CompilerServices;
 using MathNet.Numerics.Distributions;
 using MathNet.Numerics.Statistics;
 using QuantConnect.Logging;
@@ -253,46 +252,45 @@ namespace QuantConnect.Statistics
         }
 
         /// <summary>
-        /// Calculates the maximum drawdown and recovery time using OHLC equity series points.
-        /// Uses High for peak tracking and Low for drawdown measurement.
+        /// Calculates the maximum drawdown percentage and the maximum recovery time (in days)
+        /// from a historical equity time series.
         /// </summary>
-        /// <param name="equityPoints">Time series of equity OHLC data points</param>
+        /// <param name="equityOverTime">Time series of equity values indexed by date</param>
         /// <param name="rounding">Number of decimals to round the results to</param>
         /// <returns>A <see cref="DrawdownMetrics"/> object containing MaxDrawdown (percentage) and MaxRecoveryTime (in days)</returns>
-        public static DrawdownMetrics CalculateDrawdownMetrics(List<ISeriesPoint> equityPoints, int rounding = 2)
+        public static DrawdownMetrics CalculateDrawdownMetrics(SortedDictionary<DateTime, decimal> equityOverTime, int rounding = 2)
         {
             decimal maxDrawdown = 0m;
             decimal maxRecoveryTime = 0m;
 
             try
             {
-                if (equityPoints == null || equityPoints.Count < 2) return new DrawdownMetrics(0m, 0);
+                if (equityOverTime.Count < 2) return new DrawdownMetrics(0m, 0);
 
-                GetHighLow(equityPoints[0], out var peakEquity, out _);
-                var peakDate = equityPoints[0].Time;
+                var equityList = equityOverTime.ToList();
+
+                var peakEquity = equityList[0].Value;
+                var peakDate = equityList[0].Key;
                 DateTime? drawdownStartDate = null;
 
-                for (var i = 0; i < equityPoints.Count; i++)
+                foreach (var point in equityList)
                 {
-                    var point = equityPoints[i];
-                    GetHighLow(point, out var high, out var low);
-
-                    // Update peak equity using the high price
-                    if (high >= peakEquity)
+                    // Update peak equity if a new high is reached (or matched)
+                    if (point.Value >= peakEquity)
                     {
                         // If we were in a drawdown, calculate recovery time
                         if (drawdownStartDate.HasValue)
                         {
-                            var recoveryDays = (decimal)(point.Time - drawdownStartDate.Value).TotalDays;
+                            var recoveryDays = (decimal)(point.Key - drawdownStartDate.Value).TotalDays;
                             maxRecoveryTime = Math.Max(maxRecoveryTime, recoveryDays);
                             drawdownStartDate = null;
                         }
-                        peakEquity = high;
-                        peakDate = point.Time;
+                        peakEquity = point.Value;
+                        peakDate = point.Key;
                     }
 
-                    // Calculate current drawdown from peak using the low price
-                    var currentDrawdown = (low / peakEquity) - 1;
+                    // Calculate current drawdown from peak
+                    var currentDrawdown = (point.Value / peakEquity) - 1;
                     if (currentDrawdown < 0)
                     {
                         maxDrawdown = Math.Min(maxDrawdown, currentDrawdown);
@@ -313,42 +311,6 @@ namespace QuantConnect.Statistics
                 Log.Error(err);
                 return new DrawdownMetrics(0m, 0);
             }
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        internal static decimal GetClose(ISeriesPoint point)
-        {
-            switch (point)
-            {
-                case Candlestick candlestick:
-                    return candlestick.Close ?? 0m;
-                case ChartPoint chartPoint:
-                    return chartPoint.y ?? 0m;
-                default:
-                    return 0m;
-            }
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static void GetHighLow(ISeriesPoint point, out decimal high, out decimal low)
-        {
-            if (point is Candlestick candlestick)
-            {
-                var close = candlestick.Close ?? 0m;
-                high = candlestick.High ?? close;
-                low = candlestick.Low ?? close;
-                return;
-            }
-            if (point is ChartPoint chartPoint)
-            {
-                var value = chartPoint.y ?? 0m;
-                high = value;
-                low = value;
-                return;
-            }
-
-            high = 0m;
-            low = 0m;
         }
     } // End of Statistics
 

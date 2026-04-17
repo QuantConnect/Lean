@@ -821,7 +821,7 @@ namespace QuantConnect.Research
                 }
 
                 // Convert the double into decimal
-                var equityPoints = dictEquity.Select(kvp => (ISeriesPoint)new ChartPoint(kvp.Key, (decimal)kvp.Value)).ToList();
+                var equity = new SortedDictionary<DateTime, decimal>(dictEquity.ToDictionary(kvp => kvp.Key, kvp => (decimal)kvp.Value));
                 var profitLoss = new SortedDictionary<DateTime, decimal>(dictPL.ToDictionary(kvp => kvp.Key, kvp => double.IsNaN(kvp.Value) ? 0 : (decimal)kvp.Value));
 
                 // Gets the last value of the day of the benchmark and equity
@@ -835,7 +835,7 @@ namespace QuantConnect.Research
                 BaseSetupHandler.SetBrokerageTradingDayPerYear(algorithm: this);
 
                 // Compute portfolio statistics
-                var stats = new PortfolioStatistics(profitLoss, equityPoints, new(), listPerformance, listBenchmark, startingCapital, RiskFreeInterestRateModel,
+                var stats = new PortfolioStatistics(profitLoss, equity, new(), listPerformance, listBenchmark, startingCapital, RiskFreeInterestRateModel,
                     Settings.TradingDaysPerYear.Value);
 
                 result.SetItem("Average Win (%)", Convert.ToDouble(stats.AverageWinRate * 100).ToPython());
