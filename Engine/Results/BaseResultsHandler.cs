@@ -58,6 +58,7 @@ namespace QuantConnect.Lean.Engine.Results
         private string _hostName;
 
         private Bar _currentAlgorithmEquity;
+        private readonly List<ISeriesPoint> _equityForDrawdown = new();
 
         private List<ISeriesPoint> _temporaryPerformanceValues;
         private List<ISeriesPoint> _temporaryBenchmarkValues;
@@ -1063,7 +1064,8 @@ namespace QuantConnect.Lean.Engine.Results
                             portfolioTurnover = new Series();
                         }
 
-                        statisticsResults = StatisticsBuilder.Generate(trades, profitLoss, equity.Values, performanceValues, benchmarkValues,
+                        var equityForDrawdown = _equityForDrawdown.Count > 0 ? _equityForDrawdown : equity.Values;
+                        statisticsResults = StatisticsBuilder.Generate(trades, profitLoss, equityForDrawdown, performanceValues, benchmarkValues,
                             portfolioTurnover.Values, StartingPortfolioValue, Algorithm.Portfolio.TotalFees, TotalTradesCount(),
                             estimatedStrategyCapacity, AlgorithmCurrencySymbol, Algorithm.Transactions, Algorithm.RiskFreeInterestRateModel,
                             Algorithm.Settings.TradingDaysPerYear.Value // already set in Brokerage|Backtesting-SetupHandler classes
@@ -1220,6 +1222,15 @@ namespace QuantConnect.Lean.Engine.Results
         protected void UpdateAlgorithmEquity()
         {
             UpdateAlgorithmEquity(CurrentAlgorithmEquity);
+        }
+
+        /// <summary>
+        /// Records the current portfolio close value into the drawdown equity series.
+        /// Called at a finer sample rate than the chart equity series.
+        /// </summary>
+        protected void UpdateAlgorithmEquityForDrawdown(DateTime time)
+        {
+            _equityForDrawdown.Add(new ChartPoint(time, CurrentAlgorithmEquity.Close));
         }
 
         protected virtual void UpdatePortfolioValues(DateTime time, bool force = false)
