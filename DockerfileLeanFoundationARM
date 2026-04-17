@@ -262,6 +262,14 @@ RUN apt-get update && apt install -y xvfb wkhtmltopdf && \
 RUN wget -q https://cdn.quantconnect.com/fonts/foundation.zip && unzip -q foundation.zip && rm foundation.zip \
     && mv "lean fonts/"* /usr/share/fonts/truetype/ && rm -rf "lean fonts/" "__MACOSX/"
 
+# Install IB Gateway and its dependencies: Installs to /root/ibgateway
+RUN apt-get update && apt-get -y install libasound2 libnss3 libnspr4 && apt-get clean && apt-get autoclean && apt-get autoremove --purge -y && rm -rf /var/lib/apt/lists/* && \
+    mkdir -p /root/ibgateway && \
+    wget -q https://download2.interactivebrokers.com/installers/ibgateway/stable-standalone/ibgateway-stable-standalone-linux-arm.sh && \
+    chmod 777 ibgateway-stable-standalone-linux-arm.sh && \
+    ./ibgateway-stable-standalone-linux-arm.sh -q -dir /root/ibgateway && \
+    rm ibgateway-stable-standalone-linux-arm.sh
+
 # Install dotnet 9 sdk & runtime
 # The .deb packages don't support ARM, the install script does
 ENV PATH="/root/.dotnet:${PATH}"
