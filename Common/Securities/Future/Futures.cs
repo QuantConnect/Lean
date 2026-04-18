@@ -1389,6 +1389,12 @@ namespace QuantConnect.Securities
             public const string VIX = "VX";
 
             /// <summary>
+            /// VIX Mini Futures
+            /// </summary>
+            /// <returns>The symbol</returns>
+            public const string VIXMini = "VXM";
+
+            /// <summary>
             /// E-mini Russell 2000 Futures
             /// </summary>
             /// <returns>The symbol</returns>
