@@ -31,6 +31,7 @@ using QuantConnect.Orders;
 using QuantConnect.Orders.Fees;
 using QuantConnect.Python;
 using QuantConnect.Securities;
+using QuantConnect.Brokerages;
 using QuantConnect.Tests.Common.Data.UniverseSelection;
 using QuantConnect.Tests.Engine.DataFeeds;
 
@@ -220,6 +221,69 @@ namespace QuantConnect.Tests.Algorithm.Framework.Execution
                 // Remaining quantity for non-filled order = targetQuantity = 80
                 // Quantity submitted = newTargetQuantity - targetQuantity = 100 - 80 = 20
                 Assert.AreEqual(newTargetQuantity - targetQuantity, orderProcessor.GetOpenOrders().OrderByDescending(o => o.Id).First().Quantity);
+            }
+            finally
+            {
+                orderProcessor.Exit();
+                brokerage.Dispose();
+            }
+        }
+
+        [TestCase(Language.CSharp)]
+        [TestCase(Language.Python)]
+        public void CashAccountSubmitsReducingOrdersBeforeIncreasingOrders(Language language)
+        {
+            var algorithm = new AlgorithmStub();
+            algorithm.SetBrokerageModel(BrokerageName.Coinbase, AccountType.Cash);
+
+            var aapl = algorithm.AddEquity(Symbols.AAPL.Value);
+            var spy = algorithm.AddEquity(Symbols.SPY.Value);
+            aapl.SetMarketPrice(new TradeBar { Value = 100m });
+            spy.SetMarketPrice(new TradeBar { Value = 100m });
+
+            aapl.Holdings.SetHoldings(100m, 10m);
+            algorithm.SetFinishedWarmingUp();
+
+            var orderProcessor = GetAndSetBrokerageTransactionHandler(algorithm, out var brokerage);
+
+            try
+            {
+                var model = GetExecutionModel(language, true);
+                algorithm.SetExecution(model);
+
+                var targets = new IPortfolioTarget[]
+                {
+                    new PortfolioTarget(Symbols.AAPL, 0m),
+                    new PortfolioTarget(Symbols.SPY, 10m)
+                };
+
+                model.Execute(algorithm, targets);
+                orderProcessor.ProcessSynchronousEvents();
+
+                var openOrders = orderProcessor.GetOpenOrders().OrderBy(o => o.Id).ToList();
+                Assert.AreEqual(1, openOrders.Count);
+                Assert.AreEqual(Symbols.AAPL, openOrders[0].Symbol);
+                Assert.Less(openOrders[0].Quantity, 0m);
+
+                var sellOrder = openOrders[0];
+                brokerage.OnOrderEvent(new OrderEvent(
+                    sellOrder.Id,
+                    sellOrder.Symbol,
+                    algorithm.UtcTime,
+                    OrderStatus.Filled,
+                    OrderDirection.Sell,
+                    100m,
+                    sellOrder.Quantity,
+                    OrderFee.Zero));
+                orderProcessor.ProcessSynchronousEvents();
+
+                model.Execute(algorithm, Array.Empty<IPortfolioTarget>());
+                orderProcessor.ProcessSynchronousEvents();
+
+                var orders = orderProcessor.GetOrders().OrderBy(o => o.Id).ToList();
+                Assert.AreEqual(2, orders.Count);
+                Assert.AreEqual(Symbols.SPY, orders[1].Symbol);
+                Assert.Greater(orders[1].Quantity, 0m);
             }
             finally
             {

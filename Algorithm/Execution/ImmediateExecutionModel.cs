@@ -17,6 +17,8 @@ using QuantConnect.Orders;
 using QuantConnect.Securities;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Algorithm.Framework.Portfolio;
+using System;
+using System.Linq;
 
 namespace QuantConnect.Algorithm.Framework.Execution
 {
@@ -48,19 +50,31 @@ namespace QuantConnect.Algorithm.Framework.Execution
             // for performance we if empty, OrderByMarginImpact and ClearFulfilled are expensive to call
             if (!_targetsCollection.IsEmpty)
             {
+                var isCashAccount = algorithm.BrokerageModel.AccountType == AccountType.Cash;
+                var hasOpenPositionReducingOrder = isCashAccount && HasOpenPositionReducingOrder(algorithm);
+
                 foreach (var target in _targetsCollection.OrderByMarginImpact(algorithm))
                 {
                     var security = algorithm.Securities[target.Symbol];
 
                     // calculate remaining quantity to be ordered
                     var quantity = OrderSizing.GetUnorderedQuantity(algorithm, target, security, true);
+                    var isPositionReducingOrder = IsPositionReducingOrder(security.Holdings.Quantity, quantity);
 
                     if (quantity != 0)
                     {
+                        // In cash accounts, submit position-reducing orders first and wait for them to fill before
+                        // submitting cash-consuming orders. This avoids transient insufficient buying power rejects.
+                        if (hasOpenPositionReducingOrder && !isPositionReducingOrder)
+                        {
+                            continue;
+                        }
+
                         if (security.BuyingPowerModel.AboveMinimumOrderMarginPortfolioPercentage(security, quantity,
                             algorithm.Portfolio, algorithm.Settings.MinimumOrderMarginPortfolioPercentage))
                         {
                             algorithm.MarketOrder(security, quantity, Asynchronous, target.Tag);
+                            hasOpenPositionReducingOrder = hasOpenPositionReducingOrder || isPositionReducingOrder;
                         }
                         else if (!PortfolioTarget.MinimumOrderMarginPercentageWarningSent.HasValue)
                         {
@@ -72,6 +86,26 @@ namespace QuantConnect.Algorithm.Framework.Execution
 
                 _targetsCollection.ClearFulfilled(algorithm);
             }
+        }
+
+        private static bool HasOpenPositionReducingOrder(QCAlgorithm algorithm)
+        {
+            return algorithm.Transactions.GetOpenOrders().Any(order =>
+            {
+                if (!algorithm.Securities.TryGetValue(order.Symbol, out var security))
+                {
+                    return false;
+                }
+
+                return IsPositionReducingOrder(security.Holdings.Quantity, order.Quantity);
+            });
+        }
+
+        private static bool IsPositionReducingOrder(decimal holdingsQuantity, decimal orderQuantity)
+        {
+            return holdingsQuantity != 0m
+                   && orderQuantity != 0m
+                   && Math.Sign(holdingsQuantity) != Math.Sign(orderQuantity);
         }
 
         /// <summary>
