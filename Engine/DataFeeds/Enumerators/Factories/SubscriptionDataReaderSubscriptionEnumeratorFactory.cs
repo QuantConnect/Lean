@@ -95,7 +95,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
                     _startDateLimitedWarnings.TryAdd(args.Symbol, args.Message);
                 }
             };
-            dataReader.DownloadFailed += (sender, args) => { _resultHandler.ErrorMessage(args.Message, args.StackTrace); };
+            dataReader.DownloadFailed += (sender, args) => { _resultHandler.RuntimeError(args.Message, args.StackTrace); };
             dataReader.ReaderErrorDetected += (sender, args) => { _resultHandler.RuntimeError(args.Message, args.StackTrace); };
             dataReader.NumericalPrecisionLimited += (sender, args) =>
             {
