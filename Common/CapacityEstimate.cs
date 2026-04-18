@@ -146,36 +146,40 @@ namespace QuantConnect
                 }
 
                 var smallestAsset = _capacityBySymbol.Values
+                    .Where(c => c.Trades > 0 && c.MarketCapacityDollarVolume > 0)
                     .OrderBy(c => c.MarketCapacityDollarVolume)
-                    .First();
+                    .FirstOrDefault();
 
-                _smallestAssetSymbol = smallestAsset.Security.Symbol;
-
-                // When there is no trading, rely on the portfolio holdings
-                var percentageOfSaleVolume = totalSaleVolume != 0
-                    ? smallestAsset.SaleVolume / totalSaleVolume
-                    : 0;
-
-                var buyingPowerUsed = smallestAsset.Security.MarginModel.GetReservedBuyingPowerForPosition(new ReservedBuyingPowerForPositionParameters(smallestAsset.Security))
-                    .AbsoluteUsedBuyingPower * smallestAsset.Security.Leverage;
-
-                var percentageOfHoldings = buyingPowerUsed / totalPortfolioValue;
-
-                var scalingFactor = Math.Max(percentageOfSaleVolume, percentageOfHoldings);
-                var dailyMarketCapacityDollarVolume = smallestAsset.MarketCapacityDollarVolume / smallestAsset.Trades;
-
-                var newCapacity = scalingFactor == 0
-                    ? _capacity.Value
-                    : dailyMarketCapacityDollarVolume / scalingFactor;
-
-                // Weight our capacity based on previous value if we have one
-                if (_capacity.Value != 0)
+                if (smallestAsset != null)
                 {
-                    newCapacity = (0.33m * newCapacity) + (_capacity.Value * 0.66m);
-                }
+                    _smallestAssetSymbol = smallestAsset.Security.Symbol;
 
-                // Set our new capacity value
-                Capacity = newCapacity;
+                    // When there is no trading, rely on the portfolio holdings
+                    var percentageOfSaleVolume = totalSaleVolume != 0
+                        ? smallestAsset.SaleVolume / totalSaleVolume
+                        : 0;
+
+                    var buyingPowerUsed = smallestAsset.Security.MarginModel.GetReservedBuyingPowerForPosition(new ReservedBuyingPowerForPositionParameters(smallestAsset.Security))
+                        .AbsoluteUsedBuyingPower * smallestAsset.Security.Leverage;
+
+                    var percentageOfHoldings = buyingPowerUsed / totalPortfolioValue;
+
+                    var scalingFactor = Math.Max(percentageOfSaleVolume, percentageOfHoldings);
+                    var dailyMarketCapacityDollarVolume = smallestAsset.MarketCapacityDollarVolume / smallestAsset.Trades;
+
+                    var newCapacity = scalingFactor == 0
+                        ? _capacity.Value
+                        : dailyMarketCapacityDollarVolume / scalingFactor;
+
+                    // Weight our capacity based on previous value if we have one
+                    if (_capacity.Value != 0)
+                    {
+                        newCapacity = (0.33m * newCapacity) + (_capacity.Value * 0.66m);
+                    }
+
+                    // Set our new capacity value
+                    Capacity = newCapacity;
+                }
 
                 foreach (var capacity in _capacityBySymbol.Select(pair => pair.Value).ToList())
                 {
