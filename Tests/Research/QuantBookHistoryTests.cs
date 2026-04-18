@@ -306,6 +306,38 @@ namespace QuantConnect.Tests.Research
         }
 
         [Test]
+        public void OptionHistoryRespectsExpirationFilterPerDate()
+        {
+            var qb = new QuantBook();
+            var historyProvider = new TestHistoryProvider(qb.HistoryProvider);
+            qb.SetHistoryProvider(historyProvider);
+
+            var spxw = qb.AddIndexOption(Symbols.SPX, "SPXW");
+            spxw.SetFilter(u => u.WeeklysOnly().CallsOnly().Expiration(1, 2).Strikes(-1, 1));
+
+            var start = new DateTime(2021, 1, 4);
+            var end = new DateTime(2021, 1, 6);
+            var history = qb.OptionHistory(spxw.Symbol, start, end, Resolution.Daily, fillForward: false, extendedMarketHours: false);
+
+            var optionData = history.SelectMany(slice => slice.AllData.Where(data => data.Symbol.SecurityType == SecurityType.IndexOption)).ToList();
+            Assert.IsNotEmpty(optionData);
+
+            Assert.IsTrue(optionData.All(data =>
+            {
+                var dte = (data.Symbol.ID.Date.Date - data.EndTime.Date).TotalDays;
+                return dte >= 1 && dte <= 2;
+            }), "Expected all contracts to satisfy the configured [1,2] day expiration window.");
+
+            var optionContractRequests = historyProvider.HistoryRequests
+                .Where(request => request.Symbol.SecurityType == SecurityType.IndexOption && request.DataType != typeof(OptionUniverse))
+                .ToList();
+
+            Assert.IsNotEmpty(optionContractRequests);
+            Assert.IsTrue(optionContractRequests.All(request => request.EndTimeLocal - request.StartTimeLocal <= TimeSpan.FromDays(1)),
+                "Expected option contract history requests to be bounded to one day so filters are applied per date.");
+        }
+
+        [Test]
         public void OptionUnderlyingSymbolQuantBookHistory()
         {
             var qb = new QuantBook();
