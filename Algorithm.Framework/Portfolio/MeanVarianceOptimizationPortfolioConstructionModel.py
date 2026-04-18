@@ -55,7 +55,7 @@ class MeanVarianceOptimizationPortfolioConstructionModel(PortfolioConstructionMo
         # If the argument is an instance of Resolution or Timedelta
         # Redefine rebalancing_func
         rebalancing_func = rebalance
-        if isinstance(rebalance, int):
+        if isinstance(rebalance, Resolution):
             rebalance = Extensions.to_time_span(rebalance)
         if isinstance(rebalance, timedelta):
             rebalancing_func = lambda dt: dt + rebalance
@@ -135,7 +135,7 @@ class MeanVarianceOptimizationPortfolioConstructionModel(PortfolioConstructionMo
             self._symbol = symbol
             self.roc = RateOfChange(f'{symbol}.roc({lookback})', lookback)
             self.roc.updated += self.on_rate_of_change_updated
-            self.window = RollingWindow[IndicatorDataPoint](period)
+            self.window = RollingWindow(period)
 
         def reset(self):
             self.roc.updated -= self.on_rate_of_change_updated

@@ -15,9 +15,7 @@
 
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
-using System.Net;
 using MathNet.Numerics.Distributions;
 using MathNet.Numerics.Statistics;
 using QuantConnect.Logging;
@@ -30,34 +28,6 @@ namespace QuantConnect.Statistics
     /// <remarks>This is a particularly ugly class and one of the first ones written. It should be thrown out and re-written.</remarks>
     public class Statistics
     {
-        /// <summary>
-        /// Drawdown maximum percentage.
-        /// </summary>
-        /// <param name="equityOverTime"></param>
-        /// <param name="rounding"></param>
-        /// <returns></returns>
-        public static decimal DrawdownPercent(SortedDictionary<DateTime, decimal> equityOverTime, int rounding = 2)
-        {
-            var dd = 0m;
-            try
-            {
-                var lPrices = equityOverTime.Values.ToList();
-                var lDrawdowns = new List<decimal>();
-                var high = lPrices[0];
-                foreach (var price in lPrices)
-                {
-                    if (price >= high) high = price;
-                    lDrawdowns.Add((price/high) - 1);
-                }
-                dd = Math.Round(Math.Abs(lDrawdowns.Min()), rounding);
-            }
-            catch (Exception err)
-            {
-                Log.Error(err);
-            }
-            return dd;
-        }
-
         /// <summary>
         /// Annual compounded returns statistic based on the final-starting capital and years.
         /// </summary>
@@ -281,6 +251,67 @@ namespace QuantConnect.Statistics
             return Math.Round(drawdownPercentage, roundingDecimals);
         }
 
+        /// <summary>
+        /// Calculates the maximum drawdown percentage and the maximum recovery time (in days)
+        /// from a historical equity time series.
+        /// </summary>
+        /// <param name="equityOverTime">Time series of equity values indexed by date</param>
+        /// <param name="rounding">Number of decimals to round the results to</param>
+        /// <returns>A <see cref="DrawdownMetrics"/> object containing MaxDrawdown (percentage) and MaxRecoveryTime (in days)</returns>
+        public static DrawdownMetrics CalculateDrawdownMetrics(SortedDictionary<DateTime, decimal> equityOverTime, int rounding = 2)
+        {
+            decimal maxDrawdown = 0m;
+            decimal maxRecoveryTime = 0m;
+
+            try
+            {
+                if (equityOverTime.Count < 2) return new DrawdownMetrics(0m, 0);
+
+                var equityList = equityOverTime.ToList();
+
+                var peakEquity = equityList[0].Value;
+                var peakDate = equityList[0].Key;
+                DateTime? drawdownStartDate = null;
+
+                foreach (var point in equityList)
+                {
+                    // Update peak equity if a new high is reached (or matched)
+                    if (point.Value >= peakEquity)
+                    {
+                        // If we were in a drawdown, calculate recovery time
+                        if (drawdownStartDate.HasValue)
+                        {
+                            var recoveryDays = (decimal)(point.Key - drawdownStartDate.Value).TotalDays;
+                            maxRecoveryTime = Math.Max(maxRecoveryTime, recoveryDays);
+                            drawdownStartDate = null;
+                        }
+                        peakEquity = point.Value;
+                        peakDate = point.Key;
+                    }
+
+                    // Calculate current drawdown from peak
+                    var currentDrawdown = (point.Value / peakEquity) - 1;
+                    if (currentDrawdown < 0)
+                    {
+                        maxDrawdown = Math.Min(maxDrawdown, currentDrawdown);
+
+                        // Mark the start of the drawdown period
+                        if (!drawdownStartDate.HasValue)
+                        {
+                            drawdownStartDate = peakDate;
+                        }
+                    }
+                }
+
+                // Return absolute drawdown percentage and max recovery time in days
+                return new DrawdownMetrics(Math.Round(Math.Abs(maxDrawdown), rounding), (int)maxRecoveryTime);
+            }
+            catch (Exception err)
+            {
+                Log.Error(err);
+                return new DrawdownMetrics(0m, 0);
+            }
+        }
     } // End of Statistics
 
 } // End of Namespace

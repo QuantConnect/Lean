@@ -64,7 +64,7 @@ class GasAndCrudeOilEnergyCorrelationAlpha(QCAlgorithm):
                 self.log(f'Invested in: {kvp.key}')
 
 
-class PairsAlphaModel:
+class PairsAlphaModel(AlphaModel):
     '''This Alpha model assumes that the ETF for natural gas is a good leading-indicator
         of the price of the crude oil ETF. The model will take in arguments for a threshold
         at which the model triggers an insight, the length of the look-back period for evaluating
@@ -154,7 +154,7 @@ class SymbolData:
 
         self.daily_return = RateOfChangePercent(f'{symbol}.daily_rocp({1})', 1)
         self.daily_consolidator = algorithm.resolve_consolidator(symbol, Resolution.DAILY)
-        self.daily_return_history = RollingWindow[IndicatorDataPoint](daily_lookback)
+        self.daily_return_history = RollingWindow(daily_lookback)
 
         def updatedaily_return_history(s, e):
             self.daily_return_history.add(e)
@@ -187,7 +187,7 @@ class SymbolData:
         return pd.Series({x.end_time: x.value for x in self.daily_return_history})
 
     def __repr__(self):
-        return f"{self.rocp.name} - {Return}"
+        return f"{self.rocp.name} - {self.daily_return}"
 
 
 class CustomExecutionModel(ExecutionModel):

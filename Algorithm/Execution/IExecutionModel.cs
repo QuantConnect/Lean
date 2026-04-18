@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -14,6 +14,7 @@
 */
 
 using QuantConnect.Algorithm.Framework.Portfolio;
+using QuantConnect.Orders;
 
 namespace QuantConnect.Algorithm.Framework.Execution
 {
@@ -30,5 +31,12 @@ namespace QuantConnect.Algorithm.Framework.Execution
         /// <param name="targets">The portfolio targets just emitted by the portfolio construction model.
         /// These are always just the new/updated targets and not a complete set of targets</param>
         void Execute(QCAlgorithm algorithm, IPortfolioTarget[] targets);
+
+        /// <summary>
+        /// New order event handler
+        /// </summary>
+        /// <param name="algorithm">The algorithm instance</param>
+        /// <param name="orderEvent">Order event to process</param>
+        void OnOrderEvent(QCAlgorithm algorithm, OrderEvent orderEvent);
     }
 }

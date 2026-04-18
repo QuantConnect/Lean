@@ -44,16 +44,19 @@ namespace QuantConnect.Algorithm.CSharp
                 "Tick history call with symbol array with explicit tick resolution");
 
             var history = History<Tick>(spy, TimeSpan.FromHours(12));
-            if (history.Count() == 0)
+            if (!history.Any())
             {
                 throw new RegressionTestException("On history call with implicit tick resolution: history returned no results");
             }
 
             history = History<Tick>(spy, TimeSpan.FromHours(12), Resolution.Tick);
-            if (history.Count() == 0)
+            if (!history.Any())
             {
                 throw new RegressionTestException("On history call with explicit tick resolution: history returned no results");
             }
+
+            // We already tested what we wanted to test, we can quit now
+            Quit();
         }
 
         private void AssertThatHistoryThrowsForTickResolution(Action historyCall, string historyCallDescription)
@@ -82,12 +85,12 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
-        public long DataPoints => 7682413;
+        public long DataPoints => 0;
 
         /// <summary>
         /// Data Points count of the algorithm history
         /// </summary>
-        public int AlgorithmHistoryDataPoints => 2736238;
+        public int AlgorithmHistoryDataPoints => 12;
 
         /// <summary>
         /// Final status of the algorithm
@@ -125,6 +128,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Estimated Strategy Capacity", "$0"},
             {"Lowest Capacity Asset", ""},
             {"Portfolio Turnover", "0%"},
+            {"Drawdown Recovery", "0"},
             {"OrderListHash", "d41d8cd98f00b204e9800998ecf8427e"}
         };
     }

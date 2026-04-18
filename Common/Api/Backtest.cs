@@ -81,7 +81,7 @@ namespace QuantConnect.Api
         /// <summary>
         /// Backtest creation date and time
         /// </summary>
-        [JsonConverter(typeof(DateTimeJsonConverter), DateFormat.UI)]
+        [JsonConverter(typeof(DateTimeJsonConverter), DateFormat.ISOShort, DateFormat.UI)]
         public DateTime Created { get; set; }
 
         /// <summary>
@@ -128,7 +128,7 @@ namespace QuantConnect.Api
         /// <summary>
         /// Organization ID
         /// </summary>
-        public int OrganizationId { get; set; }
+        public string OrganizationId { get; set; }
 
         /// <summary>
         /// Rolling window detailed statistics.

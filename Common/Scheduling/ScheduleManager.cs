@@ -15,11 +15,12 @@
 */
 
 using System;
-using System.Collections.Generic;
 using NodaTime;
-using QuantConnect.Securities;
-using QuantConnect.Logging;
 using Python.Runtime;
+using QuantConnect.Logging;
+using QuantConnect.Interfaces;
+using QuantConnect.Securities;
+using System.Collections.Generic;
 
 namespace QuantConnect.Scheduling
 {
@@ -47,14 +48,15 @@ namespace QuantConnect.Scheduling
         /// <summary>
         /// Initializes a new instance of the <see cref="ScheduleManager"/> class
         /// </summary>
+        /// <param name="algorithm">The algorithm instance</param>
         /// <param name="securities">Securities manager containing the algorithm's securities</param>
         /// <param name="timeZone">The algorithm's time zone</param>
         /// <param name="marketHoursDatabase">The market hours database instance to use</param>
-        public ScheduleManager(SecurityManager securities, DateTimeZone timeZone, MarketHoursDatabase marketHoursDatabase)
+        public ScheduleManager(IAlgorithm algorithm, SecurityManager securities, DateTimeZone timeZone, MarketHoursDatabase marketHoursDatabase)
         {
             _securities = securities;
-            DateRules = new DateRules(securities, timeZone, marketHoursDatabase);
-            TimeRules = new TimeRules(securities, timeZone, marketHoursDatabase);
+            DateRules = new DateRules(algorithm, securities, timeZone, marketHoursDatabase);
+            TimeRules = new TimeRules(algorithm, securities, timeZone, marketHoursDatabase);
 
             // used for storing any events before the event schedule is set
             _preInitializedEvents = new List<ScheduledEvent>();

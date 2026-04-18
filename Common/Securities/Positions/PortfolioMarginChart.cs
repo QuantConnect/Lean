@@ -30,7 +30,7 @@ namespace QuantConnect.Securities.Positions
     {
         private static string PortfolioMarginTooltip = "{SERIES_NAME}: {VALUE}%";
         private static string PortfolioMarginIndexName = "Margin Used (%)";
-        private static readonly int _portfolioMarginSeriesCount = Configuration.Config.GetInt("portfolio-margin-series-count", 5);
+        private static readonly int _portfolioMarginSeriesCount = Configuration.Config.GetInt("portfolio-margin-series-count", 40);
 
         /// <summary>
         /// Helper method to add the portfolio margin series into the given chart
@@ -114,7 +114,7 @@ namespace QuantConnect.Securities.Positions
         {
             if (!portfolioChart.Series.TryGetValue(seriesName, out var series))
             {
-                series = portfolioChart.Series[seriesName] = new Series(seriesName, SeriesType.StackedArea, 0, "%")
+                series = portfolioChart.Series[seriesName] = new Series(seriesName, SeriesType.Bar, 0, "%")
                 {
                     Color = color,
                     Tooltip = PortfolioMarginTooltip,

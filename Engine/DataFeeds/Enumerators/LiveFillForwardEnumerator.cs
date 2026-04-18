@@ -33,6 +33,10 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
         private readonly TimeSpan _underlyingTimeout;
         private readonly ITimeProvider _timeProvider;
 
+        private TimeSpan _marketCloseTimeSpan;
+        private TimeSpan _marketOpenTimeSpan;
+        private DateTime _lastDate;
+
         /// <summary>
         /// Initializes a new instance of the <see cref="LiveFillForwardEnumerator"/> class that accepts
         /// a reference to the fill forward resolution, useful if the fill forward resolution is dynamic
@@ -44,16 +48,18 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
         /// <param name="exchange">The exchange used to determine when to insert fill forward data</param>
         /// <param name="fillForwardResolution">The resolution we'd like to receive data on</param>
         /// <param name="isExtendedMarketHours">True to use the exchange's extended market hours, false to use the regular market hours</param>
+        /// <param name="subscriptionStartTime">The start time of the subscription</param>
         /// <param name="subscriptionEndTime">The end time of the subscription, once passing this date the enumerator will stop</param>
         /// <param name="dataResolution">The source enumerator's data resolution</param>
         /// <param name="dataTimeZone">Time zone of the underlying source data</param>
         /// <param name="dailyStrictEndTimeEnabled">True if daily strict end times are enabled</param>
         /// <param name="dataType">The configuration data type this enumerator is for</param>
+        /// <param name="lastPointTracker">A reference to the last point emitted before this enumerator is first enumerated</param>
         public LiveFillForwardEnumerator(ITimeProvider timeProvider, IEnumerator<BaseData> enumerator, SecurityExchange exchange, IReadOnlyRef<TimeSpan> fillForwardResolution,
-            bool isExtendedMarketHours, DateTime subscriptionEndTime, Resolution dataResolution, DateTimeZone dataTimeZone, bool dailyStrictEndTimeEnabled,
-            Type dataType = null)
-            : base(enumerator, exchange, fillForwardResolution, isExtendedMarketHours, subscriptionEndTime, dataResolution.ToTimeSpan(), dataTimeZone,
-                  dailyStrictEndTimeEnabled, dataType)
+            bool isExtendedMarketHours, DateTime subscriptionStartTime, DateTime subscriptionEndTime, Resolution dataResolution, DateTimeZone dataTimeZone, bool dailyStrictEndTimeEnabled,
+            Type dataType = null, LastPointTracker lastPointTracker = null)
+            : base(enumerator, exchange, fillForwardResolution, isExtendedMarketHours, subscriptionStartTime, subscriptionEndTime, dataResolution.ToTimeSpan(), dataTimeZone,
+                  dailyStrictEndTimeEnabled, dataType, lastPointTracker)
         {
             _timeProvider = timeProvider;
             _dataResolution = dataResolution.ToTimeSpan();
@@ -73,9 +79,9 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
             if (base.RequiresFillForwardData(fillForwardResolution, previous, next, out fillForward))
             {
                 var underlyingTimeout = TimeSpan.Zero;
-                if (fillForwardResolution >= _dataResolution)
+                if (fillForwardResolution >= _dataResolution && ShouldWaitForData(fillForward))
                 {
-                    // we enforece the underlying FF timeout when the FF resolution matches it or is bigger, not the other way round, for example:
+                    // we enforce the underlying FF timeout when the FF resolution matches it or is bigger, not the other way round, for example:
                     // this is a daily enumerator and FF resolution is second, we are expected to emit a bar every second, we can't wait until the timeout each time
                     underlyingTimeout = _underlyingTimeout;
                 }
@@ -88,6 +94,40 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
                 }
             }
             return false;
+        }
+
+        /// <summary>
+        /// Helper method to determine if we should wait for data before emitting a fill forward bar.
+        /// We only wait for data if the fill forward bar is either in the market open or close time.
+        /// </summary>
+        private bool ShouldWaitForData(BaseData fillForward)
+        {
+            if (fillForward.Symbol.SecurityType != SecurityType.Equity || Exchange.Hours.IsMarketAlwaysOpen)
+            {
+                return false;
+            }
+
+            // Update market open and close daily
+            if (_lastDate != fillForward.EndTime.Date ||
+                // Update market open and close for days with multiple sessions, e.g. early close and then late open
+                fillForward.Time.TimeOfDay > _marketCloseTimeSpan)
+            {
+                _lastDate = fillForward.EndTime.Date;
+                var marketOpen = Exchange.Hours.GetNextMarketOpen(_lastDate, false);
+                var marketClose = Exchange.Hours.GetNextMarketClose(_lastDate, false);
+
+                if (_dataResolution == Time.OneHour || (_dataResolution == Time.OneDay && !UseStrictEndTime))
+                {
+                    marketOpen = marketOpen.RoundDown(_dataResolution);
+                    marketClose = marketClose.RoundUp(_dataResolution);
+                }
+
+                _marketOpenTimeSpan = marketOpen.TimeOfDay;
+                _marketCloseTimeSpan = marketClose.TimeOfDay;
+            }
+
+            // we only wait for data if the fill forward bar is not in the market open or close time
+            return fillForward.Time.TimeOfDay == _marketOpenTimeSpan || fillForward.EndTime.TimeOfDay == _marketCloseTimeSpan;
         }
 
         /// <summary>

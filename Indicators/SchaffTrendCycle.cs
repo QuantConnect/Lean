@@ -21,7 +21,7 @@ namespace QuantConnect.Indicators
     /// This indicator creates the Schaff Trend Cycle
     /// </summary>
     public class SchaffTrendCycle : Indicator, IIndicatorWarmUpPeriodProvider
-    {   
+    {
         // MACD Variables
         private readonly MovingAverageConvergenceDivergence _MACD;
         private readonly IndicatorBase<IndicatorDataPoint> _maximum;
@@ -100,11 +100,11 @@ namespace QuantConnect.Indicators
             _MACD.Update(input);
 
             // Update our Stochastics K, automatically updates our Stochastics D variable which is a smoothed version of K
-            var MACD_K = new IndicatorDataPoint(input.Time, ComputeStoch(_MACD.Current.Value, _maximum.Current.Value, _minimum.Current.Value));
+            var MACD_K = new IndicatorDataPoint(input.EndTime, ComputeStoch(_MACD.Current.Value, _maximum.Current.Value, _minimum.Current.Value));
             _K.Update(MACD_K);
 
             // With our Stochastic D values calculate PF 
-            var PF = new IndicatorDataPoint(input.Time, ComputeStoch(_D.Current.Value, _maximumD.Current.Value, _minimumD.Current.Value));
+            var PF = new IndicatorDataPoint(input.EndTime, ComputeStoch(_D.Current.Value, _maximumD.Current.Value, _minimumD.Current.Value));
             _PF.Update(PF);
 
             return _PFF.Current.Value;

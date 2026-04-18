@@ -28,17 +28,21 @@ namespace QuantConnect.Tests.Brokerages
 
         public override Order CreateShortOrder(decimal quantity)
         {
-            return new MarketOrder(Symbol, -Math.Abs(quantity), DateTime.Now, properties: Properties)
+            return new MarketOrder(Symbol, -Math.Abs(quantity), DateTime.UtcNow, properties: Properties)
             {
-                OrderSubmissionData = OrderSubmissionData
+                Status = OrderStatus.New,
+                OrderSubmissionData = OrderSubmissionData,
+                PriceCurrency = GetSymbolProperties(Symbol).QuoteCurrency
             };
         }
 
         public override Order CreateLongOrder(decimal quantity)
         {
-            return new MarketOrder(Symbol, Math.Abs(quantity), DateTime.Now, properties: Properties)
+            return new MarketOrder(Symbol, Math.Abs(quantity), DateTime.UtcNow, properties: Properties)
             {
-                OrderSubmissionData = OrderSubmissionData
+                Status = OrderStatus.New,
+                OrderSubmissionData = OrderSubmissionData,
+                PriceCurrency = GetSymbolProperties(Symbol).QuoteCurrency
             };
         }
 
@@ -53,5 +57,10 @@ namespace QuantConnect.Tests.Brokerages
         public override OrderStatus ExpectedStatus => OrderStatus.Filled;
 
         public override bool ExpectedCancellationResult => false;
+
+        public override string ToString()
+        {
+            return $"{OrderType.Market}: {SecurityType}, {Symbol}";
+        }
     }
 }

@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -60,16 +60,6 @@ namespace QuantConnect.Algorithm.Framework.Selection
             {
                 AddUniverseSelection(pyUniverseSelectionModel);
             }
-        }
-
-        /// <summary>
-        /// Initializes a new instance of the <see cref="CompositeUniverseSelectionModel"/> class
-        /// </summary>
-        /// <param name="universeSelectionModel">The individual universe selection model defining this composite model</param>
-        public CompositeUniverseSelectionModel(PyObject universeSelectionModel)
-            : this(new[] { universeSelectionModel })
-        {
-
         }
 
         /// <summary>

@@ -594,6 +594,8 @@ namespace QuantConnect.Orders.Fills
                 return fill;
             }
 
+            // LocalTime has reached or passed market close, proceed to fill
+
             var subscribedTypes = GetSubscribedTypes(asset);
 
             if (subscribedTypes.Contains(typeof(Tick)))
@@ -640,12 +642,6 @@ namespace QuantConnect.Orders.Fills
                 {
                     fill.FillPrice = tick.Price;
                 }
-            }
-            // make sure the exchange is open/normal market hours before filling
-            // It will return true if the last bar opens before the market closes
-            else if (!IsExchangeOpen(asset, false))
-            {
-                return fill;
             }
             else if (subscribedTypes.Contains(typeof(TradeBar)))
             {

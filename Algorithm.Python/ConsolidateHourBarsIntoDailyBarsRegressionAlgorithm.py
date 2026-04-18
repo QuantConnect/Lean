@@ -36,8 +36,8 @@ class ConsolidateHourBarsIntoDailyBarsRegressionAlgorithm(QCAlgorithm):
         # bars and the values of this one
         self._rsi_timedelta = RelativeStrengthIndex("Second", 15, MovingAverageType.WILDERS)
         self._values = {}
-        self.count = 0;
-        self._indicators_compared = False;
+        self.count = 0
+        self._indicators_compared = False
 
     def on_data(self, data: Slice):
         if self.is_warming_up:
@@ -51,7 +51,7 @@ class ConsolidateHourBarsIntoDailyBarsRegressionAlgorithm(QCAlgorithm):
                     average = (bar.close + bar.open) / 2
                     self._rsi_timedelta.update(bar.end_time, average)
                     if self._rsi_timedelta.current.value != self._values[time]:
-                        raise Exception(f"Both {self._rsi.name} and {self._rsi_timedelta.name} should have the same values, but they differ. {self._rsi.name}: {self._values[time]} | {self._rsi_timedelta.name}: {self._rsi_timedelta.current.value}")
+                        raise AssertionError(f"Both {self._rsi.name} and {self._rsi_timedelta.name} should have the same values, but they differ. {self._rsi.name}: {self._values[time]} | {self._rsi_timedelta.name}: {self._rsi_timedelta.current.value}")
                 self._indicators_compared = True
                 self.quit()
             else:
@@ -66,4 +66,4 @@ class ConsolidateHourBarsIntoDailyBarsRegressionAlgorithm(QCAlgorithm):
 
     def on_end_of_algorithm(self):
         if not self._indicators_compared:
-            raise Exception(f"Indicators {self._rsi.name} and {self._rsi_timedelta.name} should have been compared, but they were not. Please make sure the indicators are getting SPY data")
+            raise AssertionError(f"Indicators {self._rsi.name} and {self._rsi_timedelta.name} should have been compared, but they were not. Please make sure the indicators are getting SPY data")

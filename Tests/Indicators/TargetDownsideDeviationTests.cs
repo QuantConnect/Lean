@@ -42,6 +42,7 @@ namespace QuantConnect.Tests.Indicators
             tdd.Update(DateTime.Today, 1m);
             tdd.Update(DateTime.Today.AddSeconds(1), 5m);
             tdd.Update(DateTime.Today.AddSeconds(2), 1m);
+            tdd.Update(DateTime.Today.AddSeconds(2), 4m);
             Assert.IsTrue(tdd.IsReady);
 
             tdd.Reset();
@@ -50,15 +51,17 @@ namespace QuantConnect.Tests.Indicators
 
         protected override IndicatorBase<IndicatorDataPoint> CreateIndicator()
         {
-            return new TargetDownsideDeviation(15);
+            // Even if the indicator is ready, there may be zero values
+            ValueCanBeZero = true;
+            return new TargetDownsideDeviation(3);
         }
 
-        protected override string TestFileName => "target_downside_deviation.csv";
+        protected override string TestFileName => "spy_tdd.csv";
 
-        protected override string TestColumnName => "denominator_rf_0_period_15";
+        protected override string TestColumnName => "tdd";
 
         protected override Action<IndicatorBase<IndicatorDataPoint>, double> Assertion =>
             (indicator, expected) =>
-                Assert.AreEqual(expected, (double) indicator.Current.Value, 1e-6);
+                Assert.AreEqual(expected, (double)indicator.Current.Value, 1e-6);
     }
 }

@@ -27,7 +27,7 @@ class NullBuyingPowerOptionBullCallSpreadAlgorithm(QCAlgorithm):
         self.set_cash(200000)
 
         self.set_security_initializer(lambda security: security.set_margin_model(SecurityMarginModel.NULL))
-        self.portfolio.set_positions(SecurityPositionGroupModel.NULL);
+        self.portfolio.set_positions(SecurityPositionGroupModel.NULL)
 
         equity = self.add_equity("GOOG")
         option = self.add_option(equity.symbol)
@@ -60,9 +60,9 @@ class NullBuyingPowerOptionBullCallSpreadAlgorithm(QCAlgorithm):
                 
             for ticket in tickets:
                 if ticket.status != OrderStatus.FILLED:
-                    raise Exception(f"There should be no restriction on buying {ticket.quantity} of {ticket.symbol} with BuyingPowerModel.NULL")
+                    raise AssertionError(f"There should be no restriction on buying {ticket.quantity} of {ticket.symbol} with BuyingPowerModel.NULL")
 
 
     def on_end_of_algorithm(self) -> None:
         if self.portfolio.total_margin_used != 0:
-            raise Exception("The TotalMarginUsed should be zero to avoid margin calls.")
+            raise AssertionError("The TotalMarginUsed should be zero to avoid margin calls.")

@@ -94,12 +94,6 @@ namespace QuantConnect.Data.Consolidators
                     workingBar.Update(0, previous.Bid?.Close ?? 0, previous.Ask?.Close ?? 0, 0, previous.LastBidSize, previous.LastAskSize);
                 }
             }
-            else if (!IsTimeBased)
-            {
-                // we should only increment the period after the first data we get, else we would be accouting twice for the inital bars period
-                // because in the `if` above we are already providing the `data.Period` as argument. See test 'AggregatesNewCountQuoteBarProperly' which assert period
-                workingBar.Period += data.Period;
-            }
 
             // update the bid and ask
             if (bid != null)

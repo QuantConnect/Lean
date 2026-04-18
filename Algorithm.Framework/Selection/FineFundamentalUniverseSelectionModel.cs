@@ -60,8 +60,8 @@ namespace QuantConnect.Algorithm.Framework.Selection
         {
             Func<IEnumerable<FineFundamental>, object> fineFunc;
             Func<IEnumerable<CoarseFundamental>, object> coarseFunc;
-            if (fineSelector.TryConvertToDelegate(out fineFunc) &&
-                coarseSelector.TryConvertToDelegate(out coarseFunc))
+            if (fineSelector.TrySafeAs(out fineFunc) &&
+                coarseSelector.TrySafeAs(out coarseFunc))
             {
                 _fineSelector = fineFunc.ConvertToUniverseSelectionSymbolDelegate();
                 _coarseSelector = coarseFunc.ConvertToUniverseSelectionSymbolDelegate();

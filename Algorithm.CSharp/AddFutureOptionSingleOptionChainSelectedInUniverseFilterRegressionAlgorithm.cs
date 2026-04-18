@@ -108,7 +108,7 @@ namespace QuantConnect.Algorithm.CSharp
                 return;
             }
 
-            foreach (var chain in slice.OptionChains.Values)
+            foreach (var chain in slice.OptionChains.Values.OrderBy(x => x.Symbol.Underlying.ID.Date))
             {
                 var futureInvested = false;
                 var optionInvested = false;
@@ -220,7 +220,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
-        public long DataPoints => 608380;
+        public long DataPoints => 319494;
 
         /// <summary>
         /// Data Points count of the algorithm history
@@ -240,7 +240,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Total Orders", "2"},
             {"Average Win", "0%"},
             {"Average Loss", "0%"},
-            {"Compounding Annual Return", "347.065%"},
+            {"Compounding Annual Return", "309.669%"},
             {"Drawdown", "0.900%"},
             {"Expectancy", "0"},
             {"Start Equity", "100000"},
@@ -263,6 +263,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Estimated Strategy Capacity", "$760000.00"},
             {"Lowest Capacity Asset", "ES XCZJLDQX2SRO|ES XCZJLC9NOB29"},
             {"Portfolio Turnover", "32.31%"},
+            {"Drawdown Recovery", "0"},
             {"OrderListHash", "7a04f66a30d793bf187c2695781ad3ee"}
         };
     }

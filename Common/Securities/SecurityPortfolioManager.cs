@@ -32,7 +32,7 @@ namespace QuantConnect.Securities
     /// Portfolio manager class groups popular properties and makes them accessible through one interface.
     /// It also provide indexing by the vehicle symbol to get the Security.Holding objects.
     /// </summary>
-    public class SecurityPortfolioManager : ExtendedDictionary<SecurityHolding>, IDictionary<Symbol, SecurityHolding>, ISecurityProvider
+    public class SecurityPortfolioManager : ExtendedDictionary<Symbol, SecurityHolding>, IDictionary<Symbol, SecurityHolding>, ISecurityProvider
     {
         private Cash _baseCurrencyCash;
         private bool _setCashWasCalled;
@@ -169,7 +169,7 @@ namespace QuantConnect.Securities
         /// </summary>
         /// <param name="symbol">String search symbol for the security</param>
         /// <returns>Boolean true if portfolio contains this symbol</returns>
-        public bool ContainsKey(Symbol symbol)
+        public override bool ContainsKey(Symbol symbol)
         {
             return Securities.ContainsKey(symbol);
         }
@@ -189,7 +189,7 @@ namespace QuantConnect.Securities
         /// Count the securities objects in the portfolio.
         /// </summary>
         /// <remarks>IDictionary implementation calling the underlying Securities collection</remarks>
-        public int Count
+        public override int Count
         {
             get
             {
@@ -228,6 +228,13 @@ namespace QuantConnect.Securities
                 i++;
             }
         }
+
+        /// <summary>
+        /// Gets all the items in the dictionary
+        /// </summary>
+        /// <returns>All the items in the dictionary</returns>
+        public override IEnumerable<KeyValuePair<Symbol, SecurityHolding>> GetItems() =>
+            Securities.GetItems().Select(kvp => KeyValuePair.Create(kvp.Key, kvp.Value.Holdings));
 
         /// <summary>
         /// Gets an <see cref="System.Collections.Generic.ICollection{T}"/> containing the Symbol objects of the <see cref="System.Collections.Generic.IDictionary{TKey, TValue}"/>.
@@ -597,8 +604,14 @@ namespace QuantConnect.Securities
         /// <returns>SecurityHolding class from the algorithm securities</returns>
         public override SecurityHolding this[Symbol symbol]
         {
-            get { return Securities[symbol].Holdings; }
-            set { Securities[symbol].Holdings = value; }
+            get
+            {
+                return Securities[symbol].Holdings;
+            }
+            set
+            {
+                Securities[symbol].Holdings = value;
+            }
         }
 
         /// <summary>

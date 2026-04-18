@@ -40,9 +40,7 @@ class MacdAlphaModel(AlphaModel):
         self.insightCollection = InsightCollection()
         self.symbolData = {}
 
-        resolutionString = Extensions.GetEnumString(resolution, Resolution)
-        movingAverageTypeString = Extensions.GetEnumString(movingAverageType, MovingAverageType)
-        self.Name = '{}({},{},{},{},{})'.format(self.__class__.__name__, fastPeriod, slowPeriod, signalPeriod, movingAverageTypeString, resolutionString)
+        self.Name = '{}({},{},{},{},{})'.format(self.__class__.__name__, fastPeriod, slowPeriod, signalPeriod, movingAverageType, resolution)
 
 
     def Update(self, algorithm, data):
@@ -99,7 +97,7 @@ class MacdAlphaModel(AlphaModel):
             if data is not None:
                 # clean up our consolidator
                 algorithm.SubscriptionManager.RemoveConsolidator(symbol, data.Consolidator)
-                
+
             # remove from insight collection manager
             self.CancelInsights(algorithm, symbol)
 

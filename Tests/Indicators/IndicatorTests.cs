@@ -332,6 +332,15 @@ namespace QuantConnect.Tests.Indicators
             Assert.AreEqual(defaultValue, indicator.Previous);
         }
 
+        [Test]
+        public void IndicatorShouldRetainSymbolWhenUpdatedWithDifferentDataType()
+        {
+            var target = new TestIndicator();
+            var date = new DateTime(2020, 1, 1);
+            target.Update(new Tick(date, Symbols.SPY, 1, 1));
+            Assert.AreEqual(Symbols.SPY, target.Current.Symbol);
+        }
+
         private static void TestComparisonOperators<TValue>()
         {
             var indicator = new TestIndicator();

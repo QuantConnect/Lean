@@ -49,4 +49,4 @@ class CustomDataLinkedIconicTypeAddDataCoarseSelectionRegressionAlgorithm(QCAlgo
 
         for custom_symbol in self.custom_symbols:
             if not self.active_securities.contains_key(custom_symbol.underlying):
-                raise Exception(f"Custom data undelrying ({custom_symbol.underlying}) Symbol was not found in active securities")
+                raise AssertionError(f"Custom data undelrying ({custom_symbol.underlying}) Symbol was not found in active securities")

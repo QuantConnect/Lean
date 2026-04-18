@@ -137,7 +137,7 @@ namespace QuantConnect.Data.Common
             // the data resolution is hour and the exchange opens at any point in time over the data.Time to data.EndTime interval
             if (_extendedMarketHours ||
                 ExchangeHours.IsOpen(data.Time, false) ||
-                (Period == Time.OneDay && (data.EndTime - data.Time == Time.OneHour) && ExchangeHours.IsOpen(data.Time, data.EndTime, false)))
+                (Period == Time.OneDay && (data.EndTime - data.Time >= Time.OneHour) && ExchangeHours.IsOpen(data.Time, data.EndTime, false)))
             {
                 Consolidator.Update(data);
             }
@@ -195,7 +195,7 @@ namespace QuantConnect.Data.Common
         {
             if (!_useStrictEndTime)
             {
-                return new (Period > Time.OneDay ? dateTime : dateTime.RoundDown(Period), Period);
+                return new(Period > Time.OneDay ? dateTime : dateTime.RoundDown(Period), Period);
             }
             return LeanData.GetDailyCalendar(dateTime, ExchangeHours, _extendedMarketHours);
         }

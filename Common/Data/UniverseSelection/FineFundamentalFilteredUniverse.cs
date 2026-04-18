@@ -55,7 +55,7 @@ namespace QuantConnect.Data.UniverseSelection
         public FineFundamentalFilteredUniverse(Universe universe, PyObject fineSelector)
             : base(universe, universe.SelectSymbols)
         {
-            var func = fineSelector.ConvertToDelegate<Func< IEnumerable<FineFundamental>, object>>();
+            var func = fineSelector.SafeAs<Func< IEnumerable<FineFundamental>, object>>();
             FineFundamentalUniverse = new FineFundamentalUniverse(universe.UniverseSettings, func.ConvertToUniverseSelectionSymbolDelegate());
             FineFundamentalUniverse.SelectionChanged += (sender, args) => OnSelectionChanged(((SelectionEventArgs)args).CurrentSelection);
         }

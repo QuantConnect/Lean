@@ -42,7 +42,7 @@ namespace QuantConnect.Util
         private static readonly HashSet<Type> _strictDailyEndTimesDataTypes = new()
         {
             // the underlying could yield auxiliary data which we don't want to change
-            typeof(TradeBar), typeof(QuoteBar), typeof(ZipEntryName), typeof(BaseDataCollection), typeof(OpenInterest)
+            typeof(TradeBar), typeof(QuoteBar), typeof(BaseDataCollection), typeof(OpenInterest)
         };
 
         /// <summary>
@@ -644,9 +644,16 @@ namespace QuantConnect.Util
 
                 case SecurityType.FutureOption:
                     path = Path.Combine(path,
-                        symbol.Underlying.Value.ToLowerInvariant(),
+                        symbol.Underlying.ID.Symbol.ToLowerInvariant(),
                         symbol.Underlying.ID.Date.ToStringInvariant(DateFormat.EightCharacter));
                     break;
+
+                case SecurityType.Future:
+                    path = Path.Combine(path, symbol.ID.Symbol.ToLowerInvariant());
+                    break;
+
+                default:
+                    throw new ArgumentOutOfRangeException($"Unsupported security type {symbol.SecurityType}");
             }
 
             return path;
@@ -865,7 +872,8 @@ namespace QuantConnect.Util
 
             if (tickType == null)
             {
-                if (securityType == SecurityType.Forex || securityType == SecurityType.Cfd) {
+                if (securityType == SecurityType.Forex || securityType == SecurityType.Cfd)
+                {
                     tickType = TickType.Quote;
                 }
                 else
@@ -1023,7 +1031,7 @@ namespace QuantConnect.Util
             {
                 return TickType.OpenInterest;
             }
-            if (type == typeof(ZipEntryName))
+            if (type.IsAssignableTo(typeof(BaseChainUniverseData)))
             {
                 return TickType.Quote;
             }
@@ -1105,7 +1113,7 @@ namespace QuantConnect.Util
 
             try
             {
-                if (!TryParsePath(filePath, out symbol, out date, out resolution))
+                if (!TryParsePath(filePath, out symbol, out date, out resolution, out var isUniverses))
                 {
                     return false;
                 }
@@ -1125,7 +1133,7 @@ namespace QuantConnect.Util
                     tickType = (TickType)Enum.Parse(typeof(TickType), fileName.Split('_')[tickTypePosition], true);
                 }
 
-                dataType = GetDataType(resolution, tickType);
+                dataType = isUniverses ? typeof(OptionUniverse) : GetDataType(resolution, tickType);
                 return true;
             }
             catch (Exception ex)
@@ -1144,9 +1152,23 @@ namespace QuantConnect.Util
         /// <param name="resolution">The resolution of the symbol as parsed from the filePath</param>
         public static bool TryParsePath(string fileName, out Symbol symbol, out DateTime date, out Resolution resolution)
         {
+            return TryParsePath(fileName, out symbol, out date, out resolution, out _);
+        }
+
+        /// <summary>
+        /// Parses file name into a <see cref="Security"/> and DateTime
+        /// </summary>
+        /// <param name="fileName">File name to be parsed</param>
+        /// <param name="symbol">The symbol as parsed from the fileName</param>
+        /// <param name="date">Date of data in the file path. Only returned if the resolution is lower than Hourly</param>
+        /// <param name="resolution">The resolution of the symbol as parsed from the filePath</param>
+        /// <param name="isUniverses">Outputs whether the file path represents a universe data file.</param>
+        public static bool TryParsePath(string fileName, out Symbol symbol, out DateTime date, out Resolution resolution, out bool isUniverses)
+        {
             symbol = null;
             resolution = Resolution.Daily;
             date = default(DateTime);
+            isUniverses = default;
 
             try
             {
@@ -1168,7 +1190,7 @@ namespace QuantConnect.Util
 
                 var market = Market.USA;
                 string ticker;
-                var isUniverses = false;
+
                 if (!Enum.TryParse(info[startIndex + 2], true, out resolution))
                 {
                     resolution = Resolution.Daily;
@@ -1184,7 +1206,9 @@ namespace QuantConnect.Util
                             // only acept a failure to parse resolution if we are facing a universes path
                             return false;
                         }
-                        securityType = SecurityType.Base;
+
+                        (symbol, date) = ParseUniversePath(info, securityType);
+                        return true;
                     }
                 }
 
@@ -1231,34 +1255,15 @@ namespace QuantConnect.Util
                     }
                 }
 
-                // Future Options cannot use Symbol.Create
                 if (securityType == SecurityType.FutureOption)
                 {
                     // Future options have underlying FutureExpiry date as the parent dir for the zips, we need this for our underlying
-                    var underlyingFutureExpiryDate = Parse.DateTimeExact(info[startIndex + 4].Substring(0, 8), DateFormat.EightCharacter);
-
-                    var underlyingTicker = OptionSymbol.MapToUnderlying(ticker, securityType);
-                    // Create our underlying future and then the Canonical option for this future
-                    var underlyingFuture = Symbol.CreateFuture(underlyingTicker, market, underlyingFutureExpiryDate);
-                    symbol = Symbol.CreateCanonicalOption(underlyingFuture);
-                }
-                else if (securityType == SecurityType.IndexOption)
-                {
-                    var underlyingTicker = OptionSymbol.MapToUnderlying(ticker, securityType);
-                    // Create our underlying index and then the Canonical option
-                    var underlyingIndex = Symbol.Create(underlyingTicker, SecurityType.Index, market);
-                    symbol = Symbol.CreateCanonicalOption(underlyingIndex, ticker, market, null);
+                    symbol = CreateSymbol(ticker, securityType, market, null, Parse.DateTimeExact(info[startIndex + 4].Substring(0, 8), DateFormat.EightCharacter));
                 }
                 else
                 {
-                    Type dataType = null;
-                    if (isUniverses && info[startIndex + 3].Equals("etf", StringComparison.InvariantCultureIgnoreCase))
-                    {
-                        dataType = typeof(ETFConstituentUniverse);
-                    }
-                    symbol = CreateSymbol(ticker, securityType, market, dataType, date);
+                    symbol = CreateSymbol(ticker, securityType, market, null, date);
                 }
-
             }
             catch (Exception ex)
             {
@@ -1267,6 +1272,62 @@ namespace QuantConnect.Util
             }
 
             return true;
+        }
+
+        /// <summary>
+        /// Parses the universe file path and extracts the corresponding symbol and file date.
+        /// </summary>
+        /// <param name="filePathParts">
+        /// A list of strings representing the file path segments. The expected structure is:
+        /// <para>General format: ["data", SecurityType, Market, "universes", ...]</para>
+        /// <para>Examples:</para>
+        /// <list type="bullet">
+        /// <item><description>Equity: <c>data/equity/usa/universes/etf/spy/20201130.csv</c></description></item>
+        /// <item><description>Option: <c>data/option/usa/universes/aapl/20241112.csv</c></description></item>
+        /// <item><description>Future: <c>data/future/cme/universes/es/20130710.csv</c></description></item>
+        /// <item><description>Future Option: <c>data/futureoption/cme/universes/20120401/20111230.csv</c></description></item>
+        /// </list>
+        /// </param>
+        /// <param name="securityType">The type of security for which the symbol is being created.</param>
+        /// <returns>A tuple containing the parsed <see cref="Symbol"/> and the universe processing file date.</returns>
+        /// <exception cref="ArgumentException">Thrown if the file path does not contain 'universes'.</exception>
+        /// <exception cref="NotSupportedException">Thrown if the security type is not supported.</exception>
+        private static (Symbol symbol, DateTime processingDate) ParseUniversePath(IReadOnlyList<string> filePathParts, SecurityType securityType)
+        {
+            if (!filePathParts.Contains("universes", StringComparer.InvariantCultureIgnoreCase))
+            {
+                throw new ArgumentException($"LeanData.{nameof(ParseUniversePath)}:The file path must contain a 'universes' part, but it was not found.");
+            }
+
+            var symbol = default(Symbol);
+            var market = filePathParts[2];
+            var ticker = filePathParts[^2];
+            var universeFileDate = DateTime.ParseExact(filePathParts[^1], DateFormat.EightCharacter, DateTimeFormatInfo.InvariantInfo, DateTimeStyles.None);
+            switch (securityType)
+            {
+                case SecurityType.Equity:
+                    securityType = SecurityType.Base;
+                    var dataType = filePathParts.Contains("etf", StringComparer.InvariantCultureIgnoreCase) ? typeof(ETFConstituentUniverse) : default;
+                    symbol = CreateSymbol(ticker, securityType, market, dataType, universeFileDate);
+                    break;
+                case SecurityType.Option:
+                    symbol = CreateSymbol(ticker, securityType, market, null, universeFileDate);
+                    break;
+                case SecurityType.IndexOption:
+                    symbol = CreateSymbol(ticker, securityType, market, null, default);
+                    break;
+                case SecurityType.FutureOption:
+                    symbol = CreateSymbol(filePathParts[^3], securityType, market, null, Parse.DateTimeExact(filePathParts[^2], DateFormat.EightCharacter));
+                    break;
+                case SecurityType.Future:
+                    var mapUnderlyingTicker = OptionSymbol.MapToUnderlying(ticker, securityType);
+                    symbol = Symbol.CreateFuture(mapUnderlyingTicker, market, universeFileDate);
+                    break;
+                default:
+                    throw new NotSupportedException($"LeanData.{nameof(ParseUniversePath)}:The security type '{securityType}' is not supported for data universe files.");
+            }
+
+            return (symbol, universeFileDate);
         }
 
         /// <summary>
@@ -1293,6 +1354,20 @@ namespace QuantConnect.Util
             {
                 var symbol = new Symbol(SecurityIdentifier.GenerateEquity(ticker, market, mappingResolveDate: mappingResolveDate), ticker);
                 return securityType == SecurityType.Option ? Symbol.CreateCanonicalOption(symbol) : symbol;
+            }
+            else if (securityType == SecurityType.FutureOption)
+            {
+                var underlyingTicker = OptionSymbol.MapToUnderlying(ticker, securityType);
+                // Create our underlying future and then the Canonical option for this future
+                var underlyingFuture = Symbol.CreateFuture(underlyingTicker, market, mappingResolveDate);
+                return Symbol.CreateCanonicalOption(underlyingFuture);
+            }
+            else if (securityType == SecurityType.IndexOption)
+            {
+                var underlyingTicker = OptionSymbol.MapToUnderlying(ticker, securityType);
+                // Create our underlying index and then the Canonical option
+                var underlyingIndex = Symbol.Create(underlyingTicker, SecurityType.Index, market);
+                return Symbol.CreateCanonicalOption(underlyingIndex, ticker, market, null);
             }
             else
             {
@@ -1497,17 +1572,8 @@ namespace QuantConnect.Util
                 return false;
             }
 
-            var isZipEntryName = dataType == typeof(ZipEntryName);
-            if (isZipEntryName && baseData.Time.Hour == 0)
-            {
-                // zip entry names are emitted point in time for a date, see BaseDataSubscriptionEnumeratorFactory. When setting the strict end times
-                // we will move it to the previous day daily times, because daily market data on disk end time is midnight next day, so here we add 1 day
-                baseData.Time += Time.OneDay;
-                baseData.EndTime += Time.OneDay;
-            }
-
             var dailyCalendar = GetDailyCalendar(baseData.EndTime, exchange, extendedMarketHours: false);
-            if (!isZipEntryName && dailyCalendar.End < baseData.Time)
+            if (dailyCalendar.End < baseData.Time)
             {
                 // this data point we were given is probably from extended market hours which we don't support for daily backtesting data
                 return false;
@@ -1524,24 +1590,34 @@ namespace QuantConnect.Util
         /// <param name="fileName">File name extracted</param>
         /// <param name="entryName">Entry name extracted</param>
         public static void ParseKey(string key, out string fileName, out string entryName)
-         {
-             // Default scenario, no entryName included in key
-             entryName = null; // default to all entries
-             fileName = key;
+        {
+            // Default scenario, no entryName included in key
+            entryName = null; // default to all entries
+            fileName = key;
 
-             if (key == null)
-             {
-                 return;
-             }
+            if (key == null)
+            {
+                return;
+            }
 
-             // Try extracting an entry name; Anything after a # sign
-             var hashIndex = key.LastIndexOf("#", StringComparison.Ordinal);
-             if (hashIndex != -1)
-             {
-                 entryName = key.Substring(hashIndex + 1);
-                 fileName = key.Substring(0, hashIndex);
-             }
-         }
+            // Try extracting an entry name; Anything after a # sign
+            var hashIndex = key.LastIndexOf("#", StringComparison.Ordinal);
+            if (hashIndex != -1)
+            {
+                entryName = key.Substring(hashIndex + 1);
+                fileName = key.Substring(0, hashIndex);
+            }
+        }
+
+        /// <summary>
+        /// Helper method to determine if the specified data type supports extended market hours
+        /// </summary>
+        /// <param name="dataType">The data type</param>
+        /// <returns>Whether the specified data type supports extended market hours</returns>
+        public static bool SupportsExtendedMarketHours(Type dataType)
+        {
+            return !dataType.IsAssignableTo(typeof(BaseChainUniverseData));
+        }
 
         /// <summary>
         /// Helper method to aggregate ticks or bars into lower frequency resolutions

@@ -57,4 +57,4 @@ class UniverseSelectionDefinitionsAlgorithm(QCAlgorithm):
 
     def on_end_of_algorithm(self):
         if not self.on_securities_changed_was_called:
-            raise Exception("OnSecuritiesChanged() method was never called!")
+            raise AssertionError("OnSecuritiesChanged() method was never called!")

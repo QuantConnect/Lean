@@ -20,6 +20,7 @@ using QuantConnect.Util;
 using QuantConnect.Data;
 using QuantConnect.Interfaces;
 using System.Collections.Generic;
+using QuantConnect.Data.Market;
 
 namespace QuantConnect.Securities
 {
@@ -71,13 +72,29 @@ namespace QuantConnect.Securities
             decimal leverage,
             bool addToSymbolCache,
             Security underlying,
-            bool initializeSecurity)
+            bool initializeSecurity,
+            bool reCreateSecurity)
         {
             var configList = new SubscriptionDataConfigList(symbol);
             configList.AddRange(subscriptionDataConfigList);
 
+            if (!reCreateSecurity && _algorithm != null && _algorithm.Securities.TryGetValue(symbol, out var existingSecurity))
+            {
+                existingSecurity.AddData(configList);
+
+                // If non-internal, mark as tradable if it was not already since this is an existing security but might include new subscriptions
+                if (!configList.IsInternalFeed)
+                {
+                    existingSecurity.MakeTradable();
+                }
+
+                InitializeSecurity(initializeSecurity, existingSecurity);
+
+                return existingSecurity;
+            }
+
             var dataTypes = Enumerable.Empty<Type>();
-            if(symbol.SecurityType == SecurityType.Base && SecurityIdentifier.TryGetCustomDataTypeInstance(symbol.ID.Symbol, out var type))
+            if (symbol.SecurityType == SecurityType.Base && SecurityIdentifier.TryGetCustomDataTypeInstance(symbol.ID.Symbol, out var type))
             {
                 dataTypes = new[] { type };
             }
@@ -135,6 +152,14 @@ namespace QuantConnect.Securities
 
             var cache = _cacheProvider.GetSecurityCache(symbol);
 
+            List<TickType> sessionDataTypes = null;
+            bool hasDataTypes = _algorithm != null && _algorithm.SubscriptionManager.AvailableDataTypes?.TryGetValue(symbol.SecurityType, out sessionDataTypes) == true;
+            if (!hasDataTypes || sessionDataTypes.Count == 0)
+            {
+                sessionDataTypes = SubscriptionManager.DefaultDataTypes()[symbol.SecurityType];
+            }
+            cache.Session = new Session(sessionDataTypes.First(), exchangeHours, symbol);
+
             Security security;
             switch (symbol.ID.SecurityType)
             {
@@ -167,7 +192,7 @@ namespace QuantConnect.Securities
                     break;
 
                 case SecurityType.Future:
-                    security = new Future.Future(symbol, exchangeHours, quoteCash, symbolProperties, _cashBook, _registeredTypes, cache, underlying);
+                    security = new Future.Future(symbol, exchangeHours, quoteCash, symbolProperties, _cashBook, _registeredTypes, cache);
                     break;
 
                 case SecurityType.Forex:
@@ -206,10 +231,7 @@ namespace QuantConnect.Securities
             security.AddData(configList);
 
             // invoke the security initializer
-            if (initializeSecurity)
-            {
-                _securityInitializerProvider.SecurityInitializer.Initialize(security);
-            }
+            InitializeSecurity(initializeSecurity, security);
 
             CheckCanonicalSecurityModels(security);
 
@@ -242,7 +264,8 @@ namespace QuantConnect.Securities
             bool addToSymbolCache = true,
             Security underlying = null)
         {
-            return CreateSecurity(symbol, subscriptionDataConfigList, leverage, addToSymbolCache, underlying, initializeSecurity: true);
+            return CreateSecurity(symbol, subscriptionDataConfigList, leverage, addToSymbolCache, underlying,
+                initializeSecurity: true, reCreateSecurity: false);
         }
 
         /// <summary>
@@ -267,7 +290,8 @@ namespace QuantConnect.Securities
                 leverage: 1,
                 addToSymbolCache: false,
                 underlying: null,
-                initializeSecurity: false);
+                initializeSecurity: false,
+                reCreateSecurity: true);
         }
 
         /// <summary>
@@ -301,6 +325,15 @@ namespace QuantConnect.Securities
                     _modelsMismatchWarningSent = true;
                     _algorithm.Debug($"Warning: Security {security.Symbol} its canonical security {security.Symbol.Canonical} have at least one model of different types (fill, fee, buying power, margin interest rate, slippage, volatility, settlement). To avoid this, consider using a security initializer to set the right models to each security type according to your algorithm's requirements.");
                 }
+            }
+        }
+
+        private void InitializeSecurity(bool initializeSecurity, Security security)
+        {
+            if (initializeSecurity && !security.IsInitialized)
+            {
+                _securityInitializerProvider.SecurityInitializer.Initialize(security);
+                security.IsInitialized = true;
             }
         }
     }

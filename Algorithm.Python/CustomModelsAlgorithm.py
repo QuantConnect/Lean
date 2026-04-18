@@ -134,7 +134,7 @@ class SimpleCustomFillModel(FillModel):
         return fill
 
     def _get_trade_bar(self, asset, order_direction):
-        trade_bar = asset.cache.get_data[TradeBar]()
+        trade_bar = asset.cache.get_data(TradeBar)
         if trade_bar: return trade_bar
 
         # Tick-resolution data doesn't have TradeBar, use the asset price

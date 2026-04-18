@@ -49,7 +49,7 @@ namespace QuantConnect.Algorithm.CSharp
                 contractDepthOffset: 0
             );
 
-            _futureContract = AddFutureContract(FutureChainProvider.GetFutureContractList(_continuousContract.Symbol, Time).First());
+            _futureContract = AddFutureContract(FuturesChain(_continuousContract.Symbol).First());
         }
 
         /// <summary>
@@ -115,12 +115,12 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
-        public long DataPoints => 76;
+        public long DataPoints => 61;
 
         /// <summary>
         /// Data Points count of the algorithm history
         /// </summary>
-        public int AlgorithmHistoryDataPoints => 0;
+        public int AlgorithmHistoryDataPoints => 1;
 
         /// <summary>
         /// Final status of the algorithm
@@ -158,7 +158,8 @@ namespace QuantConnect.Algorithm.CSharp
             {"Estimated Strategy Capacity", "$5500000.00"},
             {"Lowest Capacity Asset", "ES VMKLFZIH2MTD"},
             {"Portfolio Turnover", "66.80%"},
-            {"OrderListHash", "579e2e83dd7e5e7648c47e9eff132460"}
+            {"Drawdown Recovery", "0"},
+            {"OrderListHash", "39f1e15c27212d8fdd58aeb7fb2b93cc"}
         };
     }
 }

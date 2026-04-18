@@ -210,25 +210,25 @@ namespace QuantConnect.Indicators
         /// <param name="input">The input given to the indicator</param>
         protected override decimal ComputeNextValue(IBaseDataBar input)
         {
-            TenkanMaximum.Update(input.Time, input.High);
-            TenkanMinimum.Update(input.Time, input.Low);
-            Tenkan.Update(input.Time, input.Close);
-            if (Tenkan.IsReady) DelayedTenkanSenkouA.Update(input.Time, Tenkan.Current.Value);
+            TenkanMaximum.Update(input.EndTime, input.High);
+            TenkanMinimum.Update(input.EndTime, input.Low);
+            Tenkan.Update(input.EndTime, input.Close);
+            if (Tenkan.IsReady) DelayedTenkanSenkouA.Update(input.EndTime, Tenkan.Current.Value);
 
-            KijunMaximum.Update(input.Time, input.High);
-            KijunMinimum.Update(input.Time, input.Low);
-            Kijun.Update(input.Time, input.Close);
-            if (Kijun.IsReady) DelayedKijunSenkouA.Update(input.Time, Kijun.Current.Value);
+            KijunMaximum.Update(input.EndTime, input.High);
+            KijunMinimum.Update(input.EndTime, input.Low);
+            Kijun.Update(input.EndTime, input.Close);
+            if (Kijun.IsReady) DelayedKijunSenkouA.Update(input.EndTime, Kijun.Current.Value);
 
-            SenkouA.Update(input.Time, input.Close);
+            SenkouA.Update(input.EndTime, input.Close);
 
-            SenkouB.Update(input.Time, input.Close);
-            SenkouBMaximum.Update(input.Time, input.High);
-            if (SenkouBMaximum.IsReady) DelayedMaximumSenkouB.Update(input.Time, SenkouBMaximum.Current.Value);
-            SenkouBMinimum.Update(input.Time, input.Low);
-            if (SenkouBMinimum.IsReady) DelayedMinimumSenkouB.Update(input.Time, SenkouBMinimum.Current.Value);
+            SenkouB.Update(input.EndTime, input.Close);
+            SenkouBMaximum.Update(input.EndTime, input.High);
+            if (SenkouBMaximum.IsReady) DelayedMaximumSenkouB.Update(input.EndTime, SenkouBMaximum.Current.Value);
+            SenkouBMinimum.Update(input.EndTime, input.Low);
+            if (SenkouBMinimum.IsReady) DelayedMinimumSenkouB.Update(input.EndTime, SenkouBMinimum.Current.Value);
 
-            Chikou.Update(input.Time, input.Close);
+            Chikou.Update(input.EndTime, input.Close);
 
             return input.Close;
         }

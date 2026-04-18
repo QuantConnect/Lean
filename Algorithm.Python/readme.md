@@ -45,7 +45,7 @@ Next we must prepare a Python installation for Lean to use. Follow the instructi
    - Click **New**. 
         - Name: `PYTHONNET_PYDLL`
         - Value: `{python dll location}`
-4. Install [pandas=2.1.4](https://pandas.pydata.org/) and its [dependencies](https://pandas.pydata.org/pandas-docs/stable/install.html#dependencies).
+4. Install [pandas=2.2.3](https://pandas.pydata.org/) and its [dependencies](https://pandas.pydata.org/pandas-docs/stable/install.html#dependencies).
 5. Install [wrapt=1.16.0](https://pypi.org/project/wrapt/) module.
 6. Reboot computer to ensure changes are propagated.
 
@@ -64,7 +64,7 @@ Next we must prepare a Python installation for Lean to use. Follow the instructi
    ```
    source ~/.bash-profile
    ```
-2. Install [pandas=2.1.4](https://pandas.pydata.org/) and its [dependencies](https://pandas.pydata.org/pandas-docs/stable/install.html#dependencies).
+2. Install [pandas=2.2.3](https://pandas.pydata.org/) and its [dependencies](https://pandas.pydata.org/pandas-docs/stable/install.html#dependencies).
 3. Install [wrapt=1.16.0](https://pypi.org/project/wrapt/) module.
 
 <br />
@@ -80,7 +80,7 @@ rm -rf Miniconda3-py311_24.9.2-0-Linux-x86_64.sh
 ```
 2. Create a new Python environment with the needed dependencies
 ```
-conda create -n qc_lean python=3.11.11 pandas=2.1.4 wrapt=1.16.0
+conda create -n qc_lean python=3.11.11 pandas=2.2.3 wrapt=1.16.0
 ```
 3. Set `PYTHONNET_PYDLL` environment variable to location of your python dll in your installation directory (e.g. `/home/{your_user_name}/miniconda3/envs/qc_lean/lib/libpython3.11.so`):
    - Open `/etc/environment` with a text editor of your choice.

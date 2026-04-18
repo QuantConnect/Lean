@@ -39,7 +39,7 @@ class CustomBuyingPowerModelAlgorithm(QCAlgorithm):
 
         quantity = self.calculate_order_quantity(self.spy, 1)
         if quantity % 100 != 0:
-            raise Exception(f'CustomBuyingPowerModel only allow quantity that is multiple of 100 and {quantity} was found')
+            raise AssertionError(f'CustomBuyingPowerModel only allow quantity that is multiple of 100 and {quantity} was found')
 
         # We normally get insufficient buying power model, but the
         # CustomBuyingPowerModel always says that there is sufficient buying power for the orders

@@ -30,22 +30,22 @@ class ForwardDataOnlyFillModelAlgorithm(QCAlgorithm):
     def trade(self):
         if not self.portfolio.invested:
             if self.time.hour != 9 or self.time.minute != 30:
-                raise Exception(f"Unexpected event time {self.time}")
+                raise AssertionError(f"Unexpected event time {self.time}")
 
             ticket = self.buy("SPY", 1)
             if ticket.status != OrderStatus.SUBMITTED:
-                raise Exception(f"Unexpected order status {ticket.status}")
+                raise AssertionError(f"Unexpected order status {ticket.status}")
 
     def on_order_event(self, order_event: OrderEvent):
         self.debug(f"OnOrderEvent:: {order_event}")
         if order_event.status == OrderStatus.FILLED and (self.time.hour != 10 or self.time.minute != 0):
-            raise Exception(f"Unexpected fill time {self.time}")
+            raise AssertionError(f"Unexpected fill time {self.time}")
 
 class ForwardDataOnlyFillModel(EquityFillModel):
     def fill(self, parameters: FillModelParameters):
         order_local_time = Extensions.convert_from_utc(parameters.order.time, parameters.security.exchange.time_zone)
         for data_type in [ QuoteBar, TradeBar, Tick ]:
-            data = parameters.security.cache.get_data[data_type]()
+            data = parameters.security.cache.get_data(data_type)
             if not data is None and order_local_time <= data.end_time:
                 return super().fill(parameters)
         return Fill([])

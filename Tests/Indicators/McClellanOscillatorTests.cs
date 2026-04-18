@@ -29,10 +29,22 @@ namespace QuantConnect.Tests.Indicators
         protected override IndicatorBase<TradeBar> CreateIndicator()
         {
             var mcClellanOscillator = new McClellanOscillator(19, 39);
-            mcClellanOscillator.Add(Symbols.MSFT);
-            mcClellanOscillator.Add(Symbols.GOOG);
-            mcClellanOscillator.Add(Symbols.AAPL);
+            if (SymbolList.Count > 2)
+            {
+                SymbolList.Take(3).ToList().ForEach(mcClellanOscillator.Add);
+            }
+            else
+            {
+                mcClellanOscillator.Add(Symbols.MSFT);
+                mcClellanOscillator.Add(Symbols.GOOG);
+                mcClellanOscillator.Add(Symbols.AAPL);
+            }
             return mcClellanOscillator;
+        }
+
+        protected override List<Symbol> GetSymbols()
+        {
+            return [Symbols.SPY, Symbols.AAPL, Symbols.IBM];
         }
 
         [Test]

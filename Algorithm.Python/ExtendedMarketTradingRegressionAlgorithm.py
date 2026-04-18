@@ -45,7 +45,7 @@ class ExtendedMarketTradingRegressionAlgorithm(QCAlgorithm):
     def on_order_event(self, order_event):
         self.log(str(order_event))
         if self.in_market_hours():
-            raise Exception("Order processed during market hours.")
+            raise AssertionError("Order processed during market hours.")
 
     def in_market_hours(self):
         now = self.time.time()

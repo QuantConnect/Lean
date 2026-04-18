@@ -95,7 +95,7 @@ namespace QuantConnect.Util
         /// </summary>
         /// <remarks>Note that the worker thread is a background thread,
         /// so it won't block the process from terminating even if not disposed</remarks>
-        public void Dispose()
+        public virtual void Dispose()
         {
             try
             {

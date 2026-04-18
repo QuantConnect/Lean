@@ -189,5 +189,31 @@ namespace QuantConnect.Util
                 StringBuilders.Add(builder);
             }
         }
+
+        /// <summary>
+        /// Gets a character from a stream reader
+        /// </summary>
+        /// <param name="stream">The data stream</param>
+        /// <param name="delimiter">The data delimiter character to use, default is ','</param>
+        /// <returns>The string instance read</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static char GetChar(this StreamReader stream, char delimiter = DefaultDelimiter)
+        {
+            var current = (char)stream.Read();
+            var next = (char)stream.Peek();
+
+            if (current == delimiter || current == '\n' || current == '\r' && (next != '\n' || stream.Read() == '\n') || current == NoMoreData)
+            {
+                return '\0';
+            }
+
+            if (next == delimiter || next == '\n' || next == '\r' && stream.Read() == '\r' && stream.Peek() == '\n' || next == NoMoreData)
+            {
+                // Consume the delimiter
+                stream.Read();
+            }
+
+            return current;
+        }
     }
 }

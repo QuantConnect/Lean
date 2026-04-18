@@ -34,6 +34,7 @@ class FundamentalUniverseSelectionAlgorithm(QCAlgorithm):
         self.set_universe_selection(FundamentalUniverseSelectionModel(self.select))
 
         self.changes = None
+        self.number_of_symbols_fundamental = 10
 
     # return a list of three fixed symbol objects
     def selection_function(self, fundamental):

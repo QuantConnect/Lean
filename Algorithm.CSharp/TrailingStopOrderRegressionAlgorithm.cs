@@ -37,6 +37,7 @@ namespace QuantConnect.Algorithm.CSharp
         private OrderTicket _buyOrderTicket;
         private OrderTicket _sellOrderTicket;
         private Slice _previousSlice;
+        protected virtual bool AsynchronousOrders => false;
 
         public override void Initialize()
         {
@@ -56,7 +57,7 @@ namespace QuantConnect.Algorithm.CSharp
 
             if (_buyOrderTicket == null)
             {
-                _buyOrderTicket = TrailingStopOrder(_symbol, 100, trailingAmount: BuyTrailingAmount, trailingAsPercentage: false);
+                _buyOrderTicket = TrailingStopOrder(_symbol, 100, trailingAmount: BuyTrailingAmount, trailingAsPercentage: false, asynchronous: AsynchronousOrders);
             }
             else if (_buyOrderTicket.Status != OrderStatus.Filled)
             {
@@ -79,7 +80,7 @@ namespace QuantConnect.Algorithm.CSharp
             {
                 if (Portfolio.Invested)
                 {
-                    _sellOrderTicket = TrailingStopOrder(_symbol, -100, trailingAmount: SellTrailingAmount, trailingAsPercentage: false);
+                    _sellOrderTicket = TrailingStopOrder(_symbol, -100, trailingAmount: SellTrailingAmount, trailingAsPercentage: false, asynchronous: AsynchronousOrders);
                 }
             }
             else if (_sellOrderTicket.Status != OrderStatus.Filled)
@@ -123,6 +124,17 @@ namespace QuantConnect.Algorithm.CSharp
                         throw new RegressionTestException($@"Sell trailing stop order should have filled with price less than or equal to the stop price {
                             stopPrice}. Fill price: {orderEvent.FillPrice}");
                     }
+                }
+            }
+        }
+
+        public override void OnEndOfAlgorithm()
+        {
+            foreach (var ticket in Transactions.GetOrderTickets())
+            {
+                if (ticket.SubmitRequest.Asynchronous != AsynchronousOrders)
+                {
+                    throw new RegressionTestException("Expected all orders to have the same asynchronous flag as the algorithm.");
                 }
             }
         }
@@ -183,6 +195,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Estimated Strategy Capacity", "$36000000.00"},
             {"Lowest Capacity Asset", "SPY R735QTJ8XC9X"},
             {"Portfolio Turnover", "5.79%"},
+            {"Drawdown Recovery", "0"},
             {"OrderListHash", "d56bac89a568c3a45cac595e69a35875"}
         };
     }

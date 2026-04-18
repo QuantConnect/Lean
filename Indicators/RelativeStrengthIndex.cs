@@ -84,13 +84,13 @@ namespace QuantConnect.Indicators
         {
             if (_previousInput != null && input.Value >= _previousInput.Value)
             {
-                AverageGain.Update(input.Time, input.Value - _previousInput.Value);
-                AverageLoss.Update(input.Time, 0m);
+                AverageGain.Update(input.EndTime, input.Value - _previousInput.Value);
+                AverageLoss.Update(input.EndTime, 0m);
             }
             else if (_previousInput != null && input.Value < _previousInput.Value)
             {
-                AverageGain.Update(input.Time, 0m);
-                AverageLoss.Update(input.Time, _previousInput.Value - input.Value);
+                AverageGain.Update(input.EndTime, 0m);
+                AverageLoss.Update(input.EndTime, _previousInput.Value - input.Value);
             }
 
             _previousInput = input;

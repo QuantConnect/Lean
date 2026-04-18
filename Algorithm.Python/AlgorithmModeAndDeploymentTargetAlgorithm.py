@@ -26,19 +26,19 @@ class AlgorithmModeAndDeploymentTargetAlgorithm(QCAlgorithm):
         self.debug(f"Algorithm Mode: {self.algorithm_mode}. Is Live Mode: {self.live_mode}. Deployment Target: {self.deployment_target}.")
 
         if self.algorithm_mode != AlgorithmMode.BACKTESTING:
-            raise Exception(f"Algorithm mode is not backtesting. Actual: {self.algorithm_mode}")
+            raise AssertionError(f"Algorithm mode is not backtesting. Actual: {self.algorithm_mode}")
 
         if self.live_mode:
-            raise Exception("Algorithm should not be live")
+            raise AssertionError("Algorithm should not be live")
 
         if self.deployment_target != DeploymentTarget.LOCAL_PLATFORM:
-            raise Exception(f"Algorithm deployment target is not local. Actual{self.deployment_target}")
+            raise AssertionError(f"Algorithm deployment target is not local. Actual{self.deployment_target}")
 
         # For a live deployment these checks should pass:
-        # if self.algorithm_mode != AlgorithmMode.LIVE: raise Exception("Algorithm mode is not live")
-        # if not self.live_mode: raise Exception("Algorithm should be live")
+        # if self.algorithm_mode != AlgorithmMode.LIVE: raise AssertionError("Algorithm mode is not live")
+        # if not self.live_mode: raise AssertionError("Algorithm should be live")
 
         # For a cloud deployment these checks should pass:
-        # if self.deployment_target != DeploymentTarget.CLOUD_PLATFORM: raise Exception("Algorithm deployment target is not cloud")
+        # if self.deployment_target != DeploymentTarget.CLOUD_PLATFORM: raise AssertionError("Algorithm deployment target is not cloud")
 
         self.quit()

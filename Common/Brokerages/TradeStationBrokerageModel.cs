@@ -28,6 +28,12 @@ namespace QuantConnect.Brokerages
     public class TradeStationBrokerageModel : DefaultBrokerageModel
     {
         /// <summary>
+        /// The default start time of the <see cref="OrderType.MarketOnOpen"/> order submission window.
+        /// Example: 6:00 (6:00 AM).
+        /// </summary>
+        private static readonly TimeOnly _mooWindowStart = new(6, 0, 0);
+
+        /// <summary>
         /// HashSet containing the security types supported by TradeStation.
         /// </summary>
         private readonly HashSet<SecurityType> _supportSecurityTypes = new(
@@ -38,6 +44,16 @@ namespace QuantConnect.Brokerages
                 SecurityType.Future,
                 SecurityType.IndexOption
             });
+
+        /// <summary>
+        /// Defines the default set of <see cref="SecurityType"/> values that support <see cref="OrderType.MarketOnOpen"/> orders.
+        /// </summary>
+        private static readonly IReadOnlySet<SecurityType> _defaultMarketOnOpenSupportedSecurityTypes = new HashSet<SecurityType>
+        {
+            SecurityType.Equity,
+            SecurityType.Option,
+            SecurityType.IndexOption
+        };
 
         /// <summary>
         /// HashSet containing the order types supported by the <see cref="CanSubmitOrder"/> operation in TradeStation.
@@ -52,8 +68,21 @@ namespace QuantConnect.Brokerages
                 OrderType.ComboMarket,
                 OrderType.ComboLimit,
                 OrderType.MarketOnOpen,
-                OrderType.MarketOnClose
+                OrderType.MarketOnClose,
+                OrderType.TrailingStop
             });
+
+        /// <summary>
+        /// The set of <see cref="OrderType"/> values that cannot be used for cross-zero execution.
+        /// </summary>
+        private static IReadOnlySet<OrderType> NotSupportedCrossZeroOrderTypes => new HashSet<OrderType>()
+        {
+            OrderType.ComboMarket,
+            OrderType.ComboLimit,
+            OrderType.MarketOnOpen,
+            OrderType.MarketOnClose
+        };
+
 
         /// <summary>
         /// Constructor for TradeStation brokerage model
@@ -89,6 +118,14 @@ namespace QuantConnect.Brokerages
         {
             message = default;
 
+            var supportsOutsideTradingHours = (order.Properties as TradeStationOrderProperties)?.OutsideRegularTradingHours ?? false;
+            if (supportsOutsideTradingHours && (order.Type != OrderType.Limit || order.SecurityType != SecurityType.Equity))
+            {
+                message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupportedOutsideRegularMarketHours",
+                    "To place an order outside regular trading hours, please use a limit order and ensure the security is an equity.");
+                return false;
+            }
+
             if (!_supportSecurityTypes.Contains(security.Type))
             {
                 message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
@@ -103,9 +140,13 @@ namespace QuantConnect.Brokerages
                 return false;
             }
 
-            if (BrokerageExtensions.OrderCrossesZero(security.Holdings.Quantity, order.Quantity) && IsComboOrderType(order.Type))
+            if (!BrokerageExtensions.ValidateCrossZeroOrder(this, security, order, out message, NotSupportedCrossZeroOrderTypes))
             {
-                message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported", Messages.DefaultBrokerageModel.UnsupportedCrossZeroByOrderType(this, order.Type));
+                return false;
+            }
+
+            if (!BrokerageExtensions.ValidateMarketOnOpenOrder(security, order, GetMarketOnOpenAllowedWindow, _defaultMarketOnOpenSupportedSecurityTypes, out message))
+            {
                 return false;
             }
 
@@ -149,6 +190,16 @@ namespace QuantConnect.Brokerages
         private static bool IsComboOrderType(OrderType orderType)
         {
             return orderType == OrderType.ComboMarket || orderType == OrderType.ComboLimit;
+        }
+
+        /// <summary>
+        /// Returns the TradeStation Market-on-Open submission window (6:00 AM start, slightly before market open end).
+        /// </summary>
+        /// <param name="marketHours">The market hours segment for the security.</param>
+        /// <returns>A tuple with <c>MarketOnOpenWindowStart</c> and <c>MarketOnOpenWindowEnd</c>.</returns>
+        private (TimeOnly MarketOnOpenWindowStart, TimeOnly MarketOnOpenWindowEnd) GetMarketOnOpenAllowedWindow(MarketHoursSegment marketHours)
+        {
+            return (_mooWindowStart, TimeOnly.FromTimeSpan(marketHours.Start.Add(-TimeSpan.FromMinutes(1))));
         }
     }
 }

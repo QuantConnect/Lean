@@ -525,6 +525,12 @@ namespace QuantConnect.Api
 
             ApiConnection.TryRequest(request, out BacktestResponseWrapper result);
 
+            if (result == null)
+            {
+                // api call failed
+                return null;
+            }
+
             if (!result.Success)
             {
                 // place an empty place holder so we can return any errors back to the user and not just null
@@ -544,7 +550,7 @@ namespace QuantConnect.Api
                         continue;
                     }
 
-                    var chartRequest = new RestRequest("backtests/read", Method.POST)
+                    var chartRequest = new RestRequest("backtests/chart/read", Method.POST)
                     {
                         RequestFormat = DataFormat.Json
                     };
@@ -553,18 +559,19 @@ namespace QuantConnect.Api
                     {
                         projectId,
                         backtestId,
-                        chart = chart.Key
+                        name = chart.Key,
+                        count = 100
                     }), ParameterType.RequestBody);
 
                     // Add this chart to our updated collection
-                    if (ApiConnection.TryRequest(chartRequest, out BacktestResponseWrapper chartResponse) && chartResponse.Success)
+                    if (ApiConnection.TryRequest(chartRequest, out ReadChartResponse chartResponse) && chartResponse.Success)
                     {
-                        updatedCharts.Add(chart.Key, chartResponse.Backtest.Charts[chart.Key]);
+                        updatedCharts.Add(chart.Key, chartResponse.Chart);
                     }
                 }
 
                 // Update our result
-                foreach(var updatedChart in updatedCharts)
+                foreach (var updatedChart in updatedCharts)
                 {
                     result.Backtest.Charts[updatedChart.Key] = updatedChart.Value;
                 }
@@ -881,19 +888,14 @@ namespace QuantConnect.Api
         /// Get a list of live running algorithms for user
         /// </summary>
         /// <param name="status">Filter the statuses of the algorithms returned from the api</param>
-        /// <param name="startTime">Earliest launched time of the algorithms returned by the Api</param>
-        /// <param name="endTime">Latest launched time of the algorithms returned by the Api</param>
         /// <returns><see cref="LiveList"/></returns>
-
-        public LiveList ListLiveAlgorithms(AlgorithmStatus? status = null,
-                                           DateTime? startTime = null,
-                                           DateTime? endTime = null)
+        public LiveList ListLiveAlgorithms(AlgorithmStatus? status = null)
         {
             // Only the following statuses are supported by the Api
-            if (status.HasValue                        &&
-                status != AlgorithmStatus.Running      &&
+            if (status.HasValue &&
+                status != AlgorithmStatus.Running &&
                 status != AlgorithmStatus.RuntimeError &&
-                status != AlgorithmStatus.Stopped      &&
+                status != AlgorithmStatus.Stopped &&
                 status != AlgorithmStatus.Liquidated)
             {
                 throw new ArgumentException(
@@ -905,18 +907,11 @@ namespace QuantConnect.Api
                 RequestFormat = DataFormat.Json
             };
 
-            var epochStartTime = startTime == null ? 0 : Time.DateTimeToUnixTimeStamp(startTime.Value);
-            var epochEndTime   = endTime   == null ? Time.DateTimeToUnixTimeStamp(DateTime.UtcNow) : Time.DateTimeToUnixTimeStamp(endTime.Value);
-
-            JObject obj = new JObject
-            {
-                { "start", epochStartTime },
-                { "end", epochEndTime }
-            };
+            var obj = new JObject();
 
             if (status.HasValue)
             {
-                obj.Add("status", status.ToString());
+                obj["status"] = status.ToString();
             }
 
             request.AddParameter("application/json", JsonConvert.SerializeObject(obj), ParameterType.RequestBody);
@@ -1063,6 +1058,31 @@ namespace QuantConnect.Api
         }
 
         /// <summary>
+        /// Broadcast a live command
+        /// </summary>
+        /// <param name="organizationId">Organization ID of the projects we would like to broadcast the command to</param>
+        /// <param name="excludeProjectId">Project for the live instance we want to exclude from the broadcast list</param>
+        /// <param name="command">The command to run</param>
+        /// <returns><see cref="RestResponse"/></returns>
+        public RestResponse BroadcastLiveCommand(string organizationId, int? excludeProjectId, object command)
+        {
+            var request = new RestRequest("live/commands/broadcast", Method.POST)
+            {
+                RequestFormat = DataFormat.Json,
+            };
+
+            request.AddParameter("application/json", JsonConvert.SerializeObject(new
+            {
+                organizationId,
+                excludeProjectId,
+                command
+            }), ParameterType.RequestBody);
+
+            ApiConnection.TryRequest(request, out RestResponse result);
+            return result;
+        }
+
+        /// <summary>
         /// Gets the logs of a specific live algorithm
         /// </summary>
         /// <param name="projectId">Project Id of the live running algorithm</param>
@@ -1125,7 +1145,7 @@ namespace QuantConnect.Api
             ApiConnection.TryRequest(request, out result);
 
             var finish = DateTime.UtcNow.AddMinutes(1);
-            while(DateTime.UtcNow < finish && result.Chart == null)
+            while (DateTime.UtcNow < finish && result.Chart == null)
             {
                 Thread.Sleep(5000);
                 ApiConnection.TryRequest(request, out result);
@@ -1379,18 +1399,6 @@ namespace QuantConnect.Api
         /// <param name="sharpe">Sharpe ratio since inception</param>
 
         public virtual void SendStatistics(string algorithmId, decimal unrealized, decimal fees, decimal netProfit, decimal holdings, decimal equity, decimal netReturn, decimal volume, int trades, double sharpe)
-        {
-            //
-        }
-
-        /// <summary>
-        /// Send an email to the user associated with the specified algorithm id
-        /// </summary>
-        /// <param name="algorithmId">The algorithm id</param>
-        /// <param name="subject">The email subject</param>
-        /// <param name="body">The email message body</param>
-
-        public virtual void SendUserEmail(string algorithmId, string subject, string body)
         {
             //
         }

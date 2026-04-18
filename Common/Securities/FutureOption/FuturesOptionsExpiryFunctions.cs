@@ -24,19 +24,39 @@ namespace QuantConnect.Securities.FutureOption
     /// </summary>
     public static class FuturesOptionsExpiryFunctions
     {
-        private static readonly MarketHoursDatabase _mhdb = MarketHoursDatabase.FromDataFolder();
-
-        private static readonly Symbol _lo = Symbol.CreateOption(Symbol.Create("CL", SecurityType.Future, Market.NYMEX), Market.NYMEX, default(OptionStyle), default(OptionRight), default(decimal), SecurityIdentifier.DefaultDate);
-        private static readonly Symbol _on = Symbol.CreateOption(Symbol.Create("NG", SecurityType.Future, Market.NYMEX), Market.NYMEX, default(OptionStyle), default(OptionRight), default(decimal), SecurityIdentifier.DefaultDate);
-        private static readonly Symbol _ozb = Symbol.CreateOption(Symbol.Create("ZB", SecurityType.Future, Market.CBOT), Market.CBOT, default(OptionStyle), default(OptionRight), default(decimal), SecurityIdentifier.DefaultDate);
-        private static readonly Symbol _ozc = Symbol.CreateOption(Symbol.Create("ZC", SecurityType.Future, Market.CBOT), Market.CBOT, default(OptionStyle), default(OptionRight), default(decimal), SecurityIdentifier.DefaultDate);
-        private static readonly Symbol _ozn = Symbol.CreateOption(Symbol.Create("ZN", SecurityType.Future, Market.CBOT), Market.CBOT, default(OptionStyle), default(OptionRight), default(decimal), SecurityIdentifier.DefaultDate);
-        private static readonly Symbol _ozs = Symbol.CreateOption(Symbol.Create("ZS", SecurityType.Future, Market.CBOT), Market.CBOT, default(OptionStyle), default(OptionRight), default(decimal), SecurityIdentifier.DefaultDate);
-        private static readonly Symbol _ozt = Symbol.CreateOption(Symbol.Create("ZT", SecurityType.Future, Market.CBOT), Market.CBOT, default(OptionStyle), default(OptionRight), default(decimal), SecurityIdentifier.DefaultDate);
-        private static readonly Symbol _ozw = Symbol.CreateOption(Symbol.Create("ZW", SecurityType.Future, Market.CBOT), Market.CBOT, default(OptionStyle), default(OptionRight), default(decimal), SecurityIdentifier.DefaultDate);
-        private static readonly Symbol _hxe = Symbol.CreateOption(Symbol.Create("HG", SecurityType.Future, Market.COMEX), Market.COMEX, default(OptionStyle), default(OptionRight), default(decimal), SecurityIdentifier.DefaultDate);
-        private static readonly Symbol _og = Symbol.CreateOption(Symbol.Create("GC", SecurityType.Future, Market.COMEX), Market.COMEX, default(OptionStyle), default(OptionRight), default(decimal), SecurityIdentifier.DefaultDate);
-        private static readonly Symbol _so = Symbol.CreateOption(Symbol.Create("SI", SecurityType.Future, Market.COMEX), Market.COMEX, default(OptionStyle), default(OptionRight), default(decimal), SecurityIdentifier.DefaultDate);
+        private static readonly Symbol _lo = Symbol.CreateCanonicalOption(Symbol.Create("CL", SecurityType.Future, Market.NYMEX));
+        private static readonly Symbol _on = Symbol.CreateCanonicalOption(Symbol.Create("NG", SecurityType.Future, Market.NYMEX));
+        private static readonly Symbol _ozm = Symbol.CreateCanonicalOption(Symbol.Create("ZM", SecurityType.Future, Market.CBOT));
+        private static readonly Symbol _ozb = Symbol.CreateCanonicalOption(Symbol.Create("ZB", SecurityType.Future, Market.CBOT));
+        private static readonly Symbol _ozc = Symbol.CreateCanonicalOption(Symbol.Create("ZC", SecurityType.Future, Market.CBOT));
+        private static readonly Symbol _ozn = Symbol.CreateCanonicalOption(Symbol.Create("ZN", SecurityType.Future, Market.CBOT));
+        private static readonly Symbol _otn = Symbol.CreateCanonicalOption(Symbol.Create("TN", SecurityType.Future, Market.CBOT));
+        private static readonly Symbol _oub = Symbol.CreateCanonicalOption(Symbol.Create("UB", SecurityType.Future, Market.CBOT));
+        private static readonly Symbol _ozo = Symbol.CreateCanonicalOption(Symbol.Create("ZO", SecurityType.Future, Market.CBOT));
+        private static readonly Symbol _oke = Symbol.CreateCanonicalOption(Symbol.Create("KE", SecurityType.Future, Market.CBOT));
+        private static readonly Symbol _ozf = Symbol.CreateCanonicalOption(Symbol.Create("ZF", SecurityType.Future, Market.CBOT));
+        private static readonly Symbol _ozs = Symbol.CreateCanonicalOption(Symbol.Create("ZS", SecurityType.Future, Market.CBOT));
+        private static readonly Symbol _ozt = Symbol.CreateCanonicalOption(Symbol.Create("ZT", SecurityType.Future, Market.CBOT));
+        private static readonly Symbol _ozl = Symbol.CreateCanonicalOption(Symbol.Create("ZL", SecurityType.Future, Market.CBOT));
+        private static readonly Symbol _ozw = Symbol.CreateCanonicalOption(Symbol.Create("ZW", SecurityType.Future, Market.CBOT));
+        private static readonly Symbol _oym = Symbol.CreateCanonicalOption(Symbol.Create("YM", SecurityType.Future, Market.CBOT));
+        private static readonly Symbol _hxe = Symbol.CreateCanonicalOption(Symbol.Create("HG", SecurityType.Future, Market.COMEX));
+        private static readonly Symbol _og = Symbol.CreateCanonicalOption(Symbol.Create("GC", SecurityType.Future, Market.COMEX));
+        private static readonly Symbol _so = Symbol.CreateCanonicalOption(Symbol.Create("SI", SecurityType.Future, Market.COMEX));
+        private static readonly Symbol _aud = Symbol.CreateCanonicalOption(Symbol.Create("6A", SecurityType.Future, Market.CME));
+        private static readonly Symbol _gbu = Symbol.CreateCanonicalOption(Symbol.Create("6B", SecurityType.Future, Market.CME));
+        private static readonly Symbol _cau = Symbol.CreateCanonicalOption(Symbol.Create("6C", SecurityType.Future, Market.CME));
+        private static readonly Symbol _euu = Symbol.CreateCanonicalOption(Symbol.Create("6E", SecurityType.Future, Market.CME));
+        private static readonly Symbol _jpu = Symbol.CreateCanonicalOption(Symbol.Create("6J", SecurityType.Future, Market.CME));
+        private static readonly Symbol _chu = Symbol.CreateCanonicalOption(Symbol.Create("6S", SecurityType.Future, Market.CME));
+        private static readonly Symbol _nzd = Symbol.CreateCanonicalOption(Symbol.Create("6N", SecurityType.Future, Market.CME));
+        private static readonly Symbol _le = Symbol.CreateCanonicalOption(Symbol.Create("LE", SecurityType.Future, Market.CME));
+        private static readonly Symbol _he = Symbol.CreateCanonicalOption(Symbol.Create("HE", SecurityType.Future, Market.CME));
+        private static readonly Symbol _lbr = Symbol.CreateCanonicalOption(Symbol.Create("LBR", SecurityType.Future, Market.CME));
+        private static readonly Symbol _lbs = Symbol.CreateCanonicalOption(Symbol.Create("LBS", SecurityType.Future, Market.CME));
+        private static readonly Symbol _es = Symbol.CreateCanonicalOption(Symbol.Create("ES", SecurityType.Future, Market.CME));
+        private static readonly Symbol _emd = Symbol.CreateCanonicalOption(Symbol.Create("EMD", SecurityType.Future, Market.CME));
+        private static readonly Symbol _nq = Symbol.CreateCanonicalOption(Symbol.Create("NQ", SecurityType.Future, Market.CME));
 
         /// <summary>
         /// Futures options expiry functions lookup table, keyed by canonical future option Symbol
@@ -57,12 +77,35 @@ namespace QuantConnect.Securities.FutureOption
             { _ozb, expiryMonth => FridayBeforeTwoBusinessDaysBeforeEndOfMonth(_ozb.Underlying, expiryMonth) },
             { _ozc, expiryMonth => FridayBeforeTwoBusinessDaysBeforeEndOfMonth(_ozc.Underlying, expiryMonth) },
             { _ozn, expiryMonth => FridayBeforeTwoBusinessDaysBeforeEndOfMonth(_ozn.Underlying, expiryMonth) },
+            { _otn, expiryMonth => FridayBeforeTwoBusinessDaysBeforeEndOfMonth(_otn.Underlying, expiryMonth) },
+            { _oub, expiryMonth => FridayBeforeTwoBusinessDaysBeforeEndOfMonth(_oub.Underlying, expiryMonth) },
+            { _ozo, expiryMonth => FridayBeforeTwoBusinessDaysBeforeEndOfMonth(_ozo.Underlying, expiryMonth) },
+            { _oke, expiryMonth => FridayBeforeTwoBusinessDaysBeforeEndOfMonth(_oke.Underlying, expiryMonth) },
+            { _ozf, expiryMonth => FridayBeforeTwoBusinessDaysBeforeEndOfMonth(_ozf.Underlying, expiryMonth) },
             { _ozs, expiryMonth => FridayBeforeTwoBusinessDaysBeforeEndOfMonth(_ozs.Underlying, expiryMonth) },
             { _ozt, expiryMonth => FridayBeforeTwoBusinessDaysBeforeEndOfMonth(_ozt.Underlying, expiryMonth) },
             { _ozw, expiryMonth => FridayBeforeTwoBusinessDaysBeforeEndOfMonth(_ozw.Underlying, expiryMonth) },
+            { _ozl, expiryMonth => FridayBeforeTwoBusinessDaysBeforeEndOfMonth(_ozl.Underlying, expiryMonth) },
+            { _ozm, expiryMonth => FridayBeforeTwoBusinessDaysBeforeEndOfMonth(_ozm.Underlying, expiryMonth) },
             { _hxe, expiryMonth => FourthLastBusinessDayInPrecedingMonthFromContractMonth(_hxe.Underlying, expiryMonth, 12, 0) },
             { _og, expiryMonth => FourthLastBusinessDayInPrecedingMonthFromContractMonth(_og.Underlying, expiryMonth, 12, 30) },
             { _so, expiryMonth => FourthLastBusinessDayInPrecedingMonthFromContractMonth(_so.Underlying, expiryMonth, 12, 25) },
+            { _aud, expiryMonth => SecondFridayBeforeThirdWednesdayOfContractMonth(_aud.Underlying, expiryMonth) },
+            { _gbu, expiryMonth => SecondFridayBeforeThirdWednesdayOfContractMonth(_gbu.Underlying, expiryMonth) },
+            { _cau, expiryMonth => SecondFridayBeforeThirdWednesdayOfContractMonth(_cau.Underlying, expiryMonth) },
+            { _euu, expiryMonth => SecondFridayBeforeThirdWednesdayOfContractMonth(_euu.Underlying, expiryMonth) },
+            { _jpu, expiryMonth => SecondFridayBeforeThirdWednesdayOfContractMonth(_jpu.Underlying, expiryMonth) },
+            { _chu, expiryMonth => SecondFridayBeforeThirdWednesdayOfContractMonth(_chu.Underlying, expiryMonth) },
+            { _nzd, expiryMonth => SecondFridayBeforeThirdWednesdayOfContractMonth(_nzd.Underlying, expiryMonth) },
+            { _le, expiryMonth => FirstFridayOfContractMonth(_le.Underlying, expiryMonth) },
+            { _he, expiryMonth => TenthBusinessDayOfContractMonth(_he.Underlying, expiryMonth) },
+            { _lbr, expiryMonth => LastBusinessDayInPrecedingMonthFromContractMonth(_lbr.Underlying, expiryMonth) },
+            { _lbs, expiryMonth => LastBusinessDayInPrecedingMonthFromContractMonth(_lbs.Underlying, expiryMonth) },
+            // even though these FOPs are currently quarterly (as underlying), they had until some serial months. Expiration is the same rule for all
+            { _es, expiryMonth => FuturesExpiryUtilityFunctions.ThirdFriday(expiryMonth, _es) },
+            { _emd, expiryMonth => FuturesExpiryUtilityFunctions.ThirdFriday(expiryMonth, _emd) },
+            { _oym, expiryMonth => FuturesExpiryUtilityFunctions.ThirdFriday(expiryMonth, _oym) },
+            { _nq, expiryMonth => FuturesExpiryUtilityFunctions.ThirdFriday(expiryMonth, _nq) },
         };
 
         /// <summary>
@@ -75,17 +118,13 @@ namespace QuantConnect.Securities.FutureOption
         {
             if (!canonicalFutureOptionSymbol.IsCanonical() || !canonicalFutureOptionSymbol.Underlying.IsCanonical())
             {
-                canonicalFutureOptionSymbol = Symbol.CreateOption(
-                    Symbol.Create(canonicalFutureOptionSymbol.Underlying.ID.Symbol, SecurityType.Future, canonicalFutureOptionSymbol.Underlying.ID.Market),
-                    canonicalFutureOptionSymbol.ID.Market,
-                    default(OptionStyle),
-                    default(OptionRight),
-                    default(decimal),
-                    SecurityIdentifier.DefaultDate);
+                canonicalFutureOptionSymbol = Symbol.CreateCanonicalOption(
+                    Symbol.Create(canonicalFutureOptionSymbol.Underlying.ID.Symbol,
+                        SecurityType.Future,
+                        canonicalFutureOptionSymbol.Underlying.ID.Market));
             }
 
-            Func<DateTime, DateTime> expiryFunction;
-            if (!_futuresOptionExpiryFunctions.TryGetValue(canonicalFutureOptionSymbol, out expiryFunction))
+            if (!_futuresOptionExpiryFunctions.TryGetValue(canonicalFutureOptionSymbol, out var expiryFunction))
             {
                 // No definition exists for this FOP. Let's default to futures expiry.
                 return FuturesExpiryFunctions.FuturesExpiryFunction(canonicalFutureOptionSymbol.Underlying)(futureContractMonth);
@@ -111,13 +150,8 @@ namespace QuantConnect.Securities.FutureOption
 
             if (canonicalFutureOption == null)
             {
-                canonicalFutureOption = Symbol.CreateOption(
-                    Symbol.Create(futureSymbol.ID.Symbol, SecurityType.Future, futureSymbol.ID.Market),
-                    futureSymbol.ID.Market,
-                    default(OptionStyle),
-                    default(OptionRight),
-                    default(decimal),
-                    SecurityIdentifier.DefaultDate);
+                canonicalFutureOption = Symbol.CreateCanonicalOption(
+                    Symbol.Create(futureSymbol.ID.Symbol, SecurityType.Future, futureSymbol.ID.Market));
             }
 
             return FuturesOptionExpiry(canonicalFutureOption, futureContractMonth);
@@ -175,6 +209,59 @@ namespace QuantConnect.Securities.FutureOption
             }
 
             return fourthLastBusinessDay.AddHours(hour).AddMinutes(minutes);
+        }
+
+        /// <summary>
+        /// Expiry function for AUD Future Options expiry.
+        /// Returns the second Friday before the 3rd Wednesday of contract expiry month, 9am.
+        /// </summary>
+        /// <param name="underlyingFuture">Underlying future symbol</param>
+        /// <param name="expiryMonth">Expiry month date</param>
+        /// <returns>Expiry DateTime of the Future Option</returns>
+        private static DateTime SecondFridayBeforeThirdWednesdayOfContractMonth(Symbol underlyingFuture, DateTime expiryMonth)
+        {
+            var holidays = FuturesExpiryUtilityFunctions.GetExpirationHolidays(underlyingFuture.ID.Market, underlyingFuture.ID.Symbol);
+            var thirdWednesday = FuturesExpiryUtilityFunctions.ThirdWednesday(expiryMonth);
+            var secondFridayBeforeThirdWednesday = thirdWednesday.AddDays(-12);
+
+            if (holidays.Contains(secondFridayBeforeThirdWednesday))
+            {
+                secondFridayBeforeThirdWednesday = FuturesExpiryUtilityFunctions.AddBusinessDays(secondFridayBeforeThirdWednesday, -1, holidays);
+            }
+
+            return secondFridayBeforeThirdWednesday.AddHours(9);
+        }
+
+        /// <summary>
+        /// First friday of the contract month
+        /// </summary>
+        public static DateTime FirstFridayOfContractMonth(Symbol underlyingFuture, DateTime expiryMonth)
+        {
+            var holidays = FuturesExpiryUtilityFunctions.GetExpirationHolidays(underlyingFuture.ID.Market, underlyingFuture.ID.Symbol);
+            var firstFriday = FuturesExpiryUtilityFunctions.NthFriday(expiryMonth, 1);
+            if (holidays.Contains(firstFriday))
+            {
+                firstFriday = FuturesExpiryUtilityFunctions.AddBusinessDays(firstFriday, -1, holidays);
+            }
+            return firstFriday.AddHours(13);
+        }
+
+        /// <summary>
+        /// Tenth business day of the month
+        /// </summary>
+        public static DateTime TenthBusinessDayOfContractMonth(Symbol underlyingFuture, DateTime expiryMonth)
+        {
+            var holidays = FuturesExpiryUtilityFunctions.GetExpirationHolidays(underlyingFuture.ID.Market, underlyingFuture.ID.Symbol);
+            return FuturesExpiryUtilityFunctions.NthBusinessDay(expiryMonth, 10, holidays);
+        }
+
+        /// <summary>
+        /// Last business day of the month preceding the contract month
+        /// </summary>
+        private static DateTime LastBusinessDayInPrecedingMonthFromContractMonth(Symbol underlying, DateTime expiryMonth)
+        {
+            var holidays = FuturesExpiryUtilityFunctions.GetExpirationHolidays(underlying.ID.Market, underlying.ID.Symbol);
+            return FuturesExpiryUtilityFunctions.NthLastBusinessDay(expiryMonth.AddMonths(-1), 1, holidays);
         }
     }
 }

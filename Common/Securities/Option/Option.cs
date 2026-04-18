@@ -40,12 +40,12 @@ namespace QuantConnect.Securities.Option
         /// <summary>
         /// The default number of days required to settle an equity sale
         /// </summary>
-        public const int DefaultSettlementDays = 1;
+        public static int DefaultSettlementDays { get; set; } = 1;
 
         /// <summary>
         /// The default time of day for settlement
         /// </summary>
-        public static readonly TimeSpan DefaultSettlementTime = new (8, 0, 0);
+        public static readonly TimeSpan DefaultSettlementTime = new (6, 0, 0);
 
         /// <summary>
         /// Constructor for the option security

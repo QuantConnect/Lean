@@ -51,8 +51,11 @@ namespace QuantConnect.Securities.FutureOption
             { "ZC", (d, ld) => ContractMonthSerialLookupRule(Symbol.Create("ZC", SecurityType.Future, Market.CBOT), d, ld.Value) },
             { "ZN", (d, ld) => ContractMonthSerialLookupRule(Symbol.Create("ZN", SecurityType.Future, Market.CBOT), d, ld.Value) },
             { "ZS", (d, ld) => ContractMonthSerialLookupRule(Symbol.Create("ZS", SecurityType.Future, Market.CBOT), d, ld.Value) },
+            { "ZM", (d, ld) => ContractMonthSerialLookupRule(Symbol.Create("ZM", SecurityType.Future, Market.CBOT), d, ld.Value) },
             { "ZT", (d, ld) => ContractMonthSerialLookupRule(Symbol.Create("ZT", SecurityType.Future, Market.CBOT), d, ld.Value) },
             { "ZW", (d, ld) => ContractMonthSerialLookupRule(Symbol.Create("ZW", SecurityType.Future, Market.CBOT), d, ld.Value) },
+            { "ZL", (d, ld) => ContractMonthSerialLookupRule(Symbol.Create("ZL", SecurityType.Future, Market.CBOT), d, ld.Value) },
+            { "TN", (d, ld) => ContractMonthSerialLookupRule(Symbol.Create("TN", SecurityType.Future, Market.CBOT), d, ld.Value) },
 
             // COMEX
             { "HG", (d, _) => ContractMonthYearStartThreeMonthsThenEvenOddMonthsSkipRule(d, true) },
@@ -69,13 +72,22 @@ namespace QuantConnect.Securities.FutureOption
         {
             { "ZB", 1 },
             { "ZC", 1 },
+            { "ZM", 1 },
             { "ZN", 1 },
+            { "TN", 1 },
             { "ZS", 1 },
             { "ZT", 1 },
             { "ZW", 1 },
+            { "ZL", 1 },
             { "HG", 1 },
             { "GC", 1 },
-            { "SI", 1 }
+            { "SI", 1 },
+            { "UB", 1 },
+            { "ZO", 1 },
+            { "KE", 1 },
+            { "ZF", 1 },
+            { "LBR", 1 },
+            { "LBS", 1 }
         };
 
         /// <summary>
@@ -199,7 +211,7 @@ namespace QuantConnect.Securities.FutureOption
         /// <param name="canonicalFutureSymbol">Canonical future Symbol</param>
         /// <param name="futureOptionExpirationDate">Future Option Expiration Date</param>
         /// <returns>Contract month assuming that the Future Option and Future share the same contract month</returns>
-        private static DateTime GetFutureContractMonthNoRulesApplied(Symbol canonicalFutureSymbol, DateTime futureOptionExpirationDate)
+        public static DateTime GetFutureContractMonthNoRulesApplied(Symbol canonicalFutureSymbol, DateTime futureOptionExpirationDate)
         {
             var baseOptionExpiryMonthDate = new DateTime(futureOptionExpirationDate.Year, futureOptionExpirationDate.Month, 1);
             if (!_futuresOptionsExpiryDelta.ContainsKey(canonicalFutureSymbol.ID.Symbol))

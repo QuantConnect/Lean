@@ -61,7 +61,7 @@ namespace QuantConnect.Lean.Engine.Results
         private DateTime _nextPortfolioMarginUpdate;
         private DateTime _previousPortfolioMarginUpdate;
         private readonly TimeSpan _samplePortfolioPeriod;
-        private readonly Chart _intradayPortfolioState = new(PortfolioMarginKey);
+        private readonly Chart _intradayPortfolioState = new(PortfolioMarginKey) { LegendDisabled = true };
 
         /// <summary>
         /// The earliest time of next dump to the status file

@@ -54,7 +54,7 @@ namespace QuantConnect.Indicators
         /// <summary>
         /// Indicator to store the calculation of the sharpe ratio
         /// </summary>
-        protected IndicatorBase Ratio { get; set;  }
+        protected IndicatorBase Ratio { get; set; }
 
         /// <summary>
         /// Indicator to store the numerator of the Sharpe ratio calculation
@@ -153,7 +153,7 @@ namespace QuantConnect.Indicators
         /// <returns>A new value for this indicator</returns>
         protected override decimal ComputeNextValue(IndicatorDataPoint input)
         {
-            RiskFreeRate.Update(input.Time, _riskFreeInterestRateModel.GetInterestRate(input.Time));
+            RiskFreeRate.Update(input.EndTime, _riskFreeInterestRateModel.GetInterestRate(input.EndTime));
             RateOfChange.Update(input);
             return Ratio;
         }

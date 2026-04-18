@@ -230,7 +230,7 @@ namespace QuantConnect.Tests.API
             var backtest = ApiClient.CreateBacktest(projectId, compile.CompileId, backtestName);
 
             // Now wait until the backtest is completed and request the orders again
-            var backtestReady = WaitForBacktestCompletion(projectId, backtest.BacktestId);
+            var backtestReady = WaitForBacktestCompletion(ApiClient, projectId, backtest.BacktestId);
             Assert.IsTrue(backtestReady.Success);
 
             return projectId;

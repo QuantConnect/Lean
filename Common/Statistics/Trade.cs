@@ -14,6 +14,7 @@
 */
 
 using System;
+using System.Collections.Generic;
 
 namespace QuantConnect.Statistics
 {
@@ -105,5 +106,10 @@ namespace QuantConnect.Statistics
         ///       but it might count as a loss if the ITM amount is less than the amount received for the option.
         /// </remarks>
         public bool IsWin { get; set; }
+
+        /// <summary>
+        /// The IDs of the orders related to this trade
+        /// </summary>
+        public HashSet<int> OrderIds { get; init; } = new HashSet<int>();
     }
 }

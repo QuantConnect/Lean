@@ -49,22 +49,22 @@ class InsightTagAlphaRegressionAlgorithm(QCAlgorithm):
     def on_insights_generated_verifier(self, algorithm: IAlgorithm, insights_collection: GeneratedInsightsCollection) -> None:
         for insight in insights_collection.insights:
             if insight.tag != OneTimeAlphaModel.generate_insight_tag(insight.symbol):
-                raise Exception("Unexpected insight tag was emitted")
+                raise AssertionError("Unexpected insight tag was emitted")
 
             self._symbols_with_generated_insights.append(insight.symbol)
 
     def on_end_of_algorithm(self) -> None:
         if len(self._symbols_with_generated_insights) != 3:
-            raise Exception("Unexpected number of symbols with generated insights")
+            raise AssertionError("Unexpected number of symbols with generated insights")
 
         if not self.spy in self._symbols_with_generated_insights:
-            raise Exception("SPY symbol was not found in symbols with generated insights")
+            raise AssertionError("SPY symbol was not found in symbols with generated insights")
 
         if not self.fb in self._symbols_with_generated_insights:
-            raise Exception("FB symbol was not found in symbols with generated insights")
+            raise AssertionError("FB symbol was not found in symbols with generated insights")
 
         if not self.ibm in self._symbols_with_generated_insights:
-            raise Exception("IBM symbol was not found in symbols with generated insights")
+            raise AssertionError("IBM symbol was not found in symbols with generated insights")
 
 class OneTimeAlphaModel(AlphaModel):
     def __init__(self, symbol):
@@ -85,4 +85,4 @@ class OneTimeAlphaModel(AlphaModel):
 
     @staticmethod
     def generate_insight_tag(symbol: Symbol) -> str:
-        return f"Insight generated for {symbol}";
+        return f"Insight generated for {symbol}"

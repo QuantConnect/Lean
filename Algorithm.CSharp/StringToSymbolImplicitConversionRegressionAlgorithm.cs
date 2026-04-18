@@ -49,7 +49,7 @@ namespace QuantConnect.Algorithm.CSharp
             }
             catch (Exception exception)
             {
-                if (exception.Message.Contains("This asset symbol (PEPE 0) was not found in your security list") && !Portfolio.Invested)
+                if (exception.Message.Contains("PEPE was not found", StringComparison.InvariantCultureIgnoreCase) && !Portfolio.Invested)
                 {
                     SetHoldings("SPY", 1);
                 }
@@ -112,6 +112,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Estimated Strategy Capacity", "$56000000.00"},
             {"Lowest Capacity Asset", "SPY R735QTJ8XC9X"},
             {"Portfolio Turnover", "49.82%"},
+            {"Drawdown Recovery", "0"},
             {"OrderListHash", "3da9fa60bf95b9ed148b95e02e0cfc9e"}
         };
     }

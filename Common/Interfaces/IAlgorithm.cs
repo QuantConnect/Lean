@@ -590,11 +590,13 @@ namespace QuantConnect.Interfaces
         /// <remarks>Deprecated because different assets have different market close times,
         /// and because Python does not support two methods with the same name</remarks>
         [Obsolete("This method is deprecated. Please use this overload: OnEndOfDay(Symbol symbol)")]
+        [StubsIgnore]
         void OnEndOfDay();
 
         /// <summary>
         /// Call this method at the end of each day of data.
         /// </summary>
+        [StubsAvoidImplicits]
         void OnEndOfDay(Symbol symbol);
 
         /// <summary>
@@ -753,7 +755,8 @@ namespace QuantConnect.Interfaces
         /// open orders and then liquidate any existing holdings
         /// </summary>
         /// <param name="symbol">The symbol of the security to be removed</param>
-        bool RemoveSecurity(Symbol symbol);
+        /// <param name="tag">Optional tag to indicate the cause of removal</param>
+        bool RemoveSecurity(Symbol symbol, string tag = null);
 
         /// <summary>
         /// Sets the account currency cash symbol this algorithm is to manage, as well as

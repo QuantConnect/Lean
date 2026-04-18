@@ -39,23 +39,23 @@ class ManuallySetMarketHoursAndSymbolPropertiesDatabaseEntriesAlgorithm(QCAlgori
         # we can set the MarketHoursDatabase entry for the CFDs.
 
         # Equity CFDs are usually traded the same hours as the equity market.
-        equity_market_hours_entry = self.market_hours_database.get_entry(Market.USA, None, SecurityType.EQUITY)
+        equity_market_hours_entry = self.market_hours_database.get_entry(Market.USA, Symbol.EMPTY, SecurityType.EQUITY)
         self.market_hours_database.set_entry(Market.INTERACTIVE_BROKERS, "", SecurityType.CFD, equity_market_hours_entry.exchange_hours, equity_market_hours_entry.data_time_zone)
 
         # The same can be done for the symbol properties, in case they are different depending on the underlying
-        equity_symbol_properties = self.symbol_properties_database.get_symbol_properties(Market.USA, None, SecurityType.EQUITY, Currencies.USD)
-        self.symbol_properties_database.set_entry(Market.INTERACTIVE_BROKERS, None, SecurityType.CFD, equity_symbol_properties)
+        equity_symbol_properties = self.symbol_properties_database.get_symbol_properties(Market.USA, Symbol.EMPTY, SecurityType.EQUITY, Currencies.USD)
+        self.symbol_properties_database.set_entry(Market.INTERACTIVE_BROKERS, "", SecurityType.CFD, equity_symbol_properties)
 
         spy_cfd = self.add_cfd("SPY", market=Market.INTERACTIVE_BROKERS)
 
         if json.JsonConvert.serialize_object(spy_cfd.exchange.hours) != json.JsonConvert.serialize_object(equity_market_hours_entry.exchange_hours):
-            raise Exception("Expected the SPY CFD market hours to be the same as the underlying equity market hours.")
+            raise AssertionError("Expected the SPY CFD market hours to be the same as the underlying equity market hours.")
 
         if json.JsonConvert.serialize_object(spy_cfd.symbol_properties) != json.JsonConvert.serialize_object(equity_symbol_properties):
-            raise Exception("Expected the SPY CFD symbol properties to be the same as the underlying equity symbol properties.")
+            raise AssertionError("Expected the SPY CFD symbol properties to be the same as the underlying equity symbol properties.")
 
         # We can also do it for a specific ticker
-        aud_usd_forex_market_hours_entry = self.market_hours_database.get_entry(Market.OANDA, None, SecurityType.FOREX)
+        aud_usd_forex_market_hours_entry = self.market_hours_database.get_entry(Market.OANDA, Symbol.EMPTY, SecurityType.FOREX)
         self.market_hours_database.set_entry(Market.INTERACTIVE_BROKERS, "AUDUSD", SecurityType.CFD, aud_usd_forex_market_hours_entry.exchange_hours, aud_usd_forex_market_hours_entry.data_time_zone)
 
         aud_usd_forex_symbol_properties = self.symbol_properties_database.get_symbol_properties(Market.OANDA, "AUDUSD", SecurityType.FOREX, Currencies.USD)
@@ -64,7 +64,7 @@ class ManuallySetMarketHoursAndSymbolPropertiesDatabaseEntriesAlgorithm(QCAlgori
         aud_usd_cfd = self.add_cfd("AUDUSD", market=Market.INTERACTIVE_BROKERS)
 
         if json.JsonConvert.serialize_object(aud_usd_cfd.exchange.hours) != json.JsonConvert.serialize_object(aud_usd_forex_market_hours_entry.exchange_hours):
-            raise Exception("Expected the AUDUSD CFD market hours to be the same as the underlying forex market hours.")
+            raise AssertionError("Expected the AUDUSD CFD market hours to be the same as the underlying forex market hours.")
 
         if json.JsonConvert.serialize_object(aud_usd_cfd.symbol_properties) != json.JsonConvert.serialize_object(aud_usd_forex_symbol_properties):
-            raise Exception("Expected the AUDUSD CFD symbol properties to be the same as the underlying forex symbol properties.")
+            raise AssertionError("Expected the AUDUSD CFD symbol properties to be the same as the underlying forex symbol properties.")

@@ -34,10 +34,10 @@ class HistoryWithDifferentContinuousContractDepthOffsetsRegressionAlgorithm(QCAl
         ]
 
         if any(x.size == 0 or x.size != history_results[0].size for x in history_results):
-            raise Exception("History results are empty or bar counts did not match")
+            raise AssertionError("History results are empty or bar counts did not match")
 
         # Check that prices at each time are different for different contract depth offsets
         for j in range(history_results[0].size):
             close_prices = set(history_results[i][j] for i in range(len(history_results)))
             if len(close_prices) != len(contract_depth_offsets):
-                raise Exception("History results close prices should have been different for each data mapping mode at each time")
+                raise AssertionError("History results close prices should have been different for each data mapping mode at each time")

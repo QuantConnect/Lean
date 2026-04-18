@@ -50,7 +50,7 @@ namespace QuantConnect.Algorithm.CSharp
                 }
 
                 // Update an order that fails because of the size
-                var validOrderOne = LimitOrder("BTCUSD", 0.0002, Securities["BTCUSD"].Price - 0.1m,  "NotUpdated");
+                var validOrderOne = LimitOrder("BTCUSD", 0.0002, Securities["BTCUSD"].Price - 0.1m,  tag: "NotUpdated");
                 validOrderOne.Update(new UpdateOrderFields()
                 {
                     Quantity = 0.00002m,
@@ -58,7 +58,7 @@ namespace QuantConnect.Algorithm.CSharp
                 });
 
                 // Place and update an order that will succeed
-                var validOrderTwo = LimitOrder("BTCUSD", 0.0002, Securities["BTCUSD"].Price - 0.1m, "NotUpdated");
+                var validOrderTwo = LimitOrder("BTCUSD", 0.0002, Securities["BTCUSD"].Price - 0.1m, tag: "NotUpdated");
                 validOrderTwo.Update(new UpdateOrderFields()
                 {
                     Quantity = 0.002m,
@@ -140,6 +140,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Estimated Strategy Capacity", "$0"},
             {"Lowest Capacity Asset", "BTCUSD E3"},
             {"Portfolio Turnover", "0.00%"},
+            {"Drawdown Recovery", "0"},
             {"OrderListHash", "c4eb9c8722ee647ec2925cf7b936ce69"}
         };
     }

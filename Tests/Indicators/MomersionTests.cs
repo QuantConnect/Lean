@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -58,7 +58,7 @@ namespace QuantConnect.Tests.Indicators
         [TestCase(null, 10)]
         public void ComputesCorrectly(int? minPeriod, int fullPeriod)
         {
-            var momersion = new MomersionIndicator(minPeriod, fullPeriod);
+            var momersion = new Momersion(minPeriod, fullPeriod);
             var expected = minPeriod.HasValue ? _expectedMinPeriod : _expectedFullPeriod;
 
             RunTestIndicator(momersion, expected);
@@ -68,7 +68,7 @@ namespace QuantConnect.Tests.Indicators
         [TestCase(null, 10)]
         public void ResetsProperly(int? minPeriod, int fullPeriod)
         {
-            var momersion = new MomersionIndicator(minPeriod, fullPeriod);
+            var momersion = new Momersion(minPeriod, fullPeriod);
             var expected = minPeriod.HasValue ? _expectedMinPeriod : _expectedFullPeriod;
 
             RunTestIndicator(momersion, expected);
@@ -84,7 +84,7 @@ namespace QuantConnect.Tests.Indicators
         [TestCase(null, 10)]
         public void WarmsUpProperly(int? minPeriod, int fullPeriod)
         {
-            var momersion = new MomersionIndicator(minPeriod, fullPeriod);
+            var momersion = new Momersion(minPeriod, fullPeriod);
             var period = ((IIndicatorWarmUpPeriodProvider)momersion).WarmUpPeriod;
             var dataStream = TestHelper.GetDataStream(period).ToArray();
 
@@ -95,7 +95,7 @@ namespace QuantConnect.Tests.Indicators
             }
         }
 
-        private void RunTestIndicator(MomersionIndicator momersion, IEnumerable expected)
+        private void RunTestIndicator(Momersion momersion, IEnumerable expected)
         {
             var time = DateTime.Now;
             var actual = new decimal[_prices.Length];

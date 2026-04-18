@@ -17,6 +17,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using Python.Runtime;
 using QuantConnect.Data;
 using QuantConnect.Data.UniverseSelection;
@@ -108,15 +109,6 @@ namespace QuantConnect.Securities
                 default:
                     return OptionSymbol.IsStandard(symbol);
             }
-        }
-
-        /// <summary>
-        /// Gets the symbol from the data
-        /// </summary>
-        /// <returns>The symbol that represents the datum</returns>
-        protected override Symbol GetSymbol(OptionUniverse data)
-        {
-            return data.Symbol;
         }
 
         /// <summary>
@@ -820,6 +812,7 @@ namespace QuantConnect.Securities
         /// <returns>Universe with filter applied</returns>
         public OptionFilterUniverse Delta(decimal min, decimal max)
         {
+            ValidateSecurityTypeForSupportedFilters(nameof(Delta));
             return this.Where(contractData => contractData.Greeks.Delta >= min && contractData.Greeks.Delta <= max);
         }
 
@@ -843,6 +836,7 @@ namespace QuantConnect.Securities
         /// <returns>Universe with filter applied</returns>
         public OptionFilterUniverse Gamma(decimal min, decimal max)
         {
+            ValidateSecurityTypeForSupportedFilters(nameof(Gamma));
             return this.Where(contractData => contractData.Greeks.Gamma >= min && contractData.Greeks.Gamma <= max);
         }
 
@@ -866,6 +860,7 @@ namespace QuantConnect.Securities
         /// <returns>Universe with filter applied</returns>
         public OptionFilterUniverse Theta(decimal min, decimal max)
         {
+            ValidateSecurityTypeForSupportedFilters(nameof(Theta));
             return this.Where(contractData => contractData.Greeks.Theta >= min && contractData.Greeks.Theta <= max);
         }
 
@@ -889,6 +884,7 @@ namespace QuantConnect.Securities
         /// <returns>Universe with filter applied</returns>
         public OptionFilterUniverse Vega(decimal min, decimal max)
         {
+            ValidateSecurityTypeForSupportedFilters(nameof(Vega));
             return this.Where(contractData => contractData.Greeks.Vega >= min && contractData.Greeks.Vega <= max);
         }
 
@@ -912,6 +908,7 @@ namespace QuantConnect.Securities
         /// <returns>Universe with filter applied</returns>
         public OptionFilterUniverse Rho(decimal min, decimal max)
         {
+            ValidateSecurityTypeForSupportedFilters(nameof(Rho));
             return this.Where(contractData => contractData.Greeks.Rho >= min && contractData.Greeks.Rho <= max);
         }
 
@@ -935,6 +932,7 @@ namespace QuantConnect.Securities
         /// <returns>Universe with filter applied</returns>
         public OptionFilterUniverse ImpliedVolatility(decimal min, decimal max)
         {
+            ValidateSecurityTypeForSupportedFilters(nameof(ImpliedVolatility));
             return this.Where(contractData => contractData.ImpliedVolatility >= min && contractData.ImpliedVolatility <= max);
         }
 
@@ -958,6 +956,7 @@ namespace QuantConnect.Securities
         /// <returns>Universe with filter applied</returns>
         public OptionFilterUniverse OpenInterest(long min, long max)
         {
+            ValidateSecurityTypeForSupportedFilters(nameof(OpenInterest));
             return this.Where(contractData => contractData.OpenInterest >= min && contractData.OpenInterest <= max);
         }
 
@@ -1057,6 +1056,15 @@ namespace QuantConnect.Securities
                 .DefaultIfEmpty(decimal.MaxValue)
                 .First();
         }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private void ValidateSecurityTypeForSupportedFilters(string filterName)
+        {
+            if (_option.Symbol.SecurityType == SecurityType.FutureOption)
+            {
+                throw new InvalidOperationException($"{filterName} filter is not supported for future options.");
+            }
+        }
     }
 
     /// <summary>
@@ -1084,7 +1092,7 @@ namespace QuantConnect.Securities
         /// <returns>Universe with filter applied</returns>
         public static OptionFilterUniverse Where(this OptionFilterUniverse universe, PyObject predicate)
         {
-            universe.Data = universe.Data.Where(predicate.ConvertToDelegate<Func<OptionUniverse, bool>>()).ToList();
+            universe.Data = universe.Data.Where(predicate.SafeAs<Func<OptionUniverse, bool>>()).ToList();
             return universe;
         }
 
@@ -1108,7 +1116,7 @@ namespace QuantConnect.Securities
         /// <returns>Universe with filter applied</returns>
         public static OptionFilterUniverse Select(this OptionFilterUniverse universe, PyObject mapFunc)
         {
-            return universe.Select(mapFunc.ConvertToDelegate<Func<OptionUniverse, Symbol>>());
+            return universe.Select(mapFunc.SafeAs<Func<OptionUniverse, Symbol>>());
         }
 
         /// <summary>
@@ -1131,7 +1139,7 @@ namespace QuantConnect.Securities
         /// <returns>Universe with filter applied</returns>
         public static OptionFilterUniverse SelectMany(this OptionFilterUniverse universe, PyObject mapFunc)
         {
-            return universe.SelectMany(mapFunc.ConvertToDelegate<Func<OptionUniverse, IEnumerable<Symbol>>>());
+            return universe.SelectMany(mapFunc.SafeAs<Func<OptionUniverse, IEnumerable<Symbol>>>());
         }
 
         /// <summary>

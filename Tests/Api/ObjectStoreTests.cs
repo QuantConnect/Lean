@@ -19,10 +19,11 @@ using System.Collections.Generic;
 using System;
 using System.IO;
 using System.Linq;
+using QuantConnect.Api;
 
 namespace QuantConnect.Tests.API
 {
-    [TestFixture, Explicit("Requires configured api access and available backtest node to run on")]
+    [TestFixture, Explicit("Requires configured api access and available backtest node to run on"), Parallelizable(ParallelScope.Fixtures)]
     public class ObjectStoreTests: ApiTestBase
     {
         private const string _key = "/Ricardo";
@@ -45,13 +46,12 @@ namespace QuantConnect.Tests.API
             }
         }
 
-        [TestCase("/orats_2024-02-29.json", true)]
-        [TestCase("/cli-projects.zip", true)]
+        [TestCase("/filename.zip", true)]
         [TestCase("/orats_2024-02-32.json", false)]
         [TestCase("/mrm8488", false)]
-        [TestCase("/ETF_constrain_Alex.csv", true)]
+        [TestCase("/mm_test.csv", true)]
         [TestCase("/model", true)]
-        [TestCase("/dividend_20240312.json", true)]
+        [TestCase("/trades_test.json", true)]
         public void GetObjectStorePropertiesWorksAsExpected(string key, bool isSuccessExpected)
         {
             var result = ApiClient.GetObjectStoreProperties(TestOrganization, key);
@@ -83,20 +83,30 @@ namespace QuantConnect.Tests.API
         [Test]
         public void DeleteObjectStoreWorksAsExpected()
         {
-            var result = ApiClient.SetObjectStore(TestOrganization, _key, _data);
+            var result = ApiClient.SetObjectStore(TestOrganization, _key + "/test1.txt", _data);
+            var result2 = ApiClient.SetObjectStore(TestOrganization, _key + "/test2.txt", _data);
             Assert.IsTrue(result.Success);
             var objectsBefore = ApiClient.ListObjectStore(TestOrganization, _key);
             var stringRepresentation = objectsBefore.ToString();
             Assert.IsTrue(ApiTestBase.IsValidJson(stringRepresentation));
+            var numberOfObjectsBefore = objectsBefore.Objects.Count;
+            var totalSizeBefore = objectsBefore.Objects.Select(o => o.Size).Sum();
+
+            result = ApiClient.DeleteObjectStore(TestOrganization, _key + "/test1.txt");
+            Assert.IsTrue(result.Success);
+
+            ListObjectStoreResponse objectsAfter;
+            var time = DateTime.UtcNow;
+            do
+            {
+                objectsAfter = ApiClient.ListObjectStore(TestOrganization, _key);
+            } while (objectsAfter.Objects.Count == numberOfObjectsBefore && DateTime.UtcNow < time.AddMinutes(10));
+
+            var totalSizeAfter = objectsAfter.Objects.Select(o => o.Size).Sum();
+            Assert.IsTrue(totalSizeAfter < totalSizeBefore);
 
             result = ApiClient.DeleteObjectStore(TestOrganization, _key);
             Assert.IsTrue(result.Success);
-
-            var objectsAfter = ApiClient.ListObjectStore(TestOrganization, _key);
-            Assert.AreNotEqual(objectsAfter.ObjectStorageUsed, objectsBefore.ObjectStorageUsed);
-
-            result = ApiClient.DeleteObjectStore(TestOrganization, _key);
-            Assert.IsFalse(result.Success);
         }
 
         [Test]
@@ -112,19 +122,19 @@ namespace QuantConnect.Tests.API
 
         private static object[] GetObjectStoreWorksAsExpectedTestCases =
         {
-            new object[] { new List<string> { "/orats_2024-02-17.json", "/orats_2024-02-29.json" }, true}, // Two keys present
+            new object[] { new List<string> { "/trades_test.json", "/profile_results.json" }, true}, // Two keys present
             new object[] { new List<string> {}, false}, // No key is given
-            new object[] { new List<string> { "/orats_2024-02-17.json", "/orats_2024-02-32.json" }, true}, // One key is present and the other one not
+            new object[] { new List<string> { "/trades_test.json", "/orats_2024-02-32.json" }, true}, // One key is present and the other one not
             new object[] { new List<string> { "/orats_2024-02-32.json" }, false}, // The key is not present
-            new object[] { new List<string> { "/mrm8488" }, true}, // The type of the object store file is directory
-            new object[] { new List<string> { "/ETF_constrain_Alex.csv" }, true}, // The type of the object store file is text/plain
+            new object[] { new List<string> { "/CustomData" }, true}, // The type of the object store file is directory
+            new object[] { new List<string> { "/log.txt" }, true}, // The type of the object store file is text/plain
             new object[] { new List<string> { "/model" }, true}, // The type of the object store file is application/octet-stream
-            new object[] { new List<string> { "/dividend_20240312.json" }, true}, // The type of the object store file is application/x-empty
+            new object[] { new List<string> { "/l1_model.p" }, true}, // The type of the object store file is P
             new object[] { new List<string> {
-                "/cli-projects.zip",
-                "/500MB_big_file.txt",
-                "/orats_2024-01-31.json",
-                "/orats_2024-03-06.json"
+                "/latency_1_False.txt",
+                "/portfolio-targets2.csv",
+                "/Regressor",
+                "/example_data_2.zip"
             }, true} // Heavy object store files
         };
     }

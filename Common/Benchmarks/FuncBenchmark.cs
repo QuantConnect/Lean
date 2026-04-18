@@ -44,7 +44,7 @@ namespace QuantConnect.Benchmarks
         /// <param name="pyFunc"></param>
         public FuncBenchmark(PyObject pyFunc)
         {
-            if (!pyFunc.TryConvertToDelegate(out _benchmark))
+            if (!pyFunc.TrySafeAs(out _benchmark))
             {
                 throw new ArgumentException($"FuncBenchmark(): {Messages.FuncBenchmark.UnableToConvertPythonFunctionToBenchmarkFunction}");
             }

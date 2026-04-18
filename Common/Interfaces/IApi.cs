@@ -201,7 +201,7 @@ namespace QuantConnect.Interfaces
         /// <exception cref="ArgumentException"></exception>
         public InsightResponse ReadBacktestInsights(int projectId, string backtestId, int start = 0, int end = 0);
 
-        #pragma warning disable CS1574
+#pragma warning disable CS1574
         /// <summary>
         /// Estimate optimization with the specified parameters via QuantConnect.com API
         /// </summary>
@@ -215,7 +215,7 @@ namespace QuantConnect.Interfaces
         /// <param name="parameters">Optimization parameters</param>
         /// <param name="constraints">Optimization constraints</param>
         /// <returns>Estimate object from the API.</returns>
-        #pragma warning restore CS1574
+#pragma warning restore CS1574
         public Estimate EstimateOptimization(
             int projectId,
             string name,
@@ -227,7 +227,7 @@ namespace QuantConnect.Interfaces
             HashSet<OptimizationParameter> parameters,
             IReadOnlyList<Constraint> constraints);
 
-        #pragma warning disable CS1574
+#pragma warning disable CS1574
         /// <summary>
         /// Create an optimization with the specified parameters via QuantConnect.com API
         /// </summary>
@@ -244,7 +244,7 @@ namespace QuantConnect.Interfaces
         /// <param name="nodeType">Optimization node type</param>
         /// <param name="parallelNodes">Number of parallel nodes for optimization</param>
         /// <returns>BaseOptimization object from the API.</returns>
-        #pragma warning restore CS1574
+#pragma warning restore CS1574
         public OptimizationSummary CreateOptimization(
             int projectId,
             string name,
@@ -408,10 +408,8 @@ namespace QuantConnect.Interfaces
         /// Get a list of live running algorithms for a logged in user.
         /// </summary>
         /// <param name="status">Filter the statuses of the algorithms returned from the api</param>
-        /// <param name="startTime">Earliest launched time of the algorithms returned by the Api</param>
-        /// <param name="endTime">Latest launched time of the algorithms returned by the Api</param>
         /// <returns>List of live algorithm instances</returns>
-        LiveList ListLiveAlgorithms(AlgorithmStatus? status = null, DateTime? startTime = null, DateTime? endTime = null);
+        LiveList ListLiveAlgorithms(AlgorithmStatus? status = null);
 
         /// <summary>
         /// Read out a live algorithm in the project id specified.
@@ -474,14 +472,6 @@ namespace QuantConnect.Interfaces
         void SendStatistics(string algorithmId, decimal unrealized, decimal fees, decimal netProfit, decimal holdings, decimal equity, decimal netReturn, decimal volume, int trades, double sharpe);
 
         /// <summary>
-        /// Send an email to the user associated with the specified algorithm id
-        /// </summary>
-        /// <param name="algorithmId">The algorithm id</param>
-        /// <param name="subject">The email subject</param>
-        /// <param name="body">The email message body</param>
-        void SendUserEmail(string algorithmId, string subject, string body);
-
-        /// <summary>
         /// Local implementation for downloading data to algorithms
         /// </summary>
         /// <param name="address">URL to download</param>
@@ -540,5 +530,14 @@ namespace QuantConnect.Interfaces
         /// Gets a list of LEAN versions with their corresponding basic descriptions
         /// </summary>
         public VersionsResponse ReadLeanVersions();
+
+        /// <summary>
+        /// Broadcast a live command
+        /// </summary>
+        /// <param name="organizationId">Organization ID of the projects we would like to broadcast the command to</param>
+        /// <param name="excludeProjectId">Project for the live instance we want to exclude from the broadcast list</param>
+        /// <param name="command">The command to run</param>
+        /// <returns><see cref="RestResponse"/></returns>
+        public RestResponse BroadcastLiveCommand(string organizationId, int? excludeProjectId, object command);
     }
 }

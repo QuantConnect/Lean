@@ -13,7 +13,6 @@
  * limitations under the License.
 */
 
-using System;
 using System.Collections.Generic;
 using QuantConnect.Data;
 using QuantConnect.Interfaces;
@@ -38,6 +37,7 @@ namespace QuantConnect.Algorithm.CSharp
             "Time: 10/10/2013 13:31:00 OrderID: 72 EventID: 399 Symbol: SPY Status: Filled Quantity: -1 FillQuantity: -1 FillPrice: $144.6434 LimitPrice: $144.3551 TriggerPrice: $143.61 OrderFee: 1 USD",
             "Time: 10/10/2013 15:57:00 OrderID: 73 EventID: 156 Symbol: SPY Status: Filled Quantity: -1 FillQuantity: -1 FillPrice: $145.6636 LimitPrice: $145.6434 TriggerPrice: $144.89 OrderFee: 1 USD",
             "Time: 10/11/2013 15:37:00 OrderID: 74 EventID: 380 Symbol: SPY Status: Filled Quantity: -1 FillQuantity: -1 FillPrice: $146.7185 LimitPrice: $146.6723 TriggerPrice: $145.92 OrderFee: 1 USD"        });
+        protected virtual bool AsynchronousOrders => false;
 
         /// <summary>
         /// Initialise the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must initialized.
@@ -71,7 +71,7 @@ namespace QuantConnect.Algorithm.CSharp
                 var orderRequest = new SubmitOrderRequest(OrderType.LimitIfTouched, SecurityType.Equity, "SPY",
                     _negative * 10, 0,
                     slice["SPY"].Price - (decimal) _negative, slice["SPY"].Price - (decimal) 0.25 * _negative, UtcTime,
-                    $"LIT - Quantity: {_negative * 10}");
+                    $"LIT - Quantity: {_negative * 10}", asynchronous: AsynchronousOrders);
                 _request = Transactions.AddOrder(orderRequest);
                 return;
 
@@ -106,6 +106,17 @@ namespace QuantConnect.Algorithm.CSharp
                 if (orderEvent.ToString() != expected)
                 {
                     throw new RegressionTestException($"orderEvent {orderEvent.Id} differed from {expected}. Actual {orderEvent}");
+                }
+            }
+        }
+
+        public override void OnEndOfAlgorithm()
+        {
+            foreach (var ticket in Transactions.GetOrderTickets())
+            {
+                if (ticket.SubmitRequest.Asynchronous != AsynchronousOrders)
+                {
+                    throw new RegressionTestException("Expected all orders to have the same asynchronous flag as the algorithm.");
                 }
             }
         }
@@ -166,6 +177,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Estimated Strategy Capacity", "$4400000000.00"},
             {"Lowest Capacity Asset", "SPY R735QTJ8XC9X"},
             {"Portfolio Turnover", "0.09%"},
+            {"Drawdown Recovery", "0"},
             {"OrderListHash", "70e29c5d9168728385ee48b92f2ef56c"}
         };
     }

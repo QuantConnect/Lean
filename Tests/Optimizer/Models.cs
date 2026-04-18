@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -19,7 +19,7 @@ using System.Globalization;
 
 namespace QuantConnect.Tests.Optimizer
 {
-    public class BacktestResult
+    internal class BacktestResult
     {
         private static JsonSerializerSettings _jsonSettings = new JsonSerializerSettings { Culture = CultureInfo.InvariantCulture, NullValueHandling = NullValueHandling.Ignore};
         public Statistics Statistics { get; set; }

@@ -120,6 +120,20 @@ namespace QuantConnect
         }
 
         /// <summary>
+        /// Helper method to find all defined enums in the given value
+        /// </summary>
+        public static IEnumerable<T> GetFlags<T>(long value) where T : Enum
+        {
+            foreach (T flag in Enum.GetValues(typeof(T)))
+            {
+                if ((value & Convert.ToInt64(flag, CultureInfo.InvariantCulture)) != 0)
+                {
+                    yield return flag;
+                }
+            }
+        }
+
+        /// <summary>
         /// Determine if the file is out of date according to our download period.
         /// Date based files are never out of date (Files with YYYYMMDD)
         /// </summary>
@@ -193,11 +207,11 @@ namespace QuantConnect
 
             var result = marketHoursDatabase.GetEntry(symbol.ID.Market, symbol, symbol.ID.SecurityType);
 
-            // For the OptionUniverse type, the exchange and data time zones are set to the same value (exchange tz).
-            // This is not actual options data, just option chains/universe selection, so we don't want any offsets
+            // For the OptionUniverse and FutureUniverse types, the exchange and data time zones are set to the same value (exchange tz).
+            // This is not actual options/futures data, just chains/universe selection, so we don't want any offsets
             // between the exchange and data time zones.
             // If the MHDB were data type dependent as well, this would be taken care in there.
-            if (result != null && dataTypes.Any(dataType => dataType == typeof(OptionUniverse)))
+            if (result != null && dataTypes.Any(dataType => dataType.IsAssignableTo(typeof(BaseChainUniverseData))))
             {
                 result = new MarketHoursDatabase.Entry(result.ExchangeHours.TimeZone, result.ExchangeHours);
             }
@@ -637,14 +651,14 @@ namespace QuantConnect
                 }
 
                 method = instance.GetAttr(name);
-                var pythonType = method.GetPythonType();
+                using var pythonType = method.GetPythonType();
                 var isPythonDefined = pythonType.Repr().Equals("<class \'method\'>", StringComparison.Ordinal);
 
                 if (isPythonDefined)
                 {
                     return method;
                 }
-
+                method.Dispose();
                 return null;
             }
         }
@@ -779,9 +793,7 @@ namespace QuantConnect
                     {
                         PortfolioTarget = x,
                         TargetQuantity = OrderSizing.AdjustByLotSize(security, x.Quantity),
-                        ExistingQuantity = security.Holdings.Quantity
-                            + algorithm.Transactions.GetOpenOrderTickets(x.Symbol)
-                                .Aggregate(0m, (d, t) => d + t.Quantity - t.QuantityFilled),
+                        ExistingQuantity = algorithm.Transactions.GetProjectedHoldings(security).ProjectedQuantity,
                         Security = security
                     };
                 })
@@ -2861,70 +2873,6 @@ namespace QuantConnect
         }
 
         /// <summary>
-        /// Tries to convert a <see cref="PyObject"/> into a managed object
-        /// </summary>
-        /// <typeparam name="T">Target type of the resulting managed object</typeparam>
-        /// <param name="pyObject">PyObject to be converted</param>
-        /// <param name="result">Managed object </param>
-        /// <returns>True if successful conversion</returns>
-        public static bool TryConvertToDelegate<T>(this PyObject pyObject, out T result)
-        {
-            var type = typeof(T);
-
-            // The PyObject is a C# object wrapped
-            if (TryConvert<T>(pyObject, out result))
-            {
-                return true;
-            }
-
-            if (!typeof(MulticastDelegate).IsAssignableFrom(type))
-            {
-                throw new ArgumentException(Messages.Extensions.ConvertToDelegateCannotConverPyObjectToType("TryConvertToDelegate", type));
-            }
-
-            result = default(T);
-
-            if (pyObject == null)
-            {
-                return true;
-            }
-
-            var code = string.Empty;
-            var types = type.GetGenericArguments();
-
-            using (Py.GIL())
-            {
-                var locals = new PyDict();
-                try
-                {
-                    for (var i = 0; i < types.Length; i++)
-                    {
-                        var iString = i.ToStringInvariant();
-                        code += $",t{iString}";
-                        locals.SetItem($"t{iString}", types[i].ToPython());
-                    }
-
-                    locals.SetItem("pyObject", pyObject);
-
-                    var name = type.FullName.Substring(0, type.FullName.IndexOf('`'));
-                    code = $"import System; delegate = {name}[{code.Substring(1)}](pyObject)";
-
-                    PythonEngine.Exec(code, null, locals);
-                    result = (T)locals.GetItem("delegate").AsManagedObject(typeof(T));
-                    locals.Dispose();
-                    return true;
-                }
-                catch
-                {
-                    // Do not throw or log the exception.
-                    // Return false as an exception means that the conversion could not be made.
-                }
-                locals.Dispose();
-            }
-            return false;
-        }
-
-        /// <summary>
         /// Safely convert PyObject to ManagedObject using Py.GIL Lock
         /// If no type is given it will convert the PyObject's Python Type to a ManagedObject Type
         /// in a attempt to resolve the target type to convert to.
@@ -2955,7 +2903,7 @@ namespace QuantConnect
             Func<IEnumerable<T>, object> convertedFunc;
             Func<IEnumerable<T>, IEnumerable<Symbol>> filterFunc = null;
 
-            if (universeFilterFunc != null && universeFilterFunc.TryConvertToDelegate(out convertedFunc))
+            if (universeFilterFunc != null && universeFilterFunc.TrySafeAs(out convertedFunc))
             {
                 filterFunc = convertedFunc.ConvertToUniverseSelectionSymbolDelegate();
             }
@@ -3019,25 +2967,6 @@ namespace QuantConnect
                 return ReferenceEquals(result, Universe.Unchanged)
                     ? Universe.Unchanged : ((object[])result).Select(x => (string)x);
             };
-        }
-
-        /// <summary>
-        /// Convert a <see cref="PyObject"/> into a managed object
-        /// </summary>
-        /// <typeparam name="T">Target type of the resulting managed object</typeparam>
-        /// <param name="pyObject">PyObject to be converted</param>
-        /// <returns>Instance of type T</returns>
-        public static T ConvertToDelegate<T>(this PyObject pyObject)
-        {
-            T result;
-            if (pyObject.TryConvertToDelegate(out result))
-            {
-                return result;
-            }
-            else
-            {
-                throw new ArgumentException(Messages.Extensions.ConvertToDelegateCannotConverPyObjectToType("ConvertToDelegate", typeof(T)));
-            }
         }
 
         /// <summary>
@@ -3182,25 +3111,47 @@ namespace QuantConnect
         }
 
         /// <summary>
+        /// Gets the <see cref="Type"/> from a <see cref="PyObject"/> that represents a C# type.
+        /// It throws an <see cref="ArgumentException"/> if the <see cref="PyObject"/> is not a C# type.
+        /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private static Type GetType(PyObject pyObject)
+        {
+            if (pyObject.TryConvert(out Type type))
+            {
+                return type;
+            }
+
+            using (Py.GIL())
+            {
+                throw new ArgumentException($"GetType(): {Messages.Extensions.ObjectFromPythonIsNotACSharpType(pyObject.Repr())}");
+            }
+        }
+
+        /// <summary>
         /// Converts the numeric value of one or more enumerated constants to an equivalent enumerated string.
         /// </summary>
         /// <param name="value">Numeric value</param>
         /// <param name="pyObject">Python object that encapsulated a Enum Type</param>
         /// <returns>String that represents the enumerated object</returns>
+        [Obsolete("Deprecated as of 2025-07. Please use `str()`.")]
         public static string GetEnumString(this int value, PyObject pyObject)
         {
-            Type type;
-            if (pyObject.TryConvert(out type))
-            {
-                return value.ToStringInvariant().ConvertTo(type).ToString();
-            }
-            else
-            {
-                using (Py.GIL())
-                {
-                    throw new ArgumentException($"GetEnumString(): {Messages.Extensions.ObjectFromPythonIsNotACSharpType(pyObject.Repr())}");
-                }
-            }
+            var type = GetType(pyObject);
+            return value.ToStringInvariant().ConvertTo(type).ToString();
+        }
+
+        /// <summary>
+        /// Converts the numeric value of one or more enumerated constants to an equivalent enumerated string.
+        /// </summary>
+        /// <param name="value">Numeric value</param>
+        /// <param name="pyObject">Python object that encapsulated a Enum Type</param>
+        /// <returns>String that represents the enumerated object</returns>
+        [Obsolete("Deprecated as of 2025-07. Please use `str()`.")]
+        public static string GetEnumString(this Enum value, PyObject pyObject)
+        {
+            var type = GetType(pyObject);
+            return value.ToString();
         }
 
         /// <summary>
@@ -3345,6 +3296,34 @@ namespace QuantConnect
         /// <returns>The result of the task</returns>
         public static T SynchronouslyAwaitTask<T>(this Task<T> task)
         {
+            return SynchronouslyAwaitTaskResult(task);
+        }
+
+        /// <summary>
+        /// Safely blocks until the specified task has completed executing
+        /// </summary>
+        /// <param name="task">The task to be awaited</param>
+        /// <returns>The result of the task</returns>
+        public static void SynchronouslyAwaitTask(this ValueTask task)
+        {
+            if (task.IsCompleted)
+            {
+                return;
+            }
+            task.ConfigureAwait(false).GetAwaiter().GetResult();
+        }
+
+        /// <summary>
+        /// Safely blocks until the specified task has completed executing
+        /// </summary>
+        /// <param name="task">The task to be awaited</param>
+        /// <returns>The result of the task</returns>
+        public static T SynchronouslyAwaitTask<T>(this ValueTask<T> task)
+        {
+            if (task.IsCompleted)
+            {
+                return task.Result;
+            }
             return task.ConfigureAwait(false).GetAwaiter().GetResult();
         }
 
@@ -3761,7 +3740,7 @@ namespace QuantConnect
         /// <summary>
         /// Helper method to determine the right data mapping mode to use by default
         /// </summary>
-        public static DataMappingMode GetUniverseNormalizationModeOrDefault(this UniverseSettings universeSettings, SecurityType securityType, string market)
+        public static DataMappingMode GetUniverseMappingModeOrDefault(this UniverseSettings universeSettings, SecurityType securityType, string market)
         {
             switch (securityType)
             {
@@ -3866,13 +3845,6 @@ namespace QuantConnect
             {
                 // uses TryAdd, so don't need to worry about duplicates here
                 algorithm.Securities.Add(security);
-
-                if (security.Type == SecurityType.Index && !(security as Securities.Index.Index).ManualSetIsTradable)
-                {
-                    continue;
-                }
-
-                security.IsTradable = true;
             }
 
             var activeSecurities = algorithm.UniverseManager.ActiveSecurities;
@@ -3880,8 +3852,20 @@ namespace QuantConnect
             {
                 if (!activeSecurities.ContainsKey(security.Symbol))
                 {
-                    security.IsTradable = false;
+                    security.Reset();
                 }
+            }
+        }
+
+        /// <summary>
+        /// Helper method to set the <see cref="Security.IsTradable"/> property to <code>true</code>
+        /// for the given security when possible
+        /// </summary>
+        public static void MakeTradable(this Security security)
+        {
+            if (security.Type != SecurityType.Index || (security as Securities.Index.Index).ManualSetIsTradable)
+            {
+                security.IsTradable = true;
             }
         }
 
@@ -4159,7 +4143,7 @@ namespace QuantConnect
             var expectedType = type.IsAssignableTo(config.Type);
 
             // Check our config type first to be lazy about using data.GetType() unless required
-            var configTypeFilter = (config.Type == typeof(TradeBar) || config.Type == typeof(ZipEntryName) ||
+            var configTypeFilter = (config.Type == typeof(TradeBar) || config.Type.IsAssignableTo(typeof(BaseChainUniverseData)) ||
                 config.Type == typeof(Tick) && config.TickType == TickType.Trade || config.IsCustomData);
 
             if (!configTypeFilter)
@@ -4358,6 +4342,16 @@ namespace QuantConnect
         public static ConvertibleCashAmount InTheMoneyAmount(this Option option, decimal quantity)
         {
             return option.Holdings.GetQuantityValue(Math.Abs(quantity), option.GetPayOff(option.Underlying.Price));
+        }
+
+        /// <summary>
+        /// Gets the greatest common divisor of a list of numbers
+        /// </summary>
+        /// <param name="values">List of numbers which greatest common divisor is requested</param>
+        /// <returns>The greatest common divisor for the given list of numbers</returns>
+        public static decimal GreatestCommonDivisor(this IEnumerable<decimal> values)
+        {
+            return GreatestCommonDivisor(values.Select(Convert.ToInt32));
         }
 
         /// <summary>

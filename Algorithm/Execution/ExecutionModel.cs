@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -15,6 +15,7 @@
 
 using QuantConnect.Algorithm.Framework.Portfolio;
 using QuantConnect.Data.UniverseSelection;
+using QuantConnect.Orders;
 
 namespace QuantConnect.Algorithm.Framework.Execution
 {
@@ -23,6 +24,20 @@ namespace QuantConnect.Algorithm.Framework.Execution
     /// </summary>
     public class ExecutionModel : IExecutionModel
     {
+        /// <summary>
+        /// If true, orders should be submitted asynchronously.
+        /// </summary>
+        protected bool Asynchronous { get; }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="ExecutionModel"/> class.
+        /// </summary>
+        /// <param name="asynchronous">If true, orders should be submitted asynchronously</param>
+        public ExecutionModel(bool asynchronous = true)
+        {
+            Asynchronous = asynchronous;
+        }
+
         /// <summary>
         /// Submit orders for the specified portfolio targets.
         /// This model is free to delay or spread out these orders as it sees fit
@@ -41,6 +56,15 @@ namespace QuantConnect.Algorithm.Framework.Execution
         /// <param name="algorithm">The algorithm instance that experienced the change in securities</param>
         /// <param name="changes">The security additions and removals from the algorithm</param>
         public virtual void OnSecuritiesChanged(QCAlgorithm algorithm, SecurityChanges changes)
+        {
+        }
+
+        /// <summary>
+        /// New order event handler
+        /// </summary>
+        /// <param name="algorithm">The algorithm instance</param>
+        /// <param name="orderEvent">Order event to process</param>
+        public virtual void OnOrderEvent(QCAlgorithm algorithm, OrderEvent orderEvent)
         {
         }
     }

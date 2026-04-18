@@ -47,6 +47,12 @@ namespace QuantConnect.Lean.Engine.Storage
                                                          " Please contact your organization administrator to request permission.";
 
         /// <summary>
+        /// No delete permissions error message
+        /// </summary>
+        protected const string NoDeletePermissionsError = "The current user does not have permission to delete objects from the organization Object Store." +
+                                                         " Please contact your organization administrator to request permission.";
+
+        /// <summary>
         /// Event raised each time there's an error
         /// </summary>
         public event EventHandler<ObjectStoreErrorRaisedEventArgs> ErrorRaised;
@@ -62,7 +68,7 @@ namespace QuantConnect.Lean.Engine.Storage
         private volatile bool _dirty;
 
         private Timer _persistenceTimer;
-        private Regex _pathRegex = new (@"^\.?[a-zA-Z0-9\\/_#\-\$= ]+\.?[a-zA-Z0-9]*$", RegexOptions.Compiled);
+        private Regex _pathRegex = new(@"^\.?[a-zA-Z0-9\\/_#\-\$= ]+\.?[a-zA-Z0-9]*$", RegexOptions.Compiled);
         private readonly ConcurrentDictionary<string, ObjectStoreEntry> _storage = new();
         private readonly object _persistLock = new object();
 
@@ -79,7 +85,7 @@ namespace QuantConnect.Lean.Engine.Storage
         /// <summary>
         /// The file handler instance to use
         /// </summary>
-        protected FileHandler FileHandler { get; set; } = new ();
+        protected FileHandler FileHandler { get; set; } = new();
 
         /// <summary>
         /// Initializes the object store
@@ -105,7 +111,7 @@ namespace QuantConnect.Lean.Engine.Storage
                 _persistenceTimer = new Timer(_ => Persist(), null, Controls.PersistenceIntervalSeconds * 1000, Timeout.Infinite);
             }
 
-            Log.Trace($"LocalObjectStore.Initialize(): Storage Root: {directoryInfo.FullName}. StorageFileCount {controls.StorageFileCount}. StorageLimit {BytesToMb(controls.StorageLimit)}MB");
+            Log.Trace($"LocalObjectStore.Initialize(): Storage Root: {directoryInfo.FullName}. StorageFileCount {controls.StorageFileCount}. StorageLimit {BytesToMb(controls.StorageLimit)}MB. StoragePermissions {Controls.StorageAccess}");
         }
 
         /// <summary>
@@ -119,45 +125,47 @@ namespace QuantConnect.Lean.Engine.Storage
         /// <summary>
         /// Loads objects from the AlgorithmStorageRoot into the ObjectStore
         /// </summary>
-        private IEnumerable<ObjectStoreEntry> GetObjectStoreEntries(bool loadContent, bool takePersistLock = true)
+        private IEnumerable<ObjectStoreEntry> GetObjectStoreEntries(bool loadContent)
         {
-            if (Controls.StoragePermissions.HasFlag(FileAccess.Read))
+            HashSet<string> _yielded = [];
+            if (Controls.StorageAccess.Read)
             {
-                // Acquire the persist lock to avoid yielding twice the same value, just in case
-                lock (takePersistLock ? _persistLock : new object())
+                foreach (var kvp in _storage)
                 {
-                    foreach (var kvp in _storage)
+                    if (!loadContent || kvp.Value.Data != null)
                     {
-                        if (!loadContent || kvp.Value.Data != null)
-                        {
-                            // let's first serve what we already have in memory because it might include files which are not on disk yet
-                            yield return kvp.Value;
-                        }
+                        // let's first serve what we already have in memory because it might include files which are not on disk yet
+                        _yielded.Add(kvp.Key);
+                        yield return kvp.Value;
+                    }
+                }
+
+                foreach (var file in FileHandler.EnumerateFiles(AlgorithmStorageRoot, "*", SearchOption.AllDirectories, out var rootFolder))
+                {
+                    var path = NormalizePath(file.FullName.RemoveFromStart(rootFolder));
+                    if (!_yielded.Add(path))
+                    {
+                        continue;
                     }
 
-                    foreach (var file in FileHandler.EnumerateFiles(AlgorithmStorageRoot, "*", SearchOption.AllDirectories, out var rootFolder))
+                    ObjectStoreEntry objectStoreEntry;
+                    if (loadContent)
                     {
-                        var path = NormalizePath(file.FullName.RemoveFromStart(rootFolder));
-
-                        ObjectStoreEntry objectStoreEntry;
-                        if (loadContent)
+                        if (!_storage.TryGetValue(path, out objectStoreEntry) || objectStoreEntry.Data == null)
                         {
-                            if (!_storage.TryGetValue(path, out objectStoreEntry) || objectStoreEntry.Data == null)
+                            if (TryCreateObjectStoreEntry(file.FullName, path, out objectStoreEntry))
                             {
-                                if(TryCreateObjectStoreEntry(file.FullName, path, out objectStoreEntry))
-                                {
-                                    // load file if content is null or not present, we prioritize the version we have in memory
-                                    yield return _storage[path] = objectStoreEntry;
-                                }
+                                // load file if content is null or not present, we prioritize the version we have in memory
+                                yield return _storage[path] = objectStoreEntry;
                             }
                         }
-                        else
+                    }
+                    else
+                    {
+                        if (!_storage.ContainsKey(path))
                         {
-                            if (!_storage.ContainsKey(path))
-                            {
-                                // we do not read the file contents yet, just the name. We read the contents on demand
-                                yield return _storage[path] = new ObjectStoreEntry(path, null);
-                            }
+                            // we do not read the file contents yet, just the name. We read the contents on demand
+                            yield return _storage[path] = new ObjectStoreEntry(path, null);
                         }
                     }
                 }
@@ -197,7 +205,7 @@ namespace QuantConnect.Lean.Engine.Storage
             {
                 throw new ArgumentNullException(nameof(path));
             }
-            if (!Controls.StoragePermissions.HasFlag(FileAccess.Read))
+            if (!Controls.StorageAccess.Read)
             {
                 throw new InvalidOperationException($"LocalObjectStore.ContainsKey(): {NoReadPermissionsError}");
             }
@@ -234,7 +242,7 @@ namespace QuantConnect.Lean.Engine.Storage
             }
             path = NormalizePath(path);
 
-            if(!_storage.TryGetValue(path, out var objectStoreEntry) || objectStoreEntry.Data == null)
+            if (!_storage.TryGetValue(path, out var objectStoreEntry) || objectStoreEntry.Data == null)
             {
                 var filePath = PathForKey(path);
                 if (TryCreateObjectStoreEntry(filePath, path, out objectStoreEntry))
@@ -258,7 +266,7 @@ namespace QuantConnect.Lean.Engine.Storage
             {
                 throw new ArgumentNullException(nameof(path));
             }
-            else if (!Controls.StoragePermissions.HasFlag(FileAccess.Write))
+            else if (!Controls.StorageAccess.Write)
             {
                 throw new InvalidOperationException($"LocalObjectStore.SaveBytes(): {NoWritePermissionsError}");
             }
@@ -296,7 +304,7 @@ namespace QuantConnect.Lean.Engine.Storage
         /// </summary>
         protected bool InternalSaveBytes(string path, byte[] contents)
         {
-            if(!IsWithinStorageLimit(path, contents, takePersistLock: true))
+            if (!IsWithinStorageLimit(path, contents))
             {
                 return false;
             }
@@ -310,13 +318,13 @@ namespace QuantConnect.Lean.Engine.Storage
         /// <summary>
         /// Validates storage limits are respected on a new save operation
         /// </summary>
-        protected virtual bool IsWithinStorageLimit(string path, byte[] contents, bool takePersistLock)
+        protected virtual bool IsWithinStorageLimit(string path, byte[] contents)
         {
             // Before saving confirm we are abiding by the control rules
             // Start by counting our file and its length
             var fileCount = 1;
             var expectedStorageSizeBytes = contents?.Length ?? 0L;
-            foreach (var kvp in GetObjectStoreEntries(loadContent: false, takePersistLock: takePersistLock))
+            foreach (var kvp in GetObjectStoreEntries(loadContent: false))
             {
                 if (path.Equals(kvp.Path))
                 {
@@ -326,7 +334,7 @@ namespace QuantConnect.Lean.Engine.Storage
                 else
                 {
                     fileCount++;
-                    if(kvp.Data != null)
+                    if (kvp.Data != null)
                     {
                         // if the data is in memory use it
                         expectedStorageSizeBytes += kvp.Data.Length;
@@ -370,9 +378,9 @@ namespace QuantConnect.Lean.Engine.Storage
             {
                 throw new ArgumentNullException(nameof(path));
             }
-            if (!Controls.StoragePermissions.HasFlag(FileAccess.Write))
+            if (!Controls.StorageAccess.Delete)
             {
-                throw new InvalidOperationException($"LocalObjectStore.Delete(): {NoWritePermissionsError}");
+                throw new InvalidOperationException($"LocalObjectStore.Delete(): {NoDeletePermissionsError}");
             }
 
             path = NormalizePath(path);
@@ -438,21 +446,26 @@ namespace QuantConnect.Lean.Engine.Storage
         /// </summary>
         public virtual void Dispose()
         {
+            Log.Trace("LocalObjectStore.Dispose(): start...");
             try
             {
                 if (_persistenceTimer != null)
                 {
                     _persistenceTimer.Change(Timeout.Infinite, Timeout.Infinite);
+                    var tmp = _persistenceTimer;
+                    // stop persist from rescheduling timer
+                    _persistenceTimer = null;
 
                     Persist();
 
-                    _persistenceTimer.DisposeSafely();
+                    tmp.DisposeSafely();
                 }
             }
             catch (Exception err)
             {
                 Log.Error(err, "Error deleting storage directory.");
             }
+            Log.Trace("LocalObjectStore.Dispose(): end");
         }
 
         /// <summary>Returns an enumerator that iterates through the collection.</summary>
@@ -510,7 +523,7 @@ namespace QuantConnect.Lean.Engine.Storage
                 {
                     try
                     {
-                        if(_persistenceTimer != null)
+                        if (_persistenceTimer != null)
                         {
                             // restart timer following end of persistence
                             _persistenceTimer.Change(Time.GetSecondUnevenWait(Controls.PersistenceIntervalSeconds * 1000), Timeout.Infinite);
@@ -537,7 +550,7 @@ namespace QuantConnect.Lean.Engine.Storage
                 // Also skip fails which are not flagged as dirty
                 foreach (var kvp in _storage)
                 {
-                    if(kvp.Value.Data != null && kvp.Value.IsDirty)
+                    if (kvp.Value.Data != null && kvp.Value.IsDirty)
                     {
                         var filePath = PathForKey(kvp.Key);
                         // directory might not exist for custom prefix

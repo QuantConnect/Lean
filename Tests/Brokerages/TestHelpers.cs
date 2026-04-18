@@ -17,22 +17,29 @@ using System;
 using NodaTime;
 using QuantConnect.Data;
 using QuantConnect.Util;
+using QuantConnect.Orders;
 using QuantConnect.Securities;
 using QuantConnect.Data.Market;
 using System.Collections.Generic;
+using QuantConnect.Tests.Engine.DataFeeds;
 
 namespace QuantConnect.Tests.Brokerages
 {
     public class TestsHelpers
     {
-        public static Security GetSecurity(decimal price = 1m, SecurityType securityType = SecurityType.Crypto, Resolution resolution = Resolution.Minute, string symbol = "BTCUSD", string market = Market.Coinbase, string quoteCurrency = "USD")
+        public static Security GetSecurity(decimal price = 1m, SecurityType securityType = SecurityType.Crypto, Resolution resolution = Resolution.Minute, string symbol = "BTCUSD", string market = Market.Coinbase, string quoteCurrency = "USD", bool marketAlwaysOpen = true)
         {
+            var config = CreateConfig(symbol, market, securityType, resolution);
+            var marketHours = marketAlwaysOpen
+                ? SecurityExchangeHours.AlwaysOpen(TimeZones.Utc)
+                : MarketHoursDatabase.FromDataFolder().GetExchangeHours(config);
+
             return new Security(
-                SecurityExchangeHours.AlwaysOpen(TimeZones.Utc),
-                CreateConfig(symbol, market, securityType, resolution),
+                marketHours,
+                config,
                 new Cash(quoteCurrency, 1000, price),
                 #pragma warning disable CS0618
-                SymbolPropertiesDatabase.FromDataFolder().GetSymbolProperties(market, symbol, SecurityType.Crypto, quoteCurrency),
+                SymbolPropertiesDatabase.FromDataFolder().GetSymbolProperties(market, config.Symbol, securityType, quoteCurrency),
                 #pragma warning restore CS0618
                 ErrorCurrencyConverter.Instance,
                 RegisteredSecurityDataTypesProvider.Null,
@@ -135,5 +142,34 @@ namespace QuantConnect.Tests.Brokerages
             yield return TimeZones.Honolulu;
             yield return TimeZones.Kolkata;
         }
+
+        public static SecurityManager InitializeSecurity(SecurityType securityType, params (Symbol symbol, decimal averagePrice, decimal quantity)[] equityQuantity)
+        {
+            var algorithm = new AlgorithmStub();
+            foreach (var (symbol, averagePrice, quantity) in equityQuantity)
+            {
+                switch (securityType)
+                {
+                    case SecurityType.Equity:
+                        algorithm.AddEquity(symbol.Value).Holdings.SetHoldings(averagePrice, quantity);
+                        break;
+                    case SecurityType.Option:
+                        algorithm.AddOptionContract(symbol).Holdings.SetHoldings(averagePrice, quantity);
+                        break;
+                    default:
+                        throw new NotImplementedException($"{nameof(TestsHelpers)}.{nameof(InitializeSecurity)}: uses not implemented {securityType} security type.");
+                }
+            }
+
+            return algorithm.Securities;
+        }
+
+        public static Order CreateNewOrderByOrderType(OrderType orderType, Symbol symbol, decimal orderQuantity, GroupOrderManager groupOrderManager = null) => orderType switch
+        {
+            OrderType.Market => new MarketOrder(symbol, orderQuantity, new DateTime(default)),
+            OrderType.ComboMarket => new ComboMarketOrder(symbol, orderQuantity, new DateTime(default), groupOrderManager),
+            OrderType.ComboLimit => new ComboLimitOrder(symbol, orderQuantity, 80m, new DateTime(default), groupOrderManager),
+            _ => throw new NotImplementedException()
+        };
     }
 }

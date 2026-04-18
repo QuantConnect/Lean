@@ -33,4 +33,4 @@ class OnWarmupFinishedRegressionAlgorithm(QCAlgorithm):
     
     def on_end_of_algorithm(self):
         if self._on_warmup_finished != 1:
-            raise Exception(f"Unexpected OnWarmupFinished call count {self._on_warmup_finished}")
+            raise AssertionError(f"Unexpected OnWarmupFinished call count {self._on_warmup_finished}")

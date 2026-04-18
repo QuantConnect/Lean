@@ -38,20 +38,20 @@ namespace QuantConnect.Algorithm.CSharp
 
             // Requesting history for SPY and IBM (separately) with tick resolution
             var spyHistory = History<Tick>(spy, TimeSpan.FromDays(1), Resolution.Tick);
-            if (spyHistory.Count() == 0)
+            if (!spyHistory.Any())
             {
                 throw new RegressionTestException("SPY tick history is empty");
             }
 
             var ibmHistory = History<Tick>(ibm, TimeSpan.FromDays(1), Resolution.Tick);
-            if (ibmHistory.Count() == 0)
+            if (!ibmHistory.Any())
             {
                 throw new RegressionTestException("IBM tick history is empty");
             }
 
             // Requesting history for SPY and IBM (together) with tick resolution
             var spyIbmHistory = History<Tick>(new [] { spy, ibm }, TimeSpan.FromDays(1), Resolution.Tick);
-            if (spyIbmHistory.Count() == 0)
+            if (!spyIbmHistory.Any())
             {
                 throw new RegressionTestException("Compound SPY and IBM tick history is empty");
             }
@@ -77,7 +77,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of the algorithm history
         /// </summary>
-        public int AlgorithmHistoryDataPoints => 5978528;
+        public int AlgorithmHistoryDataPoints => 32;
 
         /// <summary>
         /// Final status of the algorithm
@@ -115,6 +115,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Estimated Strategy Capacity", "$0"},
             {"Lowest Capacity Asset", ""},
             {"Portfolio Turnover", "0%"},
+            {"Drawdown Recovery", "0"},
             {"OrderListHash", "d41d8cd98f00b204e9800998ecf8427e"}
         };
     }

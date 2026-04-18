@@ -52,7 +52,7 @@ namespace QuantConnect.Data
         /// <summary>
         ///     The different <see cref="TickType" /> each <see cref="SecurityType" /> supports
         /// </summary>
-        public Dictionary<SecurityType, List<TickType>> AvailableDataTypes => _subscriptionManager.AvailableDataTypes;
+        public Dictionary<SecurityType, List<TickType>> AvailableDataTypes => _subscriptionManager?.AvailableDataTypes;
 
         /// <summary>
         ///     Get the count of assets:
@@ -172,6 +172,11 @@ namespace QuantConnect.Data
                 // If we made it here it is because we never found the symbol in the subscription list
                 throw new ArgumentException("Please subscribe to this symbol before adding a consolidator for it. Symbol: " +
                     symbol.Value);
+            }
+
+            if (consolidator.InputType.IsAbstract && tickType == null)
+            {
+                tickType = AvailableDataTypes[symbol.SecurityType].FirstOrDefault();
             }
 
             foreach (var subscription in subscriptions)
@@ -364,24 +369,28 @@ namespace QuantConnect.Data
         /// <returns>true if the subscription is valid for the consolidator</returns>
         public static bool IsSubscriptionValidForConsolidator(SubscriptionDataConfig subscription, IDataConsolidator consolidator, TickType? desiredTickType = null)
         {
-            if (subscription.Type == typeof(Tick) &&
-                LeanData.IsCommonLeanDataType(consolidator.OutputType))
+            // Ensure the consolidator can accept data of the subscription's type
+            if (!consolidator.InputType.IsAssignableFrom(subscription.Type))
+            {
+                return false;
+            }
+
+            if (subscription.Type == typeof(Tick))
             {
                 if (desiredTickType == null)
                 {
-                    var tickType = LeanData.GetCommonTickTypeForCommonDataTypes(
-                    consolidator.OutputType,
-                    subscription.Symbol.SecurityType);
-
+                    if (!LeanData.IsCommonLeanDataType(consolidator.OutputType))
+                    {
+                        return true;
+                    }
+                    var tickType = LeanData.GetCommonTickTypeForCommonDataTypes(consolidator.OutputType, subscription.Symbol.SecurityType);
                     return subscription.TickType == tickType;
                 }
-                else if (subscription.TickType != desiredTickType)
-                {
-                    return false;
-                }
+                return subscription.TickType == desiredTickType;
             }
 
-            return consolidator.InputType.IsAssignableFrom(subscription.Type);
+            // For non-Tick data, the subscription is valid if its type is compatible with the consolidator's input type
+            return true;
         }
 
         /// <summary>

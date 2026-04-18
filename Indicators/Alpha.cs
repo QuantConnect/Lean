@@ -112,7 +112,7 @@ namespace QuantConnect.Indicators
             {
                 throw new ArgumentException("The beta period must be equal or greater than 2.");
             }
-            
+
             _targetSymbol = targetSymbol;
             _referenceSymbol = referenceSymbol;
             _alphaPeriod = alphaPeriod;
@@ -122,7 +122,7 @@ namespace QuantConnect.Indicators
             _referenceROC = new RateOfChange($"{name}_ReferenceROC", alphaPeriod);
 
             _beta = new Beta($"{name}_Beta", _targetSymbol, _referenceSymbol, betaPeriod);
-            
+
             WarmUpPeriod = alphaPeriod >= betaPeriod ? alphaPeriod + 1 : betaPeriod + 1;
 
             _alpha = 0m;
@@ -179,7 +179,7 @@ namespace QuantConnect.Indicators
             : this(name, targetSymbol, referenceSymbol, period, period, new ConstantRiskFreeRateInterestRateModel(riskFreeRate ?? 0m))
         {
         }
-        
+
         /// <summary>
         /// Creates a new Alpha indicator with the specified target, reference, and period values
         /// </summary>
@@ -298,7 +298,7 @@ namespace QuantConnect.Indicators
             }
 
             _beta.Update(input);
-            
+
             if (_targetROC.Samples == _referenceROC.Samples && _referenceROC.Samples > 0)
             {
                 ComputeAlpha();
@@ -321,7 +321,7 @@ namespace QuantConnect.Indicators
             var targetMean = _targetROC.Current.Value / _alphaPeriod;
             var referenceMean = _referenceROC.Current.Value / _alphaPeriod;
 
-            var riskFreeRate = _riskFreeInterestRateModel.GetInterestRate(_targetROC.Current.Time);
+            var riskFreeRate = _riskFreeInterestRateModel.GetInterestRate(_targetROC.Current.EndTime);
 
             _alpha = targetMean - (riskFreeRate + _beta.Current.Value * (referenceMean - riskFreeRate));
         }

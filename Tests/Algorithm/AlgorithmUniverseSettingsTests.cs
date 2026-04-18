@@ -144,7 +144,8 @@ namespace QuantConnect.Tests.Algorithm
                         symbolPropertiesDatabase,
                         algorithm,
                         RegisteredSecurityDataTypesProvider.Null,
-                        new SecurityCacheProvider(algorithm.Portfolio)),
+                        new SecurityCacheProvider(algorithm.Portfolio),
+                        algorithm: algorithm),
                     dataPermissionManager,
                     TestGlobals.DataProvider),
                 algorithm,
@@ -160,7 +161,8 @@ namespace QuantConnect.Tests.Algorithm
                 symbolPropertiesDatabase,
                 algorithm,
                 RegisteredSecurityDataTypesProvider.Null,
-                new SecurityCacheProvider(algorithm.Portfolio));
+                new SecurityCacheProvider(algorithm.Portfolio),
+                algorithm: algorithm);
 
             algorithm.SubscriptionManager.SetDataManager(dataManager);
             algorithm.Securities.SetSecurityService(securityService);

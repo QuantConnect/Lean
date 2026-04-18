@@ -71,15 +71,15 @@ namespace QuantConnect.Indicators
         /// <returns>A a value for this indicator</returns>
         protected override decimal ComputeNextValue(TradeBar input)
         {
-            if (_previousHighMaximum == 0 && _previousLowMinimum == 0) 
+            if (_previousHighMaximum == 0 && _previousLowMinimum == 0)
             {
                 _previousHighMaximum = input.High;
                 _previousLowMinimum = input.Low;
-            } 
+            }
 
             if (input.Volume == 0 || input.High == input.Low)
             {
-                _sma.Update(input.Time, 0);
+                _sma.Update(input.EndTime, 0);
                 return _sma.Current.Value;
             }
 
@@ -89,7 +89,7 @@ namespace QuantConnect.Indicators
             _previousHighMaximum = input.High;
             _previousLowMinimum = input.Low;
 
-            _sma.Update(input.Time, midValue / midRatio);
+            _sma.Update(input.EndTime, midValue / midRatio);
 
             return _sma.Current.Value;
         }

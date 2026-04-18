@@ -38,14 +38,14 @@ class IndexOptionShortCallITMExpiryRegressionAlgorithm(QCAlgorithm):
         self.spx = self.add_index("SPX", Resolution.MINUTE).symbol
 
         # Select a index option expiring ITM, and adds it to the algorithm.
-        self.spx_option = list(self.option_chain(self.spx))
-        self.spx_option = [i for i in self.spx_option if i.id.strike_price <= 4200 and i.id.option_right == OptionRight.PUT and i.id.date.year == 2021 and i.id.date.month == 1]
-        self.spx_option = list(sorted(self.spx_option, key=lambda x: x.id.strike_price, reverse=True))[0]
-        self.spx_option = self.add_index_option_contract(self.spx_option, Resolution.MINUTE).symbol
+        self.spx_options = list(self.option_chain(self.spx))
+        self.spx_options = [i for i in self.spx_options if i.id.strike_price <= 4200 and i.id.option_right == OptionRight.PUT and i.id.date.year == 2021 and i.id.date.month == 1]
+        self.spx_option_contract = list(sorted(self.spx_options, key=lambda x: x.id.strike_price, reverse=True))[0]
+        self.spx_option = self.add_index_option_contract(self.spx_option_contract, Resolution.MINUTE).symbol
 
         self.expected_contract = Symbol.create_option(self.spx, Market.USA, OptionStyle.EUROPEAN, OptionRight.PUT, 4200, datetime(2021, 1, 15))
         if self.spx_option != self.expected_contract:
-            raise Exception(f"Contract self.expected_contract was not found in the chain")
+            raise AssertionError(f"Contract self.expected_contract was not found in the chain")
 
         self.schedule.on(self.date_rules.tomorrow, self.time_rules.after_market_open(self.spx, 1), lambda: self.market_order(self.spx_option, -1))
 
@@ -55,11 +55,11 @@ class IndexOptionShortCallITMExpiryRegressionAlgorithm(QCAlgorithm):
         for delisting in data.delistings.values():
             if delisting.type == DelistingType.WARNING:
                 if delisting.time != datetime(2021, 1, 15):
-                    raise Exception(f"Delisting warning issued at unexpected date: {delisting.time}")
+                    raise AssertionError(f"Delisting warning issued at unexpected date: {delisting.time}")
 
             if delisting.type == DelistingType.DELISTED:
                 if delisting.time != datetime(2021, 1, 16):
-                    raise Exception(f"Delisting happened at unexpected date: {delisting.time}")
+                    raise AssertionError(f"Delisting happened at unexpected date: {delisting.time}")
 
     def on_order_event(self, order_event: OrderEvent):
         if order_event.status != OrderStatus.FILLED:
@@ -67,7 +67,7 @@ class IndexOptionShortCallITMExpiryRegressionAlgorithm(QCAlgorithm):
             return
 
         if order_event.symbol not in self.securities:
-            raise Exception(f"Order event Symbol not found in Securities collection: {order_event.symbol}")
+            raise AssertionError(f"Order event Symbol not found in Securities collection: {order_event.symbol}")
 
         security = self.securities[order_event.symbol]
         if security.symbol == self.spx:
@@ -75,25 +75,25 @@ class IndexOptionShortCallITMExpiryRegressionAlgorithm(QCAlgorithm):
         elif security.symbol == self.expected_contract:
             self.assert_index_option_contract_order(order_event, security)
         else:
-            raise Exception(f"Received order event for unknown Symbol: {order_event.symbol}")
+            raise AssertionError(f"Received order event for unknown Symbol: {order_event.symbol}")
 
     def assert_index_option_order_exercise(self, order_event: OrderEvent, index: Security, option_contract: Security):
         if "Assignment" in order_event.message:
             if order_event.fill_price != 4200:
-                raise Exception("Option was not assigned at expected strike price (4200)")
+                raise AssertionError("Option was not assigned at expected strike price (4200)")
 
             if order_event.direction != OrderDirection.SELL or index.holdings.quantity != 0:
-                raise Exception(f"Expected Qty: 0 index holdings for assigned index option {index.symbol}, found {index.holdings.quantity}")
+                raise AssertionError(f"Expected Qty: 0 index holdings for assigned index option {index.symbol}, found {index.holdings.quantity}")
 
         elif index.holdings.quantity != 0:
-            raise Exception(f"Expected no holdings in index: {index.symbol}")
+            raise AssertionError(f"Expected no holdings in index: {index.symbol}")
 
     def assert_index_option_contract_order(self, order_event: OrderEvent, option: Security):
         if order_event.direction == OrderDirection.SELL and option.holdings.quantity != -1:
-            raise Exception(f"No holdings were created for option contract {option.symbol}")
+            raise AssertionError(f"No holdings were created for option contract {option.symbol}")
 
         if order_event.is_assignment and option.holdings.quantity != 0:
-            raise Exception(f"Holdings were found after option contract was assigned: {option.symbol}")
+            raise AssertionError(f"Holdings were found after option contract was assigned: {option.symbol}")
 
     ### <summary>
     ### Ran at the end of the algorithm to ensure the algorithm has no holdings
@@ -101,7 +101,7 @@ class IndexOptionShortCallITMExpiryRegressionAlgorithm(QCAlgorithm):
     ### <exception cref="Exception">The algorithm has holdings</exception>
     def on_end_of_algorithm(self):
         if self.portfolio.invested:
-            raise Exception(f"Expected no holdings at end of algorithm, but are invested in: {', '.join(self.portfolio.keys())}")
+            raise AssertionError(f"Expected no holdings at end of algorithm, but are invested in: {', '.join(self.portfolio.keys())}")
 
     def custom_security_initializer(self, security):
         if Extensions.is_option(security.symbol.security_type):

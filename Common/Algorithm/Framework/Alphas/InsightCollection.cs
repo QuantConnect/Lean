@@ -379,7 +379,7 @@ namespace QuantConnect.Algorithm.Framework.Alphas
         public List<Insight> GetInsights(PyObject filter)
         {
             Func<Insight, bool> convertedFilter;
-            if (filter.TryConvertToDelegate(out convertedFilter))
+            if (filter.TrySafeAs(out convertedFilter))
             {
                 return GetInsights(convertedFilter);
             }

@@ -777,14 +777,36 @@ namespace QuantConnect
         public static class SecurityExchangeHours
         {
             /// <summary>
-            /// String message saying: Unable to locate next market open within two weeks
+            /// Returns an error message when the next market open could not be located within two weeks.
+            /// Includes additional guidance if the market is always open (e.g., crypto assets).
             /// </summary>
-            public static string UnableToLocateNextMarketOpenInTwoWeeks = "Unable to locate next market open within two weeks.";
+            public static string UnableToLocateNextMarketOpenInTwoWeeks(bool isMarketAlwaysOpen)
+            {
+                var message = "Unable to locate next market open within two weeks.";
+                if (!isMarketAlwaysOpen)
+                {
+                    return message;
+                }
+                message += " Market is always open for this asset, this can happen e.g. if using TimeRules AfterMarketOpen for a crypto asset. " +
+                    "An alternative would be TimeRules.At(), TimeRules.Every(), TimeRules.Midnight or TimeRules.Noon instead";
+                return message;
+            }
 
             /// <summary>
-            /// String message saying: Unable to locate next market close within two weeks
+            /// Returns an error message when the next market close could not be located within two weeks.
+            /// Includes additional guidance if the market is always open (e.g., crypto assets).
             /// </summary>
-            public static string UnableToLocateNextMarketCloseInTwoWeeks = "Unable to locate next market close within two weeks.";
+            public static string UnableToLocateNextMarketCloseInTwoWeeks(bool isMarketAlwaysOpen)
+            {
+                var message = "Unable to locate next market close within two weeks.";
+                if (!isMarketAlwaysOpen)
+                {
+                    return message;
+                }
+                message += " Market is always open for this asset, this can happen e.g. if using TimeRules BeforeMarketClose for a crypto asset. " +
+                    "An alternative would be TimeRules.At(), TimeRules.Every(), TimeRules.Midnight or TimeRules.Noon instead";
+                return message;
+            }
 
             /// <summary>
             /// Returns a string message saying it did not find last market open for the given local date time. It also mentions
@@ -924,7 +946,7 @@ namespace QuantConnect
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public static string SymbolNotFoundInSymbolPropertiesDatabase(QuantConnect.Symbol symbol)
             {
-                return $"Symbol could not be found in the Symbol Properties Database: {symbol.Value}";
+                return $"{symbol.SecurityType} '{symbol.Value}' symbol could not be found in the database for {symbol.ID.Market} market";
             }
         }
 

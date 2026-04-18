@@ -63,11 +63,11 @@ class ShareClassMeanReversionAlphaModel(AlphaModel):
 
     def __init__(self, *args, **kwargs):
         self.sma = SimpleMovingAverage(10)
-        self.position_window = RollingWindow[float](2)
+        self.position_window = RollingWindow(2)
         self.alpha = None
         self.beta = None
         if 'tickers' not in kwargs:
-            raise Exception('ShareClassMeanReversionAlphaModel: Missing argument: "tickers"')
+            raise AssertionError('ShareClassMeanReversionAlphaModel: Missing argument: "tickers"')
         self.tickers = kwargs['tickers']
         self.position_value = None
         self.invested = False

@@ -65,7 +65,7 @@ class PriceGapMeanReversionAlpha(QCAlgorithm):
         return [ x.symbol for x in sorted_by_dollar_volume[:25] ]
 
 
-class PriceGapMeanReversionAlphaModel:
+class PriceGapMeanReversionAlphaModel(AlphaModel):
 
     def __init__(self, *args, **kwargs):
         ''' Initialize variables and dictionary for Symbol Data to support algorithm's function '''
@@ -86,7 +86,7 @@ class PriceGapMeanReversionAlphaModel:
             ## Emit insights accordingly to the price jump sign
             direction = InsightDirection.DOWN if symbol_data.price_jump > 0 else InsightDirection.UP
             insights.append(Insight.price(symbol, self.prediction_interval, direction, symbol_data.price_jump, None))
-            
+
         return insights
 
     def on_securities_changed(self, algorithm, changes):

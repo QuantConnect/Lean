@@ -94,7 +94,7 @@ namespace QuantConnect.Tests.Algorithm
         {
             var task1 = Task.Factory.StartNew(() =>
             {
-                for (var i = 0; i < 1000; i++)
+                for (var i = 0; i < 100; i++)
                 {
                     _algorithm.AddChart(new Chart($"Test_{i}"));
                     Thread.Sleep(1);
@@ -103,7 +103,7 @@ namespace QuantConnect.Tests.Algorithm
 
             var task2 = Task.Factory.StartNew(() =>
             {
-                for (var i = 0; i < 1000; i++)
+                for (var i = 0; i < 100; i++)
                 {
                     _algorithm.GetChartUpdates(true).ToList();
                     Thread.Sleep(1);

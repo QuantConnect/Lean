@@ -238,7 +238,7 @@ namespace QuantConnect.Lean.Engine
                 {
                     var security = update.Target;
 
-                    security.Update(update.Data, update.DataType, update.ContainsFillForwardData);
+                    security.Update(update.Data, update.DataType, update.ContainsFillForwardData, update.IsInternalConfig);
 
                     // Send market price updates to the TradeBuilder
                     algorithm.TradeBuilder.SetMarketPrice(security.Symbol, security.Price);
@@ -332,23 +332,28 @@ namespace QuantConnect.Lean.Engine
                     // determine if there are possible margin call orders to be executed
                     bool issueMarginCallWarning;
                     var marginCallOrders = algorithm.Portfolio.MarginCallModel.GetMarginCallOrders(out issueMarginCallWarning);
+                    var executedTicketsCount = 0;
                     if (marginCallOrders.Count != 0)
                     {
                         var executingMarginCall = false;
                         try
                         {
-                            // tell the algorithm we're about to issue the margin call
-                            algorithm.OnMarginCall(marginCallOrders);
 
-                            executingMarginCall = true;
-
-                            // execute the margin call orders
-                            var executedTickets = algorithm.Portfolio.MarginCallModel.ExecuteMarginCall(marginCallOrders);
-                            foreach (var ticket in executedTickets)
+                            if (marginCallOrders.All(order => algorithm.Portfolio.Securities[order.Symbol].Exchange.ExchangeOpen))
                             {
-                                algorithm.Error($"{algorithm.Time.ToStringInvariant()} - Executed MarginCallOrder: {ticket.Symbol} - " +
-                                    $"Quantity: {ticket.Quantity.ToStringInvariant()} @ {ticket.AverageFillPrice.ToStringInvariant()}"
-                                );
+                                // tell the algorithm we're about to issue the margin call
+                                algorithm.OnMarginCall(marginCallOrders);
+
+                                // execute the margin call orders
+                                var executedTickets = algorithm.Portfolio.MarginCallModel.ExecuteMarginCall(marginCallOrders);
+                                executedTicketsCount = executedTickets.Count;
+
+                                foreach (var ticket in executedTickets)
+                                {
+                                    algorithm.Error($"{algorithm.Time.ToStringInvariant()} - Executed MarginCallOrder: {ticket.Symbol} - " +
+                                        $"Quantity: {ticket.Quantity.ToStringInvariant()} @ {ticket.AverageFillPrice.ToStringInvariant()}"
+                                    );
+                                }
                             }
                         }
                         catch (Exception err)
@@ -358,7 +363,7 @@ namespace QuantConnect.Lean.Engine
                         }
                     }
                     // we didn't perform a margin call, but got the warning flag back, so issue the warning to the algorithm
-                    else if (issueMarginCallWarning)
+                    if (executedTicketsCount == 0 && issueMarginCallWarning)
                     {
                         try
                         {
@@ -642,6 +647,7 @@ namespace QuantConnect.Lean.Engine
             var nextWarmupStatusTime = DateTime.MinValue;
             var warmingUp = algorithm.IsWarmingUp;
             var warmingUpPercent = 0;
+            var logSubscriptionCountFlag = false;
             if (warmingUp)
             {
                 nextWarmupStatusTime = DateTime.UtcNow.AddSeconds(1);
@@ -686,6 +692,11 @@ namespace QuantConnect.Lean.Engine
                             results.SendStatusUpdate(AlgorithmStatus.History, $"{warmingUpPercent}");
                         }
                     }
+                    if (!logSubscriptionCountFlag)
+                    {
+                        Log.Trace($"AlgorithmManager.Stream(): Subscriptions count before warm up: {algorithm.SubscriptionManager.Count}");
+                        logSubscriptionCountFlag = true;
+                    }
                 }
                 else if (warmingUp)
                 {
@@ -694,6 +705,7 @@ namespace QuantConnect.Lean.Engine
                     // we trigger this callback here and not internally in the algorithm so that we can go through python if required
                     algorithm.OnWarmupFinished();
                     algorithm.Debug("Algorithm finished warming up.");
+                    Log.Trace($"AlgorithmManager.Stream(): Subscriptions count after warm up: {algorithm.SubscriptionManager.Count}");
                     results.SendStatusUpdate(AlgorithmStatus.Running, "100");
                 }
                 yield return timeSlice;

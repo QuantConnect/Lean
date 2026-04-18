@@ -26,7 +26,7 @@ class LongAndShortButterflyPutStrategiesAlgorithm(OptionStrategyFactoryMethodsBa
     def expected_orders_count(self) -> int:
         return 6
 
-    def trade_strategy(self, chain: OptionChain, option_symbol: Symbol):
+    def trade_strategy(self, chain: OptionChain, option_symbol: Symbol) -> None:
         put_contracts = (contract for contract in chain if contract.right == OptionRight.PUT)
 
         for expiry, group in itertools.groupby(put_contracts, lambda x: x.expiry):
@@ -47,35 +47,35 @@ class LongAndShortButterflyPutStrategiesAlgorithm(OptionStrategyFactoryMethodsBa
                 self.buy(self._butterfly_put, 2)
                 return
 
-    def assert_strategy_position_group(self, position_group: IPositionGroup, option_symbol: Symbol):
+    def assert_strategy_position_group(self, position_group: IPositionGroup, option_symbol: Symbol) -> None:
         positions = list(position_group.positions)
         if len(positions) != 3:
-            raise Exception(f"Expected position group to have 3 positions. Actual: {len(positions)}")
+            raise AssertionError(f"Expected position group to have 3 positions. Actual: {len(positions)}")
 
         higher_strike = max(leg.strike for leg in self._butterfly_put.option_legs)
         higher_strike_position = next((position for position in positions
                                       if position.symbol.id.option_right == OptionRight.PUT and position.symbol.id.strike_price == higher_strike),
                                      None)
 
-        if higher_strike_position.quantity != 2:
-            raise Exception(f"Expected higher strike position quantity to be 2. Actual: {higher_strike_position.quantity}")
+        if not higher_strike_position or higher_strike_position.quantity != 2:
+            raise AssertionError(f"Expected higher strike position quantity to be 2. Actual: {higher_strike_position.quantity}")
 
         lower_strike = min(leg.strike for leg in self._butterfly_put.option_legs)
         lower_strike_position = next((position for position in positions
                                     if position.symbol.id.option_right == OptionRight.PUT and position.symbol.id.strike_price == lower_strike),
                                    None)
 
-        if lower_strike_position.quantity != 2:
-            raise Exception(f"Expected lower strike position quantity to be 2. Actual: {lower_strike_position.quantity}")
+        if not lower_strike_position or lower_strike_position.quantity != 2:
+            raise AssertionError(f"Expected lower strike position quantity to be 2. Actual: {lower_strike_position.quantity}")
 
         middle_strike = [leg.strike for leg in self._butterfly_put.option_legs if leg.strike < higher_strike and leg.strike > lower_strike][0]
         middle_strike_position = next((position for position in positions
                                      if position.symbol.id.option_right == OptionRight.PUT and position.symbol.id.strike_price == middle_strike),
                                     None)
 
-        if middle_strike_position.quantity != -4:
-            raise Exception(f"Expected middle strike position quantity to be -4. Actual: {middle_strike_position.quantity}")
+        if not middle_strike_position or middle_strike_position.quantity != -4:
+            raise AssertionError(f"Expected middle strike position quantity to be -4. Actual: {middle_strike_position.quantity}")
 
-    def liquidate_strategy(self):
+    def liquidate_strategy(self) -> None:
         # We should be able to close the position using the inverse strategy (a short butterfly put)
-        self.buy(self._short_butterfly_put, 2);
+        self.buy(self._short_butterfly_put, 2)

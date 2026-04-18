@@ -98,7 +98,7 @@ namespace QuantConnect.Algorithm.Framework.Selection
         {
             _market = market;
             Func<IEnumerable<Fundamental>, object> selectorFunc;
-            if (selector.TryConvertToDelegate(out selectorFunc))
+            if (selector.TrySafeAs(out selectorFunc))
             {
                 _selector = selectorFunc.ConvertToUniverseSelectionSymbolDelegate();
             }

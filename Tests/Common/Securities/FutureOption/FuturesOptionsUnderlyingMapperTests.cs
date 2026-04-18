@@ -15,7 +15,6 @@
 
 using System;
 using NUnit.Framework;
-using QuantConnect.Lean.Engine.DataFeeds;
 using QuantConnect.Securities.Future;
 using QuantConnect.Securities.FutureOption;
 
@@ -23,42 +22,43 @@ namespace QuantConnect.Tests.Common.Securities.FutureOption
 {
     public class FuturesOptionsUnderlyingMapperTests
     {
-        [TestCase("ES", Market.CME, 2021, 3, 19, 2021, 3, false)]
-        [TestCase("NQ", Market.CME, 2021, 3, 19, 2021, 3, false)]
-        [TestCase("DC", Market.CME, 2021, 2, 2, 2021, 1, false)]
-        [TestCase("CL", Market.NYMEX, 2021, 1, 20, 2021, 2, false)]
-        [TestCase("RB", Market.NYMEX, 2021, 1, 29, 2021, 1, false)]
-        [TestCase("HO", Market.NYMEX, 2021, 1, 29, 2021, 1, false)]
-        [TestCase("NG", Market.NYMEX, 2021, 1, 27, 2021, 1, false)]
-        [TestCase("HG", Market.COMEX, 2021, 3, 29, 2021, 1, false)]
-        [TestCase("HG", Market.COMEX, 2021, 3, 29, 2021, 2, false)]
-        [TestCase("HG", Market.COMEX, 2021, 3, 29, 2021, 3, false)]
-        [TestCase("SI", Market.COMEX, 2021, 3, 29, 2021, 1, false)]
-        [TestCase("SI", Market.COMEX, 2021, 3, 29, 2021, 2, false)]
-        [TestCase("SI", Market.COMEX, 2021, 3, 29, 2021, 3, false)]
-        [TestCase("GC", Market.COMEX, 2021, 2, 24, 2021, 1, false)]
-        [TestCase("GC", Market.COMEX, 2021, 4, 28, 2021, 2, false)]
-        [TestCase("GC", Market.COMEX, 2021, 4, 28, 2021, 3, false)]
-        [TestCase("ZC", Market.CBOT, 2021, 3, 12, 2021, 2, false)]
-        [TestCase("ZC", Market.CBOT, 2021, 3, 12, 2021, 3, false)]
-        [TestCase("ZN", Market.CBOT, 2021, 3, 22, 2021, 2, false)]
-        [TestCase("ZN", Market.CBOT, 2021, 3, 22, 2021, 3, false)]
-        [TestCase("ZS", Market.CBOT, 2021, 3, 12, 2021, 2, false)]
-        [TestCase("ZS", Market.CBOT, 2021, 3, 12, 2021, 3, false)]
-        [TestCase("ZW", Market.CBOT, 2021, 3, 12, 2021, 2, false)]
-        [TestCase("ZW", Market.CBOT, 2021, 3, 12, 2021, 3, false)]
-        [TestCase("ZC", Market.CBOT, 2032, 1, 19, 2032, 1, true)]
-        [TestCase("ZS", Market.CBOT, 2035, 1, 19, 2035, 1, true)]
-        [TestCase("ZW", Market.CBOT, 2037, 1, 19, 2037, 1, true)]
-        public void GetUnderlyingSymbolFromFutureOption(string futureTicker, string market, int year, int month, int day, int fopContractYear, int fopContractMonth, bool nullExpected)
+        [TestCase("ES", Market.CME, 2021, 3, 19, 2021, 3, 19, false)]
+        [TestCase("NQ", Market.CME, 2021, 3, 19, 2021, 3, 19, false)]
+        [TestCase("DC", Market.CME, 2021, 2, 2, 2021, 2, 2, false)]
+        [TestCase("CL", Market.NYMEX, 2021, 1, 14, 2021, 1, 20, false)]
+        [TestCase("RB", Market.NYMEX, 2021, 1, 29, 2021, 1, 29, false)]
+        [TestCase("HO", Market.NYMEX, 2021, 1, 29, 2021, 1, 29, false)]
+        [TestCase("NG", Market.NYMEX, 2021, 1, 26, 2021, 1, 27, false)]
+        [TestCase("HG", Market.COMEX, 2021, 2, 23, 2021, 3, 29, false)]
+        [TestCase("SI", Market.COMEX, 2021, 2, 23, 2021, 3, 29, false)]
+        [TestCase("GC", Market.COMEX, 2021, 1, 26, 2021, 2, 24, false)]
+        [TestCase("ZC", Market.CBOT, 2021, 2, 19, 2021, 3, 12, false)]
+        [TestCase("ZN", Market.CBOT, 2021, 2, 19, 2021, 3, 22, false)]
+        [TestCase("ZS", Market.CBOT, 2021, 2, 19, 2021, 3, 12, false)]
+        [TestCase("ZW", Market.CBOT, 2021, 2, 19, 2021, 3, 12, false)]
+        [TestCase("6A", Market.CME, 2025, 09, 05, 2025, 09, 15, false)]
+        [TestCase("6A", Market.CME, 2025, 12, 05, 2025, 12, 15, false)]
+        [TestCase("6B", Market.CME, 2025, 09, 05, 2025, 09, 15, false)]
+        [TestCase("6B", Market.CME, 2025, 12, 05, 2025, 12, 15, false)]
+        [TestCase("6C", Market.CME, 2025, 09, 05, 2025, 09, 16, false)]
+        [TestCase("6C", Market.CME, 2025, 12, 05, 2025, 12, 16, false)]
+        [TestCase("6E", Market.CME, 2025, 09, 05, 2025, 09, 15, false)]
+        [TestCase("6E", Market.CME, 2025, 12, 05, 2025, 12, 15, false)]
+        [TestCase("6J", Market.CME, 2025, 09, 05, 2025, 09, 15, false)]
+        [TestCase("6J", Market.CME, 2025, 12, 05, 2025, 12, 15, false)]
+        [TestCase("6S", Market.CME, 2025, 09, 05, 2025, 09, 15, false)]
+        [TestCase("6S", Market.CME, 2025, 12, 05, 2025, 12, 15, false)]
+        [TestCase("ZC", Market.CBOT, 2031, 12, 26, 2031, 12, 26, true)]
+        [TestCase("ZS", Market.CBOT, 2034, 12, 22, 2034, 12, 22, true)]
+        [TestCase("ZW", Market.CBOT, 2036, 12, 26, 2036, 12, 26, true)]
+        public void GetUnderlyingSymbolFromFutureOption(string futureTicker, string market,
+            int fopContractYear, int fopContractMonth, int fopContractDay,
+            int expectedFutureYear, int expectedFutureMonth, int expectedFutureDay,
+            bool nullExpected)
         {
             var optionTicker = FuturesOptionsSymbolMappings.Map(futureTicker);
-            var expectedFuture = Symbol.CreateFuture(futureTicker, market, new DateTime(year, month, day));
-            var canonicalFutureOption = Symbol.CreateOption(expectedFuture, market, default(OptionStyle), default(OptionRight), default(decimal), SecurityIdentifier.DefaultDate);
-
-            var futureContractMonthDelta = FuturesExpiryUtilityFunctions.GetDeltaBetweenContractMonthAndContractExpiry(futureTicker, expectedFuture.ID.Date);
-            var futureContractMonth = expectedFuture.ID.Date.AddMonths(futureContractMonthDelta);
-            var futuresOptionsExpiration = FuturesOptionsExpiryFunctions.FuturesOptionExpiry(canonicalFutureOption, futureContractMonth);
+            var expectedFuture = Symbol.CreateFuture(futureTicker, market, new DateTime(expectedFutureYear, expectedFutureMonth, expectedFutureDay));
+            var futuresOptionsExpiration = new DateTime(fopContractYear, fopContractMonth, fopContractDay);
 
             var actualFuture = FuturesOptionsUnderlyingMapper.GetUnderlyingFutureFromFutureOption(optionTicker, market, futuresOptionsExpiration, new DateTime(2021, 1, 1));
 
@@ -69,7 +69,7 @@ namespace QuantConnect.Tests.Common.Securities.FutureOption
             }
             else
             {
-                Assert.AreEqual(expectedFuture, actualFuture);
+                Assert.AreEqual(expectedFuture, actualFuture, $"Expected {expectedFuture.ID.Date} but got {actualFuture.ID.Date}");
             }
         }
     }

@@ -34,7 +34,7 @@ class OptionIndicatorsRegressionAlgorithm(QCAlgorithm):
     def on_end_of_algorithm(self):
         if self.implied_volatility.current.value == 0 or self.delta.current.value == 0 or self.gamma.current.value == 0 \
         or self.vega.current.value == 0 or self.theta.current.value == 0 or self.rho.current.value == 0:
-            raise Exception("Expected IV/greeks calculated")
+            raise AssertionError("Expected IV/greeks calculated")
 
         self.debug(f"""Implied Volatility: {self.implied_volatility.current.value},
 Delta: {self.delta.current.value},

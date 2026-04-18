@@ -90,6 +90,12 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             }
         }
 
+        public void AddCryptoEntry(string ticker, string market)
+        {
+            var symbolProperties = SymbolPropertiesDatabase.GetSymbolProperties(market, null, SecurityType.Crypto, Currencies.USD);
+            SymbolPropertiesDatabase.SetEntry(market, ticker, SecurityType.Crypto, symbolProperties);
+        }
+
         public override void OnSecuritiesChanged(SecurityChanges changes)
         {
             SecurityChangesRecord.Add(changes);

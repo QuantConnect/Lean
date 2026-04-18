@@ -313,7 +313,7 @@ namespace QuantConnect.Lean.Engine.Results
             ResultsDestinationFolder = Globals.ResultsDestinationFolder;
             State = new Dictionary<string, string>
             {
-                ["StartTime"] = StartTime.ToStringInvariant(DateFormat.UI),
+                ["StartTime"] = StartTime.ToStringInvariant(DateFormat.ISOShort),
                 ["EndTime"] = string.Empty,
                 ["RuntimeError"] = string.Empty,
                 ["StackTrace"] = string.Empty,
@@ -618,7 +618,7 @@ namespace QuantConnect.Lean.Engine.Results
             {
                 if (!Charts.TryGetValue(PortfolioMarginKey, out var chart))
                 {
-                    chart = new Chart(PortfolioMarginKey);
+                    chart = new Chart(PortfolioMarginKey) { LegendDisabled = true };
                     Charts.AddOrUpdate(PortfolioMarginKey, chart);
                 }
                 PortfolioMarginChart.AddSample(chart, state, MapFileProvider, DateTime.UtcNow.Date);
@@ -879,7 +879,7 @@ namespace QuantConnect.Lean.Engine.Results
             {
                 State["Status"] = Algorithm.Status.ToStringInvariant();
             }
-            State["EndTime"] = endTime != null ? endTime.ToStringInvariant(DateFormat.UI) : string.Empty;
+            State["EndTime"] = endTime != null ? endTime.ToStringInvariant(DateFormat.ISOShort) : string.Empty;
 
             lock (LogStore)
             {

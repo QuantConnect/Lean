@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -17,8 +17,11 @@ using System;
 using NUnit.Framework;
 using QuantConnect.Algorithm.Framework.Portfolio;
 using QuantConnect.Data.Market;
+using QuantConnect.Lean.Engine.Results;
+using QuantConnect.Lean.Engine.TransactionHandlers;
 using QuantConnect.Orders;
 using QuantConnect.Orders.Fees;
+using QuantConnect.Tests.Algorithm;
 using QuantConnect.Tests.Common.Securities;
 using QuantConnect.Tests.Engine.DataFeeds;
 
@@ -95,45 +98,50 @@ namespace QuantConnect.Tests.Common.Orders
             Assert.AreEqual(expected, result);
         }
 
-        [TestCase(-1, -3, -1, -1)]
-        [TestCase(1, 3, 1, 1)]
-        [TestCase(2, 3, 1, 0)]
-        [TestCase(2, 3, -1, 2)]
-        [TestCase(2, 2, 1, -1)]
-        [TestCase(-2, 3, 1, 4)]
-        public void GetUnorderedQuantityHoldingsOpenOrders(decimal holdings, decimal target, decimal filledQuantity, decimal expected)
+        [TestCase(-1, -2, -1, -3, 0)]
+        [TestCase(-1, -3, -1, -3, 1)]
+        [TestCase(-1, -2, -1, -4, -1)]
+        [TestCase(1, 2, 1, 3, 0)]
+        [TestCase(1, 3, 1, 3, -1)]
+        [TestCase(1, 2, 1, 4, 1)]
+        [TestCase(2, 2, 1, 10, 6)]
+        [TestCase(2, 2, 1, -10, -14)]
+        public void GetUnorderedQuantityHoldingsOpenOrders(decimal existingHoldings, decimal orderQuantity,
+            decimal filledQuantity, decimal target, decimal expected)
         {
             var algo = new AlgorithmStub();
-            var orderProcessor = new FakeOrderProcessor();
+
+            var security = algo.AddFutureContract(Symbols.Future_CLF19_Jan2019);
+            security.SetMarketPrice(new TradeBar { Value = 250 });
+            security.Holdings.SetHoldings(250, existingHoldings);
+
+            var orderProcessor = new BrokerageTransactionHandler();
+            using var brokerage = new NullBrokerage();
+            orderProcessor.Initialize(algo, brokerage, new BacktestingResultHandler());
+            algo.Transactions.SetOrderProcessor(orderProcessor);
+
             var orderRequest = new SubmitOrderRequest(
                     OrderType.Market,
                     SecurityType.Future,
                     Symbols.Future_CLF19_Jan2019,
-                    filledQuantity * 2,
+                    orderQuantity,
                     250,
                     250,
                     new DateTime(2020, 1, 1),
                     "Pepe"
                 );
-
+            orderRequest.SetOrderId(1);
             var order = Order.CreateOrder(orderRequest);
-            var ticket = new OrderTicket(algo.Transactions, orderRequest);
-            ticket.SetOrder(order);
-           
-            ticket.AddOrderEvent(new OrderEvent(1,
+            orderProcessor.AddOpenOrder(order, algo);
+
+            brokerage.OnOrderEvent(new OrderEvent(1,
                 Symbols.Future_CLF19_Jan2019,
                 new DateTime(2020, 1, 1),
-                OrderStatus.Filled,
+                OrderStatus.PartiallyFilled,
                 filledQuantity > 0 ? OrderDirection.Buy : OrderDirection.Sell,
                 250,
                 filledQuantity,
                 OrderFee.Zero));
-
-            orderProcessor.AddTicket(ticket);
-            algo.Transactions.SetOrderProcessor(orderProcessor);
-            var security = algo.AddFutureContract(Symbols.Future_CLF19_Jan2019);
-            security.SetMarketPrice(new TradeBar { Value = 250 });
-            security.Holdings.SetHoldings(250, holdings);
 
             var result = OrderSizing.GetUnorderedQuantity(algo,
                 new PortfolioTarget(Symbols.Future_CLF19_Jan2019, target));

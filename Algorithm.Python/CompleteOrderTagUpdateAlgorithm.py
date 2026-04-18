@@ -18,8 +18,8 @@ from AlgorithmImports import *
 ### </summary>
 class CompleteOrderTagUpdateAlgorithm(QCAlgorithm):
 
-    tag_after_fill = "This is the tag set after order was filled."
-    tag_after_canceled = "This is the tag set after order was canceled."
+    _tag_after_fill = "This is the tag set after order was filled."
+    _tag_after_canceled = "This is the tag set after order was canceled."
 
     def initialize(self) -> None:
         self.set_start_date(2013,10, 7)
@@ -47,38 +47,38 @@ class CompleteOrderTagUpdateAlgorithm(QCAlgorithm):
 
     def on_order_event(self, order_event: OrderEvent) -> None:
         if order_event.status == OrderStatus.CANCELED:
-            if order_event.order_id != self._limit_order_ticket.order_id:
-                raise Exception("The only canceled order should have been the limit order.")
+            if not self._limit_order_ticket or order_event.order_id != self._limit_order_ticket.order_id:
+                raise AssertionError("The only canceled order should have been the limit order.")
 
             # update canceled order tag
-            self.update_order_tag(self._limit_order_ticket, self.tag_after_canceled, "Error updating order tag after canceled")
+            self.update_order_tag(self._limit_order_ticket, self._tag_after_canceled, "Error updating order tag after canceled")
         elif order_event.status == OrderStatus.FILLED:
             self._market_order_ticket = list(self.transactions.get_order_tickets(lambda x: x.order_type == OrderType.MARKET))[0]
-            if order_event.order_id != self._market_order_ticket.order_id:
-                raise Exception("The only filled order should have been the market order.")
+            if not self._market_order_ticket or order_event.order_id != self._market_order_ticket.order_id:
+                raise AssertionError("The only filled order should have been the market order.")
 
             # update filled order tag
-            self.update_order_tag(self._market_order_ticket, self.tag_after_fill, "Error updating order tag after fill")
+            self.update_order_tag(self._market_order_ticket, self._tag_after_fill, "Error updating order tag after fill")
 
     def on_end_of_algorithm(self) -> None:
         # check the filled order
-        self.assert_order_tag_update(self._market_order_ticket, self.tag_after_fill, "filled")
+        self.assert_order_tag_update(self._market_order_ticket, self._tag_after_fill, "filled")
         if self._market_order_ticket.quantity != self._quantity or self._market_order_ticket.quantity_filled != self._quantity:
-            raise Exception("The market order quantity should not have been updated.")
+            raise AssertionError("The market order quantity should not have been updated.")
 
         # check the canceled order
-        self.assert_order_tag_update(self._limit_order_ticket, self.tag_after_canceled, "canceled")
+        self.assert_order_tag_update(self._limit_order_ticket, self._tag_after_canceled, "canceled")
 
     def assert_order_tag_update(self, ticket: OrderTicket, expected_tag: str, order_action: str) -> None:
         if ticket is None:
-            raise Exception(f"The order ticket was not set for the {order_action} order")
+            raise AssertionError(f"The order ticket was not set for the {order_action} order")
 
         if ticket.tag != expected_tag:
-            raise Exception(f"Order ticket tag was not updated after order was {order_action}")
+            raise AssertionError(f"Order ticket tag was not updated after order was {order_action}")
 
         order = self.transactions.get_order_by_id(ticket.order_id)
         if order.tag != expected_tag:
-            raise Exception(f"Order tag was not updated after order was {order_action}")
+            raise AssertionError(f"Order tag was not updated after order was {order_action}")
 
     def update_order_tag(self, ticket: OrderTicket, tag: str, error_message_prefix: str) -> None:
         update_fields = UpdateOrderFields()
@@ -86,4 +86,4 @@ class CompleteOrderTagUpdateAlgorithm(QCAlgorithm):
         response = ticket.update(update_fields)
 
         if response.is_error:
-            raise Exception(f"{error_message_prefix}: {response.error_message}")
+            raise AssertionError(f"{error_message_prefix}: {response.error_message}")

@@ -65,8 +65,10 @@ namespace QuantConnect.Tests.Algorithm
 
             // new forex - should be tradebar
             var forexQuote = algo.AddForex("EURUSD");
-            Assert.IsTrue(forexQuote.Subscriptions.Count() == 1);
+            // The quote bar subscription is kept
+            Assert.IsTrue(forexQuote.Subscriptions.Count() == 2);
             Assert.IsTrue(GetMatchingSubscription(algo, forexQuote.Symbol, typeof(TradeBar)) != null);
+            Assert.IsTrue(GetMatchingSubscription(algo, forexQuote.Symbol, typeof(QuoteBar)) != null);
 
             // reset to empty string, affects other tests because config is static
             Config.Set("security-data-feeds", "");
@@ -91,9 +93,20 @@ namespace QuantConnect.Tests.Algorithm
 
             // equity low resolution
             var equityDaily = algo.AddSecurity(SecurityType.Equity, "goog", Resolution.Daily);
-            Assert.IsTrue(equityDaily.Subscriptions.Count() == 2);
+            Assert.IsTrue(equityDaily.Subscriptions.Count() == 3);
             Assert.IsTrue(GetMatchingSubscription(algo, equityDaily.Symbol, typeof(TradeBar)) != null);
+            Assert.IsTrue(GetMatchingSubscription(algo, equityMinute.Symbol, typeof(QuoteBar)) != null);
 
+            Assert.IsTrue(ReferenceEquals(equityMinute, equityDaily));
+
+            var equitySubscriptions = algo.SubscriptionManager.SubscriptionDataConfigService
+                .GetSubscriptionDataConfigs(equityMinute.Symbol);
+            Assert.IsTrue(equitySubscriptions.SingleOrDefault(
+                s => s.TickType == TickType.Trade && s.Type == typeof(TradeBar) && s.Resolution == Resolution.Minute) != null);
+            Assert.IsTrue(equitySubscriptions.SingleOrDefault(
+                s => s.TickType == TickType.Quote && s.Type == typeof(QuoteBar) && s.Resolution == Resolution.Minute) != null);
+            Assert.IsTrue(equitySubscriptions.SingleOrDefault(
+                s => s.TickType == TickType.Trade && s.Type == typeof(TradeBar) && s.Resolution == Resolution.Daily) != null);
 
             // option
             var option = algo.AddSecurity(SecurityType.Option, "goog");
@@ -101,7 +114,7 @@ namespace QuantConnect.Tests.Algorithm
             Assert.IsTrue(GetMatchingSubscription(algo, option.Symbol, typeof(OptionUniverse)) != null);
 
             // index option
-            var indexOption = algo.AddSecurity(SecurityType.Option, "spx");
+            var indexOption = algo.AddSecurity(SecurityType.IndexOption, "spx");
             Assert.IsTrue(indexOption.Subscriptions.Count() == 1);
             Assert.IsTrue(GetMatchingSubscription(algo, indexOption.Symbol, typeof(OptionUniverse)) != null);
 
@@ -113,19 +126,32 @@ namespace QuantConnect.Tests.Algorithm
             // future
             var future = algo.AddSecurity(SecurityType.Future, "ES");
             Assert.IsTrue(future.Subscriptions.Count() == 1);
-            Assert.IsTrue(future.Subscriptions.FirstOrDefault(x => typeof(ZipEntryName).IsAssignableFrom(x.Type)) != null);
+            Assert.IsTrue(future.Subscriptions.FirstOrDefault(x => typeof(FutureUniverse) == x.Type) != null);
 
             // Crypto high resolution
-            var cryptoMinute = algo.AddSecurity(SecurityType.Equity, "goog");
+            var cryptoMinute = algo.AddSecurity(SecurityType.Crypto, "btcusd");
             Assert.IsTrue(cryptoMinute.Subscriptions.Count() == 2);
             Assert.IsTrue(GetMatchingSubscription(algo, cryptoMinute.Symbol, typeof(TradeBar)) != null);
             Assert.IsTrue(GetMatchingSubscription(algo, cryptoMinute.Symbol, typeof(QuoteBar)) != null);
 
             // Crypto low resolution
             var cryptoHourly = algo.AddSecurity(SecurityType.Crypto, "btcusd", Resolution.Hour);
-            Assert.IsTrue(cryptoHourly.Subscriptions.Count() == 2);
+            Assert.IsTrue(cryptoHourly.Subscriptions.Count() == 4);
             Assert.IsTrue(GetMatchingSubscription(algo, cryptoHourly.Symbol, typeof(TradeBar)) != null);
             Assert.IsTrue(GetMatchingSubscription(algo, cryptoHourly.Symbol, typeof(QuoteBar)) != null);
+
+            Assert.IsTrue(ReferenceEquals(cryptoMinute, cryptoHourly));
+
+            var cryptoSubscriptions = algo.SubscriptionManager.SubscriptionDataConfigService
+                .GetSubscriptionDataConfigs(cryptoMinute.Symbol);
+            Assert.IsTrue(cryptoSubscriptions.SingleOrDefault(
+                s => s.TickType == TickType.Trade && s.Type == typeof(TradeBar) && s.Resolution == Resolution.Minute) != null);
+            Assert.IsTrue(cryptoSubscriptions.SingleOrDefault(
+                s => s.TickType == TickType.Quote && s.Type == typeof(QuoteBar) && s.Resolution == Resolution.Minute) != null);
+            Assert.IsTrue(cryptoSubscriptions.SingleOrDefault(
+                s => s.TickType == TickType.Trade && s.Type == typeof(TradeBar) && s.Resolution == Resolution.Hour) != null);
+            Assert.IsTrue(cryptoSubscriptions.SingleOrDefault(
+                s => s.TickType == TickType.Quote && s.Type == typeof(QuoteBar) && s.Resolution == Resolution.Hour) != null);
         }
 
 

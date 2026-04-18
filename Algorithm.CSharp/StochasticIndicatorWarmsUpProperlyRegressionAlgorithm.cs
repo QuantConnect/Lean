@@ -27,7 +27,7 @@ namespace QuantConnect.Algorithm.CSharp
     /// Regression algorithm that asserts Stochastic indicator, registered with a different resolution consolidator,
     /// is warmed up properly by calling QCAlgorithm.WarmUpIndicator
     /// </summary>
-    public class StochasticIndicatorWarmsUpProperlyRegressionAlgorithm: QCAlgorithm, IRegressionAlgorithmDefinition
+    public class StochasticIndicatorWarmsUpProperlyRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
         private bool _dataPointsReceived;
         private Symbol _spy;
@@ -45,7 +45,7 @@ namespace QuantConnect.Algorithm.CSharp
 
             var dailyConsolidator = new TradeBarConsolidator(TimeSpan.FromDays(1));
             _rsi = new RelativeStrengthIndex(14, MovingAverageType.Wilders);
-            _sto = new Stochastic("FIRST", 14, 3, 3);
+            _sto = new Stochastic("FIRST", 10, 3, 3);
             RegisterIndicator(_spy, _rsi, dailyConsolidator);
             RegisterIndicator(_spy, _sto, dailyConsolidator);
 
@@ -53,7 +53,7 @@ namespace QuantConnect.Algorithm.CSharp
             WarmUpIndicator(_spy, _sto, TimeSpan.FromDays(1));
 
             _rsiHistory = new RelativeStrengthIndex(14, MovingAverageType.Wilders);
-            _stoHistory = new Stochastic("SECOND", 14, 3, 3);
+            _stoHistory = new Stochastic("SECOND", 10, 3, 3);
             RegisterIndicator(_spy, _rsiHistory, dailyConsolidator);
             RegisterIndicator(_spy, _stoHistory, dailyConsolidator);
 
@@ -171,6 +171,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Estimated Strategy Capacity", "$0"},
             {"Lowest Capacity Asset", ""},
             {"Portfolio Turnover", "0%"},
+            {"Drawdown Recovery", "0"},
             {"OrderListHash", "d41d8cd98f00b204e9800998ecf8427e"}
         };
     }

@@ -51,4 +51,4 @@ class BasicTemplateIndexAlgorithm(QCAlgorithm):
 
     def on_end_of_algorithm(self) -> None:
         if self.portfolio[self.spx].total_sale_volume > 0:
-            raise Exception("Index is not tradable.")
+            raise AssertionError("Index is not tradable.")

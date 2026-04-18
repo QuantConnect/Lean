@@ -18,7 +18,6 @@ using System;
 using System.Runtime.CompilerServices;
 using QuantConnect.Data.Market;
 using Python.Runtime;
-using QuantConnect.Interfaces;
 
 namespace QuantConnect.Data.Consolidators
 {
@@ -44,7 +43,7 @@ namespace QuantConnect.Data.Consolidators
         //The number of pieces of data we've accumulated since our last emit
         private int _currentCount;
         //The working bar used for aggregating the data
-        private TConsolidated _workingBar;
+        protected TConsolidated _workingBar;
         //The last time we emitted a consolidated bar
         private DateTime? _lastEmit;
         private bool _validateTimeSpan;
@@ -126,7 +125,7 @@ namespace QuantConnect.Data.Consolidators
         /// Updates this consolidator with the specified data. This method is
         /// responsible for raising the DataConsolidated event
         /// In time span mode, the bar range is closed on the left and open on the right: [T, T+TimeSpan).
-        /// For example, if time span is 1 minute, we have [10:00, 10:01): so data at 10:01 is not 
+        /// For example, if time span is 1 minute, we have [10:00, 10:01): so data at 10:01 is not
         /// included in the bar starting at 10:00.
         /// </summary>
         /// <exception cref="InvalidOperationException">Thrown when multiple symbols are being consolidated.</exception>
@@ -206,6 +205,12 @@ namespace QuantConnect.Data.Consolidators
                 if (data.Time >= _lastEmit)
                 {
                     AggregateBar(ref _workingBar, data);
+
+                    if (_maxCount.HasValue)
+                    {
+                        // When using count-based consolidation, set EndTime to the last input's EndTime
+                        _workingBar.EndTime = data.EndTime;
+                    }
                 }
             }
 
@@ -219,11 +224,6 @@ namespace QuantConnect.Data.Consolidators
                     if (_period.HasValue)
                     {
                         workingTradeBar.Period = _period.Value;
-                    }
-                    // since trade bar has period it aggregates this properly
-                    else if (!(data is TradeBar))
-                    {
-                        workingTradeBar.Period = data.Time - _lastEmit.Value;
                     }
                 }
 
@@ -351,6 +351,14 @@ namespace QuantConnect.Data.Consolidators
             base.OnDataConsolidated(e);
             DataConsolidated?.Invoke(this, e);
 
+            ResetWorkingBar();
+        }
+
+        /// <summary>
+        /// Resets the working bar
+        /// </summary>
+        protected virtual void ResetWorkingBar()
+        {
             _workingBar = null;
         }
 
@@ -362,7 +370,7 @@ namespace QuantConnect.Data.Consolidators
         private static IPeriodSpecification GetPeriodSpecificationFromPyObject(PyObject pyObject)
         {
             Func<DateTime, CalendarInfo> expiryFunc;
-            if (pyObject.TryConvertToDelegate(out expiryFunc))
+            if (pyObject.TrySafeAs(out expiryFunc))
             {
                 return new FuncPeriodSpecification(expiryFunc);
             }

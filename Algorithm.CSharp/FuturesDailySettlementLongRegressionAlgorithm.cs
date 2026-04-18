@@ -62,7 +62,7 @@ namespace QuantConnect.Algorithm.CSharp
 
             var future = QuantConnect.Symbol.Create(Futures.Indices.SP500EMini, SecurityType.Future, Market.CME);
 
-            _contractSymbol = FutureChainProvider.GetFutureContractList(future, Time).OrderBy(x => x.ID.Date).FirstOrDefault();
+            _contractSymbol = FuturesChain(future).OrderBy(x => x.ID.Date).First();
             _future = AddFutureContract(_contractSymbol);
 
             _future.Holdings.SetHoldings(1600, 1 * OrderSide);
@@ -180,7 +180,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of the algorithm history
         /// </summary>
-        public int AlgorithmHistoryDataPoints => 0;
+        public int AlgorithmHistoryDataPoints => 1;
 
         /// <summary>
         /// Final status of the algorithm
@@ -218,6 +218,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Estimated Strategy Capacity", "$100000000.00"},
             {"Lowest Capacity Asset", "ES VMKLFZIH2MTD"},
             {"Portfolio Turnover", "183.82%"},
+            {"Drawdown Recovery", "0"},
             {"OrderListHash", "0a1d9c87a1aced914c355e762c255a31"}
         };
     }

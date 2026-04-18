@@ -25,6 +25,7 @@ class StopLimitOrderRegressionAlgorithm(QCAlgorithm):
     tolerance = 0.001
     fast_period = 30
     slow_period = 60
+    asynchronous_orders = False
 
     def initialize(self):
         self.set_start_date(2013, 1, 1)
@@ -46,26 +47,31 @@ class StopLimitOrderRegressionAlgorithm(QCAlgorithm):
 
         security = self.securities[self._symbol]
         if self._buy_order_ticket is None and self.trend_is_up():
-            self._buy_order_ticket = self.stop_limit_order(self._symbol, 100, stop_price=security.high * 1.10, limit_price=security.high * 1.11)
+            self._buy_order_ticket = self.stop_limit_order(self._symbol, 100, stop_price=security.high * 1.10, limit_price=security.high * 1.11, asynchronous=self.asynchronous_orders)
         elif self._buy_order_ticket.status == OrderStatus.FILLED and self._sell_order_ticket is None and self.trend_is_down():
-            self._sell_order_ticket = self.stop_limit_order(self._symbol, -100, stop_price=security.low * 0.99, limit_price=security.low * 0.98)
+            self._sell_order_ticket = self.stop_limit_order(self._symbol, -100, stop_price=security.low * 0.99, limit_price=security.low * 0.98, asynchronous=self.asynchronous_orders)
 
     def on_order_event(self, order_event: OrderEvent):
         if order_event.status == OrderStatus.FILLED:
-            order: StopLimitOrder = self.transactions.get_order_by_id(order_event.order_id)
+            order = self.transactions.get_order_by_id(order_event.order_id)
             if not order.stop_triggered:
-                raise Exception("StopLimitOrder StopTriggered should haven been set if the order filled.")
+                raise AssertionError("StopLimitOrder StopTriggered should haven been set if the order filled.")
 
             if order_event.direction == OrderDirection.BUY:
                 limit_price = self._buy_order_ticket.get(OrderField.LIMIT_PRICE)
                 if order_event.fill_price > limit_price:
-                    raise Exception(f"Buy stop limit order should have filled with price less than or equal to the limit price {limit_price}. "
+                    raise AssertionError(f"Buy stop limit order should have filled with price less than or equal to the limit price {limit_price}. "
                                     f"Fill price: {order_event.fill_price}")
             else:
                 limit_price = self._sell_order_ticket.get(OrderField.LIMIT_PRICE)
                 if order_event.fill_price < limit_price:
-                    raise Exception(f"Sell stop limit order should have filled with price greater than or equal to the limit price {limit_price}. "
+                    raise AssertionError(f"Sell stop limit order should have filled with price greater than or equal to the limit price {limit_price}. "
                                     f"Fill price: {order_event.fill_price}")
+
+    def on_end_of_algorithm(self):
+        for ticket in self.transactions.get_order_tickets():
+            if ticket.submit_request.asynchronous != self.asynchronous_orders:
+                raise AssertionError("Expected all orders to have the same asynchronous flag as the algorithm.")
 
     def is_ready(self):
         return self._fast.is_ready and self._slow.is_ready

@@ -35,10 +35,22 @@ namespace QuantConnect.Tests.Indicators
 
         protected override IndicatorBase<IBaseDataBar> CreateIndicator()
         {
+            Symbol symbolA = "AMZN 2T";
+            Symbol symbolB = "SPX 2T";
+            if (SymbolList.Count > 1)
+            {
+                symbolA = SymbolList[0];
+                symbolB = SymbolList[1];
+            }
 #pragma warning disable CS0618
-            var indicator = new Beta("testBetaIndicator", "AMZN 2T", "SPX 2T", 5);
+            var indicator = new Beta("testBetaIndicator", symbolA, symbolB, 5);
 #pragma warning restore CS0618
             return indicator;
+        }
+
+        protected override List<Symbol> GetSymbols()
+        {
+            return [Symbols.SPY, Symbols.AAPL];
         }
 
         [Test]
@@ -278,6 +290,26 @@ namespace QuantConnect.Tests.Indicators
 
                 // Update previousValue to the current value for the next iteration
                 previousValue = indicator.Current.Value;
+            }
+        }
+
+        [Test]
+        public override void IndicatorShouldHaveSymbolAfterUpdates()
+        {
+            var period = 5;
+            var indicator = new Beta(Symbols.SPY, Symbols.AAPL, period);
+
+            for (var i = 0; i < 2 * period; i++)
+            {
+                var startTime = _reference.AddDays(1 + i);
+                var endTime = startTime.AddDays(1);
+                // Update with the first symbol (SPY) — indicator.Current.Symbol should reflect this update
+                indicator.Update(new TradeBar() { Symbol = Symbols.SPY, Low = 1, High = 2, Volume = 100, Close = 1000 + i * 10, Time = startTime, EndTime = endTime });
+                Assert.AreEqual(Symbols.SPY, indicator.Current.Symbol);
+
+                // Update with the first symbol (AAPL) — indicator.Current.Symbol should reflect this update
+                indicator.Update(new TradeBar() { Symbol = Symbols.AAPL, Low = 1, High = 2, Volume = 100, Close = 1000 + (i * 15), Time = startTime, EndTime = endTime });
+                Assert.AreEqual(Symbols.AAPL, indicator.Current.Symbol);
             }
         }
     }

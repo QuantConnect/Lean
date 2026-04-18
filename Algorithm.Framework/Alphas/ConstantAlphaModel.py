@@ -34,10 +34,7 @@ class ConstantAlphaModel(AlphaModel):
         self.securities = []
         self.insights_time_by_symbol = {}
 
-        type_string = Extensions.GetEnumString(type, InsightType)
-        direction_string = Extensions.GetEnumString(direction, InsightDirection)
-
-        self.Name = '{}({},{},{}'.format(self.__class__.__name__, type_string, direction_string, strfdelta(period))
+        self.Name = '{}({},{},{}'.format(self.__class__.__name__, type, direction, strfdelta(period))
         if magnitude is not None:
             self.Name += ',{}'.format(magnitude)
         if confidence is not None:

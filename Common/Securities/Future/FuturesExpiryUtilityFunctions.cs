@@ -430,6 +430,20 @@ namespace QuantConnect.Securities.Future
             return new DateTime(year, month, day).AddDays(-2);
         }
 
+        /// <summary>
+        /// This function returns the third Friday of the month, adjusted for holidays and weekends.
+        /// </summary>
+        public static DateTime ThirdFriday(DateTime time, Symbol contract)
+        {
+            if (contract.ID.SecurityType.IsOption())
+            {
+                return ThirdFriday(time, contract.Underlying);
+            }
+            var thirdFriday = ThirdFriday(time);
+            var holidays = GetExpirationHolidays(contract.ID.Market, contract.ID.Symbol);
+            return AddBusinessDaysIfHoliday(thirdFriday, -1, holidays);
+        }
+
         private static readonly Dictionary<string, int> ExpiriesPriorMonth = new Dictionary<string, int>
         {
             { Futures.Energy.ArgusLLSvsWTIArgusTradeMonth, 1 },

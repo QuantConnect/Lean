@@ -47,16 +47,16 @@ class ShortableProviderOrdersRejectedRegressionAlgorithm(QCAlgorithm):
 
             response = order_ticket.update_quantity(-999) # should be allowed, we are reducing the quantity we want to short
             if not response.is_success:
-                raise ValueError("Order update should of succeeded!");
+                raise ValueError("Order update should of succeeded!")
 
             self.initialized = True
             return
 
         if not self.invalidated_allowed_order:
             if len(self.orders_allowed) != 1:
-                raise Exception(f"Expected 1 successful order, found: {len(self.orders_allowed)}")
+                raise AssertionError(f"Expected 1 successful order, found: {len(self.orders_allowed)}")
             if len(self.orders_denied) != 2:
-                raise Exception(f"Expected 2 failed orders, found: {len(self.orders_denied)}")
+                raise AssertionError(f"Expected 2 failed orders, found: {len(self.orders_denied)}")
 
             allowed_order = self.orders_allowed[0]
             order_update = UpdateOrderFields()
@@ -66,11 +66,11 @@ class ShortableProviderOrdersRejectedRegressionAlgorithm(QCAlgorithm):
 
             response = allowed_order.update(order_update)
             if response.error_code != OrderResponseErrorCode.EXCEEDS_SHORTABLE_QUANTITY:
-                raise Exception(f"Expected order to fail due to exceeded shortable quantity, found: {response.error_code}")
+                raise AssertionError(f"Expected order to fail due to exceeded shortable quantity, found: {response.error_code}")
 
             cancel_response = allowed_order.cancel()
             if cancel_response.is_error:
-                raise Exception("Expected to be able to cancel open order after bad qty update")
+                raise AssertionError("Expected to be able to cancel open order after bad qty update")
 
             self.invalidated_allowed_order = True
             self.orders_denied.clear()
@@ -81,18 +81,18 @@ class ShortableProviderOrdersRejectedRegressionAlgorithm(QCAlgorithm):
             self.handle_order(self.market_order(self.spy.symbol, -1000)) # Should succeed, no holdings and no open orders to stop this
             spy_shares = self.portfolio[self.spy.symbol].quantity
             if spy_shares != -1000:
-                raise Exception(f"Expected -1000 shares in portfolio, found: {spy_shares}")
+                raise AssertionError(f"Expected -1000 shares in portfolio, found: {spy_shares}")
 
             self.handle_order(self.limit_order(self.spy.symbol, -1, 0.01)) # Should fail, portfolio holdings are at the max shortable quantity.
             if len(self.orders_denied) != 1:
-                raise Exception(f"Expected limit order to fail due to existing holdings, but found {len(self.orders_denied)} failures")
+                raise AssertionError(f"Expected limit order to fail due to existing holdings, but found {len(self.orders_denied)} failures")
 
             self.orders_allowed.clear()
             self.orders_denied.clear()
 
             self.handle_order(self.market_order(self.aig.symbol, -1001))
             if len(self.orders_allowed) != 1:
-                raise Exception(f"Expected market order of -1001 BAC to not fail")
+                raise AssertionError(f"Expected market order of -1001 BAC to not fail")
 
             self.invalidated_new_order_with_portfolio_holdings = True
 

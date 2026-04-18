@@ -148,7 +148,7 @@ class DualThrustAlphaModel(AlphaModel):
         def __init__(self, symbol, k1, k2, range_period, consolidator_resolution):
 
             self.symbol = symbol
-            self.range_window = RollingWindow[TradeBar](range_period)
+            self.range_window = RollingWindow(range_period)
             self.consolidator = TradeBarConsolidator(consolidator_resolution)
 
             def on_data_consolidated(sender, consolidated):

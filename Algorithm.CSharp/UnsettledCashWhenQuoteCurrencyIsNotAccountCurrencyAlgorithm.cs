@@ -20,6 +20,7 @@ using QuantConnect.Data;
 using QuantConnect.Interfaces;
 using QuantConnect.Orders;
 using QuantConnect.Securities.CurrencyConversion;
+using QuantConnect.Securities.Equity;
 
 namespace QuantConnect.Algorithm.CSharp
 {
@@ -32,6 +33,8 @@ namespace QuantConnect.Algorithm.CSharp
         private Symbol _spy;
 
         private decimal _lastUnsettledCash;
+
+        private DateTime _lastUnsettledCashUpdatedDate;
 
         private DateTime _lastTradeDate;
 
@@ -80,6 +83,12 @@ namespace QuantConnect.Algorithm.CSharp
                     throw new RegressionTestException($"Unsettled cash entry for {orderEvent.FillPriceCurrency} not found");
                 }
 
+                // Clear _lastUnsettledCash if the settlement period has elapsed
+                if (orderEvent.UtcTime.Date >= _lastUnsettledCashUpdatedDate.AddDays(Equity.DefaultSettlementDays).Date)
+                {
+                    _lastUnsettledCash = 0;
+                }
+
                 var expectedUnsettledCash = Math.Abs(orderEvent.FillPrice * orderEvent.FillQuantity);
                 var actualUnsettledCash = unsettledCash.Amount - _lastUnsettledCash;
                 if (actualUnsettledCash != expectedUnsettledCash)
@@ -88,6 +97,7 @@ namespace QuantConnect.Algorithm.CSharp
                 }
 
                 _lastUnsettledCash = unsettledCash.Amount;
+                _lastUnsettledCashUpdatedDate = orderEvent.UtcTime;
             }
         }
 
@@ -197,6 +207,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Estimated Strategy Capacity", "€7700000.00"},
             {"Lowest Capacity Asset", "SPY R735QTJ8XC9X"},
             {"Portfolio Turnover", "69.61%"},
+            {"Drawdown Recovery", "0"},
             {"OrderListHash", "ee7f00badd1a38ca21e51f610ba88044"}
         };
     }

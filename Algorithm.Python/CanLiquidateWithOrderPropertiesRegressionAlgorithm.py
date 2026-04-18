@@ -35,5 +35,5 @@ class CanLiquidateWithOrderPropertiesRegressionAlgorithm(QCAlgorithm):
                 order_properties.time_in_force = TimeInForce.DAY
                 tickets = self.liquidate(asynchronous = True, order_properties = order_properties)
                 for ticket in tickets:
-                    if ticket.SubmitRequest.OrderProperties.TimeInForce != TimeInForce.DAY:
-                        raise Exception(f"The TimeInForce for all orders should be daily, but it was {ticket.SubmitRequest.OrderProperties.TimeInForce}")
+                    if ticket.submit_request.order_properties.time_in_force != TimeInForce.DAY:
+                        raise AssertionError(f"The TimeInForce for all orders should be daily, but it was {ticket.submit_request.order_properties.time_in_force}")

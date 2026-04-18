@@ -24,11 +24,18 @@ using QuantConnect.Python;
 namespace QuantConnect
 {
     /// <summary>
-    /// Provides a base class for types holding instances keyed by <see cref="Symbol"/>
+    /// Provides a base class for types holding key value pairs with helper methods for easy usage in Python
     /// </summary>
     [PandasNonExpandable]
-    public abstract class ExtendedDictionary<T> : IExtendedDictionary<Symbol, T>
+#pragma warning disable CA1708 // Identifiers should differ by more than case
+    public abstract class ExtendedDictionary<TKey, TValue> : IExtendedDictionary<TKey, TValue>
+#pragma warning restore CA1708 // Identifiers should differ by more than case
     {
+        /// <summary>
+        /// Gets the number of elements contained in the dictionary
+        /// </summary>
+        public abstract int Count { get; }
+
         /// <summary>
         /// Removes all items from the <see cref="T:System.Collections.Generic.ICollection`1"/>.
         /// </summary>
@@ -43,21 +50,39 @@ namespace QuantConnect
         }
 
         /// <summary>
-        /// Gets the value associated with the specified Symbol.
+        /// Gets the value associated with the specified key.
         /// </summary>
         /// <returns>
-        /// true if the object that implements <see cref="T:System.Collections.Generic.IDictionary`2"/> contains an element with the specified Symbol; otherwise, false.
+        /// true if the object that implements <see cref="T:System.Collections.Generic.IDictionary`2"/> contains an element with the specified key; otherwise, false.
         /// </returns>
-        /// <param name="symbol">The Symbol whose value to get.</param><param name="value">When this method returns, the value associated with the specified Symbol, if the Symbol is found; otherwise, the default value for the type of the <paramref name="value"/> parameter. This parameter is passed uninitialized.</param><exception cref="T:System.ArgumentNullException"><paramref name="symbol"/> is null.</exception>
-        public abstract bool TryGetValue(Symbol symbol, out T value);
+        /// <param name="key">The key whose value to get.</param>
+        /// <param name="value">When this method returns, the value associated with the specified key, if the key is found; otherwise, the default value for the type of the <paramref name="value"/> parameter. This parameter is passed uninitialized.</param>
+        /// <exception cref="T:System.ArgumentNullException"><paramref name="key"/> is null.</exception>
+        public abstract bool TryGetValue(TKey key, out TValue value);
 
         /// <summary>
-        /// Gets an <see cref="T:System.Collections.Generic.ICollection`1"/> containing the Symbol objects of the <see cref="T:System.Collections.Generic.IDictionary`2"/>.
+        /// Checks if the dictionary contains the specified key.
+        /// </summary>
+        /// <param name="key">The key to locate in the dictionary</param>
+        /// <returns>true if the dictionary contains an element with the specified key; otherwise, false.</returns>
+        public virtual bool ContainsKey(TKey key)
+        {
+            return TryGetValue(key, out _);
+        }
+
+        /// <summary>
+        /// Gets all the items in the dictionary
+        /// </summary>
+        /// <returns>All the items in the dictionary</returns>
+        public abstract IEnumerable<KeyValuePair<TKey, TValue>> GetItems();
+
+        /// <summary>
+        /// Gets an <see cref="T:System.Collections.Generic.ICollection`1"/> containing the key objects of the <see cref="T:System.Collections.Generic.IDictionary`2"/>.
         /// </summary>
         /// <returns>
-        /// An <see cref="T:System.Collections.Generic.ICollection`1"/> containing the Symbol objects of the object that implements <see cref="T:System.Collections.Generic.IDictionary`2"/>.
+        /// A <see cref="T:System.Collections.Generic.ICollection`1"/> containing the key objects of the object that implements <see cref="T:System.Collections.Generic.IDictionary`2"/>.
         /// </returns>
-        protected abstract IEnumerable<Symbol> GetKeys { get; }
+        protected abstract IEnumerable<TKey> GetKeys { get; }
 
         /// <summary>
         /// Gets an <see cref="T:System.Collections.Generic.ICollection`1"/> containing the values in the <see cref="T:System.Collections.Generic.IDictionary`2"/>.
@@ -65,7 +90,7 @@ namespace QuantConnect
         /// <returns>
         /// An <see cref="T:System.Collections.Generic.ICollection`1"/> containing the values in the object that implements <see cref="T:System.Collections.Generic.IDictionary`2"/>.
         /// </returns>
-        protected abstract IEnumerable<T> GetValues { get; }
+        protected abstract IEnumerable<TValue> GetValues { get; }
 
         /// <summary>
         /// Gets a value indicating whether the <see cref="IDictionary"/> object is read-only.
@@ -74,11 +99,11 @@ namespace QuantConnect
         public virtual bool IsReadOnly => true;
 
         /// <summary>
-        /// Removes the value with the specified Symbol
+        /// Removes the value with the specified key
         /// </summary>
-        /// <param name="symbol">The Symbol object of the element to remove.</param>
+        /// <param name="key">The key object of the element to remove.</param>
         /// <returns>true if the element is successfully found and removed; otherwise, false.</returns>
-        public virtual bool Remove(Symbol symbol)
+        public virtual bool Remove(TKey key)
         {
             if (IsReadOnly)
             {
@@ -91,47 +116,9 @@ namespace QuantConnect
         /// Indexer method for the base dictioanry to access the objects by their symbol.
         /// </summary>
         /// <remarks>IDictionary implementation</remarks>
-        /// <param name="symbol">Symbol object indexer</param>
-        /// <returns>Object of <typeparamref name="T"/></returns>
-        public virtual T this[Symbol symbol]
-        {
-            get
-            {
-                throw new NotImplementedException(Messages.ExtendedDictionary.IndexerBySymbolNotImplemented);
-            }
-            set
-            {
-                throw new NotImplementedException(Messages.ExtendedDictionary.IndexerBySymbolNotImplemented);
-            }
-        }
-
-        /// <summary>
-        /// Indexer method for the base dictioanry to access the objects by their symbol.
-        /// </summary>
-        /// <remarks>IDictionary implementation</remarks>
-        /// <param name="ticker">string ticker symbol indexer</param>
-        /// <returns>Object of <typeparamref name="T"/></returns>
-        public virtual T this[string ticker]
-        {
-            get
-            {
-                Symbol symbol;
-                if (!SymbolCache.TryGetSymbol(ticker, out symbol))
-                {
-                    throw new KeyNotFoundException(Messages.ExtendedDictionary.TickerNotFoundInSymbolCache(ticker));
-                }
-                return this[symbol];
-            }
-            set
-            {
-                Symbol symbol;
-                if (!SymbolCache.TryGetSymbol(ticker, out symbol))
-                {
-                    throw new KeyNotFoundException(Messages.ExtendedDictionary.TickerNotFoundInSymbolCache(ticker));
-                }
-                this[symbol] = value;
-            }
-        }
+        /// <param name="key">Key object indexer</param>
+        /// <returns>Object of <typeparamref name="TValue"/></returns>
+        public abstract TValue this[TKey key] { get; set; }
 
         /// <summary>
         /// Removes all keys and values from the <see cref="IExtendedDictionary{TKey, TValue}"/>.
@@ -155,9 +142,9 @@ namespace QuantConnect
         /// </summary>
         /// <param name="sequence">Sequence of elements which is to be used as keys for the new dictionary</param>
         /// <returns>Returns a new dictionary with the given sequence of elements as the keys of the dictionary.</returns>
-        public PyDict fromkeys(Symbol[] sequence)
+        public PyDict fromkeys(TKey[] sequence)
         {
-            return fromkeys(sequence, default(T));
+            return fromkeys(sequence, default);
         }
 
         /// <summary>
@@ -167,7 +154,7 @@ namespace QuantConnect
         /// <param name="value">Value which is set to each each element of the dictionary</param>
         /// <returns>Returns a new dictionary with the given sequence of elements as the keys of the dictionary.
         /// Each element of the newly created dictionary is set to the provided value.</returns>
-        public PyDict fromkeys(Symbol[] sequence, T value)
+        public PyDict fromkeys(TKey[] sequence, TValue value)
         {
             using (Py.GIL())
             {
@@ -182,29 +169,29 @@ namespace QuantConnect
         }
 
         /// <summary>
-        /// Returns the value for the specified Symbol if Symbol is in dictionary.
+        /// Returns the value for the specified key if key is in dictionary.
         /// </summary>
-        /// <param name="symbol">Symbol to be searched in the dictionary</param>
-        /// <returns>The value for the specified Symbol if Symbol is in dictionary.
-        /// None if the Symbol is not found and value is not specified.</returns>
-        public T get(Symbol symbol)
+        /// <param name="key">key to be searched in the dictionary</param>
+        /// <returns>The value for the specified key if key is in dictionary.
+        /// None if the key is not found and value is not specified.</returns>
+        public TValue get(TKey key)
         {
-            T data;
-            TryGetValue(symbol, out data);
+            TValue data;
+            TryGetValue(key, out data);
             return data;
         }
 
         /// <summary>
-        /// Returns the value for the specified Symbol if Symbol is in dictionary.
+        /// Returns the value for the specified key if key is in dictionary.
         /// </summary>
-        /// <param name="symbol">Symbol to be searched in the dictionary</param>
-        /// <param name="value">Value to be returned if the Symbol is not found. The default value is null.</param>
-        /// <returns>The value for the specified Symbol if Symbol is in dictionary.
-        /// value if the Symbol is not found and value is specified.</returns>
-        public T get(Symbol symbol, T value)
+        /// <param name="key">key to be searched in the dictionary</param>
+        /// <param name="value">Value to be returned if the key is not found. The default value is null.</param>
+        /// <returns>The value for the specified key if key is in dictionary.
+        /// value if the key is not found and value is specified.</returns>
+        public TValue get(TKey key, TValue value)
         {
-            T data;
-            if (TryGetValue(symbol, out data))
+            TValue data;
+            if (TryGetValue(key, out data))
             {
                 return data;
             }
@@ -212,35 +199,29 @@ namespace QuantConnect
         }
 
         /// <summary>
-        /// Returns a view object that displays a list of dictionary's (Symbol, value) tuple pairs.
+        /// Returns a view object that displays a list of dictionary's (key, value) tuple pairs.
         /// </summary>
-        /// <returns>Returns a view object that displays a list of a given dictionary's (Symbol, value) tuple pair.</returns>
+        /// <returns>Returns a view object that displays a list of a given dictionary's (key, value) tuple pair.</returns>
         public PyList items()
         {
             using (Py.GIL())
             {
                 var pyList = new PyList();
-                foreach (var key in GetKeys)
+                foreach (var (key, value) in GetItems())
                 {
-                    using (var pyKey = key.ToPython())
-                    {
-                        using (var pyValue = this[key].ToPython())
-                        {
-                            using (var pyObject = new PyTuple(new PyObject[] { pyKey, pyValue }))
-                            {
-                                pyList.Append(pyObject);
-                            }
-                        }
-                    }
+                    using var pyKey = key.ToPython();
+                    using var pyValue = value.ToPython();
+                    using var pyKvp = new PyTuple([pyKey, pyValue]);
+                    pyList.Append(pyKvp);
                 }
                 return pyList;
             }
         }
 
         /// <summary>
-        /// Returns and removes an arbitrary element (Symbol, value) pair from the dictionary.
+        /// Returns and removes an arbitrary element (key, value) pair from the dictionary.
         /// </summary>
-        /// <returns>Returns an arbitrary element (Symbol, value) pair from the dictionary
+        /// <returns>Returns an arbitrary element (key, value) pair from the dictionary
         /// removes an arbitrary element(the same element which is returned) from the dictionary.
         /// Note: Arbitrary elements and random elements are not same.The popitem() doesn't return a random element.</returns>
         public PyTuple popitem()
@@ -249,74 +230,74 @@ namespace QuantConnect
         }
 
         /// <summary>
-        /// Returns the value of a Symbol (if the Symbol is in dictionary). If not, it inserts Symbol with a value to the dictionary.
+        /// Returns the value of a key (if the key is in dictionary). If not, it inserts key with a value to the dictionary.
         /// </summary>
-        /// <param name="symbol">Key with null/None value is inserted to the dictionary if Symbol is not in the dictionary.</param>
-        /// <returns>The value of the Symbol if it is in the dictionary
-        /// None if Symbol is not in the dictionary</returns>
-        public T setdefault(Symbol symbol)
+        /// <param name="key">Key with null/None value is inserted to the dictionary if key is not in the dictionary.</param>
+        /// <returns>The value of the key if it is in the dictionary
+        /// None if key is not in the dictionary</returns>
+        public TValue setdefault(TKey key)
         {
-            return setdefault(symbol, default(T));
+            return setdefault(key, default);
         }
 
         /// <summary>
-        /// Returns the value of a Symbol (if the Symbol is in dictionary). If not, it inserts Symbol with a value to the dictionary.
+        /// Returns the value of a key (if the key is in dictionary). If not, it inserts key with a value to the dictionary.
         /// </summary>
-        /// <param name="symbol">Key with a value default_value is inserted to the dictionary if Symbol is not in the dictionary.</param>
+        /// <param name="key">Key with a value default_value is inserted to the dictionary if key is not in the dictionary.</param>
         /// <param name="default_value">Default value</param>
-        /// <returns>The value of the Symbol if it is in the dictionary
-        /// default_value if Symbol is not in the dictionary and default_value is specified</returns>
-        public T setdefault(Symbol symbol, T default_value)
+        /// <returns>The value of the key if it is in the dictionary
+        /// default_value if key is not in the dictionary and default_value is specified</returns>
+        public TValue setdefault(TKey key, TValue default_value)
         {
-            T data;
-            if (TryGetValue(symbol, out data))
+            TValue data;
+            if (TryGetValue(key, out data))
             {
                 return data;
             }
 
             if (IsReadOnly)
             {
-                throw new KeyNotFoundException(Messages.ExtendedDictionary.SymbolNotFoundDueToNoData(this, symbol));
+                throw new KeyNotFoundException(Messages.ExtendedDictionary.KeyNotFoundDueToNoData(this, key));
             }
 
-            this[symbol] = default_value;
+            this[key] = default_value;
             return default_value;
         }
 
         /// <summary>
-        /// Removes and returns an element from a dictionary having the given Symbol.
+        /// Removes and returns an element from a dictionary having the given key.
         /// </summary>
-        /// <param name="symbol">Key which is to be searched for removal</param>
-        /// <returns>If Symbol is found - removed/popped element from the dictionary
-        /// If Symbol is not found - KeyError exception is raised</returns>
-        public T pop(Symbol symbol)
+        /// <param name="key">Key which is to be searched for removal</param>
+        /// <returns>If key is found - removed/popped element from the dictionary
+        /// If key is not found - KeyError exception is raised</returns>
+        public TValue pop(TKey key)
         {
-            return pop(symbol, default(T));
+            return pop(key, default);
         }
 
         /// <summary>
-        /// Removes and returns an element from a dictionary having the given Symbol.
+        /// Removes and returns an element from a dictionary having the given key.
         /// </summary>
-        /// <param name="symbol">Key which is to be searched for removal</param>
-        /// <param name="default_value">Value which is to be returned when the Symbol is not in the dictionary</param>
-        /// <returns>If Symbol is found - removed/popped element from the dictionary
-        /// If Symbol is not found - value specified as the second argument(default)</returns>
-        public T pop(Symbol symbol, T default_value)
+        /// <param name="key">Key which is to be searched for removal</param>
+        /// <param name="default_value">Value which is to be returned when the key is not in the dictionary</param>
+        /// <returns>If key is found - removed/popped element from the dictionary
+        /// If key is not found - value specified as the second argument(default)</returns>
+        public TValue pop(TKey key, TValue default_value)
         {
-            T data;
-            if (TryGetValue(symbol, out data))
+            TValue data;
+            if (TryGetValue(key, out data))
             {
-                Remove(symbol);
+                Remove(key);
                 return data;
             }
             return default_value;
         }
 
         /// <summary>
-        /// Updates the dictionary with the elements from the another dictionary object or from an iterable of Symbol/value pairs.
-        /// The update() method adds element(s) to the dictionary if the Symbol is not in the dictionary.If the Symbol is in the dictionary, it updates the Symbol with the new value.
+        /// Updates the dictionary with the elements from the another dictionary object or from an iterable of key/value pairs.
+        /// The update() method adds element(s) to the dictionary if the key is not in the dictionary.If the key is in the dictionary, it updates the key with the new value.
         /// </summary>
-        /// <param name="other">Takes either a dictionary or an iterable object of Symbol/value pairs (generally tuples).</param>
+        /// <param name="other">Takes either a dictionary or an iterable object of key/value pairs (generally tuples).</param>
         public void update(PyObject other)
         {
             if (IsReadOnly)
@@ -324,7 +305,7 @@ namespace QuantConnect
                 throw new InvalidOperationException(Messages.ExtendedDictionary.UpdateInvalidOperation(this));
             }
 
-            var dictionary = other.ConvertToDictionary<Symbol, T>();
+            var dictionary = other.ConvertToDictionary<TKey, TValue>();
             foreach (var kvp in dictionary)
             {
                 this[kvp.Key] = kvp.Value;
@@ -332,9 +313,9 @@ namespace QuantConnect
         }
 
         /// <summary>
-        /// Returns a view object that displays a list of all the Symbol objects in the dictionary
+        /// Returns a view object that displays a list of all the key objects in the dictionary
         /// </summary>
-        /// <returns>Returns a view object that displays a list of all the Symbol objects.
+        /// <returns>Returns a view object that displays a list of all the key objects.
         /// When the dictionary is changed, the view object also reflect these changes.</returns>
         public PyList keys()
         {
@@ -348,6 +329,18 @@ namespace QuantConnect
         public PyList values()
         {
             return GetValues.ToPyList();
+        }
+
+        /// <summary>
+        /// Checks if the symbol is implicitly created from a string, in which case it is not in the symbol cache,
+        /// and throws a KeyNotFoundException.
+        /// </summary>
+        protected void CheckForImplicitlyCreatedSymbol(Symbol symbol)
+        {
+            if (symbol.ID == new SecurityIdentifier(symbol.ID.Symbol, 0))
+            {
+                throw new KeyNotFoundException(Messages.ExtendedDictionary.TickerNotFoundInSymbolCache(symbol.ID.Symbol));
+            }
         }
     }
 }

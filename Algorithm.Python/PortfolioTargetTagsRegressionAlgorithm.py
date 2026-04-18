@@ -43,7 +43,7 @@ class PortfolioTargetTagsRegressionAlgorithm(QCAlgorithm):
 
     def on_end_of_algorithm(self):
         if not self.target_tags_checked:
-            raise Exception("The portfolio targets tag were not checked")
+            raise AssertionError("The portfolio targets tag were not checked")
 
 class CustomPortfolioConstructionModel(EqualWeightingPortfolioConstructionModel):
     def __init__(self):
@@ -55,10 +55,10 @@ class CustomPortfolioConstructionModel(EqualWeightingPortfolioConstructionModel)
 
     @staticmethod
     def generate_portfolio_target_tag(target: IPortfolioTarget) -> str:
-        return f"Portfolio target tag: {target.symbol} - {target.quantity}"
+        return f"Portfolio target tag: {target.symbol} - {target.quantity:g}"
 
     @staticmethod
-    def add_p_portfolio_targets_tags(targets: List[IPortfolioTarget]) -> List[IPortfolioTarget]:
+    def add_p_portfolio_targets_tags(targets: Iterable[IPortfolioTarget]) -> List[IPortfolioTarget]:
         return [PortfolioTarget(target.symbol, target.quantity, CustomPortfolioConstructionModel.generate_portfolio_target_tag(target))
                 for target in targets]
 
@@ -82,6 +82,6 @@ class CustomExecutionModel(ImmediateExecutionModel):
         for target in targets:
             expected_tag = CustomPortfolioConstructionModel.generate_portfolio_target_tag(target)
             if target.tag != expected_tag:
-                raise Exception(f"Unexpected portfolio target tag: {target.tag} - Expected: {expected_tag}")
+                raise AssertionError(f"Unexpected portfolio target tag: {target.tag} - Expected: {expected_tag}")
 
         super().execute(algorithm, targets)

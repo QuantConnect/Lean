@@ -14,8 +14,8 @@
 */
 
 using System;
-using QuantConnect.Interfaces;
 using QuantConnect.Orders;
+using QuantConnect.Interfaces;
 using QuantConnect.Securities;
 
 namespace QuantConnect.Tests.Brokerages
@@ -23,7 +23,7 @@ namespace QuantConnect.Tests.Brokerages
     /// <summary>
     /// Helper class to abstract test cases from individual order types
     /// </summary>
-    public abstract class OrderTestParameters
+    public abstract class OrderTestParameters : BaseOrderTestParameters
     {
         public Symbol Symbol { get; private set; }
         public SecurityType SecurityType { get; private set; }
@@ -44,14 +44,18 @@ namespace QuantConnect.Tests.Brokerages
         {
             return new MarketOrder(Symbol, Math.Abs(quantity), DateTime.Now, properties: Properties)
             {
-                OrderSubmissionData = OrderSubmissionData
+                Status = OrderStatus.New,
+                OrderSubmissionData = OrderSubmissionData,
+                PriceCurrency = GetSymbolProperties(Symbol).QuoteCurrency
             };
         }
         public MarketOrder CreateShortMarketOrder(decimal quantity)
         {
             return new MarketOrder(Symbol, -Math.Abs(quantity), DateTime.Now, properties: Properties)
             {
-                OrderSubmissionData = OrderSubmissionData
+                Status = OrderStatus.New,
+                OrderSubmissionData = OrderSubmissionData,
+                PriceCurrency = GetSymbolProperties(Symbol).QuoteCurrency
             };
         }
 
@@ -81,5 +85,10 @@ namespace QuantConnect.Tests.Brokerages
         /// True to continue modifying the order until it is filled, false otherwise
         /// </summary>
         public virtual bool ModifyUntilFilled => true;
+
+        protected SymbolProperties GetSymbolProperties(Symbol symbol)
+        {
+            return SPDB.GetSymbolProperties(symbol.ID.Market, symbol, SecurityType, Currencies.USD);
+        }
     }
 }

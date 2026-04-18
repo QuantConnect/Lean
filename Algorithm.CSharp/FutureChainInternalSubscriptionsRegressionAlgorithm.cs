@@ -77,6 +77,12 @@ namespace QuantConnect.Algorithm.CSharp
                     {
                         throw new RegressionTestException($"Open interest is 0 for {contract.Symbol} at {Time}");
                     }
+
+                    // Open interest should have been set to the chain contract
+                    if (contract.OpenInterest == 0)
+                    {
+                        throw new RegressionTestException($"Open interest is 0 for {contract.Symbol} at {Time} in the chain contract");
+                    }
                 }
             }
         }
@@ -94,7 +100,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
-        public long DataPoints => 54138;
+        public long DataPoints => 19043;
 
         /// <summary>
         /// Data Points count of the algorithm history
@@ -114,7 +120,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Total Orders", "1"},
             {"Average Win", "0%"},
             {"Average Loss", "0%"},
-            {"Compounding Annual Return", "-99.310%"},
+            {"Compounding Annual Return", "-98.880%"},
             {"Drawdown", "4.400%"},
             {"Expectancy", "0"},
             {"Start Equity", "100000"},
@@ -137,6 +143,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Estimated Strategy Capacity", "$2200000.00"},
             {"Lowest Capacity Asset", "GC VL5E74HP3EE5"},
             {"Portfolio Turnover", "44.33%"},
+            {"Drawdown Recovery", "0"},
             {"OrderListHash", "6d4d3664d887d00b8222eb731f298cd8"}
         };
     }

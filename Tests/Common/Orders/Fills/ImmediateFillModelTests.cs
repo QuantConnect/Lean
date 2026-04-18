@@ -1518,6 +1518,44 @@ namespace QuantConnect.Tests.Common.Orders.Fills
             }
         }
 
+        [Test]
+        public void ImmediateFillModelFillsMOCAtOrAfterMarketCloseTime()
+        {
+            var model = new ImmediateFillModel();
+            var config = CreateTradeBarConfig(Symbols.SPY);
+            var entry = MarketHoursDatabase.FromDataFolder().GetEntry(config.Symbol.ID.Market, config.Symbol, config.SecurityType);
+            var security = new Security(
+                entry.ExchangeHours,
+                config,
+                new Cash(Currencies.USD, 0, 1m),
+                SymbolProperties.GetDefault(Currencies.USD),
+                ErrorCurrencyConverter.Instance,
+                RegisteredSecurityDataTypesProvider.Null,
+                new SecurityCache()
+            );
+
+            var timeOffset = TimeSpan.FromSeconds(1);
+            var time = new DateTime(2025, 7, 8, 16, 0, 0);
+            // Set LocalTime to slightly after market close
+            var localTime = time + timeOffset - TimeSpan.FromTicks(1);
+            // Submit MOC order an hour before close
+            var order = new MarketOnCloseOrder(Symbols.SPY, -100, time.AddMinutes(-60));
+            var utcTime = localTime.ConvertToUtc(TimeZones.NewYork);
+            var timeKeeper = new TimeKeeper(utcTime, new[] { TimeZones.NewYork });
+            security.SetLocalTimeKeeper(timeKeeper.GetLocalTimeKeeper(TimeZones.NewYork));
+            // Seed last regular bar
+            security.SetMarketPrice(new TradeBar(time - timeOffset, Symbols.SPY, 101.123m, 101.123m, 101.123m, 100, 100, timeOffset));
+
+            var fill = model.Fill(new FillModelParameters(
+                security,
+                order,
+                new MockSubscriptionDataConfigProvider(config),
+                Time.OneHour,
+                null)).Single();
+
+            Assert.AreEqual(OrderStatus.Filled, fill.Status);
+        }
+
         private static void AssertUnfilled(OrderEvent fill)
         {
             Assert.AreEqual(OrderStatus.None, fill.Status);

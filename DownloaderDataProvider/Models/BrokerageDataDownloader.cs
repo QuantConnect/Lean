@@ -25,7 +25,7 @@ namespace QuantConnect.DownloaderDataProvider.Launcher.Models
     /// <summary>
     /// Class for downloading data from a brokerage.
     /// </summary>
-    public class BrokerageDataDownloader : IDataDownloader
+    public class BrokerageDataDownloader : IDataDownloader, IDisposable
     {
         /// <summary>
         /// Represents the Brokerage implementation.
@@ -108,7 +108,8 @@ namespace QuantConnect.DownloaderDataProvider.Launcher.Models
                 .Select(symbol =>
                 {
                     var request = new Data.HistoryRequest(startUtc, endUtc, dataType, symbol, resolution, exchangeHours: exchangeHours, dataTimeZone: dataTimeZone, resolution,
-                        includeExtendedMarketHours: true, false, DataNormalizationMode.Raw, tickType);
+                        // let's not ask for extended market hours for hour and daily resolutions to match lean
+                        includeExtendedMarketHours: resolution != Resolution.Hour && resolution != Resolution.Daily, false, DataNormalizationMode.Raw, tickType);
 
                     var history = _brokerage.GetHistory(request);
 
@@ -138,6 +139,11 @@ namespace QuantConnect.DownloaderDataProvider.Launcher.Models
             {
                 throw new InvalidOperationException($"{nameof(BrokerageDataDownloader)}.{nameof(GetChainSymbols)}: The current brokerage does not support fetching canonical symbols. Please ensure your brokerage instance supports this feature.");
             }
+        }
+
+        public void Dispose()
+        {
+            _brokerage.DisposeSafely();
         }
     }
 }

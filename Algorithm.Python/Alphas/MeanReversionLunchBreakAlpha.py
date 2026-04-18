@@ -77,7 +77,7 @@ class MeanReversionLunchBreakAlphaModel(AlphaModel):
 
         for symbol, symbol_data in self._symbol_data_by_symbol.items():
             if data.bars.contains_key(symbol):
-                bar = data.bars.get_value(symbol)
+                bar = data.bars.get(symbol)
                 symbol_data.update(bar.end_time, bar.close)
 
         return [] if algorithm.time.hour != 12 else \

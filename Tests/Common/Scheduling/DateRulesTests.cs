@@ -1047,7 +1047,7 @@ wrongCustomDateRule = 1
                 )
             );
 
-            var rules = new DateRules(manager, TimeZones.NewYork, mhdb);
+            var rules = new DateRules(null, manager, TimeZones.NewYork, mhdb);
             return rules;
         }
     }

@@ -258,25 +258,45 @@ namespace QuantConnect
     /// </summary>
     public enum SeriesType
     {
+        /// <summary>
         /// Line Plot for Value Types (0)
+        /// </summary>
         Line,
+        /// <summary>
         /// Scatter Plot for Chart Distinct Types (1)
+        /// </summary>
         Scatter,
+        /// <summary>
         /// Charts (2)
+        /// </summary>
         Candle,
+        /// <summary>
         /// Bar chart (3)
+        /// </summary>
         Bar,
+        /// <summary>
         /// Flag indicators (4)
+        /// </summary>
         Flag,
+        /// <summary>
         /// 100% area chart showing relative proportions of series values at each time index (5)
+        /// </summary>
         StackedArea,
+        /// <summary>
         /// Pie chart (6)
+        /// </summary>
         Pie,
+        /// <summary>
         /// Treemap Plot (7)
+        /// </summary>
         Treemap,
+        /// <summary>
         /// Heatmap Plot (9) -- NOTE: 8 is reserved
+        /// </summary>
         Heatmap = 9,
+        /// <summary>
         /// Scatter 3D Plot (10)
+        /// </summary>
         Scatter3d
     }
 }

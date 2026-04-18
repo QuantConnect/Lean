@@ -104,8 +104,8 @@ namespace QuantConnect.Indicators
 
             var priceChange = input.Price - _prevClose;
             _prevClose = input.Price;
-            _priceChangeEma.Update(input.Time, priceChange);
-            _absPriceChangeEma.Update(input.Time, Math.Abs(priceChange));
+            _priceChangeEma.Update(input.EndTime, priceChange);
+            _absPriceChangeEma.Update(input.EndTime, Math.Abs(priceChange));
 
             return _tsi.Current.Value;
         }

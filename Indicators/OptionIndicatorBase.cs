@@ -15,6 +15,7 @@
 
 using System;
 using QuantConnect.Data;
+using QuantConnect.Python;
 
 namespace QuantConnect.Indicators
 {
@@ -28,6 +29,7 @@ namespace QuantConnect.Indicators
         /// <summary>
         /// Option's symbol object
         /// </summary>
+        [PandasIgnore]
         public Symbol OptionSymbol { get; init; }
 
         /// <summary>
@@ -58,6 +60,7 @@ namespace QuantConnect.Indicators
         /// <summary>
         /// Gets the expiration time of the option
         /// </summary>
+        [PandasIgnore]
         public DateTime Expiry
         {
             get
@@ -73,26 +76,31 @@ namespace QuantConnect.Indicators
         /// <summary>
         /// Gets the option right (call/put) of the option
         /// </summary>
+        [PandasIgnore]
         public OptionRight Right => OptionSymbol.ID.OptionRight;
 
         /// <summary>
         /// Gets the strike price of the option
         /// </summary>
+        [PandasIgnore]
         public decimal Strike => OptionSymbol.ID.StrikePrice;
 
         /// <summary>
         /// Gets the option style (European/American) of the option
         /// </summary>
+        [PandasIgnore]
         public OptionStyle Style => OptionSymbol.ID.OptionStyle;
 
         /// <summary>
         /// Risk Free Rate
         /// </summary>
+        [PandasIgnore]
         public Identity RiskFreeRate { get; set; }
 
         /// <summary>
         /// Dividend Yield
         /// </summary>
+        [PandasIgnore]
         public Identity DividendYield { get; set; }
 
         /// <summary>
@@ -113,6 +121,7 @@ namespace QuantConnect.Indicators
         /// <summary>
         /// Flag if mirror option is implemented for parity type calculation
         /// </summary>
+        [PandasIgnore]
         public bool UseMirrorContract => _oppositeOptionSymbol != null;
 
         /// <summary>

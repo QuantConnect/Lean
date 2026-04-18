@@ -43,10 +43,10 @@ class BasicTemplateIndexOptionsAlgorithm(QCAlgorithm):
 
     def on_end_of_algorithm(self) -> None:
         if self.portfolio[self.spx].total_sale_volume > 0:
-            raise Exception("Index is not tradable.")
+            raise AssertionError("Index is not tradable.")
 
         if self.portfolio.total_sale_volume == 0:
-            raise Exception("Trade volume should be greater than zero by the end of this algorithm")
+            raise AssertionError("Trade volume should be greater than zero by the end of this algorithm")
 
     def invert_option(self, symbol: Symbol) -> Symbol:
         return Symbol.create_option(

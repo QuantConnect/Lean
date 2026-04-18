@@ -13,6 +13,8 @@
 
 from AlgorithmImports import *
 
+from QuantConnect.Data.Custom.Intrinio import *
+
 class BasicTemplateIntrinioEconomicData(QCAlgorithm):
 
     def initialize(self):
@@ -55,5 +57,7 @@ class BasicTemplateIntrinioEconomicData(QCAlgorithm):
 
         if ((spread > 0 and not self.portfolio[self.bno].is_long) or
             (spread < 0 and not self.portfolio[self.uso].is_short)):
-            self.set_holdings(self.bno, 0.25 * sign(spread))
-            self.set_holdings(self.uso, -0.25 * sign(spread))
+            sign = math.copysign(1, spread)
+            self.set_holdings(self.bno, 0.25 * sign)
+            self.set_holdings(self.uso, -0.25 * sign)
+

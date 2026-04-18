@@ -15,11 +15,12 @@
 
 using QuantConnect.Data;
 using QuantConnect.Orders;
+using System.Globalization;
 using QuantConnect.Interfaces;
+using QuantConnect.Data.Market;
 using System.Collections.Generic;
 using QuantConnect.Securities.Future;
 using Futures = QuantConnect.Securities.Futures;
-using QuantConnect.Data.Market;
 
 namespace QuantConnect.Algorithm.CSharp
 {
@@ -71,7 +72,7 @@ namespace QuantConnect.Algorithm.CSharp
 
                 // Rolling over: liquidate any position of the old mapped contract and switch to the newly mapped contract
                 var quantity = oldSecurity.Holdings.Quantity;
-                var tag = $"Rollover - Symbol changed at {Time}: {changedEvent.OldSymbol} -> {changedEvent.NewSymbol}";
+                var tag = $"Rollover - Symbol changed at {Time.ToString(CultureInfo.GetCultureInfo("en-US"))}: {changedEvent.OldSymbol} -> {changedEvent.NewSymbol}";
                 Liquidate(symbol: oldSecurity.Symbol, tag: tag);
                 Order(newSecurity.Symbol, quantity, tag: tag);
             }
@@ -103,7 +104,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
-        public long DataPoints => 713375;
+        public long DataPoints => 162575;
 
         /// <summary>
         /// Data Points count of the algorithm history
@@ -146,7 +147,8 @@ namespace QuantConnect.Algorithm.CSharp
             {"Estimated Strategy Capacity", "$2900000000.00"},
             {"Lowest Capacity Asset", "ES VMKLFZIH2MTD"},
             {"Portfolio Turnover", "1.37%"},
-            {"OrderListHash", "4b28a221076b82e98fbbcb38c22b3013"}
+            {"Drawdown Recovery", "16"},
+            {"OrderListHash", "7591ea8b91c4aa958b305555fea96862"}
         };
     }
 }

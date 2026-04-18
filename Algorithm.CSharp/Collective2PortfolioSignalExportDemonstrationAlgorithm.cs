@@ -80,8 +80,10 @@ namespace QuantConnect.Algorithm.CSharp
             // Initialize this flag, to check when the ema indicators crosses between themselves
             _emaFastIsNotSet = true;
 
+            // Disable automatic exports as we manually set them
+            SignalExport.AutomaticExportTimeSpan = null;
             // Set Collective2 signal export provider
-            SignalExport.AddSignalExportProviders(new Collective2SignalExport(_collective2ApiKey, _collective2SystemId));
+            SignalExport.AddSignalExportProvider(new Collective2SignalExport(_collective2ApiKey, _collective2SystemId));
 
             SetWarmUp(100);
         }
@@ -189,6 +191,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Estimated Strategy Capacity", "$260000000.00"},
             {"Lowest Capacity Asset", "SPY R735QTJ8XC9X"},
             {"Portfolio Turnover", "2.00%"},
+            {"Drawdown Recovery", "3"},
             {"OrderListHash", "006af1a065fca33ac1f1e9cd6bd02c11"}
         };
     }

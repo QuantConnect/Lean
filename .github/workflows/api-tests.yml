@@ -32,4 +32,4 @@ jobs:
             # Build
             dotnet build /p:Configuration=Release /v:quiet /p:WarningLevel=1 QuantConnect.Lean.sln
             # Run Projects tests
-            dotnet test ./Tests/bin/Release/QuantConnect.Tests.dll --blame-hang-timeout 300seconds --blame-crash --filter "FullyQualifiedName=QuantConnect.Tests.API.ProjectTests|ObjectStoreTests" -- TestRunParameters.Parameter\(name=\"log-handler\", value=\"ConsoleErrorLogHandler\"\)
+            dotnet test ./Tests/bin/Release/QuantConnect.Tests.dll --blame-hang-timeout 7minutes --blame-crash --logger "console;verbosity=detailed" --filter "FullyQualifiedName=QuantConnect.Tests.API.ProjectTests|FullyQualifiedName=QuantConnect.Tests.API.ObjectStoreTests" -- TestRunParameters.Parameter\(name=\"log-handler\", value=\"ConsoleErrorLogHandler\"\)

@@ -37,12 +37,17 @@
     <Compile Include="..\Common\Properties\SharedAssemblyInfo.cs" Link="Properties\SharedAssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="QuantConnect.pythonnet" Version="2.0.42" />
+    <PackageReference Include="QuantConnect.pythonnet" Version="2.0.48" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="OptionUniverseFilterGreeksShortcutsRegressionAlgorithm.py" />
     <Content Include="OptionUniverseFilterOptionsDataRegressionAlgorithm.py" />
     <Content Include="OptionUniverseFilterGreeksRegressionAlgorithm.py" />
+    <Content Include="FutureUniverseHistoryRegressionAlgorithm.py" />
+    <Content Include="FutureOptionChainFullDataRegressionAlgorithm.py" />
+    <Content Include="FutureOptionChainsMultipleFullDataRegressionAlgorithm.py" />
+    <Content Include="FuturesChainFullDataRegressionAlgorithm.py" />
+    <Content Include="FuturesChainsMultipleFullDataRegressionAlgorithm.py" />
     <Content Include="OptionUniverseHistoryRegressionAlgorithm.py" />
     <Content Include="FundamentalUniverseSelectionAlgorithm.py" />
     <Content Include="AccumulativeInsightPortfolioRegressionAlgorithm.py" />

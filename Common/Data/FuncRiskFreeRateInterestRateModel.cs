@@ -40,7 +40,7 @@ namespace QuantConnect.Data
         {
             using (Py.GIL())
             {
-                _getInterestRateFunc = getInterestRateFunc.ConvertToDelegate<Func<DateTime, decimal>>();
+                _getInterestRateFunc = getInterestRateFunc.SafeAs<Func<DateTime, decimal>>();
             }
         }
 

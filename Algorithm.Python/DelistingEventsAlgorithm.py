@@ -53,10 +53,10 @@ class DelistingEventsAlgorithm(QCAlgorithm):
 
         aaa = self.securities["AAA.1"]
         if aaa.is_delisted and aaa.is_tradable:
-            raise Exception("Delisted security must NOT be tradable")
+            raise AssertionError("Delisted security must NOT be tradable")
 
         if not aaa.is_delisted and not aaa.is_tradable:
-            raise Exception("Securities must be marked as tradable until they're delisted or removed from the universe")
+            raise AssertionError("Securities must be marked as tradable until they're delisted or removed from the universe")
 
         for kvp in data.delistings:
             symbol = kvp.key

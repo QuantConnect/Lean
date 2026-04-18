@@ -51,10 +51,10 @@ class FutureOptionMultipleContractsInDifferentContractMonthsWithSameUnderlyingFu
     def on_end_of_algorithm(self):
         not_encountered = [str(k) for k,v in self.expected_symbols.items() if not v]
         if any(not_encountered):
-            raise AggregateException(f"Expected all Symbols encountered and invested in, but the following were not found: {', '.join(not_encountered)}")
+            raise AssertionError(f"Expected all Symbols encountered and invested in, but the following were not found: {', '.join(not_encountered)}")
 
         if not self.portfolio.invested:
-            raise AggregateException("Expected holdings at the end of algorithm, but none were found.")
+            raise AssertionError("Expected holdings at the end of algorithm, but none were found.")
 
     def is_in_regular_hours(self, symbol):
         return self.securities[symbol].exchange.exchange_open

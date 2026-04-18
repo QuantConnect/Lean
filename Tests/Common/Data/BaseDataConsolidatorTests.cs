@@ -211,7 +211,8 @@ namespace QuantConnect.Tests.Common.Data
             consolidator.Update(new Tick { Time = reference.AddHours(1) });
             Assert.IsNotNull(consolidated);
 
-            // sadly the first emit will be off by the data resolution since we 'swallow' a point, so to speak.
+            // The EndTime of the consolidated bar should match the EndTime of the last data point
+            Assert.AreEqual(reference.AddHours(1), consolidated.EndTime);
             Assert.AreEqual(TimeSpan.FromHours(1), consolidated.Period);
             consolidated = null;
 
@@ -221,7 +222,8 @@ namespace QuantConnect.Tests.Common.Data
             consolidator.Update(new Tick { Time = reference.AddHours(3) });
             Assert.IsNotNull(consolidated);
 
-            Assert.AreEqual(TimeSpan.FromHours(2), consolidated.Period);
+            Assert.AreEqual(reference.AddHours(3), consolidated.EndTime);
+            Assert.AreEqual(TimeSpan.FromHours(1), consolidated.Period);
             consolidated = null;
 
             consolidator.Update(new Tick { Time = reference.AddHours(4) });
@@ -230,7 +232,8 @@ namespace QuantConnect.Tests.Common.Data
             consolidator.Update(new Tick { Time = reference.AddHours(5) });
             Assert.IsNotNull(consolidated);
 
-            Assert.AreEqual(TimeSpan.FromHours(2), consolidated.Period);
+            Assert.AreEqual(reference.AddHours(5), consolidated.EndTime);
+            Assert.AreEqual(TimeSpan.FromHours(1), consolidated.Period);
         }
 
         [Test]

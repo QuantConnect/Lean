@@ -59,7 +59,7 @@ namespace QuantConnect.Algorithm.CSharp
 
                 var ticket = MarketOrder("AIG", 1);
 
-                if (ticket.Status != OrderStatus.Invalid)
+                if (ticket.Status != OrderStatus.Invalid || aig.HasData || aig.Price != 0)
                 {
                     throw new RegressionTestException("Expected order to always be invalid because there is no data yet!");
                 }
@@ -126,6 +126,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Estimated Strategy Capacity", "$830000.00"},
             {"Lowest Capacity Asset", "SPY R735QTJ8XC9X"},
             {"Portfolio Turnover", "20.49%"},
+            {"Drawdown Recovery", "2"},
             {"OrderListHash", "6ebe462373e2ecc22de8eb2fe114d704"}
         };
     }

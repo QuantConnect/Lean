@@ -33,17 +33,21 @@ namespace QuantConnect.Tests.Brokerages
 
         public override Order CreateShortOrder(decimal quantity)
         {
-            return new StopMarketOrder(Symbol, -Math.Abs(quantity), _lowLimit, DateTime.Now, properties: Properties)
+            return new StopMarketOrder(Symbol, -Math.Abs(quantity), _lowLimit, DateTime.UtcNow, properties: Properties)
             {
-                OrderSubmissionData = OrderSubmissionData
+                Status = OrderStatus.New,
+                OrderSubmissionData = OrderSubmissionData,
+                PriceCurrency = GetSymbolProperties(Symbol).QuoteCurrency
             };
         }
 
         public override Order CreateLongOrder(decimal quantity)
         {
-            return new StopMarketOrder(Symbol, Math.Abs(quantity), _highLimit, DateTime.Now, properties: Properties)
+            return new StopMarketOrder(Symbol, Math.Abs(quantity), _highLimit, DateTime.UtcNow, properties: Properties)
             {
-                OrderSubmissionData = OrderSubmissionData
+                Status = OrderStatus.New,
+                OrderSubmissionData = OrderSubmissionData,
+                PriceCurrency = GetSymbolProperties(Symbol).QuoteCurrency
             };
         }
 
@@ -68,6 +72,11 @@ namespace QuantConnect.Tests.Brokerages
         public override OrderStatus ExpectedStatus => OrderStatus.Submitted;
 
         public override bool ExpectedCancellationResult => true;
+
+        public override string ToString()
+        {
+            return $"{OrderType.StopMarket}: {SecurityType}, {Symbol}";
+        }
     }
 
     // to be used with brokerages which do not support UpdateOrder

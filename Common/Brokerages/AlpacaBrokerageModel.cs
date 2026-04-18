@@ -13,10 +13,13 @@
 * limitations under the License.
 */
 
+using System;
 using QuantConnect.Orders;
 using QuantConnect.Securities;
 using QuantConnect.Orders.Fees;
 using System.Collections.Generic;
+using QuantConnect.Orders.TimeInForces;
+using System.Linq;
 
 namespace QuantConnect.Brokerages
 {
@@ -25,6 +28,12 @@ namespace QuantConnect.Brokerages
     /// </summary>
     public class AlpacaBrokerageModel : DefaultBrokerageModel
     {
+        /// <summary>
+        /// The default start time of the <see cref="OrderType.MarketOnOpen"/> order submission window.
+        /// Example: 19:00 (7:00 PM).
+        /// </summary>
+        private static readonly TimeOnly _mooWindowStart = new(19, 0, 0);
+
         /// <summary>
         /// A dictionary that maps each supported <see cref="SecurityType"/> to an array of <see cref="OrderType"/> supported by Alpaca brokerage.
         /// </summary>
@@ -38,11 +47,17 @@ namespace QuantConnect.Brokerages
         };
 
         /// <summary>
+        /// Defines the default set of <see cref="SecurityType"/> values that support <see cref="OrderType.MarketOnOpen"/> orders.
+        /// </summary>
+        private readonly IReadOnlySet<SecurityType> _defaultMarketOnOpenSupportedSecurityTypes;
+
+        /// <summary>
         /// Initializes a new instance of the <see cref="AlpacaBrokerageModel"/> class
         /// </summary>
         /// <remarks>All Alpaca accounts are set up as margin accounts</remarks>
         public AlpacaBrokerageModel() : base(AccountType.Margin)
         {
+            _defaultMarketOnOpenSupportedSecurityTypes = _supportOrderTypeBySecurityType.Where(x => x.Value.Contains(OrderType.MarketOnOpen)).Select(x => x.Key).ToHashSet();
         }
 
         /// <summary>
@@ -82,6 +97,24 @@ namespace QuantConnect.Brokerages
                 return false;
             }
 
+            var supportsOutsideTradingHours = (order.Properties as AlpacaOrderProperties)?.OutsideRegularTradingHours ?? false;
+            if (supportsOutsideTradingHours && (order.Type != OrderType.Limit || order.TimeInForce is not DayTimeInForce))
+            {
+                message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
+                    Messages.AlpacaBrokerageModel.TradingOutsideRegularHoursNotSupported(this, order.Type, order.TimeInForce));
+                return false;
+            }
+
+            if (!BrokerageExtensions.ValidateCrossZeroOrder(this, security, order, out message))
+            {
+                return false;
+            }
+
+            if (!BrokerageExtensions.ValidateMarketOnOpenOrder(security, order, GetMarketOnOpenAllowedWindow, _defaultMarketOnOpenSupportedSecurityTypes, out message))
+            {
+                return false;
+            }
+
             return base.CanSubmitOrder(security, order, out message);
         }
 
@@ -97,6 +130,19 @@ namespace QuantConnect.Brokerages
         {
             message = null;
             return true;
+        }
+
+        /// <summary>
+        /// Returns the allowed Market-on-Open submission window for Alpaca.
+        /// </summary>
+        /// <param name="marketHours">The market hours segment for the security.</param>
+        /// <returns>
+        /// A tuple with <c>MarketOnOpenWindowStart</c> (default 19:00 / 7:00 PM) and 
+        /// <c>MarketOnOpenWindowEnd</c>, adjusted slightly before the market open to avoid rejection.
+        /// </returns>
+        private (TimeOnly MarketOnOpenWindowStart, TimeOnly MarketOnOpenWindowEnd) GetMarketOnOpenAllowedWindow(MarketHoursSegment marketHours)
+        {
+            return (_mooWindowStart, TimeOnly.FromTimeSpan(marketHours.Start.Add(-TimeSpan.FromMinutes(2))));
         }
     }
 }

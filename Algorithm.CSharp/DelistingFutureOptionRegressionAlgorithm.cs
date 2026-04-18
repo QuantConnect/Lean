@@ -13,13 +13,11 @@
  * limitations under the License.
 */
 
-using System;
 using QuantConnect.Data;
 using QuantConnect.Interfaces;
 using QuantConnect.Securities;
 using System.Collections.Generic;
 using System.Linq;
-using QuantConnect.Orders;
 
 namespace QuantConnect.Algorithm.CSharp
 {
@@ -107,7 +105,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
-        public virtual long DataPoints => 4632655;
+        public virtual long DataPoints => 761073;
 
         /// <summary>
         /// Data Points count of the algorithm history
@@ -131,10 +129,10 @@ namespace QuantConnect.Algorithm.CSharp
             {"Drawdown", "0.100%"},
             {"Expectancy", "-0.678"},
             {"Start Equity", "10000000"},
-            {"End Equity", "9988860.24"},
+            {"End Equity", "9988880.24"},
             {"Net Profit", "-0.111%"},
-            {"Sharpe Ratio", "-10.413"},
-            {"Sortino Ratio", "-0.961"},
+            {"Sharpe Ratio", "-10.416"},
+            {"Sortino Ratio", "-0.959"},
             {"Probabilistic Sharpe Ratio", "0.000%"},
             {"Loss Rate", "80%"},
             {"Win Rate", "20%"},
@@ -145,12 +143,13 @@ namespace QuantConnect.Algorithm.CSharp
             {"Annual Variance", "0"},
             {"Information Ratio", "-1.076"},
             {"Tracking Error", "0.107"},
-            {"Treynor Ratio", "14.588"},
+            {"Treynor Ratio", "14.634"},
             {"Total Fees", "$19.76"},
-            {"Estimated Strategy Capacity", "$1300000000.00"},
+            {"Estimated Strategy Capacity", "$1400000000.00"},
             {"Lowest Capacity Asset", "DC V5E8PHPRCHJ8|DC V5E8P9SH0U0X"},
             {"Portfolio Turnover", "0.00%"},
-            {"OrderListHash", "7f06f736e2f1294916fb2485519021a2"}
+            {"Drawdown Recovery", "0"},
+            {"OrderListHash", "6448bae646ab35724a0cd23936d94a48"}
         };
     }
 }

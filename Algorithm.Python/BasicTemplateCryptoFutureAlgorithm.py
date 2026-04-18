@@ -58,15 +58,15 @@ class BasicTemplateCryptoFutureAlgorithm(QCAlgorithm):
         interest_rates = slice.Get(MarginInterestRate)
         for interest_rate in interest_rates:
             self.interest_per_symbol[interest_rate.key] += 1
-            self.cached_interest_rate = self.securities[interest_rate.key].cache.get_data[MarginInterestRate]()
+            self.cached_interest_rate = self.securities[interest_rate.key].cache.get_data(MarginInterestRate)
             if self.cached_interest_rate != interest_rate.value:
-                raise Exception(f"Unexpected cached margin interest rate for {interest_rate.key}!")
+                raise AssertionError(f"Unexpected cached margin interest rate for {interest_rate.key}!")
             
         if self.fast > self.slow:
             if self.portfolio.invested == False and self.transactions.orders_count == 0:
                 self.ticket = self.buy(self.btc_usd.symbol, 50)
                 if self.ticket.status != OrderStatus.INVALID:
-                    raise Exception(f"Unexpected valid order {self.ticket}, should fail due to margin not sufficient")
+                    raise AssertionError(f"Unexpected valid order {self.ticket}, should fail due to margin not sufficient")
                 
                 self.buy(self.btc_usd.symbol, 1)
 
@@ -76,14 +76,14 @@ class BasicTemplateCryptoFutureAlgorithm(QCAlgorithm):
                 self.holdings_value_btc_usd = 100
 
                 if abs(self.btc_usd_holdings.total_sale_volume - self.holdings_value_btc_usd) > 1:
-                    raise Exception(f"Unexpected TotalSaleVolume {self.btc_usd_holdings.total_sale_volume}")
+                    raise AssertionError(f"Unexpected TotalSaleVolume {self.btc_usd_holdings.total_sale_volume}")
                 
                 if abs(self.btc_usd_holdings.absolute_holdings_cost - self.holdings_value_btc_usd) > 1:
-                    raise Exception(f"Unexpected holdings cost {self.btc_usd_holdings.holdings_cost}")
+                    raise AssertionError(f"Unexpected holdings cost {self.btc_usd_holdings.holdings_cost}")
                 
                 # margin used is based on the maintenance rate
                 if (abs(self.btc_usd_holdings.absolute_holdings_cost * 0.05 - self.margin_used) > 1) or (BuyingPowerModelExtensions.get_maintenance_margin(self.btc_usd.buying_power_model, self.btc_usd) != self.margin_used):
-                    raise Exception(f"Unexpected margin used {self.margin_used}")
+                    raise AssertionError(f"Unexpected margin used {self.margin_used}")
                 
                 self.buy(self.ada_usdt.symbol, 1000)
 
@@ -94,29 +94,29 @@ class BasicTemplateCryptoFutureAlgorithm(QCAlgorithm):
                 self.holdings_value_usdt = self.ada_usdt.price * self.ada_usdt.symbol_properties.contract_multiplier * 1000
 
                 if abs(self.ada_usdt_holdings.total_sale_volume - self.holdings_value_usdt) > 1:
-                    raise Exception(f"Unexpected TotalSaleVolume {self.ada_usdt_holdings.total_sale_volume}")
+                    raise AssertionError(f"Unexpected TotalSaleVolume {self.ada_usdt_holdings.total_sale_volume}")
                 
                 if abs(self.ada_usdt_holdings.absolute_holdings_cost - self.holdings_value_usdt) > 1:
-                    raise Exception(f"Unexpected holdings cost {self.ada_usdt_holdings.holdings_cost}")
+                    raise AssertionError(f"Unexpected holdings cost {self.ada_usdt_holdings.holdings_cost}")
                 
                 if (abs(self.ada_usdt_holdings.absolute_holdings_cost * 0.05 - self.margin_used) > 1) or (BuyingPowerModelExtensions.get_maintenance_margin(self.ada_usdt.buying_power_model, self.ada_usdt) != self.margin_used):
-                    raise Exception(f"Unexpected margin used {self.margin_used}")
+                    raise AssertionError(f"Unexpected margin used {self.margin_used}")
                 
                 # position just opened should be just spread here
                 self.profit = self.portfolio.total_unrealized_profit
                 
                 if (5 - abs(self.profit)) < 0:
-                    raise Exception(f"Unexpected TotalUnrealizedProfit {self.portfolio.total_unrealized_profit}")
+                    raise AssertionError(f"Unexpected TotalUnrealizedProfit {self.portfolio.total_unrealized_profit}")
 
                 if (self.portfolio.total_profit != 0):
-                    raise Exception(f"Unexpected TotalProfit {self.portfolio.total_profit}")
+                    raise AssertionError(f"Unexpected TotalProfit {self.portfolio.total_profit}")
                 
         else:
             if self.time.hour > 10 and self.transactions.orders_count == 3:
                 self.sell(self.btc_usd.symbol, 3)
                 self.btc_usd_holdings = self.btc_usd.holdings
                 if abs(self.btc_usd_holdings.absolute_holdings_cost - 100 * 2) > 1:
-                    raise Exception(f"Unexpected holdings cost {self.btc_usd_holdings.holdings_cost}")
+                    raise AssertionError(f"Unexpected holdings cost {self.btc_usd_holdings.holdings_cost}")
 
                 self.sell(self.ada_usdt.symbol, 3000)
                 ada_usdt_holdings = self.ada_usdt.holdings
@@ -125,22 +125,22 @@ class BasicTemplateCryptoFutureAlgorithm(QCAlgorithm):
                 holdings_value_usdt = self.ada_usdt.price * self.ada_usdt.symbol_properties.contract_multiplier * 2000
 
                 if abs(ada_usdt_holdings.absolute_holdings_cost - holdings_value_usdt) > 1:
-                    raise Exception(f"Unexpected holdings cost {ada_usdt_holdings.holdings_cost}")
+                    raise AssertionError(f"Unexpected holdings cost {ada_usdt_holdings.holdings_cost}")
 
                 # position just opened should be just spread here
                 profit = self.portfolio.total_unrealized_profit
                 if (5 - abs(profit)) < 0:
-                    raise Exception(f"Unexpected TotalUnrealizedProfit {self.portfolio.total_unrealized_profit}")
+                    raise AssertionError(f"Unexpected TotalUnrealizedProfit {self.portfolio.total_unrealized_profit}")
                 # we barely did any difference on the previous trade
                 if (5 - abs(self.portfolio.total_profit)) < 0:
-                    raise Exception(f"Unexpected TotalProfit {self.portfolio.total_profit}")
+                    raise AssertionError(f"Unexpected TotalProfit {self.portfolio.total_profit}")
 
                                             
     def on_end_of_algorithm(self):
         if self.interest_per_symbol[self.ada_usdt.symbol] != 1:
-                raise Exception(f"Unexpected interest rate count {self.interest_per_symbol[self.ada_usdt.symbol]}")
+                raise AssertionError(f"Unexpected interest rate count {self.interest_per_symbol[self.ada_usdt.symbol]}")
         if self.interest_per_symbol[self.btc_usd.symbol] != 3:
-                raise Exception(f"Unexpected interest rate count {self.interest_per_symbol[self.btc_usd.symbol]}")
+                raise AssertionError(f"Unexpected interest rate count {self.interest_per_symbol[self.btc_usd.symbol]}")
 
     def on_order_event(self, order_event):
         self.debug("{0} {1}".format(self.time, order_event))

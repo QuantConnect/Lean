@@ -48,7 +48,7 @@ namespace QuantConnect.Indicators
         /// Gets the band of Ranges for the RVI.
         /// </summary>
         private IndicatorBase<IndicatorDataPoint> RangeBand { get; }
-        
+
         /// <summary>
         /// A signal line which behaves like a slowed version of the RVI.
         /// </summary>
@@ -89,7 +89,7 @@ namespace QuantConnect.Indicators
             Signal = new RelativeVigorIndexSignal($"{name}_S");
             _previousInputs = new RollingWindow<IBaseDataBar>(3);
         }
-        
+
         /// <summary>
         /// Computes the next value of this indicator from the given state
         /// </summary>
@@ -107,18 +107,18 @@ namespace QuantConnect.Indicators
                 var f = _previousInputs[0].High - _previousInputs[0].Low;
                 var g = _previousInputs[1].High - _previousInputs[1].Low;
                 var h = _previousInputs[2].High - _previousInputs[2].Low;
-                CloseBand.Update(input.Time, (a + 2 * (b + c) + d) / 6);
-                RangeBand.Update(input.Time, (e + 2 * (f + g) + h) / 6);
-                
+                CloseBand.Update(input.EndTime, (a + 2 * (b + c) + d) / 6);
+                RangeBand.Update(input.EndTime, (e + 2 * (f + g) + h) / 6);
+
                 if (CloseBand.IsReady && RangeBand.IsReady && RangeBand != 0m)
                 {
                     _previousInputs.Add(input);
                     var rvi = CloseBand / RangeBand;
-                    Signal?.Update(input.Time, rvi); // Checks for null before updating.
+                    Signal?.Update(input.EndTime, rvi); // Checks for null before updating.
                     return rvi;
                 }
             }
-            
+
             _previousInputs.Add(input);
             return 0m;
         }

@@ -312,7 +312,7 @@ namespace QuantConnect.Securities
         /// <returns>An enumerable of <see cref="OrderTicket"/> matching the specified <paramref name="filter"/></returns>
         public IEnumerable<OrderTicket> GetOrderTickets(PyObject filter)
         {
-            return _orderProcessor.GetOrderTickets(filter.ConvertToDelegate<Func<OrderTicket, bool>>());
+            return _orderProcessor.GetOrderTickets(filter.SafeAs<Func<OrderTicket, bool>>());
         }
 
         /// <summary>
@@ -350,7 +350,7 @@ namespace QuantConnect.Securities
             {
                 return GetOpenOrderTickets(pythonSymbol);
             }
-            return _orderProcessor.GetOpenOrderTickets(filter.ConvertToDelegate<Func<OrderTicket, bool>>());
+            return _orderProcessor.GetOpenOrderTickets(filter.SafeAs<Func<OrderTicket, bool>>());
         }
 
         /// <summary>
@@ -361,7 +361,7 @@ namespace QuantConnect.Securities
         public decimal GetOpenOrdersRemainingQuantity(Func<OrderTicket, bool> filter = null)
         {
             return GetOpenOrderTickets(filter)
-                .Aggregate(0m, (d, t) => d + t.Quantity - t.QuantityFilled);
+                .Aggregate(0m, (d, t) => d + t.QuantityRemaining);
         }
 
         /// <summary>
@@ -381,7 +381,7 @@ namespace QuantConnect.Securities
             }
 
             return GetOpenOrderTickets(filter)
-                .Aggregate(0m, (d, t) => d + t.Quantity - t.QuantityFilled);
+                .Aggregate(0m, (d, t) => d + t.QuantityRemaining);
         }
 
         /// <summary>
@@ -472,7 +472,7 @@ namespace QuantConnect.Securities
             {
                 return GetOpenOrders(pythonSymbol);
             }
-            Func<Order, bool> csharpFilter = filter.ConvertToDelegate<Func<Order, bool>>();
+            Func<Order, bool> csharpFilter = filter.SafeAs<Func<Order, bool>>();
             return _orderProcessor.GetOpenOrders(x => csharpFilter(x));
         }
 
@@ -522,7 +522,7 @@ namespace QuantConnect.Securities
         /// <returns>All orders this order provider currently holds by the specified filter</returns>
         public IEnumerable<Order> GetOrders(PyObject filter)
         {
-            return _orderProcessor.GetOrders(filter.ConvertToDelegate<Func<Order, bool>>());
+            return _orderProcessor.GetOrders(filter.SafeAs<Func<Order, bool>>());
         }
 
         /// <summary>
@@ -597,6 +597,19 @@ namespace QuantConnect.Securities
                 // always zero in backtesting, fills happen synchronously, there's no dedicated thread like in live
                 MarketOrderFillTimeout = TimeSpan.Zero;
             }
+        }
+
+        /// <summary>
+        /// Calculates the projected holdings for the specified security based on the current open orders.
+        /// </summary>
+        /// <param name="security">The security</param>
+        /// <returns>
+        /// The projected holdings for the specified security, which is the sum of the current holdings
+        /// plus the sum of the open orders quantity.
+        /// </returns>
+        public ProjectedHoldings GetProjectedHoldings(Security security)
+        {
+            return _orderProcessor.GetProjectedHoldings(security);
         }
     }
 }

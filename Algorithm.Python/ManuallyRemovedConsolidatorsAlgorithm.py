@@ -59,7 +59,7 @@ class ManuallyRemovedConsolidatorsAlgorithm(QCAlgorithm):
 
         consolidator_count = sum(s.consolidators.count for s in self.subscription_manager.subscriptions)
         if consolidator_count != expected_consolidator_count:
-            raise Exception(f"Unexpected number of consolidators after removal. "
+            raise AssertionError(f"Unexpected number of consolidators after removal. "
                             f"Expected: {expected_consolidator_count}. Actual: {consolidator_count}")
 
 class CustomQuoteBarConsolidator(PythonConsolidator):

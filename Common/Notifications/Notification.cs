@@ -138,7 +138,7 @@ namespace QuantConnect.Notifications
         /// <summary>
         /// Default constructor for sending an email notification
         /// </summary>
-        /// <param name="address">Address to send to. Will throw <see cref="ArgumentException"/> if invalid
+        /// <param name="address">Address to send to, if null will default to users email. Will throw <see cref="ArgumentException"/> if invalid
         /// <see cref="Validate.EmailAddress"/></param>
         /// <param name="subject">Subject of the email. Will set to <see cref="string.Empty"/> if null</param>
         /// <param name="message">Message body of the email. Will set to <see cref="string.Empty"/> if null</param>

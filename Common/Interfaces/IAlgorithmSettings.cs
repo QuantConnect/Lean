@@ -133,5 +133,10 @@ namespace QuantConnect.Interfaces
         /// Gets the time span used to refresh the market hours and symbol properties databases
         /// </summary>
         TimeSpan DatabasesRefreshPeriod { get; set; }
+
+        /// <summary>
+        /// Determines whether to terminate the algorithm when an asset is not supported by Lean or the brokerage
+        /// </summary>
+        bool IgnoreUnknownAssetHoldings { get; set; }
     }
 }

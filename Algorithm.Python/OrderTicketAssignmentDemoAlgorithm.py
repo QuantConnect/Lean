@@ -41,13 +41,13 @@ class OrderTicketAssignmentDemoAlgorithm(QCAlgorithm):
         # this order event could be triggered before self.ticket is assigned.
         ticket = order_event.ticket
         if ticket is None:
-            raise Exception("Expected order ticket in order event to not be null")
+            raise AssertionError("Expected order ticket in order event to not be null")
         if order_event.status == OrderStatus.SUBMITTED and self.ticket is not None:
-            raise Exception("Field self.ticket not expected no be assigned on the first order event")
+            raise AssertionError("Field self.ticket not expected no be assigned on the first order event")
 
         self.debug(ticket.to_string())
 
     def on_end_of_algorithm(self):
         # Just checking that orders were placed
         if not self.portfolio.invested or self.trade_count != self.transactions.orders_count:
-            raise Exception(f"Expected the portfolio to have holdings and to have {self.trade_count} trades, but had {self.transactions.orders_count}")
+            raise AssertionError(f"Expected the portfolio to have holdings and to have {self.trade_count} trades, but had {self.transactions.orders_count}")

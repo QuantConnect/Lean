@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -16,6 +16,7 @@
 using NUnit.Framework;
 using QuantConnect.Data.Market;
 using QuantConnect.Indicators;
+using System.Linq;
 
 namespace QuantConnect.Tests.Indicators
 {
@@ -25,10 +26,17 @@ namespace QuantConnect.Tests.Indicators
         protected override IndicatorBase<TradeBar> CreateIndicator()
         {
             var adr = new AdvanceDeclineRatio("test_name");
-            adr.Add(Symbols.AAPL);
-            adr.Add(Symbols.IBM);
-            adr.Add(Symbols.GOOG);
-            RenkoBarSize = 5000000;
+            if (SymbolList.Count > 2)
+            {
+                SymbolList.Take(3).ToList().ForEach(adr.AddStock);
+            }
+            else
+            {
+                adr.Add(Symbols.AAPL);
+                adr.Add(Symbols.IBM);
+                adr.Add(Symbols.GOOG);
+                RenkoBarSize = 5000000;
+            }
             return adr;
         }
 

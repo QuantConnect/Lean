@@ -15,7 +15,9 @@
 
 using QuantConnect.Data;
 using QuantConnect.Interfaces;
+using QuantConnect.Orders;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace QuantConnect.Algorithm.CSharp
 {
@@ -24,6 +26,8 @@ namespace QuantConnect.Algorithm.CSharp
     /// </summary>
     public class SetHoldingsRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
+        protected virtual bool AsynchronousOrders => false;
+
         /// <summary>
         /// Initialise the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must initialized.
         /// </summary>
@@ -42,10 +46,36 @@ namespace QuantConnect.Algorithm.CSharp
         {
             if (!Portfolio.Invested)
             {
-                SetHoldings("SPY", 0.1m);
-                SetHoldings("SPY", 0.2d);
-                SetHoldings("SPY", 0.3f);
-                SetHoldings("SPY", 1);
+                SetHoldings("SPY", 0.1m, asynchronous: AsynchronousOrders);
+                SetHoldings("SPY", 0.2d, asynchronous: AsynchronousOrders);
+                SetHoldings("SPY", 0.3f, asynchronous: AsynchronousOrders);
+                SetHoldings("SPY", 1, asynchronous: AsynchronousOrders);
+            }
+        }
+
+        public override void OnEndOfAlgorithm()
+        {
+            var orders = Transactions.GetOrders(x => x.Symbol == QuantConnect.Symbol.Create("SPY", SecurityType.Equity, Market.USA)).ToList();
+
+            if (orders.Count != 4)
+            {
+                throw new RegressionTestException($"Expected 4 orders, found {orders.Count}");
+            }
+
+            foreach (var order in orders)
+            {
+                if (order.Status != OrderStatus.Filled)
+                {
+                    throw new RegressionTestException($"Order {order.Id} was not filled. Status: {order.Status}");
+                }
+            }
+
+            foreach (var ticket in Transactions.GetOrderTickets())
+            {
+                if (ticket.SubmitRequest.Asynchronous != AsynchronousOrders)
+                {
+                    throw new RegressionTestException("Expected all orders to have the same asynchronous flag as the algorithm.");
+                }
             }
         }
 
@@ -105,6 +135,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Estimated Strategy Capacity", "$2800000.00"},
             {"Lowest Capacity Asset", "SPY R735QTJ8XC9X"},
             {"Portfolio Turnover", "49.82%"},
+            {"Drawdown Recovery", "0"},
             {"OrderListHash", "23bf9784138d7f8f43acb295647943cc"}
         };
     }

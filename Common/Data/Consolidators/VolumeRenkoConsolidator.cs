@@ -89,20 +89,33 @@ namespace QuantConnect.Data.Consolidators
             }
             else
             {
-                throw new ArgumentException("VolumeRenkoConsolidator() must be used with TradeBar or Tick data.");
+                throw new ArgumentException($"{GetType().Name} must be used with TradeBar or Tick data.");
             }
+
+            var adjustedVolume = AdjustVolume(volume, close);
 
             if (_currentBar == null)
             {
                 _currentBar = new VolumeRenkoBar(data.Symbol, data.Time, data.EndTime, _barSize, open, high, low, close, 0);
             }
-            var volumeLeftOver = _currentBar.Update(data.EndTime, high, low, close, volume);
+            var volumeLeftOver = _currentBar.Update(data.EndTime, high, low, close, adjustedVolume);
             while (volumeLeftOver >= 0)
             {
                 OnDataConsolidated(_currentBar);
                 _currentBar = _currentBar.Rollover();
                 volumeLeftOver = _currentBar.Update(data.EndTime, high, low, close, volumeLeftOver);
             }
+        }
+
+        /// <summary>
+        /// Returns the raw volume without any adjustment.
+        /// </summary>
+        /// <param name="volume">The volume</param>
+        /// <param name="price">The price</param>
+        /// <returns>The unmodified volume</returns>
+        protected virtual decimal AdjustVolume(decimal volume, decimal price)
+        {
+            return volume;
         }
 
         /// <summary>

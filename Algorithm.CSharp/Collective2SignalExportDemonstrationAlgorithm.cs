@@ -56,9 +56,9 @@ namespace QuantConnect.Algorithm.CSharp
         /// </summary>
         private List<Symbol> _symbols = new()
         {
-            QuantConnect.Symbol.Create("SPY", SecurityType.Equity, Market.USA, null, null),
-            QuantConnect.Symbol.Create("EURUSD", SecurityType.Forex, Market.Oanda, null, null),
-            QuantConnect.Symbol.CreateFuture("ES", Market.CME, new DateTime(2023, 12, 15), null),
+            QuantConnect.Symbol.Create("SPY", SecurityType.Equity, Market.USA),
+            QuantConnect.Symbol.Create("EURUSD", SecurityType.Forex, Market.Oanda),
+            QuantConnect.Symbol.CreateFuture("ES", Market.CME, new DateTime(2023, 12, 15)),
             QuantConnect.Symbol.CreateOption("GOOG", Market.USA, OptionStyle.American, OptionRight.Call, 130, new DateTime(2023, 9, 1)),
         };
 
@@ -95,12 +95,15 @@ namespace QuantConnect.Algorithm.CSharp
             // Initialize this flag, to check when the ema indicators crosses between themselves
             _emaFastIsNotSet = true;
 
+            // Disable automatic exports as we manually set them
+            SignalExport.AutomaticExportTimeSpan = null;
+
             // Set Collective2 signal export provider.
             // If using the Collective2 white-label API, you can specify it in the constructor with the optional parameter `useWhiteLabelApi`:
             // e.g. new Collective2SignalExport(_collective2ApiKey, _collective2SystemId, useWhiteLabelApi: true)
             // The API url can also be overridden by setting the Destination property:
             // e.g. new Collective2SignalExport(_collective2ApiKey, _collective2SystemId) { Destination = new Uri("your url") }
-            SignalExport.AddSignalExportProviders(new Collective2SignalExport(_collective2ApiKey, _collective2SystemId));
+            SignalExport.AddSignalExportProvider(new Collective2SignalExport(_collective2ApiKey, _collective2SystemId));
 
             SetWarmUp(100);
         }
@@ -211,6 +214,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Estimated Strategy Capacity", "$260000000.00"},
             {"Lowest Capacity Asset", "SPY R735QTJ8XC9X"},
             {"Portfolio Turnover", "2.00%"},
+            {"Drawdown Recovery", "3"},
             {"OrderListHash", "006af1a065fca33ac1f1e9cd6bd02c11"}
         };
     }

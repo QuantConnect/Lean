@@ -186,6 +186,13 @@ namespace QuantConnect.Statistics
         public decimal ValueAtRisk95 { get; set; }
 
         /// <summary>
+        /// The recovery time of the maximum drawdown.
+        /// </summary>
+        [JsonConverter(typeof(JsonRoundingConverter))]
+        public int DrawdownRecovery { get; set; }
+
+
+        /// <summary>
         /// Initializes a new instance of the <see cref="PortfolioStatistics"/> class
         /// </summary>
         /// <param name="profitLoss">Trade record of profits and losses</param>
@@ -265,8 +272,8 @@ namespace QuantConnect.Statistics
             }
 
             var totalTrades = totalWins + totalLosses;
-            WinRate = totalTrades == 0 ? 0 : (decimal) totalWins / totalTrades;
-            LossRate = totalTrades == 0 ? 0 : (decimal) totalLosses / totalTrades;
+            WinRate = totalTrades == 0 ? 0 : (decimal)totalWins / totalTrades;
+            LossRate = totalTrades == 0 ? 0 : (decimal)totalLosses / totalTrades;
             Expectancy = WinRate * ProfitLossRatio - LossRate;
 
             if (startingCapital != 0)
@@ -274,13 +281,11 @@ namespace QuantConnect.Statistics
                 TotalNetProfit = equity.Values.LastOrDefault() / startingCapital - 1;
             }
 
-            var fractionOfYears = (decimal) (equity.Keys.LastOrDefault() - equity.Keys.FirstOrDefault()).TotalDays / 365;
+            var fractionOfYears = (decimal)(equity.Keys.LastOrDefault() - equity.Keys.FirstOrDefault()).TotalDays / 365;
             CompoundingAnnualReturn = Statistics.CompoundingAnnualPerformance(startingCapital, equity.Values.LastOrDefault(), fractionOfYears);
 
-            Drawdown = DrawdownPercent(equity, 3);
-
             AnnualVariance = Statistics.AnnualVariance(listPerformance, tradingDaysPerYear).SafeDecimalCast();
-            AnnualStandardDeviation = (decimal) Math.Sqrt((double) AnnualVariance);
+            AnnualStandardDeviation = (decimal)Math.Sqrt((double)AnnualVariance);
 
             var benchmarkAnnualPerformance = GetAnnualPerformance(listBenchmark, tradingDaysPerYear);
             var annualPerformance = GetAnnualPerformance(listPerformance, tradingDaysPerYear);
@@ -292,7 +297,7 @@ namespace QuantConnect.Statistics
             SortinoRatio = annualDownsideDeviation == 0 ? 0 : Statistics.SharpeRatio(annualPerformance, annualDownsideDeviation, riskFreeRate);
 
             var benchmarkVariance = listBenchmark.Variance();
-            Beta = benchmarkVariance.IsNaNOrZero() ? 0 : (decimal) (listPerformance.Covariance(listBenchmark) / benchmarkVariance);
+            Beta = benchmarkVariance.IsNaNOrZero() ? 0 : (decimal)(listPerformance.Covariance(listBenchmark) / benchmarkVariance);
 
             Alpha = Beta == 0 ? 0 : annualPerformance - (riskFreeRate + Beta * (benchmarkAnnualPerformance - riskFreeRate));
 
@@ -305,9 +310,13 @@ namespace QuantConnect.Statistics
             // deannualize a 1 sharpe ratio
             var benchmarkSharpeRatio = 1.0d / Math.Sqrt(tradingDaysPerYear);
             ProbabilisticSharpeRatio = Statistics.ProbabilisticSharpeRatio(listPerformance, benchmarkSharpeRatio).SafeDecimalCast();
-            
+
             ValueAtRisk99 = GetValueAtRisk(listPerformance, tradingDaysPerYear, 0.99d);
             ValueAtRisk95 = GetValueAtRisk(listPerformance, tradingDaysPerYear, 0.95d);
+
+            var drawdownMetrics = Statistics.CalculateDrawdownMetrics(equity, 3);
+            Drawdown = drawdownMetrics.Drawdown;
+            DrawdownRecovery = drawdownMetrics.DrawdownRecovery;
         }
 
         /// <summary>
@@ -315,28 +324,6 @@ namespace QuantConnect.Statistics
         /// </summary>
         public PortfolioStatistics()
         {
-        }
-
-        /// <summary>
-        /// Drawdown maximum percentage.
-        /// </summary>
-        /// <param name="equityOverTime">The list of daily equity values</param>
-        /// <param name="rounding">The number of decimal places to round the result</param>
-        /// <returns>The drawdown percentage</returns>
-        private static decimal DrawdownPercent(SortedDictionary<DateTime, decimal> equityOverTime, int rounding = 2)
-        {
-            var prices = equityOverTime.Values.ToList();
-            if (prices.Count == 0) return 0;
-
-            var drawdowns = new List<decimal>();
-            var high = prices[0];
-            foreach (var price in prices)
-            {
-                if (price > high) high = price;
-                if (high > 0) drawdowns.Add(price / high - 1);
-            }
-
-            return Math.Round(Math.Abs(drawdowns.Min()), rounding);
         }
 
         /// <summary>
@@ -357,7 +344,7 @@ namespace QuantConnect.Statistics
                 var partialSums = 0.0;
                 var points = 0;
                 double troublePoint = default;
-                foreach(var point in performance)
+                foreach (var point in performance)
                 {
                     points++;
                     partialSums += point;

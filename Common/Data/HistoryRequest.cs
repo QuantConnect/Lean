@@ -18,6 +18,7 @@ using System;
 using NodaTime;
 using QuantConnect.Securities;
 using System.Collections.Generic;
+using QuantConnect.Util;
 
 namespace QuantConnect.Data
 {
@@ -27,6 +28,7 @@ namespace QuantConnect.Data
     public class HistoryRequest : BaseDataRequest
     {
         private Resolution? _fillForwardResolution;
+        private bool _includeExtendedMarketHours;
 
         /// <summary>
         /// Gets the symbol to request data for
@@ -57,7 +59,17 @@ namespace QuantConnect.Data
         /// <summary>
         /// Gets whether or not to include extended market hours data, set to false for only normal market hours
         /// </summary>
-        public bool IncludeExtendedMarketHours { get; set; }
+        public bool IncludeExtendedMarketHours
+        {
+            get
+            {
+                return _includeExtendedMarketHours;
+            }
+            set
+            {
+                _includeExtendedMarketHours = value && LeanData.SupportsExtendedMarketHours(DataType);
+            }
+        }
 
         /// <summary>
         /// Gets the time zone of the time stamps on the raw input data

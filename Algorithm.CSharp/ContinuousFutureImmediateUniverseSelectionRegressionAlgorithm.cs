@@ -78,7 +78,7 @@ namespace QuantConnect.Algorithm.CSharp
 
                 }
 
-                return universe.Select(x => x);
+                return universe;
             });
 
             _milk.SetFilter(universe =>
@@ -94,7 +94,7 @@ namespace QuantConnect.Algorithm.CSharp
                     }
                 }
 
-                return universe.Select(x => x);
+                return universe;
             });
         }
 
@@ -184,7 +184,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
-        public long DataPoints => 596358;
+        public long DataPoints => 445961;
 
         /// <summary>
         /// Data Points count of the algorithm history
@@ -227,6 +227,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Estimated Strategy Capacity", "$0"},
             {"Lowest Capacity Asset", ""},
             {"Portfolio Turnover", "0%"},
+            {"Drawdown Recovery", "0"},
             {"OrderListHash", "d41d8cd98f00b204e9800998ecf8427e"}
         };
     }

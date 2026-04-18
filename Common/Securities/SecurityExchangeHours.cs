@@ -32,6 +32,8 @@ namespace QuantConnect.Securities
     /// </remarks>
     public class SecurityExchangeHours
     {
+        private CachedLocalMarketHours _cachedMarketHours;
+
         private HashSet<long> _holidays;
         private HashSet<long> _bankHolidays;
         private IReadOnlyDictionary<DateTime, TimeSpan> _earlyCloses;
@@ -117,7 +119,7 @@ namespace QuantConnect.Securities
         /// </summary>
         public static SecurityExchangeHours AlwaysOpen(DateTimeZone timeZone)
         {
-            var dayOfWeeks = Enum.GetValues(typeof (DayOfWeek)).OfType<DayOfWeek>();
+            var dayOfWeeks = Enum.GetValues(typeof(DayOfWeek)).OfType<DayOfWeek>();
             return new SecurityExchangeHours(timeZone,
                 Enumerable.Empty<DateTime>(),
                 dayOfWeeks.Select(LocalMarketHours.OpenAllDay).ToDictionary(x => x.DayOfWeek),
@@ -198,14 +200,11 @@ namespace QuantConnect.Securities
             var end = new DateTime(Math.Min(endLocalDateTime.Ticks, start.Date.Ticks + Time.OneDay.Ticks - 1));
             do
             {
-                if (!_holidays.Contains(start.Date.Ticks))
+                // check to see if the market is open
+                var marketHours = GetMarketHours(start);
+                if (marketHours.IsOpen(start.TimeOfDay, end.TimeOfDay, extendedMarketHours))
                 {
-                    // check to see if the market is open
-                    var marketHours = GetMarketHours(start);
-                    if (marketHours.IsOpen(start.TimeOfDay, end.TimeOfDay, extendedMarketHours))
-                    {
-                        return true;
-                    }
+                    return true;
                 }
 
                 start = start.Date.AddDays(1);
@@ -282,7 +281,7 @@ namespace QuantConnect.Securities
             for (int i = 0; i < 7; i++)
             {
                 DateTime? potentialResult = null;
-                foreach(var segment in marketHours.Segments.Reverse())
+                foreach (var segment in marketHours.Segments.Reverse())
                 {
                     if ((time.Date + segment.Start <= localDateTime) &&
                         (segment.State == MarketHoursState.Market || extendedMarketHours))
@@ -362,7 +361,7 @@ namespace QuantConnect.Securities
             }
             while (time < oneWeekLater);
 
-            throw new ArgumentException(Messages.SecurityExchangeHours.UnableToLocateNextMarketOpenInTwoWeeks);
+            throw new ArgumentException(Messages.SecurityExchangeHours.UnableToLocateNextMarketOpenInTwoWeeks(IsMarketAlwaysOpen));
         }
 
         /// <summary>
@@ -423,7 +422,7 @@ namespace QuantConnect.Securities
             }
             while (time < oneWeekLater);
 
-            throw new ArgumentException(Messages.SecurityExchangeHours.UnableToLocateNextMarketCloseInTwoWeeks);
+            throw new ArgumentException(Messages.SecurityExchangeHours.UnableToLocateNextMarketCloseInTwoWeeks(IsMarketAlwaysOpen));
         }
 
         /// <summary>
@@ -514,9 +513,17 @@ namespace QuantConnect.Securities
         /// </remarks>
         public LocalMarketHours GetMarketHours(DateTime localDateTime)
         {
+            var cachedMarketHours = _cachedMarketHours;
+            if (cachedMarketHours?.Date == localDateTime.Date)
+            {
+                return cachedMarketHours.LocalMarketHours;
+            }
+
             if (_holidays.Contains(localDateTime.Date.Ticks))
             {
-                return LocalMarketHours.ClosedAllDay(localDateTime.DayOfWeek);
+                var result = LocalMarketHours.ClosedAllDay(localDateTime.DayOfWeek);
+                _cachedMarketHours = new(result, localDateTime);
+                return result;
             }
 
             LocalMarketHours marketHours;
@@ -551,6 +558,7 @@ namespace QuantConnect.Securities
             var hasLateOpen = _lateOpens.TryGetValue(localDateTime.Date, out var lateOpenTime);
             if (!hasEarlyClose && !hasLateOpen)
             {
+                _cachedMarketHours = new(marketHours, localDateTime);
                 return marketHours;
             }
 
@@ -605,12 +613,12 @@ namespace QuantConnect.Securities
             {
                 var index = 0;
                 segmentsLateOpen = new List<MarketHoursSegment>();
-                for(var i = 0; i < marketHoursSegments.Count; i++)
+                for (var i = 0; i < marketHoursSegments.Count; i++)
                 {
                     var segment = marketHoursSegments[i];
                     if (segment.Start <= lateOpenTime && lateOpenTime <= segment.End)
                     {
-                        segmentsLateOpen.Add(new (segment.State, lateOpenTime, segment.End));
+                        segmentsLateOpen.Add(new(segment.State, lateOpenTime, segment.End));
                         index = i + 1;
                         break;
                     }
@@ -633,7 +641,9 @@ namespace QuantConnect.Securities
                 marketHoursSegments = segmentsEarlyClose;
             }
 
-            return new LocalMarketHours(localDateTime.DayOfWeek, marketHoursSegments);
+            marketHours = new LocalMarketHours(localDateTime.DayOfWeek, marketHoursSegments);
+            _cachedMarketHours = new(marketHours, localDateTime);
+            return marketHours;
         }
 
         /// <summary>
@@ -679,6 +689,7 @@ namespace QuantConnect.Securities
                 return;
             }
 
+            _cachedMarketHours = null;
             _holidays = other._holidays;
             _earlyCloses = other._earlyCloses;
             _lateOpens = other._lateOpens;
@@ -693,6 +704,17 @@ namespace QuantConnect.Securities
             TimeZone = other.TimeZone;
             RegularMarketDuration = other.RegularMarketDuration;
             IsMarketAlwaysOpen = other.IsMarketAlwaysOpen;
+        }
+
+        private class CachedLocalMarketHours
+        {
+            public LocalMarketHours LocalMarketHours { get; }
+            public DateTime Date { get; }
+            public CachedLocalMarketHours(LocalMarketHours localMarketHours, DateTime date)
+            {
+                LocalMarketHours = localMarketHours;
+                Date = date.Date;
+            }
         }
     }
 }

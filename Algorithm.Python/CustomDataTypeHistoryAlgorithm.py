@@ -25,14 +25,14 @@ class CustomDataTypeHistoryAlgorithm(QCAlgorithm):
         history = list(self.history[CustomDataType](self._symbol, 48, Resolution.HOUR))
 
         if len(history) == 0:
-            raise Exception("History request returned no data")
+            raise AssertionError("History request returned no data")
 
         self._assert_history_data(history)
 
         history2 = list(self.history[CustomDataType]([self._symbol], 48, Resolution.HOUR))
 
         if len(history2) != len(history):
-            raise Exception("History requests returned different data")
+            raise AssertionError("History requests returned different data")
 
         self._assert_history_data([y.values()[0] for y in history2])
 
@@ -41,7 +41,7 @@ class CustomDataTypeHistoryAlgorithm(QCAlgorithm):
         if any(any(not x[key] for key in expected_keys)
                or x["some_property"] != "some property value"
                for x in history):
-            raise Exception("History request returned data without the expected properties")
+            raise AssertionError("History request returned data without the expected properties")
 
 class CustomDataType(PythonData):
 

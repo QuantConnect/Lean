@@ -23,5 +23,5 @@ class CustomDataZippedObjectStoreRegressionAlgorithm(CustomDataObjectStoreRegres
         return "CustomData/ExampleCustomData.zip"
 
     def save_data_to_object_store(self):
-        self.object_store.save_bytes(self.get_custom_data_key(), Compression.zip_bytes(bytes(self.custom_data, 'utf-8'), 'data'))
+        self.object_store.save_bytes(self.get_custom_data_key(), Compression.zip_bytes(list(bytes(self.custom_data, 'utf-8')), 'data'))
 

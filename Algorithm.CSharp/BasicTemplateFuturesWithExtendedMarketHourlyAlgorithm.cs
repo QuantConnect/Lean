@@ -41,7 +41,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
-        public override long DataPoints => 228941;
+        public override long DataPoints => 67924;
 
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
@@ -74,7 +74,8 @@ namespace QuantConnect.Algorithm.CSharp
             {"Estimated Strategy Capacity", "$3000.00"},
             {"Lowest Capacity Asset", "ES VP274HSU1AF5"},
             {"Portfolio Turnover", "56.73%"},
-            {"OrderListHash", "424536177e9be5895bab50638ef43a9d"}
+            {"Drawdown Recovery", "0"},
+            {"OrderListHash", "6ce7812de5c98744cc35169a86a24325"}
         };
     }
 }

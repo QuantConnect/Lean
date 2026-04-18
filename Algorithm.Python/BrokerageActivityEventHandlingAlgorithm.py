@@ -18,12 +18,12 @@ from AlgorithmImports import *
 ### </summary>
 ### <meta name="tag" content="using quantconnect" />
 class BrokerageActivityEventHandlingAlgorithm(QCAlgorithm):
-    
+
     ### <summary>
     ### Initialise the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must initialized.
     ### </summary>
     def initialize(self):
-        self.set_start_date(2013, 10, 07)
+        self.set_start_date(2013, 10, 7)
         self.set_end_date(2013, 10, 11)
         self.set_cash(100000)
 
@@ -48,7 +48,7 @@ class BrokerageActivityEventHandlingAlgorithm(QCAlgorithm):
     ### </summary>
     def on_brokerage_disconnect(self):
         self.debug(f"Brokerage disconnected!")
-    
+
     ### <summary>
     ### Brokerage reconnected event handler. This method is called when the brokerage connection is restored after a disconnection.
     ### </summary>

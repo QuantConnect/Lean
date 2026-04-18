@@ -36,7 +36,7 @@ namespace QuantConnect.Securities
         /// <param name="seedFunction">The seed function to use</param>
         public FuncSecuritySeeder(PyObject seedFunction)
         {
-            var result = seedFunction.ConvertToDelegate<Func<Security, object>>();
+            var result = seedFunction.SafeAs<Func<Security, object>>();
             _seedFunction = security =>
             {
                 var dataObject = result(security);

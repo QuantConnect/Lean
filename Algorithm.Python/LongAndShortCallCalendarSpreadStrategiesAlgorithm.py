@@ -26,12 +26,13 @@ class LongAndShortCallCalendarSpreadStrategiesAlgorithm(OptionStrategyFactoryMet
     def expected_orders_count(self) -> int:
         return 4
 
-    def trade_strategy(self, chain: OptionChain, option_symbol: Symbol):
+    def trade_strategy(self, chain: OptionChain, option_symbol: Symbol) -> None:
         call_contracts = sorted((contract for contract in chain if contract.right == OptionRight.CALL),
                            key=lambda x: abs(x.strike - chain.underlying.value))
         for strike, group in itertools.groupby(call_contracts, lambda x: x.strike):
             contracts = sorted(group, key=lambda x: x.expiry)
-            if len(contracts) < 2: continue
+            if len(contracts) < 2:
+                continue
 
             self._near_expiration = contracts[0].expiry
             self._far_expiration = contracts[1].expiry
@@ -41,23 +42,23 @@ class LongAndShortCallCalendarSpreadStrategiesAlgorithm(OptionStrategyFactoryMet
             self.buy(self._call_calendar_spread, 2)
             return
 
-    def assert_strategy_position_group(self, position_group: IPositionGroup, option_symbol: Symbol):
+    def assert_strategy_position_group(self, position_group: IPositionGroup, option_symbol: Symbol) -> None:
         positions = list(position_group.positions)
         if len(positions) != 2:
-            raise Exception(f"Expected position group to have 2 positions. Actual: {len(positions)}")
+            raise AssertionError(f"Expected position group to have 2 positions. Actual: {len(positions)}")
 
         near_expiration_position = next((position for position in positions
                                        if position.symbol.id.option_right == OptionRight.CALL and position.symbol.id.date == self._near_expiration),
                                       None)
-        if near_expiration_position is None or near_expiration_position.quantity != -2:
-            raise Exception(f"Expected near expiration position to be -2. Actual: {near_expiration_position.quantity}")
+        if not near_expiration_position or near_expiration_position.quantity != -2:
+            raise AssertionError(f"Expected near expiration position to be -2. Actual: {near_expiration_position.quantity}")
 
         far_expiration_position = next((position for position in positions
                                       if position.symbol.id.option_right == OptionRight.CALL and position.symbol.id.date == self._far_expiration),
                                      None)
-        if far_expiration_position is None or far_expiration_position.quantity != 2:
-            raise Exception(f"Expected far expiration position to be 2. Actual: {far_expiration_position.quantity}")
+        if not far_expiration_position or far_expiration_position.quantity != 2:
+            raise AssertionError(f"Expected far expiration position to be 2. Actual: {far_expiration_position.quantity}")
 
-    def liquidate_strategy(self):
+    def liquidate_strategy(self) -> None:
         # We should be able to close the position using the inverse strategy (a short call calendar spread)
         self.buy(self._short_call_calendar_spread, 2)

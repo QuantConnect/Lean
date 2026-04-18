@@ -22,6 +22,8 @@ using System.Runtime.CompilerServices;
 using QuantConnect.Data.Fundamental;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Util;
+using Python.Runtime;
+using QuantConnect.Python;
 
 namespace QuantConnect.Securities
 {
@@ -44,6 +46,13 @@ namespace QuantConnect.Securities
         private Dictionary<Type, IReadOnlyList<BaseData>> _dataByType;
 
         private Dictionary<string, object> _properties;
+        private LocalTimeKeeper _localTimeKeeper;
+        private bool _subscribeToDateChangedEvent;
+
+        /// <summary>
+        /// Gets the trading session information
+        /// </summary>
+        public Session Session { get; set; }
 
         /// <summary>
         /// Gets the most recent price submitted to this cache
@@ -120,8 +129,9 @@ namespace QuantConnect.Securities
         /// </summary>
         /// <remarks>Internally uses <see cref="AddData"/> using the last data point of the provided list
         /// and it stores by type the non fill forward points using <see cref="StoreData"/></remarks>
-        public void AddDataList(IReadOnlyList<BaseData> data, Type dataType, bool? containsFillForwardData = null)
+        public void AddDataList(IReadOnlyList<BaseData> data, Type dataType, bool? containsFillForwardData = null, bool isInternalConfig = false)
         {
+            SubscribeToTimeUpdatedEvent();
             var nonFillForwardData = data;
             // maintaining regression requires us to NOT cache FF data
             if (containsFillForwardData != false)
@@ -144,6 +154,15 @@ namespace QuantConnect.Securities
             else if (dataType == typeof(OpenInterest))
             {
                 StoreData(data, typeof(OpenInterest));
+            }
+
+            // Session -> Current OHLCV of the day
+            if (Session != null && !isInternalConfig && LeanData.IsCommonLeanDataType(dataType))
+            {
+                for (int i = 0; i < data.Count; i++)
+                {
+                    Session.Update(data[i]);
+                }
             }
 
             var last = data[data.Count - 1];
@@ -178,6 +197,9 @@ namespace QuantConnect.Securities
                     StoreDataPoint(data);
                 }
                 OpenInterest = (long)tick.Value;
+
+                // Update the session with the latest open interest
+                Session?.Update(data);
                 return;
             }
 
@@ -315,12 +337,38 @@ namespace QuantConnect.Securities
         public T GetData<T>()
             where T : BaseData
         {
-            IReadOnlyList<BaseData> list;
-            if (!TryGetValue(typeof(T), out list) || list.Count == 0)
+            return GetData(typeof(T)) as T;
+        }
+
+        /// <summary>
+        /// Retrieves the last data packet of the specified Python type.
+        /// </summary>
+        /// <param name="pyType">The Python type to convert and match</param>
+        /// <returns>The last data packet as a PyObject, or null if not found</returns>
+        public PyObject GetData(PyObject pyType)
+        {
+            using var _ = Py.GIL();
+            if (!pyType.TryCreateType(out var type))
             {
-                return default(T);
+                return null;
             }
-            return list[list.Count - 1] as T;
+            type = typeof(PythonData).IsAssignableFrom(type) ? typeof(PythonData) : type;
+            return GetData(type).ToPython();
+        }
+
+        /// <summary>
+        /// Get the last data packet of the specified type
+        /// </summary>
+        /// <param name="type">The type of data to retrieve</param>
+        /// <returns>The last data packet of the specified type, or null if none found</returns>
+        private BaseData GetData(Type type)
+        {
+            IReadOnlyList<BaseData> list;
+            if (!TryGetValue(type, out list) || list.Count == 0)
+            {
+                return null;
+            }
+            return list[list.Count - 1];
         }
 
         /// <summary>
@@ -365,9 +413,15 @@ namespace QuantConnect.Securities
             Volume = 0;
             OpenInterest = 0;
 
+            _lastData = null;
             _dataByType = null;
             _lastTickQuotes = _empty;
             _lastTickTrades = _empty;
+
+            _lastOHLCUpdate = default;
+            _lastQuoteBarUpdate = default;
+            Session?.Reset();
+            UnsubscribeToTimeUpdatedEvent();
         }
 
         /// <summary>
@@ -414,6 +468,43 @@ namespace QuantConnect.Securities
 
             data = default;
             return _dataByType != null && _dataByType.TryGetValue(type, out data);
+        }
+
+        /// <summary>
+        /// Sets the <see cref="LocalTimeKeeper"/> to be used for this <see cref="SecurityCache"/>.
+        /// This is the source of this instance's time.
+        /// </summary>
+        /// <param name="localTimeKeeper">The source of this <see cref="Security"/>'s time.</param>
+        public virtual void SetLocalTimeKeeper(LocalTimeKeeper localTimeKeeper)
+        {
+            UnsubscribeToTimeUpdatedEvent();
+            // Assign the new LocalTimeKeeper
+            _localTimeKeeper = localTimeKeeper;
+            SubscribeToTimeUpdatedEvent();
+        }
+
+        private void SubscribeToTimeUpdatedEvent()
+        {
+            if (!_subscribeToDateChangedEvent && _localTimeKeeper != null)
+            {
+                _subscribeToDateChangedEvent = true;
+                _localTimeKeeper.TimeUpdated += OnTimeUpdated;
+            }
+        }
+
+        private void UnsubscribeToTimeUpdatedEvent()
+        {
+            if (_localTimeKeeper != null && _subscribeToDateChangedEvent)
+            {
+                _subscribeToDateChangedEvent = false;
+                _localTimeKeeper.TimeUpdated -= OnTimeUpdated;
+            }
+        }
+
+        private void OnTimeUpdated(object sender, TimeUpdatedEventArgs e)
+        {
+            // Triggered when the algorithm sets a new local time from timeSlice.Time
+            Session?.Scan(e.Time);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

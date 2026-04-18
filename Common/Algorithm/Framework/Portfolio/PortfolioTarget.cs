@@ -18,6 +18,7 @@ using QuantConnect.Interfaces;
 using QuantConnect.Securities;
 using System.Collections.Generic;
 using QuantConnect.Securities.Positions;
+using QuantConnect.Algorithm.Framework.Alphas;
 
 namespace QuantConnect.Algorithm.Framework.Portfolio
 {
@@ -60,6 +61,40 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
             Symbol = symbol;
             Quantity = quantity;
             Tag = tag;
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="PortfolioTarget"/> class
+        /// </summary>
+        /// <param name="symbol">The symbol this target is for</param>
+        /// <param name="quantity">The target quantity</param>
+        /// <param name="tag">The target tag with additional information</param>
+        public PortfolioTarget(Symbol symbol, int quantity, string tag = "")
+            : this(symbol, (decimal)quantity, tag)
+        {
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="PortfolioTarget"/> class
+        /// </summary>
+        /// <param name="symbol">The symbol this target is for</param>
+        /// <param name="insightDirection">
+        /// The insight direction, which will be used to calculate the target quantity
+        /// (1 for Up, 0 for flat, -1 for down)
+        /// </param>
+        /// <param name="tag">The target tag with additional information</param>
+        public PortfolioTarget(Symbol symbol, InsightDirection insightDirection, string tag = "")
+            : this(symbol,
+                  insightDirection switch
+                  {
+                      InsightDirection.Up => 1m,
+                      InsightDirection.Down => -1m,
+                      InsightDirection.Flat => 0m,
+                      _ => throw new ArgumentOutOfRangeException(nameof(insightDirection), insightDirection,
+                          Messages.PortfolioTarget.InvalidInsightDirection(symbol, insightDirection)),
+                  },
+                  tag)
+        {
         }
 
         /// <summary>

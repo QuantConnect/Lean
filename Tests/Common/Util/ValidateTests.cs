@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -32,7 +32,9 @@ namespace QuantConnect.Tests.Common.Util
         [TestCase("js#internal@proseware.com", true)]
         [TestCase("j.s@server1.proseware.com", true)]
         [TestCase(@"""j\""s\""""@proseware.com", true)]
+        [TestCase(null, true)]
 
+        [TestCase("", false)]
         [TestCase("js*@proseware.com", false)]
         [TestCase("js@proseware..com", false)]
         [TestCase("j..s@proseware.com", false)]

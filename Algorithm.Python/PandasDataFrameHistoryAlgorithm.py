@@ -94,9 +94,9 @@ class PandasDataFrameHistoryAlgorithm(QCAlgorithm):
     def assert_history_index(self, df, column, expected, ticker, symbol):
 
         if df.empty:
-            raise Exception(f"Empty history data frame for {symbol}")
+            raise AssertionError(f"Empty history data frame for {symbol}")
         if column not in df:
-            raise Exception(f"Could not unstack df. Columns: {', '.join(df.columns)} | {column}")
+            raise AssertionError(f"Could not unstack df. Columns: {', '.join(df.columns)} | {column}")
 
         value = df.iat[0,0]
         df2 = df.xs(df.index.get_level_values('time')[0], level='time')
@@ -133,7 +133,7 @@ class PandasDataFrameHistoryAlgorithm(QCAlgorithm):
 
         except Exception as e:
             symbols = set(df.index.get_level_values(level='symbol'))
-            raise Exception(f"{symbols}, {symbol.id}, {symbol}, {ticker}. {e}")
+            raise AssertionError(f"{symbols}, {symbol.id}, {symbol}, {ticker}. {e}")
 
 
     def assert_history_count(self, method_call, trade_bar_history, expected):
@@ -142,7 +142,7 @@ class PandasDataFrameHistoryAlgorithm(QCAlgorithm):
         else:
             count = len(trade_bar_history.index)
         if count != expected:
-            raise Exception(f"{method_call} expected {expected}, but received {count}")
+            raise AssertionError(f"{method_call} expected {expected}, but received {count}")
 
 
 class QuandlFuture(PythonQuandl):

@@ -18,6 +18,7 @@ using System;
 using NodaTime;
 using System.Linq;
 using System.Globalization;
+using QuantConnect.Interfaces;
 using QuantConnect.Securities;
 using System.Collections.Generic;
 
@@ -31,11 +32,12 @@ namespace QuantConnect.Scheduling
         /// <summary>
         /// Initializes a new instance of the <see cref="DateRules"/> helper class
         /// </summary>
+        /// <param name="algorithm">The algorithm instance</param>
         /// <param name="securities">The security manager</param>
         /// <param name="timeZone">The algorithm's default time zone</param>
         /// <param name="marketHoursDatabase">The market hours database instance to use</param>
-        public DateRules(SecurityManager securities, DateTimeZone timeZone, MarketHoursDatabase marketHoursDatabase)
-            : base(securities, timeZone, marketHoursDatabase)
+        public DateRules(IAlgorithm algorithm, SecurityManager securities, DateTimeZone timeZone, MarketHoursDatabase marketHoursDatabase)
+            : base(algorithm, securities, timeZone, marketHoursDatabase)
         {
         }
 
@@ -124,6 +126,14 @@ namespace QuantConnect.Scheduling
         /// <param name="symbol">The symbol whose exchange is used to determine tradable dates</param>
         /// <param name="extendedMarketHours">True to include days with extended market hours only, like sunday for futures</param>
         /// <returns>A date rule that fires every day the specified symbol trades</returns>
+        public IDateRule EveryDay(string symbol, bool extendedMarketHours = false) => EveryDay(GetSymbol(symbol), extendedMarketHours);
+
+        /// <summary>
+        /// Specifies an event should fire every day the symbol is trading
+        /// </summary>
+        /// <param name="symbol">The symbol whose exchange is used to determine tradable dates</param>
+        /// <param name="extendedMarketHours">True to include days with extended market hours only, like sunday for futures</param>
+        /// <returns>A date rule that fires every day the specified symbol trades</returns>
         public IDateRule EveryDay(Symbol symbol, bool extendedMarketHours = false)
         {
             var securitySchedule = GetSecurityExchangeHours(symbol);
@@ -137,8 +147,18 @@ namespace QuantConnect.Scheduling
         /// <returns>A date rule that fires on the first of each year + offset</returns>
         public IDateRule YearStart(int daysOffset = 0)
         {
-            return YearStart(null, daysOffset, false);
+            return YearStart((Symbol)null, daysOffset, false);
         }
+
+        /// <summary>
+        /// Specifies an event should fire on the first tradable date + offset for the specified symbol of each year
+        /// </summary>
+        /// <param name="symbol">The symbol whose exchange is used to determine the first tradable date of the year</param>
+        /// <param name="daysOffset"> The amount of tradable days to offset the schedule by; must be between 0 and 365</param>
+        /// <param name="extendedMarketHours">True to include days with extended market hours only, like sunday for futures</param>
+        /// <returns>A date rule that fires on the first tradable date + offset for the
+        /// specified security each year</returns>
+        public IDateRule YearStart(string symbol, int daysOffset = 0, bool extendedMarketHours = true) => YearStart(GetSymbol(symbol), daysOffset, extendedMarketHours);
 
         /// <summary>
         /// Specifies an event should fire on the first tradable date + offset for the specified symbol of each year
@@ -173,8 +193,17 @@ namespace QuantConnect.Scheduling
         /// <returns>A date rule that fires on the last of each year - offset</returns>
         public IDateRule YearEnd(int daysOffset = 0)
         {
-            return YearEnd(null, daysOffset, false);
+            return YearEnd((Symbol)null, daysOffset, false);
         }
+
+        /// <summary>
+        /// Specifies an event should fire on the last tradable date - offset for the specified symbol of each year
+        /// </summary>
+        /// <param name="symbol">The symbol whose exchange is used to determine the last tradable date of the year</param>
+        /// <param name="daysOffset">The amount of tradable days to offset the schedule by; must be between 0 and 365.</param>
+        /// <param name="extendedMarketHours">True to include days with extended market hours only, like sunday for futures</param>
+        /// <returns>A date rule that fires on the last tradable date - offset for the specified security each year</returns>
+        public IDateRule YearEnd(string symbol, int daysOffset = 0, bool extendedMarketHours = true) => YearEnd(GetSymbol(symbol), daysOffset, extendedMarketHours);
 
         /// <summary>
         /// Specifies an event should fire on the last tradable date - offset for the specified symbol of each year
@@ -219,6 +248,16 @@ namespace QuantConnect.Scheduling
         /// <param name="extendedMarketHours">True to include days with extended market hours only, like sunday for futures</param>
         /// <returns>A date rule that fires on the first tradable date + offset for the
         /// specified security each month</returns>
+        public IDateRule MonthStart(string symbol, int daysOffset = 0, bool extendedMarketHours = true) => MonthStart(GetSymbol(symbol), daysOffset, extendedMarketHours);
+
+        /// <summary>
+        /// Specifies an event should fire on the first tradable date + offset for the specified symbol of each month
+        /// </summary>
+        /// <param name="symbol">The symbol whose exchange is used to determine the first tradable date of the month</param>
+        /// <param name="daysOffset"> The amount of tradable days to offset the schedule by; must be between 0 and 30</param>
+        /// <param name="extendedMarketHours">True to include days with extended market hours only, like sunday for futures</param>
+        /// <returns>A date rule that fires on the first tradable date + offset for the
+        /// specified security each month</returns>
         public IDateRule MonthStart(Symbol symbol, int daysOffset = 0, bool extendedMarketHours = true)
         {
             // Check that our offset is allowed
@@ -240,6 +279,15 @@ namespace QuantConnect.Scheduling
         {
             return new FuncDateRule(GetName(null, "MonthEnd", -daysOffset), (start, end) => MonthIterator(null, start, end, daysOffset, false, false));
         }
+
+        /// <summary>
+        /// Specifies an event should fire on the last tradable date - offset for the specified symbol of each month
+        /// </summary>
+        /// <param name="symbol">The symbol whose exchange is used to determine the last tradable date of the month</param>
+        /// <param name="daysOffset">The amount of tradable days to offset the schedule by; must be between 0 and 30.</param>
+        /// <param name="extendedMarketHours">True to include days with extended market hours only, like sunday for futures</param>
+        /// <returns>A date rule that fires on the last tradable date - offset for the specified security each month</returns>
+        public IDateRule MonthEnd(string symbol, int daysOffset = 0, bool extendedMarketHours = true) => MonthEnd(GetSymbol(symbol), daysOffset, extendedMarketHours);
 
         /// <summary>
         /// Specifies an event should fire on the last tradable date - offset for the specified symbol of each month
@@ -286,6 +334,18 @@ namespace QuantConnect.Scheduling
         /// <param name="extendedMarketHours">True to include extended market hours, false otherwise</param>
         /// <returns>A date rule that fires on the first + offset tradable date for the specified
         /// security each week</returns>
+        public IDateRule WeekStart(string symbol, int daysOffset = 0, bool extendedMarketHours = true) => WeekStart(GetSymbol(symbol), daysOffset, extendedMarketHours);
+
+        /// <summary>
+        /// Specifies an event should fire on the first tradable date + offset for the specified
+        /// symbol each week
+        /// </summary>
+        /// <param name="symbol">The symbol whose exchange is used to determine the first
+        /// tradeable date of the week</param>
+        /// <param name="daysOffset">The amount of tradable days to offset the first tradable day by</param>
+        /// <param name="extendedMarketHours">True to include extended market hours, false otherwise</param>
+        /// <returns>A date rule that fires on the first + offset tradable date for the specified
+        /// security each week</returns>
         public IDateRule WeekStart(Symbol symbol, int daysOffset = 0, bool extendedMarketHours = true)
         {
             var securitySchedule = GetSecurityExchangeHours(symbol);
@@ -319,6 +379,17 @@ namespace QuantConnect.Scheduling
 
             return new FuncDateRule(GetName(null, "WeekEnd", -daysOffset), (start, end) => WeekIterator(null, start, end, daysOffset, false, false));
         }
+
+        /// <summary>
+        /// Specifies an event should fire on the last - offset tradable date for the specified
+        /// symbol of each week
+        /// </summary>
+        /// <param name="symbol">The symbol whose exchange is used to determine the last
+        /// tradable date of the week</param>
+        /// <param name="daysOffset"> The amount of tradable days to offset the last tradable day by each week</param>
+        /// <param name="extendedMarketHours">True to include extended market hours, false otherwise</param>
+        /// <returns>A date rule that fires on the last - offset tradable date for the specified security each week</returns>
+        public IDateRule WeekEnd(string symbol, int daysOffset = 0, bool extendedMarketHours = true) => WeekEnd(GetSymbol(symbol), daysOffset, extendedMarketHours);
 
         /// <summary>
         /// Specifies an event should fire on the last - offset tradable date for the specified

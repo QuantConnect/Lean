@@ -42,7 +42,7 @@ class OptionStrategyFactoryMethodsBaseAlgorithm(QCAlgorithm):
 
             buying_power_model = position_group.buying_power_model
             if not isinstance(buying_power_model, OptionStrategyPositionGroupBuyingPowerModel):
-                raise Exception("Expected position group buying power model type: OptionStrategyPositionGroupBuyingPowerModel. "
+                raise AssertionError("Expected position group buying power model type: OptionStrategyPositionGroupBuyingPowerModel. "
                                 f"Actual: {type(position_group.buying_power_model).__name__}")
 
             self.assert_strategy_position_group(position_group, self._option_symbol)
@@ -55,11 +55,11 @@ class OptionStrategyFactoryMethodsBaseAlgorithm(QCAlgorithm):
 
     def on_end_of_algorithm(self):
         if self.portfolio.invested:
-            raise Exception("Expected no holdings at end of algorithm")
+            raise AssertionError("Expected no holdings at end of algorithm")
 
         orders_count = len(list(self.transactions.get_orders(lambda order: order.status == OrderStatus.FILLED)))
         if orders_count != self.expected_orders_count():
-            raise Exception(f"Expected {self.expected_orders_count()} orders to have been submitted and filled, "
+            raise AssertionError(f"Expected {self.expected_orders_count()} orders to have been submitted and filled, "
                             f"half for buying the strategy and the other half for the liquidation. Actual {orders_count}")
 
     def expected_orders_count(self) -> int:

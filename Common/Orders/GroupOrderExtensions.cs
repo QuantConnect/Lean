@@ -129,5 +129,32 @@ namespace QuantConnect.Orders
         {
             return groupOrderManager != null ? legGroupQuantity / groupOrderManager.Quantity : legGroupQuantity;
         }
+
+        /// <summary>
+        /// Calculates the greatest common divisor (GCD) of the provided leg quantities
+        /// and returns it as a signed quantity based on the <see cref="OrderDirection"/>.
+        /// </summary>
+        /// <param name="legQuantity">A collection of leg quantities.</param>
+        /// <param name="orderDirection">
+        /// Determines the sign of the returned quantity:
+        /// <see cref="OrderDirection.Buy"/> returns a positive quantity,
+        /// <see cref="OrderDirection.Sell"/> returns a negative quantity.
+        /// </param>
+        /// <returns>
+        /// The greatest common divisor of the leg quantities, signed according to <paramref name="orderDirection"/>.
+        /// </returns>
+        /// <exception cref="ArgumentException">
+        /// Thrown when <paramref name="orderDirection"/> has an unsupported value.
+        /// </exception>
+        public static decimal GetGroupQuantityByEachLegQuantity(IEnumerable<decimal> legQuantity, OrderDirection orderDirection)
+        {
+            var groupQuantity = Extensions.GreatestCommonDivisor(legQuantity.Select(Math.Abs));
+            return orderDirection switch
+            {
+                OrderDirection.Buy => groupQuantity,
+                OrderDirection.Sell => decimal.Negate(groupQuantity),
+                _ => throw new ArgumentException($"Unsupported {nameof(OrderDirection)} value: '{orderDirection}'.", nameof(orderDirection))
+            };
+        }
     }
 }

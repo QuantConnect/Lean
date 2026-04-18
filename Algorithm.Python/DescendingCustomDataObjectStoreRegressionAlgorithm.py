@@ -40,7 +40,7 @@ class DescendingCustomDataObjectStoreRegressionAlgorithm(QCAlgorithm):
         "2024-09-09 12:00:00,176.0,178.0,175.0,177.0,116275729,4641.97"
     ]
 
-    def initialize(self):
+    def initialize(self) -> None:
         self.set_start_date(2024, 9, 9)
         self.set_end_date(2024, 10, 3)
         self.set_cash(100000)
@@ -49,7 +49,7 @@ class DescendingCustomDataObjectStoreRegressionAlgorithm(QCAlgorithm):
 
         SortCustomData.custom_data_key = self.get_custom_data_key()
 
-        self.custom_symbol = self.add_data(SortCustomData, "SortCustomData", Resolution.DAILY).symbol
+        self._custom_symbol = self.add_data(SortCustomData, "SortCustomData", Resolution.DAILY).symbol
 
         # Saving data here for demonstration and regression testing purposes.
         # In real scenarios, data has to be saved to the object store before the algorithm starts.
@@ -57,46 +57,46 @@ class DescendingCustomDataObjectStoreRegressionAlgorithm(QCAlgorithm):
 
         self.received_data = []
 
-    def on_data(self, slice: Slice):
-        if slice.contains_key(self.custom_symbol):
-            custom_data = slice.get(SortCustomData, self.custom_symbol)
+    def on_data(self, slice: Slice) -> None:
+        if slice.contains_key(self._custom_symbol):
+            custom_data = slice.get(SortCustomData, self._custom_symbol)
             if custom_data.open == 0 or custom_data.high == 0 or custom_data.low == 0 or custom_data.close == 0 or custom_data.price == 0:
-                raise Exception("One or more custom data fields (open, high, low, close, price) are zero.")
+                raise AssertionError("One or more custom data fields (open, high, low, close, price) are zero.")
 
             self.received_data.append(custom_data)
 
-    def on_end_of_algorithm(self):
+    def on_end_of_algorithm(self) -> None:
         if not self.received_data:
-            raise Exception("Custom data was not fetched")
+            raise AssertionError("Custom data was not fetched")
 
         # Make sure history requests work as expected
-        history = self.history(SortCustomData, self.custom_symbol, self.start_date, self.end_date, Resolution.DAILY)
+        history = self.history(SortCustomData, self._custom_symbol, self.start_date, self.end_date, Resolution.DAILY)
 
         if history.shape[0] != len(self.received_data):
-            raise Exception("History request returned more or less data than expected")
+            raise AssertionError("History request returned more or less data than expected")
 
         # Iterate through the history collection, checking if the time is in ascending order.
         for i in range(len(history) - 1):
             # [1] - time
             if history.index[i][1] > history.index[i + 1][1]:
-                raise RegressionTestException(
+                raise AssertionError(
                     f"Order failure: {history.index[i][1]} > {history.index[i + 1][1]} at index {i}.")
 
-    def get_custom_data_key(self):
+    def get_custom_data_key(self) -> str:
         return "CustomData/SortCustomData"
 
 
 class SortCustomData(PythonData):
     custom_data_key = ""
 
-    def get_source(self, config, date, is_live):
+    def get_source(self, config: SubscriptionDataConfig, date: datetime, is_live_mode: bool) -> SubscriptionDataSource:
         subscription = SubscriptionDataSource(self.custom_data_key, SubscriptionTransportMedium.OBJECT_STORE,
                                               FileFormat.CSV)
         # Indicate that the data from the subscription will be returned in descending order.
-        subscription.Sort = True
+        subscription.sort = True
         return subscription
 
-    def reader(self, config, line, date, is_live):
+    def reader(self, config: SubscriptionDataConfig, line: str, date: datetime, is_live_mode: bool) -> DynamicData:
         data = line.split(',')
         obj_data = SortCustomData()
         obj_data.symbol = config.symbol

@@ -11,6 +11,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from datetime import timedelta
 from AlgorithmImports import *
 
 # <summary>
@@ -31,14 +32,16 @@ class TickDataFilteringAlgorithm(QCAlgorithm):
         #Add our custom data filter.
         spy.set_data_filter(TickExchangeDataFilter(self))
 
+        self._order_time = None
+
     # <summary>
     # Data arriving here will now be filtered.
     # </summary>
     # <param name="data">Ticks data array</param>
     def on_data(self, data):
-        if not data.contains_key("SPY"): 
+        if not data.contains_key("SPY"):
             return
-        
+
         spy_tick_list = data["SPY"]
 
         # Ticks return a list of ticks this second
@@ -47,6 +50,10 @@ class TickDataFilteringAlgorithm(QCAlgorithm):
 
         if not self.portfolio.invested:
             self.set_holdings("SPY", 1)
+            self._order_time = self.time
+        # Let's shortcut to reduce regression test duration
+        elif self.time - self._order_time > timedelta(minutes=5):
+            self.quit()
 
 # <summary>
 # Exchange filter class
@@ -73,5 +80,5 @@ class TickExchangeDataFilter(SecurityDataFilter):
         if isinstance(data, Tick):
             if data.exchange == str(Exchange.ARCA):
                 return True
-        
+
         return False

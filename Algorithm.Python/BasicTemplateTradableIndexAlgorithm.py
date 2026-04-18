@@ -15,7 +15,7 @@ from AlgorithmImports import *
 from BasicTemplateIndexAlgorithm import BasicTemplateIndexAlgorithm
 
 class BasicTemplateTradableIndexAlgorithm(BasicTemplateIndexAlgorithm):
-    ticket = None
+    ticket: OrderTicket | None = None
     def initialize(self) -> None:
         super().initialize()
         self.securities[self.spx].is_tradable = True
@@ -26,5 +26,5 @@ class BasicTemplateTradableIndexAlgorithm(BasicTemplateIndexAlgorithm):
             self.ticket = self.market_order(self.spx, 1)
 
     def on_end_of_algorithm(self) -> None:
-        if self.ticket.status != OrderStatus.FILLED:
-            raise Exception("Index is tradable.")
+        if self.ticket and self.ticket.status != OrderStatus.FILLED:
+            raise AssertionError("Index is tradable.")

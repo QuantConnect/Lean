@@ -32,11 +32,11 @@ class HistoryWithCustomDataSourceRegressionAlgorithm(QCAlgorithm):
             fill_forward=False, extended_market_hours=False, data_normalization_mode=DataNormalizationMode.RAW).droplevel(0, axis=0)
 
         if aapl_history.size == 0 or spy_history.size == 0:
-            raise Exception("At least one of the history results is empty")
+            raise AssertionError("At least one of the history results is empty")
 
         # Check that both resutls contain the same data, since CustomData fetches APPL data regardless of the symbol
         if not aapl_history.equals(spy_history):
-            raise Exception("Histories are not equal")
+            raise AssertionError("Histories are not equal")
 
 class CustomData(PythonData):
     '''Custom data source for the regression test algorithm, which returns AAPL equity data regardless of the symbol requested.'''

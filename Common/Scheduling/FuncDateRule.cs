@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -46,7 +46,7 @@ namespace QuantConnect.Scheduling
         public FuncDateRule(string name, PyObject getDatesFunction)
         {
             Name = name;
-            if (!getDatesFunction.TryConvertToDelegate(out _getDatesFunction))
+            if (!getDatesFunction.TrySafeAs(out _getDatesFunction))
             {
                 throw new ArgumentException("Python DateRule provided is not a function");
             }

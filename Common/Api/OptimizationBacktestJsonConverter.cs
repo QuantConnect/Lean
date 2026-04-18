@@ -76,19 +76,19 @@ namespace QuantConnect.Api
             if (optimizationBacktest.StartDate != default)
             {
                 writer.WritePropertyName("startDate");
-                writer.WriteValue(optimizationBacktest.StartDate.ToStringInvariant(DateFormat.UI));
+                writer.WriteValue(optimizationBacktest.StartDate.ToStringInvariant(DateFormat.ISOShort));
             }
 
             if (optimizationBacktest.EndDate != default)
             {
                 writer.WritePropertyName("endDate");
-                writer.WriteValue(optimizationBacktest.EndDate.ToStringInvariant(DateFormat.UI));
+                writer.WriteValue(optimizationBacktest.EndDate.ToStringInvariant(DateFormat.ISOShort));
             }
 
             if (optimizationBacktest.OutOfSampleMaxEndDate != null)
             {
                 writer.WritePropertyName("outOfSampleMaxEndDate");
-                writer.WriteValue(optimizationBacktest.OutOfSampleMaxEndDate.ToStringInvariant(DateFormat.UI));
+                writer.WriteValue(optimizationBacktest.OutOfSampleMaxEndDate.ToStringInvariant(DateFormat.ISOShort));
 
                 writer.WritePropertyName("outOfSampleDays");
                 writer.WriteValue(optimizationBacktest.OutOfSampleDays);
@@ -106,6 +106,7 @@ namespace QuantConnect.Api
                         case PerformanceMetrics.SortinoRatio:
                         case PerformanceMetrics.StartEquity:
                         case PerformanceMetrics.EndEquity:
+                        case PerformanceMetrics.DrawdownRecovery:
                             continue;
                     }
                     var statistic = keyValuePair.Value.Replace("%", string.Empty);
@@ -184,6 +185,7 @@ namespace QuantConnect.Api
                     // TODO: Add SortinoRatio
                     // TODO: Add StartingEquity
                     // TODO: Add EndingEquity
+                    // TODO: Add DrawdownRecovery
                     { PerformanceMetrics.TotalFees, jStatistics[16].Value<string>() },
                     { PerformanceMetrics.TotalOrders, jStatistics[17].Value<string>() },
                     { PerformanceMetrics.TrackingError, jStatistics[18].Value<string>() },

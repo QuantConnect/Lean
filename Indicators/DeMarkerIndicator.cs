@@ -105,8 +105,8 @@ namespace QuantConnect.Indicators
                 deMin = Math.Max(_lastLow - input.Low, 0);
             }
 
-            _maxMA.Update(input.Time, deMax);
-            _minMA.Update(input.Time, deMin);
+            _maxMA.Update(input.EndTime, deMax);
+            _minMA.Update(input.EndTime, deMin);
             _lastHigh = input.High;
             _lastLow = input.Low;
 

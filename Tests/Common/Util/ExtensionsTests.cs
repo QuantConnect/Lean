@@ -46,6 +46,25 @@ namespace QuantConnect.Tests.Common.Util
     [TestFixture]
     public class ExtensionsTests
     {
+        [TestCase("00000001", TradeConditionFlags.Regular)]
+        [TestCase("20000021", TradeConditionFlags.Regular, TradeConditionFlags.IntermarketSweep, TradeConditionFlags.TradeThroughExempt)]
+        public void GetEnumValuesInValue(string saleCondition, params TradeConditionFlags[] expected)
+        {
+            var parsed = uint.Parse(saleCondition, NumberStyles.HexNumber, CultureInfo.InvariantCulture);
+            var enums = Extensions.GetFlags<TradeConditionFlags>(parsed).ToArray();
+            Assert.AreEqual(expected, enums);
+        }
+
+        [TestCase("tt", "", "tt")]
+        [TestCase("tt", "t", "t")]
+        [TestCase("tt", "tt", "")]
+        [TestCase("tt", "asda", "tt")]
+        [TestCase("tt", "1", "tt")]
+        public void RemoveFromEnd(string input, string removal, string expected)
+        {
+            Assert.AreEqual(expected, input.RemoveFromEnd(removal));
+        }
+
         [TestCase("A test", 1)]
         [TestCase("[\"A test\"]", 1)]
         [TestCase("[\"A test\", \"something else\"]", 2)]
@@ -1342,7 +1361,7 @@ class Test(PythonData):
                 using var locals = new PyDict();
                 PythonEngine.Exec(code, null, locals);
                 var pyObject = locals.GetItem("coarseSelector");
-                pyObject.TryConvertToDelegate(out coarseSelector);
+                pyObject.TryAs(out coarseSelector);
             }
 
             var coarse = Enumerable
@@ -1369,7 +1388,7 @@ class Test(PythonData):
                 using var locals = new PyDict();
                 PythonEngine.Exec("def raise_number(a): raise ValueError(a)", null, locals);
                 var pyObject = locals.GetItem("raise_number");
-                pyObject.TryConvertToDelegate(out action);
+                pyObject.TryAs(out action);
             }
 
             try
@@ -1390,8 +1409,8 @@ class Test(PythonData):
             {
                 var tradebarSelectorPyObject = Field.Volume.ToPython();
                 var quotebatSelectorPyObject = Field.BidClose.ToPython();
-                var tradebarResult = tradebarSelectorPyObject.TryConvertToDelegate<Func<IBaseData, decimal>>(out var tradebarCSharpSelector);
-                var quotebarResult = quotebatSelectorPyObject.TryConvertToDelegate<Func<IBaseData, decimal>>(out var quotebarCSharpSelector);
+                var tradebarResult = tradebarSelectorPyObject.TryAs<Func<IBaseData, decimal>>(out var tradebarCSharpSelector);
+                var quotebarResult = quotebatSelectorPyObject.TryAs<Func<IBaseData, decimal>>(out var quotebarCSharpSelector);
                 Assert.IsTrue(tradebarResult);
                 Assert.IsTrue(quotebarResult);
                 Assert.IsTrue(ReferenceEquals(Field.Volume, tradebarCSharpSelector));
@@ -1409,7 +1428,7 @@ class Test(PythonData):
                 using var locals = new PyDict();
                 PythonEngine.Exec("def raise_number(a, b): raise ValueError(a * b)", null, locals);
                 var pyObject = locals.GetItem("raise_number");
-                pyObject.TryConvertToDelegate(out action);
+                pyObject.TryAs(out action);
             }
 
             try
@@ -1433,7 +1452,7 @@ class Test(PythonData):
                 using var locals = new PyDict();
                 PythonEngine.Exec("def raise_number(a, b): raise ValueError(a * b)", null, locals);
                 var pyObject = locals.GetItem("raise_number");
-                Assert.Throws<ArgumentException>(() => pyObject.TryConvertToDelegate(out action));
+                Assert.IsFalse(pyObject.TryAs(out action));
             }
         }
 
@@ -1701,7 +1720,7 @@ class TestPythonDerivedClass(PythonData):
         public void DateRulesToFunc()
         {
             var mhdb = MarketHoursDatabase.FromDataFolder();
-            var dateRules = new DateRules(new SecurityManager(
+            var dateRules = new DateRules(null, new SecurityManager(
                 new TimeKeeper(new DateTime(2015, 1, 1), DateTimeZone.Utc)), DateTimeZone.Utc, mhdb);
             var first = new DateTime(2015, 1, 10);
             var second = new DateTime(2015, 1, 30);
@@ -1745,8 +1764,8 @@ class TestPythonDerivedClass(PythonData):
                         SymbolPropertiesDatabase.FromDataFolder(),
                         algo,
                         null,
-                        null
-                    ),
+                        null,
+                        algorithm: algo),
                     new DataPermissionManager(),
                     TestGlobals.DataProvider
                 ),
@@ -1908,7 +1927,7 @@ def select_symbol(fundamental):
 "
                 );
                 var selectSymbolPythonMethod = module.GetAttr("select_symbol");
-                Assert.IsTrue(selectSymbolPythonMethod.TryConvertToDelegate(out Func<IEnumerable<Fundamental>, object> selectSymbols));
+                Assert.IsTrue(selectSymbolPythonMethod.TryAs(out Func<IEnumerable<Fundamental>, object> selectSymbols));
                 Assert.IsNotNull(selectSymbols);
 
                 var selectSymbolsUniverseDelegate = selectSymbols.ConvertToUniverseSelectionSymbolDelegate();
@@ -2068,6 +2087,30 @@ def select_symbol(fundamental):
             var csvLine = "2,1.234";
             Assert.IsTrue(csvLine.TryGetDecimalFromCsv(index, out var result));
             Assert.AreEqual(expectedValue, result);
+        }
+
+        [Test]
+        public void GetsEnumStringInPython([Values] bool useIntValue)
+        {
+            using (Py.GIL())
+            {
+                var module = PyModule.FromString(
+                    "GetsEnumStringInPython",
+                    @"
+from AlgorithmImports import *
+
+def get_enum_string(value):
+    return Extensions.get_enum_string(value, Resolution)
+"
+                );
+
+                using var getEnumString = module.GetAttr("get_enum_string");
+                var enumValue = Resolution.Minute;
+                using var pyEnumValue = useIntValue ? Convert.ToInt64(enumValue).ToPython() : enumValue.ToPython();
+                var enumString = getEnumString.Invoke(pyEnumValue).As<string>();
+
+                Assert.AreEqual(nameof(Resolution.Minute), enumString);
+            }
         }
 
         private PyObject ConvertToPyObject(object value)

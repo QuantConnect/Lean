@@ -46,7 +46,7 @@ namespace QuantConnect.Algorithm.CSharp
                 var stopPrice = orderEvent.FillPrice - 2;
                 var currencySymbol = Currencies.GetCurrencySymbol(order.PriceCurrency);
                 Debug($"Enter short at {orderEvent.FillPrice} set STOPLOSS at {currencySymbol}{stopPrice}");
-                StopMarketOrder(order.Symbol, -order.Quantity, stopPrice, "StopLoss");
+                StopMarketOrder(order.Symbol, -order.Quantity, stopPrice, tag: "StopLoss");
             }
         }
 
@@ -116,7 +116,8 @@ namespace QuantConnect.Algorithm.CSharp
             {"Estimated Strategy Capacity", "$18000000.00"},
             {"Lowest Capacity Asset", "SPY R735QTJ8XC9X"},
             {"Portfolio Turnover", "5.79%"},
-            {"OrderListHash", "4113054204a032b871734430f2fbdcb5"}
+            {"Drawdown Recovery", "0"},
+            {"OrderListHash", "d448232662a0cada4bf83ef8334bcb5b"}
         };
     }
 }

@@ -37,7 +37,7 @@ namespace QuantConnect.Indicators
         /// The point where the regression line crosses the y-axis (price-axis)
         /// </summary>
         public IndicatorBase<IndicatorDataPoint> Intercept { get; }
-        
+
         /// <summary>
         /// The regression line slope
         /// </summary>
@@ -85,13 +85,13 @@ namespace QuantConnect.Indicators
 
             // Sort the window by time, convert the observations to double and transform it to an array
             var series = window
-                .OrderBy(i => i.Time)
+                .OrderBy(i => i.EndTime)
                 .Select(i => Convert.ToDouble(i.Value))
                 .ToArray();
             // Fit OLS
             var ols = Fit.Line(x: _t, y: series);
-            Intercept.Update(input.Time, (decimal)ols.Item1);
-            Slope.Update(input.Time, (decimal)ols.Item2);
+            Intercept.Update(input.EndTime, (decimal)ols.Item1);
+            Slope.Update(input.EndTime, (decimal)ols.Item2);
 
             // Calculate the fitted value corresponding to the input
             return Intercept.Current.Value + Slope.Current.Value * Period;

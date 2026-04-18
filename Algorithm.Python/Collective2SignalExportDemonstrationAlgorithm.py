@@ -31,9 +31,9 @@ class Collective2SignalExportDemonstrationAlgorithm(QCAlgorithm):
         # Symbols accepted by Collective2. Collective2 accepts stock, future, forex and US stock option symbols
         self.add_equity("GOOG")
         self._symbols = [
-            Symbol.create("SPY", SecurityType.EQUITY, Market.USA, None, None),
-            Symbol.create("EURUSD", SecurityType.FOREX, Market.OANDA, None, None),
-            Symbol.create_future("ES", Market.CME, datetime(2023, 12, 15), None),
+            Symbol.create("SPY", SecurityType.EQUITY, Market.USA),
+            Symbol.create("EURUSD", SecurityType.FOREX, Market.OANDA),
+            Symbol.create_future("ES", Market.CME, datetime(2023, 12, 15)),
             Symbol.create_option("GOOG", Market.USA, OptionStyle.AMERICAN, OptionRight.CALL, 130, datetime(2023, 9, 1))
         ]
         self.targets = []
@@ -61,11 +61,14 @@ class Collective2SignalExportDemonstrationAlgorithm(QCAlgorithm):
         # Collective2 System ID: This value is found beside the system's name (strategy's name) on the main system page
         self.collective2_system_id = 0
 
+        # Disable automatic exports as we manually set them
+        self.signal_export.automatic_export_time_span = None
+
         # If using the Collective2 white-label API, you can specify it in the constructor with the optional parameter `use_white_label_api`:
         # e.g. Collective2SignalExport(self.collective2_apikey, self.collective2_system_id, use_white_label_api=True)
         # The API url can also be overridden by setting the Destination property:
         # e.g. Collective2SignalExport(self.collective2_apikey, self.collective2_system_id) { Destination = new Uri("your url") }
-        self.signal_export.add_signal_export_providers(Collective2SignalExport(self.collective2_apikey, self.collective2_system_id))
+        self.signal_export.add_signal_export_provider(Collective2SignalExport(self.collective2_apikey, self.collective2_system_id))
 
         self.first_call = True
 

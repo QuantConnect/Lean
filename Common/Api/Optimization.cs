@@ -72,7 +72,7 @@ namespace QuantConnect.Api
         /// <summary>
         /// Optimization requested date and time
         /// </summary>
-        [JsonConverter(typeof(DateTimeJsonConverter), DateFormat.UI)]
+        [JsonConverter(typeof(DateTimeJsonConverter), DateFormat.ISOShort, DateFormat.UI)]
         public DateTime Requested { get; set; }
     }
 

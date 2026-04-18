@@ -82,13 +82,13 @@ namespace QuantConnect.Tests.Common
             {
                 serialized = $"{{\"Name\":\"Backtest name\",\"Tags\":[\"tag1\",\"tag2\"],\"AccountCurrency\":\"GBP\",\"Brokerage\":32," +
                 $"\"AccountType\":1,\"Parameters\":{{\"a\":\"A\",\"b\":\"B\"}},\"OutOfSampleMaxEndDate\":\"2023-01-01T00:00:00\"," +
-                $"\"OutOfSampleDays\":30,\"StartDate\":\"1998-01-01 00:00:00\",\"EndDate\":\"{algorithm.EndDate.ToString(DateFormat.UI)}\",\"TradingDaysPerYear\":252}}";
+                $"\"OutOfSampleDays\":30,\"StartDate\":\"1998-01-01T00:00:00Z\",\"EndDate\":\"{algorithm.EndDate.ToString(DateFormat.ISOShort)}\",\"TradingDaysPerYear\":252}}";
             }
             else
             {
                 Assert.AreEqual($"{{\"name\":\"Backtest name\",\"tags\":[\"tag1\",\"tag2\"],\"accountCurrency\":\"GBP\",\"brokerage\":32," +
-                $"\"accountType\":1,\"parameters\":{{\"a\":\"A\",\"b\":\"B\"}},\"outOfSampleMaxEndDate\":\"2023-01-01T00:00:00\"," +
-                $"\"outOfSampleDays\":30,\"startDate\":\"1998-01-01 00:00:00\",\"endDate\":\"{algorithm.EndDate.ToString(DateFormat.UI)}\",\"tradingDaysPerYear\":252}}", serialized);
+                $"\"accountType\":1,\"parameters\":{{\"a\":\"A\",\"b\":\"B\"}},\"outOfSampleMaxEndDate\":\"2023-01-01T00:00:00Z\"," +
+                $"\"outOfSampleDays\":30,\"startDate\":\"1998-01-01T00:00:00Z\",\"endDate\":\"{algorithm.EndDate.ToString(DateFormat.ISOShort)}\",\"tradingDaysPerYear\":252}}", serialized);
             }
 
             var deserialize = JsonConvert.DeserializeObject<AlgorithmConfiguration>(serialized);

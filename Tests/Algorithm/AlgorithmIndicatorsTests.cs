@@ -14,6 +14,7 @@
 */
 
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using Moq;
 using NUnit.Framework;
@@ -24,6 +25,7 @@ using QuantConnect.Data.Market;
 using QuantConnect.Indicators;
 using QuantConnect.Lean.Engine.DataFeeds;
 using QuantConnect.Lean.Engine.HistoricalData;
+using QuantConnect.Python;
 using QuantConnect.Tests.Engine.DataFeeds;
 using QuantConnect.Tests.Research;
 
@@ -484,6 +486,195 @@ class GoodCustomIndicator:
             Assert.IsTrue(indicator.IsReady);
         }
 
+        [Test]
+        public void IndicatorHistoryIsSupportedInPythonForOptionsIndicators([Range(1, 4)] int overload, [Values] bool useMirrorContract)
+        {
+            _algorithm.SetDateTime(new DateTime(2014, 06, 07));
+
+            var contract = Symbol.CreateOption("AAPL", Market.USA, OptionStyle.American, OptionRight.Call, 505, new DateTime(2014, 6, 27));
+            var mirrorContract = useMirrorContract
+                ? Symbol.CreateOption("AAPL", Market.USA, OptionStyle.American, OptionRight.Put, 505, new DateTime(2014, 6, 27))
+                : null;
+            var underlying = contract.Underlying;
+
+            var indicator = new ImpliedVolatility(contract, optionModel: OptionPricingModelType.BlackScholes, mirrorOption: mirrorContract);
+
+            using var _ = Py.GIL();
+
+            using var pyIndicator = indicator.ToPython();
+            var symbols = useMirrorContract ? new[] { contract, mirrorContract, underlying } : new[] { contract, underlying };
+            using var pySymbols = symbols.ToPyListUnSafe();
+
+            var symbolsHistory = overload != 4
+                ? null
+                : _algorithm.History(symbols, TimeSpan.FromDays(2), Resolution.Minute);
+
+            var indicatorHistory = overload switch
+            {
+                1 => _algorithm.IndicatorHistory(pyIndicator, pySymbols, TimeSpan.FromDays(2), Resolution.Minute),
+                2 => _algorithm.IndicatorHistory(pyIndicator, pySymbols, 60 * 24 * 2, Resolution.Minute),
+                3 => _algorithm.IndicatorHistory(pyIndicator, pySymbols, new DateTime(2014, 6, 6), new DateTime(2014, 6, 7), Resolution.Minute),
+                4 => _algorithm.IndicatorHistory(pyIndicator, symbolsHistory),
+                _ => throw new ArgumentOutOfRangeException(nameof(overload), "Invalid overload")
+            };
+
+            Assert.AreEqual(390, indicatorHistory.Count);
+
+            using var dataFrame = indicatorHistory.DataFrame;
+            Assert.AreEqual(390, dataFrame.GetAttr("shape")[0].GetAndDispose<int>());
+            // Assert dataframe column names are current, price, oppositeprice and underlyingprice
+            var columns = dataFrame.GetAttr("columns").InvokeMethod<List<string>>("tolist");
+            var expectedColumns = new[] { "current", "price", "oppositeprice", "underlyingprice" };
+            CollectionAssert.AreEquivalent(expectedColumns, columns);
+        }
+
+        [Test]
+        public void WarmUpIndicatorIsSupportedInPythonForOptionsIndicators([Values(1, 2)] int overload, [Values] bool useMirrorContract)
+        {
+            _algorithm.SetDateTime(new DateTime(2014, 06, 07));
+
+            var contract = Symbol.CreateOption("AAPL", Market.USA, OptionStyle.American, OptionRight.Call, 505, new DateTime(2014, 07, 19));
+            var mirrorContract = useMirrorContract
+                ? Symbol.CreateOption("AAPL", Market.USA, OptionStyle.American, OptionRight.Put, 505, new DateTime(2014, 07, 19))
+                : null;
+            var underlying = contract.Underlying;
+
+            var indicator = new ImpliedVolatility(contract, optionModel: OptionPricingModelType.BlackScholes, mirrorOption: mirrorContract);
+
+            using var _ = Py.GIL();
+
+            using var pyIndicator = indicator.ToPython();
+            var symbols = useMirrorContract ? new[] { contract, mirrorContract, underlying } : new[] { contract, underlying };
+            using var pySymbols = symbols.ToPyListUnSafe();
+
+            switch (overload)
+            {
+                case 1:
+                    _algorithm.WarmUpIndicator(pySymbols, pyIndicator, TimeSpan.FromDays(1));
+                    break;
+
+                case 2:
+                    _algorithm.WarmUpIndicator(pySymbols, pyIndicator, Resolution.Daily);
+                    break;
+
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(overload), "Invalid overload");
+            }
+
+            Assert.IsTrue(indicator.IsReady);
+
+            if (useMirrorContract)
+            {
+                Assert.IsNotNull(indicator.OppositePrice);
+            }
+            else
+            {
+                Assert.IsNull(indicator.OppositePrice);
+            }
+        }
+
+        [Test]
+        public void IndicatorHistoryDataFrameDoesNotCointainDefaultDateTimeIndex()
+        {
+            var pandasConverter = new PandasConverter();
+            var indicatorsDataPointPerProperty = new List<InternalIndicatorValues>
+                {
+                    new InternalIndicatorValues(null, "current")
+                };
+            var lazyDataFrame = new Lazy<PyObject>(
+                    () => pandasConverter.GetIndicatorDataFrame(indicatorsDataPointPerProperty.Select(x => new KeyValuePair<string, List<IndicatorDataPoint>>(x.Name, x.Values))),
+                    isThreadSafe: false);
+            var indicatorHistory = new IndicatorHistory(new List<IndicatorDataPoints>(), indicatorsDataPointPerProperty, lazyDataFrame);
+            indicatorHistory.Current.Add(new IndicatorDataPoint(Symbols.SPY, new DateTime(2018, 1, 1), 100));
+            indicatorHistory.Current.Add(new IndicatorDataPoint(Symbols.SPY, new DateTime(2018, 1, 2), 100));
+            // Force insertion of a default(DateTime) timestamp to ensure it's excluded from the DataFrame
+            indicatorHistory.Current.Add(new IndicatorDataPoint(Symbols.SPY, default, 100));
+
+            dynamic dataframe = indicatorHistory.DataFrame;
+            using (Py.GIL())
+            {
+                var index = dataframe.index;
+                foreach (dynamic time in index)
+                {
+                    DateTime timestamp = (DateTime)time.AsManagedObject(typeof(DateTime));
+                    // Ensure that no timestamp in the DataFrame index is equal to default(DateTime)
+                    Assert.AreNotEqual(default(DateTime), timestamp);
+                }
+            }
+        }
+
+        [Test]
+        public void IndicatorHistoryShouldIncludeValidIndicatorsAndExplicitlyIncludedProperties()
+        {
+            var referenceSymbol = Symbol.Create("IBM", SecurityType.Equity, Market.USA);
+            var indicator = new TestIndicator();
+            _algorithm.SetDateTime(new DateTime(2013, 10, 11));
+            var history = _algorithm.History(new[] { referenceSymbol }, TimeSpan.FromDays(5), Resolution.Minute);
+            var indicatorValues = _algorithm.IndicatorHistory(indicator, history);
+
+            dynamic dataframe = indicatorValues.DataFrame;
+            using (Py.GIL())
+            {
+                var index = dataframe.index;
+                var columns = dataframe.columns;
+                var expectedColumns = new List<string> { "smaprop", "genericprop", "current", "nongenericprop", "counter", "indicatortype", "description" };
+                var columnsCount = 0;
+                foreach (dynamic col in columns)
+                {
+                    columnsCount++;
+                    var columnName = (string)col.AsManagedObject(typeof(string));
+                    Assert.IsTrue(expectedColumns.Contains(columnName));
+                }
+                Assert.AreEqual(expectedColumns.Count, columnsCount);
+
+                // Validate that the number of rows in the "current" column
+                // matches the row count in "counter", "indicatortype", and "description" columns
+                // Get the number of rows in each relevant column using __len__()
+                int currentLen = dataframe["current"].InvokeMethod("__len__").As<int>();
+                int counterLen = dataframe["counter"].InvokeMethod("__len__").As<int>();
+                int indicatorTypeLen = dataframe["indicatortype"].InvokeMethod("__len__").As<int>();
+                int descriptionLen = dataframe["description"].InvokeMethod("__len__").As<int>();
+
+                // Assert that all lengths match the length of "current"
+                Assert.AreEqual(currentLen, counterLen);
+                Assert.AreEqual(currentLen, indicatorTypeLen);
+                Assert.AreEqual(currentLen, descriptionLen);
+            }
+        }
+
+        private enum TestIndicatorType
+        {
+            TypeA,
+            TypeB
+        }
+
+        private class TestIndicator : IndicatorBase<QuoteBar>, IIndicatorWarmUpPeriodProvider
+        {
+            [PandasIgnore]
+            public Identity IgnoredProp { get; }
+            public SimpleMovingAverage SmaProp { get; }
+            public IndicatorBase<IndicatorDataPoint> GenericProp { get; }
+            public IndicatorBase NonGenericProp { get; }
+            public int Counter { get; set; }
+            public TestIndicatorType IndicatorType { get; set; }
+            public string Description { get; set; }
+            private bool _isReady;
+            public int WarmUpPeriod => 1;
+            public override bool IsReady => _isReady;
+            public TestIndicator() : base("Pepe")
+            {
+                SmaProp = new SimpleMovingAverage("SMA", 5);
+                GenericProp = new Identity("Generic");
+                IgnoredProp = new Identity("Ignored");
+                NonGenericProp = new Identity("NoGeneric");
+            }
+            protected override decimal ComputeNextValue(QuoteBar input)
+            {
+                Counter++;
+                _isReady = true;
+                return input.Ask.High;
+            }
+        }
 
         private class CustomIndicator : IndicatorBase<QuoteBar>, IIndicatorWarmUpPeriodProvider
         {
@@ -497,6 +688,162 @@ class GoodCustomIndicator:
                 _isReady = true;
                 return input.Ask.High;
             }
+        }
+
+        [Test]
+        public void SupportsConversionToIndicatorBaseBaseDataCorrectly([Range(1, 6)] int scenario)
+        {
+            const string code = @"
+from AlgorithmImports import *
+from QuantConnect.Indicators import *
+
+def create_intraday_vwap_indicator(name):
+    return IntradayVwap(name)
+def create_consolidator():
+    return TradeBarConsolidator(timedelta(minutes=1))
+";
+
+            using (Py.GIL())
+            {
+                var module = PyModule.FromString(Guid.NewGuid().ToString(), code);
+                string name = "test";
+
+                // Creates the IntradayVWAP (IndicatorBase<BaseData>)
+                var indicator = module.GetAttr("create_intraday_vwap_indicator").Invoke(name.ToPython());
+                var consolidator = module.GetAttr("create_consolidator").Invoke();
+                var SymbolList = new List<Symbol>
+                {
+                    Symbols.SPY,
+                    Symbols.IBM,
+                };
+
+                // Tests different scenarios based on the "scenario" parameter
+                switch (scenario)
+                {
+                    case 1:
+                        Assert.DoesNotThrow(() => _algorithm.RegisterIndicator(Symbols.SPY, indicator, consolidator));
+                        break;
+                    case 2:
+                        Assert.DoesNotThrow(() => _algorithm.WarmUpIndicator(SymbolList.ToPyList(), indicator));
+                        break;
+                    case 3:
+                        Assert.DoesNotThrow(() => _algorithm.WarmUpIndicator(SymbolList.ToPyList(), indicator, TimeSpan.FromDays(1)));
+                        break;
+                    case 4:
+                        Assert.DoesNotThrow(() => _algorithm.IndicatorHistory(indicator, SymbolList.ToPyList(), 10));
+                        break;
+                    case 5:
+                        Assert.DoesNotThrow(() => _algorithm.IndicatorHistory(indicator, SymbolList.ToPyList(), new DateTime(2014, 6, 6), new DateTime(2014, 6, 7)));
+                        break;
+                    case 6:
+                        var symbolsHistory = _algorithm.History(SymbolList, TimeSpan.FromDays(2), Resolution.Minute);
+                        Assert.DoesNotThrow(() => _algorithm.IndicatorHistory(indicator, symbolsHistory));
+                        break;
+                    default:
+                        break;
+                }
+            }
+        }
+
+        [Test]
+        public void IchimokuIndicatorHistoryDataFrameDoesNotContainNaNInCurrentColumn()
+        {
+            var referenceSymbol = Symbol.Create("IBM", SecurityType.Equity, Market.USA);
+            _algorithm.SetDateTime(new DateTime(2013, 10, 11));
+            var history = _algorithm.History(new[] { referenceSymbol }, TimeSpan.FromDays(5), Resolution.Minute);
+            var indicator = new IchimokuKinkoHyo(9, 26, 17, 52, 26, 26);
+            var indicatorValues = _algorithm.IndicatorHistory(indicator, history);
+            indicatorValues.Current.Add(new IndicatorDataPoint(referenceSymbol, default(DateTime), 1));
+
+            dynamic dataframe = indicatorValues.DataFrame;
+            using (Py.GIL())
+            {
+                var currentColumn = dataframe["current"];
+                foreach (PyObject value in currentColumn)
+                {
+                    double doubleValue = value.As<double>();
+                    Assert.IsFalse(double.IsNaN(doubleValue));
+                }
+            }
+        }
+
+        [Test]
+        public void CanRegisterIndicatorsWithPythonSelector()
+        {
+            _algorithm.SetDateTime(new DateTime(2013, 10, 11));
+            _algorithm.Settings.AutomaticIndicatorWarmUp = true;
+            var symbol = _algorithm.AddEquity("SPY").Symbol;
+
+            using var _ = Py.GIL();
+            var testModule = PyModule.FromString("testModule",
+                @"
+from AlgorithmImports import *
+
+class LastInputTracker:
+    last_input = None
+
+def selector(bar):
+    LastInputTracker.last_input = bar
+    return bar.close
+
+def get_indicator(algo, symbol):
+    indicator = SimpleMovingAverage(10)
+    algo.register_indicator(symbol, indicator, Resolution.MINUTE, selector=selector)
+    algo.warm_up_indicator(symbol, indicator, selector=selector)
+    return indicator
+");
+
+            using var pyAlgo = _algorithm.ToPython();
+            using var pySymbol = symbol.ToPython();
+            var indicator = testModule.GetAttr("get_indicator").Invoke(pyAlgo, pySymbol).GetAndDispose<IndicatorBase>();
+
+            // The indicator should have been updated during the warm-up period
+            var lastInput = testModule.GetAttr("LastInputTracker").GetAttr("last_input").GetAndDispose<TradeBar>();
+            Assert.IsNotNull(lastInput);
+        }
+
+        // Some specific indicator helper methods tests
+        [TestCase("abands", "symbol, 2", false)]
+        [TestCase("ad", "symbol", false)]
+        [TestCase("adosc", "symbol, 2, 3", false)]
+        [TestCase("sma", "symbol, 3", true)]
+        [TestCase("ema", "symbol, 3", true)]
+        [TestCase("arima", "symbol, 1, 1, 1, 10", true)]
+        public void IndicatorHelperMethodsWorkWithPythonSelectors(string indicatorName, string indicatorArgs, bool decimalSelector)
+        {
+            _algorithm.SetDateTime(new DateTime(2013, 10, 11));
+            _algorithm.Settings.AutomaticIndicatorWarmUp = true;
+
+            var symbol = _algorithm.AddEquity("SPY").Symbol;
+            var selector = decimalSelector ? "decimal_selector" : "selector";
+
+            using var _ = Py.GIL();
+            var testModule = PyModule.FromString("testModule",
+                @$"
+from AlgorithmImports import *
+
+class LastInputTracker:
+    last_input = None
+
+def selector(bar):
+    LastInputTracker.last_input = bar
+    return bar
+
+def decimal_selector(bar):
+    LastInputTracker.last_input = bar
+    return bar.close
+
+def get_indicator(algo, symbol):
+    return algo.{indicatorName}({indicatorArgs}, selector={selector})
+");
+
+            using var pyAlgo = _algorithm.ToPython();
+            using var pySymbol = symbol.ToPython();
+            var indicator = testModule.GetAttr("get_indicator").Invoke(pyAlgo, pySymbol).GetAndDispose<IndicatorBase>();
+
+            // The indicator should have been updated during the warm-up period
+            var lastInput = testModule.GetAttr("LastInputTracker").GetAttr("last_input").GetAndDispose<TradeBar>();
+            Assert.IsNotNull(lastInput);
         }
     }
 }

@@ -20,6 +20,7 @@ using QuantConnect.Orders.Fills;
 using QuantConnect.Orders.Slippage;
 using Python.Runtime;
 using QuantConnect.Util;
+using QuantConnect.Data.UniverseSelection;
 
 namespace QuantConnect.Securities.Future
 {
@@ -27,7 +28,7 @@ namespace QuantConnect.Securities.Future
     /// Futures Security Object Implementation for Futures Assets
     /// </summary>
     /// <seealso cref="Security"/>
-    public class Future : Security, IDerivativeSecurity, IContinuousSecurity
+    public class Future : Security, IContinuousSecurity
     {
         private bool _isTradable;
 
@@ -56,7 +57,7 @@ namespace QuantConnect.Securities.Future
         /// <summary>
         /// The default time of day for settlement
         /// </summary>
-        public static readonly TimeSpan DefaultSettlementTime = new TimeSpan(8, 0, 0);
+        public static readonly TimeSpan DefaultSettlementTime = new TimeSpan(6, 0, 0);
 
         /// <summary>
         /// Constructor for the Future security
@@ -98,7 +99,7 @@ namespace QuantConnect.Securities.Future
             // for now all futures are cash settled as we don't allow underlying (Live Cattle?) to be posted on the account
             SettlementType = SettlementType.Cash;
             Holdings = new FutureHolding(this, currencyConverter);
-            ContractFilter = new EmptyContractFilter();
+            ContractFilter = new EmptyContractFilter<FutureUniverse>();
         }
 
         /// <summary>
@@ -112,16 +113,13 @@ namespace QuantConnect.Securities.Future
         ///     instances into units of the account currency</param>
         /// <param name="registeredTypes">Provides all data types registered in the algorithm</param>
         /// <param name="securityCache">Cache to store security information</param>
-        /// <param name="underlying">Future underlying security</param>
         public Future(Symbol symbol,
             SecurityExchangeHours exchangeHours,
             Cash quoteCurrency,
             SymbolProperties symbolProperties,
             ICurrencyConverter currencyConverter,
             IRegisteredSecurityDataTypesProvider registeredTypes,
-            SecurityCache securityCache,
-            Security underlying = null
-            )
+            SecurityCache securityCache)
             : base(symbol,
                 quoteCurrency,
                 symbolProperties,
@@ -145,8 +143,7 @@ namespace QuantConnect.Securities.Future
             // for now all futures are cash settled as we don't allow underlying (Live Cattle?) to be posted on the account
             SettlementType = SettlementType.Cash;
             Holdings = new FutureHolding(this, currencyConverter);
-            ContractFilter = new EmptyContractFilter();
-            Underlying = underlying;
+            ContractFilter = new EmptyContractFilter<FutureUniverse>();
         }
 
         /// <summary>
@@ -176,14 +173,6 @@ namespace QuantConnect.Securities.Future
         }
 
         /// <summary>
-        /// Gets or sets the underlying security object.
-        /// </summary>
-        public Security Underlying
-        {
-            get; set;
-        }
-
-        /// <summary>
         /// Gets or sets the currently mapped symbol for the security
         /// </summary>
         public Symbol Mapped
@@ -194,7 +183,7 @@ namespace QuantConnect.Securities.Future
         /// <summary>
         /// Gets or sets the contract filter
         /// </summary>
-        public IDerivativeSecurityFilter<Symbol> ContractFilter
+        public IDerivativeSecurityFilter<FutureUniverse> ContractFilter
         {
             get; set;
         }
@@ -263,13 +252,13 @@ namespace QuantConnect.Securities.Future
 
         private void SetFilterImp(Func<FutureFilterUniverse, FutureFilterUniverse> universeFunc)
         {
-            Func<IDerivativeSecurityFilterUniverse<Symbol>, IDerivativeSecurityFilterUniverse<Symbol>> func = universe =>
+            Func<IDerivativeSecurityFilterUniverse<FutureUniverse>, IDerivativeSecurityFilterUniverse<FutureUniverse>> func = universe =>
             {
                 var futureUniverse = universe as FutureFilterUniverse;
                 var result = universeFunc(futureUniverse);
                 return result.ApplyTypesFilter();
             };
-            ContractFilter = new FuncSecurityDerivativeFilter<Symbol>(func);
+            ContractFilter = new FuncSecurityDerivativeFilter<FutureUniverse>(func);
         }
     }
 }

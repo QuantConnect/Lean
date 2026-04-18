@@ -102,16 +102,16 @@ class ScheduledUniverseSelectionModelRegressionAlgorithm(QCAlgorithm):
 
     def expect_additions(self, changes, *tickers):
         if tickers is None and changes.added_securities.count > 0:
-            raise Exception("{}: Expected no additions: {}".format(self.time, self.time.weekday()))
+            raise AssertionError("{}: Expected no additions: {}".format(self.time, self.time.weekday()))
 
         for ticker in tickers:
             if ticker is not None and ticker not in [s.symbol.value for s in changes.added_securities]:
-                raise Exception("{}: Expected {} to be added: {}".format(self.time, ticker, self.time.weekday()))
+                raise AssertionError("{}: Expected {} to be added: {}".format(self.time, ticker, self.time.weekday()))
 
     def expect_removals(self, changes, *tickers):
         if tickers is None and changes.removed_securities.count > 0:
-            raise Exception("{}: Expected no removals: {}".format(self.time, self.time.weekday()))
+            raise AssertionError("{}: Expected no removals: {}".format(self.time, self.time.weekday()))
 
         for ticker in tickers:
             if ticker is not None and ticker not in [s.symbol.value for s in changes.removed_securities]:
-                raise Exception("{}: Expected {} to be removed: {}".format(self.time, ticker, self.time.weekday()))
+                raise AssertionError("{}: Expected {} to be removed: {}".format(self.time, ticker, self.time.weekday()))

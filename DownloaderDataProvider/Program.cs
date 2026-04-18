@@ -22,8 +22,11 @@ using QuantConnect.Interfaces;
 using QuantConnect.Securities;
 using QuantConnect.Configuration;
 using QuantConnect.Lean.Engine.DataFeeds;
+using QuantConnect.Data.UniverseSelection;
 using DataFeeds = QuantConnect.Lean.Engine.DataFeeds;
+using QuantConnect.DownloaderDataProvider.Launcher.Models;
 using QuantConnect.DownloaderDataProvider.Launcher.Models.Constants;
+using QuantConnect.Lean.Engine.HistoricalData;
 
 namespace QuantConnect.DownloaderDataProvider.Launcher;
 public static class Program
@@ -63,10 +66,27 @@ public static class Program
         InitializeConfigurations();
 
         var dataDownloader = Composer.Instance.GetExportedValueByTypeName<IDataDownloader>(Config.Get(DownloaderCommandArguments.CommandDownloaderDataDownloader));
+        var commandDataType = Config.Get(DownloaderCommandArguments.CommandDataType).ToUpperInvariant();
 
-        var dataDownloadConfig = new DataDownloadConfig();
+        switch (commandDataType)
+        {
+            case "UNIVERSE":
+                RunUniverseDownloader(dataDownloader, new DataUniverseDownloadConfig());
+                break;
+            case "TRADE":
+            case "QUOTE":
+            case "OPENINTEREST":
+                RunDownload(dataDownloader, new DataDownloadConfig(), Globals.DataFolder, _dataCacheProvider);
+                break;
+            default:
+                Log.Error($"QuantConnect.DownloaderDataProvider.Launcher: Unsupported command data type '{commandDataType}'. Valid options: UNIVERSE, TRADE, QUOTE, OPENINTEREST.");
+                break;
+        }
 
-        RunDownload(dataDownloader, dataDownloadConfig, Globals.DataFolder, _dataCacheProvider);
+        if (dataDownloader is BrokerageDataDownloader brokerageDataDownloader)
+        {
+            brokerageDataDownloader.DisposeSafely();
+        }
     }
 
     /// <summary>
@@ -110,7 +130,7 @@ public static class Program
             var groupedData = DataFeeds.DownloaderDataProvider.FilterAndGroupDownloadDataBySymbol(
                 downloadedData,
                 symbol,
-                LeanData.GetDataType(downloadParameters.Resolution, downloadParameters.TickType),
+                dataDownloadConfig.DataType,
                 exchangeTimeZone,
                 dataTimeZone,
                 downloadParameters.StartUtc,
@@ -143,6 +163,20 @@ public static class Program
     }
 
     /// <summary>
+    /// Initiates the universe downloader using the provided configuration.
+    /// </summary>
+    /// <param name="dataDownloader">The data downloader instance.</param>
+    /// <param name="dataUniverseDownloadConfig">The universe download configuration.</param>
+    private static void RunUniverseDownloader(IDataDownloader dataDownloader, DataUniverseDownloadConfig dataUniverseDownloadConfig)
+    {
+        foreach (var symbol in dataUniverseDownloadConfig.Symbols)
+        {
+            var universeDownloadParameters = new DataUniverseDownloaderGetParameters(symbol, dataUniverseDownloadConfig.StartDate, dataUniverseDownloadConfig.EndDate);
+            UniverseExtensions.RunUniverseDownloader(dataDownloader, universeDownloadParameters);
+        }
+    }
+
+    /// <summary>
     /// Retrieves the data time zone and exchange time zone associated with the specified symbol.
     /// </summary>
     /// <param name="symbol">The symbol for which to retrieve time zones.</param>
@@ -162,7 +196,7 @@ public static class Program
     /// This method sets up logging, data providers, map file providers, and factor file providers.
     /// </summary>
     /// <remarks>
-    /// The method reads configuration values to determine whether debugging is enabled, 
+    /// The method reads configuration values to determine whether debugging is enabled,
     /// which log handler to use, and which data, map file, and factor file providers to initialize.
     /// </remarks>
     /// <seealso cref="Log"/>
@@ -184,7 +218,12 @@ public static class Program
         var optionChainProvider = Composer.Instance.GetPart<IOptionChainProvider>();
         if (optionChainProvider == null)
         {
-            optionChainProvider = new CachingOptionChainProvider(new LiveOptionChainProvider(new ZipDataCacheProvider(dataProvider, false), mapFileProvider));
+            var historyManager = Composer.Instance.GetExportedValueByTypeName<HistoryProviderManager>(nameof(HistoryProviderManager));
+            historyManager.Initialize(new HistoryProviderInitializeParameters(null, null, dataProvider, _dataCacheProvider,
+                mapFileProvider, factorFileProvider, _ => { }, false, new DataPermissionManager(), null, new AlgorithmSettings()));
+            var baseOptionChainProvider = new LiveOptionChainProvider();
+            baseOptionChainProvider.Initialize(new(mapFileProvider, historyManager));
+            optionChainProvider = new CachingOptionChainProvider(baseOptionChainProvider);
             Composer.Instance.AddPart(optionChainProvider);
         }
 

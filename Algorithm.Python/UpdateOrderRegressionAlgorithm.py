@@ -58,9 +58,7 @@ class UpdateOrderRegressionAlgorithm(QCAlgorithm):
         if self.time.month != self.last_month:
             # we'll submit the next type of order from the queue
             order_type = self.order_types_queue.dequeue()
-            #Log("")
-            self.Log("\r\n--------------MONTH: {0}:: {1}".format(self.time.strftime("%B"), order_type))
-            #Log("")
+            self.log("\r\n--------------MONTH: {0}:: {1}".format(self.time.strftime("%B"), order_type))
             self.last_month = self.time.month
             self.log("ORDER TYPE:: {0}".format(order_type))
             is_long = self.quantity > 0
@@ -71,7 +69,7 @@ class UpdateOrderRegressionAlgorithm(QCAlgorithm):
                 limit_price = (1 + self.limit_percentage)*data["SPY"].high if not is_long else (1 - self.limit_percentage)*data["SPY"].low
 
             request = SubmitOrderRequest(order_type, self.security.symbol.security_type, "SPY", self.quantity, stop_price, limit_price, 0, 0.01, True,
-                                         self.utc_time, str(order_type))
+                                         self.utc_time, str(int(order_type)))
             ticket = self.transactions.add_order(request)
             self.tickets.append(ticket)
 

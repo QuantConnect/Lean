@@ -40,6 +40,8 @@ namespace QuantConnect.Lean.Engine.Setup
     /// </summary>
     public class BrokerageSetupHandler : ISetupHandler
     {
+        private bool _disposed;
+
         /// <summary>
         /// Max allocation limit configuration variable name
         /// </summary>
@@ -254,7 +256,9 @@ namespace QuantConnect.Lean.Engine.Setup
                         var optionChainProvider = Composer.Instance.GetPart<IOptionChainProvider>();
                         if (optionChainProvider == null)
                         {
-                            optionChainProvider = new CachingOptionChainProvider(new LiveOptionChainProvider(parameters.DataCacheProvider, parameters.MapFileProvider));
+                            var baseOptionChainProvider = new LiveOptionChainProvider();
+                            baseOptionChainProvider.Initialize(new(parameters.MapFileProvider, algorithm.HistoryProvider));
+                            optionChainProvider = new CachingOptionChainProvider(baseOptionChainProvider);
                             Composer.Instance.AddPart(optionChainProvider);
                         }
                         // set the option chain provider
@@ -263,7 +267,9 @@ namespace QuantConnect.Lean.Engine.Setup
                         var futureChainProvider = Composer.Instance.GetPart<IFutureChainProvider>();
                         if (futureChainProvider == null)
                         {
-                            futureChainProvider = new CachingFutureChainProvider(new LiveFutureChainProvider(parameters.DataCacheProvider));
+                            var baseFutureChainProvider = new LiveFutureChainProvider();
+                            baseFutureChainProvider.Initialize(new(parameters.MapFileProvider, algorithm.HistoryProvider));
+                            futureChainProvider = new CachingFutureChainProvider(baseFutureChainProvider);
                             Composer.Instance.AddPart(futureChainProvider);
                         }
                         // set the future chain provider
@@ -509,6 +515,11 @@ namespace QuantConnect.Lean.Engine.Setup
         /// <filterpriority>2</filterpriority>
         public void Dispose()
         {
+            if (_disposed)
+            {
+                return;
+            }
+            _disposed = true;
             _factory?.DisposeSafely();
 
             if (_dataQueueHandlerBrokerage != null)

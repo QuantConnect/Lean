@@ -50,7 +50,7 @@ class BybitCryptoRegressionAlgorithm(QCAlgorithm):
             self.log(f"USDT conversion rate: {self.portfolio.cash_book['USDT'].conversion_rate}")
             self.log(f"BTC conversion rate: {self.portfolio.cash_book['BTC'].conversion_rate}")
 
-            raise Exception("Conversion rate is 0")
+            raise AssertionError("Conversion rate is 0")
 
         if not self.slow.is_ready:
             return
@@ -77,4 +77,4 @@ class BybitCryptoRegressionAlgorithm(QCAlgorithm):
 
         btc_amount = self.portfolio.cash_book["BTC"].amount
         if btc_amount > 0:
-            raise Exception(f"BTC holdings should be zero at the end of the algorithm, but was {btc_amount}")
+            raise AssertionError(f"BTC holdings should be zero at the end of the algorithm, but was {btc_amount}")

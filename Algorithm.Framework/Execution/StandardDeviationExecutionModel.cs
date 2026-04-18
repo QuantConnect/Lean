@@ -50,11 +50,14 @@ namespace QuantConnect.Algorithm.Framework.Execution
         /// <param name="period">Period of the standard deviation indicator</param>
         /// <param name="deviations">The number of deviations away from the mean before submitting an order</param>
         /// <param name="resolution">The resolution of the STD and SMA indicators</param>
+        /// <param name="asynchronous">If true, orders should be submitted asynchronously</param>
         public StandardDeviationExecutionModel(
             int period = 60,
             decimal deviations = 2m,
-            Resolution resolution = Resolution.Minute
+            Resolution resolution = Resolution.Minute,
+            bool asynchronous = true
             )
+            : base(asynchronous)
         {
             _period = period;
             _deviations = deviations;
@@ -98,7 +101,7 @@ namespace QuantConnect.Algorithm.Framework.Execution
 
                         if (orderSize != 0)
                         {
-                            algorithm.MarketOrder(symbol, orderSize);
+                            algorithm.MarketOrder(symbol, orderSize, Asynchronous, target.Tag);
                         }
                     }
                 }
@@ -173,7 +176,7 @@ namespace QuantConnect.Algorithm.Framework.Execution
             /// Standard Deviation
             /// </summary>
             public StandardDeviation STD { get; }
-            
+
             /// <summary>
             /// Simple Moving Average
             /// </summary>

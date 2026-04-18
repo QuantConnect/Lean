@@ -94,6 +94,7 @@ namespace QuantConnect.Tests.Common.Statistics
             Assert.AreEqual(2, trade.TotalFees);
             Assert.AreEqual(-5, trade.MAE);
             Assert.AreEqual(20m, trade.MFE);
+            CollectionAssert.AreEquivalent(new[] { 1, 2 }, trade.OrderIds);
         }
 
         [Test]
@@ -151,6 +152,7 @@ namespace QuantConnect.Tests.Common.Statistics
             Assert.AreEqual(2, trade.TotalFees);
             Assert.AreEqual(-20, trade.MAE);
             Assert.AreEqual(5, trade.MFE);
+            CollectionAssert.AreEquivalent(new[] { 1, 2 }, trade.OrderIds);
         }
 
         [Test]
@@ -220,6 +222,7 @@ namespace QuantConnect.Tests.Common.Statistics
                 Assert.AreEqual(matchingMethod == FillMatchingMethod.FIFO ? 2 : 1, trade1.TotalFees);
                 Assert.AreEqual(-15, trade1.MAE);
                 Assert.AreEqual(20, trade1.MFE);
+                CollectionAssert.AreEquivalent(new[] { 1, 3 }, trade1.OrderIds);
 
                 var trade2 = builder.ClosedTrades[matchingMethod == FillMatchingMethod.FIFO ? 1 : 0];
 
@@ -234,6 +237,8 @@ namespace QuantConnect.Tests.Common.Statistics
                 Assert.AreEqual(matchingMethod == FillMatchingMethod.FIFO ? 1 : 2, trade2.TotalFees);
                 Assert.AreEqual(-5, trade2.MAE);
                 Assert.AreEqual(30, trade2.MFE);
+
+                CollectionAssert.AreEquivalent(new[] { 2, 3 }, trade2.OrderIds);
             }
             else
             {
@@ -252,6 +257,7 @@ namespace QuantConnect.Tests.Common.Statistics
                 Assert.AreEqual(3, trade.TotalFees);
                 Assert.AreEqual(-20, trade.MAE);
                 Assert.AreEqual(50, trade.MFE);
+                CollectionAssert.AreEquivalent(new[] { 1, 2, 3 }, trade.OrderIds);
             }
         }
 
@@ -322,6 +328,7 @@ namespace QuantConnect.Tests.Common.Statistics
                 Assert.AreEqual(matchingMethod == FillMatchingMethod.FIFO ? 2 : 1, trade1.TotalFees);
                 Assert.AreEqual(-20, trade1.MAE);
                 Assert.AreEqual(15, trade1.MFE);
+                CollectionAssert.AreEquivalent(new[] { 1, 3 }, trade1.OrderIds);
 
                 var trade2 = builder.ClosedTrades[matchingMethod == FillMatchingMethod.FIFO ? 1 : 0];
 
@@ -336,6 +343,7 @@ namespace QuantConnect.Tests.Common.Statistics
                 Assert.AreEqual(matchingMethod == FillMatchingMethod.FIFO ? 1 : 2, trade2.TotalFees);
                 Assert.AreEqual(-30, trade2.MAE);
                 Assert.AreEqual(5, trade2.MFE);
+                CollectionAssert.AreEquivalent(new[] { 2, 3 }, trade2.OrderIds);
             }
             else
             {
@@ -354,6 +362,7 @@ namespace QuantConnect.Tests.Common.Statistics
                 Assert.AreEqual(3, trade.TotalFees);
                 Assert.AreEqual(-50, trade.MAE);
                 Assert.AreEqual(20, trade.MFE);
+                CollectionAssert.AreEquivalent(new[] { 1, 2, 3 }, trade.OrderIds);
             }
         }
 
@@ -424,6 +433,7 @@ namespace QuantConnect.Tests.Common.Statistics
                 Assert.AreEqual(3, trade.TotalFees);
                 Assert.AreEqual(-10, trade.MAE);
                 Assert.AreEqual(60, trade.MFE);
+                CollectionAssert.AreEquivalent(new[] { 1, 2, 3 }, trade.OrderIds);
             }
             else
             {
@@ -443,6 +453,7 @@ namespace QuantConnect.Tests.Common.Statistics
                 Assert.AreEqual(2, trade1.TotalFees);
                 Assert.AreEqual(0, trade1.MAE);
                 Assert.AreEqual(10, trade1.MFE);
+                CollectionAssert.AreEquivalent(new[] { 1, 2 }, trade1.OrderIds);
 
                 var trade2 = builder.ClosedTrades[1];
 
@@ -457,6 +468,7 @@ namespace QuantConnect.Tests.Common.Statistics
                 Assert.AreEqual(1, trade2.TotalFees);
                 Assert.AreEqual(-5, trade2.MAE);
                 Assert.AreEqual(30, trade2.MFE);
+                CollectionAssert.AreEquivalent(groupingMethod == FillGroupingMethod.FlatToReduced ? [1, 3] : new[] { 1, 3 }, trade2.OrderIds);
             }
         }
 
@@ -527,6 +539,7 @@ namespace QuantConnect.Tests.Common.Statistics
                 Assert.AreEqual(3, trade.TotalFees);
                 Assert.AreEqual(-60, trade.MAE);
                 Assert.AreEqual(10, trade.MFE);
+                CollectionAssert.AreEquivalent(new[] { 1, 2, 3 }, trade.OrderIds);
             }
             else
             {
@@ -546,6 +559,7 @@ namespace QuantConnect.Tests.Common.Statistics
                 Assert.AreEqual(2, trade1.TotalFees);
                 Assert.AreEqual(-10, trade1.MAE);
                 Assert.AreEqual(0, trade1.MFE);
+                CollectionAssert.AreEquivalent(new[] { 1, 2 }, trade1.OrderIds);
 
                 var trade2 = builder.ClosedTrades[1];
 
@@ -560,6 +574,7 @@ namespace QuantConnect.Tests.Common.Statistics
                 Assert.AreEqual(1, trade2.TotalFees);
                 Assert.AreEqual(-30, trade2.MAE);
                 Assert.AreEqual(5, trade2.MFE);
+                CollectionAssert.AreEquivalent(new[] { 1, 3 }, trade2.OrderIds);
             }
         }
 
@@ -629,6 +644,7 @@ namespace QuantConnect.Tests.Common.Statistics
             Assert.AreEqual(2, trade1.TotalFees);
             Assert.AreEqual(0, trade1.MAE);
             Assert.AreEqual(10, trade1.MFE);
+            CollectionAssert.AreEquivalent(new[] { 1, 2 }, trade1.OrderIds);
 
             var trade2 = builder.ClosedTrades[1];
 
@@ -643,6 +659,7 @@ namespace QuantConnect.Tests.Common.Statistics
             Assert.AreEqual(1, trade2.TotalFees);
             Assert.AreEqual(-20, trade2.MAE);
             Assert.AreEqual(15, trade2.MFE);
+            CollectionAssert.AreEquivalent(new[] { 2, 3 }, trade2.OrderIds);
         }
 
         [Test]
@@ -711,6 +728,7 @@ namespace QuantConnect.Tests.Common.Statistics
             Assert.AreEqual(2, trade1.TotalFees);
             Assert.AreEqual(-10, trade1.MAE);
             Assert.AreEqual(0, trade1.MFE);
+            CollectionAssert.AreEquivalent(new[] { 1, 2 }, trade1.OrderIds);
 
             var trade2 = builder.ClosedTrades[1];
 
@@ -725,6 +743,7 @@ namespace QuantConnect.Tests.Common.Statistics
             Assert.AreEqual(1, trade2.TotalFees);
             Assert.AreEqual(-15, trade2.MAE);
             Assert.AreEqual(20, trade2.MFE);
+            CollectionAssert.AreEquivalent(new[] { 2, 3 }, trade2.OrderIds);
         }
 
         [Test]
@@ -818,6 +837,7 @@ namespace QuantConnect.Tests.Common.Statistics
                         Assert.AreEqual(2, trade1.TotalFees);
                         Assert.AreEqual(matchingMethod == FillMatchingMethod.FIFO ? -5 : -15, trade1.MAE);
                         Assert.AreEqual(matchingMethod == FillMatchingMethod.FIFO ? 30 : 20, trade1.MFE);
+                        CollectionAssert.AreEquivalent(matchingMethod == FillMatchingMethod.FIFO ? [1, 3] : new[] { 2, 3 }, trade1.OrderIds);
 
                         var trade2 = builder.ClosedTrades[1];
 
@@ -834,6 +854,7 @@ namespace QuantConnect.Tests.Common.Statistics
                         Assert.AreEqual(2, trade2.TotalFees);
                         Assert.AreEqual(-15, trade2.MAE);
                         Assert.AreEqual(20, trade2.MFE);
+                        CollectionAssert.AreEquivalent(matchingMethod == FillMatchingMethod.FIFO ? [2, 5] : new[] { 4, 5 }, trade2.OrderIds);
 
                         var trade3 = builder.ClosedTrades[2];
 
@@ -854,6 +875,7 @@ namespace QuantConnect.Tests.Common.Statistics
                         Assert.AreEqual(1, trade3.TotalFees);
                         Assert.AreEqual(matchingMethod == FillMatchingMethod.FIFO ? -15 : -5, trade3.MAE);
                         Assert.AreEqual(matchingMethod == FillMatchingMethod.FIFO ? 20 : 30, trade3.MFE);
+                        CollectionAssert.AreEquivalent(matchingMethod == FillMatchingMethod.FIFO ? [4, 5] : new[] { 1, 5 }, trade3.OrderIds);
                     }
                     break;
 
@@ -876,6 +898,7 @@ namespace QuantConnect.Tests.Common.Statistics
                         Assert.AreEqual(5, trade.TotalFees);
                         Assert.AreEqual(-35, trade.MAE);
                         Assert.AreEqual(70, trade.MFE);
+                        CollectionAssert.AreEquivalent(new[] { 1, 2, 3, 4, 5 }, trade.OrderIds);
                     }
                     break;
 
@@ -902,6 +925,7 @@ namespace QuantConnect.Tests.Common.Statistics
                         Assert.AreEqual(3, trade1.TotalFees);
                         Assert.AreEqual(matchingMethod == FillMatchingMethod.FIFO ? -5 : -15, trade1.MAE);
                         Assert.AreEqual(matchingMethod == FillMatchingMethod.FIFO ? 30 : 20, trade1.MFE);
+                        CollectionAssert.AreEquivalent(matchingMethod == FillMatchingMethod.FIFO ? [3, 1] : new[] { 3, 2 }, trade1.OrderIds);
 
                         var trade2 = builder.ClosedTrades[1];
 
@@ -922,6 +946,7 @@ namespace QuantConnect.Tests.Common.Statistics
                         Assert.AreEqual(2, trade2.TotalFees);
                         Assert.AreEqual(matchingMethod == FillMatchingMethod.FIFO ? -30 : -20, trade2.MAE);
                         Assert.AreEqual(matchingMethod == FillMatchingMethod.FIFO ? 40 : 50, trade2.MFE);
+                        CollectionAssert.AreEquivalent(matchingMethod == FillMatchingMethod.FIFO ? [2, 4, 5] : new[] { 1, 4, 5 }, trade2.OrderIds);
                     }
                     break;
             }
@@ -1018,6 +1043,7 @@ namespace QuantConnect.Tests.Common.Statistics
                         Assert.AreEqual(2, trade1.TotalFees);
                         Assert.AreEqual(matchingMethod == FillMatchingMethod.FIFO ? -30 : -20, trade1.MAE);
                         Assert.AreEqual(matchingMethod == FillMatchingMethod.FIFO ? 5 : 15, trade1.MFE);
+                        CollectionAssert.AreEquivalent(matchingMethod == FillMatchingMethod.FIFO ? [1, 3] : new[] { 2, 3 }, trade1.OrderIds);
 
                         var trade2 = builder.ClosedTrades[1];
 
@@ -1032,6 +1058,7 @@ namespace QuantConnect.Tests.Common.Statistics
                         Assert.AreEqual(2, trade2.TotalFees);
                         Assert.AreEqual(-20, trade2.MAE);
                         Assert.AreEqual(15, trade2.MFE);
+                        CollectionAssert.AreEquivalent(matchingMethod == FillMatchingMethod.FIFO ? [2, 5] : new[] { 4, 5 }, trade2.OrderIds);
 
                         var trade3 = builder.ClosedTrades[2];
 
@@ -1050,6 +1077,7 @@ namespace QuantConnect.Tests.Common.Statistics
                         Assert.AreEqual(1, trade3.TotalFees);
                         Assert.AreEqual(matchingMethod == FillMatchingMethod.FIFO ? -20 : -30, trade3.MAE);
                         Assert.AreEqual(matchingMethod == FillMatchingMethod.FIFO ? 15 : 5, trade3.MFE);
+                        CollectionAssert.AreEquivalent(matchingMethod == FillMatchingMethod.FIFO ? [4, 5] : new[] { 1, 5 }, trade3.OrderIds);
                     }
                     break;
 
@@ -1072,6 +1100,7 @@ namespace QuantConnect.Tests.Common.Statistics
                         Assert.AreEqual(5, trade.TotalFees);
                         Assert.AreEqual(-70, trade.MAE);
                         Assert.AreEqual(35, trade.MFE);
+                        CollectionAssert.AreEquivalent(new[] { 1, 2, 3, 4, 5 }, trade.OrderIds);
                     }
                     break;
 
@@ -1096,6 +1125,7 @@ namespace QuantConnect.Tests.Common.Statistics
                         Assert.AreEqual(3, trade1.TotalFees);
                         Assert.AreEqual(matchingMethod == FillMatchingMethod.FIFO ? -30 : -20, trade1.MAE);
                         Assert.AreEqual(matchingMethod == FillMatchingMethod.FIFO ? 5 : 15, trade1.MFE);
+                        CollectionAssert.AreEquivalent(matchingMethod == FillMatchingMethod.FIFO ? [1, 3] : new[] { 2, 3 }, trade1.OrderIds);
 
                         var trade2 = builder.ClosedTrades[1];
 
@@ -1114,6 +1144,7 @@ namespace QuantConnect.Tests.Common.Statistics
                         Assert.AreEqual(2, trade2.TotalFees);
                         Assert.AreEqual(matchingMethod == FillMatchingMethod.FIFO ? -40 : -50, trade2.MAE);
                         Assert.AreEqual(matchingMethod == FillMatchingMethod.FIFO ? 30 : 20, trade2.MFE);
+                        CollectionAssert.AreEquivalent(matchingMethod == FillMatchingMethod.FIFO ? [2, 4, 5] : new[] { 1, 4, 5 }, trade2.OrderIds);
                     }
                     break;
             }
@@ -1191,6 +1222,7 @@ namespace QuantConnect.Tests.Common.Statistics
                             Assert.AreEqual(2, trade1.TotalFees);
                             Assert.AreEqual(-5, trade1.MAE);
                             Assert.AreEqual(30, trade1.MFE);
+                            CollectionAssert.AreEquivalent(new[] { 1, 3 }, trade1.OrderIds);
 
                             var trade2 = builder.ClosedTrades[1];
 
@@ -1205,6 +1237,7 @@ namespace QuantConnect.Tests.Common.Statistics
                             Assert.AreEqual(2, trade2.TotalFees);
                             Assert.AreEqual(-30, trade2.MAE);
                             Assert.AreEqual(40, trade2.MFE);
+                            CollectionAssert.AreEquivalent(new[] { 2, 5 }, trade2.OrderIds);
 
                             var trade3 = builder.ClosedTrades[2];
 
@@ -1219,6 +1252,7 @@ namespace QuantConnect.Tests.Common.Statistics
                             Assert.AreEqual(1, trade3.TotalFees);
                             Assert.AreEqual(-15, trade3.MAE);
                             Assert.AreEqual(20, trade3.MFE);
+                            CollectionAssert.AreEquivalent(new[] { 4, 5 }, trade3.OrderIds);
                         }
                         else
                         {
@@ -1237,6 +1271,7 @@ namespace QuantConnect.Tests.Common.Statistics
                             Assert.AreEqual(2, trade1.TotalFees);
                             Assert.AreEqual(-15, trade1.MAE);
                             Assert.AreEqual(20, trade1.MFE);
+                            CollectionAssert.AreEquivalent(new[] { 2, 3 }, trade1.OrderIds);
 
                             var trade2 = builder.ClosedTrades[1];
 
@@ -1251,6 +1286,7 @@ namespace QuantConnect.Tests.Common.Statistics
                             Assert.AreEqual(2, trade2.TotalFees);
                             Assert.AreEqual(-15, trade2.MAE);
                             Assert.AreEqual(20, trade2.MFE);
+                            CollectionAssert.AreEquivalent(new[] { 4, 5 }, trade2.OrderIds);
 
                             var trade3 = builder.ClosedTrades[2];
 
@@ -1265,6 +1301,7 @@ namespace QuantConnect.Tests.Common.Statistics
                             Assert.AreEqual(0, trade3.TotalFees);
                             Assert.AreEqual(-15, trade3.MAE);
                             Assert.AreEqual(20, trade3.MFE);
+                            CollectionAssert.AreEquivalent(new[] { 2, 5 }, trade3.OrderIds);
 
                             var trade4 = builder.ClosedTrades[3];
 
@@ -1279,6 +1316,7 @@ namespace QuantConnect.Tests.Common.Statistics
                             Assert.AreEqual(1, trade4.TotalFees);
                             Assert.AreEqual(-5, trade4.MAE);
                             Assert.AreEqual(30, trade4.MFE);
+                            CollectionAssert.AreEquivalent(new[] { 1, 5 }, trade4.OrderIds);
                         }
                     }
                     break;
@@ -1300,6 +1338,7 @@ namespace QuantConnect.Tests.Common.Statistics
                         Assert.AreEqual(5, trade.TotalFees);
                         Assert.AreEqual(-50, trade.MAE);
                         Assert.AreEqual(90, trade.MFE);
+                        CollectionAssert.AreEquivalent(new[] { 1, 2, 3, 4, 5 }, trade.OrderIds);
                     }
                     break;
 
@@ -1324,6 +1363,7 @@ namespace QuantConnect.Tests.Common.Statistics
                         Assert.AreEqual(3, trade1.TotalFees);
                         Assert.AreEqual(matchingMethod == FillMatchingMethod.FIFO ? -5 : -15, trade1.MAE);
                         Assert.AreEqual(matchingMethod == FillMatchingMethod.FIFO ? 30 : 20, trade1.MFE);
+                        CollectionAssert.AreEquivalent(matchingMethod == FillMatchingMethod.FIFO ? [1, 3] : new[] { 2, 3 }, trade1.OrderIds);
 
                         var trade2 = builder.ClosedTrades[1];
 
@@ -1347,6 +1387,7 @@ namespace QuantConnect.Tests.Common.Statistics
                         Assert.AreEqual(2, trade2.TotalFees);
                         Assert.AreEqual(matchingMethod == FillMatchingMethod.FIFO ? -45 : -35, trade2.MAE);
                         Assert.AreEqual(matchingMethod == FillMatchingMethod.FIFO ? 60 : 70, trade2.MFE);
+                        CollectionAssert.AreEquivalent(matchingMethod == FillMatchingMethod.FIFO ? [2, 4, 5] : new[] { 1, 2, 4, 5 }, trade2.OrderIds);
                     }
                     break;
             }
@@ -1439,6 +1480,7 @@ namespace QuantConnect.Tests.Common.Statistics
                             Assert.AreEqual(2, trade1.TotalFees);
                             Assert.AreEqual(-30, trade1.MAE);
                             Assert.AreEqual(5, trade1.MFE);
+                            CollectionAssert.AreEquivalent(new[] { 1, 3 }, trade1.OrderIds);
 
                             var trade2 = builder.ClosedTrades[1];
 
@@ -1453,6 +1495,7 @@ namespace QuantConnect.Tests.Common.Statistics
                             Assert.AreEqual(2, trade2.TotalFees);
                             Assert.AreEqual(-40, trade2.MAE);
                             Assert.AreEqual(30, trade2.MFE);
+                            CollectionAssert.AreEquivalent(new[] { 2, 5 }, trade2.OrderIds);
 
                             var trade3 = builder.ClosedTrades[2];
 
@@ -1467,6 +1510,7 @@ namespace QuantConnect.Tests.Common.Statistics
                             Assert.AreEqual(1, trade3.TotalFees);
                             Assert.AreEqual(-20, trade3.MAE);
                             Assert.AreEqual(15, trade3.MFE);
+                            CollectionAssert.AreEquivalent(new[] { 4, 5 }, trade3.OrderIds);
                         }
                         else
                         {
@@ -1485,6 +1529,7 @@ namespace QuantConnect.Tests.Common.Statistics
                             Assert.AreEqual(2, trade1.TotalFees);
                             Assert.AreEqual(-20, trade1.MAE);
                             Assert.AreEqual(15, trade1.MFE);
+                            CollectionAssert.AreEquivalent(new[] { 2, 3 }, trade1.OrderIds);
 
                             var trade2 = builder.ClosedTrades[1];
 
@@ -1499,6 +1544,7 @@ namespace QuantConnect.Tests.Common.Statistics
                             Assert.AreEqual(2, trade2.TotalFees);
                             Assert.AreEqual(-20, trade2.MAE);
                             Assert.AreEqual(15, trade2.MFE);
+                            CollectionAssert.AreEquivalent(new[] { 4, 5 }, trade2.OrderIds);
 
                             var trade3 = builder.ClosedTrades[2];
 
@@ -1513,6 +1559,7 @@ namespace QuantConnect.Tests.Common.Statistics
                             Assert.AreEqual(0, trade3.TotalFees);
                             Assert.AreEqual(-20, trade3.MAE);
                             Assert.AreEqual(15, trade3.MFE);
+                            CollectionAssert.AreEquivalent(new[] { 2, 5 }, trade3.OrderIds);
 
                             var trade4 = builder.ClosedTrades[3];
 
@@ -1527,6 +1574,7 @@ namespace QuantConnect.Tests.Common.Statistics
                             Assert.AreEqual(1, trade4.TotalFees);
                             Assert.AreEqual(-30, trade4.MAE);
                             Assert.AreEqual(5, trade4.MFE);
+                            CollectionAssert.AreEquivalent(new[] { 1, 5 }, trade4.OrderIds);
                         }
                     }
                     break;
@@ -1548,6 +1596,7 @@ namespace QuantConnect.Tests.Common.Statistics
                         Assert.AreEqual(5, trade.TotalFees);
                         Assert.AreEqual(-90, trade.MAE);
                         Assert.AreEqual(50, trade.MFE);
+                        CollectionAssert.AreEquivalent(new[] { 1, 2, 3, 4, 5 }, trade.OrderIds);
                     }
                     break;
 
@@ -1572,6 +1621,7 @@ namespace QuantConnect.Tests.Common.Statistics
                         Assert.AreEqual(3, trade1.TotalFees);
                         Assert.AreEqual(matchingMethod == FillMatchingMethod.FIFO ? -30 : -20, trade1.MAE);
                         Assert.AreEqual(matchingMethod == FillMatchingMethod.FIFO ? 5 : 15, trade1.MFE);
+                        CollectionAssert.AreEquivalent(matchingMethod == FillMatchingMethod.FIFO ? [3, 1] : new[] { 2, 3 }, trade1.OrderIds);
 
                         var trade2 = builder.ClosedTrades[1];
 
@@ -1595,6 +1645,7 @@ namespace QuantConnect.Tests.Common.Statistics
                         Assert.AreEqual(2, trade2.TotalFees);
                         Assert.AreEqual(matchingMethod == FillMatchingMethod.FIFO ? -60 : -70, trade2.MAE);
                         Assert.AreEqual(matchingMethod == FillMatchingMethod.FIFO ? 45 : 35, trade2.MFE);
+                        CollectionAssert.AreEquivalent(matchingMethod == FillMatchingMethod.FIFO ? [2, 4, 5] : new[] { 1, 2, 4, 5 }, trade2.OrderIds);
                     }
                     break;
             }
@@ -1679,6 +1730,7 @@ namespace QuantConnect.Tests.Common.Statistics
                         Assert.AreEqual(2, trade1.TotalFees);
                         Assert.AreEqual(matchingMethod == FillMatchingMethod.FIFO ? -5 : -25, trade1.MAE);
                         Assert.AreEqual(matchingMethod == FillMatchingMethod.FIFO ? 30 : 10, trade1.MFE);
+                        CollectionAssert.AreEquivalent(matchingMethod == FillMatchingMethod.FIFO ? [1, 4] : new[] { 3, 4 }, trade1.OrderIds);
 
                         var trade2 = builder.ClosedTrades[1];
 
@@ -1693,6 +1745,7 @@ namespace QuantConnect.Tests.Common.Statistics
                         Assert.AreEqual(1, trade2.TotalFees);
                         Assert.AreEqual(-15, trade2.MAE);
                         Assert.AreEqual(20, trade2.MFE);
+                        CollectionAssert.AreEquivalent(matchingMethod == FillMatchingMethod.FIFO ? [2, 4] : new[] { 2, 4 }, trade2.OrderIds);
 
                         var trade3 = builder.ClosedTrades[2];
 
@@ -1711,6 +1764,7 @@ namespace QuantConnect.Tests.Common.Statistics
                         Assert.AreEqual(2, trade3.TotalFees);
                         Assert.AreEqual(matchingMethod == FillMatchingMethod.FIFO ? -25 : -15, trade3.MAE);
                         Assert.AreEqual(matchingMethod == FillMatchingMethod.FIFO ? 10 : 20, trade3.MFE);
+                        CollectionAssert.AreEquivalent(matchingMethod == FillMatchingMethod.FIFO ? [3, 6] : new[] { 5, 6 }, trade3.OrderIds);
 
                         var trade4 = builder.ClosedTrades[3];
 
@@ -1729,6 +1783,7 @@ namespace QuantConnect.Tests.Common.Statistics
                         Assert.AreEqual(1, trade4.TotalFees);
                         Assert.AreEqual(matchingMethod == FillMatchingMethod.FIFO ? -15 : -5, trade4.MAE);
                         Assert.AreEqual(matchingMethod == FillMatchingMethod.FIFO ? 20 : 30, trade4.MFE);
+                        CollectionAssert.AreEquivalent(matchingMethod == FillMatchingMethod.FIFO ? [5, 6] : new[] { 1, 6 }, trade4.OrderIds);
                     }
                     break;
 
@@ -1749,6 +1804,7 @@ namespace QuantConnect.Tests.Common.Statistics
                         Assert.AreEqual(6, trade.TotalFees);
                         Assert.AreEqual(-60, trade.MAE);
                         Assert.AreEqual(80, trade.MFE);
+                        CollectionAssert.AreEquivalent(new[] { 1, 2, 3, 4, 5, 6 }, trade.OrderIds);
                     }
                     break;
 
@@ -1773,6 +1829,7 @@ namespace QuantConnect.Tests.Common.Statistics
                         Assert.AreEqual(4, trade1.TotalFees);
                         Assert.AreEqual(matchingMethod == FillMatchingMethod.FIFO ? -20 : -40, trade1.MAE);
                         Assert.AreEqual(matchingMethod == FillMatchingMethod.FIFO ? 50 : 30, trade1.MFE);
+                        CollectionAssert.AreEquivalent(matchingMethod == FillMatchingMethod.FIFO ? [1, 2, 4] : new[] { 2, 3, 4 }, trade1.OrderIds);
 
                         var trade2 = builder.ClosedTrades[1];
 
@@ -1791,6 +1848,7 @@ namespace QuantConnect.Tests.Common.Statistics
                         Assert.AreEqual(2, trade2.TotalFees);
                         Assert.AreEqual(matchingMethod == FillMatchingMethod.FIFO ? -40 : -20, trade2.MAE);
                         Assert.AreEqual(matchingMethod == FillMatchingMethod.FIFO ? 30 : 50, trade2.MFE);
+                        CollectionAssert.AreEquivalent(matchingMethod == FillMatchingMethod.FIFO ? [3, 5, 6] : new[] { 1, 5, 6 }, trade2.OrderIds);
                     }
                     break;
             }
@@ -1893,6 +1951,7 @@ namespace QuantConnect.Tests.Common.Statistics
                         Assert.AreEqual(2, trade1.TotalFees);
                         Assert.AreEqual(matchingMethod == FillMatchingMethod.FIFO ? -30 : -10, trade1.MAE);
                         Assert.AreEqual(matchingMethod == FillMatchingMethod.FIFO ? 5 : 25, trade1.MFE);
+                        CollectionAssert.AreEquivalent(matchingMethod == FillMatchingMethod.FIFO ? [1, 4] : new[] { 3, 4 }, trade1.OrderIds);
 
                         var trade2 = builder.ClosedTrades[1];
 
@@ -1907,6 +1966,7 @@ namespace QuantConnect.Tests.Common.Statistics
                         Assert.AreEqual(1, trade2.TotalFees);
                         Assert.AreEqual(-20, trade2.MAE);
                         Assert.AreEqual(15, trade2.MFE);
+                        CollectionAssert.AreEquivalent(matchingMethod == FillMatchingMethod.FIFO ? [2, 4] : new[] { 2, 4 }, trade2.OrderIds);
 
                         var trade3 = builder.ClosedTrades[2];
 
@@ -1925,6 +1985,7 @@ namespace QuantConnect.Tests.Common.Statistics
                         Assert.AreEqual(2, trade3.TotalFees);
                         Assert.AreEqual(matchingMethod == FillMatchingMethod.FIFO ? -10 : -20, trade3.MAE);
                         Assert.AreEqual(matchingMethod == FillMatchingMethod.FIFO ? 25 : 15, trade3.MFE);
+                        CollectionAssert.AreEquivalent(matchingMethod == FillMatchingMethod.FIFO ? [3, 6] : new[] { 5, 6 }, trade3.OrderIds);
 
                         var trade4 = builder.ClosedTrades[3];
 
@@ -1943,6 +2004,7 @@ namespace QuantConnect.Tests.Common.Statistics
                         Assert.AreEqual(1, trade4.TotalFees);
                         Assert.AreEqual(matchingMethod == FillMatchingMethod.FIFO ? -20 : -30, trade4.MAE);
                         Assert.AreEqual(matchingMethod == FillMatchingMethod.FIFO ? 15 : 5, trade4.MFE);
+                        CollectionAssert.AreEquivalent(matchingMethod == FillMatchingMethod.FIFO ? [5, 6] : new[] { 1, 6 }, trade4.OrderIds);
                     }
                     break;
 
@@ -1963,6 +2025,7 @@ namespace QuantConnect.Tests.Common.Statistics
                         Assert.AreEqual(6, trade.TotalFees);
                         Assert.AreEqual(-80, trade.MAE);
                         Assert.AreEqual(60, trade.MFE);
+                        CollectionAssert.AreEquivalent(new[] { 1, 2, 3, 4, 5, 6 }, trade.OrderIds);
                     }
                     break;
 
@@ -1987,6 +2050,7 @@ namespace QuantConnect.Tests.Common.Statistics
                         Assert.AreEqual(4, trade1.TotalFees);
                         Assert.AreEqual(matchingMethod == FillMatchingMethod.FIFO ? -50 : -30, trade1.MAE);
                         Assert.AreEqual(matchingMethod == FillMatchingMethod.FIFO ? 20 : 40, trade1.MFE);
+                        CollectionAssert.AreEquivalent(matchingMethod == FillMatchingMethod.FIFO ? [1, 2, 4] : new[] { 2, 3, 4 }, trade1.OrderIds);
 
                         var trade2 = builder.ClosedTrades[1];
 
@@ -2005,6 +2069,7 @@ namespace QuantConnect.Tests.Common.Statistics
                         Assert.AreEqual(2, trade2.TotalFees);
                         Assert.AreEqual(matchingMethod == FillMatchingMethod.FIFO ? -30 : -50, trade2.MAE);
                         Assert.AreEqual(matchingMethod == FillMatchingMethod.FIFO ? 40 : 20, trade2.MFE);
+                        CollectionAssert.AreEquivalent(matchingMethod == FillMatchingMethod.FIFO ? [3, 5, 6] : new[] { 1, 5, 6 }, trade2.OrderIds);
                     }
                     break;
             }
@@ -2091,6 +2156,7 @@ namespace QuantConnect.Tests.Common.Statistics
                         Assert.AreEqual(2, trade1.TotalFees);
                         Assert.AreEqual(matchingMethod == FillMatchingMethod.FIFO ? -5 : -15, trade1.MAE);
                         Assert.AreEqual(matchingMethod == FillMatchingMethod.FIFO ? 30 : 20, trade1.MFE);
+                        CollectionAssert.AreEquivalent(matchingMethod == FillMatchingMethod.FIFO ? [1, 3] : new[] { 2, 3 }, trade1.OrderIds);
 
                         var trade2 = builder.ClosedTrades[1];
 
@@ -2109,6 +2175,7 @@ namespace QuantConnect.Tests.Common.Statistics
                         Assert.AreEqual(1, trade2.TotalFees);
                         Assert.AreEqual(matchingMethod == FillMatchingMethod.FIFO ? -7.5 : -2.5, trade2.MAE);
                         Assert.AreEqual(matchingMethod == FillMatchingMethod.FIFO ? 10 : 15, trade2.MFE);
+                        CollectionAssert.AreEquivalent(matchingMethod == FillMatchingMethod.FIFO ? [2, 3] : new[] { 1, 3 }, trade2.OrderIds);
 
                         var trade3 = builder.ClosedTrades[2];
 
@@ -2127,6 +2194,7 @@ namespace QuantConnect.Tests.Common.Statistics
                         Assert.AreEqual(1, trade3.TotalFees);
                         Assert.AreEqual(matchingMethod == FillMatchingMethod.FIFO ? -7.5 : -2.5, trade3.MAE);
                         Assert.AreEqual(matchingMethod == FillMatchingMethod.FIFO ? 10 : 15, trade3.MFE);
+                        CollectionAssert.AreEquivalent(matchingMethod == FillMatchingMethod.FIFO ? [2, 4] : new[] { 1, 4 }, trade3.OrderIds);
                     }
                     break;
 
@@ -2147,6 +2215,7 @@ namespace QuantConnect.Tests.Common.Statistics
                         Assert.AreEqual(4, trade.TotalFees);
                         Assert.AreEqual(-20, trade.MAE);
                         Assert.AreEqual(50, trade.MFE);
+                        CollectionAssert.AreEquivalent(new[] { 1, 2, 3, 4 }, trade.OrderIds);
                     }
                     break;
 
@@ -2169,6 +2238,7 @@ namespace QuantConnect.Tests.Common.Statistics
                         Assert.AreEqual(3, trade1.TotalFees);
                         Assert.AreEqual(matchingMethod == FillMatchingMethod.FIFO ? -12.5 : -17.5, trade1.MAE);
                         Assert.AreEqual(matchingMethod == FillMatchingMethod.FIFO ? 40 : 35, trade1.MFE);
+                        CollectionAssert.AreEquivalent(matchingMethod == FillMatchingMethod.FIFO ? [1, 2, 3] : new[] { 1, 2, 3 }, trade1.OrderIds);
 
                         var trade2 = builder.ClosedTrades[1];
 
@@ -2187,6 +2257,7 @@ namespace QuantConnect.Tests.Common.Statistics
                         Assert.AreEqual(1, trade2.TotalFees);
                         Assert.AreEqual(matchingMethod == FillMatchingMethod.FIFO ? -7.5 : -2.5, trade2.MAE);
                         Assert.AreEqual(matchingMethod == FillMatchingMethod.FIFO ? 10 : 15, trade2.MFE);
+                        CollectionAssert.AreEquivalent(matchingMethod == FillMatchingMethod.FIFO ? [2, 4] : new[] { 1, 4 }, trade2.OrderIds);
                     }
                     break;
             }
@@ -2273,6 +2344,7 @@ namespace QuantConnect.Tests.Common.Statistics
                         Assert.AreEqual(2, trade1.TotalFees);
                         Assert.AreEqual(matchingMethod == FillMatchingMethod.FIFO ? -30 : -20, trade1.MAE);
                         Assert.AreEqual(matchingMethod == FillMatchingMethod.FIFO ? 5 : 15, trade1.MFE);
+                        CollectionAssert.AreEquivalent(matchingMethod == FillMatchingMethod.FIFO ? [1, 3] : new[] { 2, 3 }, trade1.OrderIds);
 
                         var trade2 = builder.ClosedTrades[1];
 
@@ -2291,6 +2363,7 @@ namespace QuantConnect.Tests.Common.Statistics
                         Assert.AreEqual(1, trade2.TotalFees);
                         Assert.AreEqual(matchingMethod == FillMatchingMethod.FIFO ? -10 : -15, trade2.MAE);
                         Assert.AreEqual(matchingMethod == FillMatchingMethod.FIFO ? 7.5 : 2.5, trade2.MFE);
+                        CollectionAssert.AreEquivalent(matchingMethod == FillMatchingMethod.FIFO ? [2, 3] : new[] { 1, 3 }, trade2.OrderIds);
 
                         var trade3 = builder.ClosedTrades[2];
 
@@ -2309,6 +2382,7 @@ namespace QuantConnect.Tests.Common.Statistics
                         Assert.AreEqual(1, trade3.TotalFees);
                         Assert.AreEqual(matchingMethod == FillMatchingMethod.FIFO ? -10 : -15, trade3.MAE);
                         Assert.AreEqual(matchingMethod == FillMatchingMethod.FIFO ? 7.5 : 2.5, trade3.MFE);
+                        CollectionAssert.AreEquivalent(matchingMethod == FillMatchingMethod.FIFO ? [2, 4] : new[] { 1, 4 }, trade3.OrderIds);
                     }
                     break;
 
@@ -2329,6 +2403,7 @@ namespace QuantConnect.Tests.Common.Statistics
                         Assert.AreEqual(4, trade.TotalFees);
                         Assert.AreEqual(-50, trade.MAE);
                         Assert.AreEqual(20, trade.MFE);
+                        CollectionAssert.AreEquivalent(new[] { 1, 2, 3, 4 }, trade.OrderIds);
                     }
                     break;
 
@@ -2351,6 +2426,7 @@ namespace QuantConnect.Tests.Common.Statistics
                         Assert.AreEqual(3, trade1.TotalFees);
                         Assert.AreEqual(matchingMethod == FillMatchingMethod.FIFO ? -40 : -35, trade1.MAE);
                         Assert.AreEqual(matchingMethod == FillMatchingMethod.FIFO ? 12.5 : 17.5, trade1.MFE);
+                        CollectionAssert.AreEquivalent(matchingMethod == FillMatchingMethod.FIFO ? [1, 2, 3] : new[] { 1, 2, 3 }, trade1.OrderIds);
 
                         var trade2 = builder.ClosedTrades[1];
 
@@ -2369,6 +2445,7 @@ namespace QuantConnect.Tests.Common.Statistics
                         Assert.AreEqual(1, trade2.TotalFees);
                         Assert.AreEqual(matchingMethod == FillMatchingMethod.FIFO ? -10 : -15, trade2.MAE);
                         Assert.AreEqual(matchingMethod == FillMatchingMethod.FIFO ? 7.5 : 2.5, trade2.MFE);
+                        CollectionAssert.AreEquivalent(matchingMethod == FillMatchingMethod.FIFO ? [2, 4] : new[] { 1, 4 }, trade2.OrderIds);
                     }
                     break;
             }
@@ -2431,6 +2508,7 @@ namespace QuantConnect.Tests.Common.Statistics
             Assert.AreEqual(2, trade.TotalFees);
             Assert.AreEqual(-5 * multiplier, trade.MAE);
             Assert.AreEqual(20m * multiplier, trade.MFE);
+            CollectionAssert.AreEquivalent(new[] { 1, 2 }, trade.OrderIds);
         }
 
         [Test]
@@ -2470,7 +2548,7 @@ namespace QuantConnect.Tests.Common.Statistics
             var closingOrderDirection = orderDirection == OrderDirection.Buy ? OrderDirection.Sell : OrderDirection.Buy;
             var ticket = new OrderTicket(null, new SubmitOrderRequest(OrderType.OptionExercise, option.Type, option.Symbol, -quantity, 0, 0, time, ""));
             builder.ProcessFill(
-                new OrderEvent(1, option.Symbol, time.AddMinutes(10), OrderStatus.Filled, closingOrderDirection, 0m, -quantity, _orderFee)
+                new OrderEvent(2, option.Symbol, time.AddMinutes(10), OrderStatus.Filled, closingOrderDirection, 0m, -quantity, _orderFee)
                 {
                     IsInTheMoney = true,
                     Ticket = ticket
@@ -2494,9 +2572,10 @@ namespace QuantConnect.Tests.Common.Statistics
             Assert.AreEqual(time.AddMinutes(10), trade.ExitTime);
             Assert.AreEqual(0, trade.ExitPrice);
             Assert.AreEqual(Math.Sign(quantity) * -100000m, trade.ProfitLoss);
-            Assert.AreEqual(1m, trade.TotalFees);
+            Assert.AreEqual(2m, trade.TotalFees);
             Assert.AreEqual(orderDirection == OrderDirection.Buy ? -100000m : 0m, trade.MAE);
             Assert.AreEqual(orderDirection == OrderDirection.Buy ? 0m : 100000m, trade.MFE);
+            CollectionAssert.AreEquivalent(new[] { 1, 2 }, trade.OrderIds);
         }
 
         [TestCase(OrderDirection.Buy)]
@@ -2525,7 +2604,7 @@ namespace QuantConnect.Tests.Common.Statistics
             var closingOrderDirection = orderDirection == OrderDirection.Buy ? OrderDirection.Sell : OrderDirection.Buy;
             var ticket = new OrderTicket(null, new SubmitOrderRequest(OrderType.OptionExercise, option.Type, option.Symbol, -quantity, 0, 0, time, ""));
             builder.ProcessFill(
-                new OrderEvent(1, option.Symbol, time.AddMinutes(10), OrderStatus.Filled, closingOrderDirection, 0m, -quantity, _orderFee)
+                new OrderEvent(2, option.Symbol, time.AddMinutes(10), OrderStatus.Filled, closingOrderDirection, 0m, -quantity, _orderFee)
                 {
                     IsInTheMoney = true,
                     Ticket = ticket
@@ -2549,9 +2628,10 @@ namespace QuantConnect.Tests.Common.Statistics
             Assert.AreEqual(time.AddMinutes(10), trade.ExitTime);
             Assert.AreEqual(0, trade.ExitPrice);
             Assert.AreEqual(Math.Sign(quantity) * -100000m, trade.ProfitLoss);
-            Assert.AreEqual(1m, trade.TotalFees);
+            Assert.AreEqual(2m, trade.TotalFees);
             Assert.AreEqual(orderDirection == OrderDirection.Buy ? -100000m : 0m, trade.MAE);
             Assert.AreEqual(orderDirection == OrderDirection.Buy ? 0m : 100000m, trade.MFE);
+            CollectionAssert.AreEquivalent(new[] { 1, 2 }, trade.OrderIds);
         }
 
         [Test]
@@ -2595,7 +2675,7 @@ namespace QuantConnect.Tests.Common.Statistics
             var closingOrderDirection = orderDirection == OrderDirection.Buy ? OrderDirection.Sell : OrderDirection.Buy;
             var ticket = new OrderTicket(null, new SubmitOrderRequest(OrderType.Market, option.Type, option.Symbol, -quantity, 0, 0, time, ""));
             builder.ProcessFill(
-                new OrderEvent(1, option.Symbol, time.AddMinutes(10), OrderStatus.Filled, closingOrderDirection, finalOptionPrice, -quantity, _orderFee)
+                new OrderEvent(2, option.Symbol, time.AddMinutes(10), OrderStatus.Filled, closingOrderDirection, finalOptionPrice, -quantity, _orderFee)
                 {
                     IsInTheMoney = true,
                     Ticket = ticket,
@@ -2621,6 +2701,7 @@ namespace QuantConnect.Tests.Common.Statistics
             Assert.AreEqual(time.AddMinutes(10), trade.ExitTime);
             Assert.AreEqual(finalOptionPrice, trade.ExitPrice);
             Assert.AreEqual(expectedProfitLoss, trade.ProfitLoss);
+            CollectionAssert.AreEquivalent(new[] { 1, 2 }, trade.OrderIds);
         }
 
         private Option GetOption()

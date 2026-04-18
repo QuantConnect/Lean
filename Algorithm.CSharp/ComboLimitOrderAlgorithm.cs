@@ -46,6 +46,8 @@ namespace QuantConnect.Algorithm.CSharp
             }
         }
 
+        protected virtual bool AsynchronousOrders => false;
+
         protected override IEnumerable<OrderTicket> PlaceComboOrder(List<Leg> legs, int quantity, decimal? limitPrice)
         {
             _limitPrice = limitPrice.Value;
@@ -56,7 +58,7 @@ namespace QuantConnect.Algorithm.CSharp
             legs.ForEach(x => { x.OrderPrice = null; });
 
             // First, let's place a limit order that won't fill so we can update it later
-            return ComboLimitOrder(legs, _temporaryComboQuantity, _temporaryLimitPrice);
+            return ComboLimitOrder(legs, _temporaryComboQuantity, _temporaryLimitPrice, asynchronous: AsynchronousOrders);
         }
 
         protected override void UpdateComboOrder(List<OrderTicket> tickets)
@@ -121,6 +123,14 @@ namespace QuantConnect.Algorithm.CSharp
             {
                 throw new RegressionTestException("Combo order was not liquidated");
             }
+
+            foreach (var ticket in Transactions.GetOrderTickets().Where(x => x.OrderType == OrderType.ComboLimit))
+            {
+                if (ticket.SubmitRequest.Asynchronous != AsynchronousOrders)
+                {
+                    throw new RegressionTestException("Expected all orders to have the same asynchronous flag as the algorithm.");
+                }
+            }
         }
 
         /// <summary>
@@ -179,6 +189,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Estimated Strategy Capacity", "$5000.00"},
             {"Lowest Capacity Asset", "GOOCV W78ZERHAOVVQ|GOOCV VP83T1ZUHROL"},
             {"Portfolio Turnover", "60.91%"},
+            {"Drawdown Recovery", "0"},
             {"OrderListHash", "100742aeee45101940dc60e26fa1aa39"}
         };
     }

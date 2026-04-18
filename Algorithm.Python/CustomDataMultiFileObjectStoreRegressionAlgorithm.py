@@ -12,8 +12,6 @@
 
 from AlgorithmImports import *
 
-from datetime import datetime
-
 ### <summary>
 ### Regression algorithm demonstrating the use of custom data sourced from multiple "files" in the object store
 ### </summary>
@@ -50,23 +48,23 @@ class CustomDataMultiFileObjectStoreRegressionAlgorithm(QCAlgorithm):
         if slice.contains_key(self.custom_symbol):
             custom_data = slice.get(ExampleCustomData, self.custom_symbol)
             if custom_data.price == 0:
-                raise Exception("Custom data price was not expected to be zero")
+                raise AssertionError("Custom data price was not expected to be zero")
 
             self.received_data.append(custom_data)
 
     def on_end_of_algorithm(self):
         if not self.received_data:
-            raise Exception("Custom data was not fetched")
+            raise AssertionError("Custom data was not fetched")
 
         custom_security = self.securities[self.custom_symbol]
         if custom_security is None or custom_security.price == 0:
-            Exception("Expected the custom security to be added to the algorithm securities and to have a price that is not zero")
+            raise AssertionError("Expected the custom security to be added to the algorithm securities and to have a price that is not zero")
 
         # Make sure history requests work as expected
         history = self.history(ExampleCustomData, self.custom_symbol, self.start_date, self.end_date, Resolution.HOUR)
 
         if history.shape[0] != len(self.received_data):
-            raise Exception("History request returned more or less data than expected")
+            raise AssertionError("History request returned more or less data than expected")
 
         for i in range(len(self.received_data)):
             received_data = self.received_data[i]
@@ -77,10 +75,10 @@ class CustomDataMultiFileObjectStoreRegressionAlgorithm(QCAlgorithm):
                 history[["high"]].values[i][0] != received_data.high or
                 history[["low"]].values[i][0] != received_data.low or
                 history[["close"]].values[i][0] != received_data.close):
-                raise Exception("History request returned different data than expected")
+                raise AssertionError("History request returned different data than expected")
 
     @staticmethod
-    def get_custom_data_key(date: datetime.date) -> str:
+    def get_custom_data_key(date: date) -> str:
         return f"CustomData/ExampleCustomData{date.strftime('%Y%m%d')}"
 
 class ExampleCustomData(PythonData):

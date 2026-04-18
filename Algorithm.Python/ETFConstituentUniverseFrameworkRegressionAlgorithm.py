@@ -11,7 +11,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from typing import List
 from AlgorithmImports import *
 
 constituent_data = []
@@ -21,14 +20,15 @@ constituent_data = []
 ### of the ETF constituent
 ### </summary>
 class ETFConstituentAlphaModel(AlphaModel):
-    def on_securities_changed(self, algorithm, changes):
+    def on_securities_changed(self, algorithm: QCAlgorithm, changes: SecurityChanges) -> None:
         pass
 
     ### <summary>
     ### Creates new insights based on constituent data and their weighting
     ### in their respective ETF
     ### </summary>
-    def update(self, algorithm: QCAlgorithm, data: Slice):
+    def update(self, algorithm: QCAlgorithm, data: Slice) -> list[Insight]:
+        global constituent_data
         insights = []
 
         for constituent in constituent_data:
@@ -57,14 +57,14 @@ class ETFConstituentAlphaModel(AlphaModel):
 ### of the constituent in their respective ETF
 ### </summary>
 class ETFConstituentPortfolioModel(PortfolioConstructionModel):
-    def __init__(self):
+    def __init__(self) -> None:
         self.has_added = False
 
     ### <summary>
     ### Securities changed, detects if we've got new additions to the universe
     ### so that we don't try to trade every loop
     ### </summary>
-    def on_securities_changed(self, algorithm: QCAlgorithm, changes: SecurityChanges):
+    def on_securities_changed(self, algorithm: QCAlgorithm, changes: SecurityChanges) -> None:
         self.has_added = len(changes.added_securities) != 0
 
     ### <summary>
@@ -72,7 +72,7 @@ class ETFConstituentPortfolioModel(PortfolioConstructionModel):
     ### Emits portfolio targets setting the quantity to the weight of the constituent
     ### in its respective ETF.
     ### </summary>
-    def create_targets(self, algorithm: QCAlgorithm, insights: List[Insight]):
+    def create_targets(self, algorithm: QCAlgorithm, insights: list[Insight]) -> list[PortfolioTarget]:
         if not self.has_added:
             return []
 
@@ -90,7 +90,7 @@ class ETFConstituentExecutionModel(ExecutionModel):
     ### <summary>
     ### Liquidates if constituents have been removed from the universe
     ### </summary>
-    def on_securities_changed(self, algorithm: QCAlgorithm, changes: SecurityChanges):
+    def on_securities_changed(self, algorithm: QCAlgorithm, changes: SecurityChanges) -> None:
         for change in changes.removed_securities:
             algorithm.liquidate(change.symbol)
 
@@ -100,7 +100,7 @@ class ETFConstituentExecutionModel(ExecutionModel):
     ### resulting algorithm portfolio weight might not be equal
     ### to the leverage of the ETF (1x, 2x, 3x, etc.)
     ### </summary>
-    def execute(self, algorithm: QCAlgorithm, targets: List[IPortfolioTarget]):
+    def execute(self, algorithm: QCAlgorithm, targets: list[IPortfolioTarget]) -> None:
         for target in targets:
             algorithm.set_holdings(target.symbol, target.quantity)
 
@@ -111,7 +111,7 @@ class ETFConstituentUniverseFrameworkRegressionAlgorithm(QCAlgorithm):
     ### <summary>
     ### Initializes the algorithm, setting up the framework classes and ETF constituent universe settings
     ### </summary>
-    def initialize(self):
+    def initialize(self) -> None:
         self.set_start_date(2020, 12, 1)
         self.set_end_date(2021, 1, 31)
         self.set_cash(100000)
@@ -120,30 +120,22 @@ class ETFConstituentUniverseFrameworkRegressionAlgorithm(QCAlgorithm):
         self.set_portfolio_construction(ETFConstituentPortfolioModel())
         self.set_execution(ETFConstituentExecutionModel())
 
-        spy = Symbol.create("SPY", SecurityType.EQUITY, Market.USA)
-
         self.universe_settings.resolution = Resolution.HOUR
-        universe = self.add_universe(self.universe.etf(spy, self.universe_settings, self.filter_etf_constituents))
+        universe = self.add_universe(self.universe.etf("SPY", self.universe_settings, self.filter_etf_constituents))
 
         historical_data = self.history(universe, 1, flatten=True)
         if len(historical_data) < 200:
-               raise ValueError(f"Unexpected universe DataCollection count {len(historical_data)}! Expected > 200")
+            raise ValueError(f"Unexpected universe DataCollection count {len(historical_data)}! Expected > 200")
 
     ### <summary>
     ### Filters ETF constituents
     ### </summary>
     ### <param name="constituents">ETF constituents</param>
     ### <returns>ETF constituent Symbols that we want to include in the algorithm</returns>
-    def filter_etf_constituents(self, constituents):
+    def filter_etf_constituents(self, constituents: list[ETFConstituentUniverse]) -> list[Symbol]:
         global constituent_data
 
-        constituent_data_local = [i for i in constituents if i is not None and i.weight >= 0.001]
+        constituent_data_local = [i for i in constituents if i.weight and i.weight >= 0.001]
         constituent_data = list(constituent_data_local)
 
         return [i.symbol for i in constituent_data_local]
-
-    ### <summary>
-    ### no-op for performance
-    ### </summary>
-    def on_data(self, data):
-        pass

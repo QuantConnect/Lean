@@ -48,6 +48,12 @@
   "symbol-second-limit": 10000,
   "symbol-tick-limit": 10000,
 
+  // Ignore unknown asset types from brokerages
+  "ignore-unknown-asset-holdings": true,
+
+  // The maximum amount of transaction threads for concurrent order submissions if the brokerage supports it.
+  //"maximum-transaction-threads": 4,
+
   // log missing data files, useful for debugging
   "show-missing-data-logs": false,
 
@@ -91,8 +97,8 @@
   "ib-tws-dir": "C:\\Jts",
   "ib-trading-mode": "paper",
   "ib-enable-delayed-streaming-data": false,
-  "ib-version": "974",
   "ib-weekly-restart-utc-time": "22:00:00",
+  "ib-financial-advisors-group-filter": "",
 
   // tradier configuration
   "tradier-environment": "paper",
@@ -161,6 +167,8 @@
   "eze-locale": "",
   "eze-password": "",
   "eze-user-name": "",
+  "eze-trading-route": "",
+  "eze-trading-account": "",
 
   // kraken configuration
   "kraken-api-secret": "",
@@ -227,6 +235,13 @@
   // Case 2 (developing)
   "charles-schwab-authorization-code-from-url": "",
   "charles-schwab-redirect-url": "",
+
+  // Tastytrade configuration
+  "tastytrade-api-url": "",
+  "tastytrade-websocket-url": "",
+  "tastytrade-username": "",
+  "tastytrade-password": "",
+  "tastytrade-account-number": "",
 
   // Exante trading configuration
   // client-id, application-id, shared-key are required to access Exante REST API
@@ -673,6 +688,20 @@
       // real brokerage implementations require the BrokerageTransactionHandler
       "live-mode-brokerage": "CharlesSchwabBrokerage",
       "data-queue-handler": [ "CharlesSchwabBrokerage" ],
+      "setup-handler": "QuantConnect.Lean.Engine.Setup.BrokerageSetupHandler",
+      "result-handler": "QuantConnect.Lean.Engine.Results.LiveTradingResultHandler",
+      "data-feed-handler": "QuantConnect.Lean.Engine.DataFeeds.LiveTradingDataFeed",
+      "real-time-handler": "QuantConnect.Lean.Engine.RealTime.LiveTradingRealTimeHandler",
+      "transaction-handler": "QuantConnect.Lean.Engine.TransactionHandlers.BrokerageTransactionHandler",
+      "history-provider": [ "BrokerageHistoryProvider", "SubscriptionDataReaderHistoryProvider" ]
+    },
+
+    "live-tastytrade": {
+      "live-mode": true,
+
+      // real brokerage implementations require the BrokerageTransactionHandler
+      "live-mode-brokerage": "TastytradeBrokerage",
+      "data-queue-handler": [ "TastytradeBrokerage" ],
       "setup-handler": "QuantConnect.Lean.Engine.Setup.BrokerageSetupHandler",
       "result-handler": "QuantConnect.Lean.Engine.Results.LiveTradingResultHandler",
       "data-feed-handler": "QuantConnect.Lean.Engine.DataFeeds.LiveTradingDataFeed",

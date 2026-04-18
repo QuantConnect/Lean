@@ -23,7 +23,7 @@ class AllShortableSymbolsCoarseSelectionRegressionAlgorithm(QCAlgorithm):
         self._20140327 = datetime(2014, 3, 27)
         self._20140328 = datetime(2014, 3, 28)
         self._20140329 = datetime(2014, 3, 29)
-        self.last_trade_date = datetime(1,1,1)
+        self.last_trade_date = date(1,1,1)
 
         self._aapl = Symbol.create("AAPL", SecurityType.EQUITY, Market.USA)
         self._bac = Symbol.create("BAC", SecurityType.EQUITY, Market.USA)
@@ -59,7 +59,7 @@ class AllShortableSymbolsCoarseSelectionRegressionAlgorithm(QCAlgorithm):
                 continue
             shortable_quantity = security.shortable_provider.shortable_quantity(symbol, self.time)
             if not shortable_quantity:
-                raise Exception(f"Expected {symbol} to be shortable on {self.time.strftime('%Y%m%d')}")
+                raise AssertionError(f"Expected {symbol} to be shortable on {self.time.strftime('%Y%m%d')}")
 
             """
             Buy at least once into all Symbols. Since daily data will always use
@@ -76,22 +76,22 @@ class AllShortableSymbolsCoarseSelectionRegressionAlgorithm(QCAlgorithm):
         if self.time.date() == self._20140327.date():
             gme = Symbol.create("GME", SecurityType.EQUITY, Market.USA)
             if gme not in shortable_symbols.keys():
-                raise Exception("Expected unmapped GME in shortable symbols list on 2014-03-27")
+                raise AssertionError("Expected unmapped GME in shortable symbols list on 2014-03-27")
             if "GME" not in list(map(lambda x: x.symbol.value, coarse)):
-                raise Exception("Expected mapped GME in coarse symbols on 2014-03-27")
+                raise AssertionError("Expected mapped GME in coarse symbols on 2014-03-27")
 
             expected_missing = 1
 
         missing = list(filter(lambda x: x not in selected_symbols, self.expected_symbols[self.time]))
         if len(missing) != expected_missing:
-            raise Exception(f"Expected Symbols selected on {self.time.strftime('%Y%m%d')} to match expected Symbols, but the following Symbols were missing: {', '.join(list(map(lambda x:x.value, missing)))}")
+            raise AssertionError(f"Expected Symbols selected on {self.time.strftime('%Y%m%d')} to match expected Symbols, but the following Symbols were missing: {', '.join(list(map(lambda x:x.value, missing)))}")
 
         self.coarse_selected[self.time] = True
         return selected_symbols
 
     def on_end_of_algorithm(self):
         if not all(x for x in self.coarse_selected.values()):
-            raise Exception(f"Expected coarse selection on all dates, but didn't run on: {', '.join(list(map(lambda x: x.key.strftime('%Y%m%d'), filter(lambda x:not x.value, self.coarse_selected))))}")
+            raise AssertionError(f"Expected coarse selection on all dates, but didn't run on: {', '.join(list(map(lambda x: x[0].strftime('%Y%m%d'), filter(lambda x:not x[1], self.coarse_selected.items()))))}")
 
 class AllShortableSymbolsRegressionAlgorithmBrokerageModel(DefaultBrokerageModel):
     def __init__(self, shortable_provider):
@@ -109,7 +109,7 @@ class RegressionTestShortableProvider(LocalDiskShortableProvider):
     Gets a list of all shortable Symbols, including the quantity shortable as a Dictionary.
     """
     def all_shortable_symbols(self, localtime):
-        shortable_data_directory = os.path.join(Globals.DataFolder, "equity", Market.USA, "shortable", self.brokerage)
+        shortable_data_directory = os.path.join(Globals.data_folder, "equity", Market.USA, "shortable", self.brokerage)
         all_symbols = {}
 
         """

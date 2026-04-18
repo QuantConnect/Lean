@@ -34,17 +34,21 @@ class PeriodBasedHistoryRequestNotAllowedWithTickResolutionRegressionAlgorithm(Q
             "Tick history call with symbol array with explicit tick resolution")
 
         history = self.history[Tick](spy, TimeSpan.from_hours(12))
-        if len(list(history)) == 0:
-            raise Exception("On history call with implicit tick resolution: history returned no results")
+        # Check whether history has data without enumerating the whole list
+        if not any(x for x in history):
+            raise AssertionError("On history call with implicit tick resolution: history returned no results")
 
         history = self.history[Tick](spy, TimeSpan.from_hours(12), Resolution.TICK)
-        if len(list(history)) == 0:
-            raise Exception("On history call with explicit tick resolution: history returned no results")
+        if not any(x for x in history):
+            raise AssertionError("On history call with explicit tick resolution: history returned no results")
+
+        # We already tested what we wanted to test, we can quit now
+        self.quit()
 
     def assert_that_history_throws_for_tick_resolution(self, history_call, history_call_description):
         try:
             history_call()
-            raise Exception(f"{history_call_description}: expected an exception to be thrown")
+            raise AssertionError(f"{history_call_description}: expected an exception to be thrown")
         except InvalidOperationException:
             # expected
             pass

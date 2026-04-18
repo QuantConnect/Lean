@@ -29,7 +29,7 @@ class IndexOptionBullCallSpreadAlgorithm(QCAlgorithm):
         option.set_filter(lambda x: x.weeklys_only().strikes(-5, 5).expiration(40, 60))
         
         self.spxw = option.symbol
-        self.tickets = []
+        self.tickets: list[OrderTicket] = list()
 
     def on_data(self, slice: Slice) -> None:
         if not self.portfolio[self.spy].invested:

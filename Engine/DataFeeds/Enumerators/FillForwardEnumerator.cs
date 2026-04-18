@@ -38,11 +38,17 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
         private BaseData _previous;
         private bool _ended;
         private bool _isFillingForward;
+        private bool _initialized;
 
-        private readonly bool _useStrictEndTime;
+        /// <summary>
+        /// Whether to use strict daily end times
+        /// </summary>
+        protected bool UseStrictEndTime { get; }
+
         private readonly TimeSpan _dataResolution;
         private readonly DateTimeZone _dataTimeZone;
         private readonly bool _isExtendedMarketHours;
+        private readonly DateTime _subscriptionStartTime;
         private readonly DateTime _subscriptionEndTime;
         private readonly CalendarInfo _subscriptionEndDataCalendar;
         private readonly IEnumerator<BaseData> _enumerator;
@@ -55,6 +61,15 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
         protected SecurityExchange Exchange { get; init; }
 
         /// <summary>
+        /// A reference to the last point emitted for the subscription.
+        /// This is used to feed the last point of a previous enumerator in cases like concatenated enumerators.
+        /// For instance, if this enumerator is concatenated to a warm up one, we can use this to feed
+        /// the last point of the warm up enumerator to this one, so that it can use it to fill forward if
+        /// the first actual point of this enumerator is ahead of the subscription start time or the first market open after it.
+        /// </summary>
+        private LastPointTracker _lastPointTracker;
+
+        /// <summary>
         /// Initializes a new instance of the <see cref="FillForwardEnumerator"/> class that accepts
         /// a reference to the fill forward resolution, useful if the fill forward resolution is dynamic
         /// and changing as the enumeration progresses
@@ -63,23 +78,28 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
         /// <param name="exchange">The exchange used to determine when to insert fill forward data</param>
         /// <param name="fillForwardResolution">The resolution we'd like to receive data on</param>
         /// <param name="isExtendedMarketHours">True to use the exchange's extended market hours, false to use the regular market hours</param>
+        /// <param name="subscriptionStartTime">The start time of the subscription</param>
         /// <param name="subscriptionEndTime">The end time of the subscription, once passing this date the enumerator will stop</param>
         /// <param name="dataResolution">The source enumerator's data resolution</param>
         /// <param name="dataTimeZone">The time zone of the underlying source data. This is used for rounding calculations and
         /// is NOT the time zone on the BaseData instances (unless of course data time zone equals the exchange time zone)</param>
         /// <param name="dailyStrictEndTimeEnabled">True if daily strict end times are enabled</param>
         /// <param name="dataType">The configuration data type this enumerator is for</param>
+        /// <param name="lastPointTracker">A reference to the last point emitted before this enumerator is first enumerated</param>
         public FillForwardEnumerator(IEnumerator<BaseData> enumerator,
             SecurityExchange exchange,
             IReadOnlyRef<TimeSpan> fillForwardResolution,
             bool isExtendedMarketHours,
+            DateTime subscriptionStartTime,
             DateTime subscriptionEndTime,
             TimeSpan dataResolution,
             DateTimeZone dataTimeZone,
             bool dailyStrictEndTimeEnabled,
-            Type dataType = null
+            Type dataType = null,
+            LastPointTracker lastPointTracker = null
             )
         {
+            _subscriptionStartTime = subscriptionStartTime;
             _subscriptionEndTime = subscriptionEndTime;
             Exchange = exchange;
             _enumerator = enumerator;
@@ -87,17 +107,18 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
             _dataTimeZone = dataTimeZone;
             _fillForwardResolution = fillForwardResolution;
             _isExtendedMarketHours = isExtendedMarketHours;
-            _useStrictEndTime = dailyStrictEndTimeEnabled;
+            _lastPointTracker = lastPointTracker;
+            UseStrictEndTime = dailyStrictEndTimeEnabled;
             // OI data is fill-forwarded to the market close time when strict end times is enabled.
             // Open interest data can arrive at any time and this would allow to synchronize it with trades and quotes when daily
             // strict end times is enabled
             _strictEndTimeIntraDayFillForward = dailyStrictEndTimeEnabled && dataType != null && dataType == typeof(OpenInterest);
 
             // '_dataResolution' and '_subscriptionEndTime' are readonly they won't change, so lets calculate this once here since it's expensive.
-            // if _useStrictEndTime and also _strictEndTimeIntraDayFillForward, this is a subscription with data that is not adjusted
+            // if UseStrictEndTime and also _strictEndTimeIntraDayFillForward, this is a subscription with data that is not adjusted
             // for the strict end time (like open interest) but require fill forward to synchronize with other data.
             // Use the non strict end time calendar for the last day of data so that all data for that date is emitted.
-            if (_useStrictEndTime && !_strictEndTimeIntraDayFillForward)
+            if (UseStrictEndTime && !_strictEndTimeIntraDayFillForward)
             {
                 var lastDayCalendar = GetDailyCalendar(_subscriptionEndTime);
                 while (lastDayCalendar.End > _subscriptionEndTime)
@@ -133,6 +154,24 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
         /// <filterpriority>2</filterpriority>
         object IEnumerator.Current => Current;
 
+        private void Initialize()
+        {
+            if (_initialized)
+            {
+                return;
+            }
+
+            if (_lastPointTracker?.LastDataPoint != null)
+            {
+                // adjust the previous data point to the subscription start time to
+                // avoid emitting fill forward data before that
+                _previous = _lastPointTracker.LastDataPoint.Clone();
+                _previous.Time = _subscriptionStartTime - _dataResolution;
+            }
+
+            _initialized = true;
+        }
+
         /// <summary>
         /// Advances the enumerator to the next element of the collection.
         /// </summary>
@@ -142,6 +181,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
         /// <exception cref="T:System.InvalidOperationException">The collection was modified after the enumerator was created. </exception><filterpriority>2</filterpriority>
         public bool MoveNext()
         {
+            Initialize();
+
             if (_delistedTime.HasValue)
             {
                 // don't fill forward after data after the delisted date
@@ -308,7 +349,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
                 }
 
                 var period = _dataResolution;
-                if (_useStrictEndTime)
+                if (UseStrictEndTime)
                 {
                     // the period is not the data resolution (1 day) and can actually change dynamically, for example early close/late open
                     period = next.EndTime - next.Time;
@@ -367,7 +408,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
                 // next.EndTime sticks to Time TZ,
                 // potentialBarEndTime should be calculated in the same way as bar.EndTime, i.e. Time + resolution
                 // round down doesn't make sense for daily data using strict times
-                var startTime = (_useStrictEndTime && item.Period > Time.OneHour) ? item.Start : RoundDown(item.Start, item.Period);
+                var startTime = (UseStrictEndTime && item.Period > Time.OneHour) ? item.Start : RoundDown(item.Start, item.Period);
                 var potentialBarEndTime = startTime.ConvertToUtc(Exchange.TimeZone) + item.Period;
 
                 // to avoid duality it's necessary to compare potentialBarEndTime with
@@ -390,7 +431,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
 
                         // bar are ALWAYS of the data resolution
                         var expectedPeriod = _dataResolution;
-                        if (_useStrictEndTime)
+                        if (UseStrictEndTime)
                         {
                             // TODO: what about extended market hours
                             // NOTE: Not using Exchange.Hours.RegularMarketDuration so we can handle things like early closes.
@@ -448,13 +489,13 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
         private IEnumerable<CalendarInfo> GetReferenceDateIntervals(DateTime previousEndTime, TimeSpan resolution)
         {
             // say daily bar goes from 9:30 to 16:00, if resolution is 1 day, IsOpenDuringBar can return true but it's not what we want
-            if (!_useStrictEndTime && Exchange.IsOpenDuringBar(previousEndTime, previousEndTime + resolution, _isExtendedMarketHours))
+            if (!UseStrictEndTime && Exchange.IsOpenDuringBar(previousEndTime, previousEndTime + resolution, _isExtendedMarketHours))
             {
                 // if next in market us it
                 yield return new (previousEndTime, resolution);
             }
 
-            if (_useStrictEndTime)
+            if (UseStrictEndTime)
             {
                 // If we're using strict end times for open interest data, for instance, the actual data comes at any time
                 // but we want to emit a ff point at market close. If extended market hours are enabled, and previousEndTime
@@ -492,7 +533,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
             List<CalendarInfo> result = null;
             if (Exchange.IsOpenDuringBar(previousEndTime, previousEndTime + smallerResolution, _isExtendedMarketHours))
             {
-                if (_useStrictEndTime)
+                if (UseStrictEndTime)
                 {
                     // case A
                     result = new()
@@ -510,7 +551,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
             result ??= new List<CalendarInfo>(4);
 
             // we need to round down because previous end time could be of the smaller resolution, in data TZ!
-            if (_useStrictEndTime)
+            if (UseStrictEndTime)
             {
                 // case B: say smaller resolution (FF res) is 1 hour, larget resolution (daily data resolution) is 1 day
                 // For example for SPX we need to emit the daily FF bar from 8:30->15:15, even before the 'A' case above which would be 15->16 bar
@@ -534,7 +575,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
             // to the next market open
             var marketOpen = Exchange.Hours.GetNextMarketOpen(previousEndTime, _isExtendedMarketHours);
             result.Add(new (marketOpen, smallerResolution));
-            if (_useStrictEndTime)
+            if (UseStrictEndTime)
             {
                 result.Add(GetDailyCalendar(Exchange.Hours.GetNextMarketOpen(previousEndTime, false)));
             }
