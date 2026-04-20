@@ -18,6 +18,7 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
+using Newtonsoft.Json;
 using Moq;
 using NUnit.Framework;
 using QuantConnect.Algorithm;
@@ -29,6 +30,7 @@ using QuantConnect.Lean.Engine.Results;
 using QuantConnect.Lean.Engine.Setup;
 using QuantConnect.Lean.Engine.TransactionHandlers;
 using QuantConnect.Orders;
+using QuantConnect.Orders.Serialization;
 using QuantConnect.Packets;
 using QuantConnect.Securities;
 using QuantConnect.Securities.Option.StrategyMatcher;
@@ -119,6 +121,49 @@ namespace QuantConnect.Tests.Engine.Setup
 
             // SPY security should be added to the algorithm
             Assert.Contains(Symbols.SPY, _algorithm.Securities.Select(x => x.Key).ToList());
+        }
+
+        [Test]
+        public void GetOpenOrdersRestoresTagFromBrokerageDataOrders()
+        {
+            var algorithm = new QCAlgorithm();
+            var dataManager = new DataManagerStub(algorithm);
+            algorithm.SubscriptionManager.SetDataManager(dataManager);
+
+            var brokerage = new Mock<IBrokerage>();
+            var transactionHandler = new BrokerageTransactionHandler();
+            var resultHandler = new NonDequeingTestResultsHandler();
+
+            var brokerageOrder = new LimitOrder(Symbols.SPY, 1, 1.2345m, DateTime.UtcNow, "Brokerage tag");
+            brokerageOrder.BrokerId.Add("broker-id-1");
+            brokerage.Setup(x => x.GetOpenOrders()).Returns(new List<Order> { brokerageOrder });
+
+            transactionHandler.Initialize(algorithm, brokerage.Object, resultHandler);
+            try
+            {
+                var liveOrder = new LimitOrder(Symbols.SPY, 1, 1.2345m, DateTime.UtcNow, "User custom tag");
+                liveOrder.BrokerId.Add("broker-id-1");
+
+                var liveJob = GetJob();
+                liveJob.BrokerageData[BrokerageSetupHandler.OrdersConfig] = JsonConvert.SerializeObject(new OrdersResponseWrapper
+                {
+                    Orders = new List<ApiOrderResponse>
+                    {
+                        new ApiOrderResponse(liveOrder, new List<SerializedOrderEvent>(), liveOrder.Symbol)
+                    }
+                });
+
+                _brokerageSetupHandler.PublicGetOpenOrders(algorithm, resultHandler, transactionHandler, brokerage.Object, liveJob);
+
+                var restoredOrder = transactionHandler.GetOpenOrders().Single();
+                Assert.AreEqual("User custom tag", restoredOrder.Tag);
+            }
+            finally
+            {
+                transactionHandler.Exit();
+                resultHandler.Exit();
+                dataManager.RemoveAllSubscriptions();
+            }
         }
 
         [TestCaseSource(typeof(ExistingHoldingAndOrdersDataClass), nameof(ExistingHoldingAndOrdersDataClass.GetExistingHoldingsAndOrdersTestCaseData))]
@@ -883,9 +928,9 @@ namespace QuantConnect.Tests.Engine.Setup
 
         private class TestableBrokerageSetupHandler : BrokerageSetupHandler
         {
-            public void PublicGetOpenOrders(IAlgorithm algorithm, IResultHandler resultHandler, ITransactionHandler transactionHandler, IBrokerage brokerage)
+            public void PublicGetOpenOrders(IAlgorithm algorithm, IResultHandler resultHandler, ITransactionHandler transactionHandler, IBrokerage brokerage, LiveNodePacket liveJob = null)
             {
-                GetOpenOrders(algorithm, resultHandler, transactionHandler, brokerage);
+                GetOpenOrders(algorithm, resultHandler, transactionHandler, brokerage, liveJob);
             }
 
             public bool TestLoadExistingHoldingsAndOrders(IBrokerage brokerage, IAlgorithm algorithm, SetupHandlerParameters parameters)
