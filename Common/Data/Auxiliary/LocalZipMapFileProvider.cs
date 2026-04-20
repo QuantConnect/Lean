@@ -14,8 +14,10 @@
 */
 
 using System;
+using QuantConnect.Configuration;
 using QuantConnect.Util;
 using QuantConnect.Logging;
+using System.Globalization;
 using System.Threading.Tasks;
 using QuantConnect.Interfaces;
 using System.Collections.Generic;
@@ -27,6 +29,7 @@ namespace QuantConnect.Data.Auxiliary
     /// </summary>
     public class LocalZipMapFileProvider : IMapFileProvider
     {
+        private readonly DateTime? _lookupDate;
         private Dictionary<AuxiliaryDataKey, MapFileResolver> _cache;
         private IDataProvider _dataProvider;
         private object _lock;
@@ -50,12 +53,18 @@ namespace QuantConnect.Data.Auxiliary
         }
 
         /// <summary>
-        /// Creates a new instance of the <see cref="LocalDiskFactorFileProvider"/>
+        /// Creates a new instance of the <see cref="LocalZipMapFileProvider"/>
         /// </summary>
         public LocalZipMapFileProvider()
         {
             _lock = new object();
             _cache = new Dictionary<AuxiliaryDataKey, MapFileResolver>();
+            
+            var lookupDateConfig = Config.Get("map-file-provider-lookup-date");
+            if (DateTime.TryParseExact(lookupDateConfig, "yyyyMMdd", CultureInfo.InvariantCulture, DateTimeStyles.None, out var lookupDate))
+            {
+                _lookupDate = lookupDate;
+            }
         }
 
         /// <summary>
@@ -111,36 +120,29 @@ namespace QuantConnect.Data.Auxiliary
             var market = auxiliaryDataKey.Market;
             var timestamp = DateTime.UtcNow.ConvertFromUtc(TimeZones.NewYork);
             var todayNewYork = timestamp.Date;
-            var yesterdayNewYork = todayNewYork.AddDays(-1);
-
+            // If a lookup date was provided, use it, otherwise use yesterday as the starting point for our search
+            var yesterdayNewYork = _lookupDate ?? todayNewYork.AddDays(-1);
+            // To prevent infinite recursion if something is wrong with the zip files, we look back a maximum of 30 days
+            var endDate = yesterdayNewYork.AddDays(_lookupDate.HasValue ? 0 : -30);
+            
             // start the search with yesterday, today's file will be available tomorrow
-            var count = 0;
-            var date = yesterdayNewYork;
-            do
+            for (var date = yesterdayNewYork; date >= endDate; date = date.AddDays(-1))
             {
                 var zipFileName = MapFileZipHelper.GetMapFileZipFileName(market, date, auxiliaryDataKey.SecurityType);
 
                 // Fetch a stream for our zip from our data provider
                 var stream = _dataProvider.Fetch(zipFileName);
 
-                // If we found a file we can read it 
-                if (stream != null)
-                {
-                    Log.Trace("LocalZipMapFileProvider.Get({0}): Fetched map files for: {1} NY", market, date.ToShortDateString());
-                    var result =  new MapFileResolver(MapFileZipHelper.ReadMapFileZip(stream, market, auxiliaryDataKey.SecurityType));
-                    stream.DisposeSafely();
-                    return result;
-                }
+                // If we didn't find a file, continue to the next date
+                if (stream == null) continue;
 
-                // prevent infinite recursion if something is wrong
-                if (count++ > 30)
-                {
-                    throw new InvalidOperationException($"LocalZipMapFileProvider couldn't find any map files going all the way back to {date} for {market}");
-                }
-
-                date = date.AddDays(-1);
+                Log.Trace($"LocalZipMapFileProvider.Get({market}): Fetched map files for: {date.ToShortDateString()} NY ({(date - todayNewYork).Days} days ago).");
+                var result = new MapFileResolver(MapFileZipHelper.ReadMapFileZip(stream, market, auxiliaryDataKey.SecurityType));
+                stream.DisposeSafely();
+                return result;
             }
-            while (true);
+
+            throw new InvalidOperationException($"LocalZipMapFileProvider couldn't find any map files going all the way back to {endDate.ToShortDateString()} for {market}");
         }
     }
 }

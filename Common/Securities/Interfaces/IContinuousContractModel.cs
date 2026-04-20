@@ -24,10 +24,14 @@ namespace QuantConnect.Securities.Interfaces
     /// </summary>
     public enum AdjustmentType
     {
+        /// <summary>
         /// ForwardAdjusted - new quotes are adjusted as new data comes
+        /// </summary>
         ForwardAdjusted,
 
+        /// <summary>
         /// BackAdjusted - old quotes are retrospectively adjusted as new data comes
+        /// </summary>
         BackAdjusted
     };
 

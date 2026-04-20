@@ -59,16 +59,16 @@ class ETFConstituentUniverseCompositeDelistingRegressionAlgorithm(QCAlgorithm):
             raise AssertionError("New securities added after ETF constituents were delisted")
 
         # Since we added the etf subscription it will get delisted and send us a removal event
-        expected_changes_count = self.universe_symbol_count + 1
+        expected_changes_count = self.universe_symbol_count
 
         if self.universe_selection_done:
             # "_universe_symbol_count + 1" because selection is done right away,
             # so AddedSecurities includes all ETF constituents (including APPL) plus GDVD
-            self.universe_added = self.universe_added or len(changes.added_securities) == expected_changes_count
+            self.universe_added = self.universe_added or len(changes.added_securities) == (expected_changes_count - 1)
 
         # TODO: shouldn't be sending AAPL as a removed security since it was added by another universe
         self.universe_removed = self.universe_removed or (
-            len(changes.removed_securities) == expected_changes_count and
+            len(changes.removed_securities) == (expected_changes_count + 1) and
             self.utc_time.date() >= self.delisting_date and
             self.utc_time.date() < self.end_date.date())
 

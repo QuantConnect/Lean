@@ -26,6 +26,7 @@ using QuantConnect.Research;
 using System.Threading.Tasks;
 using System.Collections.Generic;
 using QuantConnect.Lean.Engine.Storage;
+using Python.Runtime;
 
 namespace QuantConnect.Tests.Common.Storage
 {
@@ -42,10 +43,10 @@ namespace QuantConnect.Tests.Common.Storage
         public void Setup()
         {
             LocalObjectStore.DefaultObjectStore = TestStorageRoot;
-            #pragma warning disable CA2000
+#pragma warning disable CA2000
             _store = new ObjectStore(new TestLocalObjectStore());
-            #pragma warning restore CA2000
-            _store.Initialize(0, 0, "", new Controls() { StorageLimit = 5 * 1024 * 1024, StorageFileCount = 100 });
+#pragma warning restore CA2000
+            _store.Initialize(0, 0, "", new Controls() { StorageLimit = 5 * 1024 * 1024, StorageFileCount = 100 }, AlgorithmMode.Backtesting);
 
             // Store initial Log Handler
             _logHandler = Log.LogHandler;
@@ -72,7 +73,7 @@ namespace QuantConnect.Tests.Common.Storage
         public void DoesNotYieldTwiceSameFile()
         {
             using var store = new ObjectStore(new TestLocalObjectStore());
-            store.Initialize(0, 0, "", new Controls() { PersistenceIntervalSeconds = -1 });
+            store.Initialize(0, 0, "", new Controls() { PersistenceIntervalSeconds = -1 }, AlgorithmMode.Backtesting);
             store.SaveBytes("DoesNotYieldTwiceSameFile", [1, 1]);
 
             var enumerator = store.GetEnumerator();
@@ -86,7 +87,7 @@ namespace QuantConnect.Tests.Common.Storage
         public void DisposeDoesNotHang()
         {
             var store = new ObjectStore(new TestLocalObjectStore());
-            store.Initialize(0, 0, "", new Controls());
+            store.Initialize(0, 0, "", new Controls(), AlgorithmMode.Backtesting);
             Assert.IsTrue(store.SaveBytes("DisposeDoesNotHang", [1, 1]));
 
             using var testEvent = new AutoResetEvent(false);
@@ -111,10 +112,10 @@ namespace QuantConnect.Tests.Common.Storage
         [Test]
         public void ExistingFilesLoadedCorretly()
         {
-            # pragma warning disable CA2000
+#pragma warning disable CA2000
             using (var store = new ObjectStore(new TestLocalObjectStore()))
             {
-            #pragma warning restore CA2000
+#pragma warning restore CA2000
                 var dir = Path.Combine(TestStorageRoot, "location-pepe", "test");
                 Directory.CreateDirectory(dir);
 
@@ -123,7 +124,7 @@ namespace QuantConnect.Tests.Common.Storage
                 File.WriteAllText(Path.Combine(dir, filename), "pinocho the movie");
                 File.WriteAllText(Path.Combine(TestStorageRoot, filename2), "jiji");
 
-                store.Initialize(0, 0, "", new Controls() { PersistenceIntervalSeconds = -1 });
+                store.Initialize(0, 0, "", new Controls() { PersistenceIntervalSeconds = -1 }, AlgorithmMode.Backtesting);
 
                 var storeContent = store.ToList();
 
@@ -234,11 +235,11 @@ namespace QuantConnect.Tests.Common.Storage
         [TestCase("..\\prefix/")]
         public void InvalidCustomPathsStore(string path)
         {
-            #pragma warning disable CA2000
+#pragma warning disable CA2000
             using (var store = new ObjectStore(new TestLocalObjectStore()))
             {
-            #pragma warning restore CA2000
-                store.Initialize(0, 0, "", new Controls() { PersistenceIntervalSeconds = -1 });
+#pragma warning restore CA2000
+                store.Initialize(0, 0, "", new Controls() { PersistenceIntervalSeconds = -1 }, AlgorithmMode.Backtesting);
                 Assert.AreEqual(0, store.Count());
 
                 Assert.Throws<ArgumentException>(() => store.SaveString($"{path}ILove", "Pizza"));
@@ -248,11 +249,11 @@ namespace QuantConnect.Tests.Common.Storage
         [Test]
         public void ValidPaths()
         {
-            #pragma warning disable CA2000
+#pragma warning disable CA2000
             using (var store = new ObjectStore(new TestLocalObjectStore()))
             {
-            #pragma warning restore CA2000
-                store.Initialize(0, 0, "", new Controls() { PersistenceIntervalSeconds = -1 });
+#pragma warning restore CA2000
+                store.Initialize(0, 0, "", new Controls() { PersistenceIntervalSeconds = -1 }, AlgorithmMode.Backtesting);
 
                 store.SaveString("jose-something/pepe/ILove", "Pizza");
                 Assert.AreEqual(1, store.Count());
@@ -279,11 +280,11 @@ namespace QuantConnect.Tests.Common.Storage
         [TestCase("./a/su-p_er\\pr x=")]
         public void CustomPrefixStore(string prefix)
         {
-            #pragma warning disable CA2000
+#pragma warning disable CA2000
             using (var store = new ObjectStore(new TestLocalObjectStore()))
             {
-            #pragma warning restore CA2000
-                store.Initialize(0, 0, "", new Controls() { PersistenceIntervalSeconds = -1 });
+#pragma warning restore CA2000
+                store.Initialize(0, 0, "", new Controls() { PersistenceIntervalSeconds = -1 }, AlgorithmMode.Backtesting);
                 Assert.AreEqual(0, store.Count());
 
                 var key = "ILove";
@@ -311,11 +312,11 @@ namespace QuantConnect.Tests.Common.Storage
         [TestCase(0)]
         public void KeysBehavior(int useCase)
         {
-            #pragma warning disable CA2000
+#pragma warning disable CA2000
             using (var store = new ObjectStore(new TestLocalObjectStore()))
             {
-            #pragma warning restore CA2000
-                store.Initialize(0, 0, "", new Controls() { PersistenceIntervalSeconds = -1 });
+#pragma warning restore CA2000
+                store.Initialize(0, 0, "", new Controls() { PersistenceIntervalSeconds = -1 }, AlgorithmMode.Backtesting);
                 var key = "ILove";
                 store.SaveString(key, "Pizza");
                 var path = store.GetFilePath(key);
@@ -360,11 +361,11 @@ namespace QuantConnect.Tests.Common.Storage
         [TestCase(0)]
         public void AfterClearState(int useCase)
         {
-            #pragma warning disable CA2000
+#pragma warning disable CA2000
             using (var store = new ObjectStore(new TestLocalObjectStore()))
             {
-            #pragma warning restore CA2000
-                store.Initialize(0, 0, "", new Controls() { PersistenceIntervalSeconds = -1 });
+#pragma warning restore CA2000
+                store.Initialize(0, 0, "", new Controls() { PersistenceIntervalSeconds = -1 }, AlgorithmMode.Backtesting);
                 var key = "ILove";
                 store.SaveString(key, "Pizza");
                 var path = store.GetFilePath(key);
@@ -418,11 +419,11 @@ namespace QuantConnect.Tests.Common.Storage
         [Test]
         public void GetFilePathAndDelete()
         {
-            #pragma warning disable CA2000
+#pragma warning disable CA2000
             using (var store = new ObjectStore(new TestLocalObjectStore()))
             {
-            #pragma warning restore CA2000
-                store.Initialize(0, 0, "", new Controls() { PersistenceIntervalSeconds = -1 });
+#pragma warning restore CA2000
+                store.Initialize(0, 0, "", new Controls() { PersistenceIntervalSeconds = -1 }, AlgorithmMode.Backtesting);
                 Assert.IsTrue(Directory.Exists("./LocalObjectStoreTests"));
 
                 var key = "ILove";
@@ -742,11 +743,11 @@ namespace QuantConnect.Tests.Common.Storage
         [Test]
         public void WriteFromExternalMethodAndSaveFromSource()
         {
-            #pragma warning disable CA2000
+#pragma warning disable CA2000
             using (var store = new ObjectStore(new TestLocalObjectStore()))
             {
-            #pragma warning restore CA2000
-                store.Initialize(0, 0, "", new Controls() { PersistenceIntervalSeconds = -1 });
+#pragma warning restore CA2000
+                store.Initialize(0, 0, "", new Controls() { PersistenceIntervalSeconds = -1 }, AlgorithmMode.Backtesting);
                 Assert.IsTrue(Directory.Exists("./LocalObjectStoreTests"));
 
                 var key = "Test";
@@ -771,11 +772,11 @@ namespace QuantConnect.Tests.Common.Storage
         [TestCase("\\abc\\1 23\\test", "1 23")]
         public void GetFilePathMethodWorksProperly(string key, string expectedParentName)
         {
-            #pragma warning disable CA2000
+#pragma warning disable CA2000
             using (var store = new ObjectStore(new TestLocalObjectStore()))
             {
-            #pragma warning restore CA2000
-                store.Initialize(0, 0, "", new Controls() { PersistenceIntervalSeconds = -1 });
+#pragma warning restore CA2000
+                store.Initialize(0, 0, "", new Controls() { PersistenceIntervalSeconds = -1 }, AlgorithmMode.Backtesting);
                 Assert.IsTrue(Directory.Exists("./LocalObjectStoreTests"));
 
                 var path = store.GetFilePath(key);
@@ -793,11 +794,11 @@ namespace QuantConnect.Tests.Common.Storage
         [Test]
         public void TrySaveKeyWithNotFileAssociated()
         {
-            #pragma warning disable CA2000
+#pragma warning disable CA2000
             using (var store = new ObjectStore(new TestLocalObjectStore()))
             {
-            #pragma warning restore CA2000
-                store.Initialize(0, 0, "", new Controls() { PersistenceIntervalSeconds = -1 });
+#pragma warning restore CA2000
+                store.Initialize(0, 0, "", new Controls() { PersistenceIntervalSeconds = -1 }, AlgorithmMode.Backtesting);
                 Assert.IsTrue(Directory.Exists("./LocalObjectStoreTests"));
 
                 var key = "test";
@@ -908,6 +909,113 @@ namespace QuantConnect.Tests.Common.Storage
             }
         }
 
+        [Test]
+        public void StoragePropertiesAreAccessible()
+        {
+            var controls = new Controls { StorageLimit = 536870912, StorageFileCount = 500 };
+            using var store = new TestLocalObjectStore();
+            store.Initialize(1, 2, "token", controls);
+
+            Assert.AreEqual(536870912, store.MaxSize);
+            Assert.AreEqual(500, store.MaxFiles);
+        }
+
+        [Test]
+        public void StoragePropertiesUseDefaultsFromControls()
+        {
+            using var store = new TestLocalObjectStore();
+            store.Initialize(1, 2, "token", new Controls());
+
+            Assert.AreEqual(10737418240, store.MaxSize);
+            Assert.AreEqual(10000, store.MaxFiles);
+        }
+
+        [TestCase(1, false)]
+        [TestCase(2, true)]
+        public void SavingFilesRespectsStorageFileCountLimit(int filesToAdd, bool expectedLimitReached)
+        {
+            var controls = new Controls { StorageFileCount = 2, StorageLimit = long.MaxValue };
+            using var store = new TestLocalObjectStore();
+            store.Initialize(1, 2, "token", controls);
+
+            for (int i = 0; i < filesToAdd; i++)
+            {
+                store.SaveBytes($"/file{i}.txt", new byte[] { 1 });
+            }
+
+            Assert.AreEqual(expectedLimitReached, store.Count() == controls.StorageFileCount);
+
+            // Delete all files
+            for (int i = 0; i < filesToAdd; i++)
+            {
+                store.Delete($"/file{i}.txt");
+            }
+        }
+
+        [Test]
+        public void ObjectStoreDelegatesToImplementation()
+        {
+            using var localStore = new TestLocalObjectStore();
+            localStore.Initialize(1, 2, "token", new Controls());
+            using var objectStore = new ObjectStore(localStore);
+
+            Assert.AreEqual(localStore.MaxSize, objectStore.MaxSize);
+            Assert.AreEqual(localStore.MaxFiles, objectStore.MaxFiles);
+            Assert.AreEqual(localStore.Count(), objectStore.Count());
+            Assert.AreEqual(localStore.Count() == localStore.MaxFiles, objectStore.Count() == objectStore.MaxFiles);
+        }
+
+        [Test]
+        public void ResearchModeThrowsExceptionAndCapturesErrorWhenObjectStoreLimitIsReached()
+        {
+            var testObjectStore = new LocalObjectStore();
+            testObjectStore.Initialize(1, 1, "test", new Controls
+            {
+                StorageFileCount = 2,
+                StorageLimit = 100,
+                PersistenceIntervalSeconds = -1,
+                StorageAccess = new QuantConnect.Packets.StoragePermissions
+                {
+                    Read = true,
+                    Write = true,
+                    Delete = true
+                }
+            }, AlgorithmMode.Research);
+            using (Py.GIL())
+            {
+
+
+                var testModule = PyModule.FromString("PythonCustomDataHistoryCanBeFetchedUsingCSharpApi",
+                    @"
+from AlgorithmImports import *
+
+def clean_data():
+    qb = QuantBook()
+    for i in range(3):
+        qb.object_store.delete(f'file_{i}.txt')
+
+def add_data(object_store):
+    qb = QuantBook()
+    qb.SetObjectStore(object_store)
+    
+    max_files = qb.object_store.max_files
+    for i in range(max_files):
+        result = qb.object_store.save(f'file_{i}.txt', f'data_{i}')
+
+    result = qb.object_store.save(f'file_{max_files}.txt', 'should_fail')
+    return result
+");
+
+                dynamic result = testModule.GetAttr("add_data");
+                var exception = Assert.Catch<Exception>(() => result(testObjectStore));
+                Assert.That(exception.Message, Does.Contain("ObjectStore limit"));
+
+                // Reset
+                testModule.GetAttr("clean_data").Invoke();
+                testObjectStore.Dispose();
+            }
+        }
+
         private static void DummyMachineLearning(string outputFile, string content)
         {
             try
@@ -932,15 +1040,15 @@ namespace QuantConnect.Tests.Common.Storage
         {
             public bool PersistDataCalled { get; set; }
 
-            public override void Initialize(int userId, int projectId, string userToken, Controls controls)
+            public override void Initialize(int userId, int projectId, string userToken, Controls controls, AlgorithmMode algorithmMode = AlgorithmMode.Backtesting)
             {
-                base.Initialize(userId, projectId, userToken, controls);
+                base.Initialize(userId, projectId, userToken, controls, algorithmMode);
             }
 
             public void Initialize(int userId, int projectId, string userToken, Controls controls, FileHandler fileHandler)
             {
                 FileHandler = fileHandler;
-                base.Initialize(userId, projectId, userToken, controls);
+                base.Initialize(userId, projectId, userToken, controls, AlgorithmMode.Backtesting);
             }
             protected override bool PersistData()
             {

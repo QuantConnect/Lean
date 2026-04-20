@@ -131,29 +131,35 @@ namespace QuantConnect.Tests.Brokerages.Paper
             results.Initialize(new(job, eventMessagingHandler, api, transactions, null));
             results.SetAlgorithm(algorithm, algorithm.Portfolio.TotalPortfolioValue);
             transactions.Initialize(algorithm, brokerage, results);
-
             var realTime = new BacktestingRealTimeHandler();
-            using var nullLeanManager = new AlgorithmManagerTests.NullLeanManager();
 
-            using var tokenSource = new CancellationTokenSource();
-            // run algorithm manager
-            manager.Run(job,
-                algorithm,
-                synchronizer,
-                transactions,
-                results,
-                realTime,
-                nullLeanManager,
-                tokenSource
-            );
+            try
+            {
+                using var nullLeanManager = new AlgorithmManagerTests.NullLeanManager();
 
-            var postDividendCash = algorithm.Portfolio.CashBook[Currencies.USD].Amount;
+                using var tokenSource = new CancellationTokenSource();
+                // run algorithm manager
+                manager.Run(job,
+                    algorithm,
+                    synchronizer,
+                    transactions,
+                    results,
+                    realTime,
+                    nullLeanManager,
+                    tokenSource,
+                    new()
+                );
 
-            realTime.Exit();
-            results.Exit();
-            Assert.AreEqual(initializedCash + dividend.Distribution, postDividendCash);
+                var postDividendCash = algorithm.Portfolio.CashBook[Currencies.USD].Amount;
 
-            transactions.Exit();
+                Assert.AreEqual(initializedCash + dividend.Distribution, postDividendCash);
+            }
+            finally
+            {
+                realTime.Exit();
+                results.Exit();
+                transactions.Exit();
+            }
         }
 
         [Test]
@@ -277,6 +283,24 @@ namespace QuantConnect.Tests.Brokerages.Paper
             Assert.DoesNotThrow(() => brokerage.PerformCashSync(algorithm, algorithm.Time, () => TimeSpan.Zero));
         }
 
+        [Test]
+        public void PerformCashSyncDoesNotAddZeroQuantityCurrenciesExceptAccountCurrency()
+        {
+            var algorithm = new AlgorithmStub(new MockDataFeed());
+            algorithm.SetAccountCurrency("USD");
+            algorithm.SetCash(10000);
+
+            using var brokerage = new TestBrokerage(algorithm);
+            var currentTime = new DateTime(2024, 1, 1, 12, 0, 0, DateTimeKind.Utc);
+            var syncPerformed = brokerage.PerformCashSync(algorithm, currentTime, () => TimeSpan.FromMinutes(5));
+
+            Assert.IsTrue(syncPerformed);
+            Assert.IsTrue(algorithm.Portfolio.CashBook.ContainsKey("USD"));
+            Assert.IsTrue(algorithm.Portfolio.CashBook.ContainsKey("BNFCR"));
+            Assert.IsTrue(algorithm.Portfolio.CashBook.ContainsKey("TEST"));
+            Assert.IsFalse(algorithm.Portfolio.CashBook.ContainsKey("EUR"));
+        }
+
         internal class TestBrokerage : BacktestingBrokerage
         {
             public TestBrokerage(IAlgorithm algorithm) : base(algorithm, "Test")
@@ -285,7 +309,7 @@ namespace QuantConnect.Tests.Brokerages.Paper
 
             public override List<CashAmount> GetCashBalance()
             {
-                return new List<CashAmount> { new CashAmount(100, Currencies.USD), new CashAmount(200, "BNFCR"), new CashAmount(300, "TEST") };
+                return new List<CashAmount> { new CashAmount(0, Currencies.USD), new CashAmount(200, "BNFCR"), new CashAmount(300, "TEST"), new CashAmount(0, "EUR") };
             }
         }
 

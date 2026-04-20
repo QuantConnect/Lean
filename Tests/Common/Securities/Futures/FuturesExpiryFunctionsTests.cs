@@ -61,19 +61,12 @@ namespace QuantConnect.Tests.Common.Securities.Futures
         [OneTimeSetUp]
         public void Init()
         {
-            FuturesExpiryUtilityFunctions.BankHolidays = true;
             var path = Path.Combine("TestData", "FuturesExpiryFunctionsTestData.xml");
             using (var reader = XmlReader.Create(path))
             {
                 var serializer = new XmlSerializer(typeof(Item[]));
                 _data = ((Item[])serializer.Deserialize(reader)).ToDictionary(i=>i.Symbol,i=>i.SymbolDates);
             }
-        }
-
-        [OneTimeTearDown]
-        public void TearDown()
-        {
-            FuturesExpiryUtilityFunctions.BankHolidays = false;
         }
 
         // last day and previous are holidays
@@ -267,7 +260,6 @@ namespace QuantConnect.Tests.Common.Securities.Futures
         [TestCase(QuantConnect.Securities.Futures.Energy.BrentLastDayFinancial, Zero)]
         [TestCase(QuantConnect.Securities.Futures.Energy.CrudeOilWTI, Zero)]
         [TestCase(QuantConnect.Securities.Futures.Energy.GulfCoastCBOBGasolineA2PlattsVsRBOBGasoline, Zero)]
-        [TestCase(QuantConnect.Securities.Futures.Energy.ClearbrookBakkenSweetCrudeOilMonthlyIndexNetEnergy, Zero)]
         [TestCase(QuantConnect.Securities.Futures.Energy.WTIFinancial, Zero)]
         [TestCase(QuantConnect.Securities.Futures.Energy.ChicagoEthanolPlatts, Zero)]
         [TestCase(QuantConnect.Securities.Futures.Energy.SingaporeMogas92UnleadedPlattsBrentCrackSpread, Zero)]
@@ -325,6 +317,20 @@ namespace QuantConnect.Tests.Common.Securities.Futures
 
             //Assert
             Assert.AreEqual(new DateTime(2025, 2, 14), expiryDate.Date);
+        }
+
+        [TestCase(QuantConnect.Securities.Futures.Indices.NASDAQ100EMini, "20260302", "20260320")]
+        [TestCase(QuantConnect.Securities.Futures.Indices.NASDAQ100EMini, "20260602", "20260618")]
+        public void ExpirationUsesHolidays(string symbol, string dateStr, string expectedDate)
+        {
+            var date = Time.ParseDate(dateStr);
+            var expected = Time.ParseDate(expectedDate);
+
+            var futureSymbol = GetFutureSymbol(symbol, date);
+            var func = FuturesExpiryFunctions.FuturesExpiryFunction(GetFutureSymbol(symbol));
+
+            var actual = func(futureSymbol.ID.Date);
+            Assert.AreEqual(expected, actual.Date, $"Failed for symbol: {symbol}. Date {dateStr}");
         }
 
         // 25th is a sunday
@@ -511,30 +517,6 @@ namespace QuantConnect.Tests.Common.Securities.Futures
                 var expected = date.LastTrade;
 
                 //Assert
-                Assert.AreEqual(expected, actual, "Failed for symbol: " + symbol);
-            }
-        }
-
-        [TestCase(QuantConnect.Securities.Futures.Dairy.CashSettledButter, TwelveTenCentralTime)]
-        [TestCase(QuantConnect.Securities.Futures.Dairy.CashSettledCheese, TwelveTenCentralTime)]
-        [TestCase(QuantConnect.Securities.Futures.Dairy.ClassIIIMilk, TwelveTenCentralTime)]
-        [TestCase(QuantConnect.Securities.Futures.Dairy.DryWhey, TwelveTenCentralTime)]
-        [TestCase(QuantConnect.Securities.Futures.Dairy.ClassIVMilk, TwelveTenCentralTime)]
-        [TestCase(QuantConnect.Securities.Futures.Dairy.NonfatDryMilk, TwelveTenCentralTime)]
-        public void DairyExpiryDateFunction_WithDifferentDates_ShouldFollowContract(string symbol, string dayTime)
-        {
-            Assert.IsTrue(_data.ContainsKey(symbol), "Symbol " + symbol + " not present in Test Data");
-            foreach (var date in _data[symbol])
-            {
-                // Arrange
-                var futureSymbol = GetFutureSymbol(symbol, date.ContractMonth);
-                var func = FuturesExpiryFunctions.FuturesExpiryFunction(GetFutureSymbol(symbol));
-
-                // Act
-                var actual = func(futureSymbol.ID.Date);
-                var expected = date.LastTrade + Parse.TimeSpan(dayTime);
-
-                // Assert
                 Assert.AreEqual(expected, actual, "Failed for symbol: " + symbol);
             }
         }

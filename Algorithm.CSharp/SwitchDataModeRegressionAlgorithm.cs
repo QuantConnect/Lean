@@ -54,7 +54,8 @@ namespace QuantConnect.Algorithm.CSharp
         {
             if (Time.Hour == 9 && Time.Minute == 58)
             {
-                AddOption(UnderlyingTicker);
+                var option = AddOption(UnderlyingTicker);
+                option.SetFilter(u => u.StandardsOnly().Strikes(-1, 1).Expiration(0, 35));
             }
 
             AssertValue(slice);

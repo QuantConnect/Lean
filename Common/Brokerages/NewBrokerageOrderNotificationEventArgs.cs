@@ -35,5 +35,13 @@ namespace QuantConnect.Brokerages
         {
             Order = order;
         }
+
+        /// <summary>
+        /// Returns a string describing the new brokerage order notification.
+        /// </summary>
+        override public string ToString()
+        {
+            return Order.ToString();
+        }
     }
 }

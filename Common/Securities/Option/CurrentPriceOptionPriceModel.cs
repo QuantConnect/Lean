@@ -13,7 +13,6 @@
  * limitations under the License.
 */
 
-using System;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
 
@@ -24,7 +23,7 @@ namespace QuantConnect.Securities.Option
     /// greeks and uses the current price for the theoretical price.
     /// <remarks>This is a stub implementation until the real models are implemented</remarks>
     /// </summary>
-    public class CurrentPriceOptionPriceModel : IOptionPriceModel
+    public class CurrentPriceOptionPriceModel : OptionPriceModel
     {
         /// <summary>
         /// Creates a new <see cref="OptionPriceModelResult"/> containing the current <see cref="Security.Price"/>
@@ -36,9 +35,21 @@ namespace QuantConnect.Securities.Option
         /// <param name="contract">The option contract to evaluate</param>
         /// <returns>An instance of <see cref="OptionPriceModelResult"/> containing the theoretical
         /// price of the specified option contract</returns>
-        public OptionPriceModelResult Evaluate(Security security, Slice slice, OptionContract contract)
+        public override OptionPriceModelResult Evaluate(Security security, Slice slice, OptionContract contract)
         {
             return new OptionPriceModelResult(security.Price, NullGreeks.Instance);
+        }
+
+        /// <summary>
+        /// Evaluates the specified option contract to compute a theoretical price, IV and greeks
+        /// </summary>
+        /// <param name="parameters">A <see cref="OptionPriceModelParameters"/> object
+        /// containing the security, slice and contract</param>
+        /// <returns>An instance of <see cref="OptionPriceModelResult"/> containing the theoretical
+        /// price of the specified option contract</returns>
+        public override OptionPriceModelResult Evaluate(OptionPriceModelParameters parameters)
+        {
+            return Evaluate(parameters.Security, parameters.Slice, parameters.Contract);
         }
     }
 }

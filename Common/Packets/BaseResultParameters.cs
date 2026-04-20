@@ -14,8 +14,9 @@
  *
 */
 
-using System;
 using QuantConnect.Orders;
+using QuantConnect.Statistics;
+using System;
 using System.Collections.Generic;
 
 namespace QuantConnect.Packets
@@ -66,6 +67,16 @@ namespace QuantConnect.Packets
         public AlgorithmConfiguration AlgorithmConfiguration { get; set; }
 
         /// <summary>
+        /// Rolling window detailed statistics.
+        /// </summary>
+        public AlgorithmPerformance TotalPerformance { get; set; }
+
+        /// <summary>
+        /// Backtest analysis results.
+        /// </summary>
+        public IReadOnlyList<Analysis> Analysis { get; set; }
+
+        /// <summary>
         /// Creates a new instance
         /// </summary>
         public BaseResultParameters(IDictionary<string, Chart> charts,
@@ -74,8 +85,10 @@ namespace QuantConnect.Packets
             IDictionary<string, string> statistics,
             IDictionary<string, string> runtimeStatistics,
             List<OrderEvent> orderEvents,
+            AlgorithmPerformance totalPerformance = null,
             AlgorithmConfiguration algorithmConfiguration = null,
-            IDictionary<string, string> state = null)
+            IDictionary<string, string> state = null,
+            IReadOnlyList<Analysis> analysisResult = null)
         {
             Charts = charts;
             Orders = orders;
@@ -85,6 +98,8 @@ namespace QuantConnect.Packets
             OrderEvents = orderEvents;
             AlgorithmConfiguration = algorithmConfiguration;
             State = state;
+            TotalPerformance = totalPerformance;
+            Analysis = analysisResult;
         }
     }
 }

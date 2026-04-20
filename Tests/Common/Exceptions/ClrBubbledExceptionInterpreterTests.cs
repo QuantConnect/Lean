@@ -95,10 +95,10 @@ namespace QuantConnect.Tests.Common.Exceptions
         {
             var exception = CreateExceptionFromType(typeof(ClrBubbledException));
             var assembly = typeof(ClrBubbledExceptionInterpreter).Assembly;
-            var interpreter = StackExceptionInterpreter.CreateFromAssemblies(new[] { assembly });
+            var interpreter = StackExceptionInterpreter.CreateFromAssemblies();
             exception = interpreter.Interpret(exception, NullExceptionInterpreter.Instance);
 
-            Assert.True(exception.Message.Contains("Value cannot be null. (Parameter 'key')", StringComparison.InvariantCulture));
+            Assert.True(exception.Message.Contains("Object reference not set to an instance of an object.", StringComparison.InvariantCulture));
             Assert.True(exception.Message.Contains("at dotnet_error", StringComparison.InvariantCulture));
             Assert.True(exception.Message.Contains("self.market_order(None", StringComparison.InvariantCulture));
             Assert.True(exception.Message.Contains($"in {_pythonModuleName}.py: line ", StringComparison.InvariantCulture));

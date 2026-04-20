@@ -100,7 +100,7 @@ def should_ignore(line: str, prev_line_ignored: bool) -> bool:
 
     # Ignore accessing specific properties of some models, just to reduce noise in regression algorithms asserting internal stuff.
     # We don't expect users to be accessing properties of models like this in most cases
-    if re.search('error: "(IBuyingPowerModel)|(IBenchmark)" has no attribute "([^"]+)"', line):
+    if re.search('error: "(IBuyingPowerModel)|(IBenchmark)|(IMarginInterestRateModel)" has no attribute "([^"]+)"', line):
         return True
 
     # In some cases Python developers use the same variable and redefine it, this is not a problem in Python but mypy doesn't like it

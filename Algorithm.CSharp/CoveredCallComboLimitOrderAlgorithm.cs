@@ -43,7 +43,7 @@ namespace QuantConnect.Algorithm.CSharp
             var option = AddOption(equity.Symbol);
             _optionSymbol = option.Symbol;
 
-            option.SetFilter(u => u.Strikes(-1, +1).Expiration(0, 30));
+            option.SetFilter(u => u.StandardsOnly().Strikes(-1, +1).Expiration(0, 30));
         }
         /// <summary>
         /// OnData event is the primary entry point for your algorithm. Each new data point will be pumped in here.
@@ -70,7 +70,7 @@ namespace QuantConnect.Algorithm.CSharp
                     var legs = new List<Leg> { Leg.Create(atmContract.Symbol, -1), Leg.Create(atmContract.Symbol.Underlying, 100) };
 
                     var comboPrice = underlyingPrice - optionPrice;
-                    if(comboPrice < 734m)
+                    if (comboPrice < 734m)
                     {
                         // just to make sure the price makes sense
                         throw new RegressionTestException($"Unexpected combo price {comboPrice}");
@@ -147,10 +147,10 @@ namespace QuantConnect.Algorithm.CSharp
             {"Treynor Ratio", "0"},
             {"Total Fees", "$6.90"},
             {"Estimated Strategy Capacity", "$8000.00"},
-            {"Lowest Capacity Asset", "GOOCV W78ZFMEBBB2E|GOOCV VP83T1ZUHROL"},
+            {"Lowest Capacity Asset", "GOOCV W78ZFMEBFLDY|GOOCV VP83T1ZUHROL"},
             {"Portfolio Turnover", "227.27%"},
             {"Drawdown Recovery", "0"},
-            {"OrderListHash", "94a9ae926f68c23d06d32af2b5a25fea"}
+            {"OrderListHash", "e36c11e174486d80060855efed57a2a9"}
         };
     }
 }

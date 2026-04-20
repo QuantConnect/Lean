@@ -162,12 +162,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
             enumerator = AddScheduleWrapper(request, enumerator, null);
 
-            if (request.IsUniverseSubscription && request.Universe is UserDefinedUniverse)
-            {
-                // for user defined universe we do not use a worker task, since calls to AddData can happen in any moment
-                // and we have to be able to inject selection data points into the enumerator
-                return SubscriptionUtils.Create(request, enumerator, _algorithm.Settings.DailyPreciseEndTime);
-            }
             return SubscriptionUtils.CreateAndScheduleWorker(request, enumerator, _factorFileProvider, true, _algorithm.Settings.DailyPreciseEndTime);
         }
 
@@ -187,9 +181,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             ISubscriptionEnumeratorFactory factory = _subscriptionFactory;
             if (request.Universe is ITimeTriggeredUniverse)
             {
-                factory = new TimeTriggeredUniverseSubscriptionEnumeratorFactory(request.Universe as ITimeTriggeredUniverse,
-                    _marketHoursDatabase,
-                    _timeProvider);
+                factory = new TimeTriggeredUniverseSubscriptionEnumeratorFactory(request.Universe as ITimeTriggeredUniverse, _marketHoursDatabase);
             }
             else if (request.Configuration.Type == typeof(FundamentalUniverse))
             {

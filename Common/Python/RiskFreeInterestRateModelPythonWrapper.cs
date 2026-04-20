@@ -16,6 +16,7 @@
 using System;
 using Python.Runtime;
 using QuantConnect.Data;
+using QuantConnect.Util;
 
 namespace QuantConnect.Python
 {
@@ -50,11 +51,10 @@ namespace QuantConnect.Python
         /// <returns>The converted <see cref="IRiskFreeInterestRateModel"/> instance</returns>
         public static IRiskFreeInterestRateModel FromPyObject(PyObject model)
         {
-            if (!model.TryConvert(out IRiskFreeInterestRateModel riskFreeInterestRateModel))
-            {
-                riskFreeInterestRateModel = new RiskFreeInterestRateModelPythonWrapper(model);
-            }
-
+            var riskFreeInterestRateModel = PythonUtil.CreateInstanceOrWrapper<IRiskFreeInterestRateModel>(
+                model,
+                py => new RiskFreeInterestRateModelPythonWrapper(py)
+            );
             return riskFreeInterestRateModel;
         }
     }

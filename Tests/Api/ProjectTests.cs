@@ -278,14 +278,18 @@ namespace QuantConnect.Tests.API
             Assert.AreEqual(CompileState.BuildError, compileError.State); //Resulting in build fail.
 
             // Using our successful compile; launch a backtest!
-            var backtestName = $"{DateTime.UtcNow.ToStringInvariant("u")} API Backtest";
+            var backtestName = $"{DateTime.UtcNow.ToStringInvariant("yyyy-MM-dd HH-mm-ss")} API Backtest";
             var backtest = ApiClient.CreateBacktest(project.Projects.First().ProjectId, compileSuccess.CompileId, backtestName);
             Assert.IsTrue(backtest.Success);
 
             // Now read the backtest and wait for it to complete
             var backtestRead = WaitForBacktestCompletion(ApiClient, project.Projects.First().ProjectId, backtest.BacktestId, secondsTimeout: 600, returnFailedBacktest: true);
             Assert.IsTrue(backtestRead.Success);
+
+            // Backtest completed, let's wait a second to allow status update
+            backtestRead = ApiClient.ReadBacktest(project.Projects.First().ProjectId, backtestRead.BacktestId);
             Assert.AreEqual(expectedStatus, backtestRead.Status);
+
             if (expectedStatus == "Runtime Error")
             {
                 Assert.IsTrue(backtestRead.Error.Contains("Intentional Failure", StringComparison.InvariantCulture) || backtestRead.HasInitializeError);
@@ -316,7 +320,7 @@ namespace QuantConnect.Tests.API
                 Assert.AreEqual(backtestName, backtestRead.Name);
 
                 //Update the note and make sure its been updated:
-                var newNote = DateTime.Now.ToStringInvariant("u");
+                var newNote = DateTime.Now.ToStringInvariant("yyyy-MM-dd HH-mm-ss");
                 var noteBacktest = ApiClient.UpdateBacktest(project.Projects.First().ProjectId, backtest.BacktestId, note: newNote);
                 Assert.IsTrue(noteBacktest.Success);
                 backtestRead = ApiClient.ReadBacktest(project.Projects.First().ProjectId, backtest.BacktestId);
@@ -366,7 +370,7 @@ namespace QuantConnect.Tests.API
             backtestRead = WaitForBacktestCompletion(ApiClient, project.ProjectId, backtest.BacktestId);
             var backtestOrdersRead = ApiClient.ReadBacktestOrders(project.ProjectId, backtest.BacktestId);
             string stringRepresentation;
-            foreach(var backtestOrder in backtestOrdersRead)
+            foreach (var backtestOrder in backtestOrdersRead)
             {
                 stringRepresentation = backtestOrder.ToString();
                 Assert.IsTrue(ApiTestBase.IsValidJson(stringRepresentation));
@@ -405,7 +409,7 @@ namespace QuantConnect.Tests.API
         {
             // We will be using the existing TestBacktest for this test
             var originalName = TestBacktest.Name;
-            var newName = $"{originalName} - Amended - {DateTime.UtcNow.ToStringInvariant("u")}";
+            var newName = $"{originalName} - Amended - {DateTime.UtcNow.ToStringInvariant("yyyy-MM-dd HH-mm-ss")}";
 
             // Update the backtest name
             var updateResult = ApiClient.UpdateBacktest(TestProject.ProjectId, TestBacktest.BacktestId, name: newName);
@@ -639,7 +643,7 @@ namespace QuantConnect.Tests.API
                 Assert.IsTrue(readLiveLogs.Length >= 0, "The length of the logs was negative!");
                 Assert.IsTrue(readLiveLogs.DeploymentOffset >= 0, "The deploymentOffset");
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 // Delete the project in case of an error
                 Assert.IsTrue(ApiClient.DeleteProject(projectId).Success);

@@ -17,13 +17,14 @@ using System;
 using System.Collections.Generic;
 using QuantConnect.Data;
 using QuantConnect.Data.UniverseSelection;
+using QuantConnect.Python;
 
 namespace QuantConnect.Algorithm.Framework.Alphas
 {
     /// <summary>
     /// Provides a base class for alpha models.
     /// </summary>
-    public class AlphaModel : IAlphaModel, INamedModel
+    public class AlphaModel : BasePythonWrapper<AlphaModel>, IAlphaModel, INamedModel
     {
         /// <summary>
         /// Defines a name for a framework model
@@ -47,7 +48,7 @@ namespace QuantConnect.Algorithm.Framework.Alphas
         /// <returns>The new insights generated</returns>
         public virtual IEnumerable<Insight> Update(QCAlgorithm algorithm, Slice data)
         {
-            throw new System.NotImplementedException("Types deriving from 'AlphaModel' must implement the 'IEnumerable<Insight> Update(QCAlgorithm, Slice) method.");
+            throw new NotImplementedException("Types deriving from 'AlphaModel' must implement the 'IEnumerable<Insight> Update(QCAlgorithm, Slice) method.");
         }
 
         /// <summary>

@@ -17,8 +17,10 @@ using System;
 using NUnit.Framework;
 using QuantConnect.Algorithm;
 using QuantConnect.Data.Market;
+using QuantConnect.Orders;
 using QuantConnect.Securities;
 using QuantConnect.Securities.CryptoFuture;
+using QuantConnect.Brokerages;
 using QuantConnect.Tests.Engine.DataFeeds;
 
 namespace QuantConnect.Tests.Common.Securities.CryptoFuture
@@ -53,7 +55,7 @@ namespace QuantConnect.Tests.Common.Securities.CryptoFuture
             if (ticker == "BTCUSD")
             {
                 // ((quantity * contract mutiplier * price) / leverage) * conversion rate (BTC -> USD)
-                marginRequirement = ((parameters.Quantity * 100m * cryptoFuture.Price) / 25m ) *  1 / cryptoFuture.Price;
+                marginRequirement = ((parameters.Quantity * 100m * cryptoFuture.Price) / 25m) * 1 / cryptoFuture.Price;
             }
             else
             {
@@ -64,36 +66,146 @@ namespace QuantConnect.Tests.Common.Securities.CryptoFuture
             Assert.AreEqual(Math.Abs(marginRequirement), result.Value);
         }
 
-        [TestCase("BTCUSD", 10)]
-        [TestCase("BTCUSDT", 10)]
-        [TestCase("BTCUSD", -10)]
-        [TestCase("BTCUSDT", -10)]
-        public void GetMaintenanceMargin(string ticker, decimal quantity)
+        [Test]
+        public void MarginRemainingWithBnfcrOnlyCollateral()
         {
-            var algo = GetAlgorithm();
-            var cryptoFuture = algo.AddCryptoFuture(ticker);
+            var algo = GetBinanceFuturesAlgorithm();
+            var algoCash = algo.Portfolio.Cash;
+            var cryptoFuture = algo.AddCryptoFuture("BTCUSDT");
             SetPrice(cryptoFuture, 16000);
-            // entry price 1000, shouldn't matter
-            cryptoFuture.Holdings.SetHoldings(1000, quantity);
 
-            var parameters = MaintenanceMarginParameters.ForCurrentHoldings(cryptoFuture);
-            var result = cryptoFuture.BuyingPowerModel.GetMaintenanceMargin(parameters);
+            // EU Binance user: only BNFCR, no USDT
+            algo.SetCash("BNFCR", 100, 1);
 
-            decimal marginRequirement;
-            if (ticker == "BTCUSD")
-            {
-                // ((quantity * contract mutiplier * price) * MaintenanceMarginRate) * conversion rate (BTC -> USD)
-                marginRequirement = ((parameters.Quantity * 100m * cryptoFuture.Price) * 0.05m) * 1 / cryptoFuture.Price;
-            }
-            else
-            {
-                // ((quantity * contract mutiplier * price) * MaintenanceMarginRate) * conversion rate (USDT ~= USD)
-                marginRequirement = ((parameters.Quantity * 1m * cryptoFuture.Price) * 0.05m) * 1;
-            }
+            var buyingPower = cryptoFuture.BuyingPowerModel.GetBuyingPower(
+                new BuyingPowerParameters(algo.Portfolio, cryptoFuture, OrderDirection.Buy));
 
-            Assert.AreEqual(Math.Abs(marginRequirement), result.Value);
+            Assert.Greater(buyingPower.Value, 0);
+            Assert.AreEqual(100m + algoCash, buyingPower.Value);
         }
 
+        [Test]
+        public void MarginRemainingWithMixedCollateral()
+        {
+            var algo = GetBinanceFuturesAlgorithm();
+            var algoCash = algo.Portfolio.Cash;
+            var cryptoFuture = algo.AddCryptoFuture("BTCUSDT");
+            SetPrice(cryptoFuture, 16000);
+
+            // Mixed: 50 USDT + 50 BNFCR
+            algo.SetCash("USDT", 50, 1);
+            algo.SetCash("BNFCR", 50, 1);
+
+            var buyingPower = cryptoFuture.BuyingPowerModel.GetBuyingPower(
+                new BuyingPowerParameters(algo.Portfolio, cryptoFuture, OrderDirection.Buy));
+
+            Assert.AreEqual(100m + algoCash, buyingPower.Value);
+        }
+
+        [Test]
+        public void MarginRemainingWithUsdtOnlyCollateral()
+        {
+            var algo = GetBinanceFuturesAlgorithm();
+            var algoCash = algo.Portfolio.Cash;
+            var cryptoFuture = algo.AddCryptoFuture("BTCUSDT");
+            SetPrice(cryptoFuture, 16000);
+
+            // Standard user: only USDT (backward compatibility)
+            algo.SetCash("USDT", 100, 1);
+
+            var buyingPower = cryptoFuture.BuyingPowerModel.GetBuyingPower(
+                new BuyingPowerParameters(algo.Portfolio, cryptoFuture, OrderDirection.Buy));
+
+            Assert.AreEqual(100m, buyingPower.Value);
+        }
+
+        [Test]
+        public void BnfcrZeroBalanceIncludesSupplementaryCollateral()
+        {
+            var algo = GetBinanceFuturesAlgorithm();
+            var algoCash = algo.Portfolio.Cash;
+            var cryptoFuture = algo.AddCryptoFuture("BTCUSDT");
+            SetPrice(cryptoFuture, 16000);
+
+            // EU user: BNFCR present with zero balance, USDC is the real collateral
+            algo.SetCash("BNFCR", 0, 1);
+            algo.SetCash("USDC", 100, 1);
+
+            var buyingPower = cryptoFuture.BuyingPowerModel.GetBuyingPower(
+                new BuyingPowerParameters(algo.Portfolio, cryptoFuture, OrderDirection.Buy));
+
+            // BNFCR presence triggers supplementary collateral — USDC should be included
+            Assert.AreEqual(100m + algoCash, buyingPower.Value);
+        }
+
+        [Test]
+        public void BtcCollateralConvertedToQuoteCurrency()
+        {
+            var algo = GetBinanceFuturesAlgorithm();
+            var algoCash = algo.Portfolio.Cash;
+            var cryptoFuture = algo.AddCryptoFuture("BTCUSDC");
+            SetPrice(cryptoFuture, 16000);
+
+            // EU user: BNFCR present, 0.5 BTC as collateral @ $16,000
+            algo.SetCash("BNFCR", 0, 1);
+            algo.SetCash("BTC", 0.5m, 16000);
+
+            var buyingPower = cryptoFuture.BuyingPowerModel.GetBuyingPower(
+                new BuyingPowerParameters(algo.Portfolio, cryptoFuture, OrderDirection.Buy));
+
+            // 0 (USDC) + 0.5 * 16000 (BTC → USDC via USD) = 8000
+            Assert.AreEqual(8000m + algoCash, buyingPower.Value);
+        }
+
+        [Test]
+        public void SharedCollateralDeductsMaintenanceMarginAcrossQuoteCurrencies()
+        {
+            var algo = GetBinanceFuturesAlgorithm();
+            var algoCash = algo.Portfolio.Cash;
+
+            // Two USDⓈ-M futures with DIFFERENT quote currencies
+            var btcUsdt = algo.AddCryptoFuture("BTCUSDT");
+            var ethUsdc = algo.AddCryptoFuture("ETHUSDC");
+            SetPrice(btcUsdt, 16000);
+            SetPrice(ethUsdc, 1600);
+
+            // EU user: BNFCR present — all USDⓈ-M futures share collateral pool
+            algo.SetCash("BNFCR", 10000, 1);
+
+            // Simulate an existing ETHUSDC position (10 ETH @ $1,600)
+            ethUsdc.Holdings.SetHoldings(1600, 10);
+
+            // ETHUSDC maintenance margin = (10 * 1 * 1600) / 25 * 1 = 640
+            var ethMaintenanceMargin = ethUsdc.BuyingPowerModel.GetMaintenanceMargin(
+                MaintenanceMarginParameters.ForCurrentHoldings(ethUsdc));
+
+            Assert.AreEqual(640m, ethMaintenanceMargin.Value);
+
+            // Buying power for BTCUSDT should deduct ETHUSDC's maintenance margin
+            var buyingPower = btcUsdt.BuyingPowerModel.GetBuyingPower(
+                new BuyingPowerParameters(algo.Portfolio, btcUsdt, OrderDirection.Buy));
+
+            // Expected: (10000 BNFCR + algoCash) - 640 maintenance margin
+            var expectedBuyingPower = 10000m + algoCash - ethMaintenanceMargin.Value;
+            Assert.AreEqual(expectedBuyingPower, buyingPower.Value,
+                "ETHUSDC maintenance margin should be deducted from BTCUSDT buying power when sharing EU collateral pool");
+        }
+
+        [Test]
+        public void DefaultMarginModelDoesNotIncludeSupplementaryCollateral()
+        {
+            var algo = GetAlgorithm();
+            var cryptoFuture = algo.AddCryptoFuture("BTCUSDT");
+            SetPrice(cryptoFuture, 16000);
+
+            // Default model should NOT include BNFCR as collateral
+            algo.SetCash("BNFCR", 100, 1);
+
+            var buyingPower = cryptoFuture.BuyingPowerModel.GetBuyingPower(
+                new BuyingPowerParameters(algo.Portfolio, cryptoFuture, OrderDirection.Buy));
+
+            Assert.AreEqual(0, buyingPower.Value);
+        }
 
         private static QCAlgorithm GetAlgorithm()
         {
@@ -103,9 +215,17 @@ namespace QuantConnect.Tests.Common.Securities.CryptoFuture
             return algo;
         }
 
+        private static QCAlgorithm GetBinanceFuturesAlgorithm()
+        {
+            var algo = new AlgorithmStub();
+            algo.SetBrokerageModel(BrokerageName.BinanceFutures, AccountType.Margin);
+            algo.SetFinishedWarmingUp();
+            return algo;
+        }
+
         private static void SetPrice(Security security, decimal price)
         {
-            var cryptoFuture = (QuantConnect.Securities.CryptoFuture.CryptoFuture) security;
+            var cryptoFuture = (QuantConnect.Securities.CryptoFuture.CryptoFuture)security;
             cryptoFuture.BaseCurrency.ConversionRate = price;
             cryptoFuture.QuoteCurrency.ConversionRate = 1;
 

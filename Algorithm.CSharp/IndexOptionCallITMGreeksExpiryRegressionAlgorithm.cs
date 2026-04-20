@@ -84,7 +84,6 @@ namespace QuantConnect.Algorithm.CSharp
 
             var deltas = slice.OptionChains.Values.OrderByDescending(y => y.Contracts.Values.Sum(x => x.Volume)).First().Contracts.Values.Select(x => x.Greeks.Delta).ToList();
             var gammas = slice.OptionChains.Values.OrderByDescending(y => y.Contracts.Values.Sum(x => x.Volume)).First().Contracts.Values.Select(x => x.Greeks.Gamma).ToList();
-            var lambda = slice.OptionChains.Values.OrderByDescending(y => y.Contracts.Values.Sum(x => x.Volume)).First().Contracts.Values.Select(x => x.Greeks.Lambda).ToList();
             var rho = slice.OptionChains.Values.OrderByDescending(y => y.Contracts.Values.Sum(x => x.Volume)).First().Contracts.Values.Select(x => x.Greeks.Rho).ToList();
             var theta = slice.OptionChains.Values.OrderByDescending(y => y.Contracts.Values.Sum(x => x.Volume)).First().Contracts.Values.Select(x => x.Greeks.Theta).ToList();
             var impliedVol = slice.OptionChains.Values.OrderByDescending(y => y.Contracts.Values.Sum(x => x.Volume)).First().Contracts.Values.Select(x => x.ImpliedVolatility).ToList();
@@ -101,10 +100,6 @@ namespace QuantConnect.Algorithm.CSharp
             if (gammas.Any(g => deltas.Any() && deltas[0] == 1 ? g != 0 : g == 0))
             {
                 throw new AggregateException("Option contract Gamma was equal to zero");
-            }
-            if (lambda.Any(l => l == 0))
-            {
-                throw new AggregateException("Option contract Lambda was equal to zero");
             }
             if (rho.Any(r => r == 0))
             {
@@ -156,7 +151,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
-        public long DataPoints => 19908;
+        public long DataPoints => 19909;
 
         /// <summary>
         /// Data Points count of the algorithm history
@@ -197,10 +192,10 @@ namespace QuantConnect.Algorithm.CSharp
             {"Treynor Ratio", "-8.141"},
             {"Total Fees", "$0.00"},
             {"Estimated Strategy Capacity", "$59000000.00"},
-            {"Lowest Capacity Asset", "SPX XL80P3GHDZXQ|SPX 31"},
+            {"Lowest Capacity Asset", "SPX XL80P3GHIA9A|SPX 31"},
             {"Portfolio Turnover", "2.19%"},
             {"Drawdown Recovery", "9"},
-            {"OrderListHash", "1a742c2ab3442846f82ddb3728f814ef"}
+            {"OrderListHash", "5b8ec5478b149dc9adfb09ea6407af82"}
         };
     }
 }

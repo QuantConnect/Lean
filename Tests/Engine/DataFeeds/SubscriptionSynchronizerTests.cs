@@ -87,7 +87,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             var startTimeUtc = algorithm.StartDate.ConvertToUtc(TimeZones.NewYork);
             var subscriptionBasedTimeProvider = new SubscriptionFrontierTimeProvider(startTimeUtc, dataManager);
             var timeSliceFactory = new TimeSliceFactory(algorithm.TimeZone);
-            var synchronizer = new SubscriptionSynchronizer(dataManager.UniverseSelection);
+            var synchronizer = new SubscriptionSynchronizer(dataManager.UniverseSelection, new());
             synchronizer.SetTimeProvider(subscriptionBasedTimeProvider);
             synchronizer.SetTimeSliceFactory(timeSliceFactory);
             var totalDataPoints = 0;

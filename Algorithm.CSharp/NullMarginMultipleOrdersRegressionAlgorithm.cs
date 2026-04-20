@@ -45,7 +45,7 @@ namespace QuantConnect.Algorithm.CSharp
             var option = AddOption(equity.Symbol);
             OptionSymbol = option.Symbol;
 
-            option.SetFilter(u => u.Strikes(-2, +2).Expiration(0, 180));
+            option.SetFilter(u => u.StandardsOnly().Strikes(-2, +2).Expiration(0, 180));
         }
 
         protected virtual void OverrideMarginModels()
@@ -75,7 +75,7 @@ namespace QuantConnect.Algorithm.CSharp
                         .ThenBy(x => x.Strike)
                         .First();
 
-                    if(!_placedTrades)
+                    if (!_placedTrades)
                     {
                         _placedTrades = true;
                         PlaceTrades(atmContracts);
@@ -100,7 +100,7 @@ namespace QuantConnect.Algorithm.CSharp
             {
                 throw new RegressionTestException($"Unexpected position group count {Portfolio.Positions.Groups.Count} for symbol {ticket.Symbol} and quantity {ticket.Quantity}");
             }
-            if(Portfolio.TotalMarginUsed != expectedMarginUsed)
+            if (Portfolio.TotalMarginUsed != expectedMarginUsed)
             {
                 throw new RegressionTestException($"Unexpected margin used {expectedMarginUsed}");
             }
@@ -163,7 +163,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Lowest Capacity Asset", "GOOCV VP83T1ZUHROL"},
             {"Portfolio Turnover", "7580.62%"},
             {"Drawdown Recovery", "0"},
-            {"OrderListHash", "ea13456d0c97785f9f2fc12842831990"}
+            {"OrderListHash", "4b36a135ed647a66c1ef3f1d9439cf02"}
         };
     }
 }

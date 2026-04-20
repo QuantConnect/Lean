@@ -14,9 +14,9 @@
 */
 
 using System;
-using System.Collections.Generic;
 using System.Threading;
 using QuantConnect.Util;
+using System.Collections.Generic;
 
 namespace QuantConnect.Scheduling
 {
@@ -26,6 +26,7 @@ namespace QuantConnect.Scheduling
     /// </summary>
     public class TimeMonitor : IDisposable
     {
+        private readonly int _monitorIntervalMs;
         private readonly Timer _timer;
         /// <summary>
         /// List to store the coming TimeConsumer objects
@@ -53,12 +54,13 @@ namespace QuantConnect.Scheduling
         /// </summary>
         public TimeMonitor(int monitorIntervalMs = 100)
         {
+            _monitorIntervalMs = monitorIntervalMs;
             TimeConsumers = new List<TimeConsumer>();
             _timer = new Timer(state =>
             {
-                try
+                lock (TimeConsumers)
                 {
-                    lock (TimeConsumers)
+                    try
                     {
                         RemoveAll();
 
@@ -67,19 +69,16 @@ namespace QuantConnect.Scheduling
                             ProcessConsumer(consumer);
                         }
                     }
-                }
-                finally
-                {
-                    try
+                    finally
                     {
-                        _timer.Change(Time.GetSecondUnevenWait(monitorIntervalMs), Timeout.Infinite);
-                    }
-                    catch (ObjectDisposedException)
-                    {
-                        // ignored disposed
+                        if (TimeConsumers.Count > 0)
+                        {
+                            // there's some remaning and we are at the timer callback so let's re schedule
+                            TrySchedule();
+                        }
                     }
                 }
-            }, null, monitorIntervalMs, Timeout.Infinite);
+            }, null, Timeout.Infinite, Timeout.Infinite);
         }
 
         /// <summary>
@@ -129,6 +128,11 @@ namespace QuantConnect.Scheduling
         {
             lock (TimeConsumers)
             {
+                if (TimeConsumers.Count == 0)
+                {
+                    // there was none left, schedule is not running, let's schedule it
+                    TrySchedule();
+                }
                 TimeConsumers.Add(consumer);
             }
         }
@@ -139,6 +143,21 @@ namespace QuantConnect.Scheduling
         public void Dispose()
         {
             _timer.DisposeSafely();
+        }
+
+        /// <summary>
+        /// Lazy scheduling
+        /// </summary>
+        private void TrySchedule()
+        {
+            try
+            {
+                _timer.Change(Time.GetSecondUnevenWait(_monitorIntervalMs), Timeout.Infinite);
+            }
+            catch (ObjectDisposedException)
+            {
+                // ignored disposed
+            }
         }
     }
 }

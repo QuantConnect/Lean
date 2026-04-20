@@ -11,7 +11,7 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
-*/
+ */
 
 using Moq;
 using NUnit.Framework;
@@ -20,6 +20,7 @@ using QuantConnect.Data.Market;
 using QuantConnect.Orders;
 using QuantConnect.Tests.Brokerages;
 using System;
+using System.Collections.Generic;
 using QuantConnect.Orders.Fees;
 using QuantConnect.Securities;
 using QuantConnect.Securities.CryptoFuture;
@@ -40,18 +41,35 @@ namespace QuantConnect.Tests.Common.Brokerages
         [SetUp]
         public void Init()
         {
-            _crypto = TestsHelpers.GetSecurity(symbol: BTCUSDT.Value,
-                securityType: BTCUSDT.SecurityType,
-                market: BTCUSDT.ID.Market,
-                quoteCurrency: "USDT");
-            _cryptoFuture = TestsHelpers.GetSecurity(symbol: BTCUSDT_Future.Value,
-                securityType: BTCUSDT_Future.SecurityType,
-                market: BTCUSDT_Future.ID.Market,
+            _crypto = GetSecurity(BTCUSDT);
+            _cryptoFuture = GetSecurity(BTCUSDT_Future);
+        }
+
+        private static Security GetSecurity(Symbol symbol)
+        {
+            return TestsHelpers.GetSecurity(symbol: symbol.Value,
+                securityType: symbol.SecurityType,
+                market: symbol.ID.Market,
                 quoteCurrency: "USDT");
         }
 
-        [TestCase(0.01, true)]
-        [TestCase(0.000001, false)]
+        private static decimal GetMinOrderSize(Symbol symbol)
+        {
+            var crypto = GetSecurity(symbol);
+            return crypto.SymbolProperties.MinimumOrderSize ?? 0;
+        }
+
+        private static IEnumerable<TestCaseData> MarketOrderSizeTestCases
+        {
+            get
+            {
+                yield return new TestCaseData(0.01m, true);
+                yield return new TestCaseData(0.000001m, false);
+                yield return new TestCaseData(GetMinOrderSize(BTCUSDT), true);
+            }
+        }
+
+        [TestCaseSource(nameof(MarketOrderSizeTestCases))]
         public void CanSubmitMarketOrder_OrderSizeIsLargeEnough(decimal orderQuantity, bool isValidOrderQuantity)
         {
             var order = new Mock<MarketOrder>();
@@ -76,8 +94,17 @@ namespace QuantConnect.Tests.Common.Brokerages
             }
         }
 
-        [TestCase(0.01, 4500, true)]
-        [TestCase(0.000001, 4500, false)]
+        private static IEnumerable<TestCaseData> LimitOrderSizeTestCases
+        {
+            get
+            {
+                yield return new TestCaseData(0.01m, 4500m, true);
+                yield return new TestCaseData(0.000001m, 4500m, false);
+                yield return new TestCaseData(GetMinOrderSize(BTCUSDT), 4500m, true);
+            }
+        }
+
+        [TestCaseSource(nameof(LimitOrderSizeTestCases))]
         public void CanSubmitLimitOrder_OrderSizeIsLargeEnough(decimal orderQuantity, decimal limitPrice, bool isValidOrderQuantity)
         {
             var order = new Mock<LimitOrder>

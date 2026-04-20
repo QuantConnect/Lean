@@ -38,7 +38,7 @@ namespace QuantConnect.Algorithm.CSharp
             UniverseSettings.Resolution = Resolution.Daily;
 
             var option = AddOption("GOOG");
-            option.SetFilter(u => u.Strikes(-2, +2).Expiration(0, 180));
+            option.SetFilter(u => u.StandardsOnly().Strikes(-2, +2).Expiration(0, 180));
             _optionSymbol = option.Symbol;
 
             if (UniverseManager.TryGetValue(option.Symbol, out var universe)
@@ -132,7 +132,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Lowest Capacity Asset", ""},
             {"Portfolio Turnover", "0%"},
             {"Drawdown Recovery", "0"},
-            {"OrderListHash", "ce4cdd4d05199b633559cd14bc6db237"}
+            {"OrderListHash", "2a63ba11c7395ae4f7b710aa3a64c71a"}
         };
     }
 }

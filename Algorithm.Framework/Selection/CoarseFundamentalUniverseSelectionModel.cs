@@ -17,7 +17,6 @@ using System;
 using System.Collections.Generic;
 using Python.Runtime;
 using QuantConnect.Data.UniverseSelection;
-using QuantConnect.Securities;
 
 namespace QuantConnect.Algorithm.Framework.Selection
 {
@@ -61,6 +60,11 @@ namespace QuantConnect.Algorithm.Framework.Selection
         /// <inheritdoc />
         public override IEnumerable<Symbol> SelectCoarse(QCAlgorithm algorithm, IEnumerable<CoarseFundamental> coarse)
         {
+            // Check if this method was overridden in Python
+            if (TryInvokePythonOverride(nameof(SelectCoarse), out IEnumerable<Symbol> result, algorithm, coarse))
+            {
+                return result;
+            }
             return _coarseSelector(coarse);
         }
     }

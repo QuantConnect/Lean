@@ -17,14 +17,23 @@ using System;
 using System.Collections.Generic;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Interfaces;
+using QuantConnect.Python;
 
 namespace QuantConnect.Algorithm.Framework.Selection
 {
     /// <summary>
     /// Provides a base class for universe selection models.
     /// </summary>
-    public class UniverseSelectionModel : IUniverseSelectionModel
+    public class UniverseSelectionModel : BasePythonWrapper<UniverseSelectionModel>, IUniverseSelectionModel
     {
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="UniverseSelectionModel"/> class.
+        /// </summary>
+        public UniverseSelectionModel()
+        {
+        }
+
         /// <summary>
         /// Gets the next time the framework should invoke the `CreateUniverses` method to refresh the set of universes.
         /// </summary>
@@ -40,7 +49,7 @@ namespace QuantConnect.Algorithm.Framework.Selection
         /// <returns>The universes to be used by the algorithm</returns>
         public virtual IEnumerable<Universe> CreateUniverses(QCAlgorithm algorithm)
         {
-            throw new System.NotImplementedException("Types deriving from 'UniverseSelectionModel' must implement the 'IEnumerable<Universe> CreateUniverses(QCAlgorithm) method.");
+            throw new NotImplementedException("Types deriving from 'UniverseSelectionModel' must implement the 'IEnumerable<Universe> CreateUniverses(QCAlgorithm) method.");
         }
     }
 }

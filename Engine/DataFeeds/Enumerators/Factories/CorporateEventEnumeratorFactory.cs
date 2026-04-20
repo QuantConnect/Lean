@@ -70,7 +70,10 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
                 tradableEventProviders.Add(new MappingEventProvider());
             }
 
-            tradableEventProviders.Add(new DelistingEventProvider());
+            if (config.CanBeDelisted())
+            {
+                tradableEventProviders.Add(new DelistingEventProvider());
+            }
 
             var enumerator = new AuxiliaryDataEnumerator(
                 config,

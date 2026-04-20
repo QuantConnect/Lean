@@ -27,8 +27,8 @@ namespace QuantConnect.Securities
     /// Used by OptionFilterUniverse and FutureFilterUniverse
     /// </summary>
     public abstract class ContractSecurityFilterUniverse<T, TData> : IDerivativeSecurityFilterUniverse<TData>
-        where T: ContractSecurityFilterUniverse<T, TData>
-        where TData: IChainUniverseData
+        where T : ContractSecurityFilterUniverse<T, TData>
+        where TData : IChainUniverseData
     {
         private bool _alreadyAppliedTypeFilters;
 
@@ -52,10 +52,15 @@ namespace QuantConnect.Securities
         }
 
         /// <summary>
+        /// The default expiration type filter value
+        /// </summary>
+        protected static readonly ContractExpirationType DefaultExpirationType = ContractExpirationType.Standard | ContractExpirationType.Weekly;
+
+        /// <summary>
         /// Expiration Types allowed through the filter
         /// Standards only by default
         /// </summary>
-        protected ContractExpirationType Type { get; set; } = ContractExpirationType.Standard;
+        protected ContractExpirationType Type { get; set; } = DefaultExpirationType;
 
         /// <summary>
         /// The local exchange current time
@@ -107,6 +112,7 @@ namespace QuantConnect.Securities
         /// </summary>
         protected ContractSecurityFilterUniverse()
         {
+            Type = DefaultExpirationType;
         }
 
         /// <summary>
@@ -116,7 +122,7 @@ namespace QuantConnect.Securities
         {
             Data = allData;
             LocalTime = localTime;
-            Type = ContractExpirationType.Standard;
+            Type = DefaultExpirationType;
         }
 
         /// <summary>
@@ -139,7 +145,7 @@ namespace QuantConnect.Securities
         {
             if (_alreadyAppliedTypeFilters)
             {
-                return (T) this;
+                return (T)this;
             }
 
             // memoization map for ApplyTypesFilter()
@@ -174,7 +180,7 @@ namespace QuantConnect.Securities
             }).ToList();
 
             _alreadyAppliedTypeFilters = true;
-            return (T) this;
+            return (T)this;
         }
 
         /// <summary>
@@ -186,7 +192,7 @@ namespace QuantConnect.Securities
         {
             Data = allData;
             LocalTime = localTime;
-            Type = ContractExpirationType.Standard;
+            Type = DefaultExpirationType;
             _alreadyAppliedTypeFilters = false;
         }
 
@@ -211,6 +217,7 @@ namespace QuantConnect.Securities
         /// Includes universe of non-standard weeklys contracts (if any) into selection
         /// </summary>
         /// <returns>Universe with filter applied</returns>
+        [Obsolete("IncludeWeeklys is obsolete because weekly contracts are now included by default.")]
         public T IncludeWeeklys()
         {
             if (_alreadyAppliedTypeFilters)
@@ -241,11 +248,11 @@ namespace QuantConnect.Securities
         {
             ApplyTypesFilter();
             var ordered = Data.OrderBy(x => x.ID.Date).ToList();
-            if (ordered.Count == 0) return (T) this;
+            if (ordered.Count == 0) return (T)this;
             var frontMonth = ordered.TakeWhile(x => ordered[0].ID.Date == x.ID.Date);
 
             Data = frontMonth.ToList();
-            return (T) this;
+            return (T)this;
         }
 
         /// <summary>
@@ -256,11 +263,11 @@ namespace QuantConnect.Securities
         {
             ApplyTypesFilter();
             var ordered = Data.OrderBy(x => x.ID.Date).ToList();
-            if (ordered.Count == 0) return (T) this;
+            if (ordered.Count == 0) return (T)this;
             var backMonths = ordered.SkipWhile(x => ordered[0].ID.Date == x.ID.Date);
 
             Data = backMonths.ToList();
-            return (T) this;
+            return (T)this;
         }
 
         /// <summary>
@@ -351,7 +358,7 @@ namespace QuantConnect.Securities
         public T Contracts(IEnumerable<Symbol> contracts)
         {
             AllSymbols = contracts.ToList();
-            return (T) this;
+            return (T)this;
         }
 
         /// <summary>
@@ -376,7 +383,7 @@ namespace QuantConnect.Securities
         {
             // force materialization using ToList
             AllSymbols = contractSelector(Data).ToList();
-            return (T) this;
+            return (T)this;
         }
 
         /// <summary>
@@ -400,7 +407,7 @@ namespace QuantConnect.Securities
         [Obsolete("Deprecated as of 2023-12-13. Filters are always non-dynamic as of now, which means they will only bee applied daily.")]
         public T OnlyApplyFilterAtMarketOpen()
         {
-            return (T) this;
+            return (T)this;
         }
 
         /// <summary>

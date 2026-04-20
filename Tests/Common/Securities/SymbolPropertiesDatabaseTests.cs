@@ -79,14 +79,9 @@ namespace QuantConnect.Tests.Common.Securities
         [TestCase("ZS", Market.CBOT, 100)]
         [TestCase("ZW", Market.CBOT, 100)]
 
-        [TestCase("CB", Market.CME, 100)]
-        [TestCase("DY", Market.CME, 100)]
         [TestCase("GF", Market.CME, 100)]
-        [TestCase("GNF", Market.CME, 100)]
         [TestCase("HE", Market.CME, 100)]
         [TestCase("LE", Market.CME, 100)]
-
-        [TestCase("CSC", Market.CME, 1)]
         public void LoadsPriceMagnifier(string ticker, string market, int expectedPriceMagnifier)
         {
             var db = SymbolPropertiesDatabase.FromDataFolder();

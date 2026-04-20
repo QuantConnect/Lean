@@ -172,8 +172,6 @@ namespace QuantConnect.Brokerages
         {
             int CurrentWriteCount { get; }
 
-            void EnterReadLock();
-
             void ExitReadLock();
 
             bool TryEnterReadLockImmediately();
@@ -204,8 +202,6 @@ namespace QuantConnect.Brokerages
             {
                 _lock = new ReaderWriterLockSlim(LockRecursionPolicy.NoRecursion);
             }
-
-            public void EnterReadLock() => _lock.EnterWriteLock();
             public void ExitReadLock() => _lock.ExitWriteLock();
             public bool TryEnterReadLockImmediately() => _lock.TryEnterWriteLock(0);
             public void EnterWriteLock() => _lock.EnterReadLock();
@@ -229,8 +225,6 @@ namespace QuantConnect.Brokerages
             {
                 _lockObject = new object();
             }
-
-            public void EnterReadLock() => Monitor.Enter(_lockObject);
 
             public void ExitReadLock() => Monitor.Exit(_lockObject);
 

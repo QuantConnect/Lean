@@ -28,7 +28,6 @@ namespace QuantConnect.Algorithm.Framework.Selection
     public class FutureUniverseSelectionModel : UniverseSelectionModel
     {
         private DateTime _nextRefreshTimeUtc;
-
         private readonly TimeSpan _refreshInterval;
         private readonly UniverseSettings _universeSettings;
         private readonly Func<DateTime, IEnumerable<Symbol>> _futureChainSymbolSelector;
@@ -121,6 +120,11 @@ namespace QuantConnect.Algorithm.Framework.Selection
         /// </summary>
         protected virtual FutureFilterUniverse Filter(FutureFilterUniverse filter)
         {
+            // Check if this method was overridden in Python
+            if (TryInvokePythonOverride(nameof(Filter), out FutureFilterUniverse result, filter))
+            {
+                return result;
+            }
             // NOP
             return filter;
         }

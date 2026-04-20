@@ -18,6 +18,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using QuantConnect.Data;
+using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Interfaces;
 using QuantConnect.Orders;
 using QuantConnect.Securities;
@@ -30,6 +31,7 @@ namespace QuantConnect.Algorithm.CSharp
     public class DelistedFutureLiquidateRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
         private Symbol _contractSymbol;
+        private bool _contractRemoved;
         protected virtual Resolution Resolution => Resolution.Minute;
 
         /// <summary>
@@ -65,8 +67,21 @@ namespace QuantConnect.Algorithm.CSharp
             }
         }
 
+        public override void OnSecuritiesChanged(SecurityChanges changes)
+        {
+            if (changes.RemovedSecurities.Any(x => x.Symbol == _contractSymbol))
+            {
+                _contractRemoved = true;
+            }
+        }
+
         public override void OnEndOfAlgorithm()
         {
+            if (!_contractRemoved)
+            {
+                throw new RegressionTestException($"Contract {_contractSymbol} was not removed from the algorithm");
+            }
+
             Log($"{_contractSymbol}: {Securities[_contractSymbol].Invested}");
             if (Securities[_contractSymbol].Invested)
             {
@@ -124,19 +139,19 @@ namespace QuantConnect.Algorithm.CSharp
             {"Loss Rate", "0%"},
             {"Win Rate", "100%"},
             {"Profit-Loss Ratio", "0"},
-            {"Alpha", "0.227"},
-            {"Beta", "0.109"},
+            {"Alpha", "0.228"},
+            {"Beta", "0.108"},
             {"Annual Standard Deviation", "0.084"},
             {"Annual Variance", "0.007"},
             {"Information Ratio", "-1.122"},
             {"Tracking Error", "0.112"},
-            {"Treynor Ratio", "2.49"},
+            {"Treynor Ratio", "2.501"},
             {"Total Fees", "$2.15"},
             {"Estimated Strategy Capacity", "$1700000000.00"},
             {"Lowest Capacity Asset", "ES VMKLFZIH2MTD"},
             {"Portfolio Turnover", "2.01%"},
             {"Drawdown Recovery", "16"},
-            {"OrderListHash", "de82efe4f019a5fa1fb79d111bf15811"}
+            {"OrderListHash", "640ce720644ff0b580687e80105d0a92"}
         };
     }
 }

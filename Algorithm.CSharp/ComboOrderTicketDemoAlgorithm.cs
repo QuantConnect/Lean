@@ -47,7 +47,7 @@ namespace QuantConnect.Algorithm.CSharp
             var option = AddOption(equity.Symbol, fillForward: true);
             _optionSymbol = option.Symbol;
 
-            option.SetFilter(u => u.Strikes(-2, +2)
+            option.SetFilter(u => u.StandardsOnly().Strikes(-2, +2)
                   .Expiration(0, 180));
         }
 
@@ -243,8 +243,7 @@ namespace QuantConnect.Algorithm.CSharp
             }
             if (orderEvent.Quantity != order.Quantity)
             {
-                throw new RegressionTestException($@"OrderEvent quantity should hold the current order Quantity. Got {orderEvent.Quantity
-                    }, expected {order.Quantity}");
+                throw new RegressionTestException($@"OrderEvent quantity should hold the current order Quantity. Got {orderEvent.Quantity}, expected {order.Quantity}");
             }
             if (order is ComboLegLimitOrder && orderEvent.LimitPrice == 0)
             {
@@ -303,8 +302,7 @@ namespace QuantConnect.Algorithm.CSharp
             {
                 throw new RegressionTestException(
                     "There were expected 6 filled market orders, 3 filled combo limit orders and 6 filled combo leg limit orders, " +
-                    $@"but there were {filledComboMarketOrders.Count} filled market orders, {filledComboLimitOrders.Count
-                    } filled combo limit orders and {filledComboLegLimitOrders.Count} filled combo leg limit orders");
+                    $@"but there were {filledComboMarketOrders.Count} filled market orders, {filledComboLimitOrders.Count} filled combo limit orders and {filledComboLegLimitOrders.Count} filled combo leg limit orders");
             }
 
             if (openOrders.Count != 0 || openOrderTickets.Count != 0)
@@ -372,10 +370,10 @@ namespace QuantConnect.Algorithm.CSharp
             {"Treynor Ratio", "0"},
             {"Total Fees", "$26.00"},
             {"Estimated Strategy Capacity", "$2000.00"},
-            {"Lowest Capacity Asset", "GOOCV W78ZERHAOVVQ|GOOCV VP83T1ZUHROL"},
+            {"Lowest Capacity Asset", "GOOCV W78ZERHAT67A|GOOCV VP83T1ZUHROL"},
             {"Portfolio Turnover", "58.98%"},
             {"Drawdown Recovery", "0"},
-            {"OrderListHash", "e69460f62d4c165fe4b4a9bff1f48962"}
+            {"OrderListHash", "bec09c16bbc4d87a4e5122f29dd5a38b"}
         };
     }
 }

@@ -42,7 +42,7 @@ namespace QuantConnect.Algorithm.CSharp
             {
                 return universeFilter.IncludeWeeklys().Strikes(-2, +2).Expiration(0, 10);
             });
-            option.PriceModel = OptionPriceModels.BaroneAdesiWhaley();
+            option.PriceModel = OptionPriceModels.BlackScholes();
             _optionSymbol = option.Symbol;
 
             SetWarmUp(TimeSpan.FromDays(3));

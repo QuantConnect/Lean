@@ -25,12 +25,17 @@ using System.Collections.Generic;
 using QuantConnect.Python;
 using Python.Runtime;
 using QuantConnect.Data.UniverseSelection;
-using QuantConnect.Data.Auxiliary;
+using QuantConnect.Configuration;
 
 namespace QuantConnect.Algorithm
 {
     public partial class QCAlgorithm
     {
+        private static readonly int SeedLookbackPeriod = Config.GetInt("seed-lookback-period", 5);
+        private static readonly int SeedRetryMinuteLookbackPeriod = Config.GetInt("seed-retry-minute-lookback-period", 24 * 60);
+        private static readonly int SeedRetryHourLookbackPeriod = Config.GetInt("seed-retry-hour-lookback-period", 24);
+        private static readonly int SeedRetryDailyLookbackPeriod = Config.GetInt("seed-retry-daily-lookback-period", 10);
+
         private bool _dataDictionaryTickWarningSent;
 
         /// <summary>
@@ -713,7 +718,7 @@ namespace QuantConnect.Algorithm
         }
 
         /// <summary>
-        /// Yields data to warmup a security for all it's subscribed data types
+        /// Yields data to warm up a security for all its subscribed data types
         /// </summary>
         /// <param name="symbol">The symbol we want to get seed data for</param>
         /// <returns>Securities historical data</returns>
@@ -726,61 +731,47 @@ namespace QuantConnect.Algorithm
                 return Enumerable.Empty<BaseData>();
             }
 
-            var result = new Dictionary<TickType, BaseData>();
-            Resolution? resolution = null;
-            Func<int, bool> requestData = period =>
-            {
-                var historyRequests = CreateBarCountHistoryRequests(new[] { symbol }, period)
-                    .Select(request =>
-                    {
-                        // For speed and memory usage, use Resolution.Minute as the minimum resolution
-                        request.Resolution = (Resolution)Math.Max((int)Resolution.Minute, (int)request.Resolution);
-                        // force no fill forward behavior
-                        request.FillForwardResolution = null;
+            var data = GetLastKnownPrices([symbol]);
+            return data.Values.FirstOrDefault() ?? Enumerable.Empty<BaseData>();
+        }
 
-                        resolution = request.Resolution;
-                        return request;
-                    })
-                    // request only those tick types we didn't get the data we wanted
-                    .Where(request => !result.ContainsKey(request.TickType))
-                    .ToList();
-                foreach (var slice in History(historyRequests))
-                {
-                    for (var i = 0; i < historyRequests.Count; i++)
-                    {
-                        var historyRequest = historyRequests[i];
-                        var data = slice.Get(historyRequest.DataType);
-                        if (data.ContainsKey(symbol))
-                        {
-                            // keep the last data point per tick type
-                            result[historyRequest.TickType] = (BaseData)data[symbol];
-                        }
-                    }
-                }
-                // true when all history requests tick types have a data point
-                return historyRequests.All(request => result.ContainsKey(request.TickType));
-            };
+        /// <summary>
+        /// Yields data to warm up multiple securities for all their subscribed data types
+        /// </summary>
+        /// <param name="securities">The securities we want to get seed data for</param>
+        /// <returns>Securities historical data</returns>
+        [DocumentationAttribute(AddingData)]
+        [DocumentationAttribute(HistoricalData)]
+        public DataDictionary<IEnumerable<BaseData>> GetLastKnownPrices(IEnumerable<Security> securities)
+        {
+            return GetLastKnownPrices(securities.Select(s => s.Symbol));
+        }
 
-            if (!requestData(5))
+        /// <summary>
+        /// Yields data to warm up multiple securities for all their subscribed data types
+        /// </summary>
+        /// <param name="symbols">The symbols we want to get seed data for</param>
+        /// <returns>Securities historical data</returns>
+        [DocumentationAttribute(AddingData)]
+        [DocumentationAttribute(HistoricalData)]
+        public DataDictionary<IEnumerable<BaseData>> GetLastKnownPrices(IEnumerable<Symbol> symbols)
+        {
+            if (HistoryProvider == null)
             {
-                if (resolution.HasValue)
-                {
-                    // If the first attempt to get the last know price returns null, it maybe the case of an illiquid security.
-                    // We increase the look-back period for this case accordingly to the resolution to cover 3 trading days
-                    var periods =
-                        resolution.Value == Resolution.Daily ? 3 :
-                        resolution.Value == Resolution.Hour ? 24 : 1440;
-                    requestData(periods);
-                }
-                else
-                {
-                    // this shouldn't happen but just in case
-                    QuantConnect.Logging.Log.Error(
-                        $"QCAlgorithm.GetLastKnownPrices(): no history request was created for symbol {symbol} at {Time}");
-                }
+                return new DataDictionary<IEnumerable<BaseData>>();
             }
-            // return the data ordered by time ascending
-            return result.Values.OrderBy(data => data.Time);
+
+            var data = new Dictionary<(Symbol, Type, TickType), BaseData>();
+            GetLastKnownPricesImpl(symbols, data);
+
+            return data
+                .GroupBy(kvp => kvp.Key.Item1)
+                .ToDataDictionary(
+                    g => g.Key,
+                    g => g.OrderBy(kvp => kvp.Value.Time)
+                        .ThenBy(kvp => GetTickTypeOrder(kvp.Key.Item1.SecurityType, kvp.Key.Item3))
+                        .Select(kvp => kvp.Value)
+                );
         }
 
         /// <summary>
@@ -795,10 +786,147 @@ namespace QuantConnect.Algorithm
         [DocumentationAttribute(HistoricalData)]
         public BaseData GetLastKnownPrice(Security security)
         {
-            return GetLastKnownPrices(security.Symbol)
+            return GetLastKnownPrice(security.Symbol);
+        }
+
+        /// <summary>
+        /// Get the last known price using the history provider.
+        /// Useful for seeding securities with the correct price
+        /// </summary>
+        /// <param name="symbol">Symbol for which to retrieve historical data</param>
+        /// <returns>A single <see cref="BaseData"/> object with the last known price</returns>
+        [Obsolete("This method is obsolete please use 'GetLastKnownPrices' which will return the last data point" +
+            " for each type associated with the requested security")]
+        [DocumentationAttribute(AddingData)]
+        [DocumentationAttribute(HistoricalData)]
+        public BaseData GetLastKnownPrice(Symbol symbol)
+        {
+            return GetLastKnownPrices(symbol)
                 // since we are returning a single data point let's respect order
                 .OrderByDescending(data => GetTickTypeOrder(data.Symbol.SecurityType, LeanData.GetCommonTickTypeForCommonDataTypes(data.GetType(), data.Symbol.SecurityType)))
                 .LastOrDefault();
+        }
+
+        private void GetLastKnownPricesImpl(IEnumerable<Symbol> symbols, Dictionary<(Symbol, Type, TickType), BaseData> result,
+            int attempts = 0, IEnumerable<HistoryRequest> failedRequests = null)
+        {
+            IEnumerable<HistoryRequest> historyRequests;
+            var isRetry = failedRequests != null;
+
+            symbols = symbols?.Where(x => !x.IsCanonical() || x.SecurityType == SecurityType.Future);
+
+            if (attempts == 0)
+            {
+                historyRequests = CreateBarCountHistoryRequests(symbols, SeedLookbackPeriod,
+                    fillForward: false, useAllSubscriptions: true)
+                    .SelectMany(request =>
+                    {
+                        // Make open interest request daily, higher resolutions will need greater periods to return data
+                        if (request.DataType == typeof(OpenInterest) && request.Resolution < Resolution.Daily)
+                        {
+                            return CreateBarCountHistoryRequests([request.Symbol], typeof(OpenInterest), SeedLookbackPeriod,
+                                Resolution.Daily, fillForward: false, useAllSubscriptions: true);
+                        }
+
+                        if (request.Resolution < Resolution.Minute)
+                        {
+                            var dataType = request.DataType;
+                            if (dataType == typeof(Tick))
+                            {
+                                dataType = request.TickType == TickType.Trade ? typeof(TradeBar) : typeof(QuoteBar);
+                            }
+
+                            return CreateBarCountHistoryRequests([request.Symbol], dataType, SeedLookbackPeriod,
+                                Resolution.Minute, fillForward: false, useAllSubscriptions: true);
+                        }
+
+                        return [request];
+                    });
+            }
+            else if (attempts == 1)
+            {
+                // If the first attempt to get the last know price returns no data, it maybe the case of an illiquid security.
+                // We increase the look-back period for this case accordingly to the resolution to cover a longer period
+                historyRequests = failedRequests
+                    .GroupBy(request => request.Symbol)
+                    .Select(group =>
+                    {
+                        var symbolRequests = group.ToArray();
+                        var resolution = symbolRequests[0].Resolution;
+                        var periods = resolution == Resolution.Daily
+                            ? SeedRetryDailyLookbackPeriod
+                            : resolution == Resolution.Hour ? SeedRetryHourLookbackPeriod : SeedRetryMinuteLookbackPeriod;
+                        return CreateBarCountHistoryRequests([group.Key], periods, resolution, fillForward: false, useAllSubscriptions: true)
+                            .Where(request => symbolRequests.Any(x => x.DataType == request.DataType));
+                    })
+                    .SelectMany(x => x);
+            }
+            else
+            {
+                // Fall back to bigger daily requests as a last resort
+                historyRequests = CreateBarCountHistoryRequests(failedRequests.Select(x => x.Symbol).Distinct(),
+                    Math.Min(60, 5 * SeedRetryDailyLookbackPeriod), Resolution.Daily, fillForward: false, useAllSubscriptions: true);
+            }
+
+            var requests = historyRequests.ToArray();
+            if (requests.Length == 0)
+            {
+                return;
+            }
+
+            foreach (var slice in History(requests))
+            {
+                for (var i = 0; i < requests.Length; i++)
+                {
+                    var historyRequest = requests[i];
+
+                    // keep the last data point per tick type
+                    BaseData data = null;
+
+                    if (historyRequest.DataType == typeof(QuoteBar))
+                    {
+                        if (slice.QuoteBars.TryGetValue(historyRequest.Symbol, out var quoteBar))
+                        {
+                            data = quoteBar;
+                        }
+                    }
+                    else if (historyRequest.DataType == typeof(TradeBar))
+                    {
+                        if (slice.Bars.TryGetValue(historyRequest.Symbol, out var quoteBar))
+                        {
+                            data = quoteBar;
+                        }
+                    }
+                    else if (historyRequest.DataType == typeof(OpenInterest))
+                    {
+                        if (slice.Ticks.TryGetValue(historyRequest.Symbol, out var openInterests))
+                        {
+                            data = openInterests[0];
+                        }
+                    }
+                    // No Tick data, resolution is limited to Minute as minimum
+                    else
+                    {
+                        var typeData = slice.Get(historyRequest.DataType);
+                        if (typeData.ContainsKey(historyRequest.Symbol))
+                        {
+                            data = typeData[historyRequest.Symbol];
+                        }
+                    }
+
+                    if (data != null)
+                    {
+                        result[(historyRequest.Symbol, historyRequest.DataType, historyRequest.TickType)] = data;
+                    }
+                }
+            }
+
+            if (attempts < 2)
+            {
+                // Give it another try to get data for all symbols and all data types
+                GetLastKnownPricesImpl(null, result, attempts + 1,
+                    requests.Where((request, i) => !result.ContainsKey((request.Symbol, request.DataType, request.TickType))));
+            }
         }
 
         /// <summary>
@@ -990,7 +1118,7 @@ namespace QuantConnect.Algorithm
         /// </summary>
         private IEnumerable<HistoryRequest> CreateBarCountHistoryRequests(IEnumerable<Symbol> symbols, int periods, Resolution? resolution = null,
             bool? fillForward = null, bool? extendedMarketHours = null, DataMappingMode? dataMappingMode = null,
-            DataNormalizationMode? dataNormalizationMode = null, int? contractDepthOffset = null)
+            DataNormalizationMode? dataNormalizationMode = null, int? contractDepthOffset = null, bool useAllSubscriptions = false)
         {
             // Materialize the symbols to avoid multiple enumeration
             var symbolsArray = symbols.ToArray();
@@ -1003,7 +1131,8 @@ namespace QuantConnect.Algorithm
                 extendedMarketHours,
                 dataMappingMode,
                 dataNormalizationMode,
-                contractDepthOffset);
+                contractDepthOffset,
+                useAllSubscriptions);
         }
 
         /// <summary>
@@ -1011,12 +1140,12 @@ namespace QuantConnect.Algorithm
         /// </summary>
         private IEnumerable<HistoryRequest> CreateBarCountHistoryRequests(IEnumerable<Symbol> symbols, Type requestedType, int periods,
             Resolution? resolution = null, bool? fillForward = null, bool? extendedMarketHours = null, DataMappingMode? dataMappingMode = null,
-            DataNormalizationMode? dataNormalizationMode = null, int? contractDepthOffset = null)
+            DataNormalizationMode? dataNormalizationMode = null, int? contractDepthOffset = null, bool useAllSubscriptions = false)
         {
             return symbols.Where(HistoryRequestValid).SelectMany(symbol =>
             {
                 // Match or create configs for the symbol
-                var configs = GetMatchingSubscriptions(symbol, requestedType, resolution).ToList();
+                var configs = GetMatchingSubscriptions(symbol, requestedType, resolution, useAllSubscriptions).ToList();
                 if (configs.Count == 0)
                 {
                     return Enumerable.Empty<HistoryRequest>();
@@ -1043,7 +1172,7 @@ namespace QuantConnect.Algorithm
             return SubscriptionManager.AvailableDataTypes[securityType].IndexOf(tickType);
         }
 
-        private IEnumerable<SubscriptionDataConfig> GetMatchingSubscriptions(Symbol symbol, Type type, Resolution? resolution = null)
+        private IEnumerable<SubscriptionDataConfig> GetMatchingSubscriptions(Symbol symbol, Type type, Resolution? resolution = null, bool useAllSubscriptions = false)
         {
             var subscriptions = SubscriptionManager.SubscriptionDataConfigService
                 // we add internal subscription so that history requests are covered, this allows us to warm them up too
@@ -1068,7 +1197,7 @@ namespace QuantConnect.Algorithm
             else
             {
                 // Filter subscriptions matching the requested type
-                matchingSubscriptions = subscriptions.Where(s => SubscriptionDataConfigTypeFilter(type, s.Type));
+                matchingSubscriptions = subscriptions.Where(s => SubscriptionDataConfigTypeFilter(type, s.Type, filterOutOpenInterest: !useAllSubscriptions));
             }
 
             var internalConfig = new List<SubscriptionDataConfig>();
@@ -1091,9 +1220,16 @@ namespace QuantConnect.Algorithm
             {
                 configs = userConfig;
             }
-            else if (internalConfig.Count != 0)
+            if ((useAllSubscriptions || configs == null) && internalConfig.Count != 0)
             {
-                configs = internalConfig;
+                if (configs == null)
+                {
+                    configs = internalConfig;
+                }
+                else
+                {
+                    configs.AddRange(internalConfig);
+                }
             }
 
             // we use the subscription manager registered configurations here, we can not rely on the Securities collection
@@ -1147,6 +1283,15 @@ namespace QuantConnect.Algorithm
             }
             else
             {
+                // let's try to respect already added user settings, even if resolution/type don't match, like Tick vs Bars
+                var userConfigIfAny = subscriptions.FirstOrDefault(x => LeanData.IsCommonLeanDataType(x.Type) && !x.IsInternalFeed);
+
+                // Inherit values from existing subscriptions or use defaults
+                var extendedMarketHours = userConfigIfAny?.ExtendedMarketHours ?? UniverseSettings.ExtendedMarketHours;
+                var dataNormalizationMode = userConfigIfAny?.DataNormalizationMode ?? UniverseSettings.GetUniverseNormalizationModeOrDefault(symbol.SecurityType);
+                var dataMappingMode = userConfigIfAny?.DataMappingMode ?? UniverseSettings.GetUniverseMappingModeOrDefault(symbol.SecurityType, symbol.ID.Market);
+                var contractDepthOffset = userConfigIfAny?.ContractDepthOffset ?? (uint)Math.Abs(UniverseSettings.ContractDepthOffset);
+
                 // If type was specified and not a lean data type and also not abstract, we create a new subscription
                 if (type != null && !LeanData.IsCommonLeanDataType(type) && !type.IsAbstract)
                 {
@@ -1170,23 +1315,22 @@ namespace QuantConnect.Algorithm
                         entry.DataTimeZone,
                         entry.ExchangeHours.TimeZone,
                         UniverseSettings.FillForward,
-                        UniverseSettings.ExtendedMarketHours,
+                        extendedMarketHours,
                         true,
                         isCustom,
                         LeanData.GetCommonTickTypeForCommonDataTypes(dataType, symbol.SecurityType),
                         true,
-                        UniverseSettings.GetUniverseNormalizationModeOrDefault(symbol.SecurityType))};
+                        dataNormalizationMode,
+                        dataMappingMode,
+                        contractDepthOffset)};
                 }
-
-                // let's try to respect already added user settings, even if resolution/type don't match, like Tick vs Bars
-                var userConfigIfAny = subscriptions.FirstOrDefault(x => LeanData.IsCommonLeanDataType(x.Type) && !x.IsInternalFeed);
 
                 var res = GetResolution(symbol, resolution, type);
                 return SubscriptionManager
                     .LookupSubscriptionConfigDataTypes(symbol.SecurityType, res,
                         // for continuous contracts, if we are given a type (or none) that's common (like trade/quote), we respect it
                         symbol.IsCanonical() && (symbol.SecurityType != SecurityType.Future || type != null && !LeanData.IsCommonLeanDataType(type)))
-                    .Where(tuple => SubscriptionDataConfigTypeFilter(type, tuple.Item1))
+                    .Where(tuple => SubscriptionDataConfigTypeFilter(type, tuple.Item1, filterOutOpenInterest: !useAllSubscriptions))
                     .Select(x =>
                     {
                         var configType = x.Item1;
@@ -1201,14 +1345,14 @@ namespace QuantConnect.Algorithm
                             entry.DataTimeZone,
                             entry.ExchangeHours.TimeZone,
                             UniverseSettings.FillForward,
-                            userConfigIfAny?.ExtendedMarketHours ?? UniverseSettings.ExtendedMarketHours,
+                            extendedMarketHours,
                             true,
                             false,
                             x.Item2,
                             true,
-                            userConfigIfAny?.DataNormalizationMode ?? UniverseSettings.GetUniverseNormalizationModeOrDefault(symbol.SecurityType),
-                            userConfigIfAny?.DataMappingMode ?? UniverseSettings.GetUniverseMappingModeOrDefault(symbol.SecurityType, symbol.ID.Market),
-                            userConfigIfAny?.ContractDepthOffset ?? (uint)Math.Abs(UniverseSettings.ContractDepthOffset));
+                            dataNormalizationMode,
+                            dataMappingMode,
+                            contractDepthOffset);
                     })
                     // lets make sure to respect the order of the data types, if used on a history request will affect outcome when using pushthrough for example
                     .OrderByDescending(config => GetTickTypeOrder(config.SecurityType, config.TickType));
@@ -1220,16 +1364,16 @@ namespace QuantConnect.Algorithm
         /// </summary>
         /// <remarks>If the target type is <see cref="BaseData"/>, <see cref="OpenInterest"/> config types will return false.
         /// This is useful to filter OpenInterest by default from history requests unless it's explicitly requested</remarks>
-        private bool SubscriptionDataConfigTypeFilter(Type targetType, Type configType)
+        private bool SubscriptionDataConfigTypeFilter(Type targetType, Type configType, bool filterOutOpenInterest = true)
         {
             if (targetType == null)
             {
-                return configType != typeof(OpenInterest);
+                return !filterOutOpenInterest || configType != typeof(OpenInterest);
             }
 
             var targetIsGenericType = targetType == typeof(BaseData);
 
-            return targetType.IsAssignableFrom(configType) && (!targetIsGenericType || configType != typeof(OpenInterest));
+            return targetType.IsAssignableFrom(configType) && (!targetIsGenericType || !filterOutOpenInterest || configType != typeof(OpenInterest));
         }
 
         private SecurityExchangeHours GetExchangeHours(Symbol symbol, Type type = null)

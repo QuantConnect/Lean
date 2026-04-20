@@ -66,7 +66,7 @@ namespace QuantConnect.Scheduling
         /// Sets the <see cref="IEventSchedule"/> implementation
         /// </summary>
         /// <param name="eventSchedule">The event schedule implementation to be used. This is the IRealTimeHandler</param>
-        internal void SetEventSchedule(IEventSchedule eventSchedule)
+        public void SetEventSchedule(IEventSchedule eventSchedule)
         {
             if (eventSchedule == null)
             {

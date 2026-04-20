@@ -1372,12 +1372,10 @@ namespace QuantConnect.Algorithm
         [DocumentationAttribute(Modeling)]
         public void SetBrokerageModel(PyObject model)
         {
-            IBrokerageModel brokerageModel;
-            if (!model.TryConvert(out brokerageModel))
-            {
-                brokerageModel = new BrokerageModelPythonWrapper(model);
-            }
-
+            var brokerageModel = PythonUtil.CreateInstanceOrWrapper<IBrokerageModel>(
+                model,
+                py => new BrokerageModelPythonWrapper(py)
+            );
             SetBrokerageModel(brokerageModel);
         }
 
@@ -1392,11 +1390,10 @@ namespace QuantConnect.Algorithm
         [DocumentationAttribute(Logging)]
         public void SetBrokerageMessageHandler(PyObject handler)
         {
-            if (!handler.TryConvert(out IBrokerageMessageHandler brokerageMessageHandler))
-            {
-                brokerageMessageHandler = new BrokerageMessageHandlerPythonWrapper(handler);
-            }
-
+            var brokerageMessageHandler = PythonUtil.CreateInstanceOrWrapper<IBrokerageMessageHandler>(
+                handler,
+                py => new BrokerageMessageHandlerPythonWrapper(py)
+            );
             SetBrokerageMessageHandler(brokerageMessageHandler);
         }
 
@@ -1407,7 +1404,11 @@ namespace QuantConnect.Algorithm
         [DocumentationAttribute(Modeling)]
         public void SetRiskFreeInterestRateModel(PyObject model)
         {
-            SetRiskFreeInterestRateModel(RiskFreeInterestRateModelPythonWrapper.FromPyObject(model));
+            var riskFreeInterestRateModel = PythonUtil.CreateInstanceOrWrapper<IRiskFreeInterestRateModel>(
+                model,
+                py => new RiskFreeInterestRateModelPythonWrapper(py)
+            );
+            SetRiskFreeInterestRateModel(riskFreeInterestRateModel);
         }
 
         /// <summary>
@@ -1426,6 +1427,25 @@ namespace QuantConnect.Algorithm
             }
 
             SetSecurityInitializer(new SecurityInitializerPythonWrapper(securityInitializer));
+        }
+
+        /// <summary>
+        /// Adds a security initializer, used to initialize/configure securities after creation.
+        /// The initializer will appended to the default initializer and others that might have been
+        /// added using this method, and will be applied to all universes and manually added securities.
+        /// </summary>
+        /// <param name="securityInitializer">The security initializer function or class</param>
+        [DocumentationAttribute(AddingData)]
+        [DocumentationAttribute(Modeling)]
+        public void AddSecurityInitializer(PyObject securityInitializer)
+        {
+            var securityInitializer1 = PythonUtil.ToAction<Security>(securityInitializer);
+            if (securityInitializer1 != null)
+            {
+                AddSecurityInitializer(securityInitializer1);
+                return;
+            }
+            AddSecurityInitializer(new SecurityInitializerPythonWrapper(securityInitializer));
         }
 
         /// <summary>

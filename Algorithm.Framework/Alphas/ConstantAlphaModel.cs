@@ -42,21 +42,10 @@ namespace QuantConnect.Algorithm.Framework.Alphas
         /// <param name="type">The type of insight</param>
         /// <param name="direction">The direction of the insight</param>
         /// <param name="period">The period over which the insight with come to fruition</param>
-        public ConstantAlphaModel(InsightType type, InsightDirection direction, TimeSpan period)
-            : this(type, direction, period, null, null)
-        {
-        }
-
-        /// <summary>
-        /// Initializes a new instance of the <see cref="ConstantAlphaModel"/> class
-        /// </summary>
-        /// <param name="type">The type of insight</param>
-        /// <param name="direction">The direction of the insight</param>
-        /// <param name="period">The period over which the insight with come to fruition</param>
         /// <param name="magnitude">The predicted change in magnitude as a +- percentage</param>
         /// <param name="confidence">The confidence in the insight</param>
         /// <param name="weight">The portfolio weight of the insights</param>
-        public ConstantAlphaModel(InsightType type, InsightDirection direction, TimeSpan period, double? magnitude, double? confidence, double? weight = null)
+        public ConstantAlphaModel(InsightType type, InsightDirection direction, TimeSpan period, double? magnitude = null, double? confidence = null, double? weight = null)
         {
             _type = type;
             _direction = direction;
@@ -127,7 +116,7 @@ namespace QuantConnect.Algorithm.Framework.Alphas
         /// <param name="symbol">The symbol to emit an insight for</param>
         protected virtual bool ShouldEmitInsight(DateTime utcTime, Symbol symbol)
         {
-            if(symbol.IsCanonical())
+            if (symbol.IsCanonical())
             {
                 // canonical futures & options are none tradable
                 return false;

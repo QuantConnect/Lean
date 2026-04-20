@@ -373,7 +373,7 @@ namespace QuantConnect.Tests.Common.Securities
 
             var underlying = new Tick { Value = 10m, Time = new DateTime(2016, 12, 29) };
 
-            Func<OptionFilterUniverse, OptionFilterUniverse> universeFunc = universe => universe;
+            Func<OptionFilterUniverse, OptionFilterUniverse> universeFunc = universe => universe.StandardsOnly();
 
             Func<IDerivativeSecurityFilterUniverse<OptionUniverse>, IDerivativeSecurityFilterUniverse<OptionUniverse>> func =
                 universe => universeFunc(universe as OptionFilterUniverse).ApplyTypesFilter();
@@ -418,7 +418,7 @@ namespace QuantConnect.Tests.Common.Securities
 
             var underlying = new Tick { Value = 10m, Time = new DateTime(2016, 12, 29) };
 
-            Func<OptionFilterUniverse, OptionFilterUniverse> universeFunc = universe => universe;
+            Func<OptionFilterUniverse, OptionFilterUniverse> universeFunc = universe => universe.StandardsOnly();
 
             Func<IDerivativeSecurityFilterUniverse<OptionUniverse>, IDerivativeSecurityFilterUniverse<OptionUniverse>> func =
                 universe => universeFunc(universe as OptionFilterUniverse).ApplyTypesFilter();

@@ -118,7 +118,7 @@ namespace QuantConnect.Tests.Common.Securities.Options
                 parameter.ExpectedFinalStatus,
                 returnLogs: true);
 
-            Assert.IsTrue(result.Logs.Any(message => message.Contains("Debug: Warning: Security ") &&
+            Assert.IsTrue(result.Logs.Any(message => message.Contains("Warning: Security ") &&
                 message.EndsWith("To avoid this, consider using a security initializer to set the right models to each security type according to your algorithm's requirements.")));
         }
     }

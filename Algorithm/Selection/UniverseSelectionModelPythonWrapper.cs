@@ -27,7 +27,6 @@ namespace QuantConnect.Algorithm.Framework.Selection
     /// </summary>
     public class UniverseSelectionModelPythonWrapper : UniverseSelectionModel
     {
-        private readonly BasePythonWrapper<UniverseSelectionModel> _model;
         private readonly bool _modelHasGetNextRefreshTime;
 
         /// <summary>
@@ -40,7 +39,7 @@ namespace QuantConnect.Algorithm.Framework.Selection
                 return DateTime.MaxValue;
             }
 
-            return _model.InvokeMethod<DateTime>(nameof(GetNextRefreshTimeUtc));
+            return InvokeMethod<DateTime>(nameof(GetNextRefreshTimeUtc));
         }
 
         /// <summary>
@@ -49,17 +48,23 @@ namespace QuantConnect.Algorithm.Framework.Selection
         /// <param name="model">Model defining universes for the algorithm</param>
         public UniverseSelectionModelPythonWrapper(PyObject model)
         {
-            _model = new BasePythonWrapper<UniverseSelectionModel>(model, false);
+            SetPythonInstance(model, false);
             using (Py.GIL())
             {
-                _modelHasGetNextRefreshTime = _model.HasAttr(nameof(IUniverseSelectionModel.GetNextRefreshTimeUtc));
+                _modelHasGetNextRefreshTime = HasAttr(nameof(IUniverseSelectionModel.GetNextRefreshTimeUtc));
 
                 foreach (var attributeName in new[] { "CreateUniverses" })
                 {
-                    if (!_model.HasAttr(attributeName))
+                    if (!HasAttr(attributeName))
                     {
                         throw new NotImplementedException($"UniverseSelectionModel.{attributeName} must be implemented. Please implement this missing method on {model.GetPythonType()}");
                     }
+                }
+
+                var methodName = nameof(SetPythonInstance);
+                if (HasAttr(methodName))
+                {
+                    InvokeMethod(methodName, model);
                 }
             }
         }
@@ -71,7 +76,7 @@ namespace QuantConnect.Algorithm.Framework.Selection
         /// <returns>The universes to be used by the algorithm</returns>
         public override IEnumerable<Universe> CreateUniverses(QCAlgorithm algorithm)
         {
-            return _model.InvokeMethodAndEnumerate<Universe>(nameof(CreateUniverses), algorithm);
+            return InvokeMethodAndEnumerate<Universe>(nameof(CreateUniverses), algorithm);
         }
     }
 }

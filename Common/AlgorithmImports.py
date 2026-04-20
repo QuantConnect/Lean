@@ -19,6 +19,7 @@ import sys
 # current working directory. We therefore construct the absolute path to the
 # start.py file, and find the runtimeconfig.json relative to that.
 path = os.path.dirname(os.path.realpath(__file__))
+sys.path.append(path)
 
 from clr import AddReference
 AddReference("System")

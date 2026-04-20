@@ -228,7 +228,7 @@ namespace QuantConnect
         };
 
         /// <summary>
-        /// Define some StableCoins that don't have direct pairs for base currencies in our SPDB in Binance market
+        /// Define some StableCoins that don't have direct pairs for base currencies in our SPDB in Bybit market
         /// This is because some CryptoExchanges do not define direct pairs with the stablecoins they offer.
         ///
         /// We use this to allow setting cash amounts for these stablecoins without needing a conversion
@@ -247,6 +247,18 @@ namespace QuantConnect
         };
 
         /// <summary>
+        /// Define some StableCoins that don't have direct pairs for base currencies in our SPDB in dYdX market
+        /// This is because some CryptoExchanges do not define direct pairs with the stablecoins they offer.
+        ///
+        /// We use this to allow setting cash amounts for these stablecoins without needing a conversion
+        /// security.
+        /// </summary>
+        private static readonly HashSet<string> _stableCoinsWithoutPairsdYdX = new HashSet<string>
+        {
+            "USDCUSD"
+        };
+
+        /// <summary>
         /// Dictionary to save StableCoins in different Markets
         /// </summary>
         private static readonly Dictionary<string, HashSet<string>> _stableCoinsWithoutPairsMarkets = new Dictionary<string, HashSet<string>>
@@ -255,7 +267,40 @@ namespace QuantConnect
             { Market.Bitfinex , _stableCoinsWithoutPairsBitfinex},
             { Market.Coinbase, _stableCoinsWithoutPairsCoinbase},
             { Market.Bybit , _stableCoinsWithoutPairsBybit},
+            { Market.DYDX , _stableCoinsWithoutPairsdYdX}
         };
+
+        private static readonly HashSet<string> _dollarStablePairs = ["USDT", "USDC", USD];
+
+        /// <summary>
+        /// Checks whether or not certain symbol is a StableCoin without pair in a given market
+        /// </summary>
+        /// <param name="accountCurrency">The account currency</param>
+        /// <param name="cashSymbol">The target cash symbol</param>
+        /// <param name="market">The market in which we want to search for that StableCoin</param>
+        /// <returns>True if the given symbol is a StableCoin without pair in the given market</returns>
+        public static bool IsStableCoinWithoutPair(string accountCurrency, string cashSymbol, string market)
+        {
+            IEnumerable<string> _targets;
+            if (_dollarStablePairs.Contains(accountCurrency))
+            {
+                // let's be polite and handle USDT/USDC/USD, this is internal
+                _targets = _dollarStablePairs.Where(x => x != cashSymbol).SelectMany(x => new[] { x + cashSymbol, cashSymbol + x }).ToArray();
+            }
+            else
+            {
+                _targets = [accountCurrency + cashSymbol, cashSymbol + accountCurrency];
+            }
+
+            foreach (var target in _targets)
+            {
+                if (IsStableCoinWithoutPair(target, market))
+                {
+                    return true;
+                }
+            }
+            return false;
+        }
 
         /// <summary>
         /// Checks whether or not certain symbol is a StableCoin without pair in a given market

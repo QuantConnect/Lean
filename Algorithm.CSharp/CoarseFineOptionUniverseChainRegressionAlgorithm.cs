@@ -47,6 +47,11 @@ namespace QuantConnect.Algorithm.CSharp
             _aapl = QuantConnect.Symbol.Create("AAPL", SecurityType.Equity, Market.USA);
             UniverseSettings.Resolution = Resolution.Minute;
 
+            // Let's disable initial price seeding, the algorithm will wait until both equity
+            // and options are added an have prices to do the tests, we don't want the equity
+            // having prices before the options are added.
+            Settings.SeedInitialPrices = false;
+
             SetStartDate(2014, 06, 04);
             // TWX is selected the 4th and 5th and aapl after that.
             // If the algo ends on the 6th, TWX subscriptions will not be removed before OnEndOfAlgorithm is called:
@@ -206,7 +211,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Lowest Capacity Asset", "AOL R735QTJ8XC9X"},
             {"Portfolio Turnover", "17.64%"},
             {"Drawdown Recovery", "0"},
-            {"OrderListHash", "a8605c1f5a9c67f60f1ddc963ec45542"}
+            {"OrderListHash", "228e694280e05c8aa24246a5866b5a83"}
         };
     }
 }

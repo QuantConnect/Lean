@@ -454,6 +454,37 @@ namespace QuantConnect.Tests.Common.Securities
         }
 
         [Test]
+        public void EnsureCurrencyDataFeedForCryptoCurrency_CryptoFuturesFirst_When_dYdX()
+        {
+            var book = new CashBook
+            {
+                {Currencies.USD, new Cash(Currencies.USD, 100, 1) },
+                {"BTC", new Cash("BTC", 100, 6000) },
+                {"ETH", new Cash("ETH", 100, 290) }
+            };
+
+            var subscriptions = new SubscriptionManager(NullTimeKeeper.Instance);
+            var dataManager = new DataManagerStub(TimeKeeper);
+            subscriptions.SetDataManager(dataManager);
+            var securities = new SecurityManager(TimeKeeper);
+
+            var marketMapWithdYdX = MarketMap.ToDictionary();
+            marketMapWithdYdX[SecurityType.CryptoFuture] = Market.DYDX;
+
+            book.EnsureCurrencyDataFeeds(securities, subscriptions, marketMapWithdYdX, SecurityChanges.None, dataManager.SecurityService);
+
+            var symbols = dataManager.SubscriptionManagerSubscriptions.Select(sdc => sdc.Symbol).ToHashSet();
+
+            Assert.IsTrue(symbols.Contains(Symbol.Create("BTCUSD", SecurityType.CryptoFuture, Market.DYDX)));
+            Assert.IsTrue(symbols.Contains(Symbol.Create("ETHUSD", SecurityType.CryptoFuture, Market.DYDX)));
+
+            foreach (var subscription in subscriptions.Subscriptions)
+            {
+                Assert.AreEqual(subscription.Symbol.SecurityType, SecurityType.CryptoFuture);
+            }
+        }
+
+        [Test]
         public void UpdateModifiesConversionRateAsInvertedValue()
         {
             const int quantity = 100;
@@ -598,7 +629,7 @@ namespace QuantConnect.Tests.Common.Securities
         public void CryptoStableCoinMappingIsCorrect(IBrokerageModel brokerageModel, string accountCurrency, string stableCoin, bool shouldThrow, Symbol[] expectedConversionSymbols)
         {
             var cashBook = new CashBook() {AccountCurrency = accountCurrency};
-            var cash = new Cash(stableCoin, 10m, 1m);
+            var cash = new Cash(stableCoin, 10m, 0);
             cashBook.Add(cash.Symbol, cash);
 
             var subscriptions = new SubscriptionManager(NullTimeKeeper.Instance);
@@ -685,6 +716,9 @@ namespace QuantConnect.Tests.Common.Securities
 
             // *** Binance ***
             // USDC Cases
+            new object[] { new BinanceBrokerageModel(), "USDT", "BNFCR", false, null },
+            new object[] { new BinanceBrokerageModel(), "USDC", "BNFCR", false, null },
+            new object[] { new BinanceBrokerageModel(), Currencies.USD, "BNFCR", false, null },
             new object[] { new BinanceBrokerageModel(), Currencies.USD, "USDC", false, null }, // No USDCUSD, but does not throw! Conversion 1-1
             new object[] { new BinanceBrokerageModel(), Currencies.EUR, "USDC", false, new[] { Symbol.Create("EURUSDC", SecurityType.Crypto, Market.Binance) } },
             new object[] { new BinanceBrokerageModel(), Currencies.GBP, "USDC", false, new[] { Symbol.Create("ADAUSDC", SecurityType.Crypto, Market.Binance), Symbol.Create("ADAGBP", SecurityType.Crypto, Market.Binance) } }, // No USDCGBP, but indirect conversion exists

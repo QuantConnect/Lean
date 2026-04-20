@@ -27,7 +27,7 @@ namespace QuantConnect.Api
         /// User ID
         /// </summary>
         [JsonProperty(PropertyName = "uid")]
-        public int Uid { get; set; }
+        public int? Uid { get; set; }
 
         /// <summary>
         /// Indicate if the user have live control
@@ -46,7 +46,7 @@ namespace QuantConnect.Api
         /// The user public ID
         /// </summary>
         [JsonProperty(PropertyName = "publicId")]
-        public string PublicId {  get; set; }
+        public string PublicId { get; set; }
 
         /// <summary>
         /// The url of the user profile image
@@ -119,7 +119,7 @@ namespace QuantConnect.Api
         /// The chart name
         /// </summary>
         [JsonProperty(PropertyName = "chartName")]
-        public string ChartName { get; set;}
+        public string ChartName { get; set; }
 
         /// <summary>
         /// Width of the chart
@@ -328,7 +328,7 @@ namespace QuantConnect.Api
         /// <summary>
         /// Configuration of the backtest view grid
         /// </summary>
-        [JsonProperty(PropertyName = "grid" )]
+        [JsonProperty(PropertyName = "grid")]
         public Grid Grid { get; set; }
 
         /// <summary>
@@ -365,7 +365,7 @@ namespace QuantConnect.Api
         /// Indicates if the project is running or not
         /// </summary>
         [JsonProperty(PropertyName = "codeRunning")]
-        public bool CodeRunning {  get; set; }
+        public bool CodeRunning { get; set; }
 
         /// <summary>
         /// LEAN environment of the project running on

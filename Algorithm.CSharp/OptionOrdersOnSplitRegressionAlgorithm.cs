@@ -42,7 +42,7 @@ namespace QuantConnect.Algorithm.CSharp
             _aapl = AddEquity("AAPL", Resolution.Minute, extendedMarketHours: true, dataNormalizationMode: DataNormalizationMode.Raw).Symbol;
 
             var option = AddOption(_aapl, Resolution.Minute);
-            option.SetFilter(-1, +1, 0, 365);
+            option.SetFilter(u => u.StandardsOnly().Strikes(-1, +1).Expiration(0, 365));
         }
 
         public override void OnData(Slice slice)

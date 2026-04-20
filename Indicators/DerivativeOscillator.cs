@@ -54,6 +54,18 @@ namespace QuantConnect.Indicators
         }
 
         /// <summary>
+        /// Initializes a new instance of the IndicatorDerivativeOscillator class with the specified name and periods.
+        /// </summary>
+        /// <param name="rsiPeriod">The period for the RSI calculation</param>
+        /// <param name="smoothingRsiPeriod">The period for the smoothing RSI</param>
+        /// <param name="doubleSmoothingRsiPeriod">The period for the double smoothing RSI</param>
+        /// <param name="signalLinePeriod">The period for the signal line</param>
+        public DerivativeOscillator(int rsiPeriod, int smoothingRsiPeriod, int doubleSmoothingRsiPeriod, int signalLinePeriod)
+            : this($"DO({rsiPeriod},{smoothingRsiPeriod},{doubleSmoothingRsiPeriod},{signalLinePeriod})", rsiPeriod, smoothingRsiPeriod, doubleSmoothingRsiPeriod, signalLinePeriod)
+        {
+        }
+
+        /// <summary>
         /// Computes the next value for the derivative oscillator indicator from the given state
         /// </summary>
         /// <param name="input">The input value to this indicator on this time step</param>

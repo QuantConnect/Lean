@@ -33,7 +33,7 @@ class BasicTemplateOptionEquityStrategyAlgorithm(QCAlgorithm):
         self._option_symbol = option.symbol
 
         # set our strike/expiry filter for this option chain
-        option.set_filter(lambda u: (u.strikes(-2, +2)
+        option.set_filter(lambda u: (u.standards_only().strikes(-2, +2)
                                      # Expiration method accepts TimeSpan objects or integer for days.
                                      # The following statements yield the same filtering criteria
                                      .expiration(0, 180)))

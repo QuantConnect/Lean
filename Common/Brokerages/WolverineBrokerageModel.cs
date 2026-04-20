@@ -17,6 +17,7 @@
 using QuantConnect.Orders;
 using QuantConnect.Securities;
 using QuantConnect.Orders.Fees;
+using System.Collections.Generic;
 
 namespace QuantConnect.Brokerages
 {
@@ -25,6 +26,18 @@ namespace QuantConnect.Brokerages
     /// </summary>
     public class WolverineBrokerageModel : DefaultBrokerageModel
     {
+        /// <summary>
+        /// Supported order types
+        /// </summary>
+        private HashSet<OrderType> SupportedOrderTypes { get; } =
+        [
+            OrderType.Market,
+            OrderType.MarketOnClose,
+            OrderType.Limit,
+            OrderType.StopMarket,
+            OrderType.StopLimit
+        ];
+
         /// <summary>
         /// Constructor for Wolverine brokerage model
         /// </summary>
@@ -51,23 +64,18 @@ namespace QuantConnect.Brokerages
                 return false;
             }
 
-            message = null;
-            if (security.Type != SecurityType.Equity)
+            if (security.Type != SecurityType.Equity && security.Type != SecurityType.Option)
             {
                 message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
                     Messages.DefaultBrokerageModel.UnsupportedSecurityType(this, security));
-
                 return false;
             }
-
-            if (order.Type != OrderType.Market)
+            if (!SupportedOrderTypes.Contains(order.Type))
             {
                 message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
-                    Messages.WolverineBrokerageModel.UnsupportedOrderType(order));
-
+                    Messages.DefaultBrokerageModel.UnsupportedOrderType(this, order, SupportedOrderTypes));
                 return false;
             }
-
             return base.CanSubmitOrder(security, order, out message);
         }
 

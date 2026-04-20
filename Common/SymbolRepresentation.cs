@@ -34,7 +34,7 @@ namespace QuantConnect
     public static class SymbolRepresentation
     {
         // Define the regex as a private readonly static field and compile it
-        private static readonly Regex _optionTickerRegex = new Regex(@"^([A-Z0-9]+)\s*(\d{6})([CP])(\d{8})$", RegexOptions.IgnoreCase | RegexOptions.Compiled);
+        private static readonly Regex _optionTickerRegex = new Regex(@"^([A-Z0-9\.]+)\s*(\d{6})([CP])(\d{8})$", RegexOptions.IgnoreCase | RegexOptions.Compiled);
 
         /// <summary>
         /// Class contains future ticker properties returned by ParseFutureTicker()
@@ -596,6 +596,36 @@ namespace QuantConnect
         public static IReadOnlyDictionary<int, string> FuturesMonthLookup { get; } = FuturesMonthCodeLookup.ToDictionary(kv => kv.Value, kv => kv.Key);
 
         /// <summary>
+        /// Converts a user-provided ticker string into a <see cref="Symbol"/> object,
+        /// handling different security types such as stocks, options, futures, and index options.
+        /// </summary>
+        /// <param name="ticker">The ticker string input by the user.</param>
+        /// <param name="securityType">The type of security (e.g., Equity, Option, Future).</param>
+        /// <param name="market">The market or exchange the symbol belongs to (optional for some types).</param>
+        /// <returns>A <see cref="Symbol"/> representing the specified security.</returns>
+        public static Symbol ParseTickerFromUserInput(string ticker, SecurityType securityType, string market)
+        {
+            if (securityType == SecurityType.Option)
+            {
+                return ParseOptionTickerOSI(ticker);
+            }
+            else if (securityType == SecurityType.Future)
+            {
+                return ParseFutureSymbol(ticker);
+            }
+            else if (securityType == SecurityType.FutureOption)
+            {
+                return ParseFutureOptionSymbol(ticker);
+            }
+            else if (securityType == SecurityType.IndexOption)
+            {
+                return ParseOptionTickerOSI(ticker, securityType);
+            }
+
+            return Symbol.Create(ticker, securityType, market);
+        }
+
+        /// <summary>
         /// Get the expiration year from short year (two-digit integer).
         /// Examples: NQZ23 and NQZ3 for Dec 2023
         /// </summary>
@@ -622,7 +652,7 @@ namespace QuantConnect
                 return 2000 + parsed.ExpirationYearShort;
             }
 
-            var baseYear = ((int)Math.Round(currentYear / 10.0)) * 10 + parsed.ExpirationYearShort;
+            var baseYear = ((int)Math.Floor(currentYear / 10.0)) * 10 + parsed.ExpirationYearShort;
             while (baseYear < currentYear)
             {
                 baseYear += 10;

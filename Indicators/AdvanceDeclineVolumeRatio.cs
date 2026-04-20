@@ -27,7 +27,7 @@ namespace QuantConnect.Indicators
         /// <summary>
         /// Initializes a new instance of the <see cref="AdvanceDeclineVolumeRatio"/> class
         /// </summary>
-        public AdvanceDeclineVolumeRatio(string name)
+        public AdvanceDeclineVolumeRatio(string name = "A/D Volume Rate")
             : base(name, (entries) => entries.Sum(x => x.Volume), (advance, decline) => decline == 0m ? advance : advance / decline) { }
     }
 }

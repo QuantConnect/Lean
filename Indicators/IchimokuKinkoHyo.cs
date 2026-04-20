@@ -147,51 +147,18 @@ namespace QuantConnect.Indicators
             KijunMinimum = new Minimum(name + "_KijunMin", kijunPeriod);
             SenkouBMaximum = new Maximum(name + "_SenkouBMaximum", senkouBPeriod);
             SenkouBMinimum = new Minimum(name + "_SenkouBMinimum", senkouBPeriod);
-            DelayedTenkanSenkouA = new Delay(name + "DelayedTenkan", senkouADelayPeriod);
-            DelayedKijunSenkouA = new Delay(name + "DelayedKijun", senkouADelayPeriod);
-            DelayedMaximumSenkouB = new Delay(name + "DelayedMax", senkouBDelayPeriod);
-            DelayedMinimumSenkouB = new Delay(name + "DelayedMin", senkouBDelayPeriod);
+            DelayedMaximumSenkouB = new Delay(name + "DelayedMax", senkouBDelayPeriod).Of(SenkouBMaximum);
+            DelayedMinimumSenkouB = new Delay(name + "DelayedMin", senkouBDelayPeriod).Of(SenkouBMinimum);
+
+            Tenkan = TenkanMaximum.Plus(TenkanMinimum).Over(2m);
+            DelayedTenkanSenkouA = new Delay(name + "DelayedTenkan", senkouADelayPeriod).Of(Tenkan);
+
+            Kijun = KijunMaximum.Plus(KijunMinimum).Over(2m);
+            DelayedKijunSenkouA = new Delay(name + "DelayedKijun", senkouADelayPeriod).Of(Kijun);
+
+            SenkouA = DelayedTenkanSenkouA.Plus(DelayedKijunSenkouA).Over(2m);
+            SenkouB = DelayedMaximumSenkouB.Plus(DelayedMinimumSenkouB).Over(2m);
             Chikou = new Delay(name + "_Chikou", senkouADelayPeriod);
-
-            SenkouA = new FunctionalIndicator<IndicatorDataPoint>(
-                name + "_SenkouA",
-                input => SenkouA.IsReady ? (DelayedTenkanSenkouA.Current.Value + DelayedKijunSenkouA.Current.Value) / 2 : decimal.Zero,
-                senkouA => DelayedTenkanSenkouA.IsReady && DelayedKijunSenkouA.IsReady,
-                () =>
-                {
-                    Tenkan.Reset();
-                    Kijun.Reset();
-                });
-
-            SenkouB = new FunctionalIndicator<IndicatorDataPoint>(
-                name + "_SenkouB",
-                input => SenkouB.IsReady ? (DelayedMaximumSenkouB.Current.Value + DelayedMinimumSenkouB.Current.Value) / 2 : decimal.Zero,
-                senkouA => DelayedMaximumSenkouB.IsReady && DelayedMinimumSenkouB.IsReady,
-                () =>
-                {
-                    Tenkan.Reset();
-                    Kijun.Reset();
-                });
-
-            Tenkan = new FunctionalIndicator<IndicatorDataPoint>(
-                name + "_Tenkan",
-                input => Tenkan.IsReady ? (TenkanMaximum.Current.Value + TenkanMinimum.Current.Value) / 2 : decimal.Zero,
-                tenkan => TenkanMaximum.IsReady && TenkanMinimum.IsReady,
-                () =>
-                {
-                    TenkanMaximum.Reset();
-                    TenkanMinimum.Reset();
-                });
-
-            Kijun = new FunctionalIndicator<IndicatorDataPoint>(
-                name + "_Kijun",
-                input => Kijun.IsReady ? (KijunMaximum.Current.Value + KijunMinimum.Current.Value) / 2 : decimal.Zero,
-                kijun => KijunMaximum.IsReady && KijunMinimum.IsReady,
-                () =>
-                {
-                    KijunMaximum.Reset();
-                    KijunMinimum.Reset();
-                });
         }
 
         /// <summary>
@@ -212,22 +179,10 @@ namespace QuantConnect.Indicators
         {
             TenkanMaximum.Update(input.EndTime, input.High);
             TenkanMinimum.Update(input.EndTime, input.Low);
-            Tenkan.Update(input.EndTime, input.Close);
-            if (Tenkan.IsReady) DelayedTenkanSenkouA.Update(input.EndTime, Tenkan.Current.Value);
-
             KijunMaximum.Update(input.EndTime, input.High);
             KijunMinimum.Update(input.EndTime, input.Low);
-            Kijun.Update(input.EndTime, input.Close);
-            if (Kijun.IsReady) DelayedKijunSenkouA.Update(input.EndTime, Kijun.Current.Value);
-
-            SenkouA.Update(input.EndTime, input.Close);
-
-            SenkouB.Update(input.EndTime, input.Close);
             SenkouBMaximum.Update(input.EndTime, input.High);
-            if (SenkouBMaximum.IsReady) DelayedMaximumSenkouB.Update(input.EndTime, SenkouBMaximum.Current.Value);
             SenkouBMinimum.Update(input.EndTime, input.Low);
-            if (SenkouBMinimum.IsReady) DelayedMinimumSenkouB.Update(input.EndTime, SenkouBMinimum.Current.Value);
-
             Chikou.Update(input.EndTime, input.Close);
 
             return input.Close;

@@ -146,7 +146,10 @@ namespace QuantConnect.Configuration
             var token = GetToken(Settings.Value, key);
             if (token == null)
             {
-                Log.Trace(Invariant($"Config.Get(): Configuration key not found. Key: {key} - Using default value: {defaultValue}"));
+                if (Log.DebuggingEnabled)
+                {
+                    Log.Debug(Invariant($"Config.Get(): Configuration key not found. Key: {key} - Using default value: {defaultValue}"));
+                }
                 return defaultValue;
             }
             return token.ToString();
@@ -227,18 +230,21 @@ namespace QuantConnect.Configuration
         public static T GetValue<T>(string key, T defaultValue = default(T))
         {
             // special case environment requests
-            if (key == "environment" && typeof (T) == typeof (string)) return (T) (object) GetEnvironment();
+            if (key == "environment" && typeof(T) == typeof(string)) return (T)(object)GetEnvironment();
 
             var token = GetToken(Settings.Value, key);
             if (token == null)
             {
                 var defaultValueString = defaultValue is IConvertible
-                    ? ((IConvertible) defaultValue).ToString(CultureInfo.InvariantCulture)
+                    ? ((IConvertible)defaultValue).ToString(CultureInfo.InvariantCulture)
                     : defaultValue is IFormattable
-                        ? ((IFormattable) defaultValue).ToString(null, CultureInfo.InvariantCulture)
+                        ? ((IFormattable)defaultValue).ToString(null, CultureInfo.InvariantCulture)
                         : Invariant($"{defaultValue}");
 
-                Log.Trace(Invariant($"Config.GetValue(): {key} - Using default value: {defaultValueString}"));
+                if (Log.DebuggingEnabled)
+                {
+                    Log.Debug(Invariant($"Config.GetValue(): {key} - Using default value: {defaultValueString}"));
+                }
                 return defaultValue;
             }
 
@@ -255,22 +261,22 @@ namespace QuantConnect.Configuration
 
             if (type.IsEnum)
             {
-                return (T) Enum.Parse(type, value, true);
+                return (T)Enum.Parse(type, value, true);
             }
 
             if (typeof(IConvertible).IsAssignableFrom(type))
             {
-                return (T) Convert.ChangeType(value, type, CultureInfo.InvariantCulture);
+                return (T)Convert.ChangeType(value, type, CultureInfo.InvariantCulture);
             }
 
             // try and find a static parse method
             try
             {
-                var parse = type.GetMethod("Parse", new[]{typeof(string)});
+                var parse = type.GetMethod("Parse", new[] { typeof(string) });
                 if (parse != null)
                 {
-                    var result = parse.Invoke(null, new object[] {value});
-                    return (T) result;
+                    var result = parse.Invoke(null, new object[] { value });
+                    return (T)result;
                 }
             }
             catch (Exception err)
@@ -381,7 +387,7 @@ namespace QuantConnect.Configuration
                     var environments = config["environments"];
                     if (!(environments is JObject)) continue;
 
-                    var settings = ((JObject) environments).SelectToken(env);
+                    var settings = ((JObject)environments).SelectToken(env);
                     if (settings == null) continue;
 
                     // copy values for the selected environment to the root
@@ -395,7 +401,7 @@ namespace QuantConnect.Configuration
                         var jProperty = clone.Property(path);
                         if (jProperty != null) jProperty.Remove();
 
-                        var value = (token is JProperty ? ((JProperty) token).Value : token).ToString();
+                        var value = (token is JProperty ? ((JProperty)token).Value : token).ToString();
                         clone.Add(path, value);
                     }
                 }

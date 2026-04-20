@@ -43,6 +43,7 @@ namespace QuantConnect.Brokerages
         private readonly TimeSpan _openThreshold;
         private readonly TimeSpan _initialDelay;
         private CancellationTokenSource _cancellationTokenSource;
+        private bool _outsideLeanOrderWarningEmitted;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="DefaultBrokerageMessageHandler"/> class
@@ -163,6 +164,11 @@ namespace QuantConnect.Brokerages
                         _cancellationTokenSource.Cancel();
                     }
                     break;
+
+                case BrokerageMessageType.ActionRequired:
+                    // not supported atm
+                    _algorithm.SetRuntimeError(new Exception("Brokerage requires user action"), Messages.DefaultBrokerageMessageHandler.BrokerageDisconnectedShutDownContext);
+                    break;
             }
         }
 
@@ -171,8 +177,13 @@ namespace QuantConnect.Brokerages
         /// </summary>
         /// <param name="eventArgs">The new order event</param>
         /// <returns>Whether the order should be added to the transaction handler</returns>
-        public bool HandleOrder(NewBrokerageOrderNotificationEventArgs eventArgs)
+        public virtual bool HandleOrder(NewBrokerageOrderNotificationEventArgs eventArgs)
         {
+            if (!_outsideLeanOrderWarningEmitted)
+            {
+                _outsideLeanOrderWarningEmitted = true;
+                _algorithm.Error(Messages.DefaultBrokerageMessageHandler.IgnoreUnrecognizedOrder(eventArgs.Order.BrokerId.FirstOrDefault()));
+            }
             return false;
         }
 

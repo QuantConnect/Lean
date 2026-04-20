@@ -62,12 +62,14 @@ namespace QuantConnect.Tests.Common.Securities
             Assert.AreEqual(symbols[7], filtered[4]);
         }
 
-        [Test]
-        public void FiltersOutWeeklysByDefault()
+        [TestCase(false, 6)]
+        [TestCase(true, 2)]
+        public void FutureContractFiltering(bool standardsOnly, int expectedCount)
         {
             var time = new DateTime(2016, 02, 17, 13, 0, 0);
 
-            Func<FutureFilterUniverse, FutureFilterUniverse> universeFunc = universe => universe;
+            Func<FutureFilterUniverse, FutureFilterUniverse> universeFunc = universe =>
+                standardsOnly ? universe.StandardsOnly() : universe;
 
             Func<IDerivativeSecurityFilterUniverse<FutureUniverse>, IDerivativeSecurityFilterUniverse<FutureUniverse>> func =
                 universe => universeFunc(universe as FutureFilterUniverse).ApplyTypesFilter();
@@ -75,19 +77,33 @@ namespace QuantConnect.Tests.Common.Securities
             var filter = new FuncSecurityDerivativeFilter<FutureUniverse>(func);
             var symbols = new[]
             {
-                Symbol.CreateFuture("VX", Market.CFE, time.AddDays(0)), // 0 Standard!!
-                Symbol.CreateFuture("VX", Market.CFE, time.AddDays(1)), // 1
-                Symbol.CreateFuture("VX", Market.CFE, time.AddDays(2)), // 2
-                Symbol.CreateFuture("VX", Market.CFE, time.AddDays(8)), // 8
-                Symbol.CreateFuture("VX", Market.CFE, time.AddDays(16)), // 16
-                Symbol.CreateFuture("VX", Market.CFE, time.AddDays(28)), // 28 Standard!!
+                Symbol.CreateFuture("VX", Market.CFE, time.AddDays(0)), // Standard
+                Symbol.CreateFuture("VX", Market.CFE, time.AddDays(1)),
+                Symbol.CreateFuture("VX", Market.CFE, time.AddDays(2)),
+                Symbol.CreateFuture("VX", Market.CFE, time.AddDays(8)),
+                Symbol.CreateFuture("VX", Market.CFE, time.AddDays(16)),
+                Symbol.CreateFuture("VX", Market.CFE, time.AddDays(28)), // Standard
             };
             var data = symbols.Select(x => new FutureUniverse() { Symbol = x });
 
             var filtered = filter.Filter(new FutureFilterUniverse(data, time)).Select(x => x.Symbol).ToList();
-            Assert.AreEqual(2, filtered.Count);
-            Assert.AreEqual(symbols[0], filtered[0]);
-            Assert.AreEqual(symbols[5], filtered[1]);
+
+            Assert.AreEqual(expectedCount, filtered.Count);
+
+            if (standardsOnly)
+            {
+                // When StandardsOnly, only Standards should be returned
+                Assert.AreEqual(symbols[0], filtered[0]);
+                Assert.AreEqual(symbols[5], filtered[1]);
+            }
+            else
+            {
+                // By default both Standards and Weeklys are returned
+                for (int i = 0; i < 6; i++)
+                {
+                    Assert.AreEqual(symbols[i], filtered[i]);
+                }
+            }
         }
 
         [Test]

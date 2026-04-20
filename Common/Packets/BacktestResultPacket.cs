@@ -209,11 +209,6 @@ namespace QuantConnect.Packets
         public Dictionary<string, AlgorithmPerformance> RollingWindow { get; set; } = new Dictionary<string, AlgorithmPerformance>();
 
         /// <summary>
-        /// Rolling window detailed statistics.
-        /// </summary>
-        public AlgorithmPerformance TotalPerformance { get; set; }
-
-        /// <summary>
         /// Default Constructor
         /// </summary>
         public BacktestResult()
@@ -226,7 +221,6 @@ namespace QuantConnect.Packets
         public BacktestResult(BacktestResultParameters parameters) : base(parameters)
         {
             RollingWindow = parameters.RollingWindow;
-            TotalPerformance = parameters.TotalPerformance;
         }
     }
 } // End of Namespace:

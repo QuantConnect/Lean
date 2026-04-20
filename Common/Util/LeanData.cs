@@ -21,7 +21,6 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 using NodaTime;
 using QuantConnect.Data;
-using QuantConnect.Data.Auxiliary;
 using QuantConnect.Data.Consolidators;
 using QuantConnect.Data.Market;
 using QuantConnect.Data.UniverseSelection;
@@ -577,8 +576,8 @@ namespace QuantConnect.Util
                     // For futures options, we use the canonical option ticker plus the underlying's expiry
                     // since it can differ from the underlying's ticker. We differ from normal futures
                     // because the option chain can be extraordinarily large compared to equity option chains.
-                    var futureOptionPath = Path.Combine(symbol.ID.Symbol, symbol.Underlying.ID.Date.ToStringInvariant(DateFormat.EightCharacter))
-                        .ToLowerInvariant();
+                    var futureOptionPath = Path.Combine(symbol.ID.Symbol.ToLowerInvariant(),
+                         FuturesExpiryUtilityFunctions.GetFutureContractMonth(symbol).ToStringInvariant(DateFormat.YearMonth));
 
                     return Path.Combine(directory, futureOptionPath);
 
@@ -638,18 +637,15 @@ namespace QuantConnect.Util
                     path = Path.Combine(path, symbol.Underlying.Value.ToLowerInvariant());
                     break;
 
+                case SecurityType.Future:
                 case SecurityType.IndexOption:
                     path = Path.Combine(path, symbol.ID.Symbol.ToLowerInvariant());
                     break;
 
                 case SecurityType.FutureOption:
                     path = Path.Combine(path,
-                        symbol.Underlying.ID.Symbol.ToLowerInvariant(),
-                        symbol.Underlying.ID.Date.ToStringInvariant(DateFormat.EightCharacter));
-                    break;
-
-                case SecurityType.Future:
-                    path = Path.Combine(path, symbol.ID.Symbol.ToLowerInvariant());
+                        symbol.ID.Symbol.ToLowerInvariant(),
+                        FuturesExpiryUtilityFunctions.GetFutureContractMonth(symbol).ToStringInvariant(DateFormat.YearMonth));
                     break;
 
                 default:
@@ -757,13 +753,9 @@ namespace QuantConnect.Util
                     }
 
                     string expirationTag;
-                    var expiryDate = symbol.ID.Date;
-                    if (expiryDate != SecurityIdentifier.DefaultDate)
+                    if (symbol.ID.Date != SecurityIdentifier.DefaultDate)
                     {
-                        var monthsToAdd = FuturesExpiryUtilityFunctions.GetDeltaBetweenContractMonthAndContractExpiry(symbol.ID.Symbol, expiryDate.Date);
-                        var contractYearMonth = expiryDate.AddMonths(monthsToAdd).ToStringInvariant(DateFormat.YearMonth);
-
-                        expirationTag = $"{contractYearMonth}_{expiryDate.ToStringInvariant(DateFormat.EightCharacter)}";
+                        expirationTag = FuturesExpiryUtilityFunctions.GetFutureContractMonth(symbol).ToStringInvariant(DateFormat.YearMonth);
                     }
                     else
                     {
@@ -934,20 +926,17 @@ namespace QuantConnect.Util
                     }
 
                 case SecurityType.Future:
+                    string expiryYearMonth;
                     if (isHourlyOrDaily)
                     {
-                        var expiryYearMonth = Parse.DateTimeExact(parts[2], DateFormat.YearMonth);
-                        var futureExpiryFunc = FuturesExpiryFunctions.FuturesExpiryFunction(symbol);
-                        var futureExpiry = futureExpiryFunc(expiryYearMonth);
-                        return Symbol.CreateFuture(parts[0], symbol.ID.Market, futureExpiry);
+                        expiryYearMonth = parts[2];
                     }
                     else
                     {
-                        var expiryYearMonth = Parse.DateTimeExact(parts[4], DateFormat.YearMonth);
-                        var futureExpiryFunc = FuturesExpiryFunctions.FuturesExpiryFunction(symbol);
-                        var futureExpiry = futureExpiryFunc(expiryYearMonth);
-                        return Symbol.CreateFuture(parts[1], symbol.ID.Market, futureExpiry);
+                        expiryYearMonth = parts[4];
                     }
+                    var futureExpiry = FuturesExpiryUtilityFunctions.GetFutureExpirationFromContractMonth(symbol, Parse.DateTimeExact(expiryYearMonth, DateFormat.YearMonth));
+                    return Symbol.CreateFuture(symbol.ID.Symbol, symbol.ID.Market, futureExpiry);
 
                 default:
                     throw new NotImplementedException(Invariant(
@@ -957,11 +946,11 @@ namespace QuantConnect.Util
         }
 
         /// <summary>
-        /// Scale and convert the resulting number to deci-cents int.
+        /// Scales the value by 10_000 and returns a normalized string.
         /// </summary>
-        private static long Scale(decimal value)
+        private static string Scale(decimal value)
         {
-            return (long)(value * 10000);
+            return Extensions.NormalizeToStr(value * 10_000m);
         }
 
         /// <summary>
@@ -1257,8 +1246,9 @@ namespace QuantConnect.Util
 
                 if (securityType == SecurityType.FutureOption)
                 {
-                    // Future options have underlying FutureExpiry date as the parent dir for the zips, we need this for our underlying
-                    symbol = CreateSymbol(ticker, securityType, market, null, Parse.DateTimeExact(info[startIndex + 4].Substring(0, 8), DateFormat.EightCharacter));
+                    // Future options have underlying future contract month date as the parent dir for the zips, we need this for our underlying
+                    var futureContractMonth = Parse.DateTimeExact(info[startIndex + 4].Substring(0, 6), DateFormat.YearMonth);
+                    symbol = CreateSymbol(ticker, securityType, market, null, futureContractMonth);
                 }
                 else
                 {
@@ -1317,11 +1307,11 @@ namespace QuantConnect.Util
                     symbol = CreateSymbol(ticker, securityType, market, null, default);
                     break;
                 case SecurityType.FutureOption:
-                    symbol = CreateSymbol(filePathParts[^3], securityType, market, null, Parse.DateTimeExact(filePathParts[^2], DateFormat.EightCharacter));
+                    symbol = CreateSymbol(filePathParts[^3], securityType, market, null, Parse.DateTimeExact(filePathParts[^2], DateFormat.YearMonth));
                     break;
                 case SecurityType.Future:
                     var mapUnderlyingTicker = OptionSymbol.MapToUnderlying(ticker, securityType);
-                    symbol = Symbol.CreateFuture(mapUnderlyingTicker, market, universeFileDate);
+                    symbol = Symbol.CreateFuture(mapUnderlyingTicker, market, SecurityIdentifier.DefaultDate);
                     break;
                 default:
                     throw new NotSupportedException($"LeanData.{nameof(ParseUniversePath)}:The security type '{securityType}' is not supported for data universe files.");
@@ -1359,7 +1349,8 @@ namespace QuantConnect.Util
             {
                 var underlyingTicker = OptionSymbol.MapToUnderlying(ticker, securityType);
                 // Create our underlying future and then the Canonical option for this future
-                var underlyingFuture = Symbol.CreateFuture(underlyingTicker, market, mappingResolveDate);
+                var underlyingExpiry = FuturesExpiryUtilityFunctions.GetFutureExpirationFromContractMonth(underlyingTicker, market, mappingResolveDate);
+                var underlyingFuture = Symbol.CreateFuture(underlyingTicker, market, underlyingExpiry);
                 return Symbol.CreateCanonicalOption(underlyingFuture);
             }
             else if (securityType == SecurityType.IndexOption)
@@ -1438,6 +1429,24 @@ namespace QuantConnect.Util
         public static IEnumerable<TradeBar> AggregateTicksToTradeBars(IEnumerable<Tick> ticks, Symbol symbol, TimeSpan resolution)
         {
             return Aggregate(new TickConsolidator(resolution), ticks, symbol);
+        }
+
+        /// <summary>
+        /// Helper method to calculate the start time of a consolidator bar given a period, and anchor start time and the current data time
+        /// </summary>
+        public static DateTime GetConsolidatorStartTime(TimeSpan period, TimeSpan startTime, DateTime time)
+        {
+            var referenceStart = time.Date + startTime;
+            if (period >= TimeSpan.FromDays(7))
+            {
+                // anchor to start of the month
+                referenceStart = new DateTime(time.Year, time.Month, 1) + startTime;
+            }
+
+            var difference = time - referenceStart;
+
+            var intervalsPassed = Math.Floor(difference.TotalSeconds / period.TotalSeconds);
+            return referenceStart + TimeSpan.FromSeconds(intervalsPassed * period.TotalSeconds);
         }
 
         /// <summary>

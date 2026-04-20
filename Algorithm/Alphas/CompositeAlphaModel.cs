@@ -116,11 +116,10 @@ namespace QuantConnect.Algorithm.Framework.Alphas
         /// <param name="pyAlphaModel">The alpha model to add</param>
         public void AddAlpha(PyObject pyAlphaModel)
         {
-            IAlphaModel alphaModel;
-            if (!pyAlphaModel.TryConvert(out alphaModel))
-            {
-                alphaModel = new AlphaModelPythonWrapper(pyAlphaModel);
-            }
+            var alphaModel = PythonUtil.CreateInstanceOrWrapper<IAlphaModel>(
+                pyAlphaModel,
+                py => new AlphaModelPythonWrapper(py)
+            );
             _alphaModels.Add(alphaModel);
         }
     }

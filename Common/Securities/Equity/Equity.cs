@@ -150,5 +150,10 @@ namespace QuantConnect.Securities.Equity
                 PriceVariationModel = new EquityPriceVariationModel();
             }
         }
+
+        /// <summary>
+        /// Returns the securities symbol
+        /// </summary>
+        public static implicit operator Symbol(Equity security) => security.Symbol;
     }
 }

@@ -262,10 +262,27 @@ namespace QuantConnect.Securities
             var cfdEntries = GetAvailableSymbolPropertiesDatabaseEntries(SecurityType.Cfd, marketMap, markets);
             var cryptoEntries = GetAvailableSymbolPropertiesDatabaseEntries(SecurityType.Crypto, marketMap, markets);
 
+            if (marketMap.TryGetValue(SecurityType.CryptoFuture, out var cryptoFutureMarket) && cryptoFutureMarket == Market.DYDX)
+            {
+                // Put additional logic for dYdX crypto futures as they don't have Crypto (Spot) market
+                // Also need to add them first to give the priority
+                // TODO: remove once dydx SPOT market will be imlemented
+                cryptoEntries = GetAvailableSymbolPropertiesDatabaseEntries(SecurityType.CryptoFuture, marketMap, markets).Concat(cryptoEntries);
+            }
+
             var potentialEntries = forexEntries
                 .Concat(cfdEntries)
                 .Concat(cryptoEntries)
                 .ToList();
+
+            // Special case for crypto markets without direct pairs (They wont be found by the above)
+            // This allows us to add cash for "StableCoins" that are 1-1 with our account currency without needing a conversion security.
+            // Check out the StableCoinsWithoutPairs static var for those that are missing their 1-1 conversion pairs
+            if (marketMap.TryGetValue(SecurityType.Crypto, out var market) && Currencies.IsStableCoinWithoutPair(accountCurrency, Symbol, market))
+            {
+                CurrencyConversion = ConstantCurrencyConversion.Identity(accountCurrency, Symbol);
+                return null;
+            }
 
             if (!potentialEntries.Any(x =>
                     Symbol == x.Key.Symbol.Substring(0, x.Key.Symbol.Length - x.Value.QuoteCurrency.Length) ||
@@ -274,18 +291,6 @@ namespace QuantConnect.Securities
                 // currency not found in any tradeable pair
                 Log.Error(Messages.Cash.NoTradablePairFoundForCurrencyConversion(Symbol, accountCurrency, marketMap.Where(kvp => ProvidesConversionRate(kvp.Key))));
                 CurrencyConversion = ConstantCurrencyConversion.Null(accountCurrency, Symbol);
-                return null;
-            }
-
-            // Special case for crypto markets without direct pairs (They wont be found by the above)
-            // This allows us to add cash for "StableCoins" that are 1-1 with our account currency without needing a conversion security.
-            // Check out the StableCoinsWithoutPairs static var for those that are missing their 1-1 conversion pairs
-            if (marketMap.TryGetValue(SecurityType.Crypto, out var market)
-                &&
-                (Currencies.IsStableCoinWithoutPair(Symbol + accountCurrency, market)
-                || Currencies.IsStableCoinWithoutPair(accountCurrency + Symbol, market)))
-            {
-                CurrencyConversion = ConstantCurrencyConversion.Identity(accountCurrency, Symbol);
                 return null;
             }
 
@@ -316,7 +321,9 @@ namespace QuantConnect.Securities
 
                 var newSecurity = securityService.CreateSecurity(symbol,
                     config,
-                    addToSymbolCache: false);
+                    addToSymbolCache: false,
+                    // All securities added for currency conversion will be seeded in batch after all are created
+                    seedSecurity: false);
 
                 Log.Trace("Cash.EnsureCurrencyDataFeed(): " + Messages.Cash.AddingSecuritySymbolForCashCurrencyFeed(symbol, Symbol));
 

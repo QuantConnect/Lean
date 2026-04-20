@@ -14,19 +14,68 @@
 */
 
 using System;
-using System.Collections.Generic;
 using System.Linq;
-using NUnit.Framework;
 using Python.Runtime;
-using QuantConnect.Data.Market;
+using NUnit.Framework;
 using QuantConnect.Indicators;
-using QuantConnect.Python;
+using System.Collections.Generic;
 
 namespace QuantConnect.Tests.Indicators
 {
     [TestFixture]
     public class RollingWindowTests
     {
+        [Test]
+        public void ResizedFromZero()
+        {
+            var window = new RollingWindow<int>(0);
+
+            Assert.AreEqual(0, window.Count);
+            Assert.AreEqual(0, window.Size);
+            window.Size = 1;
+            window.Add(10);
+
+            Assert.AreEqual(1, window.Count);
+            Assert.AreEqual(1, window.Size);
+            Assert.AreEqual(10, window[0]);
+            Assert.AreEqual(10, window[-1]);
+        }
+
+        [Test]
+        public void NotFullRollingWindowNegativeIndex()
+        {
+            var window = new RollingWindow<int>(3);
+            window.Add(10);
+            window.Add(20);
+
+            Assert.AreEqual(20, window.First());
+            Assert.AreEqual(20, window[0]);
+            Assert.AreEqual(20, window[-2]);
+
+            Assert.AreEqual(10, window[1]);
+            Assert.AreEqual(10, window[-1]);
+            Assert.AreEqual(10, window.Last());
+
+            Assert.AreEqual(0, window[2]);
+            Assert.AreEqual(0, window[-3]);
+
+            window.Add(30);
+            window.Add(40);
+
+            Assert.AreEqual(40, window.First());
+            Assert.AreEqual(40, window[0]);
+            Assert.AreEqual(40, window[-3]);
+
+            Assert.AreEqual(20, window[2]);
+            Assert.AreEqual(20, window[-1]);
+            Assert.AreEqual(20, window.Last());
+
+            Assert.IsTrue(window.IsReady);
+            Assert.AreEqual(3, window.Size);
+            Assert.AreEqual(3, window.Count);
+            Assert.AreEqual(4, window.Samples);
+        }
+
         [Test]
         public void NewWindowIsEmpty()
         {
@@ -373,7 +422,10 @@ namespace QuantConnect.Tests.Indicators
             // Add two elements and test negative indexing before window is full
             window.Add(7);
             window.Add(-2);
-            Assert.AreEqual(0, window[-1]);
+            Assert.AreEqual(7, window[-1]);
+            Assert.AreEqual(7, window.Last());
+            Assert.AreEqual(-2, window[0]);
+            Assert.AreEqual(-2, window.First());
             Assert.AreEqual(2, window.Count);
             Assert.IsFalse(window.IsReady);
 

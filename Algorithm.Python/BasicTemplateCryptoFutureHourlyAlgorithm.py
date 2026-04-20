@@ -81,7 +81,7 @@ class BasicTemplateCryptoFutureHourlyAlgorithm(QCAlgorithm):
                 if abs(self.ada_usdt_holdings.absolute_holdings_cost - self.holdings_value_usdt) > 1:
                     raise AssertionError(f"Unexpected holdings cost {self.ada_usdt_holdings.holdings_cost}")
 
-                if (abs(self.ada_usdt_holdings.absolute_holdings_cost * 0.05 - self.margin_used) > 1) or (BuyingPowerModelExtensions.get_maintenance_margin(self.ada_usdt.buying_power_model, self.ada_usdt) != self.margin_used):
+                if BuyingPowerModelExtensions.get_maintenance_margin(self.ada_usdt.buying_power_model, self.ada_usdt) != self.margin_used:
                     raise AssertionError(f"Unexpected margin used {self.margin_used}")
 
                 # position just opened should be just spread here

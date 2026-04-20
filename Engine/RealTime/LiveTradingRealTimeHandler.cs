@@ -98,11 +98,7 @@ namespace QuantConnect.Lean.Engine.RealTime
             while (!_cancellationTokenSource.IsCancellationRequested)
             {
                 var time = TimeProvider.GetUtcNow();
-
-                // pause until the next second
-                var nextSecond = time.RoundUp(TimeSpan.FromSeconds(1));
-                var delay = Convert.ToInt32((nextSecond - time).TotalMilliseconds);
-                Thread.Sleep(delay < 0 ? 1 : delay);
+                WaitTillNextSecond(time);
 
                 // poke each event to see if it should fire, we order by unique id to be deterministic
                 foreach (var kvp in ScheduledEvents.OrderBySafe(pair => pair.Value))
@@ -164,6 +160,17 @@ namespace QuantConnect.Lean.Engine.RealTime
             _realTimeThread.StopSafely(TimeSpan.FromMinutes(1), _cancellationTokenSource);
             _cancellationTokenSource.DisposeSafely();
             base.Exit();
+        }
+
+        /// <summary>
+        /// Helper method to wait until the second passes, useful to testing
+        /// </summary>
+        protected virtual void WaitTillNextSecond(DateTime time)
+        {
+            // pause until the next second
+            var nextSecond = time.RoundUp(TimeSpan.FromSeconds(1));
+            var delay = Convert.ToInt32((nextSecond - time).TotalMilliseconds);
+            Thread.Sleep(delay < 0 ? 1 : delay);
         }
 
         /// <summary>

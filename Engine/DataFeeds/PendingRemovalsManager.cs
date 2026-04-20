@@ -26,13 +26,13 @@ namespace QuantConnect.Lean.Engine.DataFeeds
     /// </summary>
     public class PendingRemovalsManager
     {
-        private readonly Dictionary<Universe, List<Security>> _pendingRemovals;
+        private readonly Dictionary<Universe, List<Universe.Member>> _pendingRemovals;
         private readonly IOrderProvider _orderProvider;
 
         /// <summary>
         /// Current pending removals
         /// </summary>
-        public IReadOnlyDictionary<Universe, List<Security>> PendingRemovals => _pendingRemovals;
+        public IReadOnlyDictionary<Universe, List<Universe.Member>> PendingRemovals => _pendingRemovals;
 
         /// <summary>
         /// Create a new instance
@@ -41,21 +41,23 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         public PendingRemovalsManager(IOrderProvider orderProvider)
         {
             _orderProvider = orderProvider;
-            _pendingRemovals = new Dictionary<Universe, List<Security>>();
+            _pendingRemovals = new Dictionary<Universe, List<Universe.Member>>();
         }
 
         /// <summary>
         /// Determines if we can safely remove the security member from a universe.
         /// We must ensure that we have zero holdings, no open orders, and no existing portfolio targets
         /// </summary>
-        private bool IsSafeToRemove(Security member, Universe universe)
+        private bool IsSafeToRemove(Universe.Member member, Universe universe)
         {
+            var security = member.Security;
+
             // but don't physically remove it from the algorithm if we hold stock or have open orders against it or an open target
-            var openOrders = _orderProvider.GetOpenOrders(x => x.Symbol == member.Symbol);
-            if (!member.HoldStock && !openOrders.Any() && (member.Holdings.Target == null || member.Holdings.Target.Quantity == 0))
+            var openOrders = _orderProvider.GetOpenOrders(x => x.Symbol == security.Symbol);
+            if (!security.HoldStock && !openOrders.Any() && (security.Holdings.Target == null || security.Holdings.Target.Quantity == 0))
             {
                 if (universe.Securities.Any(pair =>
-                    pair.Key.Underlying == member.Symbol && !IsSafeToRemove(pair.Value.Security, universe)))
+                    pair.Key.Underlying == security.Symbol && !IsSafeToRemove(pair.Value, universe)))
                 {
                     // don't remove if any member in the universe which uses this 'member' as underlying can't be removed
                     // covers the options use case
@@ -63,7 +65,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 }
 
                 // don't remove if there are unsettled positions
-                var unsettledCash = member.SettlementModel.GetUnsettledCash();
+                var unsettledCash = security.SettlementModel.GetUnsettledCash();
                 if (unsettledCash != default && unsettledCash.Amount > 0)
                 {
                     return false;
@@ -82,11 +84,11 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <param name="member">The security to remove</param>
         /// <param name="universe">The universe which the security is a member of</param>
         /// <returns>The member to remove</returns>
-        public List<RemovedMember> TryRemoveMember(Security member, Universe universe)
+        public List<RemovedMember> TryRemoveMember(Universe.Member member, Universe universe)
         {
             if (IsSafeToRemove(member, universe))
             {
-                return new List<RemovedMember> {new RemovedMember(universe, member)};
+                return new List<RemovedMember> {new RemovedMember(universe, member.Security)};
             }
 
             if (_pendingRemovals.ContainsKey(universe))
@@ -98,10 +100,31 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             }
             else
             {
-                _pendingRemovals.Add(universe, new List<Security> { member });
+                _pendingRemovals.Add(universe, new List<Universe.Member> { member });
             }
 
             return null;
+        }
+
+        /// <summary>
+        /// Will check if the security is pending for removal
+        /// </summary>
+        /// <param name="security">The security</param>
+        /// <param name="isInternal">Whether it's an internal subscription</param>
+        /// <returns>Whether the security is pending for removal</returns>
+        public bool IsPendingForRemoval(Security security, bool isInternal)
+        {
+            return _pendingRemovals.Values.Any(x => x.Any(y => y.IsInternal == isInternal && y.Security.Symbol == security.Symbol));
+        }
+
+        /// <summary>
+        /// Will check if the member is pending for removal
+        /// </summary>
+        /// <param name="member">The universe member</param>
+        /// <returns>Whether the security is pending for removal</returns>
+        public bool IsPendingForRemoval(Universe.Member member)
+        {
+            return IsPendingForRemoval(member.Security, member.IsInternal);
         }
 
         /// <summary>
@@ -119,22 +142,22 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             foreach (var kvp in _pendingRemovals.ToList())
             {
                 var universeRemoving = kvp.Key;
-                foreach (var security in kvp.Value.ToList())
+                foreach (var member in kvp.Value.ToList())
                 {
-                    var isSafeToRemove = IsSafeToRemove(security, universeRemoving);
+                    var isSafeToRemove = IsSafeToRemove(member, universeRemoving);
                     if (isSafeToRemove
                         ||
                         // if we are re selecting it we remove it as a pending removal
                         // else we might remove it when we do not want to do so
                         universeRemoving == currentUniverse
-                        && selectedSymbols.Contains(security.Symbol))
+                        && selectedSymbols.Contains(member.Security.Symbol))
                     {
                         if (isSafeToRemove)
                         {
-                            result.Add(new RemovedMember(universeRemoving, security));
+                            result.Add(new RemovedMember(universeRemoving, member.Security));
                         }
 
-                        _pendingRemovals[universeRemoving].Remove(security);
+                        _pendingRemovals[universeRemoving].Remove(member);
 
                         // if there are no more pending removals for this universe lets remove it
                         if (!_pendingRemovals[universeRemoving].Any())

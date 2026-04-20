@@ -30,7 +30,7 @@ namespace QuantConnect.Securities.Option
     /// <summary>
     /// Provides QuantLib(QL) implementation of <see cref="IOptionPriceModel"/> to support major option pricing models, available in QL.
     /// </summary>
-    public class QLOptionPriceModel : IOptionPriceModel
+    public class QLOptionPriceModel : OptionPriceModel
     {
         private static readonly OptionStyle[] _defaultAllowedOptionStyles = { OptionStyle.European, OptionStyle.American };
         private static readonly IQLUnderlyingVolatilityEstimator _defaultUnderlyingVolEstimator = new ConstantQLUnderlyingVolatilityEstimator();
@@ -67,13 +67,13 @@ namespace QuantConnect.Securities.Option
         /// <param name="riskFreeRateEstimator">The risk free rate estimator</param>
         /// <param name="dividendYieldEstimator">The underlying dividend yield estimator</param>
         /// <param name="allowedOptionStyles">List of option styles supported by the pricing model. It defaults to both American and European option styles</param>
-        public QLOptionPriceModel(PricingEngineFunc pricingEngineFunc, 
-                                  IQLUnderlyingVolatilityEstimator underlyingVolEstimator = null, 
-                                  IQLRiskFreeRateEstimator riskFreeRateEstimator = null, 
-                                  IQLDividendYieldEstimator dividendYieldEstimator = null, 
+        public QLOptionPriceModel(PricingEngineFunc pricingEngineFunc,
+                                  IQLUnderlyingVolatilityEstimator underlyingVolEstimator = null,
+                                  IQLRiskFreeRateEstimator riskFreeRateEstimator = null,
+                                  IQLDividendYieldEstimator dividendYieldEstimator = null,
                                   OptionStyle[] allowedOptionStyles = null)
             : this((option, process) => pricingEngineFunc(process), underlyingVolEstimator, riskFreeRateEstimator, dividendYieldEstimator, allowedOptionStyles)
-        {}
+        { }
         /// <summary>
         /// Method constructs QuantLib option price model with necessary estimators of underlying volatility, risk free rate, and underlying dividend yield
         /// </summary>
@@ -82,10 +82,10 @@ namespace QuantConnect.Securities.Option
         /// <param name="riskFreeRateEstimator">The risk free rate estimator</param>
         /// <param name="dividendYieldEstimator">The underlying dividend yield estimator</param>
         /// <param name="allowedOptionStyles">List of option styles supported by the pricing model. It defaults to both American and European option styles</param>
-        public QLOptionPriceModel(PricingEngineFuncEx pricingEngineFunc, 
-                                  IQLUnderlyingVolatilityEstimator underlyingVolEstimator = null, 
-                                  IQLRiskFreeRateEstimator riskFreeRateEstimator = null, 
-                                  IQLDividendYieldEstimator dividendYieldEstimator = null, 
+        public QLOptionPriceModel(PricingEngineFuncEx pricingEngineFunc,
+                                  IQLUnderlyingVolatilityEstimator underlyingVolEstimator = null,
+                                  IQLRiskFreeRateEstimator riskFreeRateEstimator = null,
+                                  IQLDividendYieldEstimator dividendYieldEstimator = null,
                                   OptionStyle[] allowedOptionStyles = null)
         {
             _pricingEngineFunc = pricingEngineFunc;
@@ -105,11 +105,11 @@ namespace QuantConnect.Securities.Option
         /// <param name="contract">The option contract to evaluate</param>
         /// <returns>An instance of <see cref="OptionPriceModelResult"/> containing the theoretical
         /// price of the specified option contract</returns>
-        public OptionPriceModelResult Evaluate(Security security, Slice slice, OptionContract contract)
+        public override OptionPriceModelResult Evaluate(Security security, Slice slice, OptionContract contract)
         {
             if (!AllowedOptionStyles.Contains(contract.Symbol.ID.OptionStyle))
             {
-               throw new ArgumentException($"{contract.Symbol.ID.OptionStyle} style options are not supported by option price model '{this.GetType().Name}'");
+                throw new ArgumentException($"{contract.Symbol.ID.OptionStyle} style options are not supported by option price model '{this.GetType().Name}'");
             }
 
             try
@@ -173,7 +173,7 @@ namespace QuantConnect.Securities.Option
                 var initialGuess = Math.Sqrt(2 * Math.PI / maturity) * premium / spot;
 
                 var underlyingVolEstimate = _underlyingVolEstimator.Estimate(security, slice, contract);
-                
+
                 // If the volatility estimator is not ready, we will use initial guess
                 if (!_underlyingVolEstimator.IsReady)
                 {
@@ -198,7 +198,7 @@ namespace QuantConnect.Securities.Option
                 // Setting the evaluation date before running the calculations
                 var evaluationDate = contract.Time.Date;
                 SetEvaluationDate(evaluationDate);
-                
+
                 // running calculations
                 var npv = EvaluateOption(option);
 
@@ -304,6 +304,18 @@ namespace QuantConnect.Securities.Option
         }
 
         /// <summary>
+        /// Evaluates the specified option contract to compute a theoretical price, IV and greeks
+        /// </summary>
+        /// <param name="parameters">A <see cref="OptionPriceModelParameters"/> object
+        /// containing the security, slice and contract</param>
+        /// <returns>An instance of <see cref="OptionPriceModelResult"/> containing the theoretical
+        /// price of the specified option contract</returns>
+        public override OptionPriceModelResult Evaluate(OptionPriceModelParameters parameters)
+        {
+            return Evaluate(parameters.Security, parameters.Slice, parameters.Contract);
+        }
+
+        /// <summary>
         /// Runs option evaluation and logs exceptions
         /// </summary>
         /// <param name="option"></param>
@@ -343,7 +355,7 @@ namespace QuantConnect.Securities.Option
         /// <param name="payoff">payoff structure of the option contract</param>
         /// <param name="black">black calculator instance</param>
         /// <returns>implied volatility estimation</returns>
-        protected double ImpliedVolatilityEstimation(double price, double initialGuess, double timeTillExpiry, double riskFreeDiscount, 
+        protected double ImpliedVolatilityEstimation(double price, double initialGuess, double timeTillExpiry, double riskFreeDiscount,
                                                      double forwardPrice, PlainVanillaPayoff payoff, out BlackCalculator black)
         {
             // Set up the optimizer
@@ -360,7 +372,7 @@ namespace QuantConnect.Securities.Option
             while (error > tolerance && iterRemain > 0)
             {
                 var oldImpliedVol = impliedVolEstimate;
-                
+
                 // Set up calculator by previous IV estimate to get new theoretical price, vega and IV
                 black = CreateBlackCalculator(forwardPrice, riskFreeDiscount, oldImpliedVol, payoff);
                 impliedVolEstimate -= (black.value() - price) / black.vega(timeTillExpiry);

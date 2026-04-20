@@ -211,7 +211,7 @@ algo = QCAlgorithm()
 
 marketHoursDatabase = MarketHoursDatabase.FromDataFolder()
 symbolPropertiesDatabase = SymbolPropertiesDatabase.FromDataFolder()
-securityService =  SecurityService(algo.Portfolio.CashBook, marketHoursDatabase, symbolPropertiesDatabase, algo, RegisteredSecurityDataTypesProvider.Null, SecurityCacheProvider(algo.Portfolio))
+securityService =  SecurityService(algo.Portfolio.CashBook, marketHoursDatabase, symbolPropertiesDatabase, algo, RegisteredSecurityDataTypesProvider.Null, SecurityCacheProvider(algo.Portfolio), algorithm=algo)
 algo.Securities.SetSecurityService(securityService)
 dataPermissionManager = DataPermissionManager()
 dataManager = DataManager(None, UniverseSelection(algo, securityService, dataPermissionManager, None), algo, algo.TimeKeeper, marketHoursDatabase, False, RegisteredSecurityDataTypesProvider.Null, dataPermissionManager)

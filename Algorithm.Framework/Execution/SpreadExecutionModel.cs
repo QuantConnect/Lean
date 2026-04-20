@@ -83,6 +83,12 @@ namespace QuantConnect.Algorithm.Framework.Execution
         /// </summary>
         protected virtual bool PriceIsFavorable(Security security)
         {
+            // Check if this method was overridden in Python
+            if (TryInvokePythonOverride(nameof(PriceIsFavorable), out bool result, security))
+            {
+                return result;
+            }
+
             // Has to be in opening hours of exchange to avoid extreme spread in OTC period
             // Price has to be larger than zero to avoid zero division error, or negative price causing the spread percentage lower than preset value by accident
             return security.Exchange.ExchangeOpen

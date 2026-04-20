@@ -26,7 +26,7 @@ namespace QuantConnect.Indicators
         /// <summary>
         /// Initializes a new instance of the <see cref="AdvanceDeclineDifference"/> class
         /// </summary>
-        public AdvanceDeclineDifference(string name)
+        public AdvanceDeclineDifference(string name = "A/D Difference")
             : base(name, (entries) => entries.Count(), (advance, decline) => advance - decline) { }
     }
 }

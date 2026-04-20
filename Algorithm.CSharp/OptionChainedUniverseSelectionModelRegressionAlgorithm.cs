@@ -28,7 +28,7 @@ namespace QuantConnect.Algorithm.CSharp
     /// <summary>
     /// Regression algorithm to test the OptionChainedUniverseSelectionModel class
     /// </summary>
-    public class OptionChainedUniverseSelectionModelRegressionAlgorithm: QCAlgorithm, IRegressionAlgorithmDefinition
+    public class OptionChainedUniverseSelectionModelRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
         public override void Initialize()
         {
@@ -39,7 +39,7 @@ namespace QuantConnect.Algorithm.CSharp
 
             var universe = AddUniverse("my-minute-universe-name", time => new List<string> { "AAPL", "TWX" });
 
-            AddUniverseSelection(new OptionChainedUniverseSelectionModel(universe, u => u.Strikes(-2, +2)
+            AddUniverseSelection(new OptionChainedUniverseSelectionModel(universe, u => u.StandardsOnly().Strikes(-2, +2)
                                    // Expiration method accepts TimeSpan objects or integer for days.
                                    // The following statements yield the same filtering criteria
                                    .Expiration(0, 180)));
@@ -124,10 +124,10 @@ namespace QuantConnect.Algorithm.CSharp
             {"Treynor Ratio", "0"},
             {"Total Fees", "$4.00"},
             {"Estimated Strategy Capacity", "$110000.00"},
-            {"Lowest Capacity Asset", "AAPL 2ZTXYLO9EQPZA|AAPL R735QTJ8XC9X"},
+            {"Lowest Capacity Asset", "AAPL 2ZTXYLO9EV0AU|AAPL R735QTJ8XC9X"},
             {"Portfolio Turnover", "8.85%"},
             {"Drawdown Recovery", "0"},
-            {"OrderListHash", "a542a51c6e634f2ddd9a97ce208d5a67"}
+            {"OrderListHash", "32f3cebb622264a2d6fd84c552ff4d0e"}
         };
     }
 }

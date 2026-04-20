@@ -19,6 +19,7 @@ using QuantConnect.Algorithm.Framework.Execution;
 using QuantConnect.Algorithm.Framework.Portfolio;
 using QuantConnect.Algorithm.Framework.Risk;
 using QuantConnect.Algorithm.Framework.Selection;
+using QuantConnect.Util;
 
 namespace QuantConnect.Algorithm
 {
@@ -31,15 +32,10 @@ namespace QuantConnect.Algorithm
         [DocumentationAttribute(AlgorithmFramework)]
         public void SetAlpha(PyObject alpha)
         {
-            IAlphaModel model;
-            if (alpha.TryConvert(out model))
-            {
-                SetAlpha(model);
-            }
-            else
-            {
-                Alpha = new AlphaModelPythonWrapper(alpha);
-            }
+            Alpha = PythonUtil.CreateInstanceOrWrapper<IAlphaModel>(
+                alpha,
+                py => new AlphaModelPythonWrapper(py)
+            );
         }
 
         /// <summary>
@@ -49,15 +45,11 @@ namespace QuantConnect.Algorithm
         [DocumentationAttribute(AlgorithmFramework)]
         public void AddAlpha(PyObject alpha)
         {
-            IAlphaModel model;
-            if (alpha.TryConvert(out model))
-            {
-                AddAlpha(model);
-            }
-            else
-            {
-                AddAlpha(new AlphaModelPythonWrapper(alpha));
-            }
+            var model = PythonUtil.CreateInstanceOrWrapper<IAlphaModel>(
+                alpha,
+                py => new AlphaModelPythonWrapper(py)
+            );
+            AddAlpha(model);
         }
 
         /// <summary>
@@ -68,15 +60,10 @@ namespace QuantConnect.Algorithm
         [DocumentationAttribute(TradingAndOrders)]
         public void SetExecution(PyObject execution)
         {
-            IExecutionModel model;
-            if (execution.TryConvert(out model))
-            {
-                SetExecution(model);
-            }
-            else
-            {
-                Execution = new ExecutionModelPythonWrapper(execution);
-            }
+            Execution = PythonUtil.CreateInstanceOrWrapper<IExecutionModel>(
+                execution,
+                py => new ExecutionModelPythonWrapper(py)
+            );
         }
 
         /// <summary>
@@ -87,15 +74,10 @@ namespace QuantConnect.Algorithm
         [DocumentationAttribute(TradingAndOrders)]
         public void SetPortfolioConstruction(PyObject portfolioConstruction)
         {
-            IPortfolioConstructionModel model;
-            if (portfolioConstruction.TryConvert(out model))
-            {
-                SetPortfolioConstruction(model);
-            }
-            else
-            {
-                PortfolioConstruction = new PortfolioConstructionModelPythonWrapper(portfolioConstruction);
-            }
+            PortfolioConstruction = PythonUtil.CreateInstanceOrWrapper<IPortfolioConstructionModel>(
+                portfolioConstruction,
+                py => new PortfolioConstructionModelPythonWrapper(py)
+            );
         }
 
         /// <summary>
@@ -106,12 +88,10 @@ namespace QuantConnect.Algorithm
         [DocumentationAttribute(Universes)]
         public void SetUniverseSelection(PyObject universeSelection)
         {
-            IUniverseSelectionModel model;
-            if (!universeSelection.TryConvert(out model))
-            {
-                model = new UniverseSelectionModelPythonWrapper(universeSelection);
-            }
-            SetUniverseSelection(model);
+            UniverseSelection = PythonUtil.CreateInstanceOrWrapper<IUniverseSelectionModel>(
+                universeSelection,
+                py => new UniverseSelectionModelPythonWrapper(py)
+            );
         }
 
         /// <summary>
@@ -122,11 +102,10 @@ namespace QuantConnect.Algorithm
         [DocumentationAttribute(Universes)]
         public void AddUniverseSelection(PyObject universeSelection)
         {
-            IUniverseSelectionModel model;
-            if (!universeSelection.TryConvert(out model))
-            {
-                model = new UniverseSelectionModelPythonWrapper(universeSelection);
-            }
+            var model = PythonUtil.CreateInstanceOrWrapper<IUniverseSelectionModel>(
+                universeSelection,
+                py => new UniverseSelectionModelPythonWrapper(py)
+            );
             AddUniverseSelection(model);
         }
 
@@ -138,15 +117,10 @@ namespace QuantConnect.Algorithm
         [DocumentationAttribute(TradingAndOrders)]
         public void SetRiskManagement(PyObject riskManagement)
         {
-            IRiskManagementModel model;
-            if (riskManagement.TryConvert(out model))
-            {
-                SetRiskManagement(model);
-            }
-            else
-            {
-                RiskManagement = new RiskManagementModelPythonWrapper(riskManagement);
-            }
+            RiskManagement = PythonUtil.CreateInstanceOrWrapper<IRiskManagementModel>(
+                riskManagement,
+                py => new RiskManagementModelPythonWrapper(py)
+            );
         }
 
         /// <summary>
@@ -157,11 +131,10 @@ namespace QuantConnect.Algorithm
         [DocumentationAttribute(TradingAndOrders)]
         public void AddRiskManagement(PyObject riskManagement)
         {
-            IRiskManagementModel model;
-            if (!riskManagement.TryConvert(out model))
-            {
-                model = new RiskManagementModelPythonWrapper(riskManagement);
-            }
+            var model = PythonUtil.CreateInstanceOrWrapper<IRiskManagementModel>(
+                riskManagement,
+                py => new RiskManagementModelPythonWrapper(py)
+            );
             AddRiskManagement(model);
         }
     }

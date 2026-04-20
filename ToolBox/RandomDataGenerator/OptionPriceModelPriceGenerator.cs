@@ -61,16 +61,14 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
         /// <returns>A new decimal suitable for usage as new security price</returns>
         public decimal NextValue(decimal maximumPercentDeviation, DateTime referenceDate)
         {
-            return _option.PriceModel
-                .Evaluate(
-                    _option,
-                    null,
-                    OptionContract.Create(
-                        referenceDate,
-                        _option,
-                        new Tick(referenceDate, _option.Underlying.Symbol, _option.Underlying.Price, _option.Underlying.Price)
-                        ))
-                .TheoreticalPrice;
+            var underlying = _option.Underlying;
+            var price = underlying.Price;
+
+            var tick = new Tick(referenceDate, underlying.Symbol, price, price);
+            var contract = OptionContract.Create(referenceDate, _option, tick);
+
+            var parameters = new OptionPriceModelParameters(_option, null, contract);
+            return _option.PriceModel.Evaluate(parameters).TheoreticalPrice;
         }
     }
 }

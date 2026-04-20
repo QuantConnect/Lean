@@ -26,7 +26,10 @@ using QuantConnect.Securities;
 using QuantConnect.Orders.Fees;
 using System.Collections.Generic;
 using System.Collections.Concurrent;
+using QuantConnect.Api;
+using QuantConnect.Brokerages.Authentication;
 using QuantConnect.Brokerages.CrossZero;
+using QuantConnect.Util;
 
 namespace QuantConnect.Brokerages
 {
@@ -326,6 +329,25 @@ namespace QuantConnect.Brokerages
         }
 
         /// <summary>
+        /// Creates a <see cref="LeanOAuthTokenHandler"/> and automatically wires it so that
+        /// authentication failures trigger a brokerage error message, causing Lean to shut down gracefully.
+        /// </summary>
+        /// <param name="apiClient">The API client used to communicate with the Lean platform.</param>
+        /// <param name="request">The request model used to generate the access token.</param>
+        /// <param name="tokenLifetime">
+        /// The expected lifetime of a fetched token. A 1-minute safety buffer is applied before expiry.
+        /// Must be provided explicitly — each brokerage has a different token lifetime.
+        /// </param>
+        /// <returns>A configured <see cref="LeanOAuthTokenHandler"/> instance.</returns>
+        protected LeanOAuthTokenHandler<T> CreateOAuthTokenHandler<T>(ApiConnection apiClient, OAuthTokenRequest request, TimeSpan tokenLifetime)
+            where T : LeanTokenCredentials
+        {
+            var handler = new LeanOAuthTokenHandler<T>(apiClient, request, tokenLifetime);
+            handler.AuthenticationFailed += (_, ex) => OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Error, "OAuthenticationFailed", ex.Message));
+            return handler;
+        }
+
+        /// <summary>
         /// Helper method that will try to get the live holdings from the provided brokerage data collection else will default to the algorithm state
         /// </summary>
         /// <remarks>Holdings will removed from the provided collection on the first call, since this method is expected to be called only
@@ -509,6 +531,11 @@ namespace QuantConnect.Brokerages
                 {
                     if (!algorithm.Portfolio.CashBook.ContainsKey(balance.Currency))
                     {
+                        if (!CashAmountUtil.ShouldAddCashBalance(balance, algorithm.AccountCurrency))
+                        {
+                            Log.Trace($"Brokerage.PerformCashSync(): Skipping {balance.Currency} cash because quantity is zero");
+                            continue;
+                        }
                         Log.Trace($"Brokerage.PerformCashSync(): Unexpected cash found {balance.Currency} {balance.Amount}", true);
                         algorithm.Portfolio.SetCash(balance.Currency, balance.Amount, 0);
                     }
@@ -756,7 +783,7 @@ namespace QuantConnect.Brokerages
                         case OrderStatus.Invalid:
                             LeanOrderByZeroCrossBrokerageOrderId.TryRemove(brokerageOrderId, out var _);
                             break;
-                    };
+                    }
                     return true;
                 }
                 // Return false if the brokerage order ID does not correspond to a cross-zero order
@@ -787,7 +814,7 @@ namespace QuantConnect.Brokerages
                         return false;
                     default:
                         return false;
-                };
+                }
 
                 OnOrderEvent(orderEvent);
 

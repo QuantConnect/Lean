@@ -16,7 +16,6 @@
 using QuantConnect.Data.UniverseSelection;
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using Python.Runtime;
 
 namespace QuantConnect.Algorithm.Framework.Selection
@@ -36,7 +35,7 @@ namespace QuantConnect.Algorithm.Framework.Selection
         /// <param name="name">A unique name for this universe</param>
         /// <param name="tickersByDate">Dictionary of DateTime keyed by String that represent the Inception date for each ticker</param>
         public InceptionDateUniverseSelectionModel(string name, Dictionary<string, DateTime> tickersByDate) :
-            base(name, (Func<DateTime, IEnumerable<string>>) null)
+            base(name, (Func<DateTime, IEnumerable<string>>)null)
         {
             _queue = new Queue<KeyValuePair<string, DateTime>>(tickersByDate);
             _symbols = new List<string>();
@@ -57,6 +56,12 @@ namespace QuantConnect.Algorithm.Framework.Selection
         /// </summary>
         public override IEnumerable<string> Select(QCAlgorithm algorithm, DateTime date)
         {
+            // Check if this method was overridden in Python
+            if (TryInvokePythonOverride(nameof(Select), out IEnumerable<string> result, algorithm, date))
+            {
+                return result;
+            }
+
             // Move Symbols that are trading from the queue to a list 
             var added = new List<string>();
             while (_queue.TryPeek(out var keyValuePair) && keyValuePair.Value <= date)

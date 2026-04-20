@@ -80,7 +80,16 @@ namespace QuantConnect.Data.Market
                 {
                     return (long)_universeData.Volume;
                 }
-                return (long)(_tradeBar?.Volume ?? 0);
+
+                if (_tradeBar == null && _tradeTick == null)
+                {
+                    return 0L;
+                }
+                if (_tradeBar != null)
+                {
+                    return (long)(_tradeTick != null && _tradeTick.EndTime > _tradeBar.EndTime ? _tradeTick.Quantity : _tradeBar.Volume);
+                }
+                return (long)_tradeTick.Quantity;
             }
         }
 
@@ -101,7 +110,12 @@ namespace QuantConnect.Data.Market
                 }
                 if (_quoteBar != null)
                 {
-                    return _quoteTick != null && _quoteTick.EndTime > _quoteBar.EndTime ? _quoteTick.BidPrice : _quoteBar.Bid.Close;
+                    var quoteBarPrice = _quoteBar.Bid?.Close ?? decimal.Zero;
+                    if (_quoteTick != null)
+                    {
+                        return _quoteTick.EndTime > _quoteBar.EndTime ? _quoteTick.BidPrice : quoteBarPrice;
+                    }
+                    return quoteBarPrice;
                 }
                 return _quoteTick.BidPrice;
             }
@@ -143,7 +157,12 @@ namespace QuantConnect.Data.Market
                 }
                 if (_quoteBar != null)
                 {
-                    return _quoteTick != null && _quoteTick.EndTime > _quoteBar.EndTime ? _quoteTick.AskPrice : _quoteBar.Ask.Close;
+                    var quoteBarPrice = _quoteBar.Ask?.Close ?? decimal.Zero;
+                    if (_quoteTick != null)
+                    {
+                        return _quoteTick.EndTime > _quoteBar.EndTime ? _quoteTick.AskPrice : quoteBarPrice;
+                    }
+                    return quoteBarPrice;
                 }
                 return _quoteTick.AskPrice;
             }

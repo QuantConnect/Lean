@@ -93,7 +93,12 @@ namespace QuantConnect.Securities.CryptoFuture
         /// <returns>True if the security is a crypto coin future</returns>
         private static bool IsCryptoCoinFuture(string quoteCurrency)
         {
-            return quoteCurrency != "USDT" && quoteCurrency != "BUSD";
+            return quoteCurrency != "USDT" && quoteCurrency != "BUSD" && quoteCurrency != "USDC";
         }
+
+        /// <summary>
+        /// Returns the securities symbol
+        /// </summary>
+        public static implicit operator Symbol(CryptoFuture security) => security.Symbol;
     }
 }

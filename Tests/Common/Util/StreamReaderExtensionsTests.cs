@@ -320,6 +320,54 @@ namespace QuantConnect.Tests.Common.Util
             Assert.AreEqual(201900, smartStream.GetInt32());
         }
 
+        [Test]
+        public void GetInt64()
+        {
+            var stream = $"1588291200426000,0,1588291202486000{Environment.NewLine}1588291205550000{Environment.NewLine}".ToStream();
+            using var smartStream = new StreamReader(stream);
+
+            Assert.AreEqual(1588291200426000, smartStream.GetInt64());
+            Assert.AreEqual(0L, smartStream.GetInt64());
+            Assert.AreEqual(1588291202486000, smartStream.GetInt64());
+            Assert.AreEqual(1588291205550000, smartStream.GetInt64());
+        }
+
+        [Test]
+        public void GetNegativeInt64()
+        {
+            var stream = $"-1588291200426000,0,-1588291202486000{Environment.NewLine}-1588291205550000{Environment.NewLine}".ToStream();
+            using var smartStream = new StreamReader(stream);
+
+            Assert.AreEqual(-1588291200426000, smartStream.GetInt64());
+            Assert.AreEqual(0L, smartStream.GetInt64());
+            Assert.AreEqual(-1588291202486000, smartStream.GetInt64());
+            Assert.AreEqual(-1588291205550000, smartStream.GetInt64());
+        }
+
+        [Test]
+        public void GetInt64WithCarriageReturnAndLineFeed()
+        {
+            var stream = "1588291200426000,0,1588291202486000\r\n1588291205550000\r\n".ToStream();
+            using var smartStream = new StreamReader(stream);
+
+            Assert.AreEqual(1588291200426000, smartStream.GetInt64());
+            Assert.AreEqual(0L, smartStream.GetInt64());
+            Assert.AreEqual(1588291202486000, smartStream.GetInt64());
+            Assert.AreEqual(1588291205550000, smartStream.GetInt64());
+        }
+
+        [Test]
+        public void GetInt64WithLineFeed()
+        {
+            var stream = "1588291200426000,0,1588291202486000\n1588291205550000\n".ToStream();
+            using var smartStream = new StreamReader(stream);
+
+            Assert.AreEqual(1588291200426000, smartStream.GetInt64());
+            Assert.AreEqual(0L, smartStream.GetInt64());
+            Assert.AreEqual(1588291202486000, smartStream.GetInt64());
+            Assert.AreEqual(1588291205550000, smartStream.GetInt64());
+        }
+
         [Parallelizable(ParallelScope.None)]
         [TestCase(typeof(TradeBar), typeof(TradeBarTest), TickType.Trade)]
         [TestCase(typeof(QuoteBar), typeof(QuoteBarTest), TickType.Quote)]

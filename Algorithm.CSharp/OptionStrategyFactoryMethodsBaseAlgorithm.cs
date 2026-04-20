@@ -45,7 +45,7 @@ namespace QuantConnect.Algorithm.CSharp
             var option = AddOption("GOOG");
             _optionSymbol = option.Symbol;
 
-            option.SetFilter(-2, +2, 0, 180);
+            option.SetFilter(u => u.StandardsOnly().Strikes(-2, +2).Expiration(0, 180));
 
             SetBenchmark("GOOG");
         }
@@ -67,8 +67,7 @@ namespace QuantConnect.Algorithm.CSharp
                 var buyingPowerModel = positionGroup.BuyingPowerModel as OptionStrategyPositionGroupBuyingPowerModel;
                 if (buyingPowerModel == null)
                 {
-                    throw new RegressionTestException($@"Expected position group buying power model type: {nameof(OptionStrategyPositionGroupBuyingPowerModel)
-                        }. Actual: {positionGroup.BuyingPowerModel.GetType()}");
+                    throw new RegressionTestException($@"Expected position group buying power model type: {nameof(OptionStrategyPositionGroupBuyingPowerModel)}. Actual: {positionGroup.BuyingPowerModel.GetType()}");
                 }
 
                 AssertStrategyPositionGroup(positionGroup);
@@ -91,9 +90,7 @@ namespace QuantConnect.Algorithm.CSharp
             var ordersCount = Transactions.GetOrders((order) => order.Status == OrderStatus.Filled).Count();
             if (ordersCount != ExpectedOrdersCount)
             {
-                throw new RegressionTestException($@"Expected {ExpectedOrdersCount
-                    } orders to have been submitted and filled, half for buying the strategy and the other half for the liquidation. Actual {
-                    ordersCount}");
+                throw new RegressionTestException($@"Expected {ExpectedOrdersCount} orders to have been submitted and filled, half for buying the strategy and the other half for the liquidation. Actual {ordersCount}");
             }
         }
 

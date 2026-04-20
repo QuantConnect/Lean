@@ -15,9 +15,10 @@
 */
 
 using System;
-using System.Runtime.CompilerServices;
-using QuantConnect.Data.Market;
 using Python.Runtime;
+using QuantConnect.Util;
+using QuantConnect.Data.Market;
+using System.Runtime.CompilerServices;
 
 namespace QuantConnect.Data.Consolidators
 {
@@ -58,8 +59,9 @@ namespace QuantConnect.Data.Consolidators
         /// Creates a consolidator to produce a new <typeparamref name="TConsolidated"/> instance representing the period
         /// </summary>
         /// <param name="period">The minimum span of time before emitting a consolidated bar</param>
-        protected PeriodCountConsolidatorBase(TimeSpan period)
-            : this(new TimeSpanPeriodSpecification(period))
+        /// <param name="startTime">Optionally the bar start time anchor to use</param>
+        protected PeriodCountConsolidatorBase(TimeSpan period, TimeSpan? startTime = null)
+            : this(new TimeSpanPeriodSpecification(period, startTime))
         {
             _period = _periodSpecification.Period;
         }
@@ -420,17 +422,25 @@ namespace QuantConnect.Data.Consolidators
         /// </summary>
         private class TimeSpanPeriodSpecification : IPeriodSpecification
         {
+            public TimeSpan? StartTime { get; }
             public TimeSpan? Period { get; }
 
-            public TimeSpanPeriodSpecification(TimeSpan period)
+            public TimeSpanPeriodSpecification(TimeSpan period, TimeSpan? startTime = null)
             {
                 Period = period;
+                StartTime = startTime;
             }
 
-            public DateTime GetRoundedBarTime(DateTime time) =>
-                Period.Value > Time.OneDay
+            public DateTime GetRoundedBarTime(DateTime time)
+            {
+                if (StartTime.HasValue)
+                {
+                    return LeanData.GetConsolidatorStartTime(Period.Value, StartTime.Value, time);
+                }
+                return Period.Value > Time.OneDay
                     ? time // #4915 For periods larger than a day, don't use a rounding schedule.
                     : time.RoundDown(Period.Value);
+            }
         }
 
         /// <summary>

@@ -17,19 +17,19 @@ class FundamentalUniverseSelectionModel:
     '''Provides a base class for defining equity coarse/fine fundamental selection models'''
     
     def __init__(self,
-                 filterFineData = None,
-                 universeSettings = None):
+                 filter_fine_data = None,
+                 universe_settings = None):
         '''Initializes a new instance of the FundamentalUniverseSelectionModel class
         Args:
-            filterFineData: [Obsolete] Fine and Coarse selection are merged
-            universeSettings: The settings used when adding symbols to the algorithm, specify null to use algorithm.UniverseSettings'''
-        self.filter_fine_data = filterFineData
+            filter_fine_data: [Obsolete] Fine and Coarse selection are merged
+            universeSettings: The settings used when adding symbols to the algorithm, specify null to use algorithm.universe_settings'''
+        self.filter_fine_data = filter_fine_data
         if self.filter_fine_data == None:
             self.fundamental_data = True
         else:
             self.fundamental_data = False
         self.market = Market.USA
-        self.universe_settings = universeSettings
+        self.universe_settings = universe_settings
 
 
     def create_universes(self, algorithm: QCAlgorithm) -> list[Universe]:

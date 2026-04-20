@@ -38,7 +38,7 @@ class BasicTemplateOptionsHistoryAlgorithm(QCAlgorithm):
 
         # set the pricing model for Greeks and volatility
         # find more pricing models https://www.quantconnect.com/lean/documentation/topic27704.html
-        option.price_model = OptionPriceModels.crank_nicolson_fd()
+        option.price_model = OptionPriceModels.black_scholes()
         # set the warm-up period for the pricing model
         self.set_warm_up(TimeSpan.from_days(4))
         # set the benchmark to be the initial cash

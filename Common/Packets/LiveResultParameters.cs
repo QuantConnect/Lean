@@ -14,9 +14,10 @@
  *
 */
 
-using System;
 using QuantConnect.Orders;
 using QuantConnect.Securities;
+using QuantConnect.Statistics;
+using System;
 using System.Collections.Generic;
 
 namespace QuantConnect.Packets
@@ -52,10 +53,12 @@ namespace QuantConnect.Packets
             IDictionary<string, string> statistics,
             IDictionary<string, string> runtimeStatistics,
             List<OrderEvent> orderEvents,
+            AlgorithmPerformance totalPerformance = null,
             IDictionary<string, string> serverStatistics = null,
             AlgorithmConfiguration algorithmConfiguration = null,
-            IDictionary<string, string> state = null)
-            : base(charts, orders, profitLoss, statistics, runtimeStatistics, orderEvents, algorithmConfiguration, state)
+            IDictionary<string, string> state = null,
+            IReadOnlyList<Analysis> analysisResult = null)
+            : base(charts, orders, profitLoss, statistics, runtimeStatistics, orderEvents, totalPerformance, algorithmConfiguration, state, analysisResult)
         {
             Holdings = holdings;
             CashBook = cashBook;

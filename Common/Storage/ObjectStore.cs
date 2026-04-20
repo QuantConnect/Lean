@@ -31,6 +31,16 @@ namespace QuantConnect.Storage
     public class ObjectStore : IObjectStore
     {
         /// <summary>
+        /// Gets the maximum storage limit in bytes
+        /// </summary>
+        public long MaxSize => _store.MaxSize;
+
+        /// <summary>
+        /// Gets the maximum number of files allowed
+        /// </summary>
+        public int MaxFiles => _store.MaxFiles;
+
+        /// <summary>
         /// Event raised each time there's an error
         /// </summary>
         public event EventHandler<ObjectStoreErrorRaisedEventArgs> ErrorRaised
@@ -57,9 +67,10 @@ namespace QuantConnect.Storage
         /// <param name="projectId">The project id</param>
         /// <param name="userToken">The user token</param>
         /// <param name="controls">The job controls instance</param>
-        public void Initialize(int userId, int projectId, string userToken, Controls controls)
+        /// <param name="algorithmMode">The algorithm mode</param>
+        public void Initialize(int userId, int projectId, string userToken, Controls controls, AlgorithmMode algorithmMode)
         {
-            _store.Initialize(userId, projectId, userToken, controls);
+            _store.Initialize(userId, projectId, userToken, controls, algorithmMode);
         }
 
         /// <summary>
@@ -278,7 +289,7 @@ namespace QuantConnect.Storage
         /// <filterpriority>2</filterpriority>
         IEnumerator IEnumerable.GetEnumerator()
         {
-            return ((IEnumerable) _store).GetEnumerator();
+            return ((IEnumerable)_store).GetEnumerator();
         }
 
         /// <summary>Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.</summary>

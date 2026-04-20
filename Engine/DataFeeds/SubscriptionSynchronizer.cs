@@ -15,10 +15,11 @@
 */
 
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
+using QuantConnect.Util;
 using QuantConnect.Data.Market;
+using System.Collections.Generic;
 using QuantConnect.Data.UniverseSelection;
 
 namespace QuantConnect.Lean.Engine.DataFeeds
@@ -32,6 +33,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         private TimeSliceFactory _timeSliceFactory;
         private ITimeProvider _timeProvider;
         private ManualTimeProvider _frontierTimeProvider;
+        private PerformanceTrackingTool _perfTrackingTool;
 
         /// <summary>
         /// Event fired when a <see cref="Subscription"/> is finished
@@ -44,9 +46,10 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <param name="universeSelection">The universe selection instance used to handle universe
         /// selection subscription output</param>
         /// <returns>A time slice for the specified frontier time</returns>
-        public SubscriptionSynchronizer(UniverseSelection universeSelection)
+        public SubscriptionSynchronizer(UniverseSelection universeSelection, PerformanceTrackingTool performanceTrackingTool)
         {
             _universeSelection = universeSelection;
+            _perfTrackingTool = performanceTrackingTool;
         }
 
         /// <summary>
@@ -102,6 +105,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 do
                 {
                     newChanges = SecurityChanges.None;
+                    _perfTrackingTool.Start(PerformanceTarget.Subscriptions);
                     foreach (var subscription in subscriptions)
                     {
                         if (subscription.EndOfStream)
@@ -216,6 +220,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                             OnSubscriptionFinished(subscription);
                         }
                     }
+                    _perfTrackingTool.Stop(PerformanceTarget.Subscriptions);
 
                     if (universeData != null && universeData.Count > 0)
                     {
@@ -230,7 +235,9 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                             var universe = kvp.Key;
                             var baseDataCollection = kvp.Value;
                             universeDataForTimeSliceCreate[universe] = baseDataCollection;
+                            _perfTrackingTool.Start(PerformanceTarget.Selection);
                             newChanges += _universeSelection.ApplyUniverseSelection(universe, frontierUtc, baseDataCollection);
+                            _perfTrackingTool.Stop(PerformanceTarget.Selection);
                         }
                         universeData.Clear();
                     }
@@ -239,8 +246,9 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 }
                 while (newChanges != SecurityChanges.None
                     || _universeSelection.AddPendingInternalDataFeeds(frontierUtc));
-
+                _perfTrackingTool.Start(PerformanceTarget.Slice);
                 var timeSlice = _timeSliceFactory.Create(frontierUtc, data, changes, universeDataForTimeSliceCreate);
+                _perfTrackingTool.Stop(PerformanceTarget.Slice);
 
                 while (delayedSubscriptionFinished.Count > 0)
                 {
@@ -272,3 +280,4 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         }
     }
 }
+

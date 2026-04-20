@@ -14,6 +14,7 @@
 */
 
 using System.Collections.Generic;
+using QuantConnect.Indicators;
 using QuantConnect.Securities.Option;
 
 namespace QuantConnect.Algorithm.CSharp
@@ -29,8 +30,10 @@ namespace QuantConnect.Algorithm.CSharp
             SetEndDate(2014, 6, 9);
 
             var option = AddOption("AAPL", Resolution.Minute);
-            // BlackSholes model does not support American style options
-            option.PriceModel = OptionPriceModels.BlackScholes();
+            option.SetFilter(u => u.StandardsOnly().Strikes(-1, 1).Expiration(0, 35));
+
+            // QL BlackSholes model does not support American style options
+            option.PriceModel = OptionPriceModels.QuantLib.BlackScholes();
 
             SetWarmup(2, Resolution.Daily);
 

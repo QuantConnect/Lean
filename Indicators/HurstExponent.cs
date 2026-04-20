@@ -55,7 +55,7 @@ namespace QuantConnect.Indicators
         /// <param name="maxLag">The maximum lag to consider for time series analysis.</param>
         public HurstExponent(string name, int period, int maxLag = 20) : base(name)
         {
-            if (maxLag < 2)
+            if (maxLag < 3)
             {
                 throw new ArgumentException("The maxLag parameter must be greater than 2 to compute the Hurst Exponent.", nameof(maxLag));
             }
@@ -63,7 +63,7 @@ namespace QuantConnect.Indicators
             _timeLags = new List<int>();
 
             // Precompute logarithms of time lags and their squares for regression calculations
-            for (var i = 2; i < maxLag; i++)
+            for (var i = 2; i <= maxLag; i++)
             {
                 var logTimeLag = (decimal)Math.Log(i);
                 _timeLags.Add(i);

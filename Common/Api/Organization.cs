@@ -69,6 +69,7 @@ namespace QuantConnect.Api
         /// DateTime the agreement was signed.
         /// Uses EpochSignedTime converted to a standard datetime.
         /// </summary>
+        [JsonIgnore]
         public DateTime? SignedTime => EpochSignedTime.HasValue ? DateTimeOffset.FromUnixTimeSeconds(EpochSignedTime.Value).DateTime : null;
 
         /// <summary>
@@ -108,7 +109,7 @@ namespace QuantConnect.Api
     }
 
     /// <summary>
-    /// QuantConnect ProductItem 
+    /// QuantConnect ProductItem
     /// </summary>
     public class ProductItem
     {

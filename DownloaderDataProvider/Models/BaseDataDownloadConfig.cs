@@ -14,6 +14,7 @@
  *
 */
 
+using QuantConnect.Util;
 using System.Globalization;
 using QuantConnect.Logging;
 using QuantConnect.Brokerages;
@@ -129,7 +130,29 @@ public abstract class BaseDataDownloadConfig
             throw new ArgumentException($"{nameof(BaseDataDownloadConfig)}.{nameof(LoadSymbols)}: The tickers dictionary cannot be null or empty.");
         }
 
-        return tickers.Keys.Select(ticker => Symbol.Create(ticker, securityType, market)).ToList();
+        return tickers.Keys.ToList((ticker) => ParseTicker(ticker, securityType, market));
+    }
+
+    /// <summary>
+    /// Parse input 'ticker' to a Symbol or Canonical Symbol based on the provided security type and market.
+    /// </summary>
+    /// <param name="ticker">The ticker string input by the user.</param>
+    /// <param name="securityType">The security type.</param>
+    /// <param name="market">The market name.</param>
+    /// <returns>A <see cref="Symbol"/> representing the specified security.</returns>
+    private static Symbol ParseTicker(string ticker, SecurityType securityType, string market)
+    {
+        var symbol = default(Symbol);
+        try
+        {
+            symbol = SymbolRepresentation.ParseTickerFromUserInput(ticker, securityType, market);
+        }
+        catch (Exception ex)
+        {
+            Log.Debug($"{nameof(BaseDataDownloadConfig)}.{nameof(ParseTicker)}: Failed to parse symbol. Exception: {ex.Message}");
+        }
+
+        return symbol ?? Symbol.Create(ticker, securityType, market);
     }
 
     /// <summary>

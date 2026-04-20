@@ -27,6 +27,16 @@ namespace QuantConnect.Interfaces
     public interface IObjectStore : IDisposable, IEnumerable<KeyValuePair<string, byte[]>>
     {
         /// <summary>
+        /// Gets the maximum storage limit in bytes
+        /// </summary>
+        long MaxSize { get; }
+
+        /// <summary>
+        /// Gets the maximum number of files allowed
+        /// </summary>
+        int MaxFiles { get; }
+
+        /// <summary>
         /// Event raised each time there's an error
         /// </summary>
         event EventHandler<ObjectStoreErrorRaisedEventArgs> ErrorRaised;
@@ -38,7 +48,8 @@ namespace QuantConnect.Interfaces
         /// <param name="projectId">The project id</param>
         /// <param name="userToken">The user token</param>
         /// <param name="controls">The job controls instance</param>
-        void Initialize(int userId, int projectId, string userToken, Controls controls);
+        /// <param name="algorithmMode">The algorithm mode</param>
+        void Initialize(int userId, int projectId, string userToken, Controls controls, AlgorithmMode algorithmMode);
 
         /// <summary>
         /// Determines whether the store contains data for the specified path

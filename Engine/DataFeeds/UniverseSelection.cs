@@ -207,13 +207,13 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 // don't remove if the universe wants to keep him in
                 if (!universe.CanRemoveMember(dateTimeUtc, security)) continue;
 
-                if (!member.Security.IsDelisted)
+                if (!member.Security.IsDelisted && !_pendingRemovalsManager.IsPendingForRemoval(member))
                 {
                     // TODO: here we are not checking if other universes have this security still selected
                     _securityChangesConstructor.Remove(member.Security, member.IsInternal);
                 }
 
-                RemoveSecurityFromUniverse(_pendingRemovalsManager.TryRemoveMember(security, universe),
+                RemoveSecurityFromUniverse(_pendingRemovalsManager.TryRemoveMember(member, universe),
                     dateTimeUtc,
                     algorithmEndDateUtc);
             }
@@ -312,6 +312,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 // this can be executed many times and its in the algorithm thread
                 Log.Debug("UniverseSelection.ApplyUniverseSelection(): " + dateTimeUtc + ": " + securityChanges);
             }
+
+            SeedAddedSecurities(securityChanges);
 
             return securityChanges;
         }
@@ -432,9 +434,11 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 security.IsDelisted = true;
                 security.Reset();
 
+                _algorithm.Securities.Remove(data.Symbol);
+
                 // Add the security removal to the security changes but only if not pending for removal.
                 // If pending, the removed change event was already emitted for this security
-                if (_algorithm.Securities.Remove(data.Symbol) && !_pendingRemovalsManager.PendingRemovals.Values.Any(x => x.Any(y => y.Symbol == data.Symbol)))
+                if (!_pendingRemovalsManager.IsPendingForRemoval(security, isInternalFeed))
                 {
                     _securityChangesConstructor.Remove(security, isInternalFeed);
 
@@ -496,12 +500,26 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             Security security;
             if (!pendingAdditions.TryGetValue(symbol, out security))
             {
-                security = _securityService.CreateSecurity(symbol, new List<SubscriptionDataConfig>(), universeSettings.Leverage, symbol.ID.SecurityType.IsOption(), underlying);
+                security = _securityService.CreateSecurity(symbol,
+                    (List<SubscriptionDataConfig>)null,
+                    universeSettings.Leverage,
+                    symbol.ID.SecurityType.IsOption(),
+                    underlying,
+                    // Securities will be seeded after all selections are applied
+                    seedSecurity: false);
 
                 pendingAdditions.Add(symbol, security);
             }
 
             return security;
+        }
+
+        private void SeedAddedSecurities(SecurityChanges changes)
+        {
+            if (_algorithm.Settings.SeedInitialPrices)
+            {
+                AlgorithmUtils.SeedSecurities(changes.AddedSecurities, _algorithm);
+            }
         }
     }
 }

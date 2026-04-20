@@ -118,35 +118,43 @@ namespace QuantConnect.Tests.Common.Orders
             var orderProcessor = new BrokerageTransactionHandler();
             using var brokerage = new NullBrokerage();
             orderProcessor.Initialize(algo, brokerage, new BacktestingResultHandler());
-            algo.Transactions.SetOrderProcessor(orderProcessor);
+            
+            try
+            {
+                algo.Transactions.SetOrderProcessor(orderProcessor);
 
-            var orderRequest = new SubmitOrderRequest(
-                    OrderType.Market,
-                    SecurityType.Future,
+                var orderRequest = new SubmitOrderRequest(
+                        OrderType.Market,
+                        SecurityType.Future,
+                        Symbols.Future_CLF19_Jan2019,
+                        orderQuantity,
+                        250,
+                        250,
+                        new DateTime(2020, 1, 1),
+                        "Pepe"
+                    );
+                orderRequest.SetOrderId(1);
+                var order = Order.CreateOrder(orderRequest);
+                orderProcessor.AddOpenOrder(order, algo);
+
+                brokerage.OnOrderEvent(new OrderEvent(1,
                     Symbols.Future_CLF19_Jan2019,
-                    orderQuantity,
-                    250,
-                    250,
                     new DateTime(2020, 1, 1),
-                    "Pepe"
-                );
-            orderRequest.SetOrderId(1);
-            var order = Order.CreateOrder(orderRequest);
-            orderProcessor.AddOpenOrder(order, algo);
+                    OrderStatus.PartiallyFilled,
+                    filledQuantity > 0 ? OrderDirection.Buy : OrderDirection.Sell,
+                    250,
+                    filledQuantity,
+                    OrderFee.Zero));
 
-            brokerage.OnOrderEvent(new OrderEvent(1,
-                Symbols.Future_CLF19_Jan2019,
-                new DateTime(2020, 1, 1),
-                OrderStatus.PartiallyFilled,
-                filledQuantity > 0 ? OrderDirection.Buy : OrderDirection.Sell,
-                250,
-                filledQuantity,
-                OrderFee.Zero));
+                var result = OrderSizing.GetUnorderedQuantity(algo,
+                    new PortfolioTarget(Symbols.Future_CLF19_Jan2019, target));
 
-            var result = OrderSizing.GetUnorderedQuantity(algo,
-                new PortfolioTarget(Symbols.Future_CLF19_Jan2019, target));
-
-            Assert.AreEqual(expected, result);
+                Assert.AreEqual(expected, result);
+            }
+            finally
+            {
+                orderProcessor.Exit();
+            }
         }
     }
 }

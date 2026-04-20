@@ -35,5 +35,13 @@ namespace QuantConnect.Brokerages
         {
             Symbol = symbol;
         }
+
+        /// <summary>
+        /// Returns a string describing the delisting notification.
+        /// </summary>
+        public override string ToString()
+        {
+            return $"Symbol: {Symbol}";
+        }
     }
 }

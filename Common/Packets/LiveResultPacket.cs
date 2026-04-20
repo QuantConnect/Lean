@@ -14,13 +14,13 @@
  *
 */
 
-using System;
-using System.Linq;
 using Newtonsoft.Json;
-using QuantConnect.Orders;
 using QuantConnect.Logging;
+using QuantConnect.Orders;
 using QuantConnect.Securities;
+using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace QuantConnect.Packets
 {
@@ -109,7 +109,7 @@ namespace QuantConnect.Packets
             return new LiveResultPacket(job, new LiveResult(new LiveResultParameters(
                 new Dictionary<string, Chart>(), new Dictionary<int, Order>(), new Dictionary<DateTime, decimal>(),
                 new Dictionary<string, Holding>(), new CashBook(), new Dictionary<string, string>(),
-                new SortedDictionary<string, string>(), new List<OrderEvent>(), new Dictionary<string, string>(),
+                new SortedDictionary<string, string>(), new List<OrderEvent>(), null, new Dictionary<string, string>(),
                 new AlgorithmConfiguration(), new Dictionary<string, string>())));
         }
     } // End Queue Packet:

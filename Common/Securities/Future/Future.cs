@@ -260,5 +260,10 @@ namespace QuantConnect.Securities.Future
             };
             ContractFilter = new FuncSecurityDerivativeFilter<FutureUniverse>(func);
         }
+
+        /// <summary>
+        /// Returns the securities symbol
+        /// </summary>
+        public static implicit operator Symbol(Future security) => security.Symbol;
     }
 }

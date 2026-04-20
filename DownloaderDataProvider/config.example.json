@@ -1,7 +1,7 @@
 {
   "map-file-provider": "LocalDiskMapFileProvider",
   "data-provider": "DefaultDataProvider",
-  "log-handler": "CompositeLogHandler",
+  "log-handler": "ConsoleLogHandler",
   "factor-file-provider": "LocalDiskFactorFileProvider",
 
   // The root directory of the data folder for this application

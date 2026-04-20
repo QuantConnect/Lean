@@ -243,14 +243,14 @@ namespace QuantConnect.Tests.Common
 			}", "AAPL  140613P00660000", "AAPL 2ZQGWTST4Z8NA|AAPL R735QTJ8XC9X", SecurityType.Option, Symbols.AAPL },
             new object[] { @"{
                 ""value"": ""GOOG  160115C00750000"",
-                ""id"": ""GOOCV W78ZEOEHQRYE|GOOCV VP83T1ZUHROL"",
+                ""id"": ""GOOCV W78ZEOEHV29Y|GOOCV VP83T1ZUHROL"",
                 ""permtick"": ""GOOG  160115C00750000"",
                 ""underlying"": {
                     ""value"": ""GOOG"",
                     ""id"": ""GOOCV VP83T1ZUHROL"",
                     ""permtick"": ""GOOG""
                 }
-            }", "GOOG  160115C00750000", "GOOCV W78ZEOEHQRYE|GOOCV VP83T1ZUHROL", SecurityType.Option, Symbols.GOOG },
+            }", "GOOG  160115C00750000", "GOOCV W78ZEOEHV29Y|GOOCV VP83T1ZUHROL", SecurityType.Option, Symbols.GOOG },
             new object[] { @"{
                 ""value"": ""SPY"",
                 ""id"": ""SPY R735QTJ8XC9X"",
@@ -268,14 +268,14 @@ namespace QuantConnect.Tests.Common
 			}", "AAPL  140613P00660000", "AAPL 2ZQGWTST4Z8NA|AAPL R735QTJ8XC9X", SecurityType.Option, Symbols.AAPL },
             new object[] { @"{
                 ""Value"": ""GOOG  160115C00750000"",
-                ""ID"": ""GOOCV W78ZEOEHQRYE|GOOCV VP83T1ZUHROL"",
+                ""ID"": ""GOOCV W78ZEOEHV29Y|GOOCV VP83T1ZUHROL"",
                 ""Permtick"": ""GOOG  160115C00750000"",
                 ""Underlying"": {
                     ""value"": ""GOOG"",
                     ""id"": ""GOOCV VP83T1ZUHROL"",
                     ""permtick"": ""GOOG""
                 }
-            }", "GOOG  160115C00750000", "GOOCV W78ZEOEHQRYE|GOOCV VP83T1ZUHROL", SecurityType.Option, Symbols.GOOG },
+            }", "GOOG  160115C00750000", "GOOCV W78ZEOEHV29Y|GOOCV VP83T1ZUHROL", SecurityType.Option, Symbols.GOOG },
             new object[] { @"{
                 ""Value"": ""SPY"",
                 ""ID"": ""SPY R735QTJ8XC9X"",

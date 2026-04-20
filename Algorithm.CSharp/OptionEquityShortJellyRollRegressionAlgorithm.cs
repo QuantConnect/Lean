@@ -125,10 +125,10 @@ namespace QuantConnect.Algorithm.CSharp
             {"Treynor Ratio", "0"},
             {"Total Fees", "$4.00"},
             {"Estimated Strategy Capacity", "$110000.00"},
-            {"Lowest Capacity Asset", "GOOCV W78ZERHAOVVQ|GOOCV VP83T1ZUHROL"},
+            {"Lowest Capacity Asset", "GOOCV W78ZERHAT67A|GOOCV VP83T1ZUHROL"},
             {"Portfolio Turnover", "4.70%"},
             {"Drawdown Recovery", "0"},
-            {"OrderListHash", "e2eab12be821aad91d9760a50ef9eab9"}
+            {"OrderListHash", "858390f60e75ee2a501d9570ad37a925"}
         };
     }
 }

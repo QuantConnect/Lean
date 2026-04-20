@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -78,7 +78,7 @@ namespace QuantConnect.Tests.Common.Exceptions
         {
             var exception = CreateExceptionFromType(typeof(PythonException));
             var assembly = typeof(PythonExceptionInterpreter).Assembly;
-            var interpreter = StackExceptionInterpreter.CreateFromAssemblies(new[] { assembly });
+            var interpreter = StackExceptionInterpreter.CreateFromAssemblies();
             exception = interpreter.Interpret(exception, NullExceptionInterpreter.Instance);
             Assert.True(exception.Message.Contains("x = None + \"Pepe Grillo\""));
         }

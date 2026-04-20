@@ -146,5 +146,10 @@ namespace QuantConnect.Securities.Crypto
                 throw new InvalidOperationException($"symbol doesn't end with {quoteCurrency}");
             }
         }
+
+        /// <summary>
+        /// Returns the securities symbol
+        /// </summary>
+        public static implicit operator Symbol(Crypto security) => security.Symbol;
     }
 }

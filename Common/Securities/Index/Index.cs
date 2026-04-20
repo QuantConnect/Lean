@@ -134,5 +134,10 @@ namespace QuantConnect.Securities.Index
             base.Reset();
             ManualSetIsTradable = false;
         }
+
+        /// <summary>
+        /// Returns the securities symbol
+        /// </summary>
+        public static implicit operator Symbol(Index security) => security.Symbol;
     }
 }

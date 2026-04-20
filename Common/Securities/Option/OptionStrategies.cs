@@ -16,6 +16,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using QuantConnect.Orders;
 using QuantConnect.Securities.Option.StrategyMatcher;
 
 namespace QuantConnect.Securities.Option
@@ -50,26 +51,22 @@ namespace QuantConnect.Securities.Option
             var underlyingQuantity = (int)_symbolPropertiesDatabase.GetSymbolProperties(canonicalOption.ID.Market, canonicalOption,
                 canonicalOption.SecurityType, "").ContractMultiplier;
 
-            return new OptionStrategy
-            {
-                Name = OptionStrategyDefinitions.CoveredCall.Name,
-                Underlying = canonicalOption.Underlying,
-                CanonicalOption = canonicalOption,
-                OptionLegs = new List<OptionStrategy.OptionLegData>
+            return new OptionStrategy(OptionStrategyDefinitions.CoveredCall.Name, 
+                canonicalOption,
+                new List<OptionStrategy.OptionLegData>
                 {
                     new OptionStrategy.OptionLegData
                     {
                         Right = OptionRight.Call, Strike = strike, Quantity = -1, Expiration = expiration
                     }
                 },
-                UnderlyingLegs = new List<OptionStrategy.UnderlyingLegData>
+                new List<OptionStrategy.UnderlyingLegData>
                 {
                     new OptionStrategy.UnderlyingLegData
                     {
                         Quantity = underlyingQuantity, Symbol = canonicalOption.Underlying
                     }
-                }
-            };
+                });
         }
 
         /// <summary>
@@ -100,26 +97,22 @@ namespace QuantConnect.Securities.Option
             var underlyingQuantity = -(int)_symbolPropertiesDatabase.GetSymbolProperties(canonicalOption.ID.Market, canonicalOption,
                 canonicalOption.SecurityType, "").ContractMultiplier;
 
-            return new OptionStrategy
-            {
-                Name = OptionStrategyDefinitions.CoveredPut.Name,
-                Underlying = canonicalOption.Underlying,
-                CanonicalOption = canonicalOption,
-                OptionLegs = new List<OptionStrategy.OptionLegData>
+            return new OptionStrategy(OptionStrategyDefinitions.CoveredPut.Name,
+                canonicalOption,
+                new List<OptionStrategy.OptionLegData>
                 {
                     new OptionStrategy.OptionLegData
                     {
                         Right = OptionRight.Put, Strike = strike, Quantity = -1, Expiration = expiration
                     }
                 },
-                UnderlyingLegs = new List<OptionStrategy.UnderlyingLegData>
+                new List<OptionStrategy.UnderlyingLegData>
                 {
                     new OptionStrategy.UnderlyingLegData
                     {
                         Quantity = underlyingQuantity, Symbol = canonicalOption.Underlying
                     }
-                }
-            };
+                });
         }
 
         /// <summary>
@@ -154,14 +147,11 @@ namespace QuantConnect.Securities.Option
             var coveredCall = CoveredCall(canonicalOption, callStrike, expiration);
             var protectivePut = ProtectivePut(canonicalOption, putStrike, expiration);
 
-            return new OptionStrategy
-            {
-                Name = OptionStrategyDefinitions.ProtectiveCollar.Name,
-                Underlying = canonicalOption.Underlying,
-                CanonicalOption = canonicalOption,
-                OptionLegs = coveredCall.OptionLegs.Concat(protectivePut.OptionLegs).ToList(),
-                UnderlyingLegs = coveredCall.UnderlyingLegs     // only 1 lot of long stock position
-            };
+            return new OptionStrategy(OptionStrategyDefinitions.ProtectiveCollar.Name,
+                canonicalOption,
+                coveredCall.OptionLegs.Concat(protectivePut.OptionLegs).ToList(),
+                coveredCall.UnderlyingLegs     // only 1 lot of long stock position
+                );
         }
 
         /// <summary>
@@ -204,19 +194,15 @@ namespace QuantConnect.Securities.Option
             CheckCanonicalOptionSymbol(canonicalOption, "NakedCall");
             CheckExpirationDate(expiration, "NakedCall", nameof(expiration));
 
-            return new OptionStrategy
-            {
-                Name = OptionStrategyDefinitions.NakedCall.Name,
-                Underlying = canonicalOption.Underlying,
-                CanonicalOption = canonicalOption,
-                OptionLegs = new List<OptionStrategy.OptionLegData>
+            return new OptionStrategy(OptionStrategyDefinitions.NakedCall.Name,
+                canonicalOption,
+                new List<OptionStrategy.OptionLegData>
                 {
                     new OptionStrategy.OptionLegData
                     {
                         Right = OptionRight.Call, Strike = strike, Quantity = -1, Expiration = expiration
                     }
-                }
-            };
+                });
         }
 
         /// <summary>
@@ -231,19 +217,15 @@ namespace QuantConnect.Securities.Option
             CheckCanonicalOptionSymbol(canonicalOption, "NakedPut");
             CheckExpirationDate(expiration, "NakedPut", nameof(expiration));
 
-            return new OptionStrategy
-            {
-                Name = OptionStrategyDefinitions.NakedPut.Name,
-                Underlying = canonicalOption.Underlying,
-                CanonicalOption = canonicalOption,
-                OptionLegs = new List<OptionStrategy.OptionLegData>
+            return new OptionStrategy(OptionStrategyDefinitions.NakedPut.Name,
+                canonicalOption,
+                new List<OptionStrategy.OptionLegData>
                 {
                     new OptionStrategy.OptionLegData
                     {
                         Right = OptionRight.Put, Strike = strike, Quantity = -1, Expiration = expiration
                     }
-                }
-            };
+                });
         }
 
         /// <summary>
@@ -270,12 +252,9 @@ namespace QuantConnect.Securities.Option
                 throw new ArgumentException("BearCallSpread: leg1Strike must be less than leg2Strike", $"{nameof(leg1Strike)}, {nameof(leg2Strike)}");
             }
 
-            return new OptionStrategy
-            {
-                Name = OptionStrategyDefinitions.BearCallSpread.Name,
-                Underlying = canonicalOption.Underlying,
-                CanonicalOption = canonicalOption,
-                OptionLegs = new List<OptionStrategy.OptionLegData>
+            return new OptionStrategy(OptionStrategyDefinitions.BearCallSpread.Name,
+                canonicalOption,
+                new List<OptionStrategy.OptionLegData>
                 {
                     new OptionStrategy.OptionLegData
                     {
@@ -285,8 +264,7 @@ namespace QuantConnect.Securities.Option
                     {
                         Right = OptionRight.Call, Strike = leg2Strike, Quantity = 1, Expiration = expiration
                     }
-                }
-            };
+                });
         }
 
         /// <summary>
@@ -313,12 +291,9 @@ namespace QuantConnect.Securities.Option
                 throw new ArgumentException("BearPutSpread: leg1Strike must be greater than leg2Strike", $"{nameof(leg1Strike)}, {nameof(leg2Strike)}");
             }
 
-            return new OptionStrategy
-            {
-                Name = OptionStrategyDefinitions.BearPutSpread.Name,
-                Underlying = canonicalOption.Underlying,
-                CanonicalOption = canonicalOption,
-                OptionLegs = new List<OptionStrategy.OptionLegData>
+            return new OptionStrategy(OptionStrategyDefinitions.BearPutSpread.Name,
+                canonicalOption,
+                new List<OptionStrategy.OptionLegData>
                 {
                     new OptionStrategy.OptionLegData
                     {
@@ -329,8 +304,7 @@ namespace QuantConnect.Securities.Option
                     {
                         Right = OptionRight.Put, Strike = leg2Strike, Quantity = -1, Expiration = expiration
                     }
-                }
-            };
+                });
         }
 
         /// <summary>
@@ -357,12 +331,9 @@ namespace QuantConnect.Securities.Option
                 throw new ArgumentException("BullCallSpread: leg1Strike must be less than leg2Strike", $"{nameof(leg1Strike)}, {nameof(leg2Strike)}");
             }
 
-            return new OptionStrategy
-            {
-                Name = OptionStrategyDefinitions.BullCallSpread.Name,
-                Underlying = canonicalOption.Underlying,
-                CanonicalOption = canonicalOption,
-                OptionLegs = new List<OptionStrategy.OptionLegData>
+            return new OptionStrategy(OptionStrategyDefinitions.BullCallSpread.Name,
+                canonicalOption,
+                new List<OptionStrategy.OptionLegData>
                 {
                     new OptionStrategy.OptionLegData
                     {
@@ -372,8 +343,7 @@ namespace QuantConnect.Securities.Option
                     {
                         Right = OptionRight.Call, Strike = leg2Strike, Quantity = -1, Expiration = expiration
                     }
-                }
-            };
+                });
         }
 
         /// <summary>
@@ -400,12 +370,9 @@ namespace QuantConnect.Securities.Option
                 throw new ArgumentException("BullPutSpread: leg1Strike must be greater than leg2Strike", $"{nameof(leg1Strike)}, {nameof(leg2Strike)}");
             }
 
-            return new OptionStrategy
-            {
-                Name = OptionStrategyDefinitions.BullPutSpread.Name,
-                Underlying = canonicalOption.Underlying,
-                CanonicalOption = canonicalOption,
-                OptionLegs = new List<OptionStrategy.OptionLegData>
+            return new OptionStrategy(OptionStrategyDefinitions.BullPutSpread.Name,
+                canonicalOption,
+                new List<OptionStrategy.OptionLegData>
                 {
                     new OptionStrategy.OptionLegData
                     {
@@ -416,8 +383,7 @@ namespace QuantConnect.Securities.Option
                         Right = OptionRight.Put, Strike = leg2Strike, Quantity = 1,
                         Expiration = expiration
                     }
-                }
-            };
+                });
         }
 
         /// <summary>
@@ -432,12 +398,9 @@ namespace QuantConnect.Securities.Option
             CheckCanonicalOptionSymbol(canonicalOption, "Straddle");
             CheckExpirationDate(expiration, "Straddle", nameof(expiration));
 
-            return new OptionStrategy
-            {
-                Name = OptionStrategyDefinitions.Straddle.Name,
-                Underlying = canonicalOption.Underlying,
-                CanonicalOption = canonicalOption,
-                OptionLegs = new List<OptionStrategy.OptionLegData>
+            return new OptionStrategy(OptionStrategyDefinitions.Straddle.Name,
+                canonicalOption,
+                new List<OptionStrategy.OptionLegData>
                 {
                     new OptionStrategy.OptionLegData
                     {
@@ -449,8 +412,7 @@ namespace QuantConnect.Securities.Option
                         Right = OptionRight.Put, Strike = strike, Quantity = 1,
                         Expiration = expiration
                     }
-                }
-            };
+                });
         }
 
         /// <summary>
@@ -491,12 +453,9 @@ namespace QuantConnect.Securities.Option
                     $"{nameof(callLegStrike)}, {nameof(putLegStrike)}");
             }
 
-            return new OptionStrategy
-            {
-                Name = OptionStrategyDefinitions.Strangle.Name,
-                Underlying = canonicalOption.Underlying,
-                CanonicalOption = canonicalOption,
-                OptionLegs = new List<OptionStrategy.OptionLegData>
+            return new OptionStrategy(OptionStrategyDefinitions.Strangle.Name,
+                canonicalOption,
+                new List<OptionStrategy.OptionLegData>
                 {
                     new OptionStrategy.OptionLegData
                     {
@@ -506,8 +465,7 @@ namespace QuantConnect.Securities.Option
                     {
                         Right = OptionRight.Put, Strike = putLegStrike, Quantity = 1, Expiration = expiration
                     }
-                }
-            };
+                });
         }
 
         /// <summary>
@@ -554,12 +512,9 @@ namespace QuantConnect.Securities.Option
                     $"{nameof(higherStrike)}, {nameof(middleStrike)}, {nameof(lowerStrike)}");
             }
 
-            return new OptionStrategy
-            {
-                Name = OptionStrategyDefinitions.ButterflyCall.Name,
-                Underlying = canonicalOption.Underlying,
-                CanonicalOption = canonicalOption,
-                OptionLegs = new List<OptionStrategy.OptionLegData>
+            return new OptionStrategy(OptionStrategyDefinitions.ButterflyCall.Name,
+                canonicalOption,
+                new List<OptionStrategy.OptionLegData>
                 {
                     new OptionStrategy.OptionLegData
                     {
@@ -573,8 +528,7 @@ namespace QuantConnect.Securities.Option
                     {
                         Right = OptionRight.Call, Strike = lowerStrike, Quantity = 1, Expiration = expiration
                     }
-                }
-            };
+                });
         }
 
         /// <summary>
@@ -643,12 +597,9 @@ namespace QuantConnect.Securities.Option
                     $"{nameof(higherStrike)}, {nameof(middleStrike)}, {nameof(lowerStrike)}");
             }
 
-            return new OptionStrategy
-            {
-                Name = OptionStrategyDefinitions.ButterflyPut.Name,
-                Underlying = canonicalOption.Underlying,
-                CanonicalOption = canonicalOption,
-                OptionLegs = new List<OptionStrategy.OptionLegData>
+            return new OptionStrategy(OptionStrategyDefinitions.ButterflyPut.Name,
+                canonicalOption,
+                new List<OptionStrategy.OptionLegData>
                 {
                     new OptionStrategy.OptionLegData
                     {
@@ -665,8 +616,7 @@ namespace QuantConnect.Securities.Option
                         Right = OptionRight.Put, Strike = lowerStrike, Quantity = 1,
                         Expiration = expiration
                     }
-                }
-            };
+                });
         }
 
         /// <summary>
@@ -727,12 +677,9 @@ namespace QuantConnect.Securities.Option
                     $"{nameof(nearExpiration)}, {nameof(farExpiration)}");
             }
 
-            return new OptionStrategy
-            {
-                Name = OptionStrategyDefinitions.CallCalendarSpread.Name,
-                Underlying = canonicalOption.Underlying,
-                CanonicalOption = canonicalOption,
-                OptionLegs = new List<OptionStrategy.OptionLegData>
+            return new OptionStrategy(OptionStrategyDefinitions.CallCalendarSpread.Name,
+                canonicalOption,
+                new List<OptionStrategy.OptionLegData>
                 {
                     new OptionStrategy.OptionLegData
                     {
@@ -742,8 +689,7 @@ namespace QuantConnect.Securities.Option
                     {
                         Right = OptionRight.Call, Strike = strike, Quantity = 1, Expiration = farExpiration
                     }
-                }
-            };
+                });
         }
 
         /// <summary>
@@ -783,12 +729,9 @@ namespace QuantConnect.Securities.Option
                     $"{nameof(nearExpiration)}, {nameof(farExpiration)}");
             }
 
-            return new OptionStrategy
-            {
-                Name = OptionStrategyDefinitions.PutCalendarSpread.Name,
-                Underlying = canonicalOption.Underlying,
-                CanonicalOption = canonicalOption,
-                OptionLegs = new List<OptionStrategy.OptionLegData>
+            return new OptionStrategy(OptionStrategyDefinitions.PutCalendarSpread.Name,
+                canonicalOption,
+                new List<OptionStrategy.OptionLegData>
                 {
                     new OptionStrategy.OptionLegData
                     {
@@ -798,8 +741,7 @@ namespace QuantConnect.Securities.Option
                     {
                         Right = OptionRight.Put, Strike = strike, Quantity = 1, Expiration = farExpiration
                     }
-                }
-            };
+                });
         }
 
         /// <summary>
@@ -882,12 +824,9 @@ namespace QuantConnect.Securities.Option
                     $"{nameof(longPutStrike)}, {nameof(shortPutStrike)}, {nameof(shortCallStrike)}, {nameof(longCallStrike)}");
             }
 
-            return new OptionStrategy
-            {
-                Name = OptionStrategyDefinitions.IronCondor.Name,
-                Underlying = canonicalOption.Underlying,
-                CanonicalOption = canonicalOption,
-                OptionLegs = new List<OptionStrategy.OptionLegData>
+            return new OptionStrategy(OptionStrategyDefinitions.IronCondor.Name,
+                canonicalOption,
+                new List<OptionStrategy.OptionLegData>
                 {
                     new OptionStrategy.OptionLegData
                     {
@@ -905,8 +844,7 @@ namespace QuantConnect.Securities.Option
                     {
                         Right = OptionRight.Call, Strike = longCallStrike, Quantity = 1, Expiration = expiration
                     }
-                }
-            };
+                });
         }
 
         /// <summary>
@@ -947,13 +885,9 @@ namespace QuantConnect.Securities.Option
             var bearPutSpread = BearPutSpread(canonicalOption, higherStrike, lowerStrike, expiration);
             var bullCallSpread = BullCallSpread(canonicalOption, lowerStrike, higherStrike, expiration);
 
-            return new OptionStrategy
-            {
-                Name = OptionStrategyDefinitions.BoxSpread.Name,
-                Underlying = canonicalOption.Underlying,
-                CanonicalOption = canonicalOption,
-                OptionLegs = bearPutSpread.OptionLegs.Concat(bullCallSpread.OptionLegs).ToList()
-            };
+            return new OptionStrategy(OptionStrategyDefinitions.BoxSpread.Name,
+                canonicalOption,
+                bearPutSpread.OptionLegs.Concat(bullCallSpread.OptionLegs).ToList());
         }
 
         /// <summary>
@@ -985,13 +919,9 @@ namespace QuantConnect.Securities.Option
             var callCalendarSpread = CallCalendarSpread(canonicalOption, strike, nearExpiration, farExpiration);
             var shortPutCalendarSpread = ShortPutCalendarSpread(canonicalOption, strike, nearExpiration, farExpiration);
 
-            return new OptionStrategy
-            {
-                Name = OptionStrategyDefinitions.JellyRoll.Name,
-                Underlying = canonicalOption.Underlying,
-                CanonicalOption = canonicalOption,
-                OptionLegs = callCalendarSpread.OptionLegs.Concat(shortPutCalendarSpread.OptionLegs).ToList()
-            };
+            return new OptionStrategy(OptionStrategyDefinitions.JellyRoll.Name,
+                canonicalOption,
+                callCalendarSpread.OptionLegs.Concat(shortPutCalendarSpread.OptionLegs).ToList());
         }
 
         /// <summary>
@@ -1035,12 +965,9 @@ namespace QuantConnect.Securities.Option
                     $"{nameof(lowerStrike)}, {nameof(middleStrike)}, {nameof(higherStrike)}");
             }
 
-            return new OptionStrategy
-            {
-                Name = OptionStrategyDefinitions.BearCallLadder.Name,
-                Underlying = canonicalOption.Underlying,
-                CanonicalOption = canonicalOption,
-                OptionLegs = new List<OptionStrategy.OptionLegData>
+            return new OptionStrategy(OptionStrategyDefinitions.BearCallLadder.Name,
+                canonicalOption,
+                new List<OptionStrategy.OptionLegData>
                 {
                     new OptionStrategy.OptionLegData
                     {
@@ -1054,8 +981,7 @@ namespace QuantConnect.Securities.Option
                     {
                         Right = OptionRight.Call, Strike = higherStrike, Quantity = 1, Expiration = expiration
                     }
-                }
-            };
+                });
         }
 
         /// <summary>
@@ -1085,12 +1011,9 @@ namespace QuantConnect.Securities.Option
                     $"{nameof(higherStrike)}, {nameof(middleStrike)}, {nameof(lowerStrike)}");
             }
 
-            return new OptionStrategy
-            {
-                Name = OptionStrategyDefinitions.BearPutLadder.Name,
-                Underlying = canonicalOption.Underlying,
-                CanonicalOption = canonicalOption,
-                OptionLegs = new List<OptionStrategy.OptionLegData>
+            return new OptionStrategy(OptionStrategyDefinitions.BearPutLadder.Name,
+                canonicalOption,
+                new List<OptionStrategy.OptionLegData>
                 {
                     new OptionStrategy.OptionLegData
                     {
@@ -1105,8 +1028,7 @@ namespace QuantConnect.Securities.Option
                     {
                         Right = OptionRight.Put, Strike = lowerStrike, Quantity = -1, Expiration = expiration
                     }
-                }
-            };
+                });
         }
 
         /// <summary>
@@ -1175,12 +1097,9 @@ namespace QuantConnect.Securities.Option
                 throw new ArgumentException($"CallBackspread: strike prices must be in ascending order, {nameof(lowerStrike)}, {nameof(higherStrike)}");
             }
 
-            return new OptionStrategy
-            {
-                Name = "Call Backspread",
-                Underlying = canonicalOption.Underlying,
-                CanonicalOption = canonicalOption,
-                OptionLegs = new List<OptionStrategy.OptionLegData>
+            return new OptionStrategy(OptionStrategyDefinitions.CallBackspread.Name,
+                canonicalOption,
+                new List<OptionStrategy.OptionLegData>
                 {
                     new OptionStrategy.OptionLegData
                     {
@@ -1190,8 +1109,7 @@ namespace QuantConnect.Securities.Option
                     {
                         Right = OptionRight.Call, Strike = higherStrike, Quantity = 2, Expiration = expiration
                     }
-                }
-            };
+                });
         }
 
         /// <summary>
@@ -1218,12 +1136,9 @@ namespace QuantConnect.Securities.Option
                 throw new ArgumentException($"PutBackspread: strike prices must be in descending order, {nameof(higherStrike)}, {nameof(lowerStrike)}");
             }
 
-            return new OptionStrategy
-            {
-                Name = "Put Backspread",
-                Underlying = canonicalOption.Underlying,
-                CanonicalOption = canonicalOption,
-                OptionLegs = new List<OptionStrategy.OptionLegData>
+            return new OptionStrategy(OptionStrategyDefinitions.PutBackspread.Name,
+                canonicalOption,
+                new List<OptionStrategy.OptionLegData>
                 {
                     new OptionStrategy.OptionLegData
                     {
@@ -1233,8 +1148,7 @@ namespace QuantConnect.Securities.Option
                     {
                         Right = OptionRight.Put, Strike = lowerStrike, Quantity = 2, Expiration = expiration
                     }
-                }
-            };
+                });
         }
 
         /// <summary>
@@ -1252,7 +1166,7 @@ namespace QuantConnect.Securities.Option
             DateTime expiration
             )
         {
-            return InvertStrategy(CallBackspread(canonicalOption, lowerStrike, higherStrike, expiration), "Short Call Backspread");
+            return InvertStrategy(CallBackspread(canonicalOption, lowerStrike, higherStrike, expiration), OptionStrategyDefinitions.ShortCallBackspread.Name);
         }
 
         /// <summary>
@@ -1271,7 +1185,7 @@ namespace QuantConnect.Securities.Option
             DateTime expiration
             )
         {
-            return InvertStrategy(PutBackspread(canonicalOption, higherStrike, lowerStrike, expiration), "Short Put Backspread");
+            return InvertStrategy(PutBackspread(canonicalOption, higherStrike, lowerStrike, expiration), OptionStrategyDefinitions.ShortPutBackspread.Name);
         }
 
         /// <summary>
@@ -1302,7 +1216,7 @@ namespace QuantConnect.Securities.Option
         private static OptionStrategy InvertStrategy(OptionStrategy strategy, string invertedStrategyName)
         {
             strategy.Name = invertedStrategyName;
-            foreach (var leg in strategy.OptionLegs.Cast<OptionStrategy.LegData>().Concat(strategy.UnderlyingLegs))
+            foreach (var leg in strategy.OptionLegs.Cast<Leg>().Concat(strategy.UnderlyingLegs))
             {
                 leg.Quantity *= -1;
             }

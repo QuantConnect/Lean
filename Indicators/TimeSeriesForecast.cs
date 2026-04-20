@@ -33,7 +33,7 @@ namespace QuantConnect.Indicators
         {
             if (period < 2)
             {
-                throw new ArgumentException(Messages.RollingWindow.InvalidSize, nameof(period));
+                throw new ArgumentException(Messages.RollingWindow.InvalidSize(2), nameof(period));
             }
         }
 

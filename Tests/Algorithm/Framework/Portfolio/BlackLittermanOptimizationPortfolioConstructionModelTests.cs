@@ -155,7 +155,7 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
             outdatedInsight.GeneratedTimeUtc -= TimeSpan.FromHours(1);
             outdatedInsight.CloseTimeUtc -= TimeSpan.FromHours(1);
 
-            var insights = _view1Insights.Concat(_view2Insights).Concat(new[] {outdatedInsight});
+            var insights = _view1Insights.Concat(_view2Insights).Concat(new[] { outdatedInsight });
             var actualTargets = _algorithm.PortfolioConstruction.CreateTargets(_algorithm, insights.ToArray());
 
             Assert.AreEqual(expectedTargets.Length, actualTargets.Count());
@@ -187,7 +187,7 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
 
                 return;
             }
-            
+
             using (Py.GIL())
             {
                 var name = nameof(BLOPCM);
@@ -221,7 +221,7 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
 
                 return;
             }
-            
+
             using (Py.GIL())
             {
                 var name = nameof(BLOPCM);
@@ -269,7 +269,7 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
                 GetInsight("View 1", "UK" , magnitude),
                 GetInsight("View 1", "USA", magnitude)
             };
-            
+
             var actualTargets = _algorithm.PortfolioConstruction.CreateTargets(_algorithm, insights);
 
             if (expectZero)
@@ -466,7 +466,7 @@ def GetSymbol(ticker):
 class BLOPCM(BlackLittermanOptimizationPortfolioConstructionModel):
 
     def __init__(self, portfolioBias):
-        super().__init__(portfolioBias = portfolioBias, optimizer = UnconstrainedMeanVariancePortfolioOptimizer())
+        super().__init__(portfolio_bias = portfolioBias, optimizer = UnconstrainedMeanVariancePortfolioOptimizer())
 
     def get_equilibrium_return(self, returns):
 
@@ -489,7 +489,7 @@ class BLOPCM(BlackLittermanOptimizationPortfolioConstructionModel):
 
         return weq.dot(V * delta), pd.DataFrame(V, columns=assets, index=assets)
 
-    def OnSecuritiesChanged(self, algorithm, changes):
+    def on_securities_changed(self, algorithm, changes):
         pass";
         }
 

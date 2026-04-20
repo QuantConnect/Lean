@@ -117,7 +117,16 @@ namespace QuantConnect.Algorithm.Framework.Alphas
         /// <param name="asset1">The first asset's symbol in the pair</param>
         /// <param name="asset2">The second asset's symbol in the pair</param>
         /// <returns>True if the statistical test for the pair is successful</returns>
-        public virtual bool HasPassedTest(QCAlgorithm algorithm, Symbol asset1, Symbol asset2) => true;
+        public virtual bool HasPassedTest(QCAlgorithm algorithm, Symbol asset1, Symbol asset2)
+        {
+            // Check if this method was overridden in Python
+            if (TryInvokePythonOverride(nameof(HasPassedTest), out bool result, algorithm, asset1, asset2))
+            {
+                return result;
+            }
+
+            return true;
+        }
 
         private void UpdatePairs(QCAlgorithm algorithm)
         {

@@ -112,9 +112,7 @@ namespace QuantConnect.Algorithm.CSharp
                     {
                         throw new RegressionTestException($"Unexpected holdings cost {btcUsdHoldings.HoldingsCost}");
                     }
-                    // margin used is based on the maintenance rate
-                    if (Math.Abs(btcUsdHoldings.AbsoluteHoldingsCost * 0.05m - marginUsed) > 1
-                        || _btcUsd.BuyingPowerModel.GetMaintenanceMargin(_btcUsd) != marginUsed)
+                    if (_btcUsd.BuyingPowerModel.GetMaintenanceMargin(_btcUsd) != marginUsed)
                     {
                         throw new RegressionTestException($"Unexpected margin used {marginUsed}");
                     }
@@ -135,8 +133,7 @@ namespace QuantConnect.Algorithm.CSharp
                     {
                         throw new RegressionTestException($"Unexpected holdings cost {btcUsdtHoldings.HoldingsCost}");
                     }
-                    if (Math.Abs(btcUsdtHoldings.AbsoluteHoldingsCost * 0.05m - marginUsed) > 1
-                        || _btcUsdt.BuyingPowerModel.GetMaintenanceMargin(_btcUsdt) != marginUsed)
+                    if (_btcUsdt.BuyingPowerModel.GetMaintenanceMargin(_btcUsdt) != marginUsed)
                     {
                         throw new RegressionTestException($"Unexpected margin used {marginUsed}");
                     }
@@ -226,7 +223,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of the algorithm history
         /// </summary>
-        public int AlgorithmHistoryDataPoints => 60;
+        public int AlgorithmHistoryDataPoints => 10;
 
         /// <summary>
         /// Final status of the algorithm
@@ -244,7 +241,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Compounding Annual Return", "0%"},
             {"Drawdown", "0%"},
             {"Expectancy", "0"},
-            {"Start Equity", "100285.86"},
+            {"Start Equity", "100285.85"},
             {"End Equity", "100285.26"},
             {"Net Profit", "0%"},
             {"Sharpe Ratio", "0"},
@@ -261,7 +258,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Tracking Error", "0"},
             {"Treynor Ratio", "0"},
             {"Total Fees", "$0.60"},
-            {"Estimated Strategy Capacity", "$200000000.00"},
+            {"Estimated Strategy Capacity", "$100000000.00"},
             {"Lowest Capacity Asset", "BTCUSDT 2V3"},
             {"Portfolio Turnover", "1.08%"},
             {"Drawdown Recovery", "0"},

@@ -25,7 +25,7 @@ from pythonnet import set_runtime
 # symlink and the directory start.py is stored in is not necessarily the
 # current working directory. We therefore construct the absolute path to the
 # start.py file, and find the runtimeconfig.json relative to that.
-set_runtime(clr_loader.get_coreclr(os.path.join(os.path.dirname(os.path.realpath(__file__)), "QuantConnect.Lean.Launcher.runtimeconfig.json")))
+set_runtime(clr_loader.get_coreclr(runtime_config=os.path.join(os.path.dirname(os.path.realpath(__file__)), "QuantConnect.Lean.Launcher.runtimeconfig.json")))
 
 from AlgorithmImports import *
 

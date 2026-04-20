@@ -95,7 +95,7 @@ namespace QuantConnect.Orders
             // Adjust the order quantity taking into account the fee's
             if (accountForFees && security.Symbol.SecurityType == SecurityType.Crypto && quantity > 0)
             {
-                var orderFee = Extensions.GetMarketOrderFees(security, quantity, algorithm.UtcTime, out _);
+                var orderFee = Extensions.GetMarketOrderFees(security, quantity, algorithm.UtcTime);
                 var baseCurrency = ((Crypto)security).BaseCurrency.Symbol;
                 if (baseCurrency == orderFee.Currency)
                 {

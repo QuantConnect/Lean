@@ -198,7 +198,6 @@ namespace QuantConnect.Algorithm.CSharp
             /// </summary>
             public Bitcoin()
             {
-                Symbol = "BTC";
             }
 
             /// <summary>
@@ -237,7 +236,7 @@ namespace QuantConnect.Algorithm.CSharp
             /// <returns>New Bitcoin Object which extends BaseData.</returns>
             public override BaseData Reader(SubscriptionDataConfig config, string line, DateTime date, bool isLiveMode)
             {
-                var coin = new Bitcoin();
+                var coin = new Bitcoin() { Symbol = config.Symbol };
                 if (isLiveMode)
                 {
                     //Example Line Format:

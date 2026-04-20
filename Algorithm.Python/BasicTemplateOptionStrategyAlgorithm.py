@@ -39,8 +39,7 @@ class BasicTemplateOptionStrategyAlgorithm(QCAlgorithm):
         # set our strike/expiry filter for this option chain
         # SetFilter method accepts timedelta objects or integer for days.
         # The following statements yield the same filtering criteria
-        option.set_filter(-2, +2, 0, 180)
-        # option.set_filter(-2,2, timedelta(0), timedelta(180))
+        option.set_filter(lambda u: (u.standards_only().strikes(-2, +2).expiration(0, 180)))
 
         # use the underlying equity as the benchmark
         self.set_benchmark("GOOG")

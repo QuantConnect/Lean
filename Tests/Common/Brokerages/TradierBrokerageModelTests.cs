@@ -23,6 +23,8 @@ using QuantConnect.Data.Market;
 using System;
 using QuantConnect.Orders.TimeInForces;
 using System.Collections.Generic;
+using QuantConnect.Data;
+using QuantConnect.Securities.Option;
 
 namespace QuantConnect.Tests.Common.Brokerages
 {
@@ -114,6 +116,31 @@ namespace QuantConnect.Tests.Common.Brokerages
             security.Holdings.SetHoldings(6, 100);
             order.Object.Symbol = security.Symbol;
             Assert.IsTrue(_tradierBrokerageModel.CanSubmitOrder(security, order.Object, out var message));
+        }
+
+        [Test]
+        public void CanSubmitOrderReturnsTrueForIndexOptions()
+        {
+            var symbol = Symbol.Create("SPX", SecurityType.IndexOption, Market.USA);
+            var time = new DateTime(2025, 05, 28, 10, 0, 0);
+            var tz = TimeZones.NewYork;
+            var indexOption = new Option(
+                SecurityExchangeHours.AlwaysOpen(tz),
+                new SubscriptionDataConfig(typeof(TradeBar), symbol, Resolution.Minute, tz, tz, true, false, false),
+                new Cash(Currencies.USD, 0, 1m),
+                new OptionSymbolProperties("", Currencies.USD, 100, 0.01m, 1),
+                ErrorCurrencyConverter.Instance,
+                RegisteredSecurityDataTypesProvider.Null
+            );
+
+            var localTimeKeeper = new LocalTimeKeeper(time.ConvertToUtc(tz), tz);
+            indexOption.Exchange.SetLocalDateTimeFrontierProvider(localTimeKeeper);
+
+            var order = new LimitOrder(symbol, 1, 100m, time);
+
+            var result = _tradierBrokerageModel.CanSubmitOrder(indexOption, order, out var message);
+            Assert.IsTrue(result);
+            Assert.IsNull(message);
         }
 
         private static IEnumerable<TestCaseData> ExtendedHoursTestCases

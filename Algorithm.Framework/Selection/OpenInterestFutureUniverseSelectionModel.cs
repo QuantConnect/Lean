@@ -74,6 +74,12 @@ namespace QuantConnect.Algorithm.Framework.Selection
         /// </summary>
         protected override FutureFilterUniverse Filter(FutureFilterUniverse filter)
         {
+            // Check if this method was overridden in Python
+            if (TryInvokePythonOverride(nameof(Filter), out FutureFilterUniverse result, filter))
+            {
+                return result;
+            }
+
             // Remove duplicated keys
             return filter.Contracts(FilterByOpenInterest(
                 filter.DistinctBy(x => x).ToDictionary(x => x.Symbol, x => _marketHoursDatabase.GetEntry(x.ID.Market, x, x.ID.SecurityType))));

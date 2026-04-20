@@ -113,7 +113,6 @@ namespace QuantConnect.Tests.Common.Brokerages
         }
 
         [TestCase("EURGBP", SecurityType.Forex)]
-        [TestCase("DE10YBEUR", SecurityType.Cfd)]
         public void CannotSubmitMOCOrdersForForexAndCfd(string ticker, SecurityType securityType)
         {
             var algo = new AlgorithmStub();
@@ -127,7 +126,6 @@ namespace QuantConnect.Tests.Common.Brokerages
         }
 
         [TestCase("EURGBP", SecurityType.Forex)]
-        [TestCase("DE10YBEUR", SecurityType.Cfd)]
         [TestCase("ES", SecurityType.Future)]
         public void CannotSubmitMOOOrdersForForexCfdAndFutureOrders(string ticker, SecurityType securityType)
         {
@@ -143,6 +141,7 @@ namespace QuantConnect.Tests.Common.Brokerages
 
         [TestCase("SPY", SecurityType.Option)]
         [TestCase("SPY", SecurityType.Equity)]
+        [TestCase("DE10YBEUR", SecurityType.Cfd)]
         public void CanSubmitMOOOrdersForOptionAndEquity(string ticker, SecurityType securityType)
         {
             var algo = new AlgorithmStub();
@@ -153,8 +152,40 @@ namespace QuantConnect.Tests.Common.Brokerages
             Assert.IsTrue(result);
         }
 
+        [TestCase(OrderType.ComboLegLimit, 2, true)]
+        [TestCase(OrderType.ComboLimit, 4, true)]
+        [TestCase(OrderType.ComboLegLimit, 4, false)]
+        public void CanSubmitComboOrdersWithExpectedLegValidation(OrderType orderType, int legCount, bool shouldSubmit)
+        {
+            var algo = new AlgorithmStub();
+            var security = algo.AddSecurity(SecurityType.Option, "SPY");
+            var groupOrderManager = new GroupOrderManager(1, legCount, 1, 100m);
+
+            Order order = orderType switch
+            {
+                OrderType.ComboLimit => new ComboLimitOrder(security.Symbol, 1, 100m, DateTime.UtcNow, groupOrderManager),
+                OrderType.ComboLegLimit => new ComboLegLimitOrder(security.Symbol, 1, 100m, DateTime.UtcNow, groupOrderManager),
+                _ => throw new ArgumentOutOfRangeException(nameof(orderType), orderType, "Unexpected combo order type")
+            };
+
+            var canSubmit = _interactiveBrokersBrokerageModel.CanSubmitOrder(security, order, out var message);
+            Assert.AreEqual(shouldSubmit, canSubmit);
+
+            if (shouldSubmit)
+            {
+                Assert.IsNull(message);
+            }
+            else
+            {
+                Assert.AreEqual(BrokerageMessageType.Warning, message.Type);
+                Assert.AreEqual("NotSupported", message.Code);
+                StringAssert.Contains("does not support four-leg ComboLegLimit orders", message.Message);
+            }
+        }
+
         [TestCase("ES", SecurityType.Future)]
         [TestCase("SPY", SecurityType.Equity)]
+        [TestCase("DE10YBEUR", SecurityType.Cfd)]
         public void CanSubmitMOCOrdersForFutureAndEquity(string ticker, SecurityType securityType)
         {
             var algo = new AlgorithmStub();

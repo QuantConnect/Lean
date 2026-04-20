@@ -27,6 +27,7 @@ using QuantConnect.Orders.Fees;
 using QuantConnect.Securities;
 using QuantConnect.Securities.Option;
 using QuantConnect.Util;
+using System.Collections.Specialized;
 
 namespace QuantConnect.Brokerages.Backtesting
 {
@@ -553,10 +554,12 @@ namespace QuantConnect.Brokerages.Backtesting
                     var universe = ukvp.Value;
                     if (universe.ContainsMember(security.Symbol))
                     {
-                        var userUniverse = universe as UserDefinedUniverse;
-                        if (userUniverse != null)
+                        if (universe is UserDefinedUniverse userUniverse)
                         {
-                            userUniverse.Remove(security.Symbol);
+                            if (userUniverse.Remove(security.Symbol))
+                            {
+                                Algorithm.UniverseManager.Update(userUniverse.Symbol, userUniverse, NotifyCollectionChangedAction.Replace);
+                            }
                         }
                         else
                         {
@@ -564,6 +567,7 @@ namespace QuantConnect.Brokerages.Backtesting
                         }
                     }
                 }
+                Algorithm.UniverseManager.ProcessChanges();
 
                 if (!Algorithm.IsWarmingUp)
                 {

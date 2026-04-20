@@ -118,10 +118,10 @@ namespace QuantConnect.Algorithm.CSharp
             {"Treynor Ratio", "0"},
             {"Total Fees", "$1.00"},
             {"Estimated Strategy Capacity", "$5700000.00"},
-            {"Lowest Capacity Asset", "AOL VRKS95ENLBYE|AOL R735QTJ8XC9X"},
+            {"Lowest Capacity Asset", "AOL VRKS95ENPM9Y|AOL R735QTJ8XC9X"},
             {"Portfolio Turnover", "0.59%"},
             {"Drawdown Recovery", "0"},
-            {"OrderListHash", "cf5752ad13afe5294a9a8aad660d015a"}
+            {"OrderListHash", "4351c4e0db0da9c6c9e032a08ee861ff"}
         };
     }
 }

@@ -64,7 +64,7 @@ namespace QuantConnect.Util
             if (string.IsNullOrWhiteSpace(dllDirectoryString))
             {
                 // Check our appdomain directory for QC Dll's, for most cases this will be true and fine to use
-                if (!string.IsNullOrEmpty(AppDomain.CurrentDomain.BaseDirectory) && Directory.GetFiles(AppDomain.CurrentDomain.BaseDirectory, "QuantConnect.*.dll").Any())
+                if (!string.IsNullOrEmpty(AppDomain.CurrentDomain.BaseDirectory) && Directory.EnumerateFiles(AppDomain.CurrentDomain.BaseDirectory, "QuantConnect.*.dll").Any())
                 {
                     dllDirectoryString = AppDomain.CurrentDomain.BaseDirectory;
                 }
@@ -77,7 +77,7 @@ namespace QuantConnect.Util
 
                     // If our parent directory contains QC Dlls use it, otherwise default to current working directory
                     // In cloud and CLI research cases we expect the parent directory to contain the Dlls; but locally it's likely current directory
-                    dllDirectoryString = Directory.GetFiles(parentDirectory, "QuantConnect.*.dll").Any() ? parentDirectory : currentDirectory;
+                    dllDirectoryString = Directory.EnumerateFiles(parentDirectory, "QuantConnect.*.dll").Any() ? parentDirectory : currentDirectory;
                 }
             }
 
@@ -88,76 +88,17 @@ namespace QuantConnect.Util
             var loadFromPluginDir = !string.IsNullOrWhiteSpace(PluginDirectory)
                 && Directory.Exists(PluginDirectory) &&
                 new DirectoryInfo(PluginDirectory).FullName != primaryDllLookupDirectory;
-            _composableParts = Task.Run(() =>
-            {
-                try
-                {
-                    var catalogs = new List<ComposablePartCatalog>
-                    {
-                        new DirectoryCatalog(primaryDllLookupDirectory, "*.dll"),
-                        new DirectoryCatalog(primaryDllLookupDirectory, "*.exe")
-                    };
-                    if (loadFromPluginDir)
-                    {
-                        catalogs.Add(new DirectoryCatalog(PluginDirectory, "*.dll"));
-                    }
-                    var aggregate = new AggregateCatalog(catalogs);
-                    _compositionContainer = new CompositionContainer(aggregate);
-                    return _compositionContainer.Catalog.Parts.ToList();
-                }
-                catch (Exception exception)
-                {
-                    // ThreadAbortException is triggered when we shutdown ignore the error log
-                    if (!(exception is ThreadAbortException))
-                    {
-                        Log.Error(exception);
-                    }
-                }
-                return new List<ComposablePartDefinition>();
-            });
-
-            // for performance we will load our assemblies and keep their exported types
-            // which is much faster that using CompositionContainer which uses reflexion
-            var exportedTypes = new ConcurrentBag<Type>();
-            var fileNames = Directory.EnumerateFiles(primaryDllLookupDirectory, $"{nameof(QuantConnect)}.*.dll");
+            var fileNames = Directory.EnumerateFiles(primaryDllLookupDirectory, "*.dll");
             if (loadFromPluginDir)
             {
-                fileNames = fileNames.Concat(Directory.EnumerateFiles(PluginDirectory, $"{nameof(QuantConnect)}.*.dll"));
+                fileNames = fileNames.Concat(Directory.EnumerateFiles(PluginDirectory, "*.dll"));
             }
-
-            // guarantee file name uniqueness
-            var files = new Dictionary<string, string>();
-            foreach (var filePath in fileNames)
-            {
-                var fileName = Path.GetFileName(filePath);
-                if (!string.IsNullOrEmpty(fileName))
-                {
-                    files[fileName] = filePath;
-                }
-            }
-            Parallel.ForEach(files.Values,
-                file =>
-                {
-                    try
-                    {
-                        foreach (var type in
-                            Assembly.LoadFrom(file).ExportedTypes.Where(type => !type.IsAbstract && !type.IsInterface && !type.IsEnum))
-                        {
-                            exportedTypes.Add(type);
-                        }
-                    }
-                    catch (Exception)
-                    {
-                        // ignored, just in case
-                    }
-                }
-            );
-            _exportedTypes = new List<Type>(exportedTypes);
+            LoadPartsSafely(fileNames.DistinctBy(Path.GetFileName));
         }
 
         private CompositionContainer _compositionContainer;
-        private readonly IReadOnlyList<Type> _exportedTypes;
-        private readonly Task<List<ComposablePartDefinition>> _composableParts;
+        private IReadOnlyList<Type> _exportedTypes;
+        private List<ComposablePartDefinition> _composableParts;
         private readonly object _exportedValuesLockObject = new object();
         private readonly Dictionary<Type, IEnumerable> _exportedValues = new Dictionary<Type, IEnumerable>();
 
@@ -268,22 +209,14 @@ namespace QuantConnect.Util
         {
             try
             {
-                T instance = null;
-                IEnumerable values;
-                var type = typeof(T);
-                lock (_exportedValuesLockObject)
+                // if we've already loaded this part, then just return the same one
+                var instance = GetParts<T>().FirstOrDefault(x => !forceTypeNameOnExisting || x.GetType().MatchesTypeName(typeName));
+                if (instance != null)
                 {
-                    if (_exportedValues.TryGetValue(type, out values))
-                    {
-                        // if we've already loaded this part, then just return the same one
-                        instance = values.OfType<T>().FirstOrDefault(x => !forceTypeNameOnExisting || x.GetType().MatchesTypeName(typeName));
-                        if (instance != null)
-                        {
-                            return instance;
-                        }
-                    }
+                    return instance;
                 }
 
+                var type = typeof(T);
                 var typeT = _exportedTypes.Where(type1 =>
                     {
                         try
@@ -305,7 +238,7 @@ namespace QuantConnect.Util
                 if (instance == null)
                 {
                     // we want to get the requested part without instantiating each one of that type
-                    var selectedPart = _composableParts.Result
+                    var selectedPart = _composableParts
                         .Where(x =>
                             {
                                 try
@@ -386,10 +319,6 @@ namespace QuantConnect.Util
                         return values.OfType<T>();
                     }
 
-                    if (!_composableParts.IsCompleted)
-                    {
-                        _composableParts.Wait();
-                    }
                     values = _compositionContainer.GetExportedValues<T>().ToList();
                     _exportedValues[typeof(T)] = values;
                     return values.OfType<T>();
@@ -414,6 +343,68 @@ namespace QuantConnect.Util
             lock (_exportedValuesLockObject)
             {
                 _exportedValues.Clear();
+            }
+        }
+
+        private void LoadPartsSafely(IEnumerable<string> files)
+        {
+            try
+            {
+                var exportedTypes = new ConcurrentBag<Type>();
+                var catalogs = new ConcurrentBag<ComposablePartCatalog>();
+                Parallel.ForEach(files, file =>
+                {
+                    try
+                    {
+                        // we need to load assemblies so that C# algorithm dependencies are resolved correctly
+                        // at the same time we need to load all QC dependencies to find all exports
+                        Assembly assembly;
+                        try
+                        {
+                            var asmName = AssemblyName.GetAssemblyName(file);
+                            assembly = Assembly.Load(asmName);
+                        }
+                        catch
+                        {
+                            // handles dependencies that are not in the probing path but might duplicate loading an already loaded assembly
+                            assembly = Assembly.LoadFrom(file);
+                        }
+
+                        if (Path.GetFileName(file).StartsWith($"{nameof(QuantConnect)}.", StringComparison.InvariantCulture))
+                        {
+                            foreach (var type in assembly.ExportedTypes.Where(type => !type.IsAbstract && !type.IsInterface && !type.IsEnum))
+                            {
+                                exportedTypes.Add(type);
+                            }
+                        }
+                        var asmCatalog = new AssemblyCatalog(assembly);
+                        var parts = asmCatalog.Parts.ToArray();
+                        if (parts.Length > 0)
+                        {
+                            catalogs.Add(asmCatalog);
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        if (!file.Contains("quickfix.fix", StringComparison.InvariantCultureIgnoreCase))
+                        {
+                            Log.Trace($"Composer.LoadPartsSafely({file}): Skipping {ex.GetType().Name}: {ex.Message}");
+                        }
+                    }
+                });
+
+                _exportedTypes = new List<Type>(exportedTypes);
+                var aggregate = new AggregateCatalog(catalogs);
+                _compositionContainer = new CompositionContainer(aggregate);
+                _composableParts = _compositionContainer.Catalog.Parts.ToList();
+            }
+            catch (Exception exception)
+            {
+                // ThreadAbortException is triggered when we shutdown ignore the error log
+                if (!(exception is ThreadAbortException))
+                {
+                    Log.Error(exception);
+                }
             }
         }
     }

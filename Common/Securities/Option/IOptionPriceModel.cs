@@ -13,6 +13,7 @@
  * limitations under the License.
 */
 
+using System;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
 
@@ -26,12 +27,10 @@ namespace QuantConnect.Securities.Option
         /// <summary>
         /// Evaluates the specified option contract to compute a theoretical price, IV and greeks
         /// </summary>
-        /// <param name="security">The option security object</param>
-        /// <param name="slice">The current data slice. This can be used to access other information
-        /// available to the algorithm</param>
-        /// <param name="contract">The option contract to evaluate</param>
+        /// <param name="parameters">A <see cref="OptionPriceModelParameters"/> object
+        /// containing the security, slice and contract</param>
         /// <returns>An instance of <see cref="OptionPriceModelResult"/> containing the theoretical
         /// price of the specified option contract</returns>
-        OptionPriceModelResult Evaluate(Security security, Slice slice, OptionContract contract);
+        OptionPriceModelResult Evaluate(OptionPriceModelParameters parameters);
     }
 }

@@ -42,6 +42,7 @@ namespace QuantConnect.Configuration
                 new CommandLineOption("report-destination", CommandOptionType.SingleValue, "Destination of processed report file"),
                 new CommandLineOption("report-css-override-file", CommandOptionType.SingleValue, "CSS override source file"),
                 new CommandLineOption("report-html-custom-file", CommandOptionType.SingleValue, "Custom HTML source file"),
+                new CommandLineOption("python-venv", CommandOptionType.SingleValue, "Python virtual environment path"),
             };
 
         /// <summary>

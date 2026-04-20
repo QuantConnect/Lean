@@ -48,6 +48,12 @@
   "symbol-second-limit": 10000,
   "symbol-tick-limit": 10000,
 
+  // retry lookback periods for automatic security seed history requests
+  "seed-lookback-period": 5,
+  "seed-retry-minute-lookback-period": 1440,
+  "seed-retry-hour-lookback-period": 24,
+  "seed-retry-daily-lookback-period": 10,
+
   // Ignore unknown asset types from brokerages
   "ignore-unknown-asset-holdings": true,
 
@@ -140,6 +146,7 @@
   // spot/margin
   "binance-api-url": "https://api.binance.com",
   "binance-websocket-url": "wss://stream.binance.com:9443/ws",
+  "binance-orders-websocket-url": "wss://ws-api.binance.com:9443/ws-api/v3",
   // USDT futures
   "binance-fapi-url": "https://fapi.binance.com",
   "binance-fwebsocket-url": "wss://fstream.binance.com/ws",
@@ -159,6 +166,18 @@
   "bybit-api-key": "",
   "bybit-api-url": "https://api.bybit.com",
   "bybit-websocket-url": "wss://stream.bybit.com",
+
+  // dydx configuration
+  //"dydx-mnemonic": "",
+  "dydx-private-key-hex": "",
+  "dydx-address": "",
+  "dydx-subaccount-number": 0,
+
+  "dydx-node-api-rest": "https://dydx-ops-rest.kingnodes.com",
+  "dydx-node-api-grpc": "https://dydx-ops-grpc.kingnodes.com:443",
+  "dydx-indexer-api-rest": "https://indexer.dydx.trade/v4",
+  "dydx-indexer-api-wss": "wss://indexer.dydx.trade/v4/ws",
+  "dydx-chain-id": "dydx-mainnet-1",
 
   // Eze configuration
   "eze-api-address-url": "",
@@ -731,6 +750,21 @@
       // real brokerage implementations require the BrokerageTransactionHandler
       "live-mode-brokerage": "QuantConnect.EzeBrokerage.EzeBrokerage",
       "data-queue-handler": [ "QuantConnect.EzeBrokerage.EzeBrokerage" ],
+      "setup-handler": "QuantConnect.Lean.Engine.Setup.BrokerageSetupHandler",
+      "result-handler": "QuantConnect.Lean.Engine.Results.LiveTradingResultHandler",
+      "data-feed-handler": "QuantConnect.Lean.Engine.DataFeeds.LiveTradingDataFeed",
+      "real-time-handler": "QuantConnect.Lean.Engine.RealTime.LiveTradingRealTimeHandler",
+      "transaction-handler": "QuantConnect.Lean.Engine.TransactionHandlers.BrokerageTransactionHandler",
+      "history-provider": [ "BrokerageHistoryProvider", "SubscriptionDataReaderHistoryProvider" ]
+    },
+
+    // defines the 'live-dydx' environment
+    "live-dydx": {
+      "live-mode": true,
+
+      // real brokerage implementations require the BrokerageTransactionHandler
+      "live-mode-brokerage": "dYdXBrokerage",
+      "data-queue-handler": [ "dYdXBrokerage" ],
       "setup-handler": "QuantConnect.Lean.Engine.Setup.BrokerageSetupHandler",
       "result-handler": "QuantConnect.Lean.Engine.Results.LiveTradingResultHandler",
       "data-feed-handler": "QuantConnect.Lean.Engine.DataFeeds.LiveTradingDataFeed",

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
 
@@ -22,7 +22,7 @@ namespace QuantConnect.Indicators
         /// Initializes a new instance of the <see cref="IntradayVwap"/> class
         /// </summary>
         /// <param name="name">The name of the indicator</param>
-        public IntradayVwap(string name)
+        public IntradayVwap(string name = "VWAP")
             : base(name)
         {
         }

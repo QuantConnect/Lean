@@ -14,8 +14,6 @@
 */
 
 using System;
-using QuantConnect.Orders;
-using QuantConnect.Orders.Fees;
 using QuantConnect.Algorithm.Framework.Portfolio;
 
 namespace QuantConnect.Securities
@@ -478,22 +476,26 @@ namespace QuantConnect.Securities
         /// <remarks>Does not use the transaction model for market fills but should.</remarks>
         public virtual decimal TotalCloseProfit(bool includeFees = true, decimal? exitPrice = null, decimal? entryPrice = null, decimal? quantity = null)
         {
-            var quantityToUse = quantity ?? Quantity;
-            if (quantityToUse == 0)
+            var quantityToUse = Quantity;
+            if (quantity.HasValue)
+            {
+                quantityToUse = quantity.Value;
+            }
+            else if (!_invested)
             {
                 return 0;
             }
 
-            // this is in the account currency
-            var orderFee = Extensions.GetMarketOrderFees(_security, -quantityToUse, _security.LocalTime.ConvertToUtc(_security.Exchange.TimeZone), out var marketOrder);
-
             var feesInAccountCurrency = 0m;
             if (includeFees)
             {
-                feesInAccountCurrency = _currencyConverter.ConvertToAccountCurrency(orderFee).Amount;
+                // this is in the account currency
+                var liquidationFees = Extensions.GetMarketOrderFees(_security, -quantityToUse, _security.LocalTime.ConvertToUtc(_security.Exchange.TimeZone));
+                feesInAccountCurrency = _currencyConverter.ConvertToAccountCurrency(liquidationFees).Amount;
             }
 
-            var price = marketOrder.Direction == OrderDirection.Sell ? _security.BidPrice : _security.AskPrice;
+            // if we are long, we would need to sell against the bid
+            var price = IsLong ? _security.BidPrice : _security.AskPrice;
             if (price == 0)
             {
                 // Bid/Ask prices can both be equal to 0. This usually happens when we request our holdings from

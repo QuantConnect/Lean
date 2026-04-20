@@ -276,10 +276,10 @@ class CustomBrokerageModel(DefaultBrokerageModel):
                 Assert.AreEqual(typeof(ImmediateFillModel), fillModel.GetType());
                 var order = new Mock<MarketOrder>();
                 var subscriptionDataConfigProvider = new Mock<ISubscriptionDataConfigProvider>();
-                var securitiesForOrders = new Dictionary<Order, Security>() { { order.Object, security} };
+                var securitiesForOrders = new Dictionary<Order, Security>() { { order.Object, security } };
                 var fillModelParameters = new FillModelParameters(security, order.Object, subscriptionDataConfigProvider.Object, TimeSpan.Zero, securitiesForOrders);
                 var result = fillModel.Fill(fillModelParameters);
-                foreach( var entry in result)
+                foreach (var entry in result)
                 {
                     Assert.AreEqual(OrderStatus.Filled, entry.Status);
                 }
@@ -664,6 +664,27 @@ class CustomBrokerageModel(DefaultBrokerageModel):
             }
         }
 
+        [Test]
+        public void TradingTechnologiesBrokerageModelValidatesStopLimitOrders()
+        {
+            var model = new TradingTechnologiesBrokerageModel();
+            var symbol = Symbols.Future_CLF19_Jan2019;
+            var security = GetSecurity(symbol);
+            security.SetMarketPrice(new Tick(DateTime.UtcNow, symbol, 4500m, 4500m));
+
+            var invalidStopLimit = new StopLimitOrder
+            {
+                Symbol = symbol,
+                Quantity = 1,
+                StopPrice = 4510m,
+                LimitPrice = 4505m
+            };
+
+            var canSubmit = model.CanSubmitOrder(security, invalidStopLimit, out var message);
+            Assert.IsFalse(canSubmit);
+            StringAssert.Contains("StopLimit Buy limit price must be greater than or equal to stop price", message.Message);
+        }
+
         [TestCase(BrokerageName.Alpaca, OrderType.MarketOnOpen, 10, -15, false)]
         [TestCase(BrokerageName.Alpaca, OrderType.MarketOnOpen, 10, -10, true)]
         [TestCase(BrokerageName.Alpaca, OrderType.MarketOnClose, 10, -15, false)]
@@ -847,25 +868,25 @@ class CustomBrokerageModel(DefaultBrokerageModel):
             };
         }
 
-        private class CustomInteractiveBrokersBrokerageModel : InteractiveBrokersBrokerageModel {}
-        private class CustomTradierBrokerageModel : TradierBrokerageModel {}
-        private class CustomOandaBrokerageModel : OandaBrokerageModel {}
-        private class CustomFxcmBrokerageModel : FxcmBrokerageModel {}
-        private class CustomBitfinexBrokerageModel : BitfinexBrokerageModel {}
-        private class CustomBinanceUSBrokerageModel : BinanceUSBrokerageModel {}
-        private class CustomBinanceBrokerageModel : BinanceBrokerageModel {}
-        private class CustomCoinbaseBrokerageModel : CoinbaseBrokerageModel {}
-        private class CustomAlphaStreamsBrokerageModel : AlphaStreamsBrokerageModel {}
-        private class CustomZerodhaBrokerageModel : ZerodhaBrokerageModel {}
-        private class CustomAxosBrokerageModel : AxosClearingBrokerageModel {}
-        private class CustomTradingTechnologiesBrokerageModel : TradingTechnologiesBrokerageModel {}
-        private class CustomSamcoBrokerageModel : SamcoBrokerageModel {}
-        private class CustomKrakenBrokerageModel : KrakenBrokerageModel {}
-        private class CustomExanteBrokerageModel : ExanteBrokerageModel {}
-        private class CustomFTXUSBrokerageModel : FTXUSBrokerageModel {}
-        private class CustomFTXBrokerageModel : FTXBrokerageModel {}
-        private  class CustomBybitBrokerageModel : BybitBrokerageModel { }
-        private class CustomDefaultBrokerageModel : DefaultBrokerageModel {}
+        private class CustomInteractiveBrokersBrokerageModel : InteractiveBrokersBrokerageModel { }
+        private class CustomTradierBrokerageModel : TradierBrokerageModel { }
+        private class CustomOandaBrokerageModel : OandaBrokerageModel { }
+        private class CustomFxcmBrokerageModel : FxcmBrokerageModel { }
+        private class CustomBitfinexBrokerageModel : BitfinexBrokerageModel { }
+        private class CustomBinanceUSBrokerageModel : BinanceUSBrokerageModel { }
+        private class CustomBinanceBrokerageModel : BinanceBrokerageModel { }
+        private class CustomCoinbaseBrokerageModel : CoinbaseBrokerageModel { }
+        private class CustomAlphaStreamsBrokerageModel : AlphaStreamsBrokerageModel { }
+        private class CustomZerodhaBrokerageModel : ZerodhaBrokerageModel { }
+        private class CustomAxosBrokerageModel : AxosClearingBrokerageModel { }
+        private class CustomTradingTechnologiesBrokerageModel : TradingTechnologiesBrokerageModel { }
+        private class CustomSamcoBrokerageModel : SamcoBrokerageModel { }
+        private class CustomKrakenBrokerageModel : KrakenBrokerageModel { }
+        private class CustomExanteBrokerageModel : ExanteBrokerageModel { }
+        private class CustomFTXUSBrokerageModel : FTXUSBrokerageModel { }
+        private class CustomFTXBrokerageModel : FTXBrokerageModel { }
+        private class CustomBybitBrokerageModel : BybitBrokerageModel { }
+        private class CustomDefaultBrokerageModel : DefaultBrokerageModel { }
 
         private static TestCaseData[] GetCustomBrokerageNameTestCases()
         {

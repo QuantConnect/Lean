@@ -27,7 +27,7 @@ namespace QuantConnect.Indicators
         /// <summary>
         /// Initializes a new instance of the <see cref="AdvanceDeclineRatio"/> class
         /// </summary>
-        public AdvanceDeclineRatio(string name)
+        public AdvanceDeclineRatio(string name = "A/D Ratio")
             : base(name, (entries) => entries.Count(), (advance, decline) => decline == 0m ? advance : advance / decline) { }
     }
 }

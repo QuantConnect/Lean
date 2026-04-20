@@ -18,6 +18,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using NodaTime;
 using QuantConnect.Data;
 using QuantConnect.Data.Consolidators;
@@ -332,20 +333,39 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
 
                 if (nextEndTimeUtc < previousTimeUtc)
                 {
-                    Log.Error("FillForwardEnumerator received data out of order. Symbol: " + previous.Symbol.ID);
+                    if (_lastPointTracker == null || next.EndTime > _subscriptionStartTime)
+                    {
+                        // in some cases we might emit auxiliary data even before our actual start time, which can happen in some cases during warmup
+                        // where previous was initialized through the last point tracker, this point will be filtered out
+                        // but in any other case though let's log it, shouldn't happen
+                        Log.Error("FillForwardEnumerator received data out of order. Symbol: " + previous.Symbol.ID);
+                    }
                     fillForward = null;
                     return false;
                 }
 
                 // check to see if the gap between previous and next warrants fill forward behavior
-                var nextPreviousTimeUtcDelta = nextTimeUtc - previousTimeUtc;
-                if (nextPreviousTimeUtcDelta <= fillForwardResolution &&
-                    nextPreviousTimeUtcDelta <= _dataResolution &&
-                    // even if there is no gap between the two data points, we still fill forward to ensure a FF bar is emitted at strict end time
-                    !_strictEndTimeIntraDayFillForward)
+                if (!ShouldFillForward(previousTimeUtc, nextTimeUtc, fillForwardResolution))
                 {
                     fillForward = null;
                     return false;
+                }
+
+                // Double check!
+                // This might be the last FF bar before the next data point, and it might not be to be
+                // emitted because it will overlap with the next point.
+                // If the previous point was fill forwarded, its time might have been rounded down,
+                // we need to compare apples to apples.
+                // (e.g. daily bars with times != midnight and without strict end times)
+                var nextPeriod = nextEndTimeUtc - nextTimeUtc;
+                if (previous.IsFillForward && (!UseStrictEndTime || nextPeriod <= Time.OneHour))
+                {
+                    var roundedNextTimeUtc = RoundDown(next.Time, nextPeriod).ConvertToUtc(Exchange.TimeZone);
+                    if (!ShouldFillForward(previousTimeUtc, roundedNextTimeUtc, fillForwardResolution))
+                    {
+                        fillForward = null;
+                        return false;
+                    }
                 }
 
                 var period = _dataResolution;
@@ -465,6 +485,16 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
             // the next is before the next fill forward time, so do nothing
             fillForward = null;
             return false;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private bool ShouldFillForward(DateTime previousTimeUtc, DateTime nextTimeUtc, TimeSpan fillForwardResolution)
+        {
+            var nextPreviousTimeUtcDelta = nextTimeUtc - previousTimeUtc;
+            return nextPreviousTimeUtcDelta > fillForwardResolution ||
+                nextPreviousTimeUtcDelta > _dataResolution ||
+                // even if there is no gap between the two data points, we still fill forward to ensure a FF bar is emitted at strict end time
+                _strictEndTimeIntraDayFillForward;
         }
 
         private IEnumerable<CalendarInfo> GetSortedReferenceDateIntervals(BaseData previous, TimeSpan fillForwardResolution, TimeSpan dataResolution)

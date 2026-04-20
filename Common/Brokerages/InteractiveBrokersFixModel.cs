@@ -14,6 +14,7 @@
 */
 
 using System;
+using System.Linq;
 using QuantConnect.Orders;
 using QuantConnect.Securities;
 using System.Collections.Generic;
@@ -51,6 +52,8 @@ namespace QuantConnect.Brokerages
             OrderType.ComboLimit
         };
 
+        private readonly GroupOrderCacheManager _groupOrderCacheManager = new();
+
         /// <summary>
         /// Initializes a new instance of the <see cref="InteractiveBrokersFixModel"/> class
         /// </summary>
@@ -74,12 +77,22 @@ namespace QuantConnect.Brokerages
         /// <returns>True if the brokerage could process the order, false otherwise</returns>
         public override bool CanSubmitOrder(Security security, Order order, out BrokerageMessageEvent message)
         {
-            if (security.Symbol.SecurityType == SecurityType.FutureOption && order is ComboOrder)
+            // only check supported combo order types
+            if (order is ComboOrder && order.GroupOrderManager != null && SupportedOrderTypes.Contains(order.Type))
             {
-                message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
-                    Messages.InteractiveBrokersFixModel.UnsupportedComboOrdersForFutureOptions(this, order));
-                return false;
+                if (_groupOrderCacheManager.TryGetGroupCachedOrders(order, out var orders))
+                {
+                    // reject combos that mix FutureOption and Future legs
+                    if (orders.Any(o => o.SecurityType == SecurityType.FutureOption) &&
+                        orders.Any(o => o.SecurityType == SecurityType.Future))
+                    {
+                        message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
+                            Messages.InteractiveBrokersFixModel.UnsupportedFopFutureComboOrders(this, order));
+                        return false;
+                    }
+                }
             }
+
             return base.CanSubmitOrder(security, order, out message);
         }
     }

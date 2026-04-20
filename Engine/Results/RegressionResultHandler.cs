@@ -76,6 +76,7 @@ namespace QuantConnect.Lean.Engine.Results
             _preInitializeLines = new ConcurrentQueue<string>();
             _currentRuntimeStatistics = new Dictionary<string, string>();
             _currentAlphaRuntimeStatistics = new Dictionary<string, string>();
+            RunResultsAnalysis = false;
         }
 
         /// <summary>

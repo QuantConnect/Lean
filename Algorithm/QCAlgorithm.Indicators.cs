@@ -53,7 +53,8 @@ namespace QuantConnect.Algorithm
             "IsReady",
             "Window",
             "Item",
-            "WarmUpPeriod"
+            "WarmUpPeriod",
+            "Period"
         };
 
         /// <summary>
@@ -487,6 +488,26 @@ namespace QuantConnect.Algorithm
             InitializeIndicator(correlation, resolution, selector, target, reference);
 
             return correlation;
+        }
+
+        /// <summary>
+        /// Creates a Covariance indicator for the given target symbol in relation with the reference used.
+        /// The indicator will be automatically updated on the given resolution.
+        /// </summary>
+        /// <param name="target">The target symbol whose Covariance value we want</param>
+        /// <param name="reference">The reference symbol to compare with the target symbol</param>
+        /// <param name="period">The period of the Covariance indicator</param>
+        /// <param name="resolution">The resolution</param>
+        /// <param name="selector">Selects a value from the BaseData to send into the indicator, if null defaults to casting the input value to a TradeBar</param>
+        /// <returns>The Covariance indicator for the given parameters</returns>
+        [DocumentationAttribute(Indicators)]
+        public Covariance COV(Symbol target, Symbol reference, int period, Resolution? resolution = null, Func<IBaseData, IBaseDataBar> selector = null)
+        {
+            var name = CreateIndicatorName(QuantConnect.Symbol.None, $"COV({period})", resolution);
+            var covariance = new Covariance(name, target, reference, period);
+            InitializeIndicator(covariance, resolution, selector, target, reference);
+
+            return covariance;
         }
 
         /// <summary>
@@ -1435,7 +1456,7 @@ namespace QuantConnect.Algorithm
         [DocumentationAttribute(Indicators)]
         public VolumeProfile VP(Symbol symbol, int period = 2, decimal valueAreaVolumePercentage = 0.70m, decimal priceRangeRoundOff = 0.05m, Resolution resolution = Resolution.Daily, Func<IBaseData, TradeBar> selector = null)
         {
-            var name = CreateIndicatorName(symbol, $"VP({period})", resolution);
+            var name = CreateIndicatorName(symbol, $"VP({period},{valueAreaVolumePercentage},{priceRangeRoundOff})", resolution);
             var marketProfile = new VolumeProfile(name, period, valueAreaVolumePercentage, priceRangeRoundOff);
             InitializeIndicator(marketProfile, resolution, selector, symbol);
 
@@ -1456,7 +1477,7 @@ namespace QuantConnect.Algorithm
         [DocumentationAttribute(Indicators)]
         public TimeProfile TP(Symbol symbol, int period = 2, decimal valueAreaVolumePercentage = 0.70m, decimal priceRangeRoundOff = 0.05m, Resolution resolution = Resolution.Daily, Func<IBaseData, TradeBar> selector = null)
         {
-            var name = CreateIndicatorName(symbol, $"TP({period})", resolution);
+            var name = CreateIndicatorName(symbol, $"TP({period},{valueAreaVolumePercentage},{priceRangeRoundOff})", resolution);
             var marketProfile = new TimeProfile(name, period, valueAreaVolumePercentage, priceRangeRoundOff);
             InitializeIndicator(marketProfile, resolution, selector, symbol);
 
@@ -1692,6 +1713,50 @@ namespace QuantConnect.Algorithm
         }
 
         /// <summary>
+        /// Creates a new New Highs - New Lows indicator
+        /// </summary>
+        /// <param name="symbols">The symbols whose NHNL we want</param>
+        /// <param name="period">The period over which to compute the NHNL</param>
+        /// <param name="resolution">The resolution</param>
+        /// <param name="selector">Selects a value from the BaseData to send into the indicator, if null defaults to casting the input value to a IBaseDataBar</param>
+        /// <returns>The NewHighsNewLows indicator for the requested symbols over the specified period</returns>
+        [DocumentationAttribute(Indicators)]
+        public NewHighsNewLows NHNL(IEnumerable<Symbol> symbols, int period, Resolution? resolution = null, Func<IBaseData, IBaseDataBar> selector = null)
+        {
+            var name = CreateIndicatorName(QuantConnect.Symbol.None, $"NH/NL({period})", resolution ?? GetSubscription(symbols.First()).Resolution);
+            var nhnlDifference = new NewHighsNewLows(name, period);
+            foreach (var symbol in symbols)
+            {
+                nhnlDifference.Add(symbol);
+            }
+            InitializeIndicator(nhnlDifference, resolution, selector, symbols.ToArray());
+
+            return nhnlDifference;
+        }
+
+        /// <summary>
+        /// Creates a new New Highs - New Lows Volume indicator
+        /// </summary>
+        /// <param name="symbols">The symbols whose NHNLV we want</param>
+        /// <param name="period">The period over which to compute the NHNLV</param>
+        /// <param name="resolution">The resolution</param>
+        /// <param name="selector">Selects a value from the BaseData to send into the indicator, if null defaults to casting the input value to a TradeBar</param>
+        /// <returns>The NewHighsNewLowsVolume indicator for the requested symbols over the specified period</returns>
+        [DocumentationAttribute(Indicators)]
+        public NewHighsNewLowsVolume NHNLV(IEnumerable<Symbol> symbols, int period, Resolution? resolution = null, Func<IBaseData, TradeBar> selector = null)
+        {
+            var name = CreateIndicatorName(QuantConnect.Symbol.None, $"NH/NL Volume({period})", resolution ?? GetSubscription(symbols.First()).Resolution);
+            var nhnlVolume = new NewHighsNewLowsVolume(name, period);
+            foreach (var symbol in symbols)
+            {
+                nhnlVolume.Add(symbol);
+            }
+            InitializeIndicator(nhnlVolume, resolution, selector, symbols.ToArray());
+
+            return nhnlVolume;
+        }
+
+        /// <summary>
         /// Creates a new On Balance Volume indicator. This will compute the cumulative total volume
         /// based on whether the close price being higher or lower than the previous period.
         /// The indicator will be automatically updated on the given resolution.
@@ -1711,7 +1776,7 @@ namespace QuantConnect.Algorithm
         }
 
         /// <summary>
-        /// Creates a new PivotPointsHighLow indicator
+        /// Creates a new PivotPointsHighLow indicator which will compute the high and low pivot points based on the configurable surrounding bars count.
         /// </summary>
         /// <param name="symbol">The symbol whose PPHL we seek</param>
         /// <param name="lengthHigh">The number of surrounding bars whose high values should be less than the current bar's for the bar high to be marked as high pivot point</param>
@@ -1721,10 +1786,27 @@ namespace QuantConnect.Algorithm
         /// <param name="selector">Selects a value from the BaseData to send into the indicator, if null defaults to casting the input value to a TradeBar</param>
         /// <returns>The PivotPointsHighLow indicator for the requested symbol.</returns>
         [DocumentationAttribute(Indicators)]
-        public PivotPointsHighLow PPHL(Symbol symbol, int lengthHigh, int lengthLow, int lastStoredValues = 100, Resolution? resolution = null, Func<IBaseData, IBaseDataBar> selector = null)
+        public PivotPointsHighLow PPHL(Symbol symbol, int lengthHigh, int lengthLow, int lastStoredValues, Resolution? resolution, Func<IBaseData, IBaseDataBar> selector = null)
+        {
+            return PPHL(symbol, lengthHigh, lengthLow, lastStoredValues, strict: true, resolution, selector);
+        }
+
+        /// <summary>
+        /// Creates a new PivotPointsHighLow indicator which will compute the high and low pivot points based on the configurable surrounding bars count.
+        /// </summary>
+        /// <param name="symbol">The symbol whose PPHL we seek</param>
+        /// <param name="lengthHigh">The number of surrounding bars whose high values should be less than the current bar's for the bar high to be marked as high pivot point</param>
+        /// <param name="lengthLow">The number of surrounding bars whose low values should be more than the current bar's for the bar low to be marked as low pivot point</param>
+        /// <param name="lastStoredValues">The number of last stored indicator values</param>
+        /// <param name="strict">When true (default), uses strict inequalities (greater than and less than). When false, uses relaxed inequalities (greater than or equal and less than or equal) allowing equal values to be detected as pivot points.</param>
+        /// <param name="resolution">The resolution</param>
+        /// <param name="selector">Selects a value from the BaseData to send into the indicator, if null defaults to casting the input value to a TradeBar</param>
+        /// <returns>The PivotPointsHighLow indicator for the requested symbol.</returns>
+        [DocumentationAttribute(Indicators)]
+        public PivotPointsHighLow PPHL(Symbol symbol, int lengthHigh, int lengthLow, int lastStoredValues = 100, bool strict = true, Resolution? resolution = null, Func<IBaseData, IBaseDataBar> selector = null)
         {
             var name = CreateIndicatorName(symbol, $"PPHL({lengthHigh},{lengthLow})", resolution);
-            var pivotPointsHighLow = new PivotPointsHighLow(name, lengthHigh, lengthLow, lastStoredValues);
+            var pivotPointsHighLow = new PivotPointsHighLow(name, lengthHigh, lengthLow, lastStoredValues, strict);
             InitializeIndicator(pivotPointsHighLow, resolution, selector, symbol);
 
             return pivotPointsHighLow;
@@ -2198,7 +2280,7 @@ namespace QuantConnect.Algorithm
 
             return targetDownsideDeviation;
         }
-        
+
         /// <summary>
         /// Creates a new TomDemark Sequential candlestick indicator for the symbol. The indicator will be automatically
         /// updated on the symbol's subscription resolution.
@@ -4157,6 +4239,21 @@ namespace QuantConnect.Algorithm
                     {
                         if (resolution.Value == Resolution.Daily)
                         {
+                            if (subscription.ExtendedMarketHours && !Settings.DailyConsolidationUseExtendedMarketHours)
+                            {
+                                // Show this warning only once
+                                if (!_hasShownDailyConsolidationWarning)
+                                {
+                                    Debug($"Warning: The subscription for {symbol} has ExtendedMarketHours=true, " +
+                                        $"but Settings.DailyConsolidationUseExtendedMarketHours=false. " +
+                                        $"Daily consolidations will exclude extended market hours. " +
+                                        $"Enable algorithm.Settings.DailyConsolidationUseExtendedMarketHours to include them."
+                                    );
+
+                                    _hasShownDailyConsolidationWarning = true;
+                                }
+                            }
+
                             consolidator = new MarketHourAwareConsolidator(Settings.DailyPreciseEndTime, resolution.Value, subscription.Type, subscription.TickType,
                                 Settings.DailyConsolidationUseExtendedMarketHours && subscription.ExtendedMarketHours);
                         }

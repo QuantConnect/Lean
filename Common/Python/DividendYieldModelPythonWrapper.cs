@@ -16,6 +16,7 @@
 using System;
 using Python.Runtime;
 using QuantConnect.Data;
+using QuantConnect.Util;
 
 namespace QuantConnect.Python
 {
@@ -62,11 +63,10 @@ namespace QuantConnect.Python
         /// <returns>The converted <see cref="IDividendYieldModel"/> instance</returns>
         public static IDividendYieldModel FromPyObject(PyObject model)
         {
-            if (!model.TryConvert(out IDividendYieldModel dividendYieldModel))
-            {
-                dividendYieldModel = new DividendYieldModelPythonWrapper(model);
-            }
-
+            var dividendYieldModel = PythonUtil.CreateInstanceOrWrapper<IDividendYieldModel>(
+                model,
+                py => new DividendYieldModelPythonWrapper(py)
+            );
             return dividendYieldModel;
         }
     }

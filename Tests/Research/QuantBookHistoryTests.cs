@@ -813,6 +813,32 @@ def get_history():
             }
         }
 
+        [Test]
+        public void IndicatorHistoryDoesNotReturnPeriodColumn()
+        {
+            using (Py.GIL())
+            {
+                var testModule = PyModule.FromString("testModule",
+                    @"
+from AlgorithmImports import *
+
+def get_indicator_history():
+    qb = QuantBook()
+    qb.set_start_date(2014, 4, 8)
+    symbol = qb.add_equity(""AAPL"", Resolution.DAILY).symbol
+    history = qb.indicator(ValueAtRisk(252, 0.95), symbol, 365, Resolution.DAILY)
+    return history
+");
+                dynamic getHistory = testModule.GetAttr("get_indicator_history");
+                var pyHistory = getHistory() as PyObject;
+                var columns = pyHistory.GetAttr("columns")
+                    .InvokeMethod("tolist")
+                    .AsManagedObject(typeof(List<string>)) as List<string>;
+                Assert.IsFalse(columns.Contains("period"));
+                Assert.AreEqual(1, columns.Count);
+            }
+        }
+
         private class TestHistoryProvider : HistoryProviderBase
         {
             private IHistoryProvider _provider;

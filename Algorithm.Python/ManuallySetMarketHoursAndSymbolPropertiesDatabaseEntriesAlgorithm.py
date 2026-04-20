@@ -51,7 +51,7 @@ class ManuallySetMarketHoursAndSymbolPropertiesDatabaseEntriesAlgorithm(QCAlgori
         if json.JsonConvert.serialize_object(spy_cfd.exchange.hours) != json.JsonConvert.serialize_object(equity_market_hours_entry.exchange_hours):
             raise AssertionError("Expected the SPY CFD market hours to be the same as the underlying equity market hours.")
 
-        if json.JsonConvert.serialize_object(spy_cfd.symbol_properties) != json.JsonConvert.serialize_object(equity_symbol_properties):
+        if not self.symbol_properties_are_equivalent(spy_cfd.symbol_properties, equity_symbol_properties):
             raise AssertionError("Expected the SPY CFD symbol properties to be the same as the underlying equity symbol properties.")
 
         # We can also do it for a specific ticker
@@ -66,5 +66,16 @@ class ManuallySetMarketHoursAndSymbolPropertiesDatabaseEntriesAlgorithm(QCAlgori
         if json.JsonConvert.serialize_object(aud_usd_cfd.exchange.hours) != json.JsonConvert.serialize_object(aud_usd_forex_market_hours_entry.exchange_hours):
             raise AssertionError("Expected the AUDUSD CFD market hours to be the same as the underlying forex market hours.")
 
-        if json.JsonConvert.serialize_object(aud_usd_cfd.symbol_properties) != json.JsonConvert.serialize_object(aud_usd_forex_symbol_properties):
+        if not self.symbol_properties_are_equivalent(aud_usd_cfd.symbol_properties, aud_usd_forex_symbol_properties):
             raise AssertionError("Expected the AUDUSD CFD symbol properties to be the same as the underlying forex symbol properties.")
+
+    def symbol_properties_are_equivalent(self, a, b):
+        return (a.description == b.description and
+                a.quote_currency == b.quote_currency and
+                a.contract_multiplier == b.contract_multiplier and
+                a.minimum_price_variation == b.minimum_price_variation and
+                a.lot_size == b.lot_size and
+                a.market_ticker == b.market_ticker and
+                a.minimum_order_size == b.minimum_order_size and
+                a.price_magnifier == b.price_magnifier and
+                a.strike_multiplier == b.strike_multiplier)

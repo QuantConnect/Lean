@@ -32,7 +32,7 @@ class HistoryAlgorithm(QCAlgorithm):
         self.add_equity("SPY", Resolution.DAILY)
         IBM = self.add_data(CustomDataEquity, "IBM", Resolution.DAILY)
         # specifying the exchange will allow the history methods that accept a number of bars to return to work properly
-        IBM.Exchange = EquityExchange()
+        IBM.exchange = EquityExchange()
 
         # we can get history in initialize to set up indicators and such
         self.daily_sma = SimpleMovingAverage(14)
@@ -96,7 +96,7 @@ class HistoryAlgorithm(QCAlgorithm):
         self.assert_history_count("History(CustomDataEquity, self.securities.keys(), 14)", all_custom_data, 14 * 2)
 
         # NOTE: Using different resolutions require that they are properly implemented in your data type. If your
-        #  custom data source has different resolutions, it would need to be implemented in the GetSource and 
+        #  custom data source has different resolutions, it would need to be implemented in the GetSource and
         #  Reader methods properly.
         #custom_data_history = self.history(CustomDataEquity, "IBM", timedelta(7), Resolution.MINUTE)
         #custom_data_history = self.history(CustomDataEquity, "IBM", 14, Resolution.MINUTE)

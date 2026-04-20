@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -36,7 +36,7 @@ namespace QuantConnect.Tests.Indicators
 
         protected override Action<IndicatorBase<IBaseDataBar>, double> Assertion =>
             (indicator, expected) =>
-                Assert.AreEqual(expected, (double) ((IchimokuKinkoHyo) indicator).Tenkan.Current.Value, 1e-3);
+                Assert.AreEqual(expected, (double)((IchimokuKinkoHyo)indicator).Tenkan.Current.Value, 1e-3);
 
         [Test]
         public void ComparesWithExternalDataTenkanMaximum()
@@ -165,6 +165,26 @@ namespace QuantConnect.Tests.Indicators
                 "DelayedMinimumSenkouB",
                 (ind, expected) => Assert.AreEqual(expected, (double)((IchimokuKinkoHyo)ind).DelayedMinimumSenkouB.Current.Value)
                 );
+        }
+
+        [Test]
+        public void ComponentsAreNonZeroWhenIndicatorIsReady()
+        {
+            var indicator = new IchimokuKinkoHyo(2, 3, 2, 4, 2, 2);
+            var date = new DateTime(2017, 1, 1);
+
+            for (int i = 1; i <= indicator.WarmUpPeriod; i++)
+            {
+                var tradeBar = new TradeBar(date + TimeSpan.FromDays(i), Symbols.SPY,
+                    100 * i, 200 * i, 100 * i, 200 * i, 500 * i);
+                indicator.Update(tradeBar);
+            }
+
+            Assert.IsTrue(indicator.IsReady);
+            Assert.AreNotEqual(0m, indicator.Tenkan.Current.Value);
+            Assert.AreNotEqual(0m, indicator.Kijun.Current.Value);
+            Assert.AreNotEqual(0m, indicator.SenkouA.Current.Value);
+            Assert.AreNotEqual(0m, indicator.SenkouB.Current.Value);
         }
     }
 }

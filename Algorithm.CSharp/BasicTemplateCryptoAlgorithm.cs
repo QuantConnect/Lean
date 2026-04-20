@@ -202,7 +202,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of the algorithm history
         /// </summary>
-        public int AlgorithmHistoryDataPoints => 240;
+        public int AlgorithmHistoryDataPoints => 35;
 
         /// <summary>
         /// Final status of the algorithm
@@ -220,7 +220,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Compounding Annual Return", "0%"},
             {"Drawdown", "0%"},
             {"Expectancy", "0"},
-            {"Start Equity", "31588.24"},
+            {"Start Equity", "31592.84"},
             {"End Equity", "30866.71"},
             {"Net Profit", "0%"},
             {"Sharpe Ratio", "0"},

@@ -60,7 +60,15 @@ namespace QuantConnect.Securities.FutureOption
             // COMEX
             { "HG", (d, _) => ContractMonthYearStartThreeMonthsThenEvenOddMonthsSkipRule(d, true) },
             { "SI", (d, _) => ContractMonthYearStartThreeMonthsThenEvenOddMonthsSkipRule(d, true) },
-            { "GC", (d, _) => ContractMonthEvenOddMonth(d, false) }
+            { "GC", (d, _) => ContractMonthEvenOddMonth(d, false) },
+
+            // CME
+            { "6A", (d, ld) => ContractMonthSerialLookupRule(Symbol.Create("6A", SecurityType.Future, Market.CME), d, ld.Value) },
+            { "6B", (d, ld) => ContractMonthSerialLookupRule(Symbol.Create("6B", SecurityType.Future, Market.CME), d, ld.Value) },
+            { "6M", (d, ld) => ContractMonthSerialLookupRule(Symbol.Create("6M", SecurityType.Future, Market.CME), d, ld.Value) },
+            { "6J", (d, ld) => ContractMonthSerialLookupRule(Symbol.Create("6J", SecurityType.Future, Market.CME), d, ld.Value) },
+            { "6E", (d, ld) => ContractMonthSerialLookupRule(Symbol.Create("6E", SecurityType.Future, Market.CME), d, ld.Value) },
+            { "6C", (d, ld) => ContractMonthSerialLookupRule(Symbol.Create("6C", SecurityType.Future, Market.CME), d, ld.Value) },
         };
 
         /// <summary>
@@ -149,9 +157,7 @@ namespace QuantConnect.Securities.FutureOption
                 // Normalize by date first, normalize to a contract month date, then we want to get the contract
                 // month of the Future contract so we normalize by getting the delta between the expiration
                 // and the contract month.
-                var futureContractMonth = future.ID.Date.Date
-                    .AddDays(-future.ID.Date.Day + 1)
-                    .AddMonths(FuturesExpiryUtilityFunctions.GetDeltaBetweenContractMonthAndContractExpiry(future.ID.Symbol, future.ID.Date));
+                var futureContractMonth = FuturesExpiryUtilityFunctions.GetFutureContractMonth(future);
 
                 // We want a contract that is either the same as the contract month or greater
                 if (futureContractMonth < futureOptionContractMonth)

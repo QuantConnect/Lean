@@ -134,6 +134,11 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             if (IsUniverseSelectionSubscription
                 || subscriptionRequest.IsUniverseSubscription)
             {
+                if (subscriptionRequest.Universe is UserDefinedUniverse)
+                {
+                    // for different reasons a user defined universe can trigger a subscription request, likes additions/removals
+                    return false;
+                }
                 throw new Exception("Subscription.AddSubscriptionRequest(): Universe selection" +
                     " subscriptions should not have more than 1 SubscriptionRequest");
             }

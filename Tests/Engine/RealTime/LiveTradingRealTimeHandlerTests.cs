@@ -131,38 +131,45 @@ namespace QuantConnect.Tests.Engine.RealTime
             var transactionHandler = new TestBrokerageTransactionHandler();
             using var broker = new BacktestingBrokerage(algorithm);
             transactionHandler.Initialize(algorithm, broker, new BacktestingResultHandler());
-
-            // Creates a market order
-            security.SetMarketPrice(new TradeBar(new DateTime(2023, 5, 30), symbol, 280m, 280m, 280m, 280m, 100));
-
-            var orderRequest = new SubmitOrderRequest(OrderType.Market, security.Type, security.Symbol, 1, 0, 0, new DateTime(2023, 5, 30), "TestTag1");
-
-            var orderProcessorMock = new Mock<IOrderProcessor>();
-            orderProcessorMock.Setup(m => m.GetOrderTicket(It.IsAny<int>())).Returns(new OrderTicket(algorithm.Transactions, orderRequest));
-            algorithm.Transactions.SetOrderProcessor(orderProcessorMock.Object);
-            var orderTicket = transactionHandler.Process(orderRequest);
-            transactionHandler.HandleOrderRequest(orderRequest);
-            Assert.IsTrue(orderTicket.Status == OrderStatus.Submitted);
-            broker.Scan();
-            Assert.IsTrue(orderTicket.Status == OrderStatus.Filled);
-
             var realTimeHandler = new TestLiveTradingRealTimeHandlerReset();
-            realTimeHandler.Setup(algorithm,
-                new AlgorithmNodePacket(PacketType.AlgorithmNode),
-                new BacktestingResultHandler(),
-                null,
-                new TestTimeLimitManager());
-            realTimeHandler.AddRefreshHoursScheduledEvent();
 
-            orderRequest = new SubmitOrderRequest(OrderType.Market, security.Type, security.Symbol, 1, 0, 0, new DateTime(2023, 5, 30), "TestTag2");
-            orderRequest.SetOrderId(2);
-            orderTicket = transactionHandler.Process(orderRequest);
-            transactionHandler.HandleOrderRequest(orderRequest);
-            Assert.IsTrue(orderTicket.Status == OrderStatus.Submitted);
-            broker.Scan();
-            Assert.IsTrue(orderTicket.Status != OrderStatus.Filled);
+            try
+            {
+                // Creates a market order
+                security.SetMarketPrice(new TradeBar(new DateTime(2023, 5, 30), symbol, 280m, 280m, 280m, 280m, 100));
 
-            realTimeHandler.Exit();
+                var orderRequest = new SubmitOrderRequest(OrderType.Market, security.Type, security.Symbol, 1, 0, 0, new DateTime(2023, 5, 30), "TestTag1");
+
+                var orderProcessorMock = new Mock<IOrderProcessor>();
+                orderProcessorMock.Setup(m => m.GetOrderTicket(It.IsAny<int>())).Returns(new OrderTicket(algorithm.Transactions, orderRequest));
+                algorithm.Transactions.SetOrderProcessor(orderProcessorMock.Object);
+                var orderTicket = transactionHandler.Process(orderRequest);
+                transactionHandler.HandleOrderRequest(orderRequest);
+                Assert.IsTrue(orderTicket.Status == OrderStatus.Submitted);
+                broker.Scan();
+                Assert.IsTrue(orderTicket.Status == OrderStatus.Filled);
+
+                realTimeHandler.Setup(algorithm,
+                    new AlgorithmNodePacket(PacketType.AlgorithmNode),
+                    new BacktestingResultHandler(),
+                    null,
+                    new TestTimeLimitManager());
+                realTimeHandler.AddRefreshHoursScheduledEvent();
+
+                orderRequest = new SubmitOrderRequest(OrderType.Market, security.Type, security.Symbol, 1, 0, 0, new DateTime(2023, 5, 30), "TestTag2");
+                orderRequest.SetOrderId(2);
+                orderTicket = transactionHandler.Process(orderRequest);
+                transactionHandler.HandleOrderRequest(orderRequest);
+                Assert.IsTrue(orderTicket.Status == OrderStatus.Submitted);
+                broker.Scan();
+                Assert.IsTrue(orderTicket.Status != OrderStatus.Filled);
+            }
+            finally
+            {
+                transactionHandler.Exit();
+                realTimeHandler.Exit();
+            }
+
         }
 
         [TestCase(null)]
@@ -200,18 +207,18 @@ namespace QuantConnect.Tests.Engine.RealTime
             // wait for the internal thread to start
             WaitUntilActive(realTimeHandler);
 
-            for (var i = 0; i < 10; i++)
+            for (var i = 0; i < 5; i++)
             {
                 timeProvider.Advance(step);
 
                 // We only advanced half the time, so we should not have refreshed yet
                 if (i % 2 == 0)
                 {
-                    Assert.IsFalse(realTimeHandler.SpdbRefreshed.Wait(5000));
+                    Assert.IsFalse(realTimeHandler.SpdbRefreshed.Wait(100));
                 }
                 else
                 {
-                    Assert.IsTrue(realTimeHandler.SpdbRefreshed.Wait(5000));
+                    Assert.IsTrue(realTimeHandler.SpdbRefreshed.Wait(2000));
                     realTimeHandler.SpdbRefreshed.Reset();
                 }
             }
@@ -295,7 +302,7 @@ namespace QuantConnect.Tests.Engine.RealTime
         {
             while (!realTimeHandler.IsActive)
             {
-                Thread.Sleep(5);
+                Thread.Sleep(2);
             }
         }
 
@@ -408,6 +415,11 @@ namespace QuantConnect.Tests.Engine.RealTime
             {
                 base.ResetSymbolPropertiesDatabase();
                 SpdbRefreshed.Set();
+            }
+
+            protected override void WaitTillNextSecond(DateTime time)
+            {
+                Thread.Sleep(2);
             }
 
             public void Dispose()

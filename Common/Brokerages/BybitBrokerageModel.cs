@@ -205,7 +205,7 @@ public class BybitBrokerageModel : DefaultBrokerageModel
     protected virtual bool IsOrderSizeLargeEnough(Security security, decimal orderQuantity)
     {
         return !security.SymbolProperties.MinimumOrderSize.HasValue ||
-               orderQuantity > security.SymbolProperties.MinimumOrderSize;
+               orderQuantity >= security.SymbolProperties.MinimumOrderSize;
     }
 
     private static IReadOnlyDictionary<SecurityType, string> GetDefaultMarkets(string marketName)

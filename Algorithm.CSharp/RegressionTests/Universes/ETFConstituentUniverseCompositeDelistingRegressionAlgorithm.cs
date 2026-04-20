@@ -106,18 +106,17 @@ namespace QuantConnect.Algorithm.CSharp
             }
 
             // if we added the etf subscription it will get added and delisted and send us a addition/removal event
-            var adjusment = AddETFSubscription ? 1 : 0;
-            var expectedChangesCount = _universeSymbolCount + adjusment;
+            var expectedChangesCount = _universeSymbolCount;
 
             if (_universeSelectionDone)
             {
-                // "_universeSymbolCount + 1" because selection is done right away,
-                // so AddedSecurities includes all ETF constituents (including APPL) plus GDVD
-                _universeAdded |= changes.AddedSecurities.Count == expectedChangesCount;
+                // manually added securities are added right away, the etf universe selection happens a few days later when data available
+                // AAPL was already added so it wont be counted
+                _universeAdded |= changes.AddedSecurities.Count == (expectedChangesCount - 1);
             }
 
             // TODO: shouldn't be sending AAPL as a removed security since it was added by another universe
-            _universeRemoved |= changes.RemovedSecurities.Count == expectedChangesCount &&
+            _universeRemoved |= changes.RemovedSecurities.Count == (expectedChangesCount + (AddETFSubscription ? 1 : 0)) &&
                 UtcTime.Date >= _delistingDate &&
                 UtcTime.Date < EndDate;
         }
@@ -151,7 +150,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
-        public virtual long DataPoints => 692;
+        public virtual long DataPoints => 826;
 
         /// <summary>
         /// Data Points count of the algorithm history
@@ -171,31 +170,31 @@ namespace QuantConnect.Algorithm.CSharp
             {"Total Orders", "1"},
             {"Average Win", "0%"},
             {"Average Loss", "0%"},
-            {"Compounding Annual Return", "30.084%"},
+            {"Compounding Annual Return", "26.315%"},
             {"Drawdown", "5.400%"},
             {"Expectancy", "0"},
             {"Start Equity", "100000"},
-            {"End Equity", "104393.19"},
-            {"Net Profit", "4.393%"},
-            {"Sharpe Ratio", "1.543"},
-            {"Sortino Ratio", "2.111"},
-            {"Probabilistic Sharpe Ratio", "58.028%"},
+            {"End Equity", "103892.62"},
+            {"Net Profit", "3.893%"},
+            {"Sharpe Ratio", "1.291"},
+            {"Sortino Ratio", "1.876"},
+            {"Probabilistic Sharpe Ratio", "53.929%"},
             {"Loss Rate", "0%"},
             {"Win Rate", "0%"},
             {"Profit-Loss Ratio", "0"},
-            {"Alpha", "0.166"},
-            {"Beta", "0.717"},
-            {"Annual Standard Deviation", "0.136"},
+            {"Alpha", "0.13"},
+            {"Beta", "0.697"},
+            {"Annual Standard Deviation", "0.139"},
             {"Annual Variance", "0.019"},
-            {"Information Ratio", "1.254"},
-            {"Tracking Error", "0.118"},
-            {"Treynor Ratio", "0.293"},
-            {"Total Fees", "$2.06"},
-            {"Estimated Strategy Capacity", "$160000000.00"},
+            {"Information Ratio", "0.889"},
+            {"Tracking Error", "0.122"},
+            {"Treynor Ratio", "0.257"},
+            {"Total Fees", "$2.04"},
+            {"Estimated Strategy Capacity", "$260000000.00"},
             {"Lowest Capacity Asset", "AAPL R735QTJ8XC9X"},
             {"Portfolio Turnover", "0.83%"},
             {"Drawdown Recovery", "23"},
-            {"OrderListHash", "527cba5cfdcac4b0f667bb354e80a1fe"}
+            {"OrderListHash", "cdf9a800c8ec7d5f9f750f32c2622f5a"}
         };
     }
 }

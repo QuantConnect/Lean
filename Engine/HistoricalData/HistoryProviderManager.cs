@@ -17,9 +17,9 @@ using NodaTime;
 using QuantConnect.Configuration;
 using QuantConnect.Data;
 using QuantConnect.Interfaces;
-using QuantConnect.Lean.Engine.DataFeeds;
 using QuantConnect.Lean.Engine.DataFeeds.Enumerators;
 using QuantConnect.Logging;
+using QuantConnect.Packets;
 using QuantConnect.Util;
 using System;
 using System.Collections.Generic;
@@ -34,9 +34,11 @@ namespace QuantConnect.Lean.Engine.HistoricalData
     /// </summary>
     public class HistoryProviderManager : HistoryProviderBase
     {
+        private AlgorithmNodePacket _job;
         private IDataPermissionManager _dataPermissionManager;
         private IBrokerage _brokerage;
         private bool _initialized;
+        private bool _loggedEquityShortcutWarning;
 
         /// <summary>
         /// Collection of history providers being used
@@ -70,6 +72,7 @@ namespace QuantConnect.Lean.Engine.HistoricalData
                 throw new InvalidOperationException("BrokerageHistoryProvider can only be initialized once");
             }
             _initialized = true;
+            _job = parameters.Job;
 
             var dataProvidersList = parameters.Job?.HistoryProvider.DeserializeList() ?? new List<string>();
             if (dataProvidersList.IsNullOrEmpty())
@@ -133,25 +136,37 @@ namespace QuantConnect.Lean.Engine.HistoricalData
         {
             List<IEnumerator<Slice>> historyEnumerators = new(_historyProviders.Count);
 
-            var historyRequets = new List<HistoryRequest>();
+            var historyRequests = new List<HistoryRequest>();
             foreach (var request in requests)
             {
                 var config = request.ToSubscriptionDataConfig();
                 _dataPermissionManager?.AssertConfiguration(config, request.StartTimeLocal, request.EndTimeLocal);
-                historyRequets.Add(request);
+                historyRequests.Add(request);
             }
 
             foreach (var historyProvider in _historyProviders)
             {
                 try
                 {
-                    var history = historyProvider.GetHistory(historyRequets, sliceTimeZone);
+                    var history = historyProvider.GetHistory(historyRequests, sliceTimeZone);
                     if (history == null)
                     {
                         // doesn't support this history request, that's okay
                         continue;
                     }
                     historyEnumerators.Add(history.GetEnumerator());
+
+                    if (_job != null && _job.DeploymentTarget == DeploymentTarget.CloudPlatform
+                        && _historyProviders.Count > 1 && historyRequests.All(x => x.Symbol.SecurityType == SecurityType.Equity))
+                    {
+                        if (!_loggedEquityShortcutWarning)
+                        {
+                            _loggedEquityShortcutWarning = true;
+                            Log.Trace($"HistoryProviderManager.GetHistory(): using {_historyProviders[0].GetType().Name} provider for equity," +
+                                $" skipping: [{string.Join(",", _historyProviders.Skip(1).Select(x => x.GetType().Name))}]");
+                        }
+                        break;
+                    }
                 }
                 catch (Exception e)
                 {

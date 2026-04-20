@@ -51,13 +51,15 @@ If you would like to mount any additional local files to your container, checkou
 
 <h2>Option 3: Install Dependencies Locally</h2>
 
-1. Install [.NET 9](https://dotnet.microsoft.com/en-us/download/dotnet/9.0) for the project
+1. Install [.NET 10](https://dotnet.microsoft.com/en-us/download/dotnet/10.0) for the project
 
-2. (Optional) Get [Python 3.11.11](https://www.python.org/downloads/release/python-31111/) for running Python algorithms
+2. (Optional) Get [Python 3.11.14](https://www.python.org/downloads/release/python-31114/) for running Python algorithms
     - Follow Python instructions [here](https://github.com/QuantConnect/Lean/tree/master/Algorithm.Python#installing-python-311) for your platform
 
 3. Get [Visual Studio Code](https://code.visualstudio.com/download)
     - Get the Extension [C#](https://marketplace.visualstudio.com/items?itemName=ms-dotnettools.csharp) for C# Debugging
+    - Get the Extension [C# Dev Kit](https://marketplace.visualstudio.com/items?itemName=ms-dotnettools.csdevkit) for the .NET Test Explorer and enhanced C# development
+    - Get the Extension [IntelliCode for C# Dev Kit](https://marketplace.visualstudio.com/items?itemName=ms-dotnettools.vscodeintellicode-csharp) for AI-assisted IntelliSense
     - Get the Extension [Python](https://marketplace.visualstudio.com/items?itemName=ms-python.python) for Python Debugging
 
 4. Get Lean into VS Code
@@ -107,6 +109,9 @@ In VS Code run build task (Ctrl+Shift+B or "Terminal" dropdown); there are a few
 - __Build__ - basic build task, just builds Lean once
 - __Rebuild__ - rebuild task, completely rebuilds the project. Use if having issues with debugging symbols being loaded for your algorithms.
 - __Clean__ - deletes out all project build files
+- __Test__ - runs the unit tests (requires building first)
+
+**Note:** VS Code will prompt you to install the recommended extensions (C#, C# Dev Kit, Python) when you first open the workspace. You can also install them manually or via the `extensions.json` file.
 
 <br />
 

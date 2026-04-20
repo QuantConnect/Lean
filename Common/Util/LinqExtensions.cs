@@ -18,6 +18,8 @@ using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Collections.ObjectModel;
 using System.Linq;
+using Common.Util;
+using QuantConnect.Data.Market;
 
 namespace QuantConnect.Util
 {
@@ -110,7 +112,7 @@ namespace QuantConnect.Util
         public static T Median<T>(this IEnumerable<T> enumerable)
         {
             var collection = enumerable.ToList();
-            return collection.OrderBy(x => x).Skip(collection.Count/2).First();
+            return collection.OrderBy(x => x).Skip(collection.Count / 2).First();
         }
 
         /// <summary>
@@ -254,7 +256,7 @@ namespace QuantConnect.Util
             {
                 if (e.MoveNext())
                 {
-                    var list = new List<T> {e.Current};
+                    var list = new List<T> { e.Current };
                     var pred = e.Current;
                     while (e.MoveNext())
                     {
@@ -265,7 +267,7 @@ namespace QuantConnect.Util
                         else
                         {
                             yield return list;
-                            list = new List<T> {e.Current};
+                            list = new List<T> { e.Current };
                         }
                         pred = e.Current;
                     }
@@ -285,7 +287,7 @@ namespace QuantConnect.Util
         /// <returns>True if there are any differences between the two sets, false otherwise</returns>
         public static bool AreDifferent<T>(this ISet<T> left, ISet<T> right)
         {
-            if(ReferenceEquals(left, right))
+            if (ReferenceEquals(left, right))
             {
                 return false;
             }
@@ -336,6 +338,41 @@ namespace QuantConnect.Util
             {
                 action(element);
             }
+        }
+
+        /// <summary>
+        /// Converts a dictionary to a ReadOnlyExtendedDictionary
+        /// </summary>
+        public static ReadOnlyExtendedDictionary<TKey, TValue> ToReadOnlyExtendedDictionary<TKey, TValue>(
+            this IDictionary<TKey, TValue> dictionary)
+        {
+            return new ReadOnlyExtendedDictionary<TKey, TValue>(dictionary);
+        }
+
+        /// <summary>
+        /// Creates a ReadOnlyExtendedDictionary from an IEnumerable according to specified key selector
+        /// </summary>
+        public static ReadOnlyExtendedDictionary<TKey, TValue> ToReadOnlyExtendedDictionary<TValue, TKey>(
+            this IEnumerable<TValue> source,
+            Func<TValue, TKey> keySelector)
+        {
+            return new ReadOnlyExtendedDictionary<TKey, TValue>(source, keySelector);
+        }
+
+        /// <summary>
+        /// Creates a DataDictionary from an IEnumerable according to specified key and value selectors
+        /// </summary>
+        public static DataDictionary<TValue> ToDataDictionary<TSource, TValue>(
+            this IEnumerable<TSource> source,
+            Func<TSource, Symbol> keySelector,
+            Func<TSource, TValue> valueSelector)
+        {
+            var result = new DataDictionary<TValue>();
+            foreach (var item in source)
+            {
+                result.Add(keySelector(item), valueSelector(item));
+            }
+            return result;
         }
     }
 }

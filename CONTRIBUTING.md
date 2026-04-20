@@ -18,7 +18,7 @@ Code reviewers will be expecting to see code that follows Microsoft's C# guideli
 
 As a point of consistency, we use soft tabs of four spaces to ensure files render correctly in everyone's environment/diff tools.
 
-All pull requests must be accompanied by units tests. If it is a new feature, the tests should highlight expected use cases as well as edge cases, if applicable. If it is a bugfix, there should be tests that expose the bug in question.
+All pull requests must be accompanied by unit tests. If it is a new feature, the tests should highlight expected use cases as well as edge cases, if applicable. If it is a bugfix, there should be tests that expose the bug in question.
 
 ## Guidelines for Framework Modules Contributions
 
@@ -73,7 +73,7 @@ As a **contributor** you will push your completed **local** topic branch to **or
 
 The upstream repository holds a single primary branch that we maintain:
 
-* **upstream/master** - This is the where main development takes place
+* **upstream/master** - This is where main development takes place
 
 ## Topic Branches
 
@@ -103,10 +103,10 @@ $ git add --all
 $ git commit
 ```
 
-You can push your changes to your fork's master branch using:
+You can push your changes to your fork's topic branch using:
 
 ```bash
-$ git push origin master
+$ git push origin bug-123-short-issue-description
 ```
 
 When committing, be sure to follow [best practices](https://github.com/erlang/otp/wiki/Writing-good-commit-messages) writing good commit descriptions.
@@ -125,7 +125,7 @@ The `git fetch upstream` command will download the **upstream** repository to yo
 If you need to merge changes in after pushing your branch to **origin**, use the following:
 
 ```bash
-$ git pull upstream/master
+$ git pull upstream master
 ```
 
 When topic branches are finished and ready for review, they should be pushed back to **origin**.

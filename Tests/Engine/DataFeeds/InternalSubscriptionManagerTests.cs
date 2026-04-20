@@ -411,7 +411,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 new RegisteredSecurityDataTypesProvider(),
                 new DataPermissionManager());
             _resultHandler = new TestResultHandler();
-            _synchronizer.Initialize(_algorithm, _dataManager);
+            _synchronizer.Initialize(_algorithm, _dataManager, new());
             _dataFeed.Initialize(_algorithm,
                 new LiveNodePacket(),
                 _resultHandler,
