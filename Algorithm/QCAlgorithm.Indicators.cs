@@ -2767,6 +2767,27 @@ namespace QuantConnect.Algorithm
         }
 
         /// <summary>
+        /// Creates a new WaveTrendOscillator indicator for the symbol.
+        /// The indicator will be automatically updated on the given resolution.
+        /// </summary>
+        /// <param name="symbol">The symbol whose WaveTrend Oscillator we want</param>
+        /// <param name="channelPeriod">The period used to smooth the typical price and its mean deviation (n1)</param>
+        /// <param name="averagePeriod">The period used to smooth the channel index into the main wave trend line (n2)</param>
+        /// <param name="signalPeriod">The period used to smooth the wave trend line into the signal line</param>
+        /// <param name="resolution">The resolution</param>
+        /// <param name="selector">Selects a value from the BaseData to send into the indicator, if null defaults to casting the input value to a TradeBar</param>
+        /// <returns>The WaveTrendOscillator indicator for the requested symbol with the given parameters</returns>
+        [DocumentationAttribute(Indicators)]
+        public WaveTrendOscillator WTO(Symbol symbol, int channelPeriod = 10, int averagePeriod = 21, int signalPeriod = 4, Resolution? resolution = null, Func<IBaseData, IBaseDataBar> selector = null)
+        {
+            var name = CreateIndicatorName(symbol, $"WTO({channelPeriod},{averagePeriod},{signalPeriod})", resolution);
+            var waveTrendOscillator = new WaveTrendOscillator(name, channelPeriod, averagePeriod, signalPeriod);
+            InitializeIndicator(waveTrendOscillator, resolution, selector, symbol);
+
+            return waveTrendOscillator;
+        }
+
+        /// <summary>
         /// Creates a Wilder Swing Index (SI) indicator for the symbol.
         /// The indicator will be automatically updated on the given resolution.
         /// </summary>
