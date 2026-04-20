@@ -22,6 +22,8 @@ namespace QuantConnect.Tests.Common
     public class ExchangeTest
     {
         [TestCase("NASDAQ", "Q")]
+        [TestCase("NASDAQ_SC", "S")]
+        [TestCase("NASDAQ_INT", "T")]
         [TestCase("NASDAQ BX", "B")]
         [TestCase("NASDAQ PSX", "X")]
         [TestCase("BATS", "Z")]
@@ -129,6 +131,8 @@ namespace QuantConnect.Tests.Common
             {
                 new TestCaseData(Exchange.UNKNOWN, null, "", SecurityType.Base),
                 new TestCaseData(Exchange.NASDAQ, "Q", "NASDAQ", SecurityType.Equity),
+                new TestCaseData(Exchange.NASDAQ_SC, "S", "NASDAQ_SC", SecurityType.Equity),
+                new TestCaseData(Exchange.NASDAQ_INT, "T", "NASDAQ_INT", SecurityType.Equity),
                 new TestCaseData(Exchange.NASDAQ_BX, "B", "NASDAQ_BX", SecurityType.Equity),
                 new TestCaseData(Exchange.NASDAQ_PSX, "X", "NASDAQ_PSX", SecurityType.Equity),
                 new TestCaseData(Exchange.BATS, "Z", "BATS", SecurityType.Equity),
