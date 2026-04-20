@@ -19,6 +19,7 @@ using System.Globalization;
 using System.Linq;
 using System.Reflection;
 using Fasterflect;
+using Newtonsoft.Json;
 using QuantConnect.AlgorithmFactory;
 using QuantConnect.Brokerages;
 using QuantConnect.Configuration;
@@ -29,6 +30,7 @@ using QuantConnect.Lean.Engine.DataFeeds;
 using QuantConnect.Lean.Engine.Results;
 using QuantConnect.Lean.Engine.TransactionHandlers;
 using QuantConnect.Logging;
+using QuantConnect.Orders;
 using QuantConnect.Packets;
 using QuantConnect.Securities;
 using QuantConnect.Util;
@@ -46,6 +48,16 @@ namespace QuantConnect.Lean.Engine.Setup
         /// Max allocation limit configuration variable name
         /// </summary>
         public static string MaxAllocationLimitConfig = "max-allocation-limit";
+
+        /// <summary>
+        /// Cached live orders configuration key.
+        /// </summary>
+        public static string LiveOrdersConfig = "live-orders";
+
+        /// <summary>
+        /// Brokerage data orders configuration key.
+        /// </summary>
+        public static string OrdersConfig = "orders";
 
         /// <summary>
         /// The worker thread instance the setup handler should use
@@ -402,7 +414,7 @@ namespace QuantConnect.Lean.Engine.Setup
             Log.Trace("BrokerageSetupHandler.Setup(): Fetching open orders from brokerage...");
             try
             {
-                GetOpenOrders(algorithm, parameters.ResultHandler, parameters.TransactionHandler, brokerage);
+                GetOpenOrders(algorithm, parameters.ResultHandler, parameters.TransactionHandler, brokerage, parameters.AlgorithmNodePacket as LiveNodePacket);
             }
             catch (Exception err)
             {
@@ -482,14 +494,18 @@ namespace QuantConnect.Lean.Engine.Setup
         /// <param name="resultHandler">The configured result handler</param>
         /// <param name="transactionHandler">The configurated transaction handler</param>
         /// <param name="brokerage">Brokerage output instance</param>
-        protected void GetOpenOrders(IAlgorithm algorithm, IResultHandler resultHandler, ITransactionHandler transactionHandler, IBrokerage brokerage)
+        /// <param name="liveJob">Live job packet containing brokerage data</param>
+        protected void GetOpenOrders(IAlgorithm algorithm, IResultHandler resultHandler, ITransactionHandler transactionHandler, IBrokerage brokerage, LiveNodePacket liveJob = null)
         {
             // populate the algorithm with the account's outstanding orders
             var openOrders = brokerage.GetOpenOrders();
+            var liveOrders = GetCachedLiveOrders(liveJob);
 
             // add options first to ensure raw data normalization mode is set on the equity underlyings
             foreach (var order in openOrders.OrderByDescending(x => x.SecurityType))
             {
+                TryUpdateOrderTagFromCachedLiveOrder(order, liveOrders);
+
                 // verify existing holding security type
                 Security security;
                 if (!GetOrAddUnrequestedSecurity(algorithm, order.Symbol, order.SecurityType, out security))
@@ -502,6 +518,74 @@ namespace QuantConnect.Lean.Engine.Setup
 
                 Log.Trace($"BrokerageSetupHandler.Setup(): Has open order: {order}");
                 resultHandler.DebugMessage($"BrokerageSetupHandler.Setup(): Open order detected.  Creating order tickets for open order {order.Symbol.Value} with quantity {order.Quantity}. Beware that this order ticket may not accurately reflect the quantity of the order if the open order is partially filled.");
+            }
+        }
+
+        private static List<Order> GetCachedLiveOrders(LiveNodePacket liveJob)
+        {
+            if (liveJob?.BrokerageData == null)
+            {
+                return new List<Order>();
+            }
+
+            if (!liveJob.BrokerageData.Remove(OrdersConfig, out var liveOrdersJson) &&
+                !liveJob.BrokerageData.Remove(LiveOrdersConfig, out liveOrdersJson))
+            {
+                return new List<Order>();
+            }
+
+            if (string.IsNullOrWhiteSpace(liveOrdersJson))
+            {
+                return new List<Order>();
+            }
+
+            try
+            {
+                // API payload can come as { length, orders:[...] } or directly as an orders array.
+                var wrapper = JsonConvert.DeserializeObject<OrdersResponseWrapper>(liveOrdersJson);
+                var wrapperOrders = wrapper?.Orders?.Select(x => x.Order).Where(x => x != null).ToList();
+                if (wrapperOrders != null && wrapperOrders.Count != 0)
+                {
+                    return wrapperOrders;
+                }
+            }
+            catch (Exception err)
+            {
+                Log.Debug($"BrokerageSetupHandler.GetCachedLiveOrders(): Failed to parse cached live orders wrapper. {err.Message}");
+            }
+
+            try
+            {
+                var responses = JsonConvert.DeserializeObject<List<ApiOrderResponse>>(liveOrdersJson);
+                return responses?.Select(x => x.Order).Where(x => x != null).ToList() ?? new List<Order>();
+            }
+            catch (Exception err)
+            {
+                Log.Debug($"BrokerageSetupHandler.GetCachedLiveOrders(): Failed to parse cached live orders list. {err.Message}");
+            }
+
+            return new List<Order>();
+        }
+
+        private static void TryUpdateOrderTagFromCachedLiveOrder(Order order, List<Order> cachedLiveOrders)
+        {
+            if (order?.BrokerId == null || order.BrokerId.Count == 0 || cachedLiveOrders.Count == 0)
+            {
+                return;
+            }
+
+            foreach (var brokerId in order.BrokerId.Where(x => !string.IsNullOrEmpty(x)))
+            {
+                var cached = cachedLiveOrders.FirstOrDefault(x =>
+                    x.BrokerId != null &&
+                    x.BrokerId.Contains(brokerId) &&
+                    !string.IsNullOrEmpty(x.Tag));
+
+                if (cached != null)
+                {
+                    order.Tag = cached.Tag;
+                    return;
+                }
             }
         }
 
