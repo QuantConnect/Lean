@@ -50,14 +50,12 @@ namespace QuantConnect.Tests.API
         {
             foreach (var key in _keysToSetUp)
             {
-                ApiClient.SetObjectStore(TestOrganization, _ciTestFolder + key, _data);
+                var fullKey = _ciTestFolder + key;
+                if (!ApiClient.GetObjectStoreProperties(TestOrganization, fullKey).Success)
+                {
+                    ApiClient.SetObjectStore(TestOrganization, fullKey, _data);
+                }
             }
-        }
-
-        [OneTimeTearDown]
-        public void TearDownObjectStoreFiles()
-        {
-            ApiClient.DeleteObjectStore(TestOrganization, _ciTestFolder);
         }
 
         [TestCaseSource(nameof(GetObjectStoreWorksAsExpectedTestCases))]
