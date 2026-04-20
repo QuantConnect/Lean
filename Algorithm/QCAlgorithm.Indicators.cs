@@ -2727,6 +2727,29 @@ namespace QuantConnect.Algorithm
         }
 
         /// <summary>
+        /// Creates a new WaveTrend Oscillator indicator. This combines two nested exponential moving
+        /// averages over the typical price with a signal line, smoothing a CCI-like transformation
+        /// into a bounded oscillator suitable for spotting overbought/oversold conditions and crossovers.
+        /// The indicator will be automatically updated on the given resolution.
+        /// </summary>
+        /// <param name="symbol">The symbol whose WaveTrend Oscillator we want</param>
+        /// <param name="channelPeriod">The channel length (EMA of typical price)</param>
+        /// <param name="averagePeriod">The average length (EMA applied to the CCI-like series, produces WT1)</param>
+        /// <param name="signalPeriod">The period of the SMA applied to WT1 to produce the signal line (WT2)</param>
+        /// <param name="resolution">The resolution</param>
+        /// <param name="selector">Selects a value from the BaseData to send into the indicator, if null defaults to casting the input value to a TradeBar</param>
+        /// <returns>The WaveTrendOscillator indicator for the requested symbol over the specified parameters</returns>
+        [DocumentationAttribute(Indicators)]
+        public WaveTrendOscillator WTO(Symbol symbol, int channelPeriod = 10, int averagePeriod = 21, int signalPeriod = 4,
+            Resolution? resolution = null, Func<IBaseData, IBaseDataBar> selector = null)
+        {
+            var name = CreateIndicatorName(symbol, $"WTO({channelPeriod},{averagePeriod},{signalPeriod})", resolution);
+            var indicator = new WaveTrendOscillator(name, channelPeriod, averagePeriod, signalPeriod);
+            InitializeIndicator(indicator, resolution, selector, symbol);
+            return indicator;
+        }
+
+        /// <summary>
         /// Creates a new Williams %R indicator. This will compute the percentage change of
         /// the current closing price in relation to the high and low of the past N periods.
         /// The indicator will be automatically updated on the given resolution.
