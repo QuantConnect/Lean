@@ -23,10 +23,42 @@ using QuantConnect.Api;
 namespace QuantConnect.Tests.API
 {
     [TestFixture, Explicit("Requires configured api access and available backtest node to run on"), Parallelizable(ParallelScope.Fixtures)]
-    public class ObjectStoreTests: ApiTestBase
+    public class ObjectStoreTests : ApiTestBase
     {
-        private const string _key = "/Ricardo";
+        private const string _ciTestFolder = "/CI_TEST";
+        private const string _key = _ciTestFolder + "/Ricardo";
         private readonly byte[] _data = new byte[3] { 1, 2, 3 };
+
+        private static readonly string[] _keysToSetUp = new[]
+        {
+            "/filename.zip",
+            "/mm_test.csv",
+            "/model",
+            "/trades_test.json",
+            "/profile_results.json",
+            "/CustomData/placeholder.txt",
+            "/log.txt",
+            "/l1_model.p",
+            "/latency_1_False.txt",
+            "/portfolio-targets2.csv",
+            "/Regressor",
+            "/example_data_2.zip"
+        };
+
+        [OneTimeSetUp]
+        public void SetUpObjectStoreFiles()
+        {
+            foreach (var key in _keysToSetUp)
+            {
+                ApiClient.SetObjectStore(TestOrganization, _ciTestFolder + key, _data);
+            }
+        }
+
+        [OneTimeTearDown]
+        public void TearDownObjectStoreFiles()
+        {
+            ApiClient.DeleteObjectStore(TestOrganization, _ciTestFolder);
+        }
 
         [TestCaseSource(nameof(GetObjectStoreWorksAsExpectedTestCases))]
         public void GetObjectStoreWorksAsExpected(string testName, List<string> keys, bool isSuccessExpected)
@@ -45,12 +77,12 @@ namespace QuantConnect.Tests.API
             }
         }
 
-        [TestCase("/filename.zip", true)]
-        [TestCase("/orats_2024-02-32.json", false)]
-        [TestCase("/mrm8488", false)]
-        [TestCase("/mm_test.csv", true)]
-        [TestCase("/model", true)]
-        [TestCase("/trades_test.json", true)]
+        [TestCase(_ciTestFolder + "/filename.zip", true)]
+        [TestCase(_ciTestFolder + "/orats_2024-02-32.json", false)]
+        [TestCase(_ciTestFolder + "/mrm8488", false)]
+        [TestCase(_ciTestFolder + "/mm_test.csv", true)]
+        [TestCase(_ciTestFolder + "/model", true)]
+        [TestCase(_ciTestFolder + "/trades_test.json", true)]
         public void GetObjectStorePropertiesWorksAsExpected(string key, bool isSuccessExpected)
         {
             var result = ApiClient.GetObjectStoreProperties(TestOrganization, key);
@@ -121,19 +153,19 @@ namespace QuantConnect.Tests.API
 
         private static object[] GetObjectStoreWorksAsExpectedTestCases =
         {
-            new object[] { "Two keys present", new List<string> { "/trades_test.json", "/profile_results.json" }, true},
+            new object[] { "Two keys present", new List<string> { _ciTestFolder + "/trades_test.json", _ciTestFolder + "/profile_results.json" }, true},
             new object[] { "No key is given", new List<string> {}, false},
-            new object[] { "One key is present and the other one not", new List<string> { "/trades_test.json", "/orats_2024-02-32.json" }, true},
-            new object[] { "The key is not present", new List<string> { "/orats_2024-02-32.json" }, false},
-            new object[] { "The type of the object store file is directory", new List<string> { "/CustomData" }, true},
-            new object[] { "The type of the object store file is text/plain", new List<string> { "/log.txt" }, true},
-            new object[] { "The type of the object store file is application/octet-stream", new List<string> { "/model" }, true},
-            new object[] { "The type of the object store file is P", new List<string> { "/l1_model.p" }, true},
+            new object[] { "One key is present and the other one not", new List<string> { _ciTestFolder + "/trades_test.json", _ciTestFolder + "/orats_2024-02-32.json" }, true},
+            new object[] { "The key is not present", new List<string> { _ciTestFolder + "/orats_2024-02-32.json" }, false},
+            new object[] { "The type of the object store file is directory", new List<string> { _ciTestFolder + "/CustomData" }, true},
+            new object[] { "The type of the object store file is text/plain", new List<string> { _ciTestFolder + "/log.txt" }, true},
+            new object[] { "The type of the object store file is application/octet-stream", new List<string> { _ciTestFolder + "/model" }, true},
+            new object[] { "The type of the object store file is P", new List<string> { _ciTestFolder + "/l1_model.p" }, true},
             new object[] { "Heavy object store files", new List<string> {
-                "/latency_1_False.txt",
-                "/portfolio-targets2.csv",
-                "/Regressor",
-                "/example_data_2.zip"
+                _ciTestFolder + "/latency_1_False.txt",
+                _ciTestFolder + "/portfolio-targets2.csv",
+                _ciTestFolder + "/Regressor",
+                _ciTestFolder + "/example_data_2.zip"
             }, true}
         };
     }
