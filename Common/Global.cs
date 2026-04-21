@@ -1040,6 +1040,7 @@ namespace QuantConnect
             {
                 switch (exchange.LazyToUpper())
                 {
+                    case "T":
                     case "Q":
                     case "NASDAQ":
                     case "NASDAQ_OMX":
@@ -1047,9 +1048,6 @@ namespace QuantConnect
                     case "S":
                     case "NASDAQ_SC":
                         return Exchange.NASDAQ_SC;
-                    case "T":
-                    case "NASDAQ_INT":
-                        return Exchange.NASDAQ_INT;
                     case "Z":
                     case "BATS":
                     case "BATS Z":
