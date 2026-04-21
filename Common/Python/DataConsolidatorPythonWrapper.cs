@@ -112,5 +112,22 @@ namespace QuantConnect.Python
         {
             _pythonWrapper.Dispose();
         }
+
+        /// <summary>
+        /// Two wrappers are equal if they wrap the same Python object reference.
+        /// </summary>
+        public override bool Equals(object obj)
+        {
+            if (obj is DataConsolidatorPythonWrapper other)
+            {
+                return _pythonWrapper.Equals(other._pythonWrapper);
+            }
+            return _pythonWrapper.Equals(obj);
+        }
+
+        /// <summary>
+        /// Hash code based on the underlying Python object reference.
+        /// </summary>
+        public override int GetHashCode() => _pythonWrapper.GetHashCode();
     }
 }
