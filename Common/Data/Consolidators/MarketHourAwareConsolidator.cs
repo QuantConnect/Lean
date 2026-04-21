@@ -15,6 +15,7 @@
 
 using System;
 using NodaTime;
+using QuantConnect.Indicators;
 using QuantConnect.Util;
 using QuantConnect.Securities;
 using QuantConnect.Data.Market;
@@ -40,6 +41,11 @@ namespace QuantConnect.Data.Common
         /// The consolidator instance
         /// </summary>
         protected IDataConsolidator Consolidator { get; }
+
+        /// <summary>
+        /// Delegates the rolling window to the inner consolidator to avoid duplication.
+        /// </summary>
+        public override RollingWindow<IBaseData> Window => ((ConsolidatorBase)Consolidator).Window;
 
         /// <summary>
         /// The associated security exchange hours instance
@@ -209,7 +215,6 @@ namespace QuantConnect.Data.Common
         protected virtual void ForwardConsolidatedBar(object sender, IBaseData consolidated)
         {
             DataConsolidated?.Invoke(this, consolidated);
-            Consolidated = consolidated;
         }
     }
 }

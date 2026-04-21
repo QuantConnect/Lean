@@ -14,6 +14,7 @@
 */
 
 using System;
+using QuantConnect.Indicators;
 
 namespace QuantConnect.Data.Consolidators
 {
@@ -40,6 +41,11 @@ namespace QuantConnect.Data.Consolidators
         {
             get; private set;
         }
+
+        /// <summary>
+        /// Delegates the rolling window to the second (inner) consolidator to avoid duplication.
+        /// </summary>
+        public override RollingWindow<IBaseData> Window => (Second as ConsolidatorBase)?.Window;
 
         /// <summary>
         /// Gets a clone of the data being currently consolidated
@@ -120,7 +126,6 @@ namespace QuantConnect.Data.Consolidators
         {
             var handler = DataConsolidated;
             if (handler != null) handler(this, consolidated);
-            Consolidated = consolidated;
         }
 
         /// <summary>Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.</summary>
