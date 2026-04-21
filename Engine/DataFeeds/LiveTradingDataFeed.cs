@@ -55,12 +55,11 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         private SubscriptionCollection _subscriptions;
         private IFactorFileProvider _factorFileProvider;
         private IDataChannelProvider _channelProvider;
-        // in live trading we delay scheduled universe selection between 11 & 12 hours after midnight UTC so that we allow new selection data to be piped in
-        // NY goes from -4/-5 UTC time, so:
-        // 11 UTC - 4 => 7am NY
-        // 12 UTC - 4 => 8am NY
-        private readonly TimeSpan _scheduledUniverseUtcTimeShift = TimeSpan.FromMinutes(11 * 60 + DateTime.UtcNow.Second);
         private readonly HashSet<string> _unsupportedConfigurations = new();
+
+        // in live trading we delay scheduled universe selection to 8 am NY, but NY goes from -4/-5 UTC time, so we adjust it
+        private static ReferenceWrapper<DateTime> _lastUtcDateShiftUpdate;
+        private static ReferenceWrapper<TimeSpan> _scheduledUniverseUtcTimeShift;
 
         /// <summary>
         /// Public flag indicator that the thread is still busy.
@@ -389,7 +388,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
             enumerator = AddScheduleWrapper(request, enumerator, new PredicateTimeProvider(_frontierTimeProvider, (currentUtcDateTime) => {
                 // will only let time advance after it's passed the live time shift frontier
-                return currentUtcDateTime.TimeOfDay > _scheduledUniverseUtcTimeShift;
+                return currentUtcDateTime.TimeOfDay > GetScheduledUniverseUtcTimeShift(currentUtcDateTime);
             }));
 
             enumerator = GetWarmupEnumerator(request, enumerator);
@@ -400,6 +399,20 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             subscription = new Subscription(request, subscriptionDataEnumerator, tzOffsetProvider);
 
             return subscription;
+        }
+
+        public static TimeSpan GetScheduledUniverseUtcTimeShift(DateTime currentUtcDateTime)
+        {
+            var currentDate = currentUtcDateTime.Date;
+            if (currentDate != _lastUtcDateShiftUpdate?.Value)
+            {
+                // on every date change, we will update the scheduled time shift to be 8am NY time, which is 12-13 UTC depending on DST
+                _lastUtcDateShiftUpdate = new(currentDate);
+                _scheduledUniverseUtcTimeShift = new(currentDate.ConvertFromUtc(TimeZones.NewYork).Date.AddHours(8).ConvertToUtc(TimeZones.NewYork).TimeOfDay
+                    // some minor randomness
+                    + TimeSpan.FromSeconds(DateTime.UtcNow.Second));
+            }
+            return _scheduledUniverseUtcTimeShift.Value;
         }
 
         /// <summary>
