@@ -54,12 +54,6 @@ namespace QuantConnect
             = new("NASDAQ_SC", "S", "NASDAQ Small Cap", QuantConnect.Market.USA, SecurityType.Equity);
 
         /// <summary>
-        /// NASDAQ Intermarket
-        /// </summary>
-        public static Exchange NASDAQ_INT { get; }
-            = new("NASDAQ_INT", "T", "NASDAQ Intermarket", QuantConnect.Market.USA, SecurityType.Equity);
-
-        /// <summary>
         /// The NASDAQ options market
         /// </summary>
         public static Exchange NASDAQ_Options { get; }
