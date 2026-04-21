@@ -50,7 +50,7 @@ namespace QuantConnect
         /// A rolling window keeping a history of values. The most recent value is at index 0.
         /// Uses lazy initialization to survive Python subclasses that do not call base constructors.
         /// </summary>
-        public RollingWindow<T> Window => _window ??= new RollingWindow<T>(DefaultWindowSize);
+        public virtual RollingWindow<T> Window => _window ??= new RollingWindow<T>(DefaultWindowSize);
 
         /// <summary>
         /// Gets the most recent value. The protected setter adds the value to the rolling window.
