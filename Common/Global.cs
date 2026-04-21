@@ -1121,6 +1121,7 @@ namespace QuantConnect
                         return Exchange.SMART;
                     case "OTCX":
                         return Exchange.OTCX;
+                    case "H":
                     case "MP":
                     case "MIAX PEARL":
                     case "MIAX_PEARL":
@@ -1128,6 +1129,7 @@ namespace QuantConnect
                     case "L":
                     case "LTSE":
                         return Exchange.LTSE;
+                    case "U":
                     case "MM":
                     case "MEMX":
                         return Exchange.MEMX;
