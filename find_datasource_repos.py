@@ -192,7 +192,6 @@ def main() -> int:
         dt: max(hits, key=pushed_at)
         for dt, hits in type_to_repos.items()
     }
-    matching_repos: set[str] = set(picked.values())
 
     log("\n=== Summary ===")
     for dt in sorted(type_to_repos):
@@ -203,7 +202,13 @@ def main() -> int:
             log(f"  {dt:45s} -> {winner}  (over: {', '.join(losers)})")
         else:
             log(f"  {dt:45s} -> {winner}")
-    log(f"\n{len(matching_repos)} unique repos with matching data types")
+
+    # ci_build_stubs.sh line 36 does ${REPO//github.com/"${TOKEN}@github.com"}
+    # so the clone URL must contain "github.com" -- emit full URLs, not bare names.
+    matching_urls: set[str] = {
+        f"https://github.com/{OWNER}/{name}" for name in picked.values()
+    }
+    log(f"\n{len(matching_urls)} unique repos with matching data types")
 
     # Merge in any extra repos carried via the ADDITIONAL_STUBS_REPOS env var
     # (CI secret) so private/out-of-band repos still make it into the build.
@@ -211,10 +216,10 @@ def main() -> int:
     if extra:
         extras = {r.strip() for r in extra.split(";") if r.strip()}
         log(f"Merging {len(extras)} extra repos from $ADDITIONAL_STUBS_REPOS")
-        matching_repos |= extras
+        matching_urls |= extras
 
     # stdout: semicolon-separated list consumed by ci_build_stubs.sh
-    print(";".join(sorted(matching_repos)))
+    print(";".join(sorted(matching_urls)))
     return 0
 
 
