@@ -5,6 +5,10 @@ on:
     - cron: "0 2 * * *" # daily at 02:00 UTC
   workflow_dispatch:
 
+permissions:
+  contents: write
+  pull-requests: write
+
 jobs:
   sync:
     runs-on: ubuntu-latest
@@ -22,61 +26,58 @@ jobs:
           # fetch all branches and tags from upstream
           git fetch upstream --prune --tags
 
-      - name: Create sync branch from upstream/master
+      - name: Create/update master as replica of upstream/master
         run: |
           set -euo pipefail
 
-          # fetch origin and upstream refs
+          # Fetch all refs
           git fetch origin --prune
           git fetch upstream --prune
 
-          # force-create/reset local master to origin/master to avoid ambiguous remote names
-          git checkout -B master origin/master
-
-          # update master to exactly match upstream/master
-          git fetch upstream master --prune
-          git reset --hard upstream/master
-
-          # push updated master to origin (use force-with-lease to avoid clobbering unseen changes)
+          # Create or update master branch to exactly match upstream/master
+          git checkout -B master upstream/master
           git push --force-with-lease origin master
 
-          # create a sync branch based on upstream/master
-          SYNC_BRANCH=sync/upstream-${{ github.run_id }}
-          git checkout -B "$SYNC_BRANCH" origin/master
-
-          # rebase the sync branch onto master so it's based on the latest master
-          echo "Rebasing $SYNC_BRANCH onto master"
-          if ! git rebase master; then
-            echo "Rebase failed — aborting and leaving branch in original state"
-            git rebase --abort || true
-            exit 1
-          fi
-
-          # push rebased sync branch to origin
-          git push --force-with-lease origin "$SYNC_BRANCH"
-
-      - name: Check if sync branch is ahead of my-master
+      - name: Check if master is ahead of my-master
         id: check_ahead
         run: |
           git fetch origin my-master:refs/remotes/origin/my-master || true
-          SYNC_BRANCH=sync/upstream-${{ github.run_id }}
-          # Count commits sync branch is ahead of my-master
-          AHEAD=$(git rev-list --left-right --count origin/my-master...$SYNC_BRANCH | awk '{print $2}')
+          # Count commits master is ahead of my-master
+          AHEAD=$(git rev-list --left-right --count origin/my-master...origin/master | awk '{print $2}')
           echo "ahead=$AHEAD" >> $GITHUB_OUTPUT
+          echo "Commits ahead: $AHEAD"
 
-      - name: Validate sync
-        run: |
-          # Simple validation - check that we're on the sync branch
-          echo "Current branch: $(git branch --show-current)"
-          echo "Sync completed successfully"
-
-      - name: Create PR
+      - name: Check for existing PR
+        id: check_pr
         if: steps.check_ahead.outputs.ahead != '0'
+        run: |
+          # Check if a PR from master to my-master already exists
+          PR_COUNT=$(gh pr list --head master --base my-master --state open --json number --jq 'length')
+          echo "pr_exists=$([ $PR_COUNT -gt 0 ] && echo 'true' || echo 'false')" >> $GITHUB_OUTPUT
+          if [ $PR_COUNT -gt 0 ]; then
+            PR_NUMBER=$(gh pr list --head master --base my-master --state open --json number -q '.[0].number')
+            echo "pr_number=$PR_NUMBER" >> $GITHUB_OUTPUT
+          fi
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Create PR from master to my-master
+        if: steps.check_ahead.outputs.ahead != '0' && steps.check_pr.outputs.pr_exists == 'false'
         uses: peter-evans/create-pull-request@v5
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           base: my-master
-          branch: sync/upstream-${{ github.run_id }}
-          title: "chore: sync from upstream QuantConnect/Lean @ ${{ github.run_id }}"
+          head: master
+          title: "chore: sync from upstream QuantConnect/Lean"
           body: |
             Automated sync from upstream QuantConnect/Lean.
+            
+            This PR updates `my-master` with the latest changes from upstream's `master` branch.
+
+      - name: Update existing PR
+        if: steps.check_ahead.outputs.ahead != '0' && steps.check_pr.outputs.pr_exists == 'true'
+        run: |
+          echo "PR #${{ steps.check_pr.outputs.pr_number }} already exists with upstream changes"
+          echo "The PR will automatically reflect the latest master branch changes"
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
