@@ -110,24 +110,28 @@ namespace QuantConnect.Algorithm.CSharp
 
             if (trades.Count != 4)
             {
-                throw new RegressionTestException($@"AssertTradeStatistics(): Expected 4 closed trades: 2 for the options, 2 for the underlying. Actual: {trades.Count}");
+                throw new RegressionTestException($@"AssertTradeStatistics(): Expected 4 closed trades: 2 for the options, 2 for the underlying. Actual: {
+                    trades.Count}");
             }
 
             var statistics = new TradeStatistics(trades);
 
             if (statistics.TotalNumberOfTrades != 4)
             {
-                throw new RegressionTestException($@"AssertTradeStatistics(): Expected 4 total trades: 2 for the options, 2 for the underlying. Actual: {statistics.TotalNumberOfTrades}");
+                throw new RegressionTestException($@"AssertTradeStatistics(): Expected 4 total trades: 2 for the options, 2 for the underlying. Actual: {
+                    statistics.TotalNumberOfTrades}");
             }
 
             if (statistics.NumberOfWinningTrades != 3)
             {
-                throw new RegressionTestException($@"AssertTradeStatistics(): Expected 3 winning trades (the ITM 650 strike option and the underlying trades). Actual {statistics.NumberOfWinningTrades}");
+                throw new RegressionTestException($@"AssertTradeStatistics(): Expected 3 winning trades (the ITM 650 strike option and the underlying trades). Actual {
+                    statistics.NumberOfWinningTrades}");
             }
 
             if (statistics.NumberOfLosingTrades != 1)
             {
-                throw new RegressionTestException($@"AssertTradeStatistics(): Expected 1 losing trade (the 600 strike option). Actual {statistics.NumberOfLosingTrades}");
+                throw new RegressionTestException($@"AssertTradeStatistics(): Expected 1 losing trade (the 600 strike option). Actual {
+                    statistics.NumberOfLosingTrades}");
             }
 
             if (statistics.WinRate != 0.75m)
@@ -174,7 +178,8 @@ namespace QuantConnect.Algorithm.CSharp
             if (googTrades.Count != 2)
             {
                 throw new RegressionTestException(
-                    $@"AssertTradeStatistics(): Expected 2 closed trades for the underlying, one for each option assignment. Actual: {googTrades.Count}");
+                    $@"AssertTradeStatistics(): Expected 2 closed trades for the underlying, one for each option assignment. Actual: {
+                        googTrades.Count}");
             }
             if (googTrades.Any(x => !x.IsWin || x.ProfitLoss < 0))
             {
@@ -209,28 +214,32 @@ namespace QuantConnect.Algorithm.CSharp
                 throw new RegressionTestException($"AssertPortfolioStatistics(): Expected loss rate to be 1/3. Actual {portfolioStatistics.LossRate}");
             }
 
-            var expectedAverageWinRate = 0.10684362197664m;
+            var expectedAverageWinRate = 0.32962000910479m;
             if (!AreEqual(expectedAverageWinRate, portfolioStatistics.AverageWinRate))
             {
-                throw new RegressionTestException($@"AssertPortfolioStatistics(): Expected average win rate to be {expectedAverageWinRate}. Actual {portfolioStatistics.AverageWinRate}");
+                throw new RegressionTestException($@"AssertPortfolioStatistics(): Expected average win rate to be {expectedAverageWinRate}. Actual {
+                    portfolioStatistics.AverageWinRate}");
             }
 
-            var expectedAverageLossRate = -0.1552m;
+            var expectedAverageLossRate = -0.13556638257576m;
             if (!AreEqual(expectedAverageLossRate, portfolioStatistics.AverageLossRate))
             {
-                throw new RegressionTestException($@"AssertPortfolioStatistics(): Expected average loss rate to be {expectedAverageLossRate}. Actual {portfolioStatistics.AverageLossRate}");
+                throw new RegressionTestException($@"AssertPortfolioStatistics(): Expected average loss rate to be {expectedAverageLossRate}. Actual {
+                    portfolioStatistics.AverageLossRate}");
             }
 
-            var expectedProfitLossRatio = 0.68842539933399m;
+            var expectedProfitLossRatio = 2.43142881621545m;
             if (!AreEqual(expectedProfitLossRatio, portfolioStatistics.ProfitLossRatio))
             {
-                throw new RegressionTestException($@"AssertPortfolioStatistics(): Expected profit loss ratio to be {expectedProfitLossRatio}. Actual {portfolioStatistics.ProfitLossRatio}");
+                throw new RegressionTestException($@"AssertPortfolioStatistics(): Expected profit loss ratio to be {expectedProfitLossRatio}. Actual {
+                    portfolioStatistics.ProfitLossRatio}");
             }
 
             var totalNetProfit = -0.00697m;
             if (!AreEqual(totalNetProfit, portfolioStatistics.TotalNetProfit))
             {
-                throw new RegressionTestException($@"AssertPortfolioStatistics(): Expected total net profit to be {totalNetProfit}. Actual {portfolioStatistics.TotalNetProfit}");
+                throw new RegressionTestException($@"AssertPortfolioStatistics(): Expected total net profit to be {totalNetProfit}. Actual {
+                    portfolioStatistics.TotalNetProfit}");
             }
         }
 
@@ -270,11 +279,11 @@ namespace QuantConnect.Algorithm.CSharp
         public virtual Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
         {
             {"Total Orders", "6"},
-            {"Average Win", "10.68%"},
-            {"Average Loss", "-15.52%"},
+            {"Average Win", "32.96%"},
+            {"Average Loss", "-13.56%"},
             {"Compounding Annual Return", "-36.270%"},
             {"Drawdown", "1.400%"},
-            {"Expectancy", "0.126"},
+            {"Expectancy", "1.288"},
             {"Start Equity", "100000"},
             {"End Equity", "99303"},
             {"Net Profit", "-0.697%"},
@@ -283,7 +292,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Probabilistic Sharpe Ratio", "0.012%"},
             {"Loss Rate", "33%"},
             {"Win Rate", "67%"},
-            {"Profit-Loss Ratio", "0.69"},
+            {"Profit-Loss Ratio", "2.43"},
             {"Alpha", "-0.011"},
             {"Beta", "0.825"},
             {"Annual Standard Deviation", "0.02"},

@@ -48,18 +48,16 @@ namespace QuantConnect.Tests.Common.Statistics
             {
                 Assert.AreEqual(1m, statistics.WinRate);
                 Assert.AreEqual(0m, statistics.LossRate);
-                Assert.AreEqual(43m / 2300m, statistics.AverageWinRate);
-                Assert.AreEqual(0m, statistics.AverageLossRate);
-                Assert.AreEqual(0m, statistics.ProfitLossRatio);
             }
             else
             {
                 Assert.AreEqual(0.5m, statistics.WinRate);
                 Assert.AreEqual(0.5m, statistics.LossRate);
-                Assert.AreEqual(0.1173913043478260869565217391m, statistics.AverageWinRate);
-                Assert.AreEqual(-0.08m, statistics.AverageLossRate);
-                Assert.AreEqual(1.4673913043478260869565217388m, statistics.ProfitLossRatio);
             }
+
+            Assert.AreEqual(0.1173913043478260869565217391m, statistics.AverageWinRate);
+            Assert.AreEqual(-0.08m, statistics.AverageLossRate);
+            Assert.AreEqual(1.4673913043478260869565217388m, statistics.ProfitLossRatio);
         }
 
 
@@ -165,10 +163,11 @@ namespace QuantConnect.Tests.Common.Statistics
         {
             var trades = CreateITMOptionAssignment(win);
             var profitLoss = new SortedDictionary<DateTime, decimal>(trades.ToDictionary(x => x.ExitTime, x => x.ProfitLoss));
-            var winningProfitLoss = new SortedDictionary<DateTime, decimal>(trades.Where(x => x.IsWin).ToDictionary(x => x.ExitTime, x => x.ProfitLoss));
+            var winCount = trades.Count(x => x.IsWin);
+            var lossCount = trades.Count - winCount;
             return new PortfolioStatistics(profitLoss, new SortedDictionary<DateTime, decimal>(),
                 new SortedDictionary<DateTime, decimal>(), listPerformance, listBenchmark, 100000,
-                new InterestRateProvider(), tradingDaysPerYear, winningProfitLoss);
+                new InterestRateProvider(), tradingDaysPerYear, winCount, lossCount);
         }
 
         private List<Trade> CreateITMOptionAssignment(bool win)
