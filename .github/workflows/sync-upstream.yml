@@ -26,7 +26,7 @@ jobs:
           # fetch all branches and tags from upstream
           git fetch upstream --prune --tags
 
-      - name: Create/update master as replica of upstream/master
+- name: Create/update master replica and sync branch
         run: |
           set -euo pipefail
 
@@ -34,16 +34,29 @@ jobs:
           git fetch origin --prune
           git fetch upstream --prune
 
-          # Create or update master branch to exactly match upstream/master
-          git checkout -B master upstream/master
-          git push --force-with-lease origin master
+          # Create a temporary master replica (don't push it - it has workflows)
+          git checkout -B _master_replica upstream/master
 
-      - name: Check if master is ahead of my-master
+          # Create sync branch from _master_replica
+          SYNC_BRANCH=sync/upstream-${{ github.run_id }}
+          git checkout -B "$SYNC_BRANCH" _master_replica
+
+          # Rebase sync branch onto my-master
+          echo "Rebasing $SYNC_BRANCH onto my-master"
+          git fetch origin my-master:refs/remotes/origin/my-master || true
+          git checkout -B "$SYNC_BRANCH" "$SYNC_BRANCH"
+          git rebase origin/my-master || true
+
+          # Push sync branch (avoid workflow files issue)
+          git push --force-with-lease origin "$SYNC_BRANCH"
+
+      - name: Check if sync branch is ahead of my-master
         id: check_ahead
         run: |
           git fetch origin my-master:refs/remotes/origin/my-master || true
-          # Count commits master is ahead of my-master
-          AHEAD=$(git rev-list --left-right --count origin/my-master...origin/master | awk '{print $2}')
+          SYNC_BRANCH=sync/upstream-${{ github.run_id }}
+          # Count commits sync branch is ahead of my-master
+          AHEAD=$(git rev-list --left-right --count origin/my-master...origin/$SYNC_BRANCH | awk '{print $2}')
           echo "ahead=$AHEAD" >> $GITHUB_OUTPUT
           echo "Commits ahead: $AHEAD"
 
@@ -51,33 +64,26 @@ jobs:
         id: check_pr
         if: steps.check_ahead.outputs.ahead != '0'
         run: |
-          # Check if a PR from master to my-master already exists
-          PR_COUNT=$(gh pr list --head master --base my-master --state open --json number --jq 'length')
+          # Check if a PR from sync branch to my-master already exists
+          SYNC_BRANCH=sync/upstream-${{ github.run_id }}
+          PR_COUNT=$(gh pr list --head "$SYNC_BRANCH" --base my-master --state open --json number --jq 'length')
           echo "pr_exists=$([ $PR_COUNT -gt 0 ] && echo 'true' || echo 'false')" >> $GITHUB_OUTPUT
           if [ $PR_COUNT -gt 0 ]; then
-            PR_NUMBER=$(gh pr list --head master --base my-master --state open --json number -q '.[0].number')
+            PR_NUMBER=$(gh pr list --head "$SYNC_BRANCH" --base my-master --state open --json number -q '.[0].number')
             echo "pr_number=$PR_NUMBER" >> $GITHUB_OUTPUT
           fi
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Create PR from master to my-master
+      - name: Create PR from sync branch to my-master
         if: steps.check_ahead.outputs.ahead != '0' && steps.check_pr.outputs.pr_exists == 'false'
         uses: peter-evans/create-pull-request@v5
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           base: my-master
-          head: master
+          branch: sync/upstream-${{ github.run_id }}
           title: "chore: sync from upstream QuantConnect/Lean"
           body: |
             Automated sync from upstream QuantConnect/Lean.
             
             This PR updates `my-master` with the latest changes from upstream's `master` branch.
-
-      - name: Update existing PR
-        if: steps.check_ahead.outputs.ahead != '0' && steps.check_pr.outputs.pr_exists == 'true'
-        run: |
-          echo "PR #${{ steps.check_pr.outputs.pr_number }} already exists with upstream changes"
-          echo "The PR will automatically reflect the latest master branch changes"
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
