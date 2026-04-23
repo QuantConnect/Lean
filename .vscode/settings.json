@@ -24,5 +24,8 @@
     "python.analysis.extraPaths": [
         "./Algorithm.Python",
         "/opt/miniconda3/lib/python3.11/site-packages",
+    ],
+    "github-actions.workflows.pinned.workflows": [
+        ".github/workflows/sync-upstream.yml"
     ]
 }

@@ -1,9 +1,8 @@
-
 name: Sync upstream
 
 on:
   schedule:
-    - cron: '0 2 * * *'   # daily at 02:00 UTC
+    - cron: "0 2 * * *" # daily at 02:00 UTC
   workflow_dispatch:
 
 jobs:
@@ -13,7 +12,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
         with:
-          ref: main
+          ref: my-master
           fetch-depth: 0
           persist-credentials: true
 
@@ -22,7 +21,6 @@ jobs:
           git remote add upstream https://github.com/QuantConnect/Lean.git || true
           # fetch all branches and tags from upstream
           git fetch upstream --prune --tags
-
 
       - name: Create sync branch from upstream/master
         run: |
@@ -57,13 +55,13 @@ jobs:
           # push rebased sync branch to origin
           git push --force-with-lease origin "$SYNC_BRANCH"
 
-      - name: Check if sync branch is ahead of main
+      - name: Check if sync branch is ahead of my-master
         id: check_ahead
         run: |
-          git fetch origin main:refs/remotes/origin/main || true
+          git fetch origin my-master:refs/remotes/origin/my-master || true
           SYNC_BRANCH=sync/upstream-${{ github.run_id }}
-          # Count commits sync branch is ahead of main
-          AHEAD=$(git rev-list --left-right --count origin/main...$SYNC_BRANCH | awk '{print $2}')
+          # Count commits sync branch is ahead of my-master
+          AHEAD=$(git rev-list --left-right --count origin/my-master...$SYNC_BRANCH | awk '{print $2}')
           echo "ahead=$AHEAD" >> $GITHUB_OUTPUT
 
       - name: Validate sync
@@ -77,7 +75,7 @@ jobs:
         uses: peter-evans/create-pull-request@v5
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-          base: main
+          base: my-master
           branch: sync/upstream-${{ github.run_id }}
           title: "chore: sync from upstream QuantConnect/Lean @ ${{ github.run_id }}"
           body: |
