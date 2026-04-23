@@ -203,11 +203,7 @@ namespace QuantConnect.Statistics
         /// <param name="startingCapital">The algorithm starting capital</param>
         /// <param name="riskFreeInterestRateModel">The risk free interest rate model to use</param>
         /// <param name="tradingDaysPerYear">The number of trading days per year</param>
-        /// <param name="winCount">
-        /// The number of wins, including ITM options with profitLoss less than 0.
-        /// If this and <paramref name="lossCount"/> are null, they will be calculated from <paramref name="profitLoss"/>
-        /// </param>
-        /// <param name="lossCount">The number of losses</param>
+        /// <param name="winningTransactions">Trade record of winning transactions</param>
         public PortfolioStatistics(
             SortedDictionary<DateTime, decimal> profitLoss,
             SortedDictionary<DateTime, decimal> equity,
@@ -217,8 +213,7 @@ namespace QuantConnect.Statistics
             decimal startingCapital,
             IRiskFreeInterestRateModel riskFreeInterestRateModel,
             int tradingDaysPerYear,
-            int? winCount = null,
-            int? lossCount = null)
+            SortedDictionary<DateTime, decimal> winningTransactions = null)
         {
             StartEquity = startingCapital;
             EndEquity = equity.LastOrDefault().Value;
@@ -244,8 +239,9 @@ namespace QuantConnect.Statistics
             foreach (var pair in profitLoss)
             {
                 var tradeProfitLoss = pair.Value;
+                var isWin = winningTransactions?.ContainsKey(pair.Key) ?? (tradeProfitLoss > 0);
 
-                if (tradeProfitLoss > 0)
+                if (isWin)
                 {
                     totalProfit += tradeProfitLoss / runningCapital;
                     totalWins++;
@@ -262,14 +258,6 @@ namespace QuantConnect.Statistics
             AverageWinRate = totalWins == 0 ? 0 : totalProfit / totalWins;
             AverageLossRate = totalLosses == 0 ? 0 : totalLoss / totalLosses;
             ProfitLossRatio = AverageLossRate == 0 ? 0 : AverageWinRate / Math.Abs(AverageLossRate);
-
-            // Set the actual total wins and losses count.
-            // Some options assignments (ITM) count as wins even though they are losses.
-            if (winCount.HasValue && lossCount.HasValue)
-            {
-                totalWins = winCount.Value;
-                totalLosses = lossCount.Value;
-            }
 
             var totalTrades = totalWins + totalLosses;
             WinRate = totalTrades == 0 ? 0 : (decimal)totalWins / totalTrades;
