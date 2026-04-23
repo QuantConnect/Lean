@@ -29,14 +29,6 @@ jobs:
           echo -e 'runInContainer() { docker exec test-container "$@"; }\n' > "$HOME/ci_functions.sh"
           echo "BASH_ENV=$HOME/ci_functions.sh" >> $GITHUB_ENV
 
-      - name: Compute additional stubs repos
-        env:
-          GH_TOKEN: ${{ secrets.QC_GIT_TOKEN || secrets.GITHUB_TOKEN }}
-          ADDITIONAL_STUBS_REPOS: ${{ secrets.ADDITIONAL_STUBS_REPOS }}
-        run: |
-          REPOS=$(python find_datasource_repos.py)
-          echo "ADDITIONAL_STUBS_REPOS=$REPOS" >> $GITHUB_ENV
-
       - name: Start container
         run: |
           docker run -d \
@@ -44,7 +36,6 @@ jobs:
             -v /home/runner/work:/__w \
             -e GITHUB_REF="${{ github.ref }}" \
             -e PYPI_API_TOKEN="${{ secrets.PYPI_API_TOKEN }}" \
-            -e ADDITIONAL_STUBS_REPOS="${{ env.ADDITIONAL_STUBS_REPOS }}" \
             -e QC_GIT_TOKEN="${{ secrets.QC_GIT_TOKEN }}" \
             --name test-container \
             quantconnect/lean:foundation \
@@ -69,10 +60,11 @@ jobs:
           
           # Generate & Publish python stubs
           echo "GITHUB_REF ${{ github.ref }}"
-          if [[ "${{ github.ref }}" = refs/tags/* && "$TAG_COMMIT" = "$MASTER_COMMIT" ]]; then 
+          if [[ "${{ github.ref }}" = refs/tags/* && "$TAG_COMMIT" = "$MASTER_COMMIT" ]]; then
             echo "Generating stubs"
             runInContainer chmod +x ci_build_stubs.sh
-            runInContainer ./ci_build_stubs.sh -t -g -p
+            ADDITIONAL_STUBS_REPOS=$(GH_TOKEN="${{ secrets.QC_GIT_TOKEN }}" ADDITIONAL_STUBS_REPOS="${{ secrets.ADDITIONAL_STUBS_REPOS }}" python find_datasource_repos.py)
+            docker exec -e ADDITIONAL_STUBS_REPOS="$ADDITIONAL_STUBS_REPOS" test-container ./ci_build_stubs.sh -t -g -p
           else 
             echo "Skipping stub generation"
           fi
