@@ -46,11 +46,11 @@ namespace QuantConnect.Algorithm.CSharp
         public override Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
         {
             {"Total Orders", "4"},
-            {"Average Win", "9.48%"},
-            {"Average Loss", "-16.73%"},
+            {"Average Win", "15.06%"},
+            {"Average Loss", "-6.42%"},
             {"Compounding Annual Return", "-25.790%"},
             {"Drawdown", "0.600%"},
-            {"Expectancy", "-0.478"},
+            {"Expectancy", "0.115"},
             {"Start Equity", "100000"},
             {"End Equity", "99538"},
             {"Net Profit", "-0.462%"},
@@ -59,7 +59,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Probabilistic Sharpe Ratio", "95.713%"},
             {"Loss Rate", "67%"},
             {"Win Rate", "33%"},
-            {"Profit-Loss Ratio", "0.57"},
+            {"Profit-Loss Ratio", "2.35"},
             {"Alpha", "-0.009"},
             {"Beta", "-0.023"},
             {"Annual Standard Deviation", "0.001"},
