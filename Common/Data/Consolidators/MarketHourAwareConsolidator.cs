@@ -40,7 +40,7 @@ namespace QuantConnect.Data.Common
         /// <summary>
         /// The consolidator instance
         /// </summary>
-        protected IDataConsolidator Consolidator { get; }
+        private IDataConsolidator Consolidator { get; }
 
         /// <summary>
         /// Delegates the rolling window to the inner consolidator to avoid duplication.

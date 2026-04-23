@@ -38,13 +38,7 @@ namespace QuantConnect.Indicators
         /// Gets the previous state of this indicator. If the state has not been updated
         /// then the time on the value will equal DateTime.MinValue.
         /// </summary>
-        public override IndicatorDataPoint Previous
-        {
-            get
-            {
-                return Window.Count > 1 ? Window[1] : new IndicatorDataPoint(DateTime.MinValue, 0);
-            }
-        }
+        public override IndicatorDataPoint Previous => base.Previous ?? new IndicatorDataPoint(DateTime.MinValue, 0);
 
         /// <summary>
         /// Gets a name for this indicator

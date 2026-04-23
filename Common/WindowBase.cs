@@ -90,12 +90,11 @@ namespace QuantConnect
         IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
 
         /// <summary>
-        /// Resets the rolling window, clearing all stored values without allocating a new window
-        /// if it has not yet been created.
+        /// Resets the rolling window, clearing all stored values.
         /// </summary>
         protected void ResetWindow()
         {
-            _window?.Reset();
+            Window.Reset();
         }
     }
 }

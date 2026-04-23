@@ -45,7 +45,7 @@ namespace QuantConnect.Data.Consolidators
         /// <summary>
         /// Delegates the rolling window to the second (inner) consolidator to avoid duplication.
         /// </summary>
-        public override RollingWindow<IBaseData> Window => (Second as ConsolidatorBase)?.Window;
+        public override RollingWindow<IBaseData> Window => (Second as ConsolidatorBase)?.Window ?? base.Window;
 
         /// <summary>
         /// Gets a clone of the data being currently consolidated
@@ -124,6 +124,10 @@ namespace QuantConnect.Data.Consolidators
         /// <param name="consolidated">The newly consolidated data</param>
         protected virtual void OnDataConsolidated(IBaseData consolidated)
         {
+            if (Second is not ConsolidatorBase)
+            {
+                Consolidated = consolidated;
+            }
             var handler = DataConsolidated;
             if (handler != null) handler(this, consolidated);
         }
