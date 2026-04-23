@@ -36,12 +36,12 @@ namespace QuantConnect.Statistics
         public const string AnnualVariance = "Annual Variance";
 
         /// <summary>
-        /// The average rate of return for losing trades
+        /// The average rate of return for trades with zero or negative profit loss
         /// </summary>
         public const string AverageLoss = "Average Loss";
 
         /// <summary>
-        /// The average rate of return for winning trades
+        /// The average rate of return for trades with positive profit loss
         /// </summary>
         public const string AverageWin = "Average Win";
 
@@ -86,7 +86,7 @@ namespace QuantConnect.Statistics
         public const string InformationRatio = "Information Ratio";
 
         /// <summary>
-        /// The ratio of the number of losing trades to the total number of trades
+        /// The ratio of the number of trades with zero or negative profit loss to the total number of trades
         /// </summary>
         public const string LossRate = "Loss Rate";
 
@@ -142,7 +142,7 @@ namespace QuantConnect.Statistics
         public const string TreynorRatio = "Treynor Ratio";
 
         /// <summary>
-        /// The ratio of the number of winning trades to the total number of trades
+        /// The ratio of the number of trades with positive profit loss to the total number of trades
         /// </summary>
         /// <remarks>If the total number of trades is zero, WinRate is set to zero</remarks>
         public const string WinRate = "Win Rate";
