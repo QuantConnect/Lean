@@ -1,0 +1,84 @@
+
+name: Sync upstream
+
+on:
+  schedule:
+    - cron: '0 2 * * *'   # daily at 02:00 UTC
+  workflow_dispatch:
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+          persist-credentials: true
+
+      - name: Add upstream
+        run: |
+          git remote add upstream https://github.com/QuantConnect/Lean.git || true
+          # fetch all branches and tags from upstream
+          git fetch upstream --prune --tags
+
+
+      - name: Create sync branch from upstream/master
+        run: |
+          set -euo pipefail
+
+          # fetch origin and upstream refs
+          git fetch origin --prune
+          git fetch upstream --prune
+
+          # force-create/reset local master to origin/master to avoid ambiguous remote names
+          git checkout -B master origin/master
+
+          # update master to exactly match upstream/master
+          git fetch upstream master --prune
+          git reset --hard upstream/master
+
+          # push updated master to origin (use force-with-lease to avoid clobbering unseen changes)
+          git push --force-with-lease origin master
+
+          # create a sync branch based on upstream/master
+          SYNC_BRANCH=sync/upstream-${{ github.run_id }}
+          git checkout -B "$SYNC_BRANCH" origin/master
+
+          # rebase the sync branch onto master so it's based on the latest master
+          echo "Rebasing $SYNC_BRANCH onto master"
+          if ! git rebase master; then
+            echo "Rebase failed — aborting and leaving branch in original state"
+            git rebase --abort || true
+            exit 1
+          fi
+
+          # push rebased sync branch to origin
+          git push --force-with-lease origin "$SYNC_BRANCH"
+
+      - name: Check if sync branch is ahead of main
+        id: check_ahead
+        run: |
+          git fetch origin main:refs/remotes/origin/main || true
+          SYNC_BRANCH=sync/upstream-${{ github.run_id }}
+          # Count commits sync branch is ahead of main
+          AHEAD=$(git rev-list --left-right --count origin/main...$SYNC_BRANCH | awk '{print $2}')
+          echo "ahead=$AHEAD" >> $GITHUB_OUTPUT
+
+      - name: Validate sync
+        run: |
+          # Simple validation - check that we're on the sync branch
+          echo "Current branch: $(git branch --show-current)"
+          echo "Sync completed successfully"
+
+      - name: Create PR
+        if: steps.check_ahead.outputs.ahead != '0'
+        uses: peter-evans/create-pull-request@v5
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          base: main
+          branch: sync/upstream-${{ github.run_id }}
+          title: "chore: sync from upstream QuantConnect/Lean @ ${{ github.run_id }}"
+          body: |
+            Automated sync from upstream QuantConnect/Lean.

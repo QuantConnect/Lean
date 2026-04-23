@@ -1,0 +1,46 @@
+name: Delete sync branches
+
+on:
+  schedule:
+    - cron: '0 3 * * *'   # daily at 03:00 UTC
+  workflow_dispatch:
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+          # ensure we can push branches back to origin using the provided token
+          persist-credentials: true
+
+      - name: Delete sync branches
+        if: always()
+        run: |
+          set -euo pipefail
+
+          # ensure we have up-to-date refs
+          git fetch --all --prune --no-tags
+
+          echo "Looking for remote branches matching 'sync/*' on origin"
+          # list remote heads on origin that match the sync/* pattern
+          remote_sync_branches=$(git ls-remote --heads origin 'sync/*' | awk '{print $2}' | sed 's|refs/heads/||' || true)
+
+          if [ -z "$remote_sync_branches" ]; then
+            echo "No sync branches found on origin. Nothing to delete."
+          else
+            echo "Found the following sync branches to delete:"
+            echo "$remote_sync_branches"
+
+            # delete each sync branch from origin
+            echo "$remote_sync_branches" | while read -r branch; do
+              if [ -z "$branch" ]; then
+                continue
+              fi
+              echo "Deleting origin/$branch"
+              git push origin --delete "$branch" || echo "Failed to delete $branch (may be protected or already removed)"
+            done
+          fi
