@@ -23,7 +23,7 @@ namespace QuantConnect.Data.Consolidators
     /// Represents a timeless consolidator which depends on the given values. This consolidator
     /// is meant to consolidate data into bars that do not depend on time, e.g., RangeBar's.
     /// </summary>
-    public abstract class BaseTimelessConsolidator<T> : ConsolidatorBase, IDataConsolidator
+    public abstract class BaseTimelessConsolidator<T> : ConsolidatorBase
         where T : IBaseData
     {
         /// <summary>
@@ -38,11 +38,6 @@ namespace QuantConnect.Data.Consolidators
         protected Func<IBaseData, decimal> VolumeSelector { get; set; }
 
         /// <summary>
-        /// Event handler type for the IDataConsolidator.DataConsolidated event
-        /// </summary>
-        protected DataConsolidatedHandler DataConsolidatedHandler { get; set; }
-
-        /// <summary>
         /// Bar being created
         /// </summary>
         protected virtual T CurrentBar {  get; set; }
@@ -50,31 +45,22 @@ namespace QuantConnect.Data.Consolidators
         /// <summary>
         /// Gets a clone of the data being currently consolidated
         /// </summary>
-        public abstract IBaseData WorkingData { get; }
+        public abstract override IBaseData WorkingData { get; }
 
         /// <summary>
         /// Gets the type consumed by this consolidator
         /// </summary>
-        public Type InputType => typeof(IBaseData);
+        public override Type InputType => typeof(IBaseData);
 
         /// <summary>
         /// Gets <see cref="T"/> which is the type emitted in the <see cref="IDataConsolidator.DataConsolidated"/> event.
         /// </summary>
-        public virtual Type OutputType => typeof(T);
+        public override Type OutputType => typeof(T);
 
         /// <summary>
-        /// Event handler that fires when a new piece of data is produced
+        /// Typed event handler that fires when a new piece of data is produced
         /// </summary>
         public event EventHandler<T> DataConsolidated;
-
-        /// <summary>
-        /// Event handler that fires when a new piece of data is produced
-        /// </summary>
-        event DataConsolidatedHandler IDataConsolidator.DataConsolidated
-        {
-            add { DataConsolidatedHandler += value; }
-            remove { DataConsolidatedHandler -= value; }
-        }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="BaseTimelessConsolidator{T}" /> class.
@@ -135,7 +121,7 @@ namespace QuantConnect.Data.Consolidators
         /// Updates this consolidator with the specified data
         /// </summary>
         /// <param name="data">The new data for the consolidator</param>
-        public void Update(IBaseData data)
+        public override void Update(IBaseData data)
         {
             var currentValue = Selector(data);
             var volume = VolumeSelector(data);
@@ -179,18 +165,15 @@ namespace QuantConnect.Data.Consolidators
         protected void OnDataConsolidated(T consolidated)
         {
             DataConsolidated?.Invoke(this, consolidated);
-
-            DataConsolidatedHandler?.Invoke(this, consolidated);
-
-            Consolidated = consolidated;
+            base.OnDataConsolidated(consolidated);
         }
 
         /// <summary>Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.</summary>
         /// <filterpriority>2</filterpriority>
-        public virtual void Dispose()
+        public override void Dispose()
         {
             DataConsolidated = null;
-            DataConsolidatedHandler = null;
+            base.Dispose();
         }
 
         /// <summary>
@@ -206,7 +189,7 @@ namespace QuantConnect.Data.Consolidators
         /// Scans this consolidator to see if it should emit a bar due to time passing
         /// </summary>
         /// <param name="currentLocalTime">The current time in the local time zone (same as <see cref="BaseData.Time"/>)</param>
-        public void Scan(DateTime currentLocalTime)
+        public override void Scan(DateTime currentLocalTime)
         {
         }
     }
