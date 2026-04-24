@@ -24,11 +24,10 @@ namespace QuantConnect.Data.Consolidators
     /// </summary>
     /// <remarks>This implementation replaced the original implementation that was shown to have inaccuracies in its representation
     /// of Renko charts. The original implementation has been moved to <see cref="ClassicRenkoConsolidator"/>.</remarks>
-    public class RenkoConsolidator : ConsolidatorBase, IDataConsolidator
+    public class RenkoConsolidator : ConsolidatorBase
     {
         private bool _firstTick = true;
         private RenkoBar _lastWicko;
-        private DataConsolidatedHandler _dataConsolidatedHandler;
         private RenkoBar _currentBar;
         
         /// <summary>
@@ -81,31 +80,22 @@ namespace QuantConnect.Data.Consolidators
         /// <summary>
         /// Gets a clone of the data being currently consolidated
         /// </summary>
-        public IBaseData WorkingData => _currentBar?.Clone();
+        public override IBaseData WorkingData => _currentBar?.Clone();
 
         /// <summary>
         /// Gets the type consumed by this consolidator
         /// </summary>
-        public Type InputType => typeof(IBaseData);
+        public override Type InputType => typeof(IBaseData);
 
         /// <summary>
         /// Gets <see cref="RenkoBar"/> which is the type emitted in the <see cref="IDataConsolidator.DataConsolidated"/> event.
         /// </summary>
-        public Type OutputType => typeof(RenkoBar);
+        public override Type OutputType => typeof(RenkoBar);
 
         /// <summary>
-        /// Event handler that fires when a new piece of data is produced
+        /// Typed event handler that fires when a new piece of data is produced
         /// </summary>
         public event EventHandler<RenkoBar> DataConsolidated;
-
-        /// <summary>
-        /// Event handler that fires when a new piece of data is produced
-        /// </summary>
-        event DataConsolidatedHandler IDataConsolidator.DataConsolidated
-        {
-            add { _dataConsolidatedHandler += value; }
-            remove { _dataConsolidatedHandler -= value; }
-        }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="RenkoConsolidator"/> class using the specified <paramref name="barSize"/>.
@@ -125,7 +115,7 @@ namespace QuantConnect.Data.Consolidators
         /// Updates this consolidator with the specified data
         /// </summary>
         /// <param name="data">The new data for the consolidator</param>
-        public void Update(IBaseData data)
+        public override void Update(IBaseData data)
         {
             var rate = data.Price;
 
@@ -218,16 +208,16 @@ namespace QuantConnect.Data.Consolidators
         /// Scans this consolidator to see if it should emit a bar due to time passing
         /// </summary>
         /// <param name="currentLocalTime">The current time in the local time zone (same as <see cref="BaseData.Time"/>)</param>
-        public void Scan(DateTime currentLocalTime)
+        public override void Scan(DateTime currentLocalTime)
         {
         }
 
         /// <summary>Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.</summary>
         /// <filterpriority>2</filterpriority>
-        public void Dispose()
+        public override void Dispose()
         {
             DataConsolidated = null;
-            _dataConsolidatedHandler = null;
+            base.Dispose();
         }
 
         /// <summary>
@@ -256,8 +246,7 @@ namespace QuantConnect.Data.Consolidators
         {
             DataConsolidated?.Invoke(this, consolidated);
             _currentBar = consolidated;
-            _dataConsolidatedHandler?.Invoke(this, consolidated);
-            Consolidated = consolidated;
+            base.OnDataConsolidated(consolidated);
         }
 
         private void Rising(IBaseData data)

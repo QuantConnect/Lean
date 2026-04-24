@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -23,14 +23,14 @@ namespace QuantConnect.Data.Consolidators
     /// and/or aggregated data.
     /// </summary>
     /// <typeparam name="TInput">The type consumed by the consolidator</typeparam>
-    public abstract class DataConsolidator<TInput> : ConsolidatorBase, IDataConsolidator
+    public abstract class DataConsolidator<TInput> : ConsolidatorBase
         where TInput : IBaseData
     {
         /// <summary>
         /// Updates this consolidator with the specified data
         /// </summary>
         /// <param name="data">The new data for the consolidator</param>
-        public void Update(IBaseData data)
+        public override void Update(IBaseData data)
         {
             if (!(data is TInput))
             {
@@ -45,7 +45,7 @@ namespace QuantConnect.Data.Consolidators
         /// Scans this consolidator to see if it should emit a bar due to time passing
         /// </summary>
         /// <param name="currentLocalTime">The current time in the local time zone (same as <see cref="BaseData.Time"/>)</param>
-        public abstract void Scan(DateTime currentLocalTime);
+        public abstract override void Scan(DateTime currentLocalTime);
 
         /// <summary>
         /// Event handler that fires when a new piece of data is produced
@@ -55,26 +55,17 @@ namespace QuantConnect.Data.Consolidators
         /// <summary>
         /// Gets a clone of the data being currently consolidated
         /// </summary>
-        public abstract IBaseData WorkingData
-        {
-            get;
-        }
+        public abstract override IBaseData WorkingData { get; }
 
         /// <summary>
         /// Gets the type consumed by this consolidator
         /// </summary>
-        public Type InputType
-        {
-            get { return typeof(TInput); }
-        }
+        public override Type InputType => typeof(TInput);
 
         /// <summary>
         /// Gets the type produced by this consolidator
         /// </summary>
-        public abstract Type OutputType
-        {
-            get;
-        }
+        public abstract override Type OutputType { get; }
 
         /// <summary>
         /// Updates this consolidator with the specified data. This method is
@@ -83,26 +74,20 @@ namespace QuantConnect.Data.Consolidators
         /// <param name="data">The new data for the consolidator</param>
         public abstract void Update(TInput data);
 
-        /// <summary>
-        /// Event invocator for the DataConsolidated event. This should be invoked
-        /// by derived classes when they have consolidated a new piece of data.
-        /// </summary>
-        /// <param name="consolidated">The newly consolidated data</param>
-        protected virtual void OnDataConsolidated(IBaseData consolidated)
-        {
-            var handler = DataConsolidated;
-            if (handler != null) handler(this, consolidated);
-
-            // assign Consolidated (and push to Window) after the event handlers fire,
-            // so handlers can compare the new bar against the previous one without extra bookkeeping
-            Consolidated = consolidated;
-        }
-
         /// <summary>Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.</summary>
         /// <filterpriority>2</filterpriority>
-        public void Dispose()
+        public override void Dispose()
         {
             DataConsolidated = null;
+        }
+
+        /// <summary>
+        /// Event invocator for the DataConsolidated event. Fires the event and updates the rolling window.
+        /// </summary>
+        protected override void OnDataConsolidated(IBaseData consolidated)
+        {
+            DataConsolidated?.Invoke(this, consolidated);
+            base.OnDataConsolidated(consolidated);
         }
     }
 }

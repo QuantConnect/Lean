@@ -23,14 +23,14 @@ namespace QuantConnect.Python
     /// <summary>
     /// Provides an Data Consolidator that wraps a <see cref="PyObject"/> object that represents a custom Python consolidator
     /// </summary>
-    public class DataConsolidatorPythonWrapper : ConsolidatorBase, IDataConsolidator
+    public class DataConsolidatorPythonWrapper : ConsolidatorBase
     {
         private readonly BasePythonWrapper<IDataConsolidator> _pythonWrapper;
 
         /// <summary>
         /// Gets a clone of the data being currently consolidated
         /// </summary>
-        public IBaseData WorkingData
+        public override IBaseData WorkingData
         {
             get { return _pythonWrapper.GetProperty<IBaseData>(nameof(WorkingData)); }
         }
@@ -38,7 +38,7 @@ namespace QuantConnect.Python
         /// <summary>
         /// Gets the type consumed by this consolidator
         /// </summary>
-        public Type InputType
+        public override Type InputType
         {
             get { return _pythonWrapper.GetProperty<Type>(nameof(InputType)); }
         }
@@ -46,26 +46,9 @@ namespace QuantConnect.Python
         /// <summary>
         /// Gets the type produced by this consolidator
         /// </summary>
-        public Type OutputType
+        public override Type OutputType
         {
             get { return _pythonWrapper.GetProperty<Type>(nameof(OutputType)); }
-        }
-
-        /// <summary>
-        /// Event handler that fires when a new piece of data is produced
-        /// </summary>
-        public event DataConsolidatedHandler DataConsolidated
-        {
-            add
-            {
-                var eventHandler = _pythonWrapper.GetEvent(nameof(DataConsolidated));
-                eventHandler += value;
-            }
-            remove
-            {
-                var eventHandler = _pythonWrapper.GetEvent(nameof(DataConsolidated));
-                eventHandler -= value;
-            }
         }
 
         /// <summary>
@@ -75,14 +58,15 @@ namespace QuantConnect.Python
         public DataConsolidatorPythonWrapper(PyObject consolidator)
         {
             _pythonWrapper = new BasePythonWrapper<IDataConsolidator>(consolidator, true);
-            DataConsolidated += (_, bar) => Consolidated = bar;
+            var pythonEvent = _pythonWrapper.GetEvent("DataConsolidated");
+            pythonEvent += new DataConsolidatedHandler((_, bar) => OnDataConsolidated(bar));
         }
 
         /// <summary>
         /// Scans this consolidator to see if it should emit a bar due to time passing
         /// </summary>
         /// <param name="currentLocalTime">The current time in the local time zone (same as <see cref="BaseData.Time"/>)</param>
-        public void Scan(DateTime currentLocalTime)
+        public override void Scan(DateTime currentLocalTime)
         {
             _pythonWrapper.InvokeMethod(nameof(Scan), currentLocalTime);
         }
@@ -91,7 +75,7 @@ namespace QuantConnect.Python
         /// Updates this consolidator with the specified data
         /// </summary>
         /// <param name="data">The new data for the consolidator</param>
-        public void Update(IBaseData data)
+        public override void Update(IBaseData data)
         {
             _pythonWrapper.InvokeMethod(nameof(Update), data);
         }
@@ -108,7 +92,7 @@ namespace QuantConnect.Python
         /// <summary>
         /// Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.
         /// </summary>
-        public void Dispose()
+        public override void Dispose()
         {
             _pythonWrapper.Dispose();
         }
