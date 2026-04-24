@@ -255,6 +255,13 @@
   "charles-schwab-authorization-code-from-url": "",
   "charles-schwab-redirect-url": "",
 
+  // Webull configuration
+  "webull-api-url": "https://api.webull.com",
+  "webull-trade-grpc-url": "https://events-api.webull.com",
+  "webull-app-key": "",
+  "webull-app-secret": "",
+  "webull-account-id": "",
+
   // Tastytrade configuration
   "tastytrade-api-url": "",
   "tastytrade-websocket-url": "",
@@ -750,6 +757,21 @@
       // real brokerage implementations require the BrokerageTransactionHandler
       "live-mode-brokerage": "QuantConnect.EzeBrokerage.EzeBrokerage",
       "data-queue-handler": [ "QuantConnect.EzeBrokerage.EzeBrokerage" ],
+      "setup-handler": "QuantConnect.Lean.Engine.Setup.BrokerageSetupHandler",
+      "result-handler": "QuantConnect.Lean.Engine.Results.LiveTradingResultHandler",
+      "data-feed-handler": "QuantConnect.Lean.Engine.DataFeeds.LiveTradingDataFeed",
+      "real-time-handler": "QuantConnect.Lean.Engine.RealTime.LiveTradingRealTimeHandler",
+      "transaction-handler": "QuantConnect.Lean.Engine.TransactionHandlers.BrokerageTransactionHandler",
+      "history-provider": [ "BrokerageHistoryProvider", "SubscriptionDataReaderHistoryProvider" ]
+    },
+
+    // defines the 'live-webull' environment
+    "live-webull": {
+      "live-mode": true,
+
+      // real brokerage implementations require the BrokerageTransactionHandler
+      "live-mode-brokerage": "WebullBrokerage",
+      "data-queue-handler": [ "WebullBrokerage" ],
       "setup-handler": "QuantConnect.Lean.Engine.Setup.BrokerageSetupHandler",
       "result-handler": "QuantConnect.Lean.Engine.Results.LiveTradingResultHandler",
       "data-feed-handler": "QuantConnect.Lean.Engine.DataFeeds.LiveTradingDataFeed",
