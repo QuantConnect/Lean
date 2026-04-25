@@ -33,7 +33,7 @@ namespace QuantConnect
         /// The Members Exchange (MEMX) is an independently owned, technology-driven stock exchange
         /// </summary>
         public static Exchange MEMX { get; }
-            = new("MEMX", "MM", "The Long-Term Stock Exchange", QuantConnect.Market.USA, SecurityType.Equity);
+            = new("MEMX", "MM", "The Members Exchange", QuantConnect.Market.USA, SecurityType.Equity);
 
         /// <summary>
         /// Long-Term Stock Exchange
@@ -46,6 +46,12 @@ namespace QuantConnect
         /// </summary>
         public static Exchange NASDAQ { get; }
             = new("NASDAQ", "Q", "National Association of Securities Dealers Automated Quotation", QuantConnect.Market.USA, SecurityType.Equity);
+
+        /// <summary>
+        /// NASDAQ Small Cap
+        /// </summary>
+        public static Exchange NASDAQ_SC { get; }
+            = new("NASDAQ_SC", "S", "NASDAQ Small Cap", QuantConnect.Market.USA, SecurityType.Equity);
 
         /// <summary>
         /// The NASDAQ options market

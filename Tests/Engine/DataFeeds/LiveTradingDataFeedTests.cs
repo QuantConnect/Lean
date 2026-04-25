@@ -2899,6 +2899,17 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             }
         }
 
+        [TestCase(0, 13)]
+        [TestCase(2, 13)]
+        [TestCase(10, 12)]
+        [TestCase(100, 12)]
+        [TestCase(280, 13)]
+        public void UniverseScheduleUtcShitft(int dateShitft, int expectedTimeShift)
+        {
+            var result = LiveTradingDataFeed.GetScheduledUniverseUtcTimeShift(new DateTime(2026, 3, 1).AddDays(dateShitft));
+            Assert.AreEqual(expectedTimeShift, (int)result.TotalHours);
+        }
+
         private IDataFeed RunDataFeed(Resolution resolution = Resolution.Second, List<string> equities = null, List<string> forex = null, List<string> crypto = null,
             Func<FuncDataQueueHandler, IEnumerable<BaseData>> getNextTicksFunction = null,
             Func<Symbol, bool, string, IEnumerable<Symbol>> lookupSymbolsFunction = null,

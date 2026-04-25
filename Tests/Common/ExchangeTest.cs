@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -22,6 +22,7 @@ namespace QuantConnect.Tests.Common
     public class ExchangeTest
     {
         [TestCase("NASDAQ", "Q")]
+        [TestCase("NASDAQ_SC", "S")]
         [TestCase("NASDAQ BX", "B")]
         [TestCase("NASDAQ PSX", "X")]
         [TestCase("BATS", "Z")]
@@ -129,6 +130,7 @@ namespace QuantConnect.Tests.Common
             {
                 new TestCaseData(Exchange.UNKNOWN, null, "", SecurityType.Base),
                 new TestCaseData(Exchange.NASDAQ, "Q", "NASDAQ", SecurityType.Equity),
+                new TestCaseData(Exchange.NASDAQ_SC, "S", "NASDAQ_SC", SecurityType.Equity),
                 new TestCaseData(Exchange.NASDAQ_BX, "B", "NASDAQ_BX", SecurityType.Equity),
                 new TestCaseData(Exchange.NASDAQ_PSX, "X", "NASDAQ_PSX", SecurityType.Equity),
                 new TestCaseData(Exchange.BATS, "Z", "BATS", SecurityType.Equity),
@@ -147,13 +149,15 @@ namespace QuantConnect.Tests.Common
                 new TestCaseData(Exchange.BSE, "BSE", "BSE", SecurityType.Equity),
 
                 new TestCaseData(Exchange.UNKNOWN, "O", "", SecurityType.Equity),
-                new TestCaseData(Exchange.UNKNOWN, "H", "", SecurityType.Equity),
+                new TestCaseData(Exchange.MIAX_PEARL, "H", "MIAX_PEARL", SecurityType.Equity),
                 new TestCaseData(Exchange.EDGA, "J", "EDGA", SecurityType.Equity),
 
                 new TestCaseData(Exchange.OPRA, "O", "OPRA", SecurityType.Option),
                 new TestCaseData(Exchange.ISE_GEMINI, "H", "ISE_GEMINI", SecurityType.Option),
                 new TestCaseData(Exchange.ISE_MERCURY, "J", "ISE_MERCURY", SecurityType.Option),
 
+                new TestCaseData(Exchange.IEX, "V", "IEX", SecurityType.Equity),
+                new TestCaseData(Exchange.MEMX, "U", "MEMX", SecurityType.Equity),
             };
         }
     }
