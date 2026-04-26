@@ -31,6 +31,7 @@ namespace QuantConnect.Securities
     public class UniverseManager : BaseExtendedDictionary<Symbol, Universe, ConcurrentDictionary<Symbol, Universe>>
     {
         private readonly Queue<UniverseManagerChanged> _pendingChanges = new();
+        private int _nextSelectionOrder;
 
         /// <summary>
         /// Event fired when a universe is added or removed
@@ -60,6 +61,7 @@ namespace QuantConnect.Securities
         {
             if (Dictionary.TryAdd(key, value))
             {
+                value.SelectionOrder = _nextSelectionOrder++;
                 lock (_pendingChanges)
                 {
                     _pendingChanges.Enqueue(new UniverseManagerChanged(NotifyCollectionChangedAction.Add, value));
