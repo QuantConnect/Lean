@@ -106,6 +106,18 @@ namespace QuantConnect.Data.Market
         /// <param name="data">The new data to update the session with</param>
         public void Update(BaseData data)
         {
+            if (data is IBaseDataBar && data.EndTime - data.Time >= Time.OneDay)
+            {
+                var sessionBar = new SessionBar(_tickType)
+                {
+                    Time = data.Time.Date,
+                    Symbol = _symbol
+                };
+                sessionBar.Update(data, null);
+                Add(sessionBar);
+                return;
+            }
+
             _consolidator?.Update(data);
         }
 
