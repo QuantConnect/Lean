@@ -53,6 +53,38 @@ namespace QuantConnect.Tests.Common.Securities
         }
 
         [Test]
+        public void TotalCloseProfitUsesPriceOutsideRegularMarketHours()
+        {
+            var security = GetSecurity<QuantConnect.Securities.Equity.Equity>(Symbols.SPY, Resolution.Minute, false);
+            var holding = new SecurityHolding(security, new IdentityCurrencyConverter(Currencies.USD));
+
+            holding.SetHoldings(90m, 100m);
+            security.SetMarketPrice(new Tick(DateTime.Now, security.Symbol, 100m, 80m, 120m));
+
+            SetSecurityLocalTime(security, new DateTime(2023, 6, 26, 12, 0, 0));
+            Assert.AreEqual(-1000m, holding.TotalCloseProfit(includeFees: false));
+
+            SetSecurityLocalTime(security, new DateTime(2023, 6, 26, 20, 0, 0));
+            Assert.AreEqual(1000m, holding.TotalCloseProfit(includeFees: false));
+        }
+
+        [Test]
+        public void TotalCloseProfitUsesPriceForShortsOutsideRegularMarketHours()
+        {
+            var security = GetSecurity<QuantConnect.Securities.Equity.Equity>(Symbols.SPY, Resolution.Minute, false);
+            var holding = new SecurityHolding(security, new IdentityCurrencyConverter(Currencies.USD));
+
+            holding.SetHoldings(110m, -100m);
+            security.SetMarketPrice(new Tick(DateTime.Now, security.Symbol, 100m, 80m, 120m));
+
+            SetSecurityLocalTime(security, new DateTime(2023, 6, 26, 12, 0, 0));
+            Assert.AreEqual(-1000m, holding.TotalCloseProfit(includeFees: false));
+
+            SetSecurityLocalTime(security, new DateTime(2023, 6, 26, 20, 0, 0));
+            Assert.AreEqual(1000m, holding.TotalCloseProfit(includeFees: false));
+        }
+
+        [Test]
         public void Raises_QuantityChanged_WhenSetHoldingsCalled()
         {
             var arguments = new List<SecurityHoldingQuantityChangedEventArgs>();
@@ -82,7 +114,7 @@ namespace QuantConnect.Tests.Common.Securities
             Assert.AreEqual(firstPrice, second.PreviousAveragePrice);
         }
 
-        private Security GetSecurity<T>(Symbol symbol, Resolution resolution)
+        private Security GetSecurity<T>(Symbol symbol, Resolution resolution, bool isMarketAlwaysOpen = true)
         {
             var subscriptionDataConfig = new SubscriptionDataConfig(
                 typeof(T),
@@ -94,8 +126,12 @@ namespace QuantConnect.Tests.Common.Securities
                 true,
                 false);
 
+            var exchangeHours = isMarketAlwaysOpen
+                ? SecurityExchangeHours.AlwaysOpen(TimeZones.Utc)
+                : MarketHoursDatabase.FromDataFolder().GetExchangeHours(symbol.ID.Market, symbol, symbol.SecurityType);
+
             var security = new Security(
-                SecurityExchangeHours.AlwaysOpen(TimeZones.Utc),
+                exchangeHours,
                 subscriptionDataConfig,
                 new Cash(Currencies.USD, 0, 1m),
                 SymbolProperties.GetDefault(Currencies.USD),
@@ -110,6 +146,13 @@ namespace QuantConnect.Tests.Common.Securities
             security.SetLocalTimeKeeper(timeKeeper.GetLocalTimeKeeper(subscriptionDataConfig.DataTimeZone));
 
             return security;
+        }
+
+        private static void SetSecurityLocalTime(Security security, DateTime localTime)
+        {
+            security.SetLocalTimeKeeper(new LocalTimeKeeper(
+                localTime.ConvertToUtc(security.Exchange.TimeZone),
+                security.Exchange.TimeZone));
         }
     }
 }

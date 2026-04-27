@@ -494,8 +494,12 @@ namespace QuantConnect.Securities
                 feesInAccountCurrency = _currencyConverter.ConvertToAccountCurrency(liquidationFees).Amount;
             }
 
-            // if we are long, we would need to sell against the bid
-            var price = IsLong ? _security.BidPrice : _security.AskPrice;
+            // if we are long, we would need to sell against the bid. Outside of
+            // regular market hours, use the last price because these positions
+            // cannot be closed against stale bid/ask quotes.
+            var price = _security.IsMarketOpen(false)
+                ? (IsLong ? _security.BidPrice : _security.AskPrice)
+                : _security.Price;
             if (price == 0)
             {
                 // Bid/Ask prices can both be equal to 0. This usually happens when we request our holdings from
