@@ -951,6 +951,11 @@ namespace QuantConnect.Lean.Engine.Results
         {
             State["RuntimeError"] = error;
             State["StackTrace"] = stack;
+            if (Algorithm != null && Algorithm.RunTimeError == null && !string.IsNullOrEmpty(error))
+            {
+                Algorithm.SetRunTimeError(new Exception(error));
+                Algorithm.SetStatus(AlgorithmStatus.RuntimeError);
+            }
         }
 
         /// <summary>
