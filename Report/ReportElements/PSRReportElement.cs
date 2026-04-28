@@ -62,7 +62,7 @@ namespace QuantConnect.Report.ReportElements
                     return "-";
                 }
                 
-                return $"{psr:P0}";
+                return FormatKpiPercent(psr);
             }
 
             var equityCurvePerformance = DrawdownCollection.NormalizeResults(_backtest, _live)
@@ -86,7 +86,7 @@ namespace QuantConnect.Report.ReportElements
                 .SafeDecimalCast();
             
             Result = psr;
-            return $"{psr:P0}";
+            return FormatKpiPercent(psr);
         }
     }
 }

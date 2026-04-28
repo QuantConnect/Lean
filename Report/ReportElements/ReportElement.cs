@@ -13,6 +13,8 @@
  * limitations under the License.
 */
 
+using System.Globalization;
+
 namespace QuantConnect.Report.ReportElements
 {
     /// <summary>
@@ -39,6 +41,30 @@ namespace QuantConnect.Report.ReportElements
         /// Result of the render as an object for serialization to JSON
         /// </summary>
         public virtual object Result { get; protected set; }
+
+        /// <summary>
+        /// Formats a numeric KPI value with the report's standard decimal precision.
+        /// </summary>
+        protected static string FormatKpi(decimal? value)
+        {
+            return value.HasValue ? value.Value.ToString("F3", CultureInfo.InvariantCulture) : "-";
+        }
+
+        /// <summary>
+        /// Formats a numeric KPI value with the report's standard decimal precision.
+        /// </summary>
+        protected static string FormatKpi(double? value)
+        {
+            return value.HasValue ? value.Value.ToString("F3", CultureInfo.InvariantCulture) : "-";
+        }
+
+        /// <summary>
+        /// Formats a percentage KPI value with the report's standard decimal precision.
+        /// </summary>
+        protected static string FormatKpiPercent(decimal? value)
+        {
+            return value.HasValue ? value.Value.ToString("P3", CultureInfo.InvariantCulture) : "-";
+        }
 
         /// <summary>
         /// The generated output string to be injected

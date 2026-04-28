@@ -50,7 +50,7 @@ namespace QuantConnect.Report.ReportElements
             {
                 var backtestDrawdown = _backtest?.TotalPerformance?.PortfolioStatistics?.Drawdown;
                 Result = backtestDrawdown;
-                return backtestDrawdown?.ToString("P1") ?? "-";
+                return FormatKpiPercent(backtestDrawdown);
             }
 
             var equityCurve = new SortedDictionary<DateTime, decimal>(DrawdownCollection.NormalizeResults(_backtest, _live)
@@ -60,7 +60,7 @@ namespace QuantConnect.Report.ReportElements
             var maxDrawdown = Statistics.Statistics.CalculateDrawdownMetrics(equityCurve).Drawdown;
             Result = maxDrawdown;
 
-            return $"{maxDrawdown:P1}";
+            return FormatKpiPercent(maxDrawdown);
         }
     }
 }
