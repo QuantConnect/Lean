@@ -411,7 +411,7 @@ namespace QuantConnect
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public static string InvalidOrderQuantityForLotSize(Securities.Security security)
             {
-                return Invariant($"The order quantity must be a multiple of LotSize: [{security.SymbolProperties.LotSize}].");
+                return Invariant($"The order quantity must be a multiple of {FormatCode("LotSize")}: [{security.SymbolProperties.LotSize}].");
             }
 
             /// <summary>

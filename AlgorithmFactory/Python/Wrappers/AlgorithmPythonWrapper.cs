@@ -177,6 +177,8 @@ namespace QuantConnect.AlgorithmFactory.Python.Wrappers
                     {
                         throw new Exception("Please ensure that one class inherits from QCAlgorithm.");
                     }
+
+                    Messages.SetAlgorithmLanguage(Language.Python);
                 }
             }
             catch (Exception e)
@@ -901,7 +903,7 @@ namespace QuantConnect.AlgorithmFactory.Python.Wrappers
                     // If the method does not return or returns a non-iterable PyObject, throw an exception
                     if (result == null || !result.IsIterable())
                     {
-                        throw new Exception("OnMarginCall must return a non-empty list of SubmitOrderRequest");
+                        throw new Exception(Messages.AlgorithmPythonWrapper.OnMarginCallMustReturnNonEmptyList());
                     }
 
                     requests.Clear();
@@ -919,7 +921,7 @@ namespace QuantConnect.AlgorithmFactory.Python.Wrappers
                     // If the PyObject is an empty list or its items are not SubmitOrderRequest objects, throw an exception
                     if (requests.Count == 0)
                     {
-                        throw new Exception("OnMarginCall must return a non-empty list of SubmitOrderRequest");
+                        throw new Exception(Messages.AlgorithmPythonWrapper.OnMarginCallMustReturnNonEmptyList());
                     }
                 }
             }

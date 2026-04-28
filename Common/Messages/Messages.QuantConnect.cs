@@ -15,6 +15,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Runtime.CompilerServices;
 
 using Python.Runtime;
@@ -30,6 +31,43 @@ namespace QuantConnect
     /// </summary>
     public static partial class Messages
     {
+        private static Language _algorithmLanguage = Language.CSharp;
+
+        /// <summary>
+        /// Sets the algorithm language used to format code identifiers in error messages.
+        /// </summary>
+        public static void SetAlgorithmLanguage(Language language)
+        {
+            _algorithmLanguage = language;
+        }
+
+        /// <summary>
+        /// Returns the code identifier formatted for the current algorithm language.
+        /// For Python, converts PascalCase/camelCase to snake_case.
+        /// </summary>
+        private static string FormatCode(string code)
+        {
+            return _algorithmLanguage switch
+            {
+                Language.Python => code.ToSnakeCase(),
+                _ => code
+            };
+        }
+
+        private static string FormatCodeRoot(string code)
+        {
+            return _algorithmLanguage switch
+            {
+                Language.Python => "self." + code.ToSnakeCase(),
+                _ => code
+            };
+        }
+
+        private static string FormatCode<T>(T value) where T : Enum
+        {
+            return string.Join(", ", value.ToString().Split(", ").Select(FormatCode));
+        }
+
         /// <summary>
         /// Provides user-facing messages for the <see cref="AlphaRuntimeStatistics"/> class and its consumers or related classes
         /// </summary>
@@ -187,8 +225,8 @@ namespace QuantConnect
             public static string TickerNotFoundInSymbolCache(string ticker)
             {
                 return $"The ticker {ticker} was not found in the SymbolCache. Use the Symbol object as key instead. " +
-                    "Accessing the securities collection/slice object by string ticker is only available for securities added with " +
-                    "the AddSecurity-family methods. For more details, please check out the documentation.";
+                    $"Accessing the securities collection/slice object by string ticker is only available for securities added with " +
+                    $"the {FormatCode("AddSecurity")}-family methods. For more details, please check out the documentation.";
             }
 
             /// <summary>
@@ -282,7 +320,7 @@ namespace QuantConnect
             public static string ZeroPriceForSecurity(QuantConnect.Symbol symbol)
             {
                 return $"{symbol}: The security does not have an accurate price as it has not yet received a bar of data. " +
-                    "Before placing a trade (or using SetHoldings) warm up your algorithm with SetWarmup, or use slice.Contains(symbol) " +
+                    $"Before placing a trade (or using {FormatCode("SetHoldings")}) warm up your algorithm with {FormatCode("SetWarmup")}, or use slice.{FormatCode("Contains")}(symbol) " +
                     "to confirm the Slice object has price before using the data. Data does not necessarily all arrive at the same " +
                     "time so your algorithm should confirm the data is ready before using it. In live trading this can mean you do " +
                     "not have an active subscription to the asset class you're trying to trade. If using custom data make sure you've " +
@@ -724,7 +762,7 @@ namespace QuantConnect
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public static string MarketNotFound(string market)
             {
-                return $@"The specified market wasn't found in the markets lookup. Requested: {market}. You can add markets by calling QuantConnect.Market.Add(string,int)";
+                return $@"The specified market wasn't found in the markets lookup. Requested: {market}. You can add markets by calling QuantConnect.Market.{FormatCode("Add")}(string,int)";
             }
         }
 
