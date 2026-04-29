@@ -727,6 +727,18 @@ namespace QuantConnect.Lean.Engine
                 {
                     // warmup finished, send an update
                     warmingUp = false;
+
+                    // Align time to StartDate so OnWarmupFinished always fires at midnight,
+                    // even when the first post warmup slice arrives later (e.g. a ScheduledUniverse at 8 AM).
+                    if (!algorithm.LiveMode)
+                    {
+                        var warmupEndUtc = algorithm.StartDate.ConvertToUtc(algorithm.TimeZone);
+                        if (algorithm.UtcTime > warmupEndUtc)
+                        {
+                            algorithm.SetDateTime(warmupEndUtc);
+                        }
+                    }
+
                     // we trigger this callback here and not internally in the algorithm so that we can go through python if required
                     algorithm.OnWarmupFinished();
                     algorithm.Debug("Algorithm finished warming up.");
