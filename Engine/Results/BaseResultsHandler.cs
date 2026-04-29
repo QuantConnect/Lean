@@ -16,6 +16,7 @@
 
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
+using QuantConnect;
 using QuantConnect.Data.Market;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Indicators;
@@ -953,8 +954,7 @@ namespace QuantConnect.Lean.Engine.Results
             State["StackTrace"] = stack;
             if (Algorithm != null && Algorithm.RunTimeError == null && !string.IsNullOrEmpty(error))
             {
-                Algorithm.SetRunTimeError(new Exception(error));
-                Algorithm.SetStatus(AlgorithmStatus.RuntimeError);
+                Algorithm.SetRuntimeError(new Exception(error), nameof(IResultHandler.RuntimeError));
             }
         }
 
