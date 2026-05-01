@@ -52,6 +52,7 @@ namespace QuantConnect.Securities.FutureOption
         private static readonly Symbol _nzd = Symbol.CreateCanonicalOption(Symbol.Create("6N", SecurityType.Future, Market.CME));
         private static readonly Symbol _mxn = Symbol.CreateCanonicalOption(Symbol.Create("6M", SecurityType.Future, Market.CME));
         private static readonly Symbol _ead = Symbol.CreateCanonicalOption(Symbol.Create("EAD", SecurityType.Future, Market.CME));
+        private static readonly Symbol _ajy = Symbol.CreateCanonicalOption(Symbol.Create("AJY", SecurityType.Future, Market.CME));
         private static readonly Symbol _le = Symbol.CreateCanonicalOption(Symbol.Create("LE", SecurityType.Future, Market.CME));
         private static readonly Symbol _he = Symbol.CreateCanonicalOption(Symbol.Create("HE", SecurityType.Future, Market.CME));
         private static readonly Symbol _lbr = Symbol.CreateCanonicalOption(Symbol.Create("LBR", SecurityType.Future, Market.CME));
@@ -101,6 +102,7 @@ namespace QuantConnect.Securities.FutureOption
             { _nzd, expiryMonth => SecondFridayBeforeThirdWednesdayOfContractMonth(_nzd.Underlying, expiryMonth) },
             { _mxn, expiryMonth => SecondFridayBeforeThirdWednesdayOfContractMonth(_mxn.Underlying, expiryMonth) },
             { _ead, expiryMonth => SecondFridayBeforeThirdWednesdayOfContractMonth(_ead.Underlying, expiryMonth) },
+            { _ajy, expiryMonth => SecondFridayBeforeThirdWednesdayOfContractMonth(_ajy.Underlying, expiryMonth) },
             { _le, expiryMonth => FirstFridayOfContractMonth(_le.Underlying, expiryMonth) },
             { _he, expiryMonth => TenthBusinessDayOfContractMonth(_he.Underlying, expiryMonth) },
             { _lbr, expiryMonth => LastBusinessDayInPrecedingMonthFromContractMonth(_lbr.Underlying, expiryMonth) },
