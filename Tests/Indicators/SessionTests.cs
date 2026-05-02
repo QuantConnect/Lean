@@ -137,6 +137,33 @@ namespace QuantConnect.Tests.Indicators
             }
         }
 
+        [Test]
+        public void DailyQuoteBarsPopulateSessionDirectly()
+        {
+            var symbol = Symbols.EURUSD;
+            var session = GetSession(symbol, TickType.Quote, 10);
+            var start = new DateTime(2024, 9, 16);
+
+            for (var i = 0; i < 5; i++)
+            {
+                var time = start.AddDays(i);
+                session.Update(new QuoteBar(
+                    time,
+                    symbol,
+                    new Bar(1.10m + i, 1.11m + i, 1.09m + i, 1.105m + i),
+                    0,
+                    new Bar(1.12m + i, 1.13m + i, 1.11m + i, 1.125m + i),
+                    0,
+                    Time.OneDay));
+            }
+
+            Assert.AreEqual(6, session.Samples);
+            Assert.AreEqual(start.AddDays(4), session[0].Time);
+            Assert.AreEqual(start.AddDays(5), session[0].EndTime);
+            Assert.AreEqual(5.11m, session[0].Open);
+            Assert.AreEqual(5.115m, session[0].Close);
+        }
+
         [TestCaseSource(nameof(NextSessionTradingDayCases))]
         public void CreatesNewSessionBarWithCorrectNextTradingDay(DateTime startDate, DateTime expectedDate)
         {
@@ -173,7 +200,11 @@ namespace QuantConnect.Tests.Indicators
 
         private static Session GetSession(TickType tickType, int initialSize)
         {
-            var symbol = Symbols.SPY;
+            return GetSession(Symbols.SPY, tickType, initialSize);
+        }
+
+        private static Session GetSession(Symbol symbol, TickType tickType, int initialSize)
+        {
             var marketHoursDatabase = MarketHoursDatabase.FromDataFolder();
             var exchangeHours = marketHoursDatabase.GetExchangeHours(symbol.ID.Market, symbol, symbol.SecurityType);
             return new Session(tickType, exchangeHours, symbol, initialSize);
