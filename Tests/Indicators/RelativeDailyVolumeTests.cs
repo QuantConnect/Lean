@@ -113,6 +113,19 @@ namespace QuantConnect.Tests.Indicators
             Assert.IsFalse(rdv8.IsReady);
         }
 
+        [Test]
+        public void ProvidesConfigurableWarmUpPeriod()
+        {
+            var rdv = new RelativeDailyVolume(2);
+            var warmUpPeriodProvider = (IIndicatorWarmUpPeriodProvider)rdv;
+
+            Assert.AreEqual(3, warmUpPeriodProvider.WarmUpPeriod);
+
+            rdv.WarmUpPeriod = 1000;
+
+            Assert.AreEqual(1000, warmUpPeriodProvider.WarmUpPeriod);
+        }
+
         /// <summary>
         /// The final value of this indicator is zero because it uses the Volume of the bars it receives.
         /// Since RenkoBar's don't always have Volume, the final current value is zero. Therefore we

@@ -26,7 +26,7 @@ namespace QuantConnect.Indicators
     /// 
     /// Current volume from open to current time of day / Average over the past x days from open to current time of day
     /// </summary>
-    public class RelativeDailyVolume : TradeBarIndicator
+    public class RelativeDailyVolume : TradeBarIndicator, IIndicatorWarmUpPeriodProvider
     {
         private readonly SortedDictionary<TimeSpan, SimpleMovingAverage> _relativeData;
         private readonly Dictionary<DateTime, decimal> _currentData;
@@ -38,6 +38,11 @@ namespace QuantConnect.Indicators
         /// Gets a flag indicating when the indicator is ready and fully initialized
         /// </summary>
         public override bool IsReady => _days >= _period;
+
+        /// <summary>
+        /// Required period, in data points, for the indicator to be ready and fully initialized.
+        /// </summary>
+        public int WarmUpPeriod { get; set; }
 
         /// <summary>
         /// Initializes a new instance of the RelativeDailyVolume class using the specified period
@@ -59,6 +64,7 @@ namespace QuantConnect.Indicators
             _relativeData = new SortedDictionary<TimeSpan, SimpleMovingAverage>();
             _currentData = new Dictionary<DateTime, decimal>();
             _period = period;
+            WarmUpPeriod = period + 1;
             _previousDay = -1; // No calendar day can be -1, thus default is not a calendar day
             _days = -1; // Will increment by one after first TradeBar, then will increment by one every new day
         }
