@@ -94,6 +94,22 @@ namespace QuantConnect.Tests.Algorithm
             interestRateProviderMock.Verify(x => x.GetInterestRate(reference), Times.Once);
         }
 
+        [Test]
+        public void WarmUpIndicatorDoesNotLeaveDefaultValueInWindow()
+        {
+            var indicator = new RateOfChange(1);
+            indicator.Window.Size = 5;
+
+            _algorithm.SetDateTime(new DateTime(2013, 10, 11));
+
+            _algorithm.WarmUpIndicator(_equity, indicator, Resolution.Minute);
+
+            Assert.IsTrue(indicator.IsReady);
+            Assert.AreEqual(indicator.Samples, indicator.Window.Count);
+            Assert.IsFalse(indicator.Window.Any(x => x.EndTime == DateTime.MinValue));
+            Assert.AreEqual(indicator.Current, indicator.Window[0]);
+        }
+
         [TestCase("Span", Language.CSharp)]
         [TestCase("Count", Language.CSharp)]
         [TestCase("StartAndEndDate", Language.CSharp)]

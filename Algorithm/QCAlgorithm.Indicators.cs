@@ -4455,6 +4455,7 @@ namespace QuantConnect.Algorithm
         {
             // Reset the indicator
             indicator.Reset();
+            indicator.Window.Reset();
 
             var properties = indicator.GetType()
                 .GetProperties()
