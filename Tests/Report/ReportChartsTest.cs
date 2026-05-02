@@ -22,6 +22,7 @@ using Python.Runtime;
 using QuantConnect.Packets;
 using QuantConnect.Report;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 
 namespace QuantConnect.Tests.Report
 {
@@ -117,6 +118,31 @@ namespace QuantConnect.Tests.Report
             string html = "";
             Assert.DoesNotThrow(() => report.Compile(out html, out _));
             Assert.IsNotEmpty(html);
+        }
+
+        [Test]
+        public void KeyStatisticsRenderWithThreeDecimalPlaces()
+        {
+            var backtestResult = GetBacktestResult();
+            backtestResult.TotalPerformance.PortfolioStatistics.Drawdown = 0.01234m;
+            backtestResult.TotalPerformance.PortfolioStatistics.PortfolioTurnover = 0.12345m;
+            backtestResult.TotalPerformance.PortfolioStatistics.ProbabilisticSharpeRatio = 0.98765m;
+            backtestResult.TotalPerformance.PortfolioStatistics.SharpeRatio = 1.23456m;
+            backtestResult.TotalPerformance.PortfolioStatistics.SortinoRatio = 2.34567m;
+            backtestResult.TotalPerformance.PortfolioStatistics.InformationRatio = -0.3094m;
+
+            var report = new QuantConnect.Report.Report("Report", "Report", "v1.0.0", backtestResult, (LiveResult)null);
+            report.Compile(out var html, out var reportStatistics);
+
+            Assert.That(html, Does.Contain("<td>1.234%</td>"));
+            Assert.That(html, Does.Contain("<td>12.345%</td>"));
+            Assert.That(html, Does.Contain("<td>98.765%</td>"));
+            Assert.That(html, Does.Contain("<td>1.235</td>"));
+            Assert.That(html, Does.Contain("<td>2.346</td>"));
+            Assert.That(html, Does.Contain("<td>-0.309</td>"));
+
+            var statistics = JObject.Parse(reportStatistics);
+            Assert.AreEqual(1.23456m, statistics["sharpe"].Value<decimal>());
         }
 
         static BacktestResult GetBacktestResult()

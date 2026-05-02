@@ -72,7 +72,7 @@ namespace QuantConnect.Report.ReportElements
             if (LiveResult == null)
             {
                 Result = BacktestResultValue;
-                return BacktestResultValue?.ToString("F1") ?? "-";
+                return FormatKpi(BacktestResultValue);
             }
 
             var equityPoints = ResultsUtil.EquityPoints(LiveResult);
@@ -96,7 +96,7 @@ namespace QuantConnect.Report.ReportElements
             var annualPerformance = Statistics.Statistics.AnnualPerformance(trailingPerformance, _tradingDaysPerYear);
             var liveResultValue = Statistics.Statistics.SharpeRatio(annualPerformance, annualStandardDeviation, 0.0);
             Result = liveResultValue;
-            return liveResultValue.ToString("F2");
+            return FormatKpi(liveResultValue);
         }
 
         /// <summary>

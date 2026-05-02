@@ -49,7 +49,7 @@ namespace QuantConnect.Report.ReportElements
                 return "-";
             }
 
-            return $"{turnover:P0}";
+            return FormatKpiPercent(turnover);
         }
     }
 }

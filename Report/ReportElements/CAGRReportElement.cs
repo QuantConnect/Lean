@@ -60,7 +60,7 @@ namespace QuantConnect.Report.ReportElements
                 equityCurve.LastValue().SafeDecimalCast(),
                 years);
             
-            return ((decimal?)Result)?.ToString("P1") ?? "-";
+            return FormatKpiPercent((decimal?)Result);
         }
     }
 }

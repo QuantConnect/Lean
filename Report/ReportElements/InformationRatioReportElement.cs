@@ -44,7 +44,7 @@ namespace QuantConnect.Report.ReportElements
         {
             var informationRatio = _backtest?.TotalPerformance?.PortfolioStatistics?.InformationRatio;
             Result = informationRatio;
-            return informationRatio?.ToString("F1") ?? "-";
+            return FormatKpi(informationRatio);
         }
     }
 }
