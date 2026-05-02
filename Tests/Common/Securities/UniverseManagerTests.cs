@@ -103,9 +103,34 @@ namespace QuantConnect.Tests.Common.Securities
             manager.Remove(universe.Configuration.Symbol);
         }
 
+        [Test]
+        public void AssignsSelectionOrderWhenUniverseIsAdded()
+        {
+            var manager = new UniverseManager();
+            var first = CreateUniverse(Symbols.SPY);
+            var second = CreateUniverse(Symbols.AAPL);
+            var third = CreateUniverse(Symbols.IBM);
+
+            manager.Add(first.Configuration.Symbol, first);
+            manager[second.Configuration.Symbol] = second;
+            manager.Add(third.Configuration.Symbol, third);
+
+            Assert.AreEqual(1, first.SelectionOrder);
+            Assert.AreEqual(2, second.SelectionOrder);
+            Assert.AreEqual(3, third.SelectionOrder);
+        }
+
         private SubscriptionDataConfig CreateTradeBarConfig()
         {
             return new SubscriptionDataConfig(typeof(TradeBar), Symbols.SPY, Resolution.Minute, TimeZones.NewYork, TimeZones.NewYork, false, false, true);
+        }
+
+        private Universe CreateUniverse(Symbol symbol)
+        {
+            return new FuncUniverse(
+                new SubscriptionDataConfig(typeof(TradeBar), symbol, Resolution.Minute, TimeZones.NewYork, TimeZones.NewYork, false, false, true),
+                new UniverseSettings(Resolution.Minute, 2, true, false, TimeSpan.Zero),
+                data => data.Select(x => x.Symbol));
         }
     }
 }

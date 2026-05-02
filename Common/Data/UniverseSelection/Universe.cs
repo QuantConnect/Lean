@@ -101,6 +101,14 @@ namespace QuantConnect.Data.UniverseSelection
         public Symbol Symbol => Configuration.Symbol;
 
         /// <summary>
+        /// Gets the order in which this universe was added to the algorithm.
+        /// </summary>
+        public int SelectionOrder
+        {
+            get; internal set;
+        }
+
+        /// <summary>
         /// Gets the data type of this universe
         /// </summary>
         public Type DataType => Configuration.Type;

@@ -19,6 +19,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.Linq;
+using System.Threading;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Util;
 using Common.Util;
@@ -31,6 +32,7 @@ namespace QuantConnect.Securities
     public class UniverseManager : BaseExtendedDictionary<Symbol, Universe, ConcurrentDictionary<Symbol, Universe>>
     {
         private readonly Queue<UniverseManagerChanged> _pendingChanges = new();
+        private int _nextSelectionOrder;
 
         /// <summary>
         /// Event fired when a universe is added or removed
@@ -60,6 +62,7 @@ namespace QuantConnect.Securities
         {
             if (Dictionary.TryAdd(key, value))
             {
+                value.SelectionOrder = Interlocked.Increment(ref _nextSelectionOrder);
                 lock (_pendingChanges)
                 {
                     _pendingChanges.Enqueue(new UniverseManagerChanged(NotifyCollectionChangedAction.Add, value));
