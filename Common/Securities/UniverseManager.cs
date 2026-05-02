@@ -19,6 +19,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.Linq;
+using System.Threading;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Util;
 using Common.Util;
@@ -61,7 +62,7 @@ namespace QuantConnect.Securities
         {
             if (Dictionary.TryAdd(key, value))
             {
-                value.SelectionOrder = _nextSelectionOrder++;
+                value.SelectionOrder = Interlocked.Increment(ref _nextSelectionOrder);
                 lock (_pendingChanges)
                 {
                     _pendingChanges.Enqueue(new UniverseManagerChanged(NotifyCollectionChangedAction.Add, value));

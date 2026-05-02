@@ -104,7 +104,7 @@ namespace QuantConnect.Tests.Common.Securities
         }
 
         [Test]
-        public void AssignsSelectionOrderWhenUniverseAdded()
+        public void AssignsSelectionOrderWhenUniverseIsAdded()
         {
             var manager = new UniverseManager();
             var first = CreateUniverse(Symbols.SPY);
@@ -115,9 +115,9 @@ namespace QuantConnect.Tests.Common.Securities
             manager[second.Configuration.Symbol] = second;
             manager.Add(third.Configuration.Symbol, third);
 
-            Assert.AreEqual(0, first.SelectionOrder);
-            Assert.AreEqual(1, second.SelectionOrder);
-            Assert.AreEqual(2, third.SelectionOrder);
+            Assert.AreEqual(1, first.SelectionOrder);
+            Assert.AreEqual(2, second.SelectionOrder);
+            Assert.AreEqual(3, third.SelectionOrder);
         }
 
         private SubscriptionDataConfig CreateTradeBarConfig()
