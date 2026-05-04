@@ -602,5 +602,55 @@ def rolling_window_with_custom_data_type():
                 Assert.AreEqual(expectedValue, value);
             }
         }
+
+        [TestCase(2, 3, 5, new[] { 3, 2 })]
+        [TestCase(5, 7, 3, new[] { 7, 6, 5 })]
+        [TestCase(3, 6, 2, new[] { 6, 5 })]
+        [TestCase(3, 6, 5, new[] { 6, 5, 4 })]
+        public void ResizeFromOverwrittenWindowPreservesNewestElements(int initialSize, int totalAdds, int newSize, int[] expected)
+        {
+            var window = new RollingWindow<int>(initialSize);
+            for (var i = 1; i <= totalAdds; i++)
+            {
+                window.Add(i);
+            }
+
+            window.Size = newSize;
+
+            for (var i = 0; i < expected.Length; i++)
+            {
+                Assert.AreEqual(expected[i], window[i]);
+            }
+        }
+
+        [Test]
+        public void MultipleResizesOnOverwrittenWindowPreserveElementOrder()
+        {
+            var window = new RollingWindow<int>(5);
+            for (var i = 1; i <= 7; i++)
+            {
+                window.Add(i);
+            }
+
+            window.Size = 3;
+            Assert.AreEqual(7, window[0]);
+            Assert.AreEqual(6, window[1]);
+            Assert.AreEqual(5, window[2]);
+
+            window.Size = 10;
+            Assert.AreEqual(7, window[0]);
+            Assert.AreEqual(6, window[1]);
+            Assert.AreEqual(5, window[2]);
+
+            for (var i = 8; i <= 17; i++)
+            {
+                window.Add(i);
+            }
+
+            Assert.AreEqual(17, window[0]);
+            Assert.AreEqual(16, window[1]);
+            Assert.AreEqual(15, window[2]);
+            Assert.AreEqual(8, window[9]);
+        }
     }
 }

@@ -368,11 +368,27 @@ namespace QuantConnect.Indicators
             {
                 _listLock.EnterWriteLock();
 
-                _list.EnsureCapacity(size);
+                if (_tail != 0)
+                {
+                    // The _list is out of order due to circular overwrites
+                    // Restore oldest to newest order and reset _tail before resizing
+                    var count = _list.Count;
+                    var reordered = new List<T>(count);
+                    for (var i = count - 1; i >= 0; i--)
+                    {
+                        reordered.Add(_list[GetListIndex(i, count, _tail)]);
+                    }
+                    _list.Clear();
+                    _list.AddRange(reordered);
+                    _tail = 0;
+                }
+
                 if (size < _list.Count)
                 {
                     _list.RemoveRange(0, _list.Count - size);
                 }
+
+                _list.EnsureCapacity(size);
                 _size = size;
             }
             finally
