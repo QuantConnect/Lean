@@ -238,13 +238,13 @@ namespace QuantConnect.Orders.Slippage
             _prices.Add(bar.Close);
             _volumes.Add(bar.Volume);
 
-            if (_prices.Samples < 2)
+            if (_prices.Count < 2)
             {
                 return;
             }
 
-            var rocp = new double[_prices.Samples - 1];
-            for (var i = 0; i < _prices.Samples - 1; i++)
+            var rocp = new double[_prices.Count - 1];
+            for (var i = 0; i < _prices.Count - 1; i++)
             {
                 if (_prices[i + 1] == 0) continue;
 
