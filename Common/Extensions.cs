@@ -3079,7 +3079,11 @@ namespace QuantConnect
             {
                 return (dataPoints) => dataPoints.Select(x => x.Symbol);
             }
-            return selector.ConvertSelectionSymbolDelegate();
+            // Convert IEnumerable to List before passing to the Python selector so that
+            // Python users can use list semantics such as indexing (e.g. fundamentals[0])
+            // and len() (e.g. len(fundamentals)) without errors. See GH issue #9447.
+            Func<IEnumerable<T>, object> listSelector = data => selector(data.ToList());
+            return listSelector.ConvertSelectionSymbolDelegate();
         }
 
         /// <summary>

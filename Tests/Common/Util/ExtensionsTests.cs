@@ -1955,6 +1955,49 @@ def select_symbol(fundamental):
             }
         }
 
+        [Test]
+        public void UniverseSelectionDelegatePassesListToPythonSelector()
+        {
+            // Regression test for GH issue #9447:
+            // The Python universe selector should receive a List, not an IEnumerable,
+            // so that users can use list semantics: fundamentals[0] and len(fundamentals).
+            using (Py.GIL())
+            {
+                var module = PyModule.FromString(
+                    "UniverseSelectionDelegatePassesListToPythonSelector",
+                    @"
+def select_symbols(fundamentals):
+    # These two operations crash if fundamentals is an IEnumerable (iterator):
+    count = len(fundamentals)       # raises TypeError on iterator
+    first = fundamentals[0]         # raises TypeError on iterator
+    return [x.Symbol for x in fundamentals]
+"
+                );
+                var selectSymbolPythonMethod = module.GetAttr("select_symbols");
+                Assert.IsTrue(selectSymbolPythonMethod.TryAs(out Func<IEnumerable<Fundamental>, object> selectSymbols));
+                Assert.IsNotNull(selectSymbols);
+
+                var selectSymbolsDelegate = selectSymbols.ConvertToUniverseSelectionSymbolDelegate();
+
+                var reference = new DateTime(2024, 2, 1);
+                // Pass as IEnumerable (simulating what C# engine provides) — not a list
+                IEnumerable<Fundamental> fundamentals = new List<Fundamental>
+                {
+                    new Fundamental(reference, Symbols.SPY),
+                    new Fundamental(reference, Symbols.AAPL),
+                    new Fundamental(reference, Symbols.IBM),
+                }.Select(x => x); // .Select() returns IEnumerable, not List
+
+                List<Symbol> symbols = null;
+                // This must NOT throw — previously crashed because Python received an
+                // IEnumerable that doesn't support len() or indexing.
+                Assert.DoesNotThrow(() => symbols = selectSymbolsDelegate(fundamentals).ToList());
+                Assert.IsNotNull(symbols);
+                CollectionAssert.IsNotEmpty(symbols);
+                Assert.AreEqual(3, symbols.Count);
+            }
+        }
+
         [TestCaseSource(nameof(DivideCases))]
         public void SafeDivisionWorksAsExpectedWithEdgeCases(decimal numerator, decimal denominator)
         {
