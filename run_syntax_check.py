@@ -57,8 +57,7 @@ specific_indicator_attributes = ['is_ready', 'samples', 'name', 'current', 'upda
 
 def should_ignore(line: str, prev_line_ignored: bool) -> bool:
     result = any(to_ignore in line for to_ignore in (
-        # this (None and object) is just noise the variable was initialized with None or mypy might not be able to resolve base class in some cases
-        'None',
+        # this ('object') is just noise: mypy might not be able to resolve base class in some cases
         '"object"',
         'Name "datetime" is not defined',
         'Name "np" is not defined',
@@ -79,7 +78,8 @@ def should_ignore(line: str, prev_line_ignored: bool) -> bool:
         'No overload variant of "warm_up_indicator" of "QCAlgorithm" matches argument types'
     ))
 
-    if result or ('note: ' in line and prev_line_ignored):
+    if result or ('note: ' in line and prev_line_ignored) or\
+        ('None' in line and '[func-returns-value]' not in line):
         return True
 
     # Ignore accessing specific order types properties
