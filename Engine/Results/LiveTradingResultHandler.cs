@@ -544,6 +544,7 @@ namespace QuantConnect.Lean.Engine.Results
         public void DebugMessage(string message)
         {
             if (Messages.Count > 500) return; //if too many in the queue already skip the logging.
+            message = FormatMessage(message);
             Messages.Enqueue(new DebugPacket(_job.ProjectId, AlgorithmId, CompileId, message));
             AddToLogStore(message);
         }
@@ -554,6 +555,7 @@ namespace QuantConnect.Lean.Engine.Results
         /// <param name="message">Message we'd like shown in console.</param>
         public void SystemDebugMessage(string message)
         {
+            message = FormatMessage(message);
             Messages.Enqueue(new SystemDebugPacket(_job.ProjectId, AlgorithmId, CompileId, message));
             AddToLogStore(message);
         }
@@ -568,6 +570,7 @@ namespace QuantConnect.Lean.Engine.Results
         {
             //Send the logging messages out immediately for live trading:
             if (Messages.Count > 500) return;
+            message = FormatMessage(message);
             Messages.Enqueue(new LogPacket(AlgorithmId, message));
             AddToLogStore(message);
         }
@@ -580,6 +583,7 @@ namespace QuantConnect.Lean.Engine.Results
         public void ErrorMessage(string message, string stacktrace = "")
         {
             if (Messages.Count > 500) return;
+            message = FormatMessage(message);
             Messages.Enqueue(new HandledErrorPacket(AlgorithmId, message, stacktrace));
             AddToLogStore(message + (!string.IsNullOrEmpty(stacktrace) ? ": StackTrace: " + stacktrace : string.Empty));
         }
@@ -591,6 +595,7 @@ namespace QuantConnect.Lean.Engine.Results
         /// <param name="stacktrace">Associated error stack trace.</param>
         public virtual void RuntimeError(string message, string stacktrace = "")
         {
+            message = FormatMessage(message);
             Messages.Enqueue(new RuntimeErrorPacket(_job.UserId, AlgorithmId, message, stacktrace));
             AddToLogStore(message + (!string.IsNullOrEmpty(stacktrace) ? ": StackTrace: " + stacktrace : string.Empty));
             SetAlgorithmState(message, stacktrace);
@@ -1269,6 +1274,13 @@ namespace QuantConnect.Lean.Engine.Results
         public void SetSummaryStatistic(string name, string value)
         {
             SummaryStatistic(name, value);
+        }
+
+        private string FormatMessage(string message)
+        {
+            return Algorithm != null
+                ? $"{Algorithm.Time.ToStringInvariant(DateFormat.UI)} {message}"
+                : message;
         }
     }
 }

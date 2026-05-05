@@ -27,6 +27,7 @@ using QuantConnect.Tests.Engine.DataFeeds;
 using QuantConnect.Lean.Engine.TransactionHandlers;
 using QuantConnect.Tests.Common.Data.UniverseSelection;
 using QuantConnect.Data.Custom.IconicTypes;
+using System.Collections.Generic;
 
 namespace QuantConnect.Tests.Engine.Results
 {
@@ -149,7 +150,7 @@ namespace QuantConnect.Tests.Engine.Results
             using var messagging = new QuantConnect.Messaging.Messaging();
             var referenceDate = new DateTime(2020, 11, 25);
             var resultHandler = new LiveTradingResultHandler();
-            resultHandler.Initialize(new (new LiveNodePacket(), messagging, api, new BacktestingTransactionHandler(), null));
+            resultHandler.Initialize(new(new LiveNodePacket(), messagging, api, new BacktestingTransactionHandler(), null));
 
             try
             {
@@ -188,6 +189,37 @@ namespace QuantConnect.Tests.Engine.Results
             {
                 resultHandler.Exit();
             }
+        }
+
+        [Test]
+        public void MessagesArePrefixedWithAlgorithmTime()
+        {
+            using var messaging = new QuantConnect.Messaging.Messaging();
+            var result = new LiveTradingResultHandler();
+            result.Initialize(new(new LiveNodePacket(), messaging, null, new BacktestingTransactionHandler(), null));
+
+            var algorithm = new AlgorithmStub();
+            algorithm.AddEquity("SPY");
+            algorithm.SetDateTime(new DateTime(2026, 1, 15, 9, 30, 0));
+            result.SetAlgorithm(algorithm, 10);
+
+            var algorithmTimePrefix = algorithm.Time.ToStringInvariant(DateFormat.UI);
+
+            result.Messages.Clear();
+            result.DebugMessage("debug message");
+            result.LogMessage("log message");
+            result.ErrorMessage("error message");
+            result.RuntimeError("runtime message");
+
+            var messages = new List<string>()
+            {
+                result.Messages.OfType<DebugPacket>().Single().Message,
+                result.Messages.OfType<LogPacket>().Single().Message,
+                result.Messages.OfType<HandledErrorPacket>().Single().Message,
+                result.Messages.OfType<RuntimeErrorPacket>().Single().Message
+            };
+
+            Assert.That(messages, Has.All.StartsWith(algorithmTimePrefix));
         }
 
         private class TestDataFeed : IDataFeed
