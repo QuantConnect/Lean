@@ -30,6 +30,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
     public class Synchronizer : ISynchronizer, IDataFeedTimeProvider, IDisposable
     {
         private DateTimeZone _dateTimeZone;
+        private DateTime _warmupEndUtc;
 
         /// <summary>
         /// The algorithm instance
@@ -116,6 +117,13 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 // check for cancellation
                 if (timeSlice == null || cancellationToken.IsCancellationRequested) break;
 
+                // If the first post warmup slice skips past StartDate, emit a time pulse at StartDate
+                // so the algorithm time is aligned before OnWarmupFinished fires
+                if (!Algorithm.LiveMode && Algorithm.IsWarmingUp && timeSlice.Time > _warmupEndUtc)
+                {
+                    yield return TimeSliceFactory.CreateTimePulse(_warmupEndUtc);
+                }
+
                 if (timeSlice.IsTimePulse && Algorithm.UtcTime == timeSlice.Time)
                 {
                     previousWasTimePulse = timeSlice.IsTimePulse;
@@ -167,6 +175,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
             // this is set after the algorithm initializes
             _dateTimeZone = Algorithm.TimeZone;
+            _warmupEndUtc = Algorithm.StartDate.ConvertToUtc(_dateTimeZone);
             TimeSliceFactory = new TimeSliceFactory(_dateTimeZone);
             SubscriptionSynchronizer.SetTimeSliceFactory(TimeSliceFactory);
         }
