@@ -138,12 +138,19 @@ namespace QuantConnect.Lean.Launcher
             // clean up resources
             leanEngineSystemHandlers.DisposeSafely();
             leanEngineAlgorithmHandlers.DisposeSafely();
-            Log.LogHandler.DisposeSafely();
             OS.Dispose();
-
-            PythonInitializer.Shutdown();
+            try
+            {
+                var isolator = new Isolator();
+                isolator.ExecuteWithTimeLimit(TimeSpan.FromSeconds(10), PythonInitializer.Shutdown, -1);
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex, $"Failed to shutdown python");
+            }
 
             Log.Trace("Program.Main(): Exiting Lean...");
+            Log.LogHandler.DisposeSafely();
             Environment.Exit(exitCode);
         }
     }
