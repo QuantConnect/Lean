@@ -2244,7 +2244,11 @@ namespace QuantConnect.Algorithm
         }
 
         /// <summary>
-        /// Creates a new StandardDeviation indicator. This will return the population standard deviation of samples over the specified period.
+        /// Creates a new StandardDeviation indicator. This will return the population standard
+        /// deviation of samples over the specified period. By default, it consumes the security's
+        /// price, so the result is the dispersion of price levels, not the asset's volatility.
+        /// To compute volatility, chain this indicator onto a <see cref="LOGR"/> or
+        /// <see cref="ROC"/> indicator using <see cref="IndicatorExtensions.Of"/>.
         /// </summary>
         /// <param name="symbol">The symbol whose STD we want</param>
         /// <param name="period">The period over which to compute the STD</param>
