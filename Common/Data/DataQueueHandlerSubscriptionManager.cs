@@ -64,7 +64,7 @@ namespace QuantConnect.Data
         /// Decrement number of subscribers for current <see cref="TickType"/>
         /// </summary>
         /// <param name="dataConfig">defines the subscription configuration data.</param> 
-        public void Unsubscribe(SubscriptionDataConfig dataConfig)
+        public virtual void Unsubscribe(SubscriptionDataConfig dataConfig)
         {
             try
             {
