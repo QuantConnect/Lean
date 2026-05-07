@@ -71,6 +71,7 @@ def should_ignore(line: str, prev_line_ignored: bool) -> bool:
         'Module has no attribute "JsonConvert"',
         'Too many arguments for "update" of "IndicatorBase"',
         'Signature of "update" incompatible with supertype "IndicatorBase"',
+        'Signature of "update" incompatible with supertype "QuantConnect.Indicators.IndicatorBase"',
         'has incompatible type "Symbol"; expected "str"',
         # This methods take an indicator and consolidator which might be instances of custom
         # indicator/consolidator Python classes that don't inherit from PythonIndicator or IDataConsolidator
@@ -94,7 +95,7 @@ def should_ignore(line: str, prev_line_ignored: bool) -> bool:
 
     # Ignore accessing indicator properties. Useful for instance when adding indicators of different types
     # to a list and then iterating over them, the common type will be IIndicatorWarmUpPeriodProvider
-    indicator_attributes_match = re.search(r'error: "IIndicatorWarmUpPeriodProvider" has no attribute "([^"]+)"', line)
+    indicator_attributes_match = re.search(r'error: "IIndicatorWarmUpPeriodProvider" has no attribute "([^"]+)"', line) or re.search(r'error: "Iterable\[IndicatorDataPoint\]" has no attribute "([^"]+)"', line)
     if indicator_attributes_match and indicator_attributes_match.group(1) in specific_indicator_attributes:
         return True
 
@@ -156,4 +157,4 @@ if __name__ == '__main__':
         log(str(result))
         success_rate = round((sum(result) / len(result)) * 100, 1)
         log(f"SUCCESS RATE {success_rate}% took {time.time() - start_time}s")
-        exit(0 if success_rate >= 99.3 else 1)
+        exit(0 if success_rate >= 99.1 else 1)

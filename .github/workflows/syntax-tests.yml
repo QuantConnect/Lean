@@ -38,5 +38,5 @@ jobs:
 
       - name: Run Syntax Test
         run: |
-          runInContainer bash -c "pip install --no-cache-dir quantconnect-stubs types-requests==2.32.* types-pytz==2025.2.0.* mypy==1.15.0"
+          runInContainer bash -c "pip install --no-cache-dir quantconnect-stubs types-requests==2.32.* types-pytz==2025.2.0.* mypy==1.20.2"
           runInContainer python run_syntax_check.py
