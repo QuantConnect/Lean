@@ -460,6 +460,20 @@ namespace QuantConnect.Tests.Common.Securities
             Assert.AreEqual(returnedEntry, entry);
         }
 
+        [TestCase("VIX3M")]
+        [TestCase("TEST")]
+        public void RetrievesCboeIndexExchangeHours(string ticker)
+        {
+            var database = MarketHoursDatabase.FromDataFolder();
+            var symbol = Symbol.Create(ticker, SecurityType.Index, Market.CBOE);
+            var usaSymbol = Symbol.Create(ticker, SecurityType.Index, Market.USA);
+            var expected = database.GetExchangeHours(Market.USA, usaSymbol, SecurityType.Index);
+
+            var result = database.GetExchangeHours(Market.CBOE, symbol, SecurityType.Index);
+
+            Assert.AreSame(expected, result);
+        }
+
         [Test]
         public void VerifyMarketHoursDataIntegrityForAllSymbols()
         {

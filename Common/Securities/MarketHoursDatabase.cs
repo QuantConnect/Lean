@@ -256,6 +256,10 @@ namespace QuantConnect.Securities
             return Entries.TryGetValue(symbolKey, out entry)
                 // now check with null symbol key
                 || Entries.TryGetValue(symbolKey.CreateCommonKey(), out entry)
+                // CBOE index market hours use the USA index entries in the data folder.
+                || securityType == SecurityType.Index
+                    && market == Market.CBOE
+                    && TryGetEntry(Market.USA, symbol, securityType, out entry)
                 // if FOP check for future
                 || securityType == SecurityType.FutureOption && TryGetEntry(market,
                     FuturesOptionsSymbolMappings.MapFromOption(symbol), SecurityType.Future, out entry)
