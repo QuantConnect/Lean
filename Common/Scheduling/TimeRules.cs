@@ -156,6 +156,19 @@ namespace QuantConnect.Scheduling
         }
 
         /// <summary>
+        /// Specifies an event should fire at market open +- <paramref name="minutesBeforeOpen"/>.
+        /// Picks, per date, the earliest market open across the algorithm's securities, ignoring always-open
+        /// exchanges. Defaults to US equities (SPY) when no eligible security is subscribed.
+        /// </summary>
+        /// <param name="minutesBeforeOpen">The minutes before market open that the event should fire</param>
+        /// <param name="extendedMarketOpen">True to use extended market open, false to use regular market open</param>
+        /// <returns>A time rule that fires the specified number of minutes before the earliest market open</returns>
+        public ITimeRule BeforeMarketOpen(double minutesBeforeOpen = 0, bool extendedMarketOpen = false)
+        {
+            return AfterMarketOpen(minutesBeforeOpen * (-1), extendedMarketOpen);
+        }
+
+        /// <summary>
         /// Specifies an event should fire at market open +- <paramref name="minutesBeforeOpen"/>
         /// </summary>
         /// <param name="symbol">The symbol whose market open we want an event for</param>
@@ -174,6 +187,54 @@ namespace QuantConnect.Scheduling
         public ITimeRule BeforeMarketOpen(Symbol symbol, double minutesBeforeOpen = 0, bool extendedMarketOpen = false)
         {
             return AfterMarketOpen(symbol, minutesBeforeOpen * (-1), extendedMarketOpen);
+        }
+
+        /// <summary>
+        /// Specifies an event should fire at market open +- <paramref name="minutesAfterOpen"/>.
+        /// Picks, per date, the earliest market open across the algorithm's securities, ignoring always-open
+        /// exchanges. Defaults to US equities (SPY) when no eligible security is subscribed.
+        /// </summary>
+        /// <param name="minutesAfterOpen">The minutes after market open that the event should fire</param>
+        /// <param name="extendedMarketOpen">True to use extended market open, false to use regular market open</param>
+        /// <returns>A time rule that fires the specified number of minutes after the earliest market open</returns>
+        public ITimeRule AfterMarketOpen(double minutesAfterOpen = 0, bool extendedMarketOpen = false)
+        {
+            var type = extendedMarketOpen ? "ExtendedMarketOpen" : "MarketOpen";
+            var afterOrBefore = minutesAfterOpen > 0 ? "after" : "before";
+            var name = Invariant($"{Math.Abs(minutesAfterOpen):0.##} min {afterOrBefore} {type}");
+            var timeAfterOpen = TimeSpan.FromMinutes(minutesAfterOpen);
+
+            return new FuncTimeRule(name, dates => EarliestMarketOpenTimes(dates, extendedMarketOpen, timeAfterOpen));
+        }
+
+        private IEnumerable<DateTime> EarliestMarketOpenTimes(IEnumerable<DateTime> dates, bool extendedMarketOpen, TimeSpan timeAfterOpen)
+        {
+            var exchangeHoursList = GetMarketOpenCloseExchangeHours();
+            foreach (var date in dates)
+            {
+                var earliestUtc = default(DateTime);
+                foreach (var exchangeHours in exchangeHoursList)
+                {
+                    if (!exchangeHours.IsDateOpen(date, extendedMarketOpen))
+                    {
+                        continue;
+                    }
+                    var marketOpen = exchangeHours.GetFirstDailyMarketOpen((date + Time.OneDay).AddTicks(-1), extendedMarketOpen);
+                    if (marketOpen.Date != date.Date)
+                    {
+                        continue;
+                    }
+                    var utc = (marketOpen + timeAfterOpen).ConvertToUtc(exchangeHours.TimeZone);
+                    if (earliestUtc == default || utc < earliestUtc)
+                    {
+                        earliestUtc = utc;
+                    }
+                }
+                if (earliestUtc != default)
+                {
+                    yield return earliestUtc;
+                }
+            }
         }
 
         /// <summary>
@@ -213,6 +274,19 @@ namespace QuantConnect.Scheduling
         }
 
         /// <summary>
+        /// Specifies an event should fire at the market close +- <paramref name="minutesAfterClose"/>.
+        /// Picks, per date, the latest market close across the algorithm's securities, ignoring always-open
+        /// exchanges. Defaults to US equities (SPY) when no eligible security is subscribed.
+        /// </summary>
+        /// <param name="minutesAfterClose">The time after market close that the event should fire</param>
+        /// <param name="extendedMarketClose">True to use extended market close, false to use regular market close</param>
+        /// <returns>A time rule that fires the specified number of minutes after the latest market close</returns>
+        public ITimeRule AfterMarketClose(double minutesAfterClose = 0, bool extendedMarketClose = false)
+        {
+            return BeforeMarketClose(minutesAfterClose * (-1), extendedMarketClose);
+        }
+
+        /// <summary>
         /// Specifies an event should fire at the market close +- <paramref name="minutesAfterClose"/>
         /// </summary>
         /// <param name="symbol">The symbol whose market close we want an event for</param>
@@ -231,6 +305,50 @@ namespace QuantConnect.Scheduling
         public ITimeRule AfterMarketClose(Symbol symbol, double minutesAfterClose = 0, bool extendedMarketClose = false)
         {
             return BeforeMarketClose(symbol, minutesAfterClose * (-1), extendedMarketClose);
+        }
+
+        /// <summary>
+        /// Specifies an event should fire at the market close +- <paramref name="minutesBeforeClose"/>.
+        /// Picks, per date, the latest market close across the algorithm's securities, ignoring always-open
+        /// exchanges. Defaults to US equities (SPY) when no eligible security is subscribed.
+        /// </summary>
+        /// <param name="minutesBeforeClose">The time before market close that the event should fire</param>
+        /// <param name="extendedMarketClose">True to use extended market close, false to use regular market close</param>
+        /// <returns>A time rule that fires the specified number of minutes before the latest market close</returns>
+        public ITimeRule BeforeMarketClose(double minutesBeforeClose = 0, bool extendedMarketClose = false)
+        {
+            var type = extendedMarketClose ? "ExtendedMarketClose" : "MarketClose";
+            var afterOrBefore = minutesBeforeClose > 0 ? "before" : "after";
+            var name = Invariant($"{Math.Abs(minutesBeforeClose):0.##} min {afterOrBefore} {type}");
+            var timeBeforeClose = TimeSpan.FromMinutes(minutesBeforeClose);
+
+            return new FuncTimeRule(name, dates => LatestMarketCloseTimes(dates, extendedMarketClose, timeBeforeClose));
+        }
+
+        private IEnumerable<DateTime> LatestMarketCloseTimes(IEnumerable<DateTime> dates, bool extendedMarketClose, TimeSpan timeBeforeClose)
+        {
+            var exchangeHoursList = GetMarketOpenCloseExchangeHours();
+            foreach (var date in dates)
+            {
+                var latestUtc = default(DateTime);
+                foreach (var exchangeHours in exchangeHoursList)
+                {
+                    if (!exchangeHours.IsDateOpen(date, extendedMarketClose))
+                    {
+                        continue;
+                    }
+                    var marketClose = exchangeHours.GetLastDailyMarketClose(date, extendedMarketClose);
+                    var utc = (marketClose - timeBeforeClose).ConvertToUtc(exchangeHours.TimeZone);
+                    if (utc > latestUtc)
+                    {
+                        latestUtc = utc;
+                    }
+                }
+                if (latestUtc != default)
+                {
+                    yield return latestUtc;
+                }
+            }
         }
 
         /// <summary>
