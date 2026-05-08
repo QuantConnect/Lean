@@ -14,6 +14,7 @@
  *
 */
 
+using System;
 using System.Collections;
 using System.Collections.Generic;
 
@@ -34,6 +35,25 @@ namespace QuantConnect.Util
         /// </summary>
         /// <remarks>Should be called before the enumeration starts</remarks>
         public bool Enabled { get; set; }
+
+        /// <summary>
+        /// Gets the count of items in the enumerable. This will force enumeration of the entire collection if it has not already been enumerated.
+        /// </summary>
+        public int Count
+        {
+            get
+            {
+                if (!Enabled)
+                {
+                    throw new InvalidOperationException("Count is not supported when memoization is disabled");
+                }
+                if (_buffer == null)
+                {
+                    foreach (var item in this) {}
+                }
+                return _buffer.Count;
+            }
+        }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="MemoizingEnumerable{T}"/> class
