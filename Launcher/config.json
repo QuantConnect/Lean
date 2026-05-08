@@ -149,7 +149,7 @@
   "binance-orders-websocket-url": "wss://ws-api.binance.com:9443/ws-api/v3",
   // USDT futures
   "binance-fapi-url": "https://fapi.binance.com",
-  "binance-fwebsocket-url": "wss://fstream.binance.com/ws",
+  "binance-fwebsocket-url": "wss://fstream.binance.com/private/ws",
   // Coin futures
   "binance-dapi-url": "https://dapi.binance.com",
   "binance-dwebsocket-url": "wss://dstream.binance.com/ws",
