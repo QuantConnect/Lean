@@ -59,7 +59,7 @@ namespace QuantConnect.Data.UniverseSelection
         public HashSet<Symbol> Selected
         {
             get; set;
-        }
+        } = [];
 
         /// <summary>
         /// True if this universe filter can run async in the data stack
