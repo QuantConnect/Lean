@@ -164,7 +164,10 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// Returns true when the first post warmup slice skips past StartDate
         /// so a time pulse can be emitted to align algorithm time before OnWarmupFinished fires
         /// </summary>
-        protected bool ShouldEmitWarmupEndPulse(TimeSlice timeSlice) => Algorithm.IsWarmingUp && timeSlice.Time > WarmupEndUtc;
+        protected bool ShouldEmitWarmupEndPulse(TimeSlice timeSlice)
+        {
+            return Algorithm.GetLocked() && Algorithm.IsWarmingUp && timeSlice.Time > WarmupEndUtc;
+        }
 
         /// <summary>
         /// Performs additional initialization steps after algorithm initialization
