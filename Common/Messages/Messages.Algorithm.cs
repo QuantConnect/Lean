@@ -33,7 +33,7 @@ namespace QuantConnect
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public static string SetTimeZoneAlreadyRunning()
             {
-                return $"QCAlgorithm.{FormatCode("SetTimeZone")}(): Cannot change time zone after algorithm running.";
+                return $"{AlgorithmPrefix()}.{FormatCode("SetTimeZone")}(): Cannot change time zone after algorithm running.";
             }
 
             /// <summary>
@@ -42,7 +42,7 @@ namespace QuantConnect
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public static string SetBenchmarkAlreadyInitialized()
             {
-                return $"QCAlgorithm.{FormatCode("SetBenchmark")}(): Cannot change Benchmark after algorithm initialized.";
+                return $"{AlgorithmPrefix()}.{FormatCode("SetBenchmark")}(): Cannot change Benchmark after algorithm initialized.";
             }
 
             /// <summary>
@@ -51,7 +51,7 @@ namespace QuantConnect
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public static string SetAccountCurrencyAlreadyInitialized()
             {
-                return $"QCAlgorithm.{FormatCode("SetAccountCurrency")}(): Cannot change AccountCurrency after algorithm initialized.";
+                return $"{AlgorithmPrefix()}.{FormatCode("SetAccountCurrency")}(): Cannot change AccountCurrency after algorithm initialized.";
             }
 
             /// <summary>
@@ -60,7 +60,7 @@ namespace QuantConnect
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public static string SetCashAlreadyInitialized()
             {
-                return $"QCAlgorithm.{FormatCode("SetCash")}(): Cannot change cash available after algorithm initialized.";
+                return $"{AlgorithmPrefix()}.{FormatCode("SetCash")}(): Cannot change cash available after algorithm initialized.";
             }
 
             /// <summary>
@@ -69,7 +69,7 @@ namespace QuantConnect
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public static string SetStartDateAlreadyInitialized()
             {
-                return $"QCAlgorithm.{FormatCode("SetStartDate")}(): Cannot change start date after algorithm initialized.";
+                return $"{AlgorithmPrefix()}.{FormatCode("SetStartDate")}(): Cannot change start date after algorithm initialized.";
             }
 
             /// <summary>
@@ -78,7 +78,7 @@ namespace QuantConnect
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public static string SetEndDateAlreadyInitialized()
             {
-                return $"QCAlgorithm.{FormatCode("SetEndDate")}(): Cannot change end date after algorithm initialized.";
+                return $"{AlgorithmPrefix()}.{FormatCode("SetEndDate")}(): Cannot change end date after algorithm initialized.";
             }
 
             /// <summary>
@@ -87,7 +87,7 @@ namespace QuantConnect
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public static string SetWarmupAlreadyInitialized()
             {
-                return $"QCAlgorithm.{FormatCode("SetWarmup")}(): This method cannot be used after algorithm initialized";
+                return $"{AlgorithmPrefix()}.{FormatCode("SetWarmup")}(): This method cannot be used after algorithm initialized";
             }
         }
 

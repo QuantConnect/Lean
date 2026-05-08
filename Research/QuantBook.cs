@@ -92,6 +92,7 @@ namespace QuantConnect.Research
         {
             try
             {
+                Messages.SetAlgorithmLanguage(Language.Python);
                 using (Py.GIL())
                 {
                     _pandas = Py.Import("pandas");
