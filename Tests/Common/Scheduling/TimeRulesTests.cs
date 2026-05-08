@@ -598,6 +598,26 @@ namespace QuantConnect.Tests.Common.Scheduling
         }
 
         [Test]
+        public void GetMarketOpenCloseExchangeHoursDedupesOptionContracts()
+        {
+            var rules = GetEmptyTimeRules(TimeZones.Utc);
+            var expiry = new DateTime(2024, 01, 19);
+            for (var strike = 100; strike < 110; strike++)
+            {
+                var contract = Symbol.CreateOption(Symbols.SPY, Market.USA, OptionStyle.American,
+                    OptionRight.Call, strike, expiry);
+                AddSecurity(rules, contract);
+            }
+
+            var method = typeof(BaseScheduleRules).GetMethod("GetMarketOpenCloseExchangeHours",
+                BindingFlags.NonPublic | BindingFlags.Instance);
+            var hours = ((IEnumerable<SecurityExchangeHours>)method.Invoke(rules, null)).ToList();
+
+            // Expected 2: SPY equity hours (pre-seeded fallback) + SPY option hours (10 contracts deduped to one).
+            Assert.AreEqual(2, hours.Count);
+        }
+
+        [Test]
         public void NoSymbolMarketCloseWithEquityAndIndexOptionPicksIndexOption()
         {
             // SPY regular closes 16:00 NY = 21:00 UTC; SPX index option closes 15:15 CT = 21:15 UTC. SPX wins.
