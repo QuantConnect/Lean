@@ -121,9 +121,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 // check for cancellation
                 if (timeSlice == null || cancellationToken.IsCancellationRequested) break;
 
-                // If the first post warmup slice skips past StartDate, emit a time pulse at StartDate
-                // so the algorithm time is aligned before OnWarmupFinished fires
-                if (Algorithm.IsWarmingUp && timeSlice.Time > WarmupEndUtc)
+                if (ShouldEmitWarmupEndPulse(timeSlice))
                 {
                     yield return TimeSliceFactory.CreateTimePulse(WarmupEndUtc);
                 }
@@ -161,6 +159,12 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             enumerator.DisposeSafely();
             Log.Trace("Synchronizer.GetEnumerator(): Exited thread.");
         }
+
+        /// <summary>
+        /// Returns true when the first post warmup slice skips past StartDate
+        /// so a time pulse can be emitted to align algorithm time before OnWarmupFinished fires
+        /// </summary>
+        protected bool ShouldEmitWarmupEndPulse(TimeSlice timeSlice) => Algorithm.IsWarmingUp && timeSlice.Time > WarmupEndUtc;
 
         /// <summary>
         /// Performs additional initialization steps after algorithm initialization

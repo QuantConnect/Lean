@@ -139,7 +139,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 // check for cancellation
                 if (timeSlice == null || cancellationToken.IsCancellationRequested) break;
 
-                if (Algorithm.IsWarmingUp && timeSlice.Time > WarmupEndUtc)
+                if (ShouldEmitWarmupEndPulse(timeSlice))
                 {
                     yield return TimeSliceFactory.CreateTimePulse(WarmupEndUtc);
                 }
