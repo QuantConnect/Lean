@@ -90,6 +90,19 @@ namespace QuantConnect.Data.UniverseSelection
         }
 
         /// <summary>
+        /// Adds the specified security to this universe.
+        /// </summary>
+        /// <remarks>Links the canonical's Holdings to the currently mapped contract so portfolio queries on the continuous symbol reflect its position.</remarks>
+        internal override bool AddMember(DateTime utcTime, Security security, bool isInternal)
+        {
+            if (security.Symbol == _currentSymbol && _security.Holdings != security.Holdings)
+            {
+                _security.Holdings = security.Holdings;
+            }
+            return base.AddMember(utcTime, security, isInternal);
+        }
+
+        /// <summary>
         /// Gets the subscription requests to be added for the specified security
         /// </summary>
         /// <param name="security">The security to get subscriptions for</param>

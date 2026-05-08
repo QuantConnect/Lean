@@ -892,7 +892,8 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 // let's wait till it's remapped
                 if (securityChanges == 3)
                 {
-                    Assert.IsNotNull(_algorithm.Securities.Total.SingleOrDefault(sec => sec.IsTradable));
+                    // The canonical Future is tradable once a contract is mapped, so both canonical and the mapped contract are tradable
+                    Assert.IsTrue(_algorithm.Securities.Total.Any(sec => sec.IsTradable));
                     Assert.AreEqual(3, _algorithm.Securities.Total.Count);
 
                     var result = LiveTradingResultHandler.GetHoldings(_algorithm.Securities.Total, _algorithm.SubscriptionManager.SubscriptionDataConfigService);
@@ -948,7 +949,8 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             {
                 if (ts.SecurityChanges != SecurityChanges.None)
                 {
-                    Assert.IsNotNull(_algorithm.Securities.Values.SingleOrDefault(sec => sec.IsTradable));
+                    // The canonical Future is tradable once a contract is mapped, so both canonical and the mapped contract are tradable
+                    Assert.IsTrue(_algorithm.Securities.Values.Any(sec => sec.IsTradable));
                     var result = LiveTradingResultHandler.GetHoldings(_algorithm.Securities.Values, _algorithm.SubscriptionManager.SubscriptionDataConfigService);
 
                     Assert.AreEqual(2, result.Count);

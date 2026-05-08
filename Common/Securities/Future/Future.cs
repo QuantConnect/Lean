@@ -35,13 +35,12 @@ namespace QuantConnect.Securities.Future
         /// <summary>
         /// Gets or sets whether or not this security should be considered tradable
         /// </summary>
-        /// <remarks>Canonical futures are not tradable</remarks>
+        /// <remarks>A canonical (continuous) Future is tradable only when a contract is currently mapped — orders are routed to that contract.</remarks>
         public override bool IsTradable
         {
             get
             {
-                // once a future is removed it is no longer tradable
-                return _isTradable && !Symbol.IsCanonical();
+                return _isTradable && (!Symbol.IsCanonical() || Mapped != null);
             }
             set
             {

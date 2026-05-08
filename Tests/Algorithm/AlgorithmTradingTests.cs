@@ -1682,6 +1682,37 @@ namespace QuantConnect.Tests.Algorithm
         }
 
         [Test]
+        public void CanonicalFutureReflectsInvestedStateOfMappedContract()
+        {
+            var algo = GetAlgorithm(out _, 1, 0);
+
+            var continuousFuture = algo.AddFuture(Futures.Indices.SP500EMini, Resolution.Minute, extendedMarketHours: true);
+            var contract = algo.AddFutureContract(
+                QuantConnect.Symbol.CreateFuture(Futures.Indices.SP500EMini, Market.CME, new DateTime(2020, 3, 20)),
+                Resolution.Minute,
+                extendedMarketHours: true);
+
+            // Simulate what ContinuousContractUniverse does on each selection: set Mapped and link Holdings to the mapped contract
+            ((IContinuousSecurity)continuousFuture).Mapped = contract.Symbol;
+            continuousFuture.Holdings = contract.Holdings;
+
+            Update(contract, 25);
+            algo.Portfolio.SetCash(150000);
+            algo.SetDateTime(new DateTime(2013, 10, 7, 17, 0, 0));
+
+            // Place an order on the canonical (routes to the mapped contract) and simulate the fill
+            var ticket = algo.MarketOrder(continuousFuture.Symbol, 1);
+            var order = new MarketOrder(ticket.Symbol, ticket.Quantity, algo.UtcTime);
+            var orderFee = contract.FeeModel.GetOrderFee(new OrderFeeParameters(contract, order));
+            var fill = new OrderEvent(order, algo.UtcTime, orderFee) { FillPrice = contract.Price, FillQuantity = ticket.Quantity };
+            algo.Portfolio.ProcessFills([fill]);
+
+            // The canonical reflects the position via the linked Holdings of the mapped contract
+            Assert.IsTrue(algo.Portfolio[continuousFuture.Symbol].Invested);
+            Assert.AreEqual(contract.Holdings.Quantity, algo.Portfolio[continuousFuture.Symbol].Quantity);
+        }
+
+        [Test]
         public void MarketOnOpenOrdersNotSupportedForFutures()
         {
             var algo = GetAlgorithm(out _, 1, 0);

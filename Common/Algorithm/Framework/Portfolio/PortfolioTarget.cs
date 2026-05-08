@@ -142,17 +142,19 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
                 return null;
             }
 
-            if (algorithm.Securities.TryGetValue(symbol, out var security) && 
-                // For a continuous (canonical) security, use the currently mapped contract since it's tradable.
-                symbol.IsCanonical() && security is IContinuousSecurity continuousSecurity)
+            // For a canonical continuous security, route the math to the currently mapped contract
+            if (algorithm.Securities.TryGetValue(symbol, out var security) && symbol.IsCanonical()
+                && security is IContinuousSecurity continuousSecurity)
             {
                 if (continuousSecurity.Mapped == null)
                 {
                     algorithm.Error(Messages.PortfolioTarget.ContinuousSymbolNotMapped(symbol));
-                    return null;
                 }
-                symbol = continuousSecurity.Mapped;
-                algorithm.Securities.TryGetValue(symbol, out security);
+                else if (algorithm.Securities.TryGetValue(continuousSecurity.Mapped, out var mappedSecurity))
+                {
+                    security = mappedSecurity;
+                    symbol = security.Symbol;
+                }
             }
 
             if (security == null)
