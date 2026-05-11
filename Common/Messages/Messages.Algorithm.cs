@@ -97,7 +97,7 @@ namespace QuantConnect
             public static string AddDataInvalidPyObjectType(string repr)
             {
                 return $"{AlgorithmPrefix()}.{FormatCode("AddData")}(): the first argument must be a custom data type (a Python class deriving from {FormatCode("PythonData")} or a CLR {FormatCode("BaseData")} type), but received {repr}. " +
-                    $"To subscribe to built-in asset classes use {FormatCode("AddEquity")}, {FormatCode("AddForex")}, {FormatCode("AddCfd")}, {FormatCode("AddCrypto")}, {FormatCode("AddFuture")}, {FormatCode("AddOption")} or {FormatCode("AddSecurity")} instead.";
+                    $"To subscribe to built-in asset classes use, for example, {FormatCode("AddEquity")} or {FormatCode("AddCrypto")}.";
             }
         }
 
