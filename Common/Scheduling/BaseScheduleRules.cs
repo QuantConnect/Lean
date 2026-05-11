@@ -17,6 +17,7 @@
 using NodaTime;
 using QuantConnect.Interfaces;
 using QuantConnect.Securities;
+using System.Collections.Generic;
 
 namespace QuantConnect.Scheduling
 {
@@ -68,6 +69,34 @@ namespace QuantConnect.Scheduling
                 return MarketHoursDatabase.GetEntry(symbol.ID.Market, symbol, symbol.SecurityType).ExchangeHours;
             }
             return security.Exchange.Hours;
+        }
+
+        /// <summary>
+        /// Helper method to fetch the exchange hours of the securities currently in <see cref="Securities"/>
+        /// whose markets are not always open. If no such securities are present, falls back to US equities (SPY).
+        /// </summary>
+        protected IEnumerable<SecurityExchangeHours> GetMarketOpenCloseExchangeHours()
+        {
+            // Pre-seed with SPY's exchange hours: this guarantees a fallback when no eligible
+            // security is subscribed and implicitly covers every US equity, which shares the
+            // same exchange hours — so we can skip US equities below to save the lookup.
+            var hours = new HashSet<SecurityExchangeHours>
+            {
+                MarketHoursDatabase.GetEntry(Market.USA, "SPY", SecurityType.Equity).ExchangeHours
+            };
+            foreach (var (symbol, security) in Securities)
+            {
+                if (security.Type == SecurityType.Equity && symbol.ID.Market == Market.USA)
+                {
+                    continue;
+                }
+                var exchangeHours = security.Exchange.Hours;
+                if (!exchangeHours.IsMarketAlwaysOpen)
+                {
+                    hours.Add(exchangeHours);
+                }
+            }
+            return hours;
         }
 
         protected Symbol GetSymbol(string ticker)
