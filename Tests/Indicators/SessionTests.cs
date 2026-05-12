@@ -171,6 +171,28 @@ namespace QuantConnect.Tests.Indicators
             yield return new TestCaseData(new DateTime(2025, 8, 29, 10, 0, 0), new DateTime(2025, 9, 2));
         }
 
+        [Test]
+        public void ManualDailyBarUpdateProducesOneConsolidationPerBar()
+        {
+            var symbol = Symbols.SPY;
+            var barCount = 20;
+            var exchangeHours = MarketHoursDatabase.FromDataFolder().GetExchangeHours(symbol.ID.Market, symbol, symbol.SecurityType);
+            var session = new Session(TickType.Trade, exchangeHours, symbol, barCount + 1);
+
+            var barDate = new DateTime(2025, 9, 2, 9, 30, 0);
+            for (var i = 0; i < barCount; i++)
+            {
+                session.Update(new TradeBar(barDate, symbol, 100 + i, 101 + i, 99 + i, 100 + i, 1000, Time.OneDay));
+                barDate = barDate.AddDays(1);
+                while (!exchangeHours.IsDateOpen(barDate.Date, false))
+                {
+                    barDate = barDate.AddDays(1);
+                }
+            }
+
+            Assert.AreEqual(barCount, session.Samples);
+        }
+
         private static Session GetSession(TickType tickType, int initialSize)
         {
             var symbol = Symbols.SPY;

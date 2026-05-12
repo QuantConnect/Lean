@@ -90,7 +90,11 @@ namespace Common.Data.Consolidators
         {
             if (!_initialized)
             {
-                _workingBar.Time = data.Time.Date;
+                // Set the working bar time only if it hasn't been set yet
+                if (_workingBar.Time == DateTime.MaxValue)
+                {
+                    _workingBar.Time = data.Time.Date;
+                }
                 _initialized = true;
             }
             base.Update(data);
