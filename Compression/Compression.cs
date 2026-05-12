@@ -845,7 +845,7 @@ namespace QuantConnect
         /// <returns>List of unzipped file names</returns>
         public static List<string> UnzipToFolder(byte[] zipData, string outputFolder)
         {
-            var stream = new MemoryStream(zipData);
+            using var stream = new MemoryStream(zipData);
             return UnzipToFolder(stream, outputFolder);
         }
 
@@ -857,7 +857,7 @@ namespace QuantConnect
         public static List<string> UnzipToFolder(string zipFile)
         {
             var outFolder = Path.GetDirectoryName(zipFile);
-            var stream = File.OpenRead(zipFile);
+            using var stream = File.OpenRead(zipFile);
             return UnzipToFolder(stream, outFolder);
         }
 
@@ -875,22 +875,18 @@ namespace QuantConnect
             {
                 outFolder = Directory.GetCurrentDirectory();
             }
-            ICSharpCode.SharpZipLib.Zip.ZipFile zf = null;
 
             try
             {
-                zf = new ICSharpCode.SharpZipLib.Zip.ZipFile(dataStream);
+                using var archive = new ZipArchive(dataStream, ZipArchiveMode.Read, leaveOpen: true);
 
-                foreach (ZipEntry zipEntry in zf)
+                foreach (var zipEntry in archive.Entries)
                 {
                     //Ignore Directories
-                    if (!zipEntry.IsFile) continue;
-
-                    var buffer = new byte[4096]; // 4K is optimum
-                    var zipStream = zf.GetInputStream(zipEntry);
+                    if (string.IsNullOrEmpty(zipEntry.Name)) continue;
 
                     // Manipulate the output filename here as desired.
-                    var fullZipToPath = Path.Combine(outFolder, zipEntry.Name);
+                    var fullZipToPath = Path.Combine(outFolder, zipEntry.FullName);
 
                     var targetFile = new FileInfo(fullZipToPath);
                     if (targetFile.Directory != null && !targetFile.Directory.Exists)
@@ -902,10 +898,9 @@ namespace QuantConnect
                     files.Add(fullZipToPath);
 
                     //Copy the data in buffer chunks
-                    using (var streamWriter = File.Create(fullZipToPath))
-                    {
-                        StreamUtils.Copy(zipStream, streamWriter, buffer);
-                    }
+                    using var entryStream = zipEntry.Open();
+                    using var streamWriter = File.Create(fullZipToPath);
+                    entryStream.CopyTo(streamWriter);
                 }
             }
             catch
@@ -913,14 +908,6 @@ namespace QuantConnect
                 // lets catch the exception just to log some information about the zip file
                 Log.Error($"Compression.UnzipToFolder(): Failure: outFolder: {outFolder} - files: {string.Join(",", files)}");
                 throw;
-            }
-            finally
-            {
-                if (zf != null)
-                {
-                    zf.IsStreamOwner = true; // Makes close also shut the underlying stream
-                    zf.Close(); // Ensure we release resources
-                }
             }
             return files;
         } // End UnZip
