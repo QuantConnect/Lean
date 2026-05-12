@@ -26,6 +26,24 @@ namespace QuantConnect.Tests.Common.Data
     [TestFixture]
     public class ConsolidatorBaseTests
     {
+
+        [Test]
+        public void TypedInterfaceExposesConsolidatedWithoutCast()
+        {
+            var reference = new DateTime(2015, 4, 13);
+
+            IDataConsolidator<RenkoBar> consolidator = new RenkoConsolidator(1m);
+            RenkoBar received = null;
+            consolidator.DataConsolidated += (sender, bar) => received = bar;
+
+            consolidator.Update(new IndicatorDataPoint(Symbols.SPY, reference, 10m));
+            consolidator.Update(new IndicatorDataPoint(Symbols.SPY, reference.AddMinutes(1), 12.1m));
+
+            Assert.IsNotNull(received);
+            Assert.IsNotNull(consolidator.Consolidated);
+            Assert.AreEqual(received, consolidator.Consolidated);
+        }
+
         [TestCaseSource(nameof(WindowTestCases))]
         public void WindowStoresConsolidatedBars(IDataConsolidator consolidator, IBaseData[] bars, decimal expectedWindow0, decimal expectedWindow1)
         {
