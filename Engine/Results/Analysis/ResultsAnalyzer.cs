@@ -146,7 +146,7 @@ namespace QuantConnect.Lean.Engine.Results.Analysis
             // ── 1. backtest equity from "Strategy Equity" chart ──────────────────
             BaseSeries equitySeries;
             if (result.Charts.TryGetValue("Strategy Equity", out var chart) &&
-                chart.Series.TryGetValue("Equity", out var series))
+                chart.Series.TryGetValue("Equity", out var series) && series.Values.Count > 0)
             {
                 equitySeries = series;
             }

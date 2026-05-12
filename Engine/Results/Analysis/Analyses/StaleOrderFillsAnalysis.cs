@@ -50,7 +50,6 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
         {
             var result = orderEvents
                 .Where(e => e.Message != null && e.Message.Contains("Warning: fill at stale price", StringComparison.InvariantCultureIgnoreCase))
-                //.Select(OrdersReader.ParseOrderEvent)
                 .ToList();
 
             var potentialSolutions = result.Count > 0 ? Solutions(language) : [];

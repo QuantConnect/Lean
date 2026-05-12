@@ -53,11 +53,23 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
 
             foreach (var orderEvent in orderEvents)
             {
-                if (orderEvent.Status != OrderStatus.Filled || algorithm.IsMarketOpen(orderEvent.Symbol))
+                if (orderEvent.Status != OrderStatus.Filled || !algorithm.Securities.TryGetValue(orderEvent.Symbol, out var security))
                 {
                     continue;
                 }
 
+                var localFillTime = orderEvent.UtcTime.ConvertFromUtc(security.Exchange.TimeZone);
+                var exchangeHours = security.Exchange.Hours;
+                var lastDataPoint = security.GetLastData();
+                var isDailyResolution = lastDataPoint != null && (lastDataPoint.EndTime - lastDataPoint.Time) > Time.OneHour;
+                if (exchangeHours.IsOpen(localFillTime, extendedMarketHours: false)
+                    // consider at the close as open
+                    || exchangeHours.IsOpen(localFillTime.AddTicks(-1), extendedMarketHours: false)
+                    // daily midnight data
+                    || isDailyResolution && !algorithm.Settings.DailyPreciseEndTime && exchangeHours.IsDateOpen(localFillTime.AddDays(-1), extendedMarketHours: false))
+                {
+                    continue;
+                }
                 result.Add(orderEvent);
             }
 

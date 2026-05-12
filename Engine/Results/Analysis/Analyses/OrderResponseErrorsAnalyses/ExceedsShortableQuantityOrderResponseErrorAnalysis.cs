@@ -57,7 +57,6 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
         {
             var result = orderEvents
                 .Where(e => e.Message != null && MessageText.All(t => e.Message.Contains(t, StringComparison.InvariantCultureIgnoreCase)))
-                //.Select(OrdersReader.ParseOrderEvent)
                 .ToList();
 
             var potentialSolutions = result.Count > 0 ? Solutions(language) : [];
