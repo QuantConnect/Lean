@@ -25,6 +25,23 @@ namespace QuantConnect.Data.Consolidators
     public delegate void DataConsolidatedHandler(object sender, IBaseData consolidated);
 
     /// <summary>
+    /// Represents an <see cref="IDataConsolidator"/> with typed access to its consolidated output as <typeparamref name="T"/>.
+    /// </summary>
+    public interface IDataConsolidator<T> : IDataConsolidator
+        where T : IBaseData
+    {
+        /// <summary>
+        /// Gets the most recently consolidated piece of data as its concrete output type.
+        /// </summary>
+        new T Consolidated { get; }
+
+        /// <summary>
+        /// Typed event handler that fires when a new piece of data is produced
+        /// </summary>
+        new event EventHandler<T> DataConsolidated;
+    }
+
+    /// <summary>
     /// Represents a type capable of taking BaseData updates and firing events containing new
     /// 'consolidated' data. These types can be used to produce larger bars, or even be used to
     /// transform the data before being sent to another component. The most common usage of these
