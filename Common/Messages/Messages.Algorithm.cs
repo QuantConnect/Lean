@@ -89,6 +89,16 @@ namespace QuantConnect
             {
                 return $"{AlgorithmPrefix()}.{FormatCode("SetWarmup")}(): This method cannot be used after algorithm initialized";
             }
+
+            /// <summary>
+            /// Returns a string message saying the first argument to AddData must be a custom data class
+            /// </summary>
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public static string AddDataInvalidPyObjectType(string repr)
+            {
+                return $"{AlgorithmPrefix()}.{FormatCode("AddData")}(): the first argument must be a custom data type (a Python class deriving from {FormatCode("PythonData")} or a CLR {FormatCode("BaseData")} type), but received {repr}. " +
+                    $"To subscribe to built-in asset classes use, for example, {FormatCode("AddEquity")} or {FormatCode("AddCrypto")}.";
+            }
         }
 
         /// <summary>

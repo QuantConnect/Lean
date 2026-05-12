@@ -19,6 +19,7 @@ using System.Linq;
 using Newtonsoft.Json;
 using NodaTime;
 using NUnit.Framework;
+using Python.Runtime;
 using QuantConnect.Algorithm;
 using QuantConnect.Algorithm.Framework.Selection;
 using QuantConnect.Algorithm.Selection;
@@ -635,6 +636,22 @@ namespace QuantConnect.Tests.Algorithm
                 "double",
                 Resolution.Daily,
                 DateTimeZone.Utc));
+        }
+
+        [Test]
+        public void AddDataWithStringAsTypeArgumentThrowsClearError()
+        {
+            var qcAlgorithm = new QCAlgorithm();
+            qcAlgorithm.SubscriptionManager.SetDataManager(new DataManagerStub(qcAlgorithm));
+
+            using var _ = Py.GIL();
+            using var pyTicker = "VIX".ToPython();
+
+            // Passing a string instead of a custom data class as the first argument used to silently build a
+            // dynamic assembly named after the string and later hang/fail downstream. It must now throw.
+            var ex = Assert.Throws<ArgumentException>(() => qcAlgorithm.AddData(pyTicker, "VIX", Resolution.Daily));
+            StringAssert.Contains("AddData", ex.Message);
+            StringAssert.Contains("AddEquity", ex.Message);
         }
 
         [Test]
