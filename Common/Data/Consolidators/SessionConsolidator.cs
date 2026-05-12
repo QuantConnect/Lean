@@ -78,6 +78,12 @@ namespace Common.Data.Consolidators
                 return;
             }
 
+            // Correct the timestamp if data skipped the predicted next trading day
+            if (workingBar.Time != DateTime.MaxValue && data.Time.Date > workingBar.Time.Date)
+            {
+                workingBar.Time = data.Time.Date;
+            }
+
             // Update the working session bar
             workingBar.Update(data, Consolidated);
         }

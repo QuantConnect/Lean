@@ -193,6 +193,27 @@ namespace QuantConnect.Tests.Indicators
             Assert.AreEqual(barCount, session.Samples);
         }
 
+        [Test]
+        public void GapDayDataPreservesCorrectTimestampAndContent()
+        {
+            var symbol = Symbols.SPY;
+            var exchangeHours = MarketHoursDatabase.FromDataFolder().GetExchangeHours(symbol.ID.Market, symbol, symbol.SecurityType);
+            var session = new Session(TickType.Trade, exchangeHours, symbol, 5);
+
+            var sep2 = new DateTime(2025, 9, 2, 9, 30, 0);
+            var sep4 = new DateTime(2025, 9, 4, 9, 30, 0);
+            var sep5 = new DateTime(2025, 9, 5, 9, 30, 0);
+
+            session.Update(new TradeBar(sep2, symbol, 100, 110, 90, 105, 1000, Time.OneDay));
+            session.Update(new TradeBar(sep4, symbol, 200, 210, 190, 205, 2000, Time.OneDay));
+            session.Update(new TradeBar(sep5, symbol, 300, 310, 290, 305, 3000, Time.OneDay));
+
+            Assert.AreEqual(sep4.Date, session[1].Time);
+            Assert.AreEqual(200, session[1].Open);
+            Assert.AreEqual(sep2.Date, session[2].Time);
+            Assert.AreEqual(100, session[2].Open);
+        }
+
         private static Session GetSession(TickType tickType, int initialSize)
         {
             var symbol = Symbols.SPY;
