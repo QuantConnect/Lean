@@ -24,7 +24,7 @@ namespace QuantConnect.Data.Consolidators
     /// </summary>
     /// <remarks>This implementation replaced the original implementation that was shown to have inaccuracies in its representation
     /// of Renko charts. The original implementation has been moved to <see cref="ClassicRenkoConsolidator"/>.</remarks>
-    public class RenkoConsolidator : ConsolidatorBase, IDataConsolidator<RenkoBar>
+    public class RenkoConsolidator : ConsolidatorBase
     {
         private bool _firstTick = true;
         private RenkoBar _lastWicko;
@@ -91,11 +91,6 @@ namespace QuantConnect.Data.Consolidators
         /// Gets <see cref="RenkoBar"/> which is the type emitted in the <see cref="IDataConsolidator.DataConsolidated"/> event.
         /// </summary>
         public override Type OutputType => typeof(RenkoBar);
-
-        /// <summary>
-        /// Gets the most recently consolidated <see cref="RenkoBar"/>.
-        /// </summary>
-        RenkoBar IDataConsolidator<RenkoBar>.Consolidated => (RenkoBar)Consolidated;
 
         /// <summary>
         /// Typed event handler that fires when a new piece of data is produced

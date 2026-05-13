@@ -23,7 +23,7 @@ namespace QuantConnect.Data.Consolidators
     /// Represents a timeless consolidator which depends on the given values. This consolidator
     /// is meant to consolidate data into bars that do not depend on time, e.g., RangeBar's.
     /// </summary>
-    public abstract class BaseTimelessConsolidator<T> : ConsolidatorBase, IDataConsolidator<T>
+    public abstract class BaseTimelessConsolidator<T> : ConsolidatorBase
         where T : IBaseData
     {
         /// <summary>
@@ -56,11 +56,6 @@ namespace QuantConnect.Data.Consolidators
         /// Gets <see cref="T"/> which is the type emitted in the <see cref="IDataConsolidator.DataConsolidated"/> event.
         /// </summary>
         public override Type OutputType => typeof(T);
-
-        /// <summary>
-        /// Gets the most recently consolidated bar as its concrete output type.
-        /// </summary>
-        T IDataConsolidator<T>.Consolidated => (T)Consolidated;
 
         /// <summary>
         /// Typed event handler that fires when a new piece of data is produced
