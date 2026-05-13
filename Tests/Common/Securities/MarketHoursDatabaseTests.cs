@@ -460,6 +460,27 @@ namespace QuantConnect.Tests.Common.Securities
             Assert.AreEqual(returnedEntry, entry);
         }
 
+        [TestCase("VIX3M")]
+        [TestCase("VVIX")]
+        [TestCase("TESTIDX")]
+        public void CorrectlyReadsCBOEIndexMarketHours(string ticker)
+        {
+            var db = MarketHoursDatabase.FromDataFolder();
+            var symbol = Symbol.Create(ticker, SecurityType.Index, Market.CBOE);
+
+            Assert.IsTrue(db.TryGetEntry(Market.CBOE, symbol, SecurityType.Index, out var entry));
+            Assert.AreEqual(TimeZones.Chicago, entry.ExchangeHours.TimeZone);
+            Assert.AreEqual(TimeZones.NewYork, entry.DataTimeZone);
+
+            var weekdays = new[] { DayOfWeek.Monday, DayOfWeek.Tuesday, DayOfWeek.Wednesday, DayOfWeek.Thursday, DayOfWeek.Friday };
+            foreach (var day in weekdays)
+            {
+                var marketSegment = entry.ExchangeHours.MarketHours[day].Segments.First(s => s.State == MarketHoursState.Market);
+                Assert.AreEqual(new TimeSpan(8, 30, 0), marketSegment.Start);
+                Assert.AreEqual(new TimeSpan(15, 15, 0), marketSegment.End);
+            }
+        }
+
         [Test]
         public void VerifyMarketHoursDataIntegrityForAllSymbols()
         {
