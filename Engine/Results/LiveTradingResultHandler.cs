@@ -62,6 +62,8 @@ namespace QuantConnect.Lean.Engine.Results
         private DateTime _previousPortfolioMarginUpdate;
         private readonly TimeSpan _samplePortfolioPeriod;
         private readonly Chart _intradayPortfolioState = new(PortfolioMarginKey) { LegendDisabled = true };
+        private readonly object _statisticsChartSamplesLock = new();
+        private readonly Dictionary<(string ChartName, string SeriesName), RetainedStatisticsSeries> _statisticsChartSamples = new();
 
         /// <summary>
         /// The earliest time of next dump to the status file
@@ -380,6 +382,106 @@ namespace QuantConnect.Lean.Engine.Results
         {
             // Update the status json file every X
             _nextStatusUpdate = DateTime.UtcNow.AddMinutes(10);
+        }
+
+        /// <summary>
+        /// Samples portfolio equity, benchmark, and daily performance
+        /// </summary>
+        /// <param name="time">Current UTC time in the AlgorithmManager loop</param>
+        public override void Sample(DateTime time)
+        {
+            base.Sample(time);
+            RetainStatisticsChartSamples();
+        }
+
+        /// <summary>
+        /// Retains daily chart samples used by statistics generation before streamed chart data is trimmed
+        /// </summary>
+        protected virtual void RetainStatisticsChartSamples()
+        {
+            lock (ChartLock)
+            {
+                RetainStatisticsChartSample(StrategyEquityKey, EquityKey);
+                RetainStatisticsChartSample(StrategyEquityKey, ReturnKey);
+                RetainStatisticsChartSample(BenchmarkKey, BenchmarkKey);
+                RetainStatisticsChartSample(PortfolioTurnoverKey, PortfolioTurnoverKey);
+            }
+        }
+
+        private void RetainStatisticsChartSample(string chartName, string seriesName)
+        {
+            if (!Charts.TryGetValue(chartName, out var chart) ||
+                !chart.Series.TryGetValue(seriesName, out var series) ||
+                series.Values.Count == 0)
+            {
+                return;
+            }
+
+            var point = series.Values[^1];
+            var key = (chartName, seriesName);
+            lock (_statisticsChartSamplesLock)
+            {
+                if (!_statisticsChartSamples.TryGetValue(key, out var retainedSeries))
+                {
+                    retainedSeries = new RetainedStatisticsSeries(series.Clone(empty: true));
+                    _statisticsChartSamples[key] = retainedSeries;
+                }
+
+                retainedSeries.Points[point.Time] = point.Clone();
+            }
+        }
+
+        /// <summary>
+        /// Restores retained statistics chart samples into a cloned chart collection
+        /// </summary>
+        protected virtual void RestoreRetainedStatisticsChartSamples(Dictionary<string, Chart> charts)
+        {
+            lock (_statisticsChartSamplesLock)
+            {
+                var clonedCharts = new HashSet<string>();
+                foreach (var kvp in _statisticsChartSamples)
+                {
+                    if (!charts.TryGetValue(kvp.Key.ChartName, out var chart))
+                    {
+                        chart = new Chart(kvp.Key.ChartName);
+                        charts[kvp.Key.ChartName] = chart;
+                    }
+                    else if (clonedCharts.Add(kvp.Key.ChartName))
+                    {
+                        chart = chart.Clone();
+                        charts[kvp.Key.ChartName] = chart;
+                    }
+
+                    if (!chart.Series.TryGetValue(kvp.Key.SeriesName, out var series))
+                    {
+                        series = kvp.Value.Series.Clone(empty: true);
+                        chart.Series[kvp.Key.SeriesName] = series;
+                    }
+
+                    var values = new SortedDictionary<DateTime, ISeriesPoint>();
+                    foreach (var point in series.Values)
+                    {
+                        values[point.Time] = point;
+                    }
+
+                    foreach (var point in kvp.Value.Points.Values)
+                    {
+                        values[point.Time] = point.Clone();
+                    }
+
+                    series.Values = values.Values.ToList();
+                }
+            }
+        }
+
+        /// <summary>
+        /// Will generate the statistics results and update the provided runtime statistics
+        /// </summary>
+        protected override StatisticsResults GenerateStatisticsResults(Dictionary<string, Chart> charts,
+            SortedDictionary<DateTime, decimal> profitLoss = null, CapacityEstimate estimatedStrategyCapacity = null)
+        {
+            RestoreRetainedStatisticsChartSamples(charts);
+            return base.GenerateStatisticsResults(charts, profitLoss, estimatedStrategyCapacity);
         }
 
         /// <summary>
@@ -1269,6 +1371,17 @@ namespace QuantConnect.Lean.Engine.Results
         public void SetSummaryStatistic(string name, string value)
         {
             SummaryStatistic(name, value);
+        }
+
+        private class RetainedStatisticsSeries
+        {
+            public BaseSeries Series { get; }
+            public SortedDictionary<DateTime, ISeriesPoint> Points { get; } = new();
+
+            public RetainedStatisticsSeries(BaseSeries series)
+            {
+                Series = series;
+            }
         }
     }
 }

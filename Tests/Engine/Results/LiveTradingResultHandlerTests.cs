@@ -15,6 +15,7 @@
 */
 
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using NUnit.Framework;
 using QuantConnect.Packets;
@@ -190,6 +191,89 @@ namespace QuantConnect.Tests.Engine.Results
             }
         }
 
+        [Test]
+        public void RestoresRetainedStatisticsSamplesToTrimmedCharts()
+        {
+            var handler = new TestableLiveTradingResultHandler();
+            handler.Charts.Clear();
+
+            var start = new DateTime(2026, 5, 1);
+            for (var i = 0; i < 5; i++)
+            {
+                AddDailyStatisticsSamples(handler, start.AddDays(i), i);
+                handler.RetainStatisticsSamples();
+            }
+
+            var trimmedCharts = new Dictionary<string, Chart>();
+            AddDailyStatisticsSamples(trimmedCharts, start.AddDays(3), 3, includePortfolioTurnover: false);
+            AddDailyStatisticsSamples(trimmedCharts, start.AddDays(4), 4, includePortfolioTurnover: false);
+
+            handler.RestoreStatisticsSamples(trimmedCharts);
+
+            AssertSeriesTimes(trimmedCharts, BaseResultsHandler.StrategyEquityKey, BaseResultsHandler.EquityKey, start, 5);
+            AssertSeriesTimes(trimmedCharts, BaseResultsHandler.StrategyEquityKey, BaseResultsHandler.ReturnKey, start, 5);
+            AssertSeriesTimes(trimmedCharts, BaseResultsHandler.BenchmarkKey, BaseResultsHandler.BenchmarkKey, start, 5);
+            AssertSeriesTimes(trimmedCharts, BaseResultsHandler.PortfolioTurnoverKey, BaseResultsHandler.PortfolioTurnoverKey, start, 5);
+        }
+
+        private static void AddDailyStatisticsSamples(TestableLiveTradingResultHandler handler, DateTime time, int index)
+        {
+            AddDailyStatisticsSamples(handler.Charts, time, index);
+        }
+
+        private static void AddDailyStatisticsSamples(IDictionary<string, Chart> charts, DateTime time, int index, bool includePortfolioTurnover = true)
+        {
+            var equityChart = GetOrAddChart(charts, BaseResultsHandler.StrategyEquityKey);
+            GetOrAddSeries<CandlestickSeries>(equityChart, BaseResultsHandler.EquityKey, () => new CandlestickSeries(BaseResultsHandler.EquityKey, 0, "$"))
+                .Values.Add(new Candlestick(time, 100 + index, 101 + index, 99 + index, 100 + index));
+            GetOrAddSeries<Series>(equityChart, BaseResultsHandler.ReturnKey, () => new Series(BaseResultsHandler.ReturnKey, SeriesType.Bar, 1, "%"))
+                .Values.Add(new ChartPoint(time, index));
+
+            var benchmarkChart = GetOrAddChart(charts, BaseResultsHandler.BenchmarkKey);
+            GetOrAddSeries<Series>(benchmarkChart, BaseResultsHandler.BenchmarkKey, () => new Series(BaseResultsHandler.BenchmarkKey))
+                .Values.Add(new ChartPoint(time, 200 + index));
+
+            if (includePortfolioTurnover)
+            {
+                var turnoverChart = GetOrAddChart(charts, BaseResultsHandler.PortfolioTurnoverKey);
+                GetOrAddSeries<Series>(turnoverChart, BaseResultsHandler.PortfolioTurnoverKey, () => new Series(BaseResultsHandler.PortfolioTurnoverKey, SeriesType.Line, 0, "%"))
+                    .Values.Add(new ChartPoint(time, index / 10m));
+            }
+        }
+
+        private static Chart GetOrAddChart(IDictionary<string, Chart> charts, string name)
+        {
+            if (!charts.TryGetValue(name, out var chart))
+            {
+                chart = new Chart(name);
+                charts[name] = chart;
+            }
+
+            return chart;
+        }
+
+        private static T GetOrAddSeries<T>(Chart chart, string name, Func<T> factory)
+            where T : BaseSeries
+        {
+            if (!chart.Series.TryGetValue(name, out var series))
+            {
+                series = factory();
+                chart.Series[name] = series;
+            }
+
+            return (T)series;
+        }
+
+        private static void AssertSeriesTimes(Dictionary<string, Chart> charts, string chartName, string seriesName, DateTime start, int count)
+        {
+            var values = charts[chartName].Series[seriesName].Values;
+
+            Assert.AreEqual(count, values.Count);
+            CollectionAssert.AreEqual(
+                Enumerable.Range(0, count).Select(x => start.AddDays(x)),
+                values.Select(x => x.Time));
+        }
+
         private class TestDataFeed : IDataFeed
         {
             public bool IsActive { get; }
@@ -216,6 +300,19 @@ namespace QuantConnect.Tests.Engine.Results
             }
             public void Exit()
             {
+            }
+        }
+
+        private class TestableLiveTradingResultHandler : LiveTradingResultHandler
+        {
+            public void RetainStatisticsSamples()
+            {
+                RetainStatisticsChartSamples();
+            }
+
+            public void RestoreStatisticsSamples(Dictionary<string, Chart> charts)
+            {
+                RestoreRetainedStatisticsChartSamples(charts);
             }
         }
     }
