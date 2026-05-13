@@ -15,6 +15,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Threading;
 using Python.Runtime;
 using QuantConnect.Data.UniverseSelection;
 
@@ -31,6 +32,7 @@ namespace QuantConnect.Data.Fundamental
     /// </summary>
     public class FundamentalUniverse : BaseDataCollection
     {
+        private static int _universeCount;
         private static readonly Fundamental _factory = new();
 
         /// <summary>
@@ -106,7 +108,7 @@ namespace QuantConnect.Data.Fundamental
         public override Symbol UniverseSymbol(string market = null)
         {
             market ??= QuantConnect.Market.USA;
-            var ticker = $"{GetType().Name}-{market}-{Guid.NewGuid()}";
+            var ticker = $"{GetType().Name}-{market}-{Interlocked.Increment(ref _universeCount):D10}-{Guid.NewGuid()}";
             return Symbol.Create(ticker, SecurityType.Equity, market, baseDataType: GetType());
         }
 

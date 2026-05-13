@@ -18,6 +18,7 @@ using System;
 using System.Linq;
 using System.Collections;
 using System.Collections.Generic;
+using System.Threading;
 using QuantConnect.Python;
 
 namespace QuantConnect.Data.UniverseSelection
@@ -27,6 +28,7 @@ namespace QuantConnect.Data.UniverseSelection
     /// </summary>
     public class BaseDataCollection : BaseData, IEnumerable<BaseData>
     {
+        private static int _universeCount;
         private DateTime _endTime;
 
         /// <summary>
@@ -152,7 +154,7 @@ namespace QuantConnect.Data.UniverseSelection
         public virtual Symbol UniverseSymbol(string market = null)
         {
             market ??= QuantConnect.Market.USA;
-            var ticker = $"{GetType().Name}-{market}-{Guid.NewGuid()}";
+            var ticker = $"{GetType().Name}-{market}-{Interlocked.Increment(ref _universeCount):D10}-{Guid.NewGuid()}";
             return Symbol.Create(ticker, SecurityType.Base, market, baseDataType: GetType());
         }
 
