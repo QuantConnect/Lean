@@ -16,7 +16,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using NodaTime;
 using Python.Runtime;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
@@ -31,6 +30,8 @@ namespace QuantConnect.Algorithm.Framework.Selection
     /// </summary>
     public class OpenInterestFutureUniverseSelectionModel : FutureUniverseSelectionModel
     {
+        private static readonly TimeSpan OpenInterestHistoryLookback = TimeSpan.FromDays(7);
+
         private readonly int? _chainContractsLookupLimit;
         private readonly IAlgorithm _algorithm;
         private readonly int? _resultsLimit;
@@ -116,11 +117,10 @@ namespace QuantConnect.Algorithm.Framework.Selection
         {
             var current = _algorithm.UtcTime;
             var exchangeHours = marketHours.ExchangeHours;
-            var endTime = Instant.FromDateTimeUtc(_algorithm.UtcTime).InZone(exchangeHours.TimeZone).ToDateTimeUnspecified();
-            var previousDay = Time.GetStartTimeForTradeBars(exchangeHours, endTime, Time.OneDay, 1, true, marketHours.DataTimeZone);
+            var startTime = current - OpenInterestHistoryLookback;
             var requests = symbols.Select(
                     symbol => new HistoryRequest(
-                        previousDay,
+                        startTime,
                         current,
                         typeof(Tick),
                         symbol,
@@ -139,7 +139,7 @@ namespace QuantConnect.Algorithm.Framework.Selection
                 .Where(s => s.HasData && s.Ticks.Keys.Count > 0)
                 .SelectMany(s => s.Ticks.Select(x => new Tuple<Symbol, Tick>(x.Key, x.Value.LastOrDefault())))
                 .GroupBy(x => x.Item1)
-                .ToDictionary(x => x.Key, x => x.OrderByDescending(i => i.Item2.Time).LastOrDefault().Item2.Value);
+                .ToDictionary(x => x.Key, x => x.OrderByDescending(i => i.Item2.Time).FirstOrDefault().Item2.Value);
         }
 
         /// <summary>

@@ -35,7 +35,7 @@ namespace QuantConnect.Tests.Algorithm.Framework.Selection
         private static readonly Symbol March = Symbol.CreateFuture(Futures.Metals.Gold, Market.COMEX, new DateTime(2020, 03, 01));
         private static readonly Symbol April = Symbol.CreateFuture(Futures.Metals.Gold, Market.COMEX, new DateTime(2020, 04, 01));
         private static readonly DateTime TestDate = new DateTime(2020, 05, 11, 0, 0, 0, DateTimeKind.Utc);
-        private static readonly DateTime ExpectedPreviousDate = new DateTime(2020, 05, 09, 20, 0, 0, DateTimeKind.Utc);
+        private static readonly DateTime ExpectedPreviousDate = TestDate.AddDays(-7);
         private static readonly IReadOnlyDictionary<Symbol, decimal> OpenInterestData = new Dictionary<Symbol, decimal>
         {
             [Jan] = 3,
@@ -140,19 +140,68 @@ namespace QuantConnect.Tests.Algorithm.Framework.Selection
             Assert.AreEqual(items.Keys, results);
         }
 
-        private static Slice CreateReplySlice(Symbol symbol, decimal openInterest)
+        [Test]
+        public void Selects_Most_Recent_Open_Interest()
         {
-            var ticks = new Ticks {{symbol, new List<Tick> {new OpenInterest(TestDate, symbol, openInterest)}}};
-            return new Slice(TestDate, null, null, null, ticks, null, null, null, null, null, null, null, TestDate, true);
+            SetupSubject(OpenInterestData.Count, OpenInterestData.Count);
+            _mockHistoryProvider.Setup(x => x.GetHistory(It.IsAny<IEnumerable<HistoryRequest>>(), It.IsAny<DateTimeZone>()))
+                .Returns<IEnumerable<HistoryRequest>, DateTimeZone>((rq, tz) =>
+                    rq.SelectMany(r => new[]
+                    {
+                        CreateReplySlice(r.Symbol, 1, TestDate.AddDays(-5)),
+                        CreateReplySlice(r.Symbol, OpenInterestData[r.Symbol], TestDate.AddDays(-1))
+                    }).ToArray());
+
+            var data = OpenInterestData.Keys.ToDictionary(x => x, x => MarketHours);
+            var results = _underTest.FilterByOpenInterest(data).ToList();
+
+            Assert.AreEqual(4, results.Count);
+            Assert.AreEqual(Feb, results[0]);
+            Assert.AreEqual(Jan, results[1]);
+            Assert.AreEqual(March, results[2]);
+            Assert.AreEqual(April, results[3]);
         }
 
-        private void SetupSubject(int? testChainContractLookupLimit, int? testResultsLimit)
+        [Test]
+        public void Requests_Open_Interest_Across_Non_Trading_Days()
+        {
+            var mondayMidnight = new DateTime(2023, 02, 27, 0, 0, 0, DateTimeKind.Utc);
+            SetupSubject(OpenInterestData.Count, OpenInterestData.Count, mondayMidnight);
+
+            _mockHistoryProvider.Setup(x => x.GetHistory(It.IsAny<IEnumerable<HistoryRequest>>(), It.IsAny<DateTimeZone>()))
+                .Returns<IEnumerable<HistoryRequest>, DateTimeZone>((requests, tz) =>
+                {
+                    foreach (var request in requests)
+                    {
+                        Assert.AreEqual(mondayMidnight.AddDays(-7), request.StartTimeUtc);
+                        Assert.AreEqual(mondayMidnight, request.EndTimeUtc);
+                    }
+
+                    return requests.Select(r => CreateReplySlice(r.Symbol, OpenInterestData[r.Symbol], mondayMidnight.AddDays(-3))).ToArray();
+                })
+                .Verifiable();
+
+            var data = OpenInterestData.Keys.ToDictionary(x => x, x => MarketHours);
+            var results = _underTest.FilterByOpenInterest(data).ToList();
+
+            _mockHistoryProvider.Verify();
+            Assert.AreEqual(4, results.Count);
+        }
+
+        private static Slice CreateReplySlice(Symbol symbol, decimal openInterest, DateTime? time = null)
+        {
+            var sliceTime = time ?? TestDate;
+            var ticks = new Ticks {{symbol, new List<Tick> {new OpenInterest(sliceTime, symbol, openInterest)}}};
+            return new Slice(sliceTime, null, null, null, ticks, null, null, null, null, null, null, null, sliceTime, true);
+        }
+
+        private void SetupSubject(int? testChainContractLookupLimit, int? testResultsLimit, DateTime? utcTime = null)
         {
             _mockHistoryProvider = new Mock<IHistoryProvider>();
 
             var mockAlgorithm = new Mock<IAlgorithm>();
             mockAlgorithm.SetupGet(x => x.HistoryProvider).Returns(_mockHistoryProvider.Object);
-            mockAlgorithm.SetupGet(x => x.UtcTime).Returns(TestDate);
+            mockAlgorithm.SetupGet(x => x.UtcTime).Returns(utcTime ?? TestDate);
             _underTest = new OpenInterestFutureUniverseSelectionModel(mockAlgorithm.Object, _ => OpenInterestData.Keys, testChainContractLookupLimit, testResultsLimit);
         }
     }
