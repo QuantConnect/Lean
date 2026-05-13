@@ -236,25 +236,28 @@ namespace QuantConnect.Tests.Common.Orders.Fills
             Assert.AreEqual(OrderStatus.None, fill.Status);
         }
 
-        [TestCase(false, OrderStatus.None, 0)]
-        [TestCase(true, OrderStatus.Filled, 10)]
-        public void StopMarketOrderRespectsOutsideRegularTradingHours(bool outsideRegularTradingHours, OrderStatus expectedStatus, decimal expectedQuantity)
+        [TestCase(true, OrderStatus.None, 0)]
+        [TestCase(false, OrderStatus.Filled, 10)]
+        public void StopMarketOrderRespectsOutsideRegularTradingHours(bool submitOutsideRegularHoursRestriction, OrderStatus expectedStatus, decimal expectedQuantity)
         {
             var time = new DateTime(2026, 5, 5, 9, 29, 0);
             var timeKeeper = new TimeKeeper(time.ConvertToUtc(TimeZones.NewYork), TimeZones.NewYork);
             var fillModel = new EquityFillModel();
             var configTradeBar = CreateTradeBarConfig(Symbols.SPY, extendedHours: true);
             var equity = CreateEquity(configTradeBar);
+            var orderProperties = submitOutsideRegularHoursRestriction
+                ? new TradeStationOrderProperties
+                {
+                    TimeInForce = TimeInForce.Day,
+                    OutsideRegularTradingHours = false
+                }
+                : null;
             var order = new StopMarketOrder(
                 Symbols.SPY,
                 10,
                 1m,
                 time.ConvertToUtc(TimeZones.NewYork),
-                properties: new TradeStationOrderProperties
-                {
-                    TimeInForce = TimeInForce.Day,
-                    OutsideRegularTradingHours = outsideRegularTradingHours
-                });
+                properties: orderProperties);
 
             equity.SetLocalTimeKeeper(timeKeeper.GetLocalTimeKeeper(TimeZones.NewYork));
             equity.SetMarketPrice(new TradeBar(time, Symbols.SPY, 100m, 101m, 99m, 100m, 100, Time.OneMinute));
