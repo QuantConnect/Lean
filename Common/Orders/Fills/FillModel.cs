@@ -1095,11 +1095,6 @@ namespace QuantConnect.Orders.Fills
                 }
 
                 var barSpan = currentBar.EndTime - currentBar.Time;
-                if (barSpan < Time.OneHour)
-                {
-                    return false;
-                }
-
                 var isOnCurrentBar = barSpan > Time.OneHour
                     // for fill purposes we consider the market open for daily bars if we are in the same day
                     ? asset.LocalTime.Date == currentBar.EndTime.Date
@@ -1119,7 +1114,9 @@ namespace QuantConnect.Orders.Fills
         {
             if (TryGetOutsideRegularTradingHours(order, out var outsideRegularTradingHours))
             {
-                isExtendedMarketHours = outsideRegularTradingHours;
+                return outsideRegularTradingHours
+                    ? IsExchangeOpen(asset, true)
+                    : asset.Exchange.Hours.IsOpen(asset.LocalTime, false);
             }
 
             return IsExchangeOpen(asset, isExtendedMarketHours);
@@ -1129,7 +1126,9 @@ namespace QuantConnect.Orders.Fills
         {
             if (TryGetOutsideRegularTradingHours(order, out var outsideRegularTradingHours))
             {
-                return IsExchangeOpen(asset, outsideRegularTradingHours);
+                return outsideRegularTradingHours
+                    ? IsExchangeOpen(asset, true)
+                    : asset.Exchange.Hours.IsOpen(asset.LocalTime, false);
             }
 
             return IsExchangeOpen(asset);
