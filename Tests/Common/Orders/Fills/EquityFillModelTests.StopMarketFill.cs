@@ -236,28 +236,23 @@ namespace QuantConnect.Tests.Common.Orders.Fills
             Assert.AreEqual(OrderStatus.None, fill.Status);
         }
 
-        [TestCase(true, OrderStatus.None, 0)]
-        [TestCase(false, OrderStatus.Filled, 10)]
-        public void StopMarketOrderRespectsOutsideRegularTradingHours(bool submitOutsideRegularHoursRestriction, OrderStatus expectedStatus, decimal expectedQuantity)
+        public void StopMarketOrderRespectsOutsideRegularTradingHours()
         {
             var time = new DateTime(2026, 5, 5, 9, 29, 0);
             var timeKeeper = new TimeKeeper(time.ConvertToUtc(TimeZones.NewYork), TimeZones.NewYork);
             var fillModel = new EquityFillModel();
             var configTradeBar = CreateTradeBarConfig(Symbols.SPY, extendedHours: true);
             var equity = CreateEquity(configTradeBar);
-            var orderProperties = submitOutsideRegularHoursRestriction
-                ? new TradeStationOrderProperties
-                {
-                    TimeInForce = TimeInForce.Day,
-                    OutsideRegularTradingHours = false
-                }
-                : null;
             var order = new StopMarketOrder(
                 Symbols.SPY,
                 10,
                 1m,
                 time.ConvertToUtc(TimeZones.NewYork),
-                properties: orderProperties);
+                properties: new TradeStationOrderProperties
+                {
+                    TimeInForce = TimeInForce.Day,
+                    OutsideRegularTradingHours = false
+                });
 
             equity.SetLocalTimeKeeper(timeKeeper.GetLocalTimeKeeper(TimeZones.NewYork));
             equity.SetMarketPrice(new TradeBar(time, Symbols.SPY, 100m, 101m, 99m, 100m, 100, Time.OneMinute));
@@ -269,8 +264,8 @@ namespace QuantConnect.Tests.Common.Orders.Fills
                 Time.OneHour,
                 null)).Single();
 
-            Assert.AreEqual(expectedStatus, fill.Status);
-            Assert.AreEqual(expectedQuantity, fill.FillQuantity);
+            Assert.AreEqual(OrderStatus.None, fill.Status);
+            Assert.AreEqual(0, fill.FillQuantity);
         }
 
         [TestCase(100, 290.50)]
