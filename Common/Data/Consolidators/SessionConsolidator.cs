@@ -78,8 +78,7 @@ namespace Common.Data.Consolidators
                 return;
             }
 
-            // Correct the timestamp if data skipped the predicted next trading day
-            if (workingBar.Time != DateTime.MaxValue && data.Time.Date > workingBar.Time.Date)
+            if (workingBar.Time == DateTime.MaxValue || data.Time.Date > workingBar.Time.Date)
             {
                 workingBar.Time = data.Time.Date;
             }
@@ -96,11 +95,6 @@ namespace Common.Data.Consolidators
         {
             if (!_initialized)
             {
-                // Set the working bar time only if it hasn't been set yet
-                if (_workingBar.Time == DateTime.MaxValue)
-                {
-                    _workingBar.Time = data.Time.Date;
-                }
                 _initialized = true;
             }
             base.Update(data);
