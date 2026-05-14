@@ -19,6 +19,7 @@ using System.Linq;
 using NUnit.Framework;
 using Python.Runtime;
 using QuantConnect.Algorithm;
+using QuantConnect.Data.Fundamental;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Tests.Engine.DataFeeds;
 
@@ -37,7 +38,7 @@ namespace QuantConnect.Tests.Algorithm
         {
             AssertConstituentUniverseDefinitionsSymbol(ticker, market, false, true, true);
         }
-        
+
         [TestCaseSource(nameof(ETFConstituentUniverseTestCases))]
         public void AddUniverseWithETFConstituentUniverseDefinitionSymbol(string ticker, string market)
         {
@@ -86,35 +87,35 @@ namespace QuantConnect.Tests.Algorithm
             if (isSymbol && isEtf)
             {
                 constituentUniverse = isPython
-                    ? algo.Universe.ETF(symbol, algo.UniverseSettings, (PyObject) null)
+                    ? algo.Universe.ETF(symbol, algo.UniverseSettings, (PyObject)null)
                     : algo.Universe.ETF(symbol, algo.UniverseSettings, CreateReturnAllFunc());
             }
             else if (isEtf)
             {
                 constituentUniverse = isPython
-                    ? algo.Universe.ETF(ticker, market, algo.UniverseSettings, (PyObject) null)
+                    ? algo.Universe.ETF(ticker, market, algo.UniverseSettings, (PyObject)null)
                     : algo.Universe.ETF(ticker, market, algo.UniverseSettings, CreateReturnAllFunc());
             }
             else if (isSymbol)
             {
                 constituentUniverse = isPython
-                    ? algo.Universe.Index(symbol, algo.UniverseSettings, (PyObject) null)
+                    ? algo.Universe.Index(symbol, algo.UniverseSettings, (PyObject)null)
                     : algo.Universe.Index(symbol, algo.UniverseSettings, CreateReturnAllFunc());
             }
             else
             {
                 constituentUniverse = isPython
-                    ? algo.Universe.Index(ticker, market, algo.UniverseSettings, (PyObject) null)
+                    ? algo.Universe.Index(ticker, market, algo.UniverseSettings, (PyObject)null)
                     : algo.Universe.Index(ticker, market, algo.UniverseSettings, CreateReturnAllFunc());
             }
 
             Assert.IsTrue(constituentUniverse.Configuration.Symbol.HasUnderlying);
             Assert.AreEqual(symbol, constituentUniverse.Configuration.Symbol.Underlying);
-            
+
             Assert.AreEqual(symbol.SecurityType, constituentUniverse.Configuration.Symbol.SecurityType);
             Assert.IsTrue(constituentUniverse.Configuration.Symbol.ID.Symbol.StartsWithInvariant("qc-universe-"));
         }
-        
+
         private static TestCaseData[] ETFConstituentUniverseTestCases()
         {
             return new[]
@@ -147,6 +148,35 @@ namespace QuantConnect.Tests.Algorithm
         private Func<IEnumerable<ETFConstituentUniverse>, IEnumerable<Symbol>> CreateReturnAllFunc()
         {
             return x => x.Select(y => y.Symbol);
+        }
+
+        [TestCase(typeof(BaseDataCollection))]
+        [TestCase(typeof(FundamentalUniverse))]
+        [TestCase(typeof(ETFConstituentsUniverseFactory))]
+        public void UniverseSymbolsSortInCreationOrder(Type dataType)
+        {
+            Symbol symbol1, symbol2, symbol3;
+            if (dataType == typeof(ETFConstituentsUniverseFactory))
+            {
+                var composite = Symbol.Create("SPY", SecurityType.Equity, Market.USA);
+                using var universe1 = new ETFConstituentsUniverseFactory(composite, null);
+                using var universe2 = new ETFConstituentsUniverseFactory(composite, null);
+                using var universe3 = new ETFConstituentsUniverseFactory(composite, null);
+                symbol1 = universe1.Configuration.Symbol;
+                symbol2 = universe2.Configuration.Symbol;
+                symbol3 = universe3.Configuration.Symbol;
+            }
+            else
+            {
+                var instance = (BaseDataCollection)Activator.CreateInstance(dataType);
+                symbol1 = instance.UniverseSymbol();
+                symbol2 = instance.UniverseSymbol();
+                symbol3 = instance.UniverseSymbol();
+            }
+
+            var comparer = StringComparer.OrdinalIgnoreCase;
+            Assert.That(comparer.Compare(symbol1.Value, symbol2.Value) < 0);
+            Assert.That(comparer.Compare(symbol2.Value, symbol3.Value) < 0);
         }
     }
 }
