@@ -538,6 +538,22 @@ namespace QuantConnect.Tests.Common.Securities
             Assert.AreEqual(1, result.PriceMagnifier);
         }
 
+        [Test]
+        public void LoadsCBOEIndexSymbolProperties()
+        {
+            var db = SymbolPropertiesDatabase.FromDataFolder();
+
+            var entries = db.GetSymbolPropertiesList(Market.CBOE, SecurityType.Index).ToList();
+
+            Assert.IsNotEmpty(entries);
+            var wildcardEntry = entries.FirstOrDefault(e => e.Key.Symbol == SecurityDatabaseKey.Wildcard);
+            Assert.IsNotNull(wildcardEntry.Value);
+            Assert.AreEqual("USD", wildcardEntry.Value.QuoteCurrency);
+            Assert.AreEqual(1m, wildcardEntry.Value.ContractMultiplier);
+            Assert.AreEqual(0.01m, wildcardEntry.Value.MinimumPriceVariation);
+            Assert.AreEqual(1m, wildcardEntry.Value.LotSize);
+        }
+
         private class TestingSymbolPropertiesDatabase : SymbolPropertiesDatabase
         {
             public TestingSymbolPropertiesDatabase(string file)
