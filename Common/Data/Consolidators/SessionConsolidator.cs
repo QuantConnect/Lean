@@ -83,21 +83,10 @@ namespace Common.Data.Consolidators
                 workingBar.Time = data.Time.Date;
             }
 
+            _initialized = true;
+
             // Update the working session bar
             workingBar.Update(data, Consolidated);
-        }
-
-        /// <summary>
-        /// Updates the session with new market data and initializes the consolidator if needed
-        /// </summary>
-        /// <param name="data">The new data to update the session with</param>
-        public override void Update(BaseData data)
-        {
-            if (!_initialized)
-            {
-                _initialized = true;
-            }
-            base.Update(data);
         }
 
         /// <summary>
