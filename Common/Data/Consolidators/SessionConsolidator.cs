@@ -65,6 +65,15 @@ namespace Common.Data.Consolidators
         /// <param name="data">The new data</param>
         protected override void AggregateBar(ref SessionBar workingBar, BaseData data)
         {
+            if (!_initialized)
+            {
+                if (workingBar.Time == DateTime.MaxValue || data.Time.Date > workingBar.Time.Date)
+                {
+                    workingBar.Time = data.Time.Date;
+                }
+                _initialized = true;
+            }
+
             // Handle open interest
             if (data.DataType == MarketDataType.Tick && data is Tick oiTick && oiTick.TickType == TickType.OpenInterest)
             {
@@ -77,13 +86,6 @@ namespace Common.Data.Consolidators
             {
                 return;
             }
-
-            if (workingBar.Time == DateTime.MaxValue || data.Time.Date > workingBar.Time.Date)
-            {
-                workingBar.Time = data.Time.Date;
-            }
-
-            _initialized = true;
 
             // Update the working session bar
             workingBar.Update(data, Consolidated);
