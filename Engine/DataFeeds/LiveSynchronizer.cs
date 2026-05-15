@@ -212,6 +212,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         {
             base.PostInitialize();
             _frontierTimeProvider.Initialize(base.GetTimeProvider());
+            WarmupEndUtc = TimeProvider.GetUtcNow();
         }
 
         /// <summary>

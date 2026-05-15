@@ -34,7 +34,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <summary>
         /// UTC time at which the warm up period ends
         /// </summary>
-        protected DateTime WarmupEndUtc { get; private set; }
+        protected DateTime WarmupEndUtc { get; set; }
 
         /// <summary>
         /// The algorithm instance
@@ -121,16 +121,16 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 // check for cancellation
                 if (timeSlice == null || cancellationToken.IsCancellationRequested) break;
 
-                if (ShouldEmitWarmupEndPulse(timeSlice))
-                {
-                    yield return TimeSliceFactory.CreateTimePulse(WarmupEndUtc);
-                }
-
                 if (timeSlice.IsTimePulse && Algorithm.UtcTime == timeSlice.Time)
                 {
                     previousWasTimePulse = timeSlice.IsTimePulse;
                     // skip time pulse when algorithms already at that time
                     continue;
+                }
+
+                if (ShouldEmitWarmupEndPulse(timeSlice))
+                {
+                    yield return TimeSliceFactory.CreateTimePulse(WarmupEndUtc);
                 }
 
                 // SubscriptionFrontierTimeProvider will return twice the same time if there are no more subscriptions or if Subscription.Current is null
