@@ -139,6 +139,11 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 // check for cancellation
                 if (timeSlice == null || cancellationToken.IsCancellationRequested) break;
 
+                if (ShouldEmitWarmupEndPulse(timeSlice))
+                {
+                    yield return TimeSliceFactory.CreateTimePulse(WarmupEndUtc);
+                }
+
                 var frontierUtc = FrontierTimeProvider.GetUtcNow();
                 // emit on data or if we've elapsed a full second since last emit or there are security changes
                 if (timeSlice.SecurityChanges != SecurityChanges.None
@@ -207,6 +212,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         {
             base.PostInitialize();
             _frontierTimeProvider.Initialize(base.GetTimeProvider());
+            WarmupEndUtc = TimeProvider.GetUtcNow();
         }
 
         /// <summary>
