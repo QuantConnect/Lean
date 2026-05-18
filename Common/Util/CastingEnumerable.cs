@@ -41,7 +41,7 @@ namespace QuantConnect.Util
         /// </summary>
         /// <param name="index">The zero-based index of the element to get.</param>
         /// <returns>The element at the specified index.</returns>
-        public TDerived this[int index] => _data[index] as TDerived;
+        public TDerived this[int index] => (TDerived)_data[index];
 
         /// <summary>
         /// Initializes a new instance of the <see cref="CastingEnumerable{TBase, TDerived}"/> class
