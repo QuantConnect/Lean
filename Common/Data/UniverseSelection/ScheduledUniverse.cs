@@ -103,7 +103,8 @@ namespace QuantConnect.Data.UniverseSelection
         }
 
         /// <summary>
-        /// Get an enumerator of UTC DateTimes that defines when this universe will be invoked
+        /// Get an enumerator of UTC DateTimes that defines when this universe will be invoked,
+        /// only including times within [startTimeUtc, endTimeUtc], both bounds inclusive.
         /// </summary>
         /// <param name="startTimeUtc">The start time of the range in UTC</param>
         /// <param name="endTimeUtc">The end time of the range in UTC</param>

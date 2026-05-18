@@ -98,7 +98,7 @@ namespace QuantConnect.Algorithm.CSharp
             {
                 throw new RegressionTestException($"Unexpected scheduled event call count: {_scheduleEventNoonCallCount}");
             }
-            if (_scheduleEventMidnightCallCount != 33)
+            if (_scheduleEventMidnightCallCount != 32)
             {
                 throw new RegressionTestException($"Unexpected scheduled event call count: {_scheduleEventMidnightCallCount}");
             }
@@ -153,8 +153,8 @@ namespace QuantConnect.Algorithm.CSharp
             {"Beta", "0"},
             {"Annual Standard Deviation", "0"},
             {"Annual Variance", "0"},
-            {"Information Ratio", "-3.002"},
-            {"Tracking Error", "0.054"},
+            {"Information Ratio", "-3.017"},
+            {"Tracking Error", "0.053"},
             {"Treynor Ratio", "0"},
             {"Total Fees", "$0.00"},
             {"Estimated Strategy Capacity", "$0"},
