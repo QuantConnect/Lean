@@ -56,6 +56,42 @@ namespace QuantConnect.Util
         }
 
         /// <summary>
+        /// Gets the element at the specified index.
+        /// </summary>
+        /// <param name="index">The zero-based index of the element to get.</param>
+        /// <returns>The element at the specified index.</returns>
+        public T this[int index]
+        {
+            get
+            {
+                if (!Enabled)
+                {
+                    throw new InvalidOperationException("Indexer is not supported when memoization is disabled");
+                }
+                if (index < 0)
+                {
+                    throw new ArgumentOutOfRangeException(nameof(index), "Index cannot be negative.");
+                }
+
+                if (_buffer != null && index < _buffer.Count)
+                {
+                    return _buffer[index];
+                }
+                
+                var i = 0;
+                foreach (var item in this)
+                {
+                    if (i++ == index)
+                    {
+                        return item;
+                    }
+                }
+
+                throw new ArgumentOutOfRangeException(nameof(index), "Index was out of range. Must be non-negative and less than the size of the collection.");
+            }
+        }
+
+        /// <summary>
         /// Initializes a new instance of the <see cref="MemoizingEnumerable{T}"/> class
         /// </summary>
         /// <param name="enumerable">The source enumerable to be memoized</param>
