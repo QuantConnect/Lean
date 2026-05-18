@@ -132,6 +132,11 @@ namespace QuantConnect.Data.UniverseSelection
             // Start yielding times
             do
             {
+                if (times.Current > endTimeUtc)
+                {
+                    times.Dispose();
+                    yield break;
+                }
                 yield return times.Current;
             }
             while (times.MoveNext());

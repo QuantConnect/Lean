@@ -69,7 +69,7 @@ namespace QuantConnect.Algorithm.CSharp
 
         public List<Language> Languages { get; } = new() { Language.CSharp };
 
-        public long DataPoints => 3948;
+        public long DataPoints => 3947;
 
         public int AlgorithmHistoryDataPoints => 0;
 
@@ -96,8 +96,8 @@ namespace QuantConnect.Algorithm.CSharp
             {"Beta", "0"},
             {"Annual Standard Deviation", "0"},
             {"Annual Variance", "0"},
-            {"Information Ratio", "-31.448"},
-            {"Tracking Error", "0.164"},
+            {"Information Ratio", "-57.739"},
+            {"Tracking Error", "0.178"},
             {"Treynor Ratio", "0"},
             {"Total Fees", "$0.00"},
             {"Estimated Strategy Capacity", "$0"},

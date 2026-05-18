@@ -90,7 +90,7 @@ namespace QuantConnect.Algorithm.CSharp
             {
                 throw new RegressionTestException($"Unexpected universe selection call count: {_selectionMethodCallCount}");
             }
-            if (_scheduleEventEveryCallCount != 130)
+            if (_scheduleEventEveryCallCount != 127)
             {
                 throw new RegressionTestException($"Unexpected scheduled event call count: {_scheduleEventEveryCallCount}");
             }
@@ -117,7 +117,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
-        public long DataPoints => 187;
+        public long DataPoints => 186;
 
         /// <summary>
         /// Data Points count of the algorithm history
@@ -153,8 +153,8 @@ namespace QuantConnect.Algorithm.CSharp
             {"Beta", "0"},
             {"Annual Standard Deviation", "0"},
             {"Annual Variance", "0"},
-            {"Information Ratio", "-2.962"},
-            {"Tracking Error", "0.052"},
+            {"Information Ratio", "-3.002"},
+            {"Tracking Error", "0.054"},
             {"Treynor Ratio", "0"},
             {"Total Fees", "$0.00"},
             {"Estimated Strategy Capacity", "$0"},
