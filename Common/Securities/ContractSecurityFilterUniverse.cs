@@ -32,7 +32,7 @@ namespace QuantConnect.Securities
     {
         private bool _alreadyAppliedTypeFilters;
 
-        private IEnumerable<TData> _data;
+        private IReadOnlyList<TData> _data;
 
         /// <summary>
         /// Defines listed contract types with Flags attribute
@@ -74,7 +74,7 @@ namespace QuantConnect.Securities
         /// <remarks>
         /// Setting it will also set AllSymbols
         /// </remarks>
-        internal IEnumerable<TData> Data
+        internal IReadOnlyList<TData> Data
         {
             get
             {
@@ -118,7 +118,7 @@ namespace QuantConnect.Securities
         /// <summary>
         /// Constructs ContractSecurityFilterUniverse
         /// </summary>
-        protected ContractSecurityFilterUniverse(IEnumerable<TData> allData, DateTime localTime)
+        protected ContractSecurityFilterUniverse(IReadOnlyList<TData> allData, DateTime localTime)
         {
             Data = allData;
             LocalTime = localTime;
@@ -188,7 +188,7 @@ namespace QuantConnect.Securities
         /// </summary>
         /// <param name="allData">All data for contracts in the Universe</param>
         /// <param name="localTime">The local exchange current time</param>
-        public virtual void Refresh(IEnumerable<TData> allData, DateTime localTime)
+        public virtual void Refresh(IReadOnlyList<TData> allData, DateTime localTime)
         {
             Data = allData;
             LocalTime = localTime;

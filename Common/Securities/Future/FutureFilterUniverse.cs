@@ -31,7 +31,7 @@ namespace QuantConnect.Securities
         /// <summary>
         /// Constructs FutureFilterUniverse
         /// </summary>
-        public FutureFilterUniverse(IEnumerable<FutureUniverse> allData, DateTime localTime)
+        public FutureFilterUniverse(IReadOnlyList<FutureUniverse> allData, DateTime localTime)
             : base(allData, localTime)
         {
         }

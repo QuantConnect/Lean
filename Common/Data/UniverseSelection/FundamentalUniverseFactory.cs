@@ -85,7 +85,7 @@ namespace QuantConnect.Data.UniverseSelection
         /// <returns>The data that passes the filter</returns>
         public override IEnumerable<Symbol> SelectSymbols(DateTime utcTime, BaseDataCollection data)
         {
-            return _selector(new MemoizingEnumerable<Fundamental.Fundamental>(data.Data.OfType<Fundamental.Fundamental>()));
+            return _selector(new CastingEnumerable<BaseData, Fundamental.Fundamental>(data.Data));
         }
 
         /// <summary>

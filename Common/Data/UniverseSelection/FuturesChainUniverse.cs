@@ -19,6 +19,7 @@ using System.Collections.Generic;
 using System.Linq;
 using QuantConnect.Securities;
 using QuantConnect.Securities.Future;
+using QuantConnect.Util;
 
 namespace QuantConnect.Data.UniverseSelection
 {
@@ -84,7 +85,7 @@ namespace QuantConnect.Data.UniverseSelection
         public override IEnumerable<Symbol> SelectSymbols(DateTime utcTime, BaseDataCollection data)
         {
             var localEndTime = utcTime.ConvertFromUtc(Future.Exchange.TimeZone);
-            var availableContracts = data.Data.Cast<FutureUniverse>().ToList();
+            var availableContracts = new CastingEnumerable<BaseData, FutureUniverse>(data.Data);
             var results = Future.ContractFilter.Filter(new FutureFilterUniverse(availableContracts, localEndTime));
 
             return results.Select(x => x.Symbol);

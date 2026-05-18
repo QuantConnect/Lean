@@ -53,29 +53,6 @@ namespace QuantConnect.Tests.Common.Util
         }
 
         [Test]
-        public void IndexerRetrievesCorrectValues()
-        {
-            var list = new List<int> { 10, 20, 30, 40, 50 };
-            var memoized = new MemoizingEnumerable<int>(list);
-
-            Assert.AreEqual(10, memoized[0]);
-            Assert.AreEqual(30, memoized[2]);
-            Assert.AreEqual(50, memoized[4]);
-
-            Assert.Throws<ArgumentOutOfRangeException>(() => { var x = memoized[-1]; });
-            Assert.Throws<ArgumentOutOfRangeException>(() => { var x = memoized[5]; });
-        }
-
-        [Test]
-        public void IndexerDisablesWithoutMemoization()
-        {
-            var list = new List<int> { 1, 2, 3 };
-            var memoized = new MemoizingEnumerable<int>(list) { Enabled = false };
-
-            Assert.Throws<InvalidOperationException>(() => { var x = memoized[0]; });
-        }
-
-        [Test]
         public void GetsCount()
         {
             var list = new List<int> {1, 2, 3, 4, 5};

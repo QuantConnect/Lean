@@ -864,7 +864,7 @@ namespace QuantConnect.Research
         /// <summary>
         /// Get's the universe data for the specified date
         /// </summary>
-        private IEnumerable<T> GetChainHistory<T>(Symbol canonicalSymbol, DateTime date, out BaseData underlyingData)
+        private IReadOnlyList<T> GetChainHistory<T>(Symbol canonicalSymbol, DateTime date, out BaseData underlyingData)
             where T : BaseChainUniverseData
         {
             // Use this GetEntry extension method since it's data type dependent, so we get the correct entry for the option universe
@@ -878,17 +878,17 @@ namespace QuantConnect.Research
             if (universeData is not null)
             {
                 underlyingData = universeData.Underlying;
-                return universeData.Data.Cast<T>();
+                return new CastingEnumerable<BaseData, T>(universeData.Data);
             }
 
             underlyingData = null;
-            return Enumerable.Empty<T>();
+            return Enumerable.Empty<T>().ToList();
         }
 
         /// <summary>
         /// Helper method to get option/future chain historical data for a given date range
         /// </summary>
-        private IEnumerable<(DateTime Date, IEnumerable<T> ChainData, BaseData UnderlyingData)> GetChainHistory<T>(
+        private IEnumerable<(DateTime Date, IReadOnlyList<T> ChainData, BaseData UnderlyingData)> GetChainHistory<T>(
             Security security, DateTime start, DateTime end, bool extendedMarketHours)
             where T : BaseChainUniverseData
         {
