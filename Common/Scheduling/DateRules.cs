@@ -231,6 +231,96 @@ namespace QuantConnect.Scheduling
         }
 
         /// <summary>
+        /// Specifies an event should fire on the first of each quarter + offset
+        /// </summary>
+        /// <param name="daysOffset"> The amount of days to offset the schedule by; must be between 0 and 92.</param>
+        /// <returns>A date rule that fires on the first of each quarter + offset</returns>
+        public IDateRule QuarterStart(int daysOffset = 0)
+        {
+            return QuarterStart((Symbol)null, daysOffset, false);
+        }
+
+        /// <summary>
+        /// Specifies an event should fire on the first tradable date + offset for the specified symbol of each quarter
+        /// </summary>
+        /// <param name="symbol">The symbol whose exchange is used to determine the first tradable date of the quarter</param>
+        /// <param name="daysOffset"> The amount of tradable days to offset the schedule by; must be between 0 and 92</param>
+        /// <param name="extendedMarketHours">True to include days with extended market hours only, like sunday for futures</param>
+        /// <returns>A date rule that fires on the first tradable date + offset for the
+        /// specified security each quarter</returns>
+        public IDateRule QuarterStart(string symbol, int daysOffset = 0, bool extendedMarketHours = true) => QuarterStart(GetSymbol(symbol), daysOffset, extendedMarketHours);
+
+        /// <summary>
+        /// Specifies an event should fire on the first tradable date + offset for the specified symbol of each quarter
+        /// </summary>
+        /// <param name="symbol">The symbol whose exchange is used to determine the first tradable date of the quarter</param>
+        /// <param name="daysOffset"> The amount of tradable days to offset the schedule by; must be between 0 and 92</param>
+        /// <param name="extendedMarketHours">True to include days with extended market hours only, like sunday for futures</param>
+        /// <returns>A date rule that fires on the first tradable date + offset for the
+        /// specified security each quarter</returns>
+        public IDateRule QuarterStart(Symbol symbol, int daysOffset = 0, bool extendedMarketHours = true)
+        {
+            // Check that our offset is allowed
+            if (daysOffset < 0 || 92 < daysOffset)
+            {
+                throw new ArgumentOutOfRangeException(nameof(daysOffset), "DateRules.QuarterStart() : Offset must be between 0 and 92");
+            }
+
+            SecurityExchangeHours securityExchangeHours = null;
+            if (symbol != null)
+            {
+                securityExchangeHours = GetSecurityExchangeHours(symbol);
+            }
+
+            // Create the new DateRule and return it
+            return new FuncDateRule(GetName(symbol, "QuarterStart", daysOffset), (start, end) => QuarterIterator(securityExchangeHours, start, end, daysOffset, true, extendedMarketHours));
+        }
+
+        /// <summary>
+        /// Specifies an event should fire on the last of each quarter
+        /// </summary>
+        /// <param name="daysOffset"> The amount of days to offset the schedule by; must be between 0 and 92</param>
+        /// <returns>A date rule that fires on the last of each quarter - offset</returns>
+        public IDateRule QuarterEnd(int daysOffset = 0)
+        {
+            return QuarterEnd((Symbol)null, daysOffset, false);
+        }
+
+        /// <summary>
+        /// Specifies an event should fire on the last tradable date - offset for the specified symbol of each quarter
+        /// </summary>
+        /// <param name="symbol">The symbol whose exchange is used to determine the last tradable date of the quarter</param>
+        /// <param name="daysOffset">The amount of tradable days to offset the schedule by; must be between 0 and 92.</param>
+        /// <param name="extendedMarketHours">True to include days with extended market hours only, like sunday for futures</param>
+        /// <returns>A date rule that fires on the last tradable date - offset for the specified security each quarter</returns>
+        public IDateRule QuarterEnd(string symbol, int daysOffset = 0, bool extendedMarketHours = true) => QuarterEnd(GetSymbol(symbol), daysOffset, extendedMarketHours);
+
+        /// <summary>
+        /// Specifies an event should fire on the last tradable date - offset for the specified symbol of each quarter
+        /// </summary>
+        /// <param name="symbol">The symbol whose exchange is used to determine the last tradable date of the quarter</param>
+        /// <param name="daysOffset">The amount of tradable days to offset the schedule by; must be between 0 and 92.</param>
+        /// <param name="extendedMarketHours">True to include days with extended market hours only, like sunday for futures</param>
+        /// <returns>A date rule that fires on the last tradable date - offset for the specified security each quarter</returns>
+        public IDateRule QuarterEnd(Symbol symbol, int daysOffset = 0, bool extendedMarketHours = true)
+        {
+            // Check that our offset is allowed
+            if (daysOffset < 0 || 92 < daysOffset)
+            {
+                throw new ArgumentOutOfRangeException(nameof(daysOffset), "DateRules.QuarterEnd() : Offset must be between 0 and 92");
+            }
+
+            SecurityExchangeHours securityExchangeHours = null;
+            if (symbol != null)
+            {
+                securityExchangeHours = GetSecurityExchangeHours(symbol);
+            }
+
+            // Create the new DateRule and return it
+            return new FuncDateRule(GetName(symbol, "QuarterEnd", -daysOffset), (start, end) => QuarterIterator(securityExchangeHours, start, end, daysOffset, false, extendedMarketHours));
+        }
+
+        /// <summary>
         /// Specifies an event should fire on the first of each month + offset
         /// </summary>
         /// <param name="daysOffset"> The amount of days to offset the schedule by; must be between 0 and 30.</param>
@@ -536,6 +626,42 @@ namespace QuantConnect.Scheduling
             Func<DateTime, DateTime> boundaryDateFunc = date => searchForward ? new DateTime(date.Year, date.Month, DateTime.DaysInMonth(date.Year, date.Month)) : new DateTime(date.Year, date.Month, 1);
 
             return BaseIterator(securitySchedule, start, end, offset, searchForward, beginningOfStartMonth, endOfEndMonth, baseDateFunc, boundaryDateFunc, extendedMarketHours);
+        }
+
+        private static IEnumerable<DateTime> QuarterIterator(SecurityExchangeHours securitySchedule, DateTime start, DateTime end, int offset, bool searchForward, bool extendedMarketHours)
+        {
+            // Iterate all days between the beginning of "start" quarter, through end of "end" quarter.
+            // Necessary to ensure we schedule events in the quarter we start and end.
+            var startQuarterFirstMonth = ((start.Month - 1) / 3) * 3 + 1;
+            var beginningOfStartQuarter = new DateTime(start.Year, startQuarterFirstMonth, 1);
+
+            var endQuarterLastMonth = ((end.Month - 1) / 3) * 3 + 3;
+            var endOfEndQuarter = new DateTime(end.Year, endQuarterLastMonth, DateTime.DaysInMonth(end.Year, endQuarterLastMonth));
+
+            // Searching forward the first day of the quarter is baseDay, with boundary being the last day
+            // Searching backward the last day of the quarter is baseDay, with boundary being the first day
+            Func<DateTime, DateTime> baseDateFunc = date =>
+            {
+                var quarterFirstMonth = ((date.Month - 1) / 3) * 3 + 1;
+                if (searchForward)
+                {
+                    return new DateTime(date.Year, quarterFirstMonth, 1);
+                }
+                var quarterLastMonth = quarterFirstMonth + 2;
+                return new DateTime(date.Year, quarterLastMonth, DateTime.DaysInMonth(date.Year, quarterLastMonth));
+            };
+            Func<DateTime, DateTime> boundaryDateFunc = date =>
+            {
+                var quarterFirstMonth = ((date.Month - 1) / 3) * 3 + 1;
+                if (searchForward)
+                {
+                    var quarterLastMonth = quarterFirstMonth + 2;
+                    return new DateTime(date.Year, quarterLastMonth, DateTime.DaysInMonth(date.Year, quarterLastMonth));
+                }
+                return new DateTime(date.Year, quarterFirstMonth, 1);
+            };
+
+            return BaseIterator(securitySchedule, start, end, offset, searchForward, beginningOfStartQuarter, endOfEndQuarter, baseDateFunc, boundaryDateFunc, extendedMarketHours);
         }
 
         private static IEnumerable<DateTime> YearIterator(SecurityExchangeHours securitySchedule, DateTime start, DateTime end, int offset, bool searchForward, bool extendedMarketHours)

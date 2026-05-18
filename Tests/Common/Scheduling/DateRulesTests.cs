@@ -315,6 +315,151 @@ namespace QuantConnect.Tests.Common.Scheduling
         }
 
         [Test]
+        public void StartOfQuarterNoSymbol()
+        {
+            var rules = GetDateRules();
+            var rule = rules.QuarterStart();
+            var dates = rule.GetDates(new DateTime(2000, 01, 01), new DateTime(2000, 12, 31)).ToList();
+
+            Assert.AreEqual(4, dates.Count);
+            CollectionAssert.AreEqual(
+                new[]
+                {
+                    new DateTime(2000, 1, 1),
+                    new DateTime(2000, 4, 1),
+                    new DateTime(2000, 7, 1),
+                    new DateTime(2000, 10, 1)
+                },
+                dates);
+        }
+
+        [Test]
+        public void StartOfQuarterNoSymbolMidQuarterStart()
+        {
+            var rules = GetDateRules();
+            var rule = rules.QuarterStart();
+            var dates = rule.GetDates(new DateTime(2000, 02, 15), new DateTime(2000, 12, 31)).ToList();
+
+            Assert.AreEqual(3, dates.Count);
+            CollectionAssert.AreEqual(
+                new[]
+                {
+                    new DateTime(2000, 4, 1),
+                    new DateTime(2000, 7, 1),
+                    new DateTime(2000, 10, 1)
+                },
+                dates);
+        }
+
+        [Test]
+        public void StartOfQuarterNoSymbolWithOffset()
+        {
+            var rules = GetDateRules();
+            var rule = rules.QuarterStart(5);
+            var dates = rule.GetDates(new DateTime(2000, 01, 01), new DateTime(2000, 12, 31)).ToList();
+
+            Assert.AreEqual(4, dates.Count);
+            CollectionAssert.AreEqual(
+                new[]
+                {
+                    new DateTime(2000, 1, 6),
+                    new DateTime(2000, 4, 6),
+                    new DateTime(2000, 7, 6),
+                    new DateTime(2000, 10, 6)
+                },
+                dates);
+        }
+
+        [Test]
+        public void StartOfQuarterWithSymbol()
+        {
+            var rules = GetDateRules();
+            var rule = rules.QuarterStart(Symbols.SPY);
+            var dates = rule.GetDates(new DateTime(2000, 01, 01), new DateTime(2000, 12, 31)).ToList();
+
+            Assert.AreEqual(4, dates.Count);
+            foreach (var date in dates)
+            {
+                Assert.AreNotEqual(DayOfWeek.Saturday, date.DayOfWeek);
+                Assert.AreNotEqual(DayOfWeek.Sunday, date.DayOfWeek);
+                Assert.Contains(date.Month, new[] { 1, 4, 7, 10 });
+                Assert.IsTrue(date.Day <= 3);
+            }
+        }
+
+        [Test]
+        public void EndOfQuarterNoSymbol()
+        {
+            var rules = GetDateRules();
+            var rule = rules.QuarterEnd();
+            var dates = rule.GetDates(new DateTime(2000, 01, 01), new DateTime(2000, 12, 31)).ToList();
+
+            Assert.AreEqual(4, dates.Count);
+            CollectionAssert.AreEqual(
+                new[]
+                {
+                    new DateTime(2000, 3, 31),
+                    new DateTime(2000, 6, 30),
+                    new DateTime(2000, 9, 30),
+                    new DateTime(2000, 12, 31)
+                },
+                dates);
+        }
+
+        [Test]
+        public void EndOfQuarterNoSymbolWithOffset()
+        {
+            var rules = GetDateRules();
+            var rule = rules.QuarterEnd(5);
+            var dates = rule.GetDates(new DateTime(2000, 01, 01), new DateTime(2000, 12, 31)).ToList();
+
+            Assert.AreEqual(4, dates.Count);
+            CollectionAssert.AreEqual(
+                new[]
+                {
+                    new DateTime(2000, 3, 26),
+                    new DateTime(2000, 6, 25),
+                    new DateTime(2000, 9, 25),
+                    new DateTime(2000, 12, 26)
+                },
+                dates);
+        }
+
+        [Test]
+        public void EndOfQuarterWithSymbol()
+        {
+            var rules = GetDateRules();
+            var rule = rules.QuarterEnd(Symbols.SPY);
+            var dates = rule.GetDates(new DateTime(2000, 01, 01), new DateTime(2000, 12, 31)).ToList();
+
+            Assert.AreEqual(4, dates.Count);
+            foreach (var date in dates)
+            {
+                Assert.AreNotEqual(DayOfWeek.Saturday, date.DayOfWeek);
+                Assert.AreNotEqual(DayOfWeek.Sunday, date.DayOfWeek);
+                Assert.Contains(date.Month, new[] { 3, 6, 9, 12 });
+            }
+        }
+
+        [TestCase(-1)]
+        [TestCase(93)]
+        public void QuarterStartOffsetOutOfRangeThrows(int offset)
+        {
+            var rules = GetDateRules();
+            Assert.Throws<ArgumentOutOfRangeException>(() => rules.QuarterStart(offset));
+            Assert.Throws<ArgumentOutOfRangeException>(() => rules.QuarterStart(Symbols.SPY, offset));
+        }
+
+        [TestCase(-1)]
+        [TestCase(93)]
+        public void QuarterEndOffsetOutOfRangeThrows(int offset)
+        {
+            var rules = GetDateRules();
+            Assert.Throws<ArgumentOutOfRangeException>(() => rules.QuarterEnd(offset));
+            Assert.Throws<ArgumentOutOfRangeException>(() => rules.QuarterEnd(Symbols.SPY, offset));
+        }
+
+        [Test]
         public void StartOfYearNoSymbol()
         {
             var rules = GetDateRules();

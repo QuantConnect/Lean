@@ -36,6 +36,10 @@ namespace QuantConnect.Lean.Engine
     /// </summary>
     public class LeanEngineAlgorithmHandlers : IDisposable
     {
+        private static IFactorFileProvider _factorFileProvider;
+        private static IMapFileProvider _mapfileProvider;
+        private static IDataProvider _dataProvider;
+
         private bool _dataMonitorWired;
 
         /// <summary>
@@ -191,6 +195,37 @@ namespace QuantConnect.Lean.Engine
         }
 
         /// <summary>
+        /// Creates and initializes the auxiliary data providers from configuration
+        /// </summary>
+        public static (IMapFileProvider, IFactorFileProvider, IDataProvider) InitializeAuxiliaryDataProviders(bool setGlobals = false)
+        {
+            if (_mapfileProvider != null)
+            {
+                Log.Trace("LeanEngineAlgorithmHandlers.InitializeAuxiliaryDataProviders(): reusing existing instances");
+                return (_mapfileProvider, _factorFileProvider, _dataProvider);
+            }
+
+            var mapFileProviderTypeName = Config.Get("map-file-provider", "LocalDiskMapFileProvider");
+            var factorFileProviderTypeName = Config.Get("factor-file-provider", "LocalDiskFactorFileProvider");
+            var dataProviderTypeName = Config.Get("data-provider", "DefaultDataProvider");
+
+            var mapFileProvider = Composer.Instance.GetExportedValueByTypeName<IMapFileProvider>(mapFileProviderTypeName);
+            var factorFileProvider = Composer.Instance.GetExportedValueByTypeName<IFactorFileProvider>(factorFileProviderTypeName);
+            var dataProvider = Composer.Instance.GetExportedValueByTypeName<IDataProvider>(dataProviderTypeName);
+
+            factorFileProvider.Initialize(mapFileProvider, dataProvider);
+            mapFileProvider.Initialize(dataProvider);
+
+            if (setGlobals)
+            {
+                _mapfileProvider = mapFileProvider;
+                _factorFileProvider = factorFileProvider;
+                _dataProvider = dataProvider;
+            }
+            return (mapFileProvider, factorFileProvider, dataProvider);
+        }
+
+        /// <summary>
         /// Creates a new instance of the <see cref="LeanEngineAlgorithmHandlers"/> class from the specified composer using type names from configuration
         /// </summary>
         /// <param name="composer">The composer instance to obtain implementations from</param>
@@ -199,14 +234,12 @@ namespace QuantConnect.Lean.Engine
         /// <exception cref="CompositionException">Throws a CompositionException during failure to load</exception>
         public static LeanEngineAlgorithmHandlers FromConfiguration(Composer composer, bool researchMode = false)
         {
+            var (mapFileProvider, factorFileProvider, dataProvider) = InitializeAuxiliaryDataProviders();
             var setupHandlerTypeName = Config.Get("setup-handler", "ConsoleSetupHandler");
             var transactionHandlerTypeName = Config.Get("transaction-handler", "BacktestingTransactionHandler");
             var realTimeHandlerTypeName = Config.Get("real-time-handler", "BacktestingRealTimeHandler");
             var dataFeedHandlerTypeName = Config.Get("data-feed-handler", "FileSystemDataFeed");
             var resultHandlerTypeName = Config.Get("result-handler", "BacktestingResultHandler");
-            var mapFileProviderTypeName = Config.Get("map-file-provider", "LocalDiskMapFileProvider");
-            var factorFileProviderTypeName = Config.Get("factor-file-provider", "LocalDiskFactorFileProvider");
-            var dataProviderTypeName = Config.Get("data-provider", "DefaultDataProvider");
             var objectStoreTypeName = Config.Get("object-store", "LocalObjectStore");
             var dataPermissionManager = Config.Get("data-permission-manager", "DataPermissionManager");
             var dataMonitor = Config.Get("data-monitor", "QuantConnect.Data.DataMonitor");
@@ -217,9 +250,9 @@ namespace QuantConnect.Lean.Engine
                 composer.GetExportedValueByTypeName<IDataFeed>(dataFeedHandlerTypeName),
                 composer.GetExportedValueByTypeName<ITransactionHandler>(transactionHandlerTypeName),
                 composer.GetExportedValueByTypeName<IRealTimeHandler>(realTimeHandlerTypeName),
-                composer.GetExportedValueByTypeName<IMapFileProvider>(mapFileProviderTypeName),
-                composer.GetExportedValueByTypeName<IFactorFileProvider>(factorFileProviderTypeName),
-                composer.GetExportedValueByTypeName<IDataProvider>(dataProviderTypeName),
+                mapFileProvider,
+                factorFileProvider,
+                dataProvider,
                 composer.GetExportedValueByTypeName<IObjectStore>(objectStoreTypeName),
                 composer.GetExportedValueByTypeName<IDataPermissionManager>(dataPermissionManager),
                 Globals.LiveMode,

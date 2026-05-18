@@ -1043,15 +1043,19 @@ namespace QuantConnect.Api
             {
                 client.Value.DefaultRequestHeaders.Clear();
 
-                // Add a user agent header in case the requested URI contains a query.
-                client.Value.DefaultRequestHeaders.TryAddWithoutValidation("user-agent", "QCAlgorithm.Download(): User Agent Header");
-
                 if (headers != null)
                 {
                     foreach (var header in headers)
                     {
                         client.Value.DefaultRequestHeaders.TryAddWithoutValidation(header.Key, header.Value);
                     }
+                }
+
+                // Add a user agent header in case the requested URI contains a query, unless the caller already provided one.
+                // DefaultRequestHeaders.Contains matches header names case-insensitively per the HTTP spec.
+                if (!client.Value.DefaultRequestHeaders.Contains("User-Agent"))
+                {
+                    client.Value.DefaultRequestHeaders.TryAddWithoutValidation("User-Agent", "QCAlgorithm.Download(): User Agent Header");
                 }
 
                 if (!userName.IsNullOrEmpty() || !password.IsNullOrEmpty())

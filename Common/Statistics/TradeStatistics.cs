@@ -154,14 +154,14 @@ namespace QuantConnect.Statistics
         public decimal WinLossRatio { get; set; }
 
         /// <summary>
-        /// The ratio of the number of winning trades to the total number of trades
+        /// The ratio of the number of trades with positive profit loss to the total number of trades
         /// </summary>
         /// <remarks>If the total number of trades is zero, WinRate is set to zero</remarks>
         [JsonConverter(typeof(JsonRoundingConverter))]
         public decimal WinRate { get; set; }
 
         /// <summary>
-        /// The ratio of the number of losing trades to the total number of trades
+        /// The ratio of the number of trades with zero or negative profit loss to the total number of trades
         /// </summary>
         /// <remarks>If the total number of trades is zero, LossRate is set to zero</remarks>
         [JsonConverter(typeof(JsonRoundingConverter))]

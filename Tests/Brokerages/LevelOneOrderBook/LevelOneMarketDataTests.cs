@@ -15,6 +15,7 @@
 
 using System;
 using NUnit.Framework;
+using QuantConnect.Data.Market;
 using QuantConnect.Brokerages.LevelOneOrderBook;
 
 namespace QuantConnect.Tests.Brokerages.LevelOneOrderBook
@@ -174,6 +175,40 @@ namespace QuantConnect.Tests.Brokerages.LevelOneOrderBook
                 Assert.AreEqual(bidSize, levelOneMarketData.BestAskSize, "Bid size should be overwritten with 0.");
                 Assert.AreEqual(askSize, levelOneMarketData.BestBidSize, "Ask size should be overwritten with 0.");
             }
+        }
+
+        [TestCase("T", "NASDAQ")]
+        [TestCase("Z", "BATS")]
+        [TestCase("N", "NYSE")]
+        [TestCase("P", "ARCA")]
+        [TestCase("", "")]
+        [TestCase(null, "")]
+        public void LevelOneMarketDataShouldMapExchangeStringOnPublishedTicks(string exchange, string expectedExchange)
+        {
+            var levelOneMarketData = new LevelOneMarketData(_aapl);
+            var quoteTick = default(Tick);
+            var tradeTick = default(Tick);
+
+            levelOneMarketData.BaseDataReceived += (_, e) =>
+            {
+                var tick = (Tick)e.BaseData;
+                if (tick.TickType == TickType.Quote)
+                {
+                    quoteTick = tick;
+                }
+                else if (tick.TickType == TickType.Trade)
+                {
+                    tradeTick = tick;
+                }
+            };
+
+            levelOneMarketData.UpdateQuote(_mockDateTime, 1, 1, 1, 1, saleCondition: string.Empty, exchange: exchange);
+            levelOneMarketData.UpdateLastTrade(_mockDateTime, 1, 1, exchange: exchange);
+
+            Assert.IsNotNull(quoteTick, "Expected BaseDataReceived to publish a quote tick.");
+            Assert.IsNotNull(tradeTick, "Expected BaseDataReceived to publish a trade tick.");
+            Assert.AreEqual(expectedExchange, quoteTick.Exchange, "Quote tick exchange mismatch.");
+            Assert.AreEqual(expectedExchange, tradeTick.Exchange, "Trade tick exchange mismatch.");
         }
 
         [TestCase(true, 0, 2)]

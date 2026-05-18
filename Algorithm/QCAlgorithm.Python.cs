@@ -109,7 +109,7 @@ namespace QuantConnect.Algorithm
         [DocumentationAttribute(AddingData)]
         public Security AddData(PyObject type, string ticker, Resolution? resolution, DateTimeZone timeZone, bool fillForward = false, decimal leverage = 1.0m)
         {
-            return AddData(type.CreateType(), ticker, resolution, timeZone, fillForward, leverage);
+            return AddData(GetCustomDataType(type), ticker, resolution, timeZone, fillForward, leverage);
         }
 
         /// <summary>
@@ -135,7 +135,7 @@ namespace QuantConnect.Algorithm
         [DocumentationAttribute(AddingData)]
         public Security AddData(PyObject type, Symbol underlying, Resolution? resolution, DateTimeZone timeZone, bool fillForward = false, decimal leverage = 1.0m)
         {
-            return AddData(type.CreateType(), underlying, resolution, timeZone, fillForward, leverage);
+            return AddData(GetCustomDataType(type), underlying, resolution, timeZone, fillForward, leverage);
         }
 
         /// <summary>
@@ -219,7 +219,7 @@ namespace QuantConnect.Algorithm
         public Security AddData(PyObject type, string ticker, SymbolProperties properties, SecurityExchangeHours exchangeHours, Resolution? resolution = null, bool fillForward = false, decimal leverage = 1.0m)
         {
             // Get the right key for storage of base type symbols
-            var dataType = type.CreateType();
+            var dataType = GetCustomDataType(type);
             var key = SecurityIdentifier.GenerateBaseSymbol(dataType, ticker);
 
             // Add entries to our Symbol Properties DB and MarketHours DB
@@ -282,6 +282,21 @@ namespace QuantConnect.Algorithm
             var security = Securities.CreateSecurity(symbol, config, leverage, addToSymbolCache: false);
 
             return AddToUserDefinedUniverse(security, new List<SubscriptionDataConfig> { config });
+        }
+
+        /// <summary>
+        /// Resolves the custom data <see cref="Type"/> from the PyObject argument of <see cref="AddData(PyObject, string, Resolution?)"/> and overloads,
+        /// throwing a clear exception if the caller passed something other than a custom data class (e.g. a string ticker).
+        /// </summary>
+        private static Type GetCustomDataType(PyObject type)
+        {
+            if (type.TryCreateType(out var dataType))
+            {
+                return dataType;
+            }
+
+            using var _ = Py.GIL();
+            throw new ArgumentException(Messages.QCAlgorithm.AddDataInvalidPyObjectType(type.Repr()));
         }
 
         /// <summary>

@@ -18,7 +18,11 @@ using System;
 namespace QuantConnect.Indicators
 {
     /// <summary>
-    /// This indicator computes the n-period population standard deviation.
+    /// This indicator computes the n-period population standard deviation of its input.
+    /// When the input is a price series, the result is the dispersion of price levels, not
+    /// the asset's volatility. To compute volatility, chain this indicator onto a
+    /// <see cref="LogReturn"/> or <see cref="RateOfChange"/> indicator using
+    /// <see cref="IndicatorExtensions.Of"/>.
     /// </summary>
     public class StandardDeviation : Variance
     {

@@ -57,8 +57,7 @@ specific_indicator_attributes = ['is_ready', 'samples', 'name', 'current', 'upda
 
 def should_ignore(line: str, prev_line_ignored: bool) -> bool:
     result = any(to_ignore in line for to_ignore in (
-        # this (None and object) is just noise the variable was initialized with None or mypy might not be able to resolve base class in some cases
-        'None',
+        # this ('object') is just noise: mypy might not be able to resolve base class in some cases
         '"object"',
         'Name "datetime" is not defined',
         'Name "np" is not defined',
@@ -72,14 +71,15 @@ def should_ignore(line: str, prev_line_ignored: bool) -> bool:
         'Module has no attribute "JsonConvert"',
         'Too many arguments for "update" of "IndicatorBase"',
         'Signature of "update" incompatible with supertype "IndicatorBase"',
-        'has incompatible type "Symbol"; expected "str"',
+        'Signature of "update" incompatible with supertype "QuantConnect.Indicators.IndicatorBase"',
         # This methods take an indicator and consolidator which might be instances of custom
         # indicator/consolidator Python classes that don't inherit from PythonIndicator or IDataConsolidator
         'No overload variant of "register_indicator" of "QCAlgorithm" matches argument types',
         'No overload variant of "warm_up_indicator" of "QCAlgorithm" matches argument types'
     ))
 
-    if result or ('note: ' in line and prev_line_ignored):
+    if result or ('note: ' in line and prev_line_ignored) or\
+        ('None' in line and '[func-returns-value]' not in line):
         return True
 
     # Ignore accessing specific order types properties
@@ -94,7 +94,7 @@ def should_ignore(line: str, prev_line_ignored: bool) -> bool:
 
     # Ignore accessing indicator properties. Useful for instance when adding indicators of different types
     # to a list and then iterating over them, the common type will be IIndicatorWarmUpPeriodProvider
-    indicator_attributes_match = re.search(r'error: "IIndicatorWarmUpPeriodProvider" has no attribute "([^"]+)"', line)
+    indicator_attributes_match = re.search(r'error: "IIndicatorWarmUpPeriodProvider" has no attribute "([^"]+)"', line) or re.search(r'error: "Iterable\[IndicatorDataPoint\]" has no attribute "([^"]+)"', line)
     if indicator_attributes_match and indicator_attributes_match.group(1) in specific_indicator_attributes:
         return True
 
@@ -156,4 +156,4 @@ if __name__ == '__main__':
         log(str(result))
         success_rate = round((sum(result) / len(result)) * 100, 1)
         log(f"SUCCESS RATE {success_rate}% took {time.time() - start_time}s")
-        exit(0 if success_rate >= 98.6 else 1)
+        exit(0 if success_rate >= 99.1 else 1)

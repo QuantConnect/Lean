@@ -39,6 +39,7 @@ using QuantConnect.Packets;
 using QuantConnect.Scheduling;
 using QuantConnect.Securities;
 using QuantConnect.Statistics;
+using QuantConnect.Util;
 using Log = QuantConnect.Logging.Log;
 
 namespace QuantConnect.Tests.Engine
@@ -386,6 +387,36 @@ namespace QuantConnect.Tests.Engine
             {
                 ++Loops;
                 SetStatus(AlgorithmStatus);
+            }
+        }
+
+        [Test]
+        public void RuntimeErrorFromResultHandlerStopsAlgorithm()
+        {
+            ResultHandlerRuntimeErrorTest.Loops = 0;
+            var parameter = new RegressionTests.AlgorithmStatisticsTestParameters(
+                "QuantConnect.Tests.Engine.AlgorithmManagerTests+ResultHandlerRuntimeErrorTest",
+                new Dictionary<string, string>(),
+                Language.CSharp,
+                AlgorithmStatus.RuntimeError);
+
+            AlgorithmRunner.RunLocalBacktest(parameter.Algorithm,
+                parameter.Statistics,
+                parameter.Language,
+                parameter.ExpectedFinalStatus,
+                algorithmLocation: "QuantConnect.Tests.dll");
+
+            Assert.AreEqual(1, ResultHandlerRuntimeErrorTest.Loops);
+        }
+
+        public class ResultHandlerRuntimeErrorTest : BasicTemplateDailyAlgorithm
+        {
+            public static int Loops { get; set; }
+
+            public override void OnData(Slice data)
+            {
+                ++Loops;
+                Composer.Instance.GetPart<IResultHandler>()?.RuntimeError("Brokerage triggered a fatal error");
             }
         }
     }

@@ -17,6 +17,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Collections.Specialized;
+using System.Threading;
 using NodaTime;
 using QuantConnect.Algorithm.Selection;
 using QuantConnect.Data;
@@ -33,6 +34,7 @@ namespace QuantConnect.Algorithm
         // save universe additions and apply at end of time step
         // this removes temporal dependencies from w/in initialize method
         // original motivation: adding equity/options to enforce equity raw data mode
+        private static int _universeCount;
         private readonly object _pendingUniverseAdditionsLock = new object();
         private readonly List<UserDefinedUniverseUpdate> _pendingUserDefinedUniverseSecurityChanges = new();
         private bool _pendingUniverseAdditions;
@@ -686,7 +688,7 @@ namespace QuantConnect.Algorithm
                 market ??= Market.USA;
                 if (string.IsNullOrEmpty(name))
                 {
-                    name = $"{dataType.Name}-{market}-{Guid.NewGuid()}";
+                    name = $"{dataType.Name}-{market}-{Interlocked.Increment(ref _universeCount):D10}-{Guid.NewGuid()}";
                 }
                 // same as 'AddData<>' 'T' type will be treated as custom/base data type with always open market hours
                 universeSymbol = QuantConnect.Symbol.Create(name, SecurityType.Base, market, baseDataType: dataType);

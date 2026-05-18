@@ -2576,20 +2576,86 @@ namespace QuantConnect.Tests.Common.Securities
             Assert.Throws<InvalidOperationException>(() => algorithm.Portfolio.SetAccountCurrency(Currencies.USD));
         }
 
-        [TestCase("SetCash(decimal cash)")]
-        [TestCase("SetCash(string symbol, ...)")]
-        public void CanNotChangeAccountCurrencyAfterSettingCash(string overload)
+        [Test]
+        public void ChangeAccountCurrencyAfterImplicitSetCashRelabelsAmountToNewCurrency()
         {
             var algorithm = new QCAlgorithm();
-            if (overload == "SetCash(decimal cash)")
-            {
-                algorithm.Portfolio.SetCash(10);
-            }
-            else
-            {
-                algorithm.Portfolio.SetCash(Currencies.USD, 1, 1);
-            }
-            Assert.Throws<InvalidOperationException>(() => algorithm.Portfolio.SetAccountCurrency(Currencies.USD));
+            // SetCash(decimal) means "this many units of the (eventual) account currency",
+            // so switching the account currency re-labels the amount instead of preserving USD.
+            algorithm.Portfolio.SetCash(1);
+
+            Assert.DoesNotThrow(() => algorithm.Portfolio.SetAccountCurrency("BTC"));
+
+            Assert.AreEqual("BTC", algorithm.Portfolio.CashBook.AccountCurrency);
+            Assert.AreEqual(1m, algorithm.Portfolio.CashBook["BTC"].Amount);
+            Assert.IsFalse(algorithm.Portfolio.CashBook.ContainsKey(Currencies.USD));
+        }
+
+        [Test]
+        public void ChangeAccountCurrencyAfterExplicitSetCashKeepsPreviousCash()
+        {
+            var algorithm = new QCAlgorithm();
+            // SetCash(symbol, ...) commits cash to a specific currency, so switching the account
+            // currency must keep that balance in its own entry and start the new one at zero.
+            algorithm.Portfolio.SetCash(Currencies.USD, 100000, 1);
+
+            Assert.DoesNotThrow(() => algorithm.Portfolio.SetAccountCurrency("BTC"));
+
+            Assert.AreEqual("BTC", algorithm.Portfolio.CashBook.AccountCurrency);
+            Assert.AreEqual(100000m, algorithm.Portfolio.CashBook[Currencies.USD].Amount);
+            Assert.AreEqual(0m, algorithm.Portfolio.CashBook["BTC"].Amount);
+        }
+
+        [Test]
+        public void ChangeAccountCurrencyAfterImplicitSetCashAppliesStartingCashToNewCurrency()
+        {
+            var algorithm = new QCAlgorithm();
+            algorithm.Portfolio.SetCash(100000);
+
+            algorithm.Portfolio.SetAccountCurrency(Currencies.EUR, 50000);
+
+            Assert.AreEqual(Currencies.EUR, algorithm.Portfolio.CashBook.AccountCurrency);
+            Assert.AreEqual(50000m, algorithm.Portfolio.CashBook[Currencies.EUR].Amount);
+            Assert.IsFalse(algorithm.Portfolio.CashBook.ContainsKey(Currencies.USD));
+        }
+
+        [Test]
+        public void ChangeAccountCurrencyAfterExplicitSetCashAppliesStartingCashToNewCurrency()
+        {
+            var algorithm = new QCAlgorithm();
+            algorithm.Portfolio.SetCash(Currencies.USD, 100000, 1);
+
+            algorithm.Portfolio.SetAccountCurrency(Currencies.EUR, 50000);
+
+            Assert.AreEqual(Currencies.EUR, algorithm.Portfolio.CashBook.AccountCurrency);
+            Assert.AreEqual(100000m, algorithm.Portfolio.CashBook[Currencies.USD].Amount);
+            Assert.AreEqual(50000m, algorithm.Portfolio.CashBook[Currencies.EUR].Amount);
+        }
+
+        [Test]
+        public void SetAccountCurrencyWithSameCurrencyOverridesStartingCash()
+        {
+            var algorithm = new QCAlgorithm();
+            algorithm.Portfolio.SetCash(100000);
+
+            // Calling SetAccountCurrency with the same currency must overwrite the previously
+            // set cash amount instead of keeping the older value.
+            algorithm.Portfolio.SetAccountCurrency(Currencies.USD, 200000);
+
+            Assert.AreEqual(Currencies.USD, algorithm.Portfolio.CashBook.AccountCurrency);
+            Assert.AreEqual(200000m, algorithm.Portfolio.CashBook[Currencies.USD].Amount);
+        }
+
+        [Test]
+        public void SetAccountCurrencyWithSameCurrencyAndNoStartingCashKeepsExistingAmount()
+        {
+            var algorithm = new QCAlgorithm();
+            algorithm.Portfolio.SetCash(100000);
+
+            algorithm.Portfolio.SetAccountCurrency(Currencies.USD);
+
+            Assert.AreEqual(Currencies.USD, algorithm.Portfolio.CashBook.AccountCurrency);
+            Assert.AreEqual(100000m, algorithm.Portfolio.CashBook[Currencies.USD].Amount);
         }
 
         [Test]

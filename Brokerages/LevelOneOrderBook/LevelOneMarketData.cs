@@ -111,7 +111,9 @@ namespace QuantConnect.Brokerages.LevelOneOrderBook
         /// <param name="bidSize">The size available at the best bid.</param>
         /// <param name="askPrice">The best ask price.</param>
         /// <param name="askSize">The size available at the best ask.</param>
-        public void UpdateQuote(DateTime? quoteDateTimeUtc, decimal? bidPrice, decimal? bidSize, decimal? askPrice, decimal? askSize)
+        /// <param name="saleCondition">The sale condition string.</param>
+        /// <param name="exchange">The exchange identifier.</param>
+        public void UpdateQuote(DateTime? quoteDateTimeUtc, decimal? bidPrice, decimal? bidSize, decimal? askPrice, decimal? askSize, string saleCondition, string exchange)
         {
             if (!IsValidTimestamp(quoteDateTimeUtc))
             {
@@ -141,10 +143,24 @@ namespace QuantConnect.Brokerages.LevelOneOrderBook
 
             if (isBidUpdated || isAskUpdated)
             {
-                var lastQuoteTick = new Tick(quoteDateTimeUtc.Value.ConvertFromUtc(SymbolDateTimeZone), Symbol, BestBidSize, BestBidPrice, BestAskSize, BestAskPrice);
+                var lastQuoteTick = new Tick(quoteDateTimeUtc.Value.ConvertFromUtc(SymbolDateTimeZone), Symbol, saleCondition, exchange.GetPrimaryExchange(Symbol.SecurityType), BestBidSize, BestBidPrice, BestAskSize, BestAskPrice);
 
                 BaseDataReceived?.Invoke(this, new(lastQuoteTick));
             }
+        }
+
+        /// <summary>
+        /// Updates the best bid and ask prices and sizes.
+        /// Constructs and publishes a quote <see cref="Tick"/> to the <see cref="IDataAggregator"/>.
+        /// </summary>
+        /// <param name="quoteDateTimeUtc">The UTC timestamp when the quote was received.</param>
+        /// <param name="bidPrice">The best bid price.</param>
+        /// <param name="bidSize">The size available at the best bid.</param>
+        /// <param name="askPrice">The best ask price.</param>
+        /// <param name="askSize">The size available at the best ask.</param>
+        public void UpdateQuote(DateTime? quoteDateTimeUtc, decimal? bidPrice, decimal? bidSize, decimal? askPrice, decimal? askSize)
+        {
+            UpdateQuote(quoteDateTimeUtc, bidPrice, bidSize, askPrice, askSize, string.Empty, string.Empty);
         }
 
         /// <summary>
@@ -175,7 +191,7 @@ namespace QuantConnect.Brokerages.LevelOneOrderBook
                 tradeDateTimeUtc.Value.ConvertFromUtc(SymbolDateTimeZone),
                 Symbol,
                 saleCondition,
-                exchange,
+                exchange.GetPrimaryExchange(Symbol.SecurityType),
                 LastTradeSize,
                 LastTradePrice);
 

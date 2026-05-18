@@ -16,6 +16,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using Python.Runtime;
 
 namespace QuantConnect.Data.UniverseSelection
@@ -25,6 +26,7 @@ namespace QuantConnect.Data.UniverseSelection
     /// </summary>
     public class ETFConstituentsUniverseFactory : ConstituentsUniverse<ETFConstituentUniverse>
     {
+        private static int _universeCount;
         private const string _etfConstituentsUniverseIdentifier = "qc-universe-etf-constituents";
 
         /// <summary>
@@ -56,8 +58,7 @@ namespace QuantConnect.Data.UniverseSelection
         /// <returns>Universe Symbol with ETF set as underlying</returns>
         private static Symbol CreateConstituentUniverseETFSymbol(Symbol compositeSymbol)
         {
-            var guid = Guid.NewGuid().ToString();
-            var universeTicker = _etfConstituentsUniverseIdentifier + '-' + guid;
+            var universeTicker = $"{_etfConstituentsUniverseIdentifier}-{Interlocked.Increment(ref _universeCount):D10}-{Guid.NewGuid()}";
 
             return new Symbol(
                 SecurityIdentifier.GenerateConstituentIdentifier(

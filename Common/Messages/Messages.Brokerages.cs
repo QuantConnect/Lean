@@ -163,7 +163,7 @@ namespace QuantConnect
                 in TimeOnly windowStart,
                 in TimeOnly windowEnd)
             {
-                return Invariant($"MarketOnOpen submission time is invalid. Valid local times are {windowStart: hh\\:mm}–{windowEnd: hh\\:mm}. Consider setting DailyPreciseEndTime = false or using {nameof(Schedule)}.{nameof(Schedule.On)}.");
+                return Invariant($"MarketOnOpen submission time is invalid. Valid local times are {windowStart: hh\\:mm}–{windowEnd: hh\\:mm}. Consider setting {FormatCode(nameof(AlgorithmSettings.DailyPreciseEndTime))} = false or using {FormatCodeRoot(nameof(Schedule))}.{FormatCode(nameof(Schedule.On))}.");
             }
         }
 
@@ -411,7 +411,7 @@ namespace QuantConnect
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public static string InvalidOrderQuantityForLotSize(Securities.Security security)
             {
-                return Invariant($"The order quantity must be a multiple of LotSize: [{security.SymbolProperties.LotSize}].");
+                return Invariant($"The order quantity must be a multiple of {FormatCode("LotSize")}: [{security.SymbolProperties.LotSize}].");
             }
 
             /// <summary>

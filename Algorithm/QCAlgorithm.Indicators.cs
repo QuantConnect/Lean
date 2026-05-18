@@ -2244,7 +2244,11 @@ namespace QuantConnect.Algorithm
         }
 
         /// <summary>
-        /// Creates a new StandardDeviation indicator. This will return the population standard deviation of samples over the specified period.
+        /// Creates a new StandardDeviation indicator. This will return the population standard
+        /// deviation of samples over the specified period. By default, it consumes the security's
+        /// price, so the result is the dispersion of price levels, not the asset's volatility.
+        /// To compute volatility, chain this indicator onto a <see cref="LOGR"/> or
+        /// <see cref="ROC"/> indicator using <see cref="IndicatorExtensions.Of"/>.
         /// </summary>
         /// <param name="symbol">The symbol whose STD we want</param>
         /// <param name="period">The period over which to compute the STD</param>
@@ -2806,6 +2810,28 @@ namespace QuantConnect.Algorithm
             InitializeIndicator(asi, resolution, selector, symbol);
 
             return asi;
+        }
+
+        /// <summary>
+        /// Creates a new WaveTrend Oscillator (WTO) indicator for the symbol.
+        /// The indicator will be automatically updated on the given resolution.
+        /// </summary>
+        /// <param name="symbol">The symbol whose WaveTrend Oscillator we want</param>
+        /// <param name="channelPeriod">The smoothing period for the typical-price EMA and the deviation EMA</param>
+        /// <param name="averagePeriod">The EMA period applied to the channel index to produce the WT1 line</param>
+        /// <param name="signalPeriod">The SMA period applied to WT1 to produce the WT2 signal line</param>
+        /// <param name="resolution">The resolution</param>
+        /// <param name="selector">Selects a value from the BaseData to send into the indicator, if null defaults to casting the input value to a TradeBar</param>
+        /// <returns>The WaveTrendOscillator indicator for the requested symbol</returns>
+        [DocumentationAttribute(Indicators)]
+        public WaveTrendOscillator WTO(Symbol symbol, int channelPeriod, int averagePeriod, int signalPeriod,
+            Resolution? resolution = null, Func<IBaseData, IBaseDataBar> selector = null)
+        {
+            var name = CreateIndicatorName(symbol, $"WTO({channelPeriod},{averagePeriod},{signalPeriod})", resolution);
+            var waveTrendOscillator = new WaveTrendOscillator(name, channelPeriod, averagePeriod, signalPeriod);
+            InitializeIndicator(waveTrendOscillator, resolution, selector, symbol);
+
+            return waveTrendOscillator;
         }
 
         /// <summary>
