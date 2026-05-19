@@ -15,6 +15,7 @@
 */
 
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using NUnit.Framework;
 using QuantConnect.Packets;
@@ -190,6 +191,43 @@ namespace QuantConnect.Tests.Engine.Results
             }
         }
 
+        [Test]
+        public void RetainsDailyStatisticsSamplesAfterChartTrimming()
+        {
+            var resultHandler = new TestableLiveTradingResultHandler();
+            var algorithm = new AlgorithmStub(createDataManager: false);
+            algorithm.SetStartDate(2026, 04, 30);
+            algorithm.SetFinishedWarmingUp();
+            algorithm.PostInitialize();
+            resultHandler.SetAlgorithm(algorithm, 100000);
+
+            for (var i = 0; i < 5; i++)
+            {
+                algorithm.Portfolio.CashBook["USD"].AddAmount(1000);
+                algorithm.Portfolio.InvalidateTotalPortfolioValue();
+                resultHandler.Sample(new DateTime(2026, 05, 01 + i, 0, 0, 0, DateTimeKind.Utc));
+            }
+
+            var charts = new Dictionary<string, Chart>
+            {
+                [BaseResultsHandler.StrategyEquityKey] = resultHandler.Charts[BaseResultsHandler.StrategyEquityKey].Clone(),
+                [BaseResultsHandler.BenchmarkKey] = resultHandler.Charts[BaseResultsHandler.BenchmarkKey].Clone()
+            };
+
+            foreach (var series in charts.Values.SelectMany(chart => chart.Series.Values))
+            {
+                series.Values = series.Values.TakeLast(2).ToList();
+            }
+
+            resultHandler.CallGenerateStatisticsResults(charts);
+
+            Assert.AreEqual(5, charts[BaseResultsHandler.StrategyEquityKey].Series[BaseResultsHandler.EquityKey].Values.Count);
+            Assert.AreEqual(5, charts[BaseResultsHandler.StrategyEquityKey].Series[BaseResultsHandler.ReturnKey].Values.Count);
+            Assert.AreEqual(5, charts[BaseResultsHandler.BenchmarkKey].Series[BaseResultsHandler.BenchmarkKey].Values.Count);
+            Assert.IsTrue(charts.ContainsKey(BaseResultsHandler.PortfolioTurnoverKey));
+            Assert.AreEqual(5, charts[BaseResultsHandler.PortfolioTurnoverKey].Series[BaseResultsHandler.PortfolioTurnoverKey].Values.Count);
+        }
+
         private class TestDataFeed : IDataFeed
         {
             public bool IsActive { get; }
@@ -216,6 +254,14 @@ namespace QuantConnect.Tests.Engine.Results
             }
             public void Exit()
             {
+            }
+        }
+
+        private class TestableLiveTradingResultHandler : LiveTradingResultHandler
+        {
+            public void CallGenerateStatisticsResults(Dictionary<string, Chart> charts)
+            {
+                GenerateStatisticsResults(charts);
             }
         }
     }

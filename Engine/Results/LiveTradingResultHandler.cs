@@ -79,6 +79,16 @@ namespace QuantConnect.Lean.Engine.Results
         private bool _userExchangeIsOpen;
         private DateTime _lastChartSampleLogicCheck;
         private readonly Dictionary<string, SecurityExchangeHours> _exchangeHours;
+        private readonly object _statisticsRetentionLock = new();
+        private readonly Dictionary<string, Dictionary<string, RetainedStatisticsSeries>> _statisticsSeriesRetention = new();
+
+        private static readonly IReadOnlyList<Tuple<string, string>> StatisticsSeries = new[]
+        {
+            Tuple.Create(StrategyEquityKey, EquityKey),
+            Tuple.Create(StrategyEquityKey, ReturnKey),
+            Tuple.Create(BenchmarkKey, BenchmarkKey),
+            Tuple.Create(PortfolioTurnoverKey, PortfolioTurnoverKey)
+        };
 
 
         /// <summary>
@@ -93,6 +103,18 @@ namespace QuantConnect.Lean.Engine.Results
             _samplePortfolioPeriod = _storeInsightPeriod = TimeSpan.FromMinutes(10);
             _streamedChartLimit = Config.GetInt("streamed-chart-limit", 12);
             _streamedChartGroupSize = Config.GetInt("streamed-chart-group-size", 3);
+        }
+
+        /// <summary>
+        /// Samples portfolio equity, benchmark, and daily performance
+        /// Called by scheduled event every night at midnight algorithm time
+        /// </summary>
+        /// <param name="time">Current UTC time in the AlgorithmManager loop</param>
+        public override void Sample(DateTime time)
+        {
+            base.Sample(time);
+
+            RetainStatisticsSamples();
         }
 
         /// <summary>
@@ -643,6 +665,106 @@ namespace QuantConnect.Lean.Engine.Results
                 //Add our value:
                 series.Values.Add(value);
             }
+        }
+
+        /// <summary>
+        /// Will generate the statistics results and update the provided runtime statistics
+        /// </summary>
+        protected override StatisticsResults GenerateStatisticsResults(Dictionary<string, Chart> charts,
+            SortedDictionary<DateTime, decimal> profitLoss = null, CapacityEstimate estimatedStrategyCapacity = null)
+        {
+            MergeRetainedStatisticsSamples(charts);
+
+            return base.GenerateStatisticsResults(charts, profitLoss, estimatedStrategyCapacity);
+        }
+
+        private void RetainStatisticsSamples()
+        {
+            lock (ChartLock)
+            {
+                foreach (var retainedSeries in StatisticsSeries)
+                {
+                    if (Charts.TryGetValue(retainedSeries.Item1, out var chart) &&
+                        chart.Series.TryGetValue(retainedSeries.Item2, out var series) &&
+                        series.Values.Count > 0)
+                    {
+                        RetainStatisticsSample(retainedSeries.Item1, retainedSeries.Item2, series);
+                    }
+                }
+            }
+        }
+
+        private void RetainStatisticsSample(string chartName, string seriesName, BaseSeries series)
+        {
+            var value = series.Values.Last();
+
+            lock (_statisticsRetentionLock)
+            {
+                if (!_statisticsSeriesRetention.TryGetValue(chartName, out var chartRetention))
+                {
+                    chartRetention = new Dictionary<string, RetainedStatisticsSeries>();
+                    _statisticsSeriesRetention[chartName] = chartRetention;
+                }
+
+                if (!chartRetention.TryGetValue(seriesName, out var seriesRetention))
+                {
+                    seriesRetention = new RetainedStatisticsSeries(series.Clone(empty: true));
+                    chartRetention[seriesName] = seriesRetention;
+                }
+
+                var values = seriesRetention.Values;
+                if (values.Count > 0 && values[values.Count - 1].Time == value.Time)
+                {
+                    values[values.Count - 1] = value.Clone();
+                }
+                else
+                {
+                    values.Add(value.Clone());
+                }
+            }
+        }
+
+        private void MergeRetainedStatisticsSamples(Dictionary<string, Chart> charts)
+        {
+            lock (_statisticsRetentionLock)
+            {
+                foreach (var chartRetention in _statisticsSeriesRetention)
+                {
+                    if (!charts.TryGetValue(chartRetention.Key, out var chart))
+                    {
+                        chart = new Chart(chartRetention.Key);
+                        charts[chartRetention.Key] = chart;
+                    }
+
+                    foreach (var seriesRetention in chartRetention.Value)
+                    {
+                        if (!chart.Series.TryGetValue(seriesRetention.Key, out var series))
+                        {
+                            series = seriesRetention.Value.Template.Clone(empty: true);
+                            chart.Series[seriesRetention.Key] = series;
+                        }
+
+                        series.Values = series.Values
+                            .Concat(seriesRetention.Value.Values.Select(x => x.Clone()))
+                            .GroupBy(x => x.Time)
+                            .Select(x => x.Last())
+                            .OrderBy(x => x.Time)
+                            .ToList();
+                    }
+                }
+            }
+        }
+
+        private class RetainedStatisticsSeries
+        {
+            public RetainedStatisticsSeries(BaseSeries template)
+            {
+                Template = template;
+            }
+
+            public BaseSeries Template { get; }
+
+            public List<ISeriesPoint> Values { get; } = new();
         }
 
         /// <summary>
