@@ -194,7 +194,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
-        public long DataPoints => 989;
+        public long DataPoints => 987;
 
         /// <summary>
         /// Data Points count of the algorithm history
@@ -214,29 +214,29 @@ namespace QuantConnect.Algorithm.CSharp
             {"Total Orders", "59"},
             {"Average Win", "0.28%"},
             {"Average Loss", "-0.20%"},
-            {"Compounding Annual Return", "73.882%"},
+            {"Compounding Annual Return", "75.392%"},
             {"Drawdown", "1.100%"},
             {"Expectancy", "0.749"},
             {"Start Equity", "100000"},
             {"End Equity", "105049.17"},
             {"Net Profit", "5.049%"},
-            {"Sharpe Ratio", "7.048"},
-            {"Sortino Ratio", "10.495"},
-            {"Probabilistic Sharpe Ratio", "96.425%"},
+            {"Sharpe Ratio", "7.229"},
+            {"Sortino Ratio", "10.917"},
+            {"Probabilistic Sharpe Ratio", "96.421%"},
             {"Loss Rate", "27%"},
             {"Win Rate", "73%"},
             {"Profit-Loss Ratio", "1.39"},
-            {"Alpha", "0.458"},
-            {"Beta", "0.044"},
-            {"Annual Standard Deviation", "0.066"},
+            {"Alpha", "0.477"},
+            {"Beta", "0.042"},
+            {"Annual Standard Deviation", "0.067"},
             {"Annual Variance", "0.004"},
-            {"Information Ratio", "3.893"},
-            {"Tracking Error", "0.083"},
-            {"Treynor Ratio", "10.5"},
+            {"Information Ratio", "3.991"},
+            {"Tracking Error", "0.084"},
+            {"Treynor Ratio", "11.625"},
             {"Total Fees", "$35.53"},
             {"Estimated Strategy Capacity", "$2600000.00"},
             {"Lowest Capacity Asset", "EURUSD 8G"},
-            {"Portfolio Turnover", "87.56%"},
+            {"Portfolio Turnover", "90.30%"},
             {"Drawdown Recovery", "3"},
             {"OrderListHash", "9af211e68f600642a2aaa58f3bec6380"}
         };
