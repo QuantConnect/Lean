@@ -35,6 +35,7 @@ namespace QuantConnect.Brokerages
         private readonly HashSet<OrderType> _supportedOrderTypes = new()
         {
             OrderType.Market,
+            OrderType.MarketOnOpen,
             OrderType.Limit,
             OrderType.StopMarket,
             OrderType.StopLimit,
