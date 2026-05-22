@@ -543,6 +543,31 @@ namespace QuantConnect.Securities.Future
                     return expiryDate.Add(new TimeSpan(13, 0, 0));
                 })
             },
+            // VIX Mini Futures (VXM): https://cdn.cboe.com/resources/futures/VXM_Contract_Specifications.pdf
+            {Symbol.Create(Futures.Indices.VIXMini, SecurityType.Future, Market.CFE), (time =>
+                {
+                    // Trading occurs 30 days before S&P 500 option expiration (third Friday of contract month).
+                    // Last trading day is the Wednesday 30 days prior to the third Friday of the contract month.
+                    var market = Market.CFE;
+                    var symbol = Futures.Indices.VIXMini;
+                    var nextThirdFriday = FuturesExpiryUtilityFunctions.ThirdFriday(time.AddMonths(1));
+                    var expiryDate = nextThirdFriday.AddDays(-30);
+                    var holidays = FuturesExpiryUtilityFunctions.GetExpirationHolidays(market, symbol);
+
+                    // If the reference 3rd Friday is a holiday, shift expiry back one day per spec.
+                    if (holidays.Contains(nextThirdFriday))
+                    {
+                        expiryDate = expiryDate.AddDays(-1);
+                    }
+                    // Ensure the computed expiry date is itself a valid tradable day.
+                    while (holidays.Contains(expiryDate) || !expiryDate.IsCommonBusinessDay())
+                    {
+                        expiryDate = expiryDate.AddDays(-1);
+                    }
+                    // Trading hours for expiring VXM futures contracts end at 8:00 a.m. Chicago time on the final settlement date.
+                    return expiryDate.Add(new TimeSpan(13, 0, 0));
+                })
+            },
             // Bloomberg Commodity Index (AW): https://www.cmegroup.com/trading/agricultural/commodity-index/bloomberg-commodity-index_contract_specifications.html
             {Symbol.Create(Futures.Indices.BloombergCommodityIndex, SecurityType.Future, Market.CBOT), (time =>
                 {
