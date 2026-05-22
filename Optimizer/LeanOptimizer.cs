@@ -21,6 +21,7 @@ using QuantConnect.Configuration;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Globalization;
+using QuantConnect.Optimizer.Analysis;
 using QuantConnect.Optimizer.Objectives;
 using QuantConnect.Optimizer.Parameters;
 using QuantConnect.Optimizer.Strategies;
@@ -40,6 +41,11 @@ namespace QuantConnect.Optimizer
         private int _failedBacktest;
         private int _completedBacktest;
         private volatile bool _disposed;
+
+        // Accumulates every completed backtest's result so the optimization-level analyzer
+        // can run over the full trial history at TriggerOnEndEvent time. IOptimizationStrategy
+        // only exposes the best Solution, so we maintain our own history here.
+        private readonly List<OptimizationResult> _completedResults = new();
 
         /// <summary>
         /// The total completed backtests count
@@ -185,6 +191,46 @@ namespace QuantConnect.Optimizer
             CleanUpRunningInstance();
             ProcessUpdate(forceSend: true);
 
+            // Run the optimization-level analyzer (Sharpe distribution, clusters, modes,
+            // sensitivity slices, zero-order failure summary) over the full trial history
+            // and attach the result to the OptimizationResult fired via Ended. Guarded by a
+            // config flag and a broad try/catch so analyzer failure never breaks the
+            // optimization itself. Parallels how BacktestingResultHandler.SendFinalResult
+            // attaches Result.Analysis from ResultsAnalyzer.
+            OptimizationAnalysis analysis = null;
+            if (result != null && Config.GetBool("optimization-analysis-enabled", true))
+            {
+                try
+                {
+                    // Map each in-process OptimizationResult to its Common-side analyzer
+                    // input shape so the analyzer (which lives in Common) doesn't have to
+                    // know about this assembly's OptimizationResult type.
+                    var trials = new List<OptimizationTrial>(_completedResults.Count);
+                    foreach (var r in _completedResults)
+                    {
+                        trials.Add(new OptimizationTrial(r.BacktestId, r.ParameterSet, r.JsonBacktestResult));
+                    }
+                    var parameters = new OptimizationAnalysisRunParameters(
+                        trials,
+                        NodePacket.OptimizationParameters);
+                    analysis = new OptimizationAnalyzer(parameters).Run();
+                }
+                catch (Exception ex)
+                {
+                    Log.Error(ex, "Error running optimization analysis");
+                }
+            }
+
+            if (result != null && analysis != null)
+            {
+                // Re-wrap the solution so the analysis travels with the Ended event.
+                result = new OptimizationResult(
+                    result.JsonBacktestResult,
+                    result.ParameterSet,
+                    result.BacktestId,
+                    analysis);
+            }
+
             Ended?.Invoke(this, result);
         }
 
@@ -245,6 +291,12 @@ namespace QuantConnect.Optimizer
                     Interlocked.Increment(ref _completedBacktest);
                     result = new OptimizationResult(jsonBacktestResult, parameterSet, backtestId);
                 }
+
+                // Accumulate completed results so the optimization-level analyzer can run over
+                // the full trial history at TriggerOnEndEvent time. _completedResults is only
+                // read on TriggerOnEndEvent (under the same lock that wraps NewResult), so a
+                // plain List is safe here.
+                _completedResults.Add(result);
 
                 // always notify the strategy
                 Strategy.PushNewResults(result);

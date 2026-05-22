@@ -48,16 +48,26 @@ namespace QuantConnect.Optimizer
         public ParameterSet ParameterSet { get; }
 
         /// <summary>
+        /// Aggregate diagnostic for the whole optimization. Populated only on the single
+        /// <see cref="OptimizationResult"/> emitted via <c>LeanOptimizer.Ended</c> at the end
+        /// of an optimization run; null on per-backtest results pushed during the run and
+        /// on <see cref="Initial"/>.
+        /// </summary>
+        public OptimizationAnalysis Analysis { get; }
+
+        /// <summary>
         /// Create an instance of <see cref="OptimizationResult"/>
         /// </summary>
         /// <param name="jsonBacktestResult">Optimization target value for this backtest</param>
         /// <param name="parameterSet">Parameter set used in compute job</param>
         /// <param name="backtestId">The backtest id that generated this result</param>
-        public OptimizationResult(string jsonBacktestResult, ParameterSet parameterSet, string backtestId)
+        /// <param name="analysis">Aggregate optimization-level diagnostic; only populated on the end-of-optimization result.</param>
+        public OptimizationResult(string jsonBacktestResult, ParameterSet parameterSet, string backtestId, OptimizationAnalysis analysis = null)
         {
             JsonBacktestResult = jsonBacktestResult;
             ParameterSet = parameterSet;
             BacktestId = backtestId;
+            Analysis = analysis;
         }
     }
 }

@@ -16,6 +16,7 @@
 using System;
 using System.Collections.Generic;
 using Newtonsoft.Json;
+using QuantConnect.Optimizer;
 using QuantConnect.Optimizer.Objectives;
 using QuantConnect.Util;
 
@@ -74,6 +75,15 @@ namespace QuantConnect.Api
         /// </summary>
         [JsonConverter(typeof(DateTimeJsonConverter), DateFormat.ISOShort, DateFormat.UI)]
         public DateTime Requested { get; set; }
+
+        /// <summary>
+        /// Aggregate diagnostic of the optimization (Sharpe distribution, parameter sensitivity
+        /// slices, clusters in parameter space, local maxima, zero-order failure breakdown).
+        /// Populated by the optimization analyzer in <c>LeanOptimizer.TriggerOnEndEvent</c>;
+        /// omitted on optimizations that haven't run the analyzer or had no usable trials.
+        /// </summary>
+        [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
+        public OptimizationAnalysis Analysis { get; set; }
     }
 
     /// <summary>
