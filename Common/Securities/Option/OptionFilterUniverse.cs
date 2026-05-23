@@ -71,7 +71,7 @@ namespace QuantConnect.Securities
         /// Constructs OptionFilterUniverse
         /// </summary>
         /// <remarks>Used for testing only</remarks>
-        public OptionFilterUniverse(Option.Option option, IEnumerable<OptionUniverse> allData, BaseData underlying, decimal underlyingScaleFactor = 1)
+        public OptionFilterUniverse(Option.Option option, IReadOnlyList<OptionUniverse> allData, BaseData underlying, decimal underlyingScaleFactor = 1)
             : base(allData, underlying.EndTime)
         {
             _option = option;
@@ -86,7 +86,7 @@ namespace QuantConnect.Securities
         /// <param name="allContractsData">All data for the option contracts</param>
         /// <param name="underlying">The current underlying last data point</param>
         /// <param name="localTime">The current local time</param>
-        public void Refresh(IEnumerable<OptionUniverse> allContractsData, BaseData underlying, DateTime localTime)
+        public void Refresh(IReadOnlyList<OptionUniverse> allContractsData, BaseData underlying, DateTime localTime)
         {
             base.Refresh(allContractsData, localTime);
 
@@ -1037,7 +1037,7 @@ namespace QuantConnect.Securities
         /// </summary>
         private OptionFilterUniverse Empty()
         {
-            Data = Enumerable.Empty<OptionUniverse>();
+            Data = Enumerable.Empty<OptionUniverse>().ToList();
             return this;
         }
 

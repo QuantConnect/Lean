@@ -49,7 +49,7 @@ namespace QuantConnect.Tests.Common.Data.UniverseSelection
         public void TimeTriggeredDoesNotReturnPastTimes()
         {
             // Schedule our universe for 12PM each day
-            using var universe = new ScheduledUniverse( 
+            using var universe = new ScheduledUniverse(
                 _dateRules.EveryDay(), _timeRules.At(12, 0),
                 (time =>
                 {
@@ -84,6 +84,25 @@ namespace QuantConnect.Tests.Common.Data.UniverseSelection
         }
 
         [Test]
+        public void TimeTriggeredDoesNotReturnTimesAfterEndTime()
+        {
+            // Schedule our universe for 12PM each day
+            using var universe = new ScheduledUniverse(
+                _dateRules.EveryDay(), _timeRules.At(12, 0),
+                time => new List<Symbol>()
+            );
+
+            var start = new DateTime(2000, 1, 5, 8, 0, 0).ConvertToUtc(_timezone);
+            var end = new DateTime(2000, 1, 5, 11, 0, 0).ConvertToUtc(_timezone);
+
+            // Get our trigger times
+            var triggerTimes = universe.GetTriggerTimes(start, end, MarketHoursDatabase.AlwaysOpen).ToList();
+
+            // Assert that there are no trigger times because 12PM is after the end time of 11AM
+            Assert.IsEmpty(triggerTimes);
+        }
+
+        [Test]
         public void TriggerTimesNone()
         {
             // Test to see what happens when we expect no trigger times.
@@ -91,7 +110,7 @@ namespace QuantConnect.Tests.Common.Data.UniverseSelection
             // on a single day from 3pm-4pm, meaning we should get none.
             var timezone = TimeZones.NewYork;
             var start = new DateTime(2000, 1, 5, 15, 0, 0);
-            var end = new DateTime(2000, 1, 5, 16,0,0);
+            var end = new DateTime(2000, 1, 5, 16, 0, 0);
 
             var dateRule = _dateRules.EveryDay();
             var timeRule = _timeRules.At(12, 0);

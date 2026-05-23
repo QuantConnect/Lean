@@ -17,6 +17,7 @@ using System;
 using System.Linq;
 using Python.Runtime;
 using System.Collections.Generic;
+using QuantConnect.Util;
 
 namespace QuantConnect.Data.UniverseSelection
 {
@@ -87,7 +88,7 @@ namespace QuantConnect.Data.UniverseSelection
         /// <returns>The data that passes the filter</returns>
         public override IEnumerable<Symbol> SelectSymbols(DateTime utcTime, BaseDataCollection data)
         {
-            return _selector(data.Data.OfType<CoarseFundamental>());
+            return _selector(new CastingEnumerable<BaseData, CoarseFundamental>(data.Data));
         }
 
         /// <summary>

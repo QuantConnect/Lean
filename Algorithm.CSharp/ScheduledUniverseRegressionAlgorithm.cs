@@ -88,7 +88,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
-        public long DataPoints => 1584;
+        public long DataPoints => 1583;
 
         /// <summary>
         /// Data Points count of the algorithm history
@@ -108,29 +108,29 @@ namespace QuantConnect.Algorithm.CSharp
             {"Total Orders", "1"},
             {"Average Win", "0%"},
             {"Average Loss", "0%"},
-            {"Compounding Annual Return", "-87.920%"},
-            {"Drawdown", "1.700%"},
+            {"Compounding Annual Return", "0%"},
+            {"Drawdown", "0%"},
             {"Expectancy", "0"},
             {"Start Equity", "100000"},
             {"End Equity", "98824.68"},
-            {"Net Profit", "-1.175%"},
-            {"Sharpe Ratio", "-5.981"},
+            {"Net Profit", "0%"},
+            {"Sharpe Ratio", "0"},
             {"Sortino Ratio", "0"},
             {"Probabilistic Sharpe Ratio", "0%"},
             {"Loss Rate", "0%"},
             {"Win Rate", "0%"},
             {"Profit-Loss Ratio", "0"},
-            {"Alpha", "-0.002"},
-            {"Beta", "0.996"},
-            {"Annual Standard Deviation", "0.13"},
-            {"Annual Variance", "0.017"},
-            {"Information Ratio", "2.618"},
-            {"Tracking Error", "0.001"},
-            {"Treynor Ratio", "-0.778"},
+            {"Alpha", "0"},
+            {"Beta", "0"},
+            {"Annual Standard Deviation", "0"},
+            {"Annual Variance", "0"},
+            {"Information Ratio", "0"},
+            {"Tracking Error", "0"},
+            {"Treynor Ratio", "0"},
             {"Total Fees", "$3.44"},
             {"Estimated Strategy Capacity", "$56000000.00"},
             {"Lowest Capacity Asset", "SPY R735QTJ8XC9X"},
-            {"Portfolio Turnover", "33.21%"},
+            {"Portfolio Turnover", "49.82%"},
             {"Drawdown Recovery", "0"},
             {"OrderListHash", "3da9fa60bf95b9ed148b95e02e0cfc9e"}
         };

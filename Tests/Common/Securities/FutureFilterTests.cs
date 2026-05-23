@@ -53,7 +53,7 @@ namespace QuantConnect.Tests.Common.Securities
             };
             var data = symbols.Select(x => new FutureUniverse() { Symbol = x });
 
-            var filtered = filter.Filter(new FutureFilterUniverse(data, time)).Select(x => x.Symbol).ToList();
+            var filtered = filter.Filter(new FutureFilterUniverse(data.ToList(), time)).Select(x => x.Symbol).ToList();
             Assert.AreEqual(5, filtered.Count);
             Assert.AreEqual(symbols[3], filtered[0]);
             Assert.AreEqual(symbols[4], filtered[1]);
@@ -86,7 +86,7 @@ namespace QuantConnect.Tests.Common.Securities
             };
             var data = symbols.Select(x => new FutureUniverse() { Symbol = x });
 
-            var filtered = filter.Filter(new FutureFilterUniverse(data, time)).Select(x => x.Symbol).ToList();
+            var filtered = filter.Filter(new FutureFilterUniverse(data.ToList(), time)).Select(x => x.Symbol).ToList();
 
             Assert.AreEqual(expectedCount, filtered.Count);
 
@@ -126,7 +126,7 @@ namespace QuantConnect.Tests.Common.Securities
             };
             var data = symbols.Select(x => new FutureUniverse() { Symbol = x });
 
-            var standardContracts = filter.Filter(new FutureFilterUniverse(data, new DateTime(2020, 1, 1))).Select(x => x.Symbol).ToList();
+            var standardContracts = filter.Filter(new FutureFilterUniverse(data.ToList(), new DateTime(2020, 1, 1))).Select(x => x.Symbol).ToList();
             Assert.AreEqual(6, standardContracts.Count);
             Assert.AreEqual(symbols[0], standardContracts[0]);
             Assert.AreEqual(symbols[1], standardContracts[1]);
@@ -159,7 +159,7 @@ namespace QuantConnect.Tests.Common.Securities
             };
             var data = symbols.Select(x => new FutureUniverse() { Symbol = x });
 
-            var filtered = filter.Filter(new FutureFilterUniverse(data, time)).Select(x => x.Symbol).ToList();
+            var filtered = filter.Filter(new FutureFilterUniverse(data.ToList(), time)).Select(x => x.Symbol).ToList();
             Assert.AreEqual(6, filtered.Count);
             Assert.AreEqual(symbols, filtered);
         }
@@ -187,7 +187,7 @@ namespace QuantConnect.Tests.Common.Securities
             };
             var data = symbols.Select(x => new FutureUniverse() { Symbol = x });
 
-            var filtered = filter.Filter(new FutureFilterUniverse(data, time)).Select(x => x.Symbol).ToList();
+            var filtered = filter.Filter(new FutureFilterUniverse(data.ToList(), time)).Select(x => x.Symbol).ToList();
             Assert.AreEqual(4, filtered.Count);
             Assert.AreEqual(symbols[1], filtered[0]);
             Assert.AreEqual(symbols[2], filtered[1]);
@@ -224,7 +224,7 @@ namespace QuantConnect.Tests.Common.Securities
             };
             var data = symbols.Select(x => new FutureUniverse() { Symbol = x });
 
-            var filtered = filter.Filter(new FutureFilterUniverse(data, new DateTime(2016, 02, 26))).ToList();
+            var filtered = filter.Filter(new FutureFilterUniverse(data.ToList(), new DateTime(2016, 02, 26))).ToList();
             Assert.AreEqual(4, filtered.Count);
         }
 
@@ -257,7 +257,7 @@ namespace QuantConnect.Tests.Common.Securities
             };
             var data = symbols.Select(x => new FutureUniverse() { Symbol = x });
 
-            var filtered = filter.Filter(new FutureFilterUniverse(data, new DateTime(2016, 02, 26))).ToList();
+            var filtered = filter.Filter(new FutureFilterUniverse(data.ToList(), new DateTime(2016, 02, 26))).ToList();
             Assert.AreEqual(3, filtered.Count);
         }
 
@@ -290,7 +290,7 @@ namespace QuantConnect.Tests.Common.Securities
             };
             var data = symbols.Select(x => new FutureUniverse() { Symbol = x });
 
-            var filtered = filter.Filter(new FutureFilterUniverse(data, new DateTime(2016, 02, 26))).ToList();
+            var filtered = filter.Filter(new FutureFilterUniverse(data.ToList(), new DateTime(2016, 02, 26))).ToList();
             Assert.AreEqual(5, filtered.Count);
         }
 
@@ -314,7 +314,7 @@ namespace QuantConnect.Tests.Common.Securities
             var data = symbols.Select(x => new FutureUniverse() { Symbol = x });
 
             // Since this is a unidentifiable symbol for our expiry functions it will return true and be passed through
-            var filtered = filter.Filter(new FutureFilterUniverse(data, time)).Select(x => x.Symbol).ToList();
+            var filtered = filter.Filter(new FutureFilterUniverse(data.ToList(), time)).Select(x => x.Symbol).ToList();
             Assert.AreEqual(1, filtered.Count);
             Assert.AreEqual(symbols[0], filtered[0]);
         }
