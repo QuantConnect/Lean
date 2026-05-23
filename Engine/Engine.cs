@@ -228,6 +228,13 @@ namespace QuantConnect.Lean.Engine
                     // initialize the default brokerage message handler
                     algorithm.BrokerageMessageHandler = factory.CreateBrokerageMessageHandler(algorithm, job, SystemHandlers.Api);
 
+                    // allow the algorithm to trigger a brokerage reconnect (e.g. when it detects a frozen data feed)
+                    algorithm.SetBrokerageReconnectAction(() =>
+                    {
+                        brokerage.Disconnect();
+                        brokerage.Connect();
+                    });
+
                     var brokerageDataQueueHandlers = Composer.Instance.GetParts<IDataQueueHandler>().OfType<IBrokerage>()
                         // In backtesting, brokerages can be used as data downloaders (BrokerageDataDownloader)
                         // and are added to the composer as IBrokerage

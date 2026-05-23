@@ -121,6 +121,8 @@ namespace QuantConnect.Algorithm
         private IStatisticsService _statisticsService;
         private IBrokerageModel _brokerageModel;
 
+        private Action _brokerageReconnectAction;
+
         private bool _sentBroadcastCommandsDisabled;
         private readonly HashSet<string> _oneTimeCommandErrors = new();
         private readonly Dictionary<string, Func<CallbackCommand, bool?>> _registeredCommands = new(StringComparer.InvariantCultureIgnoreCase);
@@ -1422,6 +1424,33 @@ namespace QuantConnect.Algorithm
         public void SetBrokerageMessageHandler(IBrokerageMessageHandler handler)
         {
             BrokerageMessageHandler = handler ?? throw new ArgumentNullException(nameof(handler));
+        }
+
+        /// <summary>
+        /// Sets the action used to reconnect the brokerage. Intended for internal use by the Lean engine only.
+        /// </summary>
+        /// <param name="reconnectAction">The action that performs the disconnect/connect cycle</param>
+        [DocumentationAttribute(LiveTrading)]
+        public void SetBrokerageReconnectAction(Action reconnectAction)
+        {
+            _brokerageReconnectAction = reconnectAction ?? throw new ArgumentNullException(nameof(reconnectAction));
+        }
+
+        /// <summary>
+        /// Triggers a brokerage disconnect/reconnect cycle. Use this when the algorithm detects
+        /// a data quality issue (e.g. a frozen market data feed) and needs to self-heal without
+        /// human intervention. Only meaningful in live trading; no-op in backtesting.
+        /// </summary>
+        [DocumentationAttribute(LiveTrading)]
+        public void ReconnectBrokerage()
+        {
+            if (_brokerageReconnectAction == null)
+            {
+                Debug("ReconnectBrokerage(): no reconnect action registered, ignoring.");
+                return;
+            }
+            Log("ReconnectBrokerage(): triggering brokerage reconnect.");
+            _brokerageReconnectAction();
         }
 
         /// <summary>

@@ -1032,6 +1032,12 @@ namespace QuantConnect.AlgorithmFactory.Python.Wrappers
         /// <param name="handler">The message handler to use</param>
         public void SetBrokerageMessageHandler(IBrokerageMessageHandler handler) => _baseAlgorithm.SetBrokerageMessageHandler(handler);
 
+        /// <inheritdoc />
+        public void SetBrokerageReconnectAction(Action reconnectAction) => _baseAlgorithm.SetBrokerageReconnectAction(reconnectAction);
+
+        /// <inheritdoc />
+        public void ReconnectBrokerage() => _baseAlgorithm.ReconnectBrokerage();
+
         /// <summary>
         /// Sets the brokerage model used to resolve transaction models, settlement models,
         /// and brokerage specified ordering behaviors.

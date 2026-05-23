@@ -831,6 +831,19 @@ namespace QuantConnect.Interfaces
         void SetBrokerageMessageHandler(IBrokerageMessageHandler handler);
 
         /// <summary>
+        /// Sets the action used to reconnect the brokerage. Intended for internal use by the Lean engine only.
+        /// </summary>
+        /// <param name="reconnectAction">The action that performs the disconnect/connect cycle</param>
+        void SetBrokerageReconnectAction(Action reconnectAction);
+
+        /// <summary>
+        /// Triggers a brokerage disconnect/reconnect cycle. Use this when the algorithm detects
+        /// a data quality issue (e.g. a frozen market data feed) and needs to self-heal without
+        /// human intervention. Only meaningful in live trading; no-op in backtesting.
+        /// </summary>
+        void ReconnectBrokerage();
+
+        /// <summary>
         /// Set the historical data provider
         /// </summary>
         /// <param name="historyProvider">Historical data provider</param>
