@@ -129,8 +129,6 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Optimization
                 if (absSlope > maxAbsDerivative) maxAbsDerivative = absSlope;
             }
 
-            var curveType = points.Count >= 2 ? "piecewise linear" : "single point";
-
             var fixedParams = new Dictionary<string, double>();
             if (otherParamNames.Count > 0)
             {
@@ -148,7 +146,6 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Optimization
                 SharpeValues = ys,
                 SharpeRange = sharpeRange,
                 MaxAbsDerivative = maxAbsDerivative,
-                CurveType = curveType,
                 IsPrimary = isPrimary,
                 Segments = segments
             };

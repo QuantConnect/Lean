@@ -54,11 +54,6 @@ namespace QuantConnect.Optimizer
         public double MaxAbsDerivative { get; set; }
 
         /// <summary>
-        /// Human-readable curve label. Either "piecewise linear" or "single point".
-        /// </summary>
-        public string CurveType { get; set; }
-
-        /// <summary>
         /// True for exactly one slice per parameter: the slice whose fixed parameters match
         /// the values at the best trial.
         /// </summary>
