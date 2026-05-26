@@ -131,20 +131,12 @@ namespace QuantConnect.Brokerages
             // Options and IndexOptions have per-direction TimeInForce restrictions.
             // https://developer.webull.com/apis/docs/trade-api/options#time-in-force
             // - Sell orders: Day only
-            // - Buy orders: GoodTilCanceled only
             if (security.Type == SecurityType.Option || security.Type == SecurityType.IndexOption)
             {
                 if (order.Direction == OrderDirection.Sell && order.TimeInForce is not DayTimeInForce)
                 {
                     message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
                         Messages.WebullBrokerageModel.InvalidTimeInForceForOptionSellOrder(order));
-                    return false;
-                }
-
-                if (order.Direction == OrderDirection.Buy && order.TimeInForce is not GoodTilCanceledTimeInForce)
-                {
-                    message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
-                        Messages.WebullBrokerageModel.InvalidTimeInForceForOptionBuyOrder(order));
                     return false;
                 }
             }
