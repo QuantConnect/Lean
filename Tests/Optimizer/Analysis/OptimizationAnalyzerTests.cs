@@ -16,6 +16,7 @@
 
 using Newtonsoft.Json;
 using NUnit.Framework;
+using QuantConnect.Lean.Engine.Results.Analysis.Optimization;
 using QuantConnect.Optimizer;
 using QuantConnect.Optimizer.Analysis;
 using QuantConnect.Optimizer.Parameters;
@@ -39,11 +40,11 @@ namespace QuantConnect.Tests.Optimizer.Analysis
                 { 0.18, 0.28, 0.38 }
             };
 
-            var results = BuildGridResults(sharpes, totalOrders: 5);
+            var trials = BuildGridTrials(sharpes, totalOrders: 5);
             var parameters = BuildGridParameters(xCount: 3, yCount: 3);
-            var analyzer = new OptimizationAnalyzer(new OptimizationAnalysisRunParameters(results, parameters));
+            var analyzer = new OptimizationAnalyzer();
 
-            var analysis = analyzer.Run();
+            var analysis = analyzer.Run(new OptimizationAnalysisRunParameters(trials, parameters));
 
             Assert.NotNull(analysis);
             Assert.AreEqual(9, analysis.TrialCountUsed);
@@ -65,9 +66,9 @@ namespace QuantConnect.Tests.Optimizer.Analysis
                 { 0.18, 0.28, 0.99 } // peak at (2, 2)
             };
 
-            var results = BuildGridResults(sharpes, totalOrders: 5);
+            var trials = BuildGridTrials(sharpes, totalOrders: 5);
             var parameters = BuildGridParameters(xCount: 3, yCount: 3);
-            var analysis = new OptimizationAnalyzer(new OptimizationAnalysisRunParameters(results, parameters)).Run();
+            var analysis = new OptimizationAnalyzer().Run(new OptimizationAnalysisRunParameters(trials, parameters));
 
             Assert.NotNull(analysis.Best);
             Assert.AreEqual(0.99, analysis.Best.SharpeRatio, 1e-9);
@@ -87,9 +88,9 @@ namespace QuantConnect.Tests.Optimizer.Analysis
                 { 0.10, 0.20, 0.10 }
             };
 
-            var results = BuildGridResults(sharpes, totalOrders: 5);
+            var trials = BuildGridTrials(sharpes, totalOrders: 5);
             var parameters = BuildGridParameters(xCount: 3, yCount: 3);
-            var analysis = new OptimizationAnalyzer(new OptimizationAnalysisRunParameters(results, parameters)).Run();
+            var analysis = new OptimizationAnalyzer().Run(new OptimizationAnalysisRunParameters(trials, parameters));
 
             Assert.AreEqual(1, analysis.Modes.Count);
             Assert.AreEqual(0.99, analysis.Modes[0].SharpeRatio, 1e-9);
@@ -106,9 +107,9 @@ namespace QuantConnect.Tests.Optimizer.Analysis
                 { 0.30, 0.40 }
             };
 
-            var results = BuildGridResults(sharpes, totalOrders: 5);
+            var trials = BuildGridTrials(sharpes, totalOrders: 5);
             var parameters = BuildGridParameters(xCount: 2, yCount: 2);
-            var analysis = new OptimizationAnalyzer(new OptimizationAnalysisRunParameters(results, parameters)).Run();
+            var analysis = new OptimizationAnalyzer().Run(new OptimizationAnalysisRunParameters(trials, parameters));
 
             Assert.LessOrEqual(analysis.Clusters.Count, 2);
         }
@@ -123,12 +124,12 @@ namespace QuantConnect.Tests.Optimizer.Analysis
                 { 0.0, 0.0 }
             };
 
-            var results = BuildGridResults(
+            var trials = BuildGridTrials(
                 sharpes,
                 totalOrders: 0,
                 analysisNames: new[] { "FlatEquityCurveAnalysis", "ExecutionSpeedAnalysis" });
             var parameters = BuildGridParameters(xCount: 2, yCount: 2);
-            var analysis = new OptimizationAnalyzer(new OptimizationAnalysisRunParameters(results, parameters)).Run();
+            var analysis = new OptimizationAnalyzer().Run(new OptimizationAnalysisRunParameters(trials, parameters));
 
             Assert.NotNull(analysis.FailedBacktests);
             Assert.AreEqual(4, analysis.FailedBacktests.ZeroOrderCount);
@@ -146,21 +147,41 @@ namespace QuantConnect.Tests.Optimizer.Analysis
                 { 0.30, 0.40 }
             };
 
-            var results = BuildGridResults(sharpes, totalOrders: 5);
+            var trials = BuildGridTrials(sharpes, totalOrders: 5);
             var parameters = BuildGridParameters(xCount: 2, yCount: 2);
-            var analysis = new OptimizationAnalyzer(new OptimizationAnalysisRunParameters(results, parameters)).Run();
+            var analysis = new OptimizationAnalyzer().Run(new OptimizationAnalysisRunParameters(trials, parameters));
 
             Assert.IsNull(analysis.FailedBacktests);
         }
 
+        [Test]
+        public void ExtractFrom_ParsesSharpeAndAnalysisNamesFromBacktestJson()
+        {
+            // Verifies the on-the-fly extraction path: given the same backtest-result JSON shape
+            // LeanOptimizer.NewResult receives, ExtractFrom pulls out Sharpe / Total Orders /
+            // Analysis tags.
+            var parameterSet = new ParameterSet(0, new Dictionary<string, string> { ["x"] = "1", ["y"] = "10" });
+            var json = BuildBacktestJson(0.75, totalOrders: 12, new[] { "FlatEquityCurveAnalysis" });
+
+            var metrics = OptimizationTrialMetrics.ExtractFrom("bt-0", parameterSet, json);
+
+            Assert.NotNull(metrics);
+            Assert.IsTrue(metrics.HasSharpe);
+            Assert.AreEqual(0.75, metrics.Sharpe, 1e-9);
+            Assert.AreEqual(12, metrics.TotalOrders);
+            CollectionAssert.AreEqual(new[] { "FlatEquityCurveAnalysis" }, metrics.AnalysisNames.ToArray());
+            Assert.AreEqual(1.0, metrics.Parameters["x"], 1e-9);
+            Assert.AreEqual(10.0, metrics.Parameters["y"], 1e-9);
+        }
+
         // ── helpers ──────────────────────────────────────────────────────────────
 
-        private static List<OptimizationTrial> BuildGridResults(
+        private static List<OptimizationTrialMetrics> BuildGridTrials(
             double[,] sharpes,
             int totalOrders,
             string[] analysisNames = null)
         {
-            var results = new List<OptimizationTrial>();
+            var trials = new List<OptimizationTrialMetrics>();
             var xCount = sharpes.GetLength(0);
             var yCount = sharpes.GetLength(1);
             var id = 0;
@@ -173,12 +194,15 @@ namespace QuantConnect.Tests.Optimizer.Analysis
                         ["x"] = (i + 1).ToString(CultureInfo.InvariantCulture),
                         ["y"] = ((j + 1) * 10).ToString(CultureInfo.InvariantCulture)
                     });
+                    // Exercise the real extraction factory so the test mirrors what LeanOptimizer
+                    // does at NewResult time. Drives both the JSON path and the parameter
+                    // parsing in a single line, keeping the on-the-fly contract under test.
                     var json = BuildBacktestJson(sharpes[i, j], totalOrders, analysisNames);
-                    results.Add(new OptimizationTrial($"backtest-{id}", paramSet, json));
+                    trials.Add(OptimizationTrialMetrics.ExtractFrom($"backtest-{id}", paramSet, json));
                     id++;
                 }
             }
-            return results;
+            return trials;
         }
 
         private static string BuildBacktestJson(double sharpe, int totalOrders, string[] analysisNames)

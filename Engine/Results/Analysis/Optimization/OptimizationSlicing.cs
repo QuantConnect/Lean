@@ -14,13 +14,14 @@
  *
 */
 
+using QuantConnect.Optimizer;
 using QuantConnect.Optimizer.Parameters;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 
-namespace QuantConnect.Optimizer.Analysis
+namespace QuantConnect.Lean.Engine.Results.Analysis.Optimization
 {
     /// <summary>
     /// Per-parameter sensitivity analysis. For each optimized parameter, builds a set of
@@ -32,8 +33,8 @@ namespace QuantConnect.Optimizer.Analysis
     {
         public static ParameterReport AnalyzeParameter(
             OptimizationParameter parameter,
-            IReadOnlyList<TrialRecord> trials,
-            TrialRecord best)
+            IReadOnlyList<OptimizationTrialMetrics> trials,
+            OptimizationTrialMetrics best)
         {
             var name = parameter.Name;
             var owning = trials.Where(t => t.Parameters.ContainsKey(name)).ToList();
@@ -46,10 +47,10 @@ namespace QuantConnect.Optimizer.Analysis
                 .ToList();
 
             // Group trials by the values held constant in other parameters — each group is one 1-D slice.
-            IEnumerable<IGrouping<string, TrialRecord>> grouped = otherParamNames.Count == 0
+            IEnumerable<IGrouping<string, OptimizationTrialMetrics>> grouped = otherParamNames.Count == 0
                 ? new[] { owning.GroupBy(_ => "").FirstOrDefault() }
                       .Where(g => g != null)
-                      .Cast<IGrouping<string, TrialRecord>>()
+                      .Cast<IGrouping<string, OptimizationTrialMetrics>>()
                 : owning.GroupBy(t => SliceKey(t, otherParamNames));
 
             var primaryKey = otherParamNames.Count == 0 ? "" : SliceKey(best, otherParamNames);
@@ -90,7 +91,7 @@ namespace QuantConnect.Optimizer.Analysis
         }
 
         private static SliceFit BuildSlice(
-            List<TrialRecord> trials,
+            List<OptimizationTrialMetrics> trials,
             string varyingParamName,
             IReadOnlyList<string> otherParamNames,
             bool isPrimary)
@@ -155,7 +156,7 @@ namespace QuantConnect.Optimizer.Analysis
 
         private static (double Min, double Max, double? Step) ExtractGridSpec(
             OptimizationParameter parameter,
-            IReadOnlyList<TrialRecord> owning,
+            IReadOnlyList<OptimizationTrialMetrics> owning,
             string name)
         {
             if (parameter is OptimizationStepParameter step)
@@ -184,7 +185,7 @@ namespace QuantConnect.Optimizer.Analysis
             return Math.Abs(value - min) <= tol || Math.Abs(value - max) <= tol;
         }
 
-        private static string SliceKey(TrialRecord t, IReadOnlyList<string> otherParamNames)
+        private static string SliceKey(OptimizationTrialMetrics t, IReadOnlyList<string> otherParamNames)
         {
             return string.Join("|", otherParamNames.Select(p =>
                 (t.Parameters.TryGetValue(p, out var v) ? v : double.NaN)

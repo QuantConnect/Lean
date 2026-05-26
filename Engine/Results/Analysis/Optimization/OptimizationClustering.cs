@@ -14,12 +14,13 @@
  *
 */
 
+using QuantConnect.Optimizer;
 using QuantConnect.Optimizer.Parameters;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace QuantConnect.Optimizer.Analysis
+namespace QuantConnect.Lean.Engine.Results.Analysis.Optimization
 {
     /// <summary>
     /// K-means clustering of trials in standardized parameter space, with k chosen by an
@@ -36,7 +37,7 @@ namespace QuantConnect.Optimizer.Analysis
         private const double PlateauThreshold = 0.7;
 
         public static IReadOnlyList<Cluster> Build(
-            IReadOnlyList<TrialRecord> trials,
+            IReadOnlyList<OptimizationTrialMetrics> trials,
             IReadOnlyCollection<OptimizationParameter> parameters)
         {
             var output = new List<Cluster>();

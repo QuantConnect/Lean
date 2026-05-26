@@ -14,11 +14,12 @@
  *
 */
 
+using QuantConnect.Optimizer;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace QuantConnect.Optimizer.Analysis
+namespace QuantConnect.Lean.Engine.Results.Analysis.Optimization
 {
     /// <summary>
     /// Aggregates failure-mode signals across backtests that produced zero orders. For up to
@@ -32,7 +33,7 @@ namespace QuantConnect.Optimizer.Analysis
         // common failure modes, not an exhaustive census.
         private const int MaxBacktestsToInspect = 10;
 
-        public static FailedBacktestSummary Build(IReadOnlyList<TrialRecord> trials)
+        public static FailedBacktestSummary Build(IReadOnlyList<OptimizationTrialMetrics> trials)
         {
             if (trials == null) return null;
 

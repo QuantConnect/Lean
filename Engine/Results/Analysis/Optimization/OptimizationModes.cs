@@ -14,12 +14,13 @@
  *
 */
 
+using QuantConnect.Optimizer;
 using QuantConnect.Optimizer.Parameters;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 
-namespace QuantConnect.Optimizer.Analysis
+namespace QuantConnect.Lean.Engine.Results.Analysis.Optimization
 {
     /// <summary>
     /// Detects local maxima of the Sharpe surface on the parameter grid: trials whose
@@ -31,7 +32,7 @@ namespace QuantConnect.Optimizer.Analysis
     internal static class OptimizationModes
     {
         public static IReadOnlyList<Mode> Find(
-            IReadOnlyList<TrialRecord> trials,
+            IReadOnlyList<OptimizationTrialMetrics> trials,
             IReadOnlyCollection<OptimizationParameter> parameters)
         {
             var modes = new List<Mode>();
@@ -53,7 +54,7 @@ namespace QuantConnect.Optimizer.Analysis
             }
 
             // Map each trial to its grid position (one index per parameter).
-            var indexed = new List<(TrialRecord Trial, int[] Indices)>();
+            var indexed = new List<(OptimizationTrialMetrics Trial, int[] Indices)>();
             foreach (var t in trials)
             {
                 if (!paramNames.All(t.Parameters.ContainsKey)) continue;

@@ -42,10 +42,13 @@ namespace QuantConnect.Optimizer
         private int _completedBacktest;
         private volatile bool _disposed;
 
-        // Accumulates every completed backtest's result so the optimization-level analyzer
-        // can run over the full trial history at TriggerOnEndEvent time. IOptimizationStrategy
-        // only exposes the best Solution, so we maintain our own history here.
-        private readonly List<OptimizationResult> _completedResults = new();
+        // Accumulates per-trial *metrics* (not the full backtest result) so the optimization-
+        // level analyzer can run over the full trial history at TriggerOnEndEvent time.
+        // IOptimizationStrategy only exposes the best Solution, so we maintain our own history
+        // here. Each entry is small (~hundreds of bytes); the heavy JsonBacktestResult string
+        // is parsed once in NewResult and then dropped to keep optimization memory bounded
+        // even when running thousands of backtests.
+        private readonly List<OptimizationTrialMetrics> _completedTrials = new();
 
         /// <summary>
         /// The total completed backtests count
@@ -97,6 +100,15 @@ namespace QuantConnect.Optimizer
         /// Event triggered when the optimization work ended
         /// </summary>
         public event EventHandler<OptimizationResult> Ended;
+
+        /// <summary>
+        /// Optional optimization-level analyzer. When set (typically by the launcher with the
+        /// Engine-side implementation), runs at <see cref="TriggerOnEndEvent"/> over the
+        /// accumulated trial metrics and attaches the resulting <see cref="OptimizationAnalysis"/>
+        /// to the <see cref="Ended"/> event's <see cref="OptimizationResult.Analysis"/>. Kept as
+        /// an injected dependency so this assembly does not need to reference Engine.
+        /// </summary>
+        public IOptimizationAnalyzer Analyzer { get; set; }
 
         /// <summary>
         /// Creates a new instance
@@ -198,22 +210,14 @@ namespace QuantConnect.Optimizer
             // optimization itself. Parallels how BacktestingResultHandler.SendFinalResult
             // attaches Result.Analysis from ResultsAnalyzer.
             OptimizationAnalysis analysis = null;
-            if (result != null && Config.GetBool("optimization-analysis-enabled", true))
+            if (result != null && Analyzer != null && Config.GetBool("optimization-analysis-enabled", true))
             {
                 try
                 {
-                    // Map each in-process OptimizationResult to its Common-side analyzer
-                    // input shape so the analyzer (which lives in Common) doesn't have to
-                    // know about this assembly's OptimizationResult type.
-                    var trials = new List<OptimizationTrial>(_completedResults.Count);
-                    foreach (var r in _completedResults)
-                    {
-                        trials.Add(new OptimizationTrial(r.BacktestId, r.ParameterSet, r.JsonBacktestResult));
-                    }
                     var parameters = new OptimizationAnalysisRunParameters(
-                        trials,
+                        _completedTrials,
                         NodePacket.OptimizationParameters);
-                    analysis = new OptimizationAnalyzer(parameters).Run();
+                    analysis = Analyzer.Run(parameters);
                 }
                 catch (Exception ex)
                 {
@@ -292,11 +296,16 @@ namespace QuantConnect.Optimizer
                     result = new OptimizationResult(jsonBacktestResult, parameterSet, backtestId);
                 }
 
-                // Accumulate completed results so the optimization-level analyzer can run over
-                // the full trial history at TriggerOnEndEvent time. _completedResults is only
-                // read on TriggerOnEndEvent (under the same lock that wraps NewResult), so a
-                // plain List is safe here.
-                _completedResults.Add(result);
+                // Extract the small per-trial metrics now, while the JSON is in hand, so we
+                // don't have to retain the heavy JsonBacktestResult string for every backtest.
+                // _completedTrials is only read on TriggerOnEndEvent (under the same lock that
+                // wraps NewResult), so a plain List is safe here. Failed/empty results extract
+                // to null and are skipped — the analyzer needs Sharpe to be useful.
+                var metrics = OptimizationTrialMetrics.ExtractFrom(backtestId, parameterSet, jsonBacktestResult);
+                if (metrics != null)
+                {
+                    _completedTrials.Add(metrics);
+                }
 
                 // always notify the strategy
                 Strategy.PushNewResults(result);

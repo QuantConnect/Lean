@@ -20,18 +20,18 @@ using System.Collections.Generic;
 namespace QuantConnect.Optimizer.Analysis
 {
     /// <summary>
-    /// Bundles the inputs needed by <see cref="OptimizationAnalyzer"/>: the full list of
-    /// completed trials from a finished optimization and the parameter grid spec that
-    /// drove it. The optimization-side analogue of <c>ResultsAnalysisRunParameters</c>
+    /// Bundles the inputs needed by <see cref="OptimizationAnalyzer"/>: the per-trial metrics
+    /// extracted as each backtest completed, and the parameter grid spec that drove the
+    /// optimization. The optimization-side analogue of <c>ResultsAnalysisRunParameters</c>
     /// (which serves the backtest analyzer in Engine).
     /// </summary>
     public class OptimizationAnalysisRunParameters
     {
         /// <summary>
-        /// All completed trials from the optimization (one per backtest), already mapped
-        /// to the Common-side <see cref="OptimizationTrial"/> shape that the analyzer reads.
+        /// All completed trials from the optimization (one per backtest), already reduced to
+        /// the small extracted shape the analyzer reads. Heavy JSON payloads are not retained.
         /// </summary>
-        public IReadOnlyList<OptimizationTrial> CompletedTrials { get; }
+        public IReadOnlyList<OptimizationTrialMetrics> CompletedTrials { get; }
 
         /// <summary>
         /// The optimization parameter grid spec (used for searched-min/max/step bounds and to
@@ -42,10 +42,10 @@ namespace QuantConnect.Optimizer.Analysis
         /// <summary>
         /// Initializes a new instance of the <see cref="OptimizationAnalysisRunParameters"/> class.
         /// </summary>
-        /// <param name="completedTrials">The completed trials.</param>
+        /// <param name="completedTrials">The completed trials, already extracted.</param>
         /// <param name="optimizationParameters">The parameter grid spec.</param>
         public OptimizationAnalysisRunParameters(
-            IReadOnlyList<OptimizationTrial> completedTrials,
+            IReadOnlyList<OptimizationTrialMetrics> completedTrials,
             IReadOnlyCollection<OptimizationParameter> optimizationParameters)
         {
             CompletedTrials = completedTrials;

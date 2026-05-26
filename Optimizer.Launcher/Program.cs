@@ -15,6 +15,7 @@
 
 using Newtonsoft.Json;
 using QuantConnect.Configuration;
+using QuantConnect.Lean.Engine.Results.Analysis.Optimization;
 using QuantConnect.Logging;
 using QuantConnect.Optimizer.Objectives;
 using QuantConnect.Optimizer.Parameters;
@@ -73,6 +74,11 @@ namespace QuantConnect.Optimizer.Launcher
 
                 var optimizerType = Config.Get("optimization-launcher", typeof(ConsoleLeanOptimizer).Name);
                 var optimizer = (LeanOptimizer)Activator.CreateInstance(Composer.Instance.GetExportedTypes<LeanOptimizer>().Single(x => x.Name == optimizerType), packet);
+
+                // Wire the Engine-side optimization analyzer via property injection. Keeping
+                // the construction here (rather than inside LeanOptimizer) lets the Optimizer
+                // assembly stay independent of Engine; only the launcher takes that dependency.
+                optimizer.Analyzer = new OptimizationAnalyzer();
 
                 if (Config.GetBool("estimate", false))
                 {
