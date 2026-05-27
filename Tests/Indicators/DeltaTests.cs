@@ -131,6 +131,27 @@ namespace QuantConnect.Tests.Indicators
             Assert.AreEqual(refDelta, (double)indicator.Current.Value, 0.0017d);
         }
 
+        [Test]
+        public void IVAndDeltaAreNonZeroForPMSettledIndexOptionOnExpirationDay()
+        {
+            // SPXW expiring on the 3rd Friday is PM-settled (15:15 CT),
+            // so at 10 AM the contract still has time value — IV and Delta must be non-zero.
+            var thirdFriday = new DateTime(2016, 02, 19);
+            var spxwSymbol = Symbol.CreateOption(Symbols.SPX, "SPXW", Market.USA, OptionStyle.European,
+                OptionRight.Call, 1900m, thirdFriday);
+
+            var delta = new Delta(spxwSymbol, 0.005m, 0.02m, optionModel: OptionPricingModelType.BlackScholes,
+                ivModel: OptionPricingModelType.BlackScholes);
+
+            var currentTime = new DateTime(2016, 02, 19, 10, 0, 0);
+            delta.Update(new IndicatorDataPoint(spxwSymbol, currentTime, 20m));
+            delta.Update(new IndicatorDataPoint(spxwSymbol.Underlying, currentTime, 1900m));
+
+            Assert.IsTrue(delta.IsReady);
+            Assert.IsTrue(delta.ImpliedVolatility.Current.Value > 0);
+            Assert.IsTrue(delta.Current.Value > 0);
+        }
+
         [TestCase(0.5, 470.0, OptionRight.Put, 0)]
         [TestCase(0.5, 470.0, OptionRight.Put, 5)]
         [TestCase(0.5, 470.0, OptionRight.Put, 10)]
