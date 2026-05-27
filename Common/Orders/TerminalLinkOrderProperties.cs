@@ -75,6 +75,20 @@ namespace QuantConnect.Orders
         public string Broker { get; set; }
 
         /// <summary>
+        /// The EMSX locate broker code identifying the counterparty the shares are being borrowed
+        /// from for a short sale (EMSX_LOCATE_BROKER, e.g. "BMTB"). Maps to the LocBrkr field on
+        /// the EMSX trading ticket. Setting this (or <see cref="LocateId"/>) on a short equity sale
+        /// causes the brokerage to emit EMSX_LOCATE_REQ = "Y" alongside.
+        /// </summary>
+        public string LocateBroker { get; set; }
+
+        /// <summary>
+        /// The EMSX locate confirmation/ticket id returned by the lending broker (EMSX_LOCATE_ID).
+        /// Maps to the LocId field on the EMSX trading ticket.
+        /// </summary>
+        public string LocateId { get; set; }
+
+        /// <summary>
         /// The EMSX order strategy details.
         /// Strategy parameters must be appended in the correct order as expected by EMSX.
         /// </summary>
