@@ -14,6 +14,7 @@
 */
 
 using System.Collections.Generic;
+using QuantConnect.Logging;
 using QuantConnect.Orders;
 using QuantConnect.Orders.Fees;
 using QuantConnect.Orders.TimeInForces;
@@ -26,6 +27,11 @@ namespace QuantConnect.Brokerages
     /// </summary>
     public class WebullBrokerageModel : DefaultBrokerageModel
     {
+        /// <summary>
+        /// Flag to track if we've already logged a message about market orders only supporting Day TIF. We only want to log this once to avoid spamming the logs.
+        /// </summary>
+        private bool _marketOrderDayTimeInForceLogged;
+
         /// <summary>
         /// Maps each supported security type to the order types Webull allows for it.
         /// </summary>
@@ -57,24 +63,6 @@ namespace QuantConnect.Brokerages
                         OrderType.Market,
                         OrderType.Limit,
                         OrderType.StopMarket,
-                        OrderType.StopLimit
-                    }
-                },
-                {
-                    SecurityType.Future, new HashSet<OrderType>
-                    {
-                        OrderType.Market,
-                        OrderType.Limit,
-                        OrderType.StopMarket,
-                        OrderType.StopLimit,
-                        OrderType.TrailingStop
-                    }
-                },
-                {
-                    SecurityType.Crypto, new HashSet<OrderType>
-                    {
-                        OrderType.Market,
-                        OrderType.Limit,
                         OrderType.StopLimit
                     }
                 }
@@ -128,6 +116,12 @@ namespace QuantConnect.Brokerages
                 return false;
             }
 
+            if (!_marketOrderDayTimeInForceLogged && order.Type == OrderType.Market && order.TimeInForce is not DayTimeInForce)
+            {
+                _marketOrderDayTimeInForceLogged = true;
+                Log.Trace("WebullBrokerageModel.CanSubmitOrder: Market orders support only Day TIF, which is set automatically by the brokerage.");
+            }
+
             // Options and IndexOptions have per-direction TimeInForce restrictions.
             // https://developer.webull.com/apis/docs/trade-api/options#time-in-force
             // - Sell orders: Day only
@@ -141,12 +135,21 @@ namespace QuantConnect.Brokerages
                 }
             }
 
-            if (order.Properties is WebullOrderProperties { OutsideRegularTradingHours: true } &&
-                security.Type != SecurityType.Equity)
+            if (order.Properties is WebullOrderProperties { OutsideRegularTradingHours: true })
             {
-                message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
-                    Messages.WebullBrokerageModel.OutsideRegularTradingHoursNotSupportedForSecurityType(security));
-                return false;
+                if (security.Type is not SecurityType.Equity)
+                {
+                    message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
+                        Messages.WebullBrokerageModel.OutsideRegularTradingHoursNotSupportedForSecurityType(security));
+                    return false;
+                }
+
+                if (order.Type == OrderType.Market)
+                {
+                    message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
+                        Messages.WebullBrokerageModel.MarketOrdersNotSupportedOutsideRegularTradingHours());
+                    return false;
+                }
             }
 
             return base.CanSubmitOrder(security, order, out message);

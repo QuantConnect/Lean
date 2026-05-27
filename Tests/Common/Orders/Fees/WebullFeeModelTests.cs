@@ -21,7 +21,6 @@ using QuantConnect.Data.Market;
 using QuantConnect.Orders;
 using QuantConnect.Orders.Fees;
 using QuantConnect.Securities;
-using QuantConnect.Securities.Crypto;
 using QuantConnect.Tests.Common.Securities;
 
 namespace QuantConnect.Tests.Common.Orders.Fees
@@ -136,45 +135,12 @@ namespace QuantConnect.Tests.Common.Orders.Fees
         }
 
         /// <summary>
-        /// Crypto fee = 0.6% of notional (quantity × price).
-        /// 2 BTC × $50,000 = $100,000 notional -> fee = $600.
-        /// </summary>
-        [Test]
-        public void GetOrderFeeCryptoReturnsPointSixPercentOfNotional()
-        {
-            var btcusd = CreateSecurity(SecurityType.Crypto, 50_000m);
-            var order = new MarketOrder(btcusd.Symbol, 2m, DateTime.UtcNow);
-
-            var fee = _feeModel.GetOrderFee(new OrderFeeParameters(btcusd, order));
-
-            // 2 * 50000 * 0.006 = 600
-            Assert.That(fee.Value.Amount, Is.EqualTo(600m));
-            Assert.That(fee.Value.Currency, Is.EqualTo(Currencies.USD));
-        }
-
-        /// <summary>
         /// Creates a test security of the requested <paramref name="securityType"/> priced at <paramref name="price"/>.
-        /// Supported types: <see cref="SecurityType.IndexOption"/>, <see cref="SecurityType.Option"/>, <see cref="SecurityType.Crypto"/>.
-        /// For option types <paramref name="ticker"/> identifies the underlying symbol;
-        /// it is ignored for <see cref="SecurityType.Crypto"/> (BTC/USD is always used).
+        /// Supported types: <see cref="SecurityType.IndexOption"/>, <see cref="SecurityType.Option"/>.
+        /// <paramref name="ticker"/> identifies the underlying symbol.
         /// </summary>
         private static Security CreateSecurity(SecurityType securityType, decimal price, string ticker = "AAPL")
         {
-            if (securityType == SecurityType.Crypto)
-            {
-                var btcusd = new Crypto(
-                    SecurityExchangeHours.AlwaysOpen(TimeZones.Utc),
-                    new Cash(Currencies.USD, 0, 1m),
-                    new Cash("BTC", 0, price),
-                    new SubscriptionDataConfig(typeof(TradeBar), Symbols.BTCUSD, Resolution.Minute,
-                        TimeZones.Utc, TimeZones.Utc, true, false, false),
-                    new SymbolProperties("BTCUSD", Currencies.USD, 1, 0.01m, 0.00000001m, string.Empty),
-                    ErrorCurrencyConverter.Instance,
-                    RegisteredSecurityDataTypesProvider.Null);
-                btcusd.SetMarketPrice(new Tick(DateTime.UtcNow, btcusd.Symbol, price, price));
-                return btcusd;
-            }
-
             var isIndex = securityType == SecurityType.IndexOption;
             var underlying = Symbol.Create(ticker, isIndex ? SecurityType.Index : SecurityType.Equity, Market.USA);
             var symbol = Symbol.CreateOption(

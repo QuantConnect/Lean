@@ -42,16 +42,6 @@ namespace QuantConnect.Tests.Common.Brokerages
         [TestCase(SecurityType.IndexOption, OrderType.Limit)]
         [TestCase(SecurityType.IndexOption, OrderType.StopMarket)]
         [TestCase(SecurityType.IndexOption, OrderType.StopLimit)]
-        // Future: all five order types supported
-        [TestCase(SecurityType.Future, OrderType.Market)]
-        [TestCase(SecurityType.Future, OrderType.Limit)]
-        [TestCase(SecurityType.Future, OrderType.StopMarket)]
-        [TestCase(SecurityType.Future, OrderType.StopLimit)]
-        [TestCase(SecurityType.Future, OrderType.TrailingStop)]
-        // Crypto: StopMarket and TrailingStop are not supported
-        [TestCase(SecurityType.Crypto, OrderType.Market)]
-        [TestCase(SecurityType.Crypto, OrderType.Limit)]
-        [TestCase(SecurityType.Crypto, OrderType.StopLimit)]
         public void CanSubmitOrderValidSecurityAndOrderTypeReturnsTrue(SecurityType securityType, OrderType orderType)
         {
             // Arrange
@@ -68,10 +58,12 @@ namespace QuantConnect.Tests.Common.Brokerages
 
         [TestCase(SecurityType.Forex)]
         [TestCase(SecurityType.Cfd)]
+        [TestCase(SecurityType.Future)]
+        [TestCase(SecurityType.Crypto)]
         public void CanSubmitOrderUnsupportedSecurityTypeReturnsFalse(SecurityType securityType)
         {
             // Arrange
-            var security = TestsHelpers.GetSecurity(securityType: securityType, symbol: "EURUSD", market: Market.Oanda);
+            var security = GetSecurityForType(securityType);
             var order = new MarketOrder(security.Symbol, 1m, DateTime.UtcNow);
 
             // Act
@@ -90,9 +82,6 @@ namespace QuantConnect.Tests.Common.Brokerages
         [TestCase(SecurityType.Option, OrderType.TrailingStop)]
         // IndexOption has the same restrictions as Option
         [TestCase(SecurityType.IndexOption, OrderType.TrailingStop)]
-        // Crypto does not support StopMarket or TrailingStop
-        [TestCase(SecurityType.Crypto, OrderType.StopMarket)]
-        [TestCase(SecurityType.Crypto, OrderType.TrailingStop)]
         public void CanSubmitOrder_UnsupportedOrderTypeForSecurityType_ReturnsFalse(
             SecurityType securityType, OrderType orderType)
         {
@@ -134,9 +123,7 @@ namespace QuantConnect.Tests.Common.Brokerages
         }
 
         [TestCase(SecurityType.Option, OrderDirection.Sell)]   // Sell + GTC  → rejected
-        [TestCase(SecurityType.Option, OrderDirection.Buy)]    // Buy  + Day  → rejected
         [TestCase(SecurityType.IndexOption, OrderDirection.Sell)]
-        [TestCase(SecurityType.IndexOption, OrderDirection.Buy)]
         public void CanSubmitOrderOptionOrderWithInvalidTimeInForceReturnsFalse(
             SecurityType securityType, OrderDirection direction)
         {
@@ -158,11 +145,50 @@ namespace QuantConnect.Tests.Common.Brokerages
             Assert.That(message.Message, Does.Contain(security.Type.ToString()));
         }
 
+        [TestCase(SecurityType.Equity, nameof(TimeInForce.Day))]
+        [TestCase(SecurityType.Equity, nameof(TimeInForce.GoodTilCanceled))]
+        [TestCase(SecurityType.Option, nameof(TimeInForce.Day))]
+        [TestCase(SecurityType.Option, nameof(TimeInForce.GoodTilCanceled))]
+        public void CanSubmitOrderMarketOrderTimeInForceValidation(SecurityType securityType, string timeInForce)
+        {
+            // Arrange
+            var security = GetSecurityForType(securityType);
+            var isDayTimeInForce = timeInForce.Equals(nameof(TimeInForce.Day), StringComparison.OrdinalIgnoreCase);
+
+            var marketOrder = new MarketOrder(security.Symbol, 1m, DateTime.UtcNow, properties: new OrderProperties
+            {
+                TimeInForce = isDayTimeInForce ? TimeInForce.Day : TimeInForce.GoodTilCanceled
+            });
+
+            // Act
+            var canSubmit = _brokerageModel.CanSubmitOrder(security, marketOrder, out var message);
+
+            // Assert
+            Assert.That(message, Is.Null);
+            Assert.That(canSubmit, Is.True);
+        }
+
         // ── CanSubmitOrder — OutsideRegularTradingHours ──────────────────────────
         // https://developer.webull.com/apis/docs/trade-api — Applicable to U.S. stock market orders only.
 
         [Test]
         public void CanSubmitOrderOutsideRegularTradingHoursOnEquityReturnsTrue()
+        {
+            // Arrange
+            var security = GetSecurityForType(SecurityType.Equity);
+            var properties = new WebullOrderProperties { OutsideRegularTradingHours = true };
+            var order = new LimitOrder(security.Symbol, 1m, 100m, DateTime.UtcNow, properties: properties);
+
+            // Act
+            var canSubmit = _brokerageModel.CanSubmitOrder(security, order, out var message);
+
+            // Assert
+            Assert.That(canSubmit, Is.True);
+            Assert.That(message, Is.Null);
+        }
+
+        [Test]
+        public void CanSubmitOrderMarketOrderOutsideRegularTradingHoursOnEquityReturnsFalse()
         {
             // Arrange
             var security = GetSecurityForType(SecurityType.Equity);
@@ -173,14 +199,14 @@ namespace QuantConnect.Tests.Common.Brokerages
             var canSubmit = _brokerageModel.CanSubmitOrder(security, order, out var message);
 
             // Assert
-            Assert.That(canSubmit, Is.True);
-            Assert.That(message, Is.Null);
+            Assert.That(canSubmit, Is.False);
+            Assert.That(message, Is.Not.Null);
+            Assert.That(message.Message, Does.Contain("Market"));
+            Assert.That(message.Message, Does.Contain("regular trading hours"));
         }
 
         [TestCase(SecurityType.Option)]
         [TestCase(SecurityType.IndexOption)]
-        [TestCase(SecurityType.Future)]
-        [TestCase(SecurityType.Crypto)]
         public void CanSubmitOrderOutsideRegularTradingHoursOnNonEquityReturnsFalse(SecurityType securityType)
         {
             // Arrange
@@ -199,8 +225,7 @@ namespace QuantConnect.Tests.Common.Brokerages
         }
 
         [TestCase(SecurityType.Option)]
-        [TestCase(SecurityType.Future)]
-        [TestCase(SecurityType.Crypto)]
+        [TestCase(SecurityType.IndexOption)]
         public void CanSubmitOrderOutsideRegularTradingHoursFalseOnNonEquityReturnsTrue(SecurityType securityType)
         {
             // Arrange

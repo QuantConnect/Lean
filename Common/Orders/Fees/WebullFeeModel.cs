@@ -25,7 +25,6 @@ namespace QuantConnect.Orders.Fees
     /// Equity and standard options trades are commission-free on Webull.
     /// Index options carry a flat $0.50 Webull contract fee plus a variable exchange proprietary fee
     /// that depends on the underlying index symbol and the option's market price.
-    /// Cryptocurrency trades carry a 0.6% fee on the notional trade value.
     /// </remarks>
     public class WebullFeeModel : FeeModel
     {
@@ -110,18 +109,12 @@ namespace QuantConnect.Orders.Fees
         private const decimal _ndxMultiLegFeeAbove25 = 0.90m;
 
         /// <summary>
-        /// Crypto fee rate applied as a percentage of the notional trade value (0.6%).
-        /// </summary>
-        private const decimal _cryptoFeeRate = 0.006m;
-
-        /// <summary>
         /// Gets the order fee for a given security and order.
         /// </summary>
         /// <param name="parameters">The parameters including the security and order details.</param>
         /// <returns>
         /// <see cref="OrderFee.Zero"/> for equity and standard options;
-        /// a per-contract fee for index options;
-        /// a percentage-of-notional fee for crypto.
+        /// a per-contract fee for index options.
         /// </returns>
         public override OrderFee GetOrderFee(OrderFeeParameters parameters)
         {
@@ -129,9 +122,6 @@ namespace QuantConnect.Orders.Fees
             {
                 case SecurityType.IndexOption:
                     return new OrderFee(new CashAmount(GetIndexOptionFee(parameters), Currencies.USD));
-                case SecurityType.Crypto:
-                    var notional = parameters.Order.AbsoluteQuantity * parameters.Security.Price;
-                    return new OrderFee(new CashAmount(notional * _cryptoFeeRate, Currencies.USD));
                 default:
                     // Equity and Option are commission-free on Webull.
                     return OrderFee.Zero;
