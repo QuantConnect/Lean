@@ -16,7 +16,6 @@
 
 using Newtonsoft.Json;
 using NUnit.Framework;
-using QuantConnect.Lean.Engine.Results.Analysis.Optimization;
 using QuantConnect.Optimizer;
 using QuantConnect.Optimizer.Objectives;
 using QuantConnect.Optimizer.Parameters;
@@ -31,18 +30,14 @@ using System.Threading.Tasks;
 namespace QuantConnect.Tests.Optimizer.Analysis
 {
     /// <summary>
-    /// End-to-end tests that drive a fake <see cref="LeanOptimizer"/> through a real
-    /// <c>Start → NewResult → TriggerOnEndEvent</c> cycle and assert what
-    /// <c>OptimizationResult.Analysis</c> ends up carrying when the <c>Ended</c> event fires.
+    /// End-to-end tests for <see cref="LeanOptimizer"/>'s analyzer wiring via the <see cref="LeanOptimizer.Ended"/> event.
     /// </summary>
     [TestFixture, Parallelizable(ParallelScope.Self)]
     public class LeanOptimizerAnalysisTests
     {
         [Test]
-        public void Ended_AttachesAnalysis_WhenTrialsCarrySharpeRatios()
+        public void Ended_AttachesAnalysis_WhenBacktestsCarrySharpeRatios()
         {
-            // Drive a 4×4 grid of trials, each emitting a backtest payload with a Sharpe ratio
-            // and Total Orders. The analyzer should populate the Analysis on the Ended event.
             using var resetEvent = new ManualResetEvent(false);
             var packet = new OptimizationNodePacket
             {
@@ -55,10 +50,6 @@ namespace QuantConnect.Tests.Optimizer.Analysis
                 MaximumConcurrentBacktests = 8
             };
             using var optimizer = new SharpeEmittingFakeLeanOptimizer(packet);
-            // Property-inject the Engine-side analyzer — the same wiring Optimizer.Launcher
-            // does. LeanOptimizer skips analysis silently when Analyzer is null, so without
-            // this line the happy-path assertion below would never get a populated Analysis.
-            optimizer.Analyzer = new OptimizationAnalyzer();
 
             OptimizationResult result = null;
             optimizer.Ended += (s, solution) =>
@@ -72,20 +63,17 @@ namespace QuantConnect.Tests.Optimizer.Analysis
             resetEvent.WaitOne();
 
             Assert.NotNull(result);
-            Assert.NotNull(result.Analysis, "Analysis should be populated when trials have Sharpe ratios");
-            Assert.Greater(result.Analysis.TrialCountUsed, 0);
+            Assert.NotNull(result.Analysis, "Analysis should be populated when backtests have Sharpe ratios");
+            Assert.Greater(result.Analysis.BacktestCountUsed, 0);
             Assert.NotNull(result.Analysis.Best);
             Assert.NotNull(result.Analysis.OverallSharpe);
-            // Per-parameter reports should exist for both grid axes.
             Assert.AreEqual(2, result.Analysis.Parameters.Count);
         }
 
         [Test]
-        public void Ended_LeavesAnalysisNull_WhenNoTrialCarriesSharpe()
+        public void Ended_LeavesAnalysisNull_WhenNoBacktestCarriesSharpe()
         {
-            // Use the stock FakeLeanOptimizer, which emits a Statistics payload with Profit and
-            // Drawdown but no Sharpe Ratio. The analyzer should safely skip and Ended should
-            // still fire with Analysis == null.
+            // FakeLeanOptimizer's payload carries no Sharpe; analyzer must safely skip.
             using var resetEvent = new ManualResetEvent(false);
             var packet = new OptimizationNodePacket
             {
@@ -98,10 +86,6 @@ namespace QuantConnect.Tests.Optimizer.Analysis
                 MaximumConcurrentBacktests = 8
             };
             using var optimizer = new FakeLeanOptimizer(packet);
-            // Wire the analyzer the same way the launcher does. With no Sharpe in any trial,
-            // the analyzer's own safe-skip path returns null — verifying that null travels
-            // through TriggerOnEndEvent without breaking the Ended event.
-            optimizer.Analyzer = new OptimizationAnalyzer();
 
             OptimizationResult result = null;
             optimizer.Ended += (s, solution) =>
@@ -114,17 +98,12 @@ namespace QuantConnect.Tests.Optimizer.Analysis
             optimizer.Start();
             resetEvent.WaitOne();
 
-            Assert.NotNull(result, "Ended must still fire even with no analyzable trials");
-            Assert.IsNull(result.Analysis, "Analysis should be null when no trial carries a Sharpe ratio");
+            Assert.NotNull(result, "Ended must still fire even with no analyzable backtests");
+            Assert.IsNull(result.Analysis, "Analysis should be null when no backtest carries a Sharpe ratio");
         }
 
-        // ── fake that emits Sharpe-bearing backtest JSON ───────────────────────────
-
         /// <summary>
-        /// LeanOptimizer fake whose RunLean produces a backtest result payload shaped like a
-        /// real one: a Statistics dictionary with "Sharpe Ratio" and "Total Orders" keys, plus
-        /// an Analysis array. Sharpe is deterministically derived from the parameter values
-        /// so the analyzer has a real signal to chew on.
+        /// <see cref="LeanOptimizer"/> fake that emits backtest JSON shaped like a real one, with a deterministic Sharpe.
         /// </summary>
         private sealed class SharpeEmittingFakeLeanOptimizer : LeanOptimizer
         {
@@ -135,21 +114,26 @@ namespace QuantConnect.Tests.Optimizer.Analysis
             protected override string RunLean(ParameterSet parameterSet, string backtestName)
             {
                 var id = Guid.NewGuid().ToString();
-                // Stagger replies a touch so we exercise the concurrent NewResult path.
                 Task.Delay(10).ContinueWith(_ =>
                 {
-                    var x = parameterSet.Value.TryGetValue("x", out var xs) && double.TryParse(xs, NumberStyles.Any, CultureInfo.InvariantCulture, out var xv) ? xv : 0;
-                    var y = parameterSet.Value.TryGetValue("y", out var ys) && double.TryParse(ys, NumberStyles.Any, CultureInfo.InvariantCulture, out var yv) ? yv : 0;
-                    // Smooth quadratic-ish surface so there's a real best and real sensitivity.
-                    var sharpe = 1.0 - 0.05 * Math.Pow(x - 3, 2) - 0.0005 * Math.Pow(y - 25, 2);
+                    var x = parameterSet.Value.TryGetValue("x", out var xs) && decimal.TryParse(xs, NumberStyles.Any, CultureInfo.InvariantCulture, out var xv) ? xv : 0m;
+                    var y = parameterSet.Value.TryGetValue("y", out var ys) && decimal.TryParse(ys, NumberStyles.Any, CultureInfo.InvariantCulture, out var yv) ? yv : 0m;
+                    // Math.Pow is double-only; cross into double for the surface and back.
+                    var sharpe = (decimal)(1.0 - 0.05 * Math.Pow((double)x - 3, 2) - 0.0005 * Math.Pow((double)y - 25, 2));
+                    var orders = Enumerable.Range(1, 10).ToDictionary(i => i, i => new { Id = i });
                     var payload = new
                     {
+                        // Statistics dict is what the optimizer's Criterion targets (e.g. "Statistics.Profit").
                         Statistics = new Dictionary<string, string>
                         {
-                            ["Sharpe Ratio"] = sharpe.ToString("R", CultureInfo.InvariantCulture),
-                            ["Total Orders"] = "10",
                             ["Profit"] = (x + y).ToString(CultureInfo.InvariantCulture)
                         },
+                        // Typed TotalPerformance.PortfolioStatistics is what the analyzer reads.
+                        TotalPerformance = new
+                        {
+                            PortfolioStatistics = new { SharpeRatio = sharpe }
+                        },
+                        Orders = orders,
                         Analysis = Array.Empty<QuantConnect.Analysis>()
                     };
                     NewResult(JsonConvert.SerializeObject(payload), id);

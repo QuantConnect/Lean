@@ -14,19 +14,15 @@
  *
 */
 
-using QuantConnect.Optimizer;
 using QuantConnect.Optimizer.Parameters;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace QuantConnect.Lean.Engine.Results.Analysis.Optimization
+namespace QuantConnect.Optimizer.Analysis
 {
     /// <summary>
-    /// K-means clustering of trials in standardized parameter space, with k chosen by an
-    /// elbow heuristic. Centroids are reported in original parameter units so they're
-    /// directly comparable to trial parameter values. Clusters are ordered by mean Sharpe
-    /// descending. Deterministic (k-means++ init seeded at 42).
+    /// K-means clustering of backtests in standardized parameter space with k chosen by an elbow heuristic.
     /// </summary>
     internal static class OptimizationClustering
     {
@@ -37,35 +33,33 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Optimization
         private const double PlateauThreshold = 0.7;
 
         public static IReadOnlyList<Cluster> Build(
-            IReadOnlyList<OptimizationTrialMetrics> trials,
+            IReadOnlyList<OptimizationBacktestMetrics> backtests,
             IReadOnlyCollection<OptimizationParameter> parameters)
         {
             var output = new List<Cluster>();
-            if (trials == null || parameters == null) return output;
-            if (trials.Count < KMin + 1 || parameters.Count == 0) return output;
+            if (backtests == null || parameters == null) return output;
+            if (backtests.Count < KMin + 1 || parameters.Count == 0) return output;
 
             var paramNames = parameters.Select(p => p.Name).ToArray();
 
-            // Only consider trials carrying values for every parameter.
-            var usable = trials
-                .Where(t => paramNames.All(t.Parameters.ContainsKey))
+            var usable = backtests
+                .Where(b => paramNames.All(b.Parameters.ContainsKey))
                 .ToList();
             if (usable.Count < KMin + 1) return output;
 
-            // Cap k_max at min(absolute, ceil(sqrt(N))) so we don't carve a small N
-            // into too many tiny clusters.
+            // Cap k_max at ceil(sqrt(N)) so small N doesn't get carved into too many clusters.
             var sqrtCap = (int)Math.Ceiling(Math.Sqrt(usable.Count));
             var kMaxEffective = Math.Min(KMaxAbsolute, sqrtCap);
             var maxK = Math.Min(kMaxEffective, usable.Count - 1);
             if (maxK < KMin) return output;
 
-            // Build (N x D) point matrix in original units, then z-score standardize.
+            // K-means math runs in double so we can use Math.Sqrt / distance comparisons;
+            // we convert back to decimal at the boundary for the centroid output.
             var raw = usable
-                .Select(t => paramNames.Select(n => t.Parameters[n]).ToArray())
+                .Select(b => paramNames.Select(n => (double)b.Parameters[n]).ToArray())
                 .ToArray();
             var (normalized, means, stds) = Standardize(raw);
 
-            // Sweep k = KMin..maxK and pick by elbow heuristic.
             var byK = new Dictionary<int, KMeansResult>();
             for (var k = KMin; k <= maxK; k++)
             {
@@ -74,8 +68,6 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Optimization
             var bestK = SelectKByElbow(byK);
             var pick = byK[bestK];
 
-            // De-normalize centroids back to the original parameter units so consumers
-            // can compare them directly to trial parameter values.
             var centroidsOriginal = pick.Centroids
                 .Select(c => Denormalize(c, means, stds))
                 .ToArray();
@@ -86,12 +78,12 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Optimization
                     .Where(i => pick.Labels[i] == c)
                     .ToList();
                 if (memberIndices.Count == 0) continue;
-                var sharpes = memberIndices.Select(i => usable[i].Sharpe).ToList();
+                var sharpes = memberIndices.Select(i => usable[i].SharpeRatio).ToList();
 
-                var centroidDict = new Dictionary<string, double>(paramNames.Length);
+                var centroidDict = new Dictionary<string, decimal>(paramNames.Length);
                 for (var d = 0; d < paramNames.Length; d++)
                 {
-                    centroidDict[paramNames[d]] = centroidsOriginal[c][d];
+                    centroidDict[paramNames[d]] = (decimal)centroidsOriginal[c][d];
                 }
 
                 output.Add(new Cluster
@@ -106,7 +98,7 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Optimization
                 });
             }
 
-            // Re-index by Sharpe (highest first) so Cluster 0 is the best-performing region.
+            // Re-index so Cluster 0 is the best-performing region.
             var ordered = output.OrderByDescending(x => x.SharpeMean).ToList();
             for (var i = 0; i < ordered.Count; i++)
             {
@@ -262,12 +254,12 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Optimization
             return s;
         }
 
-        private static double StdDev(IReadOnlyCollection<double> values)
+        private static decimal StdDev(IReadOnlyCollection<decimal> values)
         {
-            if (values.Count < 2) return 0;
+            if (values.Count < 2) return 0m;
             var mean = values.Average();
             var s = values.Sum(v => (v - mean) * (v - mean));
-            return Math.Sqrt(s / (values.Count - 1));
+            return (decimal)Math.Sqrt((double)(s / (values.Count - 1)));
         }
     }
 }

@@ -19,23 +19,23 @@ using System.Collections.Generic;
 namespace QuantConnect.Optimizer
 {
     /// <summary>
-    /// Identifies the single best-performing trial in an optimization (argmax of Sharpe).
+    /// Per-backtest identity + Sharpe ratio shared by all optimization-analysis records that describe one backtest.
     /// </summary>
-    public class BestTrialSummary
+    public class BacktestSummary
     {
         /// <summary>
-        /// The backtest id of the best-performing trial.
+        /// The backtest id.
         /// </summary>
         public string BacktestId { get; set; }
 
         /// <summary>
-        /// Parameter values for the best trial (parameter name -> numeric value).
+        /// Parameter values the backtest was run with.
         /// </summary>
-        public IReadOnlyDictionary<string, double> Parameters { get; set; }
+        public IReadOnlyDictionary<string, decimal> Parameters { get; set; }
 
         /// <summary>
-        /// Sharpe ratio of the best trial.
+        /// The backtest's Sharpe ratio.
         /// </summary>
-        public double SharpeRatio { get; set; }
+        public decimal SharpeRatio { get; set; }
     }
 }

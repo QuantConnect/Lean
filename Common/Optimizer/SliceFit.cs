@@ -19,49 +19,42 @@ using System.Collections.Generic;
 namespace QuantConnect.Optimizer
 {
     /// <summary>
-    /// One-dimensional cross-section of the parameter space: a single parameter varies while
-    /// every other parameter is held constant at the values in <see cref="FixedParameters"/>.
-    /// The piecewise linear interpolant (<see cref="Segments"/>) passes through every measured
-    /// (ParameterValue, Sharpe) point exactly.
+    /// One-dimensional cross-section of the parameter space: one parameter varies while every other is held constant.
     /// </summary>
     public class SliceFit
     {
         /// <summary>
-        /// Values of the other parameters that are held constant for this slice (name -> value).
-        /// Empty for single-parameter optimizations.
+        /// Values of the other parameters held constant for this slice.
         /// </summary>
-        public IReadOnlyDictionary<string, double> FixedParameters { get; set; }
+        public IReadOnlyDictionary<string, decimal> FixedParameters { get; set; }
 
         /// <summary>
-        /// Measured grid values of the slicing parameter, sorted ascending.
+        /// Grid values of the slicing parameter, sorted ascending.
         /// </summary>
-        public IReadOnlyList<double> ParameterValues { get; set; }
+        public IReadOnlyList<decimal> ParameterValues { get; set; }
 
         /// <summary>
-        /// Sharpe ratio at each entry in <see cref="ParameterValues"/> (same index).
+        /// Sharpe ratio at each entry in <see cref="ParameterValues"/>.
         /// </summary>
-        public IReadOnlyList<double> SharpeValues { get; set; }
+        public IReadOnlyList<decimal> SharpeValues { get; set; }
 
         /// <summary>
-        /// max(SharpeValues) - min(SharpeValues) across this slice. Zero for single-point slices.
+        /// max(<see cref="SharpeValues"/>) - min(<see cref="SharpeValues"/>) across this slice.
         /// </summary>
-        public double SharpeRange { get; set; }
+        public decimal SharpeRange { get; set; }
 
         /// <summary>
-        /// Maximum |slope| across this slice's linear segments. Equals
-        /// max(|y[i+1] - y[i]| / (x[i+1] - x[i])).
+        /// Maximum absolute slope across this slice's linear segments.
         /// </summary>
-        public double MaxAbsDerivative { get; set; }
+        public decimal MaxAbsDerivative { get; set; }
 
         /// <summary>
-        /// True for exactly one slice per parameter: the slice whose fixed parameters match
-        /// the values at the best trial.
+        /// True for the slice whose fixed parameters match the values at the best backtest.
         /// </summary>
         public bool IsPrimary { get; set; }
 
         /// <summary>
-        /// Piecewise linear pieces of the fit. Length = len(ParameterValues) - 1
-        /// (empty when there is only one point).
+        /// Piecewise linear pieces of the fit; one per adjacent pair of grid points.
         /// </summary>
         public IReadOnlyList<LinearSegment> Segments { get; set; }
     }

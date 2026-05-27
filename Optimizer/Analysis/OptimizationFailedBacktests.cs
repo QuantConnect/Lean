@@ -14,43 +14,37 @@
  *
 */
 
-using QuantConnect.Optimizer;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace QuantConnect.Lean.Engine.Results.Analysis.Optimization
+namespace QuantConnect.Optimizer.Analysis
 {
     /// <summary>
-    /// Aggregates failure-mode signals across backtests that produced zero orders. For up to
-    /// <see cref="MaxBacktestsToInspect"/> zero-order trials, counts how many carry each
-    /// distinct backtest-level analysis tag (e.g. "FlatEquityCurveAnalysis"). Returns null
-    /// when no trials in the optimization produced zero orders.
+    /// Counts how many zero-order backtests carry each backtest-level analysis tag; returns null when no zero-order backtests exist.
     /// </summary>
     internal static class OptimizationFailedBacktests
     {
-        // Cap on how many zero-order trials we look at. We only need a rough tally of the
-        // common failure modes, not an exhaustive census.
+        // Cap on inspected backtests; a rough tally is enough.
         private const int MaxBacktestsToInspect = 10;
 
-        public static FailedBacktestSummary Build(IReadOnlyList<OptimizationTrialMetrics> trials)
+        public static FailedBacktestSummary Build(IReadOnlyList<OptimizationBacktestMetrics> backtests)
         {
-            if (trials == null) return null;
+            if (backtests == null) return null;
 
-            var zeroOrder = trials.Where(t => t.TotalOrders == 0).ToList();
+            var zeroOrder = backtests.Where(b => b.TotalOrders == 0).ToList();
             if (zeroOrder.Count == 0) return null;
 
             var sample = zeroOrder.Take(MaxBacktestsToInspect).ToList();
             var nameCount = new Dictionary<string, int>(StringComparer.Ordinal);
 
-            foreach (var trial in sample)
+            foreach (var backtest in sample)
             {
-                // De-dupe per-trial so the counts answer "in how many trials did this tag
-                // appear", not "how many total occurrences across trials".
+                // De-dupe per backtest so counts are "backtests carrying the tag", not raw occurrences.
                 var seen = new HashSet<string>(StringComparer.Ordinal);
-                if (trial.AnalysisNames != null)
+                if (backtest.AnalysisNames != null)
                 {
-                    foreach (var name in trial.AnalysisNames)
+                    foreach (var name in backtest.AnalysisNames)
                     {
                         if (string.IsNullOrEmpty(name)) continue;
                         if (!seen.Add(name)) continue;

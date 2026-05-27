@@ -17,30 +17,28 @@
 namespace QuantConnect.Optimizer
 {
     /// <summary>
-    /// One straight-line piece of a piecewise linear interpolant covering [XLo, XHi].
-    /// Evaluates as y(x) = A + B * (x - XLo). Passes exactly through (XLo, Sharpe at XLo)
-    /// and (XHi, Sharpe at XHi).
+    /// One linear piece of a piecewise interpolant on [<see cref="XLo"/>, <see cref="XHi"/>], evaluated as y(x) = A + B * (x - XLo).
     /// </summary>
     public class LinearSegment
     {
         /// <summary>
-        /// Lower bound of this segment (inclusive).
+        /// Lower bound of this segment.
         /// </summary>
-        public double XLo { get; set; }
+        public decimal XLo { get; set; }
 
         /// <summary>
         /// Upper bound of this segment.
         /// </summary>
-        public double XHi { get; set; }
+        public decimal XHi { get; set; }
 
         /// <summary>
-        /// Sharpe ratio at XLo (the segment's left endpoint).
+        /// Sharpe ratio at <see cref="XLo"/>.
         /// </summary>
-        public double A { get; set; }
+        public decimal A { get; set; }
 
         /// <summary>
-        /// Constant slope through the segment: (Sharpe at XHi - Sharpe at XLo) / (XHi - XLo).
+        /// Slope through the segment.
         /// </summary>
-        public double B { get; set; }
+        public decimal B { get; set; }
     }
 }

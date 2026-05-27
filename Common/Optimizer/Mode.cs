@@ -14,37 +14,15 @@
  *
 */
 
-using System.Collections.Generic;
-
 namespace QuantConnect.Optimizer
 {
     /// <summary>
-    /// A local maximum of the Sharpe surface on the parameter grid: a trial whose Sharpe is
-    /// strictly greater than every face-neighbor's Sharpe (face-neighbors differ from this
-    /// trial in exactly one parameter by one grid step). Multiple modes indicate a multimodal
-    /// surface and suggest splitting the next optimization into narrower sweeps around each.
+    /// A local maximum of the Sharpe surface on the parameter grid; strictly greater than every face-neighbor's Sharpe.
     /// </summary>
-    public class Mode
+    public class Mode : BacktestSummary
     {
         /// <summary>
-        /// The backtest id of the mode trial.
-        /// </summary>
-        public string BacktestId { get; set; }
-
-        /// <summary>
-        /// Parameter values for the mode trial (parameter name -> numeric value).
-        /// </summary>
-        public IReadOnlyDictionary<string, double> Parameters { get; set; }
-
-        /// <summary>
-        /// Sharpe ratio of the mode trial.
-        /// </summary>
-        public double SharpeRatio { get; set; }
-
-        /// <summary>
-        /// Number of face-neighbors this trial was compared against. A higher count means
-        /// the mode is supported by more surrounding evidence (interior cells have more
-        /// neighbors than edge or corner cells).
+        /// Number of face-neighbors this backtest was compared against.
         /// </summary>
         public int NeighborCount { get; set; }
     }

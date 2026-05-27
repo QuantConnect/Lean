@@ -14,44 +14,40 @@
  *
 */
 
-using QuantConnect.Optimizer;
 using QuantConnect.Optimizer.Parameters;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 
-namespace QuantConnect.Lean.Engine.Results.Analysis.Optimization
+namespace QuantConnect.Optimizer.Analysis
 {
     /// <summary>
-    /// Per-parameter sensitivity analysis. For each optimized parameter, builds a set of
-    /// 1-D "slices" through the trial cloud (this parameter varies; every other is held
-    /// constant), fits a piecewise linear interpolant to each slice, and aggregates
-    /// sensitivity metrics across slices.
+    /// Per-parameter sensitivity analysis via 1-D slices through the backtest cloud with a piecewise linear fit.
     /// </summary>
     internal static class OptimizationSlicing
     {
         public static ParameterReport AnalyzeParameter(
             OptimizationParameter parameter,
-            IReadOnlyList<OptimizationTrialMetrics> trials,
-            OptimizationTrialMetrics best)
+            IReadOnlyList<OptimizationBacktestMetrics> backtests,
+            OptimizationBacktestMetrics best)
         {
             var name = parameter.Name;
-            var owning = trials.Where(t => t.Parameters.ContainsKey(name)).ToList();
+            var owning = backtests.Where(b => b.Parameters.ContainsKey(name)).ToList();
 
             var otherParamNames = owning
-                .SelectMany(t => t.Parameters.Keys)
+                .SelectMany(b => b.Parameters.Keys)
                 .Where(k => k != name)
                 .Distinct()
                 .OrderBy(k => k, StringComparer.Ordinal)
                 .ToList();
 
-            // Group trials by the values held constant in other parameters — each group is one 1-D slice.
-            IEnumerable<IGrouping<string, OptimizationTrialMetrics>> grouped = otherParamNames.Count == 0
+            // Group backtests by other-parameter values; each group is one 1-D slice.
+            IEnumerable<IGrouping<string, OptimizationBacktestMetrics>> grouped = otherParamNames.Count == 0
                 ? new[] { owning.GroupBy(_ => "").FirstOrDefault() }
                       .Where(g => g != null)
-                      .Cast<IGrouping<string, OptimizationTrialMetrics>>()
-                : owning.GroupBy(t => SliceKey(t, otherParamNames));
+                      .Cast<IGrouping<string, OptimizationBacktestMetrics>>()
+                : owning.GroupBy(b => SliceKey(b, otherParamNames));
 
             var primaryKey = otherParamNames.Count == 0 ? "" : SliceKey(best, otherParamNames);
 
@@ -63,16 +59,16 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Optimization
                 if (slice != null) slices.Add(slice);
             }
 
-            var distinctValueCount = owning.Select(t => t.Parameters[name]).Distinct().Count();
-            var bestValue = best.Parameters.TryGetValue(name, out var bv) ? bv : double.NaN;
+            var distinctValueCount = owning.Select(b => b.Parameters[name]).Distinct().Count();
+            var hasBest = best.Parameters.TryGetValue(name, out var bestValue);
             var (searchedMin, searchedMax, step) = ExtractGridSpec(parameter, owning, name);
-            var bestAtEdge = IsAtSearchedEdge(bestValue, searchedMin, searchedMax, step);
+            var bestAtEdge = hasBest && IsAtSearchedEdge(bestValue, searchedMin, searchedMax, step);
 
-            var meanRange = slices.Count > 0 ? slices.Average(s => s.SharpeRange) : 0;
-            var maxRange = slices.Count > 0 ? slices.Max(s => s.SharpeRange) : 0;
+            var meanRange = slices.Count > 0 ? slices.Average(s => s.SharpeRange) : 0m;
+            var maxRange = slices.Count > 0 ? slices.Max(s => s.SharpeRange) : 0m;
             var maxDerivPerStep = slices.Count > 0
-                ? slices.Max(s => s.MaxAbsDerivative) * (step ?? 1.0)
-                : 0;
+                ? slices.Max(s => s.MaxAbsDerivative) * (step ?? 1m)
+                : 0m;
 
             return new ParameterReport
             {
@@ -91,16 +87,15 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Optimization
         }
 
         private static SliceFit BuildSlice(
-            List<OptimizationTrialMetrics> trials,
+            List<OptimizationBacktestMetrics> backtests,
             string varyingParamName,
             IReadOnlyList<string> otherParamNames,
             bool isPrimary)
         {
-            // Collapse duplicate parameter values within a slice (shouldn't happen in a true grid
-            // sweep, but be defensive — average their Sharpes).
-            var points = trials
-                .GroupBy(t => t.Parameters[varyingParamName])
-                .Select(g => (X: g.Key, Y: g.Average(t => t.Sharpe)))
+            // Defensively collapse duplicate parameter values by averaging Sharpes.
+            var points = backtests
+                .GroupBy(b => b.Parameters[varyingParamName])
+                .Select(g => (X: g.Key, Y: g.Average(b => b.SharpeRatio)))
                 .OrderBy(p => p.X)
                 .ToList();
 
@@ -108,12 +103,11 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Optimization
 
             var xs = points.Select(p => p.X).ToList();
             var ys = points.Select(p => p.Y).ToList();
-            var sharpeRange = ys.Count >= 2 ? ys.Max() - ys.Min() : 0;
+            var sharpeRange = ys.Count >= 2 ? ys.Max() - ys.Min() : 0m;
 
-            // Piecewise linear: one segment per adjacent pair; slope IS the sensitivity
-            // per unit of the parameter for this slice.
+            // Piecewise linear: one segment per adjacent pair; slope is sensitivity per parameter unit.
             var segments = new List<LinearSegment>();
-            double maxAbsDerivative = 0;
+            decimal maxAbsDerivative = 0m;
             for (var i = 0; i < points.Count - 1; i++)
             {
                 var dx = xs[i + 1] - xs[i];
@@ -129,10 +123,10 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Optimization
                 if (absSlope > maxAbsDerivative) maxAbsDerivative = absSlope;
             }
 
-            var fixedParams = new Dictionary<string, double>();
+            var fixedParams = new Dictionary<string, decimal>();
             if (otherParamNames.Count > 0)
             {
-                var first = trials[0];
+                var first = backtests[0];
                 foreach (var p in otherParamNames)
                 {
                     if (first.Parameters.TryGetValue(p, out var v)) fixedParams[p] = v;
@@ -151,42 +145,38 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Optimization
             };
         }
 
-        private static (double Min, double Max, double? Step) ExtractGridSpec(
+        private static (decimal Min, decimal Max, decimal? Step) ExtractGridSpec(
             OptimizationParameter parameter,
-            IReadOnlyList<OptimizationTrialMetrics> owning,
+            IReadOnlyList<OptimizationBacktestMetrics> owning,
             string name)
         {
             if (parameter is OptimizationStepParameter step)
             {
-                return ((double)step.MinValue, (double)step.MaxValue,
-                    step.Step.HasValue ? (double)step.Step.Value : (double?)null);
+                return (step.MinValue, step.MaxValue, step.Step);
             }
 
-            // Fallback when the parameter isn't a step-based one: infer min/max/step from the
-            // measured distinct values across trials. Step is the smallest gap.
-            var values = owning.Select(t => t.Parameters[name]).Distinct().OrderBy(v => v).ToList();
-            if (values.Count == 0) return (0, 0, null);
+            // Fallback for non-step parameters: infer min/max/step from measured values.
+            var values = owning.Select(b => b.Parameters[name]).Distinct().OrderBy(v => v).ToList();
+            if (values.Count == 0) return (0m, 0m, null);
             if (values.Count == 1) return (values[0], values[0], null);
 
             var min = values[0];
             var max = values[^1];
-            var gaps = new List<double>();
+            var gaps = new List<decimal>();
             for (var i = 1; i < values.Count; i++) gaps.Add(values[i] - values[i - 1]);
             return (min, max, gaps.Min());
         }
 
-        private static bool IsAtSearchedEdge(double value, double min, double max, double? step)
+        private static bool IsAtSearchedEdge(decimal value, decimal min, decimal max, decimal? step)
         {
-            if (double.IsNaN(value)) return false;
-            var tol = ((step ?? 1.0) / 2) + 1e-9;
+            var tol = ((step ?? 1m) / 2m) + 1e-9m;
             return Math.Abs(value - min) <= tol || Math.Abs(value - max) <= tol;
         }
 
-        private static string SliceKey(OptimizationTrialMetrics t, IReadOnlyList<string> otherParamNames)
+        private static string SliceKey(OptimizationBacktestMetrics backtest, IReadOnlyList<string> otherParamNames)
         {
             return string.Join("|", otherParamNames.Select(p =>
-                (t.Parameters.TryGetValue(p, out var v) ? v : double.NaN)
-                    .ToString("R", CultureInfo.InvariantCulture)));
+                (backtest.Parameters.TryGetValue(p, out var v) ? v.ToString(CultureInfo.InvariantCulture) : "NaN")));
         }
     }
 }

@@ -77,10 +77,7 @@ namespace QuantConnect.Api
         public DateTime Requested { get; set; }
 
         /// <summary>
-        /// Aggregate diagnostic of the optimization (Sharpe distribution, parameter sensitivity
-        /// slices, clusters in parameter space, local maxima, zero-order failure breakdown).
-        /// Populated by the optimization analyzer in <c>LeanOptimizer.TriggerOnEndEvent</c>;
-        /// omitted on optimizations that haven't run the analyzer or had no usable trials.
+        /// Aggregate diagnostic of the optimization; omitted when no analysis was produced.
         /// </summary>
         [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
         public OptimizationAnalysis Analysis { get; set; }

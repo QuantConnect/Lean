@@ -19,27 +19,22 @@ using System.Collections.Generic;
 namespace QuantConnect.Optimizer
 {
     /// <summary>
-    /// Summary of backtests in an optimization that produced zero orders. Aggregates how many
-    /// of the inspected backtests carry each backtest-level analysis tag (e.g.
-    /// "FlatEquityCurveAnalysis"), giving a quick view of common failure modes that aggregate
-    /// optimization statistics can mask.
+    /// Breakdown of backtests in an optimization that produced zero orders.
     /// </summary>
     public class FailedBacktestSummary
     {
         /// <summary>
-        /// Total number of backtests in the optimization that produced zero orders.
+        /// Total number of backtests that produced zero orders.
         /// </summary>
         public int ZeroOrderCount { get; set; }
 
         /// <summary>
-        /// Number of zero-order backtests actually inspected for analysis tags (capped to
-        /// keep the summary bounded; <see cref="ZeroOrderCount"/> may be larger).
+        /// Number of zero-order backtests inspected for analysis tags; may be smaller than <see cref="ZeroOrderCount"/>.
         /// </summary>
         public int InspectedCount { get; set; }
 
         /// <summary>
-        /// Membership counts: analysis-tag name -> number of inspected backtests that carry
-        /// the tag. Each name appears at most once per backtest in the count.
+        /// Map of analysis-tag name to the number of inspected backtests carrying that tag.
         /// </summary>
         public IReadOnlyDictionary<string, int> AnalysisNameCounts { get; set; }
     }

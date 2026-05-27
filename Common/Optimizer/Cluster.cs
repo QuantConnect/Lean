@@ -19,45 +19,43 @@ using System.Collections.Generic;
 namespace QuantConnect.Optimizer
 {
     /// <summary>
-    /// One k-means cluster of trials in standardized parameter space. Centroid coordinates
-    /// are reported in the original parameter units so they are directly comparable to
-    /// trial parameter values. Clusters are ordered by <see cref="SharpeMean"/> descending.
+    /// One k-means cluster of backtests in standardized parameter space.
     /// </summary>
     public class Cluster
     {
         /// <summary>
-        /// Cluster index (0 = highest mean Sharpe).
+        /// Cluster index; 0 is the highest mean Sharpe.
         /// </summary>
         public int Index { get; set; }
 
         /// <summary>
-        /// Cluster centroid in original parameter units (parameter name -> value).
+        /// Cluster centroid in original parameter units.
         /// </summary>
-        public IReadOnlyDictionary<string, double> Centroid { get; set; }
+        public IReadOnlyDictionary<string, decimal> Centroid { get; set; }
 
         /// <summary>
-        /// Number of trials assigned to this cluster.
+        /// Number of backtests assigned to this cluster.
         /// </summary>
         public int MemberCount { get; set; }
 
         /// <summary>
         /// Mean Sharpe ratio across the cluster's members.
         /// </summary>
-        public double SharpeMean { get; set; }
+        public decimal SharpeMean { get; set; }
 
         /// <summary>
         /// Sample standard deviation of Sharpe ratios within this cluster.
         /// </summary>
-        public double SharpeStdDev { get; set; }
+        public decimal SharpeStdDev { get; set; }
 
         /// <summary>
-        /// Minimum Sharpe ratio observed within this cluster.
+        /// Minimum Sharpe ratio within this cluster.
         /// </summary>
-        public double SharpeMin { get; set; }
+        public decimal SharpeMin { get; set; }
 
         /// <summary>
-        /// Maximum Sharpe ratio observed within this cluster.
+        /// Maximum Sharpe ratio within this cluster.
         /// </summary>
-        public double SharpeMax { get; set; }
+        public decimal SharpeMax { get; set; }
     }
 }

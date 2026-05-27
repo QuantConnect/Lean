@@ -16,7 +16,6 @@
 
 using Newtonsoft.Json;
 using NUnit.Framework;
-using QuantConnect.Lean.Engine.Results.Analysis.Optimization;
 using QuantConnect.Optimizer;
 using QuantConnect.Optimizer.Analysis;
 using QuantConnect.Optimizer.Parameters;
@@ -33,103 +32,103 @@ namespace QuantConnect.Tests.Optimizer.Analysis
         public void Run_ProducesOverallSharpeStats()
         {
             // 3x3 grid of synthetic Sharpe values.
-            var sharpes = new double[,]
+            var sharpes = new decimal[,]
             {
-                { 0.10, 0.20, 0.30 },
-                { 0.15, 0.25, 0.35 },
-                { 0.18, 0.28, 0.38 }
+                { 0.10m, 0.20m, 0.30m },
+                { 0.15m, 0.25m, 0.35m },
+                { 0.18m, 0.28m, 0.38m }
             };
 
-            var trials = BuildGridTrials(sharpes, totalOrders: 5);
+            var backtests = BuildGridBacktests(sharpes, totalOrders: 5);
             var parameters = BuildGridParameters(xCount: 3, yCount: 3);
             var analyzer = new OptimizationAnalyzer();
 
-            var analysis = analyzer.Run(new OptimizationAnalysisRunParameters(trials, parameters));
+            var analysis = analyzer.Run(new OptimizationAnalysisRunParameters(backtests, parameters));
 
             Assert.NotNull(analysis);
-            Assert.AreEqual(9, analysis.TrialCountUsed);
-            Assert.AreEqual(9, analysis.TrialCountTotal);
+            Assert.AreEqual(9, analysis.BacktestCountUsed);
+            Assert.AreEqual(9, analysis.BacktestCountTotal);
 
-            // Mean = average of {0.10..0.38} = 0.243333...
-            Assert.AreEqual(0.2433, analysis.OverallSharpe.Mean, 1e-3);
-            Assert.AreEqual(0.10, analysis.OverallSharpe.Min, 1e-9);
-            Assert.AreEqual(0.38, analysis.OverallSharpe.Max, 1e-9);
+            // Mean = average of {0.10..0.38}.
+            Assert.That(analysis.OverallSharpe.Mean, Is.EqualTo(0.2433m).Within(0.001m));
+            Assert.AreEqual(0.10m, analysis.OverallSharpe.Min);
+            Assert.AreEqual(0.38m, analysis.OverallSharpe.Max);
         }
 
         [Test]
-        public void Run_BestTrialIsArgmaxSharpe()
+        public void Run_BestBacktestIsArgmaxSharpe()
         {
-            var sharpes = new double[,]
+            var sharpes = new decimal[,]
             {
-                { 0.10, 0.20, 0.30 },
-                { 0.15, 0.25, 0.35 },
-                { 0.18, 0.28, 0.99 } // peak at (2, 2)
+                { 0.10m, 0.20m, 0.30m },
+                { 0.15m, 0.25m, 0.35m },
+                { 0.18m, 0.28m, 0.99m } // peak at (2, 2)
             };
 
-            var trials = BuildGridTrials(sharpes, totalOrders: 5);
+            var backtests = BuildGridBacktests(sharpes, totalOrders: 5);
             var parameters = BuildGridParameters(xCount: 3, yCount: 3);
-            var analysis = new OptimizationAnalyzer().Run(new OptimizationAnalysisRunParameters(trials, parameters));
+            var analysis = new OptimizationAnalyzer().Run(new OptimizationAnalysisRunParameters(backtests, parameters));
 
             Assert.NotNull(analysis.Best);
-            Assert.AreEqual(0.99, analysis.Best.SharpeRatio, 1e-9);
+            Assert.AreEqual(0.99m, analysis.Best.SharpeRatio);
             // Parameters at (xIndex=2, yIndex=2). Grid x: {1,2,3}; y: {10,20,30}.
-            Assert.AreEqual(3.0, analysis.Best.Parameters["x"], 1e-9);
-            Assert.AreEqual(30.0, analysis.Best.Parameters["y"], 1e-9);
+            Assert.AreEqual(3m, analysis.Best.Parameters["x"]);
+            Assert.AreEqual(30m, analysis.Best.Parameters["y"]);
         }
 
         [Test]
         public void Run_FindsInteriorMode()
         {
             // 3x3 with a single interior peak at (1, 1): should produce one mode with 4 neighbors.
-            var sharpes = new double[,]
+            var sharpes = new decimal[,]
             {
-                { 0.10, 0.20, 0.10 },
-                { 0.20, 0.99, 0.20 },
-                { 0.10, 0.20, 0.10 }
+                { 0.10m, 0.20m, 0.10m },
+                { 0.20m, 0.99m, 0.20m },
+                { 0.10m, 0.20m, 0.10m }
             };
 
-            var trials = BuildGridTrials(sharpes, totalOrders: 5);
+            var backtests = BuildGridBacktests(sharpes, totalOrders: 5);
             var parameters = BuildGridParameters(xCount: 3, yCount: 3);
-            var analysis = new OptimizationAnalyzer().Run(new OptimizationAnalysisRunParameters(trials, parameters));
+            var analysis = new OptimizationAnalyzer().Run(new OptimizationAnalysisRunParameters(backtests, parameters));
 
             Assert.AreEqual(1, analysis.Modes.Count);
-            Assert.AreEqual(0.99, analysis.Modes[0].SharpeRatio, 1e-9);
+            Assert.AreEqual(0.99m, analysis.Modes[0].SharpeRatio);
             Assert.AreEqual(4, analysis.Modes[0].NeighborCount);
         }
 
         [Test]
         public void Run_ClusterCountRespectsSqrtCap()
         {
-            // 4 trials -> ceil(sqrt(4)) = 2 -> max 2 clusters.
-            var sharpes = new double[,]
+            // 4 backtests -> ceil(sqrt(4)) = 2 -> max 2 clusters.
+            var sharpes = new decimal[,]
             {
-                { 0.10, 0.20 },
-                { 0.30, 0.40 }
+                { 0.10m, 0.20m },
+                { 0.30m, 0.40m }
             };
 
-            var trials = BuildGridTrials(sharpes, totalOrders: 5);
+            var backtests = BuildGridBacktests(sharpes, totalOrders: 5);
             var parameters = BuildGridParameters(xCount: 2, yCount: 2);
-            var analysis = new OptimizationAnalyzer().Run(new OptimizationAnalysisRunParameters(trials, parameters));
+            var analysis = new OptimizationAnalyzer().Run(new OptimizationAnalysisRunParameters(backtests, parameters));
 
             Assert.LessOrEqual(analysis.Clusters.Count, 2);
         }
 
         [Test]
-        public void Run_BuildsFailedBacktestSummary_FromZeroOrderTrials()
+        public void Run_BuildsFailedBacktestSummary_FromZeroOrderBacktests()
         {
-            // 2x2 grid; every trial has zero orders and carries known analysis tags.
-            var sharpes = new double[,]
+            // 2x2 grid; every backtest has zero orders and carries known analysis tags.
+            var sharpes = new decimal[,]
             {
-                { 0.0, 0.0 },
-                { 0.0, 0.0 }
+                { 0m, 0m },
+                { 0m, 0m }
             };
 
-            var trials = BuildGridTrials(
+            var backtests = BuildGridBacktests(
                 sharpes,
                 totalOrders: 0,
                 analysisNames: new[] { "FlatEquityCurveAnalysis", "ExecutionSpeedAnalysis" });
             var parameters = BuildGridParameters(xCount: 2, yCount: 2);
-            var analysis = new OptimizationAnalyzer().Run(new OptimizationAnalysisRunParameters(trials, parameters));
+            var analysis = new OptimizationAnalyzer().Run(new OptimizationAnalysisRunParameters(backtests, parameters));
 
             Assert.NotNull(analysis.FailedBacktests);
             Assert.AreEqual(4, analysis.FailedBacktests.ZeroOrderCount);
@@ -139,17 +138,17 @@ namespace QuantConnect.Tests.Optimizer.Analysis
         }
 
         [Test]
-        public void Run_OmitsFailedBacktestSummary_WhenAllTrialsTrade()
+        public void Run_OmitsFailedBacktestSummary_WhenAllBacktestsTrade()
         {
-            var sharpes = new double[,]
+            var sharpes = new decimal[,]
             {
-                { 0.10, 0.20 },
-                { 0.30, 0.40 }
+                { 0.10m, 0.20m },
+                { 0.30m, 0.40m }
             };
 
-            var trials = BuildGridTrials(sharpes, totalOrders: 5);
+            var backtests = BuildGridBacktests(sharpes, totalOrders: 5);
             var parameters = BuildGridParameters(xCount: 2, yCount: 2);
-            var analysis = new OptimizationAnalyzer().Run(new OptimizationAnalysisRunParameters(trials, parameters));
+            var analysis = new OptimizationAnalyzer().Run(new OptimizationAnalysisRunParameters(backtests, parameters));
 
             Assert.IsNull(analysis.FailedBacktests);
         }
@@ -157,31 +156,29 @@ namespace QuantConnect.Tests.Optimizer.Analysis
         [Test]
         public void ExtractFrom_ParsesSharpeAndAnalysisNamesFromBacktestJson()
         {
-            // Verifies the on-the-fly extraction path: given the same backtest-result JSON shape
-            // LeanOptimizer.NewResult receives, ExtractFrom pulls out Sharpe / Total Orders /
-            // Analysis tags.
             var parameterSet = new ParameterSet(0, new Dictionary<string, string> { ["x"] = "1", ["y"] = "10" });
-            var json = BuildBacktestJson(0.75, totalOrders: 12, new[] { "FlatEquityCurveAnalysis" });
+            var json = BuildBacktestJson(0.75m, totalOrders: 12, new[] { "FlatEquityCurveAnalysis" });
 
-            var metrics = OptimizationTrialMetrics.ExtractFrom("bt-0", parameterSet, json);
+            var metrics = OptimizationBacktestMetrics.ExtractFrom("bt-0", parameterSet, json);
 
             Assert.NotNull(metrics);
-            Assert.IsTrue(metrics.HasSharpe);
-            Assert.AreEqual(0.75, metrics.Sharpe, 1e-9);
+            Assert.NotNull(metrics.PortfolioStatistics);
+            Assert.AreEqual(0.75m, metrics.SharpeRatio);
+            Assert.AreEqual(0.75m, metrics.PortfolioStatistics.SharpeRatio);
             Assert.AreEqual(12, metrics.TotalOrders);
             CollectionAssert.AreEqual(new[] { "FlatEquityCurveAnalysis" }, metrics.AnalysisNames.ToArray());
-            Assert.AreEqual(1.0, metrics.Parameters["x"], 1e-9);
-            Assert.AreEqual(10.0, metrics.Parameters["y"], 1e-9);
+            Assert.AreEqual(1m, metrics.Parameters["x"]);
+            Assert.AreEqual(10m, metrics.Parameters["y"]);
         }
 
         // ── helpers ──────────────────────────────────────────────────────────────
 
-        private static List<OptimizationTrialMetrics> BuildGridTrials(
-            double[,] sharpes,
+        private static List<OptimizationBacktestMetrics> BuildGridBacktests(
+            decimal[,] sharpes,
             int totalOrders,
             string[] analysisNames = null)
         {
-            var trials = new List<OptimizationTrialMetrics>();
+            var result = new List<OptimizationBacktestMetrics>();
             var xCount = sharpes.GetLength(0);
             var yCount = sharpes.GetLength(1);
             var id = 0;
@@ -194,30 +191,29 @@ namespace QuantConnect.Tests.Optimizer.Analysis
                         ["x"] = (i + 1).ToString(CultureInfo.InvariantCulture),
                         ["y"] = ((j + 1) * 10).ToString(CultureInfo.InvariantCulture)
                     });
-                    // Exercise the real extraction factory so the test mirrors what LeanOptimizer
-                    // does at NewResult time. Drives both the JSON path and the parameter
-                    // parsing in a single line, keeping the on-the-fly contract under test.
                     var json = BuildBacktestJson(sharpes[i, j], totalOrders, analysisNames);
-                    trials.Add(OptimizationTrialMetrics.ExtractFrom($"backtest-{id}", paramSet, json));
+                    result.Add(OptimizationBacktestMetrics.ExtractFrom($"backtest-{id}", paramSet, json));
                     id++;
                 }
             }
-            return trials;
+            return result;
         }
 
-        private static string BuildBacktestJson(double sharpe, int totalOrders, string[] analysisNames)
+        private static string BuildBacktestJson(decimal sharpe, int totalOrders, string[] analysisNames)
         {
-            var statistics = new Dictionary<string, string>
-            {
-                ["Sharpe Ratio"] = sharpe.ToString("R", CultureInfo.InvariantCulture),
-                ["Total Orders"] = totalOrders.ToString(CultureInfo.InvariantCulture)
-            };
             var analyses = (analysisNames ?? System.Array.Empty<string>())
                 .Select(n => new QuantConnect.Analysis(n, "issue", null, null, System.Array.Empty<string>()))
                 .ToList();
+            // Mirror BacktestingResultHandler's output: typed TotalPerformance.PortfolioStatistics
+            // plus an Orders dict the analyzer counts for the failure breakdown.
+            var orders = Enumerable.Range(1, totalOrders).ToDictionary(i => i, i => new { Id = i });
             return JsonConvert.SerializeObject(new
             {
-                Statistics = statistics,
+                TotalPerformance = new
+                {
+                    PortfolioStatistics = new { SharpeRatio = sharpe }
+                },
+                Orders = orders,
                 Analysis = analyses
             });
         }

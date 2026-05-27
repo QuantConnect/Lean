@@ -20,54 +20,48 @@ using System.Collections.Generic;
 namespace QuantConnect.Optimizer
 {
     /// <summary>
-    /// Aggregate diagnostic produced by analyzing a completed optimization. Captures the
-    /// per-trial Sharpe distribution, the best trial, per-parameter sensitivity slices,
-    /// k-means clusters in parameter space, local maxima ("modes"), and any zero-order
-    /// failure breakdown.
+    /// Aggregate diagnostic produced by analyzing a completed optimization.
     /// </summary>
     public class OptimizationAnalysis
     {
         /// <summary>
-        /// Total number of trial backtests observed during the optimization (including failures).
+        /// Total number of backtests observed, including failures.
         /// </summary>
-        public int TrialCountTotal { get; set; }
+        public int BacktestCountTotal { get; set; }
 
         /// <summary>
-        /// Number of trial backtests successfully used in the analysis after filtering failed runs.
+        /// Number of backtests used in the analysis after filtering failures.
         /// </summary>
-        public int TrialCountUsed { get; set; }
+        public int BacktestCountUsed { get; set; }
 
         /// <summary>
-        /// Univariate Sharpe ratio statistics across all used trials.
+        /// Sharpe ratio statistics across all used backtests.
         /// </summary>
         public SharpeSummary OverallSharpe { get; set; }
 
         /// <summary>
-        /// The best-performing trial (argmax of Sharpe).
+        /// The best-performing backtest (argmax of Sharpe).
         /// </summary>
         [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
-        public BestTrialSummary Best { get; set; }
+        public BacktestSummary Best { get; set; }
 
         /// <summary>
-        /// Per-parameter sensitivity report. One entry per optimized parameter.
+        /// Per-parameter sensitivity report; one entry per optimized parameter.
         /// </summary>
         public IReadOnlyList<ParameterReport> Parameters { get; set; }
 
         /// <summary>
         /// K-means clusters in standardized parameter space, ordered by mean Sharpe descending.
-        /// Empty when there are too few trials to cluster meaningfully.
         /// </summary>
         public IReadOnlyList<Cluster> Clusters { get; set; }
 
         /// <summary>
-        /// Local maxima of the Sharpe surface on the parameter grid (face-neighbor sense),
-        /// ordered by Sharpe descending.
+        /// Local maxima of the Sharpe surface on the parameter grid, ordered by Sharpe descending.
         /// </summary>
         public IReadOnlyList<Mode> Modes { get; set; }
 
         /// <summary>
-        /// Summary of backtests that produced zero orders, with their analysis-tag counts.
-        /// Null/omitted when no zero-order trials exist.
+        /// Breakdown of zero-order backtests; null when none exist.
         /// </summary>
         [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
         public FailedBacktestSummary FailedBacktests { get; set; }

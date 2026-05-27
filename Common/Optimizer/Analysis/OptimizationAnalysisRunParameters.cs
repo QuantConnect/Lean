@@ -20,35 +20,30 @@ using System.Collections.Generic;
 namespace QuantConnect.Optimizer.Analysis
 {
     /// <summary>
-    /// Bundles the inputs needed by <see cref="OptimizationAnalyzer"/>: the per-trial metrics
-    /// extracted as each backtest completed, and the parameter grid spec that drove the
-    /// optimization. The optimization-side analogue of <c>ResultsAnalysisRunParameters</c>
-    /// (which serves the backtest analyzer in Engine).
+    /// Bundles the inputs to the optimization analyzer: per-backtest metrics and the parameter grid spec.
     /// </summary>
     public class OptimizationAnalysisRunParameters
     {
         /// <summary>
-        /// All completed trials from the optimization (one per backtest), already reduced to
-        /// the small extracted shape the analyzer reads. Heavy JSON payloads are not retained.
+        /// Completed backtests from the optimization, already reduced to the metrics the analyzer reads.
         /// </summary>
-        public IReadOnlyList<OptimizationTrialMetrics> CompletedTrials { get; }
+        public IReadOnlyList<OptimizationBacktestMetrics> CompletedBacktests { get; }
 
         /// <summary>
-        /// The optimization parameter grid spec (used for searched-min/max/step bounds and to
-        /// drive per-parameter slicing).
+        /// The optimization parameter grid spec.
         /// </summary>
         public IReadOnlyCollection<OptimizationParameter> OptimizationParameters { get; }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="OptimizationAnalysisRunParameters"/> class.
         /// </summary>
-        /// <param name="completedTrials">The completed trials, already extracted.</param>
+        /// <param name="completedBacktests">The completed backtest metrics.</param>
         /// <param name="optimizationParameters">The parameter grid spec.</param>
         public OptimizationAnalysisRunParameters(
-            IReadOnlyList<OptimizationTrialMetrics> completedTrials,
+            IReadOnlyList<OptimizationBacktestMetrics> completedBacktests,
             IReadOnlyCollection<OptimizationParameter> optimizationParameters)
         {
-            CompletedTrials = completedTrials;
+            CompletedBacktests = completedBacktests;
             OptimizationParameters = optimizationParameters;
         }
     }

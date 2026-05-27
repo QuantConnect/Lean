@@ -17,33 +17,33 @@
 namespace QuantConnect.Optimizer
 {
     /// <summary>
-    /// Univariate statistics of the Sharpe ratio across all used trials in an optimization.
+    /// Sharpe ratio statistics across all used backtests in an optimization.
     /// </summary>
     public class SharpeSummary
     {
         /// <summary>
-        /// Arithmetic mean of Sharpe ratios across all used trials.
+        /// Arithmetic mean of Sharpe ratios.
         /// </summary>
-        public double Mean { get; set; }
+        public decimal Mean { get; set; }
 
         /// <summary>
-        /// Sample standard deviation of Sharpe ratios across all used trials.
+        /// Sample standard deviation of Sharpe ratios.
         /// </summary>
-        public double StdDev { get; set; }
+        public decimal StdDev { get; set; }
 
         /// <summary>
         /// Minimum Sharpe ratio observed.
         /// </summary>
-        public double Min { get; set; }
+        public decimal Min { get; set; }
 
         /// <summary>
         /// Maximum Sharpe ratio observed.
         /// </summary>
-        public double Max { get; set; }
+        public decimal Max { get; set; }
 
         /// <summary>
-        /// Median Sharpe ratio across all used trials.
+        /// Median Sharpe ratio.
         /// </summary>
-        public double Median { get; set; }
+        public decimal Median { get; set; }
     }
 }

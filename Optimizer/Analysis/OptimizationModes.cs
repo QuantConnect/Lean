@@ -14,64 +14,58 @@
  *
 */
 
-using QuantConnect.Optimizer;
 using QuantConnect.Optimizer.Parameters;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 
-namespace QuantConnect.Lean.Engine.Results.Analysis.Optimization
+namespace QuantConnect.Optimizer.Analysis
 {
     /// <summary>
-    /// Detects local maxima of the Sharpe surface on the parameter grid: trials whose
-    /// Sharpe is strictly greater than every face-neighbor's Sharpe (face-neighbors differ
-    /// from the candidate in exactly one parameter by one grid step). Works in 1, 2, 3+
-    /// dimensions. Isolated trials with no neighbors are not flagged — there's no
-    /// distribution to find a mode of.
+    /// Detects local maxima of the Sharpe surface; backtests strictly greater than every face-neighbor on the parameter grid.
     /// </summary>
     internal static class OptimizationModes
     {
         public static IReadOnlyList<Mode> Find(
-            IReadOnlyList<OptimizationTrialMetrics> trials,
+            IReadOnlyList<OptimizationBacktestMetrics> backtests,
             IReadOnlyCollection<OptimizationParameter> parameters)
         {
             var modes = new List<Mode>();
-            if (trials == null || parameters == null) return modes;
-            if (parameters.Count == 0 || trials.Count == 0) return modes;
+            if (backtests == null || parameters == null) return modes;
+            if (parameters.Count == 0 || backtests.Count == 0) return modes;
 
             var paramNames = parameters.Select(p => p.Name).ToArray();
 
-            // Sorted distinct values per parameter — these define the grid axes.
-            var axisValues = new Dictionary<string, List<double>>();
+            // Sorted distinct values per parameter define the grid axes.
+            var axisValues = new Dictionary<string, List<decimal>>();
             foreach (var name in paramNames)
             {
-                axisValues[name] = trials
-                    .Where(t => t.Parameters.ContainsKey(name))
-                    .Select(t => t.Parameters[name])
+                axisValues[name] = backtests
+                    .Where(b => b.Parameters.ContainsKey(name))
+                    .Select(b => b.Parameters[name])
                     .Distinct()
                     .OrderBy(v => v)
                     .ToList();
             }
 
-            // Map each trial to its grid position (one index per parameter).
-            var indexed = new List<(OptimizationTrialMetrics Trial, int[] Indices)>();
-            foreach (var t in trials)
+            // Map each backtest to its grid position.
+            var indexed = new List<(OptimizationBacktestMetrics Backtest, int[] Indices)>();
+            foreach (var b in backtests)
             {
-                if (!paramNames.All(t.Parameters.ContainsKey)) continue;
+                if (!paramNames.All(b.Parameters.ContainsKey)) continue;
                 var idx = new int[paramNames.Length];
                 var ok = true;
                 for (var d = 0; d < paramNames.Length; d++)
                 {
-                    idx[d] = axisValues[paramNames[d]].IndexOf(t.Parameters[paramNames[d]]);
+                    idx[d] = axisValues[paramNames[d]].IndexOf(b.Parameters[paramNames[d]]);
                     if (idx[d] < 0) { ok = false; break; }
                 }
-                if (ok) indexed.Add((t, idx));
+                if (ok) indexed.Add((b, idx));
             }
 
-            // O(1) neighbor lookup by index tuple.
-            var byTuple = indexed.ToDictionary(p => TupleKey(p.Indices), p => p.Trial);
+            var byTuple = indexed.ToDictionary(p => TupleKey(p.Indices), p => p.Backtest);
 
-            foreach (var (trial, idx) in indexed)
+            foreach (var (backtest, idx) in indexed)
             {
                 var totalNeighbors = 0;
                 var dominatesAll = true;
@@ -89,7 +83,7 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Optimization
                         if (!byTuple.TryGetValue(TupleKey(neighborIdx), out var neighbor)) continue;
 
                         totalNeighbors++;
-                        if (neighbor.Sharpe >= trial.Sharpe) { dominatesAll = false; break; }
+                        if (neighbor.SharpeRatio >= backtest.SharpeRatio) { dominatesAll = false; break; }
                     }
                 }
 
@@ -97,9 +91,9 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Optimization
                 {
                     modes.Add(new Mode
                     {
-                        BacktestId = trial.BacktestId,
-                        Parameters = new Dictionary<string, double>(trial.Parameters),
-                        SharpeRatio = trial.Sharpe,
+                        BacktestId = backtest.BacktestId,
+                        Parameters = new Dictionary<string, decimal>(backtest.Parameters),
+                        SharpeRatio = backtest.SharpeRatio,
                         NeighborCount = totalNeighbors
                     });
                 }
