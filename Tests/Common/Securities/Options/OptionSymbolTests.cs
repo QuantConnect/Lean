@@ -16,6 +16,7 @@
 using System;
 using System.Collections.Generic;
 using NUnit.Framework;
+using QuantConnect.Securities.IndexOption;
 using QuantConnect.Securities.Option;
 
 namespace QuantConnect.Tests.Common.Securities.Options
@@ -87,6 +88,15 @@ namespace QuantConnect.Tests.Common.Securities.Options
             var amSettledIndexOption = Symbol.CreateOption(Symbols.SPX, "SPX", Market.USA, OptionStyle.European,
                 OptionRight.Call, 200m, new DateTime(2016, 02, 18));
             yield return new TestCaseData(amSettledIndexOption, new DateTime(2016, 02, 18, 8, 30, 0));
+
+            // 3rd Friday cases: SPX is AM-settled, SPXW is PM-settled even on the same date
+            var spxThirdFriday = Symbol.CreateOption(Symbols.SPX, "SPX", Market.USA, OptionStyle.European,
+                OptionRight.Call, 200m, new DateTime(2016, 02, 19));
+            yield return new TestCaseData(spxThirdFriday, new DateTime(2016, 02, 19, 8, 30, 0));
+
+            var spxwThirdFriday = Symbol.CreateOption(Symbols.SPX, "SPXW", Market.USA, OptionStyle.European,
+                OptionRight.Call, 200m, new DateTime(2016, 02, 19));
+            yield return new TestCaseData(spxwThirdFriday, new DateTime(2016, 02, 19, 15, 15, 0));
         }
 
         [TestCaseSource(nameof(ExpirationDateTimeTestCases))]
@@ -94,6 +104,23 @@ namespace QuantConnect.Tests.Common.Securities.Options
         {
             var settlementDateTime = OptionSymbol.GetSettlementDateTime(symbol);
             Assert.AreEqual(expectedSettlementDateTime, settlementDateTime);
+        }
+
+        // AM-settled: SPX, NDX, RUT, VIX -> settle at market open on expiry day
+        // PM-settled: SPXW, RUTW, VIXW, NDXP, NQX -> always settle at market close
+        [TestCase("SPX", true)]
+        [TestCase("NDX", true)]
+        [TestCase("RUT", true)]
+        [TestCase("VIX", true)]
+        [TestCase("SPXW", false)]
+        [TestCase("RUTW", false)]
+        [TestCase("VIXW", false)]
+        [TestCase("NDXP", false)]
+        [TestCase("NQX", false)]
+        public void IsAMSettledClassifiesAllIndexOptionTickers(string ticker, bool expectedAMSettled)
+        {
+            var option = Symbol.CreateOption(Symbols.SPX, ticker, Market.USA, OptionStyle.European, OptionRight.Call, 200m, new DateTime(2016, 02, 19));
+            Assert.AreEqual(expectedAMSettled, IndexOptionSymbol.IsAMSettled(option));
         }
     }
 }
