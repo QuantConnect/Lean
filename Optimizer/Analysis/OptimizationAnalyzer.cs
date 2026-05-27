@@ -33,7 +33,7 @@ namespace QuantConnect.Optimizer.Analysis
         public OptimizationAnalysis Run(OptimizationAnalysisRunParameters parameters)
         {
             var allBacktests = parameters?.CompletedBacktests ?? new List<OptimizationBacktestMetrics>();
-            var backtests = allBacktests.Where(b => b?.PortfolioStatistics != null).ToList();
+            var backtests = allBacktests.Where(b => b?.TotalPerformance?.PortfolioStatistics != null).ToList();
             if (backtests.Count == 0)
             {
                 Log.Trace("OptimizationAnalyzer.Run(): no completed backtests with parsable Sharpe ratios; skipping analysis");

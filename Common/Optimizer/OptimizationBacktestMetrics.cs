@@ -31,9 +31,10 @@ namespace QuantConnect.Optimizer
     public class OptimizationBacktestMetrics : BacktestSummary
     {
         /// <summary>
-        /// The backtest's portfolio statistics; null when absent from the backtest result.
+        /// The backtest's total performance (wraps <see cref="QuantConnect.Statistics.TradeStatistics"/>,
+        /// <see cref="QuantConnect.Statistics.PortfolioStatistics"/>, and <see cref="QuantConnect.Statistics.Trade"/> list); null when absent from the backtest result.
         /// </summary>
-        public PortfolioStatistics PortfolioStatistics { get; set; }
+        public AlgorithmPerformance TotalPerformance { get; set; }
 
         /// <summary>
         /// Number of orders the backtest produced.
@@ -64,12 +65,26 @@ namespace QuantConnect.Optimizer
                 return null;
             }
 
-            ParsedBacktest parsed = null;
+            AlgorithmPerformance totalPerformance = null;
+            var totalOrders = 0;
+            IReadOnlyList<string> analysisNames = System.Array.Empty<string>();
+
             if (!string.IsNullOrEmpty(jsonBacktestResult))
             {
                 try
                 {
-                    parsed = JsonConvert.DeserializeObject<ParsedBacktest>(jsonBacktestResult);
+                    var jo = JObject.Parse(jsonBacktestResult);
+                    // Use case-insensitive lookups: BacktestingResultHandler serializes with CamelCaseNamingStrategy.
+                    totalPerformance = jo.GetValue("TotalPerformance", System.StringComparison.OrdinalIgnoreCase)?.ToObject<AlgorithmPerformance>();
+                    totalOrders = (jo.GetValue("Orders", System.StringComparison.OrdinalIgnoreCase) as JObject)?.Count ?? 0;
+                    var analyses = jo.GetValue("Analysis", System.StringComparison.OrdinalIgnoreCase)?.ToObject<List<QuantConnect.Analysis>>();
+                    if (analyses != null)
+                    {
+                        analysisNames = analyses
+                            .Where(a => !string.IsNullOrEmpty(a?.Name))
+                            .Select(a => a.Name)
+                            .ToList();
+                    }
                 }
                 catch (JsonException ex)
                 {
@@ -77,21 +92,13 @@ namespace QuantConnect.Optimizer
                 }
             }
 
-            var portfolioStats = parsed?.TotalPerformance?.PortfolioStatistics;
-            var analysisNames = parsed?.Analysis == null
-                ? (IReadOnlyList<string>)System.Array.Empty<string>()
-                : parsed.Analysis
-                    .Where(a => !string.IsNullOrEmpty(a?.Name))
-                    .Select(a => a.Name)
-                    .ToList();
-
             return new OptimizationBacktestMetrics
             {
                 BacktestId = backtestId,
                 Parameters = parameters,
-                SharpeRatio = portfolioStats?.SharpeRatio ?? 0m,
-                PortfolioStatistics = portfolioStats,
-                TotalOrders = parsed?.Orders?.Count ?? 0,
+                SharpeRatio = totalPerformance?.PortfolioStatistics?.SharpeRatio ?? 0m,
+                TotalPerformance = totalPerformance,
+                TotalOrders = totalOrders,
                 AnalysisNames = analysisNames
             };
         }
@@ -108,25 +115,6 @@ namespace QuantConnect.Optimizer
                 }
             }
             return result;
-        }
-
-        // Minimal-shape DTO that binds only the backtest-result fields the analyzer reads.
-        private sealed class ParsedBacktest
-        {
-            [JsonProperty("TotalPerformance")]
-            public ParsedTotalPerformance TotalPerformance { get; set; }
-
-            [JsonProperty("Orders")]
-            public JObject Orders { get; set; }
-
-            [JsonProperty("Analysis")]
-            public List<QuantConnect.Analysis> Analysis { get; set; }
-        }
-
-        private sealed class ParsedTotalPerformance
-        {
-            [JsonProperty("PortfolioStatistics")]
-            public PortfolioStatistics PortfolioStatistics { get; set; }
         }
     }
 }

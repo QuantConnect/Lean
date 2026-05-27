@@ -193,8 +193,14 @@ namespace QuantConnect.Optimizer
             {
                 try
                 {
+                    // Snapshot under the lock so a late NewResult on another thread can't mutate the list mid-enumeration.
+                    List<OptimizationBacktestMetrics> backtestsSnapshot;
+                    lock (_completedBacktests)
+                    {
+                        backtestsSnapshot = new List<OptimizationBacktestMetrics>(_completedBacktests);
+                    }
                     var parameters = new OptimizationAnalysisRunParameters(
-                        _completedBacktests,
+                        backtestsSnapshot,
                         NodePacket.OptimizationParameters);
                     result.Analysis = new OptimizationAnalyzer().Run(parameters);
                 }
@@ -271,7 +277,11 @@ namespace QuantConnect.Optimizer
                 var metrics = OptimizationBacktestMetrics.ExtractFrom(backtestId, parameterSet, jsonBacktestResult);
                 if (metrics != null)
                 {
-                    _completedBacktests.Add(metrics);
+                    // Backtest results can arrive on different threads; guard _completedBacktests with its own lock.
+                    lock (_completedBacktests)
+                    {
+                        _completedBacktests.Add(metrics);
+                    }
                 }
 
                 // always notify the strategy

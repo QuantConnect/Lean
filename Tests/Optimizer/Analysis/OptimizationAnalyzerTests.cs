@@ -162,9 +162,9 @@ namespace QuantConnect.Tests.Optimizer.Analysis
             var metrics = OptimizationBacktestMetrics.ExtractFrom("bt-0", parameterSet, json);
 
             Assert.NotNull(metrics);
-            Assert.NotNull(metrics.PortfolioStatistics);
+            Assert.NotNull(metrics.TotalPerformance?.PortfolioStatistics);
             Assert.AreEqual(0.75m, metrics.SharpeRatio);
-            Assert.AreEqual(0.75m, metrics.PortfolioStatistics.SharpeRatio);
+            Assert.AreEqual(0.75m, metrics.TotalPerformance.PortfolioStatistics.SharpeRatio);
             Assert.AreEqual(12, metrics.TotalOrders);
             CollectionAssert.AreEqual(new[] { "FlatEquityCurveAnalysis" }, metrics.AnalysisNames.ToArray());
             Assert.AreEqual(1m, metrics.Parameters["x"]);
