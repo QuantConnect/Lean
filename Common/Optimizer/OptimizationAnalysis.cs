@@ -16,6 +16,7 @@
 
 using Newtonsoft.Json;
 using System.Collections.Generic;
+using System.ComponentModel;
 
 namespace QuantConnect.Optimizer
 {
@@ -24,6 +25,13 @@ namespace QuantConnect.Optimizer
     /// </summary>
     public class OptimizationAnalysis
     {
+        /// <summary>
+        /// Natural-language interpretation of the analysis produced by a downstream AI consumer; empty until populated.
+        /// </summary>
+        [DefaultValue("")]
+        [JsonProperty(DefaultValueHandling = DefaultValueHandling.Ignore)]
+        public string Interpretation { get; set; } = string.Empty;
+
         /// <summary>
         /// Total number of backtests observed, including failures.
         /// </summary>
