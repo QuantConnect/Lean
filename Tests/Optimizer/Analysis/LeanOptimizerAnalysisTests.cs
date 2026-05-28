@@ -19,6 +19,9 @@ using NUnit.Framework;
 using QuantConnect.Optimizer;
 using QuantConnect.Optimizer.Objectives;
 using QuantConnect.Optimizer.Parameters;
+using QuantConnect.Orders;
+using QuantConnect.Packets;
+using QuantConnect.Statistics;
 using QuantConnect.Util;
 using System;
 using System.Collections.Generic;
@@ -120,8 +123,9 @@ namespace QuantConnect.Tests.Optimizer.Analysis
                     var y = parameterSet.Value.TryGetValue("y", out var ys) && decimal.TryParse(ys, NumberStyles.Any, CultureInfo.InvariantCulture, out var yv) ? yv : 0m;
                     // Math.Pow is double-only; cross into double for the surface and back.
                     var sharpe = (decimal)(1.0 - 0.05 * Math.Pow((double)x - 3, 2) - 0.0005 * Math.Pow((double)y - 25, 2));
-                    var orders = Enumerable.Range(1, 10).ToDictionary(i => i, i => new { Id = i });
-                    var payload = new
+                    // Build a real BacktestResult and serialize via the LEAN-wide JsonSerializer
+                    // so the JSON shape matches what BacktestingResultHandler produces.
+                    var result = new QuantConnect.Packets.BacktestResult
                     {
                         // Statistics dict is what the optimizer's Criterion targets (e.g. "Statistics.Profit").
                         Statistics = new Dictionary<string, string>
@@ -129,14 +133,12 @@ namespace QuantConnect.Tests.Optimizer.Analysis
                             ["Profit"] = (x + y).ToString(CultureInfo.InvariantCulture)
                         },
                         // Typed TotalPerformance.PortfolioStatistics is what the analyzer reads.
-                        TotalPerformance = new
-                        {
-                            PortfolioStatistics = new { SharpeRatio = sharpe }
-                        },
-                        Orders = orders,
+                        TotalPerformance = new AlgorithmPerformance(),
+                        Orders = Enumerable.Range(1, 10).ToDictionary(i => i, i => (Order)new MarketOrder()),
                         Analysis = Array.Empty<QuantConnect.Analysis>()
                     };
-                    NewResult(JsonConvert.SerializeObject(payload), id);
+                    result.TotalPerformance.PortfolioStatistics.SharpeRatio = sharpe;
+                    NewResult(result.SerializeJsonToString(), id);
                 });
                 return id;
             }

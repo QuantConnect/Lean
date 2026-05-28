@@ -15,9 +15,9 @@
 */
 
 using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
 using QuantConnect.Logging;
 using QuantConnect.Optimizer.Parameters;
+using QuantConnect.Packets;
 using QuantConnect.Statistics;
 using System.Collections.Generic;
 using System.Globalization;
@@ -65,26 +65,14 @@ namespace QuantConnect.Optimizer
                 return null;
             }
 
-            AlgorithmPerformance totalPerformance = null;
-            var totalOrders = 0;
-            IReadOnlyList<string> analysisNames = System.Array.Empty<string>();
-
+            BacktestResult parsed = null;
             if (!string.IsNullOrEmpty(jsonBacktestResult))
             {
                 try
                 {
-                    var jo = JObject.Parse(jsonBacktestResult);
-                    // Use case-insensitive lookups: BacktestingResultHandler serializes with CamelCaseNamingStrategy.
-                    totalPerformance = jo.GetValue("TotalPerformance", System.StringComparison.OrdinalIgnoreCase)?.ToObject<AlgorithmPerformance>();
-                    totalOrders = (jo.GetValue("Orders", System.StringComparison.OrdinalIgnoreCase) as JObject)?.Count ?? 0;
-                    var analyses = jo.GetValue("Analysis", System.StringComparison.OrdinalIgnoreCase)?.ToObject<List<QuantConnect.Analysis>>();
-                    if (analyses != null)
-                    {
-                        analysisNames = analyses
-                            .Where(a => !string.IsNullOrEmpty(a?.Name))
-                            .Select(a => a.Name)
-                            .ToList();
-                    }
+                    // DeserializeJson uses the LEAN-wide JsonSerializer (CamelCaseNamingStrategy + OrderJsonConverter),
+                    // so polymorphic Orders and camelCase JSON both work without extra configuration.
+                    parsed = jsonBacktestResult.DeserializeJson<BacktestResult>();
                 }
                 catch (JsonException ex)
                 {
@@ -92,13 +80,20 @@ namespace QuantConnect.Optimizer
                 }
             }
 
+            var analysisNames = parsed?.Analysis == null
+                ? (IReadOnlyList<string>)System.Array.Empty<string>()
+                : parsed.Analysis
+                    .Where(a => !string.IsNullOrEmpty(a?.Name))
+                    .Select(a => a.Name)
+                    .ToList();
+
             return new OptimizationBacktestMetrics
             {
                 BacktestId = backtestId,
                 Parameters = parameters,
-                SharpeRatio = totalPerformance?.PortfolioStatistics?.SharpeRatio ?? 0m,
-                TotalPerformance = totalPerformance,
-                TotalOrders = totalOrders,
+                SharpeRatio = parsed?.TotalPerformance?.PortfolioStatistics?.SharpeRatio ?? 0m,
+                TotalPerformance = parsed?.TotalPerformance,
+                TotalOrders = parsed?.Orders?.Count ?? 0,
                 AnalysisNames = analysisNames
             };
         }

@@ -19,6 +19,9 @@ using NUnit.Framework;
 using QuantConnect.Optimizer;
 using QuantConnect.Optimizer.Analysis;
 using QuantConnect.Optimizer.Parameters;
+using QuantConnect.Orders;
+using QuantConnect.Packets;
+using QuantConnect.Statistics;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
@@ -201,21 +204,20 @@ namespace QuantConnect.Tests.Optimizer.Analysis
 
         private static string BuildBacktestJson(decimal sharpe, int totalOrders, string[] analysisNames)
         {
-            var analyses = (analysisNames ?? System.Array.Empty<string>())
-                .Select(n => new QuantConnect.Analysis(n, "issue", null, null, System.Array.Empty<string>()))
-                .ToList();
-            // Mirror BacktestingResultHandler's output: typed TotalPerformance.PortfolioStatistics
-            // plus an Orders dict the analyzer counts for the failure breakdown.
-            var orders = Enumerable.Range(1, totalOrders).ToDictionary(i => i, i => new { Id = i });
-            return JsonConvert.SerializeObject(new
+            // Build a real BacktestResult and serialize through the LEAN-wide JsonSerializer
+            // (CamelCaseNamingStrategy) so the JSON shape matches what BacktestingResultHandler
+            // produces in production — which is what OptimizationBacktestMetrics.ExtractFrom
+            // round-trips through DeserializeJson<BacktestResult>.
+            var result = new QuantConnect.Packets.BacktestResult
             {
-                TotalPerformance = new
-                {
-                    PortfolioStatistics = new { SharpeRatio = sharpe }
-                },
-                Orders = orders,
-                Analysis = analyses
-            });
+                TotalPerformance = new AlgorithmPerformance(),
+                Orders = Enumerable.Range(1, totalOrders).ToDictionary(i => i, i => (Order)new MarketOrder()),
+                Analysis = (analysisNames ?? System.Array.Empty<string>())
+                    .Select(n => new QuantConnect.Analysis(n, "issue", null, null, System.Array.Empty<string>()))
+                    .ToList()
+            };
+            result.TotalPerformance.PortfolioStatistics.SharpeRatio = sharpe;
+            return result.SerializeJsonToString();
         }
 
         private static HashSet<OptimizationParameter> BuildGridParameters(int xCount, int yCount)
