@@ -29,17 +29,7 @@ namespace QuantConnect.Optimizer
         public IReadOnlyDictionary<string, decimal> FixedParameters { get; set; }
 
         /// <summary>
-        /// Grid values of the slicing parameter, sorted ascending.
-        /// </summary>
-        public IReadOnlyList<decimal> ParameterValues { get; set; }
-
-        /// <summary>
-        /// Sharpe ratio at each entry in <see cref="ParameterValues"/>.
-        /// </summary>
-        public IReadOnlyList<decimal> SharpeValues { get; set; }
-
-        /// <summary>
-        /// max(<see cref="SharpeValues"/>) - min(<see cref="SharpeValues"/>) across this slice.
+        /// Max Sharpe minus min Sharpe across this slice.
         /// </summary>
         public decimal SharpeRange { get; set; }
 
@@ -47,11 +37,6 @@ namespace QuantConnect.Optimizer
         /// Maximum absolute slope across this slice's linear segments.
         /// </summary>
         public decimal MaxAbsDerivative { get; set; }
-
-        /// <summary>
-        /// True for the slice whose fixed parameters match the values at the best backtest.
-        /// </summary>
-        public bool IsPrimary { get; set; }
 
         /// <summary>
         /// Piecewise linear pieces of the fit; one per adjacent pair of grid points.

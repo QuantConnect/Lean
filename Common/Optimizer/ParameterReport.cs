@@ -46,11 +46,6 @@ namespace QuantConnect.Optimizer
         public decimal? Step { get; set; }
 
         /// <summary>
-        /// Number of distinct values this parameter took across completed backtests.
-        /// </summary>
-        public int DistinctValueCount { get; set; }
-
-        /// <summary>
         /// Mean Sharpe range (max - min) across every 1-D slice.
         /// </summary>
         public decimal MeanWithinSliceSharpeRange { get; set; }

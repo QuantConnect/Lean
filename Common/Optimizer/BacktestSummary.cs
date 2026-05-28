@@ -14,6 +14,7 @@
  *
 */
 
+using Newtonsoft.Json;
 using System.Collections.Generic;
 
 namespace QuantConnect.Optimizer
@@ -24,8 +25,9 @@ namespace QuantConnect.Optimizer
     public class BacktestSummary
     {
         /// <summary>
-        /// The backtest id.
+        /// The backtest id; kept for programmatic access but not serialized into the analysis JSON.
         /// </summary>
+        [JsonIgnore]
         public string BacktestId { get; set; }
 
         /// <summary>

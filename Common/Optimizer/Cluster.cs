@@ -24,11 +24,6 @@ namespace QuantConnect.Optimizer
     public class Cluster
     {
         /// <summary>
-        /// Cluster index; 0 is the highest mean Sharpe.
-        /// </summary>
-        public int Index { get; set; }
-
-        /// <summary>
         /// Cluster centroid in original parameter units.
         /// </summary>
         public IReadOnlyDictionary<string, decimal> Centroid { get; set; }

@@ -49,17 +49,13 @@ namespace QuantConnect.Optimizer.Analysis
                       .Cast<IGrouping<string, OptimizationBacktestMetrics>>()
                 : owning.GroupBy(b => SliceKey(b, otherParamNames));
 
-            var primaryKey = otherParamNames.Count == 0 ? "" : SliceKey(best, otherParamNames);
-
             var slices = new List<SliceFit>();
             foreach (var group in grouped)
             {
-                var isPrimary = group.Key == primaryKey;
-                var slice = BuildSlice(group.ToList(), name, otherParamNames, isPrimary);
+                var slice = BuildSlice(group.ToList(), name, otherParamNames);
                 if (slice != null) slices.Add(slice);
             }
 
-            var distinctValueCount = owning.Select(b => b.Parameters[name]).Distinct().Count();
             var hasBest = best.Parameters.TryGetValue(name, out var bestValue);
             var (searchedMin, searchedMax, step) = ExtractGridSpec(parameter, owning, name);
             var bestAtEdge = hasBest && IsAtSearchedEdge(bestValue, searchedMin, searchedMax, step);
@@ -76,7 +72,6 @@ namespace QuantConnect.Optimizer.Analysis
                 SearchedMin = searchedMin,
                 SearchedMax = searchedMax,
                 Step = step,
-                DistinctValueCount = distinctValueCount,
                 MeanWithinSliceSharpeRange = meanRange,
                 MaxWithinSliceSharpeRange = maxRange,
                 MaxAbsDerivativePerStep = maxDerivPerStep,
@@ -89,8 +84,7 @@ namespace QuantConnect.Optimizer.Analysis
         private static SliceFit BuildSlice(
             List<OptimizationBacktestMetrics> backtests,
             string varyingParamName,
-            IReadOnlyList<string> otherParamNames,
-            bool isPrimary)
+            IReadOnlyList<string> otherParamNames)
         {
             // Defensively collapse duplicate parameter values by averaging Sharpes.
             var points = backtests
@@ -136,11 +130,8 @@ namespace QuantConnect.Optimizer.Analysis
             return new SliceFit
             {
                 FixedParameters = fixedParams,
-                ParameterValues = xs,
-                SharpeValues = ys,
                 SharpeRange = sharpeRange,
                 MaxAbsDerivative = maxAbsDerivative,
-                IsPrimary = isPrimary,
                 Segments = segments
             };
         }

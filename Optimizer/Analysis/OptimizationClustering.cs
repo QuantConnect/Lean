@@ -88,7 +88,6 @@ namespace QuantConnect.Optimizer.Analysis
 
                 output.Add(new Cluster
                 {
-                    Index = c,
                     Centroid = centroidDict,
                     MemberCount = memberIndices.Count,
                     SharpeMean = sharpes.Average(),
@@ -98,13 +97,8 @@ namespace QuantConnect.Optimizer.Analysis
                 });
             }
 
-            // Re-index so Cluster 0 is the best-performing region.
-            var ordered = output.OrderByDescending(x => x.SharpeMean).ToList();
-            for (var i = 0; i < ordered.Count; i++)
-            {
-                ordered[i].Index = i;
-            }
-            return ordered;
+            // Order by mean Sharpe descending so the best-performing region is first.
+            return output.OrderByDescending(x => x.SharpeMean).ToList();
         }
 
         private static int SelectKByElbow(Dictionary<int, KMeansResult> results)
