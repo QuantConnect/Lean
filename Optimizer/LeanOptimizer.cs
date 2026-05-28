@@ -21,6 +21,7 @@ using QuantConnect.Configuration;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Globalization;
+using QuantConnect.Optimizer.Analysis;
 using QuantConnect.Optimizer.Objectives;
 using QuantConnect.Optimizer.Parameters;
 using QuantConnect.Optimizer.Strategies;
@@ -40,6 +41,9 @@ namespace QuantConnect.Optimizer
         private int _failedBacktest;
         private int _completedBacktest;
         private volatile bool _disposed;
+
+        // Per-backtest metrics extracted in NewResult so we don't retain the full backtest JSON.
+        private readonly List<OptimizationBacktestMetrics> _completedBacktests = new();
 
         /// <summary>
         /// The total completed backtests count
@@ -183,6 +187,29 @@ namespace QuantConnect.Optimizer
 
             // we clean up before we send an update so that the runtime stats are updated
             CleanUpRunningInstance();
+
+            // Set Analysis before ProcessUpdate so SendUpdate can upload it; guarded so analyzer failure never breaks the optimization.
+            if (result != null)
+            {
+                try
+                {
+                    // Snapshot under the lock so a late NewResult on another thread can't mutate the list mid-enumeration.
+                    List<OptimizationBacktestMetrics> backtestsSnapshot;
+                    lock (_completedBacktests)
+                    {
+                        backtestsSnapshot = new List<OptimizationBacktestMetrics>(_completedBacktests);
+                    }
+                    var parameters = new OptimizationAnalysisRunParameters(
+                        backtestsSnapshot,
+                        NodePacket.OptimizationParameters);
+                    result.Analysis = new OptimizationAnalyzer().Run(parameters);
+                }
+                catch (Exception ex)
+                {
+                    Log.Error(ex, "Error running optimization analysis");
+                }
+            }
+
             ProcessUpdate(forceSend: true);
 
             Ended?.Invoke(this, result);
@@ -244,6 +271,17 @@ namespace QuantConnect.Optimizer
                 {
                     Interlocked.Increment(ref _completedBacktest);
                     result = new OptimizationResult(jsonBacktestResult, parameterSet, backtestId);
+                }
+
+                // Extract metrics now and drop the heavy JSON; null results (invalid parameters) are skipped.
+                var metrics = OptimizationBacktestMetrics.ExtractFrom(backtestId, parameterSet, jsonBacktestResult);
+                if (metrics != null)
+                {
+                    // Backtest results can arrive on different threads; guard _completedBacktests with its own lock.
+                    lock (_completedBacktests)
+                    {
+                        _completedBacktests.Add(metrics);
+                    }
                 }
 
                 // always notify the strategy
