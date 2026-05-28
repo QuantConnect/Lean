@@ -73,15 +73,23 @@ namespace QuantConnect.Securities.IndexOption
                 case "NQX":
                 case "SPXW":
                 case "RUTW":
-                // they have weeklies and monthly contracts
-                // NQX https://www.nasdaq.com/docs/NQXFactSheet.pdf
-                // SPXW https://www.cboe.com/tradable_products/sp_500/spx_weekly_options/specifications/
-                // RUTW expires every day
-                return FuturesExpiryUtilityFunctions.ThirdFriday(symbol.ID.Date) == symbol.ID.Date;
+                    // they have weeklies and monthly contracts
+                    // NQX https://www.nasdaq.com/docs/NQXFactSheet.pdf
+                    // SPXW https://www.cboe.com/tradable_products/sp_500/spx_weekly_options/specifications/
+                    // RUTW expires every day
+                    return FuturesExpiryUtilityFunctions.ThirdFriday(symbol.ID.Date) == symbol.ID.Date;
                 default:
                     // NDX/SPX/NQX/VIX/VIXW/NDXP/RUT are all normal contracts
                     return true;
             }
+        }
+
+        /// <summary>
+        /// Returns true if the index option is AM settled
+        /// </summary>
+        public static bool IsAMSettled(Symbol symbol)
+        {
+            return !_nonStandardIndexOptionTickers.Contains(symbol.ID.Symbol.LazyToUpper());
         }
 
         /// <summary>
@@ -107,7 +115,7 @@ namespace QuantConnect.Securities.IndexOption
         /// <returns>Index ticker</returns>
         public static string MapToUnderlying(string indexOption)
         {
-            if(_nonStandardOptionToIndex.TryGetValue(indexOption.LazyToUpper(), out var index))
+            if (_nonStandardOptionToIndex.TryGetValue(indexOption.LazyToUpper(), out var index))
             {
                 return index;
             }
