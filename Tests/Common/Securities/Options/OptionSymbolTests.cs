@@ -83,7 +83,7 @@ namespace QuantConnect.Tests.Common.Securities.Options
 
             var pmSettledIndexOption = Symbol.CreateOption(Symbols.SPX, "SPXW", Market.USA, OptionStyle.European,
                 OptionRight.Call, 200m, new DateTime(2016, 02, 12));
-            yield return new TestCaseData(pmSettledIndexOption, new DateTime(2016, 02, 12, 15, 15, 0));
+            yield return new TestCaseData(pmSettledIndexOption, new DateTime(2016, 02, 12, 15, 0, 0));
 
             var amSettledIndexOption = Symbol.CreateOption(Symbols.SPX, "SPX", Market.USA, OptionStyle.European,
                 OptionRight.Call, 200m, new DateTime(2016, 02, 18));
@@ -96,7 +96,7 @@ namespace QuantConnect.Tests.Common.Securities.Options
 
             var spxwThirdFriday = Symbol.CreateOption(Symbols.SPX, "SPXW", Market.USA, OptionStyle.European,
                 OptionRight.Call, 200m, new DateTime(2016, 02, 19));
-            yield return new TestCaseData(spxwThirdFriday, new DateTime(2016, 02, 19, 15, 15, 0));
+            yield return new TestCaseData(spxwThirdFriday, new DateTime(2016, 02, 19, 15, 0, 0));
         }
 
         [TestCaseSource(nameof(ExpirationDateTimeTestCases))]
@@ -104,6 +104,22 @@ namespace QuantConnect.Tests.Common.Securities.Options
         {
             var settlementDateTime = OptionSymbol.GetSettlementDateTime(symbol);
             Assert.AreEqual(expectedSettlementDateTime, settlementDateTime);
+        }
+
+        [TestCase("SPXW")]
+        [TestCase("RUTW")]
+        [TestCase("VIXW")]
+        [TestCase("NDXP")]
+        [TestCase("NQX")]
+        public void ZeroDTEPMSettledIndexOptionsExpireAt4PM(string ticker)
+        {
+            var expiry = new DateTime(2024, 1, 5); // regular Friday
+            var underlying = Symbol.Create(IndexOptionSymbol.MapToUnderlying(ticker), SecurityType.Index, Market.USA);
+            var option = Symbol.CreateOption(underlying, ticker, Market.USA, OptionStyle.European, OptionRight.Call, 200m, expiry);
+
+            var settlement = OptionSymbol.GetSettlementDateTime(option);
+
+            Assert.AreEqual(expiry.Date.AddHours(15), settlement);
         }
 
         // AM-settled: SPX, NDX, RUT, VIX -> settle at market open on expiry day

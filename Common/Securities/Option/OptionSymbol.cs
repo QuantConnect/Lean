@@ -142,6 +142,13 @@ namespace QuantConnect.Securities.Option
             {
                 expiryTime = exchangeHours.GetNextMarketOpen(expiryTime.Date, false);
             }
+            // 0DTE PM-settled index options expire at 4:00 PM ET, not the regular 4:15 PM ET (CBOE spec)
+            else if (expiryTime.Date == symbol.ID.Date.Date
+                && symbol.SecurityType == SecurityType.IndexOption
+                && !IndexOptionSymbol.IsAMSettled(symbol))
+            {
+                expiryTime = expiryTime.Date.Add(TimeSpan.FromHours(15));
+            }
 
             return expiryTime;
         }
