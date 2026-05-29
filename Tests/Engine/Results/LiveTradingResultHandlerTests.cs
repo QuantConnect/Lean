@@ -149,7 +149,7 @@ namespace QuantConnect.Tests.Engine.Results
             using var messagging = new QuantConnect.Messaging.Messaging();
             var referenceDate = new DateTime(2020, 11, 25);
             var resultHandler = new LiveTradingResultHandler();
-            resultHandler.Initialize(new (new LiveNodePacket(), messagging, api, new BacktestingTransactionHandler(), null));
+            resultHandler.Initialize(new(new LiveNodePacket(), messagging, api, new BacktestingTransactionHandler(), null));
 
             try
             {
@@ -188,6 +188,62 @@ namespace QuantConnect.Tests.Engine.Results
             {
                 resultHandler.Exit();
             }
+        }
+
+        [Test]
+        public void TrimChartsUsesLongerWindowForPerformanceCharts()
+        {
+            var handler = new TestableLiveTradingResultHandler();
+            var utcNow = new DateTime(2020, 11, 25, 12, 0, 0, DateTimeKind.Utc);
+
+            var benchmarkChart = new Chart(BaseResultsHandler.BenchmarkKey);
+            benchmarkChart.Series.Add(BaseResultsHandler.BenchmarkKey, new Series(BaseResultsHandler.BenchmarkKey));
+            handler.Charts[BaseResultsHandler.BenchmarkKey] = benchmarkChart;
+
+            // Add a custom user chart to verify it still uses the 2 day window 
+            var customChart = new Chart("MyCustomChart");
+            customChart.Series.Add("MyMetric", new Series("MyMetric"));
+            handler.Charts["MyCustomChart"] = customChart;
+
+            var returnSeries = handler.Charts[BaseResultsHandler.StrategyEquityKey].Series[BaseResultsHandler.ReturnKey];
+            var equitySeries = handler.Charts[BaseResultsHandler.StrategyEquityKey].Series[BaseResultsHandler.EquityKey];
+            var benchmarkSeries = benchmarkChart.Series[BaseResultsHandler.BenchmarkKey];
+            var customSeries = customChart.Series["MyMetric"];
+
+            // performance charts: 15 daily samples covering well beyond both trim windows
+            for (var i = 15; i >= 1; i--)
+            {
+                var t = utcNow.AddDays(-i);
+                returnSeries.Values.Add(new ChartPoint(t, i));
+                benchmarkSeries.Values.Add(new ChartPoint(t, i));
+                equitySeries.Values.Add(new Candlestick(t, 100, 110, 90, 105));
+            }
+
+            // custom chart: 5 samples to verify it uses the 2-day window
+            for (var i = 5; i >= 1; i--)
+            {
+                customSeries.Values.Add(new ChartPoint(utcNow.AddDays(-i), i));
+            }
+
+            handler.PublicTrimCharts(utcNow);
+
+            // performance charts keep 10 day window
+            var performanceChartsCutoff = utcNow.AddDays(-10);
+            Assert.IsTrue(returnSeries.Values.All(v => v.Time > performanceChartsCutoff));
+            Assert.IsTrue(benchmarkSeries.Values.All(v => v.Time > performanceChartsCutoff));
+            Assert.IsTrue(equitySeries.Values.All(v => v.Time > performanceChartsCutoff));
+            Assert.AreEqual(9, returnSeries.Values.Count);
+            Assert.AreEqual(9, benchmarkSeries.Values.Count);
+
+            // other charts keep 2 day window
+            var otherChartsCutoff = utcNow.AddDays(-2);
+            Assert.IsTrue(customSeries.Values.All(v => v.Time > otherChartsCutoff));
+            Assert.AreEqual(1, customSeries.Values.Count);
+        }
+
+        private class TestableLiveTradingResultHandler : LiveTradingResultHandler
+        {
+            public void PublicTrimCharts(DateTime utcNow) => TrimCharts(utcNow);
         }
 
         private class TestDataFeed : IDataFeed

@@ -336,21 +336,7 @@ namespace QuantConnect.Lean.Engine.Results
                     if (utcNow > _nextChartTrimming)
                     {
                         Log.Debug("LiveTradingResultHandler.Update(): Trimming charts");
-                        var timeLimitUtc = utcNow.AddDays(-2);
-                        lock (ChartLock)
-                        {
-                            foreach (var chart in Charts)
-                            {
-                                foreach (var series in chart.Value.Series)
-                                {
-                                    // trim data that's older than 2 days
-                                    series.Value.Values =
-                                        (from v in series.Value.Values
-                                         where v.Time > timeLimitUtc
-                                         select v).ToList();
-                                }
-                            }
-                        }
+                        TrimCharts(utcNow);
                         _nextChartTrimming = DateTime.UtcNow.AddMinutes(10);
                         Log.Debug("LiveTradingResultHandler.Update(): Finished trimming charts");
                     }
@@ -380,6 +366,30 @@ namespace QuantConnect.Lean.Engine.Results
         {
             // Update the status json file every X
             _nextStatusUpdate = DateTime.UtcNow.AddMinutes(10);
+        }
+
+        /// <summary>
+        /// Removes chart series points older than their retention window: 10 days for performance charts, 2 days for all others.
+        /// </summary>
+        protected virtual void TrimCharts(DateTime utcNow)
+        {
+            lock (ChartLock)
+            {
+                foreach (var chart in Charts)
+                {
+                    var timeLimitUtc = AlgorithmPerformanceCharts.Contains(chart.Key)
+                        ? utcNow.AddDays(-10)
+                        : utcNow.AddDays(-2);
+
+                    foreach (var series in chart.Value.Series)
+                    {
+                        series.Value.Values =
+                            (from v in series.Value.Values
+                             where v.Time > timeLimitUtc
+                             select v).ToList();
+                    }
+                }
+            }
         }
 
         /// <summary>
