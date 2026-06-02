@@ -85,14 +85,28 @@ namespace QuantConnect.Optimizer.Launcher
             var resultDirectory = Path.Combine(_rootResultDirectory, backtestId);
             Directory.CreateDirectory(resultDirectory);
 
-            // Use ProcessStartInfo class
+            // Use ProcessStartInfo class — use ArgumentList for safe per-argument escaping (CWE-88)
             var startInfo = new ProcessStartInfo
             {
                 FileName = _leanLocation,
                 WorkingDirectory = Directory.GetParent(_leanLocation).FullName,
-                Arguments = $"--results-destination-folder \"{resultDirectory}\" --algorithm-id \"{backtestId}\" --optimization-id \"{optimizationId}\" --parameters {parameterSet} --backtest-name \"{backtestName}\" {_extraLeanArguments}",
                 WindowStyle = ProcessWindowStyle.Minimized
             };
+            startInfo.ArgumentList.Add("--results-destination-folder");
+            startInfo.ArgumentList.Add(resultDirectory);
+            startInfo.ArgumentList.Add("--algorithm-id");
+            startInfo.ArgumentList.Add(backtestId);
+            startInfo.ArgumentList.Add("--optimization-id");
+            startInfo.ArgumentList.Add(optimizationId);
+            startInfo.ArgumentList.Add("--parameters");
+            startInfo.ArgumentList.Add(parameterSet.ToString());
+            startInfo.ArgumentList.Add("--backtest-name");
+            startInfo.ArgumentList.Add(backtestName);
+            // Append any extra arguments individually — split preserving quoted tokens
+            foreach (var arg in SplitArguments(_extraLeanArguments))
+            {
+                startInfo.ArgumentList.Add(arg);
+            }
 
             var process = new Process
             {
@@ -153,6 +167,36 @@ namespace QuantConnect.Optimizer.Launcher
                 }
                 Log.Trace(message);
             }
+        }
+
+        private static IEnumerable<string> SplitArguments(string arguments)
+        {
+            if (string.IsNullOrWhiteSpace(arguments))
+                yield break;
+
+            var current = new System.Text.StringBuilder();
+            var inQuotes = false;
+            foreach (var ch in arguments)
+            {
+                if (ch == '"')
+                {
+                    inQuotes = !inQuotes;
+                }
+                else if (ch == ' ' && !inQuotes)
+                {
+                    if (current.Length > 0)
+                    {
+                        yield return current.ToString();
+                        current.Clear();
+                    }
+                }
+                else
+                {
+                    current.Append(ch);
+                }
+            }
+            if (current.Length > 0)
+                yield return current.ToString();
         }
     }
 }

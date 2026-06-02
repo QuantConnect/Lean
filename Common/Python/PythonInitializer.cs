@@ -140,9 +140,13 @@ namespace QuantConnect.Python
                     // Insert any pending path additions
                     if (!_pendingPathAdditions.IsNullOrEmpty())
                     {
-                        var code = string.Join(";", _pendingPathAdditions
-                            .Select(s => $"sys.path.insert({insertionIndex}, '{s}')")).Replace('\\', '/');
-                        PythonEngine.Exec(code, locals: locals);
+                        // Pass each path as a Python object to avoid code injection via path strings
+                        // containing single quotes or newlines (CWE-94)
+                        foreach (var path in _pendingPathAdditions)
+                        {
+                            using var pyPath = new PyString(path.Replace('\\', '/'));
+                            sys.path.insert(insertionIndex, pyPath);
+                        }
 
                         _pendingPathAdditions.Clear();
                     }
