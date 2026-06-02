@@ -79,6 +79,8 @@ namespace QuantConnect.Lean.Engine.Results
         private bool _userExchangeIsOpen;
         private DateTime _lastChartSampleLogicCheck;
         private readonly Dictionary<string, SecurityExchangeHours> _exchangeHours;
+        protected readonly SortedDictionary<DateTime, decimal> _dailyEquityClose = new();
+        protected readonly object _dailyEquityCloseLock = new();
 
 
         /// <summary>
@@ -371,22 +373,78 @@ namespace QuantConnect.Lean.Engine.Results
         /// <summary>
         /// Removes chart series points older than their retention window: 10 days for performance charts, 2 days for all others.
         /// </summary>
+        public override void Sample(DateTime time)
+        {
+            base.Sample(time);
+            if (!Algorithm.IsWarmingUp)
+            {
+                lock (_dailyEquityCloseLock)
+                {
+                    _dailyEquityClose[time.Date] = GetPortfolioValue();
+                }
+            }
+        }
+
+        protected override StatisticsResults GenerateStatisticsResults(Dictionary<string, Chart> charts,
+            SortedDictionary<DateTime, decimal> profitLoss = null, CapacityEstimate estimatedStrategyCapacity = null)
+        {
+            List<KeyValuePair<DateTime, decimal>> historicalCloses;
+            lock (_dailyEquityCloseLock)
+            {
+                historicalCloses = _dailyEquityClose.ToList();
+            }
+
+            if (historicalCloses.Count > 0 &&
+                charts.TryGetValue(StrategyEquityKey, out var strategyEquity) &&
+                strategyEquity.Series.TryGetValue(EquityKey, out var equitySeries))
+            {
+                var existingDates = new HashSet<DateTime>(equitySeries.Values.Select(v => v.Time.Date));
+                var toInject = historicalCloses
+                    .Where(kvp => !existingDates.Contains(kvp.Key))
+                    .Select(kvp => (ISeriesPoint)new Candlestick(kvp.Key, kvp.Value, kvp.Value, kvp.Value, kvp.Value))
+                    .ToList();
+
+                if (toInject.Count > 0)
+                {
+                    var mergedEquity = (CandlestickSeries)equitySeries.Clone();
+                    mergedEquity.Values.InsertRange(0, toInject);
+
+                    var mergedChart = new Chart(StrategyEquityKey);
+                    foreach (var kvp in strategyEquity.Series)
+                    {
+                        mergedChart.Series[kvp.Key] = kvp.Key == EquityKey ? mergedEquity : kvp.Value;
+                    }
+
+                    charts = new Dictionary<string, Chart>(charts) { [StrategyEquityKey] = mergedChart };
+                }
+            }
+
+            return base.GenerateStatisticsResults(charts, profitLoss, estimatedStrategyCapacity);
+        }
+
+        /// <summary>
+        /// Removes chart series points older than their retention window: 2 years for daily statistics series
+        /// (Return, Benchmark), 2 days for all others.
+        /// </summary>
         protected virtual void TrimCharts(DateTime utcNow)
         {
+            var defaultLimit = utcNow.AddDays(-2);
+            var dailyStatsLimit = utcNow.AddDays(-730);
+
             lock (ChartLock)
             {
                 foreach (var chart in Charts)
                 {
-                    var timeLimitUtc = AlgorithmPerformanceCharts.Contains(chart.Key)
-                        ? utcNow.AddDays(-10)
-                        : utcNow.AddDays(-2);
-
                     foreach (var series in chart.Value.Series)
                     {
-                        series.Value.Values =
-                            (from v in series.Value.Values
-                             where v.Time > timeLimitUtc
-                             select v).ToList();
+                        var isDailyStatsSeries =
+                            (chart.Key == StrategyEquityKey && series.Key == ReturnKey) ||
+                            (chart.Key == BenchmarkKey && series.Key == BenchmarkKey);
+
+                        var timeLimitUtc = isDailyStatsSeries ? dailyStatsLimit : defaultLimit;
+                        series.Value.Values = series.Value.Values
+                            .Where(v => v.Time > timeLimitUtc)
+                            .ToList();
                     }
                 }
             }
