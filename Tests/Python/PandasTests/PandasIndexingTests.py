@@ -14,6 +14,7 @@
 from AlgorithmImports import *
 from QuantConnect.Tests import *
 from QuantConnect.Tests.Python import *
+from PandasMapper import PandasColumn
 
 # TODO: Rename to PandasResearchTests and keep this class for QB related tests; rename py module to PandasTests
 class PandasIndexingTests():
@@ -68,3 +69,8 @@ class PandasDataFrameTests():
             return True
         except:
             return False
+
+    def test_column_equals_only_matching_string(self):
+        # A column label should only equal a matching string, never None/ints/floats
+        column = PandasColumn("shares")
+        return (not (column == None)) and (not (column == 0)) and (not (column == 123)) and (column == "shares")
