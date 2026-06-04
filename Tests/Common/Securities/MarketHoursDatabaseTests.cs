@@ -114,6 +114,52 @@ namespace QuantConnect.Tests.Common.Securities
             }
         }
 
+        [TestCase(Market.SH)]
+        [TestCase(Market.SZ)]
+        public void CorrectlyReadsChinaEquityMarketHours(string market)
+        {
+            var exchangeHours = MarketHoursDatabase.FromDataFolder();
+
+            var equityHours = exchangeHours.GetExchangeHours(market, null, SecurityType.Equity);
+            Assert.AreEqual(TimeZones.Shanghai, equityHours.TimeZone);
+
+            foreach (var day in equityHours.MarketHours.Keys)
+            {
+                var marketHours = equityHours.MarketHours[day];
+                if (day == DayOfWeek.Saturday || day == DayOfWeek.Sunday)
+                {
+                    Assert.IsTrue(marketHours.IsClosedAllDay);
+                    continue;
+                }
+
+                var marketSegments = marketHours.Segments.Where(x => x.State == MarketHoursState.Market).ToList();
+                Assert.AreEqual(2, marketSegments.Count);
+                Assert.AreEqual(new TimeSpan(9, 30, 0), marketSegments[0].Start);
+                Assert.AreEqual(new TimeSpan(11, 30, 0), marketSegments[0].End);
+                Assert.AreEqual(new TimeSpan(13, 0, 0), marketSegments[1].Start);
+                Assert.AreEqual(new TimeSpan(15, 0, 0), marketSegments[1].End);
+            }
+        }
+
+        [TestCase(Market.SHF)]
+        [TestCase(Market.DCE)]
+        [TestCase(Market.CZC)]
+        [TestCase(Market.INE)]
+        public void CorrectlyReadsChinaCommodityFutureMarketHours(string market)
+        {
+            var exchangeHours = MarketHoursDatabase.FromDataFolder();
+
+            var futureHours = exchangeHours.GetExchangeHours(market, null, SecurityType.Future);
+            Assert.AreEqual(TimeZones.Shanghai, futureHours.TimeZone);
+
+            var mondaySegments = futureHours.MarketHours[DayOfWeek.Monday].Segments
+                .Where(x => x.State == MarketHoursState.Market)
+                .ToList();
+            Assert.AreEqual(new TimeSpan(9, 0, 0), mondaySegments[0].Start);
+            Assert.AreEqual(new TimeSpan(15, 0, 0), mondaySegments[2].End);
+            Assert.AreEqual(new TimeSpan(21, 0, 0), mondaySegments[3].Start);
+        }
+
         [Test]
         public void CorrectlyReadsUsEquityEarlyCloses()
         {

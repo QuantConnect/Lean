@@ -225,6 +225,8 @@
     <None Include="MaximumDrawdownPercentPortfolioFrameworkRegressionAlgorithm.py" />
     <None Include="MeanVarianceOptimizationFrameworkAlgorithm.py" />
     <None Include="MovingAverageCrossAlgorithm.py" />
+    <None Include="ChinaEquityMovingAverageCrossAlgorithm.py" />
+    <None Include="ChinaFutureMovingAverageCrossAlgorithm.py" />
     <None Include="MultipleSymbolConsolidationAlgorithm.py" />
     <None Include="OptionChainConsistencyRegressionAlgorithm.py" />
     <None Include="OptionChainProviderAlgorithm.py" />

@@ -71,7 +71,15 @@ namespace QuantConnect
             Tuple.Create(InteractiveBrokers, 39),
             Tuple.Create(EUREX, 40),
             Tuple.Create(OSE, 41),
-            Tuple.Create(DYDX, 42)
+            Tuple.Create(DYDX, 42),
+
+            Tuple.Create(SH, 43),
+            Tuple.Create(SZ, 44),
+            Tuple.Create(CFFEX, 45),
+            Tuple.Create(SHF, 46),
+            Tuple.Create(DCE, 47),
+            Tuple.Create(CZC, 48),
+            Tuple.Create(INE, 49)
         };
 
         static Market()
@@ -268,6 +276,41 @@ namespace QuantConnect
         public const string DYDX = "dydx";
 
         /// <summary>
+        /// Shanghai Stock Exchange market, using the Wind SH suffix.
+        /// </summary>
+        public const string SH = "sh";
+
+        /// <summary>
+        /// Shenzhen Stock Exchange market, using the Wind SZ suffix.
+        /// </summary>
+        public const string SZ = "sz";
+
+        /// <summary>
+        /// China Financial Futures Exchange market. Wind uses the CFE suffix; Lean keeps CFE for Cboe Futures Exchange.
+        /// </summary>
+        public const string CFFEX = "cffex";
+
+        /// <summary>
+        /// Shanghai Futures Exchange market, using the Wind SHF suffix.
+        /// </summary>
+        public const string SHF = "shf";
+
+        /// <summary>
+        /// Dalian Commodity Exchange market, using the Wind DCE suffix.
+        /// </summary>
+        public const string DCE = "dce";
+
+        /// <summary>
+        /// Zhengzhou Commodity Exchange market, using the Wind CZC suffix.
+        /// </summary>
+        public const string CZC = "czc";
+
+        /// <summary>
+        /// Shanghai International Energy Exchange market, using the Wind INE suffix.
+        /// </summary>
+        public const string INE = "ine";
+
+        /// <summary>
         /// Adds the specified market to the map of available markets with the specified identifier.
         /// </summary>
         /// <param name="market">The market string to add</param>
@@ -333,6 +376,51 @@ namespace QuantConnect
         public static List<string> SupportedMarkets()
         {
             return Markets.Keys.ToList();
+        }
+
+        /// <summary>
+        /// Attempts to resolve a Wind-style ticker suffix to a Lean market code.
+        /// </summary>
+        public static bool TryGetMarketFromWindTicker(string ticker, out string market)
+        {
+            market = null;
+            if (string.IsNullOrWhiteSpace(ticker))
+            {
+                return false;
+            }
+
+            var suffixIndex = ticker.LastIndexOf('.');
+            if (suffixIndex < 0 || suffixIndex == ticker.Length - 1)
+            {
+                return false;
+            }
+
+            switch (ticker.Substring(suffixIndex + 1).ToUpperInvariant())
+            {
+                case "SH":
+                    market = SH;
+                    return true;
+                case "SZ":
+                    market = SZ;
+                    return true;
+                case "CFE":
+                    market = CFFEX;
+                    return true;
+                case "SHF":
+                    market = SHF;
+                    return true;
+                case "DCE":
+                    market = DCE;
+                    return true;
+                case "CZC":
+                    market = CZC;
+                    return true;
+                case "INE":
+                    market = INE;
+                    return true;
+                default:
+                    return false;
+            }
         }
     }
 }

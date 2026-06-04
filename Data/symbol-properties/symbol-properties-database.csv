@@ -4,6 +4,18 @@ market,symbol,type,description,quote_currency,contract_multiplier,minimum_price_
 # Use # signs for comments
 #
 
+sh,[*],equity,Shanghai Stock Exchange Equity,CNY,1,0.01,100,,100
+sz,[*],equity,Shenzhen Stock Exchange Equity,CNY,1,0.01,100,,100
+sh,[*],base,Shanghai Stock Exchange Fund,CNY,1,0.001,100,,100
+sz,[*],base,Shenzhen Stock Exchange Fund,CNY,1,0.001,100,,100
+cffex,IF,future,CSI 300 Index Futures,CNY,300,0.2,1,,1
+cffex,[*],future,China Financial Futures Exchange Future,CNY,1,0.01,1,,1
+shf,RB,future,Steel Rebar Futures,CNY,10,1,1,,1
+shf,[*],future,Shanghai Futures Exchange Future,CNY,1,0.01,1,,1
+dce,[*],future,Dalian Commodity Exchange Future,CNY,1,0.01,1,,1
+czc,[*],future,Zhengzhou Commodity Exchange Future,CNY,1,0.01,1,,1
+ine,[*],future,Shanghai International Energy Exchange Future,CNY,1,0.01,1,,1
+
 eurex,FESX,future,EURO STOXX 50 Index Futures,EUR,10,1,1,,1
 eurex,FDAX,future,DAX Futures,EUR,25,1,1,,1
 eurex,FSDX,future,DAX 50 ESG Futures,EUR,25,1,1,,1

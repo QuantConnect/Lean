@@ -54,6 +54,11 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
         public IReadOnlyList<QuantConnect.Analysis> Run(SortedList<DateTime, decimal> backtestEquity,
             SortedList<DateTime, decimal> benchmarkEquity)
         {
+            if (backtestEquity.Count < 2 || benchmarkEquity.Count < 2)
+            {
+                return SingleResponse(null);
+            }
+
             var backtestReturns = backtestEquity.PercentChange();
             var benchmarkReturns = benchmarkEquity.PercentChange();
 

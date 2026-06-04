@@ -155,6 +155,44 @@ namespace QuantConnect.Lean.Engine.Results.Analysis
                 return (new(), new());
             }
 
+            var chartSampler = new SeriesSampler(TimeSpan.FromDays(1));
+            var chartSampledEquity = chartSampler.Sample(equitySeries, equitySeries.Values.First().Time, equitySeries.Values.Last().Time);
+            var chartEquityByTime = new SortedList<DateTime, decimal>(
+                chartSampledEquity.Values.ToDictionary(
+                    p => p.Time,
+                    p => p is Candlestick c ? c.Close ?? 0m : ((ChartPoint)p).Y ?? 0m));
+
+            if (result.Charts.TryGetValue("Benchmark", out var benchmarkChart) &&
+                benchmarkChart.Series.TryGetValue("Benchmark", out var benchmarkChartSeries) &&
+                benchmarkChartSeries.Values.Count > 0)
+            {
+                var chartSampledBenchmark = chartSampler.Sample(
+                    benchmarkChartSeries,
+                    benchmarkChartSeries.Values.First().Time,
+                    benchmarkChartSeries.Values.Last().Time);
+                var chartBenchmarkByTime = new SortedList<DateTime, decimal>(
+                    chartSampledBenchmark.Values.ToDictionary(
+                        p => p.Time,
+                        p => p is Candlestick c ? c.Close ?? 0m : ((ChartPoint)p).Y ?? 0m));
+
+                if (chartBenchmarkByTime.Count == 0 || chartBenchmarkByTime.Values[0] == 0m)
+                {
+                    return (chartEquityByTime, new());
+                }
+
+                var chartCommonKeys = chartEquityByTime.Keys.Intersect(chartBenchmarkByTime.Keys).ToHashSet();
+                if (chartCommonKeys.Count == 0)
+                {
+                    return (chartEquityByTime, new());
+                }
+
+                return (
+                    new SortedList<DateTime, decimal>(
+                        chartEquityByTime.Where(kv => chartCommonKeys.Contains(kv.Key)).ToDictionary(kv => kv.Key, kv => kv.Value)),
+                    new SortedList<DateTime, decimal>(
+                        chartBenchmarkByTime.Where(kv => chartCommonKeys.Contains(kv.Key)).ToDictionary(kv => kv.Key, kv => kv.Value)));
+            }
+
             // ── 2. Benchmark from SPY history ─────────────────────────────────────
             var spy = Symbol.Create("SPY", SecurityType.Equity, Market.USA);
             var exchangeTimeZone = MarketHoursDatabase.FromDataFolder()
@@ -171,6 +209,11 @@ namespace QuantConnect.Lean.Engine.Results.Analysis
             }
 
             // ── 3. Resample both to daily data points ────────────────────────────
+            if (benchmarkSeries.Count == 0)
+            {
+                return (chartEquityByTime, new());
+            }
+
             var sampler = new SeriesSampler(TimeSpan.FromDays(1));
             var start = new DateTime(
                 Math.Max(equitySeries.Values.First().Time.Ticks, benchmarkSeries.Keys.First().Ticks));

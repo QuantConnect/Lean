@@ -815,7 +815,9 @@ namespace QuantConnect.Algorithm
             // if the benchmark hasn't been set yet, load in the default from the brokerage model
             if (Benchmark == null)
             {
-                Benchmark = BrokerageModel.GetBenchmark(Securities);
+                Benchmark = AccountCurrency == Currencies.CNY
+                    ? new FuncBenchmark(_ => 0)
+                    : BrokerageModel.GetBenchmark(Securities);
             }
 
             // Check benchmark timezone against algorithm timezone to warn for misaligned statistics
@@ -3634,6 +3636,11 @@ namespace QuantConnect.Algorithm
             if (string.IsNullOrEmpty(market))
             {
                 if (securityType == SecurityType.Index && IndexSymbol.TryGetIndexMarket(ticker, out market))
+                {
+                    return market;
+                }
+
+                if (Market.TryGetMarketFromWindTicker(ticker, out market))
                 {
                     return market;
                 }

@@ -104,6 +104,40 @@ namespace QuantConnect.Tests.Common.Securities
             Assert.AreEqual(defaultSymbolProperties.LotSize, 1);
         }
 
+        [TestCase(Market.SH)]
+        [TestCase(Market.SZ)]
+        public void LoadsChinaEquitySymbolProperties(string market)
+        {
+            var db = SymbolPropertiesDatabase.FromDataFolder();
+            var symbol = Symbol.Create("600000", SecurityType.Equity, market);
+            var windSymbol = Symbol.Create($"600000.{(market == Market.SH ? "SH" : "SZ")}", SecurityType.Equity, market);
+
+            var symbolProperties = db.GetSymbolProperties(symbol.ID.Market, symbol, symbol.SecurityType, Currencies.CNY);
+            var windSymbolProperties = db.GetSymbolProperties(windSymbol.ID.Market, windSymbol, windSymbol.SecurityType, Currencies.CNY);
+
+            Assert.AreEqual(Currencies.CNY, symbolProperties.QuoteCurrency);
+            Assert.AreEqual(Currencies.CNY, windSymbolProperties.QuoteCurrency);
+            Assert.AreEqual(1m, symbolProperties.ContractMultiplier);
+            Assert.AreEqual(0.01m, symbolProperties.MinimumPriceVariation);
+            Assert.AreEqual(100m, symbolProperties.LotSize);
+            Assert.AreEqual(100m, symbolProperties.MinimumOrderSize);
+        }
+
+        [TestCase("RB", Market.SHF, 10, 1)]
+        [TestCase("IF", Market.CFFEX, 300, 0.2)]
+        public void LoadsChinaFutureSymbolProperties(string ticker, string market, int expectedMultiplier, double expectedTick)
+        {
+            var db = SymbolPropertiesDatabase.FromDataFolder();
+            var symbol = Symbol.Create(ticker, SecurityType.Future, market);
+
+            var symbolProperties = db.GetSymbolProperties(symbol.ID.Market, symbol, symbol.SecurityType, Currencies.CNY);
+
+            Assert.AreEqual(Currencies.CNY, symbolProperties.QuoteCurrency);
+            Assert.AreEqual(expectedMultiplier, symbolProperties.ContractMultiplier);
+            Assert.AreEqual((decimal)expectedTick, symbolProperties.MinimumPriceVariation);
+            Assert.AreEqual(1m, symbolProperties.LotSize);
+        }
+
         [TestCase(Market.FXCM, SecurityType.Forex)]
         [TestCase(Market.Oanda, SecurityType.Forex)]
         [TestCase(Market.Coinbase, SecurityType.Crypto)]

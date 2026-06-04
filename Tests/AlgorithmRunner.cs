@@ -53,6 +53,7 @@ namespace QuantConnect.Tests
             DateTime? endDate = null,
             string setupHandler = "RegressionSetupHandlerWrapper",
             decimal? initialCash = null,
+            string initialCashCurrency = Currencies.USD,
             string algorithmLocation = null,
             bool returnLogs = false,
             Dictionary<string, string> customConfigurations = null)
@@ -160,7 +161,7 @@ namespace QuantConnect.Tests
                             job.PeriodFinish = endDate;
                             if (initialCash.HasValue)
                             {
-                                job.CashAmount = new CashAmount(initialCash.Value, Currencies.USD);
+                                job.CashAmount = new CashAmount(initialCash.Value, initialCashCurrency);
                             }
                             algorithmManager = new AlgorithmManager(false, job);
 

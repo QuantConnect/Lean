@@ -57,6 +57,11 @@ namespace QuantConnect
         public const string CNH = "CNH";
 
         /// <summary>
+        /// CNY (Chinese Yuan Renminbi onshore) currency string
+        /// </summary>
+        public const string CNY = "CNY";
+
+        /// <summary>
         /// CHF (Swiss Franc) currency string
         /// </summary>
         public const string CHF = "CHF";
