@@ -34,6 +34,10 @@ namespace QuantConnect.Logging
         private static int _level = 1;
         private static ILogHandler _logHandler = new ConsoleLogHandler();
 
+        public static int UserId { get; private set; }
+        public static int ProjectId { get; private set; }
+        public static int JobId { get; private set; }
+
         /// <summary>
         /// Gets or sets the ILogHandler instance used as the global logging implementation.
         /// </summary>
@@ -65,6 +69,14 @@ namespace QuantConnect.Logging
         {
             get { return _level; }
             set { _level = value; }
+        }
+
+        public static void Initialize(ILogHandler logHandler, int userId, int projectId, int jobId)
+        {
+            _logHandler = logHandler;
+            UserId = userId;
+            ProjectId = projectId;
+            JobId = jobId;
         }
 
         /// <summary>
@@ -160,6 +172,31 @@ namespace QuantConnect.Logging
             {
                 Console.WriteLine("Log.Debug(): Error writing debug: " + err.Message);
             }
+        }
+
+        /// <summary>
+        /// Output report log to the console
+        /// </summary>
+        /// <param name="text">The message to write</param>
+        public static void Report(string text)
+        {
+            try
+            {
+                _logHandler.Report(text);
+            }
+            catch (Exception err)
+            {
+                Console.WriteLine("Log.Report(): Error writing report: " + err.Message);
+            }
+        }
+
+        /// <summary>
+        /// Output report log to the console
+        /// </summary>
+        /// <param name="args">Values to write as csv line</param>
+        public static void Report(params object[] args)
+        {
+            Report($"{UserId},{ProjectId},{JobId},{string.Join(",", args)}");
         }
 
         /// <summary>

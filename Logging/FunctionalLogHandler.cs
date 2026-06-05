@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -29,6 +29,7 @@ namespace QuantConnect.Logging
         private readonly Action<string> _debug;
         private readonly Action<string> _trace;
         private readonly Action<string> _error;
+        private readonly Action<string> _report;
 
         /// <summary>
         /// Default constructor to handle MEF.
@@ -48,6 +49,15 @@ namespace QuantConnect.Logging
             _debug = debug;
             _trace = trace;
             _error = error;
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="QuantConnect.Logging.FunctionalLogHandler"/> class.
+        /// </summary>
+        public FunctionalLogHandler(Action<string> debug, Action<string> trace, Action<string> error, Action<string> report)
+            : this(debug, trace, error)
+        {
+            _report = report;
         }
 
         /// <summary>
@@ -83,6 +93,18 @@ namespace QuantConnect.Logging
             if (_trace != null)
             {
                 _trace(DateTime.Now.ToString(DateFormat, CultureInfo.InvariantCulture) + " TRACE " + text);
+            }
+        }
+
+        /// <summary>
+        /// Write report message to log
+        /// </summary>
+        /// <param name="text">The report text to log</param>
+        public void Report(string text)
+        {
+            if (_report != null)
+            {
+                _report(DateTime.Now.ToString(DateFormat, CultureInfo.InvariantCulture) + " REPORT " + text);
             }
         }
 

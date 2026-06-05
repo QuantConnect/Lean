@@ -133,7 +133,7 @@ namespace QuantConnect.Tests
                 if (returnLogs)
                 {
                     var storeLog = (string logMessage) => logs.Add(logMessage);
-                    newLogHandlers.Add(new FunctionalLogHandler(storeLog, storeLog, storeLog));
+                    newLogHandlers.Add(new FunctionalLogHandler(storeLog, storeLog, storeLog, storeLog));
                 }
 
                 using (Log.LogHandler = new CompositeLogHandler(newLogHandlers.ToArray()))
