@@ -65,5 +65,40 @@ def getOrderProperties() -> TerminalLinkOrderProperties:
                 Assert.IsNull(orderProperties.Strategy.Fields[3].Value);
             }
         }
+
+        [Test]
+        public void LocateFieldsDefaultToEmpty()
+        {
+            // Locate fields are only meaningful for Reg SHO short equity sales; for any other
+            // order they must be unset so the brokerage doesn't emit EMSX_LOCATE_* on the request.
+            var properties = new TerminalLinkOrderProperties();
+            Assert.IsNull(properties.LocateBroker);
+            Assert.IsNull(properties.LocateId);
+        }
+
+        [Test]
+        public void SetsLocateFieldsFromPython()
+        {
+            using (Py.GIL())
+            {
+                var module = PyModule.FromString("locateFieldsModule",
+                    @"
+from AlgorithmImports import *
+
+def getOrderProperties() -> TerminalLinkOrderProperties:
+    properties = TerminalLinkOrderProperties()
+    properties.LocateBroker = ""BMTB""
+    properties.LocateId = ""LOC-123""
+    return properties
+");
+
+                dynamic getOrderProperties = module.GetAttr("getOrderProperties");
+                var properties = (TerminalLinkOrderProperties)getOrderProperties();
+
+                Assert.IsNotNull(properties);
+                Assert.AreEqual("BMTB", properties.LocateBroker);
+                Assert.AreEqual("LOC-123", properties.LocateId);
+            }
+        }
     }
 }

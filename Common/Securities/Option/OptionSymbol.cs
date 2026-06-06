@@ -76,7 +76,7 @@ namespace QuantConnect.Securities.Option
         /// <returns>The underlying ticker</returns>
         public static string MapToUnderlying(string optionTicker, SecurityType securityType)
         {
-            if(securityType == SecurityType.FutureOption || securityType == SecurityType.Future)
+            if (securityType == SecurityType.FutureOption || securityType == SecurityType.Future)
             {
                 return FuturesOptionsSymbolMappings.MapFromOption(optionTicker);
             }
@@ -133,10 +133,21 @@ namespace QuantConnect.Securities.Option
                 throw new ArgumentException($"The symbol {symbol} is not an option type");
             }
 
-            // Standard index options are AM-settled, which means they settle on market open of the expiration date
-            if (expiryTime.Date == symbol.ID.Date.Date && symbol.SecurityType == SecurityType.IndexOption && IsStandard(symbol))
+            // Standard index options are AM-settled, which means they settle on market open of the expiration date.
+            // Non-standard tickers (e.g. SPXW, RUTW) are always PM-settled, even when expiring on the 3rd Friday.
+            if (expiryTime.Date == symbol.ID.Date.Date
+                && symbol.SecurityType == SecurityType.IndexOption
+                && IsStandard(symbol)
+                && IndexOptionSymbol.IsAMSettled(symbol))
             {
                 expiryTime = exchangeHours.GetNextMarketOpen(expiryTime.Date, false);
+            }
+            // 0DTE PM-settled index options expire at 4:00 PM ET, not the regular 4:15 PM ET (CBOE spec)
+            else if (expiryTime.Date == symbol.ID.Date.Date
+                && symbol.SecurityType == SecurityType.IndexOption
+                && !IndexOptionSymbol.IsAMSettled(symbol))
+            {
+                expiryTime = expiryTime.Date.Add(TimeSpan.FromHours(15));
             }
 
             return expiryTime;

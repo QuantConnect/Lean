@@ -15,13 +15,17 @@
 
 using System;
 using System.Linq;
+using System.Reflection;
 using Python.Runtime;
 using NUnit.Framework;
 using QuantConnect.Research;
 using System.Collections.Generic;
+using QuantConnect.Data;
 using QuantConnect.Data.Fundamental;
+using QuantConnect.Data.Market;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Scheduling;
+using QuantConnect.Util;
 
 namespace QuantConnect.Tests.Research
 {
@@ -825,6 +829,25 @@ class Test():
         }
 
         [Test]
+        public void FilterUniverseDataFallsBackToCurrencyPairMatchingWhenSecurityTypesDiffer()
+        {
+            var eurBase = new Symbol(SecurityIdentifier.GenerateBase(typeof(Fundamental), "EUR", Market.USA), "EUR");
+            var gbpBase = new Symbol(SecurityIdentifier.GenerateBase(typeof(Fundamental), "GBP", Market.USA), "GBP");
+            var eurUsd = Symbol.Create("EURUSD", SecurityType.Forex, Market.Oanda);
+
+            // selection returns Forex — security type differs from Base data symbols
+            var filteredSymbols = new HashSet<Symbol> { eurUsd };
+            var data = new List<BaseData> { new Tick { Symbol = eurBase }, new Tick { Symbol = gbpBase } };
+
+            var filterMethod = typeof(QuantBook).GetMethod("FilterUniverseData", BindingFlags.NonPublic | BindingFlags.Static);
+            var result = (List<BaseData>)filterMethod.Invoke(null, new object[] { data, filteredSymbols, (SecurityType?)eurUsd.SecurityType });
+
+            // EUR matches EURUSD base currency, GBP matches neither
+            Assert.AreEqual(1, result.Count);
+            Assert.AreEqual(eurBase, result[0].Symbol);
+        }
+
+        [Test]
         public void PerformSelectionDoesNotSkipDataPointWhenPreviousDataPointIsYielded()
         {
             var historyDataPoints = new List<BaseDataCollection>()
@@ -875,7 +898,7 @@ class Test():
 .Replace("{identation}", identation, StringComparison.InvariantCulture);
         }
 
-        private class QuantBookTestClass: QuantBook
+        private class QuantBookTestClass : QuantBook
         {
             public static IEnumerable<BaseDataCollection> PerformSelection(IEnumerable<BaseDataCollection> history, DateTime start, DateTime end, IDateRule dateRule)
             {

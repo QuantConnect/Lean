@@ -85,5 +85,17 @@ namespace QuantConnect.Tests.Python
                 Assert.IsTrue(exception.Contains("No key found for either mapped or original key.", StringComparison.InvariantCulture), exception);
             }
         }
+
+        [Test]
+        public void ColumnEqualsOnlyMatchingString()
+        {
+            using (Py.GIL())
+            {
+                PyObject result = _pandasDataFrameTests.test_column_equals_only_matching_string();
+                var test = result.As<bool>();
+
+                Assert.IsTrue(test);
+            }
+        }
     }
 }

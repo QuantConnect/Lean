@@ -940,6 +940,7 @@ namespace QuantConnect.Research
             var history = History(universe, start, endDate);
 
             HashSet<Symbol> filteredSymbols = null;
+            SecurityType? filteredSecurityType = null;
             Func<BaseDataCollection, BaseDataCollection> processDataPoint = dataPoint =>
             {
                 var utcTime = dataPoint.EndTime.ConvertToUtc(universe.Configuration.ExchangeTimeZone);
@@ -947,14 +948,28 @@ namespace QuantConnect.Research
                 if (!ReferenceEquals(selection, Universe.Unchanged))
                 {
                     filteredSymbols = selection.ToHashSet();
+                    filteredSecurityType = filteredSymbols.FirstOrDefault()?.ID.SecurityType;
                 }
-                dataPoint.Data = dataPoint.Data.Where(x => filteredSymbols == null || filteredSymbols.Contains(x.Symbol)).ToList();
+                dataPoint.Data = FilterUniverseData(dataPoint.Data, filteredSymbols, filteredSecurityType);
                 return dataPoint;
             };
 
             Func<BaseDataCollection, DateTime> getTime = dataPoint => dataPoint.EndTime.Date;
 
             return PerformSelection<BaseDataCollection, BaseDataCollection>(history, processDataPoint, getTime, start, endDate, dateRule);
+        }
+
+        private static List<BaseData> FilterUniverseData(List<BaseData> data, HashSet<Symbol> filteredSymbols, SecurityType? filteredSecurityType)
+        {
+            return data.Where(x =>
+                filteredSymbols == null ||
+                filteredSymbols.Contains(x.Symbol) ||
+                (filteredSecurityType.HasValue && x.Symbol.SecurityType != filteredSecurityType.Value &&
+                 filteredSymbols.Any(s =>
+                     CurrencyPairUtil.TryDecomposeCurrencyPair(s, out var baseCurrency, out var quoteCurrency) &&
+                     (x.Symbol.Value.Equals(baseCurrency, StringComparison.OrdinalIgnoreCase) ||
+                      x.Symbol.Value.Equals(quoteCurrency, StringComparison.OrdinalIgnoreCase))))
+            ).ToList();
         }
 
         /// <summary>

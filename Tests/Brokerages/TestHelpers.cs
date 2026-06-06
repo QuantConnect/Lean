@@ -58,8 +58,11 @@ namespace QuantConnect.Tests.Brokerages
                     break;
 
                 case SecurityType.Option:
-                case SecurityType.IndexOption:
                     actualSymbol = Symbols.CreateOptionSymbol(symbol, OptionRight.Call, 1000, new DateTime(2020, 3, 26));
+                    break;
+                case SecurityType.IndexOption:
+                    var index = Symbols.CreateIndexSymbol(symbol);
+                    actualSymbol = Symbol.CreateOption(index, index.ID.Market, SecurityType.IndexOption.DefaultOptionStyle(), OptionRight.Call, 6500m, new(2026, 04, 13));
                     break;
 
                 default:

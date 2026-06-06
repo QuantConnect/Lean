@@ -37,7 +37,10 @@ class PandasColumn(str):
 
     def __eq__(self, other):
         # We need this since Lean created data frames might contain Symbol objects in the indexes
-        return super().__eq__(other) and type(other) is not Symbol
+        if type(other) is Symbol:
+            return False
+        # For non-strings str.__eq__ returns NotImplemented, which Python resolves to False
+        return super().__eq__(other)
 
     def __hash__(self):
         return super().__hash__()
