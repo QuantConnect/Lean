@@ -85,38 +85,40 @@ namespace QuantConnect.Data.Common
             Period = resolution.ToTimeSpan();
             _extendedMarketHours = extendedMarketHours;
 
+            Consolidator = CreateConsolidator(resolution, dataType, tickType);
+            Consolidator.DataConsolidated += ForwardConsolidatedBar;
+        }
+
+        /// <summary>
+        /// Creates the inner consolidator that produces the requested <paramref name="dataType"/> output.
+        /// </summary>
+        protected virtual IDataConsolidator CreateConsolidator(Resolution resolution, Type dataType, TickType tickType)
+        {
             if (dataType == typeof(Tick))
             {
                 if (tickType == TickType.Trade)
                 {
-                    Consolidator = resolution == Resolution.Daily
+                    return resolution == Resolution.Daily
                         ? new TickConsolidator(DailyStrictEndTime)
                         : new TickConsolidator(Period);
                 }
-                else
-                {
-                    Consolidator = resolution == Resolution.Daily
-                        ? new TickQuoteBarConsolidator(DailyStrictEndTime)
-                        : new TickQuoteBarConsolidator(Period);
-                }
+                return resolution == Resolution.Daily
+                    ? new TickQuoteBarConsolidator(DailyStrictEndTime)
+                    : new TickQuoteBarConsolidator(Period);
             }
-            else if (dataType == typeof(TradeBar))
+            if (dataType == typeof(TradeBar))
             {
-                Consolidator = resolution == Resolution.Daily
+                return resolution == Resolution.Daily
                     ? new TradeBarConsolidator(DailyStrictEndTime)
                     : new TradeBarConsolidator(Period);
             }
-            else if (dataType == typeof(QuoteBar))
+            if (dataType == typeof(QuoteBar))
             {
-                Consolidator = resolution == Resolution.Daily
+                return resolution == Resolution.Daily
                     ? new QuoteBarConsolidator(DailyStrictEndTime)
                     : new QuoteBarConsolidator(Period);
             }
-            else
-            {
-                throw new ArgumentNullException(nameof(dataType), $"{dataType.Name} not supported");
-            }
-            Consolidator.DataConsolidated += ForwardConsolidatedBar;
+            throw new ArgumentNullException(nameof(dataType), $"{dataType.Name} not supported");
         }
 
         /// <summary>
