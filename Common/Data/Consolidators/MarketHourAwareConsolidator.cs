@@ -122,6 +122,43 @@ namespace QuantConnect.Data.Common
         }
 
         /// <summary>
+        /// Initializes a new instance of the <see cref="MarketHourAwareConsolidator"/> class for an arbitrary period.
+        /// Intraday periods are anchored to the market open without extending past the close.
+        /// </summary>
+        /// <param name="dailyStrictEndTimeEnabled">True if daily strict end times should be enabled</param>
+        /// <param name="period">The consolidation period</param>
+        /// <param name="dataType">The target data type</param>
+        /// <param name="tickType">The target tick type</param>
+        /// <param name="extendedMarketHours">True if extended market hours should be consolidated</param>
+        public MarketHourAwareConsolidator(bool dailyStrictEndTimeEnabled, TimeSpan period, Type dataType, TickType tickType, bool extendedMarketHours)
+        {
+            _dailyStrictEndTimeEnabled = dailyStrictEndTimeEnabled;
+            Period = period;
+            _extendedMarketHours = extendedMarketHours;
+            Func<DateTime, CalendarInfo> calendar = period < Time.OneDay ? IntradayCalendar : DailyStrictEndTime;
+
+            if (dataType == typeof(Tick))
+            {
+                Consolidator = tickType == TickType.Trade
+                    ? new TickConsolidator(calendar)
+                    : new TickQuoteBarConsolidator(calendar);
+            }
+            else if (dataType == typeof(TradeBar))
+            {
+                Consolidator = new TradeBarConsolidator(calendar);
+            }
+            else if (dataType == typeof(QuoteBar))
+            {
+                Consolidator = new QuoteBarConsolidator(calendar);
+            }
+            else
+            {
+                throw new ArgumentNullException(nameof(dataType), $"{dataType.Name} not supported");
+            }
+            Consolidator.DataConsolidated += ForwardConsolidatedBar;
+        }
+
+        /// <summary>
         /// Event handler that fires when a new piece of data is produced
         /// </summary>
         public event DataConsolidatedHandler DataConsolidated;
@@ -200,6 +237,19 @@ namespace QuantConnect.Data.Common
                 return new(Period > Time.OneDay ? dateTime : dateTime.RoundDown(Period), Period);
             }
             return LeanData.GetDailyCalendar(dateTime, ExchangeHours, _extendedMarketHours);
+        }
+
+        /// <summary>
+        /// Determines a bar start time and period for intraday consolidation, anchored to the market open
+        /// without extending past the market close so a bar never spans across closed market hours
+        /// </summary>
+        protected virtual CalendarInfo IntradayCalendar(DateTime dateTime)
+        {
+            if (ExchangeHours == null || ExchangeHours.IsMarketAlwaysOpen)
+            {
+                return new(dateTime.RoundDown(Period), Period);
+            }
+            return LeanData.GetIntradayCalendar(dateTime, Period, ExchangeHours, _extendedMarketHours);
         }
 
         /// <summary>
