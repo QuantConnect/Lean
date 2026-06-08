@@ -82,11 +82,11 @@ namespace QuantConnect
         private bool MonitorTask(Task task,
             TimeSpan timeSpan,
             Func<IsolatorLimitResult> withinCustomLimits,
-            long memoryCap = 1024,
-            int sleepIntervalMillis = 1000)
+            long memoryCap,
+            int sleepIntervalMillis)
         {
             // default to always within custom limits
-            withinCustomLimits = withinCustomLimits ?? (() => new IsolatorLimitResult(TimeSpan.Zero, string.Empty));
+            withinCustomLimits ??= () => new IsolatorLimitResult(TimeSpan.Zero, string.Empty);
 
             var message = string.Empty;
             var emaPeriod = 60d;

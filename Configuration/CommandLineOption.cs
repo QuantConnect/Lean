@@ -1,4 +1,4 @@
-﻿using McMaster.Extensions.CommandLineUtils;
+using McMaster.Extensions.CommandLineUtils;
 
 namespace QuantConnect.Configuration
 {
@@ -23,7 +23,7 @@ namespace QuantConnect.Configuration
         public string Name { get; }
 
         /// <summary>
-        /// Command line option contructor
+        /// Command line option constructor
         /// </summary>
         public CommandLineOption(string name, CommandOptionType type, string description = "")
         {
