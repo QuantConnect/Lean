@@ -137,6 +137,8 @@ namespace QuantConnect.Research
                     DeploymentTarget = Config.GetValue("deployment-target", DeploymentTarget.LocalPlatform)
                 };
 
+                Logging.Log.Initialize(algorithmPacket.UserId, algorithmPacket.ProjectId, algorithmPacket.AlgorithmId);
+
                 ProjectId = algorithmPacket.ProjectId;
                 systemHandlers.LeanManager.Initialize(systemHandlers,
                     algorithmHandlers,
