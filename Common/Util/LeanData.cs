@@ -1477,6 +1477,33 @@ namespace QuantConnect.Util
         }
 
         /// <summary>
+        /// Helper method to return the intraday bar start time and period, anchored to the market open, without extending past the close
+        /// </summary>
+        /// <param name="exchangeTimeZoneDate">The point in time we want to get the bar information about</param>
+        /// <param name="period">The intraday consolidation period</param>
+        /// <param name="exchangeHours">The associated exchange hours</param>
+        /// <param name="extendedMarketHours">True if extended market hours should be taken into consideration</param>
+        /// <returns>The calendar information that holds a start time and a period</returns>
+        public static CalendarInfo GetIntradayCalendar(DateTime exchangeTimeZoneDate, TimeSpan period, SecurityExchangeHours exchangeHours, bool extendedMarketHours)
+        {
+            var marketOpen = exchangeHours.IsOpen(exchangeTimeZoneDate, extendedMarketHours)
+                ? exchangeHours.GetPreviousMarketOpen(exchangeTimeZoneDate.AddTicks(1), extendedMarketHours)
+                : exchangeHours.GetPreviousMarketOpen(exchangeTimeZoneDate, extendedMarketHours);
+
+            var intervalsPassed = (long)Math.Floor((exchangeTimeZoneDate - marketOpen).Ticks / (double)period.Ticks);
+            var startTime = marketOpen.AddTicks(intervalsPassed * period.Ticks);
+
+            // keep the last bar from extending past the market close
+            var endTime = startTime + period;
+            var marketClose = exchangeHours.GetNextMarketClose(marketOpen, extendedMarketHours);
+            if (endTime > marketClose)
+            {
+                endTime = marketClose;
+            }
+            return new CalendarInfo(startTime, endTime - startTime);
+        }
+
+        /// <summary>
         /// Helper method to get the next daily end time, taking into account strict end times if appropriate
         /// </summary>
         public static DateTime GetNextDailyEndTime(Symbol symbol, DateTime exchangeTimeZoneDate, SecurityExchangeHours exchangeHours)
