@@ -14,8 +14,10 @@
 */
 
 using System;
+using System.Buffers;
 using System.Collections;
 using System.Globalization;
+using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -27,6 +29,7 @@ namespace QuantConnect.Logging
     /// </summary>
     public static class Log
     {
+        private static readonly SearchValues<char> ReportCsvEscapedChars = SearchValues.Create("\",");
         private static readonly Regex LeanPathRegex = new Regex("(?:\\S*?\\\\pythonnet\\\\)|(?:\\S*?\\\\Lean\\\\)|(?:\\S*?/Lean/)|(?:\\S*?/pythonnet/)", RegexOptions.Compiled);
         private static string _lastTraceText = "";
         private static string _lastErrorText = "";
@@ -34,9 +37,20 @@ namespace QuantConnect.Logging
         private static int _level = 1;
         private static ILogHandler _logHandler = new ConsoleLogHandler();
 
+        /// <summary>
+        /// Gets the job user id
+        /// </summary>
         public static int UserId { get; private set; }
+
+        /// <summary>
+        /// Gets the ob project id
+        /// </summary>
         public static int ProjectId { get; private set; }
-        public static int JobId { get; private set; }
+
+        /// <summary>
+        /// Gets the job id (algorithm, live or optimization id)
+        /// </summary>
+        public static string JobId { get; private set; }
 
         /// <summary>
         /// Gets or sets the ILogHandler instance used as the global logging implementation.
@@ -71,9 +85,11 @@ namespace QuantConnect.Logging
             set { _level = value; }
         }
 
-        public static void Initialize(ILogHandler logHandler, int userId, int projectId, int jobId)
+        /// <summary>
+        /// Initialized the Log class
+        /// </summary>
+        public static void Initialize(int userId, int projectId, string jobId)
         {
-            _logHandler = logHandler;
             UserId = userId;
             ProjectId = projectId;
             JobId = jobId;
@@ -196,7 +212,7 @@ namespace QuantConnect.Logging
         /// <param name="args">Values to write as csv line</param>
         public static void Report(params object[] args)
         {
-            Report($"{UserId},{ProjectId},{JobId},{string.Join(",", args)}");
+            Report($"{UserId},{ProjectId},{JobId},{string.Join(",", args.Select(x => x is string s && s.IndexOfAny(ReportCsvEscapedChars) >= 0 ? $"\"{s}\"" : x))}");
         }
 
         /// <summary>
