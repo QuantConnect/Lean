@@ -78,6 +78,15 @@ namespace QuantConnect.Tests
         }
 
         /// <summary>
+        /// Write report message to log
+        /// </summary>
+        /// <param name="text">The report text to log</param>
+        public virtual void Report(string text)
+        {
+            _trace.WriteLine($"{DateTime.UtcNow.ToString(_dateFormat, CultureInfo.InvariantCulture)} REPORT:: {text}");
+        }
+
+        /// <summary>
         /// Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.
         /// </summary>
         /// <filterpriority>2</filterpriority>

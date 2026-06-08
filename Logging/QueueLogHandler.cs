@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -97,6 +97,19 @@ namespace QuantConnect.Logging
             OnLogEvent(log);
 
             _trace.WriteLine(DateTime.Now.ToString(DateFormat, CultureInfo.InvariantCulture) + " Trace:: " + text);
+        }
+
+        /// <summary>
+        /// Write report message to log
+        /// </summary>
+        /// <param name="text">The report text to log</param>
+        public void Report(string text)
+        {
+            var log = new LogEntry(text, DateTime.UtcNow, LogType.Report);
+            _logs.Enqueue(log);
+            OnLogEvent(log);
+
+            _trace.WriteLine(DateTime.Now.ToString(DateFormat, CultureInfo.InvariantCulture) + " Report:: " + text);
         }
 
         /// <summary>
