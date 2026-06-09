@@ -307,11 +307,7 @@ namespace QuantConnect.Tests.Common.Data
             consolidator.DataConsolidated += (_, b) => bars.Add((TradeBar)b);
 
             // feed the first 30 minutes after the open, one bar per minute
-            for (var i = 0; i < 30; i++)
-            {
-                var t = marketOpen.AddMinutes(i);
-                consolidator.Update(new TradeBar { Time = t, Period = Time.OneMinute, Symbol = symbol, Open = 1, High = 1, Low = 1, Close = 1, Volume = 1 });
-            }
+            Feed(consolidator, symbol, marketOpen, 30);
 
             Assert.GreaterOrEqual(bars.Count, 3);
             Assert.AreEqual(marketOpen, bars[0].Time);
@@ -328,29 +324,60 @@ namespace QuantConnect.Tests.Common.Data
             var bars = new List<TradeBar>();
             consolidator.DataConsolidated += (_, b) => bars.Add((TradeBar)b);
 
-            void Feed(DateTime from, int minutes)
-            {
-                for (var i = 0; i < minutes; i++)
-                {
-                    var t = from.AddMinutes(i);
-                    consolidator.Update(new TradeBar { Time = t, Period = Time.OneMinute, Symbol = symbol, Open = 1, High = 1, Low = 1, Close = 1, Volume = 1 });
-                }
-            }
-
             // feed the last 10 minutes of day 1 (up to the 16:00 close) and the first 10 of day 2
-            Feed(new DateTime(2015, 04, 13, 15, 50, 0), 10);
-            Feed(new DateTime(2015, 04, 14, 9, 30, 0), 10);
+            Feed(consolidator, symbol, new DateTime(2015, 04, 13, 15, 50, 0), 10);
+            Feed(consolidator, symbol, new DateTime(2015, 04, 14, 9, 30, 0), 10);
 
-            // the last bar of day 1 should end at the 16:00 close
-            var lastDay1 = bars.FindLast(b => b.Time.Date == new DateTime(2015, 04, 13));
-            Assert.IsNotNull(lastDay1);
-            Assert.AreEqual(new DateTime(2015, 04, 13, 16, 0, 0), lastDay1.EndTime);
+            // day 1 produces two 7 minute bars anchored to the market open at 9:30
+            var day1Bars = bars.FindAll(b => b.Time.Date == new DateTime(2015, 04, 13));
+            Assert.AreEqual(2, day1Bars.Count);
+            Assert.AreEqual(new DateTime(2015, 04, 13, 15, 48, 0), day1Bars[0].Time);
+            Assert.AreEqual(new DateTime(2015, 04, 13, 15, 55, 0), day1Bars[0].EndTime);
+            Assert.AreEqual(new DateTime(2015, 04, 13, 15, 55, 0), day1Bars[1].Time);
+            Assert.AreEqual(new DateTime(2015, 04, 13, 16, 0, 0), day1Bars[1].EndTime);
 
-            // the first bar of day 2 should start at the 9:30 open, ending at 9:37
+            // next day starts over at the market open at 9:30
             var day2Open = new DateTime(2015, 04, 14, 9, 30, 0);
             var firstDay2 = bars.Find(b => b.Time == day2Open);
             Assert.IsNotNull(firstDay2);
             Assert.AreEqual(day2Open.AddMinutes(7), firstDay2.EndTime);
+        }
+
+        [TestCase(true)]
+        [TestCase(false)]
+        public void ConsolidatesPeriodGreaterThanOneDay(bool dailyStrictEndTimeEnabled)
+        {
+            var symbol = Symbols.SPX;
+            using var consolidator = new MarketHourAwareConsolidator(dailyStrictEndTimeEnabled, TimeSpan.FromDays(2), typeof(TradeBar), TickType.Trade, extendedMarketHours: true);
+            var bars = new List<TradeBar>();
+            consolidator.DataConsolidated += (_, b) => bars.Add((TradeBar)b);
+
+            // feed 4 daily bars
+            var start = new DateTime(2015, 04, 13, 10, 0, 0);
+            for (var i = 0; i < 4; i++)
+            {
+                consolidator.Update(new TradeBar { Time = start.AddDays(i), Period = Time.OneDay, Symbol = symbol, Open = 1, High = 1, Low = 1, Close = 1, Volume = 1 });
+            }
+            consolidator.Scan(start.AddDays(4));
+
+            Assert.AreEqual(2, bars.Count);
+            // first bar
+            Assert.AreEqual(TimeSpan.FromDays(2), bars[0].Period);
+            Assert.AreEqual(start, bars[0].Time);
+            Assert.AreEqual(start.AddDays(2), bars[0].EndTime);
+            // second bar
+            Assert.AreEqual(TimeSpan.FromDays(2), bars[1].Period);
+            Assert.AreEqual(start.AddDays(2), bars[1].Time);
+            Assert.AreEqual(start.AddDays(4), bars[1].EndTime);
+        }
+
+        private static void Feed(IDataConsolidator consolidator, Symbol symbol, DateTime from, int minutes)
+        {
+            for (var i = 0; i < minutes; i++)
+            {
+                var t = from.AddMinutes(i);
+                consolidator.Update(new TradeBar { Time = t, Period = Time.OneMinute, Symbol = symbol, Open = 1, High = 1, Low = 1, Close = 1, Volume = 1 });
+            }
         }
 
         protected override IDataConsolidator CreateConsolidator()
