@@ -23,7 +23,6 @@ using System.Linq;
 using Python.Runtime;
 using QuantConnect.Util;
 using static QuantConnect.StringExtensions;
-using QuantConnect.Data.Common;
 using QuantConnect.Python;
 
 namespace QuantConnect.Algorithm

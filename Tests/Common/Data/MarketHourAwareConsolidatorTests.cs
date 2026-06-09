@@ -17,7 +17,6 @@
 using System;
 using NUnit.Framework;
 using QuantConnect.Data.Market;
-using QuantConnect.Data.Common;
 using QuantConnect.Data.Consolidators;
 using System.Collections.Generic;
 using QuantConnect.Data;
