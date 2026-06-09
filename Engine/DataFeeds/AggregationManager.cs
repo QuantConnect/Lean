@@ -14,6 +14,7 @@
 */
 
 using QuantConnect.Data;
+using QuantConnect.Data.Common;
 using QuantConnect.Data.Consolidators;
 using QuantConnect.Data.Market;
 using QuantConnect.Lean.Engine.DataFeeds.Enumerators;
