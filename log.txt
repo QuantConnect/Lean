@@ -1,2 +1,0 @@
-C:\Users\josue\AppData\Local\Temp\MortgageRateVolatilityAlpha.py_9nv924me:105: error: Name "PythonQuandl" is not defined  [name-defined]
-C:\Users\josue\AppData\Local\Temp\MarketHourAwareIntradayConsolidationRegressionAlgorithm.py_bdu07sxf:33: error: Name "MarketHourAwareConsolidator" is not defined  [name-defined]
