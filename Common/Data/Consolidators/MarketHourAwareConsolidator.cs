@@ -18,8 +18,9 @@ using NodaTime;
 using QuantConnect.Util;
 using QuantConnect.Securities;
 using QuantConnect.Data.Market;
+using QuantConnect.Data.Consolidators;
 
-namespace QuantConnect.Data.Consolidators
+namespace QuantConnect.Data.Common
 {
     /// <summary>
     /// Consolidator for open markets bar only, extended hours bar are not consolidated.
