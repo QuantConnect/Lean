@@ -68,7 +68,6 @@ from QuantConnect.Securities.Option import *
 from QuantConnect.Securities.Equity import *
 from QuantConnect.Securities.Future import *
 from QuantConnect.Data.Consolidators import *
-from QuantConnect.Data.Common import *
 from QuantConnect.Orders.TimeInForces import *
 from QuantConnect.Algorithm.Framework import *
 from QuantConnect.Algorithm.Selection import *
