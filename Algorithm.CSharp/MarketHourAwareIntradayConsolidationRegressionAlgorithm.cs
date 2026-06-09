@@ -66,6 +66,13 @@ namespace QuantConnect.Algorithm.CSharp
                 throw new RegressionTestException($"Bar ending at {bar.EndTime} extends past the market close {marketClose}");
             }
 
+            // bars span the full period unless the last one is clipped at the market close
+            var barPeriod = bar.EndTime - bar.Time;
+            if (barPeriod != _period && bar.EndTime != marketClose)
+            {
+                throw new RegressionTestException($"Bar from {bar.Time} to {bar.EndTime} has period {barPeriod} instead of {_period}");
+            }
+
             _consolidatedBarCount++;
         }
 

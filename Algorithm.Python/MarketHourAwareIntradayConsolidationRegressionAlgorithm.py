@@ -46,6 +46,11 @@ class MarketHourAwareIntradayConsolidationRegressionAlgorithm(QCAlgorithm):
         if bar.end_time > market_close:
             raise RegressionTestException(f"Bar ending at {bar.end_time} extends past the market close {market_close}")
 
+        # bars span the full period unless the last one is clipped at the market close
+        bar_period = bar.end_time - bar.time
+        if bar_period != self._period and bar.end_time != market_close:
+            raise RegressionTestException(f"Bar from {bar.time} to {bar.end_time} has period {bar_period} instead of {self._period}")
+
         self._consolidated_bar_count += 1
 
     def on_end_of_algorithm(self):
