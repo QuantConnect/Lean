@@ -42,6 +42,11 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
     /// </summary>
     public class BrokerageTransactionHandler : ITransactionHandler
     {
+        /// <summary>
+        /// The tag used for order events of liquidations triggered by a delisting
+        /// </summary>
+        public static readonly string LiquidateFromDelistingTag = "Liquidate from delisting";
+
         private IAlgorithm _algorithm;
         private QCAlgorithm _qcAlgorithmInstance;
         private SignalExportManager _signalExport;
@@ -1545,7 +1550,7 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
                 var quantity = -security.Holdings.Quantity;
                 if (quantity != 0)
                 {
-                    var tag = "Liquidate from delisting";
+                    var tag = LiquidateFromDelistingTag;
 
                     // Create our order and add it
                     var order = new MarketOrder(security.Symbol, quantity, _algorithm.UtcTime, tag);

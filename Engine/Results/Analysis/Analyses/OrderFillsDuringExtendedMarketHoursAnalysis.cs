@@ -13,9 +13,11 @@
  * limitations under the License.
  *
 */
+using System;
 using System.Collections.Generic;
 using QuantConnect.Orders;
 using QuantConnect.Algorithm;
+using QuantConnect.Lean.Engine.TransactionHandlers;
 
 namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
 {
@@ -54,7 +56,7 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
             foreach (var orderEvent in orderEvents)
             {
                 if (orderEvent.Status != OrderStatus.Filled || !algorithm.Securities.TryGetValue(orderEvent.Symbol, out var security)
-                    || orderEvent.Message?.Contains("Liquidate from delisting", System.StringComparison.InvariantCultureIgnoreCase) == true)
+                    || orderEvent.Message?.Contains(BrokerageTransactionHandler.LiquidateFromDelistingTag, StringComparison.InvariantCultureIgnoreCase) == true)
                 {
                     continue;
                 }
