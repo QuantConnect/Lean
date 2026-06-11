@@ -90,6 +90,36 @@ namespace QuantConnect.Data.Common
         }
 
         /// <summary>
+        /// Initializes a new instance of the <see cref="MarketHourAwareConsolidator"/> class for an arbitrary period.
+        /// Intraday periods are anchored to the market open without extending past the close.
+        /// </summary>
+        /// <param name="dailyStrictEndTimeEnabled">True if daily strict end times should be enabled</param>
+        /// <param name="period">The consolidation period</param>
+        /// <param name="dataType">The target data type</param>
+        /// <param name="tickType">The target tick type</param>
+        /// <param name="extendedMarketHours">True if extended market hours should be consolidated</param>
+        public MarketHourAwareConsolidator(bool dailyStrictEndTimeEnabled, TimeSpan period, Type dataType, TickType tickType, bool extendedMarketHours)
+        {
+            _dailyStrictEndTimeEnabled = dailyStrictEndTimeEnabled;
+            Period = period;
+            _extendedMarketHours = extendedMarketHours;
+
+            // when the period exactly matches a standard resolution, reuse the resolution based consolidation so its
+            // well-tested behavior is preserved; only arbitrary periods need the market-open anchored intraday calendar
+            var resolution = period.ToHigherResolutionEquivalent(false);
+            if (resolution.ToTimeSpan() == period)
+            {
+                Consolidator = CreateConsolidator(resolution, dataType, tickType);
+            }
+            else
+            {
+                Func<DateTime, CalendarInfo> calendar = period < Time.OneDay ? IntradayCalendar : DailyStrictEndTime;
+                Consolidator = CreateConsolidator(calendar, dataType, tickType);
+            }
+            Consolidator.DataConsolidated += ForwardConsolidatedBar;
+        }
+
+        /// <summary>
         /// Creates the inner consolidator that produces the requested <paramref name="dataType"/> output.
         /// </summary>
         protected virtual IDataConsolidator CreateConsolidator(Resolution resolution, Type dataType, TickType tickType)
@@ -117,6 +147,28 @@ namespace QuantConnect.Data.Common
                 return resolution == Resolution.Daily
                     ? new QuoteBarConsolidator(DailyStrictEndTime)
                     : new QuoteBarConsolidator(Period);
+            }
+            throw new ArgumentNullException(nameof(dataType), $"{dataType.Name} not supported");
+        }
+
+        /// <summary>
+        /// Creates the underlying calendar based consolidator for the given data type, used for arbitrary periods
+        /// </summary>
+        protected virtual IDataConsolidator CreateConsolidator(Func<DateTime, CalendarInfo> calendar, Type dataType, TickType tickType)
+        {
+            if (dataType == typeof(Tick))
+            {
+                return tickType == TickType.Trade
+                    ? new TickConsolidator(calendar)
+                    : new TickQuoteBarConsolidator(calendar);
+            }
+            if (dataType == typeof(TradeBar))
+            {
+                return new TradeBarConsolidator(calendar);
+            }
+            if (dataType == typeof(QuoteBar))
+            {
+                return new QuoteBarConsolidator(calendar);
             }
             throw new ArgumentNullException(nameof(dataType), $"{dataType.Name} not supported");
         }
@@ -195,11 +247,25 @@ namespace QuantConnect.Data.Common
         /// </summary>
         protected virtual CalendarInfo DailyStrictEndTime(DateTime dateTime)
         {
-            if (!_useStrictEndTime)
+            // strict end times describe a single daily bar, so periods larger than a day fall back to standard period consolidation
+            if (!_useStrictEndTime || Period > Time.OneDay)
             {
                 return new(Period > Time.OneDay ? dateTime : dateTime.RoundDown(Period), Period);
             }
             return LeanData.GetDailyCalendar(dateTime, ExchangeHours, _extendedMarketHours);
+        }
+
+        /// <summary>
+        /// Determines a bar start time and period for intraday consolidation, anchored to the market open
+        /// without extending past the market close so a bar never spans across closed market hours
+        /// </summary>
+        protected virtual CalendarInfo IntradayCalendar(DateTime dateTime)
+        {
+            if (ExchangeHours == null || ExchangeHours.IsMarketAlwaysOpen)
+            {
+                return new(dateTime.RoundDown(Period), Period);
+            }
+            return LeanData.GetIntradayCalendar(dateTime, Period, ExchangeHours, _extendedMarketHours);
         }
 
         /// <summary>
