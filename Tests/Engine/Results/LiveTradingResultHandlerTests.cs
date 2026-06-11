@@ -150,7 +150,7 @@ namespace QuantConnect.Tests.Engine.Results
             using var messagging = new QuantConnect.Messaging.Messaging();
             var referenceDate = new DateTime(2020, 11, 25);
             var resultHandler = new LiveTradingResultHandler();
-            resultHandler.Initialize(new (new LiveNodePacket(), messagging, api, new BacktestingTransactionHandler(), null));
+            resultHandler.Initialize(new(new LiveNodePacket(), messagging, api, new BacktestingTransactionHandler(), null));
 
             try
             {
@@ -220,6 +220,82 @@ namespace QuantConnect.Tests.Engine.Results
             };
 
             Assert.That(messages, Has.All.StartsWith(algorithmTimePrefix));
+        }
+
+        [Test]
+        public void TrimChartsKeepsDailySampleOfStatisticsSeries()
+        {
+            var handler = new TestableLiveTradingResultHandler();
+            var utcNow = new DateTime(2020, 11, 25, 12, 0, 0, DateTimeKind.Utc);
+
+            var benchmarkChart = new Chart(BaseResultsHandler.BenchmarkKey);
+            benchmarkChart.Series.Add(BaseResultsHandler.BenchmarkKey, new Series(BaseResultsHandler.BenchmarkKey));
+            handler.Charts[BaseResultsHandler.BenchmarkKey] = benchmarkChart;
+
+            var customChart = new Chart("MyCustomChart");
+            customChart.Series.Add("MyMetric", new Series("MyMetric"));
+            handler.Charts["MyCustomChart"] = customChart;
+
+            var returnSeries = handler.Charts[BaseResultsHandler.StrategyEquityKey].Series[BaseResultsHandler.ReturnKey];
+            var equitySeries = handler.Charts[BaseResultsHandler.StrategyEquityKey].Series[BaseResultsHandler.EquityKey];
+            var benchmarkSeries = benchmarkChart.Series[BaseResultsHandler.BenchmarkKey];
+            var customSeries = customChart.Series["MyMetric"];
+
+            // Return and Benchmark: one point per day, going beyond 2 years
+            for (var i = 800; i >= 1; i--)
+            {
+                var t = utcNow.AddDays(-i);
+                returnSeries.Values.Add(new ChartPoint(t, i));
+                benchmarkSeries.Values.Add(new ChartPoint(t, i));
+            }
+
+            // Equity: several points per day for older days, plus a couple of recent ones
+            foreach (var day in new[] { 5, 4, 3 })
+            {
+                var date = utcNow.AddDays(-day).Date;
+                equitySeries.Values.Add(new Candlestick(date.AddHours(10), 100, 110, 90, 101));
+                equitySeries.Values.Add(new Candlestick(date.AddHours(14), 100, 110, 90, 102));
+                equitySeries.Values.Add(new Candlestick(date.AddHours(16), 100, 110, 90, 103)); // last sample of the day
+            }
+            // Two recent points on the same day, within the 2 day window
+            equitySeries.Values.Add(new Candlestick(utcNow.AddHours(-5), 100, 110, 90, 200));
+            equitySeries.Values.Add(new Candlestick(utcNow.AddHours(-1), 100, 110, 90, 201));
+
+            // Custom chart: not a statistics series, so no daily sample
+            for (var i = 5; i >= 1; i--)
+            {
+                customSeries.Values.Add(new ChartPoint(utcNow.AddDays(-i), i));
+            }
+
+            handler.PublicTrimCharts(utcNow);
+
+            // Return and Benchmark keep one point per day, up to 2 years
+            var dailyStatsCutoff = utcNow.AddDays(-730);
+            Assert.IsTrue(returnSeries.Values.All(v => v.Time > dailyStatsCutoff));
+            Assert.IsTrue(benchmarkSeries.Values.All(v => v.Time > dailyStatsCutoff));
+            Assert.AreEqual(729, returnSeries.Values.Count);
+            Assert.AreEqual(729, benchmarkSeries.Values.Count);
+
+            // Equity keeps all recent points and one per day for older ones
+            Assert.AreEqual(5, equitySeries.Values.Count);
+            foreach (var day in new[] { 5, 4, 3 })
+            {
+                var date = utcNow.AddDays(-day).Date;
+                var samplesForDay = equitySeries.Values.Where(v => v.Time.Date == date).ToList();
+                Assert.AreEqual(1, samplesForDay.Count); // only one point per day
+                Assert.AreEqual(103, ((Candlestick)samplesForDay[0]).Close); // and it is the last of the day
+            }
+            Assert.AreEqual(2, equitySeries.Values.Count(v => v.Time > utcNow.AddDays(-2)));
+
+            // Custom chart keeps only the last 2 days
+            var defaultCutoff = utcNow.AddDays(-2);
+            Assert.IsTrue(customSeries.Values.All(v => v.Time > defaultCutoff));
+            Assert.AreEqual(1, customSeries.Values.Count);
+        }
+
+        private class TestableLiveTradingResultHandler : LiveTradingResultHandler
+        {
+            public void PublicTrimCharts(DateTime utcNow) => TrimCharts(utcNow);
         }
 
         private class TestDataFeed : IDataFeed
