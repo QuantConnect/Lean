@@ -1556,7 +1556,8 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
                     {
                         FillPrice = security.Price,
                         Status = OrderStatus.Filled,
-                        FillQuantity = order.Quantity
+                        FillQuantity = order.Quantity,
+                        Message = tag
                     };
 
                     // Process this order event

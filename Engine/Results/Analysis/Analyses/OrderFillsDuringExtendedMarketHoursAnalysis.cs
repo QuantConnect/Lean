@@ -53,7 +53,8 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
 
             foreach (var orderEvent in orderEvents)
             {
-                if (orderEvent.Status != OrderStatus.Filled || !algorithm.Securities.TryGetValue(orderEvent.Symbol, out var security))
+                if (orderEvent.Status != OrderStatus.Filled || !algorithm.Securities.TryGetValue(orderEvent.Symbol, out var security)
+                    || orderEvent.Message?.Contains("Liquidate from delisting", System.StringComparison.InvariantCultureIgnoreCase) == true)
                 {
                     continue;
                 }
@@ -74,7 +75,7 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
             }
 
             var potentialSolutions = result.Count > 0 ? Solutions(language) : [];
-            return SingleResponse(orderEvents.Count > 0 ? orderEvents[0] : null, orderEvents.Count > 1 ? orderEvents.Count : null, potentialSolutions);
+            return SingleResponse(result.Count > 0 ? result[0] : null, result.Count > 1 ? result.Count : null, potentialSolutions);
         }
 
         /// <summary>
