@@ -80,14 +80,24 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
         /// </summary>
         private static List<string> Solutions() =>
         [
-            "Check if you need to warm-up some data structures, including indicators, RollingWindow objects, and training data.",
+            "Log how often each entry condition passes individually: when several conditions must align " +
+            "(trend, volume, indicator thresholds), it is common that they are never all true at the same time. " +
+            "Relax the single most restrictive condition and re-run, changing one condition per backtest " +
+            "instead of redesigning the strategy.",
+
+            "Check if you need to warm-up some data structures, including indicators, RollingWindow objects, and training data. " +
+            "Log how many assets pass IsReady or warm-up gates: they can silently exclude most of the universe.",
 
             "Check if the algorithm subscribes to any assets. " +
-            "Is the universe selection actually selecting anything?",
+            "Is the universe selection actually selecting anything? Log the selection count on each rebalance.",
 
-            "Check if the trading logic ever leads to a trade.",
+            "Check custom data sources actually deliver data by logging the first points received: " +
+            "a reader or date-format error can silently produce no data and therefore no signals.",
 
-            "Check if there is enough cash to satisify the minimum order sizes.",
+            "Check minimum-history or training-window requirements against the history the data source actually provides: " +
+            "if a model requires more history than exists, the trading logic may never activate.",
+
+            "Check if there is enough cash to satisfy the minimum order sizes.",
         ];
     }
 }
