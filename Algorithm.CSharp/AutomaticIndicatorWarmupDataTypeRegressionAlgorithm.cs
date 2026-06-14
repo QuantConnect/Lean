@@ -167,7 +167,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Average Win", "0%"},
             {"Average Loss", "0%"},
             {"Compounding Annual Return", "733913.744%"},
-            {"Drawdown", "15.900%"},
+            {"Drawdown", "16.100%"},
             {"Expectancy", "0"},
             {"Start Equity", "100000"},
             {"End Equity", "106827.7"},
@@ -189,7 +189,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Estimated Strategy Capacity", "$200000000.00"},
             {"Lowest Capacity Asset", "ES VMKLFZIH2MTD"},
             {"Portfolio Turnover", "351.80%"},
-            {"Drawdown Recovery", "1"},
+            {"Drawdown Recovery", "2"},
             {"OrderListHash", "dfd9a280d3c6470b305c03e0b72c234e"}
         };
     }

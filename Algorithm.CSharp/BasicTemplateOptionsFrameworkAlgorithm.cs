@@ -160,7 +160,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Average Win", "0.13%"},
             {"Average Loss", "-0.30%"},
             {"Compounding Annual Return", "-46.395%"},
-            {"Drawdown", "1.600%"},
+            {"Drawdown", "1.500%"},
             {"Expectancy", "0.429"},
             {"Start Equity", "100000"},
             {"End Equity", "99149.50"},

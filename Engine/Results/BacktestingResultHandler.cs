@@ -39,6 +39,7 @@ namespace QuantConnect.Lean.Engine.Results
     public class BacktestingResultHandler : BaseResultsHandler, IResultHandler
     {
         private const double Samples = 4000;
+        private const double DrawdownSamples = 40000;
         private const double MinimumSamplePeriod = 4;
 
         private BacktestNodePacket _job;
@@ -59,6 +60,8 @@ namespace QuantConnect.Lean.Engine.Results
 
         //Processing Time:
         private DateTime _nextSample;
+        private DateTime _nextDrawdownSample;
+        private TimeSpan _drawdownResamplePeriod;
         private string _algorithmId;
         private int _projectId;
 
@@ -460,6 +463,10 @@ namespace QuantConnect.Lean.Engine.Results
             ResamplePeriod = TimeSpan.FromMinutes(resampleMinutes);
             Log.Trace("BacktestingResultHandler(): Sample Period Set: " + resampleMinutes.ToStringInvariant("00.00"));
 
+            // Drawdown uses a finer resample period (10x more samples) for more accurate calculation
+            var drawdownResampleMinutes = totalMinutes < MinimumSamplePeriod * DrawdownSamples ? MinimumSamplePeriod : totalMinutes / DrawdownSamples;
+            _drawdownResamplePeriod = TimeSpan.FromMinutes(drawdownResampleMinutes);
+
             ConfigureConsoleTextWriter(algorithm);
         }
 
@@ -738,7 +745,12 @@ namespace QuantConnect.Lean.Engine.Results
             // Invalidate the processed days count so it gets recalculated
             _progressMonitor.InvalidateProcessedDays();
 
-            // Update the equity bar
+            // Update the equity bar and sample close for drawdown at finer granularity
+            if (time > _nextDrawdownSample || forceProcess)
+            {
+                _nextDrawdownSample = time.Add(_drawdownResamplePeriod);
+                UpdateAlgorithmEquityForDrawdown(time);
+            }
             UpdateAlgorithmEquity();
 
             if (time > _nextSample || forceProcess)

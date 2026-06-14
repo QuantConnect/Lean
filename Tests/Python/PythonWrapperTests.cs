@@ -67,7 +67,7 @@ namespace QuantConnect.Tests.Python
                         {"Average Win", "0%"},
                         {"Average Loss", "0%"},
                         {"Compounding Annual Return", "119.460%"},
-                        {"Drawdown", "0%"},
+                        {"Drawdown", "1.000%"},
                         {"Expectancy", "0"},
                         {"Net Profit", "1.010%"},
                         {"Sharpe Ratio", "-5.989"},
