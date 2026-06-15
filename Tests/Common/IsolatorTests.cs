@@ -53,13 +53,14 @@ namespace QuantConnect.Tests.Common
             var ended = false;
             var canceled = false;
             var result = false;
-            isolator.CancellationTokenSource.CancelAfter(TimeSpan.FromMilliseconds(100));
             try
             {
                 result = isolator.ExecuteWithTimeLimit(
                     TimeSpan.FromSeconds(5),
                     () => {
                         executed = true;
+                        // cancel only once the code block is running so the task can't be canceled before it starts
+                        isolator.CancellationTokenSource.CancelAfter(TimeSpan.FromMilliseconds(100));
                         Thread.Sleep(5000);
                         ended = true;
                     },
