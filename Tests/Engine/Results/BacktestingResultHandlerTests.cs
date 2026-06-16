@@ -446,10 +446,10 @@ namespace QuantConnect.Tests.Engine.Results
             {
                 0,                      // First sample at start 10/7 12AM, zero because no change has occurred yet
                 0,                      // 10/7 - 10/8 <- We get first data at 12AM on 10/8
-                -0.01112113,            // 10/8 - 10/9 <- We buy at with OnMarketOpen order
-                -3.291606E-05,          // 10/9 - 10/10
-                0.01100997,             // 10/10 - 10/11
-                0.005968033             // 10/11 12AM - 10/11 8PM
+                -0.01112113,            // 10/8 - 10/9 <- We buy with a MarketOnOpen order (submitted while the market is closed)
+                0.0005122819,           // 10/9 - 10/10 <- RemoveSecurity liquidation now converts (was filling at the stale previous close)
+                0.009923037000000001,   // 10/10 - 10/11
+                0.007853915             // 10/11 12AM - 10/11 8PM
             };
 
             Assert.AreEqual(expectedPerformance, performance.Values.ToList());
@@ -463,9 +463,9 @@ namespace QuantConnect.Tests.Engine.Results
             {
                 0,                          // First sample at start 10/7 12AM, seen as missing since percent change won't exists for that day
                 0,                          // 10/7 - 10/8 <- We get first data at 12AM on 10/8
-                -0.011121126999999979,      // 10/8 - 10/9 <- We buy at with OnMarketOpen order
-                -3.29160637250732E-05,      // 10/9 - 10/10
-                0.011009966611364035,       // 10/10 - 10/11
+                -0.011121126999999979,      // 10/8 - 10/9 <- We buy with a MarketOnOpen order (submitted while the market is closed)
+                0.0005122821549045775,      // 10/9 - 10/10 <- RemoveSecurity liquidation now converts (was filling at the stale previous close)
+                0.009923037498293092,       // 10/10 - 10/11
             };
 
             Assert.AreEqual(expectedEquityPerformance, equityPerformance.ValuesAll.ToList());
