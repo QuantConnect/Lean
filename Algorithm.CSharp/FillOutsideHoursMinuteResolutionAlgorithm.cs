@@ -21,9 +21,8 @@ using QuantConnect.Orders;
 namespace QuantConnect.Algorithm.CSharp
 {
     /// <summary>
-    /// Regression algorithm asserting that orders submitted outside of market hours are:
-    ///     - Filled outside of market hours for daily resolution
-    ///     - Not filled outside of market hours for the rest of the resolutions
+    /// Regression algorithm asserting that a market order submitted outside of market hours is not filled immediately
+    /// on stale, already past data (regardless of resolution, including daily); it waits for fresh data instead.
     ///
     /// This specific algorithm tests this for minute resolution and is intended to be used as a base class for the other resolutions.
     /// </summary>
@@ -45,16 +44,11 @@ namespace QuantConnect.Algorithm.CSharp
                 {
                     var ticket = SubmitOrderRequest(new SubmitOrderRequest(OrderType.Market, spy.Type, spy.Symbol, 1, 0, 0, Time, ""));
 
-                    if (Resolution == Resolution.Daily)
+                    // A market order submitted outside of regular market hours must not fill immediately on the
+                    // stale, already past bar (e.g. the daily bar from the prior close); it waits for fresh data.
+                    if (ticket.Status.IsFill())
                     {
-                        if (ticket.Status != OrderStatus.Filled)
-                        {
-                            throw new RegressionTestException($"Order was expected to be filled on {Time}. Resolution: {Resolution}");
-                        }
-                    }
-                    else if (ticket.Status.IsFill())
-                    {
-                        throw new RegressionTestException($"Order was not expected to be filled on {Time}. Resolution: {Resolution}");
+                        throw new RegressionTestException($"Order was not expected to be filled outside regular market hours on {Time}. Resolution: {Resolution}");
                     }
                 }
             });

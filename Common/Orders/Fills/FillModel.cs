@@ -292,9 +292,17 @@ namespace QuantConnect.Orders.Fills
             var prices = GetPricesCheckingPythonWrapper(asset, orderDirection);
             var pricesEndTimeUtc = prices.EndTime.ConvertToUtc(asset.Exchange.TimeZone);
 
-            // if the order is filled on stale (fill-forward) data, set a warning message on the order event
+            // If the order would be filled on stale (fill-forward / already past) data: for coarse resolutions
+            // (hour/daily) wait for fresh data, e.g. the next bar to close, instead of filling at a stale price
+            // (the latest bar is the stale previous close when a market order is placed mid-bar). For finer
+            // resolutions (minute/second/tick) keep the previous behavior of filling on the stale price with a warning.
             if (pricesEndTimeUtc.Add(Parameters.StalePriceTimeSpan) < order.Time)
             {
+                if (ShouldWaitForFreshData(asset))
+                {
+                    return fill;
+                }
+
                 fill.Message = Messages.FillModel.FilledAtStalePrice(asset, prices);
             }
 
@@ -965,6 +973,20 @@ namespace QuantConnect.Orders.Fills
             }
 
             return subscribedTypes;
+        }
+
+        /// <summary>
+        /// Determines whether a market order filling on stale data should wait for fresh data instead of filling
+        /// on the stale price. This is only done for coarse resolutions (hour/daily), where the stale bar is the
+        /// previous close and a fresh bar (the next close/open) is expected. For minute/second/tick subscriptions
+        /// the previous behavior is kept (fill on the stale price with a warning), since stale data there represents
+        /// a genuine gap rather than a bar still forming.
+        /// </summary>
+        /// <param name="asset">Security being filled</param>
+        protected bool ShouldWaitForFreshData(Security asset)
+        {
+            var configs = Parameters.ConfigProvider.GetSubscriptionDataConfigs(asset.Symbol);
+            return configs.Count > 0 && configs.All(x => x.Resolution == Resolution.Hour || x.Resolution == Resolution.Daily);
         }
 
         /// <summary>

@@ -104,8 +104,11 @@ namespace QuantConnect
         /// Gets/sets the minimum time span elapsed to consider a market fill price as stale (defaults to one hour)
         /// </summary>
         /// <remarks>
-        /// In the default fill models, a warning message will be added to market order fills
-        /// if this time span (or more) has elapsed since the price was last updated.
+        /// In the default fill models, a market order will not be filled on data older than this time span;
+        /// instead it will wait for fresh data (e.g. the next bar to close) before filling. This avoids filling
+        /// at a stale, already past price, for example when mixing daily/hour resolution assets with intraday
+        /// scheduled events or lower resolution assets. Tighten it (e.g. to one minute) to make market orders
+        /// wait for the next bar more aggressively.
         /// </remarks>
         /// <seealso cref="FillModel"/>
         /// <seealso cref="ImmediateFillModel"/>

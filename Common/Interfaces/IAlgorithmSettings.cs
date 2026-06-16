@@ -99,7 +99,8 @@ namespace QuantConnect.Interfaces
         int DataSubscriptionLimit { get; set; }
 
         /// <summary>
-        /// Gets the minimum time span elapsed to consider a market fill price as stale (defaults to one hour)
+        /// Gets the minimum time span elapsed to consider a market fill price as stale (defaults to one hour).
+        /// Market orders are not filled on data older than this time span; they wait for fresh data instead.
         /// </summary>
         TimeSpan StalePriceTimeSpan { get; set; }
 
