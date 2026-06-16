@@ -261,8 +261,8 @@ namespace QuantConnect.Algorithm
                 // it has no fresh intraday price to fill against (it would otherwise fill at the stale previous
                 // close). It is filled at today's close (MarketOnClose), or at the next open (MarketOnOpen) if we are
                 // already within the MarketOnClose submission buffer.
-                // This is only done in backtesting. In live trading an open-market market order fills at the real
-                // current price, so we leave it as a regular market order. Markets that never close (e.g. crypto,
+                // This is only done in backtesting. In live trading an open-market market order fills at the current
+                // market price, so we leave it as a regular market order. Markets that never close (e.g. crypto,
                 // forex) have no open/close to convert to, so they are left as a regular market order too.
                 if (!LiveMode && !security.Exchange.Hours.IsMarketAlwaysOpen && IsDailyResolutionOnly(security.Symbol))
                 {
@@ -272,7 +272,7 @@ namespace QuantConnect.Algorithm
 
                     if (!_isDailyResolutionMarketOrderConversionWarningSent && convertedTicket.SubmitRequest.Response.IsSuccess)
                     {
-                        Debug("Warning: market orders on daily resolution data sent during market hours are automatically converted into MarketOnClose orders (or MarketOnOpen near the close) to avoid filling at the stale previous close. Note: in live trading this conversion is not applied, as the order fills at the real current price.");
+                        Debug("Warning: market orders on daily resolution data sent during market hours are automatically converted into MarketOnClose orders (or MarketOnOpen near the close) to avoid filling at the stale previous close. Note: in live trading this conversion is not applied, as the order fills at the current market price.");
                         _isDailyResolutionMarketOrderConversionWarningSent = true;
                     }
                     return convertedTicket;
