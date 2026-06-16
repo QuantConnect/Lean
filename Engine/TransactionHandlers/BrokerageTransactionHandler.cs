@@ -75,7 +75,9 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
         /// </summary>
         protected List<IBusyCollection<OrderRequest>> _orderRequestQueues { get; set; }
 
-        private List<Thread> _processingThreads;
+        // Worker pool for concurrent order processing, routed by OrderId, growing on demand. Null in the synchronous backtest path.
+        private DynamicWorkerPool<OrderRequest> _pool;
+
         private readonly CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource();
 
         private readonly ConcurrentQueue<OrderEvent> _orderEvents = new ConcurrentQueue<OrderEvent>();
@@ -236,23 +238,44 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
         /// </summary>
         protected virtual void InitializeTransactionThread()
         {
-            // multi threaded queue, used for live deployments
-            var processingThreadsCount = _brokerage.ConcurrencyEnabled
-                ? Config.GetInt("maximum-transaction-threads", 4)
-                : 1;
-            _orderRequestQueues = new(processingThreadsCount);
-            _processingThreads = new(processingThreadsCount);
-            for (var i = 0; i < processingThreadsCount; i++)
-            {
-                _orderRequestQueues.Add(new BusyBlockingCollection<OrderRequest>());
-                var threadId = i; // avoid modified closure
-                _processingThreads.Add(new Thread(() => Run(threadId)) { IsBackground = true, Name = $"Transaction Thread {i}" });
-            }
-            foreach (var thread in _processingThreads)
-            {
-                thread.Start();
-            }
+            // The pool starts with the minimum number of workers and grows up to the maximum on demand.
+            // Requests are routed by OrderId, and each order is processed by a single worker at a time,
+            // which preserves the Submit/Update/Cancel ordering per OrderId even as the pool scales.
+            var maxThreads = _brokerage.ConcurrencyEnabled ? Math.Max(1, MaximumTransactionThreads) : 1;
+            var minThreads = _brokerage.ConcurrencyEnabled ? Math.Min(Math.Max(1, MinimumTransactionThreads), maxThreads) : 1;
+
+            _pool = new DynamicWorkerPool<OrderRequest>(
+                request =>
+                {
+                    HandleOrderRequest(request);
+                    ProcessAsynchronousEvents();
+                },
+                minThreads,
+                maxThreads,
+                onError: err =>
+                {
+                    // unexpected error, we need to close down shop
+                    _algorithm.SetRuntimeError(err, "HandleOrderRequest");
+                    IsActive = false;
+                },
+                threadName: "Transaction Thread");
+            _pool.Start();
         }
+
+        /// <summary>
+        /// The maximum number of worker threads the dynamic transaction thread pool can grow to
+        /// </summary>
+        protected virtual int MaximumTransactionThreads => Config.GetInt("maximum-transaction-threads", 10);
+
+        /// <summary>
+        /// The number of worker threads the dynamic transaction thread pool starts with
+        /// </summary>
+        protected virtual int MinimumTransactionThreads => Config.GetInt("minimum-transaction-threads", 2);
+
+        /// <summary>
+        /// The number of worker threads currently running in the dynamic transaction thread pool
+        /// </summary>
+        protected int ProcessingThreadsCount => _pool?.WorkerCount ?? 0;
 
         /// <summary>
         /// Boolean flag indicating the Run thread method is busy.
@@ -674,7 +697,8 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
         }
 
         /// <summary>
-        /// Primary thread entry point to launch the transaction thread.
+        /// Processes the order request queue synchronously. Used by the backtesting transaction handler,
+        /// which processes order requests on the algorithm thread instead of using the worker pool.
         /// </summary>
         protected void Run(int threadId)
         {
@@ -690,12 +714,6 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
             {
                 // unexpected error, we need to close down shop
                 _algorithm.SetRuntimeError(err, "HandleOrderRequest");
-            }
-
-            if (_processingThreads != null)
-            {
-                Log.Trace($"BrokerageTransactionHandler.Run(): Ending Thread {threadId}...");
-                IsActive = false;
             }
         }
 
@@ -717,7 +735,11 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
             // in backtesting we need to wait for orders to be removed from the queue and finished processing
             if (!_algorithm.LiveMode)
             {
-                if (_orderRequestQueues.Any(queue => queue.IsBusy && !queue.WaitHandle.WaitOne(Time.OneSecond, _cancellationTokenSource.Token)))
+                if (_orderRequestQueues != null && _orderRequestQueues.Any(queue => queue.IsBusy && !queue.WaitHandle.WaitOne(Time.OneSecond, _cancellationTokenSource.Token)))
+                {
+                    Log.Error("BrokerageTransactionHandler.ProcessSynchronousEvents(): Timed out waiting for request queue to finish processing.");
+                }
+                else if (_pool != null && !_pool.WaitForIdle(Time.OneSecond))
                 {
                     Log.Error("BrokerageTransactionHandler.ProcessSynchronousEvents(): Timed out waiting for request queue to finish processing.");
                 }
@@ -800,23 +822,14 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
         public void Exit()
         {
             var timeout = TimeSpan.FromSeconds(60);
-            if (_processingThreads != null)
+            if (_pool != null)
             {
-                // only wait if the processing thread is running
-                if (_orderRequestQueues.Any(queue => queue.IsBusy && !queue.WaitHandle.WaitOne(timeout)))
+                // wait for the pool to finish processing pending requests, then stop the workers
+                if (!_pool.WaitForIdle(timeout))
                 {
                     Log.Error("BrokerageTransactionHandler.Exit(): Exceed timeout: " + (int)(timeout.TotalSeconds) + " seconds.");
                 }
-
-                foreach (var queue in _orderRequestQueues)
-                {
-                    queue.CompleteAdding();
-                }
-
-                foreach (var thread in _processingThreads)
-                {
-                    thread?.StopSafely(timeout, _cancellationTokenSource);
-                }
+                _pool.DisposeSafely();
             }
             IsActive = false;
             _cancellationTokenSource.DisposeSafely();
@@ -1939,12 +1952,23 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
 
         private void EnqueueOrderRequest(OrderRequest request, Order order)
         {
+            // route by OrderId (or combo group id) so all requests for the same order are processed
+            // in order by a single worker; the pool keeps the routing stable as it scales
             var queueKey = request.OrderId;
             if (order.GroupOrderManager?.Id > 0)
             {
                 queueKey = order.GroupOrderManager.Id;
             }
-            _orderRequestQueues[queueKey % _orderRequestQueues.Count].Add(request);
+
+            if (_pool != null)
+            {
+                _pool.Enqueue(queueKey, request);
+            }
+            else
+            {
+                // synchronous backtest path: a single queue processed on the algorithm thread
+                _orderRequestQueues[(int)(queueKey % _orderRequestQueues.Count)].Add(request);
+            }
         }
 
         /// <summary>
