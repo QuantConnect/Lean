@@ -245,14 +245,13 @@ namespace QuantConnect.Algorithm
             if (security.Type != SecurityType.Future && security.Type != SecurityType.FutureOption)
             {
                 // When the market is closed the order is converted to fill at the next open (MarketOnOpen),
-                // regardless of resolution. IsDailyResolutionOnly is only needed here for the one-time warning,
-                // so it is short-circuited away once the warning has been sent.
+                // regardless of resolution.
                 if (!security.Exchange.ExchangeOpen)
                 {
                     var mooTicket = MarketOnOpenOrder(security.Symbol, quantity, asynchronous, tag, orderProperties);
-                    if (!_isMarketOnOpenOrderWarningSent && mooTicket.SubmitRequest.Response.IsSuccess && IsDailyResolutionOnly(security.Symbol))
+                    if (!_isMarketOnOpenOrderWarningSent && mooTicket.SubmitRequest.Response.IsSuccess)
                     {
-                        Debug("Warning: market orders sent using daily data, or after market hours, are automatically converted into MarketOnOpen orders to fill at the next market open.");
+                        Debug("Warning: market orders submitted while the market is closed are automatically converted into MarketOnOpen orders to fill at the next market open.");
                         _isMarketOnOpenOrderWarningSent = true;
                     }
                     return mooTicket;
@@ -263,8 +262,9 @@ namespace QuantConnect.Algorithm
                 // close). It is filled at today's close (MarketOnClose), or at the next open (MarketOnOpen) if we are
                 // already within the MarketOnClose submission buffer.
                 // This is only done in backtesting. In live trading an open-market market order fills at the real
-                // current price, so we leave it as a regular market order.
-                if (!LiveMode && IsDailyResolutionOnly(security.Symbol))
+                // current price, so we leave it as a regular market order. Markets that never close (e.g. crypto,
+                // forex) have no open/close to convert to, so they are left as a regular market order too.
+                if (!LiveMode && !security.Exchange.Hours.IsMarketAlwaysOpen && IsDailyResolutionOnly(security.Symbol))
                 {
                     var convertedTicket = IsWithinMarketOnCloseSubmissionBuffer(security)
                         ? MarketOnOpenOrder(security.Symbol, quantity, asynchronous, tag, orderProperties)
