@@ -31,13 +31,13 @@ jobs:
             Microsoft.dotnet-interactive
 
           # Add dotnet tools to Path and activate kernel
-          export PATH="/root/.dotnet/tools:$PATH"
+          export PATH="$HOME/.dotnet/tools:$PATH"
           dotnet interactive jupyter install
 
       - name: Build and Run Research Tests
         run: |
           # Build
-          export PATH="/root/.dotnet/tools:$PATH"
+          export PATH="$HOME/.dotnet/tools:$PATH"
           dotnet build /p:Configuration=Release /v:quiet /p:WarningLevel=1 QuantConnect.Lean.sln
 
           # Run Tests
