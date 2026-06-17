@@ -44,10 +44,17 @@ jobs:
 
           # Generate & Publish python stubs
           echo "GITHUB_REF ${{ github.ref }}"
-          if [[ "${{ github.ref }}" = refs/tags/* && "$TAG_COMMIT" = "$MASTER_COMMIT" ]]; then
-            echo "Generating stubs"
-            chmod +x ci_build_stubs.sh
-            export ADDITIONAL_STUBS_REPOS=$(python find_datasource_repos.py) && ./ci_build_stubs.sh -t -g -p
-          else
-            echo "Skipping stub generation"
-          fi
+          case "${{ github.ref }}" in
+            refs/tags/*)
+              if [ "$TAG_COMMIT" = "$MASTER_COMMIT" ]; then
+                echo "Generating stubs"
+                chmod +x ci_build_stubs.sh
+                export ADDITIONAL_STUBS_REPOS=$(python find_datasource_repos.py) && ./ci_build_stubs.sh -t -g -p
+              else
+                echo "Skipping stub generation"
+              fi
+              ;;
+            *)
+              echo "Skipping stub generation"
+              ;;
+          esac
