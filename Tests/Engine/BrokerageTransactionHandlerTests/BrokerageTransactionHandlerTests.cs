@@ -38,7 +38,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Threading;
-using System.Threading.Tasks;
 using HistoryRequest = QuantConnect.Data.HistoryRequest;
 
 namespace QuantConnect.Tests.Engine.BrokerageTransactionHandlerTests
@@ -2956,7 +2955,7 @@ namespace QuantConnect.Tests.Engine.BrokerageTransactionHandlerTests
 
             public ConcurrentDictionary<int, string> RequestProcessingThreads = new();
 
-            // blocks workers to force a backlog
+            // blocks workers to force a sustained backlog so the pool grows
             public ManualResetEventSlim Gate;
 
             public int ActiveThreadCount => ProcessingThreadsCount;
