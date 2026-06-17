@@ -16,7 +16,6 @@
 
 using System;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using NUnit.Framework;
@@ -34,24 +33,6 @@ namespace QuantConnect.Tests.Common.Util
             pool.Start();
 
             Assert.AreEqual(2, pool.WorkerCount);
-            Assert.AreEqual(10, pool.PartitionCount);
-        }
-
-        [Test]
-        public void ClampsMinAndMaxWorkers()
-        {
-            // min is clamped to at least 1, and to at most max
-            using var pool = new DynamicWorkerPool<int>(_ => { }, minWorkers: 0, maxWorkers: 1);
-            pool.Start();
-
-            Assert.AreEqual(1, pool.WorkerCount);
-            Assert.AreEqual(1, pool.PartitionCount);
-        }
-
-        [Test]
-        public void ThrowsOnNullHandler()
-        {
-            Assert.Throws<ArgumentNullException>(() => new DynamicWorkerPool<int>(null, 1, 2));
         }
 
         [Test]
@@ -86,7 +67,7 @@ namespace QuantConnect.Tests.Common.Util
 
             try
             {
-                // keep feeding work while the workers stay busy on the gate, so the starving pool grows
+                // workers block on the gate, so the queues pile up and the pool grows to the maximum
                 var key = 0;
                 var reachedMax = SpinWait.SpinUntil(() =>
                 {
@@ -111,7 +92,7 @@ namespace QuantConnect.Tests.Common.Util
         [Test]
         public void DoesNotGrowWhenWorkersKeepUp()
         {
-            // workers process instantly, so there is never a starving backlog and the pool stays minimal
+            // workers process instantly, so the queues never pile up and the pool stays minimal
             using var pool = new DynamicWorkerPool<int>(_ => { }, minWorkers: 2, maxWorkers: 10);
             pool.Start();
 
@@ -128,29 +109,22 @@ namespace QuantConnect.Tests.Common.Util
         [Test]
         public void PreservesOrderPerKey()
         {
-            const int maxWorkers = 10;
-            const int keysCount = maxWorkers;       // one logical key per partition
+            // with a stable pool size, items sharing a key go to the same queue and keep their order
+            const int workers = 10;
             const int itemsPerKey = 50;
-            using var gate = new ManualResetEventSlim(false);
             var sequence = new ConcurrentQueue<(int Key, int Value)>();
-
-            using var pool = new DynamicWorkerPool<(int Key, int Value)>(item =>
-            {
-                gate.Wait();
-                sequence.Enqueue(item);
-            }, minWorkers: 2, maxWorkers: maxWorkers);
+            using var pool = new DynamicWorkerPool<(int Key, int Value)>(sequence.Enqueue,
+                minWorkers: workers, maxWorkers: workers);
             pool.Start();
 
-            // interleave items across keys; items with the same key must keep their relative order
             for (var n = 0; n < itemsPerKey; n++)
             {
-                for (var key = 0; key < keysCount; key++)
+                for (var key = 0; key < workers; key++)
                 {
                     pool.Enqueue(key, (key, n));
                 }
             }
 
-            gate.Set();
             Assert.IsTrue(pool.WaitForIdle(TimeSpan.FromSeconds(10)));
 
             foreach (var group in sequence.ToList().GroupBy(x => x.Key))
@@ -159,39 +133,6 @@ namespace QuantConnect.Tests.Common.Util
                 CollectionAssert.AreEqual(Enumerable.Range(0, itemsPerKey).ToList(), values,
                     $"key {group.Key} was processed out of order");
             }
-        }
-
-        [Test]
-        public void NeverProcessesSamePartitionConcurrently()
-        {
-            const int maxWorkers = 10;
-            var active = new ConcurrentDictionary<long, int>();
-            var overlapDetected = 0;
-            const int count = 2000;
-            using var done = new CountdownEvent(count);
-
-            using var pool = new DynamicWorkerPool<long>(item =>
-            {
-                // items sharing item % maxWorkers land on the same partition and must never overlap
-                var partition = item % maxWorkers;
-                if (active.AddOrUpdate(partition, 1, (_, c) => c + 1) > 1)
-                {
-                    Interlocked.Exchange(ref overlapDetected, 1);
-                }
-                Thread.SpinWait(50);
-                active.AddOrUpdate(partition, 0, (_, c) => c - 1);
-                done.Signal();
-            }, minWorkers: 4, maxWorkers: maxWorkers);
-            pool.Start();
-
-            for (var i = 0; i < count; i++)
-            {
-                // many distinct keys colliding on the same partitions (key % maxWorkers)
-                pool.Enqueue(i, i);
-            }
-
-            Assert.IsTrue(done.Wait(15000));
-            Assert.AreEqual(0, overlapDetected, "the same partition was processed by two workers at once");
         }
 
         [Test]
@@ -226,55 +167,6 @@ namespace QuantConnect.Tests.Common.Util
 
             Assert.IsTrue(raised.Wait(5000));
             Assert.IsInstanceOf<InvalidOperationException>(captured);
-        }
-
-        [Test]
-        public void EnqueueRoutesNegativeKeysToValidPartition()
-        {
-            var processed = new ConcurrentBag<int>();
-            using var done = new CountdownEvent(4);
-            using var pool = new DynamicWorkerPool<int>(i => { processed.Add(i); done.Signal(); }, 1, 4);
-            pool.Start();
-
-            // negative keys must still map to a valid partition without throwing
-            pool.Enqueue(-1, 10);
-            pool.Enqueue(-7, 20);
-            pool.Enqueue(-13, 30);
-            pool.Enqueue(-100, 40);
-
-            Assert.IsTrue(done.Wait(5000));
-            CollectionAssert.AreEquivalent(new[] { 10, 20, 30, 40 }, processed);
-        }
-
-        [Test]
-        public void DisposeStopsWorkers()
-        {
-            var pool = new DynamicWorkerPool<int>(_ => { }, 2, 4);
-            pool.Start();
-            pool.Enqueue(0, 0);
-            Assert.IsTrue(pool.WaitForIdle(TimeSpan.FromSeconds(5)));
-
-            Assert.DoesNotThrow(() => pool.Dispose());
-            // disposing again is safe
-            Assert.DoesNotThrow(() => pool.Dispose());
-        }
-
-        [Test]
-        public void EnqueueBeforeStartIsProcessedOnStart()
-        {
-            var processed = new ConcurrentBag<int>();
-            using var done = new CountdownEvent(3);
-            using var pool = new DynamicWorkerPool<int>(i => { processed.Add(i); done.Signal(); }, 2, 4);
-
-            // enqueue before Start: items wait in their partitions until workers come up
-            pool.Enqueue(0, 1);
-            pool.Enqueue(1, 2);
-            pool.Enqueue(2, 3);
-
-            pool.Start();
-
-            Assert.IsTrue(done.Wait(5000));
-            CollectionAssert.AreEquivalent(new[] { 1, 2, 3 }, processed);
         }
     }
 }

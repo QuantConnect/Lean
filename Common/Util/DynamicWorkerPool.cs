@@ -15,16 +15,15 @@
 */
 
 using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Threading;
 
 namespace QuantConnect.Util
 {
     /// <summary>
-    /// A worker pool that routes items into a fixed number of partitions by key, keeping the routing
-    /// stable while the number of workers grows on demand from a minimum up to a maximum when busy.
-    /// Each partition is processed by a single worker at a time, so items sharing a key keep their order.
+    /// A worker pool that routes items into queues by key and processes each queue with its own thread.
+    /// It starts with a minimum number of workers and adds more on demand (up to a maximum) when a queue
+    /// starts to pile up. Items sharing a key go to the same queue, so they keep their relative order.
     /// </summary>
     /// <typeparam name="T">The item type being processed</typeparam>
     public class DynamicWorkerPool<T> : IDisposable
@@ -35,32 +34,39 @@ namespace QuantConnect.Util
         private readonly int _minWorkers;
         private readonly int _maxWorkers;
 
-        private readonly ConcurrentQueue<T>[] _partitions;
-        // 0 = free, 1 = claimed; ensures at most one worker processes a partition at a time
-        private readonly int[] _claims;
-        private readonly ManualResetEventSlim _workAvailable;
-        private readonly CancellationTokenSource _cancellationTokenSource;
+        private readonly BusyBlockingCollection<T>[] _queues;
         private readonly List<Thread> _workers;
-        private readonly object _workersLock = new object();
-
-        private int _activeWorkerCount;
-        private int _busyWorkers;
-        private bool _started;
+        private readonly CancellationTokenSource _cancellationTokenSource;
+        private readonly object _lock = new object();
+        private int _activeWorkers;
+        private bool _disposed;
 
         /// <summary>
         /// The number of worker threads currently running
         /// </summary>
-        public int WorkerCount => Volatile.Read(ref _activeWorkerCount);
+        public int WorkerCount => Volatile.Read(ref _activeWorkers);
 
         /// <summary>
-        /// The fixed number of partitions used to route items (equal to the maximum worker count)
+        /// True while any queue still has items to process
         /// </summary>
-        public int PartitionCount => _partitions.Length;
-
-        /// <summary>
-        /// True while any partition has pending work or any worker is still processing an item
-        /// </summary>
-        public bool IsBusy => IsPoolBusy();
+        public bool IsBusy
+        {
+            get
+            {
+                if (Volatile.Read(ref _disposed))
+                {
+                    return false;
+                }
+                for (var i = 0; i < _queues.Length; i++)
+                {
+                    if (_queues[i].IsBusy)
+                    {
+                        return true;
+                    }
+                }
+                return false;
+            }
+        }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="DynamicWorkerPool{T}"/> class
@@ -78,15 +84,13 @@ namespace QuantConnect.Util
             _onError = onError;
             _threadName = threadName;
 
-            _partitions = new ConcurrentQueue<T>[_maxWorkers];
+            _queues = new BusyBlockingCollection<T>[_maxWorkers];
             for (var i = 0; i < _maxWorkers; i++)
             {
-                _partitions[i] = new ConcurrentQueue<T>();
+                _queues[i] = new BusyBlockingCollection<T>();
             }
-            _claims = new int[_maxWorkers];
-            _workAvailable = new ManualResetEventSlim(false);
-            _cancellationTokenSource = new CancellationTokenSource();
             _workers = new List<Thread>(_maxWorkers);
+            _cancellationTokenSource = new CancellationTokenSource();
         }
 
         /// <summary>
@@ -94,54 +98,52 @@ namespace QuantConnect.Util
         /// </summary>
         public void Start()
         {
-            lock (_workersLock)
+            lock (_lock)
             {
-                if (_started)
+                if (_workers.Count > 0)
                 {
                     return;
                 }
-                _started = true;
-
                 for (var i = 0; i < _minWorkers; i++)
                 {
-                    _workers.Add(NewWorker(i));
+                    StartWorker(i);
                 }
-                _activeWorkerCount = _minWorkers;
-                foreach (var worker in _workers)
-                {
-                    worker.Start();
-                }
+                _activeWorkers = _minWorkers;
             }
         }
 
         /// <summary>
-        /// Enqueues an item to be processed. Items are routed to a partition by <paramref name="key"/>,
-        /// so all items sharing the same key land on the same partition and keep their relative order.
+        /// Routes an item to a queue by <paramref name="key"/> and adds a worker if that queue is piling up
         /// </summary>
-        /// <param name="key">The routing key (e.g. an order id); the same key always maps to the same partition</param>
+        /// <param name="key">The routing key; the same key maps to the same queue while the pool size is stable</param>
         /// <param name="item">The item to process</param>
         public void Enqueue(long key, T item)
         {
-            var partition = (int)(key % _partitions.Length);
-            if (partition < 0)
+            var active = Volatile.Read(ref _activeWorkers);
+            var index = (int)(key % active);
+            if (index < 0)
             {
-                partition += _partitions.Length;
+                index += active;
             }
-            _partitions[partition].Enqueue(item);
 
-            // signal the workers and grow the pool if the partitions are starving
-            _workAvailable.Set();
-            MaybeScaleUp();
+            var queue = _queues[index];
+            queue.Add(item);
+
+            // the queue is piling up faster than its worker can process it: grow the pool
+            if (active < _maxWorkers && queue.Count > 1)
+            {
+                Grow();
+            }
         }
 
         /// <summary>
-        /// Waits until all partitions are empty and no worker is processing, or the timeout elapses
+        /// Waits until all queues are empty and idle, or the timeout elapses
         /// </summary>
         /// <returns>True if the pool became idle, false on timeout</returns>
         public bool WaitForIdle(TimeSpan timeout)
         {
             var deadline = DateTime.UtcNow + timeout;
-            while (IsPoolBusy())
+            while (IsBusy)
             {
                 if (DateTime.UtcNow >= deadline)
                 {
@@ -157,13 +159,22 @@ namespace QuantConnect.Util
         /// </summary>
         public void Dispose()
         {
-            if (!_cancellationTokenSource.IsCancellationRequested)
+            lock (_lock)
             {
-                _cancellationTokenSource.Cancel();
+                if (_disposed)
+                {
+                    return;
+                }
+                _disposed = true;
             }
-            _workAvailable.Set();
 
-            lock (_workersLock)
+            _cancellationTokenSource.Cancel();
+            foreach (var queue in _queues)
+            {
+                queue.CompleteAdding();
+            }
+
+            lock (_lock)
             {
                 foreach (var worker in _workers)
                 {
@@ -171,35 +182,41 @@ namespace QuantConnect.Util
                 }
             }
 
-            _workAvailable.DisposeSafely();
+            foreach (var queue in _queues)
+            {
+                queue.DisposeSafely();
+            }
             _cancellationTokenSource.DisposeSafely();
         }
 
-        private Thread NewWorker(int id)
+        private void Grow()
         {
-            return new Thread(WorkerLoop) { IsBackground = true, Name = $"{_threadName} {id}" };
+            lock (_lock)
+            {
+                if (_activeWorkers >= _maxWorkers || _cancellationTokenSource.IsCancellationRequested)
+                {
+                    return;
+                }
+                StartWorker(_activeWorkers);
+                // publish the new worker only after it has started so routing never targets a missing queue
+                _activeWorkers++;
+            }
         }
 
-        /// <summary>
-        /// Worker entry point. Scans the partitions, claiming and processing any that have pending work,
-        /// and blocks when there is none.
-        /// </summary>
-        private void WorkerLoop()
+        private void StartWorker(int index)
         {
-            var token = _cancellationTokenSource.Token;
+            var worker = new Thread(() => WorkerLoop(index)) { IsBackground = true, Name = $"{_threadName} {index}" };
+            _workers.Add(worker);
+            worker.Start();
+        }
+
+        private void WorkerLoop(int index)
+        {
             try
             {
-                while (!token.IsCancellationRequested)
+                foreach (var item in _queues[index].GetConsumingEnumerable(_cancellationTokenSource.Token))
                 {
-                    if (!ProcessAvailable())
-                    {
-                        // no work found: reset and re-scan before blocking to avoid lost wake-ups
-                        _workAvailable.Reset();
-                        if (!ProcessAvailable())
-                        {
-                            _workAvailable.Wait(token);
-                        }
-                    }
+                    _handler(item);
                 }
             }
             catch (OperationCanceledException)
@@ -210,110 +227,6 @@ namespace QuantConnect.Util
             {
                 _onError?.Invoke(err);
             }
-            finally
-            {
-                Interlocked.Decrement(ref _activeWorkerCount);
-            }
-        }
-
-        /// <summary>
-        /// Scans all partitions and processes the ones with pending work. A partition is claimed before
-        /// processing so at most one worker handles it at a time, preserving per-key ordering.
-        /// </summary>
-        /// <returns>True if any work was processed</returns>
-        private bool ProcessAvailable()
-        {
-            var worked = false;
-            for (var i = 0; i < _partitions.Length; i++)
-            {
-                var partition = _partitions[i];
-                if (partition.IsEmpty)
-                {
-                    continue;
-                }
-
-                // claim the partition; if another worker owns it, skip and let that worker process it
-                if (Interlocked.CompareExchange(ref _claims[i], 1, 0) != 0)
-                {
-                    continue;
-                }
-
-                Interlocked.Increment(ref _busyWorkers);
-                try
-                {
-                    while (partition.TryDequeue(out var item))
-                    {
-                        _handler(item);
-                        worked = true;
-                    }
-                }
-                finally
-                {
-                    Interlocked.Decrement(ref _busyWorkers);
-                    Volatile.Write(ref _claims[i], 0);
-                }
-
-                // items may have been added between our last dequeue and releasing the claim;
-                // make sure a worker wakes up to handle them
-                if (!partition.IsEmpty)
-                {
-                    _workAvailable.Set();
-                }
-            }
-            return worked;
-        }
-
-        /// <summary>
-        /// Grows the pool by one worker (up to the maximum) when the partitions are starving, i.e. every
-        /// running worker is already busy at the moment new work is enqueued.
-        /// </summary>
-        private void MaybeScaleUp()
-        {
-            var active = Volatile.Read(ref _activeWorkerCount);
-            if (active >= _maxWorkers)
-            {
-                return;
-            }
-
-            if (Volatile.Read(ref _busyWorkers) >= active)
-            {
-                TrySpawnWorker();
-            }
-        }
-
-        private void TrySpawnWorker()
-        {
-            lock (_workersLock)
-            {
-                if (!_started || _activeWorkerCount >= _maxWorkers || _cancellationTokenSource.IsCancellationRequested)
-                {
-                    return;
-                }
-
-                var worker = NewWorker(_workers.Count);
-                _workers.Add(worker);
-                _activeWorkerCount++;
-                worker.Start();
-            }
-
-            // wake the new worker (and any idle ones) to pick up the backlog
-            _workAvailable.Set();
-        }
-
-        private bool IsPoolBusy()
-        {
-            if (Volatile.Read(ref _busyWorkers) > 0)
-            {
-                return true;
-            }
-            for (var i = 0; i < _partitions.Length; i++)
-            {
-                if (!_partitions[i].IsEmpty)
-                {
-                    return true;
-                }
-            }
-            return false;
         }
     }
 }
