@@ -995,7 +995,7 @@ namespace QuantConnect.Orders.Fills
             if (PythonWrapper != null)
             {
                 var prices = PythonWrapper.GetPricesInternal(asset, direction);
-                return new Prices(prices.EndTime, prices.Current, prices.Open, prices.High, prices.Low, prices.Close);
+                return new Prices(prices.Time, prices.EndTime, prices.Current, prices.Open, prices.High, prices.Low, prices.Close);
             }
             return GetPrices(asset, direction);
         }
@@ -1012,11 +1012,13 @@ namespace QuantConnect.Orders.Fills
             var open = asset.Open;
             var close = asset.Close;
             var current = asset.Price;
-            var endTime = asset.Cache.GetData()?.EndTime ?? DateTime.MinValue;
+            var lastData = asset.Cache.GetData();
+            var startTime = lastData?.Time ?? DateTime.MinValue;
+            var endTime = lastData?.EndTime ?? DateTime.MinValue;
 
             if (direction == OrderDirection.Hold)
             {
-                return new Prices(endTime, current, open, high, low, close);
+                return new Prices(startTime, endTime, current, open, high, low, close);
             }
 
             // Only fill with data types we are subscribed to
@@ -1030,14 +1032,14 @@ namespace QuantConnect.Orders.Fills
                 var price = direction == OrderDirection.Sell ? tick.BidPrice : tick.AskPrice;
                 if (price != 0m)
                 {
-                    return new Prices(tick.EndTime, price, 0, 0, 0, 0);
+                    return new Prices(tick.Time, tick.EndTime, price, 0, 0, 0, 0);
                 }
 
                 // If the ask/bid spreads are not available for ticks, try the price
                 price = tick.Price;
                 if (price != 0m)
                 {
-                    return new Prices(tick.EndTime, price, 0, 0, 0, 0);
+                    return new Prices(tick.Time, tick.EndTime, price, 0, 0, 0, 0);
                 }
             }
 
@@ -1048,7 +1050,7 @@ namespace QuantConnect.Orders.Fills
                 var bar = direction == OrderDirection.Sell ? quoteBar.Bid : quoteBar.Ask;
                 if (bar != null)
                 {
-                    return new Prices(quoteBar.EndTime, bar);
+                    return new Prices(quoteBar.Time, quoteBar.EndTime, bar);
                 }
             }
 
@@ -1059,7 +1061,7 @@ namespace QuantConnect.Orders.Fills
                 return new Prices(tradeBar);
             }
 
-            return new Prices(endTime, current, open, high, low, close);
+            return new Prices(startTime, endTime, current, open, high, low, close);
         }
     }
 }
