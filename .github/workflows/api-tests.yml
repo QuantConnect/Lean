@@ -9,7 +9,7 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-24.04
+    runs-on: self-hosted
     # Only run on push events (not on pull_request) for security reasons in order to be able to use secrets
     if: ${{ github.event_name == 'push' }}
     steps:

@@ -9,7 +9,7 @@ on:
 
 jobs:
   build:
-    runs-on: self-hosted
+    runs-on: [self-hosted, benchmark]
     container:
         image: quantconnect/lean:foundation
         volumes:
