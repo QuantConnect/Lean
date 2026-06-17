@@ -76,10 +76,12 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
         protected List<IBusyCollection<OrderRequest>> _orderRequestQueues { get; set; }
 
         private List<Thread> _processingThreads;
-        // the transaction thread pool starts with the minimum number of workers and grows up to the maximum on
-        // demand. One queue is allocated per potential worker so routing by OrderId stays stable as it grows.
-        private int _activeTransactionThreads;
+        // maximum number of transaction threads (and queues) the pool can grow to on demand
         private int _maximumTransactionThreads;
+        // pins each order (or combo group) to one queue for its whole life, so all its requests are handled
+        // in order by the same thread even after the pool grows and changes the modulo used for new orders
+        private readonly Dictionary<int, int> _orderRequestQueueIndexByKey = new();
+        // guards on demand growth of the queues/threads against concurrent reads in Run/Exit/enqueue
         private readonly object _processingThreadsLock = new object();
         private readonly CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource();
 
@@ -241,59 +243,86 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
         /// </summary>
         protected virtual void InitializeTransactionThread()
         {
-            // multi threaded queue, used for live deployments. We allocate one queue per potential worker so
-            // requests keep routing to the same queue by OrderId, but only start the minimum number of workers.
-            // More are started on demand (up to the maximum) when a queue starts to pile up.
-            _maximumTransactionThreads = _brokerage.ConcurrencyEnabled ? Math.Max(1, MaximumTransactionThreads) : 1;
-            var minThreads = _brokerage.ConcurrencyEnabled ? Math.Min(Math.Max(1, MinimumTransactionThreads), _maximumTransactionThreads) : 1;
+            // live deployments start with the minimum number of threads and grow on demand (see TryExpandProcessingThreads)
+            // up to the maximum. No concurrency means a single thread, no growth.
+            int initialThreadsCount;
+            if (_brokerage.ConcurrencyEnabled)
+            {
+                _maximumTransactionThreads = Math.Max(1, MaximumTransactionThreads);
+                initialThreadsCount = Math.Min(Math.Max(1, MinimumTransactionThreads), _maximumTransactionThreads);
+            }
+            else
+            {
+                _maximumTransactionThreads = initialThreadsCount = 1;
+            }
 
             _orderRequestQueues = new(_maximumTransactionThreads);
             _processingThreads = new(_maximumTransactionThreads);
-            for (var i = 0; i < _maximumTransactionThreads; i++)
+            for (var i = 0; i < initialThreadsCount; i++)
             {
-                _orderRequestQueues.Add(new BusyBlockingCollection<OrderRequest>());
+                AddProcessingThread();
             }
-            for (var i = 0; i < minThreads; i++)
-            {
-                StartProcessingThread(i);
-            }
-            _activeTransactionThreads = minThreads;
         }
 
         /// <summary>
-        /// The maximum number of worker threads the dynamic transaction thread pool can grow to
+        /// The maximum number of transaction threads the pool can grow to
         /// </summary>
         protected virtual int MaximumTransactionThreads => Config.GetInt("maximum-transaction-threads", 10);
 
         /// <summary>
-        /// The number of worker threads the dynamic transaction thread pool starts with
+        /// The number of transaction threads the pool starts with
         /// </summary>
         protected virtual int MinimumTransactionThreads => Config.GetInt("minimum-transaction-threads", 2);
 
         /// <summary>
-        /// The number of worker threads currently running in the dynamic transaction thread pool
+        /// The number of transaction threads currently running
         /// </summary>
-        protected int ProcessingThreadsCount => Volatile.Read(ref _activeTransactionThreads);
-
-        private void StartProcessingThread(int threadId)
+        protected int ProcessingThreadsCount
         {
+            get
+            {
+                lock (_processingThreadsLock)
+                {
+                    return _processingThreads?.Count ?? 0;
+                }
+            }
+        }
+
+        /// <summary>
+        /// Creates a queue and its dedicated thread and starts it.
+        /// Callers growing the pool on demand must hold <see cref="_processingThreadsLock"/>.
+        /// </summary>
+        private void AddProcessingThread()
+        {
+            var threadId = _orderRequestQueues.Count; // matches the queue index this thread will consume
+            _orderRequestQueues.Add(new BusyBlockingCollection<OrderRequest>());
             var thread = new Thread(() => Run(threadId)) { IsBackground = true, Name = $"Transaction Thread {threadId}" };
             _processingThreads.Add(thread);
             thread.Start();
         }
 
-        private void GrowProcessingThreads()
+        /// <summary>
+        /// Grows the pool only when every thread is busy and still has pending requests, up to the maximum.
+        /// Caller must hold <see cref="_processingThreadsLock"/>.
+        /// </summary>
+        private void TryExpandProcessingThreads()
         {
-            lock (_processingThreadsLock)
+            if (_orderRequestQueues.Count >= _maximumTransactionThreads || _cancellationTokenSource.IsCancellationRequested)
             {
-                if (_activeTransactionThreads >= _maximumTransactionThreads || _cancellationTokenSource.IsCancellationRequested)
+                return;
+            }
+
+            // only grow when the whole pool is saturated: every thread busy and with requests still waiting
+            for (var i = 0; i < _orderRequestQueues.Count; i++)
+            {
+                var queue = _orderRequestQueues[i];
+                if (!queue.IsBusy || queue.Count == 0)
                 {
                     return;
                 }
-                StartProcessingThread(_activeTransactionThreads);
-                // publish the new worker only after it started so routing never targets a queue without a thread
-                _activeTransactionThreads++;
             }
+
+            AddProcessingThread();
         }
 
         /// <summary>
@@ -720,9 +749,16 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
         /// </summary>
         protected void Run(int threadId)
         {
+            IBusyCollection<OrderRequest> queue;
+            lock (_processingThreadsLock)
+            {
+                // capture our queue safely, the queues list may be growing on demand concurrently
+                queue = _orderRequestQueues[threadId];
+            }
+
             try
             {
-                foreach (var request in _orderRequestQueues[threadId].GetConsumingEnumerable(_cancellationTokenSource.Token))
+                foreach (var request in queue.GetConsumingEnumerable(_cancellationTokenSource.Token))
                 {
                     HandleOrderRequest(request);
                     ProcessAsynchronousEvents();
@@ -844,18 +880,27 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
             var timeout = TimeSpan.FromSeconds(60);
             if (_processingThreads != null)
             {
+                // snapshot under the lock since the pool might still be growing on demand concurrently
+                List<IBusyCollection<OrderRequest>> queues;
+                List<Thread> threads;
+                lock (_processingThreadsLock)
+                {
+                    queues = _orderRequestQueues.ToList();
+                    threads = _processingThreads.ToList();
+                }
+
                 // only wait if the processing thread is running
-                if (_orderRequestQueues.Any(queue => queue.IsBusy && !queue.WaitHandle.WaitOne(timeout)))
+                if (queues.Any(queue => queue.IsBusy && !queue.WaitHandle.WaitOne(timeout)))
                 {
                     Log.Error("BrokerageTransactionHandler.Exit(): Exceed timeout: " + (int)(timeout.TotalSeconds) + " seconds.");
                 }
 
-                foreach (var queue in _orderRequestQueues)
+                foreach (var queue in queues)
                 {
                     queue.CompleteAdding();
                 }
 
-                foreach (var thread in _processingThreads)
+                foreach (var thread in threads)
                 {
                     thread?.StopSafely(timeout, _cancellationTokenSource);
                 }
@@ -1981,30 +2026,30 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
 
         private void EnqueueOrderRequest(OrderRequest request, Order order)
         {
-            // route by OrderId (or combo group id) so all requests for the same order go to the same queue and
-            // are processed in order by a single worker; the routing stays stable while the pool size is steady
+            // route by OrderId (or combo group id) so requests for the same order keep their order on one queue
             var queueKey = request.OrderId;
             if (order.GroupOrderManager?.Id > 0)
             {
                 queueKey = order.GroupOrderManager.Id;
             }
 
-            var active = Volatile.Read(ref _activeTransactionThreads);
-            if (active == 0)
+            IBusyCollection<OrderRequest> queue;
+            lock (_processingThreadsLock)
             {
-                // synchronous backtest path: a single queue processed on the algorithm thread
-                _orderRequestQueues[queueKey % _orderRequestQueues.Count].Add(request);
-                return;
+                // grow the pool first if every existing thread is already saturated
+                TryExpandProcessingThreads();
+
+                // reuse the order's pinned queue if it has one, so it is never re-routed when the pool grows
+                if (!_orderRequestQueueIndexByKey.TryGetValue(queueKey, out var queueIndex))
+                {
+                    queueIndex = queueKey % _orderRequestQueues.Count;
+                    _orderRequestQueueIndexByKey[queueKey] = queueIndex;
+                }
+                queue = _orderRequestQueues[queueIndex];
             }
 
-            var queue = _orderRequestQueues[queueKey % active];
+            // add outside the lock, since it can block when the queue is at its bounded capacity
             queue.Add(request);
-
-            // the queue is piling up faster than its worker can process it: add a worker, up to the maximum
-            if (active < _maximumTransactionThreads && queue.Count > 1)
-            {
-                GrowProcessingThreads();
-            }
         }
 
         /// <summary>
