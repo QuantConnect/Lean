@@ -19,6 +19,7 @@ using System.Linq;
 using NUnit.Framework;
 using QuantConnect.Data;
 using System.Collections.Generic;
+using QuantConnect.Securities;
 using QuantConnect.Securities.Option;
 
 namespace QuantConnect.Tests.Common
@@ -107,6 +108,27 @@ namespace QuantConnect.Tests.Common
             Assert.AreEqual(0m, sid.StrikePrice);
             Assert.AreEqual(default(OptionRight), sid.OptionRight);
             Assert.AreEqual(default(OptionStyle), sid.OptionStyle);
+        }
+
+        [Test]
+        public void AdjustFutureSymbolByOffsetRespectsContractMonthCycle()
+        {
+            var symbol = Symbol.CreateFuture(Futures.Metals.Gold, Market.COMEX, new DateTime(2026, 4, 28));
+
+            var adjusted = symbol.AdjustSymbolByOffset(1, new[] { 2, 4, 6, 8, 12 });
+
+            Assert.AreEqual(new DateTime(2026, 6, 26), adjusted.ID.Date);
+        }
+
+        [Test]
+        public void AdjustFutureSymbolByOffsetSkipsCurrentContractOutsideContractMonthCycle()
+        {
+            var symbol = Symbol.CreateFuture(Futures.Metals.Gold, Market.COMEX, new DateTime(2026, 10, 28));
+
+            var adjusted = symbol.AdjustSymbolByOffset(0, new[] { 2, 4, 6, 8, 12 });
+
+            Assert.AreEqual(2026, adjusted.ID.Date.Year);
+            Assert.AreEqual(12, adjusted.ID.Date.Month);
         }
 
         [Test]

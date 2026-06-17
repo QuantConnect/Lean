@@ -546,12 +546,14 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             bool isCustomData = false,
             DataNormalizationMode dataNormalizationMode = DataNormalizationMode.Adjusted,
             DataMappingMode dataMappingMode = DataMappingMode.OpenInterest,
-            uint contractDepthOffset = 0
+            uint contractDepthOffset = 0,
+            int dataMappingModeDaysOffset = 0,
+            IReadOnlyList<int> contractMonthCycle = null
             )
         {
             return Add(symbol, resolution, fillForward, extendedMarketHours, isFilteredSubscription, isInternalFeed, isCustomData,
                 new List<Tuple<Type, TickType>> { new Tuple<Type, TickType>(dataType, LeanData.GetCommonTickTypeForCommonDataTypes(dataType, symbol.SecurityType)) },
-                dataNormalizationMode, dataMappingMode, contractDepthOffset)
+                dataNormalizationMode, dataMappingMode, contractDepthOffset, dataMappingModeDaysOffset, contractMonthCycle)
                 .First();
         }
 
@@ -571,7 +573,9 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             List<Tuple<Type, TickType>> subscriptionDataTypes = null,
             DataNormalizationMode dataNormalizationMode = DataNormalizationMode.Adjusted,
             DataMappingMode dataMappingMode = DataMappingMode.OpenInterest,
-            uint contractDepthOffset = 0
+            uint contractDepthOffset = 0,
+            int dataMappingModeDaysOffset = 0,
+            IReadOnlyList<int> contractMonthCycle = null
             )
         {
             var dataTypes = subscriptionDataTypes;
@@ -685,7 +689,9 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                               tickType: tickType,
                               dataNormalizationMode: dataNormalizationMode,
                               dataMappingMode: dataMappingMode,
-                              contractDepthOffset: contractDepthOffset)).ToList();
+                              contractDepthOffset: contractDepthOffset,
+                              dataMappingModeDaysOffset: dataMappingModeDaysOffset,
+                              contractMonthCycle: contractMonthCycle)).ToList();
 
             for (int i = 0; i < result.Count; i++)
             {
