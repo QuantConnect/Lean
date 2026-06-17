@@ -16,6 +16,7 @@ jobs:
     runs-on: self-hosted
     container:
         image: quantconnect/lean:foundation
+        options: --cpus 12 --memory 12g
         env:
           QC_JOB_USER_ID: ${{ secrets.QC_JOB_USER_ID }}
           QC_API_ACCESS_TOKEN: ${{ secrets.QC_API_ACCESS_TOKEN }}

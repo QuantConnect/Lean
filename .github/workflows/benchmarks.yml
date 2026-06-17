@@ -16,6 +16,7 @@ jobs:
     runs-on: [self-hosted, benchmark]
     container:
         image: quantconnect/lean:foundation
+        options: --cpus 12 --memory 12g
         volumes:
           - /nas:/Data:ro
     steps:

@@ -16,6 +16,7 @@ jobs:
     runs-on: self-hosted
     container:
         image: quantconnect/lean:foundation
+        options: --cpus 12 --memory 12g
         env:
           PYPI_API_TOKEN: ${{ secrets.PYPI_API_TOKEN }}
           QC_GIT_TOKEN: ${{ secrets.QC_GIT_TOKEN }}

@@ -10,6 +10,7 @@ jobs:
     runs-on: self-hosted
     container:
         image: quantconnect/lean:foundation
+        options: --cpus 12 --memory 12g
     steps:
       - uses: actions/checkout@v2
         with:
