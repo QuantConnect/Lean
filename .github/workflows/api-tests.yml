@@ -17,6 +17,7 @@ jobs:
         uses: actions/checkout@v2
         
       - name: Liberate disk space
+        if: ${{ runner.environment == 'github-hosted' }}
         uses: jlumbroso/free-disk-space@main
         with:
           tool-cache: true

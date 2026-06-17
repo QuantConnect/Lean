@@ -13,7 +13,7 @@ jobs:
     container:
         image: quantconnect/lean:foundation
         volumes:
-          - /nas:/Data
+          - /nas:/Data:ro
     steps:
       - uses: actions/checkout@v2
 

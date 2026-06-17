@@ -17,6 +17,7 @@ jobs:
           fetch-depth: 0  # Ensures we fetch all history
 
       - name: Liberate disk space
+        if: ${{ runner.environment == 'github-hosted' }}
         uses: jlumbroso/free-disk-space@main
         with:
           tool-cache: true
