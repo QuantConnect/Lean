@@ -2525,7 +2525,7 @@ namespace QuantConnect.Tests.Engine.BrokerageTransactionHandlerTests
 
             try
             {
-                // the pool starts with the minimum number of worker threads and grows only on demand
+                // the pool starts with the minimum number of threads and grows only on demand
                 Assert.AreEqual(2, transactionHandler.ActiveThreadCount);
             }
             finally
@@ -2563,8 +2563,7 @@ namespace QuantConnect.Tests.Engine.BrokerageTransactionHandlerTests
                 // starts at the minimum
                 Assert.AreEqual(2, transactionHandler.ActiveThreadCount);
 
-                // keep feeding orders while the workers stay busy on the gate (sustained saturation),
-                // which is what makes the starving pool grow up to the configured maximum
+                // keep feeding orders while threads stay blocked on the gate, forcing the pool to grow to the max
                 var orderId = 0;
                 var reachedMax = SpinWait.SpinUntil(() =>
                 {
@@ -2580,6 +2579,124 @@ namespace QuantConnect.Tests.Engine.BrokerageTransactionHandlerTests
                 Assert.IsTrue(reachedMax, $"Pool did not grow to the maximum, current size: {transactionHandler.ActiveThreadCount}");
                 // never grows beyond the configured maximum
                 Assert.AreEqual(maximumThreads, transactionHandler.ActiveThreadCount);
+            }
+            finally
+            {
+                gate.Set();
+                transactionHandler.Exit();
+            }
+        }
+
+        [Test]
+        public void KeepsAnOrderOnTheSameThreadAfterThePoolGrows()
+        {
+            var algorithm = new TestAlgorithm();
+            using var brokerage = new TestingConcurrentBrokerage();
+            using var finishedEvent = new ManualResetEventSlim(false);
+            using var gate = new ManualResetEventSlim(false);
+            var transactionHandler = new TestableConcurrentBrokerageTransactionHandler(int.MaxValue, finishedEvent)
+            {
+                Gate = gate,
+                MaxThreadsOverride = 10
+            };
+            transactionHandler.Initialize(algorithm, brokerage, new BacktestingResultHandler());
+
+            try
+            {
+                algorithm.Transactions.SetOrderProcessor(transactionHandler);
+                algorithm.SetCash(100000);
+                algorithm.SetFinishedWarmingUp();
+
+                var security1 = (Security)algorithm.AddEquity("SPY");
+                var security2 = (Security)algorithm.AddEquity("AAPL");
+
+                var reference = new DateTime(2025, 07, 03, 10, 0, 0);
+                security1.SetMarketPrice(new Tick(reference, security1.Symbol, 500, 500));
+                security2.SetMarketPrice(new Tick(reference, security2.Symbol, 200, 200));
+
+                // group id 2 pins to queue 0 (2 % 2) while the pool is at the minimum; once it grows to >= 3
+                // an un-pinned request would route to queue 2 (2 % count), so this scenario detects re-routing
+                var groupOrderManager = new GroupOrderManager(2, 2, -1, 1m);
+                var leg1 = new SubmitOrderRequest(OrderType.ComboLimit, security1.Type, security1.Symbol, -1, 1m, 0, reference, "",
+                    groupOrderManager: groupOrderManager);
+                leg1.SetOrderId(1);
+                transactionHandler.Process(leg1);
+
+                Assert.AreEqual(2, transactionHandler.ActiveThreadCount);
+
+                // saturate the pool with unrelated orders so it grows past the minimum
+                var orderId = 100;
+                var grew = SpinWait.SpinUntil(() =>
+                {
+                    if (orderId < 1100)
+                    {
+                        var request = MakeAsyncMarketRequest(security1, reference);
+                        request.SetOrderId(++orderId);
+                        transactionHandler.Process(request);
+                    }
+                    return transactionHandler.ActiveThreadCount >= 3;
+                }, 10000);
+                Assert.IsTrue(grew, $"the pool did not grow, current size: {transactionHandler.ActiveThreadCount}");
+
+                // leg 2 of the same combo arrives after the pool grew; the pin must keep it on the original queue
+                var leg2 = new SubmitOrderRequest(OrderType.ComboLimit, security2.Type, security2.Symbol, 1, 1m, 0, reference, "",
+                    groupOrderManager: groupOrderManager);
+                leg2.SetOrderId(2);
+                transactionHandler.Process(leg2);
+
+                gate.Set();
+
+                // both legs must have been handled by the same thread despite the pool growing in between
+                Assert.IsTrue(SpinWait.SpinUntil(() =>
+                    transactionHandler.RequestProcessingThreads.ContainsKey(leg1.OrderId) &&
+                    transactionHandler.RequestProcessingThreads.ContainsKey(leg2.OrderId), 10000),
+                    "the combo legs were not processed");
+                Assert.AreEqual(transactionHandler.RequestProcessingThreads[leg1.OrderId],
+                    transactionHandler.RequestProcessingThreads[leg2.OrderId]);
+            }
+            finally
+            {
+                gate.Set();
+                transactionHandler.Exit();
+            }
+        }
+
+        [Test]
+        public void DoesNotGrowWhenThePoolIsNotSaturated()
+        {
+            var algorithm = new TestAlgorithm();
+            using var brokerage = new TestingConcurrentBrokerage();
+            using var finishedEvent = new ManualResetEventSlim(false);
+            using var gate = new ManualResetEventSlim(false);
+            var transactionHandler = new TestableConcurrentBrokerageTransactionHandler(int.MaxValue, finishedEvent)
+            {
+                Gate = gate,
+                MaxThreadsOverride = 10
+            };
+            transactionHandler.Initialize(algorithm, brokerage, new BacktestingResultHandler());
+
+            try
+            {
+                algorithm.Transactions.SetOrderProcessor(transactionHandler);
+                algorithm.SetFinishedWarmingUp();
+
+                var security = (Security)algorithm.AddEquity("SPY");
+                var reference = new DateTime(2025, 07, 03, 10, 0, 0);
+                security.SetMarketPrice(new Tick(reference, security.Symbol, 300, 300));
+
+                Assert.AreEqual(2, transactionHandler.ActiveThreadCount);
+
+                // all even order ids route to the same queue (id % 2 == 0), keeping the other thread idle,
+                // so even with a backlog on one queue the pool must not grow
+                for (var i = 1; i <= 20; i++)
+                {
+                    var request = MakeAsyncMarketRequest(security, reference);
+                    request.SetOrderId(i * 2);
+                    transactionHandler.Process(request);
+                }
+
+                // growth is evaluated synchronously on each enqueue, so the count is final here
+                Assert.AreEqual(2, transactionHandler.ActiveThreadCount);
             }
             finally
             {
@@ -2955,7 +3072,7 @@ namespace QuantConnect.Tests.Engine.BrokerageTransactionHandlerTests
 
             public ConcurrentDictionary<int, string> RequestProcessingThreads = new();
 
-            // blocks workers to force a sustained backlog so the pool grows
+            // blocks threads so requests pile up and force the pool to grow
             public ManualResetEventSlim Gate;
 
             public int ActiveThreadCount => ProcessingThreadsCount;
