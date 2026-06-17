@@ -10,39 +10,18 @@ on:
 jobs:
   build:
     runs-on: self-hosted
+    container:
+        image: quantconnect/lean:foundation
     steps:
       - name: Checkout
         uses: actions/checkout@v2
-        
-      - name: Liberate disk space
-        if: ${{ runner.environment == 'github-hosted' }}
-        uses: jlumbroso/free-disk-space@main
-        with:
-          tool-cache: true
-          large-packages: false
-          docker-images: false
-          swap-storage: false
-
-      - name: Define docker helper
-        run: |
-          echo 'runInContainer() { docker exec test-container "$@"; }' > $HOME/ci_functions.sh
-          echo "BASH_ENV=$HOME/ci_functions.sh" >> $GITHUB_ENV
-
-      - name: Start container
-        run: |
-          docker run -d \
-            --workdir /__w/Lean/Lean \
-            -v /home/runner/work:/__w \
-            --name test-container \
-            quantconnect/lean:foundation \
-            tail -f /dev/null
 
       - name: Build
-        run: runInContainer dotnet build /p:Configuration=Release /v:quiet /p:WarningLevel=1 QuantConnect.Lean.sln
+        run: dotnet build /p:Configuration=Release /v:quiet /p:WarningLevel=1 QuantConnect.Lean.sln
 
       - name: Run Tests
         run: |
-          runInContainer dotnet test ./Tests/bin/Release/QuantConnect.Tests.dll \
+          dotnet test ./Tests/bin/Release/QuantConnect.Tests.dll \
             --filter TestCategory=RegressionTests \
             -- TestRunParameters.Parameter\(name=\"log-handler\", value=\"ConsoleErrorLogHandler\"\) \
             TestRunParameters.Parameter\(name=\"reduced-disk-size\", value=\"true\"\)
