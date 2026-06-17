@@ -85,6 +85,39 @@ namespace QuantConnect.Tests.Common.Orders.Fills
             Assert.AreEqual(OrderStatus.Filled, fill.Status);
         }
 
+        // A hour/daily market order resting before the bar opened fills at the bar open; one placed during the bar
+        // fills at the current (close) price.
+        [TestCase(-30, 100.0)]  // placed before the bar opened -> bar open
+        [TestCase(30, 102.3)]   // placed during the bar -> current/close
+        public void MarketOrderRestingBeforeBarFillsAtBarOpen(int orderOffsetMinutes, double expectedPriceDouble)
+        {
+            var expectedPrice = (decimal)expectedPriceDouble;
+            var model = new ImmediateFillModel();
+            var config = CreateTradeBarConfig(Symbols.SPY, resolution: Resolution.Hour);
+            var security = GetSecurity(config);
+
+            // hour bar covering 11:00 -> 12:00 NewYork
+            var barStartNY = new DateTime(2014, 6, 24, 11, 0, 0);
+            var barEndNY = new DateTime(2014, 6, 24, 12, 0, 0);
+            TimeKeeper.SetUtcDateTime(barEndNY.ConvertToUtc(TimeZones.NewYork));
+            security.SetLocalTimeKeeper(TimeKeeper.GetLocalTimeKeeper(TimeZones.NewYork));
+            security.SetMarketPrice(new TradeBar(barStartNY, Symbols.SPY, 100m, 103m, 99m, 102.3m, 100m, TimeSpan.FromHours(1)));
+
+            var barStartUtc = barStartNY.ConvertToUtc(TimeZones.NewYork);
+            var order = new MarketOrder(Symbols.SPY, 100, barStartUtc.AddMinutes(orderOffsetMinutes));
+
+            var fill = model.Fill(new FillModelParameters(
+                security,
+                order,
+                new MockSubscriptionDataConfigProvider(config),
+                Time.OneHour,
+                null)).Single();
+
+            Assert.AreEqual(OrderStatus.Filled, fill.Status);
+            Assert.AreEqual(order.Quantity, fill.FillQuantity);
+            Assert.AreEqual(expectedPrice, fill.FillPrice);
+        }
+
         [TestCase(true, true)]
         [TestCase(false, true)]
         [TestCase(true, false)]

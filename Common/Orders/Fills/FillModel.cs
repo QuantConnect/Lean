@@ -306,8 +306,9 @@ namespace QuantConnect.Orders.Fills
                 fill.Message = Messages.FillModel.FilledAtStalePrice(asset, prices);
             }
 
-            //Order [fill]price for a market order model is the current security price
-            fill.FillPrice = prices.Current;
+            //Order [fill]price for a market order model is the current security price (or the bar open if the order
+            //was resting before this bar opened, see GetMarketFillPrice)
+            fill.FillPrice = GetMarketFillPrice(asset, order, prices);
             fill.Status = OrderStatus.Filled;
 
             //Calculate the model slippage: e.g. 0.01c
@@ -987,6 +988,29 @@ namespace QuantConnect.Orders.Fills
         {
             var configs = Parameters.ConfigProvider.GetSubscriptionDataConfigs(asset.Symbol);
             return configs.Count > 0 && configs.All(x => x.Resolution == Resolution.Hour || x.Resolution == Resolution.Daily);
+        }
+
+        /// <summary>
+        /// Gets the fill price for a market order. A hour/daily market order that was resting before the current bar
+        /// opened - it predates the bar, e.g. it was placed after the previous close or while waiting for fresh data -
+        /// fills at the bar open (the price when trading resumed, like a <see cref="MarketOnOpenOrder"/>) instead of the
+        /// bar close. An order placed during the bar still fills at the current price.
+        /// </summary>
+        /// <param name="asset">Security being filled</param>
+        /// <param name="order">Order being filled</param>
+        /// <param name="prices">The prices for the bar being filled on</param>
+        protected decimal GetMarketFillPrice(Security asset, Order order, Prices prices)
+        {
+            if (prices.Open != 0 && ShouldWaitForFreshData(asset))
+            {
+                var barStartUtc = (asset.Cache.GetData()?.Time ?? prices.EndTime).ConvertToUtc(asset.Exchange.TimeZone);
+                if (order.Time <= barStartUtc)
+                {
+                    return prices.Open;
+                }
+            }
+
+            return prices.Current;
         }
 
         /// <summary>

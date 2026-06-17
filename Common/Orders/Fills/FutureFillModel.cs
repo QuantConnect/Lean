@@ -59,8 +59,9 @@ namespace QuantConnect.Orders.Fills
                 fill.Message = Messages.FillModel.FilledAtStalePrice(asset, prices);
             }
 
-            //Order [fill]price for a market order model is the current security price
-            fill.FillPrice = prices.Current;
+            //Order [fill]price for a market order model is the current security price (or the bar open if the order
+            //was resting before this bar opened, see GetMarketFillPrice)
+            fill.FillPrice = GetMarketFillPrice(asset, order, prices);
             fill.Status = OrderStatus.Filled;
 
             //Calculate the model slippage: e.g. 0.01c
