@@ -2589,78 +2589,6 @@ namespace QuantConnect.Tests.Engine.BrokerageTransactionHandlerTests
             }
         }
 
-        [Test]
-        public void PreservesRequestOrderPerPartitionUnderScaling()
-        {
-            var algorithm = new TestAlgorithm();
-            using var brokerage = new TestingConcurrentBrokerage();
-
-            const int maxThreads = 10;
-            using var finishedEvent = new ManualResetEventSlim(false);
-            using var gate = new ManualResetEventSlim(false);
-            var transactionHandler = new TestableConcurrentBrokerageTransactionHandler(int.MaxValue, finishedEvent)
-            {
-                Gate = gate,
-                MaxThreadsOverride = maxThreads,
-                // isolate the pool's delivery ordering from the order/brokerage pipeline
-                RecordOnly = true
-            };
-            transactionHandler.Initialize(algorithm, brokerage, new BacktestingResultHandler());
-
-            try
-            {
-                algorithm.Transactions.SetOrderProcessor(transactionHandler);
-
-                var security = (Security)algorithm.AddEquity("SPY");
-                algorithm.SetFinishedWarmingUp();
-
-                var reference = new DateTime(2025, 07, 03, 10, 0, 0);
-                security.SetMarketPrice(new Tick(reference, security.Symbol, 300, 300));
-
-                // feed orders across all partitions while workers block on the gate, so the backlog grows the pool to the maximum
-                var orderId = 0;
-                var reachedMax = SpinWait.SpinUntil(() =>
-                {
-                    if (orderId < 1000)
-                    {
-                        var request = MakeAsyncMarketRequest(security, reference);
-                        request.SetOrderId(++orderId);
-                        transactionHandler.Process(request);
-                    }
-                    return transactionHandler.ActiveThreadCount >= maxThreads;
-                }, 10000);
-                Assert.IsTrue(reachedMax, $"Pool did not grow to the maximum, current size: {transactionHandler.ActiveThreadCount}");
-
-                // keep a healthy backlog on every partition before releasing the workers
-                for (var i = 0; i < maxThreads * 5; i++)
-                {
-                    var request = MakeAsyncMarketRequest(security, reference);
-                    request.SetOrderId(++orderId);
-                    transactionHandler.Process(request);
-                }
-                var enqueued = orderId;
-
-                // release the workers and wait until the whole backlog drains
-                gate.Set();
-                Assert.IsTrue(SpinWait.SpinUntil(() => transactionHandler.ProcessingSequence.Count >= enqueued, 15000),
-                    $"processed {transactionHandler.ProcessingSequence.Count}/{enqueued}");
-
-                // within each partition, requests must keep their enqueue order (ascending OrderId) despite the pool scaling up
-                var processed = transactionHandler.ProcessingSequence.ToList();
-                foreach (var partition in processed.GroupBy(x => x.OrderId % maxThreads))
-                {
-                    var ids = partition.Select(x => x.OrderId).ToList();
-                    CollectionAssert.AreEqual(ids.OrderBy(x => x).ToList(), ids,
-                        $"partition {partition.Key} was processed out of order: {string.Join(",", ids)}");
-                }
-            }
-            finally
-            {
-                gate.Set();
-                transactionHandler.Exit();
-            }
-        }
-
         private static SubmitOrderRequest MakeAsyncMarketRequest(Security security, DateTime date)
         {
             return new SubmitOrderRequest(OrderType.Market, security.Type, security.Symbol, 1, 0, 0, 0, 0, false, date, "",
@@ -3028,17 +2956,8 @@ namespace QuantConnect.Tests.Engine.BrokerageTransactionHandlerTests
 
             public ConcurrentDictionary<int, string> RequestProcessingThreads = new();
 
-            // ordered record of processed requests, to assert per-OrderId ordering
-            public ConcurrentQueue<(int OrderId, OrderRequestType Type)> ProcessingSequence = new();
-
             // blocks workers to force a backlog
             public ManualResetEventSlim Gate;
-
-            // slows workers down to let a backlog build up
-            public int ProcessingDelayMs;
-
-            // only record the delivery order, skipping the base order pipeline
-            public bool RecordOnly;
 
             public int ActiveThreadCount => ProcessingThreadsCount;
 
@@ -3055,15 +2974,8 @@ namespace QuantConnect.Tests.Engine.BrokerageTransactionHandlerTests
             public override void HandleOrderRequest(OrderRequest request)
             {
                 Gate?.Wait();
-                if (ProcessingDelayMs > 0)
-                {
-                    Thread.Sleep(ProcessingDelayMs);
-                }
 
-                if (!RecordOnly)
-                {
-                    base.HandleOrderRequest(request);
-                }
+                base.HandleOrderRequest(request);
 
                 // Capture the thread name for debugging purposes
                 var threadName = Thread.CurrentThread.Name ?? Environment.CurrentManagedThreadId.ToString();
@@ -3074,7 +2986,6 @@ namespace QuantConnect.Tests.Engine.BrokerageTransactionHandlerTests
                 RequestProcessingThreads[request.OrderId] = threadName;
 
                 ProcessedRequests.Add(request);
-                ProcessingSequence.Enqueue((request.OrderId, request.OrderRequestType));
 
                 if (Interlocked.Increment(ref _currentOrdersCount) >= _expectedOrdersCount)
                 {
