@@ -269,6 +269,12 @@
   "tastytrade-password": "",
   "tastytrade-account-number": "",
 
+  // Public.com configuration
+  "public-api-url": "https://api.public.com",
+  "public-secret-key": "",
+  // Users can have multiple different accounts
+  "public-account-number": "",
+
   // Exante trading configuration
   // client-id, application-id, shared-key are required to access Exante REST API
   // Exante generates them at https://exante.eu/clientsarea/dashboard/ after adding an application
@@ -772,6 +778,21 @@
       // real brokerage implementations require the BrokerageTransactionHandler
       "live-mode-brokerage": "WebullBrokerage",
       "data-queue-handler": [ "WebullBrokerage" ],
+      "setup-handler": "QuantConnect.Lean.Engine.Setup.BrokerageSetupHandler",
+      "result-handler": "QuantConnect.Lean.Engine.Results.LiveTradingResultHandler",
+      "data-feed-handler": "QuantConnect.Lean.Engine.DataFeeds.LiveTradingDataFeed",
+      "real-time-handler": "QuantConnect.Lean.Engine.RealTime.LiveTradingRealTimeHandler",
+      "transaction-handler": "QuantConnect.Lean.Engine.TransactionHandlers.BrokerageTransactionHandler",
+      "history-provider": [ "BrokerageHistoryProvider", "SubscriptionDataReaderHistoryProvider" ]
+    },
+
+    // defines the 'live-public' environment
+    "live-public": {
+      "live-mode": true,
+
+      // real brokerage implementations require the BrokerageTransactionHandler
+      "live-mode-brokerage": "PublicBrokerage",
+      "data-queue-handler": [ "PublicBrokerage" ],
       "setup-handler": "QuantConnect.Lean.Engine.Setup.BrokerageSetupHandler",
       "result-handler": "QuantConnect.Lean.Engine.Results.LiveTradingResultHandler",
       "data-feed-handler": "QuantConnect.Lean.Engine.DataFeeds.LiveTradingDataFeed",
