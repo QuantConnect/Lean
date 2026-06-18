@@ -222,6 +222,14 @@ namespace QuantConnect.Tests.Common.Scheduling
             public ManualTimeProvider ManualTimeProvider = new ManualTimeProvider();
 
             protected override ITimeProvider TimeProvider => ManualTimeProvider;
+
+            // Time is fully driven by the ManualTimeProvider in tests, so there's no need to pace the
+            // scan loop to real wall-clock time. Sleeping here (Thread.Sleep granularity is ~15ms on
+            // Windows) would make the loop take longer than the test's timeout for long simulated ranges,
+            // causing the last scheduled events to be missed intermittently.
+            protected override void WaitTillNextSecond(DateTime time)
+            {
+            }
         }
     }
 }
