@@ -195,8 +195,10 @@ namespace QuantConnect.Brokerages
             switch (brokerage)
             {
                 case BrokerageName.Default:
-                case BrokerageName.TerminalLink:
                     return new DefaultBrokerageModel(accountType);
+
+                case BrokerageName.TerminalLink:
+                    return new TerminalLinkBrokerageModel(accountType);
 
                 case BrokerageName.Alpaca:
                     return new AlpacaBrokerageModel();
