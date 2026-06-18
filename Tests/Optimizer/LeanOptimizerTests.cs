@@ -294,8 +294,10 @@ namespace QuantConnect.Tests.Optimizer
             var runtimeStatistics = optimizer.GetRuntimeStatistics();
             Assert.NotZero(int.Parse(runtimeStatistics["Completed"], CultureInfo.InvariantCulture));
             Assert.NotZero(int.Parse(runtimeStatistics["Failed"], CultureInfo.InvariantCulture));
-            // we have 2 force updates at least, expect a few more over it.
-            Assert.Greater(totalUpdates, 2);
+            // there are 2 forced estimation updates (start and end); any additional in-progress updates depend on
+            // timing and are not guaranteed (e.g. when backtests complete/fail fast), so only the guaranteed
+            // minimum is asserted here to avoid a flaky "expected > 2 but was 2" failure.
+            Assert.GreaterOrEqual(totalUpdates, 2);
             Assert.AreEqual(int.Parse(runtimeStatistics["Completed"], CultureInfo.InvariantCulture)
                             + int.Parse(runtimeStatistics["Failed"], CultureInfo.InvariantCulture)
                             + int.Parse(runtimeStatistics["Running"], CultureInfo.InvariantCulture), totalBacktest);
