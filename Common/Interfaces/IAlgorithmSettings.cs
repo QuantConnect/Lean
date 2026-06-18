@@ -99,8 +99,15 @@ namespace QuantConnect.Interfaces
         int DataSubscriptionLimit { get; set; }
 
         /// <summary>
-        /// Gets the minimum time span elapsed to consider a market fill price as stale (defaults to one hour)
+        /// Gets/sets the minimum time span elapsed to consider a market fill price as stale (defaults to one hour)
         /// </summary>
+        /// <remarks>
+        /// In the default fill models, a market order on an hour or daily resolution subscription is not filled on
+        /// data older than this time span; instead it waits for fresh data (e.g. the next bar), avoiding a
+        /// fill at the stale previous close. Market orders on minute/second/tick subscriptions still fill on stale
+        /// data, only adding a warning message. Tighten it (e.g. to one minute) to make hour/daily orders wait for
+        /// the next bar more aggressively.
+        /// </remarks>
         TimeSpan StalePriceTimeSpan { get; set; }
 
         /// <summary>

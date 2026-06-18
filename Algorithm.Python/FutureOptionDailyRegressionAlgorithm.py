@@ -19,7 +19,7 @@ from AlgorithmImports import *
 class FutureOptionDailyRegressionAlgorithm(QCAlgorithm):
 
     def initialize(self):
-        self.set_start_date(2020, 1, 7)
+        self.set_start_date(2020, 1, 6)
         self.set_end_date(2020, 1, 8)
         resolution = Resolution.DAILY
 
@@ -45,11 +45,11 @@ class FutureOptionDailyRegressionAlgorithm(QCAlgorithm):
         if self.es_option != expected_contract:
             raise AssertionError(f"Contract {self.es_option} was not the expected contract {expected_contract}")
 
-        # Schedule a purchase of this contract tomorrow at 10AM when the market is open
-        self.schedule.on(self.date_rules.tomorrow, self.time_rules.at(10,0,0), self.schedule_callback_buy)
+        # On daily resolution the order fills at the daily close, so buy on the first day with available data and
+        # liquidate the next day, once the purchase has filled at the previous close
+        self.schedule.on(self.date_rules.on(2020, 1, 7), self.time_rules.at(10,0,0), self.schedule_callback_buy)
 
-        # Schedule liquidation at 2pm tomorrow when the market is open
-        self.schedule.on(self.date_rules.tomorrow, self.time_rules.at(14,0,0), self.schedule_callback_liquidate)
+        self.schedule.on(self.date_rules.on(2020, 1, 8), self.time_rules.at(14,0,0), self.schedule_callback_liquidate)
 
     def schedule_callback_buy(self):
         self.market_order(self.es_option, 1)

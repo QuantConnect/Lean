@@ -292,14 +292,23 @@ namespace QuantConnect.Orders.Fills
             var prices = GetPricesCheckingPythonWrapper(asset, orderDirection);
             var pricesEndTimeUtc = prices.EndTime.ConvertToUtc(asset.Exchange.TimeZone);
 
-            // if the order is filled on stale (fill-forward) data, set a warning message on the order event
+            // If the order would be filled on stale (fill-forward / already past) data: for coarse resolutions
+            // (hour/daily) wait for fresh data, e.g. the next bar to close, instead of filling at a stale price
+            // (the latest bar is the stale previous close when a market order is placed mid-bar). For finer
+            // resolutions (minute/second/tick) keep the previous behavior of filling on the stale price with a warning.
             if (pricesEndTimeUtc.Add(Parameters.StalePriceTimeSpan) < order.Time)
             {
+                if (ShouldWaitForFreshData(asset))
+                {
+                    return fill;
+                }
+
                 fill.Message = Messages.FillModel.FilledAtStalePrice(asset, prices);
             }
 
-            //Order [fill]price for a market order model is the current security price
-            fill.FillPrice = prices.Current;
+            //Order [fill]price for a market order model is the current security price (or the bar open if the order
+            //was resting before this bar opened, see GetMarketFillPrice)
+            fill.FillPrice = GetMarketFillPrice(asset, order, prices);
             fill.Status = OrderStatus.Filled;
 
             //Calculate the model slippage: e.g. 0.01c
@@ -968,6 +977,43 @@ namespace QuantConnect.Orders.Fills
         }
 
         /// <summary>
+        /// Determines whether a market order filling on stale data should wait for fresh data instead of filling
+        /// on the stale price. This is only done for coarse resolutions (hour/daily), where the stale bar is the
+        /// previous close and a fresh bar (the next close/open) is expected. For minute/second/tick subscriptions
+        /// the previous behavior is kept (fill on the stale price with a warning), since stale data there represents
+        /// a genuine gap rather than a bar still forming.
+        /// </summary>
+        /// <param name="asset">Security being filled</param>
+        protected bool ShouldWaitForFreshData(Security asset)
+        {
+            var configs = Parameters.ConfigProvider.GetSubscriptionDataConfigs(asset.Symbol);
+            return configs.Count > 0 && configs.All(x => x.Resolution == Resolution.Hour || x.Resolution == Resolution.Daily);
+        }
+
+        /// <summary>
+        /// Gets the fill price for a market order. A hour/daily market order that was resting before the current bar
+        /// opened - it predates the bar, e.g. it was placed after the previous close or while waiting for fresh data -
+        /// fills at the bar open (the price when trading resumed, like a <see cref="MarketOnOpenOrder"/>) instead of the
+        /// bar close. An order placed during the bar still fills at the current price.
+        /// </summary>
+        /// <param name="asset">Security being filled</param>
+        /// <param name="order">Order being filled</param>
+        /// <param name="prices">The prices for the bar being filled on</param>
+        protected decimal GetMarketFillPrice(Security asset, Order order, Prices prices)
+        {
+            if (prices.Open != 0 && ShouldWaitForFreshData(asset))
+            {
+                var barStartUtc = prices.Time.ConvertToUtc(asset.Exchange.TimeZone);
+                if (order.Time <= barStartUtc)
+                {
+                    return prices.Open;
+                }
+            }
+
+            return prices.Current;
+        }
+
+        /// <summary>
         /// Helper method to determine if the exchange is open before filling. Will allow pre/post market fills to occur based on configuration
         /// </summary>
         /// <param name="asset">Security which has subscribed data types</param>
@@ -1032,11 +1078,13 @@ namespace QuantConnect.Orders.Fills
             var open = asset.Open;
             var close = asset.Close;
             var current = asset.Price;
-            var endTime = asset.Cache.GetData()?.EndTime ?? DateTime.MinValue;
+            var lastData = asset.Cache.GetData();
+            var startTime = lastData?.Time ?? DateTime.MinValue;
+            var endTime = lastData?.EndTime ?? DateTime.MinValue;
 
             if (direction == OrderDirection.Hold)
             {
-                return new Prices(endTime, current, open, high, low, close);
+                return new Prices(startTime, endTime, current, open, high, low, close);
             }
 
             // Only fill with data types we are subscribed to
@@ -1048,14 +1096,14 @@ namespace QuantConnect.Orders.Fills
                 var price = direction == OrderDirection.Sell ? tick.BidPrice : tick.AskPrice;
                 if (price != 0m)
                 {
-                    return new Prices(tick.EndTime, price, 0, 0, 0, 0);
+                    return new Prices(tick.Time, tick.EndTime, price, 0, 0, 0, 0);
                 }
 
                 // If the ask/bid spreads are not available for ticks, try the price
                 price = tick.Price;
                 if (price != 0m)
                 {
-                    return new Prices(tick.EndTime, price, 0, 0, 0, 0);
+                    return new Prices(tick.Time, tick.EndTime, price, 0, 0, 0, 0);
                 }
             }
 
@@ -1066,7 +1114,7 @@ namespace QuantConnect.Orders.Fills
                 var bar = direction == OrderDirection.Sell ? quoteBar.Bid : quoteBar.Ask;
                 if (bar != null)
                 {
-                    return new Prices(quoteBar.EndTime, bar);
+                    return new Prices(quoteBar.Time, quoteBar.EndTime, bar);
                 }
             }
 
@@ -1077,7 +1125,7 @@ namespace QuantConnect.Orders.Fills
                 return new Prices(tradeBar);
             }
 
-            return new Prices(endTime, current, open, high, low, close);
+            return new Prices(startTime, endTime, current, open, high, low, close);
         }
 
         /// <summary>

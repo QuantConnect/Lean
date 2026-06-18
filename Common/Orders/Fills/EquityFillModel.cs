@@ -81,7 +81,7 @@ namespace QuantConnect.Orders.Fills
                     if (tradeBar.Low <= order.TriggerPrice || order.TriggerTouched)
                     {
                         order.TriggerTouched = true;
-                        var askCurrent = GetBestEffortAskPrice(asset, order.Time, out var fillMessage);
+                        var askCurrent = GetBestEffortAskPrice(asset, order.Time, out var fillMessage, out _);
 
                         if (askCurrent <= order.LimitPrice)
                         {
@@ -99,7 +99,7 @@ namespace QuantConnect.Orders.Fills
                     if (tradeBar.High >= order.TriggerPrice || order.TriggerTouched)
                     {
                         order.TriggerTouched = true;
-                        var bidCurrent = GetBestEffortBidPrice(asset, order.Time, out var fillMessage);
+                        var bidCurrent = GetBestEffortBidPrice(asset, order.Time, out var fillMessage, out _);
 
                         if (bidCurrent >= order.LimitPrice)
                         {
@@ -136,18 +136,28 @@ namespace QuantConnect.Orders.Fills
             var slip = asset.SlippageModel.GetSlippageApproximation(asset, order);
 
             var fillMessage = string.Empty;
+            var stalePrice = false;
+            var fillPrice = 0m;
 
             switch (order.Direction)
             {
                 case OrderDirection.Buy:
                     //Order [fill]price for a buy market order model is the current security ask price
-                    fill.FillPrice = GetBestEffortAskPrice(asset, order.Time, out fillMessage) + slip;
+                    fillPrice = GetBestEffortAskPrice(asset, order.Time, out fillMessage, out stalePrice) + slip;
                     break;
                 case OrderDirection.Sell:
                     //Order [fill]price for a buy market order model is the current security bid price
-                    fill.FillPrice = GetBestEffortBidPrice(asset, order.Time, out fillMessage) - slip;
+                    fillPrice = GetBestEffortBidPrice(asset, order.Time, out fillMessage, out stalePrice) - slip;
                     break;
             }
+
+            // On stale data: for coarse resolutions (hour/daily) wait for fresh prices (e.g. the next bar to close)
+            // instead of filling at an already past, stale bar's price, which happens when a market order is placed
+            // mid-bar or through an intraday scheduled event. For finer resolutions (minute/second/tick) keep filling
+            // on the stale price with the warning already set in fillMessage.
+            if (stalePrice && ShouldWaitForFreshData(asset)) return fill;
+
+            fill.FillPrice = fillPrice;
 
             // assume the order completely filled
             fill.FillQuantity = order.Quantity;
@@ -552,7 +562,7 @@ namespace QuantConnect.Orders.Fills
                 case OrderDirection.Buy:
                     if (fill.FillPrice == 0)
                     {
-                        fill.FillPrice = GetBestEffortAskPrice(asset, order.Time, out bestEffortMessage);
+                        fill.FillPrice = GetBestEffortAskPrice(asset, order.Time, out bestEffortMessage, out _);
                         fill.Message += bestEffortMessage;
                     }
 
@@ -561,7 +571,7 @@ namespace QuantConnect.Orders.Fills
                 case OrderDirection.Sell:
                     if (fill.FillPrice == 0)
                     {
-                        fill.FillPrice = GetBestEffortBidPrice(asset, order.Time, out bestEffortMessage);
+                        fill.FillPrice = GetBestEffortBidPrice(asset, order.Time, out bestEffortMessage, out _);
                         fill.Message += bestEffortMessage;
                     }
 
@@ -663,7 +673,7 @@ namespace QuantConnect.Orders.Fills
                 case OrderDirection.Buy:
                     if (fill.FillPrice == 0)
                     {
-                        fill.FillPrice = GetBestEffortAskPrice(asset, order.Time, out bestEffortMessage);
+                        fill.FillPrice = GetBestEffortAskPrice(asset, order.Time, out bestEffortMessage, out _);
                         fill.Message += bestEffortMessage;
                     }
 
@@ -672,7 +682,7 @@ namespace QuantConnect.Orders.Fills
                 case OrderDirection.Sell:
                     if (fill.FillPrice == 0)
                     {
-                        fill.FillPrice = GetBestEffortBidPrice(asset, order.Time, out bestEffortMessage);
+                        fill.FillPrice = GetBestEffortBidPrice(asset, order.Time, out bestEffortMessage, out _);
                         fill.Message += bestEffortMessage;
                     }
 
@@ -714,9 +724,12 @@ namespace QuantConnect.Orders.Fills
         /// <param name="asset">Security which has subscribed data types</param>
         /// <param name="orderTime">Time the order was submitted</param>
         /// <param name="message">Information about the best effort, whether prices are stale or need to use trade information</param>
-        private decimal GetBestEffortAskPrice(Security asset, DateTime orderTime, out string message)
+        /// <param name="stalePrice">True when no price within the stale price window was found and the returned best
+        /// effort price comes from stale (already past) data, in which case the caller should wait for fresh data</param>
+        private decimal GetBestEffortAskPrice(Security asset, DateTime orderTime, out string message, out bool stalePrice)
         {
             message = string.Empty;
+            stalePrice = false;
             BaseData baseData = null;
             var bestEffortAskPrice = 0m;
 
@@ -799,6 +812,7 @@ namespace QuantConnect.Orders.Fills
 
             if (baseData != null)
             {
+                stalePrice = true;
                 return bestEffortAskPrice;
             }
 
@@ -813,9 +827,12 @@ namespace QuantConnect.Orders.Fills
         /// <param name="asset">Security which has subscribed data types</param>
         /// <param name="orderTime">Time the order was submitted</param>
         /// <param name="message">Information about the best effort, whether prices are stale or need to use trade information</param>
-        private decimal GetBestEffortBidPrice(Security asset, DateTime orderTime, out string message)
+        /// <param name="stalePrice">True when no price within the stale price window was found and the returned best
+        /// effort price comes from stale (already past) data, in which case the caller should wait for fresh data</param>
+        private decimal GetBestEffortBidPrice(Security asset, DateTime orderTime, out string message, out bool stalePrice)
         {
             message = string.Empty;
+            stalePrice = false;
             BaseData baseData = null;
             var bestEffortBidPrice = 0m;
 
@@ -898,6 +915,7 @@ namespace QuantConnect.Orders.Fills
 
             if (baseData != null)
             {
+                stalePrice = true;
                 return bestEffortBidPrice;
             }
 
@@ -977,7 +995,7 @@ namespace QuantConnect.Orders.Fills
             if (PythonWrapper != null)
             {
                 var prices = PythonWrapper.GetPricesInternal(asset, direction);
-                return new Prices(prices.EndTime, prices.Current, prices.Open, prices.High, prices.Low, prices.Close);
+                return new Prices(prices.Time, prices.EndTime, prices.Current, prices.Open, prices.High, prices.Low, prices.Close);
             }
             return GetPrices(asset, direction);
         }
@@ -994,11 +1012,13 @@ namespace QuantConnect.Orders.Fills
             var open = asset.Open;
             var close = asset.Close;
             var current = asset.Price;
-            var endTime = asset.Cache.GetData()?.EndTime ?? DateTime.MinValue;
+            var lastData = asset.Cache.GetData();
+            var startTime = lastData?.Time ?? DateTime.MinValue;
+            var endTime = lastData?.EndTime ?? DateTime.MinValue;
 
             if (direction == OrderDirection.Hold)
             {
-                return new Prices(endTime, current, open, high, low, close);
+                return new Prices(startTime, endTime, current, open, high, low, close);
             }
 
             // Only fill with data types we are subscribed to
@@ -1012,14 +1032,14 @@ namespace QuantConnect.Orders.Fills
                 var price = direction == OrderDirection.Sell ? tick.BidPrice : tick.AskPrice;
                 if (price != 0m)
                 {
-                    return new Prices(tick.EndTime, price, 0, 0, 0, 0);
+                    return new Prices(tick.Time, tick.EndTime, price, 0, 0, 0, 0);
                 }
 
                 // If the ask/bid spreads are not available for ticks, try the price
                 price = tick.Price;
                 if (price != 0m)
                 {
-                    return new Prices(tick.EndTime, price, 0, 0, 0, 0);
+                    return new Prices(tick.Time, tick.EndTime, price, 0, 0, 0, 0);
                 }
             }
 
@@ -1030,7 +1050,7 @@ namespace QuantConnect.Orders.Fills
                 var bar = direction == OrderDirection.Sell ? quoteBar.Bid : quoteBar.Ask;
                 if (bar != null)
                 {
-                    return new Prices(quoteBar.EndTime, bar);
+                    return new Prices(quoteBar.Time, quoteBar.EndTime, bar);
                 }
             }
 
@@ -1041,7 +1061,7 @@ namespace QuantConnect.Orders.Fills
                 return new Prices(tradeBar);
             }
 
-            return new Prices(endTime, current, open, high, low, close);
+            return new Prices(startTime, endTime, current, open, high, low, close);
         }
     }
 }

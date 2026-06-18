@@ -670,7 +670,7 @@ namespace QuantConnect.Tests.Common.Orders.Fills
             protected override Prices GetPrices(Security asset, OrderDirection direction)
             {
                 GetPricesWasCalled = true;
-                return new Prices(orderDateTime, 12345, 12345, 12345, 12345, 12345);
+                return new Prices(orderDateTime, orderDateTime, 12345, 12345, 12345, 12345, 12345);
             }
         }
 
@@ -683,7 +683,7 @@ namespace QuantConnect.Tests.Common.Orders.Fills
                 GetPricesWasCalled = true;
                 // call base.GetPrices() just to test it show its possible
                 base.GetPrices(asset, direction);
-                return new Prices(orderDateTime, 12345, 12345, 12345, 12345, 12345);
+                return new Prices(orderDateTime, orderDateTime, 12345, 12345, 12345, 12345, 12345);
             }
         }
 
