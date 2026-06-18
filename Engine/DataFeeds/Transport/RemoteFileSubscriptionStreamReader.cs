@@ -199,7 +199,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Transport
 
                 if (attempt < maxAttempts)
                 {
-                    Thread.Sleep(1000);
+                    Thread.Sleep(2000 + 1000 * attempt);
                 }
             }
 
