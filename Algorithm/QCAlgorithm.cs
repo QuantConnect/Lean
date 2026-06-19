@@ -3817,7 +3817,7 @@ namespace QuantConnect.Algorithm
 
         private string FormatLog(string message)
         {
-            return $"{Time.ToStringInvariant(DateFormat.UI)} {message}";
+            return message.PrefixWithAlgorithmTime(Time);
         }
     }
 }

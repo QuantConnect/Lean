@@ -469,6 +469,7 @@ namespace QuantConnect.Lean.Engine.Results
         /// <param name="message">Message we'd like shown in console.</param>
         public virtual void DebugMessage(string message)
         {
+            message = FormatMessage(message);
             Messages.Enqueue(new DebugPacket(_projectId, AlgorithmId, CompileId, message));
             AddToLogStore(message);
         }
@@ -479,6 +480,7 @@ namespace QuantConnect.Lean.Engine.Results
         /// <param name="message">Message we'd like shown in console.</param>
         public virtual void SystemDebugMessage(string message)
         {
+            message = FormatMessage(message);
             Messages.Enqueue(new SystemDebugPacket(_projectId, AlgorithmId, CompileId, message));
             AddToLogStore(message);
         }
@@ -489,6 +491,7 @@ namespace QuantConnect.Lean.Engine.Results
         /// <param name="message">Message we'd in the log.</param>
         public virtual void LogMessage(string message)
         {
+            message = FormatMessage(message);
             Messages.Enqueue(new LogPacket(AlgorithmId, message));
             AddToLogStore(message);
         }
@@ -502,8 +505,8 @@ namespace QuantConnect.Lean.Engine.Results
         {
             if (message == _errorMessage) return;
             if (Messages.Count > 500) return;
-            Messages.Enqueue(new HandledErrorPacket(AlgorithmId, message, stacktrace));
             _errorMessage = message;
+            Messages.Enqueue(new HandledErrorPacket(AlgorithmId, FormatMessage(message), stacktrace));
         }
 
         /// <summary>
@@ -514,8 +517,9 @@ namespace QuantConnect.Lean.Engine.Results
         public virtual void RuntimeError(string message, string stacktrace = "")
         {
             PurgeQueue();
-            Messages.Enqueue(new RuntimeErrorPacket(_job.UserId, AlgorithmId, message, stacktrace));
             _errorMessage = message;
+            message = FormatMessage(message);
+            Messages.Enqueue(new RuntimeErrorPacket(_job.UserId, AlgorithmId, message, stacktrace));
             SetAlgorithmState(message, stacktrace);
         }
 
