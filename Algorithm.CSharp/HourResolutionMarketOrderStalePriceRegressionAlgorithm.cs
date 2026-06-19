@@ -81,14 +81,38 @@ namespace QuantConnect.Algorithm.CSharp
                 return;
             }
 
-            // The order must fill on the next hour bar close (11:00), not on the stale previous bar (10:00)
+            // The order must fill on the next hour bar (10:00 -> 11:00), not on the stale previous bar (10:00)
             var fillLocalTime = orderEvent.UtcTime.ConvertFromUtc(Securities[_spy].Exchange.TimeZone);
             var expectedFill = new DateTime(2013, 10, 8, 11, 0, 0);
 
             if (fillLocalTime != expectedFill)
             {
                 throw new RegressionTestException(
-                    $"Expected the order to fill at the next hour bar close {expectedFill} but filled at {fillLocalTime}");
+                    $"Expected the order to fill at the next hour bar {expectedFill} but filled at {fillLocalTime}");
+            }
+
+            // The fill must use a real, freshly closed hour bar - not a fill-forwarded repeat of an older bar - and
+            // that bar must be the next hour bar (ending 11:00).
+            var hourBar = Securities[_spy].GetLastData();
+            if (hourBar == null || hourBar.IsFillForward)
+            {
+                throw new RegressionTestException(
+                    $"Expected the order to fill on a real (non fill-forwarded) hour bar but got {(hourBar == null ? "no data" : "fill-forwarded data")} at {Time}");
+            }
+
+            if (hourBar.EndTime != expectedFill)
+            {
+                throw new RegressionTestException(
+                    $"Expected the fill bar to end at the next hour {expectedFill} but it ended at {hourBar.EndTime}");
+            }
+
+            // It must fill at that hour bar's close price, not the stale previous bar's price nor the bar open. The
+            // order is placed mid-bar (after the bar opened), so the close - not the open - is used.
+            var hourBarClose = Securities[_spy].Close;
+            if (orderEvent.FillPrice != hourBarClose)
+            {
+                throw new RegressionTestException(
+                    $"Expected the order to fill at the next hour bar close price {hourBarClose} but filled at {orderEvent.FillPrice}");
             }
         }
 
