@@ -119,6 +119,28 @@ namespace QuantConnect.Tests.Common.Brokerages
             Assert.That(message, Is.Null);
         }
 
+        // A margin account keeps an explicit UseMargin choice and otherwise uses margin by default;
+        // a cash account has no margin buying power, so UseMargin is always forced off there.
+        [TestCase(AccountType.Margin, null, true)]
+        [TestCase(AccountType.Margin, true, true)]
+        [TestCase(AccountType.Margin, false, false)]
+        [TestCase(AccountType.Cash, null, false)]
+        [TestCase(AccountType.Cash, true, false)]
+        [TestCase(AccountType.Cash, false, false)]
+        public void CanSubmitOrderResolvesUseMarginFromAccountType(AccountType accountType, bool? requestedUseMargin, bool expectedUseMargin)
+        {
+            var brokerageModel = new PublicBrokerageModel(accountType);
+            var security = GetSecurityForType(SecurityType.Equity);
+            var properties = new PublicOrderProperties { UseMargin = requestedUseMargin };
+            var order = new LimitOrder(security.Symbol, 1m, 100m, DateTime.UtcNow, properties: properties);
+
+            var canSubmit = brokerageModel.CanSubmitOrder(security, order, out var message);
+
+            Assert.That(canSubmit, Is.True);
+            Assert.That(message, Is.Null);
+            Assert.That(properties.UseMargin, Is.EqualTo(expectedUseMargin));
+        }
+
         [Test]
         public void CanUpdateOrderSingleOrderReturnsTrue()
         {

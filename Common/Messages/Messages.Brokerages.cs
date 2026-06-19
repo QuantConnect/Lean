@@ -629,6 +629,21 @@ namespace QuantConnect
         }
 
         /// <summary>
+        /// Provides user-facing messages for the <see cref="Brokerages.PublicBrokerageModel"/> class and its consumers or related classes
+        /// </summary>
+        public static class PublicBrokerageModel
+        {
+            /// <summary>
+            /// Returns a message explaining that orders for the extended market must be Limit orders with Day time-in-force.
+            /// </summary>
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public static string ExtendedMarketOrderMustBeLimit(Orders.Order order)
+            {
+                return Invariant($"Orders for extended market must be of type '{nameof(OrderType.Limit)}' and with 'DAY' time-in-force, but {order.Type} was specified.");
+            }
+        }
+
+        /// <summary>
         /// Provides user-facing messages for the <see cref="Brokerages.RBIBrokerageModel"/> class and its consumers or related classes
         /// </summary>
         public static class RBIBrokerageModel
