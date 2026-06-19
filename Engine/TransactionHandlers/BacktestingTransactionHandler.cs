@@ -58,13 +58,13 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
             _enableConcurrency = _brokerage.ConcurrencyEnabled && _algorithm.LiveMode;
 
             base.Initialize(algorithm, brokerage, resultHandler);
-
-            if (!_enableConcurrency)
-            {
-                // non blocking implementation
-                _orderRequestQueues = new() { new BusyCollection<OrderRequest>() };
-            }
         }
+
+        /// <summary>
+        /// For backtesting order requests are processed synchronously by the algorithm thread, only live
+        /// paper deployments with a concurrency enabled brokerage use background transaction threads
+        /// </summary>
+        protected override bool SynchronousProcessing => !_enableConcurrency;
 
         /// <summary>
         /// Processes all synchronous events that must take place before the next time loop for the algorithm
@@ -74,7 +74,7 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
             if (!_enableConcurrency)
             {
                 // we process pending order requests our selves
-                Run(0);
+                ProcessPendingRequests();
             }
 
             base.ProcessSynchronousEvents();
@@ -113,7 +113,7 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
             }
 
             // we submit the order request our selves
-            Run(0);
+            ProcessPendingRequests();
 
             if (!ticket.OrderSet.WaitOne(0))
             {
@@ -122,19 +122,6 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
                 Log.Error("BacktestingTransactionHandler.WaitForOrderSubmission(): " +
                     $"The order request (Id={ticket.OrderId}) was not submitted. " +
                     "See the OrderRequest.Response for more information");
-            }
-        }
-
-        /// <summary>
-        /// For backtesting order requests will be processed by the algorithm thread
-        /// sequentially at <see cref="WaitForOrderSubmission"/> and <see cref="ProcessSynchronousEvents"/>
-        /// </summary>
-        protected override void InitializeTransactionThread()
-        {
-            if (_enableConcurrency)
-            {
-                // let the base class handle this
-                base.InitializeTransactionThread();
             }
         }
     }
