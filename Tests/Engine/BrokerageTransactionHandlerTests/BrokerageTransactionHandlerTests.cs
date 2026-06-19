@@ -2962,6 +2962,9 @@ namespace QuantConnect.Tests.Engine.BrokerageTransactionHandlerTests
 
             protected override TimeSpan TimeSinceLastFill => TestTimeSinceLastFill;
 
+            // no worker thread: these tests drive HandleOrderRequest manually
+            protected override bool SynchronousProcessing => true;
+
             public override void Initialize(IAlgorithm algorithm, IBrokerage brokerage, IResultHandler resultHandler)
             {
                 _brokerage = brokerage;
@@ -2972,11 +2975,6 @@ namespace QuantConnect.Tests.Engine.BrokerageTransactionHandlerTests
             public DateTime GetLastSyncDate()
             {
                 return _brokerage.LastSyncDateTimeUtc.ConvertFromUtc(TimeZones.NewYork);
-            }
-
-            protected override void InitializeTransactionThread()
-            {
-                _orderRequestQueues = new() { new BusyCollection<OrderRequest>() };
             }
 
             public new void RoundOrderPrices(Order order, Security security)
