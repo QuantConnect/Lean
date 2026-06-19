@@ -104,6 +104,13 @@ namespace QuantConnect.Brokerages
                 return false;
             }
 
+            if (order.Properties is PublicOrderProperties publicOrderProperties)
+            {
+                // A cash account has no margin buying power, so margin is always off there.
+                // On a margin account, keep an explicit choice and otherwise use margin by default.
+                publicOrderProperties.UseMargin = AccountType != AccountType.Cash && (publicOrderProperties.UseMargin ?? true);
+            }
+
             // Public.com handles crossing a zero position natively, so the order is not split or rejected here.
             return base.CanSubmitOrder(security, order, out message);
         }

@@ -31,9 +31,10 @@ namespace QuantConnect.Orders
         public bool OutsideRegularTradingHours { get; set; }
 
         /// <summary>
-        /// If set to <c>true</c>, the order uses margin buying power when the account allows it;
-        /// if <c>false</c>, the order uses cash-only buying power.
+        /// Controls the buying power used by the order.
+        /// <c>true</c> uses margin buying power when the account allows it; <c>false</c> uses cash-only buying power.
+        /// When left <c>null</c>, the brokerage model fills it in from the account type before the order is sent.
         /// </summary>
-        public bool UseMargin { get; set; }
+        public bool? UseMargin { get; set; }
     }
 }
