@@ -96,6 +96,14 @@ namespace QuantConnect.Brokerages
                 return false;
             }
 
+            // Public.com only accepts Limit orders in the extended (outside regular trading hours) session.
+            if (order.Properties is PublicOrderProperties { OutsideRegularTradingHours: true } && order.Type != OrderType.Limit)
+            {
+                message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
+                    Messages.PublicBrokerageModel.ExtendedMarketOrderMustBeLimit(order));
+                return false;
+            }
+
             // Public.com handles crossing a zero position natively, so the order is not split or rejected here.
             return base.CanSubmitOrder(security, order, out message);
         }
