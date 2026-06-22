@@ -404,18 +404,47 @@ namespace QuantConnect.Lean.Engine.Results
         }
 
         /// <summary>
-        /// Keeps all points within the full resolution limit, then one per day down to the daily sample limit, and drops the rest
+        /// Keeps all points within the full resolution limit, then one aggregated point per day down to the daily sample limit, and drops the rest
         /// </summary>
         private static List<ISeriesPoint> TrimToDailySample(List<ISeriesPoint> values, DateTime fullResolutionLimit, DateTime dailySampleLimit)
         {
             var dailySamples = values
                 .Where(point => point.Time > dailySampleLimit && point.Time <= fullResolutionLimit)
                 .GroupBy(point => point.Time.Date)
-                .Select(group => group.Last());
+                .Select(AggregateDailySample);
 
             var fullResolution = values.Where(point => point.Time > fullResolutionLimit);
 
             return dailySamples.Concat(fullResolution).ToList();
+        }
+
+        /// <summary>
+        /// Aggregates a single day's points into one, keeping the full OHLC for candlestick series
+        /// </summary>
+        private static ISeriesPoint AggregateDailySample(IEnumerable<ISeriesPoint> dayPoints)
+        {
+            ISeriesPoint last = null;
+            Candlestick aggregated = null;
+            foreach (var point in dayPoints)
+            {
+                last = point;
+                if (point is Candlestick candlestick)
+                {
+                    aggregated ??= new Candlestick();
+                    aggregated.Update(candlestick.Open);
+                    aggregated.Update(candlestick.High);
+                    aggregated.Update(candlestick.Low);
+                    aggregated.Update(candlestick.Close);
+                }
+            }
+
+            if (aggregated == null)
+            {
+                return last;
+            }
+
+            aggregated.Time = last.Time;
+            return aggregated;
         }
 
         /// <summary>

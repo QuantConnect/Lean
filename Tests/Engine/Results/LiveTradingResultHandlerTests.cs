@@ -249,17 +249,17 @@ namespace QuantConnect.Tests.Engine.Results
                 benchmarkSeries.Values.Add(new ChartPoint(t, i));
             }
 
-            // Equity: several points per day for older days, plus a couple of recent ones
+            // Equity: several points per day for older days, with varying OHLC so the high and low come from intraday candles
             foreach (var day in new[] { 5, 4, 3 })
             {
                 var date = utcNow.AddDays(-day).Date;
-                equitySeries.Values.Add(new Candlestick(date.AddHours(10), 100, 110, 90, 101));
-                equitySeries.Values.Add(new Candlestick(date.AddHours(14), 100, 110, 90, 102));
-                equitySeries.Values.Add(new Candlestick(date.AddHours(16), 100, 110, 90, 103)); // last sample of the day
+                equitySeries.Values.Add(new Candlestick(date.AddHours(10), 100, 105, 98, 101));
+                equitySeries.Values.Add(new Candlestick(date.AddHours(14), 101, 120, 99, 102));
+                equitySeries.Values.Add(new Candlestick(date.AddHours(16), 102, 106, 85, 103));
             }
-            // Two recent points on the same day, within the 2 day window
-            equitySeries.Values.Add(new Candlestick(utcNow.AddHours(-5), 100, 110, 90, 200));
-            equitySeries.Values.Add(new Candlestick(utcNow.AddHours(-1), 100, 110, 90, 201));
+            // Two recent points within the 2 day window
+            equitySeries.Values.Add(new Candlestick(utcNow.AddHours(-5), 200, 210, 195, 205));
+            equitySeries.Values.Add(new Candlestick(utcNow.AddHours(-1), 205, 215, 200, 211));
 
             // Custom chart: not a statistics series, so no daily sample
             for (var i = 5; i >= 1; i--)
@@ -276,21 +276,41 @@ namespace QuantConnect.Tests.Engine.Results
             Assert.AreEqual(729, returnSeries.Values.Count);
             Assert.AreEqual(729, benchmarkSeries.Values.Count);
 
-            // Equity keeps all recent points and one per day for older ones
+            // Equity keeps all recent points and one aggregated candlestick per day for older ones
             Assert.AreEqual(5, equitySeries.Values.Count);
             foreach (var day in new[] { 5, 4, 3 })
             {
                 var date = utcNow.AddDays(-day).Date;
-                var samplesForDay = equitySeries.Values.Where(v => v.Time.Date == date).ToList();
-                Assert.AreEqual(1, samplesForDay.Count); // only one point per day
-                Assert.AreEqual(103, ((Candlestick)samplesForDay[0]).Close); // and it is the last of the day
+                var samplesForDay = equitySeries.Values.Where(v => v.Time.Date == date).Cast<Candlestick>().ToList();
+                Assert.AreEqual(1, samplesForDay.Count);
+                // The whole day OHLC is aggregated, not just the last candle
+                var candle = samplesForDay[0];
+                Assert.AreEqual(100, candle.Open);
+                Assert.AreEqual(120, candle.High);
+                Assert.AreEqual(85, candle.Low);
+                Assert.AreEqual(103, candle.Close);
             }
-            Assert.AreEqual(2, equitySeries.Values.Count(v => v.Time > utcNow.AddDays(-2)));
+
+            // Recent points are kept at full resolution
+            var recent = equitySeries.Values.Where(v => v.Time > utcNow.AddDays(-2)).Cast<Candlestick>().ToList();
+            Assert.AreEqual(2, recent.Count);
+            Assert.AreEqual(205, recent[0].Close);
+            Assert.AreEqual(211, recent[1].Close);
 
             // Custom chart keeps only the last 2 days
             var defaultCutoff = utcNow.AddDays(-2);
             Assert.IsTrue(customSeries.Values.All(v => v.Time > defaultCutoff));
             Assert.AreEqual(1, customSeries.Values.Count);
+
+            // Trimming runs repeatedly in production, so a second pass must leave the already trimmed series unchanged
+            var equitySnapshot = equitySeries.Values.Cast<Candlestick>()
+                .Select(v => (v.Time, v.Open, v.High, v.Low, v.Close)).ToList();
+            handler.PublicTrimCharts(utcNow);
+            Assert.AreEqual(729, returnSeries.Values.Count);
+            Assert.AreEqual(729, benchmarkSeries.Values.Count);
+            Assert.AreEqual(1, customSeries.Values.Count);
+            CollectionAssert.AreEqual(equitySnapshot, equitySeries.Values.Cast<Candlestick>()
+                .Select(v => (v.Time, v.Open, v.High, v.Low, v.Close)).ToList());
         }
 
         private class TestableLiveTradingResultHandler : LiveTradingResultHandler
