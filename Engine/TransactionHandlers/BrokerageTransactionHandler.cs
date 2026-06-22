@@ -356,7 +356,7 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
                 order.OrderSubmissionData = new OrderSubmissionData(security.BidPrice, security.AskPrice, security.Close);
                 _openOrders[order.Id] = new OpenOrderState(order, ticket, security);
 
-                EnqueueOrderRequest(request, order);
+                _threadPool.Dispatch(request, order);
 
                 WaitForOrderSubmission(ticket);
             }
@@ -472,7 +472,7 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
                 else
                 {
                     request.SetResponse(OrderResponse.Success(request), OrderRequestStatus.Processing);
-                    EnqueueOrderRequest(request, order);
+                    _threadPool.Dispatch(request, order);
                 }
             }
             catch (Exception err)
@@ -544,7 +544,7 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
 
                     // send the request to be processed
                     request.SetResponse(OrderResponse.Success(request), OrderRequestStatus.Processing);
-                    EnqueueOrderRequest(request, order);
+                    _threadPool.Dispatch(request, order);
                 }
             }
             catch (Exception err)
@@ -1218,11 +1218,10 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
                         order.Status = orderEvent.Status;
                     }
 
-                    // once an order reaches a final state it won't receive any more requests, so release its pinned
-                    // processing queue to keep the pin map bounded to the orders still in flight
+                    // notify the pool once an order reaches a final state so it can release its processing queue
                     if (order.Status.IsClosed())
                     {
-                        TryReleaseProcessingQueue(order);
+                        _threadPool.Release(order);
                     }
 
                     orderEvent.Id = order.GetNewId();
@@ -1935,47 +1934,6 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
             return $"Order exceeds shortable quantity {shortableQuantity} for Symbol {symbol} requested {quantity})";
         }
 
-        private void EnqueueOrderRequest(OrderRequest request, Order order)
-        {
-            // route by OrderId (or combo group id) so requests for the same order keep their order on one queue
-            var routingKey = request.OrderId;
-            if (order.GroupOrderManager?.Id > 0)
-            {
-                routingKey = order.GroupOrderManager.Id;
-            }
-
-            _threadPool.Dispatch(request, routingKey);
-        }
-
-        /// <summary>
-        /// Releases the processing queue pinned to a closed order so the pin map stays bounded to the orders still
-        /// in flight. A combo group shares a single queue keyed by its group id, so it is only released once every
-        /// leg has reached a final state, mirroring the routing key used in <see cref="EnqueueOrderRequest"/>.
-        /// </summary>
-        private void TryReleaseProcessingQueue(Order order)
-        {
-            var group = order.GroupOrderManager;
-            if (group == null || group.Id <= 0)
-            {
-                _threadPool.Release(order.Id);
-                return;
-            }
-
-            // the whole group routes through one queue; its still-open legs must keep landing on that same queue,
-            // so we can only release it once every leg has been submitted and reached a final state
-            if (group.OrderIds.Count < group.Count)
-            {
-                return;
-            }
-            foreach (var legId in group.OrderIds)
-            {
-                if (!_completeOrders.TryGetValue(legId, out var leg) || !leg.Status.IsClosed())
-                {
-                    return;
-                }
-            }
-            _threadPool.Release(group.Id);
-        }
 
         /// <summary>
         /// Holds an order and its state

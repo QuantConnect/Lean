@@ -42,6 +42,8 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
         // pins each order (or combo group) to one queue for its whole life, so all its requests are handled
         // in order by the same thread even after the pool grows and re-routes new orders to other queues
         private readonly Dictionary<int, int> _queueIndexByKey = new();
+        // tracks the completed legs of each combo group, so its pinned queue is only released once they are all done
+        private readonly Dictionary<int, HashSet<int>> _completedComboLegs = new();
         // guards on demand growth of the queues/threads against concurrent reads in Run/Dispatch/Shutdown
         private readonly object _lock = new object();
         // maximum number of threads (and queues) the pool can grow to on demand
@@ -127,13 +129,16 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
         }
 
         /// <summary>
-        /// Dispatches an order request to the queue pinned to its routing key, growing the pool first if
-        /// every existing thread is already saturated.
+        /// Dispatches an order request to the queue pinned to its order, growing the pool first if every existing
+        /// thread is already saturated. All the requests of an order, and of every leg of a combo group, are routed
+        /// to the same queue so they are processed in order by a single thread.
         /// </summary>
         /// <param name="request">The order request to process</param>
-        /// <param name="routingKey">Identifies the order (or combo group) the request belongs to</param>
-        public void Dispatch(OrderRequest request, int routingKey)
+        /// <param name="order">The order the request belongs to, used to decide its routing</param>
+        public void Dispatch(OrderRequest request, Order order)
         {
+            var routingKey = GetRoutingKey(order);
+
             IBusyCollection<OrderRequest> queue;
             lock (_lock)
             {
@@ -154,16 +159,45 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
         }
 
         /// <summary>
-        /// Releases the queue pinned to the given routing key once its order reaches a final state, keeping the
-        /// pin map bounded to the orders still in flight.
+        /// Releases the queue pinned to an order once it reaches a final state, keeping the pin map bounded to the
+        /// orders still in flight. A combo group shares a single queue, so it is only released once every leg of
+        /// the group has completed.
         /// </summary>
-        /// <param name="routingKey">The routing key previously used in <see cref="Dispatch"/></param>
-        public void Release(int routingKey)
+        /// <param name="order">The order that reached a final state</param>
+        public void Release(Order order)
         {
+            var group = order.GroupOrderManager;
             lock (_lock)
             {
-                _queueIndexByKey.Remove(routingKey);
+                if (group == null || group.Id <= 0)
+                {
+                    _queueIndexByKey.Remove(order.Id);
+                    return;
+                }
+
+                // the whole combo routes through one queue keyed by the group id, so we track its completed legs
+                // and only release the queue once every leg of the group has reached a final state
+                if (!_completedComboLegs.TryGetValue(group.Id, out var completedLegs))
+                {
+                    completedLegs = new HashSet<int>();
+                    _completedComboLegs[group.Id] = completedLegs;
+                }
+                completedLegs.Add(order.Id);
+                if (completedLegs.Count >= group.Count)
+                {
+                    _completedComboLegs.Remove(group.Id);
+                    _queueIndexByKey.Remove(group.Id);
+                }
             }
+        }
+
+        /// <summary>
+        /// Computes the routing key of an order: the combo group id when it belongs to one, otherwise its own id,
+        /// so that every leg of a combo is routed to the same queue.
+        /// </summary>
+        private static int GetRoutingKey(Order order)
+        {
+            return order.GroupOrderManager?.Id > 0 ? order.GroupOrderManager.Id : order.Id;
         }
 
         /// <summary>
