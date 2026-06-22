@@ -238,26 +238,6 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
         protected virtual bool SynchronousProcessing => false;
 
         /// <summary>
-        /// Create and start the transaction thread, who will be in charge of processing
-        /// the order requests
-        /// </summary>
-        protected virtual void InitializeTransactionThread()
-        {
-            Action<OrderRequest> processRequest = request =>
-            {
-                HandleOrderRequest(request);
-                ProcessAsynchronousEvents();
-            };
-            Action<Exception> onError = error => _algorithm.SetRuntimeError(error, "HandleOrderRequest");
-
-            // backtesting drains a single queue synchronously on the algorithm thread, live deployments use
-            // background worker threads: a single one, or growing on demand up to the maximum when concurrent.
-            _threadPool = SynchronousProcessing
-                ? OrderRequestProcessingPool.Synchronous(processRequest, onError)
-                : new OrderRequestProcessingPool(ConcurrencyEnabled, MinimumTransactionThreads, MaximumTransactionThreads, processRequest, onError);
-        }
-
-        /// <summary>
         /// The maximum number of transaction threads the pool can grow to
         /// </summary>
         protected virtual int MaximumTransactionThreads => Config.GetInt("maximum-transaction-threads", 10);
@@ -277,6 +257,26 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
         /// False indicates they are completely finished processing and ready to be terminated.
         /// </summary>
         public bool IsActive => _threadPool?.IsActive ?? false;
+
+        /// <summary>
+        /// Create and start the transaction thread, who will be in charge of processing
+        /// the order requests
+        /// </summary>
+        protected virtual void InitializeTransactionThread()
+        {
+            Action<OrderRequest> processRequest = request =>
+            {
+                HandleOrderRequest(request);
+                ProcessAsynchronousEvents();
+            };
+            Action<Exception> onError = error => _algorithm.SetRuntimeError(error, "HandleOrderRequest");
+
+            // backtesting drains a single queue synchronously on the algorithm thread, live deployments use
+            // background worker threads: a single one, or growing on demand up to the maximum when concurrent.
+            _threadPool = SynchronousProcessing
+                ? OrderRequestProcessingPool.Synchronous(processRequest, onError)
+                : new OrderRequestProcessingPool(ConcurrencyEnabled, MinimumTransactionThreads, MaximumTransactionThreads, processRequest, onError);
+        }
 
         #region Order Request Processing
 
@@ -800,17 +800,8 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
         /// </summary>
         public void Exit()
         {
-            var timeout = TimeSpan.FromSeconds(60);
-            if (_threadPool != null)
-            {
-                // only wait if a queue is still processing
-                if (_threadPool.WaitForProcessing(timeout))
-                {
-                    Log.Error("BrokerageTransactionHandler.Exit(): Exceed timeout: " + (int)(timeout.TotalSeconds) + " seconds.");
-                }
-
-                _threadPool.Shutdown(timeout);
-            }
+            // Shutdown drains the queued requests (CompleteAdding) and waits for the threads before stopping
+            _threadPool?.Shutdown(TimeSpan.FromSeconds(60));
         }
 
         /// <summary>

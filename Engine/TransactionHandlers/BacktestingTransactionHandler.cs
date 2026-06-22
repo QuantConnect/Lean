@@ -62,7 +62,7 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
 
         /// <summary>
         /// For backtesting order requests are processed synchronously by the algorithm thread, only live
-        /// paper deployments with a concurrency enabled brokerage use background transaction threads
+        /// deployments with a concurrency enabled brokerage use background transaction threads
         /// </summary>
         protected override bool SynchronousProcessing => !_enableConcurrency;
 
