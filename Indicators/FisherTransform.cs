@@ -69,7 +69,7 @@ namespace QuantConnect.Indicators
         /// <summary>
         /// Gets a flag indicating when this indicator is ready and fully initialized
         /// </summary>
-        public override bool IsReady => _medianMax.IsReady && _medianMax.IsReady;
+        public override bool IsReady => _medianMax.IsReady && _medianMin.IsReady;
 
         /// <summary>
         /// Required period, in data points, for the indicator to be ready and fully initialized.
