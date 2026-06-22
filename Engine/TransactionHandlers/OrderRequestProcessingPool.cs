@@ -44,7 +44,8 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
         private readonly Dictionary<int, int> _queueIndexByKey = new();
         // tracks the completed legs of each combo group, so its pinned queue is only released once they are all done
         private readonly Dictionary<int, HashSet<int>> _completedComboLegs = new();
-        // guards on demand growth of the queues/threads against concurrent reads in Run/Dispatch/Shutdown
+        // guards the queues/threads and pin maps against the on demand growth happening concurrently with
+        // the worker threads, dispatching, releasing and shutdown
         private readonly object _lock = new object();
         // maximum number of threads (and queues) the pool can grow to on demand
         private readonly int _maximumThreads;
@@ -233,10 +234,9 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
             }
 
             // re-check each pass so a queue added while we waited is not missed
-            IBusyCollection<OrderRequest> busyQueue;
-            while ((busyQueue = GetBusyQueue()) != null)
+            while (TryGetBusyQueue(out var queue))
             {
-                if (!busyQueue.WaitHandle.WaitOne(timeout, _cancellationTokenSource.Token))
+                if (!queue.WaitHandle.WaitOne(timeout, _cancellationTokenSource.Token))
                 {
                     return true;
                 }
@@ -245,13 +245,16 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
         }
 
         /// <summary>
-        /// Returns a queue still processing requests, or null if every queue is idle.
+        /// Gets a queue still processing requests, if any.
         /// </summary>
-        private IBusyCollection<OrderRequest> GetBusyQueue()
+        /// <param name="queue">The busy queue found, or null if every queue is idle</param>
+        /// <returns>True if a busy queue was found, false if every queue is idle</returns>
+        private bool TryGetBusyQueue(out IBusyCollection<OrderRequest> queue)
         {
             lock (_lock)
             {
-                return _queues.FirstOrDefault(queue => queue.IsBusy);
+                queue = _queues.FirstOrDefault(q => q.IsBusy);
+                return queue != null;
             }
         }
 
@@ -261,22 +264,19 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
         /// <param name="timeout">The maximum time to wait for each thread to stop</param>
         public void Shutdown(TimeSpan timeout)
         {
-            List<IBusyCollection<OrderRequest>> queues;
-            List<Thread> threads;
             lock (_lock)
             {
-                // stop growing so the snapshot below can't miss a queue/thread added afterwards
+                // stop growing so no queue/thread can be added while we shut down, which leaves the
+                // collections frozen and safe to iterate without taking a snapshot
                 _shuttingDown = true;
-                queues = _queues.ToList();
-                threads = _threads.ToList();
             }
 
-            foreach (var queue in queues)
+            foreach (var queue in _queues)
             {
                 queue.CompleteAdding();
             }
 
-            foreach (var thread in threads)
+            foreach (var thread in _threads)
             {
                 thread?.StopSafely(timeout, _cancellationTokenSource);
             }

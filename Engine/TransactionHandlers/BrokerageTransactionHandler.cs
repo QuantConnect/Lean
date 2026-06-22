@@ -1925,7 +1925,6 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
             return $"Order exceeds shortable quantity {shortableQuantity} for Symbol {symbol} requested {quantity})";
         }
 
-
         /// <summary>
         /// Holds an order and its state
         /// </summary>
