@@ -32,6 +32,19 @@ namespace QuantConnect.Tests.Optimizer
     [TestFixture, Parallelizable(ParallelScope.Children)]
     public class LeanOptimizerTests
     {
+        // These tests run in parallel and the LeanOptimizer constructor reads "optimization-update-interval" from the
+        // shared, global Config, while TrackEstimation writes it. The underlying config store is not thread-safe, so a
+        // write racing a concurrent read can corrupt it. Serialize the construction-time reads against that write.
+        private static readonly object _configLock = new object();
+
+        private static FakeLeanOptimizer CreateOptimizer(OptimizationNodePacket packet)
+        {
+            lock (_configLock)
+            {
+                return new FakeLeanOptimizer(packet);
+            }
+        }
+
         [TestCase("QuantConnect.Optimizer.Strategies.GridSearchOptimizationStrategy")]
         [TestCase("QuantConnect.Optimizer.Strategies.EulerSearchOptimizationStrategy")]
         public void MaximizeNoTarget(string strategyName)
@@ -51,7 +64,7 @@ namespace QuantConnect.Tests.Optimizer
                 MaximumConcurrentBacktests = 20,
                 OptimizationStrategySettings = new StepBaseOptimizationStrategySettings { DefaultSegmentAmount = 10 }
             };
-            using var optimizer = new FakeLeanOptimizer(packet);
+            using var optimizer = CreateOptimizer(packet);
 
             OptimizationResult result = null;
             optimizer.Ended += (s, solution) =>
@@ -90,7 +103,7 @@ namespace QuantConnect.Tests.Optimizer
                 MaximumConcurrentBacktests = 20,
                 OptimizationStrategySettings = new StepBaseOptimizationStrategySettings { DefaultSegmentAmount = 10 }
             };
-            using var optimizer = new FakeLeanOptimizer(packet);
+            using var optimizer = CreateOptimizer(packet);
 
             OptimizationResult result = null;
             optimizer.Ended += (s, solution) =>
@@ -127,7 +140,7 @@ namespace QuantConnect.Tests.Optimizer
                 },
                 MaximumConcurrentBacktests = 20
             };
-            using var optimizer = new FakeLeanOptimizer(packet);
+            using var optimizer = CreateOptimizer(packet);
 
             OptimizationResult result = null;
             optimizer.Ended += (s, solution) =>
@@ -170,7 +183,7 @@ namespace QuantConnect.Tests.Optimizer
                 MaximumConcurrentBacktests = 20,
                 OptimizationStrategySettings = new StepBaseOptimizationStrategySettings { DefaultSegmentAmount = 10 }
             };
-            using var optimizer = new FakeLeanOptimizer(packet);
+            using var optimizer = CreateOptimizer(packet);
 
             OptimizationResult result = null;
             optimizer.Ended += (s, solution) =>
@@ -211,7 +224,7 @@ namespace QuantConnect.Tests.Optimizer
                 },
                 MaximumConcurrentBacktests = 20
             };
-            using var optimizer = new FakeLeanOptimizer(packet);
+            using var optimizer = CreateOptimizer(packet);
 
             OptimizationResult result = null;
             optimizer.Ended += (s, solution) =>
@@ -237,7 +250,10 @@ namespace QuantConnect.Tests.Optimizer
         [Test]
         public void TrackEstimation()
         {
-            Config.Set("optimization-update-interval", 1);
+            lock (_configLock)
+            {
+                Config.Set("optimization-update-interval", 1);
+            }
             OptimizationResult result = null;
             using var resetEvent = new ManualResetEvent(false);
             var packet = new OptimizationNodePacket
@@ -254,7 +270,7 @@ namespace QuantConnect.Tests.Optimizer
                 },
                 MaximumConcurrentBacktests = 5
             };
-            using var optimizer = new FakeLeanOptimizer(packet);
+            using var optimizer = CreateOptimizer(packet);
             // keep stats up-to-date
             int totalBacktest = optimizer.GetCurrentEstimate();
             int totalUpdates = 0;
