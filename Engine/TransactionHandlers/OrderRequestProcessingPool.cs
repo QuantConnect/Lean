@@ -50,6 +50,8 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
         private readonly int _maximumThreads;
         // true when there are no worker threads and the caller drains the single queue itself
         private readonly bool _synchronous;
+        // set under the lock while shutting down so the pool stops growing
+        private bool _shuttingDown;
         private readonly Action<OrderRequest> _processRequest;
         private readonly Action<Exception> _onError;
         private readonly CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource();
@@ -230,14 +232,27 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
                 return false;
             }
 
-            List<IBusyCollection<OrderRequest>> queues;
+            // re-check each pass so a queue added while we waited is not missed
+            IBusyCollection<OrderRequest> busyQueue;
+            while ((busyQueue = GetBusyQueue()) != null)
+            {
+                if (!busyQueue.WaitHandle.WaitOne(timeout, _cancellationTokenSource.Token))
+                {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        /// <summary>
+        /// Returns a queue still processing requests, or null if every queue is idle.
+        /// </summary>
+        private IBusyCollection<OrderRequest> GetBusyQueue()
+        {
             lock (_lock)
             {
-                // snapshot under the lock since the queues list may be growing on demand concurrently
-                queues = _queues.ToList();
+                return _queues.FirstOrDefault(queue => queue.IsBusy);
             }
-
-            return queues.Any(queue => queue.IsBusy && !queue.WaitHandle.WaitOne(timeout, _cancellationTokenSource.Token));
         }
 
         /// <summary>
@@ -250,7 +265,8 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
             List<Thread> threads;
             lock (_lock)
             {
-                // snapshot under the lock since the pool might still be growing on demand concurrently
+                // stop growing so the snapshot below can't miss a queue/thread added afterwards
+                _shuttingDown = true;
                 queues = _queues.ToList();
                 threads = _threads.ToList();
             }
@@ -288,7 +304,7 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
         /// </summary>
         private void TryExpand()
         {
-            if (_synchronous || _queues.Count >= _maximumThreads || _cancellationTokenSource.IsCancellationRequested)
+            if (_synchronous || _shuttingDown || _queues.Count >= _maximumThreads || _cancellationTokenSource.IsCancellationRequested)
             {
                 return;
             }
