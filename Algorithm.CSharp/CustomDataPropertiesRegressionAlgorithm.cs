@@ -41,8 +41,8 @@ namespace QuantConnect.Algorithm.CSharp
         /// </summary>
         public override void Initialize()
         {
-            SetStartDate(2020, 01, 05);
-            SetEndDate(2020, 01, 10);
+            SetStartDate(2018, 04, 05);
+            SetEndDate(2018, 04, 10);
 
             //Set the cash for the strategy:
             SetCash(100000);
@@ -110,7 +110,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
-        public long DataPoints => 53;
+        public long DataPoints => 50;
 
         /// <summary>
         /// Data Points count of the algorithm history
@@ -130,31 +130,31 @@ namespace QuantConnect.Algorithm.CSharp
             {"Total Orders", "1"},
             {"Average Win", "0%"},
             {"Average Loss", "0%"},
-            {"Compounding Annual Return", "47.205%"},
-            {"Drawdown", "0.300%"},
+            {"Compounding Annual Return", "-45.767%"},
+            {"Drawdown", "4.000%"},
             {"Expectancy", "0"},
             {"Start Equity", "100000"},
-            {"End Equity", "100637.62"},
-            {"Net Profit", "0.638%"},
-            {"Sharpe Ratio", "4.986"},
-            {"Sortino Ratio", "484.533"},
-            {"Probabilistic Sharpe Ratio", "68.746%"},
+            {"End Equity", "98999.21"},
+            {"Net Profit", "-1.001%"},
+            {"Sharpe Ratio", "0.907"},
+            {"Sortino Ratio", "3.722"},
+            {"Probabilistic Sharpe Ratio", "48.891%"},
             {"Loss Rate", "0%"},
             {"Win Rate", "0%"},
             {"Profit-Loss Ratio", "0"},
-            {"Alpha", "-0.24"},
-            {"Beta", "0.917"},
-            {"Annual Standard Deviation", "0.072"},
-            {"Annual Variance", "0.005"},
-            {"Information Ratio", "-10.861"},
-            {"Tracking Error", "0.027"},
-            {"Treynor Ratio", "0.39"},
+            {"Alpha", "0.514"},
+            {"Beta", "0.649"},
+            {"Annual Standard Deviation", "0.5"},
+            {"Annual Variance", "0.25"},
+            {"Information Ratio", "1.127"},
+            {"Tracking Error", "0.485"},
+            {"Treynor Ratio", "0.699"},
             {"Total Fees", "$0.00"},
             {"Estimated Strategy Capacity", "$0"},
             {"Lowest Capacity Asset", "BTC.Bitcoin 2S"},
-            {"Portfolio Turnover", "16.66%"},
-            {"Drawdown Recovery", "1"},
-            {"OrderListHash", "596837f3f0cb7b46650912203c2b7d61"}
+            {"Portfolio Turnover", "16.93%"},
+            {"Drawdown Recovery", "2"},
+            {"OrderListHash", "b9aecea6ebe672324d20a389ac004b1e"}
         };
 
         /// <summary>
@@ -218,7 +218,7 @@ namespace QuantConnect.Algorithm.CSharp
                 }
 
                 // Read from a local data file so the test is deterministic instead of depending on a remote source
-                var source = Path.Combine(Globals.DataFolder, "equity", "usa", "daily", "spy.zip");
+                var source = Path.Combine(Globals.DataFolder, "crypto", "coinbase", "daily", "btcusd_trade.zip");
                 return new SubscriptionDataSource(source, SubscriptionTransportMedium.LocalFile, FileFormat.Csv);
             }
 
@@ -249,18 +249,18 @@ namespace QuantConnect.Algorithm.CSharp
                     return coin;
                 }
 
-                // Example Line Format (prices scaled by 10000):
+                // Example Line Format:
                 // date            open     high     low      close    volume
-                // 20200106 00:00  3204400  3237300  3203600  3236400  43759922
+                // 20180405 00:00  6791.68  6933.11  6568.64  6785.85  13832.668772
                 try
                 {
                     var data = line.Split(',');
                     coin.Time = DateTime.ParseExact(data[0], "yyyyMMdd HH:mm", CultureInfo.InvariantCulture);
                     coin.EndTime = coin.Time.AddDays(1);
-                    coin.Open = Convert.ToDecimal(data[1], CultureInfo.InvariantCulture) / 10000m;
-                    coin.High = Convert.ToDecimal(data[2], CultureInfo.InvariantCulture) / 10000m;
-                    coin.Low = Convert.ToDecimal(data[3], CultureInfo.InvariantCulture) / 10000m;
-                    coin.Close = Convert.ToDecimal(data[4], CultureInfo.InvariantCulture) / 10000m;
+                    coin.Open = Convert.ToDecimal(data[1], CultureInfo.InvariantCulture);
+                    coin.High = Convert.ToDecimal(data[2], CultureInfo.InvariantCulture);
+                    coin.Low = Convert.ToDecimal(data[3], CultureInfo.InvariantCulture);
+                    coin.Close = Convert.ToDecimal(data[4], CultureInfo.InvariantCulture);
                     coin.VolumeBTC = Convert.ToDecimal(data[5], CultureInfo.InvariantCulture);
                     coin.Value = coin.Close;
                 }

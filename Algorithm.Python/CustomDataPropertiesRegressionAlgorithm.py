@@ -25,8 +25,8 @@ from AlgorithmImports import *
 class CustomDataPropertiesRegressionAlgorithm(QCAlgorithm):
 
     def initialize(self) -> None:
-        self.set_start_date(2020, 1, 5)   # Set Start Date
-        self.set_end_date(2020, 1, 10)    # Set End Date
+        self.set_start_date(2018, 4, 5)   # Set Start Date
+        self.set_end_date(2018, 4, 10)    # Set End Date
         self.set_cash(100000)             # Set Strategy Cash
 
         # Define our custom data properties and exchange hours
@@ -68,7 +68,7 @@ class Bitcoin(PythonData):
             return SubscriptionDataSource("https://www.bitstamp.net/api/ticker/", SubscriptionTransportMedium.REST)
 
         # Read from a local data file so the test is deterministic instead of depending on a remote source
-        source = f"{Globals.data_folder}/equity/usa/daily/spy.zip"
+        source = f"{Globals.data_folder}/crypto/coinbase/daily/btcusd_trade.zip"
         return SubscriptionDataSource(source, SubscriptionTransportMedium.LOCAL_FILE, FileFormat.CSV)
 
     def reader(self, config: SubscriptionDataConfig, line: str, date: datetime, is_live_mode: bool) -> DynamicData:
@@ -100,18 +100,18 @@ class Bitcoin(PythonData):
                 # Do nothing, possible error in json decoding
                 return coin
 
-        # Example Line Format (prices scaled by 10000):
+        # Example Line Format:
         # date            open     high     low      close    volume
-        # 20200106 00:00  3204400  3237300  3203600  3236400  43759922
+        # 20180405 00:00  6791.68  6933.11  6568.64  6785.85  13832.668772
         try:
             data = line.split(',')
             coin.time = datetime.strptime(data[0], "%Y%m%d %H:%M")
             coin.end_time = coin.time + timedelta(1)
-            coin.value = float(data[4]) / 10000
-            coin["Open"] = float(data[1]) / 10000
-            coin["High"] = float(data[2]) / 10000
-            coin["Low"] = float(data[3]) / 10000
-            coin["Close"] = float(data[4]) / 10000
+            coin.value = float(data[4])
+            coin["Open"] = float(data[1])
+            coin["High"] = float(data[2])
+            coin["Low"] = float(data[3])
+            coin["Close"] = float(data[4])
             coin["VolumeBTC"] = float(data[5])
             return coin
 
