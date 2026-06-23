@@ -195,11 +195,13 @@ namespace QuantConnect.Statistics
         /// </summary>
         /// <param name="listPerformance">The list of algorithm performance values</param>
         /// <param name="benchmarkSharpeRatio">The benchmark sharpe ratio to use</param>
+        /// <param name="riskFreeRate">The risk free rate for each performance sample</param>
         /// <returns>Probabilistic Sharpe Ratio</returns>
         public static double ProbabilisticSharpeRatio(List<double> listPerformance,
-             double benchmarkSharpeRatio)
+             double benchmarkSharpeRatio,
+             double riskFreeRate = 0)
         {
-            var observedSharpeRatio = ObservedSharpeRatio(listPerformance);
+            var observedSharpeRatio = ObservedSharpeRatio(listPerformance, riskFreeRate);
 
             var skewness = listPerformance.Skewness();
             var kurtosis = listPerformance.Kurtosis();
@@ -224,10 +226,11 @@ namespace QuantConnect.Statistics
         /// Calculates the observed sharpe ratio
         /// </summary>
         /// <param name="listPerformance">The performance samples to use</param>
+        /// <param name="riskFreeRate">The risk free rate for each performance sample</param>
         /// <returns>The observed sharpe ratio</returns>
-        public static double ObservedSharpeRatio(List<double> listPerformance)
+        public static double ObservedSharpeRatio(List<double> listPerformance, double riskFreeRate = 0)
         {
-            var performanceAverage = listPerformance.Average();
+            var performanceAverage = listPerformance.Average() - riskFreeRate;
             var standardDeviation = listPerformance.StandardDeviation();
             // we don't annualize it
             return standardDeviation.IsNaNOrZero() ? 0 : performanceAverage / standardDeviation;
