@@ -67,11 +67,9 @@ class Bitcoin(PythonData):
         if is_live_mode:
             return SubscriptionDataSource("https://www.bitstamp.net/api/ticker/", SubscriptionTransportMedium.REST)
 
-        #return "http://my-ftp-server.com/futures-data-" + date.to_string("Ymd") + ".zip"
-        # OR simply return a fixed small data file. Large files will slow down your backtest
-        subscription = SubscriptionDataSource("https://www.quantconnect.com/api/v2/proxy/nasdaq/api/v3/datatables/QDL/BITFINEX.csv?code=BTCUSD&api_key=WyAazVXnq7ATy_fefTqm")
-        subscription.sort = True
-        return subscription
+        # Read from a local data file so the test is deterministic instead of depending on a remote source
+        source = f"{Globals.data_folder}/equity/usa/daily/spy.zip"
+        return SubscriptionDataSource(source, SubscriptionTransportMedium.LOCAL_FILE, FileFormat.CSV)
 
     def reader(self, config: SubscriptionDataConfig, line: str, date: datetime, is_live_mode: bool) -> DynamicData:
         coin = Bitcoin()
@@ -102,25 +100,21 @@ class Bitcoin(PythonData):
                 # Do nothing, possible error in json decoding
                 return coin
 
-        # Example Line Format:
-        #code    date        high     low      mid      last     bid      ask      volume
-        #BTCUSD  2024-10-08  63248.0  61940.0  62246.5  62245.0  62246.0  62247.0       5.929230648356
-        if not (line.strip() and line[7].isdigit()): return coin
-
+        # Example Line Format (prices scaled by 10000):
+        # date            open     high     low      close    volume
+        # 20200106 00:00  3204400  3237300  3203600  3236400  43759922
         try:
             data = line.split(',')
-            coin.time = datetime.strptime(data[1], "%Y-%m-%d")
+            coin.time = datetime.strptime(data[0], "%Y%m%d %H:%M")
             coin.end_time = coin.time + timedelta(1)
-            coin.value = float(data[5])
-            coin["High"] = float(data[2])
-            coin["Low"] = float(data[3])
-            coin["Mid"] = float(data[4])
-            coin["Close"] = float(data[5])
-            coin["Bid"] = float(data[6])
-            coin["Ask"] = float(data[7])
-            coin["VolumeBTC"] = float(data[8])
+            coin.value = float(data[4]) / 10000
+            coin["Open"] = float(data[1]) / 10000
+            coin["High"] = float(data[2]) / 10000
+            coin["Low"] = float(data[3]) / 10000
+            coin["Close"] = float(data[4]) / 10000
+            coin["VolumeBTC"] = float(data[5])
             return coin
 
         except ValueError:
-            # Do nothing, possible error in json decoding
+            # Do nothing, skip malformed rows
             return coin
