@@ -65,14 +65,14 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
 
             ExpectedResults = new List<double[]>
             {
-                new double[] { -0.562396, 0.608942, 0.953453 },
-                new double[] { 0.686025, -0.269589, 0.583023 },
-                new double[] { 0.26394, -0.043374, 0.779434 },
-                new double[] { -0.223905, 0.401036, 1, 0.065329, -0.24246 },
-                new double[] { 0.5, 0.5 },
                 new double[] { -0.5, 0.5, 1 },
-                new double[] { -0.242647, 1, 0.242647 },
-                new double[] { -1, 0.922902, 0.364512, 0.712585 },
+                new double[] { 0, 0, 1 },
+                new double[] { -0.404692, 0.404692, 1 },
+                new double[] { -0.418338, 0.023261, 1, 0.040668, 0.35441 },
+                new double[] { 0.5, 0.5 },
+                new double[] { -0.670213, 0.670213, 1 },
+                new double[] { -1, 1, 1 },
+                new double[] { -1, 0.315476, 0.684524, 1 },
             };
         }
 
@@ -98,7 +98,7 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
         public void OptimizeWeightingsSpecifyingLowerBoundAndRiskFreeRate(int testCaseNumber)
         {
             var testOptimizer = new MaximumSharpeRatioPortfolioOptimizer(lower: 0, riskFreeRate: 0.04);
-            var expectedResult = new double[] { 0, 0.44898, 0.55102 };
+            var expectedResult = new double[] { 0, 0, 1 };
 
             var result = testOptimizer.Optimize(HistoricalReturns[testCaseNumber]);
 
@@ -106,13 +106,14 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
         }
 
         [Test]
-        public void SingleSecurityPortfolioReturnsNaN()
+        public void SingleSecurityPortfolioReturnsFullWeight()
         {
             var testOptimizer = new MaximumSharpeRatioPortfolioOptimizer();
             var historicalReturns = new double[,] { { -0.1 } };
             var expectedReturns = new double[] { -0.1 };
 
-            var expectedResult = new double[] { double.NaN };
+            // With a single security the budget constraint Σw = 1 leaves it fully invested
+            var expectedResult = new double[] { 1 };
 
             var result = testOptimizer.Optimize(historicalReturns, expectedReturns);
 

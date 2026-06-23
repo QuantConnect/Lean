@@ -55,24 +55,23 @@ class MaximumSharpeRatioPortfolioOptimizer:
 
         size = covariance.columns.size   # K x 1
         x0 = np.array(size * [1. / size])
-        k = expected_returns.dot(x0)
 
-        # Sharpe Maximization under Quadratic Constraints
+        # SLSQP maximizes the Sharpe ratio (µ − r_f)^T w / √(w^T Σ w) directly, so the fractional
+        # objective is optimized in place without any substitution. The budget constraint Σw = 1 and
+        # the per-weight bounds lw ≤ w ≤ up are applied as-is. The previous implementation instead
+        # fixed (µ − r_f)^T w to the equal-weight return, which collapsed the optimizer to minimum
+        # variance. The C# implementation uses the Charnes-Cooper QP substitution because its solver
+        # only handles quadratic objectives.
         # https://quant.stackexchange.com/questions/18521/sharpe-maximization-under-quadratic-constraints
-        # (µ − r_f)^T w = k
         constraints = [
-            {'type': 'eq', 'fun': lambda weights: expected_returns.dot(weights) - k}]
+            # Σw = 1
+            {'type': 'eq', 'fun': lambda weights: self.get_budget_constraint(weights)}]
 
-        # Σw = 1
-        constraints.append(
-            {'type': 'eq', 'fun': lambda weights: self.get_budget_constraint(weights)})
-
-        opt = minimize(lambda weights: self.portfolio_variance(weights, covariance),   # Objective function
+        opt = minimize(lambda weights: -expected_returns.dot(weights) / np.sqrt(self.portfolio_variance(weights, covariance)),   # Objective function: −Sharpe ratio
                        x0,                                                        # Initial guess
                        bounds = self.get_boundary_conditions(size),               # Bounds for variables: lw ≤ w ≤ up
                        constraints = constraints,                                 # Constraints definition
                        method='SLSQP')        # Optimization method:  Sequential Least SQuares Programming
-        sharpe_ratio = expected_returns.dot(opt['x']) / opt.fun
 
         return opt['x'] if opt['success'] else x0
 

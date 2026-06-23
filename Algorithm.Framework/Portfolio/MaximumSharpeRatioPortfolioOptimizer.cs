@@ -14,6 +14,7 @@
 */
 
 using System.Collections.Generic;
+using System.Linq;
 using Accord.Math;
 using Accord.Math.Optimization;
 using Accord.Statistics;
@@ -45,40 +46,35 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
         }
 
         /// <summary>
-        /// Sum of all weight is one: 1^T w = 1 / Σw = 1
-        /// </summary>
-        /// <param name="size">number of variables</param>
-        /// <returns>linear constraint object</returns>
-        protected LinearConstraint GetBudgetConstraint(int size)
-        {
-            return new LinearConstraint(size)
-            {
-                CombinedAs = Vector.Create(size, 1.0),
-                ShouldBe = ConstraintType.EqualTo,
-                Value = 1.0
-            };
-        }
-
-        /// <summary>
         /// Boundary constraints on weights: lw ≤ w ≤ up
         /// </summary>
+        /// <remarks>
+        /// Expressed in the substituted variable y = κw (κ = 1ᵀy &gt; 0), the per-weight bounds
+        /// become linear: yᵢ − up·(1ᵀy) ≤ 0 and yᵢ − lw·(1ᵀy) ≥ 0.
+        /// </remarks>
         /// <param name="size">number of variables</param>
         /// <returns>enumeration of linear constraint objects</returns>
         protected IEnumerable<LinearConstraint> GetBoundaryConditions(int size)
         {
             for (int i = 0; i < size; i++)
             {
-                yield return new LinearConstraint(1)
+                // yᵢ − up·(1ᵀy) ≤ 0
+                var upper = Vector.Create(size, -_upper);
+                upper[i] += 1.0;
+                yield return new LinearConstraint(size)
                 {
-                    VariablesAtIndices = new int[] { i },
-                    ShouldBe = ConstraintType.GreaterThanOrEqualTo,
-                    Value = _lower
-                };
-                yield return new LinearConstraint(1)
-                {
-                    VariablesAtIndices = new int[] { i },
+                    CombinedAs = upper,
                     ShouldBe = ConstraintType.LesserThanOrEqualTo,
-                    Value = _upper
+                    Value = 0.0
+                };
+                // yᵢ − lw·(1ᵀy) ≥ 0
+                var lower = Vector.Create(size, -_lower);
+                lower[i] += 1.0;
+                yield return new LinearConstraint(size)
+                {
+                    CombinedAs = lower,
+                    ShouldBe = ConstraintType.GreaterThanOrEqualTo,
+                    Value = 0.0
                 };
             }
         }
@@ -96,36 +92,49 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
             var returns = (expectedReturns ?? historicalReturns.Mean(0)).Subtract(_riskFreeRate);
 
             var size = covariance.GetLength(0);
-            var x0 = Vector.Create(size, 1.0 / size);
-            var k = returns.Dot(x0);
+            var equalWeights = Vector.Create(size, 1.0 / size);
 
+            // The Charnes-Cooper substitution needs a portfolio with positive expected excess
+            // return to exist, otherwise the Sharpe ratio cannot be maximized.
+            var feasible = _lower >= 0 ? returns.Any(x => x > 0) : returns.Any(x => x != 0);
+            if (!feasible)
+            {
+                return equalWeights;
+            }
+
+            // Charnes-Cooper substitution y = κw (κ = 1ᵀy): maximizing the Sharpe ratio
+            // (µ − r_f)ᵀw / √(wᵀΣw) becomes minimizing wᵀΣw subject to (µ − r_f)ᵀy = 1,
+            // recovering the weights afterwards as w = y / (1ᵀy).
+            // https://quant.stackexchange.com/questions/18521/sharpe-maximization-under-quadratic-constraints
             var constraints = new List<LinearConstraint>
             {
-                // Sharpe Maximization under Quadratic Constraints
-                // https://quant.stackexchange.com/questions/18521/sharpe-maximization-under-quadratic-constraints
-                // (µ − r_f)^T w = k
+                // (µ − r_f)ᵀy = 1
                 new LinearConstraint(size)
                 {
                     CombinedAs = returns,
                     ShouldBe = ConstraintType.EqualTo,
-                    Value = k
+                    Value = 1.0
                 }
             };
-
-            // Σw = 1
-            constraints.Add(GetBudgetConstraint(size));
 
             // lw ≤ w ≤ up
             constraints.AddRange(GetBoundaryConditions(size));
 
-            // Setup solver
+            // Setup solver: minimize yᵀΣy
             var optfunc = new QuadraticObjectiveFunction(covariance, Vector.Create(size, 0.0));
             var solver = new GoldfarbIdnani(optfunc, constraints);
 
             // Solve problem
-            var success = solver.Minimize(Vector.Copy(x0));
-            var sharpeRatio = returns.Dot(solver.Solution) / solver.Value;
-            return success ? solver.Solution : x0;
+            var success = solver.Minimize(Vector.Copy(equalWeights));
+            if (!success)
+            {
+                return equalWeights;
+            }
+
+            // Recover the portfolio weights: w = y / (1ᵀy)
+            var y = solver.Solution;
+            var sum = y.Sum();
+            return sum > 0 ? y.Divide(sum) : equalWeights;
         }
     }
 }
