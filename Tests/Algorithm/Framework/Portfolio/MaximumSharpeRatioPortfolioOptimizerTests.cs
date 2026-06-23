@@ -18,6 +18,7 @@ using QuantConnect.Algorithm.Framework.Portfolio;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Accord.Statistics;
 
 namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
 {
@@ -91,14 +92,22 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
         [TestCase(7)]
         public override void OptimizeWeightings(int testCaseNumber)
         {
-            base.OptimizeWeightings(testCaseNumber);
+            var testOptimizer = CreateOptimizer();
+            var historicalReturns = HistoricalReturns[testCaseNumber];
+            var expectedReturns = ExpectedReturns[testCaseNumber] ?? historicalReturns.Mean(0);
+            var covariance = Covariances[testCaseNumber] ?? historicalReturns.Covariance();
+            var result = testOptimizer.Optimize(historicalReturns, ExpectedReturns[testCaseNumber], Covariances[testCaseNumber]);
+
+            AssertWeightConstraintsAreSatisfied(result);
+            Assert.GreaterOrEqual(SharpeRatio(result, expectedReturns, covariance),
+                SharpeRatio(EqualWeights(result.Length), expectedReturns, covariance) - 1e-6);
         }
 
         [TestCase(0)]
         public void OptimizeWeightingsSpecifyingLowerBoundAndRiskFreeRate(int testCaseNumber)
         {
             var testOptimizer = new MaximumSharpeRatioPortfolioOptimizer(lower: 0, riskFreeRate: 0.04);
-            var expectedResult = new double[] { 0, 0.44898, 0.55102 };
+            var expectedResult = new double[] { 0, 0, 1 };
 
             var result = testOptimizer.Optimize(HistoricalReturns[testCaseNumber]);
 
@@ -106,13 +115,33 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
         }
 
         [Test]
-        public void SingleSecurityPortfolioReturnsNaN()
+        public void MaximizesSharpeRatioInsteadOfMatchingEqualWeightReturn()
+        {
+            var testOptimizer = new MaximumSharpeRatioPortfolioOptimizer(lower: 0, upper: 1);
+            var historicalReturns = new double[,] { { 0, 0, 0 }, { 0, 0, 0 } };
+            var expectedReturns = new double[] { 0.05, 0.09, 0.18 };
+            var covariance = new double[,]
+            {
+                { 0.0100, 0.0010, 0.0010 },
+                { 0.0010, 0.0225, 0.0010 },
+                { 0.0010, 0.0010, 0.0625 }
+            };
+
+            var result = testOptimizer.Optimize(historicalReturns, expectedReturns, covariance);
+            var equalWeightSharpeRatio = SharpeRatio(EqualWeights(result.Length), expectedReturns, covariance);
+
+            AssertWeightConstraintsAreSatisfied(result, 0, 1);
+            Assert.Greater(SharpeRatio(result, expectedReturns, covariance), equalWeightSharpeRatio + 0.01);
+        }
+
+        [Test]
+        public void SingleSecurityPortfolioReturnsFullWeight()
         {
             var testOptimizer = new MaximumSharpeRatioPortfolioOptimizer();
             var historicalReturns = new double[,] { { -0.1 } };
             var expectedReturns = new double[] { -0.1 };
 
-            var expectedResult = new double[] { double.NaN };
+            var expectedResult = new double[] { 1 };
 
             var result = testOptimizer.Optimize(historicalReturns, expectedReturns);
 
@@ -150,6 +179,38 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
                 Assert.GreaterOrEqual(rounded, lower);
                 Assert.LessOrEqual(rounded, upper);
             };
+        }
+
+        private static void AssertWeightConstraintsAreSatisfied(double[] result, double lower = -1, double upper = 1)
+        {
+            Assert.AreEqual(1, Math.Round(result.Sum(), 6));
+            foreach (var x in result)
+            {
+                var rounded = Math.Round(x, 6);
+                Assert.GreaterOrEqual(rounded, lower);
+                Assert.LessOrEqual(rounded, upper);
+            }
+        }
+
+        private static double[] EqualWeights(int size)
+        {
+            return Enumerable.Repeat(1d / size, size).ToArray();
+        }
+
+        private static double SharpeRatio(double[] weights, double[] expectedReturns, double[,] covariance)
+        {
+            var portfolioReturn = 0d;
+            var variance = 0d;
+            for (var i = 0; i < weights.Length; i++)
+            {
+                portfolioReturn += weights[i] * expectedReturns[i];
+                for (var j = 0; j < weights.Length; j++)
+                {
+                    variance += weights[i] * covariance[i, j] * weights[j];
+                }
+            }
+
+            return portfolioReturn / Math.Sqrt(variance);
         }
     }
 }

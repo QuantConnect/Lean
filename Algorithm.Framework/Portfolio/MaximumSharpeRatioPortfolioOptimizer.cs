@@ -14,6 +14,7 @@
 */
 
 using System.Collections.Generic;
+using System.Linq;
 using Accord.Math;
 using Accord.Math.Optimization;
 using Accord.Statistics;
@@ -97,35 +98,82 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
 
             var size = covariance.GetLength(0);
             var x0 = Vector.Create(size, 1.0 / size);
-            var k = returns.Dot(x0);
+            var variableCount = size + 1;
+            var kappaIndex = size;
 
             var constraints = new List<LinearConstraint>
             {
-                // Sharpe Maximization under Quadratic Constraints
+                // Sharpe maximization under quadratic constraints via Charnes-Cooper:
+                // y = w * kappa, kappa > 0, (µ - r_f)^T y = 1.
                 // https://quant.stackexchange.com/questions/18521/sharpe-maximization-under-quadratic-constraints
-                // (µ − r_f)^T w = k
-                new LinearConstraint(size)
+                new LinearConstraint(variableCount)
                 {
-                    CombinedAs = returns,
+                    CombinedAs = returns.Concat(new[] { 0.0 }).ToArray(),
                     ShouldBe = ConstraintType.EqualTo,
-                    Value = k
+                    Value = 1.0
+                },
+                // Σy = kappa
+                new LinearConstraint(variableCount)
+                {
+                    CombinedAs = Enumerable.Range(0, variableCount)
+                        .Select(i => i == kappaIndex ? -1.0 : 1.0)
+                        .ToArray(),
+                    ShouldBe = ConstraintType.EqualTo,
+                    Value = 0.0
                 }
             };
 
-            // Σw = 1
-            constraints.Add(GetBudgetConstraint(size));
+            for (var i = 0; i < size; i++)
+            {
+                // y_i >= lower * kappa
+                constraints.Add(new LinearConstraint(variableCount)
+                {
+                    CombinedAs = Enumerable.Range(0, variableCount)
+                        .Select(j => j == i ? 1.0 : j == kappaIndex ? -_lower : 0.0)
+                        .ToArray(),
+                    ShouldBe = ConstraintType.GreaterThanOrEqualTo,
+                    Value = 0.0
+                });
+                // y_i <= upper * kappa
+                constraints.Add(new LinearConstraint(variableCount)
+                {
+                    CombinedAs = Enumerable.Range(0, variableCount)
+                        .Select(j => j == i ? 1.0 : j == kappaIndex ? -_upper : 0.0)
+                        .ToArray(),
+                    ShouldBe = ConstraintType.LesserThanOrEqualTo,
+                    Value = 0.0
+                });
+            }
 
-            // lw ≤ w ≤ up
-            constraints.AddRange(GetBoundaryConditions(size));
+            constraints.Add(new LinearConstraint(1)
+            {
+                VariablesAtIndices = new[] { kappaIndex },
+                ShouldBe = ConstraintType.GreaterThanOrEqualTo,
+                Value = 0.0
+            });
 
             // Setup solver
-            var optfunc = new QuadraticObjectiveFunction(covariance, Vector.Create(size, 0.0));
+            var objective = new double[variableCount, variableCount];
+            for (var row = 0; row < size; row++)
+            {
+                for (var column = 0; column < size; column++)
+                {
+                    objective[row, column] = covariance[row, column];
+                }
+            }
+            var optfunc = new QuadraticObjectiveFunction(objective, Vector.Create(variableCount, 0.0));
             var solver = new GoldfarbIdnani(optfunc, constraints);
 
             // Solve problem
-            var success = solver.Minimize(Vector.Copy(x0));
-            var sharpeRatio = returns.Dot(solver.Solution) / solver.Value;
-            return success ? solver.Solution : x0;
+            var y0 = x0.Concat(new[] { 1.0 }).ToArray();
+            var success = solver.Minimize(Vector.Copy(y0));
+            if (!success || solver.Solution[kappaIndex].IsNaNOrInfinity() || solver.Solution[kappaIndex] <= 0)
+            {
+                return x0;
+            }
+
+            var solution = solver.Solution.Take(size).ToArray().Divide(solver.Solution[kappaIndex]);
+            return solution.Any(x => x.IsNaNOrInfinity()) ? x0 : solution;
         }
     }
 }
