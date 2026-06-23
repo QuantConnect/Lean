@@ -35,7 +35,6 @@ namespace QuantConnect.Brokerages
         {
             OrderType.Market,
             OrderType.MarketOnOpen,
-            OrderType.MarketOnClose,
             OrderType.Limit,
             OrderType.StopMarket,
             OrderType.StopLimit,
@@ -75,13 +74,13 @@ namespace QuantConnect.Brokerages
         }
 
         /// <summary>
-        /// Bloomberg EMSX supports cancel/replace (35=G) on order quantity, price, stop price,
-        /// order type and time in force.
+        /// TerminalLink does not allow modifying live orders; the EMSX brokerage rejects updates.
         /// </summary>
         public override bool CanUpdateOrder(Security security, Order order, UpdateOrderRequest request, out BrokerageMessageEvent message)
         {
-            message = null;
-            return true;
+            message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
+                Messages.DefaultBrokerageModel.OrderUpdateNotSupported);
+            return false;
         }
     }
 }

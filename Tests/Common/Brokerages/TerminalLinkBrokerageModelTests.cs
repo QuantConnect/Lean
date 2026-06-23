@@ -59,7 +59,6 @@ namespace QuantConnect.Tests.Common.Brokerages
 
         [TestCase(OrderType.Market)]
         [TestCase(OrderType.MarketOnOpen)]
-        [TestCase(OrderType.MarketOnClose)]
         [TestCase(OrderType.Limit)]
         [TestCase(OrderType.StopMarket)]
         [TestCase(OrderType.StopLimit)]
@@ -73,6 +72,7 @@ namespace QuantConnect.Tests.Common.Brokerages
             Assert.IsNull(message);
         }
 
+        [TestCase(OrderType.MarketOnClose)]
         [TestCase(OrderType.LimitIfTouched)]
         [TestCase(OrderType.TrailingStop)]
         public void CannotSubmitOrder_ForUnsupportedOrderTypes(OrderType orderType)
@@ -87,15 +87,16 @@ namespace QuantConnect.Tests.Common.Brokerages
         }
 
         [Test]
-        public void CanUpdateOrder_IsAlwaysAllowed()
+        public void CannotUpdateOrder()
         {
             var algo = new AlgorithmStub();
             var security = algo.AddSecurity(SecurityType.Equity, "SPY");
             var order = new MarketOrder(security.Symbol, 1, new DateTime(2024, 1, 2));
             var request = new UpdateOrderRequest(new DateTime(2024, 1, 2), order.Id, new UpdateOrderFields());
 
-            Assert.IsTrue(_brokerageModel.CanUpdateOrder(security, order, request, out var message));
-            Assert.IsNull(message);
+            Assert.IsFalse(_brokerageModel.CanUpdateOrder(security, order, request, out var message));
+            Assert.AreEqual(BrokerageMessageType.Warning, message.Type);
+            Assert.AreEqual("NotSupported", message.Code);
         }
 
         private static Order CreateOrder(OrderType orderType, Symbol symbol, decimal quantity)
