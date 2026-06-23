@@ -77,5 +77,22 @@ namespace QuantConnect.Tests.Common.Statistics
 
             Assert.AreEqual(0d, result, 0.001);
         }
+
+        [Test]
+        public void UsesRiskFreeRateForObservedSharpeRatio()
+        {
+            var performance = new List<double>
+            {
+                0.00018, 0.00021, 0.00017, 0.00020, 0.00019,
+                0.00022, 0.00018, 0.00021, 0.00017, 0.00020
+            };
+
+            var benchmarkSharpeRatio = 1.0d / System.Math.Sqrt(252);
+            var grossResult = QuantConnect.Statistics.Statistics.ProbabilisticSharpeRatio(performance, benchmarkSharpeRatio);
+            var excessReturnResult = QuantConnect.Statistics.Statistics.ProbabilisticSharpeRatio(performance, benchmarkSharpeRatio, 0.00025);
+
+            Assert.Greater(grossResult, 0.99d);
+            Assert.Less(excessReturnResult, 0.01d);
+        }
     }
 }
