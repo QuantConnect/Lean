@@ -152,5 +152,73 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
                 Assert.LessOrEqual(rounded, upper);
             };
         }
+
+        // Cases with a positive-definite covariance, where the maximum Sharpe ratio
+        // portfolio is well defined (case 1 has a zero-variance asset and case 4 an
+        // indefinite covariance, so they are excluded here).
+        [TestCase(0)]
+        [TestCase(2)]
+        [TestCase(5)]
+        [TestCase(7)]
+        public void OptimizedWeightsMaximizeSharpeRatio(int testCaseNumber)
+        {
+            // Independent of the hardcoded ExpectedResults: the returned portfolio must
+            // achieve a Sharpe ratio no lower than equal weights or any other feasible
+            // portfolio drawn from the constraint set.
+            var testOptimizer = new MaximumSharpeRatioPortfolioOptimizer();
+            var expectedReturns = ExpectedReturns[testCaseNumber];
+            var covariance = Covariances[testCaseNumber];
+
+            var result = testOptimizer.Optimize(HistoricalReturns[testCaseNumber], expectedReturns, covariance);
+            var optimalSharpe = SharpeRatio(result, expectedReturns, covariance);
+
+            var size = result.Length;
+            var equalWeights = Enumerable.Repeat(1.0 / size, size).ToArray();
+            Assert.GreaterOrEqual(optimalSharpe, SharpeRatio(equalWeights, expectedReturns, covariance));
+
+            var random = new Random(0);
+            for (var i = 0; i < 10000; i++)
+            {
+                var candidate = RandomFeasibleWeights(random, size, lower: -1.0, upper: 1.0);
+                Assert.GreaterOrEqual(optimalSharpe + 1e-6, SharpeRatio(candidate, expectedReturns, covariance));
+            }
+        }
+
+        private static double SharpeRatio(double[] weights, double[] expectedReturns, double[,] covariance)
+        {
+            var size = weights.Length;
+            var portfolioReturn = 0.0;
+            var portfolioVariance = 0.0;
+            for (var i = 0; i < size; i++)
+            {
+                portfolioReturn += weights[i] * expectedReturns[i];
+                for (var j = 0; j < size; j++)
+                {
+                    portfolioVariance += weights[i] * covariance[i, j] * weights[j];
+                }
+            }
+            return portfolioReturn / Math.Sqrt(portfolioVariance);
+        }
+
+        private static double[] RandomFeasibleWeights(Random random, int size, double lower, double upper)
+        {
+            // Draw weights uniformly from the box and keep only those summing to one.
+            while (true)
+            {
+                var weights = new double[size];
+                var sum = 0.0;
+                for (var i = 0; i < size - 1; i++)
+                {
+                    weights[i] = lower + random.NextDouble() * (upper - lower);
+                    sum += weights[i];
+                }
+                var last = 1.0 - sum;
+                if (last >= lower && last <= upper)
+                {
+                    weights[size - 1] = last;
+                    return weights;
+                }
+            }
+        }
     }
 }
