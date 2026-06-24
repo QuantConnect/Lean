@@ -183,6 +183,10 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
             var equalWeights = Enumerable.Repeat(1.0 / size, size).ToArray();
             Assert.GreaterOrEqual(optimalSharpe, SharpeRatio(equalWeights, expectedReturns, covariance));
 
+            // The Sharpe ratio cannot exceed the unconstrained tangency portfolio, a hard
+            // analytic ceiling (Cauchy-Schwarz) that no feasible portfolio can beat.
+            Assert.LessOrEqual(optimalSharpe, TangencySharpe(expectedReturns, covariance) + 1e-6);
+
             var random = new Random(0);
             for (var i = 0; i < 10000; i++)
             {
@@ -205,6 +209,23 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
                 }
             }
             return portfolioReturn / Math.Sqrt(portfolioVariance);
+        }
+
+        private static double TangencySharpe(double[] expectedReturns, double[,] covariance)
+        {
+            // The unconstrained maximum Sharpe ratio is sqrt(mu' inv(S) mu), the largest
+            // value any portfolio can reach regardless of the budget or weight bounds.
+            var inverse = covariance.Inverse();
+            var size = expectedReturns.Length;
+            var quadraticForm = 0.0;
+            for (var i = 0; i < size; i++)
+            {
+                for (var j = 0; j < size; j++)
+                {
+                    quadraticForm += expectedReturns[i] * inverse[i, j] * expectedReturns[j];
+                }
+            }
+            return Math.Sqrt(quadraticForm);
         }
 
         private static double[] RandomFeasibleWeights(Random random, int size, double lower, double upper)
