@@ -13,6 +13,8 @@
  * limitations under the License.
 */
 
+using Accord.Math;
+using Accord.Statistics;
 using NUnit.Framework;
 using QuantConnect.Algorithm.Framework.Portfolio;
 using System;
@@ -153,23 +155,28 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
             };
         }
 
-        // Cases with a positive-definite covariance, where the maximum Sharpe ratio
-        // portfolio is well defined (case 1 has a zero-variance asset and case 4 an
-        // indefinite covariance, so they are excluded here).
+        // Every case whose maximum Sharpe ratio portfolio is well defined. Case 1 has a
+        // zero-variance asset (the ratio is unbounded) and case 4 an indefinite covariance
+        // (it falls back to equal weights), so neither has a finite interior optimum and
+        // both are excluded.
         [TestCase(0)]
         [TestCase(2)]
+        [TestCase(3)]
         [TestCase(5)]
+        [TestCase(6)]
         [TestCase(7)]
         public void OptimizedWeightsMaximizeSharpeRatio(int testCaseNumber)
         {
             // Independent of the hardcoded ExpectedResults: the returned portfolio must
             // achieve a Sharpe ratio no lower than equal weights or any other feasible
-            // portfolio drawn from the constraint set.
+            // portfolio drawn from the constraint set. The mean and covariance are
+            // reconstructed exactly as the optimizer does so the check uses the same inputs.
             var testOptimizer = new MaximumSharpeRatioPortfolioOptimizer();
-            var expectedReturns = ExpectedReturns[testCaseNumber];
-            var covariance = Covariances[testCaseNumber];
+            var historicalReturns = HistoricalReturns[testCaseNumber];
+            var expectedReturns = ExpectedReturns[testCaseNumber] ?? historicalReturns.Mean(0);
+            var covariance = Covariances[testCaseNumber] ?? historicalReturns.Covariance();
 
-            var result = testOptimizer.Optimize(HistoricalReturns[testCaseNumber], expectedReturns, covariance);
+            var result = testOptimizer.Optimize(historicalReturns, ExpectedReturns[testCaseNumber], Covariances[testCaseNumber]);
             var optimalSharpe = SharpeRatio(result, expectedReturns, covariance);
 
             var size = result.Length;
