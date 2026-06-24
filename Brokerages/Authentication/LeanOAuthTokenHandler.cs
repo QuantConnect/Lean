@@ -15,6 +15,7 @@
 
 using System;
 using QuantConnect.Api;
+using QuantConnect.Util;
 using System.Threading;
 
 namespace QuantConnect.Brokerages.Authentication
@@ -96,6 +97,34 @@ namespace QuantConnect.Brokerages.Authentication
         public TimeSpan OffsetBeforeExpiration { get; set; } = TimeSpan.FromMinutes(2);
 
         /// <summary>
+        /// Timer that proactively refreshes the cached token before it expires, independent of request traffic.
+        /// </summary>
+        private readonly Timer _refreshTimer;
+
+        /// <summary>
+        /// Signals shutdown to the background refresh so any in-flight retry wait is aborted.
+        /// </summary>
+        private readonly CancellationTokenSource _refreshCancellationTokenSource = new();
+
+        /// <summary>
+        /// Indicates the handler has been disposed and the background refresh should stop.
+        /// </summary>
+        private volatile bool _disposed;
+
+        /// <summary>
+        /// The delay until the next proactive refresh: the token lifetime less the safety offset, i.e. the moment
+        /// the cached token becomes eligible for refresh. Falls back to <see cref="RetryInterval"/> if misconfigured.
+        /// </summary>
+        private TimeSpan RefreshPeriod
+        {
+            get
+            {
+                var period = _tokenLifetime - OffsetBeforeExpiration;
+                return period > TimeSpan.Zero ? period : RetryInterval;
+            }
+        }
+
+        /// <summary>
         /// Initializes a new instance of the <see cref="LeanOAuthTokenHandler"/> class.
         /// </summary>
         /// <param name="apiClient">The API client used to communicate with the Lean platform.</param>
@@ -109,6 +138,8 @@ namespace QuantConnect.Brokerages.Authentication
             _apiClient = apiClient;
             _jsonBodyRequest = request.ToJson();
             _tokenLifetime = tokenLifetime;
+
+            _refreshTimer = new Timer(BackgroundRefresh, null, RefreshPeriod, Timeout.InfiniteTimeSpan);
         }
 
         /// <summary>
@@ -165,6 +196,79 @@ namespace QuantConnect.Brokerages.Authentication
                 // Unreachable — the loop always returns or throws
                 throw new InvalidOperationException($"LeanOAuthTokenHandler.{nameof(GetAccessToken)}: Unexpected state in token retry loop.");
             }
+        }
+
+        /// <summary>
+        /// Background timer callback that refreshes the access token and re-arms the timer.
+        /// </summary>
+        /// <param name="state">Unused timer state.</param>
+        private void BackgroundRefresh(object state)
+        {
+            if (_disposed)
+            {
+                return;
+            }
+
+            try
+            {
+                // The cache window has elapsed, so this forces a real refresh against the Lean platform.
+                GetAccessToken(_refreshCancellationTokenSource.Token);
+            }
+            catch (Exception ex)
+            {
+                // Terminal failures already raised AuthenticationFailed inside GetAccessToken; log and keep the timer alive.
+                Logging.Log.Error($"LeanOAuthTokenHandler.{nameof(BackgroundRefresh)}: {ex.Message}");
+            }
+            finally
+            {
+                ScheduleNextRefresh();
+            }
+        }
+
+        /// <summary>
+        /// Arms the refresh timer to fire when the cached token next becomes eligible for refresh.
+        /// </summary>
+        private void ScheduleNextRefresh()
+        {
+            if (_disposed)
+            {
+                return;
+            }
+
+            TimeSpan delay;
+            lock (_lock)
+            {
+                // Fire when the current cached token is due to be refreshed. If a request-driven refresh
+                // already pushed the expiry out, we wake up later; if we have no valid token, retry soon.
+                var remaining = _tokenExpiresAt - DateTime.UtcNow;
+                delay = remaining > TimeSpan.Zero ? remaining : RetryInterval;
+            }
+
+            try
+            {
+                _refreshTimer.Change(delay, Timeout.InfiniteTimeSpan);
+            }
+            catch (ObjectDisposedException)
+            {
+                // The handler was disposed concurrently; nothing more to schedule.
+            }
+        }
+
+        /// <summary>
+        /// Stops the background refresh and releases resources.
+        /// </summary>
+        /// <param name="disposing">True when called from <see cref="IDisposable.Dispose"/>.</param>
+        protected override void Dispose(bool disposing)
+        {
+            if (disposing)
+            {
+                _disposed = true;
+                _refreshCancellationTokenSource.Cancel();
+                _refreshTimer.DisposeSafely();
+                _refreshCancellationTokenSource.DisposeSafely();
+            }
+
+            base.Dispose(disposing);
         }
     }
 }
