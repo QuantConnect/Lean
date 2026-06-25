@@ -418,9 +418,49 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <summary>
         /// Checks the current subscriptions and adds necessary currency pair feeds to provide real time conversion data
         /// </summary>
-        public void EnsureCurrencyDataFeeds(SecurityChanges securityChanges)
+        /// <param name="securityChanges">The security changes to consume</param>
+        /// <param name="seedNewCurrencies">
+        /// When true (the default, used by the runtime universe selection path), any newly introduced currency
+        /// conversion securities are immediately seeded with their last known price so the conversion rate is
+        /// non-zero right away. <see cref="BaseSetupHandler.SetupCurrencyConversions"/> passes false because it
+        /// performs its own (optionally white-listed) seeding right after calling this method during setup.
+        /// </param>
+        public void EnsureCurrencyDataFeeds(SecurityChanges securityChanges, bool seedNewCurrencies = true)
         {
             _currencySubscriptionDataConfigManager.EnsureCurrencySubscriptionDataConfigs(securityChanges, _algorithm.BrokerageModel);
+
+            if (!seedNewCurrencies)
+            {
+                return;
+            }
+
+            // Seed any newly introduced currency conversion securities so they have a non-zero conversion rate
+            // immediately, instead of waiting for the first bar of the conversion pair to arrive. Otherwise any
+            // conversion requested in that gap (e.g. a scheduled order before the day's first conversion bar) would
+            // throw 'The conversion rate for <currency> is not available'. This mirrors what
+            // BaseSetupHandler.SetupCurrencyConversions does during setup, but for cashes added/required at runtime.
+            // We only target cashes that still have a zero conversion rate, so already seeded currencies aren't
+            // re-seeded. SeedSecurities degrades gracefully (no history/data leaves the rate at 0, same as today).
+            var cashToUpdate = _algorithm.Portfolio.CashBook.Values
+                .Where(cash => cash.CurrencyConversion != null && cash.ConversionRate == 0)
+                .ToList();
+
+            if (cashToUpdate.Count == 0)
+            {
+                return;
+            }
+
+            var securitiesToUpdate = cashToUpdate
+                .SelectMany(cash => cash.CurrencyConversion.ConversionRateSecurities)
+                .Distinct()
+                .ToList();
+
+            AlgorithmUtils.SeedSecurities(securitiesToUpdate, _algorithm);
+
+            foreach (var cash in cashToUpdate)
+            {
+                cash.Update();
+            }
         }
 
         /// <summary>
