@@ -279,12 +279,12 @@ namespace QuantConnect
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public static string ConversionRateNotFound(string currency)
             {
-                return Invariant($"The conversion rate for {currency} is not available. " +
+                return $"The conversion rate for {currency} is not available. " +
                     $"This usually means there is no data to convert {currency} into the account currency. " +
                     "To fix this, make sure a conversion path to the account currency exists, for example by " +
                     $"subscribing to a security/pair that links {currency} to the account currency (e.g. via AddForex/AddCrypto/AddCfd), " +
                     "or by providing the conversion pair when calling SetCash. " +
-                    "See https://www.quantconnect.com/docs/v2/writing-algorithms/portfolio/cashbook for more information.");
+                    "See https://www.quantconnect.com/docs/v2/writing-algorithms/portfolio/cashbook for more information.";
             }
 
             /// <summary>
