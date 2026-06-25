@@ -46,12 +46,14 @@ namespace QuantConnect.Orders.Fills
             var prices = GetPricesCheckingPythonWrapper(asset, order.Direction);
             var pricesEndTimeUtc = prices.EndTime.ConvertToUtc(asset.Exchange.TimeZone);
 
-            // If the order would be filled on stale (fill-forward / already past) data: for coarse resolutions
-            // (hour/daily) wait for fresh data, e.g. the next bar to close, instead of filling at a stale price.
-            // For finer resolutions (minute/second/tick) keep filling on the stale price with a warning.
+            // If the order would be filled on stale (fill-forward / already past) data, wait for fresh data instead of
+            // filling at a stale price when either: the subscription is a coarse resolution (hour/daily) and the next
+            // bar is expected; or the order was placed within the first bar after market open, before the current
+            // session's first bar has been emitted. For finer resolutions mid-session keep filling on the stale price
+            // with a warning.
             if (pricesEndTimeUtc.Add(Parameters.StalePriceTimeSpan) < order.Time)
             {
-                if (ShouldWaitForFreshData(asset))
+                if (ShouldWaitForFreshDataOnStale(asset, order.Time))
                 {
                     return fill;
                 }

@@ -161,7 +161,7 @@ namespace QuantConnect.Orders.Fills
             //    for that first bar instead of filling at the previous date's stale price.
             // Otherwise (finer resolutions, mid-session) keep filling on the stale price with the warning already set
             // in fillMessage.
-            if (stalePrice && (ShouldWaitForFreshData(asset) || IsWithinFirstResolutionSpanAfterMarketOpen(asset, order.Time)))
+            if (stalePrice && ShouldWaitForFreshDataOnStale(asset, order.Time))
             {
                 return fill;
             }
@@ -173,41 +173,6 @@ namespace QuantConnect.Orders.Fills
             fill.Message = fillMessage;
             fill.Status = OrderStatus.Filled;
             return fill;
-        }
-
-        /// <summary>
-        /// Determines whether a market order placed right at/after market open would be filled on data from the
-        /// previous trading date because the first bar of the current session has not been emitted yet.
-        /// This is the case when the time elapsed since the market open is shorter than the lowest subscribed
-        /// resolution: e.g. with minute data, an order placed less than a minute after the open has no
-        /// current-session bar to fill on yet, so the fill should wait for that first bar instead of using the
-        /// previous date's stale price.
-        /// </summary>
-        /// <param name="asset">Security being filled</param>
-        /// <param name="orderTime">Order submission time, in UTC</param>
-        private bool IsWithinFirstResolutionSpanAfterMarketOpen(Security asset, DateTime orderTime)
-        {
-            var configs = Parameters.ConfigProvider.GetSubscriptionDataConfigs(asset.Symbol);
-            if (configs.Count == 0)
-            {
-                return false;
-            }
-
-            // The lowest (finest) subscribed resolution determines how soon the first bar of the session is available
-            var resolutionSpan = configs.GetHighestResolution().ToTimeSpan();
-
-            // Tick data has no bar to wait for (zero span)
-            if (resolutionSpan == TimeSpan.Zero)
-            {
-                return false;
-            }
-
-            var localOrderTime = orderTime.ConvertFromUtc(asset.Exchange.TimeZone);
-            var marketOpen = asset.Exchange.Hours.GetPreviousMarketOpen(localOrderTime, extendedMarketHours: false);
-
-            // Wait only when the order falls within the first resolution span after the market open, i.e. before the
-            // first bar of the current session has closed and become available
-            return localOrderTime - marketOpen < resolutionSpan;
         }
 
         /// <summary>
