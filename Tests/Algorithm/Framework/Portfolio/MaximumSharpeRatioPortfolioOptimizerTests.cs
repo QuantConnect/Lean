@@ -13,6 +13,8 @@
  * limitations under the License.
 */
 
+using Accord.Math;
+using Accord.Statistics;
 using NUnit.Framework;
 using QuantConnect.Algorithm.Framework.Portfolio;
 using System;
@@ -65,14 +67,14 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
 
             ExpectedResults = new List<double[]>
             {
-                new double[] { -0.562396, 0.608942, 0.953453 },
-                new double[] { 0.686025, -0.269589, 0.583023 },
-                new double[] { 0.26394, -0.043374, 0.779434 },
-                new double[] { -0.223905, 0.401036, 1, 0.065329, -0.24246 },
-                new double[] { 0.5, 0.5 },
                 new double[] { -0.5, 0.5, 1 },
-                new double[] { -0.242647, 1, 0.242647 },
-                new double[] { -1, 0.922902, 0.364512, 0.712585 },
+                new double[] { 0, 0, 1 },
+                new double[] { -0.404692, 0.404692, 1 },
+                new double[] { -0.418338, 0.023261, 1, 0.040668, 0.35441 },
+                new double[] { 0.5, 0.5 },
+                new double[] { -0.670213, 0.670213, 1 },
+                new double[] { -1, 1, 1 },
+                new double[] { -1, 0.315476, 0.684524, 1 },
             };
         }
 
@@ -98,7 +100,7 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
         public void OptimizeWeightingsSpecifyingLowerBoundAndRiskFreeRate(int testCaseNumber)
         {
             var testOptimizer = new MaximumSharpeRatioPortfolioOptimizer(lower: 0, riskFreeRate: 0.04);
-            var expectedResult = new double[] { 0, 0.44898, 0.55102 };
+            var expectedResult = new double[] { 0, 0, 1 };
 
             var result = testOptimizer.Optimize(HistoricalReturns[testCaseNumber]);
 
@@ -106,13 +108,14 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
         }
 
         [Test]
-        public void SingleSecurityPortfolioReturnsNaN()
+        public void SingleSecurityPortfolioReturnsFullWeight()
         {
             var testOptimizer = new MaximumSharpeRatioPortfolioOptimizer();
             var historicalReturns = new double[,] { { -0.1 } };
             var expectedReturns = new double[] { -0.1 };
 
-            var expectedResult = new double[] { double.NaN };
+            // With a single security the budget constraint Σw = 1 leaves it fully invested
+            var expectedResult = new double[] { 1 };
 
             var result = testOptimizer.Optimize(historicalReturns, expectedReturns);
 
@@ -150,6 +153,100 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
                 Assert.GreaterOrEqual(rounded, lower);
                 Assert.LessOrEqual(rounded, upper);
             };
+        }
+
+        // Every case whose maximum Sharpe ratio portfolio is well defined. Case 1 has a
+        // zero-variance asset (the ratio is unbounded) and case 4 an indefinite covariance
+        // (it falls back to equal weights), so neither has a finite interior optimum and
+        // both are excluded.
+        [TestCase(0)]
+        [TestCase(2)]
+        [TestCase(3)]
+        [TestCase(5)]
+        [TestCase(6)]
+        [TestCase(7)]
+        public void OptimizedWeightsMaximizeSharpeRatio(int testCaseNumber)
+        {
+            // Independent of the hardcoded ExpectedResults: the returned portfolio must
+            // achieve a Sharpe ratio no lower than equal weights or any other feasible
+            // portfolio drawn from the constraint set. The mean and covariance are
+            // reconstructed exactly as the optimizer does so the check uses the same inputs.
+            var testOptimizer = new MaximumSharpeRatioPortfolioOptimizer();
+            var historicalReturns = HistoricalReturns[testCaseNumber];
+            var expectedReturns = ExpectedReturns[testCaseNumber] ?? historicalReturns.Mean(0);
+            var covariance = Covariances[testCaseNumber] ?? historicalReturns.Covariance();
+
+            var result = testOptimizer.Optimize(historicalReturns, ExpectedReturns[testCaseNumber], Covariances[testCaseNumber]);
+            var optimalSharpe = SharpeRatio(result, expectedReturns, covariance);
+
+            var size = result.Length;
+            var equalWeights = Enumerable.Repeat(1.0 / size, size).ToArray();
+            Assert.GreaterOrEqual(optimalSharpe, SharpeRatio(equalWeights, expectedReturns, covariance));
+
+            // The Sharpe ratio cannot exceed the unconstrained tangency portfolio, a hard
+            // analytic ceiling (Cauchy-Schwarz) that no feasible portfolio can beat.
+            Assert.LessOrEqual(optimalSharpe, TangencySharpe(expectedReturns, covariance) + 1e-6);
+
+            var random = new Random(0);
+            for (var i = 0; i < 10000; i++)
+            {
+                var candidate = RandomFeasibleWeights(random, size, lower: -1.0, upper: 1.0);
+                Assert.GreaterOrEqual(optimalSharpe + 1e-6, SharpeRatio(candidate, expectedReturns, covariance));
+            }
+        }
+
+        private static double SharpeRatio(double[] weights, double[] expectedReturns, double[,] covariance)
+        {
+            var size = weights.Length;
+            var portfolioReturn = 0.0;
+            var portfolioVariance = 0.0;
+            for (var i = 0; i < size; i++)
+            {
+                portfolioReturn += weights[i] * expectedReturns[i];
+                for (var j = 0; j < size; j++)
+                {
+                    portfolioVariance += weights[i] * covariance[i, j] * weights[j];
+                }
+            }
+            return portfolioReturn / Math.Sqrt(portfolioVariance);
+        }
+
+        private static double TangencySharpe(double[] expectedReturns, double[,] covariance)
+        {
+            // The unconstrained maximum Sharpe ratio is sqrt(mu' inv(S) mu), the largest
+            // value any portfolio can reach regardless of the budget or weight bounds.
+            var inverse = covariance.Inverse();
+            var size = expectedReturns.Length;
+            var quadraticForm = 0.0;
+            for (var i = 0; i < size; i++)
+            {
+                for (var j = 0; j < size; j++)
+                {
+                    quadraticForm += expectedReturns[i] * inverse[i, j] * expectedReturns[j];
+                }
+            }
+            return Math.Sqrt(quadraticForm);
+        }
+
+        private static double[] RandomFeasibleWeights(Random random, int size, double lower, double upper)
+        {
+            // Draw weights uniformly from the box and keep only those summing to one.
+            while (true)
+            {
+                var weights = new double[size];
+                var sum = 0.0;
+                for (var i = 0; i < size - 1; i++)
+                {
+                    weights[i] = lower + random.NextDouble() * (upper - lower);
+                    sum += weights[i];
+                }
+                var last = 1.0 - sum;
+                if (last >= lower && last <= upper)
+                {
+                    weights[size - 1] = last;
+                    return weights;
+                }
+            }
         }
     }
 }
