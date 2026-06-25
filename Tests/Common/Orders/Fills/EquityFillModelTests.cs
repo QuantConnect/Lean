@@ -1235,6 +1235,69 @@ namespace QuantConnect.Tests.Common.Orders.Fills
             Assert.IsTrue(fill.Message.Contains("Warning: fill at stale price"));
         }
 
+        // Within the first minute after the open the first session bar is not available yet, so the fill must wait
+        [TestCase(0, true, OrderDirection.Buy)]
+        [TestCase(1, true, OrderDirection.Buy)]
+        [TestCase(59, true, OrderDirection.Sell)]
+        // Once the first bar window has elapsed the order fills on the available (stale) price as before
+        [TestCase(60, false, OrderDirection.Buy)]
+        [TestCase(120, false, OrderDirection.Sell)]
+        public void MarketOrderWaitsForFirstSessionBarWhenStaleRightAfterMarketOpen(int secondsAfterOpen, bool shouldWaitForFreshData, OrderDirection direction)
+        {
+            var config = CreateTradeBarConfig(Symbols.SPY, Resolution.Minute);
+            var configProvider = new MockSubscriptionDataConfigProvider(config);
+            configProvider.SubscriptionDataConfigs.Add(config);
+            var equity = CreateEquity(config);
+            var model = (EquityFillModel)equity.FillModel;
+
+            // US equity market opens at 9:30. The order is placed shortly after the open while only the previous
+            // trading day's bar is available in the cache (overnight gap makes it stale).
+            var marketOpen = new DateTime(2014, 6, 24, 9, 30, 0);
+            var orderTime = marketOpen.AddSeconds(secondsAfterOpen);
+
+            var timeKeeper = TimeKeeper.GetLocalTimeKeeper(TimeZones.NewYork);
+            timeKeeper.UpdateTime(orderTime.ConvertToUtc(TimeZones.NewYork));
+            equity.SetLocalTimeKeeper(timeKeeper);
+
+            const decimal staleClose = 101.123m;
+            equity.SetMarketPrice(new TradeBar(new DateTime(2014, 6, 23, 15, 59, 0), Symbols.SPY,
+                101m, 101.2m, 100.9m, staleClose, 100, Time.OneMinute));
+
+            var quantity = direction == OrderDirection.Buy ? 100 : -100;
+            var order = new MarketOrder(Symbols.SPY, quantity, orderTime.ConvertToUtc(equity.Exchange.TimeZone));
+            var parameters = new FillModelParameters(equity, order, configProvider, Time.OneHour, null);
+
+            var fill = model.Fill(parameters).Single();
+
+            if (!shouldWaitForFreshData)
+            {
+                // The first bar window has elapsed: the order fills on the available (stale) price
+                Assert.AreEqual(OrderStatus.Filled, fill.Status);
+                Assert.AreEqual(order.Quantity, fill.FillQuantity);
+                Assert.AreEqual(staleClose, fill.FillPrice);
+                return;
+            }
+
+            // Within the first bar after the open: must not fill on the previous session's stale price
+            Assert.AreNotEqual(OrderStatus.Filled, fill.Status);
+            Assert.AreNotEqual(OrderStatus.PartiallyFilled, fill.Status);
+            Assert.AreEqual(0, fill.FillQuantity);
+
+            // Once the first bar of the current session is available, the order fills on the fresh price
+            const decimal freshClose = 102.345m;
+            var firstSessionBarEnd = marketOpen.Add(Time.OneMinute);
+            timeKeeper.UpdateTime(firstSessionBarEnd.ConvertToUtc(TimeZones.NewYork));
+            equity.SetLocalTimeKeeper(timeKeeper);
+            equity.SetMarketPrice(new TradeBar(marketOpen, Symbols.SPY,
+                102m, 102.5m, 101.9m, freshClose, 100, Time.OneMinute));
+
+            fill = model.Fill(parameters).Single();
+
+            Assert.AreEqual(OrderStatus.Filled, fill.Status);
+            Assert.AreEqual(order.Quantity, fill.FillQuantity);
+            Assert.AreEqual(freshClose, fill.FillPrice);
+        }
+
         [TestCase(OrderDirection.Sell, 11)]
         [TestCase(OrderDirection.Buy, 21)]
         // uses the trade bar last close

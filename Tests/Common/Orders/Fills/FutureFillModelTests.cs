@@ -109,6 +109,49 @@ namespace QuantConnect.Tests.Common.Orders.Fills
 
         }
 
+        [TestCase(OrderDirection.Buy)]
+        [TestCase(OrderDirection.Sell)]
+        public void MarketOrderWaitsForFirstSessionBarWhenStaleRightAfterMarketOpen(OrderDirection orderDirection)
+        {
+            var model = new FutureFillModel();
+            var config = CreateTradeBarConfig(Symbols.ES_Future_Chain);
+            var security = GetSecurity(config);
+            var quantity = orderDirection == OrderDirection.Buy ? 100 : -100;
+
+            // Place the order one second into the first bar of the session, before that first bar is available
+            var sessionOpen = security.Exchange.Hours.GetPreviousMarketOpen(Noon, extendedMarketHours: false);
+            var orderTime = sessionOpen.AddSeconds(1);
+
+            var timeKeeper = new TimeKeeper(orderTime.ConvertToUtc(TimeZones.NewYork), new[] { TimeZones.NewYork });
+            security.SetLocalTimeKeeper(timeKeeper.GetLocalTimeKeeper(TimeZones.NewYork));
+
+            // Only a stale bar (older than the stale-price window) is available in the cache
+            const decimal staleClose = 101.123m;
+            security.SetMarketPrice(new TradeBar(orderTime.AddHours(-2), Symbols.ES_Future_Chain,
+                101m, 101.2m, 100.9m, staleClose, 100, Time.OneMinute));
+
+            var order = new MarketOrder(Symbols.ES_Future_Chain, quantity, orderTime.ConvertToUtc(TimeZones.NewYork));
+            var parameters = new FillModelParameters(security, order, new MockSubscriptionDataConfigProvider(config), Time.OneHour, null);
+
+            // Within the first minute after the session open: must not fill on the stale price
+            var fill = model.Fill(parameters).Single();
+            Assert.AreNotEqual(OrderStatus.Filled, fill.Status);
+            Assert.AreNotEqual(OrderStatus.PartiallyFilled, fill.Status);
+            Assert.AreEqual(0, fill.FillQuantity);
+
+            // Once the first bar of the session is available, the order fills on the fresh price
+            const decimal freshClose = 102.345m;
+            var firstSessionBarEnd = sessionOpen.Add(Time.OneMinute);
+            timeKeeper.SetUtcDateTime(firstSessionBarEnd.ConvertToUtc(TimeZones.NewYork));
+            security.SetMarketPrice(new TradeBar(sessionOpen, Symbols.ES_Future_Chain,
+                102m, 102.5m, 101.9m, freshClose, 100, Time.OneMinute));
+
+            fill = model.Fill(parameters).Single();
+            Assert.AreEqual(OrderStatus.Filled, fill.Status);
+            Assert.AreEqual(order.Quantity, fill.FillQuantity);
+            Assert.AreEqual(freshClose, fill.FillPrice);
+        }
+
         private SubscriptionDataConfig CreateTradeBarConfig(Symbol symbol, bool isInternal = false, bool extendedMarketHours = true)
         {
             return new SubscriptionDataConfig(typeof(TradeBar), symbol, Resolution.Minute, TimeZones.NewYork, TimeZones.NewYork, true, extendedMarketHours, isInternal);
