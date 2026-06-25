@@ -84,8 +84,10 @@ namespace QuantConnect.Lean.Engine.Setup
             IReadOnlyCollection<string> currenciesToUpdateWhiteList = null)
         {
             // this is needed to have non-zero currency conversion rates during warmup
-            // will also set the Cash.ConversionRateSecurity
-            universeSelection.EnsureCurrencyDataFeeds(SecurityChanges.None);
+            // will also set the Cash.ConversionRateSecurity.
+            // We disable the runtime auto-seeding here because this method does its own (optionally white-listed)
+            // seeding right below; letting EnsureCurrencyDataFeeds seed as well would ignore the white list.
+            universeSelection.EnsureCurrencyDataFeeds(SecurityChanges.None, seedNewCurrencies: false);
 
             // now set conversion rates
             Func<Cash, bool> cashToUpdateFilter = currenciesToUpdateWhiteList == null
