@@ -151,11 +151,20 @@ namespace QuantConnect.Orders.Fills
                     break;
             }
 
-            // On stale data: for coarse resolutions (hour/daily) wait for fresh prices (e.g. the next bar to close)
-            // instead of filling at an already past, stale bar's price, which happens when a market order is placed
-            // mid-bar or through an intraday scheduled event. For finer resolutions (minute/second/tick) keep filling
-            // on the stale price with the warning already set in fillMessage.
-            if (stalePrice && ShouldWaitForFreshData(asset)) return fill;
+            // On stale data, decide whether to wait for fresh prices instead of filling at an already past, stale
+            // bar's price:
+            //  - For coarse resolutions (hour/daily) wait for the next bar to close. This happens when a market order
+            //    is placed mid-bar or through an intraday scheduled event.
+            //  - Right on/after market open the first bar of the current session has not been emitted yet, so the only
+            //    data available comes from the previous trading date. If the order was placed within the lowest
+            //    subscribed resolution span after the open (e.g. less than a minute after open with minute data), wait
+            //    for that first bar instead of filling at the previous date's stale price.
+            // Otherwise (finer resolutions, mid-session) keep filling on the stale price with the warning already set
+            // in fillMessage.
+            if (stalePrice && (ShouldWaitForFreshData(asset) || IsWithinFirstResolutionSpanAfterMarketOpen(asset, order.Time)))
+            {
+                return fill;
+            }
 
             fill.FillPrice = fillPrice;
 
@@ -164,6 +173,41 @@ namespace QuantConnect.Orders.Fills
             fill.Message = fillMessage;
             fill.Status = OrderStatus.Filled;
             return fill;
+        }
+
+        /// <summary>
+        /// Determines whether a market order placed right at/after market open would be filled on data from the
+        /// previous trading date because the first bar of the current session has not been emitted yet.
+        /// This is the case when the time elapsed since the market open is shorter than the lowest subscribed
+        /// resolution: e.g. with minute data, an order placed less than a minute after the open has no
+        /// current-session bar to fill on yet, so the fill should wait for that first bar instead of using the
+        /// previous date's stale price.
+        /// </summary>
+        /// <param name="asset">Security being filled</param>
+        /// <param name="orderTime">Order submission time, in UTC</param>
+        private bool IsWithinFirstResolutionSpanAfterMarketOpen(Security asset, DateTime orderTime)
+        {
+            var configs = Parameters.ConfigProvider.GetSubscriptionDataConfigs(asset.Symbol);
+            if (configs.Count == 0)
+            {
+                return false;
+            }
+
+            // The lowest (finest) subscribed resolution determines how soon the first bar of the session is available
+            var resolutionSpan = configs.GetHighestResolution().ToTimeSpan();
+
+            // Tick data has no bar to wait for (zero span)
+            if (resolutionSpan == TimeSpan.Zero)
+            {
+                return false;
+            }
+
+            var localOrderTime = orderTime.ConvertFromUtc(asset.Exchange.TimeZone);
+            var marketOpen = asset.Exchange.Hours.GetPreviousMarketOpen(localOrderTime, extendedMarketHours: false);
+
+            // Wait only when the order falls within the first resolution span after the market open, i.e. before the
+            // first bar of the current session has closed and become available
+            return localOrderTime - marketOpen < resolutionSpan;
         }
 
         /// <summary>
