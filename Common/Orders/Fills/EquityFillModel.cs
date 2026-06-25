@@ -81,7 +81,7 @@ namespace QuantConnect.Orders.Fills
                     if (tradeBar.Low <= order.TriggerPrice || order.TriggerTouched)
                     {
                         order.TriggerTouched = true;
-                        var askCurrent = GetBestEffortAskPrice(asset, order.Time, out var fillMessage, out _);
+                        var askCurrent = GetBestEffortAskPrice(asset, order.Time, out var fillMessage, out _, out _);
 
                         if (askCurrent <= order.LimitPrice)
                         {
@@ -99,7 +99,7 @@ namespace QuantConnect.Orders.Fills
                     if (tradeBar.High >= order.TriggerPrice || order.TriggerTouched)
                     {
                         order.TriggerTouched = true;
-                        var bidCurrent = GetBestEffortBidPrice(asset, order.Time, out var fillMessage, out _);
+                        var bidCurrent = GetBestEffortBidPrice(asset, order.Time, out var fillMessage, out _, out _);
 
                         if (bidCurrent >= order.LimitPrice)
                         {
@@ -137,31 +137,27 @@ namespace QuantConnect.Orders.Fills
 
             var fillMessage = string.Empty;
             var stalePrice = false;
+            var staleDataEndTimeUtc = default(DateTime);
             var fillPrice = 0m;
 
             switch (order.Direction)
             {
                 case OrderDirection.Buy:
                     //Order [fill]price for a buy market order model is the current security ask price
-                    fillPrice = GetBestEffortAskPrice(asset, order.Time, out fillMessage, out stalePrice) + slip;
+                    fillPrice = GetBestEffortAskPrice(asset, order.Time, out fillMessage, out stalePrice, out staleDataEndTimeUtc) + slip;
                     break;
                 case OrderDirection.Sell:
                     //Order [fill]price for a buy market order model is the current security bid price
-                    fillPrice = GetBestEffortBidPrice(asset, order.Time, out fillMessage, out stalePrice) - slip;
+                    fillPrice = GetBestEffortBidPrice(asset, order.Time, out fillMessage, out stalePrice, out staleDataEndTimeUtc) - slip;
                     break;
             }
 
-            // On stale data, decide whether to wait for fresh prices instead of filling at an already past, stale
-            // bar's price:
-            //  - For coarse resolutions (hour/daily) wait for the next bar to close. This happens when a market order
-            //    is placed mid-bar or through an intraday scheduled event.
-            //  - Right on/after market open the first bar of the current session has not been emitted yet, so the only
-            //    data available comes from the previous trading date. If the order was placed within the lowest
-            //    subscribed resolution span after the open (e.g. less than a minute after open with minute data), wait
-            //    for that first bar instead of filling at the previous date's stale price.
-            // Otherwise (finer resolutions, mid-session) keep filling on the stale price with the warning already set
-            // in fillMessage.
-            if (stalePrice && ShouldWaitForFreshDataOnStale(asset, order.Time))
+            // On stale data, wait for fresh prices instead of filling at an already past, stale bar's price when the
+            // latest data is more than one resolution bar behind the current time (e.g. the first bar of the session
+            // has not been emitted yet after the open, or there is an intraday data gap). This is independent of the
+            // time of day. Coarse resolutions (hour/daily) always wait. Otherwise (data within one bar of the current
+            // time) keep filling on the stale price with the warning already set in fillMessage.
+            if (stalePrice && ShouldWaitForFreshDataOnStale(asset, staleDataEndTimeUtc, utcTime))
             {
                 return fill;
             }
@@ -571,7 +567,7 @@ namespace QuantConnect.Orders.Fills
                 case OrderDirection.Buy:
                     if (fill.FillPrice == 0)
                     {
-                        fill.FillPrice = GetBestEffortAskPrice(asset, order.Time, out bestEffortMessage, out _);
+                        fill.FillPrice = GetBestEffortAskPrice(asset, order.Time, out bestEffortMessage, out _, out _);
                         fill.Message += bestEffortMessage;
                     }
 
@@ -580,7 +576,7 @@ namespace QuantConnect.Orders.Fills
                 case OrderDirection.Sell:
                     if (fill.FillPrice == 0)
                     {
-                        fill.FillPrice = GetBestEffortBidPrice(asset, order.Time, out bestEffortMessage, out _);
+                        fill.FillPrice = GetBestEffortBidPrice(asset, order.Time, out bestEffortMessage, out _, out _);
                         fill.Message += bestEffortMessage;
                     }
 
@@ -682,7 +678,7 @@ namespace QuantConnect.Orders.Fills
                 case OrderDirection.Buy:
                     if (fill.FillPrice == 0)
                     {
-                        fill.FillPrice = GetBestEffortAskPrice(asset, order.Time, out bestEffortMessage, out _);
+                        fill.FillPrice = GetBestEffortAskPrice(asset, order.Time, out bestEffortMessage, out _, out _);
                         fill.Message += bestEffortMessage;
                     }
 
@@ -691,7 +687,7 @@ namespace QuantConnect.Orders.Fills
                 case OrderDirection.Sell:
                     if (fill.FillPrice == 0)
                     {
-                        fill.FillPrice = GetBestEffortBidPrice(asset, order.Time, out bestEffortMessage, out _);
+                        fill.FillPrice = GetBestEffortBidPrice(asset, order.Time, out bestEffortMessage, out _, out _);
                         fill.Message += bestEffortMessage;
                     }
 
@@ -735,10 +731,13 @@ namespace QuantConnect.Orders.Fills
         /// <param name="message">Information about the best effort, whether prices are stale or need to use trade information</param>
         /// <param name="stalePrice">True when no price within the stale price window was found and the returned best
         /// effort price comes from stale (already past) data, in which case the caller should wait for fresh data</param>
-        private decimal GetBestEffortAskPrice(Security asset, DateTime orderTime, out string message, out bool stalePrice)
+        /// <param name="staleDataEndTimeUtc">When <paramref name="stalePrice"/> is true, the end time (in UTC) of the
+        /// stale data the price comes from, so the caller can measure how far behind the current time it is</param>
+        private decimal GetBestEffortAskPrice(Security asset, DateTime orderTime, out string message, out bool stalePrice, out DateTime staleDataEndTimeUtc)
         {
             message = string.Empty;
             stalePrice = false;
+            staleDataEndTimeUtc = default;
             BaseData baseData = null;
             var bestEffortAskPrice = 0m;
 
@@ -822,6 +821,7 @@ namespace QuantConnect.Orders.Fills
             if (baseData != null)
             {
                 stalePrice = true;
+                staleDataEndTimeUtc = baseData.EndTime.ConvertToUtc(asset.Exchange.TimeZone);
                 return bestEffortAskPrice;
             }
 
@@ -838,10 +838,13 @@ namespace QuantConnect.Orders.Fills
         /// <param name="message">Information about the best effort, whether prices are stale or need to use trade information</param>
         /// <param name="stalePrice">True when no price within the stale price window was found and the returned best
         /// effort price comes from stale (already past) data, in which case the caller should wait for fresh data</param>
-        private decimal GetBestEffortBidPrice(Security asset, DateTime orderTime, out string message, out bool stalePrice)
+        /// <param name="staleDataEndTimeUtc">When <paramref name="stalePrice"/> is true, the end time (in UTC) of the
+        /// stale data the price comes from, so the caller can measure how far behind the current time it is</param>
+        private decimal GetBestEffortBidPrice(Security asset, DateTime orderTime, out string message, out bool stalePrice, out DateTime staleDataEndTimeUtc)
         {
             message = string.Empty;
             stalePrice = false;
+            staleDataEndTimeUtc = default;
             BaseData baseData = null;
             var bestEffortBidPrice = 0m;
 
@@ -925,6 +928,7 @@ namespace QuantConnect.Orders.Fills
             if (baseData != null)
             {
                 stalePrice = true;
+                staleDataEndTimeUtc = baseData.EndTime.ConvertToUtc(asset.Exchange.TimeZone);
                 return bestEffortBidPrice;
             }
 

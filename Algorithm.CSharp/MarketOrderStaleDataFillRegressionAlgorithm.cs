@@ -21,14 +21,20 @@ using QuantConnect.Orders;
 namespace QuantConnect.Algorithm.CSharp
 {
     /// <summary>
-    /// Regression algorithm reproducing the stale fill at market open issue: a market order placed within the first
-    /// bar of the session (here one second after the open, while subscribed to minute resolution) must not be filled
-    /// on the previous trading date's stale price. The fill should wait for the first bar of the current session to be
-    /// available. <see cref="QuantConnect.Orders.Fills.EquityFillModel.MarketFill"/>
+    /// Regression algorithm reproducing the stale fill issue: a market order must not be filled on data that is older
+    /// than the subscribed resolution (the latest available bar is more than one resolution behind the fill time),
+    /// regardless of the time of day. The fill should wait until fresh data is available.
+    ///
+    /// Two orders are submitted to cover both cases:
+    ///  - right after the market open (9:30:01), when the only data available is the previous trading date's bar
+    ///    (the original reported case), and
+    ///  - mid-session (noon), where data is continuous and the order fills normally on fresh data.
+    /// <see cref="QuantConnect.Orders.Fills.EquityFillModel.MarketFill"/>
     /// </summary>
-    public class MarketOrderFillAtMarketOpenRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
+    public class MarketOrderStaleDataFillRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
         private Symbol _spy;
+        private System.TimeSpan _resolutionSpan;
 
         /// <summary>
         /// Initialise the data and resolution required, as well as the cash and start-end dates for your algorithm.
@@ -39,16 +45,20 @@ namespace QuantConnect.Algorithm.CSharp
             SetEndDate(2013, 10, 11);
             SetCash(100000);
 
-            _spy = AddEquity("SPY", Resolution.Minute).Symbol;
+            var resolution = Resolution.Minute;
+            _resolutionSpan = resolution.ToTimeSpan();
+            _spy = AddEquity("SPY", resolution).Symbol;
 
-            // Place a market order one second after the open, before the first minute bar of the session is available
+            // Market open: order one second after the open, before the first minute bar of the session is available
             Schedule.On(DateRules.EveryDay(_spy), TimeRules.At(9, 30, 1), Trade);
+            // Mid-session: data is continuous here, so the order fills normally on fresh data
+            Schedule.On(DateRules.EveryDay(_spy), TimeRules.At(12, 0, 0), Trade);
         }
 
         private void Trade()
         {
-            // Only trade once the security already has data, so the fill would be attempted against the previous
-            // trading date's bar (the stale data we want to avoid filling on), not against an empty cache
+            // Only trade once the security already has data, so a stale fill would be attempted against an older bar
+            // (the data we want to avoid filling on) rather than against an empty cache
             if (Securities[_spy].HasData)
             {
                 MarketOrder(_spy, 1);
@@ -56,7 +66,7 @@ namespace QuantConnect.Algorithm.CSharp
         }
 
         /// <summary>
-        /// Asserts that market orders are never filled on stale data within the first bar after the open
+        /// Asserts that market orders are never filled on data staler than the subscribed resolution, at any time of day
         /// </summary>
         public override void OnOrderEvent(OrderEvent orderEvent)
         {
@@ -65,19 +75,23 @@ namespace QuantConnect.Algorithm.CSharp
                 return;
             }
 
-            var exchangeHours = Securities[orderEvent.Symbol].Exchange.Hours;
-            var fillLocalTime = orderEvent.UtcTime.ConvertFromUtc(exchangeHours.TimeZone);
-            var marketOpen = exchangeHours.GetPreviousMarketOpen(fillLocalTime, extendedMarketHours: false);
+            var security = Securities[orderEvent.Symbol];
+            var lastData = security.GetLastData();
+            if (lastData == null)
+            {
+                return;
+            }
 
-            // The order is submitted one second after the open. Without waiting for the first session bar it would
-            // fill immediately on the previous trading date's stale price. The fill must only happen once the first
-            // minute bar (the subscription resolution) is available, i.e. at least one minute after the open.
-            if (fillLocalTime - marketOpen < QuantConnect.Time.OneMinute)
+            // The latest available data must be within one resolution bar of the fill time. Without the fix, a market
+            // order placed when only stale data is available (e.g. right after the open, before the first session bar)
+            // would fill on that stale price instead of waiting for fresh data.
+            var dataGap = orderEvent.UtcTime - lastData.EndTime.ConvertToUtc(security.Exchange.TimeZone);
+            if (dataGap > _resolutionSpan)
             {
                 throw new RegressionTestException(
-                    $"Order {orderEvent.OrderId} for {orderEvent.Symbol} filled at {fillLocalTime} on stale data, " +
-                    $"within the first minute after the market open {marketOpen}. It should have waited for the first " +
-                    $"bar of the session to be available before filling.");
+                    $"Order {orderEvent.OrderId} for {orderEvent.Symbol} filled at {orderEvent.UtcTime} UTC on stale " +
+                    $"data ending {lastData.EndTime} ({dataGap} behind, more than the {_resolutionSpan} resolution). " +
+                    $"The fill should have waited for fresh data.");
             }
         }
 
@@ -111,34 +125,34 @@ namespace QuantConnect.Algorithm.CSharp
         /// </summary>
         public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
         {
-            {"Total Orders", "4"},
+            {"Total Orders", "9"},
             {"Average Win", "0%"},
             {"Average Loss", "0%"},
-            {"Compounding Annual Return", "0.486%"},
+            {"Compounding Annual Return", "1.007%"},
             {"Drawdown", "0.000%"},
             {"Expectancy", "0"},
             {"Start Equity", "100000"},
-            {"End Equity", "100006.20"},
-            {"Net Profit", "0.006%"},
-            {"Sharpe Ratio", "-5.157"},
-            {"Sortino Ratio", "-19.237"},
-            {"Probabilistic Sharpe Ratio", "72.422%"},
+            {"End Equity", "100012.81"},
+            {"Net Profit", "0.013%"},
+            {"Sharpe Ratio", "1.079"},
+            {"Sortino Ratio", "3.268"},
+            {"Probabilistic Sharpe Ratio", "73.812%"},
             {"Loss Rate", "0%"},
             {"Win Rate", "0%"},
             {"Profit-Loss Ratio", "0"},
-            {"Alpha", "-0.01"},
-            {"Beta", "0.003"},
-            {"Annual Standard Deviation", "0.001"},
+            {"Alpha", "-0.012"},
+            {"Beta", "0.007"},
+            {"Annual Standard Deviation", "0.002"},
             {"Annual Variance", "0"},
-            {"Information Ratio", "-8.92"},
-            {"Tracking Error", "0.222"},
-            {"Treynor Ratio", "-1.182"},
-            {"Total Fees", "$4.00"},
-            {"Estimated Strategy Capacity", "$4300000000.00"},
+            {"Information Ratio", "-8.931"},
+            {"Tracking Error", "0.221"},
+            {"Treynor Ratio", "0.244"},
+            {"Total Fees", "$9.00"},
+            {"Estimated Strategy Capacity", "$290000000.00"},
             {"Lowest Capacity Asset", "SPY R735QTJ8XC9X"},
-            {"Portfolio Turnover", "0.12%"},
+            {"Portfolio Turnover", "0.26%"},
             {"Drawdown Recovery", "2"},
-            {"OrderListHash", "f76c5144075b62eaf924fe29632b92f4"}
+            {"OrderListHash", "c849aa80f00dde3d93bf4cc6d65c4d5e"}
         };
     }
 }

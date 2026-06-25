@@ -294,13 +294,12 @@ namespace QuantConnect.Orders.Fills
             var pricesEndTimeUtc = prices.EndTime.ConvertToUtc(asset.Exchange.TimeZone);
 
             // If the order would be filled on stale (fill-forward / already past) data, wait for fresh data instead of
-            // filling at a stale price when either: the subscription is a coarse resolution (hour/daily), where the
-            // latest bar is the stale previous close when a market order is placed mid-bar; or the order was placed
-            // within the first bar after market open, before the current session's first bar has been emitted. For
-            // finer resolutions mid-session keep the previous behavior of filling on the stale price with a warning.
+            // filling at a stale price when the latest data is more than one resolution bar behind the current time
+            // (e.g. the first bar of the session after the open, or an intraday data gap). Otherwise fill on the stale
+            // price with a warning.
             if (pricesEndTimeUtc.Add(Parameters.StalePriceTimeSpan) < order.Time)
             {
-                if (ShouldWaitForFreshDataOnStale(asset, order.Time))
+                if (ShouldWaitForFreshDataOnStale(asset, pricesEndTimeUtc, utcTime))
                 {
                     return fill;
                 }
@@ -994,45 +993,32 @@ namespace QuantConnect.Orders.Fills
 
         /// <summary>
         /// Determines whether a market order that would be filled on stale data should wait for fresh data instead of
-        /// filling on the stale price. Waiting happens in two cases:
-        ///  - Coarse resolutions (hour/daily), where the stale bar is the previous close and a fresh bar (the next
-        ///    close/open) is expected, see <see cref="ShouldWaitForFreshData"/>.
-        ///  - Right on/after market open, before the first bar of the current session has been emitted, see
-        ///    <see cref="IsWithinFirstResolutionSpanAfterMarketOpen"/>.
+        /// filling on the stale price. The order waits when the latest available data is more than one subscribed
+        /// resolution span behind the current time, i.e. the data is older than a single bar so a newer one is still
+        /// expected. This is independent of the time of day: it covers the market open (the first bar of the session
+        /// has not been emitted yet) as well as any intraday data gap larger than the resolution.
+        ///
+        /// Coarse resolutions (hour/daily) always wait, since there the stale bar is the previous close and the gap to
+        /// the current time can be smaller than the resolution while a fresh bar is still expected. Tick subscriptions
+        /// never wait, since there is no bar to expect.
         /// </summary>
         /// <param name="asset">Security being filled</param>
-        /// <param name="orderTime">Order submission time, in UTC</param>
-        protected bool ShouldWaitForFreshDataOnStale(Security asset, DateTime orderTime)
+        /// <param name="dataEndTimeUtc">End time, in UTC, of the latest data available for the fill</param>
+        /// <param name="currentTimeUtc">Current time of the security, in UTC</param>
+        protected bool ShouldWaitForFreshDataOnStale(Security asset, DateTime dataEndTimeUtc, DateTime currentTimeUtc)
         {
-            return ShouldWaitForFreshData(asset) || IsWithinFirstResolutionSpanAfterMarketOpen(asset, orderTime);
-        }
-
-        /// <summary>
-        /// Determines whether a market order placed right at/after market open would be filled on data from the
-        /// previous trading date because the first bar of the current session has not been emitted yet.
-        /// This is the case when the time elapsed since the market open is shorter than the lowest subscribed
-        /// resolution: e.g. with minute data, an order placed less than a minute after the open has no
-        /// current-session bar to fill on yet, so the fill should wait for that first bar instead of using the
-        /// previous date's stale price.
-        /// </summary>
-        /// <param name="asset">Security being filled</param>
-        /// <param name="orderTime">Order submission time, in UTC</param>
-        protected bool IsWithinFirstResolutionSpanAfterMarketOpen(Security asset, DateTime orderTime)
-        {
-            // Always-open markets (e.g. crypto) have no session open, so there is no first session bar to wait for
-            if (asset.Exchange.Hours.IsMarketAlwaysOpen)
+            if (ShouldWaitForFreshData(asset))
             {
-                return false;
+                return true;
             }
 
-            var configs = Parameters.ConfigProvider.GetSubscriptionDataConfigs(asset.Symbol);
-            if (configs.Count == 0)
-            {
-                return false;
-            }
-
-            // The lowest (finest) subscribed resolution determines how soon the first bar of the session is available
-            var resolutionSpan = configs.GetHighestResolution().ToTimeSpan();
+            // Use the lowest (finest) subscribed resolution to size a single bar. Internal configurations are included
+            // because, even though their data is not sent to the algorithm, they still drive the security cache and the
+            // data used for the fill.
+            var resolutionSpan = Parameters.ConfigProvider
+                .GetSubscriptionDataConfigs(asset.Symbol, includeInternalConfigs: true)
+                .GetHighestResolution()
+                .ToTimeSpan();
 
             // Tick data has no bar to wait for (zero span)
             if (resolutionSpan == TimeSpan.Zero)
@@ -1040,12 +1026,8 @@ namespace QuantConnect.Orders.Fills
                 return false;
             }
 
-            var localOrderTime = orderTime.ConvertFromUtc(asset.Exchange.TimeZone);
-            var marketOpen = asset.Exchange.Hours.GetPreviousMarketOpen(localOrderTime, extendedMarketHours: false);
-
-            // Wait only when the order falls within the first resolution span after the market open, i.e. before the
-            // first bar of the current session has closed and become available
-            return localOrderTime - marketOpen < resolutionSpan;
+            // Wait when the latest available data is more than one resolution bar behind the current time
+            return currentTimeUtc - dataEndTimeUtc > resolutionSpan;
         }
 
         /// <summary>

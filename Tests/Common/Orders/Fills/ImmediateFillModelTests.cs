@@ -971,12 +971,14 @@ namespace QuantConnect.Tests.Common.Orders.Fills
             security.SetMarketPrice(new IndicatorDataPoint(Symbols.SPY, noon, 101.123m));
 
             // Add both a tradebar and a tick to the security cache
-            // This is the case when a tick is seeded with minute data in an algorithm
-            security.Cache.AddData(new TradeBar(DateTime.MinValue, symbol, 1.0m, 1.0m, 1.0m, 1.0m, 1.0m));
-            security.Cache.AddData(new Tick(config, "42525000,1000000,100,A,@,0", DateTime.MinValue));
+            // This is the case when a tick is seeded with minute data in an algorithm.
+            // Use fresh timestamps (data within one resolution bar of the current time) so the fill is not held
+            // back as stale; this test is about which data type is used, not stale-data handling.
+            security.Cache.AddData(new TradeBar(noon.AddMinutes(-1), symbol, 1.0m, 1.0m, 1.0m, 1.0m, 1.0m, Time.OneMinute));
+            security.Cache.AddData(new Tick(config, "42525000,1000000,100,A,@,0", noon.Date));
 
             var fillModel = new ImmediateFillModel();
-            var order = new MarketOrder(symbol, 1000, DateTime.Now);
+            var order = new MarketOrder(symbol, 1000, noon);
             var fill = fillModel.Fill(new FillModelParameters(
                 security,
                 order,
@@ -1003,12 +1005,14 @@ namespace QuantConnect.Tests.Common.Orders.Fills
             security.SetMarketPrice(new IndicatorDataPoint(Symbols.SPY, noon, 101.123m));
 
 
-            // This is the case when a tick is seeded with minute data in an algorithm
-            security.Cache.AddData(new TradeBar(DateTime.MinValue, symbol, 1.0m, 1.0m, 1.0m, 1.0m, 1.0m));
-            security.Cache.AddData(new Tick(config, "42525000,1000000,100,A,@,0", DateTime.MinValue));
+            // This is the case when a tick is seeded with minute data in an algorithm.
+            // Use fresh timestamps (data within one resolution bar of the current time) so the fill is not held
+            // back as stale; this test is about which data type is used, not stale-data handling.
+            security.Cache.AddData(new TradeBar(noon.AddMinutes(-1), symbol, 1.0m, 1.0m, 1.0m, 1.0m, 1.0m, Time.OneMinute));
+            security.Cache.AddData(new Tick(config, "42525000,1000000,100,A,@,0", noon.Date));
 
             var fillModel = new ImmediateFillModel();
-            var order = new MarketOrder(symbol, 1000, DateTime.Now);
+            var order = new MarketOrder(symbol, 1000, noon);
             var fill = fillModel.Fill(new FillModelParameters(
                 security,
                 order,
