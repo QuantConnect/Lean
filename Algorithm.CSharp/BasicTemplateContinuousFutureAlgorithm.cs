@@ -36,6 +36,11 @@ namespace QuantConnect.Algorithm.CSharp
         private SimpleMovingAverage _fast;
         private SimpleMovingAverage _slow;
 
+        // Minimum gap between the fast and slow SMAs required before acting on a cross.
+        // At a cross the two averages can coincide to within rounding noise, where the C#
+        // (decimal) and Python (double) comparisons disagree; this keeps both languages in lockstep.
+        private const decimal CrossThreshold = 0.001m;
+
         /// <summary>
         /// Initialise the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must initialized.
         /// </summary>
@@ -71,13 +76,13 @@ namespace QuantConnect.Algorithm.CSharp
 
             if (!Portfolio.Invested)
             {
-                if(_fast > _slow)
+                if(_fast.Current.Value - _slow.Current.Value > CrossThreshold)
                 {
                     _currentContract = Securities[_continuousContract.Mapped];
                     Buy(_currentContract.Symbol, 1);
                 }
             }
-            else if(_fast < _slow)
+            else if(_slow.Current.Value - _fast.Current.Value > CrossThreshold)
             {
                 Liquidate();
             }
@@ -134,34 +139,34 @@ namespace QuantConnect.Algorithm.CSharp
         /// </summary>
         public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
         {
-            {"Total Orders", "11"},
-            {"Average Win", "1.77%"},
+            {"Total Orders", "9"},
+            {"Average Win", "2.85%"},
             {"Average Loss", "-0.43%"},
-            {"Compounding Annual Return", "10.305%"},
+            {"Compounding Annual Return", "11.019%"},
             {"Drawdown", "0.900%"},
-            {"Expectancy", "2.068"},
+            {"Expectancy", "2.818"},
             {"Start Equity", "100000"},
-            {"End Equity", "105061.7"},
-            {"Net Profit", "5.062%"},
-            {"Sharpe Ratio", "1.527"},
-            {"Sortino Ratio", "1.948"},
-            {"Probabilistic Sharpe Ratio", "82.514%"},
-            {"Loss Rate", "40%"},
-            {"Win Rate", "60%"},
-            {"Profit-Loss Ratio", "4.11"},
-            {"Alpha", "0.062"},
-            {"Beta", "0.006"},
-            {"Annual Standard Deviation", "0.042"},
+            {"End Equity", "105403.5"},
+            {"Net Profit", "5.404%"},
+            {"Sharpe Ratio", "1.531"},
+            {"Sortino Ratio", "2.106"},
+            {"Probabilistic Sharpe Ratio", "82.864%"},
+            {"Loss Rate", "50%"},
+            {"Win Rate", "50%"},
+            {"Profit-Loss Ratio", "6.64"},
+            {"Alpha", "0.067"},
+            {"Beta", "0.009"},
+            {"Annual Standard Deviation", "0.045"},
             {"Annual Variance", "0.002"},
-            {"Information Ratio", "-1.682"},
-            {"Tracking Error", "0.091"},
-            {"Treynor Ratio", "10.502"},
-            {"Total Fees", "$23.65"},
-            {"Estimated Strategy Capacity", "$1200000000.00"},
+            {"Information Ratio", "-1.606"},
+            {"Tracking Error", "0.093"},
+            {"Treynor Ratio", "7.237"},
+            {"Total Fees", "$19.35"},
+            {"Estimated Strategy Capacity", "$1000000000.00"},
             {"Lowest Capacity Asset", "ES VMKLFZIH2MTD"},
-            {"Portfolio Turnover", "5.12%"},
+            {"Portfolio Turnover", "4.18%"},
             {"Drawdown Recovery", "19"},
-            {"OrderListHash", "2d133d753fc12ea3e5a42aba59c3db0e"}
+            {"OrderListHash", "eb3bed9886f79a56c631225a6445adb2"}
         };
     }
 }

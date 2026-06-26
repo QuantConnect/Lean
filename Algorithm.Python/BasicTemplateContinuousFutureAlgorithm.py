@@ -34,6 +34,11 @@ class BasicTemplateContinuousFutureAlgorithm(QCAlgorithm):
         self._slow = self.sma(self._continuous_contract.symbol, 10, Resolution.DAILY)
         self._current_contract = None
 
+        # Minimum gap between the fast and slow SMAs required before acting on a cross.
+        # At a cross the two averages can coincide to within rounding noise, where the C#
+        # (decimal) and Python (double) comparisons disagree; this keeps both languages in lockstep.
+        self._cross_threshold = 0.001
+
     def on_data(self, data):
         '''OnData event is the primary entry point for your algorithm. Each new data point will be pumped in here.
 
@@ -45,10 +50,10 @@ class BasicTemplateContinuousFutureAlgorithm(QCAlgorithm):
                 self.log(f"SymbolChanged event: {changed_event}")
 
         if not self.portfolio.invested:
-            if self._fast.current.value > self._slow.current.value:
+            if self._fast.current.value - self._slow.current.value > self._cross_threshold:
                 self._current_contract = self.securities[self._continuous_contract.mapped]
                 self.buy(self._current_contract.symbol, 1)
-        elif self._fast.current.value < self._slow.current.value:
+        elif self._slow.current.value - self._fast.current.value > self._cross_threshold:
             self.liquidate()
 
         # We check exchange hours because the contract mapping can call OnData outside of regular hours.
