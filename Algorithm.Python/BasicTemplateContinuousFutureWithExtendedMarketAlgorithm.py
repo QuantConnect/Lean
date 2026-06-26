@@ -47,13 +47,16 @@ class BasicTemplateContinuousFutureWithExtendedMarketAlgorithm(QCAlgorithm):
 
         if not self.is_market_open(self._continuous_contract.symbol):
             return
-
-        if not self.portfolio.invested:
-            if self._fast.current.value > self._slow.current.value:
-                self._current_contract = self.securities[self._continuous_contract.mapped]
-                self.buy(self._current_contract.symbol, 1)
-        elif self._fast.current.value < self._slow.current.value:
-            self.liquidate()
+                
+        # This is just to limit the amount of orders done in this regression test, since data in the repo is limited.
+        # Also limit it to 3 orders so that the continuous contract rolls happens with an open position.
+        if self.time < datetime(2013, 11, 12) and self.transactions.orders_count < 3:
+            if not self.portfolio.invested:
+                if self._fast.current.value > self._slow.current.value:
+                    self._current_contract = self.securities[self._continuous_contract.mapped]
+                    self.buy(self._current_contract.symbol, 1)
+            elif self._fast.current.value < self._slow.current.value:
+                self.liquidate()
 
         if self._current_contract is not None and self._current_contract.symbol != self._continuous_contract.mapped:
             self.log(f"{Time} - rolling position from {self._current_contract.symbol} to {self._continuous_contract.mapped}")
