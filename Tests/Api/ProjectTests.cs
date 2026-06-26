@@ -94,8 +94,11 @@ namespace QuantConnect.Tests.API
             Assert.IsTrue(deleteProject.Success);
 
             // Make sure the project is really deleted
+            // The API soft deletes projects (moves them to "Recycle Bin/..."), so exclude those
             var projectList = ApiClient.ListProjects();
-            Assert.IsFalse(projectList.Projects.Any(p => p.ProjectId == project.Projects.First().ProjectId));
+            Assert.IsFalse(projectList.Projects
+                .Where(p => !p.Name.StartsWith("Recycle Bin/", StringComparison.Ordinal))
+                .Any(p => p.ProjectId == project.Projects.First().ProjectId));
         }
 
         /// <summary>
