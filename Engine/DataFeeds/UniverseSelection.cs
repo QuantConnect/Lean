@@ -455,11 +455,22 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 .Distinct()
                 .ToList();
 
-            AlgorithmUtils.SeedSecurities(securitiesToUpdate, _algorithm);
-
-            foreach (var cash in cashToUpdate)
+            // Best-effort pre-seeding: it must never break the algorithm. If the last-known-price lookup can't run
+            // (e.g. no history provider, no data, or a conversion security missing properties), we degrade gracefully
+            // and leave the rate at 0 - exactly the pre-fix behavior - so the first conversion-pair bar still updates it.
+            try
             {
-                cash.Update();
+                AlgorithmUtils.SeedSecurities(securitiesToUpdate, _algorithm);
+
+                foreach (var cash in cashToUpdate)
+                {
+                    cash.Update();
+                }
+            }
+            catch (Exception err)
+            {
+                Log.Error($"UniverseSelection.EnsureCurrencyDataFeeds(): failed to seed runtime currency conversion rate(s), " +
+                    $"they will be set once the first conversion-pair bar arrives. {err.Message}");
             }
         }
 
