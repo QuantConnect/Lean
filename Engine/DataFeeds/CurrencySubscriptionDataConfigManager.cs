@@ -131,7 +131,9 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <summary>
         /// Checks the current <see cref="SubscriptionDataConfig"/> and adds new necessary currency pair feeds to provide real time conversion data
         /// </summary>
-        public void EnsureCurrencySubscriptionDataConfigs(SecurityChanges securityChanges, IBrokerageModel brokerageModel)
+        /// <returns>True if new currency conversion feeds were introduced, false otherwise. Lets callers skip
+        /// follow up work like seeding the new conversion rates when nothing was added</returns>
+        public bool EnsureCurrencySubscriptionDataConfigs(SecurityChanges securityChanges, IBrokerageModel brokerageModel)
         {
             _ensureCurrencyDataFeeds = false;
             // remove any 'to be added' if the security has already been added
@@ -150,6 +152,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 _toBeAddedCurrencySubscriptionDataConfigs.Add(config);
             }
             _pendingSubscriptionDataConfigs = _toBeAddedCurrencySubscriptionDataConfigs.Any();
+
+            return newConfigs.Count > 0;
         }
     }
 }

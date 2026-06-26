@@ -128,7 +128,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
                     // if the input is already fundamental data we just need to filter it and pass it through
                     var hasFundamentalData = universeData.Data.Count > 0 && universeData.Data[0] is Fundamental;
-                    if(hasFundamentalData)
+                    if (hasFundamentalData)
                     {
                         // Remove selected symbols that does not have fine fundamental data
                         var anyDoesNotHaveFundamentalData = false;
@@ -137,7 +137,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                         // which do not use coarse data as underlying, in which case it could happen that we try to load fine fundamental data that is missing, but no problem,
                         // 'FineFundamentalSubscriptionEnumeratorFactory' won't emit it
                         var set = selectSymbolsResult.ToHashSet();
-                        fineCollection.Data.AddRange(universeData.Data.OfType<Fundamental>().Where(fundamental => {
+                        fineCollection.Data.AddRange(universeData.Data.OfType<Fundamental>().Where(fundamental =>
+                        {
                             // we remove to we distict by symbol
                             if (set.Remove(fundamental.Symbol))
                             {
@@ -360,7 +361,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                         resolution = supportedResolutions.OrderByDescending(x => x).First();
                     }
 
-                    var subscriptionList = new List<Tuple<Type, TickType>>() {subscriptionType};
+                    var subscriptionList = new List<Tuple<Type, TickType>>() { subscriptionType };
                     var dataConfig = _algorithm.SubscriptionManager.SubscriptionDataConfigService.Add(
                         securityBenchmark.Security.Symbol,
                         resolution,
@@ -419,28 +420,21 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// Checks the current subscriptions and adds necessary currency pair feeds to provide real time conversion data
         /// </summary>
         /// <param name="securityChanges">The security changes to consume</param>
-        /// <param name="seedNewCurrencies">
-        /// When true (the default, used by the runtime universe selection path), any newly introduced currency
-        /// conversion securities are immediately seeded with their last known price so the conversion rate is
-        /// non-zero right away. <see cref="BaseSetupHandler.SetupCurrencyConversions"/> passes false because it
-        /// performs its own (optionally white-listed) seeding right after calling this method during setup.
-        /// </param>
+        /// <param name="seedNewCurrencies">Whether to seed the conversion rate of newly added currencies with their last
+        /// known price. The setup handler passes false because it performs its own (optionally white-listed) seeding</param>
         public void EnsureCurrencyDataFeeds(SecurityChanges securityChanges, bool seedNewCurrencies = true)
         {
-            _currencySubscriptionDataConfigManager.EnsureCurrencySubscriptionDataConfigs(securityChanges, _algorithm.BrokerageModel);
+            var newCurrencyFeedsAdded = _currencySubscriptionDataConfigManager.EnsureCurrencySubscriptionDataConfigs(securityChanges, _algorithm.BrokerageModel);
 
-            if (!seedNewCurrencies)
+            // Only scan the cashbook and seed when a new conversion feed was actually introduced
+            if (!seedNewCurrencies || !newCurrencyFeedsAdded)
             {
                 return;
             }
 
-            // Seed any newly introduced currency conversion securities so they have a non-zero conversion rate
-            // immediately, instead of waiting for the first bar of the conversion pair to arrive. Otherwise any
-            // conversion requested in that gap (e.g. a scheduled order before the day's first conversion bar) would
-            // throw 'The conversion rate for <currency> is not available'. This mirrors what
-            // BaseSetupHandler.SetupCurrencyConversions does during setup, but for cashes added/required at runtime.
-            // We only target cashes that still have a zero conversion rate, so already seeded currencies aren't
-            // re-seeded. SeedSecurities degrades gracefully (no history/data leaves the rate at 0, same as today).
+            // Seed the new conversion rates with their last known price so they are non-zero right away, instead of
+            // waiting for the first conversion pair bar to arrive. Otherwise a conversion needed in that gap would
+            // throw. This is the same thing BaseSetupHandler does during setup, but for cashes added at runtime.
             var cashToUpdate = _algorithm.Portfolio.CashBook.Values
                 .Where(cash => cash.CurrencyConversion != null && cash.ConversionRate == 0)
                 .ToList();
@@ -455,9 +449,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 .Distinct()
                 .ToList();
 
-            // Best-effort pre-seeding: it must never break the algorithm. If the last-known-price lookup can't run
-            // (e.g. no history provider, no data, or a conversion security missing properties), we degrade gracefully
-            // and leave the rate at 0 - exactly the pre-fix behavior - so the first conversion-pair bar still updates it.
             try
             {
                 AlgorithmUtils.SeedSecurities(securitiesToUpdate, _algorithm);
@@ -469,8 +460,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             }
             catch (Exception err)
             {
-                Log.Error($"UniverseSelection.EnsureCurrencyDataFeeds(): failed to seed runtime currency conversion rate(s), " +
-                    $"they will be set once the first conversion-pair bar arrives. {err.Message}");
+                // Seeding must never break the algorithm, the rate will be set on the first conversion pair bar
+                Log.Error($"UniverseSelection.EnsureCurrencyDataFeeds(): failed to seed runtime currency conversion rate(s): {err.Message}");
             }
         }
 

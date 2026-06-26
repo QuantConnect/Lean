@@ -85,8 +85,8 @@ namespace QuantConnect.Lean.Engine.Setup
         {
             // this is needed to have non-zero currency conversion rates during warmup
             // will also set the Cash.ConversionRateSecurity.
-            // We disable the runtime auto-seeding here because this method does its own (optionally white-listed)
-            // seeding right below; letting EnsureCurrencyDataFeeds seed as well would ignore the white list.
+            // We don't let it seed the conversion rates here because we do that right below,
+            // where we can also limit the seeding to a specific white list of currencies
             universeSelection.EnsureCurrencyDataFeeds(SecurityChanges.None, seedNewCurrencies: false);
 
             // now set conversion rates
