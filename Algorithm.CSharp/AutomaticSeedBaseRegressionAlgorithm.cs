@@ -31,6 +31,7 @@ namespace QuantConnect.Algorithm.CSharp
         protected virtual bool ShouldHaveTradeData { get; }
         protected virtual bool ShouldHaveQuoteData { get; }
         protected virtual bool ShouldHaveOpenInterestData { get; }
+        protected virtual List<string> SecuritiesToIgnoreForChecking => Enumerable.Empty<string>().ToList();
 
         public override void OnSecuritiesChanged(SecurityChanges changes)
         {
@@ -38,7 +39,9 @@ namespace QuantConnect.Algorithm.CSharp
             var gotQuotes = false;
             var gotOpenInterest = false;
 
-            foreach (var addedSecurity in changes.AddedSecurities.Where(x => !x.Symbol.IsCanonical() || x.Symbol.SecurityType == SecurityType.Future))
+            var securitiesToCheck = changes.AddedSecurities.Where(x => (!x.Symbol.IsCanonical() || x.Symbol.SecurityType == SecurityType.Future) && !SecuritiesToIgnoreForChecking.Contains(x.Symbol.Value)).ToList();
+
+            foreach (var addedSecurity in securitiesToCheck)
             {
                 if (addedSecurity.Price == 0)
                 {
@@ -55,7 +58,7 @@ namespace QuantConnect.Algorithm.CSharp
                 gotOpenInterest |= addedSecurity.Cache.GetData<OpenInterest>() != null;
             }
 
-            if (changes.AddedSecurities.Count > 0)
+            if (securitiesToCheck.Count > 0)
             {
                 if (ShouldHaveTradeData && !gotTrades)
                 {

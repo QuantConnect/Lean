@@ -76,17 +76,22 @@ namespace QuantConnect.Algorithm.CSharp
                 return;
             }
 
-            if (!Portfolio.Invested)
+            // This is just to limit the amount of orders done in this regression test, since data in the repo is limited.
+            // Also limit it to 3 orders so that the continuous contract rolls happens with an open position.
+            if (Time < new DateTime(2013, 11, 12) && Transactions.OrdersCount < 3)
             {
-                if(_fast > _slow)
+                if (!Portfolio.Invested)
                 {
-                    _currentContract = Securities[_continuousContract.Mapped];
-                    Buy(_currentContract.Symbol, 1);
+                    if (_fast > _slow)
+                    {
+                        _currentContract = Securities[_continuousContract.Mapped];
+                        Buy(_currentContract.Symbol, 1);
+                    }
                 }
-            }
-            else if(_fast < _slow)
-            {
-                Liquidate();
+                else if (_fast < _slow)
+                {
+                    Liquidate();
+                }
             }
 
             if (_currentContract != null && _currentContract.Symbol != _continuousContract.Mapped)

@@ -214,7 +214,7 @@ namespace QuantConnect.Algorithm.CSharp
                 throw new RegressionTestException($"AssertPortfolioStatistics(): Expected loss rate to be 1/3. Actual {portfolioStatistics.LossRate}");
             }
 
-            var expectedAverageWinRate = 0.32962000910479m;
+            var expectedAverageWinRate = 0.3425273813030554588544037705m;
             if (!AreEqual(expectedAverageWinRate, portfolioStatistics.AverageWinRate))
             {
                 throw new RegressionTestException($@"AssertPortfolioStatistics(): Expected average win rate to be {expectedAverageWinRate}. Actual {
@@ -228,14 +228,14 @@ namespace QuantConnect.Algorithm.CSharp
                     portfolioStatistics.AverageLossRate}");
             }
 
-            var expectedProfitLossRatio = 2.43142881621545m;
+            var expectedProfitLossRatio = 2.5266395310920343630590960734m;
             if (!AreEqual(expectedProfitLossRatio, portfolioStatistics.ProfitLossRatio))
             {
                 throw new RegressionTestException($@"AssertPortfolioStatistics(): Expected profit loss ratio to be {expectedProfitLossRatio}. Actual {
                     portfolioStatistics.ProfitLossRatio}");
             }
 
-            var totalNetProfit = -0.00697m;
+            var totalNetProfit = 0.00267m;
             if (!AreEqual(totalNetProfit, portfolioStatistics.TotalNetProfit))
             {
                 throw new RegressionTestException($@"AssertPortfolioStatistics(): Expected total net profit to be {totalNetProfit}. Actual {

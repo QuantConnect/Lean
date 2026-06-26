@@ -16,6 +16,7 @@
 
 using QuantConnect.Data;
 using QuantConnect.Data.UniverseSelection;
+using System.Collections.Generic;
 
 namespace QuantConnect.Algorithm.CSharp
 {
@@ -30,9 +31,12 @@ namespace QuantConnect.Algorithm.CSharp
         protected override bool ShouldHaveQuoteData => true;
         protected override bool ShouldHaveOpenInterestData => true;
 
+        // SPY will be added with daily resolution, will not have quotes
+        protected override List<string> SecuritiesToIgnoreForChecking => ["SPY"];
+
         public override void Initialize()
         {
-            SetStartDate(2015, 12, 28);
+            SetStartDate(2015, 12, 24);
             SetEndDate(2015, 12, 28);
             SetCash(100000);
 
