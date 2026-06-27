@@ -37,9 +37,7 @@ namespace QuantConnect.Algorithm.CSharp
         private SimpleMovingAverage _fast;
         private SimpleMovingAverage _slow;
 
-        // Minimum gap between the fast and slow SMAs required before acting on a cross.
-        // At a cross the two averages can coincide to within rounding noise, where the C#
-        // (decimal) and Python (double) comparisons disagree; this keeps both languages in lockstep.
+        // Minimum SMA gap required before acting on a cross; see the workaround note in OnData.
         private const decimal CrossThreshold = 0.001m;
 
         /// <summary>
@@ -85,6 +83,8 @@ namespace QuantConnect.Algorithm.CSharp
             // Also limit it to 3 orders so that the continuous contract rolls happens with an open position.
             if (Time < new DateTime(2013, 11, 12) && Transactions.OrdersCount < 3)
             {
+                // Workaround so the C# and Python versions take the exact same trades on the limited
+                // sample data in the repository (decimal vs double rounding can disagree at a cross).
                 if (!Portfolio.Invested)
                 {
                     if (_fast.Current.Value - _slow.Current.Value > CrossThreshold)

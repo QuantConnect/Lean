@@ -34,9 +34,7 @@ class BasicTemplateContinuousFutureAlgorithm(QCAlgorithm):
         self._slow = self.sma(self._continuous_contract.symbol, 10, Resolution.DAILY)
         self._current_contract = None
 
-        # Minimum gap between the fast and slow SMAs required before acting on a cross.
-        # At a cross the two averages can coincide to within rounding noise, where the C#
-        # (decimal) and Python (double) comparisons disagree; this keeps both languages in lockstep.
+        # Minimum SMA gap required before acting on a cross; see the workaround note in on_data.
         self._cross_threshold = 0.001
 
     def on_data(self, data):
@@ -49,6 +47,8 @@ class BasicTemplateContinuousFutureAlgorithm(QCAlgorithm):
             if changed_event.symbol == self._continuous_contract.symbol:
                 self.log(f"SymbolChanged event: {changed_event}")
 
+        # Workaround so the C# and Python versions take the exact same trades on the limited
+        # sample data in the repository (decimal vs double rounding can disagree at a cross).
         if not self.portfolio.invested:
             if self._fast.current.value - self._slow.current.value > self._cross_threshold:
                 self._current_contract = self.securities[self._continuous_contract.mapped]
