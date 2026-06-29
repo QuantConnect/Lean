@@ -75,5 +75,15 @@ namespace QuantConnect.Tests.Common.Brokerages
 
             Assert.That(canSubmit, Is.EqualTo(shouldSubmit));
         }
+
+        [Test]
+        public void CryptoDefaultMarketIsAlpaca()
+        {
+            var brokerageModel = new AlpacaBrokerageModel();
+
+            Assert.That(brokerageModel.DefaultMarkets[SecurityType.Crypto], Is.EqualTo(Market.Alpaca));
+            // Non-crypto security types keep their default markets.
+            Assert.That(brokerageModel.DefaultMarkets[SecurityType.Equity], Is.EqualTo(Market.USA));
+        }
     }
 }

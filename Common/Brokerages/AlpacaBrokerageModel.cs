@@ -14,6 +14,7 @@
 */
 
 using System;
+using QuantConnect.Util;
 using QuantConnect.Orders;
 using QuantConnect.Securities;
 using QuantConnect.Orders.Fees;
@@ -50,6 +51,11 @@ namespace QuantConnect.Brokerages
         /// Defines the default set of <see cref="SecurityType"/> values that support <see cref="OrderType.MarketOnOpen"/> orders.
         /// </summary>
         private readonly IReadOnlySet<SecurityType> _defaultMarketOnOpenSupportedSecurityTypes;
+
+        /// <summary>
+        /// Gets a map of the default markets to be used for each security type
+        /// </summary>
+        public override IReadOnlyDictionary<SecurityType, string> DefaultMarkets { get; } = GetDefaultMarkets(Market.Alpaca);
 
         /// <summary>
         /// Initializes a new instance of the <see cref="AlpacaBrokerageModel"/> class
@@ -143,6 +149,16 @@ namespace QuantConnect.Brokerages
         private (TimeOnly MarketOnOpenWindowStart, TimeOnly MarketOnOpenWindowEnd) GetMarketOnOpenAllowedWindow(MarketHoursSegment marketHours)
         {
             return (_mooWindowStart, TimeOnly.FromTimeSpan(marketHours.Start.Add(-TimeSpan.FromMinutes(2))));
+        }
+
+        /// <summary>
+        /// Gets the default markets for the Alpaca brokerage, routing crypto to its own market.
+        /// </summary>
+        private static IReadOnlyDictionary<SecurityType, string> GetDefaultMarkets(string marketName)
+        {
+            var map = DefaultMarketMap.ToDictionary();
+            map[SecurityType.Crypto] = marketName;
+            return map.ToReadOnlyDictionary();
         }
     }
 }
