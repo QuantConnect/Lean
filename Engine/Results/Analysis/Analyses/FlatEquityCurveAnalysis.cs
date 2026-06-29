@@ -35,6 +35,12 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
         public override int Weight { get; } = 99;
 
         /// <summary>
+        /// Maximum number of flat segments included in the sample. When more are found,
+        /// only the longest ones are kept and the total count is reported in the result.
+        /// </summary>
+        private const int MaxReportedSegments = 5;
+
+        /// <summary>
         /// Runs the flat equity curve analysis against the provided backtest parameters.
         /// </summary>
         public override IReadOnlyList<QuantConnect.Analysis> Run(ResultsAnalysisRunParameters parameters) => Run(parameters.EquityCurve);
@@ -50,7 +56,7 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
             var keys = equityCurve.Keys.ToArray();
             var vals = equityCurve.Values.ToArray();
 
-            var segments = new List<object>();
+            var segments = new List<(DateTime start, DateTime end, int tradingDays)>();
             var i = 0;
             while (i < vals.Length)
             {
@@ -61,18 +67,31 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
                 var tradingDays = j - i;
                 if (tradingDays > 1)
                 {
-                    segments.Add(new
-                    {
-                        start = keys[i],
-                        end = keys[j - 1],
-                        trading_days = tradingDays,
-                    });
+                    segments.Add((keys[i], keys[j - 1], tradingDays));
                 }
                 i = j;
             }
 
-            var potentialSolutions = segments.Count > 0 ? Solutions() : [];
-            return SingleResponse(segments.Count > 0 ? segments : null, potentialSolutions);
+            if (segments.Count == 0)
+            {
+                return SingleResponse(null);
+            }
+
+            // The number of flat segments is unbounded, so only keep the longest ones
+            // and report the total count when there are more than we display.
+            var biggestSegments = segments
+                .OrderByDescending(s => s.tradingDays)
+                .Take(MaxReportedSegments)
+                .Select(s => new
+                {
+                    start = s.start,
+                    end = s.end,
+                    trading_days = s.tradingDays,
+                })
+                .ToList();
+
+            var totalCount = segments.Count > MaxReportedSegments ? segments.Count : (int?)null;
+            return SingleResponse(biggestSegments, totalCount, Solutions());
         }
 
         /// <summary>
