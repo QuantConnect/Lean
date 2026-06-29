@@ -1182,21 +1182,31 @@ namespace QuantConnect.Tests.Common.Orders.Fills
         [TestCase(false)]
         public void MarketOrderFillWithStalePriceHasWarningMessage(bool isInternal)
         {
+            // The latest data is older than the stale-price threshold relative to the order submission time, but it is
+            // still within one resolution bar, so the order fills at the stale price with a warning instead of waiting
+            // for fresh data. Use a stale-price threshold shorter than the minute resolution bar so both conditions hold.
+            var stalePriceTimeSpan = TimeSpan.FromSeconds(30);
+            var dataTime = Noon;
+            var orderTime = dataTime.AddSeconds(45);
+
             var model = new ImmediateFillModel();
-            var order = new MarketOrder(Symbols.SPY, -100, Noon.ConvertToUtc(TimeZones.NewYork).AddMinutes(61));
+            var order = new MarketOrder(Symbols.SPY, -100, orderTime.ConvertToUtc(TimeZones.NewYork));
             var config = CreateTradeBarConfig(Symbols.SPY, isInternal);
             var security = GetSecurity(config);
-            security.SetLocalTimeKeeper(TimeKeeper.GetLocalTimeKeeper(TimeZones.NewYork));
-            security.SetMarketPrice(new IndicatorDataPoint(Symbols.SPY, Noon, 101.123m));
+
+            var timeKeeper = new TimeKeeper(orderTime.ConvertToUtc(TimeZones.NewYork), TimeZones.NewYork);
+            security.SetLocalTimeKeeper(timeKeeper.GetLocalTimeKeeper(TimeZones.NewYork));
+            security.SetMarketPrice(new IndicatorDataPoint(Symbols.SPY, dataTime, 101.123m));
 
             var fill = model.Fill(new FillModelParameters(
                 security,
                 order,
                 new MockSubscriptionDataConfigProvider(config),
-                Time.OneHour,
+                stalePriceTimeSpan,
                 null)).Single();
 
-            Assert.IsTrue(fill.Message.Contains("Warning: fill at stale price"));
+            Assert.AreEqual(OrderStatus.Filled, fill.Status);
+            Assert.IsTrue(fill.Message.Contains("Warning: fill at stale price"), fill.Message);
         }
 
         [TestCase(OrderDirection.Sell, 11, true)]

@@ -294,12 +294,12 @@ namespace QuantConnect.Orders.Fills
             var pricesEndTimeUtc = prices.EndTime.ConvertToUtc(asset.Exchange.TimeZone);
 
             // If the order would be filled on stale (fill-forward / already past) data, wait for fresh data instead of
-            // filling at a stale price when the latest data is more than one resolution bar behind the current time
-            // (e.g. the first bar of the session after the open, or an intraday data gap). Otherwise fill on the stale
-            // price with a warning.
+            // filling at a stale price when the latest data is more than one resolution bar behind the order submission
+            // time (e.g. the first bar of the session after the open, or an intraday data gap). Otherwise fill on the
+            // stale price with a warning.
             if (pricesEndTimeUtc.Add(Parameters.StalePriceTimeSpan) < order.Time)
             {
-                if (ShouldWaitForFreshDataOnStale(asset, pricesEndTimeUtc, utcTime))
+                if (ShouldWaitForFreshDataOnStale(asset, pricesEndTimeUtc, order.Time))
                 {
                     return fill;
                 }
@@ -994,20 +994,20 @@ namespace QuantConnect.Orders.Fills
         /// <summary>
         /// Determines whether a market order that would be filled on stale data should wait for fresh data instead of
         /// filling on the stale price. The order waits when the latest available data is more than one subscribed
-        /// resolution span behind the current time, i.e. the data is older than a single bar so a newer one is still
-        /// expected. This is independent of the time of day: it covers the market open (the first bar of the session
-        /// has not been emitted yet) as well as any intraday data gap larger than the resolution.
+        /// resolution span behind the order submission time, i.e. the data is older than a single bar so a newer one is
+        /// still expected. This is independent of the time of day: it covers the market open (the first bar of the
+        /// session has not been emitted yet) as well as any intraday data gap larger than the resolution.
         ///
         /// Coarse resolutions (hour/daily) always wait, since there the stale bar is the previous close and the gap to
-        /// the current time can be smaller than the resolution while a fresh bar is still expected. Tick subscriptions
+        /// the order time can be smaller than the resolution while a fresh bar is still expected. Tick subscriptions
         /// never wait, since there is no bar to expect.
         /// </summary>
         /// <param name="asset">Security being filled</param>
         /// <param name="dataEndTimeUtc">End time, in UTC, of the latest data available for the fill</param>
-        /// <param name="currentTimeUtc">Current time of the security, in UTC</param>
+        /// <param name="orderTimeUtc">Order submission time, in UTC</param>
         /// <param name="subscriptionConfigs">The subscription configs for the security, including internal configurations.
         /// When not provided, they are fetched from the configuration provider</param>
-        protected bool ShouldWaitForFreshDataOnStale(Security asset, DateTime dataEndTimeUtc, DateTime currentTimeUtc, List<SubscriptionDataConfig> subscriptionConfigs = null)
+        protected bool ShouldWaitForFreshDataOnStale(Security asset, DateTime dataEndTimeUtc, DateTime orderTimeUtc, List<SubscriptionDataConfig> subscriptionConfigs = null)
         {
             if (ShouldWaitForFreshData(asset))
             {
@@ -1028,8 +1028,8 @@ namespace QuantConnect.Orders.Fills
                 return false;
             }
 
-            // Wait when the latest available data is more than one resolution bar behind the current time
-            return currentTimeUtc - dataEndTimeUtc > resolutionSpan;
+            // Wait when the latest available data is more than one resolution bar behind the order submission time
+            return orderTimeUtc - dataEndTimeUtc > resolutionSpan;
         }
 
         /// <summary>

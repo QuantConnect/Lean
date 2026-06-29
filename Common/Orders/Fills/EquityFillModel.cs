@@ -161,11 +161,11 @@ namespace QuantConnect.Orders.Fills
             }
 
             // On stale data, wait for fresh prices instead of filling at an already past, stale bar's price when the
-            // latest data is more than one resolution bar behind the current time (e.g. the first bar of the session
-            // has not been emitted yet after the open, or there is an intraday data gap). This is independent of the
-            // time of day. Coarse resolutions (hour/daily) always wait. Otherwise (data within one bar of the current
+            // latest data is more than one resolution bar behind the order submission time (e.g. the first bar of the
+            // session has not been emitted yet after the open, or there is an intraday data gap). This is independent of
+            // the time of day. Coarse resolutions (hour/daily) always wait. Otherwise (data within one bar of the order
             // time) keep filling on the stale price with the warning already set in fillMessage.
-            if (stalePrice && ShouldWaitForFreshDataOnStale(asset, staleDataEndTimeUtc, utcTime, subscriptionConfigs))
+            if (stalePrice && ShouldWaitForFreshDataOnStale(asset, staleDataEndTimeUtc, order.Time, subscriptionConfigs))
             {
                 return fill;
             }
