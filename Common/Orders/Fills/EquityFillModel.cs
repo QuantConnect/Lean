@@ -135,6 +135,14 @@ namespace QuantConnect.Orders.Fills
             // Calculate the model slippage: e.g. 0.01c
             var slip = asset.SlippageModel.GetSlippageApproximation(asset, order);
 
+            // Fetch the subscription configs once and reuse them for both the best-effort price lookup and the
+            // stale-data check below. Internal configurations are included because, even though their data is not
+            // sent to the algorithm, they still drive the security cache and the data used for the fill.
+            var subscriptionConfigs = Parameters.ConfigProvider.GetSubscriptionDataConfigs(asset.Symbol, includeInternalConfigs: true);
+
+            // The best-effort price only considers the data types sent to the algorithm (non-internal subscriptions).
+            var subscribedTypes = GetSubscribedTypes(asset, subscriptionConfigs);
+
             var fillMessage = string.Empty;
             var stalePrice = false;
             var staleDataEndTimeUtc = default(DateTime);
@@ -144,11 +152,11 @@ namespace QuantConnect.Orders.Fills
             {
                 case OrderDirection.Buy:
                     //Order [fill]price for a buy market order model is the current security ask price
-                    fillPrice = GetBestEffortAskPrice(asset, order.Time, out fillMessage, out stalePrice, out staleDataEndTimeUtc) + slip;
+                    fillPrice = GetBestEffortAskPrice(asset, order.Time, out fillMessage, out stalePrice, out staleDataEndTimeUtc, subscribedTypes) + slip;
                     break;
                 case OrderDirection.Sell:
                     //Order [fill]price for a buy market order model is the current security bid price
-                    fillPrice = GetBestEffortBidPrice(asset, order.Time, out fillMessage, out stalePrice, out staleDataEndTimeUtc) - slip;
+                    fillPrice = GetBestEffortBidPrice(asset, order.Time, out fillMessage, out stalePrice, out staleDataEndTimeUtc, subscribedTypes) - slip;
                     break;
             }
 
@@ -157,7 +165,7 @@ namespace QuantConnect.Orders.Fills
             // has not been emitted yet after the open, or there is an intraday data gap). This is independent of the
             // time of day. Coarse resolutions (hour/daily) always wait. Otherwise (data within one bar of the current
             // time) keep filling on the stale price with the warning already set in fillMessage.
-            if (stalePrice && ShouldWaitForFreshDataOnStale(asset, staleDataEndTimeUtc, utcTime))
+            if (stalePrice && ShouldWaitForFreshDataOnStale(asset, staleDataEndTimeUtc, utcTime, subscriptionConfigs))
             {
                 return fill;
             }
@@ -708,10 +716,19 @@ namespace QuantConnect.Orders.Fills
         /// <param name="asset">Security which has subscribed data types</param>
         protected override HashSet<Type> GetSubscribedTypes(Security asset)
         {
-            var subscribedTypes = Parameters
-                .ConfigProvider
-                .GetSubscriptionDataConfigs(asset.Symbol)
-                .ToHashSet(x => x.Type);
+            return GetSubscribedTypes(asset, Parameters.ConfigProvider.GetSubscriptionDataConfigs(asset.Symbol, includeInternalConfigs: true));
+        }
+
+        /// <summary>
+        /// Get data types the Security is subscribed to from an already fetched set of subscription configs,
+        /// avoiding an extra call to the configuration provider
+        /// </summary>
+        /// <param name="asset">Security which has subscribed data types</param>
+        /// <param name="subscriptionConfigs">The subscription configs for the security, which may include internal configurations</param>
+        private static HashSet<Type> GetSubscribedTypes(Security asset, List<SubscriptionDataConfig> subscriptionConfigs)
+        {
+            // Only the data types sent to the algorithm (non-internal subscriptions) are considered subscribed
+            var subscribedTypes = subscriptionConfigs.Where(x => !x.IsInternalFeed).ToHashSet(x => x.Type);
 
             if (subscribedTypes.Count == 0)
             {
@@ -733,7 +750,9 @@ namespace QuantConnect.Orders.Fills
         /// effort price comes from stale (already past) data, in which case the caller should wait for fresh data</param>
         /// <param name="staleDataEndTimeUtc">When <paramref name="stalePrice"/> is true, the end time (in UTC) of the
         /// stale data the price comes from, so the caller can measure how far behind the current time it is</param>
-        private decimal GetBestEffortAskPrice(Security asset, DateTime orderTime, out string message, out bool stalePrice, out DateTime staleDataEndTimeUtc)
+        /// <param name="subscribedTypes">The data types the security is subscribed to. When not provided, they are
+        /// fetched from the configuration provider</param>
+        private decimal GetBestEffortAskPrice(Security asset, DateTime orderTime, out string message, out bool stalePrice, out DateTime staleDataEndTimeUtc, HashSet<Type> subscribedTypes = null)
         {
             message = string.Empty;
             stalePrice = false;
@@ -745,7 +764,7 @@ namespace QuantConnect.Orders.Fills
             var localOrderTime = orderTime.ConvertFromUtc(asset.Exchange.TimeZone);
             var cutOffTime = localOrderTime.Add(-Parameters.StalePriceTimeSpan);
 
-            var subscribedTypes = GetSubscribedTypes(asset);
+            subscribedTypes ??= GetSubscribedTypes(asset);
 
             List<Tick> ticks = null;
             var isTickSubscribed = subscribedTypes.Contains(typeof(Tick));
@@ -840,7 +859,9 @@ namespace QuantConnect.Orders.Fills
         /// effort price comes from stale (already past) data, in which case the caller should wait for fresh data</param>
         /// <param name="staleDataEndTimeUtc">When <paramref name="stalePrice"/> is true, the end time (in UTC) of the
         /// stale data the price comes from, so the caller can measure how far behind the current time it is</param>
-        private decimal GetBestEffortBidPrice(Security asset, DateTime orderTime, out string message, out bool stalePrice, out DateTime staleDataEndTimeUtc)
+        /// <param name="subscribedTypes">The data types the security is subscribed to. When not provided, they are
+        /// fetched from the configuration provider</param>
+        private decimal GetBestEffortBidPrice(Security asset, DateTime orderTime, out string message, out bool stalePrice, out DateTime staleDataEndTimeUtc, HashSet<Type> subscribedTypes = null)
         {
             message = string.Empty;
             stalePrice = false;
@@ -852,7 +873,7 @@ namespace QuantConnect.Orders.Fills
             var localOrderTime = orderTime.ConvertFromUtc(asset.Exchange.TimeZone);
             var cutOffTime = localOrderTime.Add(-Parameters.StalePriceTimeSpan);
 
-            var subscribedTypes = GetSubscribedTypes(asset);
+            subscribedTypes ??= GetSubscribedTypes(asset);
 
             List<Tick> ticks = null;
             var isTickSubscribed = subscribedTypes.Contains(typeof(Tick));

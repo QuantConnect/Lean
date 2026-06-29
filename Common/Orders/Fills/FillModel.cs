@@ -1005,7 +1005,9 @@ namespace QuantConnect.Orders.Fills
         /// <param name="asset">Security being filled</param>
         /// <param name="dataEndTimeUtc">End time, in UTC, of the latest data available for the fill</param>
         /// <param name="currentTimeUtc">Current time of the security, in UTC</param>
-        protected bool ShouldWaitForFreshDataOnStale(Security asset, DateTime dataEndTimeUtc, DateTime currentTimeUtc)
+        /// <param name="subscriptionConfigs">The subscription configs for the security, including internal configurations.
+        /// When not provided, they are fetched from the configuration provider</param>
+        protected bool ShouldWaitForFreshDataOnStale(Security asset, DateTime dataEndTimeUtc, DateTime currentTimeUtc, List<SubscriptionDataConfig> subscriptionConfigs = null)
         {
             if (ShouldWaitForFreshData(asset))
             {
@@ -1015,8 +1017,8 @@ namespace QuantConnect.Orders.Fills
             // Use the lowest (finest) subscribed resolution to size a single bar. Internal configurations are included
             // because, even though their data is not sent to the algorithm, they still drive the security cache and the
             // data used for the fill.
-            var resolutionSpan = Parameters.ConfigProvider
-                .GetSubscriptionDataConfigs(asset.Symbol, includeInternalConfigs: true)
+            subscriptionConfigs ??= Parameters.ConfigProvider.GetSubscriptionDataConfigs(asset.Symbol, includeInternalConfigs: true);
+            var resolutionSpan = subscriptionConfigs
                 .GetHighestResolution()
                 .ToTimeSpan();
 
