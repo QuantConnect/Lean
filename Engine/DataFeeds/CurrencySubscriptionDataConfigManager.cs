@@ -131,10 +131,14 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <summary>
         /// Checks the current <see cref="SubscriptionDataConfig"/> and adds new necessary currency pair feeds to provide real time conversion data
         /// </summary>
-        /// <returns>True if new currency conversion feeds were introduced, false otherwise. Lets callers skip
-        /// follow up work like seeding the new conversion rates when nothing was added</returns>
+        /// <returns>True if a new currency was introduced, either as a new internal conversion feed or as a new cash
+        /// entry added to the cashbook. Lets callers skip follow up work like seeding the new conversion rates when
+        /// nothing was added</returns>
         public bool EnsureCurrencySubscriptionDataConfigs(SecurityChanges securityChanges, IBrokerageModel brokerageModel)
         {
+            // a new cash added to the cashbook also needs its conversion rate seeded, even when its conversion
+            // security is an already subscribed one and no new internal feed is introduced below
+            var newCashAdded = _ensureCurrencyDataFeeds;
             _ensureCurrencyDataFeeds = false;
             // remove any 'to be added' if the security has already been added
             _toBeAddedCurrencySubscriptionDataConfigs.RemoveWhere(
@@ -153,7 +157,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             }
             _pendingSubscriptionDataConfigs = _toBeAddedCurrencySubscriptionDataConfigs.Any();
 
-            return newConfigs.Count > 0;
+            return newConfigs.Count > 0 || newCashAdded;
         }
     }
 }

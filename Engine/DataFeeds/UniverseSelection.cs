@@ -424,10 +424,11 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// known price. The setup handler passes false because it performs its own (optionally white-listed) seeding</param>
         public void EnsureCurrencyDataFeeds(SecurityChanges securityChanges, bool seedNewCurrencies = true)
         {
-            var newCurrencyFeedsAdded = _currencySubscriptionDataConfigManager.EnsureCurrencySubscriptionDataConfigs(securityChanges, _algorithm.BrokerageModel);
+            var newCurrenciesAdded = _currencySubscriptionDataConfigManager.EnsureCurrencySubscriptionDataConfigs(securityChanges, _algorithm.BrokerageModel);
 
-            // Only scan the cashbook and seed when a new conversion feed was actually introduced
-            if (!seedNewCurrencies || !newCurrencyFeedsAdded)
+            // Only scan the cashbook and seed when a new currency was actually introduced, either as a new
+            // internal conversion feed or as a new cash entry whose conversion security is an already added one
+            if (!seedNewCurrencies || !newCurrenciesAdded)
             {
                 return;
             }
@@ -435,28 +436,9 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             // Seed the new conversion rates with their last known price so they are non-zero right away, instead of
             // waiting for the first conversion pair bar to arrive. Otherwise a conversion needed in that gap would
             // throw. This is the same thing BaseSetupHandler does during setup, but for cashes added at runtime.
-            var cashToUpdate = _algorithm.Portfolio.CashBook.Values
-                .Where(cash => cash.CurrencyConversion != null && cash.ConversionRate == 0)
-                .ToList();
-
-            if (cashToUpdate.Count == 0)
-            {
-                return;
-            }
-
-            var securitiesToUpdate = cashToUpdate
-                .SelectMany(cash => cash.CurrencyConversion.ConversionRateSecurities)
-                .Distinct()
-                .ToList();
-
             try
             {
-                AlgorithmUtils.SeedSecurities(securitiesToUpdate, _algorithm);
-
-                foreach (var cash in cashToUpdate)
-                {
-                    cash.Update();
-                }
+                AlgorithmUtils.SeedCurrencyConversionRates(_algorithm);
             }
             catch (Exception err)
             {
