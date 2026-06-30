@@ -109,6 +109,63 @@ namespace QuantConnect.Tests.Common.Data.Fundamental
             Assert.AreEqual("", field.ToString());
         }
 
+        [Test]
+        public void ArithmeticOperatorsBetweenDoubleFields()
+        {
+            var left = new TestMultiPeriodField();
+            left.OneYear = 10;
+            var right = new TestMultiPeriodField();
+            right.OneYear = 4;
+
+            Assert.AreEqual(14m, left + right);
+            Assert.AreEqual(6m, left - right);
+            Assert.AreEqual(40m, left * right);
+            Assert.AreEqual(2.5m, left / right);
+            Assert.AreEqual(2m, left % right);
+        }
+
+        [Test]
+        public void ArithmeticOperatorsBetweenLongFields()
+        {
+            var left = new TestMultiPeriodFieldLong();
+            left.OneYear = 10;
+            var right = new TestMultiPeriodFieldLong();
+            right.OneYear = 4;
+
+            Assert.AreEqual(14m, left + right);
+            Assert.AreEqual(6m, left - right);
+            Assert.AreEqual(40m, left * right);
+            Assert.AreEqual(2.5m, left / right);
+            Assert.AreEqual(2m, left % right);
+        }
+
+        [Test]
+        public void ArithmeticOperatorsWithScalar()
+        {
+            var field = new TestMultiPeriodField();
+            field.OneYear = 10;
+
+            // field implicitly converts to decimal, the built-in decimal operators apply
+            Assert.AreEqual(13m, field + 3m);
+            Assert.AreEqual(7m, field - 3m);
+            Assert.AreEqual(30m, field * 3m);
+            Assert.AreEqual(5m, field / 2m);
+            Assert.AreEqual(1m, field % 3m);
+        }
+
+        [Test]
+        public void ArithmeticOperatorsUseDefaultPeriodValue()
+        {
+            // No default period value available, falls back to first available period (3M = 1)
+            var left = new TestMultiPeriodField();
+            left.ThreeMonths = 1;
+            var right = new TestMultiPeriodField();
+            right.ThreeMonths = 1;
+
+            Assert.IsFalse(left.HasValue);
+            Assert.AreEqual(2m, left + right);
+        }
+
         private class TestMultiPeriodField : MultiPeriodField
         {
             protected override string DefaultPeriod => "OneYear";
@@ -154,6 +211,53 @@ namespace QuantConnect.Tests.Common.Data.Fundamental
                 foreach (var kvp in new[] { new Tuple<string, double>("1Y", OneYear), new Tuple<string, double>("3M", ThreeMonths), new Tuple<string, double>("3Y", ThreeYears), new Tuple<string, double>("5Y", FiveYears) })
                 {
                     if (!BaseFundamentalDataProvider.IsNone(typeof(double), kvp.Item2))
+                    {
+                        result[kvp.Item1] = kvp.Item2;
+                    }
+                }
+                return result;
+            }
+        }
+
+        private class TestMultiPeriodFieldLong : MultiPeriodFieldLong
+        {
+            protected override string DefaultPeriod => "OneYear";
+
+            public long ThreeMonths { get; set; } = NoValue;
+            public long OneYear { get; set; } = NoValue;
+            public override bool HasValue => !BaseFundamentalDataProvider.IsNone(typeof(long), OneYear);
+            public override long Value
+            {
+                get
+                {
+                    var defaultValue = OneYear;
+                    if (!BaseFundamentalDataProvider.IsNone(typeof(long), defaultValue))
+                    {
+                        return defaultValue;
+                    }
+                    return base.Value;
+                }
+            }
+
+            public override long GetPeriodValue(string period)
+            {
+                switch (period)
+                {
+                    case QuantConnect.Data.Fundamental.Period.ThreeMonths:
+                        return ThreeMonths;
+                    case QuantConnect.Data.Fundamental.Period.OneYear:
+                        return OneYear;
+                    default:
+                        return NoValue;
+                }
+            }
+
+            public override IReadOnlyDictionary<string, long> GetPeriodValues()
+            {
+                var result = new Dictionary<string, long>();
+                foreach (var kvp in new[] { new Tuple<string, long>("1Y", OneYear), new Tuple<string, long>("3M", ThreeMonths) })
+                {
+                    if (!BaseFundamentalDataProvider.IsNone(typeof(long), kvp.Item2))
                     {
                         result[kvp.Item1] = kvp.Item2;
                     }
