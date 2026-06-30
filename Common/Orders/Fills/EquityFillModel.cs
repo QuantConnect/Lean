@@ -136,9 +136,8 @@ namespace QuantConnect.Orders.Fills
             var slip = asset.SlippageModel.GetSlippageApproximation(asset, order);
 
             // Fetch the subscription configs once and reuse them for both the best-effort price lookup and the
-            // stale-data check below. Internal configurations are included because, even though their data is not
-            // sent to the algorithm, they still drive the security cache and the data used for the fill.
-            var subscriptionConfigs = Parameters.ConfigProvider.GetSubscriptionDataConfigs(asset.Symbol, includeInternalConfigs: true);
+            // stale-data check below.
+            var subscriptionConfigs = GetSubscriptionDataConfigs(asset);
 
             // The best-effort price only considers the data types sent to the algorithm (non-internal subscriptions).
             var subscribedTypes = GetSubscribedTypes(asset, subscriptionConfigs);
@@ -716,7 +715,7 @@ namespace QuantConnect.Orders.Fills
         /// <param name="asset">Security which has subscribed data types</param>
         protected override HashSet<Type> GetSubscribedTypes(Security asset)
         {
-            return GetSubscribedTypes(asset, Parameters.ConfigProvider.GetSubscriptionDataConfigs(asset.Symbol, includeInternalConfigs: true));
+            return GetSubscribedTypes(asset, GetSubscriptionDataConfigs(asset));
         }
 
         /// <summary>
