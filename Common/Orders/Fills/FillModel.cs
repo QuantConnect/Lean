@@ -1007,8 +1007,23 @@ namespace QuantConnect.Orders.Fills
 
             // Only the subscriptions whose data is sent to the algorithm (non-internal) decide whether all subscribed
             // resolutions are coarse (hour/daily).
-            var configs = subscriptionConfigs.Where(x => !x.IsInternalFeed).ToList();
-            return configs.Count > 0 && configs.All(x => x.Resolution == Resolution.Hour || x.Resolution == Resolution.Daily);
+            var hasNonInternal = false;
+            foreach (var config in subscriptionConfigs)
+            {
+                if (config.IsInternalFeed)
+                {
+                    continue;
+                }
+
+                if (config.Resolution != Resolution.Hour && config.Resolution != Resolution.Daily)
+                {
+                    return false;
+                }
+
+                hasNonInternal = true;
+            }
+
+            return hasNonInternal;
         }
 
         /// <summary>
