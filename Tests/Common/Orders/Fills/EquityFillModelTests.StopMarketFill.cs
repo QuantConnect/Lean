@@ -236,6 +236,38 @@ namespace QuantConnect.Tests.Common.Orders.Fills
             Assert.AreEqual(OrderStatus.None, fill.Status);
         }
 
+        public void StopMarketOrderRespectsOutsideRegularTradingHours()
+        {
+            var time = new DateTime(2026, 5, 5, 9, 29, 0);
+            var timeKeeper = new TimeKeeper(time.ConvertToUtc(TimeZones.NewYork), TimeZones.NewYork);
+            var fillModel = new EquityFillModel();
+            var configTradeBar = CreateTradeBarConfig(Symbols.SPY, extendedHours: true);
+            var equity = CreateEquity(configTradeBar);
+            var order = new StopMarketOrder(
+                Symbols.SPY,
+                10,
+                1m,
+                time.ConvertToUtc(TimeZones.NewYork),
+                properties: new TradeStationOrderProperties
+                {
+                    TimeInForce = TimeInForce.Day,
+                    OutsideRegularTradingHours = false
+                });
+
+            equity.SetLocalTimeKeeper(timeKeeper.GetLocalTimeKeeper(TimeZones.NewYork));
+            equity.SetMarketPrice(new TradeBar(time, Symbols.SPY, 100m, 101m, 99m, 100m, 100, Time.OneMinute));
+
+            var fill = fillModel.Fill(new FillModelParameters(
+                equity,
+                order,
+                new MockSubscriptionDataConfigProvider(configTradeBar),
+                Time.OneHour,
+                null)).Single();
+
+            Assert.AreEqual(OrderStatus.None, fill.Status);
+            Assert.AreEqual(0, fill.FillQuantity);
+        }
+
         [TestCase(100, 290.50)]
         [TestCase(-100, 291.50)]
         public void StopMarketOrderFillsAtOpenWithUnfavourableGap(decimal orderQuantity, decimal stopPrice)
