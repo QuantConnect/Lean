@@ -217,6 +217,56 @@ namespace QuantConnect.Data.Fundamental
         /// Computes the remainder of dividing the left field's default value by the right field's default value
         /// </summary>
         public static decimal operator %(MultiPeriodField left, MultiPeriodField right) => (decimal)left.Value % (decimal)right.Value;
+
+        /// <summary>
+        /// Adds the default values of a double and a long backed field
+        /// </summary>
+        public static decimal operator +(MultiPeriodField left, MultiPeriodFieldLong right) => (decimal)left.Value + right.Value;
+
+        /// <summary>
+        /// Adds the default values of a long and a double backed field
+        /// </summary>
+        public static decimal operator +(MultiPeriodFieldLong left, MultiPeriodField right) => left.Value + (decimal)right.Value;
+
+        /// <summary>
+        /// Subtracts the right field's default value from the left field's default value
+        /// </summary>
+        public static decimal operator -(MultiPeriodField left, MultiPeriodFieldLong right) => (decimal)left.Value - right.Value;
+
+        /// <summary>
+        /// Subtracts the right field's default value from the left field's default value
+        /// </summary>
+        public static decimal operator -(MultiPeriodFieldLong left, MultiPeriodField right) => left.Value - (decimal)right.Value;
+
+        /// <summary>
+        /// Multiplies the default values of a double and a long backed field
+        /// </summary>
+        public static decimal operator *(MultiPeriodField left, MultiPeriodFieldLong right) => (decimal)left.Value * right.Value;
+
+        /// <summary>
+        /// Multiplies the default values of a long and a double backed field
+        /// </summary>
+        public static decimal operator *(MultiPeriodFieldLong left, MultiPeriodField right) => left.Value * (decimal)right.Value;
+
+        /// <summary>
+        /// Divides the left field's default value by the right field's default value
+        /// </summary>
+        public static decimal operator /(MultiPeriodField left, MultiPeriodFieldLong right) => (decimal)left.Value / right.Value;
+
+        /// <summary>
+        /// Divides the left field's default value by the right field's default value
+        /// </summary>
+        public static decimal operator /(MultiPeriodFieldLong left, MultiPeriodField right) => left.Value / (decimal)right.Value;
+
+        /// <summary>
+        /// Computes the remainder of dividing the left field's default value by the right field's default value
+        /// </summary>
+        public static decimal operator %(MultiPeriodField left, MultiPeriodFieldLong right) => (decimal)left.Value % right.Value;
+
+        /// <summary>
+        /// Computes the remainder of dividing the left field's default value by the right field's default value
+        /// </summary>
+        public static decimal operator %(MultiPeriodFieldLong left, MultiPeriodField right) => left.Value % (decimal)right.Value;
 #pragma warning restore CA2225 // Operator overloads have named alternates
     }
 

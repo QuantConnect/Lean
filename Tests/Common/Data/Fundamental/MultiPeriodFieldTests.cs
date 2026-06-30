@@ -140,6 +140,29 @@ namespace QuantConnect.Tests.Common.Data.Fundamental
         }
 
         [Test]
+        public void ArithmeticOperatorsBetweenDoubleAndLongFields()
+        {
+            var doubleField = new TestMultiPeriodField();
+            doubleField.OneYear = 10;
+            var longField = new TestMultiPeriodFieldLong();
+            longField.OneYear = 4;
+
+            // double on the left, long on the right
+            Assert.AreEqual(14m, doubleField + longField);
+            Assert.AreEqual(6m, doubleField - longField);
+            Assert.AreEqual(40m, doubleField * longField);
+            Assert.AreEqual(2.5m, doubleField / longField);
+            Assert.AreEqual(2m, doubleField % longField);
+
+            // long on the left, double on the right
+            Assert.AreEqual(14m, longField + doubleField);
+            Assert.AreEqual(-6m, longField - doubleField);
+            Assert.AreEqual(40m, longField * doubleField);
+            Assert.AreEqual(0.4m, longField / doubleField);
+            Assert.AreEqual(4m, longField % doubleField);
+        }
+
+        [Test]
         public void ArithmeticOperatorsWithScalar()
         {
             var field = new TestMultiPeriodField();
