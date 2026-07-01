@@ -37,11 +37,23 @@ namespace QuantConnect.Tests.Common.Data.Market
             );
         }
 
+        [SetUp]
+        public void ResetSharedOptionData()
+        {
+            // Other tests can leave the shared OptionPriceModelResultData.Null singleton holding a
+            // trade bar, which then leaks into any contract that hasn't set its own price model.
+            // Reset it by updating a throwaway (singleton-backed) contract with a zero-priced trade bar.
+            var symbol = Symbols.SPY_C_192_Feb19_2016;
+            new OptionContract(CreateOption(symbol))
+                .Update(new TradeBar(new DateTime(2016, 02, 16), symbol, 0, 0, 0, 0, 0));
+        }
+
         [Test]
         public void PriceValueAndCloseAliasLastPrice()
         {
             var symbol = Symbols.SPY_C_192_Feb19_2016;
             var contract = new OptionContract(CreateOption(symbol)) { Time = new DateTime(2016, 02, 16) };
+            contract.SetOptionPriceModel(() => OptionPriceModelResult.None);
 
             // No data yet, all aliases default to zero
             Assert.AreEqual(0, contract.LastPrice);
