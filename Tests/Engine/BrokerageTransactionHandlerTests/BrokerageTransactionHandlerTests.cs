@@ -2705,6 +2705,80 @@ namespace QuantConnect.Tests.Engine.BrokerageTransactionHandlerTests
             }
         }
 
+        [Test]
+        public void KeepsAComboOnItsQueueWhenASimpleOrderWithTheSameIdIsReleased()
+        {
+            // order ids and combo group ids come from independent counters, so they can share the same int value:
+            // releasing a simple order must not evict the pinned queue of a combo group with the same id
+            using var gate = new ManualResetEventSlim(false);
+            var processingThreads = new ConcurrentDictionary<int, string>();
+            Exception processingError = null;
+            var pool = new OrderRequestProcessingPool(concurrencyEnabled: true, minimumThreads: 1, maximumThreads: 10,
+                request =>
+                {
+                    // record the processing thread, then block to keep the pool busy
+                    processingThreads[request.OrderId] = Thread.CurrentThread.Name;
+                    gate.Wait();
+                },
+                exception => processingError = exception);
+
+            try
+            {
+                var symbol = Symbols.SPY;
+                var reference = new DateTime(2025, 07, 03, 10, 0, 0);
+                const int sharedId = 1; // used both as the combo group id and as the simple order id
+
+                // the combo pins group id 1 to queue 0 (1 % 1) while the pool is at a single thread
+                var group = new GroupOrderManager(sharedId, 2, 10);
+                var leg1 = MakeComboRequest(symbol, reference, group, orderId: 101);
+                pool.Dispatch(leg1, Order.CreateOrder(leg1));
+
+                // release a simple order sharing the same int id; it must not touch the combo pin
+                var simpleRequest = new SubmitOrderRequest(OrderType.Market, symbol.SecurityType, symbol, 1, 0, 0, reference, "");
+                simpleRequest.SetOrderId(sharedId);
+                pool.Release(Order.CreateOrder(simpleRequest));
+
+                // saturate the queue so the pool grows to a second thread; an un-pinned key 1 would then route to
+                // queue 1 (1 % 2), so reaching the same thread later proves the combo pin survived the release
+                var fillerId = 1000;
+                var grew = SpinWait.SpinUntil(() =>
+                {
+                    var filler = new SubmitOrderRequest(OrderType.Market, symbol.SecurityType, symbol, 1, 0, 0, 0, 0, false, reference, "",
+                        asynchronous: true);
+                    filler.SetOrderId(++fillerId);
+                    pool.Dispatch(filler, Order.CreateOrder(filler));
+                    return pool.ThreadCount >= 2;
+                }, 10000);
+                Assert.IsTrue(grew, $"the pool did not grow, current size: {pool.ThreadCount}");
+
+                // the second leg arrives after the pool grew; the pin must keep it on the original queue
+                var leg2 = MakeComboRequest(symbol, reference, group, orderId: 102);
+                pool.Dispatch(leg2, Order.CreateOrder(leg2));
+
+                gate.Set();
+
+                // both legs must have been handled by the same thread
+                Assert.IsTrue(SpinWait.SpinUntil(() =>
+                    processingThreads.ContainsKey(101) && processingThreads.ContainsKey(102), 10000),
+                    "the combo legs were not processed");
+                Assert.AreEqual(processingThreads[101], processingThreads[102]);
+                Assert.IsNull(processingError, $"the pool reported an error: {processingError}");
+            }
+            finally
+            {
+                gate.Set();
+                pool.Shutdown(TimeSpan.FromSeconds(10));
+            }
+        }
+
+        private static SubmitOrderRequest MakeComboRequest(Symbol symbol, DateTime reference, GroupOrderManager group, int orderId)
+        {
+            var request = new SubmitOrderRequest(OrderType.ComboMarket, symbol.SecurityType, symbol, 1, 0, 0, reference, "",
+                groupOrderManager: group);
+            request.SetOrderId(orderId);
+            return request;
+        }
+
         private static SubmitOrderRequest MakeAsyncMarketRequest(Security security, DateTime date)
         {
             return new SubmitOrderRequest(OrderType.Market, security.Type, security.Symbol, 1, 0, 0, 0, 0, false, date, "",
