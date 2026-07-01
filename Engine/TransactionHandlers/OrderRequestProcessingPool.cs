@@ -17,6 +17,7 @@ using System;
 using System.Collections.Generic;
 using System.Threading;
 using QuantConnect.Interfaces;
+using QuantConnect.Logging;
 using QuantConnect.Orders;
 using QuantConnect.Util;
 
@@ -285,6 +286,7 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
             // only grow when every worker is already busy, so the request being enqueued would have to wait
             if (Volatile.Read(ref _busyWorkers) >= _threads.Count)
             {
+                Log.Trace($"OrderRequestProcessingPool.TryExpand(): adding new thread, current count {_threads.Count}");
                 AddThread();
             }
         }
