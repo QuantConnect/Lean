@@ -109,6 +109,54 @@ namespace QuantConnect.Tests.Common.Orders.Fills
 
         }
 
+        // A market order whose only available data is stale by more than one resolution bar must wait for fresh data
+        // instead of filling on the stale price, independent of the time of day: right at the session open (the first
+        // bar has not been emitted yet) and mid-session (an intraday data gap).
+        [TestCase(false, OrderDirection.Buy)]
+        [TestCase(false, OrderDirection.Sell)]
+        [TestCase(true, OrderDirection.Buy)]
+        [TestCase(true, OrderDirection.Sell)]
+        public void MarketOrderWaitsForFreshDataWhenStaleByMoreThanResolution(bool midSession, OrderDirection orderDirection)
+        {
+            var model = new FutureFillModel();
+            var config = CreateTradeBarConfig(Symbols.ES_Future_Chain);
+            var security = GetSecurity(config);
+            var quantity = orderDirection == OrderDirection.Buy ? 100 : -100;
+
+            var sessionOpen = security.Exchange.Hours.GetPreviousMarketOpen(Noon, extendedMarketHours: false);
+            // One second into the first bar of the session, or mid-session at noon
+            var orderTime = midSession ? Noon : sessionOpen.AddSeconds(1);
+
+            var timeKeeper = new TimeKeeper(orderTime.ConvertToUtc(TimeZones.NewYork), new[] { TimeZones.NewYork });
+            security.SetLocalTimeKeeper(timeKeeper.GetLocalTimeKeeper(TimeZones.NewYork));
+
+            // Only a stale bar (two hours old, more than one resolution bar behind) is available in the cache
+            const decimal staleClose = 101.123m;
+            security.SetMarketPrice(new TradeBar(orderTime.AddHours(-2), Symbols.ES_Future_Chain,
+                101m, 101.2m, 100.9m, staleClose, 100, Time.OneMinute));
+
+            var order = new MarketOrder(Symbols.ES_Future_Chain, quantity, orderTime.ConvertToUtc(TimeZones.NewYork));
+            var parameters = new FillModelParameters(security, order, new MockSubscriptionDataConfigProvider(config), Time.OneHour, null);
+
+            // The latest data is more than one resolution bar (minute) behind: must not fill on the stale price
+            var fill = model.Fill(parameters).Single();
+            Assert.AreNotEqual(OrderStatus.Filled, fill.Status);
+            Assert.AreNotEqual(OrderStatus.PartiallyFilled, fill.Status);
+            Assert.AreEqual(0, fill.FillQuantity);
+
+            // Once a fresh bar (within one resolution of the current time) is available, the order fills on it
+            const decimal freshClose = 102.345m;
+            var freshBarEnd = orderTime.RoundDown(Time.OneMinute).Add(Time.OneMinute);
+            timeKeeper.SetUtcDateTime(freshBarEnd.ConvertToUtc(TimeZones.NewYork));
+            security.SetMarketPrice(new TradeBar(freshBarEnd.Add(-Time.OneMinute), Symbols.ES_Future_Chain,
+                102m, 102.5m, 101.9m, freshClose, 100, Time.OneMinute));
+
+            fill = model.Fill(parameters).Single();
+            Assert.AreEqual(OrderStatus.Filled, fill.Status);
+            Assert.AreEqual(order.Quantity, fill.FillQuantity);
+            Assert.AreEqual(freshClose, fill.FillPrice);
+        }
+
         private SubscriptionDataConfig CreateTradeBarConfig(Symbol symbol, bool isInternal = false, bool extendedMarketHours = true)
         {
             return new SubscriptionDataConfig(typeof(TradeBar), symbol, Resolution.Minute, TimeZones.NewYork, TimeZones.NewYork, true, extendedMarketHours, isInternal);

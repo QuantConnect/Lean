@@ -14,6 +14,7 @@
 */
 
 using System;
+using System.Collections.Generic;
 using QuantConnect.Util;
 using QuantConnect.Data;
 using QuantConnect.Securities;
@@ -46,12 +47,17 @@ namespace QuantConnect.Orders.Fills
             var prices = GetPricesCheckingPythonWrapper(asset, order.Direction);
             var pricesEndTimeUtc = prices.EndTime.ConvertToUtc(asset.Exchange.TimeZone);
 
-            // If the order would be filled on stale (fill-forward / already past) data: for coarse resolutions
-            // (hour/daily) wait for fresh data, e.g. the next bar to close, instead of filling at a stale price.
-            // For finer resolutions (minute/second/tick) keep filling on the stale price with a warning.
+            // If the order would be filled on stale (fill-forward / already past) data, wait for fresh data instead of
+            // filling at a stale price when the latest data is more than one resolution bar behind the order submission
+            // time (e.g. the first bar of the session after the open, or an intraday data gap). Otherwise fill on the
+            // stale price with a warning.
+            // Fetched lazily and reused across the stale-data check and the fill-price resolution so the subscription
+            // configs are resolved at most once per fill.
+            List<SubscriptionDataConfig> subscriptionConfigs = null;
             if (pricesEndTimeUtc.Add(Parameters.StalePriceTimeSpan) < order.Time)
             {
-                if (ShouldWaitForFreshData(asset))
+                subscriptionConfigs = GetSubscriptionDataConfigs(asset);
+                if (ShouldWaitForFreshDataOnStale(asset, pricesEndTimeUtc, order.Time, subscriptionConfigs))
                 {
                     return fill;
                 }
@@ -61,7 +67,7 @@ namespace QuantConnect.Orders.Fills
 
             //Order [fill]price for a market order model is the current security price (or the bar open if the order
             //was resting before this bar opened, see GetMarketFillPrice)
-            fill.FillPrice = GetMarketFillPrice(asset, order, prices);
+            fill.FillPrice = GetMarketFillPrice(asset, order, prices, subscriptionConfigs);
             fill.Status = OrderStatus.Filled;
 
             //Calculate the model slippage: e.g. 0.01c
@@ -115,9 +121,7 @@ namespace QuantConnect.Orders.Fills
             if (order.Status == OrderStatus.Canceled) return fill;
 
             // Fill only if open or extended
-            // even though data from internal configurations are not sent to the algorithm.OnData they still drive security cache and data
-            // this is specially relevant for the continuous contract underlying mapped contracts which are internal configurations
-            if (!IsExchangeOpen(asset, Parameters.ConfigProvider.GetSubscriptionDataConfigs(asset.Symbol, includeInternalConfigs: true).IsExtendedMarketHours()))
+            if (!IsExchangeOpen(asset, GetSubscriptionDataConfigs(asset).IsExtendedMarketHours()))
             {
                 return fill;
             }

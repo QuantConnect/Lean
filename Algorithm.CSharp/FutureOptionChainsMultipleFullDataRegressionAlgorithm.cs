@@ -98,7 +98,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
-        public long DataPoints => 1819;
+        public long DataPoints => 1939;
 
         /// <summary>
         /// Data Points count of the algorithm history
@@ -115,14 +115,14 @@ namespace QuantConnect.Algorithm.CSharp
         /// </summary>
         public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
         {
-            {"Total Orders", "450"},
+            {"Total Orders", "304"},
             {"Average Win", "0%"},
             {"Average Loss", "0%"},
             {"Compounding Annual Return", "0%"},
             {"Drawdown", "0%"},
             {"Expectancy", "0"},
             {"Start Equity", "100000"},
-            {"End Equity", "80983.36"},
+            {"End Equity", "86704.62"},
             {"Net Profit", "0%"},
             {"Sharpe Ratio", "0"},
             {"Sortino Ratio", "0"},
@@ -137,12 +137,12 @@ namespace QuantConnect.Algorithm.CSharp
             {"Information Ratio", "0"},
             {"Tracking Error", "0"},
             {"Treynor Ratio", "0"},
-            {"Total Fees", "$19016.64"},
+            {"Total Fees", "$13367.88"},
             {"Estimated Strategy Capacity", "$0"},
             {"Lowest Capacity Asset", "ES XCZJLCGM7IF8|ES XCZJLC9NOB29"},
-            {"Portfolio Turnover", "49.52%"},
+            {"Portfolio Turnover", "35.03%"},
             {"Drawdown Recovery", "0"},
-            {"OrderListHash", "8ef148c1100cb53bdd6a833c7a958974"}
+            {"OrderListHash", "3f98435e7fc61b79c7ff9d1690457c9f"}
         };
     }
 }
