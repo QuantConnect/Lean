@@ -69,7 +69,7 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
         /// </summary>
         public override void ProcessSynchronousEvents()
         {
-            if (SynchronousProcessing)
+            if (SynchronousProcessingEnabled)
             {
                 // we process pending order requests our selves
                 ProcessPendingRequests();
@@ -103,7 +103,7 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
         /// <param name="ticket">The <see cref="OrderTicket"/> expecting to be submitted</param>
         protected override void WaitForOrderSubmission(OrderTicket ticket)
         {
-            if (!SynchronousProcessing)
+            if (!SynchronousProcessingEnabled)
             {
                 // let the base class handle this
                 base.WaitForOrderSubmission(ticket);

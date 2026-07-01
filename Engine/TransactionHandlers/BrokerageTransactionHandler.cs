@@ -238,6 +238,13 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
         protected virtual bool SynchronousProcessing => false;
 
         /// <summary>
+        /// Snapshot of <see cref="SynchronousProcessing"/> taken when the pool is created. The pool is built once,
+        /// so we capture the decision to keep it and the request handling in sync even if the algorithm live mode
+        /// changes afterwards.
+        /// </summary>
+        protected bool SynchronousProcessingEnabled { get; private set; }
+
+        /// <summary>
         /// The maximum number of transaction threads the pool can grow to
         /// </summary>
         protected virtual int MaximumTransactionThreads => Config.GetInt("maximum-transaction-threads", 10);
@@ -273,7 +280,8 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
 
             // backtesting drains a single queue synchronously on the algorithm thread, live deployments use
             // background worker threads: a single one, or growing on demand up to the maximum when concurrent.
-            _threadPool = SynchronousProcessing
+            SynchronousProcessingEnabled = SynchronousProcessing;
+            _threadPool = SynchronousProcessingEnabled
                 ? OrderRequestProcessingPool.Synchronous(processRequest, onError)
                 : new OrderRequestProcessingPool(ConcurrencyEnabled, MinimumTransactionThreads, MaximumTransactionThreads, processRequest, onError);
         }
