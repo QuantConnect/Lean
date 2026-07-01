@@ -509,7 +509,10 @@ namespace QuantConnect.Python
             {
                 if (!_membersCache.TryGetValue(type, out typeMembers))
                 {
-                    var forcedInclusionMembers = LeanData.IsCommonLeanDataType(type)
+                    // Contracts (e.g. OptionContract, FuturesContract) expose their own representative price members
+                    // (LastPrice, BidPrice, ...) and mark the BaseData-like aliases (Value, Price, Close) with
+                    // PandasIgnore, so we don't want to force the Value member in as we do for custom data types.
+                    var forcedInclusionMembers = LeanData.IsCommonLeanDataType(type) || typeof(BaseContract).IsAssignableFrom(type)
                         ? Array.Empty<string>()
                         : _nonLeanDataTypeForcedMemberNames;
                     typeMembers = GetDataTypeMembers(type, forcedInclusionMembers).ToList();
