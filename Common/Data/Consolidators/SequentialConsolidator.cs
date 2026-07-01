@@ -14,6 +14,7 @@
 */
 
 using System;
+using QuantConnect.Indicators;
 
 namespace QuantConnect.Data.Consolidators
 {
@@ -22,7 +23,7 @@ namespace QuantConnect.Data.Consolidators
     /// such that data flows from the First to Second consolidator. It's output comes
     /// from the Second.
     /// </summary>
-    public class SequentialConsolidator : IDataConsolidator
+    public class SequentialConsolidator : ConsolidatorBase
     {
         /// <summary>
         /// Gets the first consolidator to receive data
@@ -42,20 +43,9 @@ namespace QuantConnect.Data.Consolidators
         }
 
         /// <summary>
-        /// Gets the most recently consolidated piece of data. This will be null if this consolidator
-        /// has not produced any data yet.
-        ///
-        /// For a SequentialConsolidator, this is the output from the 'Second' consolidator.
-        /// </summary>
-        public IBaseData Consolidated
-        {
-            get { return Second.Consolidated; }
-        }
-
-        /// <summary>
         /// Gets a clone of the data being currently consolidated
         /// </summary>
-        public IBaseData WorkingData
+        public override IBaseData WorkingData
         {
             get { return Second.WorkingData; }
         }
@@ -63,7 +53,7 @@ namespace QuantConnect.Data.Consolidators
         /// <summary>
         /// Gets the type consumed by this consolidator
         /// </summary>
-        public Type InputType
+        public override Type InputType
         {
             get { return First.InputType; }
         }
@@ -71,7 +61,7 @@ namespace QuantConnect.Data.Consolidators
         /// <summary>
         /// Gets the type produced by this consolidator
         /// </summary>
-        public Type OutputType
+        public override Type OutputType
         {
             get { return Second.OutputType; }
         }
@@ -80,7 +70,7 @@ namespace QuantConnect.Data.Consolidators
         /// Updates this consolidator with the specified data
         /// </summary>
         /// <param name="data">The new data for the consolidator</param>
-        public void Update(IBaseData data)
+        public override void Update(IBaseData data)
         {
             First.Update(data);
         }
@@ -89,7 +79,7 @@ namespace QuantConnect.Data.Consolidators
         /// Scans this consolidator to see if it should emit a bar due to time passing
         /// </summary>
         /// <param name="currentLocalTime">The current time in the local time zone (same as <see cref="BaseData.Time"/>)</param>
-        public void Scan(DateTime currentLocalTime)
+        public override void Scan(DateTime currentLocalTime)
         {
             First.Scan(currentLocalTime);
         }
@@ -127,15 +117,15 @@ namespace QuantConnect.Data.Consolidators
         /// by derived classes when they have consolidated a new piece of data.
         /// </summary>
         /// <param name="consolidated">The newly consolidated data</param>
-        protected virtual void OnDataConsolidated(IBaseData consolidated)
+        protected override void OnDataConsolidated(IBaseData consolidated)
         {
-            var handler = DataConsolidated;
-            if (handler != null) handler(this, consolidated);
+            DataConsolidated?.Invoke(this, consolidated);
+            base.OnDataConsolidated(consolidated);
         }
 
         /// <summary>Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.</summary>
         /// <filterpriority>2</filterpriority>
-        public void Dispose()
+        public override void Dispose()
         {
             First.Dispose();
             Second.Dispose();
@@ -145,10 +135,11 @@ namespace QuantConnect.Data.Consolidators
         /// <summary>
         /// Resets the consolidator
         /// </summary>
-        public void Reset()
+        public override void Reset()
         {
             First.Reset();
             Second.Reset();
+            base.Reset();
         }
     }
 }
