@@ -2679,6 +2679,46 @@ namespace QuantConnect.Tests.Engine.BrokerageTransactionHandlerTests
             }
         }
 
+        [Test]
+        public void ProcessesManyOrdersWithUpdatesAndCancelsQuickly()
+        {
+            // lots of submit/update/cancel at once, the handler does nothing so this only measures the pool
+            const int orderCount = 1000;
+            const int requestsPerOrder = 3;
+            var processedCount = 0;
+            Exception processingError = null;
+
+            var pool = new OrderRequestProcessingPool(concurrencyEnabled: true, minimumThreads: 2, maximumThreads: 10,
+                _ => Interlocked.Increment(ref processedCount),
+                exception => processingError = exception);
+
+            try
+            {
+                var symbol = Symbols.SPY;
+                var reference = new DateTime(2025, 07, 03, 10, 0, 0);
+
+                for (var i = 1; i <= orderCount; i++)
+                {
+                    var submit = new SubmitOrderRequest(OrderType.Market, symbol.SecurityType, symbol, 1, 0, 0, reference, "");
+                    submit.SetOrderId(i);
+                    var order = Order.CreateOrder(submit);
+
+                    pool.Dispatch(submit, order);
+                    pool.Dispatch(new UpdateOrderRequest(reference, order.Id, new UpdateOrderFields()), order);
+                    pool.Dispatch(new CancelOrderRequest(reference, order.Id, ""), order);
+                }
+
+                // if the pool ever hangs or falls behind this wait times out instead of finishing in a few ms
+                var expectedRequests = orderCount * requestsPerOrder;
+                Assert.IsTrue(SpinWait.SpinUntil(() => processedCount >= expectedRequests, 10000));
+                Assert.IsNull(processingError);
+            }
+            finally
+            {
+                pool.Shutdown(TimeSpan.FromSeconds(10));
+            }
+        }
+
         private static SubmitOrderRequest MakeAsyncMarketRequest(Security security, DateTime date)
         {
             return new SubmitOrderRequest(OrderType.Market, security.Type, security.Symbol, 1, 0, 0, 0, 0, false, date, "",
