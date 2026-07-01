@@ -39,9 +39,10 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
         // one queue per worker thread; the newly updated order requests wait here to be processed
         private readonly List<IBusyCollection<OrderRequest>> _queues;
         private readonly List<Thread> _threads;
-        // pins each order (or combo group) to one queue for its whole life, so all its requests are handled
-        // in order by the same thread even after the pool grows and re-routes new orders to other queues
-        private readonly Dictionary<int, int> _queueIndexByKey = new();
+        // pins each order to one queue so all its requests keep being handled by the same thread as the pool grows
+        private readonly Dictionary<int, int> _queueIndexByOrderId = new();
+        // same for combo groups, kept apart from the order map since order and group ids can share a value
+        private readonly Dictionary<int, int> _queueIndexByGroupId = new();
         // tracks the completed legs of each combo group, so its pinned queue is only released once they are all done
         private readonly Dictionary<int, HashSet<int>> _completedComboLegs = new();
         // guards the queues/threads and pin maps against the on demand growth happening concurrently with
@@ -140,7 +141,10 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
         /// <param name="order">The order the request belongs to, used to decide its routing</param>
         public void Dispatch(OrderRequest request, Order order)
         {
-            var routingKey = GetRoutingKey(order);
+            var group = order.GroupOrderManager;
+            // a combo routes every leg through one queue keyed by the group id, a simple order by its own id
+            var isGroup = group?.Id > 0;
+            var routingKey = isGroup ? group.Id : order.Id;
 
             IBusyCollection<OrderRequest> queue;
             lock (_lock)
@@ -149,10 +153,11 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
                 TryExpand();
 
                 // reuse the order's pinned queue if it has one, so it is never re-routed when the pool grows
-                if (!_queueIndexByKey.TryGetValue(routingKey, out var queueIndex))
+                var pinMap = isGroup ? _queueIndexByGroupId : _queueIndexByOrderId;
+                if (!pinMap.TryGetValue(routingKey, out var queueIndex))
                 {
                     queueIndex = routingKey % _queues.Count;
-                    _queueIndexByKey[routingKey] = queueIndex;
+                    pinMap[routingKey] = queueIndex;
                 }
                 queue = _queues[queueIndex];
             }
@@ -174,12 +179,11 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
             {
                 if (group == null || group.Id <= 0)
                 {
-                    _queueIndexByKey.Remove(order.Id);
+                    _queueIndexByOrderId.Remove(order.Id);
                     return;
                 }
 
-                // the whole combo routes through one queue keyed by the group id, so we track its completed legs
-                // and only release the queue once every leg of the group has reached a final state
+                // a combo shares one queue, so release it only once every leg has reached a final state
                 if (!_completedComboLegs.TryGetValue(group.Id, out var completedLegs))
                 {
                     completedLegs = new HashSet<int>();
@@ -189,18 +193,9 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
                 if (completedLegs.Count >= group.Count)
                 {
                     _completedComboLegs.Remove(group.Id);
-                    _queueIndexByKey.Remove(group.Id);
+                    _queueIndexByGroupId.Remove(group.Id);
                 }
             }
-        }
-
-        /// <summary>
-        /// Computes the routing key of an order: the combo group id when it belongs to one, otherwise its own id,
-        /// so that every leg of a combo is routed to the same queue.
-        /// </summary>
-        private static int GetRoutingKey(Order order)
-        {
-            return order.GroupOrderManager?.Id > 0 ? order.GroupOrderManager.Id : order.Id;
         }
 
         /// <summary>
