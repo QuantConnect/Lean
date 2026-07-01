@@ -26,7 +26,7 @@ namespace QuantConnect.Data.Market
     /// </summary>
     public class OptionContract : BaseContract
     {
-        private IOptionData _optionData = OptionPriceModelResultData.Null;
+        private IOptionData _optionData = new OptionPriceModelResultData(() => OptionPriceModelResult.None);
         private readonly SymbolProperties _symbolProperties;
 
         /// <summary>
@@ -229,8 +229,6 @@ namespace QuantConnect.Data.Market
         /// </summary>
         private class OptionPriceModelResultData : IOptionData
         {
-            public static readonly OptionPriceModelResultData Null = new(() => OptionPriceModelResult.None);
-
             private readonly Lazy<OptionPriceModelResult> _optionPriceModelResult;
             private TradeBar _tradeBar;
             private QuoteBar _quoteBar;

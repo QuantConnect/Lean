@@ -42,9 +42,12 @@ namespace QuantConnect.Tests.Common.Data.Market
         {
             var symbol = Symbols.SPY_C_192_Feb19_2016;
             var contract = new OptionContract(CreateOption(symbol)) { Time = new DateTime(2016, 02, 16) };
-            // Give the contract its own option data holder so it doesn't read from/write to the
-            // shared OptionPriceModelResultData.Null singleton, which other tests may have mutated.
-            contract.SetOptionPriceModel(() => OptionPriceModelResult.None);
+
+            // No data yet, all aliases default to zero
+            Assert.AreEqual(0, contract.LastPrice);
+            Assert.AreEqual(contract.LastPrice, contract.Price);
+            Assert.AreEqual(contract.LastPrice, contract.Value);
+            Assert.AreEqual(contract.LastPrice, contract.Close);
 
             var tradeBar = new TradeBar(new DateTime(2016, 02, 16), symbol, 1, 2, 3, 4, 5);
             contract.Update(tradeBar);
