@@ -2467,7 +2467,7 @@ namespace QuantConnect.Tests.Engine.BrokerageTransactionHandlerTests
         }
 
         [Test]
-        public void ProcessesComboRequestsOnSameThreadWhenConcurrencyIsEnabled()
+        public void ProcessesComboRequestsWhenConcurrencyIsEnabled()
         {
             var algorithm = new TestAlgorithm();
             using var brokerage = new TestingConcurrentBrokerage();
@@ -2504,9 +2504,9 @@ namespace QuantConnect.Tests.Engine.BrokerageTransactionHandlerTests
 
                 Assert.IsTrue(finishedEvent.Wait(10000));
 
-                Assert.IsTrue(transactionHandler.RequestProcessingThreads.TryGetValue(orderRequest1.OrderId, out var order1Thread));
-                Assert.IsTrue(transactionHandler.RequestProcessingThreads.TryGetValue(orderRequest2.OrderId, out var order2Thread));
-                Assert.AreEqual(order1Thread, order2Thread);
+                // both legs of the combo must be processed
+                Assert.IsTrue(transactionHandler.RequestProcessingThreads.ContainsKey(orderRequest1.OrderId));
+                Assert.IsTrue(transactionHandler.RequestProcessingThreads.ContainsKey(orderRequest2.OrderId));
             }
             finally
             {
@@ -2588,137 +2588,18 @@ namespace QuantConnect.Tests.Engine.BrokerageTransactionHandlerTests
         }
 
         [Test]
-        public void KeepsAnOrderOnTheSameThreadAfterThePoolGrows()
+        public void ProcessesAnOrdersRequestsInOrderAsThePoolGrows()
         {
-            var algorithm = new TestAlgorithm();
-            using var brokerage = new TestingConcurrentBrokerage();
-            using var finishedEvent = new ManualResetEventSlim(false);
+            // the requests of a single order must be processed in arrival order even when the pool grows between them
             using var gate = new ManualResetEventSlim(false);
-            var transactionHandler = new TestableConcurrentBrokerageTransactionHandler(int.MaxValue, finishedEvent)
-            {
-                Gate = gate,
-                MaxThreadsOverride = 10
-            };
-            transactionHandler.Initialize(algorithm, brokerage, new BacktestingResultHandler());
-
-            try
-            {
-                algorithm.Transactions.SetOrderProcessor(transactionHandler);
-                algorithm.SetCash(100000);
-                algorithm.SetFinishedWarmingUp();
-
-                var security1 = (Security)algorithm.AddEquity("SPY");
-                var security2 = (Security)algorithm.AddEquity("AAPL");
-
-                var reference = new DateTime(2025, 07, 03, 10, 0, 0);
-                security1.SetMarketPrice(new Tick(reference, security1.Symbol, 500, 500));
-                security2.SetMarketPrice(new Tick(reference, security2.Symbol, 200, 200));
-
-                // group id 2 pins to queue 0 (2 % 2) while the pool is at the minimum; once it grows to >= 3
-                // an un-pinned request would route to queue 2 (2 % count), so this scenario detects re-routing
-                var groupOrderManager = new GroupOrderManager(2, 2, -1, 1m);
-                var leg1 = new SubmitOrderRequest(OrderType.ComboLimit, security1.Type, security1.Symbol, -1, 1m, 0, reference, "",
-                    groupOrderManager: groupOrderManager);
-                leg1.SetOrderId(1);
-                transactionHandler.Process(leg1);
-
-                Assert.AreEqual(2, transactionHandler.ActiveThreadCount);
-
-                // saturate the pool with unrelated orders so it grows past the minimum
-                var orderId = 100;
-                var grew = SpinWait.SpinUntil(() =>
-                {
-                    if (orderId < 1100)
-                    {
-                        var request = MakeAsyncMarketRequest(security1, reference);
-                        request.SetOrderId(++orderId);
-                        transactionHandler.Process(request);
-                    }
-                    return transactionHandler.ActiveThreadCount >= 3;
-                }, 10000);
-                Assert.IsTrue(grew, $"the pool did not grow, current size: {transactionHandler.ActiveThreadCount}");
-
-                // leg 2 of the same combo arrives after the pool grew; the pin must keep it on the original queue
-                var leg2 = new SubmitOrderRequest(OrderType.ComboLimit, security2.Type, security2.Symbol, 1, 1m, 0, reference, "",
-                    groupOrderManager: groupOrderManager);
-                leg2.SetOrderId(2);
-                transactionHandler.Process(leg2);
-
-                gate.Set();
-
-                // both legs must have been handled by the same thread despite the pool growing in between
-                Assert.IsTrue(SpinWait.SpinUntil(() =>
-                    transactionHandler.RequestProcessingThreads.ContainsKey(leg1.OrderId) &&
-                    transactionHandler.RequestProcessingThreads.ContainsKey(leg2.OrderId), 10000),
-                    "the combo legs were not processed");
-                Assert.AreEqual(transactionHandler.RequestProcessingThreads[leg1.OrderId],
-                    transactionHandler.RequestProcessingThreads[leg2.OrderId]);
-            }
-            finally
-            {
-                gate.Set();
-                transactionHandler.Exit();
-            }
-        }
-
-        [Test]
-        public void DoesNotGrowWhenThePoolIsNotSaturated()
-        {
-            var algorithm = new TestAlgorithm();
-            using var brokerage = new TestingConcurrentBrokerage();
-            using var finishedEvent = new ManualResetEventSlim(false);
-            using var gate = new ManualResetEventSlim(false);
-            var transactionHandler = new TestableConcurrentBrokerageTransactionHandler(int.MaxValue, finishedEvent)
-            {
-                Gate = gate,
-                MaxThreadsOverride = 10
-            };
-            transactionHandler.Initialize(algorithm, brokerage, new BacktestingResultHandler());
-
-            try
-            {
-                algorithm.Transactions.SetOrderProcessor(transactionHandler);
-                algorithm.SetFinishedWarmingUp();
-
-                var security = (Security)algorithm.AddEquity("SPY");
-                var reference = new DateTime(2025, 07, 03, 10, 0, 0);
-                security.SetMarketPrice(new Tick(reference, security.Symbol, 300, 300));
-
-                Assert.AreEqual(2, transactionHandler.ActiveThreadCount);
-
-                // all even order ids route to the same queue (id % 2 == 0), keeping the other thread idle,
-                // so even with a backlog on one queue the pool must not grow
-                for (var i = 1; i <= 20; i++)
-                {
-                    var request = MakeAsyncMarketRequest(security, reference);
-                    request.SetOrderId(i * 2);
-                    transactionHandler.Process(request);
-                }
-
-                // growth is evaluated synchronously on each enqueue, so the count is final here
-                Assert.AreEqual(2, transactionHandler.ActiveThreadCount);
-            }
-            finally
-            {
-                gate.Set();
-                transactionHandler.Exit();
-            }
-        }
-
-        [Test]
-        public void KeepsAComboOnItsQueueWhenASimpleOrderWithTheSameIdIsReleased()
-        {
-            // order ids and combo group ids come from independent counters, so they can share the same int value:
-            // releasing a simple order must not evict the pinned queue of a combo group with the same id
-            using var gate = new ManualResetEventSlim(false);
-            var processingThreads = new ConcurrentDictionary<int, string>();
+            var processed = new ConcurrentQueue<(int OrderId, OrderRequestType Type)>();
             Exception processingError = null;
             var pool = new OrderRequestProcessingPool(concurrencyEnabled: true, minimumThreads: 1, maximumThreads: 10,
                 request =>
                 {
-                    // record the processing thread, then block to keep the pool busy
-                    processingThreads[request.OrderId] = Thread.CurrentThread.Name;
+                    // block first so the requests pile up, then record the order they run in
                     gate.Wait();
+                    processed.Enqueue((request.OrderId, request.OrderRequestType));
                 },
                 exception => processingError = exception);
 
@@ -2726,20 +2607,14 @@ namespace QuantConnect.Tests.Engine.BrokerageTransactionHandlerTests
             {
                 var symbol = Symbols.SPY;
                 var reference = new DateTime(2025, 07, 03, 10, 0, 0);
-                const int sharedId = 1; // used both as the combo group id and as the simple order id
 
-                // the combo pins group id 1 to queue 0 (1 % 1) while the pool is at a single thread
-                var group = new GroupOrderManager(sharedId, 2, 10);
-                var leg1 = MakeComboRequest(symbol, reference, group, orderId: 101);
-                pool.Dispatch(leg1, Order.CreateOrder(leg1));
+                // the order we track, its submit claims a worker and blocks on the gate
+                var submit = new SubmitOrderRequest(OrderType.Market, symbol.SecurityType, symbol, 1, 0, 0, reference, "");
+                submit.SetOrderId(1);
+                var order = Order.CreateOrder(submit);
+                pool.Dispatch(submit, order);
 
-                // release a simple order sharing the same int id; it must not touch the combo pin
-                var simpleRequest = new SubmitOrderRequest(OrderType.Market, symbol.SecurityType, symbol, 1, 0, 0, reference, "");
-                simpleRequest.SetOrderId(sharedId);
-                pool.Release(Order.CreateOrder(simpleRequest));
-
-                // saturate the queue so the pool grows to a second thread; an un-pinned key 1 would then route to
-                // queue 1 (1 % 2), so reaching the same thread later proves the combo pin survived the release
+                // saturate the pool with unrelated orders so it grows while the submit is still in flight
                 var fillerId = 1000;
                 var grew = SpinWait.SpinUntil(() =>
                 {
@@ -2747,21 +2622,20 @@ namespace QuantConnect.Tests.Engine.BrokerageTransactionHandlerTests
                         asynchronous: true);
                     filler.SetOrderId(++fillerId);
                     pool.Dispatch(filler, Order.CreateOrder(filler));
-                    return pool.ThreadCount >= 2;
+                    return pool.ThreadCount >= 3;
                 }, 10000);
                 Assert.IsTrue(grew, $"the pool did not grow, current size: {pool.ThreadCount}");
 
-                // the second leg arrives after the pool grew; the pin must keep it on the original queue
-                var leg2 = MakeComboRequest(symbol, reference, group, orderId: 102);
-                pool.Dispatch(leg2, Order.CreateOrder(leg2));
+                // the update and cancel arrive after the pool grew, they must still run after the submit and in order
+                pool.Dispatch(new UpdateOrderRequest(reference, order.Id, new UpdateOrderFields()), order);
+                pool.Dispatch(new CancelOrderRequest(reference, order.Id, ""), order);
 
                 gate.Set();
 
-                // both legs must have been handled by the same thread
-                Assert.IsTrue(SpinWait.SpinUntil(() =>
-                    processingThreads.ContainsKey(101) && processingThreads.ContainsKey(102), 10000),
-                    "the combo legs were not processed");
-                Assert.AreEqual(processingThreads[101], processingThreads[102]);
+                Assert.IsTrue(SpinWait.SpinUntil(() => processed.Count(x => x.OrderId == 1) >= 3, 10000),
+                    "the order's requests were not all processed");
+                var sequence = processed.Where(x => x.OrderId == 1).Select(x => x.Type).ToList();
+                Assert.AreEqual(new[] { OrderRequestType.Submit, OrderRequestType.Update, OrderRequestType.Cancel }, sequence);
                 Assert.IsNull(processingError, $"the pool reported an error: {processingError}");
             }
             finally
@@ -2771,12 +2645,38 @@ namespace QuantConnect.Tests.Engine.BrokerageTransactionHandlerTests
             }
         }
 
-        private static SubmitOrderRequest MakeComboRequest(Symbol symbol, DateTime reference, GroupOrderManager group, int orderId)
+        [Test]
+        public void DoesNotGrowWhenOnlyOneOrderIsBusy()
         {
-            var request = new SubmitOrderRequest(OrderType.ComboMarket, symbol.SecurityType, symbol, 1, 0, 0, reference, "",
-                groupOrderManager: group);
-            request.SetOrderId(orderId);
-            return request;
+            using var gate = new ManualResetEventSlim(false);
+            var pool = new OrderRequestProcessingPool(concurrencyEnabled: true, minimumThreads: 2, maximumThreads: 10,
+                request => gate.Wait(),
+                exception => { });
+
+            try
+            {
+                var symbol = Symbols.SPY;
+                var reference = new DateTime(2025, 07, 03, 10, 0, 0);
+
+                var submit = new SubmitOrderRequest(OrderType.Market, symbol.SecurityType, symbol, 1, 0, 0, reference, "");
+                submit.SetOrderId(1);
+                var order = Order.CreateOrder(submit);
+                pool.Dispatch(submit, order);
+
+                // every follow up request is for the same order, so they are parked behind the one busy worker while
+                // the other stays idle, so the pool must not grow no matter how many pile up
+                for (var i = 0; i < 20; i++)
+                {
+                    pool.Dispatch(new UpdateOrderRequest(reference, order.Id, new UpdateOrderFields()), order);
+                }
+
+                Assert.AreEqual(2, pool.ThreadCount);
+            }
+            finally
+            {
+                gate.Set();
+                pool.Shutdown(TimeSpan.FromSeconds(10));
+            }
         }
 
         private static SubmitOrderRequest MakeAsyncMarketRequest(Security security, DateTime date)

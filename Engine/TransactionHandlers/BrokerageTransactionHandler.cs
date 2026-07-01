@@ -70,8 +70,8 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
         private int _failedCashSyncAttempts;
 
         /// <summary>
-        /// Holds the worker threads and their queues, dispatching each order request to the queue pinned to
-        /// its order and growing the pool on demand as the threads get saturated.
+        /// Runs order requests on worker threads that pull from a single shared queue, keeping each order's
+        /// requests in order while growing the pool on demand as the threads get saturated.
         /// </summary>
         protected OrderRequestProcessingPool _threadPool;
 
@@ -1207,12 +1207,6 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
                     if (order.Status != OrderStatus.Filled && order.Status != OrderStatus.Canceled || orderEvent.Status != OrderStatus.Invalid)
                     {
                         order.Status = orderEvent.Status;
-                    }
-
-                    // notify the pool once an order reaches a final state so it can release its processing queue
-                    if (order.Status.IsClosed())
-                    {
-                        _threadPool.Release(order);
                     }
 
                     orderEvent.Id = order.GetNewId();

@@ -15,51 +15,48 @@
 
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading;
 using QuantConnect.Interfaces;
-using QuantConnect.Logging;
 using QuantConnect.Orders;
 using QuantConnect.Util;
 
 namespace QuantConnect.Lean.Engine.TransactionHandlers
 {
     /// <summary>
-    /// Holds the worker threads and their queues used to process order requests, dispatching each
-    /// request to the queue pinned to its order and growing the pool on demand when it gets saturated.
+    /// Runs order requests on background worker threads that pull from a single shared queue. The pool grows on
+    /// demand when the workers get saturated and keeps every request of an order processed in order.
     /// </summary>
     /// <remarks>
-    /// In concurrent mode each thread owns a single <see cref="BusyBlockingCollection{T}"/> it consumes,
-    /// the pool starts at the minimum number of threads and grows up to the maximum when every thread is
-    /// busy with pending work. In synchronous mode there are no worker threads: a single non blocking queue
-    /// is drained on the caller thread via <see cref="ProcessPending"/>.
+    /// Workers pull from one shared queue, so the load spreads across them instead of pinning each order to a thread
+    /// up front. To keep a single order (or combo group) in order, only one of its requests runs at a time. While one
+    /// runs the rest wait parked, and the same worker takes them next in arrival order. This state only exists while
+    /// an order has requests in flight, so nothing needs releasing once the order closes. In synchronous mode there
+    /// are no workers and the caller drains the queue itself through <see cref="ProcessPending"/>.
     /// </remarks>
     public class OrderRequestProcessingPool
     {
-        // one queue per worker thread; the newly updated order requests wait here to be processed
-        private readonly List<IBusyCollection<OrderRequest>> _queues;
+        // the shared queue of requests cleared to run. every worker pulls from here so the load stays balanced
+        private readonly IBusyCollection<WorkItem> _readyQueue;
         private readonly List<Thread> _threads;
-        // pins each order to one queue so all its requests keep being handled by the same thread as the pool grows
-        private readonly Dictionary<int, int> _queueIndexByOrderId = new();
-        // same for combo groups, kept apart from the order map since order and group ids can share a value
-        private readonly Dictionary<int, int> _queueIndexByGroupId = new();
-        // tracks the completed legs of each combo group, so its pinned queue is only released once they are all done
-        private readonly Dictionary<int, HashSet<int>> _completedComboLegs = new();
-        // guards the queues/threads and pin maps against the on demand growth happening concurrently with
-        // the worker threads, dispatching, releasing and shutdown
+        // for each order (or combo group) being processed, the follow up requests waiting their turn in arrival order.
+        // while the key is here the order is already running, so a new request waits instead of starting
+        private readonly Dictionary<(bool IsGroup, int Id), Queue<OrderRequest>> _inFlight = new();
+        // guards the in flight map, the threads list and the growth/shutdown flags
         private readonly object _lock = new object();
-        // maximum number of threads (and queues) the pool can grow to on demand
+        // maximum number of worker threads the pool can grow to on demand
         private readonly int _maximumThreads;
         // true when there are no worker threads and the caller drains the single queue itself
         private readonly bool _synchronous;
         // set under the lock while shutting down so the pool stops growing
         private bool _shuttingDown;
+        // number of workers currently processing a request, used to decide when the pool is saturated
+        private int _busyWorkers;
         private readonly Action<OrderRequest> _processRequest;
         private readonly Action<Exception> _onError;
         private readonly CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource();
 
         /// <summary>
-        /// True while the pool is processing order requests, false once its worker threads have finished.
+        /// True while the pool is processing order requests, false once it has been shut down.
         /// </summary>
         public bool IsActive { get; private set; }
 
@@ -97,7 +94,7 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
             _maximumThreads = concurrencyEnabled ? Math.Max(1, maximumThreads) : 1;
             var initialThreadsCount = concurrencyEnabled ? Math.Min(Math.Max(1, minimumThreads), _maximumThreads) : 1;
 
-            _queues = new(_maximumThreads);
+            _readyQueue = new BusyBlockingCollection<WorkItem>();
             _threads = new(_maximumThreads);
             IsActive = true;
             for (var i = 0; i < initialThreadsCount; i++)
@@ -107,7 +104,7 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
         }
 
         /// <summary>
-        /// Private constructor for the synchronous pool: a single non blocking queue and no worker threads.
+        /// Private constructor for the synchronous pool, a single non blocking queue and no worker threads.
         /// </summary>
         private OrderRequestProcessingPool(Action<OrderRequest> processRequest, Action<Exception> onError)
         {
@@ -116,13 +113,13 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
             _onError = onError;
             _maximumThreads = 1;
 
-            _queues = new(1) { new BusyCollection<OrderRequest>() };
+            _readyQueue = new BusyCollection<WorkItem>();
             _threads = new(0);
             IsActive = true;
         }
 
         /// <summary>
-        /// Creates a synchronous pool with no worker threads: its single queue is drained on the caller thread
+        /// Creates a synchronous pool with no worker threads. Its single queue is drained on the caller thread
         /// via <see cref="ProcessPending"/>.
         /// </summary>
         /// <param name="processRequest">Handles a single order request</param>
@@ -133,68 +130,45 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
         }
 
         /// <summary>
-        /// Dispatches an order request to the queue pinned to its order, growing the pool first if every existing
-        /// thread is already saturated. All the requests of an order, and of every leg of a combo group, are routed
-        /// to the same queue so they are processed in order by a single thread.
+        /// Dispatches an order request to be processed. If the order already has a request in flight, the new one
+        /// waits parked so its worker runs it next and the order stays in arrival order. Otherwise it is queued for
+        /// any worker to pick up, growing the pool first when every worker is already busy.
         /// </summary>
         /// <param name="request">The order request to process</param>
-        /// <param name="order">The order the request belongs to, used to decide its routing</param>
+        /// <param name="order">The order the request belongs to, used to keep its requests ordered</param>
         public void Dispatch(OrderRequest request, Order order)
         {
-            var group = order.GroupOrderManager;
-            // a combo routes every leg through one queue keyed by the group id, a simple order by its own id
-            var isGroup = group?.Id > 0;
-            var routingKey = isGroup ? group.Id : order.Id;
-
-            IBusyCollection<OrderRequest> queue;
-            lock (_lock)
+            // synchronous mode has a single consumer draining in arrival order, no need to serialize per order
+            if (_synchronous)
             {
-                // grow the pool first if every existing thread is already saturated
-                TryExpand();
-
-                // reuse the order's pinned queue if it has one, so it is never re-routed when the pool grows
-                var pinMap = isGroup ? _queueIndexByGroupId : _queueIndexByOrderId;
-                if (!pinMap.TryGetValue(routingKey, out var queueIndex))
-                {
-                    queueIndex = routingKey % _queues.Count;
-                    pinMap[routingKey] = queueIndex;
-                }
-                queue = _queues[queueIndex];
+                _readyQueue.Add(new WorkItem(request, default));
+                return;
             }
 
-            // add outside the lock, since it can block when the queue is at its bounded capacity
-            queue.Add(request);
-        }
-
-        /// <summary>
-        /// Releases the queue pinned to an order once it reaches a final state, keeping the pin map bounded to the
-        /// orders still in flight. A combo group shares a single queue, so it is only released once every leg of
-        /// the group has completed.
-        /// </summary>
-        /// <param name="order">The order that reached a final state</param>
-        public void Release(Order order)
-        {
-            var group = order.GroupOrderManager;
+            var key = GetRoutingKey(order);
+            WorkItem readyItem = default;
+            var run = false;
             lock (_lock)
             {
-                if (group == null || group.Id <= 0)
+                if (_inFlight.TryGetValue(key, out var parked))
                 {
-                    _queueIndexByOrderId.Remove(order.Id);
-                    return;
+                    // the order is already being processed, park this request so its worker runs it next in order
+                    parked.Enqueue(request);
                 }
+                else
+                {
+                    // claim the order and grow the pool if every worker is already busy so this request would wait
+                    _inFlight[key] = new Queue<OrderRequest>();
+                    TryExpand();
+                    readyItem = new WorkItem(request, key);
+                    run = true;
+                }
+            }
 
-                // a combo shares one queue, so release it only once every leg has reached a final state
-                if (!_completedComboLegs.TryGetValue(group.Id, out var completedLegs))
-                {
-                    completedLegs = new HashSet<int>();
-                    _completedComboLegs[group.Id] = completedLegs;
-                }
-                completedLegs.Add(order.Id);
-                if (completedLegs.Count >= group.Count)
-                {
-                    _completedComboLegs.Remove(group.Id);
-                    _queueIndexByGroupId.Remove(group.Id);
-                }
+            // add outside the lock, it can block when the queue is at its bounded capacity
+            if (run)
+            {
+                _readyQueue.Add(readyItem);
             }
         }
 
@@ -206,7 +180,10 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
         {
             try
             {
-                Consume(_queues[0]);
+                foreach (var item in _readyQueue.GetConsumingEnumerable(_cancellationTokenSource.Token))
+                {
+                    _processRequest(item.Request);
+                }
             }
             catch (Exception err)
             {
@@ -216,10 +193,12 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
         }
 
         /// <summary>
-        /// Waits for every queue to finish processing its pending requests, up to the given timeout.
+        /// Waits until no order has requests in flight, up to the given timeout. In practice only the synchronous
+        /// early return runs. The threaded branch below is defensive, since its callers only reach it in backtesting
+        /// where the pool is synchronous, so it never runs in a live deployment.
         /// </summary>
         /// <param name="timeout">The maximum time to wait</param>
-        /// <returns>True if any queue was still busy when the timeout elapsed</returns>
+        /// <returns>True if the pool was still processing when the timeout elapsed</returns>
         public bool WaitForProcessing(TimeSpan timeout)
         {
             // synchronous mode has no worker thread to drain the queue, the caller pumps it via ProcessPending
@@ -228,10 +207,11 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
                 return false;
             }
 
-            // re-check each pass so a queue added while we waited is not missed
-            while (TryGetBusyQueue(out var queue))
+            // re-check each pass since the shared queue signals idle as soon as a worker finds it empty, even if
+            // another worker is still processing or a request is parked
+            while (IsProcessing())
             {
-                if (!queue.WaitHandle.WaitOne(timeout, _cancellationTokenSource.Token))
+                if (!_readyQueue.WaitHandle.WaitOne(timeout, _cancellationTokenSource.Token))
                 {
                     return true;
                 }
@@ -240,16 +220,13 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
         }
 
         /// <summary>
-        /// Gets a queue still processing requests, if any.
+        /// Whether any order still has a request in flight, either queued, being processed or parked.
         /// </summary>
-        /// <param name="queue">The busy queue found, or null if every queue is idle</param>
-        /// <returns>True if a busy queue was found, false if every queue is idle</returns>
-        private bool TryGetBusyQueue(out IBusyCollection<OrderRequest> queue)
+        private bool IsProcessing()
         {
             lock (_lock)
             {
-                queue = _queues.FirstOrDefault(q => q.IsBusy);
-                return queue != null;
+                return _inFlight.Count > 0 || _readyQueue.IsBusy;
             }
         }
 
@@ -261,16 +238,12 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
         {
             lock (_lock)
             {
-                // stop growing so no queue/thread can be added while we shut down, which leaves the
-                // collections frozen and safe to iterate without taking a snapshot
+                // stop growing so the threads list is frozen and safe to iterate without taking a snapshot
                 _shuttingDown = true;
             }
 
-            foreach (var queue in _queues)
-            {
-                queue.CompleteAdding();
-            }
-
+            // let the workers drain whatever is queued, then stop them
+            _readyQueue.CompleteAdding();
             foreach (var thread in _threads)
             {
                 thread?.StopSafely(timeout, _cancellationTokenSource);
@@ -281,76 +254,113 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
         }
 
         /// <summary>
-        /// Creates a queue and its dedicated worker thread and starts it.
+        /// Creates a worker thread and starts it.
         /// Callers growing the pool on demand must hold <see cref="_lock"/>.
         /// </summary>
         private void AddThread()
         {
-            var threadId = _queues.Count; // matches the queue index this thread will consume
-            _queues.Add(new BusyBlockingCollection<OrderRequest>());
-            var thread = new Thread(() => Run(threadId)) { IsBackground = true, Name = $"Transaction Thread {threadId}" };
+            var threadId = _threads.Count;
+            var thread = new Thread(Run) { IsBackground = true, Name = $"Transaction Thread {threadId}" };
             _threads.Add(thread);
             thread.Start();
         }
 
         /// <summary>
-        /// Grows the pool only when every thread is busy and still has pending requests, up to the maximum.
+        /// Grows the pool by one worker when every existing worker is already busy, up to the maximum.
         /// Caller must hold <see cref="_lock"/>.
         /// </summary>
         private void TryExpand()
         {
-            if (_synchronous || _shuttingDown || _queues.Count >= _maximumThreads || _cancellationTokenSource.IsCancellationRequested)
+            if (_synchronous || _shuttingDown || _threads.Count >= _maximumThreads || _cancellationTokenSource.IsCancellationRequested)
             {
                 return;
             }
 
-            // only grow when the whole pool is saturated: every thread busy and with requests still waiting
-            for (var i = 0; i < _queues.Count; i++)
+            // only grow when every worker is already busy, so the request being enqueued would have to wait
+            if (Volatile.Read(ref _busyWorkers) >= _threads.Count)
             {
-                var queue = _queues[i];
-                if (!queue.IsBusy || queue.Count == 0)
-                {
-                    return;
-                }
+                AddThread();
             }
-
-            AddThread();
         }
 
         /// <summary>
-        /// Worker thread entry point: consumes its queue until the pool is shut down.
+        /// Worker thread loop that consumes ready requests until the pool is shut down.
         /// </summary>
-        private void Run(int threadId)
+        private void Run()
         {
-            IBusyCollection<OrderRequest> queue;
-            lock (_lock)
-            {
-                // capture our queue safely, the queues list may be growing on demand concurrently
-                queue = _queues[threadId];
-            }
-
             try
             {
-                Consume(queue);
+                foreach (var item in _readyQueue.GetConsumingEnumerable(_cancellationTokenSource.Token))
+                {
+                    ProcessInOrder(item);
+                }
             }
             catch (Exception err)
             {
                 // unexpected error, we need to close down shop
                 _onError(err);
             }
-
-            Log.Trace($"OrderRequestProcessingPool.Run(): Ending Thread {threadId}...");
-            IsActive = false;
         }
 
         /// <summary>
-        /// Processes every request the queue yields, handing each one to the configured processor.
+        /// Processes a request and then drains, in arrival order, every follow up request parked for the same order,
+        /// so a single worker handles the whole order in sequence before moving on to other work.
         /// </summary>
-        private void Consume(IBusyCollection<OrderRequest> queue)
+        private void ProcessInOrder(WorkItem item)
         {
-            foreach (var request in queue.GetConsumingEnumerable(_cancellationTokenSource.Token))
+            var request = item.Request;
+            Interlocked.Increment(ref _busyWorkers);
+            try
             {
-                _processRequest(request);
+                while (request != null)
+                {
+                    _processRequest(request);
+
+                    lock (_lock)
+                    {
+                        var parked = _inFlight[item.Key];
+                        if (parked.Count > 0)
+                        {
+                            request = parked.Dequeue();
+                        }
+                        else
+                        {
+                            // no more requests for this order in flight, drop its bookkeeping
+                            _inFlight.Remove(item.Key);
+                            request = null;
+                        }
+                    }
+                }
+            }
+            finally
+            {
+                Interlocked.Decrement(ref _busyWorkers);
+            }
+        }
+
+        /// <summary>
+        /// Builds the routing key that ties an order's requests together, the combo group when it has one, otherwise
+        /// the order itself. Order ids and group ids are separate counters that can share a value, so the flag keeps
+        /// a simple order and a combo group from colliding.
+        /// </summary>
+        private static (bool IsGroup, int Id) GetRoutingKey(Order order)
+        {
+            var group = order.GroupOrderManager;
+            return group?.Id > 0 ? (true, group.Id) : (false, order.Id);
+        }
+
+        /// <summary>
+        /// Pairs a request with its routing key so the worker can drain the rest of the order without re-deriving it.
+        /// </summary>
+        private readonly struct WorkItem
+        {
+            public OrderRequest Request { get; }
+            public (bool IsGroup, int Id) Key { get; }
+
+            public WorkItem(OrderRequest request, (bool IsGroup, int Id) key)
+            {
+                Request = request;
+                Key = key;
             }
         }
     }
