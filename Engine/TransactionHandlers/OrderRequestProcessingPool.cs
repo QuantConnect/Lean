@@ -38,8 +38,8 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
         // the shared queue of requests cleared to run. every worker pulls from here so the load stays balanced
         private readonly IBusyCollection<WorkItem> _readyQueue;
         private readonly List<Thread> _threads;
-        // for each order (or combo group) being processed, the follow up requests waiting their turn in arrival order.
-        // while the key is here the order is already running, so a new request waits instead of starting
+        // for each order (or combo group) being processed, the follow up requests waiting their turn in arrival order,
+        // or null until a second request actually needs parking. while the key is here the order is already running
         private readonly Dictionary<(bool IsGroup, int Id), Queue<OrderRequest>> _inFlight = new();
         // guards the in flight map, the threads list and the growth/shutdown flags
         private readonly object _lock = new object();
@@ -152,13 +152,19 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
             {
                 if (_inFlight.TryGetValue(key, out var parked))
                 {
-                    // the order is already being processed, park this request so its worker runs it next in order
+                    // the order is already being processed, park this request so its worker runs it next in order,
+                    // allocating the queue only now that a second request has actually arrived
+                    if (parked == null)
+                    {
+                        _inFlight[key] = parked = new Queue<OrderRequest>();
+                    }
                     parked.Enqueue(request);
                 }
                 else
                 {
-                    // claim the order and grow the pool if every worker is already busy so this request would wait
-                    _inFlight[key] = new Queue<OrderRequest>();
+                    // claim the order without a queue, most orders never get a second request. grow the pool if
+                    // every worker is already busy so this request would wait
+                    _inFlight[key] = null;
                     TryExpand();
                     readyItem = new WorkItem(request, key);
                     run = true;
@@ -319,7 +325,7 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
                     lock (_lock)
                     {
                         var parked = _inFlight[item.Key];
-                        if (parked.Count > 0)
+                        if (parked != null && parked.Count > 0)
                         {
                             request = parked.Dequeue();
                         }

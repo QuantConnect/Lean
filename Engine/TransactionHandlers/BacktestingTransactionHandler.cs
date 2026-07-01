@@ -33,7 +33,6 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
         private BacktestingBrokerage _brokerage;
         private IAlgorithm _algorithm;
         private Delistings _lastestDelistings;
-        private bool _enableConcurrency;
 
         /// <summary>
         /// Gets current time UTC. This is here to facilitate testing
@@ -55,7 +54,6 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
 
             _brokerage = (BacktestingBrokerage)brokerage;
             _algorithm = algorithm;
-            _enableConcurrency = _brokerage.ConcurrencyEnabled && _algorithm.LiveMode;
 
             base.Initialize(algorithm, brokerage, resultHandler);
         }
@@ -64,14 +62,14 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
         /// For backtesting order requests are processed synchronously by the algorithm thread, only live
         /// deployments with a concurrency enabled brokerage use background transaction threads
         /// </summary>
-        protected override bool SynchronousProcessing => !_enableConcurrency;
+        protected override bool SynchronousProcessing => !(ConcurrencyEnabled && _algorithm.LiveMode);
 
         /// <summary>
         /// Processes all synchronous events that must take place before the next time loop for the algorithm
         /// </summary>
         public override void ProcessSynchronousEvents()
         {
-            if (!_enableConcurrency)
+            if (SynchronousProcessing)
             {
                 // we process pending order requests our selves
                 ProcessPendingRequests();
@@ -105,7 +103,7 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
         /// <param name="ticket">The <see cref="OrderTicket"/> expecting to be submitted</param>
         protected override void WaitForOrderSubmission(OrderTicket ticket)
         {
-            if (_enableConcurrency)
+            if (!SynchronousProcessing)
             {
                 // let the base class handle this
                 base.WaitForOrderSubmission(ticket);
