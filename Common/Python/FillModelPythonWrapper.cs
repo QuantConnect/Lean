@@ -141,6 +141,17 @@ namespace QuantConnect.Python
         }
 
         /// <summary>
+        /// Pegged to Midpoint Fill Model. Return an order event with the fill details.
+        /// </summary>
+        /// <param name="asset">Asset we're trading this order</param>
+        /// <param name="order">Pegged to Midpoint Order to fill</param>
+        /// <returns>Order fill information detailing the average price and quantity filled.</returns>
+        public override OrderEvent PeggedToMidpointFill(Security asset, PeggedToMidpointOrder order)
+        {
+            return _model.InvokeMethod<OrderEvent>(nameof(PeggedToMidpointFill), asset, order);
+        }
+
+        /// <summary>
         /// Default combo market fill model for the base security class. Fills at the last traded price for each leg.
         /// </summary>
         /// <param name="order">Order to fill</param>
