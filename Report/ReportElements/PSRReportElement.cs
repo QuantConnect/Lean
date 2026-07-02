@@ -16,6 +16,7 @@
 using System;
 using System.Linq;
 using Deedle;
+using QuantConnect.Data;
 using QuantConnect.Packets;
 
 namespace QuantConnect.Report.ReportElements
@@ -75,14 +76,17 @@ namespace QuantConnect.Report.ReportElements
             }
 
             var sixMonthsBefore = equityCurvePerformance.LastKey() - TimeSpan.FromDays(180);
+            var lastSixMonthsPerformance = equityCurvePerformance.Where(kvp => kvp.Key >= sixMonthsBefore);
 
             var benchmarkSharpeRatio = 1.0d / Math.Sqrt(_tradingDaysPerYear);
+            // Use the same excess-return basis as the reported PSR by subtracting the deannualized risk-free rate
+            var riskFreeRate = new InterestRateProvider().GetAverageRiskFreeRate(lastSixMonthsPerformance.Keys);
             psr = Statistics.Statistics.ProbabilisticSharpeRatio(
-                equityCurvePerformance
-                    .Where(kvp => kvp.Key >= sixMonthsBefore)
+                lastSixMonthsPerformance
                     .Values
-                    .ToList(), 
-                benchmarkSharpeRatio)
+                    .ToList(),
+                benchmarkSharpeRatio,
+                (double)riskFreeRate / _tradingDaysPerYear)
                 .SafeDecimalCast();
             
             Result = psr;
