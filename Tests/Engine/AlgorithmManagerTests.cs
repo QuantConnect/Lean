@@ -21,10 +21,12 @@ using System.Diagnostics;
 using System.Linq;
 using System.Threading;
 using NUnit.Framework;
+using QuantConnect.Algorithm;
 using QuantConnect.Algorithm.CSharp;
 using QuantConnect.Brokerages;
 using QuantConnect.Brokerages.Backtesting;
 using QuantConnect.Data;
+using QuantConnect.Data.Consolidators;
 using QuantConnect.Data.Market;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Interfaces;
@@ -39,6 +41,7 @@ using QuantConnect.Packets;
 using QuantConnect.Scheduling;
 using QuantConnect.Securities;
 using QuantConnect.Statistics;
+using QuantConnect.Tests.Engine.DataFeeds;
 using QuantConnect.Util;
 using Log = QuantConnect.Logging.Log;
 
@@ -407,6 +410,140 @@ namespace QuantConnect.Tests.Engine
                 algorithmLocation: "QuantConnect.Tests.dll");
 
             Assert.AreEqual(1, ResultHandlerRuntimeErrorTest.Loops);
+        }
+
+        [Test]
+        public void ScheduledEventsRunAfterPastConsolidators()
+        {
+            var algorithm = new QCAlgorithm();
+            algorithm.SubscriptionManager.SetDataManager(new DataManagerStub(algorithm));
+            algorithm.SetStartDate(2013, 10, 07);
+            algorithm.SetEndDate(2013, 10, 08);
+            algorithm.SetCash(100000);
+
+            var spy = algorithm.AddEquity("SPY", Resolution.Hour).Symbol;
+            var consolidator = new ScanFlagConsolidator();
+            algorithm.SubscriptionManager.AddConsolidator(spy, consolidator);
+            algorithm.SetStatus(AlgorithmStatus.Running);
+
+            var realtime = new AssertConsolidatorScannedBeforeScheduleHandler(consolidator);
+            var algorithmManager = new AlgorithmManager(false);
+            var job = new BacktestNodePacket(1, 2, "3", null, 9m, $"{nameof(AlgorithmManagerTests)}.{nameof(ScheduledEventsRunAfterPastConsolidators)}");
+            var synchronizer = new SingleTimePulseSynchronizer(algorithm.UtcTime.AddHours(2));
+            using var leanManager = new NullLeanManager();
+            using var tokenSource = new CancellationTokenSource();
+
+            algorithmManager.Run(
+                job,
+                algorithm,
+                synchronizer,
+                new BacktestingTransactionHandler(),
+                new NullResultHandler(),
+                realtime,
+                leanManager,
+                tokenSource,
+                new PerformanceTrackingTool());
+
+            Assert.IsTrue(realtime.ScanPastEventsCalled);
+        }
+
+        private sealed class SingleTimePulseSynchronizer : ISynchronizer
+        {
+            private readonly DateTime _time;
+
+            public SingleTimePulseSynchronizer(DateTime time)
+            {
+                _time = time;
+            }
+
+            public IEnumerable<TimeSlice> StreamData(CancellationToken cancellationToken)
+            {
+                yield return new TimeSlice(
+                    _time,
+                    0,
+                    new Slice(
+                        _time,
+                        new List<BaseData>(),
+                        new TradeBars(),
+                        new QuoteBars(),
+                        new Ticks(),
+                        new OptionChains(),
+                        new FuturesChains(),
+                        new Splits(),
+                        new Dividends(),
+                        new Delistings(),
+                        new SymbolChangedEvents(),
+                        new MarginInterestRates(),
+                        _time),
+                    new List<DataFeedPacket>(),
+                    new List<UpdateData<ISecurityPrice>>(),
+                    new List<UpdateData<SubscriptionDataConfig>>(),
+                    new List<UpdateData<ISecurityPrice>>(),
+                    SecurityChanges.None,
+                    new Dictionary<Universe, BaseDataCollection>(),
+                    true);
+            }
+        }
+
+        private sealed class AssertConsolidatorScannedBeforeScheduleHandler : IRealTimeHandler
+        {
+            private readonly ScanFlagConsolidator _consolidator;
+
+            public AssertConsolidatorScannedBeforeScheduleHandler(ScanFlagConsolidator consolidator)
+            {
+                _consolidator = consolidator;
+            }
+
+            public bool IsActive => false;
+            public bool ScanPastEventsCalled { get; private set; }
+            public void Add(ScheduledEvent scheduledEvent)
+            {
+            }
+
+            public void Remove(ScheduledEvent scheduledEvent)
+            {
+            }
+
+            public void Setup(IAlgorithm algorithm, AlgorithmNodePacket job, IResultHandler resultHandler, IApi api, IIsolatorLimitResultProvider isolatorLimitProvider)
+            {
+            }
+
+            public void Run()
+            {
+            }
+
+            public void SetTime(DateTime time)
+            {
+            }
+
+            public void ScanPastEvents(DateTime time)
+            {
+                ScanPastEventsCalled = true;
+                Assert.IsTrue(_consolidator.Scanned);
+            }
+
+            public void Exit()
+            {
+            }
+
+            public void OnSecuritiesChanged(SecurityChanges changes)
+            {
+            }
+        }
+
+        private sealed class ScanFlagConsolidator : DataConsolidator<BaseData>
+        {
+            public bool Scanned { get; private set; }
+            public override IBaseData WorkingData => null;
+            public override Type OutputType => typeof(BaseData);
+            public override void Update(BaseData data)
+            {
+            }
+
+            public override void Scan(DateTime currentLocalTime)
+            {
+                Scanned = true;
+            }
         }
 
         public class ResultHandlerRuntimeErrorTest : BasicTemplateDailyAlgorithm

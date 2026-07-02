@@ -201,13 +201,6 @@ namespace QuantConnect.Lean.Engine
                     break;
                 }
 
-                // If backtesting/warmup, we need to check if there are realtime events in the past
-                // which didn't fire because at the scheduled times there was no data (i.e. markets closed)
-                // and fire them with the correct date/time.
-                performanceTrackingTool.Start(PerformanceTarget.Schedule);
-                realtime.ScanPastEvents(time);
-                performanceTrackingTool.Stop(PerformanceTarget.Schedule);
-
                 // will scan registered consolidators for which we've past the expected scan call.
                 // In live mode we want to round down to the second, so we don't scan too far into the future:
                 // The time slice might carry the data needed to complete a current consolidated bar but the
@@ -218,6 +211,13 @@ namespace QuantConnect.Lean.Engine
                 performanceTrackingTool.Start(PerformanceTarget.Consolidators);
                 algorithm.SubscriptionManager.ScanPastConsolidators(pastConsolidatorsScanTime, algorithm);
                 performanceTrackingTool.Stop(PerformanceTarget.Consolidators);
+
+                // If backtesting/warmup, we need to check if there are realtime events in the past
+                // which didn't fire because at the scheduled times there was no data (i.e. markets closed)
+                // and fire them with the correct date/time.
+                performanceTrackingTool.Start(PerformanceTarget.Schedule);
+                realtime.ScanPastEvents(time);
+                performanceTrackingTool.Stop(PerformanceTarget.Schedule);
 
                 performanceTrackingTool.Start(PerformanceTarget.Securities);
                 //Set the algorithm and real time handler's time
