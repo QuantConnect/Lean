@@ -2641,7 +2641,7 @@ namespace QuantConnect.Tests.Engine.BrokerageTransactionHandlerTests
             finally
             {
                 gate.Set();
-                pool.Shutdown(TimeSpan.FromSeconds(10));
+                pool.DisposeSafely();
             }
         }
 
@@ -2675,7 +2675,7 @@ namespace QuantConnect.Tests.Engine.BrokerageTransactionHandlerTests
             finally
             {
                 gate.Set();
-                pool.Shutdown(TimeSpan.FromSeconds(10));
+                pool.DisposeSafely();
             }
         }
 
@@ -2715,7 +2715,7 @@ namespace QuantConnect.Tests.Engine.BrokerageTransactionHandlerTests
             }
             finally
             {
-                pool.Shutdown(TimeSpan.FromSeconds(10));
+                pool.DisposeSafely();
             }
         }
 

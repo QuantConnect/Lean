@@ -34,8 +34,10 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
     /// an order has requests in flight, so nothing needs releasing once the order closes. In synchronous mode there
     /// are no workers and the caller drains the queue itself through <see cref="ProcessPending"/>.
     /// </remarks>
-    public class OrderRequestProcessingPool
+    public class OrderRequestProcessingPool : IDisposable
     {
+        // maximum time to wait for each worker thread to stop when disposing the pool
+        private static readonly TimeSpan ShutdownTimeout = TimeSpan.FromSeconds(60);
         // the shared queue of requests cleared to run. every worker pulls from here so the load stays balanced
         private readonly IBusyCollection<WorkItem> _readyQueue;
         private readonly List<Thread> _threads;
@@ -43,12 +45,13 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
         // or null until a second request actually needs parking. while the key is here the order is already running
         private readonly Dictionary<(bool IsGroup, int Id), Queue<OrderRequest>> _inFlight = new();
         // guards the in flight map, the threads list and the growth/shutdown flags
-        private readonly object _lock = new object();
+        private readonly Lock _lock = new();
         // maximum number of worker threads the pool can grow to on demand
         private readonly int _maximumThreads;
         // true when there are no worker threads and the caller drains the single queue itself
         private readonly bool _synchronous;
-        // set under the lock while shutting down so the pool stops growing
+        // set under the lock when shutting down so the pool stops growing while the queue drains, before the
+        // cancellation token is cancelled as the final hard stop
         private bool _shuttingDown;
         // number of workers currently processing a request, used to decide when the pool is saturated
         private int _busyWorkers;
@@ -238,13 +241,17 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
         }
 
         /// <summary>
-        /// Stops every worker thread and waits for them to terminate, up to the given timeout.
+        /// Stops every worker thread and waits for them to terminate, then releases the pool resources.
         /// </summary>
-        /// <param name="timeout">The maximum time to wait for each thread to stop</param>
-        public void Shutdown(TimeSpan timeout)
+        public void Dispose()
         {
             lock (_lock)
             {
+                // already disposed, nothing else to do
+                if (_shuttingDown)
+                {
+                    return;
+                }
                 // stop growing so the threads list is frozen and safe to iterate without taking a snapshot
                 _shuttingDown = true;
             }
@@ -253,10 +260,11 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
             _readyQueue.CompleteAdding();
             foreach (var thread in _threads)
             {
-                thread?.StopSafely(timeout, _cancellationTokenSource);
+                thread?.StopSafely(ShutdownTimeout, _cancellationTokenSource);
             }
 
             IsActive = false;
+            _readyQueue.DisposeSafely();
             _cancellationTokenSource.DisposeSafely();
         }
 
@@ -278,7 +286,7 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
         /// </summary>
         private void TryExpand()
         {
-            if (_synchronous || _shuttingDown || _threads.Count >= _maximumThreads || _cancellationTokenSource.IsCancellationRequested)
+            if (_synchronous || _shuttingDown || _threads.Count >= _maximumThreads)
             {
                 return;
             }
