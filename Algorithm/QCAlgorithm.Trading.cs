@@ -1278,12 +1278,9 @@ namespace QuantConnect.Algorithm
             if (security == null || !security.IsTradable)
             {
                 // Try to add and seed the security, but don't is it's a canonical symbol
-                if (!isCanonical &&
+                if (CanAutoAddSecurity(symbol) &&
                     // Indexes are not tradable by default
-                    symbol.SecurityType != SecurityType.Index &&
-                    (!symbol.HasUnderlying ||
-                     (symbol.SecurityType.IsOption() && !OptionSymbol.IsOptionContractExpired(symbol, UtcTime)) ||
-                     (symbol.SecurityType == SecurityType.Future && !FuturesExpiryUtilityFunctions.IsFutureContractExpired(symbol, UtcTime, MarketHoursDatabase))))
+                    symbol.SecurityType != SecurityType.Index)
                 {
                     // Send one time warning
                     security = AddSecurity(symbol);
@@ -1299,6 +1296,21 @@ namespace QuantConnect.Algorithm
 
             throw new InvalidOperationException($"The symbol {symbol} is not found in the algorithm's securities collection " +
                     "and cannot be re-added due to it being delisted or no longer tradable.");
+        }
+
+        /// <summary>
+        /// Determines whether the given symbol can be automatically added to the algorithm on the user's behalf,
+        /// so that it does not need to be explicitly subscribed to before being used. This is the case both when
+        /// submitting an order (see <see cref="GetSecurityForOrder"/>) and when registering an indicator or
+        /// consolidator for a symbol the user has not subscribed to. Canonical symbols (universes) and expired
+        /// option/future contracts are excluded.
+        /// </summary>
+        private bool CanAutoAddSecurity(Symbol symbol)
+        {
+            return !symbol.IsCanonical() &&
+                (!symbol.HasUnderlying ||
+                 (symbol.SecurityType.IsOption() && !OptionSymbol.IsOptionContractExpired(symbol, UtcTime)) ||
+                 (symbol.SecurityType == SecurityType.Future && !FuturesExpiryUtilityFunctions.IsFutureContractExpired(symbol, UtcTime, MarketHoursDatabase)));
         }
 
         /// <summary>
