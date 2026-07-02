@@ -107,13 +107,29 @@ namespace QuantConnect.Securities.Option
         {
             var security = parameters.Security;
             var quantity = parameters.Quantity;
+            var price = GetInitialMarginPrice(security, quantity);
             var value = security.QuoteCurrency.ConversionRate
                         * security.SymbolProperties.ContractMultiplier
-                        * security.Price
+                        * price
                         * quantity;
 
             // Initial margin requirement for long options is only the premium that is paid upfront
             return new OptionInitialMargin(parameters.Quantity >= 0 ? 0 : value * GetMarginRequirement(security, quantity, value), value);
+        }
+
+        private static decimal GetInitialMarginPrice(Security security, decimal quantity)
+        {
+            if (quantity > 0 && security.AskPrice != 0m)
+            {
+                return security.AskPrice;
+            }
+
+            if (quantity < 0 && security.BidPrice != 0m)
+            {
+                return security.BidPrice;
+            }
+
+            return security.Price;
         }
 
         /// <summary>

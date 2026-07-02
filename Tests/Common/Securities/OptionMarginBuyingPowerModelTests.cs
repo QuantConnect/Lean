@@ -79,6 +79,59 @@ namespace QuantConnect.Tests.Common.Securities
         }
 
         [Test]
+        public void LongOptionInitialMarginUsesAskPriceIfAvailable()
+        {
+            const decimal bidPrice = 1.5m;
+            const decimal askPrice = 2.5m;
+            const decimal lastPrice = 2m;
+            const decimal underlyingPrice = 200m;
+            const decimal quantity = 10m;
+
+            var equity = CreateEquity();
+            equity.SetMarketPrice(new Tick { Value = underlyingPrice });
+
+            var optionCall = CreateOption(equity, OptionRight.Call, 192m);
+            optionCall.SetMarketPrice(new Tick
+            {
+                Value = lastPrice,
+                BidPrice = bidPrice,
+                AskPrice = askPrice,
+                TickType = TickType.Quote
+            });
+
+            var buyingPowerModel = new OptionMarginModel();
+            var expectedPremium = askPrice * optionCall.SymbolProperties.ContractMultiplier * quantity;
+
+            Assert.AreEqual(expectedPremium, buyingPowerModel.GetInitialMarginRequirement(optionCall, quantity));
+        }
+
+        [Test]
+        public void ShortOptionInitialMarginUsesBidPriceIfAvailable()
+        {
+            const decimal bidPrice = 1.5m;
+            const decimal askPrice = 2.5m;
+            const decimal lastPrice = 2m;
+            const decimal underlyingPrice = 200m;
+            const decimal quantity = -10m;
+
+            var equity = CreateEquity();
+            equity.SetMarketPrice(new Tick { Value = underlyingPrice });
+
+            var optionCall = CreateOption(equity, OptionRight.Call, 192m);
+            optionCall.SetMarketPrice(new Tick
+            {
+                Value = lastPrice,
+                BidPrice = bidPrice,
+                AskPrice = askPrice,
+                TickType = TickType.Quote
+            });
+
+            var buyingPowerModel = new OptionMarginModel();
+
+            Assert.AreEqual(-41500, (double)buyingPowerModel.GetInitialMarginRequirement(optionCall, quantity), delta: 0.01);
+        }
+
+        [Test]
         public void TestShortCallsITM()
         {
             const decimal price = 14m;
