@@ -21,6 +21,7 @@ using System.IO;
 using System.Linq;
 using NUnit.Framework;
 using QuantConnect.Data.Auxiliary;
+using QuantConnect.Securities;
 
 namespace QuantConnect.Tests.Common.Data.Auxiliary
 {
@@ -86,6 +87,24 @@ namespace QuantConnect.Tests.Common.Data.Auxiliary
             });
 
             Assert.AreEqual(new DateTime(2014, 03, 27), mapFile.FirstDate);
+        }
+
+        [Test]
+        public void TradingDaysBeforeExpiryUsesLastTradingDayRows()
+        {
+            var april = Symbol.CreateFuture(Futures.Metals.Gold, QuantConnect.Market.COMEX, new DateTime(2026, 4, 28));
+            var june = Symbol.CreateFuture(Futures.Metals.Gold, QuantConnect.Market.COMEX, new DateTime(2026, 6, 26));
+            var mapFile = new MapFile("gc", new List<MapFileRow>
+            {
+                new MapFileRow(new DateTime(2026, 4, 28), april.ID.ToString(), "COMEX", QuantConnect.Market.COMEX, SecurityType.Future, DataMappingMode.LastTradingDay),
+                new MapFileRow(new DateTime(2026, 6, 26), june.ID.ToString(), "COMEX", QuantConnect.Market.COMEX, SecurityType.Future, DataMappingMode.LastTradingDay)
+            });
+
+            var result = mapFile.GetMappedSymbol(
+                new DateTime(2026, 4, 28),
+                dataMappingMode: DataMappingMode.TradingDaysBeforeExpiry);
+
+            Assert.AreEqual(april.ID.ToString().ToUpperInvariant(), result);
         }
 
         [Test]

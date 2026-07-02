@@ -2711,6 +2711,9 @@ namespace QuantConnect
                 case "3":
                 case "openinterestannual":
                     return DataMappingMode.OpenInterestAnnual;
+                case "4":
+                case "tradingdaysbeforeexpiry":
+                    return DataMappingMode.TradingDaysBeforeExpiry;
                 default:
                     throw new ArgumentException(Messages.Extensions.UnknownDataMappingMode(dataMappingMode));
             }
@@ -3599,13 +3602,32 @@ namespace QuantConnect
         /// <returns>A new future expiration symbol instance</returns>
         public static Symbol AdjustSymbolByOffset(this Symbol symbol, uint offset)
         {
+            return symbol.AdjustSymbolByOffset(offset, null);
+        }
+
+        /// <summary>
+        /// Helper method that will return a back month, with future expiration, future contract based on the given offset and contract month cycle
+        /// </summary>
+        /// <param name="symbol">The none canonical future symbol</param>
+        /// <param name="offset">The quantity of contracts to move into the future expiration chain</param>
+        /// <param name="contractMonthCycle">Optional contract expiration months to include in the offset walk</param>
+        /// <returns>A new future expiration symbol instance</returns>
+        public static Symbol AdjustSymbolByOffset(this Symbol symbol, uint offset, IReadOnlyCollection<int> contractMonthCycle)
+        {
             if (symbol.SecurityType != SecurityType.Future || symbol.IsCanonical())
             {
                 throw new InvalidOperationException(Messages.Extensions.ErrorAdjustingSymbolByOffset);
             }
 
+            var contractMonths = contractMonthCycle?.ToHashSet();
             var expiration = symbol.ID.Date;
-            for (var i = 0; i < offset; i++)
+            var remainingOffset = offset;
+            if (contractMonths != null && !contractMonths.Contains(expiration.Month))
+            {
+                remainingOffset++;
+            }
+
+            for (var i = 0; i < remainingOffset; i++)
             {
                 var expiryFunction = FuturesExpiryFunctions.FuturesExpiryFunction(symbol);
                 DateTime newExpiration;
@@ -3615,7 +3637,7 @@ namespace QuantConnect
                 {
                     monthOffset++;
                     newExpiration = expiryFunction(expiration.AddMonths(monthOffset)).Date;
-                } while (newExpiration <= expiration);
+                } while (newExpiration <= expiration || contractMonths != null && !contractMonths.Contains(newExpiration.Month));
 
                 expiration = newExpiration;
                 symbol = Symbol.CreateFuture(symbol.ID.Symbol, symbol.ID.Market, newExpiration);
@@ -4164,7 +4186,8 @@ namespace QuantConnect
             var dataNormalizationMode = settings.GetUniverseNormalizationModeOrDefault(symbol.SecurityType);
 
             future = (Future)algorithm.AddSecurity(symbol.Canonical, settings.Resolution, settings.FillForward, settings.Leverage, settings.ExtendedMarketHours,
-                settings.DataMappingMode, dataNormalizationMode, settings.ContractDepthOffset);
+                settings.DataMappingMode, dataNormalizationMode, settings.ContractDepthOffset, settings.DataMappingModeDaysOffset,
+                settings.ContractMonthCycle?.ToArray());
 
             // let's yield back both the future chain and the continuous future universe
             return algorithm.UniverseManager.Values.Where(universe => universe.Configuration.Symbol == symbol.Canonical || ContinuousContractUniverse.CreateSymbol(symbol.Canonical) == universe.Configuration.Symbol);
@@ -4298,7 +4321,9 @@ namespace QuantConnect
                 isFilteredSubscription,
                 request.DataNormalizationMode,
                 request.DataMappingMode,
-                request.ContractDepthOffset
+                request.ContractDepthOffset,
+                dataMappingModeDaysOffset: request.DataMappingModeDaysOffset,
+                contractMonthCycle: request.ContractMonthCycle
             );
         }
 

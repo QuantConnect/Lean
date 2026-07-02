@@ -105,6 +105,11 @@ namespace QuantConnect.Data.Auxiliary
         /// <returns>Symbol on this date.</returns>
         public string GetMappedSymbol(DateTime searchDate, string defaultReturnValue = "", DataMappingMode? dataMappingMode = null)
         {
+            if (dataMappingMode == DataMappingMode.TradingDaysBeforeExpiry)
+            {
+                dataMappingMode = DataMappingMode.LastTradingDay;
+            }
+
             var mappedSymbol = defaultReturnValue;
             //Iterate backwards to find the most recent factor:
             for (var i = 0; i < _data.Count; i++)
