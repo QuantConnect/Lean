@@ -2467,7 +2467,7 @@ namespace QuantConnect.Tests.Engine.BrokerageTransactionHandlerTests
         }
 
         [Test]
-        public void ProcessesComboRequestsOnSameThreadWhenConcurrencyIsEnabled()
+        public void ProcessesComboRequestsWhenConcurrencyIsEnabled()
         {
             var algorithm = new TestAlgorithm();
             using var brokerage = new TestingConcurrentBrokerage();
@@ -2504,14 +2504,225 @@ namespace QuantConnect.Tests.Engine.BrokerageTransactionHandlerTests
 
                 Assert.IsTrue(finishedEvent.Wait(10000));
 
-                Assert.IsTrue(transactionHandler.RequestProcessingThreads.TryGetValue(orderRequest1.OrderId, out var order1Thread));
-                Assert.IsTrue(transactionHandler.RequestProcessingThreads.TryGetValue(orderRequest2.OrderId, out var order2Thread));
-                Assert.AreEqual(order1Thread, order2Thread);
+                // both legs of the combo must be processed
+                Assert.IsTrue(transactionHandler.RequestProcessingThreads.ContainsKey(orderRequest1.OrderId));
+                Assert.IsTrue(transactionHandler.RequestProcessingThreads.ContainsKey(orderRequest2.OrderId));
             }
             finally
             {
                 transactionHandler.Exit();
             }
+        }
+
+        [Test]
+        public void TransactionThreadPoolStartsAtMinimumThreads()
+        {
+            var algorithm = new TestAlgorithm();
+            using var brokerage = new TestingConcurrentBrokerage();
+            using var finishedEvent = new ManualResetEventSlim(false);
+            var transactionHandler = new TestableConcurrentBrokerageTransactionHandler(1, finishedEvent);
+            transactionHandler.Initialize(algorithm, brokerage, new BacktestingResultHandler());
+
+            try
+            {
+                // the pool starts with the minimum number of threads and grows only on demand
+                Assert.AreEqual(2, transactionHandler.ActiveThreadCount);
+            }
+            finally
+            {
+                transactionHandler.Exit();
+            }
+        }
+
+        [TestCase(10)]
+        [TestCase(3)]
+        public void TransactionThreadPoolGrowsUnderBacklogUpToMaximum(int maximumThreads)
+        {
+            var algorithm = new TestAlgorithm();
+            using var brokerage = new TestingConcurrentBrokerage();
+
+            using var finishedEvent = new ManualResetEventSlim(false);
+            using var gate = new ManualResetEventSlim(false);
+            var transactionHandler = new TestableConcurrentBrokerageTransactionHandler(int.MaxValue, finishedEvent)
+            {
+                Gate = gate,
+                MaxThreadsOverride = maximumThreads
+            };
+            transactionHandler.Initialize(algorithm, brokerage, new BacktestingResultHandler());
+
+            try
+            {
+                algorithm.Transactions.SetOrderProcessor(transactionHandler);
+
+                var security = (Security)algorithm.AddEquity("SPY");
+                algorithm.SetFinishedWarmingUp();
+
+                var reference = new DateTime(2025, 07, 03, 10, 0, 0);
+                security.SetMarketPrice(new Tick(reference, security.Symbol, 300, 300));
+
+                // starts at the minimum
+                Assert.AreEqual(2, transactionHandler.ActiveThreadCount);
+
+                // keep feeding orders while threads stay blocked on the gate, forcing the pool to grow to the max
+                var orderId = 0;
+                var reachedMax = SpinWait.SpinUntil(() =>
+                {
+                    if (orderId < 1000)
+                    {
+                        var request = MakeAsyncMarketRequest(security, reference);
+                        request.SetOrderId(++orderId);
+                        transactionHandler.Process(request);
+                    }
+                    return transactionHandler.ActiveThreadCount >= maximumThreads;
+                }, 10000);
+
+                Assert.IsTrue(reachedMax, $"Pool did not grow to the maximum, current size: {transactionHandler.ActiveThreadCount}");
+                // never grows beyond the configured maximum
+                Assert.AreEqual(maximumThreads, transactionHandler.ActiveThreadCount);
+            }
+            finally
+            {
+                gate.Set();
+                transactionHandler.Exit();
+            }
+        }
+
+        [Test]
+        public void ProcessesAnOrdersRequestsInOrderAsThePoolGrows()
+        {
+            // the requests of a single order must be processed in arrival order even when the pool grows between them
+            using var gate = new ManualResetEventSlim(false);
+            var processed = new ConcurrentQueue<(int OrderId, OrderRequestType Type)>();
+            Exception processingError = null;
+            var pool = new OrderRequestProcessingPool(concurrencyEnabled: true, minimumThreads: 1, maximumThreads: 10,
+                request =>
+                {
+                    // block first so the requests pile up, then record the order they run in
+                    gate.Wait();
+                    processed.Enqueue((request.OrderId, request.OrderRequestType));
+                },
+                exception => processingError = exception);
+
+            try
+            {
+                var symbol = Symbols.SPY;
+                var reference = new DateTime(2025, 07, 03, 10, 0, 0);
+
+                // the order we track, its submit claims a worker and blocks on the gate
+                var submit = new SubmitOrderRequest(OrderType.Market, symbol.SecurityType, symbol, 1, 0, 0, reference, "");
+                submit.SetOrderId(1);
+                var order = Order.CreateOrder(submit);
+                pool.Dispatch(submit, order);
+
+                // saturate the pool with unrelated orders so it grows while the submit is still in flight
+                var fillerId = 1000;
+                var grew = SpinWait.SpinUntil(() =>
+                {
+                    var filler = new SubmitOrderRequest(OrderType.Market, symbol.SecurityType, symbol, 1, 0, 0, 0, 0, false, reference, "",
+                        asynchronous: true);
+                    filler.SetOrderId(++fillerId);
+                    pool.Dispatch(filler, Order.CreateOrder(filler));
+                    return pool.ThreadCount >= 3;
+                }, 10000);
+                Assert.IsTrue(grew, $"the pool did not grow, current size: {pool.ThreadCount}");
+
+                // the update and cancel arrive after the pool grew, they must still run after the submit and in order
+                pool.Dispatch(new UpdateOrderRequest(reference, order.Id, new UpdateOrderFields()), order);
+                pool.Dispatch(new CancelOrderRequest(reference, order.Id, ""), order);
+
+                gate.Set();
+
+                Assert.IsTrue(SpinWait.SpinUntil(() => processed.Count(x => x.OrderId == 1) >= 3, 10000),
+                    "the order's requests were not all processed");
+                var sequence = processed.Where(x => x.OrderId == 1).Select(x => x.Type).ToList();
+                Assert.AreEqual(new[] { OrderRequestType.Submit, OrderRequestType.Update, OrderRequestType.Cancel }, sequence);
+                Assert.IsNull(processingError, $"the pool reported an error: {processingError}");
+            }
+            finally
+            {
+                gate.Set();
+                pool.Shutdown(TimeSpan.FromSeconds(10));
+            }
+        }
+
+        [Test]
+        public void DoesNotGrowWhenOnlyOneOrderIsBusy()
+        {
+            using var gate = new ManualResetEventSlim(false);
+            var pool = new OrderRequestProcessingPool(concurrencyEnabled: true, minimumThreads: 2, maximumThreads: 10,
+                request => gate.Wait(),
+                exception => { });
+
+            try
+            {
+                var symbol = Symbols.SPY;
+                var reference = new DateTime(2025, 07, 03, 10, 0, 0);
+
+                var submit = new SubmitOrderRequest(OrderType.Market, symbol.SecurityType, symbol, 1, 0, 0, reference, "");
+                submit.SetOrderId(1);
+                var order = Order.CreateOrder(submit);
+                pool.Dispatch(submit, order);
+
+                // every follow up request is for the same order, so they are parked behind the one busy worker while
+                // the other stays idle, so the pool must not grow no matter how many pile up
+                for (var i = 0; i < 20; i++)
+                {
+                    pool.Dispatch(new UpdateOrderRequest(reference, order.Id, new UpdateOrderFields()), order);
+                }
+
+                Assert.AreEqual(2, pool.ThreadCount);
+            }
+            finally
+            {
+                gate.Set();
+                pool.Shutdown(TimeSpan.FromSeconds(10));
+            }
+        }
+
+        [Test]
+        public void ProcessesManyOrdersWithUpdatesAndCancelsQuickly()
+        {
+            // lots of submit/update/cancel at once, the handler does nothing so this only measures the pool
+            const int orderCount = 1000;
+            const int requestsPerOrder = 3;
+            var processedCount = 0;
+            Exception processingError = null;
+
+            var pool = new OrderRequestProcessingPool(concurrencyEnabled: true, minimumThreads: 2, maximumThreads: 10,
+                _ => Interlocked.Increment(ref processedCount),
+                exception => processingError = exception);
+
+            try
+            {
+                var symbol = Symbols.SPY;
+                var reference = new DateTime(2025, 07, 03, 10, 0, 0);
+
+                for (var i = 1; i <= orderCount; i++)
+                {
+                    var submit = new SubmitOrderRequest(OrderType.Market, symbol.SecurityType, symbol, 1, 0, 0, reference, "");
+                    submit.SetOrderId(i);
+                    var order = Order.CreateOrder(submit);
+
+                    pool.Dispatch(submit, order);
+                    pool.Dispatch(new UpdateOrderRequest(reference, order.Id, new UpdateOrderFields()), order);
+                    pool.Dispatch(new CancelOrderRequest(reference, order.Id, ""), order);
+                }
+
+                // if the pool ever hangs or falls behind this wait times out instead of finishing in a few ms
+                var expectedRequests = orderCount * requestsPerOrder;
+                Assert.IsTrue(SpinWait.SpinUntil(() => processedCount >= expectedRequests, 10000));
+                Assert.IsNull(processingError);
+            }
+            finally
+            {
+                pool.Shutdown(TimeSpan.FromSeconds(10));
+            }
+        }
+
+        private static SubmitOrderRequest MakeAsyncMarketRequest(Security security, DateTime date)
+        {
+            return new SubmitOrderRequest(OrderType.Market, security.Type, security.Symbol, 1, 0, 0, 0, 0, false, date, "",
+                asynchronous: true);
         }
 
         [TestCase("OnAccountChanged")]
@@ -2765,6 +2976,9 @@ namespace QuantConnect.Tests.Engine.BrokerageTransactionHandlerTests
 
             protected override TimeSpan TimeSinceLastFill => TestTimeSinceLastFill;
 
+            // no worker thread: these tests drive HandleOrderRequest manually
+            protected override bool SynchronousProcessing => true;
+
             public override void Initialize(IAlgorithm algorithm, IBrokerage brokerage, IResultHandler resultHandler)
             {
                 _brokerage = brokerage;
@@ -2775,11 +2989,6 @@ namespace QuantConnect.Tests.Engine.BrokerageTransactionHandlerTests
             public DateTime GetLastSyncDate()
             {
                 return _brokerage.LastSyncDateTimeUtc.ConvertFromUtc(TimeZones.NewYork);
-            }
-
-            protected override void InitializeTransactionThread()
-            {
-                _orderRequestQueues = new() { new BusyCollection<OrderRequest>() };
             }
 
             public new void RoundOrderPrices(Order order, Security security)
@@ -2875,6 +3084,15 @@ namespace QuantConnect.Tests.Engine.BrokerageTransactionHandlerTests
 
             public ConcurrentDictionary<int, string> RequestProcessingThreads = new();
 
+            // blocks threads so requests pile up and force the pool to grow
+            public ManualResetEventSlim Gate;
+
+            public int ActiveThreadCount => ProcessingThreadsCount;
+
+            // overrides the pool maximum without touching the global Config
+            public int? MaxThreadsOverride { get; set; }
+            protected override int MaximumTransactionThreads => MaxThreadsOverride ?? base.MaximumTransactionThreads;
+
             public TestableConcurrentBrokerageTransactionHandler(int expectedOrdersCount, ManualResetEventSlim finishedEvent)
             {
                 _expectedOrdersCount = expectedOrdersCount;
@@ -2883,6 +3101,8 @@ namespace QuantConnect.Tests.Engine.BrokerageTransactionHandlerTests
 
             public override void HandleOrderRequest(OrderRequest request)
             {
+                Gate?.Wait();
+
                 base.HandleOrderRequest(request);
 
                 // Capture the thread name for debugging purposes

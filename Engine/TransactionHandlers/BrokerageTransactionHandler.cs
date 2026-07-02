@@ -70,13 +70,10 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
         private int _failedCashSyncAttempts;
 
         /// <summary>
-        /// OrderQueue holds the newly updated orders from the user algorithm waiting to be processed. Once
-        /// orders are processed they are moved into the Orders queue awaiting the brokerage response.
+        /// Runs order requests on worker threads that pull from a single shared queue, keeping each order's
+        /// requests in order while growing the pool on demand as the threads get saturated.
         /// </summary>
-        protected List<IBusyCollection<OrderRequest>> _orderRequestQueues { get; set; }
-
-        private List<Thread> _processingThreads;
-        private readonly CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource();
+        protected OrderRequestProcessingPool _threadPool;
 
         private readonly ConcurrentQueue<OrderEvent> _orderEvents = new ConcurrentQueue<OrderEvent>();
 
@@ -210,8 +207,6 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
                 HandleOrderUpdated(e);
             };
 
-            IsActive = true;
-
             if (_algorithm is QCAlgorithm qcAlgorithm)
             {
                 _qcAlgorithmInstance = qcAlgorithm;
@@ -231,34 +226,65 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
         }
 
         /// <summary>
+        /// Whether the transaction thread pool can grow on demand to process order requests concurrently.
+        /// When false a single worker thread is used.
+        /// </summary>
+        protected virtual bool ConcurrencyEnabled => _brokerage.ConcurrencyEnabled;
+
+        /// <summary>
+        /// Whether order requests are drained synchronously by the algorithm thread instead of by background
+        /// worker threads. Used by backtesting deployments.
+        /// </summary>
+        protected virtual bool SynchronousProcessing => false;
+
+        /// <summary>
+        /// Snapshot of <see cref="SynchronousProcessing"/> taken when the pool is created. The pool is built once,
+        /// so we capture the decision to keep it and the request handling in sync even if the algorithm live mode
+        /// changes afterwards.
+        /// </summary>
+        protected bool SynchronousProcessingEnabled { get; private set; }
+
+        /// <summary>
+        /// The maximum number of transaction threads the pool can grow to
+        /// </summary>
+        protected virtual int MaximumTransactionThreads => Config.GetInt("maximum-transaction-threads", 10);
+
+        /// <summary>
+        /// The number of transaction threads the pool starts with
+        /// </summary>
+        protected virtual int MinimumTransactionThreads => Config.GetInt("minimum-transaction-threads", 2);
+
+        /// <summary>
+        /// The number of transaction threads currently running
+        /// </summary>
+        protected int ProcessingThreadsCount => _threadPool?.ThreadCount ?? 0;
+
+        /// <summary>
+        /// Boolean flag indicating the transaction threads are busy.
+        /// False indicates they are completely finished processing and ready to be terminated.
+        /// </summary>
+        public bool IsActive => _threadPool?.IsActive ?? false;
+
+        /// <summary>
         /// Create and start the transaction thread, who will be in charge of processing
         /// the order requests
         /// </summary>
         protected virtual void InitializeTransactionThread()
         {
-            // multi threaded queue, used for live deployments
-            var processingThreadsCount = _brokerage.ConcurrencyEnabled
-                ? Config.GetInt("maximum-transaction-threads", 4)
-                : 1;
-            _orderRequestQueues = new(processingThreadsCount);
-            _processingThreads = new(processingThreadsCount);
-            for (var i = 0; i < processingThreadsCount; i++)
+            Action<OrderRequest> processRequest = request =>
             {
-                _orderRequestQueues.Add(new BusyBlockingCollection<OrderRequest>());
-                var threadId = i; // avoid modified closure
-                _processingThreads.Add(new Thread(() => Run(threadId)) { IsBackground = true, Name = $"Transaction Thread {i}" });
-            }
-            foreach (var thread in _processingThreads)
-            {
-                thread.Start();
-            }
-        }
+                HandleOrderRequest(request);
+                ProcessAsynchronousEvents();
+            };
+            Action<Exception> onError = error => _algorithm.SetRuntimeError(error, "HandleOrderRequest");
 
-        /// <summary>
-        /// Boolean flag indicating the Run thread method is busy.
-        /// False indicates it is completely finished processing and ready to be terminated.
-        /// </summary>
-        public bool IsActive { get; private set; }
+            // backtesting drains a single queue synchronously on the algorithm thread, live deployments use
+            // background worker threads: a single one, or growing on demand up to the maximum when concurrent.
+            SynchronousProcessingEnabled = SynchronousProcessing;
+            _threadPool = SynchronousProcessingEnabled
+                ? OrderRequestProcessingPool.Synchronous(processRequest, onError)
+                : new OrderRequestProcessingPool(ConcurrencyEnabled, MinimumTransactionThreads, MaximumTransactionThreads, processRequest, onError);
+        }
 
         #region Order Request Processing
 
@@ -338,7 +364,7 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
                 order.OrderSubmissionData = new OrderSubmissionData(security.BidPrice, security.AskPrice, security.Close);
                 _openOrders[order.Id] = new OpenOrderState(order, ticket, security);
 
-                EnqueueOrderRequest(request, order);
+                _threadPool.Dispatch(request, order);
 
                 WaitForOrderSubmission(ticket);
             }
@@ -366,7 +392,7 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
         }
 
         /// <summary>
-        /// Wait for the order to be handled by the <see cref="_processingThreads"/>
+        /// Wait for the order to be handled by the <see cref="_threadPool"/>
         /// </summary>
         /// <param name="ticket">The <see cref="OrderTicket"/> expecting to be submitted</param>
         protected virtual void WaitForOrderSubmission(OrderTicket ticket)
@@ -454,7 +480,7 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
                 else
                 {
                     request.SetResponse(OrderResponse.Success(request), OrderRequestStatus.Processing);
-                    EnqueueOrderRequest(request, order);
+                    _threadPool.Dispatch(request, order);
                 }
             }
             catch (Exception err)
@@ -526,7 +552,7 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
 
                     // send the request to be processed
                     request.SetResponse(OrderResponse.Success(request), OrderRequestStatus.Processing);
-                    EnqueueOrderRequest(request, order);
+                    _threadPool.Dispatch(request, order);
                 }
             }
             catch (Exception err)
@@ -674,29 +700,12 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
         }
 
         /// <summary>
-        /// Primary thread entry point to launch the transaction thread.
+        /// Drains the pending order requests on the calling thread. Used by synchronous (non concurrent)
+        /// deployments, where the algorithm thread pumps the request queue itself.
         /// </summary>
-        protected void Run(int threadId)
+        protected void ProcessPendingRequests()
         {
-            try
-            {
-                foreach (var request in _orderRequestQueues[threadId].GetConsumingEnumerable(_cancellationTokenSource.Token))
-                {
-                    HandleOrderRequest(request);
-                    ProcessAsynchronousEvents();
-                }
-            }
-            catch (Exception err)
-            {
-                // unexpected error, we need to close down shop
-                _algorithm.SetRuntimeError(err, "HandleOrderRequest");
-            }
-
-            if (_processingThreads != null)
-            {
-                Log.Trace($"BrokerageTransactionHandler.Run(): Ending Thread {threadId}...");
-                IsActive = false;
-            }
+            _threadPool.ProcessPending();
         }
 
         /// <summary>
@@ -717,7 +726,7 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
             // in backtesting we need to wait for orders to be removed from the queue and finished processing
             if (!_algorithm.LiveMode)
             {
-                if (_orderRequestQueues.Any(queue => queue.IsBusy && !queue.WaitHandle.WaitOne(Time.OneSecond, _cancellationTokenSource.Token)))
+                if (_threadPool.WaitForProcessing(Time.OneSecond))
                 {
                     Log.Error("BrokerageTransactionHandler.ProcessSynchronousEvents(): Timed out waiting for request queue to finish processing.");
                 }
@@ -799,27 +808,8 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
         /// </summary>
         public void Exit()
         {
-            var timeout = TimeSpan.FromSeconds(60);
-            if (_processingThreads != null)
-            {
-                // only wait if the processing thread is running
-                if (_orderRequestQueues.Any(queue => queue.IsBusy && !queue.WaitHandle.WaitOne(timeout)))
-                {
-                    Log.Error("BrokerageTransactionHandler.Exit(): Exceed timeout: " + (int)(timeout.TotalSeconds) + " seconds.");
-                }
-
-                foreach (var queue in _orderRequestQueues)
-                {
-                    queue.CompleteAdding();
-                }
-
-                foreach (var thread in _processingThreads)
-                {
-                    thread?.StopSafely(timeout, _cancellationTokenSource);
-                }
-            }
-            IsActive = false;
-            _cancellationTokenSource.DisposeSafely();
+            // Shutdown drains the queued requests (CompleteAdding) and waits for the threads before stopping
+            _threadPool?.Shutdown(TimeSpan.FromSeconds(60));
         }
 
         /// <summary>
@@ -1935,16 +1925,6 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
         {
             var shortableQuantity = _algorithm.ShortableQuantity(symbol);
             return $"Order exceeds shortable quantity {shortableQuantity} for Symbol {symbol} requested {quantity})";
-        }
-
-        private void EnqueueOrderRequest(OrderRequest request, Order order)
-        {
-            var queueKey = request.OrderId;
-            if (order.GroupOrderManager?.Id > 0)
-            {
-                queueKey = order.GroupOrderManager.Id;
-            }
-            _orderRequestQueues[queueKey % _orderRequestQueues.Count].Add(request);
         }
 
         /// <summary>
