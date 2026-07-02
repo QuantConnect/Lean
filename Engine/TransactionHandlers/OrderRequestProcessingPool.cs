@@ -31,8 +31,9 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
     /// Workers pull from one shared queue, so the load spreads across them instead of pinning each order to a thread
     /// up front. To keep a single order (or combo group) in order, only one of its requests runs at a time. While one
     /// runs the rest wait parked, and the same worker takes them next in arrival order. This state only exists while
-    /// an order has requests in flight, so nothing needs releasing once the order closes. In synchronous mode there
-    /// are no workers and the caller drains the queue itself through <see cref="ProcessPending"/>.
+    /// an order has requests in flight, so nothing needs releasing once the order closes. When a single consumer
+    /// drains the queue, a lone fixed worker or the caller itself in synchronous mode (through
+    /// <see cref="ProcessPending"/>), arrival order is already preserved so the per-order bookkeeping is skipped.
     /// </remarks>
     public class OrderRequestProcessingPool : IDisposable
     {
@@ -50,6 +51,9 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
         private readonly int _maximumThreads;
         // true when there are no worker threads and the caller drains the single queue itself
         private readonly bool _synchronous;
+        // true when a single consumer drains the queue (synchronous or a single fixed worker), which already
+        // preserves arrival order across all orders so the per-order serialization is skipped entirely
+        private readonly bool _singleConsumer;
         // set under the lock when shutting down so the pool stops growing while the queue drains, before the
         // cancellation token is cancelled as the final hard stop
         private bool _shuttingDown;
@@ -96,6 +100,7 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
             _onError = onError;
             // concurrency grows the pool minimum..maximum on demand, otherwise a single fixed thread is used
             _maximumThreads = concurrencyEnabled ? Math.Max(1, maximumThreads) : 1;
+            _singleConsumer = _maximumThreads == 1;
             var initialThreadsCount = concurrencyEnabled ? Math.Min(Math.Max(1, minimumThreads), _maximumThreads) : 1;
 
             _readyQueue = new BusyBlockingCollection<WorkItem>();
@@ -103,7 +108,7 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
             IsActive = true;
             for (var i = 0; i < initialThreadsCount; i++)
             {
-                AddThread();
+                AddThread().Start();
             }
         }
 
@@ -116,6 +121,7 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
             _processRequest = processRequest;
             _onError = onError;
             _maximumThreads = 1;
+            _singleConsumer = true;
 
             _readyQueue = new BusyCollection<WorkItem>();
             _threads = new(0);
@@ -142,8 +148,8 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
         /// <param name="order">The order the request belongs to, used to keep its requests ordered</param>
         public void Dispatch(OrderRequest request, Order order)
         {
-            // synchronous mode has a single consumer draining in arrival order, no need to serialize per order
-            if (_synchronous)
+            // a single consumer drains in arrival order across all orders, no need to serialize per order
+            if (_singleConsumer)
             {
                 _readyQueue.Add(new WorkItem(request, default));
                 return;
@@ -151,6 +157,7 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
 
             var key = GetRoutingKey(order);
             WorkItem readyItem = default;
+            Thread newThread = null;
             var run = false;
             lock (_lock)
             {
@@ -169,15 +176,17 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
                     // claim the order without a queue, most orders never get a second request. grow the pool if
                     // every worker is already busy so this request would wait
                     _inFlight[key] = null;
-                    TryExpand();
+                    newThread = TryExpand();
                     readyItem = new WorkItem(request, key);
                     run = true;
                 }
             }
 
-            // add outside the lock, it can block when the queue is at its bounded capacity
+            // start the new worker and add outside the lock: starting an OS thread and a potentially blocking
+            // add on a bounded queue shouldn't stall other dispatchers
             if (run)
             {
+                newThread?.Start();
                 _readyQueue.Add(readyItem);
             }
         }
@@ -188,18 +197,7 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
         /// </summary>
         public void ProcessPending()
         {
-            try
-            {
-                foreach (var item in _readyQueue.GetConsumingEnumerable(_cancellationTokenSource.Token))
-                {
-                    _processRequest(item.Request);
-                }
-            }
-            catch (Exception err)
-            {
-                // unexpected error, we need to close down shop
-                _onError(err);
-            }
+            Drain(item => _processRequest(item.Request));
         }
 
         /// <summary>
@@ -256,11 +254,24 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
                 _shuttingDown = true;
             }
 
-            // let the workers drain whatever is queued, then stop them
+            // let the workers drain whatever is queued and parked: once adding is complete their consuming
+            // enumerables finish naturally when the queue empties, so join before cancelling anything. Only
+            // escalate to StopSafely, which cancels the shared token and drops pending requests, on timeout
             _readyQueue.CompleteAdding();
             foreach (var thread in _threads)
             {
-                thread?.StopSafely(ShutdownTimeout, _cancellationTokenSource);
+                try
+                {
+                    if (thread != null && !thread.Join(ShutdownTimeout))
+                    {
+                        Log.Error($"OrderRequestProcessingPool.Dispose(): Exceeded timeout: {(int)ShutdownTimeout.TotalSeconds} seconds waiting for '{thread.Name}' to finish processing");
+                        thread.StopSafely(ShutdownTimeout, _cancellationTokenSource);
+                    }
+                }
+                catch (ThreadStateException)
+                {
+                    // registered by a concurrent Dispatch but not started yet, nothing to drain on it
+                }
             }
 
             IsActive = false;
@@ -269,46 +280,64 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
         }
 
         /// <summary>
-        /// Creates a worker thread and starts it.
+        /// Creates and registers a worker thread without starting it, so callers can start it outside the lock.
         /// Callers growing the pool on demand must hold <see cref="_lock"/>.
         /// </summary>
-        private void AddThread()
+        /// <returns>The new worker thread, for the caller to start</returns>
+        private Thread AddThread()
         {
-            var threadId = _threads.Count;
-            var thread = new Thread(Run) { IsBackground = true, Name = $"Transaction Thread {threadId}" };
+            var thread = new Thread(Run) { IsBackground = true, Name = $"Transaction Thread {_threads.Count}" };
             _threads.Add(thread);
-            thread.Start();
+            return thread;
         }
 
         /// <summary>
         /// Grows the pool by one worker when every existing worker is already busy, up to the maximum.
-        /// Caller must hold <see cref="_lock"/>.
+        /// Caller must hold <see cref="_lock"/> and start the returned thread, if any, outside of it.
         /// </summary>
-        private void TryExpand()
+        /// <returns>The new worker thread to start, null when the pool doesn't need to grow</returns>
+        private Thread TryExpand()
         {
-            if (_synchronous || _shuttingDown || _threads.Count >= _maximumThreads)
+            if (_shuttingDown || _threads.Count >= _maximumThreads)
             {
-                return;
+                return null;
             }
 
             // only grow when every worker is already busy, so the request being enqueued would have to wait
             if (Volatile.Read(ref _busyWorkers) >= _threads.Count)
             {
                 Log.Trace($"OrderRequestProcessingPool.TryExpand(): adding new thread, current count {_threads.Count}");
-                AddThread();
+                return AddThread();
+            }
+            return null;
+        }
+
+        /// <summary>
+        /// Worker thread loop that consumes ready requests until the pool is shut down. A single fixed worker
+        /// already consumes in arrival order so it skips the per-order bookkeeping.
+        /// </summary>
+        private void Run()
+        {
+            if (_singleConsumer)
+            {
+                Drain(item => _processRequest(item.Request));
+            }
+            else
+            {
+                Drain(ProcessInOrder);
             }
         }
 
         /// <summary>
-        /// Worker thread loop that consumes ready requests until the pool is shut down.
+        /// Consumes ready requests on the calling thread until the queue completes adding or the pool is shut down.
         /// </summary>
-        private void Run()
+        private void Drain(Action<WorkItem> process)
         {
             try
             {
                 foreach (var item in _readyQueue.GetConsumingEnumerable(_cancellationTokenSource.Token))
                 {
-                    ProcessInOrder(item);
+                    process(item);
                 }
             }
             catch (Exception err)
