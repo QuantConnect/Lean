@@ -123301,6 +123301,144 @@
       "earlyCloses": {},
       "lateOpens": {}
     },
+    "Future-krx-[*]": {
+      "dataTimeZone": "Asia/Seoul",
+      "exchangeTimeZone": "Asia/Seoul",
+      "sunday": [],
+      "monday": [
+        {
+          "start": "08:00:00",
+          "end": "09:00:00",
+          "state": "premarket"
+        },
+        {
+          "start": "09:00:00",
+          "end": "15:45:00",
+          "state": "market"
+        }
+      ],
+      "tuesday": [
+        {
+          "start": "08:00:00",
+          "end": "09:00:00",
+          "state": "premarket"
+        },
+        {
+          "start": "09:00:00",
+          "end": "15:45:00",
+          "state": "market"
+        }
+      ],
+      "wednesday": [
+        {
+          "start": "08:00:00",
+          "end": "09:00:00",
+          "state": "premarket"
+        },
+        {
+          "start": "09:00:00",
+          "end": "15:45:00",
+          "state": "market"
+        }
+      ],
+      "thursday": [
+        {
+          "start": "08:00:00",
+          "end": "09:00:00",
+          "state": "premarket"
+        },
+        {
+          "start": "09:00:00",
+          "end": "15:45:00",
+          "state": "market"
+        }
+      ],
+      "friday": [
+        {
+          "start": "08:00:00",
+          "end": "09:00:00",
+          "state": "premarket"
+        },
+        {
+          "start": "09:00:00",
+          "end": "15:45:00",
+          "state": "market"
+        }
+      ],
+      "saturday": [],
+      "holidays": [],
+      "earlyCloses": {},
+      "lateOpens": {}
+    },
+    "Future-krx-KM": {
+      "dataTimeZone": "Asia/Seoul",
+      "exchangeTimeZone": "Asia/Seoul",
+      "sunday": [],
+      "monday": [
+        {
+          "start": "08:00:00",
+          "end": "09:00:00",
+          "state": "premarket"
+        },
+        {
+          "start": "09:00:00",
+          "end": "15:45:00",
+          "state": "market"
+        }
+      ],
+      "tuesday": [
+        {
+          "start": "08:00:00",
+          "end": "09:00:00",
+          "state": "premarket"
+        },
+        {
+          "start": "09:00:00",
+          "end": "15:45:00",
+          "state": "market"
+        }
+      ],
+      "wednesday": [
+        {
+          "start": "08:00:00",
+          "end": "09:00:00",
+          "state": "premarket"
+        },
+        {
+          "start": "09:00:00",
+          "end": "15:45:00",
+          "state": "market"
+        }
+      ],
+      "thursday": [
+        {
+          "start": "08:00:00",
+          "end": "09:00:00",
+          "state": "premarket"
+        },
+        {
+          "start": "09:00:00",
+          "end": "15:45:00",
+          "state": "market"
+        }
+      ],
+      "friday": [
+        {
+          "start": "08:00:00",
+          "end": "09:00:00",
+          "state": "premarket"
+        },
+        {
+          "start": "09:00:00",
+          "end": "15:45:00",
+          "state": "market"
+        }
+      ],
+      "saturday": [],
+      "holidays": [],
+      "earlyCloses": {},
+      "lateOpens": {}
+    },
     "Index-ose-[*]": {
       "dataTimeZone": "Asia/Tokyo",
       "exchangeTimeZone": "Asia/Tokyo",

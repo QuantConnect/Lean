@@ -56,6 +56,7 @@ namespace QuantConnect.Tests.Common.Securities.Futures
         private const string OneFortyFivePM = "13:45:00";
         private const string ThreeThirtyPM = "15:30:00";
         private const string FourFifteenPM = "16:15:00";
+        private const string ThreeTwentyPMKoreaTime = "15:20:00";
         private readonly SymbolPropertiesDatabase _symbolPropertiesDatabase = SymbolPropertiesDatabase.FromDataFolder();
 
         [OneTimeSetUp]
@@ -396,6 +397,7 @@ namespace QuantConnect.Tests.Common.Securities.Futures
         [TestCase(QuantConnect.Securities.Futures.Indices.VIX, EightOClockChicagoTime)]
         [TestCase(QuantConnect.Securities.Futures.Indices.VIXMini, EightOClockChicagoTime)]
         [TestCase(QuantConnect.Securities.Futures.Indices.Nikkei225Yen, TwoThirtyPM)]
+        [TestCase(QuantConnect.Securities.Futures.Indices.Kospi200, ThreeTwentyPMKoreaTime)]
         [TestCase(QuantConnect.Securities.Futures.Indices.MSCITaiwanIndex, OneFortyFivePM)]
         [TestCase(QuantConnect.Securities.Futures.Indices.Nifty50, ThreeThirtyPM)]
         [TestCase(QuantConnect.Securities.Futures.Indices.BankNifty, ThreeThirtyPM)]
