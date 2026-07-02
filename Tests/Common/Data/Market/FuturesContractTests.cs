@@ -92,6 +92,26 @@ namespace QuantConnect.Tests.Common.Data.Market
         }
 
         [Test]
+        public void PriceValueAndCloseAliasLastPrice()
+        {
+            var futureContract = new FuturesContract(Symbols.Future_CLF19_Jan2019);
+
+            // No data yet, all aliases default to zero
+            Assert.AreEqual(0, futureContract.LastPrice);
+            Assert.AreEqual(futureContract.LastPrice, futureContract.Price);
+            Assert.AreEqual(futureContract.LastPrice, futureContract.Value);
+            Assert.AreEqual(futureContract.LastPrice, futureContract.Close);
+
+            var tradeBar = new TradeBar(new DateTime(2025, 12, 10), Symbols.Future_CLF19_Jan2019, 1, 2, 3, 4, 5);
+            futureContract.Update(tradeBar);
+
+            Assert.AreEqual(4, futureContract.LastPrice);
+            Assert.AreEqual(futureContract.LastPrice, futureContract.Price);
+            Assert.AreEqual(futureContract.LastPrice, futureContract.Value);
+            Assert.AreEqual(futureContract.LastPrice, futureContract.Close);
+        }
+
+        [Test]
         public void OpenInterest()
         {
             var futureContract = new FuturesContract(Symbols.Future_CLF19_Jan2019);
