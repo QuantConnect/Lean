@@ -42,8 +42,13 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
     /// </summary>
     public class BrokerageTransactionHandler : ITransactionHandler
     {
+        /// <summary>
+        /// The tag used for order events of liquidations triggered by a delisting
+        /// </summary>
+        public static readonly string LiquidateFromDelistingTag = "Liquidate from delisting";
+
         private IAlgorithm _algorithm;
-        private QCAlgorithm _qcAlgorithmIntance;
+        private QCAlgorithm _qcAlgorithmInstance;
         private SignalExportManager _signalExport;
         private IExecutionModel _executionModel;
         private IBrokerage _brokerage;
@@ -209,14 +214,14 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
 
             if (_algorithm is QCAlgorithm qcAlgorithm)
             {
-                _qcAlgorithmIntance = qcAlgorithm;
+                _qcAlgorithmInstance = qcAlgorithm;
                 _signalExport = qcAlgorithm.SignalExport;
                 _executionModel = qcAlgorithm.Execution;
             }
             else
             {
                 var pyAlgorithmWrapper = _algorithm as AlgorithmPythonWrapper;
-                _qcAlgorithmIntance = pyAlgorithmWrapper.BaseAlgorithm;
+                _qcAlgorithmInstance = pyAlgorithmWrapper.BaseAlgorithm;
                 _signalExport = pyAlgorithmWrapper.SignalExport;
                 _executionModel = pyAlgorithmWrapper.Execution;
             }
@@ -1366,7 +1371,7 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
 
                     NewOrderEvent?.Invoke(this, orderEvent);
 
-                    _executionModel.OnOrderEvent(_qcAlgorithmIntance, orderEvent);
+                    _executionModel.OnOrderEvent(_qcAlgorithmInstance, orderEvent);
 
                     try
                     {
@@ -1545,7 +1550,7 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
                 var quantity = -security.Holdings.Quantity;
                 if (quantity != 0)
                 {
-                    var tag = "Liquidate from delisting";
+                    var tag = LiquidateFromDelistingTag;
 
                     // Create our order and add it
                     var order = new MarketOrder(security.Symbol, quantity, _algorithm.UtcTime, tag);
@@ -1556,7 +1561,8 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
                     {
                         FillPrice = security.Price,
                         Status = OrderStatus.Filled,
-                        FillQuantity = order.Quantity
+                        FillQuantity = order.Quantity,
+                        Message = tag
                     };
 
                     // Process this order event

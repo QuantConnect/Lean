@@ -83,6 +83,42 @@ namespace QuantConnect.Tests.Common.Exceptions
             Assert.True(exception.Message.Contains("self.set_cash('SPY')"));
         }
 
+        [Test]
+        public void VerifyMessageContainsTheMethodName()
+        {
+            var exception = CreateExceptionFromType(typeof(PythonException));
+            var interpreter = new NoMethodMatchPythonExceptionInterpreter();
+            exception = interpreter.Interpret(exception, NullExceptionInterpreter.Instance);
+
+            // The interpreter should reference the actual method name that failed to resolve (SetCash),
+            // not a fragment of the argument type list (e.g. "'str'>)").
+            Assert.That(exception.Message, Does.Contain("SetCash"));
+            Assert.That(exception.Message, Does.Not.Contain(">)"));
+        }
+
+        [Test]
+        public void VerifyMessageContainsTheMethodNameForOverloadedMethod()
+        {
+            PythonException pythonException;
+            using (Py.GIL())
+            {
+                var module = Py.Import("Test_PythonExceptionInterpreter");
+                dynamic algorithm = module.GetAttr("Test_PythonExceptionInterpreter").Invoke();
+
+                // self.rsi(symbol, 15, Resolution.DAILY) -- the third argument should be a
+                // MovingAverageType, so no RSI overload matches the given arguments.
+                pythonException = Assert.Throws<PythonException>(() => algorithm.no_method_match_rsi());
+            }
+
+            var interpreter = new NoMethodMatchPythonExceptionInterpreter();
+            var exception = interpreter.Interpret(pythonException, NullExceptionInterpreter.Instance);
+
+            // The interpreter should reference the RSI method name, not a fragment of the
+            // argument type list (e.g. "'QuantConnect.Resolution'>)").
+            Assert.That(exception.Message, Does.Contain("RSI"));
+            Assert.That(exception.Message, Does.Not.Contain(">)"));
+        }
+
         private Exception CreateExceptionFromType(Type type) => type == typeof(PythonException) ? _pythonException : (Exception)Activator.CreateInstance(type);
     }
 }

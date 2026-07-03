@@ -57,6 +57,9 @@ namespace QuantConnect.Tests.Common.Orders.Fills
             var referenceUtc = reference.ConvertToUtc(TimeZones.NewYork);
             var timeKeeper = new TimeKeeper(referenceUtc);
             _security.SetLocalTimeKeeper(timeKeeper.GetLocalTimeKeeper(TimeZones.NewYork));
+            // Seed fresh market data so market fills are not held back as stale (data within one resolution bar
+            // of the current time). These tests exercise the fill model plumbing, not the stale-data handling.
+            _security.SetMarketPrice(new TradeBar(reference.AddMinutes(-1), _security.Symbol, 1m, 1m, 1m, 1m, 1, Time.OneMinute));
         }
 
         #region InheritImmediateFillModel
@@ -670,7 +673,7 @@ namespace QuantConnect.Tests.Common.Orders.Fills
             protected override Prices GetPrices(Security asset, OrderDirection direction)
             {
                 GetPricesWasCalled = true;
-                return new Prices(orderDateTime, 12345, 12345, 12345, 12345, 12345);
+                return new Prices(orderDateTime, orderDateTime, 12345, 12345, 12345, 12345, 12345);
             }
         }
 
@@ -683,7 +686,7 @@ namespace QuantConnect.Tests.Common.Orders.Fills
                 GetPricesWasCalled = true;
                 // call base.GetPrices() just to test it show its possible
                 base.GetPrices(asset, direction);
-                return new Prices(orderDateTime, 12345, 12345, 12345, 12345, 12345);
+                return new Prices(orderDateTime, orderDateTime, 12345, 12345, 12345, 12345, 12345);
             }
         }
 

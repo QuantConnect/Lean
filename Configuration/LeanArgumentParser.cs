@@ -147,7 +147,7 @@ namespace QuantConnect.Configuration
             };
 
         /// <summary>
-        /// Argument parser contructor
+        /// Argument parser constructor
         /// </summary>
         public static Dictionary<string, object> ParseArguments(string[] args)
         {

@@ -16,6 +16,7 @@
 
 using NUnit.Framework;
 using QuantConnect.Data;
+using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Util;
 using QuantConnect.Data.Auxiliary;
 using QuantConnect.Lean.Engine.Setup;
@@ -109,6 +110,49 @@ namespace QuantConnect.Tests.Engine.Setup
             // The remaining currencies should not have conversion rate set
             Assert.AreEqual(0, algorithm.Portfolio.CashBook["EUR"].ConversionRate);
             Assert.AreEqual(0, algorithm.Portfolio.CashBook["USDT"].ConversionRate);
+        }
+
+        [Test]
+        public void RuntimeCurrencyConversionRateIsSeeded()
+        {
+            // When a currency requiring a conversion feed is introduced at runtime (a universe adding a security
+            // whose quote currency isn't in the cashbook yet), the runtime path used to wire up the conversion
+            // subscription without seeding its price, leaving the rate at 0 until the first pair bar. After the fix
+            // it seeds the new conversion security right away, just like BaseSetupHandler does during setup.
+
+            var historyProvider = new SubscriptionDataReaderHistoryProvider();
+
+            var algorithm = new BrokerageSetupHandlerTests.TestAlgorithm { UniverseSettings = { Resolution = Resolution.Minute } };
+
+            historyProvider.Initialize(new HistoryProviderInitializeParameters(
+                null,
+                null,
+                TestGlobals.DataProvider,
+                TestGlobals.DataCacheProvider,
+                TestGlobals.MapFileProvider,
+                TestGlobals.FactorFileProvider,
+                null,
+                false,
+                new DataPermissionManager(),
+                algorithm.ObjectStore,
+                algorithm.Settings));
+            algorithm.SetHistoryProvider(historyProvider);
+
+            algorithm.SetStartDate(2015, 1, 24);
+            algorithm.SetCash("USD", 0);
+
+            // Run setup so the engine is in the post-setup (runtime) state
+            BaseSetupHandler.SetupCurrencyConversions(algorithm, algorithm.DataManager.UniverseSelection);
+
+            // Introduce a new currency at runtime and drive the runtime path that wires up its conversion feed
+            algorithm.SetCash("BTC", 10);
+            algorithm.DataManager.UniverseSelection.EnsureCurrencyDataFeeds(SecurityChanges.None);
+
+            // The new currency should already have a non-zero rate, without waiting for a live bar
+            Assert.IsNotNull(algorithm.Portfolio.CashBook["BTC"].CurrencyConversion);
+            Assert.AreNotEqual(0, algorithm.Portfolio.CashBook["BTC"].ConversionRate);
+            Assert.IsTrue(algorithm.Portfolio.CashBook["BTC"].ValueInAccountCurrency > 0);
+            Assert.DoesNotThrow(() => algorithm.Portfolio.CashBook.ConvertToAccountCurrency(10, "BTC"));
         }
     }
 }

@@ -1123,6 +1123,18 @@ namespace QuantConnect.Lean.Engine.Results
         }
 
         /// <summary>
+        /// Prefixes the given message with the algorithm time, matching the format used by
+        /// the algorithm's own log messages (see <see cref="IAlgorithm.Log"/>). Used to normalize
+        /// the timestamp across all algorithm logs and messages.
+        /// </summary>
+        /// <param name="message">The message to format</param>
+        /// <returns>The message prefixed with the algorithm time, or the original message if the algorithm is not yet available</returns>
+        protected string FormatMessage(string message)
+        {
+            return Algorithm != null ? message.PrefixWithAlgorithmTime(Algorithm.Time) : message;
+        }
+
+        /// <summary>
         /// Save an algorithm message to the log store. Uses a different timestamped method of adding messaging to interweve debug and logging messages.
         /// </summary>
         /// <param name="message">String message to store</param>
@@ -1171,7 +1183,7 @@ namespace QuantConnect.Lean.Engine.Results
                         {
                             _packetDroppedWarning = true;
                             // this shouldn't happen in most cases, queue limit is high and consumed often but just in case let's not silently drop packets without a warning
-                            Messages.Enqueue(new HandledErrorPacket(AlgorithmId, "Your algorithm messaging has been rate limited to prevent browser flooding."));
+                            Messages.Enqueue(new HandledErrorPacket(AlgorithmId, FormatMessage("Your algorithm messaging has been rate limited to prevent browser flooding.")));
                         }
                         //if too many in the queue already skip the logging and drop the messages
                         continue;

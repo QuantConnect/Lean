@@ -254,8 +254,8 @@ namespace QuantConnect.Lean.Engine.Results
 
                         var deltaStatistics = new Dictionary<string, string>();
                         var orders = new Dictionary<int, Order>(TransactionHandler.Orders);
-                        var complete = new LiveResultPacket(_job, new LiveResult(new LiveResultParameters(chartComplete, orders, 
-                            Algorithm.Transactions.TransactionRecord, holdings, Algorithm.Portfolio.CashBook, deltaStatistics, 
+                        var complete = new LiveResultPacket(_job, new LiveResult(new LiveResultParameters(chartComplete, orders,
+                            Algorithm.Transactions.TransactionRecord, holdings, Algorithm.Portfolio.CashBook, deltaStatistics,
                             runtimeStatistics, orderEvents, statistics.TotalPerformance, serverStatistics, state: GetAlgorithmState())));
                         StoreResult(complete);
                         _nextChartsUpdate = DateTime.UtcNow.Add(ChartUpdateInterval);
@@ -336,21 +336,7 @@ namespace QuantConnect.Lean.Engine.Results
                     if (utcNow > _nextChartTrimming)
                     {
                         Log.Debug("LiveTradingResultHandler.Update(): Trimming charts");
-                        var timeLimitUtc = utcNow.AddDays(-2);
-                        lock (ChartLock)
-                        {
-                            foreach (var chart in Charts)
-                            {
-                                foreach (var series in chart.Value.Series)
-                                {
-                                    // trim data that's older than 2 days
-                                    series.Value.Values =
-                                        (from v in series.Value.Values
-                                         where v.Time > timeLimitUtc
-                                         select v).ToList();
-                                }
-                            }
-                        }
+                        TrimCharts(utcNow);
                         _nextChartTrimming = DateTime.UtcNow.AddMinutes(10);
                         Log.Debug("LiveTradingResultHandler.Update(): Finished trimming charts");
                     }
@@ -380,6 +366,85 @@ namespace QuantConnect.Lean.Engine.Results
         {
             // Update the status json file every X
             _nextStatusUpdate = DateTime.UtcNow.AddMinutes(10);
+        }
+
+        /// <summary>
+        /// Trims old points from each chart series. The statistics series (equity, return and benchmark) keep
+        /// full resolution for the last 2 days and a daily sample for up to 2 years. Every other series keeps
+        /// only the last 2 days.
+        /// </summary>
+        protected virtual void TrimCharts(DateTime utcNow)
+        {
+            var fullResolutionLimit = utcNow.AddDays(-2);
+            var dailySampleLimit = utcNow.AddDays(-730);
+
+            lock (ChartLock)
+            {
+                foreach (var chart in Charts)
+                {
+                    foreach (var series in chart.Value.Series)
+                    {
+                        var isStatisticsSeries =
+                            (chart.Key == StrategyEquityKey && (series.Key == EquityKey || series.Key == ReturnKey)) ||
+                            (chart.Key == BenchmarkKey && series.Key == BenchmarkKey);
+
+                        if (isStatisticsSeries)
+                        {
+                            series.Value.Values = TrimToDailySample(series.Value.Values, fullResolutionLimit, dailySampleLimit);
+                        }
+                        else
+                        {
+                            series.Value.Values = series.Value.Values
+                                .Where(point => point.Time > fullResolutionLimit)
+                                .ToList();
+                        }
+                    }
+                }
+            }
+        }
+
+        /// <summary>
+        /// Keeps all points within the full resolution limit, then one aggregated point per day down to the daily sample limit, and drops the rest
+        /// </summary>
+        private static List<ISeriesPoint> TrimToDailySample(List<ISeriesPoint> values, DateTime fullResolutionLimit, DateTime dailySampleLimit)
+        {
+            var dailySamples = values
+                .Where(point => point.Time > dailySampleLimit && point.Time <= fullResolutionLimit)
+                .GroupBy(point => point.Time.Date)
+                .Select(AggregateDailySample);
+
+            var fullResolution = values.Where(point => point.Time > fullResolutionLimit);
+
+            return dailySamples.Concat(fullResolution).ToList();
+        }
+
+        /// <summary>
+        /// Aggregates a single day's points into one, keeping the full OHLC for candlestick series
+        /// </summary>
+        private static ISeriesPoint AggregateDailySample(IEnumerable<ISeriesPoint> dayPoints)
+        {
+            ISeriesPoint last = null;
+            Candlestick aggregated = null;
+            foreach (var point in dayPoints)
+            {
+                last = point;
+                if (point is Candlestick candlestick)
+                {
+                    aggregated ??= new Candlestick();
+                    aggregated.Update(candlestick.Open);
+                    aggregated.Update(candlestick.High);
+                    aggregated.Update(candlestick.Low);
+                    aggregated.Update(candlestick.Close);
+                }
+            }
+
+            if (aggregated == null)
+            {
+                return last;
+            }
+
+            aggregated.Time = last.Time;
+            return aggregated;
         }
 
         /// <summary>
@@ -544,6 +609,7 @@ namespace QuantConnect.Lean.Engine.Results
         public void DebugMessage(string message)
         {
             if (Messages.Count > 500) return; //if too many in the queue already skip the logging.
+            message = FormatMessage(message);
             Messages.Enqueue(new DebugPacket(_job.ProjectId, AlgorithmId, CompileId, message));
             AddToLogStore(message);
         }
@@ -554,6 +620,7 @@ namespace QuantConnect.Lean.Engine.Results
         /// <param name="message">Message we'd like shown in console.</param>
         public void SystemDebugMessage(string message)
         {
+            message = FormatMessage(message);
             Messages.Enqueue(new SystemDebugPacket(_job.ProjectId, AlgorithmId, CompileId, message));
             AddToLogStore(message);
         }
@@ -568,6 +635,7 @@ namespace QuantConnect.Lean.Engine.Results
         {
             //Send the logging messages out immediately for live trading:
             if (Messages.Count > 500) return;
+            message = FormatMessage(message);
             Messages.Enqueue(new LogPacket(AlgorithmId, message));
             AddToLogStore(message);
         }
@@ -580,6 +648,7 @@ namespace QuantConnect.Lean.Engine.Results
         public void ErrorMessage(string message, string stacktrace = "")
         {
             if (Messages.Count > 500) return;
+            message = FormatMessage(message);
             Messages.Enqueue(new HandledErrorPacket(AlgorithmId, message, stacktrace));
             AddToLogStore(message + (!string.IsNullOrEmpty(stacktrace) ? ": StackTrace: " + stacktrace : string.Empty));
         }
@@ -591,6 +660,7 @@ namespace QuantConnect.Lean.Engine.Results
         /// <param name="stacktrace">Associated error stack trace.</param>
         public virtual void RuntimeError(string message, string stacktrace = "")
         {
+            message = FormatMessage(message);
             Messages.Enqueue(new RuntimeErrorPacket(_job.UserId, AlgorithmId, message, stacktrace));
             AddToLogStore(message + (!string.IsNullOrEmpty(stacktrace) ? ": StackTrace: " + stacktrace : string.Empty));
             SetAlgorithmState(message, stacktrace);

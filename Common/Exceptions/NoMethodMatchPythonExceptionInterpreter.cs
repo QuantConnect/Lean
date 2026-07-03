@@ -50,13 +50,36 @@ namespace QuantConnect.Exceptions
         {
             var pe = (PythonException)exception;
 
-            var startIndex = pe.Message.LastIndexOfInvariant(" ");
-            var methodName = pe.Message.Substring(startIndex).Trim();
+            var methodName = GetMethodName(pe.Message);
             var message = Messages.NoMethodMatchPythonExceptionInterpreter.AttemptedToAccessMethodThatDoesNotExist(methodName);
 
             message += PythonUtil.PythonExceptionStackParser(pe.StackTrace);
 
             return new MissingMethodException(message, pe);
+        }
+
+        /// <summary>
+        /// Extracts the name of the method that failed to resolve from the Python exception message.
+        /// The message has the form: "No method matches given arguments for {methodName}: ({argumentTypes})",
+        /// so the method name sits between the "for " keyword and the following ":".
+        /// </summary>
+        private static string GetMethodName(string exceptionMessage)
+        {
+            const string forKeyword = "for ";
+            var forIndex = exceptionMessage.IndexOfInvariant(forKeyword);
+            if (forIndex == -1)
+            {
+                // Unexpected format, fall back to the whole message
+                return exceptionMessage.Trim();
+            }
+
+            var methodNameStart = forIndex + forKeyword.Length;
+            var colonIndex = exceptionMessage.IndexOf(':', methodNameStart);
+            var methodName = colonIndex > methodNameStart
+                ? exceptionMessage.Substring(methodNameStart, colonIndex - methodNameStart)
+                : exceptionMessage.Substring(methodNameStart);
+
+            return methodName.Trim();
         }
     }
 }

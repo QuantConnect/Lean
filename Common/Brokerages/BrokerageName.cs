@@ -202,6 +202,11 @@ namespace QuantConnect.Brokerages
         /// <summary>
         /// Transaction and submit/execution rules will use Webull models
         /// </summary>
-        Webull
+        Webull,
+
+        /// <summary>
+        /// Transaction and submit/execution rules will use Public.com models
+        /// </summary>
+        Public
     }
 }

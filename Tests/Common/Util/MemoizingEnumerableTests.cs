@@ -60,5 +60,56 @@ namespace QuantConnect.Tests.Common.Util
             Assert.AreEqual(5, memoized.Count);
             Assert.AreEqual(memoized.Count, memoized.ToList().Count);
         }
+
+        [Test]
+        public void EmptyIsFalseForNonEmptyEnumerable()
+        {
+            var list = new List<int> {1, 2, 3, 4, 5};
+            var memoized = new MemoizingEnumerable<int>(list);
+            Assert.IsFalse(memoized.Empty);
+            // still enumerates fully after checking Empty
+            CollectionAssert.AreEqual(list, memoized);
+        }
+
+        [Test]
+        public void EmptyIsTrueForEmptyEnumerable()
+        {
+            var memoized = new MemoizingEnumerable<int>(Enumerable.Empty<int>());
+            Assert.IsTrue(memoized.Empty);
+        }
+
+        [Test]
+        public void EmptyDoesNotForceFullEnumeration()
+        {
+            var enumerated = 0;
+            var enumerable = Enumerable.Range(0, 10).Select(x => { enumerated++; return x; });
+            var memoized = new MemoizingEnumerable<int>(enumerable);
+            Assert.IsFalse(memoized.Empty);
+            // only the first item should have been enumerated
+            Assert.AreEqual(1, enumerated);
+        }
+
+        [Test]
+        public void EnumerationAfterEmptyKeepsIntegrity()
+        {
+            var i = 0;
+            // lazy source where each element is produced exactly once
+            var enumerable = Enumerable.Range(0, 5).Select(x => i++);
+            var memoized = new MemoizingEnumerable<int>(enumerable);
+
+            // accessing Empty consumes the first item from the source
+            Assert.IsFalse(memoized.Empty);
+
+            // enumerating should still yield the full sequence without duplicating the first item
+            CollectionAssert.AreEqual(new[] { 0, 1, 2, 3, 4 }, memoized.ToList());
+        }
+
+        [Test]
+        public void EmptyThrowsWhenDisabled()
+        {
+            var list = new List<int> {1, 2, 3, 4, 5};
+            var memoized = new MemoizingEnumerable<int>(list) { Enabled = false };
+            Assert.Throws<InvalidOperationException>(() => { var _ = memoized.Empty; });
+        }
     }
 }

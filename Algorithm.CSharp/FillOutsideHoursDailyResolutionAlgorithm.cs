@@ -18,11 +18,11 @@ using System.Collections.Generic;
 namespace QuantConnect.Algorithm.CSharp
 {
     /// <summary>
-    /// Regression algorithm asserting that orders submitted outside of market hours are:
-    ///     - Filled outside of market hours for daily resolution
-    ///     - Not filled outside of market hours for the rest of the resolutions
+    /// Regression algorithm asserting that a market order submitted outside of market hours is not filled immediately
+    /// on stale, already past data; it waits for fresh data instead.
     ///
-    /// This specific algorithm tests this for daily resolution.
+    /// This specific algorithm tests this for daily resolution, where the order waits for the next daily close
+    /// instead of filling on the stale previous close.
     /// </summary>
     public class FillOutsideHoursDailyResolutionAlgorithm : FillOutsideHoursMinuteResolutionAlgorithm
     {
@@ -65,7 +65,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Drawdown", "0%"},
             {"Expectancy", "0"},
             {"Start Equity", "100000"},
-            {"End Equity", "99997.32"},
+            {"End Equity", "99999"},
             {"Net Profit", "0%"},
             {"Sharpe Ratio", "0"},
             {"Sortino Ratio", "0"},
@@ -81,11 +81,11 @@ namespace QuantConnect.Algorithm.CSharp
             {"Tracking Error", "0"},
             {"Treynor Ratio", "0"},
             {"Total Fees", "$1.00"},
-            {"Estimated Strategy Capacity", "$0"},
+            {"Estimated Strategy Capacity", "$1300000000000.00"},
             {"Lowest Capacity Asset", "SPY R735QTJ8XC9X"},
             {"Portfolio Turnover", "0.07%"},
             {"Drawdown Recovery", "0"},
-            {"OrderListHash", "2d975133eed041a4062bb802855a0e63"}
+            {"OrderListHash", "2c54da1d3441391b60055337b48c9b62"}
         };
     }
 }

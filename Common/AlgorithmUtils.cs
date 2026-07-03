@@ -15,6 +15,7 @@
 
 using QuantConnect.Interfaces;
 using QuantConnect.Securities;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -44,6 +45,40 @@ namespace QuantConnect
                         security.SetMarketPrice(datum);
                     }
                 }
+            }
+        }
+
+        /// <summary>
+        /// Seeds an initial conversion rate for the cashbook currencies that don't have one yet, so they are
+        /// non-zero right away instead of waiting for the first conversion pair bar to arrive
+        /// </summary>
+        /// <param name="algorithm">The algorithm instance</param>
+        /// <param name="currenciesToUpdateWhiteList">
+        /// If passed, only the currencies in the CashBook contained in this list will be updated.
+        /// By default, if not passed (null), all currencies in the cashbook without a properly set up currency conversion will be updated.
+        /// </param>
+        public static void SeedCurrencyConversionRates(IAlgorithm algorithm, IReadOnlyCollection<string> currenciesToUpdateWhiteList = null)
+        {
+            Func<Cash, bool> cashToUpdateFilter = currenciesToUpdateWhiteList == null
+                ? (x) => x.CurrencyConversion != null && x.ConversionRate == 0
+                : (x) => currenciesToUpdateWhiteList.Contains(x.Symbol);
+            var cashToUpdate = algorithm.Portfolio.CashBook.Values.Where(cashToUpdateFilter).ToList();
+
+            if (cashToUpdate.Count == 0)
+            {
+                return;
+            }
+
+            var securitiesToUpdate = cashToUpdate
+                .SelectMany(x => x.CurrencyConversion.ConversionRateSecurities)
+                .Distinct()
+                .ToList();
+
+            SeedSecurities(securitiesToUpdate, algorithm);
+
+            foreach (var cash in cashToUpdate)
+            {
+                cash.Update();
             }
         }
     }

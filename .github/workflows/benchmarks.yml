@@ -7,13 +7,18 @@ on:
   pull_request:
     branches: [master]
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   build:
-    runs-on: self-hosted
+    runs-on: [self-hosted, benchmark]
     container:
         image: quantconnect/lean:foundation
+        options: --cpus 12 --memory 12g
         volumes:
-          - /nas:/Data
+          - /nas:/Data:ro
     steps:
       - uses: actions/checkout@v2
 

@@ -210,14 +210,26 @@ namespace QuantConnect.Data.Market
         /// Default initializer to setup an empty quotebar.
         /// </summary>
         public QuoteBar()
+            : this(false)
         {
+        }
+
+        /// <summary>
+        /// Default initializer to setup an empty quotebar.
+        /// </summary>
+        public QuoteBar(bool empty)
+        {
+            DataType = MarketDataType.QuoteBar;
+            if (empty)
+            {
+                return;
+            }
             Symbol = Symbol.Empty;
             Time = new DateTime();
             Bid = new Bar();
             Ask = new Bar();
             Value = 0;
             Period = QuantConnect.Time.OneMinute;
-            DataType = MarketDataType.QuoteBar;
         }
 
         /// <summary>

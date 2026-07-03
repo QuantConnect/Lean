@@ -31,6 +31,7 @@ namespace QuantConnect.Algorithm
     {
         private int _maxOrders = 10000;
         private bool _isMarketOnOpenOrderWarningSent;
+        private bool _isDailyResolutionMarketOrderConversionWarningSent;
         private bool _isMarketOnOpenOrderRestrictedForFuturesWarningSent;
         private bool _isGtdTfiForMooAndMocOrdersValidationWarningSent;
         private bool _isOptionsOrderOnStockSplitWarningSent;
@@ -240,21 +241,42 @@ namespace QuantConnect.Algorithm
         {
             var security = GetSecurityForOrder(symbol);
 
-            // check the exchange is open before sending a market order, if it's not open then convert it into a market on open order.
             // For futures and FOPs, market orders can be submitted on extended hours, so we let them through.
-            if ((security.Type != SecurityType.Future && security.Type != SecurityType.FutureOption) && !security.Exchange.ExchangeOpen)
+            if (security.Type != SecurityType.Future && security.Type != SecurityType.FutureOption)
             {
-                var mooTicket = MarketOnOpenOrder(security.Symbol, quantity, asynchronous, tag, orderProperties);
-                if (!_isMarketOnOpenOrderWarningSent)
+                // When the market is closed the order is converted to fill at the next open (MarketOnOpen),
+                // regardless of resolution.
+                if (!security.Exchange.ExchangeOpen)
                 {
-                    var anyNonDailySubscriptions = security.Subscriptions.Any(x => x.Resolution != Resolution.Daily);
-                    if (mooTicket.SubmitRequest.Response.IsSuccess && !anyNonDailySubscriptions)
+                    var mooTicket = MarketOnOpenOrder(security.Symbol, quantity, asynchronous, tag, orderProperties);
+                    if (!_isMarketOnOpenOrderWarningSent && mooTicket.SubmitRequest.Response.IsSuccess)
                     {
-                        Debug("Warning: all market orders sent using daily data, or market orders sent after hours are automatically converted into MarketOnOpen orders.");
+                        Debug("Warning: market orders submitted while the market is closed are automatically converted into MarketOnOpen orders to fill at the next market open.");
                         _isMarketOnOpenOrderWarningSent = true;
                     }
+                    return mooTicket;
                 }
-                return mooTicket;
+
+                // The market is open: only a security subscribed solely to daily resolution needs conversion, since
+                // it has no fresh intraday price to fill against (it would otherwise fill at the stale previous
+                // close). It is filled at today's close (MarketOnClose), or at the next open (MarketOnOpen) if we are
+                // already within the MarketOnClose submission buffer.
+                // This is only done in backtesting. In live trading an open-market market order fills at the current
+                // market price, so we leave it as a regular market order. Markets that never close (e.g. crypto,
+                // forex) have no open/close to convert to, so they are left as a regular market order too.
+                if (!LiveMode && !security.Exchange.Hours.IsMarketAlwaysOpen && IsDailyResolutionOnly(security.Symbol))
+                {
+                    var convertedTicket = IsWithinMarketOnCloseSubmissionBuffer(security)
+                        ? MarketOnOpenOrder(security.Symbol, quantity, asynchronous, tag, orderProperties)
+                        : MarketOnCloseOrder(security.Symbol, quantity, asynchronous, tag, orderProperties);
+
+                    if (!_isDailyResolutionMarketOrderConversionWarningSent && convertedTicket.SubmitRequest.Response.IsSuccess)
+                    {
+                        Debug("Warning: market orders on daily resolution data sent during market hours are automatically converted into MarketOnClose orders (or MarketOnOpen near the close) to avoid filling at the stale previous close. Note: in live trading this conversion is not applied, as the order fills at the current market price.");
+                        _isDailyResolutionMarketOrderConversionWarningSent = true;
+                    }
+                    return convertedTicket;
+                }
             }
 
             var request = CreateSubmitOrderRequest(OrderType.Market, security, quantity, tag, orderProperties ?? DefaultOrderProperties?.Clone(), asynchronous);
@@ -371,6 +393,37 @@ namespace QuantConnect.Algorithm
             var request = CreateSubmitOrderRequest(OrderType.MarketOnClose, security, quantity, tag, properties, asynchronous);
 
             return SubmitOrderRequest(request);
+        }
+
+        /// <summary>
+        /// Determines whether the given symbol is subscribed only at daily resolution, i.e. there is no intraday
+        /// (sub-daily) data to fill a market order against. Internal subscriptions are excluded. The current,
+        /// non-stale subscriptions are fetched from the subscription manager rather than from the security.
+        /// </summary>
+        private bool IsDailyResolutionOnly(Symbol symbol)
+        {
+            var configs = SubscriptionManager.SubscriptionDataConfigService.GetSubscriptionDataConfigs(symbol);
+            return configs.Count > 0 && configs.All(x => x.Resolution == Resolution.Daily);
+        }
+
+        /// <summary>
+        /// Determines whether a <see cref="OrderType.MarketOnClose"/> order for the given security would be rejected
+        /// for being submitted too close to the market close (within <see cref="Orders.MarketOnCloseOrder.SubmissionTimeBuffer"/>).
+        /// Mirrors the validation enforced in <see cref="PreOrderChecksImpl"/>.
+        /// </summary>
+        private bool IsWithinMarketOnCloseSubmissionBuffer(Security security)
+        {
+            if (security.Exchange.Hours.IsMarketAlwaysOpen)
+            {
+                return false;
+            }
+
+            var nextMarketClose = security.Exchange.Hours.GetNextMarketClose(security.LocalTime, false);
+            var latestSubmissionTimeUtc = nextMarketClose
+                .ConvertToUtc(security.Exchange.TimeZone)
+                .Subtract(Orders.MarketOnCloseOrder.SubmissionTimeBuffer);
+
+            return UtcTime > latestSubmissionTimeUtc;
         }
 
         /// <summary>
@@ -1207,7 +1260,13 @@ namespace QuantConnect.Algorithm
 
                 if (security.Exchange.Hours.IsOpen(security.LocalTime, false))
                 {
-                    return OrderResponse.Error(request, OrderResponseErrorCode.MarketOnOpenNotAllowedDuringRegularHours, $"Cannot submit a {nameof(OrderType.MarketOnOpen)} order while the market is open.");
+                    // A security subscribed only to daily resolution has no intraday data to fill against, so
+                    // MarketOnOpen/MarketOnClose are its execution proxies; allow MOO during regular hours for those
+                    // (e.g. when a daily market order is converted near the close, past the MarketOnClose buffer).
+                    if (!IsDailyResolutionOnly(security.Symbol))
+                    {
+                        return OrderResponse.Error(request, OrderResponseErrorCode.MarketOnOpenNotAllowedDuringRegularHours, $"Cannot submit a {nameof(OrderType.MarketOnOpen)} order while the market is open.");
+                    }
                 }
             }
             else if (request.OrderType == OrderType.MarketOnClose)
@@ -1217,17 +1276,12 @@ namespace QuantConnect.Algorithm
                     throw new InvalidOperationException($"Market never closes for this symbol {security.Symbol}, can no submit a {nameof(OrderType.MarketOnClose)} order.");
                 }
 
-                var nextMarketClose = security.Exchange.Hours.GetNextMarketClose(security.LocalTime, false);
-
-                // Enforce MarketOnClose submission buffer
-                var latestSubmissionTimeUtc = nextMarketClose
-                    .ConvertToUtc(security.Exchange.TimeZone)
-                    .Subtract(Orders.MarketOnCloseOrder.SubmissionTimeBuffer);
-                if (UtcTime > latestSubmissionTimeUtc)
+                // Enforce MarketOnClose submission buffer.
+                // Default buffer is 15.5 minutes because with minute data a user will receive the 3:44->3:45 bar at 3:45,
+                // if the latest time is 3:45 it is already too late to submit one of these orders
+                if (IsWithinMarketOnCloseSubmissionBuffer(security))
                 {
                     // Tell user the required buffer on these orders, also inform them it can be changed for special cases.
-                    // Default buffer is 15.5 minutes because with minute data a user will receive the 3:44->3:45 bar at 3:45,
-                    // if the latest time is 3:45 it is already too late to submit one of these orders
                     return OrderResponse.Error(request, OrderResponseErrorCode.MarketOnCloseOrderTooLate,
                         $"MarketOnClose orders must be placed within {Orders.MarketOnCloseOrder.SubmissionTimeBuffer} before market close." +
                         " Override this TimeSpan buffer by setting Orders.MarketOnCloseOrder.SubmissionTimeBuffer in QCAlgorithm.Initialize()."
@@ -1282,12 +1336,9 @@ namespace QuantConnect.Algorithm
             if (security == null || !security.IsTradable)
             {
                 // Try to add and seed the security, but don't is it's a canonical symbol
-                if (!isCanonical &&
+                if (CanAutoAddSecurity(symbol) &&
                     // Indexes are not tradable by default
-                    symbol.SecurityType != SecurityType.Index &&
-                    (!symbol.HasUnderlying ||
-                     (symbol.SecurityType.IsOption() && !OptionSymbol.IsOptionContractExpired(symbol, UtcTime)) ||
-                     (symbol.SecurityType == SecurityType.Future && !FuturesExpiryUtilityFunctions.IsFutureContractExpired(symbol, UtcTime, MarketHoursDatabase))))
+                    symbol.SecurityType != SecurityType.Index)
                 {
                     // Send one time warning
                     security = AddSecurity(symbol);
@@ -1303,6 +1354,21 @@ namespace QuantConnect.Algorithm
 
             throw new InvalidOperationException($"The symbol {symbol} is not found in the algorithm's securities collection " +
                     "and cannot be re-added due to it being delisted or no longer tradable.");
+        }
+
+        /// <summary>
+        /// Determines whether the given symbol can be automatically added to the algorithm on the user's behalf,
+        /// so that it does not need to be explicitly subscribed to before being used. This is the case both when
+        /// submitting an order (see <see cref="GetSecurityForOrder"/>) and when registering an indicator or
+        /// consolidator for a symbol the user has not subscribed to. Canonical symbols (universes) and expired
+        /// option/future contracts are excluded.
+        /// </summary>
+        private bool CanAutoAddSecurity(Symbol symbol)
+        {
+            return !symbol.IsCanonical() &&
+                (!symbol.HasUnderlying ||
+                 (symbol.SecurityType.IsOption() && !OptionSymbol.IsOptionContractExpired(symbol, UtcTime)) ||
+                 (symbol.SecurityType == SecurityType.Future && !FuturesExpiryUtilityFunctions.IsFutureContractExpired(symbol, UtcTime, MarketHoursDatabase)));
         }
 
         /// <summary>

@@ -14,11 +14,14 @@
  *
 */
 
+using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Net;
+using System.Text;
 using NUnit.Framework;
+using QuantConnect.Interfaces;
 using QuantConnect.Lean.Engine.DataFeeds;
 using QuantConnect.Lean.Engine.DataFeeds.Transport;
 using QuantConnect.Util;
@@ -178,6 +181,65 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Transport
                     null),
                 "Api.Download(): Failed to download data from quantconnect.com. Please verify the source for missing http:// or https://"
             );
+        }
+
+        [Test]
+        public void RetriesTransientEmptyDownload()
+        {
+            // the remote endpoint answers empty twice before returning the data; the reader should retry and recover
+            var provider = new TransientEmptyDownloadProvider(emptyResponses: 2, payload: "20131007 00:00,1,2,0,1,100");
+            RemoteFileSubscriptionStreamReader.SetDownloadProvider(provider);
+
+            using var cacheProvider = new SingleEntryDataCacheProvider(TestGlobals.DataProvider, isDataEphemeral: true);
+            using var remoteReader = new RemoteFileSubscriptionStreamReader(
+                cacheProvider,
+                "https://cdn.quantconnect.com/uploads/transient-empty.csv",
+                Globals.Cache,
+                null);
+
+            Assert.IsFalse(remoteReader.EndOfStream, "reader should have data after retrying past the empty responses");
+            Assert.AreEqual("20131007 00:00,1,2,0,1,100", remoteReader.ReadLine());
+            Assert.AreEqual(3, provider.DownloadCount);
+        }
+
+        [Test]
+        public void EmptyDownloadIsNotCached()
+        {
+            var provider = new TransientEmptyDownloadProvider(emptyResponses: int.MaxValue, payload: string.Empty);
+            RemoteFileSubscriptionStreamReader.SetDownloadProvider(provider);
+
+            var url = "https://cdn.quantconnect.com/uploads/always-empty.csv";
+            using var cacheProvider = new ZipDataCacheProvider(TestGlobals.DataProvider, isDataEphemeral: false);
+            using var remoteReader = new RemoteFileSubscriptionStreamReader(cacheProvider, url, Globals.Cache, null);
+
+            Assert.IsTrue(remoteReader.EndOfStream, "an empty download should yield no data");
+            // the empty response must not have been persisted to the cache
+            Assert.IsFalse(File.Exists(Path.Combine(Globals.Cache, url.ToMD5() + ".csv")),
+                "an empty download must not be cached");
+        }
+
+        private class TransientEmptyDownloadProvider : IDownloadProvider
+        {
+            private readonly int _emptyResponses;
+            private readonly byte[] _payload;
+            public int DownloadCount { get; private set; }
+
+            public TransientEmptyDownloadProvider(int emptyResponses, string payload)
+            {
+                _emptyResponses = emptyResponses;
+                _payload = Encoding.UTF8.GetBytes(payload);
+            }
+
+            public byte[] DownloadBytes(string address, IEnumerable<KeyValuePair<string, string>> headers, string userName, string password)
+            {
+                DownloadCount++;
+                return DownloadCount <= _emptyResponses ? Array.Empty<byte>() : _payload;
+            }
+
+            public string Download(string address, IEnumerable<KeyValuePair<string, string>> headers, string userName, string password)
+            {
+                return Encoding.UTF8.GetString(DownloadBytes(address, headers, userName, password));
+            }
         }
 
         private class TestDownloadProvider : QuantConnect.Api.Api
