@@ -305,6 +305,14 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 throw new InvalidOperationException($"{DataNormalizationMode.ScaledRaw} normalization mode only intended for history requests.");
             }
 
+            if (request.Configuration.DataMappingMode == DataMappingMode.TradingDaysBeforeExpiry &&
+                request.Configuration.DataNormalizationMode != DataNormalizationMode.Raw)
+            {
+                throw new NotSupportedException(
+                    $"{DataMappingMode.TradingDaysBeforeExpiry} does not support {request.Configuration.DataNormalizationMode} normalization because continuous future factor files do not contain factors for shifted roll dates. " +
+                    $"Use {DataNormalizationMode.Raw} normalization or choose a factor-file-backed mapping mode.");
+            }
+
             // before adding the configuration to the data feed let's assert it's valid
             _dataPermissionManager.AssertConfiguration(request.Configuration, request.StartTimeLocal, request.EndTimeLocal);
 
