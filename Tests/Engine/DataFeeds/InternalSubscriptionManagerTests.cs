@@ -238,9 +238,9 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                             .Any(config => config.IsInternalFeed && config.Resolution == Resolution.Second));
                         first = false;
                     }
-                    else if(_algorithm.Securities["AAPL"].Price != 0 && _algorithm.Securities["IBM"].Price != 0)
+                    else if (_algorithm.Securities["AAPL"].Price != 0 && _algorithm.Securities["IBM"].Price != 0)
                     {
-                        #pragma warning disable CS0618
+#pragma warning disable CS0618
                         _algorithm.SetHoldings("AAPL", 0.01);
                         _algorithm.SetHoldings("IBM", 0.01);
 
@@ -250,7 +250,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                         Assert.AreEqual(OrderStatus.Submitted, orders[0].Status);
 
                         orders = _algorithm.Transactions.GetOpenOrders("IBM");
-                        #pragma warning restore CS0618
+#pragma warning restore CS0618
                         Assert.AreEqual(1, orders.Count);
                         Assert.AreEqual(Symbols.IBM, orders[0].Symbol);
                         Assert.AreEqual(OrderStatus.Submitted, orders[0].Status);
@@ -423,7 +423,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 new DataChannelProvider());
             _algorithm.SubscriptionManager.SetDataManager(_dataManager);
             _algorithm.Securities.SetSecurityService(securityService);
-            var backtestingTransactionHandler = new BacktestingTransactionHandler();
+            var backtestingTransactionHandler = new SynchronousBacktestingTransactionHandler();
             _paperBrokerage = new PaperBrokerage(_algorithm, new LiveNodePacket());
             backtestingTransactionHandler.Initialize(_algorithm, _paperBrokerage, _resultHandler);
             _algorithm.Transactions.SetOrderProcessor(backtestingTransactionHandler);
@@ -434,6 +434,12 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             }
             _transactionHandler = backtestingTransactionHandler;
         }
+
+        private class SynchronousBacktestingTransactionHandler : BacktestingTransactionHandler
+        {
+            protected override bool SynchronousProcessing => true;
+        }
+
         private class TestAggregationManager : AggregationManager
         {
             public TestAggregationManager(ITimeProvider timeProvider)
