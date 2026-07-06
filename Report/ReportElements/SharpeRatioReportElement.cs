@@ -14,6 +14,7 @@
 */
 
 using Deedle;
+using QuantConnect.Data;
 using QuantConnect.Packets;
 using System;
 using System.Collections.Generic;
@@ -83,7 +84,8 @@ namespace QuantConnect.Report.ReportElements
             }
 
             var sixMonthsAgo = performance.LastKey().AddDays(-180);
-            var trailingPerformance = performance.Where(series => series.Key >= sixMonthsAgo && series.Key.DayOfWeek != DayOfWeek.Saturday && series.Key.DayOfWeek != DayOfWeek.Sunday)
+            var trailingSeries = performance.Where(series => series.Key >= sixMonthsAgo && series.Key.DayOfWeek != DayOfWeek.Saturday && series.Key.DayOfWeek != DayOfWeek.Sunday);
+            var trailingPerformance = trailingSeries
                 .Values
                 .ToList();
 
@@ -93,8 +95,10 @@ namespace QuantConnect.Report.ReportElements
                 return "-";
             }
 
+            // Use excess returns to stay consistent with the reported PSR and backtest Sharpe ratio
+            var riskFreeRate = new InterestRateProvider().GetAverageRiskFreeRate(trailingSeries.Keys);
             var annualPerformance = Statistics.Statistics.AnnualPerformance(trailingPerformance, _tradingDaysPerYear);
-            var liveResultValue = Statistics.Statistics.SharpeRatio(annualPerformance, annualStandardDeviation, 0.0);
+            var liveResultValue = Statistics.Statistics.SharpeRatio(annualPerformance, annualStandardDeviation, (double)riskFreeRate);
             Result = liveResultValue;
             return liveResultValue.ToString("F2");
         }

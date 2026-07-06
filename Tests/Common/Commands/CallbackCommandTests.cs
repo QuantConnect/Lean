@@ -97,7 +97,7 @@ namespace QuantConnect.Tests.Common.Commands
                     {"Net Profit", "0.003%"},
                     {"Sharpe Ratio", "-5.552"},
                     {"Sortino Ratio", "0"},
-                    {"Probabilistic Sharpe Ratio", "66.765%"},
+                    {"Probabilistic Sharpe Ratio", "20.550%"},
                     {"Loss Rate", "0%"},
                     {"Win Rate", "0%"},
                     {"Profit-Loss Ratio", "0"},

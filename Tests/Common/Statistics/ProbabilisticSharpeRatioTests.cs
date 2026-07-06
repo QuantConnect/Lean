@@ -77,5 +77,34 @@ namespace QuantConnect.Tests.Common.Statistics
 
             Assert.AreEqual(0d, result, 0.001);
         }
+
+        [Test]
+        public void UsesRiskFreeRateForObservedSharpeRatio()
+        {
+            // Gross returns clear the benchmark, so on a gross basis the PSR is high
+            var performance = new List<double> { 0.01, 0.02, 0.01, 0, 0, 3 };
+            var benchmarkSharpeRatio = 1.0d / System.Math.Sqrt(252);
+
+            var grossResult = QuantConnect.Statistics.Statistics.ProbabilisticSharpeRatio(performance, benchmarkSharpeRatio);
+            // A per-sample risk free rate above the average return makes the excess return negative,
+            // so the PSR must collapse below the gross one
+            var excessReturnResult = QuantConnect.Statistics.Statistics.ProbabilisticSharpeRatio(performance, benchmarkSharpeRatio, 0.6);
+
+            Assert.Greater(grossResult, 0.5d);
+            Assert.Less(excessReturnResult, 0.5d);
+            Assert.Greater(grossResult, excessReturnResult);
+        }
+
+        [Test]
+        public void ObservedSharpeRatioSubtractsRiskFreeRate()
+        {
+            var performance = new List<double> { 0.02, 0.04 };
+
+            // A risk free rate equal to the average return zeroes the excess observed sharpe ratio
+            Assert.AreEqual(0d, QuantConnect.Statistics.Statistics.ObservedSharpeRatio(performance, 0.03d), 1e-12);
+            // and it is strictly lower than the gross observed sharpe ratio
+            Assert.Greater(QuantConnect.Statistics.Statistics.ObservedSharpeRatio(performance),
+                QuantConnect.Statistics.Statistics.ObservedSharpeRatio(performance, 0.03d));
+        }
     }
 }

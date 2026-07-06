@@ -180,7 +180,7 @@ namespace QuantConnect.Tests.Python
                     {"Expectancy", "4.239"},
                     {"Net Profit", "1.203%"},
                     {"Sharpe Ratio", "7.908"},
-                    {"Probabilistic Sharpe Ratio", "95.063%"},
+                    {"Probabilistic Sharpe Ratio", "94.373%"},
                     {"Loss Rate", "62%"},
                     {"Win Rate", "38%"},
                     {"Profit-Loss Ratio", "12.97"},
