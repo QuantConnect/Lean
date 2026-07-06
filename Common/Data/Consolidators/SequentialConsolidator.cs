@@ -106,8 +106,7 @@ namespace QuantConnect.Data.Consolidators
             // wire up the second one to get data from the first
             first.DataConsolidated += (sender, consolidated) => second.Update(consolidated);
 
-            // wire up the second one's events to also fire this consolidator's event so consumers
-            // can attach
+            // forward the second consolidator's event. This wrapper also keeps its own window
             second.DataConsolidated += (sender, consolidated) => OnDataConsolidated(consolidated);
         }
 
@@ -118,8 +117,10 @@ namespace QuantConnect.Data.Consolidators
         /// <param name="consolidated">The newly consolidated data</param>
         protected override void OnDataConsolidated(IBaseData consolidated)
         {
-            DataConsolidated?.Invoke(this, consolidated);
+            // update the rolling window before firing the typed event so handlers
+            // see the just-consolidated bar at Window[0], same as PeriodCountConsolidatorBase
             base.OnDataConsolidated(consolidated);
+            DataConsolidated?.Invoke(this, consolidated);
         }
 
         /// <summary>Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.</summary>

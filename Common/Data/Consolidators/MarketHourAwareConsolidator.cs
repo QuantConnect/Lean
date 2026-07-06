@@ -272,12 +272,15 @@ namespace QuantConnect.Data.Consolidators
         }
 
         /// <summary>
-        /// Will forward the underlying consolidated bar to consumers on this object
+        /// Will forward the underlying consolidated bar to consumers on this object.
+        /// This wrapper keeps its own rolling window in addition to the inner consolidator's window.
         /// </summary>
         protected virtual void ForwardConsolidatedBar(object sender, IBaseData consolidated)
         {
-            DataConsolidated?.Invoke(this, consolidated);
+            // update the rolling window before firing the typed event so handlers
+            // see the just-consolidated bar at Window[0], same as PeriodCountConsolidatorBase
             base.OnDataConsolidated(consolidated);
+            DataConsolidated?.Invoke(this, consolidated);
         }
     }
 }

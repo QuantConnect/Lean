@@ -71,6 +71,31 @@ namespace QuantConnect.Tests.Common.Data
             Assert.AreEqual(1, latestBar.Low);
         }
 
+        [Test]
+        public void ConsolidatedIsAvailableInsideDataConsolidatedHandler()
+        {
+            var symbol = Symbols.BTCUSD;
+            using var consolidator = new MarketHourAwareConsolidator(true, Resolution.Daily, typeof(TradeBar), TickType.Trade, false);
+
+            IBaseData eventArgument = null;
+            IBaseData consolidatedInsideHandler = null;
+            consolidator.DataConsolidated += (_, bar) =>
+            {
+                eventArgument = bar;
+                consolidatedInsideHandler = ((ConsolidatorBase)consolidator).Consolidated;
+            };
+
+            var time = new DateTime(2015, 04, 13, 10, 0, 0);
+            consolidator.Update(new TradeBar() { Time = time.Subtract(Time.OneMinute), Period = Time.OneMinute, Symbol = symbol, High = 100 });
+
+            time = new DateTime(2015, 04, 14, 0, 0, 0);
+            consolidator.Scan(time);
+
+            // A handler must see the just-consolidated bar in the window, not the previous one
+            Assert.IsNotNull(eventArgument);
+            Assert.AreEqual(eventArgument, consolidatedInsideHandler);
+        }
+
         [TestCase(true)]
         [TestCase(false)]
         public void Daily(bool strictEndTime)

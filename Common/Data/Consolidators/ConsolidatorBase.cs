@@ -89,12 +89,13 @@ namespace QuantConnect.Data.Consolidators
         }
 
         /// <summary>
-        /// Event invocator for the DataConsolidated event. Fires the event and updates the rolling window.
+        /// Event invocator for the DataConsolidated event. Updates the rolling window and then fires
+        /// the event, so every handler observes the just-consolidated bar at Window[0].
         /// </summary>
         protected virtual void OnDataConsolidated(IBaseData consolidated)
         {
-            _dataConsolidated?.Invoke(this, consolidated);
             Consolidated = consolidated;
+            _dataConsolidated?.Invoke(this, consolidated);
         }
 
         /// <summary>

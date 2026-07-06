@@ -46,6 +46,67 @@ namespace QuantConnect.Tests.Common.Data
             consolidator.Dispose();
         }
 
+        [Test]
+        public void ConsolidatedIsAvailableInsideDataConsolidatedHandler()
+        {
+            var reference = new DateTime(2015, 4, 13);
+            var consolidator = new IdentityDataConsolidator<TradeBar>();
+
+            IBaseData eventArgument = null;
+            IBaseData consolidatedInsideHandler = null;
+            consolidator.DataConsolidated += (_, bar) =>
+            {
+                eventArgument = bar;
+                consolidatedInsideHandler = ((ConsolidatorBase)consolidator).Consolidated;
+            };
+
+            consolidator.Update(new TradeBar { Symbol = Symbols.SPY, Time = reference, Close = 10m, Value = 10m, Period = Time.OneMinute });
+
+            // A handler must see the just-consolidated bar in the window, not the previous one
+            Assert.AreEqual(eventArgument, consolidatedInsideHandler);
+
+            consolidator.Dispose();
+        }
+
+        [Test]
+        public void CurrentAndPreviousAreNullBeforeFirstConsolidation()
+        {
+            var consolidator = new TradeBarConsolidator(1);
+            var windowConsolidator = (ConsolidatorBase)consolidator;
+
+            Assert.IsNull(windowConsolidator.Consolidated);
+            Assert.IsNull(windowConsolidator.Current);
+            Assert.IsNull(windowConsolidator.Previous);
+            Assert.IsNull(windowConsolidator[0]);
+            Assert.AreEqual(0, windowConsolidator.Window.Count);
+
+            consolidator.Dispose();
+        }
+
+        [Test]
+        public void ResetClearsWindowAndConsolidated()
+        {
+            var reference = new DateTime(2015, 4, 13);
+            var spy = Symbols.SPY;
+            var consolidator = new TradeBarConsolidator(1);
+            var windowConsolidator = (ConsolidatorBase)consolidator;
+
+            consolidator.Update(new TradeBar { Symbol = spy, Time = reference, Close = 10m, Value = 10m, Period = Time.OneMinute });
+            consolidator.Update(new TradeBar { Symbol = spy, Time = reference.AddMinutes(1), Close = 20m, Value = 20m, Period = Time.OneMinute });
+
+            Assert.AreEqual(2, windowConsolidator.Window.Count);
+            Assert.IsNotNull(windowConsolidator.Consolidated);
+
+            windowConsolidator.Reset();
+
+            Assert.AreEqual(0, windowConsolidator.Window.Count);
+            Assert.IsNull(windowConsolidator.Consolidated);
+            Assert.IsNull(windowConsolidator.Current);
+            Assert.IsNull(windowConsolidator.Previous);
+
+            consolidator.Dispose();
+        }
+
         private static IEnumerable<TestCaseData> WindowTestCases()
         {
             var reference = new DateTime(2015, 4, 13);
