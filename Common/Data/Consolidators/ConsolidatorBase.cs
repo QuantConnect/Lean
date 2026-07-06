@@ -14,6 +14,7 @@
 */
 
 using System;
+using QuantConnect.Indicators;
 
 namespace QuantConnect.Data.Consolidators
 {

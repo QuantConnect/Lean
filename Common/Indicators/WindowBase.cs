@@ -15,9 +15,8 @@
 
 using System.Collections;
 using System.Collections.Generic;
-using QuantConnect.Indicators;
 
-namespace QuantConnect
+namespace QuantConnect.Indicators
 {
     /// <summary>
     /// Provides a base class for types that maintain a rolling window history of values.
@@ -48,7 +47,7 @@ namespace QuantConnect
 
         /// <summary>
         /// A rolling window keeping a history of values. The most recent value is at index 0.
-        /// Uses lazy initialization to survive Python subclasses that do not call base constructors.
+        /// Uses lazy initialization to support Python subclasses that do not call base constructors.
         /// </summary>
         public virtual RollingWindow<T> Window => _window ??= new RollingWindow<T>(DefaultWindowSize);
 
