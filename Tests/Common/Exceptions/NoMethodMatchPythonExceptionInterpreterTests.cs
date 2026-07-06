@@ -90,9 +90,10 @@ namespace QuantConnect.Tests.Common.Exceptions
             var interpreter = new NoMethodMatchPythonExceptionInterpreter();
             exception = interpreter.Interpret(exception, NullExceptionInterpreter.Instance);
 
-            // The interpreter should reference the actual method name that failed to resolve (SetCash),
-            // not a fragment of the argument type list (e.g. "'str'>)").
-            Assert.That(exception.Message, Does.Contain("SetCash"));
+            // The interpreter should reference the actual method name that failed to resolve
+            // (set_cash, the snake_case name Python callers use), not a fragment of the argument
+            // type list (e.g. "'str'>)").
+            Assert.That(exception.Message, Does.Contain("set_cash"));
             Assert.That(exception.Message, Does.Not.Contain(">)"));
         }
 
@@ -113,9 +114,9 @@ namespace QuantConnect.Tests.Common.Exceptions
             var interpreter = new NoMethodMatchPythonExceptionInterpreter();
             var exception = interpreter.Interpret(pythonException, NullExceptionInterpreter.Instance);
 
-            // The interpreter should reference the RSI method name, not a fragment of the
-            // argument type list (e.g. "'QuantConnect.Resolution'>)").
-            Assert.That(exception.Message, Does.Contain("RSI"));
+            // The interpreter should reference the rsi method name (snake_case, as Python callers
+            // use it), not a fragment of the argument type list (e.g. "'QuantConnect.Resolution'>)").
+            Assert.That(exception.Message, Does.Contain("rsi"));
             Assert.That(exception.Message, Does.Not.Contain(">)"));
         }
 
