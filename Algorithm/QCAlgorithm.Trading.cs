@@ -1363,7 +1363,7 @@ namespace QuantConnect.Algorithm
                     if (!_liquidateSymbolNotFoundWarningSent)
                     {
                         _liquidateSymbolNotFoundWarningSent = true;
-                        Debug($"Warning: Liquidate() ignored symbol '{symbolToLiquidate}' because it has not been added to the algorithm. Add the security before liquidating it.");
+                        Debug($"Warning: liquidate ignored symbol '{symbolToLiquidate}' because it has not been added to the algorithm. Add the security before liquidating it.");
                     }
                     continue;
                 }
