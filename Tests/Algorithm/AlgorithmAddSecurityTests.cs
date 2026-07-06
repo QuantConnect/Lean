@@ -258,6 +258,41 @@ namespace QuantConnect.Tests.Algorithm
             Assert.AreEqual(1, _algo.SubscriptionManager.Subscriptions.Count(x => x.Symbol == spx.Symbol));
         }
 
+        [TestCase("SPXW", "SPX")]
+        [TestCase("RUTW", "RUT")]
+        [TestCase("VIXW", "VIX")]
+        [TestCase("NDXP", "NDX")]
+        [TestCase("NQX", "NDX")]
+        [TestCase("SPX", "SPX")]
+        [TestCase("VIX", "VIX")]
+        public void AddIndexOptionMapsNonStandardOptionTickerToItsUnderlyingIndex(string ticker, string expectedUnderlyingTicker)
+        {
+            var option = _algo.AddIndexOption(ticker);
+
+            // the canonical keeps the provided option ticker
+            Assert.AreEqual($"?{ticker}", option.Symbol.Value);
+            Assert.AreEqual(ticker, option.Symbol.ID.Symbol);
+            // but the underlying is the actual index, which has data. Else the option contracts would reference
+            // a data-less underlying index security which would never get a price
+            Assert.AreEqual(SecurityType.Index, option.Symbol.Underlying.SecurityType);
+            Assert.AreEqual(expectedUnderlyingTicker, option.Symbol.Underlying.Value);
+
+            // the auto-added underlying index security is the mapped index
+            _algo.OnEndOfTimeStep();
+            Assert.IsTrue(_algo.Securities.ContainsKey(option.Symbol.Underlying));
+            Assert.AreEqual(option.Symbol.Underlying, option.Underlying.Symbol);
+            if (ticker != expectedUnderlyingTicker)
+            {
+                Assert.IsFalse(_algo.Securities.Keys.Any(x => x.SecurityType == SecurityType.Index && x.Value == ticker));
+                // a one time warning is sent about the mapping
+                Assert.AreEqual(1, _algo.DebugMessages.Count(x => x.Contains(ticker, StringComparison.InvariantCulture)));
+            }
+            else
+            {
+                Assert.IsEmpty(_algo.DebugMessages);
+            }
+        }
+
         [TestCase(Language.CSharp)]
         [TestCase(Language.Python)]
         public void AddSecurityInitializerAppendsInitializer(Language language)
