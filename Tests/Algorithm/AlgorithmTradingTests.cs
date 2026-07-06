@@ -1556,6 +1556,41 @@ namespace QuantConnect.Tests.Algorithm
             Assert.IsTrue(limitOrderCanceled);
         }
 
+        [TestCase(Language.CSharp, true)]
+        [TestCase(Language.CSharp, false)]
+        [TestCase(Language.Python, true)]
+        [TestCase(Language.Python, false)]
+        public void LiquidateIgnoresSymbolsNotAddedToTheAlgorithm(Language language, bool singleSymbol)
+        {
+            var algo = GetAlgorithm(out _, 1, 0);
+
+            // AAPL was never added to the algorithm
+            List<OrderTicket> liquidatedTickets = null;
+            if (language == Language.CSharp)
+            {
+                if (singleSymbol)
+                {
+                    Assert.DoesNotThrow(() => liquidatedTickets = algo.Liquidate(Symbols.AAPL));
+                }
+                else
+                {
+                    Assert.DoesNotThrow(() => liquidatedTickets = algo.Liquidate(new List<Symbol>() { Symbols.AAPL }));
+                }
+            }
+            else
+            {
+                using (Py.GIL())
+                {
+                    var symbols = singleSymbol
+                        ? Symbols.AAPL.ToPython()
+                        : (new List<Symbol>() { Symbols.AAPL }).ToPython();
+                    Assert.DoesNotThrow(() => liquidatedTickets = algo.Liquidate(symbols));
+                }
+            }
+
+            Assert.IsEmpty(liquidatedTickets);
+        }
+
         [Test]
         public void MarketOrdersAreSupportedForFuturesOnExtendedMarketHours()
         {

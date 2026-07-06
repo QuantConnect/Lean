@@ -35,6 +35,7 @@ namespace QuantConnect.Algorithm
         private bool _isMarketOnOpenOrderRestrictedForFuturesWarningSent;
         private bool _isGtdTfiForMooAndMocOrdersValidationWarningSent;
         private bool _isOptionsOrderOnStockSplitWarningSent;
+        private bool _liquidateSymbolNotFoundWarningSent;
 
         /// <summary>
         /// Transaction Manager - Process transaction fills and order management.
@@ -1268,7 +1269,7 @@ namespace QuantConnect.Algorithm
         private Security GetSecurityForOrder(Symbol symbol)
         {
             var isCanonical = symbol.IsCanonical();
-            if (Securities.TryGetValue(symbol, out var security) && 
+            if (Securities.TryGetValue(symbol, out var security) &&
                 // Let canonical and delisted securities through instead of throwing. An invalid ticket will be returned later on when trying to submit the order.
                 (isCanonical || security.IsTradable || security.IsDelisted))
             {
@@ -1326,8 +1327,7 @@ namespace QuantConnect.Algorithm
             IEnumerable<Symbol> toLiquidate;
             if (symbol != null)
             {
-                toLiquidate = Securities.ContainsKey(symbol)
-                    ? new[] { symbol } : Enumerable.Empty<Symbol>();
+                toLiquidate = new[] { symbol };
             }
             else
             {
@@ -1357,6 +1357,17 @@ namespace QuantConnect.Algorithm
             tag ??= "Liquidated";
             foreach (var symbolToLiquidate in symbols)
             {
+                // skip symbols that have not been added to the algorithm instead of throwing
+                if (!Securities.ContainsKey(symbolToLiquidate))
+                {
+                    if (!_liquidateSymbolNotFoundWarningSent)
+                    {
+                        _liquidateSymbolNotFoundWarningSent = true;
+                        Debug($"Warning: Liquidate() ignored symbol '{symbolToLiquidate}' because it has not been added to the algorithm. Add the security before liquidating it.");
+                    }
+                    continue;
+                }
+
                 // get open orders
                 var orders = Transactions.GetOpenOrders(symbolToLiquidate);
 
