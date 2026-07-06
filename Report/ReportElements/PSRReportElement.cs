@@ -76,7 +76,11 @@ namespace QuantConnect.Report.ReportElements
             }
 
             var sixMonthsBefore = equityCurvePerformance.LastKey() - TimeSpan.FromDays(180);
-            var lastSixMonthsPerformance = equityCurvePerformance.Where(kvp => kvp.Key >= sixMonthsBefore);
+            // Skip weekends so we stay on a trading-day basis. The risk-free rate below is deannualized by
+            // tradingDaysPerYear, so leaving calendar days in would deduct it over ~365 days a year and over-deduct the rate
+            var lastSixMonthsPerformance = equityCurvePerformance.Where(kvp => kvp.Key >= sixMonthsBefore
+                && kvp.Key.DayOfWeek != DayOfWeek.Saturday
+                && kvp.Key.DayOfWeek != DayOfWeek.Sunday);
 
             var benchmarkSharpeRatio = 1.0d / Math.Sqrt(_tradingDaysPerYear);
             // Use the same excess-return basis as the reported PSR by subtracting the deannualized risk-free rate
