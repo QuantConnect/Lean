@@ -15,7 +15,6 @@
 
 using System;
 using NodaTime;
-using QuantConnect.Indicators;
 using QuantConnect.Util;
 using QuantConnect.Securities;
 using QuantConnect.Data.Market;
@@ -39,7 +38,7 @@ namespace QuantConnect.Data.Consolidators
         /// <summary>
         /// The consolidator instance
         /// </summary>
-        private IDataConsolidator Consolidator { get; }
+        protected IDataConsolidator Consolidator { get; }
 
         /// <summary>
         /// The associated security exchange hours instance

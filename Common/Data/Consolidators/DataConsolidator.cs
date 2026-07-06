@@ -79,6 +79,7 @@ namespace QuantConnect.Data.Consolidators
         public override void Dispose()
         {
             DataConsolidated = null;
+            base.Dispose();
         }
 
         /// <summary>

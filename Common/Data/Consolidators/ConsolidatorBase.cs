@@ -25,19 +25,30 @@ namespace QuantConnect.Data.Consolidators
     {
         private DataConsolidatedHandler _dataConsolidated;
 
+        private IBaseData _consolidated;
+
         /// <summary>
         /// Gets the most recently consolidated piece of data. This will be null if this consolidator
-        /// has not produced any data yet. Setting this property adds the value to the rolling window.
+        /// has not produced any data yet. Setting this property adds the value to the rolling window,
+        /// setting it to null clears the window.
         /// </summary>
         public IBaseData Consolidated
         {
             get
             {
-                return Window.Count > 0 ? Window[0] : null;
+                return _consolidated;
             }
             protected set
             {
-                Window.Add(value);
+                _consolidated = value;
+                if (value == null)
+                {
+                    ResetWindow();
+                }
+                else
+                {
+                    Current = value;
+                }
             }
         }
 
@@ -99,7 +110,7 @@ namespace QuantConnect.Data.Consolidators
         /// </summary>
         public virtual void Reset()
         {
-            ResetWindow();
+            Consolidated = null;
         }
     }
 }

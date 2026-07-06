@@ -94,7 +94,7 @@ namespace QuantConnect
         /// </summary>
         protected void ResetWindow()
         {
-            Window.Reset();
+            _window?.Reset();
         }
     }
 }

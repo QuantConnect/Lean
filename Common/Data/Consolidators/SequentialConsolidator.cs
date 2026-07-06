@@ -14,7 +14,6 @@
 */
 
 using System;
-using QuantConnect.Indicators;
 
 namespace QuantConnect.Data.Consolidators
 {
@@ -130,6 +129,7 @@ namespace QuantConnect.Data.Consolidators
             First.Dispose();
             Second.Dispose();
             DataConsolidated = null;
+            base.Dispose();
         }
 
         /// <summary>

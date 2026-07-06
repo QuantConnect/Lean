@@ -26,6 +26,7 @@ namespace QuantConnect.Python
     public class DataConsolidatorPythonWrapper : ConsolidatorBase
     {
         private readonly BasePythonWrapper<IDataConsolidator> _pythonWrapper;
+        private readonly DataConsolidatedHandler _pythonDataConsolidated;
 
         /// <summary>
         /// Gets a clone of the data being currently consolidated
@@ -58,8 +59,9 @@ namespace QuantConnect.Python
         public DataConsolidatorPythonWrapper(PyObject consolidator)
         {
             _pythonWrapper = new BasePythonWrapper<IDataConsolidator>(consolidator, true);
+            _pythonDataConsolidated = (_, bar) => OnDataConsolidated(bar);
             var pythonEvent = _pythonWrapper.GetEvent("DataConsolidated");
-            pythonEvent += new DataConsolidatedHandler((_, bar) => OnDataConsolidated(bar));
+            pythonEvent += _pythonDataConsolidated;
         }
 
         /// <summary>
@@ -94,7 +96,10 @@ namespace QuantConnect.Python
         /// </summary>
         public override void Dispose()
         {
+            var pythonEvent = _pythonWrapper.GetEvent("DataConsolidated");
+            pythonEvent -= _pythonDataConsolidated;
             _pythonWrapper.Dispose();
+            base.Dispose();
         }
 
         /// <summary>
