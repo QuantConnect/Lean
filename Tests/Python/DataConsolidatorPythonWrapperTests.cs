@@ -203,6 +203,85 @@ namespace QuantConnect.Tests.Python
         }
 
         [Test]
+        public void WindowIsPopulatedOnConsolidation()
+        {
+            using (Py.GIL())
+            {
+                using var wrapper = CreateFedPythonWrapper(1);
+                Assert.AreEqual(1, wrapper.Window.Count);
+                Assert.IsNotNull(wrapper.Consolidated);
+                Assert.AreEqual(wrapper.Consolidated, wrapper[0]);
+            }
+        }
+
+        [Test]
+        public void WindowKeepsPreviousConsolidatedBar()
+        {
+            using (Py.GIL())
+            {
+                using var wrapper = CreateFedPythonWrapper(1);
+                var firstConsolidated = wrapper.Consolidated;
+
+                FeedConsolidation(wrapper, 1);
+
+                Assert.AreEqual(2, wrapper.Window.Count);
+                Assert.AreNotEqual(firstConsolidated, wrapper[0]);
+                Assert.AreEqual(firstConsolidated, wrapper[1]);
+                Assert.AreEqual(firstConsolidated, wrapper.Previous);
+            }
+        }
+
+        [Test]
+        public void CanIterateOverConsolidatedBars()
+        {
+            using (Py.GIL())
+            {
+                using var wrapper = CreateFedPythonWrapper(2);
+                var bars = wrapper.ToList();
+                Assert.AreEqual(2, bars.Count);
+                Assert.AreEqual(wrapper[0], bars[0]);
+                Assert.AreEqual(wrapper[1], bars[1]);
+            }
+        }
+
+        [Test]
+        public void ResetClearsWindow()
+        {
+            using (Py.GIL())
+            {
+                using var wrapper = CreateFedPythonWrapper(1);
+                wrapper.Reset();
+                Assert.AreEqual(0, wrapper.Window.Count);
+                Assert.IsNull(wrapper.Consolidated);
+            }
+        }
+
+        private static DataConsolidatorPythonWrapper CreateFedPythonWrapper(int consolidations)
+        {
+            var module = PyModule.FromString(Guid.NewGuid().ToString(),
+                "from AlgorithmImports import *\n" +
+                "class CustomConsolidator(QuoteBarConsolidator):\n" +
+                "   def __init__(self):\n" +
+                "       super().__init__(timedelta(minutes=2))\n");
+
+            var wrapper = new DataConsolidatorPythonWrapper(module.GetAttr("CustomConsolidator").Invoke());
+            FeedConsolidation(wrapper, consolidations);
+            return wrapper;
+        }
+
+        private static void FeedConsolidation(DataConsolidatorPythonWrapper wrapper, int consolidations)
+        {
+            var offset = wrapper.Window.Count * 2;
+            var time = DateTime.Today;
+            for (var i = 0; i < consolidations; i++)
+            {
+                var bar = new QuoteBar { Time = time.AddMinutes(offset + i * 2), Symbol = Symbols.SPY, Bid = new Bar(1, 2, 0.75m, 1.25m), LastBidSize = 3, Value = 1, Period = TimeSpan.FromMinutes(1) };
+                wrapper.Update(bar);
+                wrapper.Scan(time.AddMinutes(offset + (i + 1) * 2));
+            }
+        }
+
+        [Test]
         public void AttachAndTriggerEvent()
         {
             using (Py.GIL())
