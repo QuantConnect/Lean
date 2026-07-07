@@ -278,7 +278,7 @@ namespace QuantConnect.Securities
             }
 
             // let's loop for a week
-            for (int i = 0; i < 7; i++)
+            for (int i = 0; i < 9; i++)
             {
                 DateTime? potentialResult = null;
                 foreach (var segment in marketHours.Segments.Reverse())
