@@ -258,10 +258,39 @@ namespace QuantConnect.Data
         {
             if (!pyConsolidator.TryConvert(out IDataConsolidator consolidator))
             {
-                consolidator = new DataConsolidatorPythonWrapper(pyConsolidator);
+                // reuse the wrapper created when this python consolidator was added instead of building a
+                // throwaway one: a new wrapper would subscribe to the live python object's event just to be
+                // disposed again, and would leave the original wrapper's subscription leaked
+                consolidator = FindPythonConsolidator(symbol, pyConsolidator)
+                    ?? new DataConsolidatorPythonWrapper(pyConsolidator);
             }
 
             RemoveConsolidator(symbol, consolidator);
+        }
+
+        /// <summary>
+        /// Finds the <see cref="DataConsolidatorPythonWrapper"/> previously created for the given python
+        /// consolidator so it can be removed and disposed, rather than a throwaway wrapper that would churn
+        /// the live python object's event subscription and leak the original one.
+        /// </summary>
+        private IDataConsolidator FindPythonConsolidator(Symbol symbol, PyObject pyConsolidator)
+        {
+            var configs = symbol != null
+                ? _subscriptionManager.GetSubscriptionDataConfigs(symbol)
+                : Subscriptions;
+
+            foreach (var subscription in configs)
+            {
+                foreach (var existing in subscription.Consolidators)
+                {
+                    if (existing is DataConsolidatorPythonWrapper && existing.Equals(pyConsolidator))
+                    {
+                        return existing;
+                    }
+                }
+            }
+
+            return null;
         }
 
         /// <summary>

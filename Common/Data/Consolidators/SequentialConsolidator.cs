@@ -84,11 +84,6 @@ namespace QuantConnect.Data.Consolidators
         }
 
         /// <summary>
-        /// Event handler that fires when a new piece of data is produced
-        /// </summary>
-        public event DataConsolidatedHandler DataConsolidated;
-
-        /// <summary>
         /// Creates a new consolidator that will pump date through the first, and then the output
         /// of the first into the second. This enables 'wrapping' or 'composing' of consolidators
         /// </summary>
@@ -111,22 +106,12 @@ namespace QuantConnect.Data.Consolidators
             second.DataConsolidated += (sender, consolidated) => OnDataConsolidated(consolidated);
         }
 
-        /// <summary>
-        /// Raises the strongly typed DataConsolidated event
-        /// </summary>
-        /// <param name="consolidated">The newly consolidated data</param>
-        protected override void FireDataConsolidated(IBaseData consolidated)
-        {
-            DataConsolidated?.Invoke(this, consolidated);
-        }
-
         /// <summary>Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.</summary>
         /// <filterpriority>2</filterpriority>
         public override void Dispose()
         {
             First.Dispose();
             Second.Dispose();
-            DataConsolidated = null;
             base.Dispose();
         }
 

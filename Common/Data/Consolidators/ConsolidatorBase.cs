@@ -24,8 +24,6 @@ namespace QuantConnect.Data.Consolidators
     /// </summary>
     public abstract class ConsolidatorBase : WindowBase<IBaseData>, IDataConsolidator
     {
-        private DataConsolidatedHandler _dataConsolidated;
-
         private IBaseData _consolidated;
 
         /// <summary>
@@ -72,13 +70,11 @@ namespace QuantConnect.Data.Consolidators
         public abstract void Scan(DateTime currentLocalTime);
 
         /// <summary>
-        /// Event handler that fires when a new piece of data is produced
+        /// Event handler that fires when a new piece of data is produced. This is the single subscription
+        /// point, shared by the <see cref="IDataConsolidator"/> interface and by derived consolidators whose
+        /// output is a base data bar, so subscribing and unsubscribing always target the same handler list.
         /// </summary>
-        event DataConsolidatedHandler IDataConsolidator.DataConsolidated
-        {
-            add { _dataConsolidated += value; }
-            remove { _dataConsolidated -= value; }
-        }
+        public event DataConsolidatedHandler DataConsolidated;
 
         /// <summary>
         /// Event invocator for the DataConsolidated event. Populates the rolling window, raises the
@@ -97,7 +93,7 @@ namespace QuantConnect.Data.Consolidators
             // let derived consolidators raise their strongly typed DataConsolidated event
             FireDataConsolidated(consolidated);
 
-            _dataConsolidated?.Invoke(this, consolidated);
+            DataConsolidated?.Invoke(this, consolidated);
 
             // assign the Consolidated property after the event handlers are fired,
             // this allows the event handlers to look at the new consolidated data
@@ -106,8 +102,10 @@ namespace QuantConnect.Data.Consolidators
         }
 
         /// <summary>
-        /// Raises the strongly typed DataConsolidated event exposed by derived consolidators. Invoked after
-        /// the rolling window is populated and before the interface event so every handler sees the same window.
+        /// Raises the strongly typed DataConsolidated event exposed by derived consolidators that produce a
+        /// more specific bar type. Invoked after the rolling window is populated and before the shared event
+        /// so every handler sees the same window. Consolidators whose output is a base data bar do not need
+        /// to override this, the shared <see cref="DataConsolidated"/> event already carries their bar.
         /// </summary>
         /// <param name="consolidated">The newly consolidated data</param>
         protected virtual void FireDataConsolidated(IBaseData consolidated)
@@ -119,7 +117,7 @@ namespace QuantConnect.Data.Consolidators
         /// </summary>
         public virtual void Dispose()
         {
-            _dataConsolidated = null;
+            DataConsolidated = null;
         }
 
         /// <summary>

@@ -106,6 +106,28 @@ namespace QuantConnect.Tests.Common.Data
         }
 
         [Test]
+        public void InterfaceAndConcreteDataConsolidatedShareOneSubscriptionList()
+        {
+            // regression for the interface event and the concrete event being two separate handler lists:
+            // subscribing through one and unsubscribing through the other must cancel out
+            var reference = new DateTime(2015, 4, 13);
+            var spy = Symbols.SPY;
+            var consolidator = new IdentityDataConsolidator<TradeBar>();
+            IDataConsolidator asInterface = consolidator;
+
+            var calls = 0;
+            DataConsolidatedHandler handler = (_, __) => calls++;
+
+            asInterface.DataConsolidated += handler;
+            consolidator.DataConsolidated -= handler;
+
+            consolidator.Update(new TradeBar { Symbol = spy, Time = reference, Close = 10m, Value = 10m, Period = Time.OneMinute });
+
+            Assert.AreEqual(0, calls);
+            consolidator.Dispose();
+        }
+
+        [Test]
         public void OutOfOrderDataDoesNotClearWindow()
         {
             // regression for count mode emitting a null bar on an out of order data point, which
