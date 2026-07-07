@@ -106,7 +106,8 @@ namespace QuantConnect.Data.Consolidators
             // wire up the second one to get data from the first
             first.DataConsolidated += (sender, consolidated) => second.Update(consolidated);
 
-            // forward the second consolidator's event. This wrapper also keeps its own window
+            // wire up the second one's events to also fire this consolidator's event so consumers
+            // can attach. This wrapper also keeps its own window
             second.DataConsolidated += (sender, consolidated) => OnDataConsolidated(consolidated);
         }
 
