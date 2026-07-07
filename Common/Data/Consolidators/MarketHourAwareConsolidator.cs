@@ -277,10 +277,8 @@ namespace QuantConnect.Data.Consolidators
         /// </summary>
         protected virtual void ForwardConsolidatedBar(object sender, IBaseData consolidated)
         {
-            // update the rolling window before firing the typed event so handlers
-            // see the just-consolidated bar at Window[0], same as PeriodCountConsolidatorBase
-            base.OnDataConsolidated(consolidated);
             DataConsolidated?.Invoke(this, consolidated);
+            base.OnDataConsolidated(consolidated);
         }
     }
 }

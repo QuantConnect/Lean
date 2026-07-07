@@ -117,10 +117,8 @@ namespace QuantConnect.Data.Consolidators
         /// <param name="consolidated">The newly consolidated data</param>
         protected override void OnDataConsolidated(IBaseData consolidated)
         {
-            // update the rolling window before firing the typed event so handlers
-            // see the just-consolidated bar at Window[0], same as PeriodCountConsolidatorBase
-            base.OnDataConsolidated(consolidated);
             DataConsolidated?.Invoke(this, consolidated);
+            base.OnDataConsolidated(consolidated);
         }
 
         /// <summary>Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.</summary>

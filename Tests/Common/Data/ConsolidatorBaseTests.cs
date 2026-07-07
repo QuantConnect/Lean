@@ -47,9 +47,10 @@ namespace QuantConnect.Tests.Common.Data
         }
 
         [Test]
-        public void ConsolidatedIsAvailableInsideDataConsolidatedHandler()
+        public void HandlerSeesPreviousConsolidatedBarWhileReceivingTheNewOne()
         {
             var reference = new DateTime(2015, 4, 13);
+            var spy = Symbols.SPY;
             var consolidator = new IdentityDataConsolidator<TradeBar>();
 
             IBaseData eventArgument = null;
@@ -60,10 +61,20 @@ namespace QuantConnect.Tests.Common.Data
                 consolidatedInsideHandler = ((ConsolidatorBase)consolidator).Consolidated;
             };
 
-            consolidator.Update(new TradeBar { Symbol = Symbols.SPY, Time = reference, Close = 10m, Value = 10m, Period = Time.OneMinute });
+            // First bar: inside the handler Consolidated is still null (no previous bar yet)
+            var first = new TradeBar { Symbol = spy, Time = reference, Close = 10m, Value = 10m, Period = Time.OneMinute };
+            consolidator.Update(first);
+            Assert.AreEqual(first, eventArgument);
+            Assert.IsNull(consolidatedInsideHandler);
 
-            // A handler must see the just-consolidated bar in the window, not the previous one
-            Assert.AreEqual(eventArgument, consolidatedInsideHandler);
+            // Second bar: the handler receives the new bar as argument while Consolidated still holds the previous one
+            var second = new TradeBar { Symbol = spy, Time = reference.AddMinutes(1), Close = 20m, Value = 20m, Period = Time.OneMinute };
+            consolidator.Update(second);
+            Assert.AreEqual(second, eventArgument);
+            Assert.AreEqual(first, consolidatedInsideHandler);
+
+            // Once the handler returns, the window reflects the latest consolidated bar
+            Assert.AreEqual(second, ((ConsolidatorBase)consolidator).Consolidated);
 
             consolidator.Dispose();
         }

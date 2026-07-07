@@ -244,11 +244,9 @@ namespace QuantConnect.Data.Consolidators
         /// <param name="consolidated">The newly consolidated data</param>
         protected void OnDataConsolidated(RenkoBar consolidated)
         {
-            _currentBar = consolidated;
-            // update the rolling window before firing the typed event so handlers
-            // see the just-consolidated bar at Window[0], same as PeriodCountConsolidatorBase
-            base.OnDataConsolidated(consolidated);
             DataConsolidated?.Invoke(this, consolidated);
+            _currentBar = consolidated;
+            base.OnDataConsolidated(consolidated);
         }
 
         private void Rising(IBaseData data)

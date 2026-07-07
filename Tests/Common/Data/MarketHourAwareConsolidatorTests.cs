@@ -72,7 +72,7 @@ namespace QuantConnect.Tests.Common.Data
         }
 
         [Test]
-        public void ConsolidatedIsAvailableInsideDataConsolidatedHandler()
+        public void HandlerSeesPreviousConsolidatedBarWhileReceivingTheNewOne()
         {
             var symbol = Symbols.BTCUSD;
             using var consolidator = new MarketHourAwareConsolidator(true, Resolution.Daily, typeof(TradeBar), TickType.Trade, false);
@@ -91,9 +91,13 @@ namespace QuantConnect.Tests.Common.Data
             time = new DateTime(2015, 04, 14, 0, 0, 0);
             consolidator.Scan(time);
 
-            // A handler must see the just-consolidated bar in the window, not the previous one
+            // The handler receives the new bar as argument while Consolidated still holds the previous
+            // state, which is null here since this is the first consolidation
             Assert.IsNotNull(eventArgument);
-            Assert.AreEqual(eventArgument, consolidatedInsideHandler);
+            Assert.IsNull(consolidatedInsideHandler);
+
+            // Once the handler returned, the window reflects the just-consolidated bar
+            Assert.AreEqual(eventArgument, ((ConsolidatorBase)consolidator).Consolidated);
         }
 
         [TestCase(true)]
