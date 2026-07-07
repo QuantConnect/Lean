@@ -91,6 +91,7 @@ oanda,XPDUSD,cfd,Palladium,USD,1,0.001,1
 oanda,XPTUSD,cfd,Platinum,USD,1,0.001,1
 
 interactivebrokers,[*],cfd,,USD,1,0.01,1
+interactivebrokers,USDKRW,forex,USD/KRW,KRW,1,0.01,1
 interactivebrokers,IBUS500,cfd,US 500,USD,1,0.01,1
 interactivebrokers,IBUS30,cfd,US 30,USD,1,0.01,1
 interactivebrokers,IBUST100,cfd,US Tech 100,USD,1,0.01,1
