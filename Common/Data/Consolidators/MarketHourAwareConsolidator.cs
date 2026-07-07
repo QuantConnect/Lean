@@ -277,8 +277,16 @@ namespace QuantConnect.Data.Consolidators
         /// </summary>
         protected virtual void ForwardConsolidatedBar(object sender, IBaseData consolidated)
         {
+            OnDataConsolidated(consolidated);
+        }
+
+        /// <summary>
+        /// Raises the strongly typed DataConsolidated event
+        /// </summary>
+        /// <param name="consolidated">The newly consolidated data</param>
+        protected override void FireDataConsolidated(IBaseData consolidated)
+        {
             DataConsolidated?.Invoke(this, consolidated);
-            base.OnDataConsolidated(consolidated);
         }
     }
 }

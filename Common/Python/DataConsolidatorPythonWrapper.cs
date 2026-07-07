@@ -27,6 +27,7 @@ namespace QuantConnect.Python
     {
         private readonly BasePythonWrapper<IDataConsolidator> _pythonWrapper;
         private readonly DataConsolidatedHandler _pythonDataConsolidated;
+        private bool _disposed;
 
         /// <summary>
         /// Gets a clone of the data being currently consolidated
@@ -60,8 +61,14 @@ namespace QuantConnect.Python
         {
             _pythonWrapper = new BasePythonWrapper<IDataConsolidator>(consolidator, true);
             _pythonDataConsolidated = (_, bar) => OnDataConsolidated(bar);
-            var pythonEvent = _pythonWrapper.GetEvent("DataConsolidated");
-            pythonEvent += _pythonDataConsolidated;
+
+            // GetEvent releases the GIL before returning, so the event subscription must
+            // hold it explicitly, otherwise pythonnet mutates the Python object without the GIL
+            using (Py.GIL())
+            {
+                dynamic pythonEvent = _pythonWrapper.GetEvent("DataConsolidated");
+                pythonEvent += _pythonDataConsolidated;
+            }
         }
 
         /// <summary>
@@ -96,8 +103,19 @@ namespace QuantConnect.Python
         /// </summary>
         public override void Dispose()
         {
-            var pythonEvent = _pythonWrapper.GetEvent("DataConsolidated");
-            pythonEvent -= _pythonDataConsolidated;
+            if (_disposed)
+            {
+                return;
+            }
+            _disposed = true;
+
+            // Dispose can run from engine threads that do not hold the GIL, so acquire it before
+            // unsubscribing, otherwise the pythonnet event mutation can crash the runtime
+            using (Py.GIL())
+            {
+                dynamic pythonEvent = _pythonWrapper.GetEvent("DataConsolidated");
+                pythonEvent -= _pythonDataConsolidated;
+            }
             _pythonWrapper.Dispose();
             base.Dispose();
         }

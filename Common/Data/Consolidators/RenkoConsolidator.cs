@@ -238,15 +238,14 @@ namespace QuantConnect.Data.Consolidators
         }
 
         /// <summary>
-        /// Event invocator for the DataConsolidated event. This should be invoked
-        /// by derived classes when they have consolidated a new piece of data.
+        /// Raises the strongly typed DataConsolidated event
         /// </summary>
         /// <param name="consolidated">The newly consolidated data</param>
-        protected void OnDataConsolidated(RenkoBar consolidated)
+        protected override void FireDataConsolidated(IBaseData consolidated)
         {
-            DataConsolidated?.Invoke(this, consolidated);
-            _currentBar = consolidated;
-            base.OnDataConsolidated(consolidated);
+            var bar = (RenkoBar)consolidated;
+            _currentBar = bar;
+            DataConsolidated?.Invoke(this, bar);
         }
 
         private void Rising(IBaseData data)

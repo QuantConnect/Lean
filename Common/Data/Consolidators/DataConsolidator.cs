@@ -83,12 +83,11 @@ namespace QuantConnect.Data.Consolidators
         }
 
         /// <summary>
-        /// Event invocator for the DataConsolidated event
+        /// Raises the strongly typed DataConsolidated event
         /// </summary>
-        protected override void OnDataConsolidated(IBaseData consolidated)
+        protected override void FireDataConsolidated(IBaseData consolidated)
         {
             DataConsolidated?.Invoke(this, consolidated);
-            base.OnDataConsolidated(consolidated);
         }
     }
 }

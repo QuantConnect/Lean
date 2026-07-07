@@ -30,8 +30,7 @@ namespace QuantConnect.Data.Consolidators
 
         /// <summary>
         /// Gets the most recently consolidated piece of data. This will be null if this consolidator
-        /// has not produced any data yet. Setting this property adds the value to the rolling window,
-        /// setting it to null clears the window.
+        /// has not produced any data yet.
         /// </summary>
         public IBaseData Consolidated
         {
@@ -42,14 +41,6 @@ namespace QuantConnect.Data.Consolidators
             protected set
             {
                 _consolidated = value;
-                if (value == null)
-                {
-                    ResetWindow();
-                }
-                else
-                {
-                    Current = value;
-                }
             }
         }
 
@@ -90,16 +81,37 @@ namespace QuantConnect.Data.Consolidators
         }
 
         /// <summary>
-        /// Event invocator for the DataConsolidated event. Fires the event and updates the rolling window.
+        /// Event invocator for the DataConsolidated event. Populates the rolling window, raises the
+        /// strongly typed and interface events, and finally updates the <see cref="Consolidated"/> property.
         /// </summary>
         protected virtual void OnDataConsolidated(IBaseData consolidated)
         {
+            // populate the rolling window before firing any event so that, inside a DataConsolidated
+            // handler, consolidator[0] is the bar that was just produced. Skip null bars, an out of order
+            // data point can produce a null bar in count mode, so we never push null nor wipe the history
+            if (consolidated != null)
+            {
+                Current = consolidated;
+            }
+
+            // let derived consolidators raise their strongly typed DataConsolidated event
+            FireDataConsolidated(consolidated);
+
             _dataConsolidated?.Invoke(this, consolidated);
 
             // assign the Consolidated property after the event handlers are fired,
             // this allows the event handlers to look at the new consolidated data
             // and the previous consolidated data at the same time without extra bookkeeping
             Consolidated = consolidated;
+        }
+
+        /// <summary>
+        /// Raises the strongly typed DataConsolidated event exposed by derived consolidators. Invoked after
+        /// the rolling window is populated and before the interface event so every handler sees the same window.
+        /// </summary>
+        /// <param name="consolidated">The newly consolidated data</param>
+        protected virtual void FireDataConsolidated(IBaseData consolidated)
+        {
         }
 
         /// <summary>
@@ -116,6 +128,7 @@ namespace QuantConnect.Data.Consolidators
         public virtual void Reset()
         {
             Consolidated = null;
+            ResetWindow();
         }
     }
 }
