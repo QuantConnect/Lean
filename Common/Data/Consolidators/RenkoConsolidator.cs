@@ -95,7 +95,7 @@ namespace QuantConnect.Data.Consolidators
         /// <summary>
         /// Typed event handler that fires when a new piece of data is produced
         /// </summary>
-        public event EventHandler<RenkoBar> DataConsolidated;
+        public new event EventHandler<RenkoBar> DataConsolidated;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="RenkoConsolidator"/> class using the specified <paramref name="barSize"/>.
@@ -244,8 +244,10 @@ namespace QuantConnect.Data.Consolidators
         protected override void FireDataConsolidated(IBaseData consolidated)
         {
             var bar = (RenkoBar)consolidated;
-            _currentBar = bar;
+            // fire the typed event before updating the current bar so handlers reading
+            // WorkingData still see the previous bar, as they did before the rolling window
             DataConsolidated?.Invoke(this, bar);
+            _currentBar = bar;
         }
 
         private void Rising(IBaseData data)

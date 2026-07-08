@@ -60,7 +60,7 @@ namespace QuantConnect.Data.Consolidators
         /// <summary>
         /// Typed event handler that fires when a new piece of data is produced
         /// </summary>
-        public event EventHandler<T> DataConsolidated;
+        public new event EventHandler<T> DataConsolidated;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="BaseTimelessConsolidator{T}" /> class.
