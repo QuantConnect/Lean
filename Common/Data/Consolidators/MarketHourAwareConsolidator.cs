@@ -167,11 +167,6 @@ namespace QuantConnect.Data.Consolidators
         }
 
         /// <summary>
-        /// Event handler that fires when a new piece of data is produced
-        /// </summary>
-        public event DataConsolidatedHandler DataConsolidated;
-
-        /// <summary>
         /// Updates this consolidator with the specified data
         /// </summary>
         /// <param name="data">The new data for the consolidator</param>
@@ -277,8 +272,7 @@ namespace QuantConnect.Data.Consolidators
         /// </summary>
         protected virtual void ForwardConsolidatedBar(object sender, IBaseData consolidated)
         {
-            DataConsolidated?.Invoke(this, consolidated);
-            base.OnDataConsolidated(consolidated);
+            OnDataConsolidated(consolidated);
         }
     }
 }

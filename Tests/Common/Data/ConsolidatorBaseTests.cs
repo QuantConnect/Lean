@@ -80,6 +80,78 @@ namespace QuantConnect.Tests.Common.Data
         }
 
         [Test]
+        public void WindowHoldsTheNewBarInsideTypedHandler()
+        {
+            // regression for consolidators that fired their typed event before populating the window:
+            // inside the handler consolidator[0] must be the bar that was just produced
+            var reference = new DateTime(2015, 4, 13);
+            var spy = Symbols.SPY;
+            var consolidator = new RenkoConsolidator(1m);
+            var windowConsolidator = (ConsolidatorBase)consolidator;
+
+            var handlerCalls = 0;
+            consolidator.DataConsolidated += (_, bar) =>
+            {
+                handlerCalls++;
+                Assert.AreEqual(bar, windowConsolidator[0]);
+                Assert.AreEqual(bar, windowConsolidator.Current);
+                Assert.AreEqual(bar.Value, windowConsolidator.Current.Value);
+            };
+
+            consolidator.Update(new IndicatorDataPoint(spy, reference, 10m));
+            consolidator.Update(new IndicatorDataPoint(spy, reference.AddMinutes(1), 12.1m));
+
+            Assert.Greater(handlerCalls, 0);
+            consolidator.Dispose();
+        }
+
+        [Test]
+        public void InterfaceAndConcreteDataConsolidatedShareOneSubscriptionList()
+        {
+            // regression for the interface event and the concrete event being two separate handler lists:
+            // subscribing through one and unsubscribing through the other must cancel out
+            var reference = new DateTime(2015, 4, 13);
+            var spy = Symbols.SPY;
+            var consolidator = new IdentityDataConsolidator<TradeBar>();
+            IDataConsolidator asInterface = consolidator;
+
+            var calls = 0;
+            DataConsolidatedHandler handler = (_, __) => calls++;
+
+            asInterface.DataConsolidated += handler;
+            consolidator.DataConsolidated -= handler;
+
+            consolidator.Update(new TradeBar { Symbol = spy, Time = reference, Close = 10m, Value = 10m, Period = Time.OneMinute });
+
+            Assert.AreEqual(0, calls);
+            consolidator.Dispose();
+        }
+
+        [Test]
+        public void OutOfOrderDataDoesNotClearWindow()
+        {
+            // regression for count mode emitting a null bar on an out of order data point, which
+            // previously reset the whole rolling window through the Consolidated setter
+            var reference = new DateTime(2015, 4, 13);
+            var spy = Symbols.SPY;
+            var consolidator = new TradeBarConsolidator(1);
+            var windowConsolidator = (ConsolidatorBase)consolidator;
+
+            consolidator.Update(new TradeBar { Symbol = spy, Time = reference, Close = 10m, Value = 10m, Period = Time.OneMinute });
+            consolidator.Update(new TradeBar { Symbol = spy, Time = reference.AddMinutes(1), Close = 20m, Value = 20m, Period = Time.OneMinute });
+
+            Assert.AreEqual(2, windowConsolidator.Window.Count);
+
+            consolidator.Update(new TradeBar { Symbol = spy, Time = reference.AddMinutes(-5), Close = 30m, Value = 30m, Period = Time.OneMinute });
+
+            Assert.AreEqual(2, windowConsolidator.Window.Count);
+            Assert.AreEqual(20m, windowConsolidator.Window[0].Value);
+            Assert.AreEqual(10m, windowConsolidator.Window[1].Value);
+
+            consolidator.Dispose();
+        }
+
+        [Test]
         public void CurrentAndPreviousAreNullBeforeFirstConsolidation()
         {
             var consolidator = new TradeBarConsolidator(1);

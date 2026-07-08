@@ -60,7 +60,7 @@ namespace QuantConnect.Data.Consolidators
         /// <summary>
         /// Typed event handler that fires when a new piece of data is produced
         /// </summary>
-        public event EventHandler<T> DataConsolidated;
+        public new event EventHandler<T> DataConsolidated;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="BaseTimelessConsolidator{T}" /> class.
@@ -158,14 +158,12 @@ namespace QuantConnect.Data.Consolidators
         protected abstract void CreateNewBar(IBaseData data, decimal currentValue, decimal volume);
 
         /// <summary>
-        /// Event invocator for the DataConsolidated event. This should be invoked
-        /// by derived classes when they have consolidated a new piece of data.
+        /// Raises the strongly typed DataConsolidated event
         /// </summary>
         /// <param name="consolidated">The newly consolidated data</param>
-        protected void OnDataConsolidated(T consolidated)
+        protected override void FireDataConsolidated(IBaseData consolidated)
         {
-            DataConsolidated?.Invoke(this, consolidated);
-            base.OnDataConsolidated(consolidated);
+            DataConsolidated?.Invoke(this, (T)consolidated);
         }
 
         /// <summary>Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.</summary>

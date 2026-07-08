@@ -48,11 +48,6 @@ namespace QuantConnect.Data.Consolidators
         public abstract override void Scan(DateTime currentLocalTime);
 
         /// <summary>
-        /// Event handler that fires when a new piece of data is produced
-        /// </summary>
-        public event DataConsolidatedHandler DataConsolidated;
-
-        /// <summary>
         /// Gets a clone of the data being currently consolidated
         /// </summary>
         public abstract override IBaseData WorkingData { get; }
@@ -74,21 +69,5 @@ namespace QuantConnect.Data.Consolidators
         /// <param name="data">The new data for the consolidator</param>
         public abstract void Update(TInput data);
 
-        /// <summary>Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.</summary>
-        /// <filterpriority>2</filterpriority>
-        public override void Dispose()
-        {
-            DataConsolidated = null;
-            base.Dispose();
-        }
-
-        /// <summary>
-        /// Event invocator for the DataConsolidated event
-        /// </summary>
-        protected override void OnDataConsolidated(IBaseData consolidated)
-        {
-            DataConsolidated?.Invoke(this, consolidated);
-            base.OnDataConsolidated(consolidated);
-        }
     }
 }

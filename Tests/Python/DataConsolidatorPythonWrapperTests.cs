@@ -282,6 +282,45 @@ namespace QuantConnect.Tests.Python
         }
 
         [Test]
+        public void PythonConsolidatorSubclassExposesWindow()
+        {
+            // custom consolidators that inherit PythonConsolidator (the documented path) must expose the
+            // rolling window just like the C# consolidators, not only the ones routed through the wrapper
+            using (Py.GIL())
+            {
+                var module = PyModule.FromString(Guid.NewGuid().ToString(),
+                    "from AlgorithmImports import *\n" +
+                    "class CustomConsolidator(PythonConsolidator):\n" +
+                    "   def __init__(self):\n" +
+                    "       self.input_type = QuoteBar\n" +
+                    "       self.output_type = QuoteBar\n" +
+                    "       self.consolidated = None\n" +
+                    "       self.working_data = None\n" +
+                    "   def update(self, data):\n" +
+                    "       pass\n" +
+                    "   def scan(self, time):\n" +
+                    "       pass\n");
+
+                var customConsolidator = module.GetAttr("CustomConsolidator").Invoke();
+                var consolidator = customConsolidator.As<PythonConsolidator>();
+
+                var time = DateTime.Today;
+                var bar1 = new QuoteBar { Time = time, Symbol = Symbols.SPY, Bid = new Bar(1, 2, 0.75m, 1.25m), Value = 1, Period = TimeSpan.FromMinutes(1) };
+                var bar2 = new QuoteBar { Time = time.AddMinutes(1), Symbol = Symbols.SPY, Bid = new Bar(1, 2, 0.75m, 1.25m), Value = 2, Period = TimeSpan.FromMinutes(1) };
+
+                consolidator.OnDataConsolidated(customConsolidator, bar1);
+                consolidator.OnDataConsolidated(customConsolidator, bar2);
+
+                Assert.AreEqual(2, consolidator.Window.Count);
+                Assert.AreEqual(bar2, consolidator[0]);
+                Assert.AreEqual(bar1, consolidator.Previous);
+
+                consolidator.Reset();
+                Assert.AreEqual(0, consolidator.Window.Count);
+            }
+        }
+
+        [Test]
         public void AttachAndTriggerEvent()
         {
             using (Py.GIL())
