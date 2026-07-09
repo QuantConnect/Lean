@@ -4058,6 +4058,22 @@ namespace QuantConnect
         }
 
         /// <summary>
+        /// Helper method to get the exchange hours for the given symbol, from the security if available,
+        /// since the user can override them, else from the market hours database
+        /// </summary>
+        /// <param name="algorithm">The algorithm instance to search for the security</param>
+        /// <param name="symbol">The symbol to get the exchange hours for</param>
+        /// <returns>The exchange hours of the symbol</returns>
+        public static SecurityExchangeHours GetExchangeHours(this IAlgorithm algorithm, Symbol symbol)
+        {
+            if (algorithm.Securities.TryGetValue(symbol, out var security))
+            {
+                return security.Exchange.Hours;
+            }
+            return MarketHoursDatabase.FromDataFolder().GetExchangeHours(symbol.ID.Market, symbol, symbol.ID.SecurityType);
+        }
+
+        /// <summary>
         /// Helper method to set an algorithm runtime exception in a normalized fashion
         /// </summary>
         public static void SetRuntimeError(this IAlgorithm algorithm, Exception exception, string context)

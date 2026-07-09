@@ -166,6 +166,19 @@ namespace QuantConnect.Data
             Type dataType,
             bool? extendedMarketHours = null)
         {
+            // Custom data linked to an underlying security, like some alternative datasets,
+            // only has data points for days the underlying security trades. Since the custom data market
+            // is always open, we count back the requested periods using the underlying exchange hours,
+            // else we would count calendar days and get fewer data points than requested
+            if (exchange.IsMarketAlwaysOpen && symbol.SecurityType == SecurityType.Base && symbol.HasUnderlying)
+            {
+                var underlyingExchange = _algorithm.GetExchangeHours(symbol.Underlying);
+                if (!underlyingExchange.IsMarketAlwaysOpen)
+                {
+                    exchange = underlyingExchange;
+                }
+            }
+
             var isExtendedMarketHours = false;
             // hour and daily resolution does no have extended market hours data. Same for chain universes
             if (resolution < Resolution.Hour && LeanData.SupportsExtendedMarketHours(dataType))

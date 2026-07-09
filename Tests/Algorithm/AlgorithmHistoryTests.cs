@@ -3235,6 +3235,45 @@ tradeBar = TradeBar
             Assert.AreEqual(marketOpen, requestStart);
         }
 
+        // This reproduces https://github.com/QuantConnect/Lean/issues/9598
+        [Test]
+        public void GetsBarCountHistoryRequestStartTimeForLinkedCustomDataUsingUnderlyingTradableDays()
+        {
+            var end = new DateTime(2014, 6, 9);
+            var algorithm = GetAlgorithm(end);
+            var aapl = algorithm.AddEquity("AAPL");
+            var customSecurity = algorithm.AddData<CustomData>(aapl.Symbol);
+            var config = algorithm.SubscriptionManager.SubscriptionDataConfigService
+                .GetSubscriptionDataConfigs(customSecurity.Symbol)
+                .Single();
+            Assert.IsTrue(customSecurity.Exchange.Hours.IsMarketAlwaysOpen);
+
+            var historyRequestFactory = new HistoryRequestFactory(algorithm);
+            var requestStart = historyRequestFactory.GetStartTimeAlgoTz(customSecurity.Symbol, 10, Resolution.Daily,
+                customSecurity.Exchange.Hours, config.DataTimeZone, config.Type);
+
+            // Even though the custom data market is always open, the start time is computed counting back
+            // 10 tradable days of the underlying equity, skipping weekends and the Memorial Day holiday (2014-05-26),
+            // instead of 10 calendar days which would be 2014-05-30
+            Assert.AreEqual(new DateTime(2014, 5, 23), requestStart);
+        }
+
+        // This reproduces https://github.com/QuantConnect/Lean/issues/9598
+        [Test]
+        public void LinkedCustomDataBarCountHistoryAccountsForUnderlyingTradableDays()
+        {
+            var end = new DateTime(2013, 10, 14);
+            var algorithm = GetAlgorithm(end);
+            var spy = algorithm.AddEquity("SPY").Symbol;
+            var customSymbol = algorithm.AddData<CustomData>(spy).Symbol;
+
+            var history = algorithm.History<CustomData>(customSymbol, 10, Resolution.Daily).ToList();
+
+            // The custom data only has data points for days the underlying trades,
+            // so counting back calendar days would return fewer points than requested
+            Assert.AreEqual(10, history.Count);
+        }
+
         // This reproduces https://github.com/QuantConnect/Lean/issues/7504
         [TestCase(Language.CSharp)]
         [TestCase(Language.Python)]
@@ -4347,8 +4386,7 @@ def get_history(algorithm, symbol):
         {
             public override SubscriptionDataSource GetSource(SubscriptionDataConfig config, DateTime date, bool isLiveMode)
             {
-                var source = Path.Combine(Globals.DataFolder, "equity", "usa", config.Resolution.ToString().ToLower(),
-                    Symbols.SPY.Value.ToLowerInvariant(), LeanData.GenerateZipFileName(Symbols.SPY, date, config.Resolution, config.TickType));
+                var source = LeanData.GenerateZipFilePath(Globals.DataFolder, Symbols.SPY, date, config.Resolution, config.TickType);
                 return new SubscriptionDataSource(source, SubscriptionTransportMedium.LocalFile, FileFormat.Csv);
             }
             public override BaseData Reader(SubscriptionDataConfig config, string line, DateTime date, bool isLiveMode)
