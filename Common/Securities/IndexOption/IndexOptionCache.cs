@@ -13,27 +13,13 @@
  * limitations under the License.
 */
 
-using System;
-using System.Collections.Generic;
-using QuantConnect.Data;
-
-namespace QuantConnect.Securities.Option
+namespace QuantConnect.Securities.IndexOption
 {
     /// <summary>
-    /// Option specific caching support
+    /// Index option specific caching support
     /// </summary>
     /// <seealso cref="SecurityCache"/>
-    public class OptionCache : SecurityCache
+    public class IndexOptionCache : Option.OptionCache
     {
-        /// <summary>
-        /// Stores the specified data list in the cache, updating the open interest from any chain universe data
-        /// </summary>
-        /// <param name="data">The collection of data to store in this cache</param>
-        /// <param name="dataType">The data type</param>
-        public override void StoreData(IReadOnlyList<BaseData> data, Type dataType)
-        {
-            UpdateOpenInterest(data[data.Count - 1]);
-            base.StoreData(data, dataType);
-        }
     }
 }
