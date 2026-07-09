@@ -335,6 +335,18 @@ namespace QuantConnect.Securities
         }
 
         /// <summary>
+        /// Helper method to update the open interest cache property from the last data point of a stored data list
+        /// </summary>
+        /// <param name="data">The data list being stored</param>
+        protected void UpdateOpenInterest(IReadOnlyList<BaseData> data)
+        {
+            if (data.Count != 0)
+            {
+                UpdateOpenInterest(data[data.Count - 1]);
+            }
+        }
+
+        /// <summary>
         /// Get last data packet received for this security if any else null
         /// </summary>
         /// <returns>BaseData type of the security</returns>

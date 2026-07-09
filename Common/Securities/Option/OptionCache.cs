@@ -32,7 +32,7 @@ namespace QuantConnect.Securities.Option
         /// <param name="dataType">The data type</param>
         public override void StoreData(IReadOnlyList<BaseData> data, Type dataType)
         {
-            UpdateOpenInterest(data[data.Count - 1]);
+            UpdateOpenInterest(data);
             base.StoreData(data, dataType);
         }
     }
