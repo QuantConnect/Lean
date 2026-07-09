@@ -21,6 +21,8 @@ using QuantConnect.Securities.Index;
 using QuantConnect.Securities.Option;
 using QuantConnect.Securities.Future;
 using QuantConnect.Securities.Equity;
+using QuantConnect.Securities.IndexOption;
+using QuantConnect.Securities.FutureOption;
 
 namespace QuantConnect.Securities
 {
@@ -63,6 +65,12 @@ namespace QuantConnect.Securities
                     break;
                 case SecurityType.Option:
                     securityCache = new OptionCache();
+                    break;
+                case SecurityType.IndexOption:
+                    securityCache = new IndexOptionCache();
+                    break;
+                case SecurityType.FutureOption:
+                    securityCache = new FutureOptionCache();
                     break;
                 case SecurityType.Forex:
                     securityCache = new ForexCache();
