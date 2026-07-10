@@ -1382,13 +1382,9 @@ namespace QuantConnect.Algorithm
                 }
                 catch (InvalidCastException exception)
                 {
-                    // Skip the PyObject overload from the hint: it is the one that just rejected the value
-                    var overloads = typeof(QCAlgorithm).GetMethods()
-                        .Where(method => method.Name == nameof(SetBenchmark) &&
-                            !method.GetParameters().Any(parameter => typeof(PyObject).IsAssignableFrom(parameter.ParameterType)));
                     throw new ArgumentException(
                         $"Unable to set the benchmark from {benchmark.ToDisplayString()}: it is not a supported benchmark type. " +
-                        MethodSignatureFormatter.FormatOverloads(overloads),
+                        MethodSignatureFormatter.FormatOverloads(typeof(QCAlgorithm).GetMethods().Where(m => m.Name == nameof(SetBenchmark))),
                         exception);
                 }
             }

@@ -15,7 +15,6 @@
 */
 
 using System;
-using System.Linq;
 using Python.Runtime;
 using QuantConnect.Util;
 using QuantConnect.Data.Market;
@@ -112,12 +111,9 @@ namespace QuantConnect.Data.Consolidators
             catch (InvalidCastException exception)
             {
                 var type = GetType();
-                // Skip the PyObject overloads from the hint: they are the ones that just rejected the value
-                var constructors = type.GetConstructors()
-                    .Where(constructor => !constructor.GetParameters().Any(parameter => typeof(PyObject).IsAssignableFrom(parameter.ParameterType)));
                 throw new ArgumentException(
                     $"Unable to create a consolidator period from {pyObject.ToDisplayString()}: it is not a supported period type. " +
-                    MethodSignatureFormatter.FormatOverloads(constructors, displayName: type.Name),
+                    MethodSignatureFormatter.FormatOverloads(type.GetConstructors(), displayName: type.Name),
                     exception);
             }
             _period = _periodSpecification.Period;
