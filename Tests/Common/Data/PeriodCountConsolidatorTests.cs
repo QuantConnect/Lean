@@ -395,8 +395,8 @@ namespace QuantConnect.Tests.Common.Data
                 Assert.That(exception.Message, Does.Contain("Daily").IgnoreCase);
                 Assert.That(exception.Message, Does.Contain("Resolution"));
                 Assert.That(exception.Message, Does.Contain("The following overloads are available:"));
-                Assert.That(exception.Message, Does.Contain("QuoteBarConsolidator(TimeSpan period"));
-                Assert.That(exception.Message, Does.Contain("QuoteBarConsolidator(Int32 max_count"));
+                Assert.That(exception.Message, Does.Contain("QuoteBarConsolidator(timedelta period"));
+                Assert.That(exception.Message, Does.Contain("QuoteBarConsolidator(int max_count"));
                 Assert.That(exception.InnerException, Is.TypeOf<InvalidCastException>());
             }
         }
