@@ -20,6 +20,7 @@ using System;
 using System.Collections.Generic;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Algorithm.Framework.Selection;
+using QuantConnect.Indicators;
 using QuantConnect.Tests.Common.Data.UniverseSelection;
 using QuantConnect.Util;
 
@@ -53,7 +54,7 @@ namespace QuantConnect.Tests.Algorithm.Framework.Alphas
 
         protected override string GetExpectedModelName(IAlphaModel model)
         {
-            return $"{nameof(MacdAlphaModel)}(12,26,9,Exponential,Daily)";
+            return $"{nameof(MacdAlphaModel)}(12,26,9,{GetEnumString(MovingAverageType.Exponential, model)},{GetEnumString(Resolution.Daily, model)})";
         }
 
         [Test]

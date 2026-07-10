@@ -93,7 +93,7 @@ def test_constructor():
 
         protected override string GetExpectedModelName(IAlphaModel model)
         {
-            return Invariant($"{nameof(ConstantAlphaModel)}({_type},{_direction},{_period},{_magnitude})");
+            return Invariant($"{nameof(ConstantAlphaModel)}({GetEnumString(_type, model)},{GetEnumString(_direction, model)},{_period},{_magnitude})");
         }
     }
 }
