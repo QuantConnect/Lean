@@ -17,6 +17,7 @@
 using System;
 using System.Collections.Generic;
 using NUnit.Framework;
+using Python.Runtime;
 using QuantConnect.Data;
 using QuantConnect.Data.Consolidators;
 using QuantConnect.Data.Market;
@@ -377,6 +378,27 @@ namespace QuantConnect.Tests.Common.Data
             Assert.IsNotNull(consolidated);
             Assert.AreEqual(Symbols.SPY, consolidated.Symbol);
             Assert.AreEqual(expectedEndTime, consolidated.EndTime);
+        }
+
+        [Test]
+        public void PyObjectConstructorThrowsDescriptiveErrorForUnsupportedPeriodType()
+        {
+            using (Py.GIL())
+            {
+                // A Resolution enum value is neither a timedelta nor a callable returning CalendarInfo,
+                // so the consolidator cannot create a period specification from it
+                using var pyResolution = Resolution.Daily.ToPython();
+                var exception = Assert.Throws<ArgumentException>(() => new QuoteBarConsolidator(pyResolution));
+
+                // The error must state the source object and its type, the supported target types and the failure reason
+                Assert.That(exception.Message, Does.Contain("'Resolution'"));
+                Assert.That(exception.Message, Does.Contain($"'{pyResolution}'"));
+                Assert.That(exception.Message, Does.Contain("timedelta"));
+                Assert.That(exception.Message, Does.Contain(typeof(TimeSpan).ToString()));
+                Assert.That(exception.Message, Does.Contain(typeof(Func<DateTime, CalendarInfo>).ToString()));
+                Assert.That(exception.Message, Does.Contain("could not be converted"));
+                Assert.That(exception.InnerException, Is.TypeOf<InvalidCastException>());
+            }
         }
 
         private static void PushBarsThrough(int barCount, TimeSpan period, TradeBarConsolidator consolidator, ref DateTime time)

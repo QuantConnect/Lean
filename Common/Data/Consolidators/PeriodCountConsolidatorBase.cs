@@ -379,7 +379,20 @@ namespace QuantConnect.Data.Consolidators
 
             using (Py.GIL())
             {
-                return new TimeSpanPeriodSpecification(pyObject.As<TimeSpan>());
+                try
+                {
+                    return new TimeSpanPeriodSpecification(pyObject.As<TimeSpan>());
+                }
+                catch (InvalidCastException exception)
+                {
+                    throw new ArgumentException(
+                        $"Unable to create a consolidator period from the given Python object '{pyObject}' of type '{pyObject.GetPythonType().Name}': " +
+                        $"it could not be converted to any of the supported period types. Supported types are: a timedelta ({typeof(TimeSpan)}), " +
+                        $"which sets the fixed period of the consolidated bars, and a callable ({typeof(Func<DateTime, CalendarInfo>)}) that takes " +
+                        "the current datetime and returns the CalendarInfo with the start time and period of the bar it belongs to. " +
+                        "For example, for daily consolidation use timedelta(days=1) instead of Resolution.DAILY.",
+                        exception);
+                }
             }
         }
 
