@@ -575,6 +575,11 @@ namespace QuantConnect.Securities.Option
             {
                 var optionUniverse = universe as OptionFilterUniverse;
                 var result = universeFunc(optionUniverse);
+                if (result == null)
+                {
+                    throw new ArgumentException("Option.SetFilter: the filter function returned null." +
+                        " Return the incoming universe with your filters applied.");
+                }
                 return result.ApplyTypesFilter();
             });
             ContractFilter.Asynchronous = false;
@@ -592,6 +597,13 @@ namespace QuantConnect.Securities.Option
                 using (Py.GIL())
                 {
                     PyObject result = (universeFunc as dynamic)(optionUniverse);
+
+                    if (result == null || result.IsNone())
+                    {
+                        throw new ArgumentException("Option.SetFilter: the filter function returned 'None'." +
+                            " Return the incoming universe with your filters applied," +
+                            " e.g. 'return universe.strikes(-20, 20).expiration(0, 0)'");
+                    }
 
                     //Try to convert it to the possible outcomes and process it
                     //Must try filter first, if it is a filter and you try and convert it to
@@ -638,6 +650,11 @@ namespace QuantConnect.Securities.Option
             {
                 var optionUniverse = universe as OptionFilterUniverse;
                 var result = universeFunc(optionUniverse);
+                if (result == null)
+                {
+                    throw new ArgumentException("Option.SetFilter: the filter function returned null." +
+                        " Return the incoming universe with your filters applied.");
+                }
                 return result.ApplyTypesFilter();
             });
         }

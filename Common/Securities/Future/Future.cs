@@ -256,6 +256,12 @@ namespace QuantConnect.Securities.Future
             {
                 var futureUniverse = universe as FutureFilterUniverse;
                 var result = universeFunc(futureUniverse);
+                if (result == null)
+                {
+                    throw new ArgumentException("Future.SetFilter: the filter function returned null/'None'." +
+                        " Return the incoming universe with your filters applied," +
+                        " e.g. 'return universe.expiration(0, 90)'");
+                }
                 return result.ApplyTypesFilter();
             };
             ContractFilter = new FuncSecurityDerivativeFilter<FutureUniverse>(func);
