@@ -143,6 +143,8 @@ namespace QuantConnect.Tests.Algorithm
                 Assert.That(exception.Message, Does.Contain("'Resolution'"));
                 Assert.That(exception.Message, Does.Contain("The following overloads are available:"));
                 Assert.That(exception.Message, Does.Contain("set_benchmark("));
+                // The PyObject overload that just rejected the value is not hinted
+                Assert.That(exception.Message, Does.Not.Contain("benchmark: Any"));
                 Assert.That(exception.InnerException, Is.TypeOf<InvalidCastException>());
             }
         }

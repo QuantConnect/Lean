@@ -395,8 +395,10 @@ namespace QuantConnect.Tests.Common.Data
                 Assert.That(exception.Message, Does.Contain("Daily").IgnoreCase);
                 Assert.That(exception.Message, Does.Contain("Resolution"));
                 Assert.That(exception.Message, Does.Contain("The following overloads are available:"));
-                Assert.That(exception.Message, Does.Contain("QuoteBarConsolidator(timedelta period"));
-                Assert.That(exception.Message, Does.Contain("QuoteBarConsolidator(int max_count"));
+                Assert.That(exception.Message, Does.Contain("QuoteBarConsolidator(period: timedelta"));
+                Assert.That(exception.Message, Does.Contain("QuoteBarConsolidator(max_count: int"));
+                // The PyObject overload that just rejected the value is not hinted
+                Assert.That(exception.Message, Does.Not.Contain("pyfuncobj"));
                 Assert.That(exception.InnerException, Is.TypeOf<InvalidCastException>());
             }
         }
