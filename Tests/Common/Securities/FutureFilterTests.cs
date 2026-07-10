@@ -17,6 +17,7 @@
 using System;
 using System.Linq;
 using NUnit.Framework;
+using Python.Runtime;
 using QuantConnect.Data.Market;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Securities;
@@ -60,6 +61,87 @@ namespace QuantConnect.Tests.Common.Securities
             Assert.AreEqual(symbols[5], filtered[2]);
             Assert.AreEqual(symbols[6], filtered[3]);
             Assert.AreEqual(symbols[7], filtered[4]);
+        }
+
+        [Test]
+        public void CountReturnsTheNumberOfContractsInTheUniverse()
+        {
+            var time = new DateTime(2016, 02, 26);
+            var symbols = new[]
+            {
+                Symbol.CreateFuture("SPY", Market.CME, time.AddDays(3)),
+                Symbol.CreateFuture("SPY", Market.CME, time.AddDays(5)),
+                Symbol.CreateFuture("SPY", Market.CME, time.AddDays(10)),
+            };
+            var data = symbols.Select(x => new FutureUniverse() { Symbol = x }).ToList();
+            var universe = new FutureFilterUniverse(data, time);
+
+            Assert.AreEqual(symbols.Length, universe.Count);
+
+            // Filter and check the count reflects the filtered contracts
+            universe.Expiration(TimeSpan.FromDays(3), TimeSpan.FromDays(7));
+            Assert.AreEqual(2, universe.Count);
+        }
+
+        [Test]
+        public void CountIsUpdatedAsFiltersReduceTheUniverse()
+        {
+            var time = new DateTime(2016, 02, 26);
+            var symbols = Enumerable.Range(0, 10)
+                .Select(i => Symbol.CreateFuture("SPY", Market.CME, time.AddDays(i)))
+                .ToArray();
+            var data = symbols.Select(x => new FutureUniverse() { Symbol = x }).ToList();
+            var universe = new FutureFilterUniverse(data, time);
+
+            Assert.AreEqual(symbols.Length, universe.Count);
+
+            // Contracts expiring within 3 to 7 days
+            universe.Expiration(TimeSpan.FromDays(3), TimeSpan.FromDays(7));
+            Assert.AreEqual(5, universe.Count);
+
+            // Out of those, only the earliest expiring contract
+            universe.FrontMonth();
+            Assert.AreEqual(1, universe.Count);
+        }
+
+        [Test]
+        public void PythonLenReturnsTheNumberOfContractsInTheUniverse()
+        {
+            var time = new DateTime(2016, 02, 26);
+            var symbols = new[]
+            {
+                Symbol.CreateFuture("SPY", Market.CME, time.AddDays(0)), // 0
+                Symbol.CreateFuture("SPY", Market.CME, time.AddDays(1)), // 1
+                Symbol.CreateFuture("SPY", Market.CME, time.AddDays(2)), // 2
+                Symbol.CreateFuture("SPY", Market.CME, time.AddDays(3)), // 3
+                Symbol.CreateFuture("SPY", Market.CME, time.AddDays(4)), // 4
+                Symbol.CreateFuture("SPY", Market.CME, time.AddDays(5)), // 5
+                Symbol.CreateFuture("SPY", Market.CME, time.AddDays(6)), // 6
+                Symbol.CreateFuture("SPY", Market.CME, time.AddDays(7)), // 7
+                Symbol.CreateFuture("SPY", Market.CME, time.AddDays(8)), // 8
+                Symbol.CreateFuture("SPY", Market.CME, time.AddDays(9)), // 9
+            };
+            var data = symbols.Select(x => new FutureUniverse() { Symbol = x }).ToList();
+            var universe = new FutureFilterUniverse(data, time);
+
+            using (Py.GIL())
+            {
+                using var module = PyModule.FromString("testModule",
+                    @"
+def get_length(universe):
+    return len(universe)");
+                using var getLength = module.GetAttr("get_length");
+                using var pyUniverse = universe.ToPython();
+
+                // The whole universe
+                using var length = getLength.Invoke(pyUniverse);
+                Assert.AreEqual(symbols.Length, length.As<int>());
+
+                // Filter and check the length reflects the filtered contracts
+                universe.Expiration(TimeSpan.FromDays(3), TimeSpan.FromDays(7));
+                using var filteredLength = getLength.Invoke(pyUniverse);
+                Assert.AreEqual(5, filteredLength.As<int>());
+            }
         }
 
         [TestCase(false, 6)]

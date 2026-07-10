@@ -24,5 +24,9 @@ namespace QuantConnect.Securities
     public interface IDerivativeSecurityFilterUniverse<T> : IEnumerable<T>
         where T : IChainUniverseData
     {
+        /// <summary>
+        /// The number of contracts in the universe
+        /// </summary>
+        int Count { get; }
     }
 }
