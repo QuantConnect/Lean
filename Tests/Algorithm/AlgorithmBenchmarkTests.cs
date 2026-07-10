@@ -138,9 +138,11 @@ namespace QuantConnect.Tests.Algorithm
                 using var pyBenchmark = Resolution.Daily.ToPython();
                 var exception = Assert.Throws<ArgumentException>(() => algorithm.SetBenchmark(pyBenchmark));
 
-                Assert.That(exception.Message, Does.Contain("'Daily'"));
+                // The value rendering is case-insensitive to support both pythonnet enum str() conventions ("Daily" and "DAILY")
+                Assert.That(exception.Message, Does.Contain("Daily").IgnoreCase);
                 Assert.That(exception.Message, Does.Contain("'Resolution'"));
-                Assert.That(exception.Message, Does.Contain("method overloads"));
+                Assert.That(exception.Message, Does.Contain("The following overloads are available:"));
+                Assert.That(exception.Message, Does.Contain("set_benchmark("));
                 Assert.That(exception.InnerException, Is.TypeOf<InvalidCastException>());
             }
         }

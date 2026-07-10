@@ -1384,7 +1384,7 @@ namespace QuantConnect.Algorithm
                 {
                     throw new ArgumentException(
                         $"Unable to set the benchmark from {benchmark.ToDisplayString()}: it is not a supported benchmark type. " +
-                        "Please use one of the available method overloads.",
+                        MethodSignatureFormatter.FormatOverloads(typeof(QCAlgorithm).GetMethods().Where(m => m.Name == nameof(SetBenchmark))),
                         exception);
                 }
             }

@@ -390,10 +390,13 @@ namespace QuantConnect.Tests.Common.Data
                 using var pyResolution = Resolution.Daily.ToPython();
                 var exception = Assert.Throws<ArgumentException>(() => new QuoteBarConsolidator(pyResolution));
 
-                // The error must state the source value as the user typed it and point to the constructor overloads
-                Assert.That(exception.Message, Does.Contain("Daily"));
+                // The error must state the source value and its type and list the available constructor overloads.
+                // The value rendering is case-insensitive to support both pythonnet enum str() conventions ("Daily" and "DAILY")
+                Assert.That(exception.Message, Does.Contain("Daily").IgnoreCase);
                 Assert.That(exception.Message, Does.Contain("Resolution"));
-                Assert.That(exception.Message, Does.Contain("constructor overloads"));
+                Assert.That(exception.Message, Does.Contain("The following overloads are available:"));
+                Assert.That(exception.Message, Does.Contain("QuoteBarConsolidator(TimeSpan period"));
+                Assert.That(exception.Message, Does.Contain("QuoteBarConsolidator(Int32 max_count"));
                 Assert.That(exception.InnerException, Is.TypeOf<InvalidCastException>());
             }
         }
