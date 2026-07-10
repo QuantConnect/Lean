@@ -390,13 +390,9 @@ namespace QuantConnect.Tests.Common.Data
                 using var pyResolution = Resolution.Daily.ToPython();
                 var exception = Assert.Throws<ArgumentException>(() => new QuoteBarConsolidator(pyResolution));
 
-                // The error must state the source object and its type, the supported target types and the failure reason
-                Assert.That(exception.Message, Does.Contain("'Resolution'"));
-                Assert.That(exception.Message, Does.Contain($"'{pyResolution}'"));
-                Assert.That(exception.Message, Does.Contain("timedelta"));
-                Assert.That(exception.Message, Does.Contain(typeof(TimeSpan).ToString()));
-                Assert.That(exception.Message, Does.Contain(typeof(Func<DateTime, CalendarInfo>).ToString()));
-                Assert.That(exception.Message, Does.Contain("could not be converted"));
+                // The error must state the source value as the user typed it and point to the constructor overloads
+                Assert.That(exception.Message, Does.Contain("Resolution.DAILY"));
+                Assert.That(exception.Message, Does.Contain("constructor overloads"));
                 Assert.That(exception.InnerException, Is.TypeOf<InvalidCastException>());
             }
         }
