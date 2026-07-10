@@ -14,6 +14,7 @@
 */
 
 using NUnit.Framework;
+using Python.Runtime;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
 using QuantConnect.Data.UniverseSelection;
@@ -227,6 +228,92 @@ namespace QuantConnect.Tests.Common.Securities.Options
                 Assert.Throws<InvalidOperationException>(() => universe.Rho(0m, 1m));
                 Assert.Throws<InvalidOperationException>(() => universe.R(0m, 1m));
             });
+        }
+
+        [Test]
+        public void CountReturnsTheNumberOfContractsInTheUniverse()
+        {
+            var minIV = 0.10m;
+            var maxIV = 0.12m;
+            var expectedContracts = 11;
+
+            // Set up
+            var universe = new OptionFilterUniverse(GetOption(), _testOptionsData, _underlying);
+            universe.Refresh(_testOptionsData, _underlying, _underlying.EndTime);
+
+            Assert.AreEqual(_testOptionsData.Count, universe.Count);
+
+            // Filter and check the count reflects the filtered contracts
+            universe.ImpliedVolatility(minIV, maxIV);
+            Assert.AreEqual(expectedContracts, universe.Count);
+        }
+
+        [Test]
+        public void CountIsUpdatedAsFiltersReduceTheUniverse()
+        {
+            // Use an underlying price that matches one of the strikes in the test data
+            // so that the strikes filter can find contracts around the ATM strike
+            var underlying = new TradeBar
+            {
+                Symbol = _underlying.Symbol,
+                Close = 5410m,
+                Time = _underlying.Time,
+                EndTime = _underlying.EndTime
+            };
+
+            // Set up
+            var universe = new OptionFilterUniverse(GetOption(), _testOptionsData, underlying);
+            universe.Refresh(_testOptionsData, underlying, underlying.EndTime);
+
+            Assert.AreEqual(_testOptionsData.Count, universe.Count);
+
+            // Contracts with strikes 5405, 5410 and 5415
+            universe.Strikes(-1, 1);
+            Assert.AreEqual(13, universe.Count);
+
+            // Out of those, contracts expiring within 60 days: 2024-07-19 and 2024-08-16
+            universe.Expiration(0, 60);
+            Assert.AreEqual(6, universe.Count);
+        }
+
+        [Test]
+        public void EmptyContractFilterUniverseCountIsZero()
+        {
+            var universe = new OptionFilterUniverse(GetOption(), _testOptionsData, _underlying);
+            var emptyUniverse = new EmptyContractFilter<OptionUniverse>().Filter(universe);
+
+            Assert.AreEqual(0, emptyUniverse.Count);
+        }
+
+        [Test]
+        public void PythonLenReturnsTheNumberOfContractsInTheUniverse()
+        {
+            var minIV = 0.10m;
+            var maxIV = 0.12m;
+            var expectedContracts = 11;
+
+            // Set up
+            var universe = new OptionFilterUniverse(GetOption(), _testOptionsData, _underlying);
+            universe.Refresh(_testOptionsData, _underlying, _underlying.EndTime);
+
+            using (Py.GIL())
+            {
+                using var module = PyModule.FromString("testModule",
+                    @"
+def get_length(universe):
+    return len(universe)");
+                using var getLength = module.GetAttr("get_length");
+                using var pyUniverse = universe.ToPython();
+
+                // The whole universe
+                using var length = getLength.Invoke(pyUniverse);
+                Assert.AreEqual(_testOptionsData.Count, length.As<int>());
+
+                // Filter and check the length reflects the filtered contracts
+                universe.ImpliedVolatility(minIV, maxIV);
+                using var filteredLength = getLength.Invoke(pyUniverse);
+                Assert.AreEqual(expectedContracts, filteredLength.As<int>());
+            }
         }
 
         private static Option GetOption(Symbol symbol = null)
