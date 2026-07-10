@@ -574,7 +574,9 @@ namespace QuantConnect.Securities.Option
             ContractFilter = new FuncSecurityDerivativeFilter<OptionUniverse>(universe =>
             {
                 var optionUniverse = universe as OptionFilterUniverse;
-                var result = universeFunc(optionUniverse);
+                //A null result is allowed: filter methods modify the universe in place,
+                //returning it is only necessary for chaining
+                var result = universeFunc(optionUniverse) ?? optionUniverse;
                 return result.ApplyTypesFilter();
             });
             ContractFilter.Asynchronous = false;
