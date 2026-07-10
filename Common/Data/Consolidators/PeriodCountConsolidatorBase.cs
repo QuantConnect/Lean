@@ -385,12 +385,8 @@ namespace QuantConnect.Data.Consolidators
                 }
                 catch (InvalidCastException exception)
                 {
-                    // Display enum values as the user typed them, e.g. Resolution.DAILY instead of Daily
-                    var value = pyObject.TryConvert(out Enum enumValue)
-                        ? $"{enumValue.GetType().Name}.{enumValue.ToString().ToSnakeCase(constant: true)}"
-                        : $"'{pyObject}' of type '{pyObject.GetPythonType().Name}'";
                     throw new ArgumentException(
-                        $"Unable to create a consolidator period from {value}: it is not a supported period type. " +
+                        $"Unable to create a consolidator period from {pyObject.ToDisplayString()}: it is not a supported period type. " +
                         "Please use one of the available constructor overloads.",
                         exception);
                 }

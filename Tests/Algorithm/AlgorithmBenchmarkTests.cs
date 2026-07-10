@@ -18,6 +18,7 @@ using System;
 using System.Collections.Generic;
 using NodaTime;
 using NUnit.Framework;
+using Python.Runtime;
 using QuantConnect.Algorithm;
 using QuantConnect.Configuration;
 using QuantConnect.Interfaces;
@@ -121,6 +122,26 @@ namespace QuantConnect.Tests.Algorithm
                 default:
                     Assert.AreEqual(0, algorithm.LogMessages.Count);
                     break;
+            }
+        }
+
+        [Test]
+        public void PythonSetBenchmarkThrowsDescriptiveErrorForUnsupportedBenchmarkType()
+        {
+            var algorithm = new QCAlgorithm();
+            var dataManager = new DataManagerStub(algorithm, new MockDataFeed());
+            algorithm.SubscriptionManager.SetDataManager(dataManager);
+
+            using (Py.GIL())
+            {
+                // Not a benchmark producing function nor a symbol
+                using var pyBenchmark = Resolution.Daily.ToPython();
+                var exception = Assert.Throws<ArgumentException>(() => algorithm.SetBenchmark(pyBenchmark));
+
+                Assert.That(exception.Message, Does.Contain("'Daily'"));
+                Assert.That(exception.Message, Does.Contain("'Resolution'"));
+                Assert.That(exception.Message, Does.Contain("method overloads"));
+                Assert.That(exception.InnerException, Is.TypeOf<InvalidCastException>());
             }
         }
 

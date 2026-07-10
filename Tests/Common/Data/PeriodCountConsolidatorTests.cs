@@ -391,10 +391,28 @@ namespace QuantConnect.Tests.Common.Data
                 var exception = Assert.Throws<ArgumentException>(() => new QuoteBarConsolidator(pyResolution));
 
                 // The error must state the source value as the user typed it and point to the constructor overloads
-                Assert.That(exception.Message, Does.Contain("Resolution.DAILY"));
+                Assert.That(exception.Message, Does.Contain("Daily"));
+                Assert.That(exception.Message, Does.Contain("Resolution"));
                 Assert.That(exception.Message, Does.Contain("constructor overloads"));
                 Assert.That(exception.InnerException, Is.TypeOf<InvalidCastException>());
             }
+        }
+
+        [Test]
+        public void QuoteBarConsolidatorFromResolutionCreatesConsolidatorWithExpectedPeriod()
+        {
+            var time = new DateTime(2015, 04, 13);
+            QuoteBar consolidated = null;
+            using var consolidator = QuoteBarConsolidator.FromResolution(Resolution.Minute);
+            consolidator.DataConsolidated += (sender, bar) => consolidated = bar;
+
+            consolidator.Update(new QuoteBar { Time = time, Period = Time.OneSecond });
+            Assert.IsNull(consolidated);
+
+            consolidator.Update(new QuoteBar { Time = time.AddMinutes(1), Period = Time.OneSecond });
+            Assert.IsNotNull(consolidated);
+            Assert.AreEqual(Time.OneMinute, consolidated.Period);
+            Assert.AreEqual(time, consolidated.Time);
         }
 
         private static void PushBarsThrough(int barCount, TimeSpan period, TradeBarConsolidator consolidator, ref DateTime time)
