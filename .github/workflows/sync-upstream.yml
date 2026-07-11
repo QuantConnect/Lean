@@ -9,6 +9,12 @@ permissions:
   contents: write
   pull-requests: write
 
+env:
+  UPSTREAM_REPO: https://github.com/QuantConnect/Lean.git
+  UPSTREAM_BRANCH: master
+  DOWNSTREAM_BRANCH: my-master
+  SYNC_BRANCH: sync/upstream-master
+
 jobs:
   sync:
     runs-on: ubuntu-latest
@@ -16,75 +22,100 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
         with:
-          ref: my-master
+          ref: ${{ env.DOWNSTREAM_BRANCH }}
           fetch-depth: 0
           persist-credentials: true
 
-      - name: Add upstream
+      - name: Configure Git
         run: |
-          git remote add upstream https://github.com/QuantConnect/Lean.git || true
-          # fetch all branches and tags from upstream
-          git fetch upstream --prune --tags
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
 
-      - name: Create/update master replica and sync branch
+      - name: Add upstream remote and fetch
+        run: |
+          set -euo pipefail
+          git remote add upstream "$UPSTREAM_REPO" || true
+          git fetch upstream --prune --tags
+          git fetch origin --prune
+
+      - name: Check for new upstream commits
+        id: check_upstream
         run: |
           set -euo pipefail
 
-          # Fetch all refs
-          git fetch origin --prune
-          git fetch upstream --prune
+          # Count commits upstream is ahead of the downstream branch
+          AHEAD=$(git rev-list --left-right --count origin/${{ env.DOWNSTREAM_BRANCH }}...upstream/${{ env.UPSTREAM_BRANCH }} | awk '{print $2}')
+          echo "ahead=$AHEAD" >> "$GITHUB_OUTPUT"
+          echo "Upstream is $AHEAD commit(s) ahead of ${{ env.DOWNSTREAM_BRANCH }}"
 
-          # Create a temporary master replica (don't push it - it has workflows)
-          git checkout -B _master_replica upstream/master
+          if [ "$AHEAD" -eq 0 ]; then
+            echo "No new upstream commits. Exiting."
+            exit 0
+          fi
 
-          # Create sync branch from _master_replica
-          SYNC_BRANCH=sync/upstream-${{ github.run_id }}
-          git checkout -B "$SYNC_BRANCH" _master_replica
-
-          # Rebase sync branch onto my-master
-          echo "Rebasing $SYNC_BRANCH onto my-master"
-          git fetch origin my-master:refs/remotes/origin/my-master || true
-          git checkout -B "$SYNC_BRANCH" "$SYNC_BRANCH"
-          git rebase origin/my-master || true
-
-          # Push sync branch (avoid workflow files issue)
-          git push --force-with-lease origin "$SYNC_BRANCH"
-
-      - name: Check if sync branch is ahead of my-master
-        id: check_ahead
+      - name: Create or update local upstream branch
+        if: steps.check_upstream.outputs.ahead != '0'
         run: |
-          git fetch origin my-master:refs/remotes/origin/my-master || true
-          SYNC_BRANCH=sync/upstream-${{ github.run_id }}
-          # Count commits sync branch is ahead of my-master
-          AHEAD=$(git rev-list --left-right --count origin/my-master...origin/$SYNC_BRANCH | awk '{print $2}')
-          echo "ahead=$AHEAD" >> $GITHUB_OUTPUT
-          echo "Commits ahead: $AHEAD"
+          set -euo pipefail
+          git checkout -B upstream-${{ env.UPSTREAM_BRANCH }} upstream/${{ env.UPSTREAM_BRANCH }}
+          echo "Local upstream-${{ env.UPSTREAM_BRANCH }} branch updated to upstream/${{ env.UPSTREAM_BRANCH }}"
+
+      - name: Create sync branch and merge upstream changes
+        if: steps.check_upstream.outputs.ahead != '0'
+        run: |
+          set -euo pipefail
+
+          # Create the sync branch from the downstream branch
+          git checkout -B ${{ env.SYNC_BRANCH }} origin/${{ env.DOWNSTREAM_BRANCH }}
+
+          # Merge upstream changes into the sync branch
+          echo "Merging upstream/${{ env.UPSTREAM_BRANCH }} into ${{ env.SYNC_BRANCH }}"
+          git merge upstream/${{ env.UPSTREAM_BRANCH }} --no-edit
+
+          # Push the sync branch
+          git push --force-with-lease origin ${{ env.SYNC_BRANCH }}
 
       - name: Check for existing PR
         id: check_pr
-        if: steps.check_ahead.outputs.ahead != '0'
+        if: steps.check_upstream.outputs.ahead != '0'
         run: |
-          # Check if a PR from sync branch to my-master already exists
-          SYNC_BRANCH=sync/upstream-${{ github.run_id }}
-          PR_COUNT=$(gh pr list --head "$SYNC_BRANCH" --base my-master --state open --json number --jq 'length')
-          echo "pr_exists=$([ $PR_COUNT -gt 0 ] && echo 'true' || echo 'false')" >> $GITHUB_OUTPUT
-          if [ $PR_COUNT -gt 0 ]; then
-            PR_NUMBER=$(gh pr list --head "$SYNC_BRANCH" --base my-master --state open --json number -q '.[0].number')
-            echo "pr_number=$PR_NUMBER" >> $GITHUB_OUTPUT
+          set -euo pipefail
+
+          PR_JSON=$(gh pr list --head ${{ env.SYNC_BRANCH }} --base ${{ env.DOWNSTREAM_BRANCH }} --state open --json number --jq '.[0] // empty')
+
+          if [ -n "$PR_JSON" ]; then
+            PR_NUMBER=$(echo "$PR_JSON" | jq -r '.number')
+            echo "pr_exists=true" >> "$GITHUB_OUTPUT"
+            echo "pr_number=$PR_NUMBER" >> "$GITHUB_OUTPUT"
+            echo "Existing PR found: #$PR_NUMBER"
+          else
+            echo "pr_exists=false" >> "$GITHUB_OUTPUT"
+            echo "No existing PR found"
           fi
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Create PR from sync branch to my-master
-        if: steps.check_ahead.outputs.ahead != '0' && steps.check_pr.outputs.pr_exists
-          == 'false'
-        uses: peter-evans/create-pull-request@v5
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          base: my-master
-          branch: sync/upstream-${{ github.run_id }}
-          title: "chore: sync from upstream QuantConnect/Lean"
-          body: |
-            Automated sync from upstream QuantConnect/Lean.
+      - name: Create PR from sync branch to downstream branch
+        if: steps.check_upstream.outputs.ahead != '0' && steps.check_pr.outputs.pr_exists == 'false'
+        run: |
+          set -euo pipefail
 
-            This PR updates `my-master` with the latest changes from upstream's `master` branch.
+          gh pr create \
+            --base ${{ env.DOWNSTREAM_BRANCH }} \
+            --head ${{ env.SYNC_BRANCH }} \
+            --title "chore: sync from upstream QuantConnect/Lean" \
+            --body "Automated sync from upstream QuantConnect/Lean. This PR updates \`${{ env.DOWNSTREAM_BRANCH }}\` with the latest changes from upstream's \`${{ env.UPSTREAM_BRANCH }}\` branch."
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Merge existing PR
+        if: steps.check_upstream.outputs.ahead != '0' && steps.check_pr.outputs.pr_exists == 'true'
+        run: |
+          set -euo pipefail
+
+          PR_NUMBER=${{ steps.check_pr.outputs.pr_number }}
+          echo "Merging PR #$PR_NUMBER"
+
+          gh pr merge "$PR_NUMBER" --squash --delete-branch=false
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
