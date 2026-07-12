@@ -53,6 +53,12 @@ namespace QuantConnect.Exceptions
             var methodName = GetMethodName(pe.Message);
             var message = Messages.NoMethodMatchPythonExceptionInterpreter.AttemptedToAccessMethodThatDoesNotExist(methodName);
 
+            var overloadsHint = GetOverloadsHint(pe.Message);
+            if (!string.IsNullOrEmpty(overloadsHint))
+            {
+                message += $" {overloadsHint}";
+            }
+
             message += PythonUtil.PythonExceptionStackParser(pe.StackTrace);
 
             return new MissingMethodException(message, pe);
@@ -80,6 +86,22 @@ namespace QuantConnect.Exceptions
                 : exceptionMessage.Substring(methodNameStart);
 
             return methodName.Trim();
+        }
+
+        /// <summary>
+        /// Extracts the candidate-signatures hint pythonnet appends to the binding-failure
+        /// message ("The expected signature is:" or "The following overloads are available:"
+        /// followed by the signatures), so the interpreted message can keep it.
+        /// </summary>
+        private static string GetOverloadsHint(string exceptionMessage)
+        {
+            var hintIndex = exceptionMessage.IndexOfInvariant("The expected signature is:");
+            if (hintIndex == -1)
+            {
+                hintIndex = exceptionMessage.IndexOfInvariant("The following overloads are available:");
+            }
+
+            return hintIndex == -1 ? null : exceptionMessage.Substring(hintIndex).Trim();
         }
     }
 }

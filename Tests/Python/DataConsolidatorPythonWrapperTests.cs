@@ -180,7 +180,7 @@ namespace QuantConnect.Tests.Python
                     {"Expectancy", "4.239"},
                     {"Net Profit", "1.203%"},
                     {"Sharpe Ratio", "7.908"},
-                    {"Probabilistic Sharpe Ratio", "95.063%"},
+                    {"Probabilistic Sharpe Ratio", "94.373%"},
                     {"Loss Rate", "62%"},
                     {"Win Rate", "38%"},
                     {"Profit-Loss Ratio", "12.97"},
@@ -200,6 +200,124 @@ namespace QuantConnect.Tests.Python
                 parameter.Statistics,
                 parameter.Language,
                 parameter.ExpectedFinalStatus);
+        }
+
+        [Test]
+        public void WindowIsPopulatedOnConsolidation()
+        {
+            using (Py.GIL())
+            {
+                using var wrapper = CreateFedPythonWrapper(1);
+                Assert.AreEqual(1, wrapper.Window.Count);
+                Assert.IsNotNull(wrapper.Consolidated);
+                Assert.AreEqual(wrapper.Consolidated, wrapper[0]);
+            }
+        }
+
+        [Test]
+        public void WindowKeepsPreviousConsolidatedBar()
+        {
+            using (Py.GIL())
+            {
+                using var wrapper = CreateFedPythonWrapper(1);
+                var firstConsolidated = wrapper.Consolidated;
+
+                FeedConsolidation(wrapper, 1);
+
+                Assert.AreEqual(2, wrapper.Window.Count);
+                Assert.AreNotEqual(firstConsolidated, wrapper[0]);
+                Assert.AreEqual(firstConsolidated, wrapper[1]);
+                Assert.AreEqual(firstConsolidated, wrapper.Previous);
+            }
+        }
+
+        [Test]
+        public void CanIterateOverConsolidatedBars()
+        {
+            using (Py.GIL())
+            {
+                using var wrapper = CreateFedPythonWrapper(2);
+                var bars = wrapper.ToList();
+                Assert.AreEqual(2, bars.Count);
+                Assert.AreEqual(wrapper[0], bars[0]);
+                Assert.AreEqual(wrapper[1], bars[1]);
+            }
+        }
+
+        [Test]
+        public void ResetClearsWindow()
+        {
+            using (Py.GIL())
+            {
+                using var wrapper = CreateFedPythonWrapper(1);
+                wrapper.Reset();
+                Assert.AreEqual(0, wrapper.Window.Count);
+                Assert.IsNull(wrapper.Consolidated);
+            }
+        }
+
+        private static DataConsolidatorPythonWrapper CreateFedPythonWrapper(int consolidations)
+        {
+            var module = PyModule.FromString(Guid.NewGuid().ToString(),
+                "from AlgorithmImports import *\n" +
+                "class CustomConsolidator(QuoteBarConsolidator):\n" +
+                "   def __init__(self):\n" +
+                "       super().__init__(timedelta(minutes=2))\n");
+
+            var wrapper = new DataConsolidatorPythonWrapper(module.GetAttr("CustomConsolidator").Invoke());
+            FeedConsolidation(wrapper, consolidations);
+            return wrapper;
+        }
+
+        private static void FeedConsolidation(DataConsolidatorPythonWrapper wrapper, int consolidations)
+        {
+            var offset = wrapper.Window.Count * 2;
+            var time = DateTime.Today;
+            for (var i = 0; i < consolidations; i++)
+            {
+                var bar = new QuoteBar { Time = time.AddMinutes(offset + i * 2), Symbol = Symbols.SPY, Bid = new Bar(1, 2, 0.75m, 1.25m), LastBidSize = 3, Value = 1, Period = TimeSpan.FromMinutes(1) };
+                wrapper.Update(bar);
+                wrapper.Scan(time.AddMinutes(offset + (i + 1) * 2));
+            }
+        }
+
+        [Test]
+        public void PythonConsolidatorSubclassExposesWindow()
+        {
+            // custom consolidators that inherit PythonConsolidator (the documented path) must expose the
+            // rolling window just like the C# consolidators, not only the ones routed through the wrapper
+            using (Py.GIL())
+            {
+                var module = PyModule.FromString(Guid.NewGuid().ToString(),
+                    "from AlgorithmImports import *\n" +
+                    "class CustomConsolidator(PythonConsolidator):\n" +
+                    "   def __init__(self):\n" +
+                    "       self.input_type = QuoteBar\n" +
+                    "       self.output_type = QuoteBar\n" +
+                    "       self.consolidated = None\n" +
+                    "       self.working_data = None\n" +
+                    "   def update(self, data):\n" +
+                    "       pass\n" +
+                    "   def scan(self, time):\n" +
+                    "       pass\n");
+
+                var customConsolidator = module.GetAttr("CustomConsolidator").Invoke();
+                var consolidator = customConsolidator.As<PythonConsolidator>();
+
+                var time = DateTime.Today;
+                var bar1 = new QuoteBar { Time = time, Symbol = Symbols.SPY, Bid = new Bar(1, 2, 0.75m, 1.25m), Value = 1, Period = TimeSpan.FromMinutes(1) };
+                var bar2 = new QuoteBar { Time = time.AddMinutes(1), Symbol = Symbols.SPY, Bid = new Bar(1, 2, 0.75m, 1.25m), Value = 2, Period = TimeSpan.FromMinutes(1) };
+
+                consolidator.OnDataConsolidated(customConsolidator, bar1);
+                consolidator.OnDataConsolidated(customConsolidator, bar2);
+
+                Assert.AreEqual(2, consolidator.Window.Count);
+                Assert.AreEqual(bar2, consolidator[0]);
+                Assert.AreEqual(bar1, consolidator.Previous);
+
+                consolidator.Reset();
+                Assert.AreEqual(0, consolidator.Window.Count);
+            }
         }
 
         [Test]

@@ -58,7 +58,9 @@
   "ignore-unknown-asset-holdings": true,
 
   // The maximum amount of transaction threads for concurrent order submissions if the brokerage supports it.
-  //"maximum-transaction-threads": 4,
+  // The pool starts at the minimum and grows up to the maximum on demand.
+  //"minimum-transaction-threads": 2,
+  //"maximum-transaction-threads": 10,
 
   // log missing data files, useful for debugging
   "show-missing-data-logs": false,

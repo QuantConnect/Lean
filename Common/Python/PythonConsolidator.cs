@@ -16,14 +16,17 @@
 using Python.Runtime;
 using QuantConnect.Data;
 using QuantConnect.Data.Consolidators;
+using QuantConnect.Indicators;
 using System;
 
 namespace QuantConnect.Python
 {
     /// <summary>
     /// Provides a base class for python consolidators, necessary to use event handler.
+    /// Inherits the built-in rolling window so custom Python consolidators can access their
+    /// consolidated history through the indexer, Current, Previous and Window members.
     /// </summary>
-    public class PythonConsolidator : IDataConsolidator
+    public class PythonConsolidator : WindowBase<IBaseData>, IDataConsolidator
     {
         /// <summary>
         /// Gets the most recently consolidated piece of data. This will be null if this consolidator
@@ -70,6 +73,11 @@ namespace QuantConnect.Python
         /// <param name="data">The finished data from the consolidator</param>
         public void OnDataConsolidated(PyObject consolidator, IBaseData data)
         {
+            // populate the rolling window before firing so a handler sees the new bar at index 0
+            if (data != null)
+            {
+                Current = data;
+            }
             DataConsolidated?.Invoke(consolidator, data);
         }
 
@@ -80,6 +88,7 @@ namespace QuantConnect.Python
         {
             Consolidated = null;
             WorkingData = null;
+            ResetWindow();
         }
 
         /// <summary>

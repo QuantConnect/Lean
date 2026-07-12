@@ -90,9 +90,10 @@ namespace QuantConnect.Tests.Common.Exceptions
             var interpreter = new NoMethodMatchPythonExceptionInterpreter();
             exception = interpreter.Interpret(exception, NullExceptionInterpreter.Instance);
 
-            // The interpreter should reference the actual method name that failed to resolve (SetCash),
-            // not a fragment of the argument type list (e.g. "'str'>)").
-            Assert.That(exception.Message, Does.Contain("SetCash"));
+            // The interpreter should reference the actual method name that failed to resolve
+            // (set_cash, the snake_case name Python callers use), not a fragment of the argument
+            // type list (e.g. "'str'>)").
+            Assert.That(exception.Message, Does.Contain("set_cash"));
             Assert.That(exception.Message, Does.Not.Contain(">)"));
         }
 
@@ -113,10 +114,49 @@ namespace QuantConnect.Tests.Common.Exceptions
             var interpreter = new NoMethodMatchPythonExceptionInterpreter();
             var exception = interpreter.Interpret(pythonException, NullExceptionInterpreter.Instance);
 
-            // The interpreter should reference the RSI method name, not a fragment of the
-            // argument type list (e.g. "'QuantConnect.Resolution'>)").
-            Assert.That(exception.Message, Does.Contain("RSI"));
+            // The interpreter should reference the rsi method name (snake_case, as Python callers
+            // use it), not a fragment of the argument type list (e.g. "'QuantConnect.Resolution'>)").
+            Assert.That(exception.Message, Does.Contain("rsi"));
             Assert.That(exception.Message, Does.Not.Contain(">)"));
+        }
+
+        [Test]
+        public void VerifyMessageKeepsTheOverloadsHint()
+        {
+            // pythonnet appends the candidate signatures to the binding-failure message.
+            // set_cash('SPY') has multiple candidate overloads.
+            var pythonException = (PythonException)CreateExceptionFromType(typeof(PythonException));
+            StringAssert.Contains("The following overloads are available:", pythonException.Message);
+
+            var interpreter = new NoMethodMatchPythonExceptionInterpreter();
+            var exception = interpreter.Interpret(pythonException, NullExceptionInterpreter.Instance);
+
+            // The interpreted message must keep the overloads hint so the user can see
+            // what the method expects, not just that no overload matched.
+            Assert.That(exception.Message, Does.Contain("The following overloads are available:"));
+            Assert.That(exception.Message, Does.Contain("set_cash("));
+        }
+
+        [Test]
+        public void VerifyMessageKeepsTheExpectedSignatureHint()
+        {
+            PythonException pythonException;
+            using (Py.GIL())
+            {
+                var module = Py.Import("Test_PythonExceptionInterpreter");
+                dynamic algorithm = module.GetAttr("Test_PythonExceptionInterpreter").Invoke();
+                pythonException = Assert.Throws<PythonException>(() => algorithm.no_method_match_rsi());
+            }
+
+            // rsi's candidate overloads collapse into a single snake-case signature,
+            // so pythonnet words the hint as "The expected signature is:"
+            StringAssert.Contains("The expected signature is:", pythonException.Message);
+
+            var interpreter = new NoMethodMatchPythonExceptionInterpreter();
+            var exception = interpreter.Interpret(pythonException, NullExceptionInterpreter.Instance);
+
+            Assert.That(exception.Message, Does.Contain("The expected signature is:"));
+            Assert.That(exception.Message, Does.Contain("rsi("));
         }
 
         private Exception CreateExceptionFromType(Type type) => type == typeof(PythonException) ? _pythonException : (Exception)Activator.CreateInstance(type);

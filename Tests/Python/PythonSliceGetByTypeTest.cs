@@ -35,7 +35,7 @@ namespace QuantConnect.Tests.Common
                     {"Expectancy", "0"},
                     {"Net Profit", "1.736%"},
                     {"Sharpe Ratio", "8.86"},
-                    {"Probabilistic Sharpe Ratio", "67.609%"},
+                    {"Probabilistic Sharpe Ratio", "67.459%"},
                     {"Loss Rate", "0%"},
                     {"Win Rate", "0%"},
                     {"Profit-Loss Ratio", "0"},

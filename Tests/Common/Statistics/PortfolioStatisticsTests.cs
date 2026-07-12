@@ -89,6 +89,41 @@ namespace QuantConnect.Tests.Common.Statistics
         }
 
         [Test]
+        public void SharpeRatioAndProbabilisticSharpeRatioStayConsistent()
+        {
+            // A low-volatility asset with small positive daily returns
+            var start = new DateTime(2023, 1, 1);
+            var performance = new List<double>();
+            var equity = new SortedDictionary<DateTime, decimal>();
+            var value = 1_000_000m;
+            var random = new Random(42);
+            for (var i = 0; i < 500; i++)
+            {
+                // Random daily return drawn from a normal distribution
+                var z = Math.Sqrt(-2.0 * Math.Log(1 - random.NextDouble())) * Math.Cos(2.0 * Math.PI * random.NextDouble());
+                var dailyReturn = 0.00018 + 0.00016 * z;
+                performance.Add(dailyReturn);
+                value *= (decimal)(1 + dailyReturn);
+                equity[start.AddDays(i)] = value;
+            }
+
+            PortfolioStatistics BuildStatistics(decimal riskFreeRate) => new PortfolioStatistics(
+                new SortedDictionary<DateTime, decimal>(), equity, new SortedDictionary<DateTime, decimal>(),
+                performance, performance, 1_000_000m,
+                new ConstantRiskFreeRateInterestRateModel(riskFreeRate), _tradingDaysPerYear);
+
+            // Without a risk-free rate both the Sharpe ratio and the PSR are high
+            var grossStatistics = BuildStatistics(0m);
+            Assert.Greater(grossStatistics.SharpeRatio, 0m);
+            Assert.Greater(grossStatistics.ProbabilisticSharpeRatio, 0.5m);
+
+            // A risk-free rate above the return turns the Sharpe ratio negative, and the PSR drops with it
+            var excessStatistics = BuildStatistics(0.068m);
+            Assert.Less(excessStatistics.SharpeRatio, 0m);
+            Assert.Less(excessStatistics.ProbabilisticSharpeRatio, 0.1m);
+        }
+
+        [Test]
         public void VaRMatchesExternalData()
         {
             var externalFileName = "spy_valueatrisk.csv";

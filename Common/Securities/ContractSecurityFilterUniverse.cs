@@ -68,6 +68,11 @@ namespace QuantConnect.Securities
         public DateTime LocalTime { get; private set; }
 
         /// <summary>
+        /// The number of contracts in the universe
+        /// </summary>
+        public int Count => _data.Count;
+
+        /// <summary>
         /// All data in this filter
         /// Marked internal for use by extensions
         /// </summary>
