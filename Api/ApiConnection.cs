@@ -245,7 +245,7 @@ namespace QuantConnect.Api
             var stopwatch = Stopwatch.StartNew();
             try
             {
-                if (request.RequestUri.OriginalString.StartsWith('/'))
+                if (request.RequestUri != null && request.RequestUri.OriginalString.StartsWith('/'))
                 {
                     request.RequestUri = new Uri(request.RequestUri.ToString().TrimStart('/'), UriKind.Relative);
                 }
@@ -256,7 +256,18 @@ namespace QuantConnect.Api
                 response = await _httpClient.SendAsync(request, cancellationTokenSource.Token).ConfigureAwait(false);
                 responseContentStream = await response.Content.ReadAsStreamAsync(cancellationTokenSource.Token).ConfigureAwait(false);
 
-                result = responseContentStream.DeserializeJson<T>(leaveOpen: true);
+                try
+                {
+                    result = responseContentStream.DeserializeJson<T>(leaveOpen: true);
+                }
+                catch (Exception err)
+                {
+                    // a non json payload, for example an html error page from a proxy or load balancer,
+                    // the http status and raw content describe the failure better than the parse exception
+                    Log.Error($"ApiConnection.TryRequest({request.RequestUri}): failed to deserialize response: {err.GetType().Name}: {err.Message}." +
+                        $" HTTP {(int)response.StatusCode} {response.ReasonPhrase}. Content: {GetRawResponseContent(responseContentStream)}");
+                    return new Tuple<bool, T>(false, null);
+                }
 
                 if (!response.IsSuccessStatusCode)
                 {
@@ -323,6 +334,12 @@ namespace QuantConnect.Api
                     }
                 }
                 builder.Append(Invariant($" after {elapsedMilliseconds}ms. ThreadPool: {ThreadPool.ThreadCount} threads, {ThreadPool.PendingWorkItemCount} pending work items"));
+                if (exception is not HttpRequestException and not OperationCanceledException)
+                {
+                    // network failures are described by their error codes above and are frequent during outages,
+                    // any other exception type is unexpected so include the stack trace to locate its source
+                    builder.Append(Environment.NewLine).Append(exception.StackTrace);
+                }
                 return builder.ToString();
             }
             catch (Exception)
@@ -360,11 +377,12 @@ namespace QuantConnect.Api
 
         private void SetAuthenticator(HttpRequestMessage request)
         {
-            request.Headers.Remove("Authorization");
             request.Headers.Remove("Timestamp");
 
             var base64EncodedAuthenticationString = GetAuthenticatorHeader(out var timeStamp);
-            _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Basic", base64EncodedAuthenticationString);
+            // set the authorization on the request itself, the client default headers are shared across
+            // concurrent requests and mutating them while requests are in flight is not thread safe
+            request.Headers.Authorization = new AuthenticationHeaderValue("Basic", base64EncodedAuthenticationString);
             request.Headers.Add("Timestamp", timeStamp);
         }
 
