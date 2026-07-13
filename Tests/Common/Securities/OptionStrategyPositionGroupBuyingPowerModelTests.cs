@@ -1025,6 +1025,41 @@ namespace QuantConnect.Tests.Common.Securities
             Assert.AreEqual((double)expectedMaintenanceMargin, (double)maintenanceMargin.Value, (double)(0.2m * expectedMaintenanceMargin));
         }
 
+        private static readonly TestCaseData[] ZeroQuantityPositionGroupTestCases = MaintenanceMarginTestCases
+            .Select(x => (OptionStrategyDefinition)x.Arguments[0])
+            .DistinctBy(x => x.Name)
+            .Select(x => new TestCaseData(x))
+            .ToArray();
+
+        [TestCaseSource(nameof(ZeroQuantityPositionGroupTestCases))]
+        public void GetsZeroMarginRequirementsForZeroQuantityPositionGroup(OptionStrategyDefinition optionStrategyDefinition)
+        {
+            var positionGroup = SetUpOptionStrategy(optionStrategyDefinition, 1);
+            // Zero-quantity groups are probed by PositionGroupBuyingPowerModel.GetPositionGroupOrderQuantity
+            // when iterating quantities towards a reduction target (e.g. during a margin call)
+            var zeroQuantityGroup = positionGroup.WithQuantity(0, _portfolio.Positions);
+
+            var initialMargin = zeroQuantityGroup.BuyingPowerModel.GetInitialMarginRequirement(
+                new PositionGroupInitialMarginParameters(_portfolio, zeroQuantityGroup));
+            var maintenanceMargin = zeroQuantityGroup.BuyingPowerModel.GetMaintenanceMargin(
+                new PositionGroupMaintenanceMarginParameters(_portfolio, zeroQuantityGroup));
+
+            Assert.AreEqual(0m, initialMargin.Value);
+            Assert.AreEqual(0m, maintenanceMargin.Value);
+        }
+
+        [Test]
+        public void FullyLiquidatesSingleLotGroupWhenMarginCallRequiresPartialReduction()
+        {
+            var positionGroup = SetUpOptionStrategy(OptionStrategyDefinitions.BullPutSpread, 1);
+
+            // Emulates DefaultMarginCallModel.GenerateMarginCallOrders: the margin call only needs to free
+            // part of the margin used by the group, but a single lot cannot be partially reduced,
+            // so the group should be fully liquidated instead of throwing
+            var usedMargin = positionGroup.BuyingPowerModel.GetReservedBuyingPowerForPositionGroup(_portfolio, positionGroup);
+            ComputeAndAssertQuantityForDeltaBuyingPower(positionGroup, -1, -usedMargin / 2);
+        }
+
         /// <remarks>
         /// TODO: Revisit the explicit test cases when we can take into account premium for strategies with zero margin.
         /// </remarks>
