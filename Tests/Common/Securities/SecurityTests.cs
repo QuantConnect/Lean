@@ -461,6 +461,22 @@ namespace QuantConnect.Tests.Common.Securities
         }
 
         [Test]
+        public void GettingPythonCustomPropertyWithIncompatibleTypeThrowsDescriptiveError()
+        {
+            var security = GetSecurity();
+            using (Py.GIL())
+            {
+                security.Set("StringProperty", "a string value".ToPython());
+
+                var exception = Assert.Throws<InvalidCastException>(() => security.Get<decimal>("StringProperty"));
+                Assert.That(exception.Message, Does.Contain("'StringProperty'"));
+                Assert.That(exception.Message, Does.Contain("'str'"));
+                Assert.That(exception.Message, Does.Contain(nameof(Decimal)));
+                Assert.That(exception.InnerException, Is.TypeOf<InvalidCastException>());
+            }
+        }
+
+        [Test]
         public void SetsAndGetsDynamicCustomPropertiesUsingIndexer()
         {
             var security = GetSecurity();

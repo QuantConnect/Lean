@@ -44,7 +44,7 @@ namespace QuantConnect.Tests.Algorithm.Framework.Alphas
 
         protected override string GetExpectedModelName(IAlphaModel model)
         {
-            return $"{nameof(BasePairsTradingAlphaModel)}({_lookback},{_resolution},1)";
+            return $"{nameof(BasePairsTradingAlphaModel)}({_lookback},{GetEnumString(_resolution, model)},1)";
         }
 
         protected override IAlphaModel CreatePythonAlphaModel()

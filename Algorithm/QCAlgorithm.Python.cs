@@ -1375,7 +1375,18 @@ namespace QuantConnect.Algorithm
                     SetBenchmark(pyBenchmark);
                     return;
                 }
-                SetBenchmark((Symbol)benchmark.AsManagedObject(typeof(Symbol)));
+
+                try
+                {
+                    SetBenchmark((Symbol)benchmark.AsManagedObject(typeof(Symbol)));
+                }
+                catch (InvalidCastException exception)
+                {
+                    throw new ArgumentException(
+                        $"Unable to set the benchmark from {benchmark.ToDisplayString()}: it is not a supported benchmark type. " +
+                        MethodSignatureFormatter.FormatOverloads(typeof(QCAlgorithm).GetMethods().Where(m => m.Name == nameof(SetBenchmark))),
+                        exception);
+                }
             }
         }
 

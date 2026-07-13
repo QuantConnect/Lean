@@ -26,6 +26,16 @@ namespace QuantConnect.Data.Consolidators
     public class QuoteBarConsolidator : PeriodCountConsolidatorBase<QuoteBar, QuoteBar>
     {
         /// <summary>
+        /// Create a new QuoteBarConsolidator for the desired resolution
+        /// </summary>
+        /// <param name="resolution">The resolution desired</param>
+        /// <returns>A consolidator that produces data on the resolution interval</returns>
+        public static QuoteBarConsolidator FromResolution(Resolution resolution)
+        {
+            return new QuoteBarConsolidator(resolution.ToTimeSpan());
+        }
+
+        /// <summary>
         /// Initializes a new instance of the <see cref="QuoteBarConsolidator"/> class
         /// </summary>
         /// <param name="period">The minimum span of time before emitting a consolidated bar</param>
