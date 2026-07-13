@@ -13,6 +13,7 @@
  * limitations under the License.
 */
 
+using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 using Moq;
 using NUnit.Framework;
@@ -45,12 +46,14 @@ namespace QuantConnect.Tests.Engine
         }
 
         [Test]
+        [SuppressMessage("Reliability", "CA2000:Dispose objects before losing scope", Justification = "LeanEngineSystemHandlers owns and disposes the API instance.")]
         public void LocalLeanManagerInjectsConfiguredWalkForwardOptimizationProvider()
         {
-            var manager = new LocalLeanManager();
-            var systemHandlers = new LeanEngineSystemHandlers(
+            using var manager = new LocalLeanManager();
+            var api = new QuantConnect.Api.Api();
+            using var systemHandlers = new LeanEngineSystemHandlers(
                 Mock.Of<IJobQueueHandler>(),
-                new QuantConnect.Api.Api(),
+                api,
                 Mock.Of<IMessagingHandler>(),
                 Mock.Of<ILeanManager>());
             manager.Initialize(systemHandlers, null, new BacktestNodePacket(), null);
