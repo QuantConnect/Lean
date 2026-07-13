@@ -245,7 +245,7 @@ namespace QuantConnect.Api
             var stopwatch = Stopwatch.StartNew();
             try
             {
-                if (request.RequestUri.OriginalString.StartsWith('/'))
+                if (request.RequestUri != null && request.RequestUri.OriginalString.StartsWith('/'))
                 {
                     request.RequestUri = new Uri(request.RequestUri.ToString().TrimStart('/'), UriKind.Relative);
                 }
@@ -256,7 +256,18 @@ namespace QuantConnect.Api
                 response = await _httpClient.SendAsync(request, cancellationTokenSource.Token).ConfigureAwait(false);
                 responseContentStream = await response.Content.ReadAsStreamAsync(cancellationTokenSource.Token).ConfigureAwait(false);
 
-                result = responseContentStream.DeserializeJson<T>(leaveOpen: true);
+                try
+                {
+                    result = responseContentStream.DeserializeJson<T>(leaveOpen: true);
+                }
+                catch (Exception err)
+                {
+                    // a non json payload, for example an html error page from a proxy or load balancer,
+                    // the http status and raw content describe the failure better than the parse exception
+                    Log.Error($"ApiConnection.TryRequest({request.RequestUri}): failed to deserialize response: {err.GetType().Name}: {err.Message}." +
+                        $" HTTP {(int)response.StatusCode} {response.ReasonPhrase}. Content: {GetRawResponseContent(responseContentStream)}");
+                    return new Tuple<bool, T>(false, null);
+                }
 
                 if (!response.IsSuccessStatusCode)
                 {
