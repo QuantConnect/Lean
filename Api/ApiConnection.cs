@@ -360,11 +360,12 @@ namespace QuantConnect.Api
 
         private void SetAuthenticator(HttpRequestMessage request)
         {
-            request.Headers.Remove("Authorization");
             request.Headers.Remove("Timestamp");
 
             var base64EncodedAuthenticationString = GetAuthenticatorHeader(out var timeStamp);
-            _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Basic", base64EncodedAuthenticationString);
+            // set the authorization on the request itself, the client default headers are shared across
+            // concurrent requests and mutating them while requests are in flight is not thread safe
+            request.Headers.Authorization = new AuthenticationHeaderValue("Basic", base64EncodedAuthenticationString);
             request.Headers.Add("Timestamp", timeStamp);
         }
 
