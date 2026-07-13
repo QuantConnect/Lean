@@ -1130,6 +1130,12 @@ namespace QuantConnect.AlgorithmFactory.Python.Wrappers
         public void SetHistoryProvider(IHistoryProvider historyProvider) => _baseAlgorithm.SetHistoryProvider(historyProvider);
 
         /// <summary>
+        /// Sets the walk-forward optimization provider.
+        /// </summary>
+        /// <param name="provider">Walk-forward optimization provider</param>
+        public void SetWalkForwardOptimizationProvider(IWalkForwardOptimizationProvider provider) => _baseAlgorithm.SetWalkForwardOptimizationProvider(provider);
+
+        /// <summary>
         /// Set live mode state of the algorithm run: Public setter for the algorithm property LiveMode.
         /// </summary>
         /// <param name="live">Bool live mode flag</param>

@@ -901,6 +901,12 @@ namespace QuantConnect.Interfaces
         void SetApi(IApi api);
 
         /// <summary>
+        /// Sets the walk-forward optimization provider.
+        /// </summary>
+        /// <param name="provider">The provider used to run walk-forward optimizations</param>
+        void SetWalkForwardOptimizationProvider(IWalkForwardOptimizationProvider provider);
+
+        /// <summary>
         /// Sets the object store
         /// </summary>
         /// <param name="objectStore">The object store</param>
