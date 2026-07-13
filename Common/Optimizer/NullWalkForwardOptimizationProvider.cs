@@ -27,7 +27,10 @@ namespace QuantConnect.Optimizer
         /// </summary>
         public static NullWalkForwardOptimizationProvider Instance { get; } = new NullWalkForwardOptimizationProvider();
 
-        private NullWalkForwardOptimizationProvider()
+        /// <summary>
+        /// Creates a new instance.
+        /// </summary>
+        public NullWalkForwardOptimizationProvider()
         {
         }
 

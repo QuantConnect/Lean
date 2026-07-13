@@ -13,6 +13,7 @@
  * limitations under the License.
 */
 
+using System.ComponentModel.Composition;
 using QuantConnect.Optimizer;
 
 namespace QuantConnect.Interfaces
@@ -20,6 +21,7 @@ namespace QuantConnect.Interfaces
     /// <summary>
     /// Provides walk-forward optimization results for a running algorithm.
     /// </summary>
+    [InheritedExport(typeof(IWalkForwardOptimizationProvider))]
     public interface IWalkForwardOptimizationProvider
     {
         /// <summary>

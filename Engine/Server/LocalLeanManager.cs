@@ -16,7 +16,9 @@
 using QuantConnect.Util;
 using QuantConnect.Packets;
 using QuantConnect.Commands;
+using QuantConnect.Configuration;
 using QuantConnect.Interfaces;
+using QuantConnect.Optimizer;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Lean.Engine.DataFeeds.Transport;
 
@@ -67,6 +69,9 @@ namespace QuantConnect.Lean.Engine.Server
         {
             Algorithm = algorithm;
             algorithm.SetApi(SystemHandlers.Api);
+            algorithm.SetWalkForwardOptimizationProvider(
+                Composer.Instance.GetExportedValueByTypeName<IWalkForwardOptimizationProvider>(
+                    Config.Get("walk-forward-optimization-provider", nameof(NullWalkForwardOptimizationProvider))));
             RemoteFileSubscriptionStreamReader.SetDownloadProvider((Api.Api)SystemHandlers.Api);
         }
 
