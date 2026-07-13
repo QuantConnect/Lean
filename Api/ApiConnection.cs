@@ -323,6 +323,12 @@ namespace QuantConnect.Api
                     }
                 }
                 builder.Append(Invariant($" after {elapsedMilliseconds}ms. ThreadPool: {ThreadPool.ThreadCount} threads, {ThreadPool.PendingWorkItemCount} pending work items"));
+                if (exception is not HttpRequestException and not OperationCanceledException)
+                {
+                    // network failures are described by their error codes above and are frequent during outages,
+                    // any other exception type is unexpected so include the stack trace to locate its source
+                    builder.Append(Environment.NewLine).Append(exception.StackTrace);
+                }
                 return builder.ToString();
             }
             catch (Exception)
