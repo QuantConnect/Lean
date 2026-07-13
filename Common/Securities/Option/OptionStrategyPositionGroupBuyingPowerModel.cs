@@ -49,6 +49,12 @@ namespace QuantConnect.Securities.Option
         /// <returns>The maintenance margin required for the </returns>
         public override MaintenanceMargin GetMaintenanceMargin(PositionGroupMaintenanceMarginParameters parameters)
         {
+            if (parameters.PositionGroup.Quantity == 0)
+            {
+                // a zero-quantity group, e.g. probed while iterating quantities during a margin call reduction
+                return MaintenanceMargin.Zero;
+            }
+
             if (_optionStrategy == null)
             {
                 // we could be liquidating a position
@@ -287,6 +293,12 @@ namespace QuantConnect.Securities.Option
         /// <param name="parameters">An object containing the security and quantity</param>
         public override InitialMargin GetInitialMarginRequirement(PositionGroupInitialMarginParameters parameters)
         {
+            if (parameters.PositionGroup.Quantity == 0)
+            {
+                // a zero-quantity group, e.g. probed while iterating quantities during a margin call reduction
+                return OptionInitialMargin.Zero;
+            }
+
             var result = 0m;
 
             if (_optionStrategy == null)
