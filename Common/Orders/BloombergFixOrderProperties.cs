@@ -13,14 +13,12 @@
  * limitations under the License.
 */
 
-using System;
-
 namespace QuantConnect.Orders
 {
     /// <summary>
-    /// FIX (Financial Information Exchange) order properties
+    /// Contains additional properties and settings for an order submitted to Fix Bloomberg
     /// </summary>
-    [Obsolete("FixOrderProperites is deprecated. Use FixOrderProperties instead.")]
-    public class FixOrderProperites : FixOrderProperties
-    { }
+    public class BloombergFixOrderProperties : FixOrderProperties
+    {
+    }
 }
