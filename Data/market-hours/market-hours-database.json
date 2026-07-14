@@ -123355,11 +123355,6 @@
       "sunday": [],
       "monday": [
         {
-          "start": "08:30:00",
-          "end": "08:45:00",
-          "state": "premarket"
-        },
-        {
           "start": "08:45:00",
           "end": "15:45:00",
           "state": "market"
@@ -123374,11 +123369,6 @@
         {
           "start": "00:00:00",
           "end": "06:00:00",
-          "state": "premarket"
-        },
-        {
-          "start": "08:30:00",
-          "end": "08:45:00",
           "state": "premarket"
         },
         {
@@ -123399,11 +123389,6 @@
           "state": "premarket"
         },
         {
-          "start": "08:30:00",
-          "end": "08:45:00",
-          "state": "premarket"
-        },
-        {
           "start": "08:45:00",
           "end": "15:45:00",
           "state": "market"
@@ -123421,11 +123406,6 @@
           "state": "premarket"
         },
         {
-          "start": "08:30:00",
-          "end": "08:45:00",
-          "state": "premarket"
-        },
-        {
           "start": "08:45:00",
           "end": "15:45:00",
           "state": "market"
@@ -123440,11 +123420,6 @@
         {
           "start": "00:00:00",
           "end": "06:00:00",
-          "state": "premarket"
-        },
-        {
-          "start": "08:30:00",
-          "end": "08:45:00",
           "state": "premarket"
         },
         {
@@ -123932,11 +123907,6 @@
       "sunday": [],
       "monday": [
         {
-          "start": "08:30:00",
-          "end": "08:45:00",
-          "state": "premarket"
-        },
-        {
           "start": "08:45:00",
           "end": "15:45:00",
           "state": "market"
@@ -123951,11 +123921,6 @@
         {
           "start": "00:00:00",
           "end": "06:00:00",
-          "state": "premarket"
-        },
-        {
-          "start": "08:30:00",
-          "end": "08:45:00",
           "state": "premarket"
         },
         {
@@ -123976,11 +123941,6 @@
           "state": "premarket"
         },
         {
-          "start": "08:30:00",
-          "end": "08:45:00",
-          "state": "premarket"
-        },
-        {
           "start": "08:45:00",
           "end": "15:45:00",
           "state": "market"
@@ -123998,11 +123958,6 @@
           "state": "premarket"
         },
         {
-          "start": "08:30:00",
-          "end": "08:45:00",
-          "state": "premarket"
-        },
-        {
           "start": "08:45:00",
           "end": "15:45:00",
           "state": "market"
@@ -124017,11 +123972,6 @@
         {
           "start": "00:00:00",
           "end": "06:00:00",
-          "state": "premarket"
-        },
-        {
-          "start": "08:30:00",
-          "end": "08:45:00",
           "state": "premarket"
         },
         {
