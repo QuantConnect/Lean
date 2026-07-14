@@ -796,7 +796,13 @@ namespace QuantConnect.Securities.Future
             // KOSPI 200 Index Futures (KM): http://global.krx.co.kr/contents/GLB/05/0503/0503010102/GLB0503010102.jsp
             {Symbol.Create(Futures.Indices.Kospi200, SecurityType.Future, Market.KRX), (time =>
                 {
-                    // Contract months: the four nearest months of the quarterly cycle (March, June, September, December)
+                    // Listed contracts: four quarterly months (March, June, September, December) + two half-yearly months (June, December)
+                    // + one yearly month (December), all within the quarterly cycle
+                    while (!FutureExpirationCycles.HMUZ.Contains(time.Month))
+                    {
+                        time = time.AddMonths(1);
+                    }
+
                     // Last trading day: the second Thursday of the contract month. Trading terminates at 15:20 KST on that day.
                     // If the second Thursday is a holiday, the last trading day is the preceding business day.
                     var market = Market.KRX;
