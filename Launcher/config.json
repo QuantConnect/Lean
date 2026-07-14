@@ -214,6 +214,18 @@
   "rbi-on-behalf-of-comp-id": "",
   "rbi-log-fix-messages": false,
 
+  // bloomberg fix configuration
+  "bloomberg-fix-host": "",
+  "bloomberg-fix-port": "",
+  "bloomberg-fix-sender-comp-id": "",
+  "bloomberg-fix-target-comp-id": "",
+  "bloomberg-fix-on-behalf-of-comp-id": "",
+  "bloomberg-fix-sender-sub-id": "",
+  "bloomberg-fix-deliver-to-comp-id": "",
+  "bloomberg-fix-log-messages": false,
+  "bloomberg-fix-ssl-certificate-path": "",
+  "bloomberg-fix-ssl-certificate-password": "",
+
   // Trading Technologies configuration
   "tt-user-name": "",
   "tt-session-password": "",
@@ -749,6 +761,20 @@
 
       // real brokerage implementations require the BrokerageTransactionHandler
       "live-mode-brokerage": "RBIBrokerage",
+      "data-queue-handler": [ "QuantConnect.Lean.Engine.DataFeeds.Queues.LiveDataQueue" ],
+      "history-provider": [ "SubscriptionDataReaderHistoryProvider" ],
+      "setup-handler": "QuantConnect.Lean.Engine.Setup.BrokerageSetupHandler",
+      "result-handler": "QuantConnect.Lean.Engine.Results.LiveTradingResultHandler",
+      "data-feed-handler": "QuantConnect.Lean.Engine.DataFeeds.LiveTradingDataFeed",
+      "real-time-handler": "QuantConnect.Lean.Engine.RealTime.LiveTradingRealTimeHandler",
+      "transaction-handler": "QuantConnect.Lean.Engine.TransactionHandlers.BrokerageTransactionHandler"
+    },
+
+    "live-bloomberg-fix": {
+      "live-mode": true,
+
+      // real brokerage implementations require the BrokerageTransactionHandler
+      "live-mode-brokerage": "BloombergFixBrokerage",
       "data-queue-handler": [ "QuantConnect.Lean.Engine.DataFeeds.Queues.LiveDataQueue" ],
       "history-provider": [ "SubscriptionDataReaderHistoryProvider" ],
       "setup-handler": "QuantConnect.Lean.Engine.Setup.BrokerageSetupHandler",
