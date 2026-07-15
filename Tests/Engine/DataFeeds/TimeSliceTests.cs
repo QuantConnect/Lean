@@ -217,6 +217,69 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             Assert.AreEqual(281, data[1].Value);
         }
 
+        [Test]
+        public void ExternalEquityUpdatesShareReadOnlyData()
+        {
+            var config = new SubscriptionDataConfig(
+                typeof(TradeBar), Symbols.SPY, Resolution.Minute, TimeZones.Utc, TimeZones.Utc, true, false, false);
+            var timeSlice = CreateTimeSlice(config, new TradeBar { Symbol = Symbols.SPY, Time = DateTime.UtcNow, Value = 100 });
+
+            Assert.AreEqual(1, timeSlice.SecuritiesUpdateData.Count);
+            Assert.AreEqual(1, timeSlice.ConsolidatorUpdateData.Count);
+
+            var securityData = timeSlice.SecuritiesUpdateData[0].Data;
+            var consolidatorData = timeSlice.ConsolidatorUpdateData[0].Data;
+            Assert.AreSame(securityData, consolidatorData);
+            Assert.Throws<NotSupportedException>(() => ((IList<BaseData>)securityData).Add(new TradeBar()));
+        }
+
+        [TestCase(SecurityType.Option)]
+        [TestCase(SecurityType.Future)]
+        public void DerivativeUpdatesUseDistinctData(SecurityType securityType)
+        {
+            var symbol = securityType == SecurityType.Option
+                ? Symbols.SPY_C_192_Feb19_2016
+                : Symbols.Fut_SPY_Mar19_2016;
+            var config = new SubscriptionDataConfig(
+                typeof(TradeBar), symbol, Resolution.Minute, TimeZones.Utc, TimeZones.Utc, true, false, false);
+            var timeSlice = CreateTimeSlice(config, new TradeBar { Symbol = symbol, Time = DateTime.UtcNow, Value = 100 });
+
+            var securityUpdate = timeSlice.SecuritiesUpdateData.Single(update => update.Target.Symbol == symbol);
+            var consolidatorUpdate = timeSlice.ConsolidatorUpdateData.Single(update => update.Target.Symbol == symbol);
+            Assert.AreNotSame(securityUpdate.Data, consolidatorUpdate.Data);
+        }
+
+        [Test]
+        public void InternalFeedOnlyCreatesSecurityUpdateData()
+        {
+            var config = new SubscriptionDataConfig(
+                typeof(TradeBar), Symbols.SPY, Resolution.Minute, TimeZones.Utc, TimeZones.Utc, true, false, true);
+            var timeSlice = CreateTimeSlice(config, new TradeBar { Symbol = Symbols.SPY, Time = DateTime.UtcNow, Value = 100 });
+
+            Assert.AreEqual(1, timeSlice.SecuritiesUpdateData.Count);
+            Assert.AreEqual(0, timeSlice.ConsolidatorUpdateData.Count);
+            Assert.IsTrue(timeSlice.SecuritiesUpdateData[0].IsInternalConfig);
+        }
+
+        private TimeSlice CreateTimeSlice(SubscriptionDataConfig config, BaseData data)
+        {
+            var security = GetSecurity(config);
+            var packets = new List<DataFeedPacket>();
+            if (security is Option option)
+            {
+                var underlying = new TradeBar { Symbol = option.Underlying.Symbol, Time = data.Time, Value = 100 };
+                packets.Add(new DataFeedPacket(option.Underlying, option.Underlying.SubscriptionDataConfig,
+                    new List<BaseData> { underlying }));
+            }
+            packets.Add(new DataFeedPacket(security, config, new List<BaseData> { data }));
+
+            return _timeSliceFactory.Create(
+                data.Time,
+                packets,
+                SecurityChangesTests.CreateNonInternal(Enumerable.Empty<Security>(), Enumerable.Empty<Security>()),
+                new Dictionary<Universe, BaseDataCollection>());
+        }
+
         private IEnumerable<Slice> GetSlices(Symbol symbol, int initialVolume)
         {
             var dataType = symbol.SecurityType.IsOption() ? typeof(OptionUniverse) : typeof(FutureUniverse);

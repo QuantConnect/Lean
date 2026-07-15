@@ -172,8 +172,13 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     custom.Add(new UpdateData<ISecurityPrice>(packet.Security, packet.Configuration.Type, list, packet.Configuration.IsInternalFeed));
                 }
 
+                var canShareUpdateData = !packet.Configuration.IsInternalFeed
+                    && !symbol.SecurityType.IsOption()
+                    && symbol.SecurityType != SecurityType.Future;
                 var securityUpdate = new List<BaseData>(list.Count);
-                var consolidatorUpdate = new List<BaseData>(list.Count);
+                var consolidatorUpdate = canShareUpdateData
+                    ? securityUpdate
+                    : new List<BaseData>(list.Count);
                 var containsFillForwardData = false;
                 for (var i = 0; i < list.Count; i++)
                 {
@@ -316,7 +321,10 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                         // do not add it if it is a Suspicious tick
                         if (tick != null && tick.Suspicious) continue;
 
-                        securityUpdate.Add(baseData);
+                        if (!canShareUpdateData)
+                        {
+                            securityUpdate.Add(baseData);
+                        }
 
                         // option underlying security update
                         if (!packet.Configuration.IsInternalFeed)
@@ -376,11 +384,17 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     }
                 }
 
-                if (securityUpdate.Count > 0)
+                if (canShareUpdateData && securityUpdate.Count > 0)
+                {
+                    var updateData = securityUpdate.AsReadOnly();
+                    security.Add(new UpdateData<ISecurityPrice>(packet.Security, packet.Configuration.Type, updateData, false, containsFillForwardData));
+                    consolidator.Add(new UpdateData<SubscriptionDataConfig>(packet.Configuration, packet.Configuration.Type, updateData, false, containsFillForwardData));
+                }
+                else if (securityUpdate.Count > 0)
                 {
                     security.Add(new UpdateData<ISecurityPrice>(packet.Security, packet.Configuration.Type, securityUpdate, packet.Configuration.IsInternalFeed, containsFillForwardData));
                 }
-                if (consolidatorUpdate.Count > 0)
+                if (!canShareUpdateData && consolidatorUpdate.Count > 0)
                 {
                     consolidator.Add(new UpdateData<SubscriptionDataConfig>(packet.Configuration, packet.Configuration.Type, consolidatorUpdate, packet.Configuration.IsInternalFeed, containsFillForwardData));
                 }
