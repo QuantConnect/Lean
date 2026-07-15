@@ -18,7 +18,7 @@ namespace QuantConnect.Orders
     /// <summary>
     /// Trading Technologies order properties
     /// </summary>
-    public class TradingTechnologiesOrderProperties : FixOrderProperites
+    public class TradingTechnologiesOrderProperties : FixOrderProperties
     {
     }
 }
