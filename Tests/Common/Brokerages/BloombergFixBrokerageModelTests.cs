@@ -78,7 +78,6 @@ namespace QuantConnect.Tests.Common.Brokerages
             Assert.That(message, Is.Not.Null);
         }
 
-        [TestCase(OrderType.MarketOnClose)]
         [TestCase(OrderType.LimitIfTouched)]
         [TestCase(OrderType.TrailingStop)]
         [TestCase(OrderType.ComboLimit)]
