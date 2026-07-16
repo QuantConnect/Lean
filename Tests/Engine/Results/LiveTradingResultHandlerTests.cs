@@ -19,10 +19,13 @@ using System.Linq;
 using System.Threading;
 using System.Diagnostics;
 using NUnit.Framework;
+using QuantConnect.Orders;
 using QuantConnect.Packets;
 using QuantConnect.Logging;
 using QuantConnect.Securities;
 using QuantConnect.Interfaces;
+using QuantConnect.Data.Market;
+using QuantConnect.Orders.Fees;
 using QuantConnect.Configuration;
 using QuantConnect.Lean.Engine.Results;
 using QuantConnect.Lean.Engine.DataFeeds;
@@ -332,16 +335,30 @@ namespace QuantConnect.Tests.Engine.Results
                 var algorithm = new AlgorithmStub(createDataManager: false);
                 var dataManager = new DataManagerStub(new TestDataFeed(), algorithm);
                 algorithm.SubscriptionManager.SetDataManager(dataManager);
-                var spy = algorithm.AddEquity("SPY");
+                // crypto markets are always open, so the market orders fill right away regardless of when the test runs
+                var btc = algorithm.AddCrypto("BTCUSD", Resolution.Minute, Market.Coinbase);
+                btc.SetFeeModel(new ConstantFeeModel(0));
+                // the price time must be fresh relative to the order submission time (algorithm utc time) for the fills to happen
+                btc.SetMarketPrice(new TradeBar(algorithm.UtcTime.ConvertFromUtc(btc.Exchange.TimeZone), btc.Symbol, 100, 100, 100, 100, 100));
                 algorithm.PostInitialize();
 
                 var transactionHandler = new BacktestingTransactionHandler();
                 using var brokerage = new BacktestingBrokerage(algorithm);
                 transactionHandler.Initialize(algorithm, brokerage, resultHandler);
+                algorithm.Transactions.SetOrderProcessor(transactionHandler);
 
                 resultHandler.Initialize(new(new LiveNodePacket(), messaging, api, transactionHandler, null));
                 resultHandler.SetAlgorithm(algorithm, 100000);
                 algorithm.SetLocked();
+
+                // places an order for the given quantity, changing the holdings when it fills
+                OrderTicket Trade(decimal quantity, OrderType orderType = OrderType.Market, decimal limitPrice = 0)
+                {
+                    var ticket = algorithm.Transactions.ProcessRequest(new SubmitOrderRequest(orderType, btc.Symbol.SecurityType,
+                        btc.Symbol, quantity, 0, limitPrice, algorithm.UtcTime, string.Empty));
+                    brokerage.Scan();
+                    return ticket;
+                }
 
                 var expectedStores = 1;
                 // the first update pass always stores because the scheduled store is due right away
@@ -350,8 +367,8 @@ namespace QuantConnect.Tests.Engine.Results
                 // without holdings changes, no store is forced even after the settle delay elapses
                 Assert.IsFalse(resultHandler.WaitForStore(expectedStores + 1, settleDelay + TimeSpan.FromSeconds(1)), "A store happened without holdings changes");
 
-                // a position is opened for an existing security
-                spy.Holdings.SetHoldings(100, 10);
+                // a position is opened
+                Trade(10);
                 var stopwatch = Stopwatch.StartNew();
 
                 // no store is forced before the holdings settle
@@ -360,28 +377,26 @@ namespace QuantConnect.Tests.Engine.Results
                 Assert.IsTrue(resultHandler.WaitForStore(++expectedStores, settleDelay + TimeSpan.FromSeconds(5)), "No store was forced after the opened position settled");
                 Assert.GreaterOrEqual(stopwatch.Elapsed, settleDelay);
 
-                // the existing position is increased
-                spy.Holdings.SetHoldings(100, 20);
+                // the position is increased
+                Trade(10);
                 Assert.IsTrue(resultHandler.WaitForStore(++expectedStores, settleDelay + TimeSpan.FromSeconds(5)), "No store was forced after the increased position settled");
 
-                // the existing position is reduced
-                spy.Holdings.SetHoldings(100, 5);
+                // the position is reduced
+                Trade(-5);
                 Assert.IsTrue(resultHandler.WaitForStore(++expectedStores, settleDelay + TimeSpan.FromSeconds(5)), "No store was forced after the reduced position settled");
 
-                // a security added after the algorithm started is monitored too
-                var aapl = algorithm.AddEquity("AAPL");
-                aapl.Holdings.SetHoldings(200, 10);
-                Assert.IsTrue(resultHandler.WaitForStore(++expectedStores, settleDelay + TimeSpan.FromSeconds(5)), "No store was forced after the added security holdings settled");
+                // order events without fills don't force stores: a limit order far from the market price
+                // is submitted and then canceled without ever changing the holdings
+                var ticket = Trade(1, OrderType.Limit, limitPrice: 1);
+                ticket.Cancel();
+                Assert.IsFalse(resultHandler.WaitForStore(expectedStores + 1, settleDelay + TimeSpan.FromSeconds(1)), "A store was forced for order events without fills");
 
-                // the added security position is liquidated before removing it, like QCAlgorithm.RemoveSecurity does
-                aapl.Holdings.SetHoldings(200, 0);
+                // the position is liquidated
+                Trade(-15);
                 Assert.IsTrue(resultHandler.WaitForStore(++expectedStores, settleDelay + TimeSpan.FromSeconds(5)), "No store was forced after the liquidation settled");
 
-                // once the security is removed, its holdings are no longer monitored.
-                // this will also fail if any of the previous changes forced more than one store
-                algorithm.Securities.Remove(aapl.Symbol);
-                aapl.Holdings.SetHoldings(200, 10);
-                Assert.IsFalse(resultHandler.WaitForStore(expectedStores + 1, settleDelay + TimeSpan.FromSeconds(1)), "A store was forced for a removed security");
+                // a single settled change forces a single store
+                Assert.IsFalse(resultHandler.WaitForStore(expectedStores + 1, settleDelay + TimeSpan.FromSeconds(1)), "More than one store was forced for a single holdings change");
             }
             finally
             {

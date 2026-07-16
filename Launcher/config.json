@@ -6,17 +6,20 @@
   // two predefined environments, 'backtesting' and 'live', feel free
   // to add more!
 
-  "environment": "backtesting", // "live-paper", "backtesting", "live-interactive", "live-interactive-iqfeed"
+  "environment": "live-paper", // "live-paper", "backtesting", "live-interactive", "live-interactive-iqfeed"
 
   // algorithm class selector
-  "algorithm-type-name": "BasicTemplateFrameworkAlgorithm",
+  "algorithm-type-name": "CryptoHoldingsBatchUpdatesAlgorithm",
 
   // Algorithm language selector - options CSharp, Python
-  "algorithm-language": "CSharp",
+  "algorithm-language": "Python",
 
   //Physical DLL location
-  "algorithm-location": "QuantConnect.Algorithm.CSharp.dll",
-  //"algorithm-location": "../../../Algorithm.Python/BasicTemplateFrameworkAlgorithm.py",
+  //"algorithm-location": "QuantConnect.Algorithm.CSharp.dll",
+  "algorithm-location": "../../../Algorithm.Python/CryptoHoldingsBatchUpdatesAlgorithm.py",
+
+  // show debug logs, including the result handler store logs
+  "debug-mode": true,
 
   //Research notebook
   //"composer-dll-directory": ".",
@@ -92,7 +95,7 @@
   "live-data-port": 8020,
 
   // live portfolio state
-  "live-cash-balance": "",
+  "live-cash-balance": "[{\"currency\":\"USD\",\"amount\":100000}]",
   "live-holdings": "[]",
 
   // interactive brokers configuration
@@ -385,7 +388,7 @@
       "setup-handler": "QuantConnect.Lean.Engine.Setup.BrokerageSetupHandler",
       "result-handler": "QuantConnect.Lean.Engine.Results.LiveTradingResultHandler",
       "data-feed-handler": "QuantConnect.Lean.Engine.DataFeeds.LiveTradingDataFeed",
-      "data-queue-handler": [ "QuantConnect.Lean.Engine.DataFeeds.Queues.LiveDataQueue" ],
+      "data-queue-handler": [ "QuantConnect.Lean.Engine.DataFeeds.Queues.FakeDataQueue" ],
       "real-time-handler": "QuantConnect.Lean.Engine.RealTime.LiveTradingRealTimeHandler",
       "transaction-handler": "QuantConnect.Lean.Engine.TransactionHandlers.BacktestingTransactionHandler"
     },

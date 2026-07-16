@@ -16,7 +16,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Collections.Specialized;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
@@ -111,6 +110,9 @@ namespace QuantConnect.Lean.Engine.Results
             _currentUtcDate = utcNow.Date;
 
             _nextPortfolioMarginUpdate = utcNow.RoundDown(_samplePortfolioPeriod).Add(_samplePortfolioPeriod);
+
+            _holdingsChangeMonitor.Monitor(parameters.TransactionHandler);
+
             base.Initialize(parameters);
         }
 
@@ -776,8 +778,6 @@ namespace QuantConnect.Lean.Engine.Results
             base.SetAlgorithm(algorithm, startingPortfolioValue);
             Algorithm.SetStatisticsService(this);
 
-            _holdingsChangeMonitor.Monitor(algorithm.Securities);
-
             // we need to forward Console.Write messages to the algorithm's Debug function
             var debug = new FuncTextWriter(algorithm.Debug);
             var error = new FuncTextWriter(algorithm.Error);
@@ -1351,8 +1351,9 @@ namespace QuantConnect.Lean.Engine.Results
         }
 
         /// <summary>
-        /// Monitors the securities holdings for quantity changes so the update loop can force a store
-        /// of the full results once the changes settle, without waiting for the next scheduled store
+        /// Monitors the order events, keeping track of the last time the holdings changed by filtering fills,
+        /// so the update loop can force a store of the full results once the changes settle,
+        /// without waiting for the next scheduled store
         /// </summary>
         private class HoldingsChangeMonitor
         {
@@ -1363,33 +1364,11 @@ namespace QuantConnect.Lean.Engine.Results
             private long _lastStoredTicks;
 
             /// <summary>
-            /// Monitors each security holding for quantity changes,
-            /// including securities added and removed after the algorithm starts
+            /// Monitors the order events to keep track of the last time the holdings changed
             /// </summary>
-            public void Monitor(SecurityManager securities)
+            public void Monitor(IOrderEventProvider orderEventProvider)
             {
-                foreach (var security in securities.Values)
-                {
-                    security.Holdings.QuantityChanged += HoldingsOnQuantityChanged;
-                }
-
-                securities.CollectionChanged += (sender, args) =>
-                {
-                    if (args.Action == NotifyCollectionChangedAction.Add)
-                    {
-                        foreach (var security in args.NewItems.OfType<Security>())
-                        {
-                            security.Holdings.QuantityChanged += HoldingsOnQuantityChanged;
-                        }
-                    }
-                    else if (args.Action == NotifyCollectionChangedAction.Remove)
-                    {
-                        foreach (var security in args.OldItems.OfType<Security>())
-                        {
-                            security.Holdings.QuantityChanged -= HoldingsOnQuantityChanged;
-                        }
-                    }
-                };
+                orderEventProvider.NewOrderEvent += OnNewOrderEvent;
             }
 
             /// <summary>
@@ -1418,9 +1397,12 @@ namespace QuantConnect.Lean.Engine.Results
                 _lastStoredTicks = _snapshotTicks;
             }
 
-            private void HoldingsOnQuantityChanged(object sender, SecurityHoldingQuantityChangedEventArgs e)
+            private void OnNewOrderEvent(object sender, OrderEvent orderEvent)
             {
-                Interlocked.Exchange(ref _lastChangedTicks, DateTime.UtcNow.Ticks);
+                if (orderEvent.Status.IsFill())
+                {
+                    Interlocked.Exchange(ref _lastChangedTicks, DateTime.UtcNow.Ticks);
+                }
             }
         }
     }
