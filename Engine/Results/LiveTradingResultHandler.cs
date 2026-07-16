@@ -16,6 +16,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Collections.Specialized;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
@@ -58,6 +59,12 @@ namespace QuantConnect.Lean.Engine.Results
 
         private readonly TimeSpan _storeInsightPeriod;
 
+        // Holdings change monitoring: once holdings change and settle for the configured period,
+        // we force a store of the full results without waiting for the next scheduled store
+        private readonly TimeSpan _holdingsChangedStoreDelay;
+        private long _lastHoldingsChangedTicks;
+        private long _lastStoredHoldingsChangedTicks;
+
         private DateTime _nextPortfolioMarginUpdate;
         private DateTime _previousPortfolioMarginUpdate;
         private readonly TimeSpan _samplePortfolioPeriod;
@@ -93,6 +100,7 @@ namespace QuantConnect.Lean.Engine.Results
             _samplePortfolioPeriod = _storeInsightPeriod = TimeSpan.FromMinutes(10);
             _streamedChartLimit = Config.GetInt("streamed-chart-limit", 12);
             _streamedChartGroupSize = Config.GetInt("streamed-chart-group-size", 3);
+            _holdingsChangedStoreDelay = TimeSpan.FromSeconds(Config.GetDouble("holdings-changed-store-delay", 10));
         }
 
         /// <summary>
@@ -212,6 +220,9 @@ namespace QuantConnect.Lean.Engine.Results
 
                     //Profit loss changes, get the banner statistics, summary information on the performance for the headers.
                     var serverStatistics = GetServerStatistics(utcNow);
+                    // read the last holdings change time before taking the snapshot so a change slipping in
+                    // between the snapshot and the store is never marked as stored
+                    var lastHoldingsChangedTicks = Interlocked.Read(ref _lastHoldingsChangedTicks);
                     var holdings = GetHoldings(Algorithm.Securities.Values, Algorithm.SubscriptionManager.SubscriptionDataConfigService);
 
                     //Add the algorithm statistics first.
@@ -235,8 +246,12 @@ namespace QuantConnect.Lean.Engine.Results
                         MessagingHandler.Send(liveResultPacket);
                     }
 
-                    //Send full packet to storage.
-                    if (utcNow > _nextChartsUpdate)
+                    // Send full packet to storage. Holdings changes not yet persisted force a store once they
+                    // have settled for the configured delay, so the stored results reflect fills quickly
+                    // instead of waiting for the next scheduled store
+                    var holdingsSettled = lastHoldingsChangedTicks > _lastStoredHoldingsChangedTicks
+                        && utcNow.Ticks >= lastHoldingsChangedTicks + _holdingsChangedStoreDelay.Ticks;
+                    if (utcNow > _nextChartsUpdate || holdingsSettled)
                     {
                         Log.Debug("LiveTradingResultHandler.Update(): Pre-store result");
                         var chartComplete = new Dictionary<string, Chart>();
@@ -258,6 +273,7 @@ namespace QuantConnect.Lean.Engine.Results
                             Algorithm.Transactions.TransactionRecord, holdings, Algorithm.Portfolio.CashBook, deltaStatistics,
                             runtimeStatistics, orderEvents, statistics.TotalPerformance, serverStatistics, state: GetAlgorithmState())));
                         StoreResult(complete);
+                        _lastStoredHoldingsChangedTicks = lastHoldingsChangedTicks;
                         _nextChartsUpdate = DateTime.UtcNow.Add(ChartUpdateInterval);
                         Log.Debug("LiveTradingResultHandler.Update(): End-store result");
                     }
@@ -769,6 +785,37 @@ namespace QuantConnect.Lean.Engine.Results
             base.SetAlgorithm(algorithm, startingPortfolioValue);
             Algorithm.SetStatisticsService(this);
 
+            // we must be notified each time our holdings change, so each time a security is added, we
+            // want to bind to its SecurityHolding.QuantityChanged event, to force a results store once they settle
+            foreach (var security in algorithm.Securities.Values)
+            {
+                security.Holdings.QuantityChanged += HoldingsOnQuantityChanged;
+            }
+
+            algorithm.Securities.CollectionChanged += (sender, args) =>
+            {
+                var items = args.NewItems ?? new List<object>();
+                if (args.OldItems != null)
+                {
+                    foreach (var item in args.OldItems)
+                    {
+                        items.Add(item);
+                    }
+                }
+
+                foreach (Security security in items)
+                {
+                    if (args.Action == NotifyCollectionChangedAction.Add)
+                    {
+                        security.Holdings.QuantityChanged += HoldingsOnQuantityChanged;
+                    }
+                    else if (args.Action == NotifyCollectionChangedAction.Remove)
+                    {
+                        security.Holdings.QuantityChanged -= HoldingsOnQuantityChanged;
+                    }
+                }
+            };
+
             // we need to forward Console.Write messages to the algorithm's Debug function
             var debug = new FuncTextWriter(algorithm.Debug);
             var error = new FuncTextWriter(algorithm.Error);
@@ -776,6 +823,15 @@ namespace QuantConnect.Lean.Engine.Results
             Console.SetError(error);
 
             UpdateAlgorithmStatus();
+        }
+
+        /// <summary>
+        /// Keeps track of the last time any security holding quantity changed, so the update loop
+        /// can force a results store once holdings have settled
+        /// </summary>
+        private void HoldingsOnQuantityChanged(object sender, SecurityHoldingQuantityChangedEventArgs e)
+        {
+            Interlocked.Exchange(ref _lastHoldingsChangedTicks, DateTime.UtcNow.Ticks);
         }
 
         /// <summary>

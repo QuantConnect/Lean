@@ -16,14 +16,19 @@
 
 using System;
 using System.Linq;
+using System.Threading;
+using System.Diagnostics;
 using NUnit.Framework;
 using QuantConnect.Packets;
+using QuantConnect.Logging;
 using QuantConnect.Securities;
 using QuantConnect.Interfaces;
+using QuantConnect.Configuration;
 using QuantConnect.Lean.Engine.Results;
 using QuantConnect.Lean.Engine.DataFeeds;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Tests.Engine.DataFeeds;
+using QuantConnect.Brokerages.Backtesting;
 using QuantConnect.Lean.Engine.TransactionHandlers;
 using QuantConnect.Tests.Common.Data.UniverseSelection;
 using QuantConnect.Data.Custom.IconicTypes;
@@ -313,9 +318,119 @@ namespace QuantConnect.Tests.Engine.Results
                 .Select(v => (v.Time, v.Open, v.High, v.Low, v.Close)).ToList());
         }
 
+        [Test]
+        public void HoldingsChangeForcesResultsStoreOnceSettled()
+        {
+            var settleDelay = TimeSpan.FromSeconds(2);
+            Config.Set("holdings-changed-store-delay", settleDelay.TotalSeconds.ToStringInvariant());
+            using var api = new Api.Api();
+            using var messaging = new QuantConnect.Messaging.Messaging();
+            var resultHandler = new TestableForceStoreOnSettledHoldingsResultHandler();
+
+            try
+            {
+                var algorithm = new AlgorithmStub(createDataManager: false);
+                var dataManager = new DataManagerStub(new TestDataFeed(), algorithm);
+                algorithm.SubscriptionManager.SetDataManager(dataManager);
+                var spy = algorithm.AddEquity("SPY");
+                algorithm.PostInitialize();
+
+                var transactionHandler = new BacktestingTransactionHandler();
+                using var brokerage = new BacktestingBrokerage(algorithm);
+                transactionHandler.Initialize(algorithm, brokerage, resultHandler);
+
+                resultHandler.Initialize(new(new LiveNodePacket(), messaging, api, transactionHandler, null));
+                resultHandler.SetAlgorithm(algorithm, 100000);
+                algorithm.SetLocked();
+
+                var expectedStores = 1;
+                // the first update pass always stores because the scheduled store is due right away
+                Assert.IsTrue(resultHandler.WaitForStore(expectedStores, TimeSpan.FromSeconds(30)), "Initial scheduled store did not happen");
+
+                // without holdings changes, no store is forced even after the settle delay elapses
+                Assert.IsFalse(resultHandler.WaitForStore(expectedStores + 1, settleDelay + TimeSpan.FromSeconds(1)), "A store happened without holdings changes");
+
+                // a position is opened for an existing security
+                spy.Holdings.SetHoldings(100, 10);
+                var stopwatch = Stopwatch.StartNew();
+
+                // no store is forced before the holdings settle
+                Assert.IsFalse(resultHandler.WaitForStore(expectedStores + 1, TimeSpan.FromSeconds(1)), "A store was forced before the holdings settled");
+                // but once they settle, a store is forced without waiting for the scheduled one
+                Assert.IsTrue(resultHandler.WaitForStore(++expectedStores, settleDelay + TimeSpan.FromSeconds(5)), "No store was forced after the opened position settled");
+                Assert.GreaterOrEqual(stopwatch.Elapsed, settleDelay);
+
+                // the existing position is increased
+                spy.Holdings.SetHoldings(100, 20);
+                Assert.IsTrue(resultHandler.WaitForStore(++expectedStores, settleDelay + TimeSpan.FromSeconds(5)), "No store was forced after the increased position settled");
+
+                // the existing position is reduced
+                spy.Holdings.SetHoldings(100, 5);
+                Assert.IsTrue(resultHandler.WaitForStore(++expectedStores, settleDelay + TimeSpan.FromSeconds(5)), "No store was forced after the reduced position settled");
+
+                // a security added after the algorithm started is monitored too
+                var aapl = algorithm.AddEquity("AAPL");
+                aapl.Holdings.SetHoldings(200, 10);
+                Assert.IsTrue(resultHandler.WaitForStore(++expectedStores, settleDelay + TimeSpan.FromSeconds(5)), "No store was forced after the added security holdings settled");
+
+                // the added security position is liquidated before removing it, like QCAlgorithm.RemoveSecurity does
+                aapl.Holdings.SetHoldings(200, 0);
+                Assert.IsTrue(resultHandler.WaitForStore(++expectedStores, settleDelay + TimeSpan.FromSeconds(5)), "No store was forced after the liquidation settled");
+
+                // once the security is removed, its holdings are no longer monitored.
+                // this will also fail if any of the previous changes forced more than one store
+                algorithm.Securities.Remove(aapl.Symbol);
+                aapl.Holdings.SetHoldings(200, 10);
+                Assert.IsFalse(resultHandler.WaitForStore(expectedStores + 1, settleDelay + TimeSpan.FromSeconds(1)), "A store was forced for a removed security");
+            }
+            finally
+            {
+                resultHandler.Exit();
+                Config.Reset();
+            }
+        }
+
         private class TestableLiveTradingResultHandler : LiveTradingResultHandler
         {
             public void PublicTrimCharts(DateTime utcNow) => TrimCharts(utcNow);
+        }
+
+        private class TestableForceStoreOnSettledHoldingsResultHandler : LiveTradingResultHandler
+        {
+            private int _storeCount;
+
+            // speed up the update loop so the test can use short settle delays
+            protected override TimeSpan MainUpdateInterval => TimeSpan.FromMilliseconds(100);
+
+            public TestableForceStoreOnSettledHoldingsResultHandler()
+            {
+                // keep the scheduled store out of the way so only forced stores happen after the initial one
+                ChartUpdateInterval = TimeSpan.FromMinutes(10);
+            }
+
+            public bool WaitForStore(int count, TimeSpan timeout)
+            {
+                var start = DateTime.UtcNow;
+                while (DateTime.UtcNow - start < timeout)
+                {
+                    if (Interlocked.CompareExchange(ref _storeCount, 0, 0) >= count)
+                    {
+                        return true;
+                    }
+                    Thread.Sleep(50);
+                }
+                return Interlocked.CompareExchange(ref _storeCount, 0, 0) >= count;
+            }
+
+            protected override void StoreResult(Packet packet)
+            {
+                Interlocked.Increment(ref _storeCount);
+            }
+
+            public override string SaveLogs(string id, List<LogEntry> logs)
+            {
+                return string.Empty;
+            }
         }
 
         private class TestDataFeed : IDataFeed
