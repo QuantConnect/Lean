@@ -53,8 +53,8 @@ class OptionUniverseRemovedAndReAddedRegressionAlgorithm(QCAlgorithm):
 
     def on_end_of_algorithm(self):
         if not self._readded:
-            raise Exception("The option universe was never removed and re-added")
+            raise RegressionTestException("The option universe was never removed and re-added")
         if self._chains_before == 0:
-            raise Exception("Expected option chain data before the universe was removed")
+            raise RegressionTestException("Expected option chain data before the universe was removed")
         if self._chains_after == 0:
-            raise Exception("Expected option chain data after the universe was re-added")
+            raise RegressionTestException("Expected option chain data after the universe was re-added")
