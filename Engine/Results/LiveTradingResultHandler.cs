@@ -1391,7 +1391,7 @@ namespace QuantConnect.Lean.Engine.Results
             {
                 if (orderEvent.Status.IsFill())
                 {
-                    Interlocked.Exchange(ref _lastChangedTicks, DateTime.UtcNow.Ticks);
+                    Interlocked.Exchange(ref _lastChangedTicks, orderEvent.UtcTime.Ticks);
                 }
             }
         }

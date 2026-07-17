@@ -335,6 +335,10 @@ namespace QuantConnect.Tests.Engine.Results
                 var algorithm = new AlgorithmStub(createDataManager: false);
                 var dataManager = new DataManagerStub(new TestDataFeed(), algorithm);
                 algorithm.SubscriptionManager.SetDataManager(dataManager);
+                // live algorithms run on wall-clock time, which the order event times the monitor tracks are in sync with
+                algorithm.SetDateTime(DateTime.UtcNow);
+                // normally initialized by the setup handlers, required for statistics generation
+                algorithm.Settings.TradingDaysPerYear = 365;
                 // crypto markets are always open, so the market orders fill right away regardless of when the test runs
                 var btc = algorithm.AddCrypto("BTCUSD", Resolution.Minute, Market.Coinbase);
                 btc.SetFeeModel(new ConstantFeeModel(0));
@@ -354,6 +358,9 @@ namespace QuantConnect.Tests.Engine.Results
                 // places an order for the given quantity, changing the holdings when it fills
                 OrderTicket Trade(decimal quantity, OrderType orderType = OrderType.Market, decimal limitPrice = 0)
                 {
+                    // keep the algorithm clock in sync with wall-clock time like in live trading,
+                    // so the order events are stamped with current times
+                    algorithm.SetDateTime(DateTime.UtcNow);
                     var ticket = algorithm.Transactions.ProcessRequest(new SubmitOrderRequest(orderType, btc.Symbol.SecurityType,
                         btc.Symbol, quantity, 0, limitPrice, algorithm.UtcTime, string.Empty));
                     brokerage.Scan();
@@ -367,9 +374,10 @@ namespace QuantConnect.Tests.Engine.Results
                 // without holdings changes, no store is forced even after the settle delay elapses
                 Assert.IsFalse(resultHandler.WaitForStore(expectedStores + 1, settleDelay + TimeSpan.FromSeconds(1)), "A store happened without holdings changes");
 
-                // a position is opened
-                Trade(10);
+                // a position is opened. The stopwatch is started before trading so the elapsed time
+                // is measured from no later than the order fill time
                 var stopwatch = Stopwatch.StartNew();
+                Trade(10);
 
                 // no store is forced before the holdings settle
                 Assert.IsFalse(resultHandler.WaitForStore(expectedStores + 1, TimeSpan.FromSeconds(1)), "A store was forced before the holdings settled");
