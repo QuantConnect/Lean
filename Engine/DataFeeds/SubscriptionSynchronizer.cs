@@ -183,16 +183,20 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                                     ? packet.Data
                                     : packetBaseDataCollection.Data;
 
+                                BaseDataCollection collection;
                                 if (universeData != null
-                                    && universeData.TryGetValue(subscription.Universes.Single(), out var collection))
+                                    && universeData.TryGetValue(subscription.Universes.Single(), out collection))
                                 {
                                     collection.AddRange(packetData);
                                 }
                                 else
                                 {
-                                    AddUniverseData(ref universeData, subscription.Universes.Single(),
-                                        new BaseDataCollection(frontierUtc, frontierUtc, subscription.Configuration.Symbol, packetData,
-                                            packetBaseDataCollection?.Underlying, packetBaseDataCollection?.FilteredContracts));
+                                    collection = new BaseDataCollection(frontierUtc, frontierUtc, subscription.Configuration.Symbol, packetData, packetBaseDataCollection?.Underlying, packetBaseDataCollection?.FilteredContracts);
+                                    if (universeData == null)
+                                    {
+                                        universeData = new Dictionary<Universe, BaseDataCollection>();
+                                    }
+                                    universeData[subscription.Universes.Single()] = collection;
                                 }
                             }
                         }
@@ -200,21 +204,23 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                         if (subscription.IsUniverseSelectionSubscription
                             && subscription.Universes.Single().DisposeRequested)
                         {
-                            ScheduleDisposedUniverseFinalSelection(ref universeData, subscription.Universes.Single(), frontierUtc);
+                            var universe = subscription.Universes.Single();
+                            // check if a universe selection isn't already scheduled for this disposed universe
+                            if (universeData == null || !universeData.ContainsKey(universe))
+                            {
+                                if (universeData == null)
+                                {
+                                    universeData = new Dictionary<Universe, BaseDataCollection>();
+                                }
+                                // we force trigger one last universe selection for this disposed universe, so it deselects all subscriptions it added
+                                universeData[universe] = new BaseDataCollection(frontierUtc, subscription.Configuration.Symbol);
+                            }
 
                             // we need to do this after all usages of subscription.Universes
                             OnSubscriptionFinished(subscription);
                         }
                     }
                     _perfTrackingTool.Stop(PerformanceTarget.Subscriptions);
-
-                    // process any disposed universe whose subscription was removed before we could trigger
-                    // its last selection above, e.g. a universe removed and re-added in the same time step,
-                    // so that it deselects all the members it added
-                    while (_universeSelection.TryGetPendingFinalSelection(out var pendingDisposedUniverse))
-                    {
-                        ScheduleDisposedUniverseFinalSelection(ref universeData, pendingDisposedUniverse, frontierUtc);
-                    }
 
                     if (universeData != null && universeData.Count > 0)
                     {
@@ -255,33 +261,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
                 yield return timeSlice;
             }
-        }
-
-        /// <summary>
-        /// Schedules one last universe selection for the given disposed universe, if not already scheduled,
-        /// so that it deselects all the members it added
-        /// </summary>
-        private static void ScheduleDisposedUniverseFinalSelection(ref Dictionary<Universe, BaseDataCollection> universeData,
-            Universe universe, DateTime frontierUtc)
-        {
-            // check if a universe selection isn't already scheduled for this disposed universe
-            if (universeData == null || !universeData.ContainsKey(universe))
-            {
-                AddUniverseData(ref universeData, universe, new BaseDataCollection(frontierUtc, universe.Configuration.Symbol));
-            }
-        }
-
-        /// <summary>
-        /// Adds the given universe data collection to perform selection on, lazily creating the holding dictionary
-        /// </summary>
-        private static void AddUniverseData(ref Dictionary<Universe, BaseDataCollection> universeData,
-            Universe universe, BaseDataCollection collection)
-        {
-            if (universeData == null)
-            {
-                universeData = new Dictionary<Universe, BaseDataCollection>();
-            }
-            universeData[universe] = collection;
         }
 
         /// <summary>

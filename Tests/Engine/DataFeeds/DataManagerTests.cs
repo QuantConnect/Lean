@@ -264,7 +264,8 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 new DateTime(2019, 1, 1),
                 new DateTime(2019, 1, 2));
             using var oldEnumerator = new EnqueueableEnumerator<SubscriptionData>();
-            dataFeed.Subscription = new Subscription(oldRequest, oldEnumerator, null);
+            var oldSubscription = new Subscription(oldRequest, oldEnumerator, null);
+            dataFeed.Subscription = oldSubscription;
             Assert.IsTrue(dataManager.AddSubscription(oldRequest));
 
             // the universe is removed: it gets disposed synchronously but its subscription removal
@@ -285,10 +286,17 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             var newSubscription = new Subscription(newRequest, newEnumerator, null);
             dataFeed.Subscription = newSubscription;
 
-            Assert.IsTrue(dataManager.AddSubscription(newRequest));
-
-            // the stale subscription was replaced by one belonging to the new universe
+            // the new universe's request is parked: the stale subscription stays in place until it is removed
+            Assert.IsFalse(dataManager.AddSubscription(newRequest));
             Assert.IsTrue(dataManager.DataFeedSubscriptions.TryGetValue(newConfig, out var currentSubscription));
+            Assert.AreSame(oldSubscription, currentSubscription);
+
+            // the synchronizer will remove the stale subscription in its next loop,
+            // after performing one last selection for the disposed universe
+            Assert.IsTrue(dataManager.RemoveSubscription(config));
+
+            // the parked request was re-issued: the new universe's subscription is now in place
+            Assert.IsTrue(dataManager.DataFeedSubscriptions.TryGetValue(newConfig, out currentSubscription));
             Assert.AreSame(newSubscription, currentSubscription);
             CollectionAssert.AreEqual(new[] { newUniverse }, currentSubscription.Universes);
             // the configuration is still registered for the new universe

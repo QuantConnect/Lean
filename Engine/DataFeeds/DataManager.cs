@@ -49,6 +49,9 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// so we use ConcurrentDictionary with byte value to minimize memory usage
         private readonly Dictionary<SubscriptionDataConfig, SubscriptionDataConfig> _subscriptionManagerSubscriptions = new();
 
+        /// Universe subscription requests that collided with a subscription pending removal, to be re-issued once it is removed
+        private readonly Dictionary<SubscriptionDataConfig, SubscriptionRequest> _pendingUniverseSubscriptionRequests = new();
+
         /// <summary>
         /// Event fired when a new subscription is added
         /// </summary>
@@ -255,6 +258,12 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// </summary>
         public void RemoveAllSubscriptions()
         {
+            // drop any parked universe subscription request, we don't want to re-issue them while tearing down
+            lock (_pendingUniverseSubscriptionRequests)
+            {
+                _pendingUniverseSubscriptionRequests.Clear();
+            }
+
             // remove each subscription from our collection
             foreach (var subscription in DataFeedSubscriptions)
             {
@@ -287,7 +296,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 }
             }
 
-            if (DataFeedSubscriptions.TryGetValue(request.Configuration, out var subscription))
+            Subscription subscription;
+            if (DataFeedSubscriptions.TryGetValue(request.Configuration, out subscription))
             {
                 if (!subscription.EndOfStream)
                 {
@@ -296,39 +306,22 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                         && subscription.Universes.All(universe => universe.DisposeRequested))
                     {
                         // a universe was removed and a new one with the same configuration was added in the same
-                        // time step. The old subscription removal is performed asynchronously by the synchronizer,
-                        // so we force it out now and carry on creating a new subscription for the new universe
-                        var staleUniverses = subscription.Universes.ToList();
-                        RemoveSubscriptionInternal(request.Configuration, universe: null, forceSubscriptionRemoval: true);
-
-                        // the removal above unregistered the configuration, which the new subscription requires
-                        lock (_subscriptionManagerSubscriptions)
+                        // time step. The stale subscription will be removed by the synchronizer in the next loop,
+                        // after performing one last selection for its disposed universes, so we park the new
+                        // universe's request and will re-issue it once the stale subscription is actually removed
+                        lock (_pendingUniverseSubscriptionRequests)
                         {
-                            if (_subscriptionManagerSubscriptions.TryAdd(request.Configuration, request.Configuration))
-                            {
-                                _subscriptionDataConfigsEnumerator = null;
-                            }
+                            _pendingUniverseSubscriptionRequests[request.Configuration] = request;
                         }
+                        return false;
+                    }
 
-                        // the synchronizer will not see the removed subscription, so we schedule the final
-                        // selection it would have triggered for the stale universes to deselect their members
-                        foreach (var staleUniverse in staleUniverses)
-                        {
-                            UniverseSelection.ScheduleFinalSelection(staleUniverse);
-                        }
-                    }
-                    else
-                    {
-                        // duplicate subscription request
-                        subscription.AddSubscriptionRequest(request);
-                        // only result true if the existing subscription is internal, we actually added something from the users perspective
-                        return subscription.Configuration.IsInternalFeed;
-                    }
+                    // duplicate subscription request
+                    subscription.AddSubscriptionRequest(request);
+                    // only result true if the existing subscription is internal, we actually added something from the users perspective
+                    return subscription.Configuration.IsInternalFeed;
                 }
-                else
-                {
-                    DataFeedSubscriptions.TryRemove(request.Configuration, out _);
-                }
+                DataFeedSubscriptions.TryRemove(request.Configuration, out _);
             }
 
             if (request.Configuration.DataNormalizationMode == DataNormalizationMode.ScaledRaw)
@@ -389,7 +382,9 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         private bool RemoveSubscriptionInternal(SubscriptionDataConfig configuration, Universe universe, bool forceSubscriptionRemoval)
         {
             // remove the subscription from our collection, if it exists
-            if (DataFeedSubscriptions.TryGetValue(configuration, out var subscription))
+            Subscription subscription;
+
+            if (DataFeedSubscriptions.TryGetValue(configuration, out subscription))
             {
                 // we remove the subscription when there are no other requests left
                 if (subscription.RemoveSubscriptionRequest(universe))
@@ -426,6 +421,21 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                         // this can be executed many times and its in the algorithm thread
                         Log.Debug($"DataManager.RemoveSubscription(): Removed {configuration}");
                     }
+
+                    // if a new universe with this same configuration was added while this subscription's removal was
+                    // pending, its subscription request was parked: the slot is now free, so we re-issue it.
+                    // We keep the request's original start time, which was already adjusted to the previous tradable
+                    // date when the universe was added, so that its first selection happens right away
+                    SubscriptionRequest pendingRequest;
+                    lock (_pendingUniverseSubscriptionRequests)
+                    {
+                        _pendingUniverseSubscriptionRequests.Remove(configuration, out pendingRequest);
+                    }
+                    if (pendingRequest != null && !pendingRequest.Universe.DisposeRequested)
+                    {
+                        AddSubscription(pendingRequest);
+                    }
+
                     return true;
                 }
             }

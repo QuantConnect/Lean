@@ -14,7 +14,6 @@
 */
 
 using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using QuantConnect.Benchmarks;
@@ -43,7 +42,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         private bool _initializedSecurityBenchmark;
         private bool _anyDoesNotHaveFundamentalDataWarningLogged;
         private readonly SecurityChangesConstructor _securityChangesConstructor;
-        private readonly ConcurrentQueue<Universe> _pendingDisposedUniverseSelections = new();
 
         /// <summary>
         /// Initializes a new instance of the <see cref="UniverseSelection"/> class
@@ -92,26 +90,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             {
                 _dataManager.RemoveSubscription(request.Configuration);
             };
-        }
-
-        /// <summary>
-        /// Schedules a final selection for a disposed universe whose subscription was removed
-        /// before the synchronizer could trigger it, so that it deselects all the members it added
-        /// </summary>
-        /// <param name="universe">The disposed universe requiring a final selection</param>
-        public void ScheduleFinalSelection(Universe universe)
-        {
-            _pendingDisposedUniverseSelections.Enqueue(universe);
-        }
-
-        /// <summary>
-        /// Gets the next disposed universe with a pending scheduled final selection, if any
-        /// </summary>
-        /// <param name="universe">The next disposed universe with a pending final selection</param>
-        /// <returns>True if there was a pending disposed universe final selection</returns>
-        public bool TryGetPendingFinalSelection(out Universe universe)
-        {
-            return _pendingDisposedUniverseSelections.TryDequeue(out universe);
         }
 
         /// <summary>
