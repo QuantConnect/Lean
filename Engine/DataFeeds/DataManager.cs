@@ -292,12 +292,36 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             {
                 if (!subscription.EndOfStream)
                 {
-                    // duplicate subscription request
-                    subscription.AddSubscriptionRequest(request);
-                    // only result true if the existing subscription is internal, we actually added something from the users perspective
-                    return subscription.Configuration.IsInternalFeed;
+                    if (request.IsUniverseSubscription
+                        && subscription.IsUniverseSelectionSubscription
+                        && subscription.Universes.All(universe => universe.DisposeRequested))
+                    {
+                        // GH issue 7682: a universe was removed and a new one with the same configuration was added in the
+                        // same time step. The old subscription removal is performed asynchronously by the synchronizer,
+                        // so we force it out now and carry on creating a new subscription for the new universe
+                        RemoveSubscriptionInternal(request.Configuration, universe: null, forceSubscriptionRemoval: true);
+
+                        // the removal above unregistered the configuration, which the new subscription requires
+                        lock (_subscriptionManagerSubscriptions)
+                        {
+                            if (_subscriptionManagerSubscriptions.TryAdd(request.Configuration, request.Configuration))
+                            {
+                                _subscriptionDataConfigsEnumerator = null;
+                            }
+                        }
+                    }
+                    else
+                    {
+                        // duplicate subscription request
+                        subscription.AddSubscriptionRequest(request);
+                        // only result true if the existing subscription is internal, we actually added something from the users perspective
+                        return subscription.Configuration.IsInternalFeed;
+                    }
                 }
-                DataFeedSubscriptions.TryRemove(request.Configuration, out _);
+                else
+                {
+                    DataFeedSubscriptions.TryRemove(request.Configuration, out _);
+                }
             }
 
             if (request.Configuration.DataNormalizationMode == DataNormalizationMode.ScaledRaw)
