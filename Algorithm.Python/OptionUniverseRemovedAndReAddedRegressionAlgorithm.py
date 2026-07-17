@@ -14,9 +14,9 @@
 from AlgorithmImports import *
 
 ### <summary>
-### Regression algorithm reproducing GH issue #7682: removing an option universe and re-adding
-### one for the same underlying within the same time step must not throw, and the re-added
-### universe must keep providing option chain data.
+### Regression algorithm asserting that removing an option universe and re-adding one for the
+### same underlying within the same time step does not throw, and that the re-added universe
+### keeps providing option chain data.
 ### </summary>
 class OptionUniverseRemovedAndReAddedRegressionAlgorithm(QCAlgorithm):
 

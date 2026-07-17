@@ -296,8 +296,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                         && subscription.IsUniverseSelectionSubscription
                         && subscription.Universes.All(universe => universe.DisposeRequested))
                     {
-                        // GH issue 7682: a universe was removed and a new one with the same configuration was added in the
-                        // same time step. The old subscription removal is performed asynchronously by the synchronizer,
+                        // a universe was removed and a new one with the same configuration was added in the same
+                        // time step. The old subscription removal is performed asynchronously by the synchronizer,
                         // so we force it out now and carry on creating a new subscription for the new universe
                         RemoveSubscriptionInternal(request.Configuration, universe: null, forceSubscriptionRemoval: true);
 

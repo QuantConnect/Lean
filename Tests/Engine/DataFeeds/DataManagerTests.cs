@@ -222,7 +222,6 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         }
 
         [Test]
-        // reproduces GH issue 7682
         public void ReplacesSubscriptionOfUniverseRemovedAndReAddedInSameTimeStep()
         {
             var dataPermissionManager = new DataPermissionManager();
@@ -299,7 +298,6 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         }
 
         [Test]
-        // reproduces GH issue 7682
         public void OptionUniverseCanBeRemovedAndReAddedInSameTimeStep()
         {
             AlgorithmRunner.RunLocalBacktest("OptionUniverseRemovedAndReAddedRegressionAlgorithm",
