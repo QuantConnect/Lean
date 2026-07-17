@@ -217,7 +217,6 @@ namespace QuantConnect.Lean.Engine.Results
 
                     //Profit loss changes, get the banner statistics, summary information on the performance for the headers.
                     var serverStatistics = GetServerStatistics(utcNow);
-                    _holdingsChangeMonitor.Snapshot();
                     var holdings = GetHoldings(Algorithm.Securities.Values, Algorithm.SubscriptionManager.SubscriptionDataConfigService);
 
                     //Add the algorithm statistics first.
@@ -1360,7 +1359,6 @@ namespace QuantConnect.Lean.Engine.Results
             private readonly TimeSpan _storeDelay = TimeSpan.FromSeconds(Config.GetDouble("holdings-changed-store-delay", 10));
 
             private long _lastChangedTicks;
-            private long _snapshotTicks;
             private long _lastStoredTicks;
 
             /// <summary>
@@ -1372,29 +1370,21 @@ namespace QuantConnect.Lean.Engine.Results
             }
 
             /// <summary>
-            /// Captures the last time the holdings changed. To be called before fetching the holdings
-            /// to send and store, so a change slipping in after the holdings are fetched is never marked as stored
-            /// </summary>
-            public void Snapshot()
-            {
-                _snapshotTicks = Interlocked.Read(ref _lastChangedTicks);
-            }
-
-            /// <summary>
-            /// Determines whether the captured holdings changes have not been stored yet and have
+            /// Determines whether the latest holdings changes have not been stored yet and have
             /// settled for the configured delay, in which case a results store should be forced
             /// </summary>
             public bool ShouldForceStore(DateTime utcNow)
             {
-                return _snapshotTicks > _lastStoredTicks && utcNow.Ticks >= _snapshotTicks + _storeDelay.Ticks;
+                var lastChangedTicks = Interlocked.Read(ref _lastChangedTicks);
+                return lastChangedTicks > _lastStoredTicks && utcNow.Ticks >= lastChangedTicks + _storeDelay.Ticks;
             }
 
             /// <summary>
-            /// Marks the captured holdings changes as stored
+            /// Marks the latest holdings changes as stored
             /// </summary>
             public void MarkStored()
             {
-                _lastStoredTicks = _snapshotTicks;
+                _lastStoredTicks = Interlocked.Read(ref _lastChangedTicks);
             }
 
             private void OnNewOrderEvent(object sender, OrderEvent orderEvent)
