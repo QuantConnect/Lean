@@ -287,8 +287,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 }
             }
 
-            Subscription subscription;
-            if (DataFeedSubscriptions.TryGetValue(request.Configuration, out subscription))
+            if (DataFeedSubscriptions.TryGetValue(request.Configuration, out var subscription))
             {
                 if (!subscription.EndOfStream)
                 {
@@ -390,9 +389,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         private bool RemoveSubscriptionInternal(SubscriptionDataConfig configuration, Universe universe, bool forceSubscriptionRemoval)
         {
             // remove the subscription from our collection, if it exists
-            Subscription subscription;
-
-            if (DataFeedSubscriptions.TryGetValue(configuration, out subscription))
+            if (DataFeedSubscriptions.TryGetValue(configuration, out var subscription))
             {
                 // we remove the subscription when there are no other requests left
                 if (subscription.RemoveSubscriptionRequest(universe))
