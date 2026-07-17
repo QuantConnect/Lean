@@ -299,6 +299,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                         // a universe was removed and a new one with the same configuration was added in the same
                         // time step. The old subscription removal is performed asynchronously by the synchronizer,
                         // so we force it out now and carry on creating a new subscription for the new universe
+                        var staleUniverses = subscription.Universes.ToList();
                         RemoveSubscriptionInternal(request.Configuration, universe: null, forceSubscriptionRemoval: true);
 
                         // the removal above unregistered the configuration, which the new subscription requires
@@ -308,6 +309,13 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                             {
                                 _subscriptionDataConfigsEnumerator = null;
                             }
+                        }
+
+                        // the synchronizer will not see the removed subscription, so we schedule the final
+                        // selection it would have triggered for the stale universes to deselect their members
+                        foreach (var staleUniverse in staleUniverses)
+                        {
+                            UniverseSelection.ScheduleFinalSelection(staleUniverse);
                         }
                     }
                     else

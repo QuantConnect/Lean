@@ -222,6 +222,22 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     }
                     _perfTrackingTool.Stop(PerformanceTarget.Subscriptions);
 
+                    // process any disposed universe whose subscription was removed before we could trigger
+                    // its last selection above, e.g. a universe removed and re-added in the same time step,
+                    // so that it deselects all the members it added
+                    Universe pendingDisposedUniverse;
+                    while (_universeSelection.TryGetPendingFinalSelection(out pendingDisposedUniverse))
+                    {
+                        if (universeData == null)
+                        {
+                            universeData = new Dictionary<Universe, BaseDataCollection>();
+                        }
+                        if (!universeData.ContainsKey(pendingDisposedUniverse))
+                        {
+                            universeData[pendingDisposedUniverse] = new BaseDataCollection(frontierUtc, pendingDisposedUniverse.Configuration.Symbol);
+                        }
+                    }
+
                     if (universeData != null && universeData.Count > 0)
                     {
                         // if we are going to perform universe selection we emit an empty
