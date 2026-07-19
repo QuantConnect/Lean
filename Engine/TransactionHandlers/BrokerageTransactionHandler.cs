@@ -1313,7 +1313,7 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
 
                     if (orderEvent.Status == OrderStatus.Filled || orderEvent.Status == OrderStatus.PartiallyFilled)
                     {
-                        var security = orders[i].Security;
+                        var security = _algorithm.Securities[orderEvent.Symbol];
 
                         var multiplier = security.SymbolProperties.ContractMultiplier;
                         var securityConversionRate = security.QuoteCurrency.ConversionRate;

@@ -14,11 +14,13 @@
  *
 */
 
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using QuantConnect.Data;
 using QuantConnect.Interfaces;
 using QuantConnect.Securities;
+using QuantConnect.Statistics;
 
 namespace QuantConnect.Algorithm.CSharp
 {
@@ -75,6 +77,23 @@ namespace QuantConnect.Algorithm.CSharp
                 if (Time < CallOptionSymbol.ID.Date)
                 {
                     MarketOrder(CallOptionSymbol, -1);
+                }
+            }
+        }
+
+        public override void OnEndOfAlgorithm()
+        {
+            foreach (var trade in TradeBuilder.ClosedTrades.Where(trade => trade.Symbols.Contains(Stock.Symbol)))
+            {
+                var direction = trade.Direction == TradeDirection.Long ? 1m : -1m;
+                var expectedProfitLoss = Math.Round(
+                    (trade.ExitPrice - trade.EntryPrice) * trade.Quantity * direction * Stock.SymbolProperties.ContractMultiplier,
+                    2);
+
+                if (trade.ProfitLoss != expectedProfitLoss)
+                {
+                    throw new RegressionTestException(
+                        $"Expected underlying trade profit/loss to be {expectedProfitLoss}. Actual: {trade.ProfitLoss}");
                 }
             }
         }
