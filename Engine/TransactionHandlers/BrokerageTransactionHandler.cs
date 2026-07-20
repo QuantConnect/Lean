@@ -1186,7 +1186,10 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
                         return;
                     }
 
-                    orders.Add(new OpenOrderState(order, ticket, security ?? _algorithm.Securities[order.Symbol]));
+                    // we take the order event symbol security to make sure to match the actual traded asset:
+                    // for order exercises, the underlying security events are traded under the same option order id,
+                    // but the order event symbol is the underlying security, not the option contract.
+                    orders.Add(new OpenOrderState(order, ticket, security != null && security.Symbol == orderEvent.Symbol ? security : _algorithm.Securities[orderEvent.Symbol]));
                     orderEvent.Ticket = ticket;
                 }
 

@@ -47,3 +47,22 @@ class OptionAssignmentRegressionAlgorithm(QCAlgorithm):
 
             if self.time < self.call_option_symbol.id.date:
                 self.market_order(self.call_option_symbol, -1)
+
+    def get_security(self, symbol):
+        if symbol == self.stock.symbol:
+            return self.stock
+        if symbol == self.call_option_symbol:
+            return self.call_option
+        if symbol == self.put_option_symbol:
+            return self.put_option
+        raise RegressionTestException(f"Unexpected symbol: {symbol}")
+
+    def on_end_of_algorithm(self):
+        for trade in self.trade_builder.closed_trades:
+            symbol, = trade.symbols
+            direction = 1 if trade.direction == TradeDirection.LONG else -1
+            multiplier = self.get_security(symbol).symbol_properties.contract_multiplier
+            expected_profit_loss = round((trade.exit_price - trade.entry_price) * trade.quantity * direction * multiplier, 2)
+
+            if trade.profit_loss != expected_profit_loss:
+                raise RegressionTestException(f"Expected underlying trade profit/loss to be {expected_profit_loss}. Actual: {trade.profit_loss}")
