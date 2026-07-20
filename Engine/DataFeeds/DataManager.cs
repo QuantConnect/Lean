@@ -313,7 +313,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                         {
                             _pendingUniverseSubscriptionRequests[request.Configuration] = request;
                         }
-                        return false;
+                        return true;
                     }
 
                     // duplicate subscription request

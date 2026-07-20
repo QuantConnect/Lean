@@ -287,7 +287,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             dataFeed.Subscription = newSubscription;
 
             // the new universe's request is parked: the stale subscription stays in place until it is removed
-            Assert.IsFalse(dataManager.AddSubscription(newRequest));
+            Assert.IsTrue(dataManager.AddSubscription(newRequest));
             Assert.IsTrue(dataManager.DataFeedSubscriptions.TryGetValue(newConfig, out var currentSubscription));
             Assert.AreSame(oldSubscription, currentSubscription);
 
