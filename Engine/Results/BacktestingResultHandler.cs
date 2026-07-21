@@ -228,6 +228,11 @@ namespace QuantConnect.Lean.Engine.Results
                         // we store the last 100 order events, the final packet will contain the full list
                         TransactionHandler.OrderEvents.Reverse().Take(100).ToList(), state: GetAlgorithmState()));
 
+                    if (RunResultsAnalysis)
+                    {
+                        completeResult.Analysis = RunInRunResultsAnalysis(statisticsResult.TotalPerformance);
+                    }
+
                     StoreResult(new BacktestResultPacket(_job, completeResult, Algorithm.EndDate, Algorithm.StartDate, progress));
 
                     _nextS3Update = DateTime.UtcNow.AddSeconds(30);
@@ -437,6 +442,58 @@ namespace QuantConnect.Lean.Engine.Results
             catch (Exception err)
             {
                 Log.Error(err);
+            }
+        }
+
+        /// <summary>
+        /// Runs the in-run results analyzer against a snapshot of the current intermediate backtest state.
+        /// Invoked periodically while the backtest is still running, unlike the full analysis performed
+        /// by <see cref="SendFinalResult"/> when the backtest ends.
+        /// </summary>
+        /// <param name="totalPerformance">The current total algorithm performance, for analyses that read portfolio statistics</param>
+        /// <returns>The failed analyses with solutions, or null if the analysis could not run</returns>
+        protected virtual IReadOnlyList<QuantConnect.Analysis> RunInRunResultsAnalysis(AlgorithmPerformance totalPerformance)
+        {
+            try
+            {
+                var algorithm = _job.Language == Language.Python ? (Algorithm as AlgorithmPythonWrapper)?.BaseAlgorithm : Algorithm as QCAlgorithm;
+                if (algorithm == null)
+                {
+                    return null;
+                }
+
+                // The analyses read the charts without holding ChartLock, so hand them clones
+                Dictionary<string, Chart> charts;
+                lock (ChartLock)
+                {
+                    charts = Charts.ToDictionary(kvp => kvp.Key, kvp => kvp.Value.Clone());
+                }
+
+                // Unlike the intermediate result stored to disk, the analyses get the full order
+                // and order event collections, not just the latest 100
+                var snapshot = new BacktestResult(new BacktestResultParameters(
+                    charts,
+                    TransactionHandler.Orders.ToDictionary(),
+                    Algorithm.Transactions.TransactionRecord,
+                    new Dictionary<string, string>(),
+                    new Dictionary<string, string>(),
+                    new Dictionary<string, AlgorithmPerformance>(),
+                    TransactionHandler.OrderEvents.ToList(),
+                    totalPerformance));
+
+                List<string> logs;
+                lock (LogStore)
+                {
+                    logs = LogStore.Select(x => x.Message).ToList();
+                }
+
+                // Keep the time budget small: this runs on the result handler thread and delays message processing
+                return new InRunResultsAnalyzer(snapshot, algorithm, _job.Language, logs).Run(timeLimitSeconds: 1);
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex, "Error running in-run backtest analysis");
+                return null;
             }
         }
 
