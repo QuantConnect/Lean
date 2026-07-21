@@ -93,12 +93,6 @@ namespace QuantConnect.Interfaces
         ICollection<string> Keys { get; }
 
         /// <summary>
-        /// Returns the count of objects stored, without loading their content.
-        /// This also enables len() on the object store in Python
-        /// </summary>
-        int Count { get; }
-
-        /// <summary>
         /// Will clear the object store state cache. This is useful when the object store is used concurrently by nodes which want to share information
         /// </summary>
         void Clear();

@@ -79,12 +79,6 @@ namespace QuantConnect.Storage
         public ICollection<string> Keys => _store.Keys;
 
         /// <summary>
-        /// Returns the count of objects stored, without loading their content.
-        /// This also enables len() on the object store in Python
-        /// </summary>
-        public int Count => _store.Count;
-
-        /// <summary>
         /// Will clear the object store state cache. This is useful when the object store is used concurrently by nodes which want to share information
         /// </summary>
         public void Clear() => _store.Clear();
