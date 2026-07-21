@@ -52,6 +52,8 @@ namespace QuantConnect.Lean.Engine.Results
 
         private BacktestProgressMonitor _progressMonitor;
 
+        private InRunResultsAnalyzer _inRunResultsAnalyzer;
+
         /// <summary>
         /// Calculates the capacity of a strategy per Symbol in real-time
         /// </summary>
@@ -469,8 +471,18 @@ namespace QuantConnect.Lean.Engine.Results
                     charts = Charts.ToDictionary(kvp => kvp.Key, kvp => kvp.Value.Clone());
                 }
 
-                // Unlike the intermediate result stored to disk, the analyses get the full order
-                // and order event collections, not just the latest 100
+                _inRunResultsAnalyzer ??= new InRunResultsAnalyzer(algorithm, _job.Language);
+
+                // Only the order events and logs produced since the previous run are analyzed,
+                // the analyzer accumulates findings across runs
+                var orderEvents = TransactionHandler.OrderEvents.Skip(_inRunResultsAnalyzer.OrderEventsPosition).ToList();
+
+                List<string> logs;
+                lock (LogStore)
+                {
+                    logs = LogStore.Skip(_inRunResultsAnalyzer.LogsPosition).Select(x => x.Message).ToList();
+                }
+
                 var snapshot = new BacktestResult(new BacktestResultParameters(
                     charts,
                     TransactionHandler.Orders.ToDictionary(),
@@ -478,17 +490,11 @@ namespace QuantConnect.Lean.Engine.Results
                     new Dictionary<string, string>(),
                     new Dictionary<string, string>(),
                     new Dictionary<string, AlgorithmPerformance>(),
-                    TransactionHandler.OrderEvents.ToList(),
+                    orderEvents,
                     totalPerformance));
 
-                List<string> logs;
-                lock (LogStore)
-                {
-                    logs = LogStore.Select(x => x.Message).ToList();
-                }
-
                 // Keep the time budget small: this runs on the result handler thread and delays message processing
-                return new InRunResultsAnalyzer(snapshot, algorithm, _job.Language, logs).Run(timeLimitSeconds: 1);
+                return _inRunResultsAnalyzer.Run(snapshot, logs, timeLimitSeconds: 1);
             }
             catch (Exception ex)
             {

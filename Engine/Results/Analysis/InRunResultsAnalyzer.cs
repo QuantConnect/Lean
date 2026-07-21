@@ -15,7 +15,9 @@
 */
 using QuantConnect.Algorithm;
 using QuantConnect.Lean.Engine.Results.Analysis.Analyses;
+using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace QuantConnect.Lean.Engine.Results.Analysis
 {
@@ -26,15 +28,106 @@ namespace QuantConnect.Lean.Engine.Results.Analysis
     public class InRunResultsAnalyzer : ResultsAnalyzer
     {
         /// <summary>
-        /// Initializes a new instance of the <see cref="InRunResultsAnalyzer"/> class.
+        /// Analyses that read the current backtest state (statistics, orders, charts) instead of scanning
+        /// the append-only order event and log streams. They must run against the full current state on
+        /// every run, and their previous findings are replaced instead of accumulated.
         /// </summary>
-        /// <param name="result">A snapshot of the current intermediate backtest result to analyze.</param>
+        private static readonly HashSet<string> StateBasedAnalyses = new()
+        {
+            nameof(PortfolioValueIsNotPositiveAnalysis),
+            nameof(TakeProfitAndStopLossOrdersAnalysis),
+            nameof(PortfolioMarginUsageAnalysis),
+        };
+
+        private readonly Dictionary<string, QuantConnect.Analysis> _findings = new();
+
+        /// <summary>
+        /// The number of order events already consumed by previous runs. The order events
+        /// in the result passed to <see cref="Run(Result, IReadOnlyList{string}, int, int)"/>
+        /// are expected to start at this position.
+        /// </summary>
+        public int OrderEventsPosition { get; private set; }
+
+        /// <summary>
+        /// The number of log entries already consumed by previous runs. The logs passed to
+        /// <see cref="Run(Result, IReadOnlyList{string}, int, int)"/> are expected to start
+        /// at this position.
+        /// </summary>
+        public int LogsPosition { get; private set; }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="InRunResultsAnalyzer"/> class.
+        /// The instance is expected to be kept alive for the duration of the backtest,
+        /// receiving fresh data on each <see cref="Run(Result, IReadOnlyList{string}, int, int)"/> call.
+        /// </summary>
         /// <param name="algorithm">The algorithm instance used for history requests and settings.</param>
         /// <param name="language">The programming language the algorithm is written in.</param>
-        /// <param name="logs">The list of log lines produced by the backtest so far.</param>
-        public InRunResultsAnalyzer(Result result, QCAlgorithm algorithm, Language language, IReadOnlyList<string> logs)
-            : base(result, algorithm, language, logs)
+        public InRunResultsAnalyzer(QCAlgorithm algorithm, Language language)
+            : base(null, algorithm, language, null)
         {
+        }
+
+        /// <summary>
+        /// Runs the analyses incrementally: <paramref name="result"/> and <paramref name="logs"/> are
+        /// expected to contain only the order events and log lines produced since the previous run
+        /// (per <see cref="OrderEventsPosition"/> and <see cref="LogsPosition"/>), and the returned
+        /// findings are the merge of this run's findings into the ones accumulated by previous runs.
+        /// Findings from analyses scanning the order event and log streams are accumulated
+        /// (first sample kept, counts totaled), while findings from state-based analyses are
+        /// replaced on every run.
+        /// </summary>
+        /// <param name="result">A snapshot of the current intermediate backtest result, holding only new order events.</param>
+        /// <param name="logs">The log lines produced since the previous run.</param>
+        /// <param name="timeLimitSeconds">Wall-clock seconds allowed for the full chain before early exit.</param>
+        /// <param name="maxFailedAnalyses">Maximum number of failing analyses to return.</param>
+        /// <returns>The accumulated findings, ranked by analysis weight.</returns>
+        public IReadOnlyList<QuantConnect.Analysis> Run(Result result, IReadOnlyList<string> logs, int timeLimitSeconds = 1, int maxFailedAnalyses = 10)
+        {
+            SetAnalysisData(result, logs);
+            var newFindings = Run(timeLimitSeconds, maxFailedAnalyses);
+
+            OrderEventsPosition += result.OrderEvents?.Count ?? 0;
+            LogsPosition += logs?.Count ?? 0;
+
+            // State-based analyses are recomputed from scratch each run: remove their previous
+            // findings so they are replaced, or dropped if they no longer fail
+            foreach (var name in _findings.Keys.Where(IsStateBased).ToList())
+            {
+                _findings.Remove(name);
+            }
+
+            foreach (var finding in newFindings)
+            {
+                if (!IsStateBased(finding.Name) && _findings.TryGetValue(finding.Name, out var previous))
+                {
+                    // This run only saw new order events and logs: keep the first sample and total the counts.
+                    // A null count means a single occurrence
+                    finding.Sample = previous.Sample;
+                    finding.Count = (previous.Count ?? 1) + (finding.Count ?? 1);
+                }
+                _findings[finding.Name] = finding;
+            }
+
+            var weights = GetAnalyses().ToDictionary(analysis => analysis.GetType().Name, analysis => analysis.Weight);
+            return _findings.Values
+                .OrderByDescending(finding => weights.GetValueOrDefault(BaseAnalysisName(finding.Name)))
+                .Take(maxFailedAnalyses)
+                .ToList();
+        }
+
+        /// <summary>
+        /// Determines whether the given finding was produced by a state-based analysis.
+        /// </summary>
+        private static bool IsStateBased(string findingName) => StateBasedAnalyses.Contains(BaseAnalysisName(findingName));
+
+        /// <summary>
+        /// Gets the analysis class name from a finding name, which aggregated
+        /// analyses suffix with the sub-analysis name.
+        /// </summary>
+        private static string BaseAnalysisName(string findingName)
+        {
+            var separatorIndex = findingName.IndexOf(" / ", StringComparison.Ordinal);
+            return separatorIndex < 0 ? findingName : findingName[..separatorIndex];
         }
 
         /// <summary>

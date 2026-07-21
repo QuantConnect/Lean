@@ -31,7 +31,7 @@ namespace QuantConnect.Lean.Engine.Results.Analysis
     {
         private readonly QCAlgorithm _algorithm;
         private readonly Language _language;
-        private readonly IReadOnlyList<string> _logs;
+        private IReadOnlyList<string> _logs;
         private SortedList<DateTime, decimal> _equityCurve;
         private SortedList<DateTime, decimal> _benchmarkEquityCurve;
         private Result _result;
@@ -105,6 +105,18 @@ namespace QuantConnect.Lean.Engine.Results.Analysis
             }
 
             return responses;
+        }
+
+        /// <summary>
+        /// Sets the backtest data to analyze. Used by analyzers that are kept alive
+        /// and run multiple times against fresh data.
+        /// </summary>
+        /// <param name="result">The backtest result to analyze.</param>
+        /// <param name="logs">The list of log lines to analyze.</param>
+        protected void SetAnalysisData(Result result, IReadOnlyList<string> logs)
+        {
+            _result = result;
+            _logs = logs;
         }
 
         /// <summary>
