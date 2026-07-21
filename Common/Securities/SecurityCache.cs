@@ -414,7 +414,7 @@ namespace QuantConnect.Securities
         {
             if (typeof(T) == typeof(Tick))
             {
-                return _lastTickTrades.Concat(_lastTickQuotes).Cast<T>();
+                return _lastTickTrades.Concat(_lastTickQuotes).Cast<T>().Memoize();
             }
 
             lock (_locker)
@@ -424,7 +424,7 @@ namespace QuantConnect.Securities
                     return new List<T>();
                 }
 
-                return list.Cast<T>();
+                return list.Cast<T>().Memoize();
             }
         }
 
