@@ -20,6 +20,7 @@ using System.Threading;
 using QuantConnect.Interfaces;
 using QuantConnect.Logging;
 using QuantConnect.Orders;
+using QuantConnect.Util;
 using Python.Runtime;
 
 namespace QuantConnect.Securities
@@ -302,7 +303,7 @@ namespace QuantConnect.Securities
         /// <returns>An enumerable of <see cref="OrderTicket"/> matching the specified <paramref name="filter"/></returns>
         public IEnumerable<OrderTicket> GetOrderTickets(Func<OrderTicket, bool> filter = null)
         {
-            return _orderProcessor.GetOrderTickets(filter ?? (x => true));
+            return _orderProcessor.GetOrderTickets(filter ?? (x => true)).Memoize();
         }
 
         /// <summary>
@@ -312,7 +313,7 @@ namespace QuantConnect.Securities
         /// <returns>An enumerable of <see cref="OrderTicket"/> matching the specified <paramref name="filter"/></returns>
         public IEnumerable<OrderTicket> GetOrderTickets(PyObject filter)
         {
-            return _orderProcessor.GetOrderTickets(filter.SafeAs<Func<OrderTicket, bool>>());
+            return _orderProcessor.GetOrderTickets(filter.SafeAs<Func<OrderTicket, bool>>()).Memoize();
         }
 
         /// <summary>
@@ -332,7 +333,7 @@ namespace QuantConnect.Securities
         /// <returns>An enumerable of opened <see cref="OrderTicket"/> matching the specified <paramref name="filter"/></returns>
         public IEnumerable<OrderTicket> GetOpenOrderTickets(Func<OrderTicket, bool> filter = null)
         {
-            return _orderProcessor.GetOpenOrderTickets(filter ?? (x => true));
+            return _orderProcessor.GetOpenOrderTickets(filter ?? (x => true)).Memoize();
         }
 
         /// <summary>
@@ -350,7 +351,7 @@ namespace QuantConnect.Securities
             {
                 return GetOpenOrderTickets(pythonSymbol);
             }
-            return _orderProcessor.GetOpenOrderTickets(filter.SafeAs<Func<OrderTicket, bool>>());
+            return _orderProcessor.GetOpenOrderTickets(filter.SafeAs<Func<OrderTicket, bool>>()).Memoize();
         }
 
         /// <summary>
@@ -512,7 +513,7 @@ namespace QuantConnect.Securities
         /// <returns>All orders this order provider currently holds by the specified filter</returns>
         public IEnumerable<Order> GetOrders(Func<Order, bool> filter = null)
         {
-            return _orderProcessor.GetOrders(filter ?? (x => true));
+            return _orderProcessor.GetOrders(filter ?? (x => true)).Memoize();
         }
 
         /// <summary>
@@ -522,7 +523,7 @@ namespace QuantConnect.Securities
         /// <returns>All orders this order provider currently holds by the specified filter</returns>
         public IEnumerable<Order> GetOrders(PyObject filter)
         {
-            return _orderProcessor.GetOrders(filter.SafeAs<Func<Order, bool>>());
+            return _orderProcessor.GetOrders(filter.SafeAs<Func<Order, bool>>()).Memoize();
         }
 
         /// <summary>
