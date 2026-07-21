@@ -326,7 +326,7 @@ namespace QuantConnect.Securities
         /// <returns>An enumerable of <see cref="OrderTicket"/> matching the specified <paramref name="filter"/></returns>
         private IEnumerable<OrderTicket> GetOrderTickets(Func<OrderTicket, bool> filter, bool memoize)
         {
-            var tickets = _orderProcessor.GetOrderTickets(filter);
+            var tickets = _orderProcessor.GetOrderTickets(filter ?? (x => true));
             return memoize ? tickets.Memoize() : tickets;
         }
 
@@ -378,7 +378,7 @@ namespace QuantConnect.Securities
         /// <returns>An enumerable of opened <see cref="OrderTicket"/> matching the specified <paramref name="filter"/></returns>
         private IEnumerable<OrderTicket> GetOpenOrderTickets(Func<OrderTicket, bool> filter, bool memoize)
         {
-            var tickets = _orderProcessor.GetOpenOrderTickets(filter);
+            var tickets = _orderProcessor.GetOpenOrderTickets(filter ?? (x => true));
             return memoize ? tickets.Memoize() : tickets;
         }
 
