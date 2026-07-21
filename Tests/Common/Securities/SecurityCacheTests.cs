@@ -441,28 +441,6 @@ namespace QuantConnect.Tests.Common.Securities
         }
 
         [Test]
-        public void GetAllDataIsMemoizedExposingCount()
-        {
-            var cache = new SecurityCache();
-            cache.StoreData(new[]
-            {
-                new CustomDataBitcoinAlgorithm.Bitcoin { Ask = 1m },
-                new CustomDataBitcoinAlgorithm.Bitcoin { Ask = 2m }
-            }, typeof(CustomDataBitcoinAlgorithm.Bitcoin));
-
-            var data = cache.GetAll<CustomDataBitcoinAlgorithm.Bitcoin>();
-            Assert.IsInstanceOf<MemoizingEnumerable<CustomDataBitcoinAlgorithm.Bitcoin>>(data);
-            Assert.AreEqual(2, ((MemoizingEnumerable<CustomDataBitcoinAlgorithm.Bitcoin>)data).Count);
-
-            cache.AddData(new Tick { TickType = TickType.Trade, Value = 1m });
-            cache.AddData(new Tick { TickType = TickType.Quote, BidPrice = 1m, AskPrice = 2m });
-
-            var ticks = cache.GetAll<Tick>();
-            Assert.IsInstanceOf<MemoizingEnumerable<Tick>>(ticks);
-            Assert.AreEqual(2, ((MemoizingEnumerable<Tick>)ticks).Count);
-        }
-
-        [Test]
         public void GetAllData_ReturnsListOfDataOnTargetCache()
         {
             var cache = new SecurityCache();

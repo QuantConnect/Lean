@@ -256,7 +256,7 @@ namespace QuantConnect.Securities
             }
 
             var cancelledOrders = new List<OrderTicket>();
-            foreach (var ticket in GetOpenOrderTickets())
+            foreach (var ticket in _orderProcessor.GetOpenOrderTickets(x => true))
             {
                 ticket.Cancel(Messages.SecurityTransactionManager.OrderCanceledByCancelOpenOrders(_algorithm.UtcTime));
                 cancelledOrders.Add(ticket);
@@ -278,7 +278,7 @@ namespace QuantConnect.Securities
             }
 
             var cancelledOrders = new List<OrderTicket>();
-            foreach (var ticket in GetOpenOrderTickets(x => x.Symbol == symbol))
+            foreach (var ticket in _orderProcessor.GetOpenOrderTickets(x => x.Symbol == symbol))
             {
                 ticket.Cancel(tag);
                 cancelledOrders.Add(ticket);
@@ -361,7 +361,8 @@ namespace QuantConnect.Securities
         /// <returns>Total quantity that hasn't been filled yet for all orders that were not filtered</returns>
         public decimal GetOpenOrdersRemainingQuantity(Func<OrderTicket, bool> filter = null)
         {
-            return GetOpenOrderTickets(filter)
+            // going directly to the order processor to avoid the memoization overhead, given this is a single enumeration
+            return _orderProcessor.GetOpenOrderTickets(filter ?? (x => true))
                 .Aggregate(0m, (d, t) => d + t.QuantityRemaining);
         }
 
@@ -381,8 +382,7 @@ namespace QuantConnect.Securities
                 return GetOpenOrdersRemainingQuantity(pythonSymbol);
             }
 
-            return GetOpenOrderTickets(filter)
-                .Aggregate(0m, (d, t) => d + t.QuantityRemaining);
+            return GetOpenOrdersRemainingQuantity(filter.SafeAs<Func<OrderTicket, bool>>());
         }
 
         /// <summary>
