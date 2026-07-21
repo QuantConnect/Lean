@@ -353,6 +353,77 @@ namespace QuantConnect.Tests.Common.Storage
             }
         }
 
+        [TestCase(2)]
+        [TestCase(1)]
+        [TestCase(0)]
+        public void CountBehavior(int useCase)
+        {
+#pragma warning disable CA2000
+            using (var store = new ObjectStore(new TestLocalObjectStore()))
+            {
+#pragma warning restore CA2000
+                store.Initialize(0, 0, "", new Controls() { PersistenceIntervalSeconds = -1 }, AlgorithmMode.Backtesting);
+                var key = "ILove";
+                store.SaveString(key, "Pizza");
+                var path = store.GetFilePath(key);
+
+                if (useCase == 0)
+                {
+                    // delete
+                    Assert.IsTrue(store.Delete(key));
+                    Assert.AreEqual(0, store.Count);
+                }
+                else if (useCase == 1)
+                {
+                    // read
+                    Assert.AreEqual(1, store.Count);
+                }
+                else if (useCase == 2)
+                {
+                    // new file
+                    File.WriteAllText(Path.Combine(Path.GetDirectoryName(path), "some other-file"), "Pepe");
+
+                    Assert.AreEqual(2, store.Count);
+
+                    Assert.IsTrue(store.Delete("some other-file"));
+                }
+
+                // clean up
+                if (File.Exists(path))
+                {
+                    File.Delete(path);
+                }
+            }
+        }
+
+        [Test]
+        public void CountEnablesPythonLen()
+        {
+#pragma warning disable CA2000
+            using (var store = new ObjectStore(new TestLocalObjectStore()))
+            {
+#pragma warning restore CA2000
+                store.Initialize(0, 0, "", new Controls() { PersistenceIntervalSeconds = -1 }, AlgorithmMode.Backtesting);
+                var key = "ILove";
+                store.SaveString(key, "Pizza");
+                var path = store.GetFilePath(key);
+
+                using (Py.GIL())
+                {
+                    // PyObject.Length() goes through the same mp_length slot as Python's len()
+                    using var pyStore = store.ToPython();
+                    Assert.AreEqual(1, pyStore.Length());
+                }
+
+                // clean up
+                Assert.IsTrue(store.Delete(key));
+                if (File.Exists(path))
+                {
+                    File.Delete(path);
+                }
+            }
+        }
+
         [TestCase(5)]
         [TestCase(4)]
         [TestCase(3)]
