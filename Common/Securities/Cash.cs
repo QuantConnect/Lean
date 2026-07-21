@@ -23,6 +23,7 @@ using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Interfaces;
 using QuantConnect.Logging;
 using QuantConnect.Securities.CurrencyConversion;
+using QuantConnect.Util;
 
 namespace QuantConnect.Securities
 {
@@ -52,7 +53,7 @@ namespace QuantConnect.Securities
         /// If this cash represents the account currency, then an empty enumerable is returned.
         /// </summary>
         public IEnumerable<Symbol> SecuritySymbols => CurrencyConversion.ConversionRateSecurities.Any()
-            ? CurrencyConversion.ConversionRateSecurities.Select(x => x.Symbol)
+            ? CurrencyConversion.ConversionRateSecurities.Select(x => x.Symbol).Memoize()
             // we do this only because Newtonsoft.Json complains about empty enumerables
             : new List<Symbol>(0);
 
