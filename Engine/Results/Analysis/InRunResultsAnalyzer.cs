@@ -86,6 +86,10 @@ namespace QuantConnect.Lean.Engine.Results.Analysis
             SetAnalysisData(result, logs);
             var newFindings = Run(timeLimitSeconds, maxFailedAnalyses);
 
+            // The positions are advanced even when the time limit truncates a run, so the analyses that
+            // didn't get to run miss this delta until the final analysis re-scans the complete streams.
+            // Stress tests show runs complete in a fraction of the time limit, but if its trace message
+            // starts showing up in logs, revisit this (e.g. track per-analysis positions).
             OrderEventsPosition += result.OrderEvents?.Count ?? 0;
             LogsPosition += logs?.Count ?? 0;
 
