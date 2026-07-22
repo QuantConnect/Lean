@@ -28,6 +28,7 @@ namespace QuantConnect.Brokerages
         {
             SecurityType.Equity,
             SecurityType.Option,
+            SecurityType.IndexOption,
             SecurityType.Future,
         };
 

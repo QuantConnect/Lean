@@ -29,6 +29,7 @@ namespace QuantConnect.Tests.Common.Brokerages
 
         [TestCase("SPY", SecurityType.Equity)]
         [TestCase("SPY", SecurityType.Option)]
+        [TestCase("SPX", SecurityType.IndexOption)]
         [TestCase("ES", SecurityType.Future)]
         public void CanSubmitOrder_ForSupportedSecurityTypes(string ticker, SecurityType securityType)
         {
@@ -40,8 +41,8 @@ namespace QuantConnect.Tests.Common.Brokerages
             Assert.IsNull(message);
         }
 
-        // Index is data-only on TerminalLink; Forex/Crypto/Cfd and option chains other than
-        // equity options (IndexOption/FutureOption) are not supported for trading.
+        // Index is data-only on TerminalLink; Forex/Crypto/Cfd and FutureOption
+        // are not supported for trading.
         [TestCase("EURUSD", SecurityType.Forex)]
         [TestCase("BTCUSD", SecurityType.Crypto)]
         [TestCase("DE10YBEUR", SecurityType.Cfd)]
