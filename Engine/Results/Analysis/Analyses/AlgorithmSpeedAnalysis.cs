@@ -88,9 +88,12 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
         public override string Issue { get; } = "The algorithm is running slowly.";
 
         /// <summary>
-        /// Gets the severity weight for the algorithm speed analysis.
+        /// Gets the severity weight for the algorithm speed analysis. High enough to run before the
+        /// order-response error analyses in the in-run chain: this analysis drives the user's decision
+        /// to stop a slow backtest, and it is one of the cheapest in the set, so it should not be the
+        /// one skipped when the time limit or the failed-analyses cap truncates a run.
         /// </summary>
-        public override int Weight { get; } = 77;
+        public override int Weight { get; } = 96;
 
         /// <summary>
         /// Runs the algorithm speed analysis against the speed metrics tracked for the running backtest.
