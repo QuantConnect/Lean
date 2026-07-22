@@ -37,6 +37,20 @@ namespace QuantConnect.Lean.Engine.Results.Analysis
         private Result _result;
 
         /// <summary>
+        /// Whether the equity and benchmark curves should be built before running the analyses.
+        /// Building them requires a benchmark history request, so analyzers whose analyses
+        /// don't read the curves can skip it.
+        /// </summary>
+        protected virtual bool RequiresEquityCurves => true;
+
+        /// <summary>
+        /// The speed metrics tracked for the running backtest, made available to the analyses
+        /// through <see cref="ResultsAnalysisRunParameters.Speed"/>. Null unless the analyzer
+        /// tracks the algorithm speed, like the in-run analyzer does.
+        /// </summary>
+        protected virtual AlgorithmSpeedTracker SpeedTracker => null;
+
+        /// <summary>
         /// Initializes a new instance of the <see cref="ResultsAnalyzer"/> class.
         /// </summary>
         /// <param name="result">The backtest result to analyze.</param>
@@ -118,20 +132,6 @@ namespace QuantConnect.Lean.Engine.Results.Analysis
             _result = result;
             _logs = logs;
         }
-
-        /// <summary>
-        /// Whether the equity and benchmark curves should be built before running the analyses.
-        /// Building them requires a benchmark history request, so analyzers whose analyses
-        /// don't read the curves can skip it.
-        /// </summary>
-        protected virtual bool RequiresEquityCurves => true;
-
-        /// <summary>
-        /// The speed metrics tracked for the running backtest, made available to the analyses
-        /// through <see cref="ResultsAnalysisRunParameters.Speed"/>. Null unless the analyzer
-        /// tracks the algorithm speed, like the in-run analyzer does.
-        /// </summary>
-        protected virtual AlgorithmSpeedTracker SpeedTracker => null;
 
         /// <summary>
         /// Creates the set of diagnostic analyses to run against the backtest.

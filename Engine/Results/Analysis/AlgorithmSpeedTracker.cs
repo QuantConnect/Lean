@@ -72,6 +72,19 @@ namespace QuantConnect.Lean.Engine.Results.Analysis
         public bool HasDataPointCounts => _samples.Count > 0 && _samples[^1].DataPoints > 0;
 
         /// <summary>
+        /// The average data points processed per second over the whole sampled span, including
+        /// history data points to match the speed the engine reports on completion.
+        /// Null when there are not enough samples to measure.
+        /// </summary>
+        public double? DataPointsPerSecond => RateBetween(0, _samples.Count - 1, TotalDataPoints);
+
+        /// <summary>
+        /// The average data points processed per second over the first <see cref="RecentWindowSamples"/> samples,
+        /// used as the early-run baseline for degradation detection. Null when there are not enough samples to measure.
+        /// </summary>
+        public double? InitialDataPointsPerSecond => RateBetween(0, Math.Min(RecentWindowSamples, _samples.Count) - 1, TotalDataPoints);
+
+        /// <summary>
         /// Records a sample of the cumulative speed counters. Samples with a non-increasing
         /// elapsed time are ignored so rates are always computed over positive time deltas.
         /// </summary>
@@ -84,19 +97,6 @@ namespace QuantConnect.Lean.Engine.Results.Analysis
             }
             _samples.Add(sample);
         }
-
-        /// <summary>
-        /// The average data points processed per second over the whole sampled span, including
-        /// history data points to match the speed the engine reports on completion.
-        /// Null when there are not enough samples to measure.
-        /// </summary>
-        public double? DataPointsPerSecond => RateBetween(0, _samples.Count - 1, TotalDataPoints);
-
-        /// <summary>
-        /// The average data points processed per second over the first <see cref="RecentWindowSamples"/> samples,
-        /// used as the early-run baseline for degradation detection. Null when there are not enough samples to measure.
-        /// </summary>
-        public double? InitialDataPointsPerSecond => RateBetween(0, Math.Min(RecentWindowSamples, _samples.Count) - 1, TotalDataPoints);
 
         /// <summary>
         /// The average data points processed per second over the recent window, including history data points.

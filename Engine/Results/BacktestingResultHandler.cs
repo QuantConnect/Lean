@@ -66,6 +66,10 @@ namespace QuantConnect.Lean.Engine.Results
         private string _algorithmId;
         private int _projectId;
 
+        private QCAlgorithm _algorithmInstance;
+
+        private QCAlgorithm AlgorithmInstance => _algorithmInstance ??= _job.Language == Language.Python ? (Algorithm as AlgorithmPythonWrapper)?.BaseAlgorithm : Algorithm as QCAlgorithm;
+
         /// <summary>
         /// Whether or not to run the results analysis at the end of the backtest.
         /// </summary>
@@ -418,13 +422,12 @@ namespace QuantConnect.Lean.Engine.Results
                 // Run backtest analyzer
                 if (RunResultsAnalysis)
                 {
-                    var algorithm = _job.Language == Language.Python ? (Algorithm as AlgorithmPythonWrapper)?.BaseAlgorithm : Algorithm as QCAlgorithm;
                     List<string> logs;
                     lock (LogStore)
                     {
                         logs = LogStore.Select(x => x.Message).ToList();
                     }
-                    var analyzer = new ResultsAnalyzer(result.Results, algorithm, _job.Language, logs);
+                    var analyzer = new ResultsAnalyzer(result.Results, AlgorithmInstance, _job.Language, logs);
                     try
                     {
                         result.Results.Analysis = analyzer.Run();
@@ -468,8 +471,7 @@ namespace QuantConnect.Lean.Engine.Results
                     return null;
                 }
 
-                var algorithm = _job.Language == Language.Python ? (Algorithm as AlgorithmPythonWrapper)?.BaseAlgorithm : Algorithm as QCAlgorithm;
-                if (algorithm == null)
+                if (AlgorithmInstance == null)
                 {
                     return null;
                 }
@@ -481,13 +483,13 @@ namespace QuantConnect.Lean.Engine.Results
                     charts = Charts.ToDictionary(kvp => kvp.Key, kvp => kvp.Value.Clone());
                 }
 
-                _inRunResultsAnalyzer ??= new InRunResultsAnalyzer(algorithm, _job.Language);
+                _inRunResultsAnalyzer ??= new InRunResultsAnalyzer(AlgorithmInstance, _job.Language);
 
                 // Sample the engine speed counters for the algorithm speed analysis
                 var speedSample = new AlgorithmSpeedSample(
                     DateTime.UtcNow - StartTime,
                     PerformanceTrackingTool?.DataPoints ?? 0,
-                    Algorithm.HistoryProvider?.DataPointCount ?? 0,
+                    PerformanceTrackingTool?.HistoryDataPoints ?? 0,
                     _progressMonitor?.ProcessedDays ?? 0,
                     _progressMonitor?.TotalDays ?? 0);
 
