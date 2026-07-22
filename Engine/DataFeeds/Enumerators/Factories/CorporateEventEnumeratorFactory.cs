@@ -72,7 +72,11 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
 
             if (config.CanBeDelisted())
             {
-                tradableEventProviders.Add(new DelistingEventProvider());
+                var delistingDate = config.Symbol.GetDelistingDate(mapFileProvider.ResolveMapFile(config));
+                if (startTime.Date < delistingDate.Date)
+                {
+                    tradableEventProviders.Add(new DelistingEventProvider());
+                }
             }
 
             var enumerator = new AuxiliaryDataEnumerator(
