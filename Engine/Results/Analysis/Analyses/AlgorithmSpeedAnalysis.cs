@@ -142,8 +142,8 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
             var projection = remaining.HasValue
                 ? Invariant($"about {FormatDuration(remaining.Value)} remaining at the recent pace")
                 : "the remaining time cannot be estimated yet";
-            var sample = Invariant($"Processing {recent.Value / 1000:F1}k data points per second recently ") +
-                Invariant($"({average / 1000:F1}k average); {speed.Progress * 100:F0}% complete after ") +
+            var sample = Invariant($"Processing {FormatRate(recent.Value)} data points per second recently ") +
+                Invariant($"({FormatRate(average)} average); {speed.Progress * 100:F0}% complete after ") +
                 Invariant($"{FormatDuration(speed.Elapsed)}, {projection}.");
 
             findings.Add(new(SlowExecutionName,
@@ -238,8 +238,8 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
 
             findings.Add(new(ThroughputDegradationName,
                 "The algorithm's processing speed is degrading as the backtest progresses.",
-                Invariant($"Throughput dropped from {initial.Value / 1000:F1}k data points per second early in the run ") +
-                    Invariant($"to {recent.Value / 1000:F1}k recently."),
+                Invariant($"Throughput dropped from {FormatRate(initial.Value)} data points per second early in the run ") +
+                    Invariant($"to {FormatRate(recent.Value)} recently."),
                 null,
                 [
                     "Check for collections that grow unboundedly as the backtest progresses, like lists of past data points; use rolling windows with a fixed size instead.",
@@ -277,6 +277,17 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
 
                     "Reduce the period or resolution of the history requests.",
                 ]));
+        }
+
+        /// <summary>
+        /// Formats a data points per second rate compactly: in thousands like "12.5k" when at least
+        /// one thousand, as a raw count like "340" below that, so very slow rates don't read as "0.0k".
+        /// </summary>
+        private static string FormatRate(double dataPointsPerSecond)
+        {
+            return dataPointsPerSecond >= 1000
+                ? Invariant($"{dataPointsPerSecond / 1000:F1}k")
+                : Invariant($"{dataPointsPerSecond:F0}");
         }
 
         /// <summary>

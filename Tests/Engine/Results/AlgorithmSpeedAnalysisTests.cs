@@ -64,6 +64,19 @@ namespace QuantConnect.Tests.Engine.Results
         }
 
         [Test]
+        public void FormatsRatesBelowOneThousandAsRawCounts()
+        {
+            // 100 data points per second: formatted as a raw count instead of "0.1k"
+            var tracker = AlgorithmSpeedTrackerTests.BuildUniformTracker(samples: 7, stepSeconds: 30,
+                dataPointsPerStep: 3_000, historyDataPointsPerStep: 0, daysPerStep: 1, totalDays: 10);
+
+            var findings = new AlgorithmSpeedAnalysis().Run(tracker);
+
+            var finding = findings.Single(x => x.Name.EndsWith(AlgorithmSpeedAnalysis.SlowExecutionName, StringComparison.Ordinal));
+            StringAssert.Contains("Processing 100 data points per second recently (100 average)", (string)finding.Sample);
+        }
+
+        [Test]
         public void DoesNotFlagFastExecution()
         {
             // 100k data points per second and a short remaining runtime
