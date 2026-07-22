@@ -34,6 +34,36 @@ namespace QuantConnect.Indicators
         private readonly double[] _t;
 
         /// <summary>
+        /// Reference symbol to use as the regression x-axis, when provided.
+        /// </summary>
+        private readonly Symbol _referenceSymbol = Symbol.Empty;
+
+        /// <summary>
+        /// Window of matched reference data points.
+        /// </summary>
+        private readonly RollingWindow<IndicatorDataPoint> _referenceWindow;
+
+        /// <summary>
+        /// Target symbol inferred from the first non-reference input.
+        /// </summary>
+        private Symbol _targetSymbol = Symbol.Empty;
+
+        /// <summary>
+        /// Pending target input waiting for a matching reference input time.
+        /// </summary>
+        private IndicatorDataPoint _targetInput;
+
+        /// <summary>
+        /// Pending reference input waiting for a matching target input time.
+        /// </summary>
+        private IndicatorDataPoint _referenceInput;
+
+        /// <summary>
+        /// Last computed value, returned while waiting for matched target/reference inputs.
+        /// </summary>
+        private decimal _lastComputedValue;
+
+        /// <summary>
         /// The point where the regression line crosses the y-axis (price-axis)
         /// </summary>
         public IndicatorBase<IndicatorDataPoint> Intercept { get; }
@@ -44,9 +74,14 @@ namespace QuantConnect.Indicators
         public IndicatorBase<IndicatorDataPoint> Slope { get; }
 
         /// <summary>
+        /// Gets a flag indicating when this indicator is ready and fully initialized
+        /// </summary>
+        public override bool IsReady => base.IsReady && (_referenceWindow == null || _referenceWindow.IsReady);
+
+        /// <summary>
         /// Required period, in data points, for the indicator to be ready and fully initialized.
         /// </summary>
-        public int WarmUpPeriod => Period;
+        public override int WarmUpPeriod => Period;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="LeastSquaresMovingAverage"/> class.
@@ -64,10 +99,76 @@ namespace QuantConnect.Indicators
         /// <summary>
         /// Initializes a new instance of the <see cref="LeastSquaresMovingAverage"/> class.
         /// </summary>
+        /// <param name="name">The name of this indicator</param>
+        /// <param name="referenceSymbol">The reference symbol to regress against</param>
+        /// <param name="period">The number of data points to hold in the window</param>
+        public LeastSquaresMovingAverage(string name, Symbol referenceSymbol, int period)
+            : this(name, period)
+        {
+            _referenceSymbol = referenceSymbol;
+            _referenceWindow = new RollingWindow<IndicatorDataPoint>(period);
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="LeastSquaresMovingAverage"/> class.
+        /// </summary>
         /// <param name="period">The number of data points to hold in the window.</param>
         public LeastSquaresMovingAverage(int period)
             : this($"LSMA({period})", period)
         {
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="LeastSquaresMovingAverage"/> class.
+        /// </summary>
+        /// <param name="referenceSymbol">The reference symbol to regress against</param>
+        /// <param name="period">The number of data points to hold in the window</param>
+        public LeastSquaresMovingAverage(Symbol referenceSymbol, int period)
+            : this($"LSMA({period},{referenceSymbol})", referenceSymbol, period)
+        {
+        }
+
+        /// <summary>
+        /// Computes the next value of this indicator from the given state
+        /// </summary>
+        /// <param name="input">The input given to the indicator</param>
+        /// <returns>
+        /// A new value for this indicator
+        /// </returns>
+        protected override decimal ComputeNextValue(IndicatorDataPoint input)
+        {
+            if (_referenceWindow == null)
+            {
+                return base.ComputeNextValue(input);
+            }
+
+            if (input.Symbol == _referenceSymbol)
+            {
+                _referenceInput = input;
+            }
+            else
+            {
+                if (_targetSymbol == Symbol.Empty)
+                {
+                    _targetSymbol = input.Symbol;
+                }
+                else if (input.Symbol != _targetSymbol)
+                {
+                    throw new ArgumentException($"The input symbol {input.Symbol} is not the target or reference symbol.");
+                }
+
+                _targetInput = input;
+            }
+
+            if (_targetInput != null && _referenceInput != null && _targetInput.EndTime == _referenceInput.EndTime)
+            {
+                _referenceWindow.Add(_referenceInput);
+                _lastComputedValue = base.ComputeNextValue(_targetInput);
+                _targetInput = null;
+                _referenceInput = null;
+            }
+
+            return _lastComputedValue;
         }
 
         /// <summary>
@@ -88,13 +189,30 @@ namespace QuantConnect.Indicators
                 .OrderBy(i => i.EndTime)
                 .Select(i => Convert.ToDouble(i.Value))
                 .ToArray();
-            // Fit OLS
-            var ols = Fit.Line(x: _t, y: series);
-            Intercept.Update(input.EndTime, (decimal)ols.Item1);
-            Slope.Update(input.EndTime, (decimal)ols.Item2);
+
+            decimal x = Period;
+            double intercept;
+            double slope;
+
+            if (_referenceWindow != null && _referenceWindow.IsReady)
+            {
+                var xValues = _referenceWindow
+                    .OrderBy(i => i.EndTime)
+                    .Select(i => Convert.ToDouble(i.Value))
+                    .ToArray();
+                x = _referenceWindow[0].Value;
+                (intercept, slope) = Fit.Line(x: xValues, y: series);
+            }
+            else
+            {
+                (intercept, slope) = Fit.Line(x: _t, y: series);
+            }
+
+            Intercept.Update(input.EndTime, intercept.SafeDecimalCast());
+            Slope.Update(input.EndTime, slope.SafeDecimalCast());
 
             // Calculate the fitted value corresponding to the input
-            return Intercept.Current.Value + Slope.Current.Value * Period;
+            return Intercept.Current.Value + Slope.Current.Value * x;
         }
 
         /// <summary>
@@ -104,6 +222,11 @@ namespace QuantConnect.Indicators
         {
             Intercept.Reset();
             Slope.Reset();
+            _referenceWindow?.Reset();
+            _targetInput = null;
+            _referenceInput = null;
+            _targetSymbol = Symbol.Empty;
+            _lastComputedValue = 0m;
             base.Reset();
         }
     }
