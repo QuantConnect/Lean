@@ -14,6 +14,7 @@
  *
 */
 
+using Newtonsoft.Json;
 using QuantConnect.Algorithm;
 using QuantConnect.AlgorithmFactory.Python.Wrappers;
 using QuantConnect.Brokerages;
@@ -53,6 +54,7 @@ namespace QuantConnect.Lean.Engine.Results
         private BacktestProgressMonitor _progressMonitor;
 
         private InRunResultsAnalyzer _inRunResultsAnalyzer;
+        private string _lastInRunAnalysisSignature = "[]";
 
         /// <summary>
         /// Calculates the capacity of a strategy per Symbol in real-time
@@ -233,6 +235,7 @@ namespace QuantConnect.Lean.Engine.Results
                     if (RunResultsAnalysis)
                     {
                         completeResult.Analysis = RunInRunResultsAnalysis(statisticsResult.TotalPerformance);
+                        SendInRunAnalysis(completeResult.Analysis, progress);
                     }
 
                     StoreResult(new BacktestResultPacket(_job, completeResult, Algorithm.EndDate, Algorithm.StartDate, progress));
@@ -501,6 +504,30 @@ namespace QuantConnect.Lean.Engine.Results
                 Log.Error(ex, "Error running in-run backtest analysis");
                 return null;
             }
+        }
+
+        /// <summary>
+        /// Sends the in-run analysis findings to the browser in their own packet,
+        /// only when they changed since they were last sent.
+        /// </summary>
+        /// <param name="findings">The accumulated in-run analysis findings, or null if the analysis could not run</param>
+        /// <param name="progress">The current backtest progress</param>
+        private void SendInRunAnalysis(IReadOnlyList<QuantConnect.Analysis> findings, decimal progress)
+        {
+            if (findings == null)
+            {
+                return;
+            }
+
+            var signature = JsonConvert.SerializeObject(findings);
+            if (signature == _lastInRunAnalysisSignature)
+            {
+                return;
+            }
+            _lastInRunAnalysisSignature = signature;
+
+            MessagingHandler.Send(new BacktestResultPacket(_job, new BacktestResult { Analysis = findings },
+                Algorithm.EndDate, Algorithm.StartDate, progress));
         }
 
         /// <summary>
