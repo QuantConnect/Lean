@@ -307,6 +307,12 @@ namespace QuantConnect.Lean.Engine.Results
         protected IMapFileProvider MapFileProvider { get; set; }
 
         /// <summary>
+        /// The tool tracking the engine's performance counters, used by the in-run
+        /// algorithm speed analysis. May be null when the host doesn't track performance.
+        /// </summary>
+        protected PerformanceTrackingTool PerformanceTrackingTool { get; set; }
+
+        /// <summary>
         /// Creates a new instance
         /// </summary>
         protected BaseResultsHandler()
@@ -498,6 +504,7 @@ namespace QuantConnect.Lean.Engine.Results
             _updateRunner.Start();
             State["Hostname"] = _hostName;
             MapFileProvider = parameters.MapFileProvider;
+            PerformanceTrackingTool = parameters.PerformanceTrackingTool;
 
             SerializerSettings = new()
             {

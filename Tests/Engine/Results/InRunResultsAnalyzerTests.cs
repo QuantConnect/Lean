@@ -19,6 +19,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using NUnit.Framework;
+using QuantConnect.Algorithm;
 using QuantConnect.Lean.Engine.Results.Analysis;
 using QuantConnect.Lean.Engine.Results.Analysis.Analyses;
 using QuantConnect.Orders;
@@ -178,6 +179,36 @@ namespace QuantConnect.Tests.Engine.Results
         }
 
         [Test]
+        public void NothingIsAnalyzedOrConsumedDuringAlgorithmWarmUp()
+        {
+            // A fresh algorithm is warming up until the engine flips it
+            var algorithm = new QCAlgorithm();
+            var ran = false;
+            var fake = new FakeAnalysisA(10)
+            {
+                Findings = () => MakeFindings(nameof(FakeAnalysisA), "sample", 1),
+                OnRun = () => ran = true
+            };
+            var analyzer = new TestInRunResultsAnalyzer(algorithm, fake);
+
+            var findings = analyzer.Run(MakeResult(2), new[] { "log" });
+
+            Assert.IsFalse(ran);
+            Assert.IsEmpty(findings);
+            Assert.AreEqual(0, analyzer.OrderEventsPosition);
+            Assert.AreEqual(0, analyzer.LogsPosition);
+
+            // Once warm-up finishes, the analysis catches up on the unconsumed order events and logs
+            algorithm.SetFinishedWarmingUp();
+            findings = analyzer.Run(MakeResult(2), new[] { "log" });
+
+            Assert.IsTrue(ran);
+            Assert.AreEqual("sample", findings.Single().Sample);
+            Assert.AreEqual(2, analyzer.OrderEventsPosition);
+            Assert.AreEqual(1, analyzer.LogsPosition);
+        }
+
+        [Test]
         public void FindingsAreRankedByAnalysisWeightAndCapped()
         {
             var lowWeight = new FakeAnalysisA(10)
@@ -226,7 +257,12 @@ namespace QuantConnect.Tests.Engine.Results
             private readonly IReadOnlyCollection<BaseResultsAnalysis> _analyses;
 
             public TestInRunResultsAnalyzer(params BaseResultsAnalysis[] analyses)
-                : base(null, Language.CSharp)
+                : this(null, analyses)
+            {
+            }
+
+            public TestInRunResultsAnalyzer(QCAlgorithm algorithm, params BaseResultsAnalysis[] analyses)
+                : base(algorithm, Language.CSharp)
             {
                 _analyses = analyses;
             }

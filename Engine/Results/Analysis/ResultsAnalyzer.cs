@@ -75,7 +75,7 @@ namespace QuantConnect.Lean.Engine.Results.Analysis
                 (_equityCurve, _benchmarkEquityCurve) = ReadEquityCurve(_result, _algorithm);
             }
 
-            var parameters = new ResultsAnalysisRunParameters(_result, _algorithm, _language, _logs, _equityCurve, _benchmarkEquityCurve);
+            var parameters = new ResultsAnalysisRunParameters(_result, _algorithm, _language, _logs, _equityCurve, _benchmarkEquityCurve, SpeedTracker);
 
             var responses = new List<QuantConnect.Analysis>();
             var timer = Stopwatch.StartNew();
@@ -125,6 +125,13 @@ namespace QuantConnect.Lean.Engine.Results.Analysis
         /// don't read the curves can skip it.
         /// </summary>
         protected virtual bool RequiresEquityCurves => true;
+
+        /// <summary>
+        /// The speed metrics tracked for the running backtest, made available to the analyses
+        /// through <see cref="ResultsAnalysisRunParameters.Speed"/>. Null unless the analyzer
+        /// tracks the algorithm speed, like the in-run analyzer does.
+        /// </summary>
+        protected virtual AlgorithmSpeedTracker SpeedTracker => null;
 
         /// <summary>
         /// Creates the set of diagnostic analyses to run against the backtest.

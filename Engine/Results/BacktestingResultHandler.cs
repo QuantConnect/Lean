@@ -461,6 +461,13 @@ namespace QuantConnect.Lean.Engine.Results
         {
             try
             {
+                // Nothing to analyze until trading starts: skip building the snapshot altogether.
+                // The analyzer catches up on the warm-up order events and logs on the first run after warm-up ends.
+                if (Algorithm.IsWarmingUp)
+                {
+                    return null;
+                }
+
                 var algorithm = _job.Language == Language.Python ? (Algorithm as AlgorithmPythonWrapper)?.BaseAlgorithm : Algorithm as QCAlgorithm;
                 if (algorithm == null)
                 {
@@ -475,6 +482,14 @@ namespace QuantConnect.Lean.Engine.Results
                 }
 
                 _inRunResultsAnalyzer ??= new InRunResultsAnalyzer(algorithm, _job.Language);
+
+                // Sample the engine speed counters for the algorithm speed analysis
+                var speedSample = new AlgorithmSpeedSample(
+                    DateTime.UtcNow - StartTime,
+                    PerformanceTrackingTool?.DataPoints ?? 0,
+                    Algorithm.HistoryProvider?.DataPointCount ?? 0,
+                    _progressMonitor?.ProcessedDays ?? 0,
+                    _progressMonitor?.TotalDays ?? 0);
 
                 // Only the order events and logs produced since the previous run are analyzed,
                 // the analyzer accumulates findings across runs
@@ -497,7 +512,7 @@ namespace QuantConnect.Lean.Engine.Results
                     totalPerformance));
 
                 // Keep the time budget small: this runs on the result handler thread and delays message processing
-                return _inRunResultsAnalyzer.Run(snapshot, logs, timeLimitSeconds: 1);
+                return _inRunResultsAnalyzer.Run(snapshot, logs, speedSample, timeLimitSeconds: 1);
             }
             catch (Exception ex)
             {

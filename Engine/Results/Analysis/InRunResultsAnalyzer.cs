@@ -37,9 +37,14 @@ namespace QuantConnect.Lean.Engine.Results.Analysis
             nameof(PortfolioValueIsNotPositiveAnalysis),
             nameof(TakeProfitAndStopLossOrdersAnalysis),
             nameof(PortfolioMarginUsageAnalysis),
+            nameof(AlgorithmSpeedAnalysis),
         };
 
         private readonly Dictionary<string, QuantConnect.Analysis> _findings = new();
+
+        private readonly AlgorithmSpeedTracker _speed = new();
+
+        private readonly QCAlgorithm _algorithm;
 
         /// <summary>
         /// The number of order events already consumed by previous runs. The order events
@@ -56,6 +61,19 @@ namespace QuantConnect.Lean.Engine.Results.Analysis
         public int LogsPosition { get; private set; }
 
         /// <summary>
+        /// The equity and benchmark curves are not built for in-run analysis:
+        /// none of the in-run analyses read them, and building them would issue
+        /// a benchmark history request on every run.
+        /// </summary>
+        protected override bool RequiresEquityCurves => false;
+
+        /// <summary>
+        /// The in-run analyses read the algorithm speed metrics accumulated from the
+        /// samples received on each run.
+        /// </summary>
+        protected override AlgorithmSpeedTracker SpeedTracker => _speed;
+
+        /// <summary>
         /// Initializes a new instance of the <see cref="InRunResultsAnalyzer"/> class.
         /// The instance is expected to be kept alive for the duration of the backtest,
         /// receiving fresh data on each <see cref="Run(Result, IReadOnlyList{string}, int, int)"/> call.
@@ -65,6 +83,7 @@ namespace QuantConnect.Lean.Engine.Results.Analysis
         public InRunResultsAnalyzer(QCAlgorithm algorithm, Language language)
             : base(null, algorithm, language, null)
         {
+            _algorithm = algorithm;
         }
 
         /// <summary>
@@ -75,15 +94,30 @@ namespace QuantConnect.Lean.Engine.Results.Analysis
         /// Findings from analyses scanning the order event and log streams are accumulated
         /// (first sample kept, counts totaled), while findings from state-based analyses are
         /// replaced on every run.
+        /// While the algorithm is warming up, nothing is analyzed or consumed and no findings are reported.
         /// </summary>
         /// <param name="result">A snapshot of the current intermediate backtest result, holding only new order events.</param>
         /// <param name="logs">The log lines produced since the previous run.</param>
+        /// <param name="speedSample">A sample of the engine speed counters for the algorithm speed analysis, when available.</param>
         /// <param name="timeLimitSeconds">Wall-clock seconds allowed for the full chain before early exit.</param>
         /// <param name="maxFailedAnalyses">Maximum number of failing analyses to return.</param>
         /// <returns>The accumulated findings, ranked by analysis weight.</returns>
-        public IReadOnlyList<QuantConnect.Analysis> Run(Result result, IReadOnlyList<string> logs, int timeLimitSeconds = 1, int maxFailedAnalyses = 10)
+        public IReadOnlyList<QuantConnect.Analysis> Run(Result result, IReadOnlyList<string> logs, AlgorithmSpeedSample? speedSample = null,
+            int timeLimitSeconds = 1, int maxFailedAnalyses = 10)
         {
+            // Nothing is analyzed during the algorithm warm-up period: trading hasn't started, and
+            // sampling the warm-up pace would skew the speed metrics. The positions don't advance,
+            // so the order events and logs produced during warm-up are analyzed by the first run after it ends.
+            if (_algorithm?.IsWarmingUp == true)
+            {
+                return [];
+            }
+
             SetAnalysisData(result, logs);
+            if (speedSample.HasValue)
+            {
+                _speed.AddSample(speedSample.Value);
+            }
             var newFindings = Run(timeLimitSeconds, maxFailedAnalyses);
 
             // The positions are advanced even when the time limit truncates a run, so the analyses that
@@ -112,6 +146,14 @@ namespace QuantConnect.Lean.Engine.Results.Analysis
                 _findings[finding.Name] = finding;
             }
 
+            return RankFindings(maxFailedAnalyses);
+        }
+
+        /// <summary>
+        /// Ranks the accumulated findings by their analysis weight, capped to the given maximum.
+        /// </summary>
+        private IReadOnlyList<QuantConnect.Analysis> RankFindings(int maxFailedAnalyses)
+        {
             var weights = GetAnalyses().ToDictionary(analysis => analysis.GetType().Name, analysis => analysis.Weight);
             return _findings.Values
                 .OrderByDescending(finding => weights.GetValueOrDefault(BaseAnalysisName(finding.Name)))
@@ -135,13 +177,6 @@ namespace QuantConnect.Lean.Engine.Results.Analysis
         }
 
         /// <summary>
-        /// The equity and benchmark curves are not built for in-run analysis:
-        /// none of the in-run analyses read them, and building them would issue
-        /// a benchmark history request on every run.
-        /// </summary>
-        protected override bool RequiresEquityCurves => false;
-
-        /// <summary>
         /// Creates the set of diagnostic analyses to run while the backtest is in progress.
         /// Only analyses that read the result snapshot (logs, orders, order events, charts) are
         /// included: they are cheap, thread-safe, and detect error conditions whose findings
@@ -149,8 +184,8 @@ namespace QuantConnect.Lean.Engine.Results.Analysis
         /// left to the final analysis, since partial-period statistics are noisy and require
         /// history requests.
         /// </summary>
-        protected override IReadOnlyCollection<BaseResultsAnalysis> GetAnalyses() => new BaseResultsAnalysis[]
-        {
+        protected override IReadOnlyCollection<BaseResultsAnalysis> GetAnalyses() =>
+        [
             new PortfolioValueIsNotPositiveAnalysis(),
             new InsufficientBuyingPowerOrderResponseErrorAnalysis(),
             new MarginCallsAnalysis(),
@@ -174,6 +209,7 @@ namespace QuantConnect.Lean.Engine.Results.Analysis
             new OrderQuantityLessThanLotSizeOrderResponseErrorAnalysis(),
             new InsightsEmittedForDelistedSecuritiesAnalysis(),
             new PortfolioMarginUsageAnalysis(),
-        };
+            new AlgorithmSpeedAnalysis(),
+        ];
     }
 }
