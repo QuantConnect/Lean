@@ -19,7 +19,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using NUnit.Framework;
-using QuantConnect.Algorithm;
 using QuantConnect.Lean.Engine.Results.Analysis;
 using QuantConnect.Lean.Engine.Results.Analysis.Analyses;
 using QuantConnect.Orders;
@@ -179,33 +178,22 @@ namespace QuantConnect.Tests.Engine.Results
         }
 
         [Test]
-        public void NothingIsAnalyzedOrConsumedDuringAlgorithmWarmUp()
+        public void SpeedSamplesAreTrackedOnlyWhenProvided()
         {
-            // A fresh algorithm is warming up until the engine flips it
-            var algorithm = new QCAlgorithm();
-            var ran = false;
-            var fake = new FakeAnalysisA(10)
-            {
-                Findings = () => MakeFindings(nameof(FakeAnalysisA), "sample", 1),
-                OnRun = () => ran = true
-            };
-            var analyzer = new TestInRunResultsAnalyzer(algorithm, fake);
+            AlgorithmSpeedTracker speed = null;
+            var fake = new FakeAnalysisA(10) { OnParameters = parameters => speed = parameters.Speed };
+            var analyzer = new TestInRunResultsAnalyzer(fake);
 
-            var findings = analyzer.Run(MakeResult(2), new[] { "log" });
+            analyzer.Run(MakeResult(1), new[] { "log" });
+            Assert.IsNotNull(speed);
+            Assert.AreEqual(0, speed.SampleCount);
 
-            Assert.IsFalse(ran);
-            Assert.IsEmpty(findings);
-            Assert.AreEqual(0, analyzer.OrderEventsPosition);
-            Assert.AreEqual(0, analyzer.LogsPosition);
+            analyzer.Run(MakeResult(1), new[] { "log" }, new AlgorithmSpeedSample(TimeSpan.FromSeconds(30), 100, 0, 1, 10));
+            Assert.AreEqual(1, speed.SampleCount);
 
-            // Once warm-up finishes, the analysis catches up on the unconsumed order events and logs
-            algorithm.SetFinishedWarmingUp();
-            findings = analyzer.Run(MakeResult(2), new[] { "log" });
-
-            Assert.IsTrue(ran);
-            Assert.AreEqual("sample", findings.Single().Sample);
-            Assert.AreEqual(2, analyzer.OrderEventsPosition);
-            Assert.AreEqual(1, analyzer.LogsPosition);
+            // No sample provided (e.g. while the algorithm warms up): the tracker is left untouched
+            analyzer.Run(MakeResult(1), new[] { "log" });
+            Assert.AreEqual(1, speed.SampleCount);
         }
 
         [Test]
@@ -257,12 +245,7 @@ namespace QuantConnect.Tests.Engine.Results
             private readonly IReadOnlyCollection<BaseResultsAnalysis> _analyses;
 
             public TestInRunResultsAnalyzer(params BaseResultsAnalysis[] analyses)
-                : this(null, analyses)
-            {
-            }
-
-            public TestInRunResultsAnalyzer(QCAlgorithm algorithm, params BaseResultsAnalysis[] analyses)
-                : base(algorithm, Language.CSharp)
+                : base(null, Language.CSharp)
             {
                 _analyses = analyses;
             }
@@ -282,6 +265,8 @@ namespace QuantConnect.Tests.Engine.Results
 
             public Action OnRun { get; set; }
 
+            public Action<ResultsAnalysisRunParameters> OnParameters { get; set; }
+
             protected FakeAnalysis(int weight)
             {
                 _weight = weight;
@@ -290,6 +275,7 @@ namespace QuantConnect.Tests.Engine.Results
             public override IReadOnlyList<QuantConnect.Analysis> Run(ResultsAnalysisRunParameters parameters)
             {
                 OnRun?.Invoke();
+                OnParameters?.Invoke(parameters);
                 return Findings();
             }
         }

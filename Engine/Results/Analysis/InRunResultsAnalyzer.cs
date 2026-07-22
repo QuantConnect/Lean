@@ -44,18 +44,16 @@ namespace QuantConnect.Lean.Engine.Results.Analysis
 
         private readonly AlgorithmSpeedTracker _speed = new();
 
-        private readonly QCAlgorithm _algorithm;
-
         /// <summary>
         /// The number of order events already consumed by previous runs. The order events
-        /// in the result passed to <see cref="Run(Result, IReadOnlyList{string}, int, int)"/>
+        /// in the result passed to <see cref="Run(Result, IReadOnlyList{string}, System.Nullable{AlgorithmSpeedSample}, int, int)"/>
         /// are expected to start at this position.
         /// </summary>
         public int OrderEventsPosition { get; private set; }
 
         /// <summary>
         /// The number of log entries already consumed by previous runs. The logs passed to
-        /// <see cref="Run(Result, IReadOnlyList{string}, int, int)"/> are expected to start
+        /// <see cref="Run(Result, IReadOnlyList{string}, System.Nullable{AlgorithmSpeedSample}, int, int)"/> are expected to start
         /// at this position.
         /// </summary>
         public int LogsPosition { get; private set; }
@@ -76,14 +74,13 @@ namespace QuantConnect.Lean.Engine.Results.Analysis
         /// <summary>
         /// Initializes a new instance of the <see cref="InRunResultsAnalyzer"/> class.
         /// The instance is expected to be kept alive for the duration of the backtest,
-        /// receiving fresh data on each <see cref="Run(Result, IReadOnlyList{string}, int, int)"/> call.
+        /// receiving fresh data on each <see cref="Run(Result, IReadOnlyList{string}, System.Nullable{AlgorithmSpeedSample}, int, int)"/> call.
         /// </summary>
         /// <param name="algorithm">The algorithm instance used for history requests and settings.</param>
         /// <param name="language">The programming language the algorithm is written in.</param>
         public InRunResultsAnalyzer(QCAlgorithm algorithm, Language language)
             : base(null, algorithm, language, null)
         {
-            _algorithm = algorithm;
         }
 
         /// <summary>
@@ -94,25 +91,17 @@ namespace QuantConnect.Lean.Engine.Results.Analysis
         /// Findings from analyses scanning the order event and log streams are accumulated
         /// (first sample kept, counts totaled), while findings from state-based analyses are
         /// replaced on every run.
-        /// While the algorithm is warming up, nothing is analyzed or consumed and no findings are reported.
         /// </summary>
         /// <param name="result">A snapshot of the current intermediate backtest result, holding only new order events.</param>
         /// <param name="logs">The log lines produced since the previous run.</param>
-        /// <param name="speedSample">A sample of the engine speed counters for the algorithm speed analysis, when available.</param>
+        /// <param name="speedSample">A sample of the engine speed counters for the algorithm speed analysis.
+        /// Null when the counters should not be sampled, like while the algorithm warms up.</param>
         /// <param name="timeLimitSeconds">Wall-clock seconds allowed for the full chain before early exit.</param>
         /// <param name="maxFailedAnalyses">Maximum number of failing analyses to return.</param>
         /// <returns>The accumulated findings, ranked by analysis weight.</returns>
         public IReadOnlyList<QuantConnect.Analysis> Run(Result result, IReadOnlyList<string> logs, AlgorithmSpeedSample? speedSample = null,
             int timeLimitSeconds = 1, int maxFailedAnalyses = 10)
         {
-            // Nothing is analyzed during the algorithm warm-up period: trading hasn't started, and
-            // sampling the warm-up pace would skew the speed metrics. The positions don't advance,
-            // so the order events and logs produced during warm-up are analyzed by the first run after it ends.
-            if (_algorithm?.IsWarmingUp == true)
-            {
-                return [];
-            }
-
             SetAnalysisData(result, logs);
             if (speedSample.HasValue)
             {

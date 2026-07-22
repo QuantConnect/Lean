@@ -464,13 +464,6 @@ namespace QuantConnect.Lean.Engine.Results
         {
             try
             {
-                // Nothing to analyze until trading starts: skip building the snapshot altogether.
-                // The analyzer catches up on the warm-up order events and logs on the first run after warm-up ends.
-                if (Algorithm.IsWarmingUp)
-                {
-                    return null;
-                }
-
                 if (AlgorithmInstance == null)
                 {
                     return null;
@@ -485,13 +478,18 @@ namespace QuantConnect.Lean.Engine.Results
 
                 _inRunResultsAnalyzer ??= new InRunResultsAnalyzer(AlgorithmInstance, _job.Language);
 
-                // Sample the engine speed counters for the algorithm speed analysis
-                var speedSample = new AlgorithmSpeedSample(
-                    DateTime.UtcNow - StartTime,
-                    PerformanceTrackingTool?.DataPoints ?? 0,
-                    PerformanceTrackingTool?.HistoryDataPoints ?? 0,
-                    _progressMonitor?.ProcessedDays ?? 0,
-                    _progressMonitor?.TotalDays ?? 0);
+                // Sample the engine speed counters for the algorithm speed analysis, but not while the
+                // algorithm is warming up: the warm-up pace would skew the speed metrics. The analyses
+                // themselves do run during warm-up, so conditions like orders submitted while warming up
+                // surface without waiting for warm-up to end
+                AlgorithmSpeedSample? speedSample = Algorithm.IsWarmingUp
+                    ? null
+                    : new AlgorithmSpeedSample(
+                        DateTime.UtcNow - StartTime,
+                        PerformanceTrackingTool?.DataPoints ?? 0,
+                        PerformanceTrackingTool?.HistoryDataPoints ?? 0,
+                        _progressMonitor?.ProcessedDays ?? 0,
+                        _progressMonitor?.TotalDays ?? 0);
 
                 // Only the order events and logs produced since the previous run are analyzed,
                 // the analyzer accumulates findings across runs
