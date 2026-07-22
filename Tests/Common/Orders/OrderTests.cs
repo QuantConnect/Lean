@@ -80,6 +80,24 @@ namespace QuantConnect.Tests.Common.Orders
             }
         }
 
+        [TestCase(OrderType.Limit)]
+        [TestCase(OrderType.StopMarket)]
+        public void CreateOrderAttachesGroupOrderManagerBeforeIdIsSet(OrderType orderType)
+        {
+            var time = new DateTime(2015, 11, 23, 17, 15, 37);
+            var groupOrderManager = new GroupOrderManager(1, 2, 100) { ComboType = ComboType.OneCancelsTheOther };
+            var request = new SubmitOrderRequest(orderType, SecurityType.Equity, Symbols.SPY, 100, 195m, 210.10m, time, "oco",
+                groupOrderManager: groupOrderManager);
+            request.SetOrderId(12345);
+
+            var order = Order.CreateOrder(request);
+
+            Assert.AreEqual(orderType, order.Type);
+            Assert.AreSame(groupOrderManager, order.GroupOrderManager);
+            Assert.AreEqual(12345, order.Id);
+            Assert.IsTrue(groupOrderManager.OrderIds.Contains(12345));
+        }
+
         private static TestCaseData[] GetValueTestParameters()
         {
             const decimal delta = 1m;

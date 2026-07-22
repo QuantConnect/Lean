@@ -60,6 +60,12 @@ namespace QuantConnect.Python
                                 continue;
                             }
                         }
+                        else if (method != null && !method.IsAbstract)
+                        {
+                            // a default interface method already provides a fallback implementation,
+                            // so Python models are not required to define it
+                            continue;
+                        }
                         missingMembers.Add(member.Name);
                     }
                 }

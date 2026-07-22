@@ -432,6 +432,9 @@ namespace QuantConnect.Securities
                            dir == x.Direction &&
                            // don't count our current order
                            x.Id != order.Id &&
+                           // don't count siblings of the same one-cancels-the-other group: only one of them can ever execute
+                           (order.GroupOrderManager == null || order.GroupOrderManager.ComboType != ComboType.OneCancelsTheOther ||
+                                x.GroupOrderManager?.Id != order.GroupOrderManager.Id) &&
                            // only count working orders
                            (x.Type == OrderType.Limit || x.Type == OrderType.StopMarket);
                 }

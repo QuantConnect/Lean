@@ -58,6 +58,17 @@ namespace QuantConnect.Tests.Python
             }
 
             [Test]
+            public void DoesNotThrowWhenDefaultBodiedInterfaceMethodIsNotImplemented()
+            {
+                using (Py.GIL())
+                {
+                    var module = PyModule.FromString(nameof(ValidateImplementationOf), FullyImplementedExceptDefaultMethod);
+                    var model = module.GetAttr("FullyImplementedExceptDefaultMethodModel").Invoke();
+                    Assert.That(() => model.ValidateImplementationOf<IModelWithDefaultMethod>(), Throws.Nothing);
+                }
+            }
+
+            [Test]
             public void SettlementModelPythonWrapperWorks()
             {
                 var results = AlgorithmRunner.RunLocalBacktest("CustomSettlementModelRegressionAlgorithm",
@@ -315,11 +326,41 @@ class ModelMissingProperty:
         pass
 ";
 
+            // a Python class that implements every IModelWithDefaultMethod member except the
+            // default-bodied one, proving the validation loosening for default interface methods
+            private const string FullyImplementedExceptDefaultMethod =
+                @"
+from clr import AddReference
+AddReference('QuantConnect.Tests')
+
+from QuantConnect.Tests.Python import *
+
+class FullyImplementedExceptDefaultMethodModel:
+    def MethodOne():
+        pass
+    def MethodTwo():
+        pass
+    @property
+    def PropertyOne(self):
+        return 'value'
+
+";
+
             interface IModel
             {
                 string PropertyOne { get; set; }
                 void MethodOne();
                 void MethodTwo();
+            }
+
+            // a true C# interface with a default-bodied (C# 8) method: Python models are not
+            // required to implement it, since the default body already provides a fallback
+            interface IModelWithDefaultMethod
+            {
+                string PropertyOne { get; set; }
+                void MethodOne();
+                void MethodTwo();
+                bool MethodWithDefaultBody() => true;
             }
 
             public class Model : IModel

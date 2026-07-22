@@ -50,7 +50,7 @@ namespace QuantConnect.Tests.Brokerages
         [SetUp]
         public void Setup()
         {
-            Log.LogHandler = new NUnitLogHandler();
+            //Log.LogHandler = new NUnitLogHandler();
 
             Log.Trace("");
             Log.Trace("");

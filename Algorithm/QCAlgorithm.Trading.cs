@@ -928,6 +928,71 @@ namespace QuantConnect.Algorithm
             return SubmitComboOrder(legs, quantity, limitPrice, asynchronous, tag, orderProperties);
         }
 
+        /// <summary>
+        /// Creates a one-cancels-the-other (OCO) order group: 2 or 3 orders placed together where the first
+        /// one to fully fill cancels every other order in the group. No order in the group waits for another
+        /// one to fill; they are all live in the market at the same time
+        /// </summary>
+        /// <param name="orders">
+        /// The orders that make up the group, built with their public constructors but not submitted. This method
+        /// reads only their symbol, quantity and leg price, builds fresh requests from them, and never registers
+        /// the passed instances: the returned tickets are the live handles, not the passed orders. Each order must
+        /// be a fresh spec: a <see cref="OrderType.Limit"/> or <see cref="OrderType.StopMarket"/> order with a
+        /// non-zero quantity, status <see cref="OrderStatus.None"/>, no <see cref="Order.BrokerId"/> and no
+        /// <see cref="Order.GroupOrderManager"/>
+        /// </param>
+        /// <param name="asynchronous">Send the orders asynchronously (false). Otherwise we'll block until every leg is submitted</param>
+        /// <param name="tag">String tag applied to every leg (optional). Overrides any tag set on the individual orders</param>
+        /// <param name="orderProperties">
+        /// The order properties to use for every leg, including their shared time in force. Defaults to
+        /// <see cref="DefaultOrderProperties"/>. Overrides any properties set on the individual orders
+        /// </param>
+        /// <returns>One order ticket per leg, in the same order as <paramref name="orders"/>. If a pre-order check
+        /// fails, nothing is placed and the list contains a single invalid ticket</returns>
+        [DocumentationAttribute(TradingAndOrders)]
+        public List<OrderTicket> OneCancelsTheOtherOrder(List<Order> orders, bool asynchronous = false, string tag = "", IOrderProperties orderProperties = null)
+        {
+            if (orders.Count < 2 || orders.Count > 3)
+            {
+                throw new ArgumentException("OneCancelsTheOtherOrder requires 2 or 3 orders");
+            }
+
+            var seenInstances = new HashSet<Order>();
+            foreach (var order in orders)
+            {
+                if (order == null)
+                {
+                    throw new ArgumentException("OneCancelsTheOtherOrder does not support a null order");
+                }
+                if (order.Type != OrderType.Limit && order.Type != OrderType.StopMarket)
+                {
+                    throw new ArgumentException("OneCancelsTheOtherOrder only supports Limit and StopMarket orders");
+                }
+                if (order.Quantity == 0)
+                {
+                    throw new ArgumentException("OneCancelsTheOtherOrder does not support zero quantity orders");
+                }
+                if (order.GroupOrderManager != null)
+                {
+                    throw new ArgumentException("OneCancelsTheOtherOrder requires fresh orders: the passed order already belongs to a group");
+                }
+                if (order.BrokerId.Count > 0)
+                {
+                    throw new ArgumentException("OneCancelsTheOtherOrder requires fresh orders: the passed order already carries a brokerage id");
+                }
+                if (order.Status != OrderStatus.None)
+                {
+                    throw new ArgumentException("OneCancelsTheOtherOrder requires fresh orders: the passed order has already been submitted");
+                }
+                if (!seenInstances.Add(order))
+                {
+                    throw new ArgumentException("OneCancelsTheOtherOrder does not support passing the same order instance twice");
+                }
+            }
+
+            return SubmitGroupOrder(ComboType.OneCancelsTheOther, orders, asynchronous, tag, orderProperties);
+        }
+
         private List<OrderTicket> GenerateOptionStrategyOrders(OptionStrategy strategy, int strategyQuantity, bool asynchronous, string tag, IOrderProperties orderProperties)
         {
             // Make sure the strategy is initialized, that is, canonical and leg symbols are set.
@@ -1005,6 +1070,88 @@ namespace QuantConnect.Algorithm
                 }
             }
 
+            return orderTickets;
+        }
+
+        /// <summary>
+        /// Builds fresh <see cref="SubmitOrderRequest"/>s for every leg of an order group from a list of order
+        /// specs, runs the pre-order checks for every leg before submitting any of them, and submits them in
+        /// list order. This is the shared submitter for order group types that are not the existing ratio-based
+        /// combo (<see cref="SubmitComboOrder"/> is unrelated and unchanged): <see cref="OneCancelsTheOtherOrder"/>
+        /// is the first caller, and the future conditional (OTO) and bracket order types add their own thin
+        /// wrapper over this same method
+        /// </summary>
+        /// <param name="comboType">How the legs of the group execute relative to each other</param>
+        /// <param name="orders">The order specs that make up the group's legs</param>
+        /// <param name="asynchronous">Send the orders asynchronously (false). Otherwise we'll block until every leg is submitted</param>
+        /// <param name="tag">String tag applied to every leg</param>
+        /// <param name="orderProperties">The order properties to use for every leg. Defaults to <see cref="DefaultOrderProperties"/></param>
+        /// <returns>One order ticket per leg, in the same order as <paramref name="orders"/></returns>
+        private List<OrderTicket> SubmitGroupOrder(ComboType comboType, List<Order> orders, bool asynchronous, string tag, IOrderProperties orderProperties)
+        {
+            // one clock and one group manager for every leg: a stale user time would corrupt Day-TIF expiry,
+            // and the legs must share a single clock so one can't fill a bar early relative to the others
+            var groupOrderManager = new GroupOrderManager(Transactions.GetIncrementGroupOrderManagerId(), orders.Count, orders[0].Quantity)
+            {
+                ComboType = comboType
+            };
+
+            List<OrderTicket> orderTickets = new(capacity: orders.Count);
+            List<SubmitOrderRequest> submitRequests = new(capacity: orders.Count);
+            foreach (var order in orders)
+            {
+                var security = GetSecurityForOrder(order.Symbol);
+
+                decimal limitPrice;
+                decimal stopPrice;
+                switch (order.Type)
+                {
+                    case OrderType.Limit:
+                        limitPrice = ((LimitOrder)order).LimitPrice;
+                        stopPrice = 0m;
+                        break;
+
+                    case OrderType.StopMarket:
+                        limitPrice = 0m;
+                        stopPrice = ((StopMarketOrder)order).StopPrice;
+                        break;
+
+                    default:
+                        // every current caller (OneCancelsTheOtherOrder) already validates leg types before
+                        // reaching here; this only guards a future caller that forgets to
+                        throw new ArgumentException($"SubmitGroupOrder does not support order type {order.Type}");
+                }
+
+                var request = CreateSubmitOrderRequest(
+                    order.Type,
+                    security,
+                    order.Quantity,
+                    tag,
+                    orderProperties ?? DefaultOrderProperties?.Clone(),
+                    asynchronous: asynchronous,
+                    groupOrderManager: groupOrderManager,
+                    limitPrice: limitPrice,
+                    stopPrice: stopPrice);
+
+                // we execute pre order checks for all requests before submitting, so that if anything fails we
+                // are not left with half submitted groups
+                var response = PreOrderChecks(request);
+                if (response.IsError)
+                {
+                    orderTickets.Add(OrderTicket.InvalidSubmitRequest(Transactions, request, response));
+                    return orderTickets;
+                }
+
+                submitRequests.Add(request);
+            }
+
+            foreach (var request in submitRequests)
+            {
+                orderTickets.Add(Transactions.AddOrder(request));
+            }
+
+            // unlike a combo market order, a group of this kind has nothing that fills at submit time (resting
+            // legs stay open by design), so there is nothing to synchronously wait for here
             return orderTickets;
         }
 
@@ -1388,6 +1535,7 @@ namespace QuantConnect.Algorithm
 
                 // cancel all open orders
                 var marketOrdersQuantity = 0m;
+                var canceledGroupIds = new HashSet<int>();
                 foreach (var order in orders)
                 {
                     if (order.Type == OrderType.Market)
@@ -1400,7 +1548,8 @@ namespace QuantConnect.Algorithm
                             marketOrdersQuantity += ticket.QuantityRemaining;
                         }
                     }
-                    else
+                    // canceling one leg of a group cancels every leg, so only issue one cancel per group
+                    else if (order.GroupOrderManager == null || canceledGroupIds.Add(order.GroupOrderManager.Id))
                     {
                         Transactions.CancelOrder(order.Id, tag);
                     }

@@ -941,11 +941,40 @@ namespace QuantConnect.Securities
         /// <returns>True if the algorithm has enough buying power available</returns>
         public HasSufficientBuyingPowerForOrderResult HasSufficientBuyingPowerForOrder(List<Order> orders)
         {
+            var groupOrderManager = orders.Count > 0 ? orders[0].GroupOrderManager : null;
+            if (groupOrderManager != null && groupOrderManager.ComboType == ComboType.OneCancelsTheOther)
+            {
+                // exactly one leg of the group can ever execute. This is checked before the position-group path
+                // on purpose: two option legs on different contracts could otherwise form a valid strategy there
+                // and get margined as if both execute, which is wrong for a one-winner group.
+                if (orders.All(order => order.Symbol == orders[0].Symbol))
+                {
+                    // same symbol: comparing notional value is meaningful, so we only need to afford the
+                    // most expensive leg
+                    var mostExpensiveLeg = orders.OrderByDescending(order => Math.Abs(order.GetValue(Securities[order.Symbol]))).First();
+                    var mostExpensiveLegSecurity = Securities[mostExpensiveLeg.Symbol];
+                    return mostExpensiveLegSecurity.BuyingPowerModel.HasSufficientBuyingPowerForOrder(this, mostExpensiveLegSecurity, mostExpensiveLeg);
+                }
+
+                // different symbols/security types have no common notional metric to compare (an option's
+                // premium is not its margin requirement), so conservatively require every leg to individually
+                // pass its own buying power check
+                return HasSufficientBuyingPowerForEachOrder(orders);
+            }
+
             if (Positions.TryCreatePositionGroup(orders, out var group))
             {
                 return group.BuyingPowerModel.HasSufficientBuyingPowerForOrder(new HasSufficientPositionGroupBuyingPowerForOrderParameters(this, group, orders));
             }
 
+            return HasSufficientBuyingPowerForEachOrder(orders);
+        }
+
+        /// <summary>
+        /// Checks that every one of the given orders individually has sufficient buying power
+        /// </summary>
+        private HasSufficientBuyingPowerForOrderResult HasSufficientBuyingPowerForEachOrder(List<Order> orders)
+        {
             for (var i = 0; i < orders.Count; i++)
             {
                 var order = orders[i];

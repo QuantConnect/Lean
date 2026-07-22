@@ -1592,6 +1592,49 @@ namespace QuantConnect.Tests.Algorithm
         }
 
         [Test]
+        public void LiquidateCancelsOpenOneCancelsTheOtherGroupOnlyOnce()
+        {
+            Security msft;
+            var algo = GetAlgorithm(out msft, 1, 0);
+            var aapl = algo.AddEquity("AAPL");
+            // keep the exchange always open so the closing trade is a regular market order, not a MarketOnOpen/Close conversion
+            msft.Exchange.SetMarketHours(new List<MarketHoursSegment> { MarketHoursSegment.OpenAllDay() });
+            aapl.Exchange.SetMarketHours(new List<MarketHoursSegment> { MarketHoursSegment.OpenAllDay() });
+            Update(msft, 25);
+            Update(aapl, 25);
+            algo.Portfolio.SetCash(1000000);
+
+            // other, unrelated holdings besides the OCO group
+            msft.Holdings.SetHoldings(25, 100);
+            aapl.Holdings.SetHoldings(25, 50);
+
+            // an open OCO group with 2 legs on MSFT
+            var ocoTickets = algo.OneCancelsTheOtherOrder(new List<Order>
+            {
+                CreateOcoLimitLeg(-50m, 30m),
+                CreateOcoStopLeg(-50m, 20m)
+            });
+            foreach (var ticket in ocoTickets)
+            {
+                Assert.AreNotEqual(OrderStatus.Invalid, ticket.Status);
+                // make the leg visible to Transactions.GetOpenOrders(), which Liquidate() reads
+                _fakeOrderProcessor.AddOrder(Order.CreateOrder(ticket.SubmitRequest));
+            }
+
+            List<OrderTicket> liquidatedTickets = null;
+            Assert.DoesNotThrow(() => liquidatedTickets = algo.Liquidate());
+
+            // only one of the 2 open legs should have actually received a cancel request: canceling one
+            // leg of a group cancels every leg, so Liquidate() must skip the sibling instead of canceling it too
+            var canceledLegsCount = ocoTickets.Count(ticket => ticket.CancelRequest != null);
+            Assert.AreEqual(1, canceledLegsCount);
+
+            // both symbols still got their closing market order
+            Assert.IsTrue(liquidatedTickets.Any(x => x.Symbol == Symbols.MSFT));
+            Assert.IsTrue(liquidatedTickets.Any(x => x.Symbol == Symbols.AAPL));
+        }
+
+        [Test]
         public void MarketOrdersAreSupportedForFuturesOnExtendedMarketHours()
         {
             var algo = GetAlgorithm(out _, 1, 0);
@@ -1804,6 +1847,94 @@ namespace QuantConnect.Tests.Algorithm
         }
 
         [Test]
+        public void OneCancelsTheOtherOrderWithTwoValidOrdersReturnsOneTicketPerLegSharingGroupManager()
+        {
+            Security msft;
+            var algo = GetAlgorithm(out msft, 1, 0);
+            Update(msft, 25);
+
+            var tickets = algo.OneCancelsTheOtherOrder(new List<Order>
+            {
+                CreateOcoLimitLeg(),
+                CreateOcoStopLeg()
+            });
+
+            Assert.AreEqual(2, tickets.Count);
+            foreach (var ticket in tickets)
+            {
+                Assert.AreNotEqual(OrderStatus.Invalid, ticket.Status);
+            }
+
+            var groupOrderManager = tickets[0].SubmitRequest.GroupOrderManager;
+            Assert.IsNotNull(groupOrderManager);
+            Assert.AreEqual(ComboType.OneCancelsTheOther, groupOrderManager.ComboType);
+            Assert.AreEqual(2, groupOrderManager.Count);
+            Assert.AreSame(groupOrderManager, tickets[1].SubmitRequest.GroupOrderManager);
+        }
+
+        [TestCaseSource(nameof(OneCancelsTheOtherOrderInvalidOrdersCases))]
+        public void OneCancelsTheOtherOrderWithInvalidOrdersThrowsArgumentException(List<Order> orders)
+        {
+            var algo = GetAlgorithm(out var msft, 1, 0);
+            Update(msft, 25);
+
+            Assert.Throws<ArgumentException>(() => algo.OneCancelsTheOtherOrder(orders));
+        }
+
+        [Test]
+        public void OneCancelsTheOtherOrderDoesNotMutateUserPassedOrders()
+        {
+            Security msft;
+            var algo = GetAlgorithm(out msft, 1, 0);
+            Update(msft, 25);
+
+            var limitLeg = CreateOcoLimitLeg();
+            var stopLeg = CreateOcoStopLeg();
+            var orders = new List<Order> { limitLeg, stopLeg };
+
+            var tickets = algo.OneCancelsTheOtherOrder(orders);
+            foreach (var ticket in tickets)
+            {
+                Assert.AreNotEqual(OrderStatus.Invalid, ticket.Status);
+            }
+
+            // the user's own order instances must stay exactly as they were built: no Id, no BrokerId,
+            // no GroupOrderManager, status still None. The tickets, not these instances, are the live handles
+            foreach (var order in orders)
+            {
+                Assert.AreEqual(OrderStatus.None, order.Status);
+                Assert.AreEqual(0, order.Id);
+                Assert.AreEqual(0, order.BrokerId.Count);
+                Assert.IsNull(order.GroupOrderManager);
+            }
+        }
+
+        [Test]
+        public void OneCancelsTheOtherOrderUsesGroupTagAndPropertiesNotLegLevelOnes()
+        {
+            Security msft;
+            var algo = GetAlgorithm(out msft, 1, 0);
+            Update(msft, 25);
+
+            var legProperties = new OrderProperties { TimeInForce = TimeInForce.Day };
+            var orders = new List<Order>
+            {
+                CreateOcoLimitLeg(tag: "leg-tag", properties: legProperties),
+                CreateOcoStopLeg(tag: "leg-tag", properties: legProperties)
+            };
+
+            var groupProperties = new OrderProperties { TimeInForce = TimeInForce.GoodTilCanceled };
+            var tickets = algo.OneCancelsTheOtherOrder(orders, tag: "group-tag", orderProperties: groupProperties);
+
+            foreach (var ticket in tickets)
+            {
+                Assert.AreNotEqual(OrderStatus.Invalid, ticket.Status);
+                Assert.AreEqual("group-tag", ticket.SubmitRequest.Tag);
+                Assert.AreEqual(TimeInForce.GoodTilCanceled, ticket.SubmitRequest.OrderProperties.TimeInForce);
+            }
+        }
+
+        [Test]
         public void MarketOnCloseOrdersSubmissionTimeCheck([Values] bool beforeLatestSubmissionTime)
         {
             var algo = GetAlgorithm(out _, 1, 0);
@@ -1890,6 +2021,48 @@ namespace QuantConnect.Tests.Algorithm
             var hashSufficientBuyingPower = security.BuyingPowerModel.HasSufficientBuyingPowerForOrder(algo.Portfolio,
                 security, new MarketOrder(security.Symbol, orderQuantity, DateTime.UtcNow));
             return hashSufficientBuyingPower.IsSufficient;
+        }
+
+        private static LimitOrder CreateOcoLimitLeg(decimal quantity = -50m, decimal limitPrice = 30m, string tag = "", IOrderProperties properties = null)
+        {
+            return new LimitOrder(Symbols.MSFT, quantity, limitPrice, DateTime.UtcNow, tag, properties);
+        }
+
+        private static StopMarketOrder CreateOcoStopLeg(decimal quantity = -50m, decimal stopPrice = 20m, string tag = "", IOrderProperties properties = null)
+        {
+            return new StopMarketOrder(Symbols.MSFT, quantity, stopPrice, DateTime.UtcNow, tag, properties);
+        }
+
+        private static IEnumerable<TestCaseData> OneCancelsTheOtherOrderInvalidOrdersCases()
+        {
+            yield return new TestCaseData(new List<Order> { CreateOcoLimitLeg() }).SetName("OneLeg");
+
+            yield return new TestCaseData(new List<Order>
+            {
+                CreateOcoLimitLeg(-10m), CreateOcoStopLeg(-10m), CreateOcoLimitLeg(-5m), CreateOcoStopLeg(-5m)
+            }).SetName("FourLegs");
+
+            yield return new TestCaseData(new List<Order> { CreateOcoLimitLeg(0m), CreateOcoStopLeg() }).SetName("ZeroQuantityLeg");
+
+            yield return new TestCaseData(new List<Order>
+            {
+                new MarketOrder(Symbols.MSFT, -10m, DateTime.UtcNow), CreateOcoStopLeg()
+            }).SetName("UnsupportedOrderType");
+
+            var alreadySubmitted = CreateOcoLimitLeg();
+            alreadySubmitted.Status = OrderStatus.Submitted;
+            yield return new TestCaseData(new List<Order> { alreadySubmitted, CreateOcoStopLeg() }).SetName("AlreadySubmittedOrder");
+
+            var withBrokerId = CreateOcoLimitLeg();
+            withBrokerId.BrokerId.Add("1");
+            yield return new TestCaseData(new List<Order> { withBrokerId, CreateOcoStopLeg() }).SetName("OrderWithBrokerId");
+
+            var withGroupManager = CreateOcoLimitLeg();
+            withGroupManager.GroupOrderManager = new GroupOrderManager(1, 2, withGroupManager.Quantity);
+            yield return new TestCaseData(new List<Order> { withGroupManager, CreateOcoStopLeg() }).SetName("OrderWithGroupOrderManager");
+
+            var duplicate = CreateOcoLimitLeg();
+            yield return new TestCaseData(new List<Order> { duplicate, duplicate }).SetName("DuplicateInstance");
         }
 
         private static object[] LiquidateWorksAsExpectedTestCases =
