@@ -207,6 +207,42 @@ namespace QuantConnect.Tests.Common.Securities.CryptoFuture
             Assert.AreEqual(0, buyingPower.Value);
         }
 
+        [Test]
+        public void BinanceUsdQuotedFutureIsCoinMargined()
+        {
+            var symbol = Symbol.Create("BTCUSD", SecurityType.CryptoFuture, Market.Binance);
+            var cryptoFuture = new QuantConnect.Securities.CryptoFuture.CryptoFuture(
+                symbol,
+                SecurityExchangeHours.AlwaysOpen(TimeZones.NewYork),
+                new Cash("USD", 0, 1m),
+                new Cash("BTC", 0, 1m),
+                SymbolProperties.GetDefault("USD"),
+                ErrorCurrencyConverter.Instance,
+                RegisteredSecurityDataTypesProvider.Null,
+                new SecurityCache());
+
+            Assert.IsTrue(cryptoFuture.IsCryptoCoinFuture());
+        }
+
+        [Test]
+        public void NonBinanceUsdQuotedFutureIsNotCoinMargined()
+        {
+            // EU MiCA-compliant exchanges (e.g. Kraken Futures, OKX EU) quote linear, USD-margined
+            // futures directly in fiat USD rather than a stablecoin.
+            var symbol = Symbol.Create("BTCUSD", SecurityType.CryptoFuture, Market.Kraken);
+            var cryptoFuture = new QuantConnect.Securities.CryptoFuture.CryptoFuture(
+                symbol,
+                SecurityExchangeHours.AlwaysOpen(TimeZones.NewYork),
+                new Cash("USD", 0, 1m),
+                new Cash("BTC", 0, 1m),
+                SymbolProperties.GetDefault("USD"),
+                ErrorCurrencyConverter.Instance,
+                RegisteredSecurityDataTypesProvider.Null,
+                new SecurityCache());
+
+            Assert.IsFalse(cryptoFuture.IsCryptoCoinFuture());
+        }
+
         private static QCAlgorithm GetAlgorithm()
         {
             // Initialize algorithm
