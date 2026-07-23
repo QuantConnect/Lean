@@ -288,7 +288,7 @@ namespace QuantConnect.Orders.Fills
             if (order.Status == OrderStatus.Canceled) return fill;
 
             // make sure the exchange is open/normal market hours before filling
-            if (!IsExchangeOpen(asset, false)) return fill;
+            if (!IsExchangeOpen(asset, order, false)) return fill;
 
             var orderDirection = order.Direction;
             var prices = GetPricesCheckingPythonWrapper(asset, orderDirection);
@@ -354,7 +354,7 @@ namespace QuantConnect.Orders.Fills
             if (order.Status == OrderStatus.Canceled) return fill;
 
             // make sure the exchange is open/normal market hours before filling
-            if (!IsExchangeOpen(asset, false)) return fill;
+            if (!IsExchangeOpen(asset, order, false)) return fill;
 
             //Get the range of prices in the last bar:
             var prices = GetPricesCheckingPythonWrapper(asset, order.Direction);
@@ -413,7 +413,7 @@ namespace QuantConnect.Orders.Fills
             if (order.Status == OrderStatus.Canceled) return fill;
 
             // Make sure the exchange is open/normal market hours before filling
-            if (!IsExchangeOpen(asset, false)) return fill;
+            if (!IsExchangeOpen(asset, order, false)) return fill;
 
             // Get the range of prices in the last bar:
             var prices = GetPricesCheckingPythonWrapper(asset, order.Direction);
@@ -493,7 +493,7 @@ namespace QuantConnect.Orders.Fills
             if (order.Status == OrderStatus.Canceled) return fill;
 
             // make sure the exchange is open before filling -- allow pre/post market fills to occur
-            if (!IsExchangeOpen(asset))
+            if (!IsExchangeOpen(asset, order))
             {
                 return fill;
             }
@@ -583,7 +583,7 @@ namespace QuantConnect.Orders.Fills
             if (order.Status == OrderStatus.Canceled) return fill;
 
             // Fill only if open or extended
-            if (!IsExchangeOpen(asset))
+            if (!IsExchangeOpen(asset, order))
             {
                 return fill;
             }
@@ -685,7 +685,7 @@ namespace QuantConnect.Orders.Fills
             if (order.Status == OrderStatus.Canceled) return fill;
 
             // make sure the exchange is open before filling -- allow pre/post market fills to occur
-            if (!IsExchangeOpen(asset))
+            if (!IsExchangeOpen(asset, order))
             {
                 return fill;
             }
@@ -1229,6 +1229,55 @@ namespace QuantConnect.Orders.Fills
             }
 
             return true;
+        }
+
+        /// <summary>
+        /// Determines if the exchange is open for the specified order using the current time of the asset
+        /// </summary>
+        protected virtual bool IsExchangeOpen(Security asset, Order order, bool isExtendedMarketHours)
+        {
+            if (TryGetOutsideRegularTradingHours(order, out var outsideRegularTradingHours))
+            {
+                return outsideRegularTradingHours
+                    ? IsExchangeOpen(asset, true)
+                    : asset.Exchange.Hours.IsOpen(asset.LocalTime, false);
+            }
+
+            return IsExchangeOpen(asset, isExtendedMarketHours);
+        }
+
+        private bool IsExchangeOpen(Security asset, Order order)
+        {
+            if (TryGetOutsideRegularTradingHours(order, out var outsideRegularTradingHours))
+            {
+                return outsideRegularTradingHours
+                    ? IsExchangeOpen(asset, true)
+                    : asset.Exchange.Hours.IsOpen(asset.LocalTime, false);
+            }
+
+            return IsExchangeOpen(asset);
+        }
+
+        private static bool TryGetOutsideRegularTradingHours(Order order, out bool outsideRegularTradingHours)
+        {
+            switch (order.Properties)
+            {
+                case AlpacaOrderProperties properties:
+                    outsideRegularTradingHours = properties.OutsideRegularTradingHours;
+                    return true;
+                case InteractiveBrokersOrderProperties properties:
+                    outsideRegularTradingHours = properties.OutsideRegularTradingHours;
+                    return true;
+                case TradierOrderProperties properties:
+                    outsideRegularTradingHours = properties.OutsideRegularTradingHours;
+                    return true;
+                case TradeStationOrderProperties properties:
+                    outsideRegularTradingHours = properties.OutsideRegularTradingHours;
+                    return true;
+                default:
+                    outsideRegularTradingHours = false;
+                    return false;
+            }
         }
 
         private class ComboLimitOrderLegParameters
