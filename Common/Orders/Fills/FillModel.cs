@@ -16,6 +16,8 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.CompilerServices;
+using QuantConnect.Data;
 using QuantConnect.Data.Market;
 using QuantConnect.Python;
 using QuantConnect.Orders.Fees;
@@ -292,14 +294,27 @@ namespace QuantConnect.Orders.Fills
             var prices = GetPricesCheckingPythonWrapper(asset, orderDirection);
             var pricesEndTimeUtc = prices.EndTime.ConvertToUtc(asset.Exchange.TimeZone);
 
-            // if the order is filled on stale (fill-forward) data, set a warning message on the order event
+            // If the order would be filled on stale (fill-forward / already past) data, wait for fresh data instead of
+            // filling at a stale price when the latest data is more than one resolution bar behind the order submission
+            // time (e.g. the first bar of the session after the open, or an intraday data gap). Otherwise fill on the
+            // stale price with a warning.
+            // Fetched lazily and reused across the stale-data check and the fill-price resolution so the subscription
+            // configs are resolved at most once per fill.
+            List<SubscriptionDataConfig> subscriptionConfigs = null;
             if (pricesEndTimeUtc.Add(Parameters.StalePriceTimeSpan) < order.Time)
             {
+                subscriptionConfigs = GetSubscriptionDataConfigs(asset);
+                if (ShouldWaitForFreshDataOnStale(asset, pricesEndTimeUtc, order.Time, subscriptionConfigs))
+                {
+                    return fill;
+                }
+
                 fill.Message = Messages.FillModel.FilledAtStalePrice(asset, prices);
             }
 
-            //Order [fill]price for a market order model is the current security price
-            fill.FillPrice = prices.Current;
+            //Order [fill]price for a market order model is the current security price (or the bar open if the order
+            //was resting before this bar opened, see GetMarketFillPrice)
+            fill.FillPrice = GetMarketFillPrice(asset, order, prices, subscriptionConfigs);
             fill.Status = OrderStatus.Filled;
 
             //Calculate the model slippage: e.g. 0.01c
@@ -947,16 +962,25 @@ namespace QuantConnect.Orders.Fills
         }
 
         /// <summary>
+        /// Gets the subscription data configs for the security, including internal configurations. Even though data
+        /// from internal configurations is not sent to the algorithm.OnData, it still drives the security cache and the
+        /// data used for the fill. This is specially relevant for the continuous contract underlying mapped contracts,
+        /// which are internal configurations.
+        /// </summary>
+        /// <param name="asset">Security to get the subscription configs for</param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        protected List<SubscriptionDataConfig> GetSubscriptionDataConfigs(Security asset)
+        {
+            return Parameters.ConfigProvider.GetSubscriptionDataConfigs(asset.Symbol, includeInternalConfigs: true);
+        }
+
+        /// <summary>
         /// Get data types the Security is subscribed to
         /// </summary>
         /// <param name="asset">Security which has subscribed data types</param>
         protected virtual HashSet<Type> GetSubscribedTypes(Security asset)
         {
-            var subscribedTypes = Parameters
-                .ConfigProvider
-                // even though data from internal configurations are not sent to the algorithm.OnData they still drive security cache and data
-                // this is specially relevant for the continuous contract underlying mapped contracts which are internal configurations
-                .GetSubscriptionDataConfigs(asset.Symbol, includeInternalConfigs: true)
+            var subscribedTypes = GetSubscriptionDataConfigs(asset)
                 .ToHashSet(x => x.Type);
 
             if (subscribedTypes.Count == 0)
@@ -968,14 +992,112 @@ namespace QuantConnect.Orders.Fills
         }
 
         /// <summary>
+        /// Determines whether a market order filling on stale data should wait for fresh data instead of filling
+        /// on the stale price. This is only done for coarse resolutions (hour/daily), where the stale bar is the
+        /// previous close and a fresh bar (the next close/open) is expected. For minute/second/tick subscriptions
+        /// the previous behavior is kept (fill on the stale price with a warning), since stale data there represents
+        /// a genuine gap rather than a bar still forming.
+        /// </summary>
+        /// <param name="asset">Security being filled</param>
+        /// <param name="subscriptionConfigs">The subscription configs for the security, including internal configurations.
+        /// When not provided, they are fetched from the configuration provider</param>
+        protected bool ShouldWaitForFreshData(Security asset, List<SubscriptionDataConfig> subscriptionConfigs = null)
+        {
+            subscriptionConfigs ??= GetSubscriptionDataConfigs(asset);
+
+            // Only the subscriptions whose data is sent to the algorithm (non-internal) decide whether all subscribed
+            // resolutions are coarse (hour/daily).
+            var hasNonInternal = false;
+            foreach (var config in subscriptionConfigs)
+            {
+                if (config.IsInternalFeed)
+                {
+                    continue;
+                }
+
+                if (config.Resolution != Resolution.Hour && config.Resolution != Resolution.Daily)
+                {
+                    return false;
+                }
+
+                hasNonInternal = true;
+            }
+
+            return hasNonInternal;
+        }
+
+        /// <summary>
+        /// Determines whether a market order that would be filled on stale data should wait for fresh data instead of
+        /// filling on the stale price. The order waits when the latest available data is more than one subscribed
+        /// resolution span behind the order submission time, i.e. the data is older than a single bar so a newer one is
+        /// still expected. This is independent of the time of day: it covers the market open (the first bar of the
+        /// session has not been emitted yet) as well as any intraday data gap larger than the resolution.
+        ///
+        /// Coarse resolutions (hour/daily) always wait, since there the stale bar is the previous close and the gap to
+        /// the order time can be smaller than the resolution while a fresh bar is still expected. Tick subscriptions
+        /// never wait, since there is no bar to expect.
+        /// </summary>
+        /// <param name="asset">Security being filled</param>
+        /// <param name="dataEndTimeUtc">End time, in UTC, of the latest data available for the fill</param>
+        /// <param name="orderTimeUtc">Order submission time, in UTC</param>
+        /// <param name="subscriptionConfigs">The subscription configs for the security, including internal configurations.
+        /// When not provided, they are fetched from the configuration provider</param>
+        protected bool ShouldWaitForFreshDataOnStale(Security asset, DateTime dataEndTimeUtc, DateTime orderTimeUtc, List<SubscriptionDataConfig> subscriptionConfigs = null)
+        {
+            subscriptionConfigs ??= GetSubscriptionDataConfigs(asset);
+
+            if (ShouldWaitForFreshData(asset, subscriptionConfigs))
+            {
+                return true;
+            }
+
+            // Use the lowest (finest) subscribed resolution to size a single bar.
+            var resolutionSpan = subscriptionConfigs
+                .GetHighestResolution()
+                .ToTimeSpan();
+
+            // Tick data has no bar to wait for (zero span)
+            if (resolutionSpan == TimeSpan.Zero)
+            {
+                return false;
+            }
+
+            // Wait when the latest available data is more than one resolution bar behind the order submission time
+            return orderTimeUtc - dataEndTimeUtc > resolutionSpan;
+        }
+
+        /// <summary>
+        /// Gets the fill price for a market order. A hour/daily market order that was resting before the current bar
+        /// opened - it predates the bar, e.g. it was placed after the previous close or while waiting for fresh data -
+        /// fills at the bar open (the price when trading resumed, like a <see cref="MarketOnOpenOrder"/>) instead of the
+        /// bar close. An order placed during the bar still fills at the current price.
+        /// </summary>
+        /// <param name="asset">Security being filled</param>
+        /// <param name="order">Order being filled</param>
+        /// <param name="prices">The prices for the bar being filled on</param>
+        /// <param name="subscriptionConfigs">The subscription configs for the security, including internal configurations.
+        /// When not provided, they are fetched from the configuration provider</param>
+        protected decimal GetMarketFillPrice(Security asset, Order order, Prices prices, List<SubscriptionDataConfig> subscriptionConfigs = null)
+        {
+            if (prices.Open != 0 && ShouldWaitForFreshData(asset, subscriptionConfigs))
+            {
+                var barStartUtc = prices.Time.ConvertToUtc(asset.Exchange.TimeZone);
+                if (order.Time <= barStartUtc)
+                {
+                    return prices.Open;
+                }
+            }
+
+            return prices.Current;
+        }
+
+        /// <summary>
         /// Helper method to determine if the exchange is open before filling. Will allow pre/post market fills to occur based on configuration
         /// </summary>
         /// <param name="asset">Security which has subscribed data types</param>
         private bool IsExchangeOpen(Security asset)
         {
-            // even though data from internal configurations are not sent to the algorithm.OnData they still drive security cache and data
-            // this is specially relevant for the continuous contract underlying mapped contracts which are internal configurations
-            var configs = Parameters.ConfigProvider.GetSubscriptionDataConfigs(asset.Symbol, includeInternalConfigs: true);
+            var configs = GetSubscriptionDataConfigs(asset);
             if (configs.Count == 0)
             {
                 throw new InvalidOperationException(Messages.FillModel.NoDataSubscriptionFoundForFilling(asset));
@@ -1032,11 +1154,13 @@ namespace QuantConnect.Orders.Fills
             var open = asset.Open;
             var close = asset.Close;
             var current = asset.Price;
-            var endTime = asset.Cache.GetData()?.EndTime ?? DateTime.MinValue;
+            var lastData = asset.Cache.GetData();
+            var startTime = lastData?.Time ?? DateTime.MinValue;
+            var endTime = lastData?.EndTime ?? DateTime.MinValue;
 
             if (direction == OrderDirection.Hold)
             {
-                return new Prices(endTime, current, open, high, low, close);
+                return new Prices(startTime, endTime, current, open, high, low, close);
             }
 
             // Only fill with data types we are subscribed to
@@ -1048,14 +1172,14 @@ namespace QuantConnect.Orders.Fills
                 var price = direction == OrderDirection.Sell ? tick.BidPrice : tick.AskPrice;
                 if (price != 0m)
                 {
-                    return new Prices(tick.EndTime, price, 0, 0, 0, 0);
+                    return new Prices(tick.Time, tick.EndTime, price, 0, 0, 0, 0);
                 }
 
                 // If the ask/bid spreads are not available for ticks, try the price
                 price = tick.Price;
                 if (price != 0m)
                 {
-                    return new Prices(tick.EndTime, price, 0, 0, 0, 0);
+                    return new Prices(tick.Time, tick.EndTime, price, 0, 0, 0, 0);
                 }
             }
 
@@ -1066,7 +1190,7 @@ namespace QuantConnect.Orders.Fills
                 var bar = direction == OrderDirection.Sell ? quoteBar.Bid : quoteBar.Ask;
                 if (bar != null)
                 {
-                    return new Prices(quoteBar.EndTime, bar);
+                    return new Prices(quoteBar.Time, quoteBar.EndTime, bar);
                 }
             }
 
@@ -1077,7 +1201,7 @@ namespace QuantConnect.Orders.Fills
                 return new Prices(tradeBar);
             }
 
-            return new Prices(endTime, current, open, high, low, close);
+            return new Prices(startTime, endTime, current, open, high, low, close);
         }
 
         /// <summary>

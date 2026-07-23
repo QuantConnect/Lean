@@ -68,6 +68,27 @@ namespace QuantConnect.Data.Market
         public virtual decimal LastPrice { get; set; }
 
         /// <summary>
+        /// Value representation of this contract, mimicking <see cref="BaseData.Value"/>.
+        /// Aliases <see cref="LastPrice"/>.
+        /// </summary>
+        [PandasIgnore]
+        public virtual decimal Value => LastPrice;
+
+        /// <summary>
+        /// Alias of value as price, mimicking <see cref="BaseData.Price"/>.
+        /// Aliases <see cref="LastPrice"/>.
+        /// </summary>
+        [PandasIgnore]
+        public virtual decimal Price => LastPrice;
+
+        /// <summary>
+        /// Closing price of this contract, mimicking <see cref="TradeBar.Close"/>.
+        /// Aliases <see cref="LastPrice"/>.
+        /// </summary>
+        [PandasIgnore]
+        public virtual decimal Close => LastPrice;
+
+        /// <summary>
         /// Gets the last volume this contract traded at
         /// </summary>
         public virtual long Volume { get; set; }

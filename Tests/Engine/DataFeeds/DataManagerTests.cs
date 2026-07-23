@@ -222,6 +222,90 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         }
 
         [Test]
+        public void ReplacesSubscriptionOfUniverseRemovedAndReAddedInSameTimeStep()
+        {
+            var dataPermissionManager = new DataPermissionManager();
+            var dataFeed = new TestDataFeed();
+            var dataManager = new DataManager(dataFeed,
+                new UniverseSelection(_algorithm,
+                    _securityService,
+                    dataPermissionManager,
+                    TestGlobals.DataProvider),
+                _algorithm,
+                _algorithm.TimeKeeper,
+                MarketHoursDatabase.AlwaysOpen,
+                false,
+                new RegisteredSecurityDataTypesProvider(),
+                dataPermissionManager);
+
+            var config = new SubscriptionDataConfig(typeof(TradeBar),
+                Symbols.SPY,
+                Resolution.Daily,
+                TimeZones.NewYork,
+                TimeZones.NewYork,
+                false,
+                false,
+                false);
+            var universeSettings = new UniverseSettings(Resolution.Daily, 1, false, false, TimeSpan.FromDays(365));
+            var security = new Equity(
+                config.Symbol,
+                SecurityExchangeHours.AlwaysOpen(TimeZones.NewYork),
+                new Cash(Currencies.USD, 1, 1),
+                SymbolProperties.GetDefault(Currencies.USD),
+                new IdentityCurrencyConverter(Currencies.USD),
+                new RegisteredSecurityDataTypesProvider(),
+                new SecurityCache());
+
+            using var oldUniverse = new TestUniverse(config, universeSettings);
+            var oldRequest = new SubscriptionRequest(true,
+                oldUniverse,
+                security,
+                config,
+                new DateTime(2019, 1, 1),
+                new DateTime(2019, 1, 2));
+            using var oldEnumerator = new EnqueueableEnumerator<SubscriptionData>();
+            var oldSubscription = new Subscription(oldRequest, oldEnumerator, null);
+            dataFeed.Subscription = oldSubscription;
+            Assert.IsTrue(dataManager.AddSubscription(oldRequest));
+
+            // the universe is removed: it gets disposed synchronously but its subscription removal
+            // is deferred to the next synchronizer loop
+            oldUniverse.Dispose();
+
+            // a new universe with an equal configuration is added in the same time step,
+            // before the old subscription has been removed
+            var newConfig = new SubscriptionDataConfig(config);
+            using var newUniverse = new TestUniverse(newConfig, universeSettings);
+            var newRequest = new SubscriptionRequest(true,
+                newUniverse,
+                security,
+                newConfig,
+                new DateTime(2019, 1, 1),
+                new DateTime(2019, 1, 2));
+            using var newEnumerator = new EnqueueableEnumerator<SubscriptionData>();
+            var newSubscription = new Subscription(newRequest, newEnumerator, null);
+            dataFeed.Subscription = newSubscription;
+
+            // the new universe's request is parked: the stale subscription stays in place until it is removed
+            Assert.IsTrue(dataManager.AddSubscription(newRequest));
+            Assert.IsTrue(dataManager.DataFeedSubscriptions.TryGetValue(newConfig, out var currentSubscription));
+            Assert.AreSame(oldSubscription, currentSubscription);
+
+            // the synchronizer will remove the stale subscription in its next loop,
+            // after performing one last selection for the disposed universe
+            Assert.IsTrue(dataManager.RemoveSubscription(config));
+
+            // the parked request was re-issued: the new universe's subscription is now in place
+            Assert.IsTrue(dataManager.DataFeedSubscriptions.TryGetValue(newConfig, out currentSubscription));
+            Assert.AreSame(newSubscription, currentSubscription);
+            CollectionAssert.AreEqual(new[] { newUniverse }, currentSubscription.Universes);
+            // the configuration is still registered for the new universe
+            Assert.AreEqual(1, dataManager.GetSubscriptionDataConfigs(config.Symbol).Count);
+
+            dataManager.RemoveAllSubscriptions();
+        }
+
+        [Test]
         public void ScaledRawNormalizationModeIsNotAllowed()
         {
             var dataPermissionManager = new DataPermissionManager();

@@ -127,9 +127,9 @@ namespace QuantConnect.Algorithm.CSharp.RegressionTests
         /// </summary>
         public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
         {
-            {"Total Orders", "10"},
+            {"Total Orders", "55"},
             {"Average Win", "0%"},
-            {"Average Loss", "0.00%"},
+            {"Average Loss", "-0.01%"},
             {"Compounding Annual Return", "-0.468%"},
             {"Drawdown", "0.000%"},
             {"Expectancy", "-1"},
@@ -138,7 +138,7 @@ namespace QuantConnect.Algorithm.CSharp.RegressionTests
             {"Net Profit", "-0.015%"},
             {"Sharpe Ratio", "-15.229"},
             {"Sortino Ratio", "0"},
-            {"Probabilistic Sharpe Ratio", "0.781%"},
+            {"Probabilistic Sharpe Ratio", "0.000%"},
             {"Loss Rate", "100%"},
             {"Win Rate", "0%"},
             {"Profit-Loss Ratio", "0"},
@@ -150,11 +150,11 @@ namespace QuantConnect.Algorithm.CSharp.RegressionTests
             {"Tracking Error", "0.103"},
             {"Treynor Ratio", "5.946"},
             {"Total Fees", "$0.00"},
-            {"Estimated Strategy Capacity", "$8000.00"},
+            {"Estimated Strategy Capacity", "$20000.00"},
             {"Lowest Capacity Asset", "SPXW XKX6S2GMDZSE|SPX 31"},
-            {"Portfolio Turnover", "0.01%"},
+            {"Portfolio Turnover", "0.00%"},
             {"Drawdown Recovery", "0"},
-            {"OrderListHash", "ad9c0f3aa3b311065df12bcff9a2b4de"}
+            {"OrderListHash", "a15fe0e8fc66f7d6a83433525c33a2c1"}
         };
     }
 }

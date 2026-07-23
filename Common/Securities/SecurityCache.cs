@@ -298,7 +298,7 @@ namespace QuantConnect.Securities
         /// </summary>
         /// <param name="data">The collection of data to store in this cache</param>
         /// <param name="dataType">The data type</param>
-        public void StoreData(IReadOnlyList<BaseData> data, Type dataType)
+        public virtual void StoreData(IReadOnlyList<BaseData> data, Type dataType)
         {
             if (dataType == typeof(Tick))
             {
@@ -318,6 +318,31 @@ namespace QuantConnect.Securities
             {
                 _dataByType ??= new();
                 _dataByType[dataType] = data;
+            }
+        }
+
+        /// <summary>
+        /// Helper method to update the open interest cache property from a chain universe data point,
+        /// which carries the contracts daily open interest
+        /// </summary>
+        /// <param name="data">The data point being stored</param>
+        protected void UpdateOpenInterest(BaseData data)
+        {
+            if (data is BaseChainUniverseData chainUniverseData)
+            {
+                OpenInterest = (long)chainUniverseData.OpenInterest;
+            }
+        }
+
+        /// <summary>
+        /// Helper method to update the open interest cache property from the last data point of a stored data list
+        /// </summary>
+        /// <param name="data">The data list being stored</param>
+        protected void UpdateOpenInterest(IReadOnlyList<BaseData> data)
+        {
+            if (data.Count != 0)
+            {
+                UpdateOpenInterest(data[data.Count - 1]);
             }
         }
 

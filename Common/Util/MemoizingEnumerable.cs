@@ -56,6 +56,26 @@ namespace QuantConnect.Util
         }
 
         /// <summary>
+        /// Gets whether the enumerable is empty. This will force enumeration of the first item if it has not already been enumerated.
+        /// </summary>
+        public bool Empty
+        {
+            get
+            {
+                if (!Enabled)
+                {
+                    throw new InvalidOperationException("Empty is not supported when memoization is disabled");
+                }
+                if (_buffer == null || _buffer.Count == 0)
+                {
+                    using var enumerator = GetEnumerator();
+                    return !enumerator.MoveNext();
+                }
+                return _buffer.Count == 0;
+            }
+        }
+
+        /// <summary>
         /// Initializes a new instance of the <see cref="MemoizingEnumerable{T}"/> class
         /// </summary>
         /// <param name="enumerable">The source enumerable to be memoized</param>

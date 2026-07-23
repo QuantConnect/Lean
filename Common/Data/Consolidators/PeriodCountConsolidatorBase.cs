@@ -103,8 +103,20 @@ namespace QuantConnect.Data.Consolidators
         /// </summary>
         /// <param name="pyObject">Python object that defines either a function object that defines the start time of a consolidated data or a timespan</param>
         protected PeriodCountConsolidatorBase(PyObject pyObject)
-            : this(GetPeriodSpecificationFromPyObject(pyObject))
         {
+            try
+            {
+                _periodSpecification = GetPeriodSpecificationFromPyObject(pyObject);
+            }
+            catch (InvalidCastException exception)
+            {
+                var type = GetType();
+                throw new ArgumentException(
+                    $"Unable to create a consolidator period from {pyObject.ToDisplayString()}: it is not a supported period type. " +
+                    MethodSignatureFormatter.FormatOverloads(type.GetConstructors(), displayName: type.Name),
+                    exception);
+            }
+            _period = _periodSpecification.Period;
         }
 
         /// <summary>

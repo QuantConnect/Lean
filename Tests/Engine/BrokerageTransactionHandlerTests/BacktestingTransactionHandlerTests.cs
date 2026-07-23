@@ -104,9 +104,12 @@ namespace QuantConnect.Tests.Engine.BrokerageTransactionHandlerTests
                 // Creates a market order
                 var security = _algorithm.Securities[Ticker];
                 var price = 1.12m;
-                security.SetMarketPrice(new Tick(DateTime.UtcNow.AddDays(-1), security.Symbol, price, price, price));
-                var orderRequest = new SubmitOrderRequest(OrderType.Market, security.Type, security.Symbol, 1000, 0, 0, 0, DateTime.UtcNow, "");
-                var orderRequest2 = new SubmitOrderRequest(OrderType.Market, security.Type, security.Symbol, -1000, 0, 0, 0, DateTime.UtcNow, "");
+                // Use a recent price so the data is not stale relative to the order submission time, otherwise the
+                // market orders would wait for fresh data instead of filling.
+                var reference = new DateTime(2026, 06, 26, 12, 0, 0);
+                security.SetMarketPrice(new Tick(reference.AddMinutes(-1), security.Symbol, price, price, price));
+                var orderRequest = new SubmitOrderRequest(OrderType.Market, security.Type, security.Symbol, 1000, 0, 0, 0, reference, "");
+                var orderRequest2 = new SubmitOrderRequest(OrderType.Market, security.Type, security.Symbol, -1000, 0, 0, 0, reference, "");
                 orderRequest.SetOrderId(1);
                 orderRequest2.SetOrderId(2);
 

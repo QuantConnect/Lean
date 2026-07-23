@@ -25,7 +25,7 @@ namespace QuantConnect.Data.Consolidators
     public class BaseDataConsolidator : TradeBarConsolidatorBase<BaseData>
     {
         /// <summary>
-        /// Create a new TickConsolidator for the desired resolution
+        /// Create a new BaseDataConsolidator for the desired resolution
         /// </summary>
         /// <param name="resolution">The resolution desired</param>
         /// <returns>A consolidator that produces data on the resolution interval</returns>

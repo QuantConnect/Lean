@@ -27,6 +27,7 @@ using QuantConnect.Lean.Engine.Results;
 using Python.Runtime;
 using System.Threading;
 using QuantConnect.Tests.Engine.DataFeeds;
+using QuantConnect.Util;
 
 namespace QuantConnect.Tests.Common.Securities
 {
@@ -111,6 +112,88 @@ namespace QuantConnect.Tests.Common.Securities
             }
 
             transactionHandler.Exit();
+        }
+
+        [Test]
+        public void OrderEnumerablesAreMemoizedExposingCount()
+        {
+            var (algorithm, transactionHandler, backtestingBrokerage, spy) = CreateAlgorithmWithOpenOrders();
+            using (backtestingBrokerage)
+            {
+                var orders = algorithm.Transactions.GetOrders();
+                var orderTickets = algorithm.Transactions.GetOrderTickets();
+                var openOrderTickets = algorithm.Transactions.GetOpenOrderTickets();
+                var spyOpenOrderTickets = algorithm.Transactions.GetOpenOrderTickets(spy);
+
+                Assert.IsInstanceOf<MemoizingEnumerable<Order>>(orders);
+                Assert.IsInstanceOf<MemoizingEnumerable<OrderTicket>>(orderTickets);
+                Assert.IsInstanceOf<MemoizingEnumerable<OrderTicket>>(openOrderTickets);
+                Assert.IsInstanceOf<MemoizingEnumerable<OrderTicket>>(spyOpenOrderTickets);
+
+                Assert.AreEqual(2, ((MemoizingEnumerable<Order>)orders).Count);
+                Assert.AreEqual(2, ((MemoizingEnumerable<OrderTicket>)orderTickets).Count);
+                Assert.AreEqual(2, ((MemoizingEnumerable<OrderTicket>)openOrderTickets).Count);
+                Assert.AreEqual(1, ((MemoizingEnumerable<OrderTicket>)spyOpenOrderTickets).Count);
+
+                transactionHandler.Exit();
+            }
+        }
+
+        [Test]
+        public void OrderEnumerablesSupportPythonLen()
+        {
+            var (algorithm, transactionHandler, backtestingBrokerage, spy) = CreateAlgorithmWithOpenOrders();
+            using (backtestingBrokerage)
+            {
+                Func<Order, bool> orderFilter = x => true;
+                Func<OrderTicket, bool> orderTicketFilter = x => true;
+                using (Py.GIL())
+                {
+                    // PyObject.Length() goes through the same mp_length slot as Python's len()
+                    using var orders = algorithm.Transactions.GetOrders().ToPython();
+                    using var orderTickets = algorithm.Transactions.GetOrderTickets().ToPython();
+                    using var openOrderTickets = algorithm.Transactions.GetOpenOrderTickets().ToPython();
+                    using var spyOpenOrderTickets = algorithm.Transactions.GetOpenOrderTickets(spy).ToPython();
+
+                    Assert.AreEqual(2, orders.Length());
+                    Assert.AreEqual(2, orderTickets.Length());
+                    Assert.AreEqual(2, openOrderTickets.Length());
+                    Assert.AreEqual(1, spyOpenOrderTickets.Length());
+
+                    using var filteredOrders = algorithm.Transactions.GetOrders(orderFilter.ToPython()).ToPython();
+                    using var filteredOrderTickets = algorithm.Transactions.GetOrderTickets(orderTicketFilter.ToPython()).ToPython();
+                    using var filteredOpenOrderTickets = algorithm.Transactions.GetOpenOrderTickets(orderTicketFilter.ToPython()).ToPython();
+
+                    Assert.AreEqual(2, filteredOrders.Length());
+                    Assert.AreEqual(2, filteredOrderTickets.Length());
+                    Assert.AreEqual(2, filteredOpenOrderTickets.Length());
+                }
+
+                transactionHandler.Exit();
+            }
+        }
+
+        private (QCAlgorithm, BrokerageTransactionHandler, BacktestingBrokerage, Symbol) CreateAlgorithmWithOpenOrders()
+        {
+            var algorithm = new QCAlgorithm();
+            algorithm.SubscriptionManager.SetDataManager(new DataManagerStub(algorithm));
+            var spySecurity = algorithm.AddEquity("SPY");
+            var ibmSecurity = algorithm.AddEquity("IBM");
+            algorithm.SetTimeZone(TimeZones.NewYork);
+            spySecurity.SetMarketPrice(new Tick { Value = 270m });
+            ibmSecurity.SetMarketPrice(new Tick { Value = 270m });
+            algorithm.SetFinishedWarmingUp();
+
+            var transactionHandler = new BrokerageTransactionHandler();
+
+            var backtestingBrokerage = new BacktestingBrokerage(algorithm);
+            transactionHandler.Initialize(algorithm, backtestingBrokerage, _resultHandler);
+            algorithm.Transactions.SetOrderProcessor(transactionHandler);
+
+            algorithm.SetHoldings(spySecurity.Symbol, 0.5m);
+            algorithm.SetHoldings(ibmSecurity.Symbol, 0.5m);
+
+            return (algorithm, transactionHandler, backtestingBrokerage, spySecurity.Symbol);
         }
     }
 }

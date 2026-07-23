@@ -75,7 +75,7 @@ namespace QuantConnect.Brokerages
         /// <summary>
         /// The set of <see cref="OrderType"/> values that cannot be used for cross-zero execution.
         /// </summary>
-        private static IReadOnlySet<OrderType> NotSupportedCrossZeroOrderTypes => new HashSet<OrderType>()
+        private static readonly IReadOnlySet<OrderType> NotSupportedCrossZeroOrderTypes = new HashSet<OrderType>()
         {
             OrderType.ComboMarket,
             OrderType.ComboLimit,

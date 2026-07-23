@@ -214,7 +214,7 @@ namespace QuantConnect.Algorithm.CSharp
                 throw new RegressionTestException($"AssertPortfolioStatistics(): Expected loss rate to be 1/3. Actual {portfolioStatistics.LossRate}");
             }
 
-            var expectedAverageWinRate = 0.32962000910479m;
+            var expectedAverageWinRate = 0.3425273813030554588544037705m;
             if (!AreEqual(expectedAverageWinRate, portfolioStatistics.AverageWinRate))
             {
                 throw new RegressionTestException($@"AssertPortfolioStatistics(): Expected average win rate to be {expectedAverageWinRate}. Actual {
@@ -228,14 +228,14 @@ namespace QuantConnect.Algorithm.CSharp
                     portfolioStatistics.AverageLossRate}");
             }
 
-            var expectedProfitLossRatio = 2.43142881621545m;
+            var expectedProfitLossRatio = 2.5266395310920343630590960734m;
             if (!AreEqual(expectedProfitLossRatio, portfolioStatistics.ProfitLossRatio))
             {
                 throw new RegressionTestException($@"AssertPortfolioStatistics(): Expected profit loss ratio to be {expectedProfitLossRatio}. Actual {
                     portfolioStatistics.ProfitLossRatio}");
             }
 
-            var totalNetProfit = -0.00697m;
+            var totalNetProfit = 0.00267m;
             if (!AreEqual(totalNetProfit, portfolioStatistics.TotalNetProfit))
             {
                 throw new RegressionTestException($@"AssertPortfolioStatistics(): Expected total net profit to be {totalNetProfit}. Actual {
@@ -278,34 +278,34 @@ namespace QuantConnect.Algorithm.CSharp
         /// </summary>
         public virtual Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
         {
-            {"Total Orders", "6"},
-            {"Average Win", "32.96%"},
+            {"Total Orders", "5"},
+            {"Average Win", "34.25%"},
             {"Average Loss", "-13.56%"},
-            {"Compounding Annual Return", "-36.270%"},
+            {"Compounding Annual Return", "18.738%"},
             {"Drawdown", "1.400%"},
-            {"Expectancy", "1.288"},
+            {"Expectancy", "1.351"},
             {"Start Equity", "100000"},
-            {"End Equity", "99303"},
-            {"Net Profit", "-0.697%"},
-            {"Sharpe Ratio", "-8.675"},
-            {"Sortino Ratio", "-6.769"},
-            {"Probabilistic Sharpe Ratio", "0.012%"},
+            {"End Equity", "100267"},
+            {"Net Profit", "0.267%"},
+            {"Sharpe Ratio", "4.957"},
+            {"Sortino Ratio", "0"},
+            {"Probabilistic Sharpe Ratio", "70.276%"},
             {"Loss Rate", "33%"},
             {"Win Rate", "67%"},
-            {"Profit-Loss Ratio", "2.43"},
-            {"Alpha", "-0.011"},
-            {"Beta", "0.825"},
-            {"Annual Standard Deviation", "0.02"},
-            {"Annual Variance", "0"},
-            {"Information Ratio", "1.705"},
-            {"Tracking Error", "0.014"},
-            {"Treynor Ratio", "-0.207"},
+            {"Profit-Loss Ratio", "2.53"},
+            {"Alpha", "0.024"},
+            {"Beta", "-1.724"},
+            {"Annual Standard Deviation", "0.072"},
+            {"Annual Variance", "0.005"},
+            {"Information Ratio", "6.8"},
+            {"Tracking Error", "0.081"},
+            {"Treynor Ratio", "-0.208"},
             {"Total Fees", "$3.00"},
-            {"Estimated Strategy Capacity", "$0"},
-            {"Lowest Capacity Asset", "GOOCV VP83T1ZUHROL"},
-            {"Portfolio Turnover", "50.31%"},
-            {"Drawdown Recovery", "0"},
-            {"OrderListHash", "65544a2eaccc912e8c81519f5975da1a"}
+            {"Estimated Strategy Capacity", "$10000000.00"},
+            {"Lowest Capacity Asset", "GOOCV W6NBKMB4N492|GOOCV VP83T1ZUHROL"},
+            {"Portfolio Turnover", "50.23%"},
+            {"Drawdown Recovery", "5"},
+            {"OrderListHash", "9d48744bc10d9c00aeba0f7a11dbbee0"}
         };
     }
 }

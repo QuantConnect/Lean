@@ -13,36 +13,14 @@
  * limitations under the License.
 */
 
+using System;
+
 namespace QuantConnect.Orders
 {
     /// <summary>
     /// FIX (Financial Information Exchange) order properties
     /// </summary>
-    public class FixOrderProperites: OrderProperties
-    {
-        /// <summary>
-        /// Instruction for order handling on Broker floor
-        /// </summary>
-        public char? HandleInstruction { get; set; }
-
-        /// <summary>
-        /// Free format text string
-        /// </summary>
-        public string Notes { get; set; }
-
-        /// <summary>
-        /// Automated execution order, private, no broker intervention
-        /// </summary>
-        public const char AutomatedExecutionOrderPrivate = '1';
-
-        /// <summary>
-        /// Automated execution order, public, broker, intervention OK
-        /// </summary>
-        public const char AutomatedExecutionOrderPublic = '2';
-
-        /// <summary>
-        /// Staged order, broker intervention required
-        /// </summary>
-        public const char ManualOrder = '3';
-    }
+    [Obsolete("FixOrderProperites is deprecated. Use FixOrderProperties instead.")]
+    public class FixOrderProperites : FixOrderProperties
+    { }
 }

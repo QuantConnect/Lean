@@ -84,26 +84,13 @@ namespace QuantConnect.Lean.Engine.Setup
             IReadOnlyCollection<string> currenciesToUpdateWhiteList = null)
         {
             // this is needed to have non-zero currency conversion rates during warmup
-            // will also set the Cash.ConversionRateSecurity
-            universeSelection.EnsureCurrencyDataFeeds(SecurityChanges.None);
+            // will also set the Cash.ConversionRateSecurity.
+            // We don't let it seed the conversion rates here because we do that right below,
+            // where we can also limit the seeding to a specific white list of currencies
+            universeSelection.EnsureCurrencyDataFeeds(SecurityChanges.None, seedNewCurrencies: false);
 
             // now set conversion rates
-            Func<Cash, bool> cashToUpdateFilter = currenciesToUpdateWhiteList == null
-                ? (x) => x.CurrencyConversion != null && x.ConversionRate == 0
-                : (x) => currenciesToUpdateWhiteList.Contains(x.Symbol);
-            var cashToUpdate = algorithm.Portfolio.CashBook.Values.Where(cashToUpdateFilter).ToList();
-
-            var securitiesToUpdate = cashToUpdate
-                .SelectMany(x => x.CurrencyConversion.ConversionRateSecurities)
-                .Distinct()
-                .ToList();
-
-            AlgorithmUtils.SeedSecurities(securitiesToUpdate, algorithm);
-
-            foreach (var cash in cashToUpdate)
-            {
-                cash.Update();
-            }
+            AlgorithmUtils.SeedCurrencyConversionRates(algorithm, currenciesToUpdateWhiteList);
 
             Log.Trace($"BaseSetupHandler.SetupCurrencyConversions():{Environment.NewLine}" +
                 $"Account Type: {algorithm.BrokerageModel.AccountType}{Environment.NewLine}{Environment.NewLine}{algorithm.Portfolio.CashBook}");

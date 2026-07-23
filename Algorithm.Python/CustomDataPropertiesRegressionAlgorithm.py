@@ -25,8 +25,8 @@ from AlgorithmImports import *
 class CustomDataPropertiesRegressionAlgorithm(QCAlgorithm):
 
     def initialize(self) -> None:
-        self.set_start_date(2020, 1, 5)   # Set Start Date
-        self.set_end_date(2020, 1, 10)    # Set End Date
+        self.set_start_date(2018, 4, 5)   # Set Start Date
+        self.set_end_date(2018, 4, 10)    # Set End Date
         self.set_cash(100000)             # Set Strategy Cash
 
         # Define our custom data properties and exchange hours
@@ -67,11 +67,9 @@ class Bitcoin(PythonData):
         if is_live_mode:
             return SubscriptionDataSource("https://www.bitstamp.net/api/ticker/", SubscriptionTransportMedium.REST)
 
-        #return "http://my-ftp-server.com/futures-data-" + date.to_string("Ymd") + ".zip"
-        # OR simply return a fixed small data file. Large files will slow down your backtest
-        subscription = SubscriptionDataSource("https://www.quantconnect.com/api/v2/proxy/nasdaq/api/v3/datatables/QDL/BITFINEX.csv?code=BTCUSD&api_key=WyAazVXnq7ATy_fefTqm")
-        subscription.sort = True
-        return subscription
+        # Read from a local data file so the test is deterministic instead of depending on a remote source
+        source = f"{Globals.data_folder}/crypto/coinbase/daily/btcusd_trade.zip"
+        return SubscriptionDataSource(source, SubscriptionTransportMedium.LOCAL_FILE, FileFormat.CSV)
 
     def reader(self, config: SubscriptionDataConfig, line: str, date: datetime, is_live_mode: bool) -> DynamicData:
         coin = Bitcoin()
@@ -103,24 +101,20 @@ class Bitcoin(PythonData):
                 return coin
 
         # Example Line Format:
-        #code    date        high     low      mid      last     bid      ask      volume
-        #BTCUSD  2024-10-08  63248.0  61940.0  62246.5  62245.0  62246.0  62247.0       5.929230648356
-        if not (line.strip() and line[7].isdigit()): return coin
-
+        # date            open     high     low      close    volume
+        # 20180405 00:00  6791.68  6933.11  6568.64  6785.85  13832.668772
         try:
             data = line.split(',')
-            coin.time = datetime.strptime(data[1], "%Y-%m-%d")
+            coin.time = datetime.strptime(data[0], "%Y%m%d %H:%M")
             coin.end_time = coin.time + timedelta(1)
-            coin.value = float(data[5])
+            coin.value = float(data[4])
+            coin["Open"] = float(data[1])
             coin["High"] = float(data[2])
             coin["Low"] = float(data[3])
-            coin["Mid"] = float(data[4])
-            coin["Close"] = float(data[5])
-            coin["Bid"] = float(data[6])
-            coin["Ask"] = float(data[7])
-            coin["VolumeBTC"] = float(data[8])
+            coin["Close"] = float(data[4])
+            coin["VolumeBTC"] = float(data[5])
             return coin
 
         except ValueError:
-            # Do nothing, possible error in json decoding
+            # Do nothing, skip malformed rows
             return coin

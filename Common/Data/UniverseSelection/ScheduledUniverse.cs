@@ -72,7 +72,12 @@ namespace QuantConnect.Data.UniverseSelection
         public ScheduledUniverse(DateTimeZone timeZone, IDateRule dateRule, ITimeRule timeRule, PyObject selector, UniverseSettings settings = null)
             : base(CreateConfiguration(timeZone, dateRule, timeRule))
         {
-            selector.TrySafeAs<Func<DateTime, object>>(out var func);
+            if (!selector.TrySafeAs<Func<DateTime, object>>(out var func))
+            {
+                throw new ArgumentException(
+                    $"Unable to create a scheduled universe selector from {selector.ToDisplayString()}: it is not a function. " +
+                    "Please provide a function that takes the firing date time and returns the selected symbols.");
+            }
             _dateRule = dateRule;
             _timeRule = timeRule;
             _selector = func.ConvertSelectionSymbolDelegate();

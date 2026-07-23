@@ -37,6 +37,9 @@ namespace QuantConnect.Algorithm.CSharp
         private SimpleMovingAverage _fast;
         private SimpleMovingAverage _slow;
 
+        // Minimum SMA gap required before acting on a cross; see the workaround note in OnData.
+        private const decimal CrossThreshold = 0.001m;
+
         /// <summary>
         /// Initialise the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must initialized.
         /// </summary>
@@ -76,17 +79,24 @@ namespace QuantConnect.Algorithm.CSharp
                 return;
             }
 
-            if (!Portfolio.Invested)
+            // This is just to limit the amount of orders done in this regression test, since data in the repo is limited.
+            // Also limit it to 3 orders so that the continuous contract rolls happens with an open position.
+            if (Time < new DateTime(2013, 11, 12) && Transactions.OrdersCount < 3)
             {
-                if(_fast > _slow)
+                // Workaround so the C# and Python versions take the exact same trades on the limited
+                // sample data in the repository (decimal vs double rounding can disagree at a cross).
+                if (!Portfolio.Invested)
                 {
-                    _currentContract = Securities[_continuousContract.Mapped];
-                    Buy(_currentContract.Symbol, 1);
+                    if (_fast.Current.Value - _slow.Current.Value > CrossThreshold)
+                    {
+                        _currentContract = Securities[_continuousContract.Mapped];
+                        Buy(_currentContract.Symbol, 1);
+                    }
                 }
-            }
-            else if(_fast < _slow)
-            {
-                Liquidate();
+                else if (_slow.Current.Value - _fast.Current.Value > CrossThreshold)
+                {
+                    Liquidate();
+                }
             }
 
             if (_currentContract != null && _currentContract.Symbol != _continuousContract.Mapped)
@@ -140,34 +150,34 @@ namespace QuantConnect.Algorithm.CSharp
         /// </summary>
         public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
         {
-            {"Total Orders", "5"},
-            {"Average Win", "2.86%"},
+            {"Total Orders", "3"},
+            {"Average Win", "6.15%"},
             {"Average Loss", "0%"},
-            {"Compounding Annual Return", "12.959%"},
-            {"Drawdown", "1.100%"},
+            {"Compounding Annual Return", "13.813%"},
+            {"Drawdown", "1.400%"},
             {"Expectancy", "0"},
             {"Start Equity", "100000"},
-            {"End Equity", "106337.1"},
-            {"Net Profit", "6.337%"},
-            {"Sharpe Ratio", "1.41"},
-            {"Sortino Ratio", "1.242"},
-            {"Probabilistic Sharpe Ratio", "77.992%"},
+            {"End Equity", "106741.4"},
+            {"Net Profit", "6.741%"},
+            {"Sharpe Ratio", "2.003"},
+            {"Sortino Ratio", "2.845"},
+            {"Probabilistic Sharpe Ratio", "87.787%"},
             {"Loss Rate", "0%"},
             {"Win Rate", "100%"},
             {"Profit-Loss Ratio", "0"},
-            {"Alpha", "0.071"},
-            {"Beta", "0.054"},
-            {"Annual Standard Deviation", "0.059"},
-            {"Annual Variance", "0.003"},
-            {"Information Ratio", "-1.392"},
-            {"Tracking Error", "0.097"},
-            {"Treynor Ratio", "1.518"},
-            {"Total Fees", "$10.75"},
-            {"Estimated Strategy Capacity", "$890000000.00"},
+            {"Alpha", "0.069"},
+            {"Beta", "0.086"},
+            {"Annual Standard Deviation", "0.044"},
+            {"Annual Variance", "0.002"},
+            {"Information Ratio", "-1.506"},
+            {"Tracking Error", "0.086"},
+            {"Treynor Ratio", "1.023"},
+            {"Total Fees", "$6.45"},
+            {"Estimated Strategy Capacity", "$3700000000.00"},
             {"Lowest Capacity Asset", "ES VMKLFZIH2MTD"},
-            {"Portfolio Turnover", "2.32%"},
-            {"Drawdown Recovery", "34"},
-            {"OrderListHash", "1504a8892da8d8c0650018732f315753"}
+            {"Portfolio Turnover", "1.37%"},
+            {"Drawdown Recovery", "18"},
+            {"OrderListHash", "764ab9f6ea662a60e41daedb9613b246"}
         };
     }
 }

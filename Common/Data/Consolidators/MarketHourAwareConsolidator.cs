@@ -24,7 +24,7 @@ namespace QuantConnect.Data.Consolidators
     /// <summary>
     /// Consolidator for open markets bar only, extended hours bar are not consolidated.
     /// </summary>
-    public class MarketHourAwareConsolidator : IDataConsolidator
+    public class MarketHourAwareConsolidator : ConsolidatorBase
     {
         private readonly bool _dailyStrictEndTimeEnabled;
         private readonly bool _extendedMarketHours;
@@ -51,25 +51,19 @@ namespace QuantConnect.Data.Consolidators
         protected DateTimeZone DataTimeZone { get; set; }
 
         /// <summary>
-        /// Gets the most recently consolidated piece of data. This will be null if this consolidator
-        /// has not produced any data yet.
-        /// </summary>
-        public IBaseData Consolidated => Consolidator.Consolidated;
-
-        /// <summary>
         /// Gets the type consumed by this consolidator
         /// </summary>
-        public Type InputType => Consolidator.InputType;
+        public override Type InputType => Consolidator.InputType;
 
         /// <summary>
         /// Gets a clone of the data being currently consolidated
         /// </summary>
-        public IBaseData WorkingData => Consolidator.WorkingData;
+        public override IBaseData WorkingData => Consolidator.WorkingData;
 
         /// <summary>
         /// Gets the type produced by this consolidator
         /// </summary>
-        public Type OutputType => Consolidator.OutputType;
+        public override Type OutputType => Consolidator.OutputType;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="MarketHourAwareConsolidator"/> class.
@@ -173,15 +167,10 @@ namespace QuantConnect.Data.Consolidators
         }
 
         /// <summary>
-        /// Event handler that fires when a new piece of data is produced
-        /// </summary>
-        public event DataConsolidatedHandler DataConsolidated;
-
-        /// <summary>
         /// Updates this consolidator with the specified data
         /// </summary>
         /// <param name="data">The new data for the consolidator</param>
-        public virtual void Update(IBaseData data)
+        public override void Update(IBaseData data)
         {
             Initialize(data);
 
@@ -200,7 +189,7 @@ namespace QuantConnect.Data.Consolidators
         /// Scans this consolidator to see if it should emit a bar due to time passing
         /// </summary>
         /// <param name="currentLocalTime">The current time in the local time zone (same as <see cref="P:QuantConnect.Data.BaseData.Time" />)</param>
-        public void Scan(DateTime currentLocalTime)
+        public override void Scan(DateTime currentLocalTime)
         {
             Consolidator.Scan(currentLocalTime);
         }
@@ -208,21 +197,23 @@ namespace QuantConnect.Data.Consolidators
         /// <summary>
         /// Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.
         /// </summary>
-        public void Dispose()
+        public override void Dispose()
         {
             Consolidator.DataConsolidated -= ForwardConsolidatedBar;
             Consolidator.Dispose();
+            base.Dispose();
         }
 
         /// <summary>
         /// Resets the consolidator
         /// </summary>
-        public void Reset()
+        public override void Reset()
         {
             _useStrictEndTime = false;
             ExchangeHours = null;
             DataTimeZone = null;
             Consolidator.Reset();
+            base.Reset();
         }
 
         /// <summary>
@@ -276,11 +267,12 @@ namespace QuantConnect.Data.Consolidators
         }
 
         /// <summary>
-        /// Will forward the underlying consolidated bar to consumers on this object
+        /// Will forward the underlying consolidated bar to consumers on this object.
+        /// This wrapper keeps its own rolling window in addition to the inner consolidator's window.
         /// </summary>
         protected virtual void ForwardConsolidatedBar(object sender, IBaseData consolidated)
         {
-            DataConsolidated?.Invoke(this, consolidated);
+            OnDataConsolidated(consolidated);
         }
     }
 }

@@ -25,6 +25,9 @@ namespace QuantConnect.Algorithm.CSharp
     public class FutureOptionHourlyRegressionAlgorithm : FutureOptionDailyRegressionAlgorithm
     {
         protected override Resolution Resolution => Resolution.Hour;
+        // Hourly data fills within the day, so the original same-day buy/liquidate range is kept
+        protected override DateTime StartDate => new DateTime(2020, 1, 7);
+        protected override DateTime EndDate => new DateTime(2020, 1, 8);
 
         protected override void ScheduleBuySell()
         {

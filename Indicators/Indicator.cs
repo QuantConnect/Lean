@@ -22,11 +22,6 @@ namespace QuantConnect.Indicators
     public abstract class Indicator : IndicatorBase<IndicatorDataPoint>
     {
         /// <summary>
-        /// The default size of the history window for the indicator
-        /// </summary>
-        public static int DefaultWindowSize { get; } = 2;
-
-        /// <summary>
         /// Initializes a new instance of the Indicator class using the specified name.
         /// </summary>
         /// <param name="name">The name of this indicator</param>

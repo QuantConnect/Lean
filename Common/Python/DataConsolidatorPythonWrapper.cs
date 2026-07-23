@@ -23,58 +23,34 @@ namespace QuantConnect.Python
     /// <summary>
     /// Provides an Data Consolidator that wraps a <see cref="PyObject"/> object that represents a custom Python consolidator
     /// </summary>
-    public class DataConsolidatorPythonWrapper : BasePythonWrapper<IDataConsolidator>, IDataConsolidator
+    public class DataConsolidatorPythonWrapper : ConsolidatorBase
     {
-        internal PyObject Model => Instance;
-
-        /// <summary>
-        /// Gets the most recently consolidated piece of data. This will be null if this consolidator
-        /// has not produced any data yet.
-        /// </summary>
-        public IBaseData Consolidated
-        {
-            get { return GetProperty<IBaseData>(nameof(Consolidated)); }
-        }
+        private readonly BasePythonWrapper<IDataConsolidator> _pythonWrapper;
+        private readonly DataConsolidatedHandler _pythonDataConsolidated;
+        private bool _disposed;
 
         /// <summary>
         /// Gets a clone of the data being currently consolidated
         /// </summary>
-        public IBaseData WorkingData
+        public override IBaseData WorkingData
         {
-            get { return GetProperty<IBaseData>(nameof(WorkingData)); }
+            get { return _pythonWrapper.GetProperty<IBaseData>(nameof(WorkingData)); }
         }
 
         /// <summary>
         /// Gets the type consumed by this consolidator
         /// </summary>
-        public Type InputType
+        public override Type InputType
         {
-            get { return GetProperty<Type>(nameof(InputType)); }
+            get { return _pythonWrapper.GetProperty<Type>(nameof(InputType)); }
         }
 
         /// <summary>
         /// Gets the type produced by this consolidator
         /// </summary>
-        public Type OutputType
+        public override Type OutputType
         {
-            get { return GetProperty<Type>(nameof(OutputType)); }
-        }
-
-        /// <summary>
-        /// Event handler that fires when a new piece of data is produced
-        /// </summary>
-        public event DataConsolidatedHandler DataConsolidated
-        {
-            add
-            {
-                var eventHandler = GetEvent(nameof(DataConsolidated));
-                eventHandler += value;
-            }
-            remove
-            {
-                var eventHandler = GetEvent(nameof(DataConsolidated));
-                eventHandler -= value;
-            }
+            get { return _pythonWrapper.GetProperty<Type>(nameof(OutputType)); }
         }
 
         /// <summary>
@@ -82,40 +58,83 @@ namespace QuantConnect.Python
         /// </summary>
         /// <param name="consolidator">Represents a custom python consolidator</param>
         public DataConsolidatorPythonWrapper(PyObject consolidator)
-            : base(consolidator, true)
         {
+            _pythonWrapper = new BasePythonWrapper<IDataConsolidator>(consolidator, true);
+            _pythonDataConsolidated = (_, bar) => OnDataConsolidated(bar);
+
+            // GetEvent releases the GIL before returning, so the event subscription must
+            // hold it explicitly, otherwise pythonnet mutates the Python object without the GIL
+            using (Py.GIL())
+            {
+                dynamic pythonEvent = _pythonWrapper.GetEvent("DataConsolidated");
+                pythonEvent += _pythonDataConsolidated;
+            }
         }
 
         /// <summary>
         /// Scans this consolidator to see if it should emit a bar due to time passing
         /// </summary>
         /// <param name="currentLocalTime">The current time in the local time zone (same as <see cref="BaseData.Time"/>)</param>
-        public void Scan(DateTime currentLocalTime)
+        public override void Scan(DateTime currentLocalTime)
         {
-            InvokeMethod(nameof(Scan), currentLocalTime);
+            _pythonWrapper.InvokeMethod(nameof(Scan), currentLocalTime);
         }
 
         /// <summary>
         /// Updates this consolidator with the specified data
         /// </summary>
         /// <param name="data">The new data for the consolidator</param>
-        public void Update(IBaseData data)
+        public override void Update(IBaseData data)
         {
-            InvokeMethod(nameof(Update), data);
-        }
-
-        /// <summary>Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.</summary>
-        /// <filterpriority>2</filterpriority>
-        public void Dispose()
-        {
+            _pythonWrapper.InvokeMethod(nameof(Update), data);
         }
 
         /// <summary>
         /// Resets the consolidator
         /// </summary>
-        public void Reset()
+        public override void Reset()
         {
-            InvokeMethod(nameof(Reset));
+            _pythonWrapper.InvokeMethod(nameof(Reset));
+            base.Reset();
         }
+
+        /// <summary>
+        /// Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.
+        /// </summary>
+        public override void Dispose()
+        {
+            if (_disposed)
+            {
+                return;
+            }
+            _disposed = true;
+
+            // Dispose can run from engine threads that do not hold the GIL, so acquire it before
+            // unsubscribing, otherwise the pythonnet event mutation can crash the runtime
+            using (Py.GIL())
+            {
+                dynamic pythonEvent = _pythonWrapper.GetEvent("DataConsolidated");
+                pythonEvent -= _pythonDataConsolidated;
+            }
+            _pythonWrapper.Dispose();
+            base.Dispose();
+        }
+
+        /// <summary>
+        /// Two wrappers are equal if they wrap the same Python object reference.
+        /// </summary>
+        public override bool Equals(object obj)
+        {
+            if (obj is DataConsolidatorPythonWrapper other)
+            {
+                return _pythonWrapper.Equals(other._pythonWrapper);
+            }
+            return _pythonWrapper.Equals(obj);
+        }
+
+        /// <summary>
+        /// Hash code based on the underlying Python object reference.
+        /// </summary>
+        public override int GetHashCode() => _pythonWrapper.GetHashCode();
     }
 }

@@ -24,6 +24,9 @@ using System.Collections.Generic;
 using QuantConnect.Util;
 using System.IO;
 using System.Threading;
+using System.Diagnostics;
+using System.Net.Sockets;
+using static QuantConnect.StringExtensions;
 
 namespace QuantConnect.Api
 {
@@ -99,7 +102,17 @@ namespace QuantConnect.Api
                 _httpClient.DisposeSafely();
             }
 
-            _httpClient = new HttpClient() { BaseAddress = new Uri($"{baseUrl.TrimEnd('/')}/") };
+            var baseAddress = new Uri($"{baseUrl.TrimEnd('/')}/");
+#pragma warning disable CA2000 // Dispose objects before losing scope: the client takes ownership of the handler
+            var handler = new SocketsHttpHandler
+            {
+                // fail fast when a connection can't be established instead of consuming the whole request timeout
+                ConnectTimeout = TimeSpan.FromMinutes(1),
+                // recycle pooled connections so DNS/load balancer changes and stale NAT state are picked up
+                PooledConnectionLifetime = TimeSpan.FromMinutes(5)
+            };
+            _httpClient = new HttpClient(handler, disposeHandler: true) { BaseAddress = baseAddress };
+#pragma warning restore CA2000
             Client = new RestClient(baseUrl);
 
             if (defaultHeaders != null)
@@ -228,9 +241,11 @@ namespace QuantConnect.Api
             // Default to 100 seconds (since we disabled the default client timeout)
             timeout ??= TimeSpan.FromSeconds(100);
 
+            using var cancellationTokenSource = new CancellationTokenSource(timeout.Value);
+            var stopwatch = Stopwatch.StartNew();
             try
             {
-                if (request.RequestUri.OriginalString.StartsWith('/'))
+                if (request.RequestUri != null && request.RequestUri.OriginalString.StartsWith('/'))
                 {
                     request.RequestUri = new Uri(request.RequestUri.ToString().TrimStart('/'), UriKind.Relative);
                 }
@@ -238,11 +253,21 @@ namespace QuantConnect.Api
                 SetAuthenticator(request);
 
                 // Execute the authenticated REST API Call
-                using var cancellationTokenSource = new CancellationTokenSource(timeout.Value);
                 response = await _httpClient.SendAsync(request, cancellationTokenSource.Token).ConfigureAwait(false);
                 responseContentStream = await response.Content.ReadAsStreamAsync(cancellationTokenSource.Token).ConfigureAwait(false);
 
-                result = responseContentStream.DeserializeJson<T>(leaveOpen: true);
+                try
+                {
+                    result = responseContentStream.DeserializeJson<T>(leaveOpen: true);
+                }
+                catch (Exception err)
+                {
+                    // a non json payload, for example an html error page from a proxy or load balancer,
+                    // the http status and raw content describe the failure better than the parse exception
+                    Log.Error($"ApiConnection.TryRequest({request.RequestUri}): failed to deserialize response: {err.GetType().Name}: {err.Message}." +
+                        $" HTTP {(int)response.StatusCode} {response.ReasonPhrase}. Content: {GetRawResponseContent(responseContentStream)}");
+                    return new Tuple<bool, T>(false, null);
+                }
 
                 if (!response.IsSuccessStatusCode)
                 {
@@ -260,7 +285,7 @@ namespace QuantConnect.Api
             }
             catch (Exception err)
             {
-                Log.Error($"ApiConnection.TryRequest({request.RequestUri}): Error: {err.Message}, Response content: {GetRawResponseContent(responseContentStream)}");
+                Log.Error($"ApiConnection.TryRequest({request.RequestUri}): {DescribeError(err, cancellationTokenSource.IsCancellationRequested, stopwatch.ElapsedMilliseconds, timeout.Value)}, Response content: {GetRawResponseContent(responseContentStream)}");
                 return new Tuple<bool, T>(false, null);
             }
             finally
@@ -270,6 +295,58 @@ namespace QuantConnect.Api
             }
 
             return new Tuple<bool, T>(true, result);
+        }
+
+        /// <summary>
+        /// Builds a diagnostic description of a failed request: distinguishes a timeout from an external
+        /// cancellation, includes how long the request ran, the exception cause chain with socket/http error
+        /// codes and the thread pool state, to help tell network failures apart from process-level issues
+        /// </summary>
+        private static string DescribeError(Exception exception, bool timeoutElapsed, long elapsedMilliseconds, TimeSpan timeout)
+        {
+            try
+            {
+                var builder = new StringBuilder("Error: ");
+                if (exception is OperationCanceledException)
+                {
+                    builder.Append(timeoutElapsed
+                        ? Invariant($"request timed out, no response received (timeout {timeout.TotalSeconds}s)")
+                        : "request was canceled before the timeout elapsed");
+                }
+                else
+                {
+                    for (var inner = exception; inner != null; inner = inner.InnerException)
+                    {
+                        if (inner != exception)
+                        {
+                            builder.Append(" -> ");
+                        }
+                        builder.Append(inner.GetType().Name);
+                        if (inner is HttpRequestException httpException)
+                        {
+                            builder.Append(Invariant($"[{httpException.HttpRequestError}]"));
+                        }
+                        else if (inner is SocketException socketException)
+                        {
+                            builder.Append(Invariant($"[{socketException.SocketErrorCode}]"));
+                        }
+                        builder.Append(": ").Append(inner.Message);
+                    }
+                }
+                builder.Append(Invariant($" after {elapsedMilliseconds}ms. ThreadPool: {ThreadPool.ThreadCount} threads, {ThreadPool.PendingWorkItemCount} pending work items"));
+                if (exception is not HttpRequestException and not OperationCanceledException)
+                {
+                    // network failures are described by their error codes above and are frequent during outages,
+                    // any other exception type is unexpected so include the stack trace to locate its source
+                    builder.Append(Environment.NewLine).Append(exception.StackTrace);
+                }
+                return builder.ToString();
+            }
+            catch (Exception)
+            {
+                // we are already handling a request failure, describing it should never throw
+                return $"Error: {exception?.Message}";
+            }
         }
 
         private static string GetRawResponseContent(Stream stream)
@@ -300,11 +377,12 @@ namespace QuantConnect.Api
 
         private void SetAuthenticator(HttpRequestMessage request)
         {
-            request.Headers.Remove("Authorization");
             request.Headers.Remove("Timestamp");
 
             var base64EncodedAuthenticationString = GetAuthenticatorHeader(out var timeStamp);
-            _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Basic", base64EncodedAuthenticationString);
+            // set the authorization on the request itself, the client default headers are shared across
+            // concurrent requests and mutating them while requests are in flight is not thread safe
+            request.Headers.Authorization = new AuthenticationHeaderValue("Basic", base64EncodedAuthenticationString);
             request.Headers.Add("Timestamp", timeStamp);
         }
 

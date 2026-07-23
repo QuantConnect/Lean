@@ -574,7 +574,9 @@ namespace QuantConnect.Securities.Option
             ContractFilter = new FuncSecurityDerivativeFilter<OptionUniverse>(universe =>
             {
                 var optionUniverse = universe as OptionFilterUniverse;
-                var result = universeFunc(optionUniverse);
+                //A null result is allowed: filter methods modify the universe in place,
+                //returning it is only necessary for chaining
+                var result = universeFunc(optionUniverse) ?? optionUniverse;
                 return result.ApplyTypesFilter();
             });
             ContractFilter.Asynchronous = false;
@@ -599,6 +601,13 @@ namespace QuantConnect.Securities.Option
                     //this exception because we are using Py.GIL() and it will see the error set
                     OptionFilterUniverse filter;
                     List<Symbol> list;
+
+                    //A None result is allowed: filter methods modify the universe in place,
+                    //returning it is only necessary for chaining
+                    if (result == null || result.IsNone())
+                    {
+                        return optionUniverse.ApplyTypesFilter();
+                    }
 
                     if ((result).TryConvert(out filter))
                     {

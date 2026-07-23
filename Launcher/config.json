@@ -58,7 +58,9 @@
   "ignore-unknown-asset-holdings": true,
 
   // The maximum amount of transaction threads for concurrent order submissions if the brokerage supports it.
-  //"maximum-transaction-threads": 4,
+  // The pool starts at the minimum and grows up to the maximum on demand.
+  //"minimum-transaction-threads": 2,
+  //"maximum-transaction-threads": 10,
 
   // log missing data files, useful for debugging
   "show-missing-data-logs": false,
@@ -212,6 +214,18 @@
   "rbi-on-behalf-of-comp-id": "",
   "rbi-log-fix-messages": false,
 
+  // bloomberg fix configuration
+  "bloomberg-fix-host": "",
+  "bloomberg-fix-port": "",
+  "bloomberg-fix-sender-comp-id": "",
+  "bloomberg-fix-target-comp-id": "",
+  "bloomberg-fix-on-behalf-of-comp-id": "",
+  "bloomberg-fix-sender-sub-id": "",
+  "bloomberg-fix-deliver-to-comp-id": "",
+  "bloomberg-fix-log-messages": false,
+  "bloomberg-fix-ssl-certificate-path": "",
+  "bloomberg-fix-ssl-certificate-password": "",
+
   // Trading Technologies configuration
   "tt-user-name": "",
   "tt-session-password": "",
@@ -268,6 +282,12 @@
   "tastytrade-username": "",
   "tastytrade-password": "",
   "tastytrade-account-number": "",
+
+  // Public.com configuration
+  "public-api-url": "https://api.public.com",
+  "public-secret-key": "",
+  // Users can have multiple different accounts
+  "public-account-number": "",
 
   // Exante trading configuration
   // client-id, application-id, shared-key are required to access Exante REST API
@@ -750,6 +770,20 @@
       "transaction-handler": "QuantConnect.Lean.Engine.TransactionHandlers.BrokerageTransactionHandler"
     },
 
+    "live-bloomberg-fix": {
+      "live-mode": true,
+
+      // real brokerage implementations require the BrokerageTransactionHandler
+      "live-mode-brokerage": "BloombergFixBrokerage",
+      "data-queue-handler": [ "QuantConnect.Lean.Engine.DataFeeds.Queues.LiveDataQueue" ],
+      "history-provider": [ "SubscriptionDataReaderHistoryProvider" ],
+      "setup-handler": "QuantConnect.Lean.Engine.Setup.BrokerageSetupHandler",
+      "result-handler": "QuantConnect.Lean.Engine.Results.LiveTradingResultHandler",
+      "data-feed-handler": "QuantConnect.Lean.Engine.DataFeeds.LiveTradingDataFeed",
+      "real-time-handler": "QuantConnect.Lean.Engine.RealTime.LiveTradingRealTimeHandler",
+      "transaction-handler": "QuantConnect.Lean.Engine.TransactionHandlers.BrokerageTransactionHandler"
+    },
+
     // defines the 'live-eze' environment
     "live-eze": {
       "live-mode": true,
@@ -772,6 +806,21 @@
       // real brokerage implementations require the BrokerageTransactionHandler
       "live-mode-brokerage": "WebullBrokerage",
       "data-queue-handler": [ "WebullBrokerage" ],
+      "setup-handler": "QuantConnect.Lean.Engine.Setup.BrokerageSetupHandler",
+      "result-handler": "QuantConnect.Lean.Engine.Results.LiveTradingResultHandler",
+      "data-feed-handler": "QuantConnect.Lean.Engine.DataFeeds.LiveTradingDataFeed",
+      "real-time-handler": "QuantConnect.Lean.Engine.RealTime.LiveTradingRealTimeHandler",
+      "transaction-handler": "QuantConnect.Lean.Engine.TransactionHandlers.BrokerageTransactionHandler",
+      "history-provider": [ "BrokerageHistoryProvider", "SubscriptionDataReaderHistoryProvider" ]
+    },
+
+    // defines the 'live-public' environment
+    "live-public": {
+      "live-mode": true,
+
+      // real brokerage implementations require the BrokerageTransactionHandler
+      "live-mode-brokerage": "PublicBrokerage",
+      "data-queue-handler": [ "PublicBrokerage" ],
       "setup-handler": "QuantConnect.Lean.Engine.Setup.BrokerageSetupHandler",
       "result-handler": "QuantConnect.Lean.Engine.Results.LiveTradingResultHandler",
       "data-feed-handler": "QuantConnect.Lean.Engine.DataFeeds.LiveTradingDataFeed",

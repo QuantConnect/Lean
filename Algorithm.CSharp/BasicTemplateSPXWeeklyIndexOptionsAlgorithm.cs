@@ -103,7 +103,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
-        public virtual long DataPoints => 21467;
+        public virtual long DataPoints => 26326;
 
         /// <summary>
         /// Data Points count of the algorithm history
@@ -122,32 +122,32 @@ namespace QuantConnect.Algorithm.CSharp
         {
             {"Total Orders", "5"},
             {"Average Win", "0.63%"},
-            {"Average Loss", "-0.03%"},
-            {"Compounding Annual Return", "54.478%"},
-            {"Drawdown", "0.400%"},
-            {"Expectancy", "23.219"},
+            {"Average Loss", "-0.02%"},
+            {"Compounding Annual Return", "23.182%"},
+            {"Drawdown", "1.200%"},
+            {"Expectancy", "26.062"},
             {"Start Equity", "1000000"},
-            {"End Equity", "1006025"},
-            {"Net Profit", "0.602%"},
-            {"Sharpe Ratio", "2.62"},
-            {"Sortino Ratio", "0"},
-            {"Probabilistic Sharpe Ratio", "63.221%"},
+            {"End Equity", "1002884"},
+            {"Net Profit", "0.288%"},
+            {"Sharpe Ratio", "-3.925"},
+            {"Sortino Ratio", "-9.873"},
+            {"Probabilistic Sharpe Ratio", "28.244%"},
             {"Loss Rate", "0%"},
             {"Win Rate", "100%"},
-            {"Profit-Loss Ratio", "23.22"},
-            {"Alpha", "0.067"},
-            {"Beta", "-0.013"},
-            {"Annual Standard Deviation", "0.004"},
-            {"Annual Variance", "0"},
-            {"Information Ratio", "-50.808"},
-            {"Tracking Error", "0.086"},
-            {"Treynor Ratio", "-0.725"},
+            {"Profit-Loss Ratio", "26.06"},
+            {"Alpha", "-1.151"},
+            {"Beta", "0.233"},
+            {"Annual Standard Deviation", "0.035"},
+            {"Annual Variance", "0.001"},
+            {"Information Ratio", "-63.342"},
+            {"Tracking Error", "0.071"},
+            {"Treynor Ratio", "-0.591"},
             {"Total Fees", "$0.00"},
-            {"Estimated Strategy Capacity", "$580000.00"},
-            {"Lowest Capacity Asset", "SPXW 31K54PVWHYTTA|SPX 31"},
-            {"Portfolio Turnover", "0.40%"},
+            {"Estimated Strategy Capacity", "$200000.00"},
+            {"Lowest Capacity Asset", "SPXW 31K35TP65TBHQ|SPX 31"},
+            {"Portfolio Turnover", "0.28%"},
             {"Drawdown Recovery", "0"},
-            {"OrderListHash", "03148bbb5453fc1056a3285bd31ce158"}
+            {"OrderListHash", "dc3fdd20abc50b79fd2f2a1005225277"}
         };
     }
 }

@@ -85,6 +85,39 @@ namespace QuantConnect.Tests.Common.Orders.Fills
             Assert.AreEqual(OrderStatus.Filled, fill.Status);
         }
 
+        // A hour/daily market order resting before the bar opened fills at the bar open; one placed during the bar
+        // fills at the current (close) price.
+        [TestCase(-30, 100.0)]  // placed before the bar opened -> bar open
+        [TestCase(30, 102.3)]   // placed during the bar -> current/close
+        public void MarketOrderRestingBeforeBarFillsAtBarOpen(int orderOffsetMinutes, double expectedPriceDouble)
+        {
+            var expectedPrice = (decimal)expectedPriceDouble;
+            var model = new ImmediateFillModel();
+            var config = CreateTradeBarConfig(Symbols.SPY, resolution: Resolution.Hour);
+            var security = GetSecurity(config);
+
+            // hour bar covering 11:00 -> 12:00 NewYork
+            var barStartNY = new DateTime(2014, 6, 24, 11, 0, 0);
+            var barEndNY = new DateTime(2014, 6, 24, 12, 0, 0);
+            TimeKeeper.SetUtcDateTime(barEndNY.ConvertToUtc(TimeZones.NewYork));
+            security.SetLocalTimeKeeper(TimeKeeper.GetLocalTimeKeeper(TimeZones.NewYork));
+            security.SetMarketPrice(new TradeBar(barStartNY, Symbols.SPY, 100m, 103m, 99m, 102.3m, 100m, TimeSpan.FromHours(1)));
+
+            var barStartUtc = barStartNY.ConvertToUtc(TimeZones.NewYork);
+            var order = new MarketOrder(Symbols.SPY, 100, barStartUtc.AddMinutes(orderOffsetMinutes));
+
+            var fill = model.Fill(new FillModelParameters(
+                security,
+                order,
+                new MockSubscriptionDataConfigProvider(config),
+                Time.OneHour,
+                null)).Single();
+
+            Assert.AreEqual(OrderStatus.Filled, fill.Status);
+            Assert.AreEqual(order.Quantity, fill.FillQuantity);
+            Assert.AreEqual(expectedPrice, fill.FillPrice);
+        }
+
         [TestCase(true, true)]
         [TestCase(false, true)]
         [TestCase(true, false)]
@@ -938,12 +971,14 @@ namespace QuantConnect.Tests.Common.Orders.Fills
             security.SetMarketPrice(new IndicatorDataPoint(Symbols.SPY, noon, 101.123m));
 
             // Add both a tradebar and a tick to the security cache
-            // This is the case when a tick is seeded with minute data in an algorithm
-            security.Cache.AddData(new TradeBar(DateTime.MinValue, symbol, 1.0m, 1.0m, 1.0m, 1.0m, 1.0m));
-            security.Cache.AddData(new Tick(config, "42525000,1000000,100,A,@,0", DateTime.MinValue));
+            // This is the case when a tick is seeded with minute data in an algorithm.
+            // Use fresh timestamps (data within one resolution bar of the current time) so the fill is not held
+            // back as stale; this test is about which data type is used, not stale-data handling.
+            security.Cache.AddData(new TradeBar(noon.AddMinutes(-1), symbol, 1.0m, 1.0m, 1.0m, 1.0m, 1.0m, Time.OneMinute));
+            security.Cache.AddData(new Tick(config, "42525000,1000000,100,A,@,0", noon.Date));
 
             var fillModel = new ImmediateFillModel();
-            var order = new MarketOrder(symbol, 1000, DateTime.Now);
+            var order = new MarketOrder(symbol, 1000, noon);
             var fill = fillModel.Fill(new FillModelParameters(
                 security,
                 order,
@@ -970,12 +1005,14 @@ namespace QuantConnect.Tests.Common.Orders.Fills
             security.SetMarketPrice(new IndicatorDataPoint(Symbols.SPY, noon, 101.123m));
 
 
-            // This is the case when a tick is seeded with minute data in an algorithm
-            security.Cache.AddData(new TradeBar(DateTime.MinValue, symbol, 1.0m, 1.0m, 1.0m, 1.0m, 1.0m));
-            security.Cache.AddData(new Tick(config, "42525000,1000000,100,A,@,0", DateTime.MinValue));
+            // This is the case when a tick is seeded with minute data in an algorithm.
+            // Use fresh timestamps (data within one resolution bar of the current time) so the fill is not held
+            // back as stale; this test is about which data type is used, not stale-data handling.
+            security.Cache.AddData(new TradeBar(noon.AddMinutes(-1), symbol, 1.0m, 1.0m, 1.0m, 1.0m, 1.0m, Time.OneMinute));
+            security.Cache.AddData(new Tick(config, "42525000,1000000,100,A,@,0", noon.Date));
 
             var fillModel = new ImmediateFillModel();
-            var order = new MarketOrder(symbol, 1000, DateTime.Now);
+            var order = new MarketOrder(symbol, 1000, noon);
             var fill = fillModel.Fill(new FillModelParameters(
                 security,
                 order,
@@ -1145,21 +1182,31 @@ namespace QuantConnect.Tests.Common.Orders.Fills
         [TestCase(false)]
         public void MarketOrderFillWithStalePriceHasWarningMessage(bool isInternal)
         {
+            // The latest data is older than the stale-price threshold relative to the order submission time, but it is
+            // still within one resolution bar, so the order fills at the stale price with a warning instead of waiting
+            // for fresh data. Use a stale-price threshold shorter than the minute resolution bar so both conditions hold.
+            var stalePriceTimeSpan = TimeSpan.FromSeconds(30);
+            var dataTime = Noon;
+            var orderTime = dataTime.AddSeconds(45);
+
             var model = new ImmediateFillModel();
-            var order = new MarketOrder(Symbols.SPY, -100, Noon.ConvertToUtc(TimeZones.NewYork).AddMinutes(61));
+            var order = new MarketOrder(Symbols.SPY, -100, orderTime.ConvertToUtc(TimeZones.NewYork));
             var config = CreateTradeBarConfig(Symbols.SPY, isInternal);
             var security = GetSecurity(config);
-            security.SetLocalTimeKeeper(TimeKeeper.GetLocalTimeKeeper(TimeZones.NewYork));
-            security.SetMarketPrice(new IndicatorDataPoint(Symbols.SPY, Noon, 101.123m));
+
+            var timeKeeper = new TimeKeeper(orderTime.ConvertToUtc(TimeZones.NewYork), TimeZones.NewYork);
+            security.SetLocalTimeKeeper(timeKeeper.GetLocalTimeKeeper(TimeZones.NewYork));
+            security.SetMarketPrice(new IndicatorDataPoint(Symbols.SPY, dataTime, 101.123m));
 
             var fill = model.Fill(new FillModelParameters(
                 security,
                 order,
                 new MockSubscriptionDataConfigProvider(config),
-                Time.OneHour,
+                stalePriceTimeSpan,
                 null)).Single();
 
-            Assert.IsTrue(fill.Message.Contains("Warning: fill at stale price"));
+            Assert.AreEqual(OrderStatus.Filled, fill.Status);
+            Assert.IsTrue(fill.Message.Contains("Warning: fill at stale price"), fill.Message);
         }
 
         [TestCase(OrderDirection.Sell, 11, true)]

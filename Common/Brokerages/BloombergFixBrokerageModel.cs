@@ -29,6 +29,7 @@ namespace QuantConnect.Brokerages
         {
             SecurityType.Equity,
             SecurityType.Option,
+            SecurityType.IndexOption,
             SecurityType.Future,
         };
 
@@ -36,6 +37,7 @@ namespace QuantConnect.Brokerages
         {
             OrderType.Market,
             OrderType.MarketOnOpen,
+            OrderType.MarketOnClose,
             OrderType.Limit,
             OrderType.StopMarket,
             OrderType.StopLimit,
@@ -72,13 +74,6 @@ namespace QuantConnect.Brokerages
             {
                 message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
                     Messages.DefaultBrokerageModel.UnsupportedOrderType(this, order, _supportedOrderTypes));
-                return false;
-            }
-
-            if (order.AbsoluteQuantity % 1 != 0)
-            {
-                message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
-                    $"Order Quantity must be Integer, but provided {order.AbsoluteQuantity}.");
                 return false;
             }
 

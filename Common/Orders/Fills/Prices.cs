@@ -24,6 +24,11 @@ namespace QuantConnect.Orders.Fills
     public class Prices
     {
         /// <summary>
+        /// Start time for these prices (when the bar opened)
+        /// </summary>
+        public DateTime Time { get; init; }
+
+        /// <summary>
         /// End time for these prices
         /// </summary>
         public DateTime EndTime { get; init; }
@@ -58,31 +63,34 @@ namespace QuantConnect.Orders.Fills
         /// </summary>
         /// <param name="bar">Data bar to use for prices</param>
         public Prices(IBaseDataBar bar)
-            : this(bar.EndTime, bar.Close, bar.Open, bar.High, bar.Low, bar.Close)
+            : this(bar.Time, bar.EndTime, bar.Close, bar.Open, bar.High, bar.Low, bar.Close)
         {
         }
 
         /// <summary>
-        /// Create an instance of Prices class with a data bar and end time
+        /// Create an instance of Prices class with a data bar and start/end time
         /// </summary>
+        /// <param name="time">The start time for these prices (when the bar opened)</param>
         /// <param name="endTime">The end time for these prices</param>
         /// <param name="bar">Data bar to use for prices</param>
-        public Prices(DateTime endTime, IBar bar)
-            : this(endTime, bar.Close, bar.Open, bar.High, bar.Low, bar.Close)
+        public Prices(DateTime time, DateTime endTime, IBar bar)
+            : this(time, endTime, bar.Close, bar.Open, bar.High, bar.Low, bar.Close)
         {
         }
 
         /// <summary>
         /// Create a instance of the Prices class with specific values for all prices
         /// </summary>
+        /// <param name="time">The start time for these prices (when the bar opened)</param>
         /// <param name="endTime">The end time for these prices</param>
         /// <param name="current">Current price</param>
         /// <param name="open">Open price</param>
         /// <param name="high">High price</param>
         /// <param name="low">Low price</param>
         /// <param name="close">Close price</param>
-        public Prices(DateTime endTime, decimal current, decimal open, decimal high, decimal low, decimal close)
+        public Prices(DateTime time, DateTime endTime, decimal current, decimal open, decimal high, decimal low, decimal close)
         {
+            Time = time;
             EndTime = endTime;
             Current = current;
             Open = open == 0 ? current : open;

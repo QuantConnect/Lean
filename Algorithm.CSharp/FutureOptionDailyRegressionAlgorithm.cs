@@ -31,11 +31,13 @@ namespace QuantConnect.Algorithm.CSharp
         protected OrderTicket Ticket { get; set; }
         protected Symbol ESOption { get; set; }
         protected virtual Resolution Resolution => Resolution.Daily;
+        protected virtual DateTime StartDate => new DateTime(2020, 1, 6);
+        protected virtual DateTime EndDate => new DateTime(2020, 1, 8);
 
         public override void Initialize()
         {
-            SetStartDate(2020, 1, 7);
-            SetEndDate(2020, 1, 8);
+            SetStartDate(StartDate);
+            SetEndDate(EndDate);
 
             // Add our underlying future contract
             var futureContract = AddFutureContract(
@@ -66,14 +68,15 @@ namespace QuantConnect.Algorithm.CSharp
 
         protected virtual void ScheduleBuySell()
         {
-            // Schedule a purchase of this contract tomorrow at 10AM when the market is open
-            Schedule.On(DateRules.Tomorrow, TimeRules.At(10,0,0), () =>
+            // On daily resolution the order fills at the daily close, so a same-day buy + liquidate cannot work
+            // (the buy would not fill until after the liquidation). Buy on the first day with available data and
+            // liquidate the next day, once the purchase has filled at the previous close.
+            Schedule.On(DateRules.On(2020, 1, 7), TimeRules.At(10, 0, 0), () =>
             {
                 Ticket = MarketOrder(ESOption, 1);
             });
 
-            // Schedule liquidation tomorrow at 2PM when the market is open
-            Schedule.On(DateRules.Tomorrow, TimeRules.At(14,0,0), () =>
+            Schedule.On(DateRules.On(2020, 1, 8), TimeRules.At(14, 0, 0), () =>
             {
                 Liquidate();
             });
@@ -118,7 +121,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
-        public virtual long DataPoints => 27;
+        public virtual long DataPoints => 36;
 
         /// <summary>
         /// Data Points count of the algorithm history
@@ -136,33 +139,33 @@ namespace QuantConnect.Algorithm.CSharp
         public virtual Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
         {
             {"Total Orders", "2"},
-            {"Average Win", "0%"},
+            {"Average Win", "1.50%"},
             {"Average Loss", "0%"},
-            {"Compounding Annual Return", "0%"},
-            {"Drawdown", "0%"},
+            {"Compounding Annual Return", "640.945%"},
+            {"Drawdown", "0.000%"},
             {"Expectancy", "0"},
             {"Start Equity", "100000"},
-            {"End Equity", "99997.16"},
-            {"Net Profit", "0%"},
-            {"Sharpe Ratio", "0"},
+            {"End Equity", "101497.16"},
+            {"Net Profit", "1.497%"},
+            {"Sharpe Ratio", "32.826"},
             {"Sortino Ratio", "0"},
             {"Probabilistic Sharpe Ratio", "0%"},
             {"Loss Rate", "0%"},
-            {"Win Rate", "0%"},
+            {"Win Rate", "100%"},
             {"Profit-Loss Ratio", "0"},
-            {"Alpha", "0"},
-            {"Beta", "0"},
-            {"Annual Standard Deviation", "0"},
-            {"Annual Variance", "0"},
-            {"Information Ratio", "0"},
-            {"Tracking Error", "0"},
-            {"Treynor Ratio", "0"},
+            {"Alpha", "4.881"},
+            {"Beta", "1.842"},
+            {"Annual Standard Deviation", "0.168"},
+            {"Annual Variance", "0.028"},
+            {"Information Ratio", "67.238"},
+            {"Tracking Error", "0.077"},
+            {"Treynor Ratio", "3"},
             {"Total Fees", "$2.84"},
-            {"Estimated Strategy Capacity", "$0"},
+            {"Estimated Strategy Capacity", "$66000.00"},
             {"Lowest Capacity Asset", "ES XCZJLCEYO5XG|ES XCZJLC9NOB29"},
-            {"Portfolio Turnover", "4.24%"},
-            {"Drawdown Recovery", "0"},
-            {"OrderListHash", "ea4b22620e9435d7fa80888b8bd7be87"}
+            {"Portfolio Turnover", "3.30%"},
+            {"Drawdown Recovery", "1"},
+            {"OrderListHash", "ca2b881524d4b9307e19a4f84ab4f5d7"}
         };
     }
 }

@@ -16,6 +16,7 @@
 
 using QuantConnect.Data;
 using QuantConnect.Data.UniverseSelection;
+using System.Collections.Generic;
 
 namespace QuantConnect.Algorithm.CSharp
 {
@@ -30,9 +31,12 @@ namespace QuantConnect.Algorithm.CSharp
         protected override bool ShouldHaveQuoteData => true;
         protected override bool ShouldHaveOpenInterestData => true;
 
+        // SPY will be added with daily resolution, will not have quotes
+        protected override List<string> SecuritiesToIgnoreForChecking => ["SPY"];
+
         public override void Initialize()
         {
-            SetStartDate(2015, 12, 28);
+            SetStartDate(2015, 12, 24);
             SetEndDate(2015, 12, 28);
             SetCash(100000);
 
@@ -91,11 +95,46 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
-        public override long DataPoints => 4044;
+        public override long DataPoints => 38649;
 
         /// <summary>
         /// Data Points count of the algorithm history
         /// </summary>
-        public override int AlgorithmHistoryDataPoints => 218;
+        public override int AlgorithmHistoryDataPoints => 185;
+
+        /// <summary>
+        /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
+        /// </summary>
+        public override Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>
+        {
+            {"Total Orders", "0"},
+            {"Average Win", "0%"},
+            {"Average Loss", "0%"},
+            {"Compounding Annual Return", "0%"},
+            {"Drawdown", "0%"},
+            {"Expectancy", "0"},
+            {"Start Equity", "100000"},
+            {"End Equity", "100000"},
+            {"Net Profit", "0%"},
+            {"Sharpe Ratio", "0"},
+            {"Sortino Ratio", "0"},
+            {"Probabilistic Sharpe Ratio", "0%"},
+            {"Loss Rate", "0%"},
+            {"Win Rate", "0%"},
+            {"Profit-Loss Ratio", "0"},
+            {"Alpha", "0"},
+            {"Beta", "0"},
+            {"Annual Standard Deviation", "0"},
+            {"Annual Variance", "0"},
+            {"Information Ratio", "7.438"},
+            {"Tracking Error", "0.017"},
+            {"Treynor Ratio", "0"},
+            {"Total Fees", "$0.00"},
+            {"Estimated Strategy Capacity", "$0"},
+            {"Lowest Capacity Asset", ""},
+            {"Portfolio Turnover", "0%"},
+            {"Drawdown Recovery", "0"},
+            {"OrderListHash", "d41d8cd98f00b204e9800998ecf8427e"}
+        };
     }
 }

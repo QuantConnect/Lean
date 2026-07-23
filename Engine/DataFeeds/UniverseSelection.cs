@@ -128,7 +128,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
                     // if the input is already fundamental data we just need to filter it and pass it through
                     var hasFundamentalData = universeData.Data.Count > 0 && universeData.Data[0] is Fundamental;
-                    if(hasFundamentalData)
+                    if (hasFundamentalData)
                     {
                         // Remove selected symbols that does not have fine fundamental data
                         var anyDoesNotHaveFundamentalData = false;
@@ -137,7 +137,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                         // which do not use coarse data as underlying, in which case it could happen that we try to load fine fundamental data that is missing, but no problem,
                         // 'FineFundamentalSubscriptionEnumeratorFactory' won't emit it
                         var set = selectSymbolsResult.ToHashSet();
-                        fineCollection.Data.AddRange(universeData.Data.OfType<Fundamental>().Where(fundamental => {
+                        fineCollection.Data.AddRange(universeData.Data.OfType<Fundamental>().Where(fundamental =>
+                        {
                             // we remove to we distict by symbol
                             if (set.Remove(fundamental.Symbol))
                             {
@@ -360,7 +361,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                         resolution = supportedResolutions.OrderByDescending(x => x).First();
                     }
 
-                    var subscriptionList = new List<Tuple<Type, TickType>>() {subscriptionType};
+                    var subscriptionList = new List<Tuple<Type, TickType>>() { subscriptionType };
                     var dataConfig = _algorithm.SubscriptionManager.SubscriptionDataConfigService.Add(
                         securityBenchmark.Security.Symbol,
                         resolution,
@@ -418,9 +419,32 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// <summary>
         /// Checks the current subscriptions and adds necessary currency pair feeds to provide real time conversion data
         /// </summary>
-        public void EnsureCurrencyDataFeeds(SecurityChanges securityChanges)
+        /// <param name="securityChanges">The security changes to consume</param>
+        /// <param name="seedNewCurrencies">Whether to seed the conversion rate of newly added currencies with their last
+        /// known price. The setup handler passes false because it performs its own (optionally white-listed) seeding</param>
+        public void EnsureCurrencyDataFeeds(SecurityChanges securityChanges, bool seedNewCurrencies = true)
         {
-            _currencySubscriptionDataConfigManager.EnsureCurrencySubscriptionDataConfigs(securityChanges, _algorithm.BrokerageModel);
+            var newCurrenciesAdded = _currencySubscriptionDataConfigManager.EnsureCurrencySubscriptionDataConfigs(securityChanges, _algorithm.BrokerageModel);
+
+            // Only scan the cashbook and seed when a new currency was actually introduced, either as a new
+            // internal conversion feed or as a new cash entry whose conversion security is an already added one
+            if (!seedNewCurrencies || !newCurrenciesAdded)
+            {
+                return;
+            }
+
+            // Seed the new conversion rates with their last known price so they are non-zero right away, instead of
+            // waiting for the first conversion pair bar to arrive. Otherwise a conversion needed in that gap would
+            // throw. This is the same thing BaseSetupHandler does during setup, but for cashes added at runtime.
+            try
+            {
+                AlgorithmUtils.SeedCurrencyConversionRates(_algorithm);
+            }
+            catch (Exception err)
+            {
+                // Seeding must never break the algorithm, the rate will be set on the first conversion pair bar
+                Log.Error($"UniverseSelection.EnsureCurrencyDataFeeds(): failed to seed runtime currency conversion rate(s): {err.Message}");
+            }
         }
 
         /// <summary>

@@ -35,6 +35,7 @@ namespace QuantConnect.Algorithm
         private bool _isMarketOnOpenOrderRestrictedForFuturesWarningSent;
         private bool _isGtdTfiForMooAndMocOrdersValidationWarningSent;
         private bool _isOptionsOrderOnStockSplitWarningSent;
+        private bool _liquidateSymbolNotFoundWarningSent;
 
         /// <summary>
         /// Transaction Manager - Process transaction fills and order management.
@@ -1268,7 +1269,7 @@ namespace QuantConnect.Algorithm
         private Security GetSecurityForOrder(Symbol symbol)
         {
             var isCanonical = symbol.IsCanonical();
-            if (Securities.TryGetValue(symbol, out var security) && 
+            if (Securities.TryGetValue(symbol, out var security) &&
                 // Let canonical and delisted securities through instead of throwing. An invalid ticket will be returned later on when trying to submit the order.
                 (isCanonical || security.IsTradable || security.IsDelisted))
             {
@@ -1278,12 +1279,9 @@ namespace QuantConnect.Algorithm
             if (security == null || !security.IsTradable)
             {
                 // Try to add and seed the security, but don't is it's a canonical symbol
-                if (!isCanonical &&
+                if (CanAutoAddSecurity(symbol) &&
                     // Indexes are not tradable by default
-                    symbol.SecurityType != SecurityType.Index &&
-                    (!symbol.HasUnderlying ||
-                     (symbol.SecurityType.IsOption() && !OptionSymbol.IsOptionContractExpired(symbol, UtcTime)) ||
-                     (symbol.SecurityType == SecurityType.Future && !FuturesExpiryUtilityFunctions.IsFutureContractExpired(symbol, UtcTime, MarketHoursDatabase))))
+                    symbol.SecurityType != SecurityType.Index)
                 {
                     // Send one time warning
                     security = AddSecurity(symbol);
@@ -1302,6 +1300,21 @@ namespace QuantConnect.Algorithm
         }
 
         /// <summary>
+        /// Determines whether the given symbol can be automatically added to the algorithm on the user's behalf,
+        /// so that it does not need to be explicitly subscribed to before being used. This is the case both when
+        /// submitting an order (see <see cref="GetSecurityForOrder"/>) and when registering an indicator or
+        /// consolidator for a symbol the user has not subscribed to. Canonical symbols (universes) and expired
+        /// option/future contracts are excluded.
+        /// </summary>
+        private bool CanAutoAddSecurity(Symbol symbol)
+        {
+            return !symbol.IsCanonical() &&
+                (!symbol.HasUnderlying ||
+                 (symbol.SecurityType.IsOption() && !OptionSymbol.IsOptionContractExpired(symbol, UtcTime)) ||
+                 (symbol.SecurityType == SecurityType.Future && !FuturesExpiryUtilityFunctions.IsFutureContractExpired(symbol, UtcTime, MarketHoursDatabase)));
+        }
+
+        /// <summary>
         /// Liquidate your portfolio holdings
         /// </summary>
         /// <param name="symbol">Specific asset to liquidate, defaults to all</param>
@@ -1314,8 +1327,7 @@ namespace QuantConnect.Algorithm
             IEnumerable<Symbol> toLiquidate;
             if (symbol != null)
             {
-                toLiquidate = Securities.ContainsKey(symbol)
-                    ? new[] { symbol } : Enumerable.Empty<Symbol>();
+                toLiquidate = new[] { symbol };
             }
             else
             {
@@ -1345,6 +1357,17 @@ namespace QuantConnect.Algorithm
             tag ??= "Liquidated";
             foreach (var symbolToLiquidate in symbols)
             {
+                // skip symbols that have not been added to the algorithm instead of throwing
+                if (!Securities.ContainsKey(symbolToLiquidate))
+                {
+                    if (!_liquidateSymbolNotFoundWarningSent)
+                    {
+                        _liquidateSymbolNotFoundWarningSent = true;
+                        Debug($"Warning: liquidate ignored symbol '{symbolToLiquidate}' because it has not been added to the algorithm. Add the security before liquidating it.");
+                    }
+                    continue;
+                }
+
                 // get open orders
                 var orders = Transactions.GetOpenOrders(symbolToLiquidate);
 

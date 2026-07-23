@@ -46,6 +46,8 @@ namespace QuantConnect.Securities
         {
             public DateTime LocalTime => default;
 
+            public int Count => 0;
+
             public IEnumerator<T> GetEnumerator()
             {
                 return Enumerable.Empty<T>().GetEnumerator();
