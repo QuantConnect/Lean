@@ -19,6 +19,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using NUnit.Framework;
+using QuantConnect.Lean.Engine.Results;
 using QuantConnect.Lean.Engine.Results.Analysis;
 using QuantConnect.Lean.Engine.Results.Analysis.Analyses;
 using QuantConnect.Orders;
@@ -227,6 +228,28 @@ namespace QuantConnect.Tests.Engine.Results
                 findings.Select(finding => finding.Name));
         }
 
+        [Test]
+        public void RequiredChartsAreTheChartsReadByTheInRunAnalyses()
+        {
+            // The result handler only clones these charts into the analyzed snapshot,
+            // so this must stay in sync with the charts the in-run analyses read
+            CollectionAssert.AreEquivalent(
+                new[] { BaseResultsHandler.PortfolioMarginKey },
+                InRunResultsAnalyzer.RequiredCharts);
+        }
+
+        [Test]
+        public void AnalysesAreCreatedOnceAndReusedAcrossRuns()
+        {
+            var analyzer = new TestInRunResultsAnalyzer(new FakeAnalysisA(10));
+
+            analyzer.Run(MakeResult(1), new[] { "log" });
+            analyzer.Run(MakeResult(1), new[] { "log" });
+
+            // Both the analysis chain and the findings ranking read the cached set
+            Assert.AreEqual(1, analyzer.GetAnalysesCallCount);
+        }
+
         private static BacktestResult MakeResult(int orderEventsCount)
         {
             return new BacktestResult
@@ -250,7 +273,13 @@ namespace QuantConnect.Tests.Engine.Results
                 _analyses = analyses;
             }
 
-            protected override IReadOnlyCollection<BaseResultsAnalysis> GetAnalyses() => _analyses;
+            public int GetAnalysesCallCount { get; private set; }
+
+            protected override IReadOnlyCollection<BaseResultsAnalysis> GetAnalyses()
+            {
+                GetAnalysesCallCount++;
+                return _analyses;
+            }
         }
 
         private class FakeAnalysis : BaseResultsAnalysis

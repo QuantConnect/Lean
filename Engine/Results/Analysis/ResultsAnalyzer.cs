@@ -35,6 +35,13 @@ namespace QuantConnect.Lean.Engine.Results.Analysis
         private SortedList<DateTime, decimal> _equityCurve;
         private SortedList<DateTime, decimal> _benchmarkEquityCurve;
         private Result _result;
+        private IReadOnlyCollection<BaseResultsAnalysis> _analyses;
+
+        /// <summary>
+        /// The diagnostic analyses to run. Created once and reused across runs,
+        /// since the analyses are stateless.
+        /// </summary>
+        protected IReadOnlyCollection<BaseResultsAnalysis> Analyses => _analyses ??= GetAnalyses();
 
         /// <summary>
         /// Whether the equity and benchmark curves should be built before running the analyses.
@@ -76,7 +83,7 @@ namespace QuantConnect.Lean.Engine.Results.Analysis
         /// <returns>Up to <paramref name="maxFailedAnalyses"/> <see cref="QuantConnect.Analysis"/> entries with solutions, ranked by weight.</returns>
         public IReadOnlyList<QuantConnect.Analysis> Run(int timeLimitSeconds = 5, int maxFailedAnalyses = 10)
         {
-            var analyses = GetAnalyses();
+            var analyses = Analyses;
             if (analyses.Count == 0)
             {
                 return [];
@@ -136,8 +143,8 @@ namespace QuantConnect.Lean.Engine.Results.Analysis
         /// <summary>
         /// Creates the set of diagnostic analyses to run against the backtest.
         /// </summary>
-        protected virtual IReadOnlyCollection<BaseResultsAnalysis> GetAnalyses() => new BaseResultsAnalysis[]
-        {
+        protected virtual IReadOnlyCollection<BaseResultsAnalysis> GetAnalyses() =>
+        [
             new PortfolioValueIsNotPositiveAnalysis(),
             new FlatEquityCurveAnalysis(),
             new InsufficientBuyingPowerOrderResponseErrorAnalysis(),
@@ -169,7 +176,7 @@ namespace QuantConnect.Lean.Engine.Results.Analysis
             new PortfolioMarginUsageAnalysis(),
             new ParameterCountAnalysis(),
             new MonteCarloPercentileAnalysis(),
-        };
+        ];
 
         /// <summary>
         /// Reads the backtest's "Strategy Equity" chart and fetches SPY daily history to build
@@ -204,12 +211,6 @@ namespace QuantConnect.Lean.Engine.Results.Analysis
             var benchmarkSeries = new SortedList<DateTime, decimal>();
             var historyStart = algorithm.StartDate - TimeSpan.FromDays(3);
             var historyEnd = algorithm.EndDate + TimeSpan.FromDays(1);
-            if (historyEnd > algorithm.Time)
-            {
-                // When running mid-backtest, requesting past the current algorithm time would get the request
-                // trimmed by the engine anyway, while also emitting a debug message to the user
-                historyEnd = algorithm.Time;
-            }
             foreach (var bar in algorithm.History(spy, historyStart, historyEnd, Resolution.Daily))
             {
                 var time = algorithm.Settings.DailyPreciseEndTime ? bar.EndTime.AddDays(1).Date : bar.EndTime;

@@ -45,6 +45,26 @@ namespace QuantConnect.Lean.Engine.Results.Analysis
         private readonly AlgorithmSpeedTracker _speed = new();
 
         /// <summary>
+        /// The equity and benchmark curves are not built for in-run analysis:
+        /// none of the in-run analyses read them, and building them would issue
+        /// a benchmark history request on every run.
+        /// </summary>
+        protected override bool RequiresEquityCurves => false;
+
+        /// <summary>
+        /// The in-run analyses read the algorithm speed metrics accumulated from the
+        /// samples received on each run.
+        /// </summary>
+        protected override AlgorithmSpeedTracker SpeedTracker => _speed;
+
+        /// <summary>
+        /// The names of the charts the in-run analyses read. Only these need to be
+        /// cloned into the result snapshot passed to
+        /// <see cref="Run(Result, IReadOnlyList{string}, System.Nullable{AlgorithmSpeedSample}, int, int)"/>.
+        /// </summary>
+        public static IReadOnlyList<string> RequiredCharts { get; } = [BaseResultsHandler.PortfolioMarginKey];
+
+        /// <summary>
         /// The number of order events already consumed by previous runs. The order events
         /// in the result passed to <see cref="Run(Result, IReadOnlyList{string}, System.Nullable{AlgorithmSpeedSample}, int, int)"/>
         /// are expected to start at this position.
@@ -57,19 +77,6 @@ namespace QuantConnect.Lean.Engine.Results.Analysis
         /// at this position.
         /// </summary>
         public int LogsPosition { get; private set; }
-
-        /// <summary>
-        /// The equity and benchmark curves are not built for in-run analysis:
-        /// none of the in-run analyses read them, and building them would issue
-        /// a benchmark history request on every run.
-        /// </summary>
-        protected override bool RequiresEquityCurves => false;
-
-        /// <summary>
-        /// The in-run analyses read the algorithm speed metrics accumulated from the
-        /// samples received on each run.
-        /// </summary>
-        protected override AlgorithmSpeedTracker SpeedTracker => _speed;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="InRunResultsAnalyzer"/> class.
@@ -117,7 +124,9 @@ namespace QuantConnect.Lean.Engine.Results.Analysis
             LogsPosition += logs?.Count ?? 0;
 
             // State-based analyses are recomputed from scratch each run: remove their previous
-            // findings so they are replaced, or dropped if they no longer fail
+            // findings so they are replaced, or dropped if they no longer fail. If a time-limit
+            // truncated run skipped one of them, its finding drops until a run reaches it again —
+            // same trade-off as the positions advancement above
             foreach (var name in _findings.Keys.Where(IsStateBased).ToList())
             {
                 _findings.Remove(name);
@@ -143,7 +152,7 @@ namespace QuantConnect.Lean.Engine.Results.Analysis
         /// </summary>
         private IReadOnlyList<QuantConnect.Analysis> RankFindings(int maxFailedAnalyses)
         {
-            var weights = GetAnalyses().ToDictionary(analysis => analysis.GetType().Name, analysis => analysis.Weight);
+            var weights = Analyses.ToDictionary(analysis => analysis.GetType().Name, analysis => analysis.Weight);
             return _findings.Values
                 .OrderByDescending(finding => weights.GetValueOrDefault(BaseAnalysisName(finding.Name)))
                 .Take(maxFailedAnalyses)

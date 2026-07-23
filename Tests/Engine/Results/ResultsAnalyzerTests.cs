@@ -129,6 +129,17 @@ namespace QuantConnect.Tests.Engine.Results
             Assert.AreEqual(1, findings.Count);
         }
 
+        [Test]
+        public void AnalysesAreCreatedOnceAndReusedAcrossRuns()
+        {
+            var analyzer = new TestResultsAnalyzer(false, new FakeAnalysisA(10));
+
+            analyzer.Run();
+            analyzer.Run();
+
+            Assert.AreEqual(1, analyzer.GetAnalysesCallCount);
+        }
+
         private class TestResultsAnalyzer : ResultsAnalyzer
         {
             private readonly bool _requiresEquityCurves;
@@ -143,7 +154,13 @@ namespace QuantConnect.Tests.Engine.Results
 
             protected override bool RequiresEquityCurves => _requiresEquityCurves;
 
-            protected override IReadOnlyCollection<BaseResultsAnalysis> GetAnalyses() => _analyses;
+            public int GetAnalysesCallCount { get; private set; }
+
+            protected override IReadOnlyCollection<BaseResultsAnalysis> GetAnalyses()
+            {
+                GetAnalysesCallCount++;
+                return _analyses;
+            }
         }
 
         private class FakeAnalysis : BaseResultsAnalysis
