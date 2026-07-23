@@ -114,8 +114,10 @@ namespace QuantConnect.Notifications
         public Dictionary<string, string> Headers { get; set; }
 
         /// <summary>
-        /// Send to address:
+        /// Send to address. If null, the email is sent to all members in the project.
+        /// Always serialized, even when null: the cloud API requires the key to be present
         /// </summary>
+        [JsonProperty(NullValueHandling = NullValueHandling.Include)]
         public string Address { get; set; }
 
         /// <summary>
@@ -138,7 +140,8 @@ namespace QuantConnect.Notifications
         /// <summary>
         /// Default constructor for sending an email notification
         /// </summary>
-        /// <param name="address">Address to send to, if null will default to users email. Will throw <see cref="ArgumentException"/> if invalid
+        /// <param name="address">Address to send to. If null, the email is sent to all members in the project.
+        /// Will throw <see cref="ArgumentException"/> if invalid
         /// <see cref="Validate.EmailAddress"/></param>
         /// <param name="subject">Subject of the email. Will set to <see cref="string.Empty"/> if null</param>
         /// <param name="message">Message body of the email. Will set to <see cref="string.Empty"/> if null</param>
@@ -146,12 +149,22 @@ namespace QuantConnect.Notifications
         /// <param name="headers">Optional email headers to use</param>
         public NotificationEmail(string address, string subject = "", string message = "", string data = "", Dictionary<string, string> headers = null)
         {
-            if (!Validate.EmailAddress(address))
+            if (address == null)
             {
-                throw new ArgumentException(Messages.NotificationEmail.InvalidEmailAddress(address));
+                // sent to all members in the project
+                Address = null;
+            }
+            else
+            {
+                address = address.Trim();
+                if (!Validate.EmailAddress(address))
+                {
+                    throw new ArgumentException(Messages.NotificationEmail.InvalidEmailAddress(address));
+                }
+
+                Address = address;
             }
 
-            Address = address;
             Data = data ?? string.Empty;
             Message = message ?? string.Empty;
             Subject = subject ?? string.Empty;

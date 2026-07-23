@@ -65,7 +65,10 @@ namespace QuantConnect.Notifications
                 var address = jObject.GetValue("Address", StringComparison.InvariantCultureIgnoreCase);
                 var headers= jObject.GetValue("Headers", StringComparison.InvariantCultureIgnoreCase);
 
-                return new NotificationEmail(address?.ToString(), token.ToString(), message?.ToString(), data?.ToString(), headers?.ToObject<Dictionary<string, string>>());
+                // a null address means the email is sent to all members in the project
+                var addressValue = address == null || address.Type == JTokenType.Null ? null : address.ToString();
+
+                return new NotificationEmail(addressValue, token.ToString(), message?.ToString(), data?.ToString(), headers?.ToObject<Dictionary<string, string>>());
             }
             else if (jObject.TryGetValue("Address", StringComparison.InvariantCultureIgnoreCase, out token))
             {

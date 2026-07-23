@@ -52,6 +52,19 @@ namespace QuantConnect.Tests.Common.Notifications
         }
 
         [Test]
+        public void Email_WithoutAddress_AddsNotificationEmail_ForAllProjectMembers()
+        {
+            Assert.AreEqual(_liveMode, _notify.Email(null, "subject", "message", "data"));
+            Assert.AreEqual(_liveMode ? 1 : 0, _notify.Messages.Count);
+            if (_liveMode)
+            {
+                var email = _notify.Messages.Single() as NotificationEmail;
+                Assert.IsNotNull(email);
+                Assert.IsNull(email.Address);
+            }
+        }
+
+        [Test]
         public void Sms_AddsNotificationSms_ToMessages_WhenLiveModeIsTrue()
         {
             Assert.AreEqual(_liveMode, _notify.Sms("phone-number", "message"));
@@ -103,6 +116,32 @@ namespace QuantConnect.Tests.Common.Notifications
             if (_liveMode)
             {
                 Assert.IsInstanceOf<NotificationFtp>(_notify.Messages.Single());
+            }
+        }
+
+        [Test]
+        public void PythonEmailWithNoneAddress_SendsToAllProjectMembers()
+        {
+            using (Py.GIL())
+            {
+                var test = PyModule.FromString("testModule",
+                    @"
+from AlgorithmImports import *
+
+def email_none(notifier):
+    return notifier.email(None, 'subject', 'message', 'data')");
+
+                dynamic function = test.GetAttr("email_none");
+                bool result = function(_notify);
+
+                Assert.AreEqual(_liveMode, result);
+                Assert.AreEqual(_liveMode ? 1 : 0, _notify.Messages.Count);
+                if (_liveMode)
+                {
+                    var email = _notify.Messages.Single() as NotificationEmail;
+                    Assert.IsNotNull(email);
+                    Assert.IsNull(email.Address);
+                }
             }
         }
 

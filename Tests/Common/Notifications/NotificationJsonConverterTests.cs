@@ -47,6 +47,24 @@ namespace QuantConnect.Tests.Common.Notifications
             Assert.AreEqual(expected.Headers, result.Headers);
         }
 
+        [Test]
+        public void EmailWithoutAddressRoundTrip()
+        {
+            // a null address means the email will be sent to all members in the project
+            var expected = new NotificationEmail(null, "subjectP", "message", "dataContent");
+
+            // the cloud API requires the Address key to be present, null means all members in the project
+            var serialized = JsonConvert.SerializeObject(expected);
+            StringAssert.Contains("\"Address\":null", serialized);
+
+            var result = (NotificationEmail)JsonConvert.DeserializeObject<Notification>(serialized);
+
+            Assert.IsNull(result.Address);
+            Assert.AreEqual(expected.Subject, result.Subject);
+            Assert.AreEqual(expected.Data, result.Data);
+            Assert.AreEqual(expected.Message, result.Message);
+        }
+
         [TestCase(true)]
         [TestCase(false)]
         public void SmsRoundTrip(bool nullFields)

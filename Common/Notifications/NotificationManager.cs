@@ -42,11 +42,12 @@ namespace QuantConnect.Notifications
 
         /// <summary>
         /// Send an email to the address specified for live trading notifications.
+        /// If the address is null, the email is sent to all members in the project.
         /// </summary>
         /// <param name="subject">Subject of the email</param>
         /// <param name="message">Message body, up to 10kb</param>
         /// <param name="data">Data attachment (optional)</param>
-        /// <param name="address">Email address to send to, if null will default to users email</param>
+        /// <param name="address">Email address to send to. If null, the email is sent to all members in the project</param>
         /// <param name="headers">Optional email headers to use</param>
         public bool Email(string address, string subject, string message, string data, PyObject headers)
         {
@@ -55,11 +56,12 @@ namespace QuantConnect.Notifications
 
         /// <summary>
         /// Send an email to the address specified for live trading notifications.
+        /// If the address is null, the email is sent to all members in the project.
         /// </summary>
         /// <param name="subject">Subject of the email</param>
         /// <param name="message">Message body, up to 10kb</param>
         /// <param name="data">Data attachment (optional)</param>
-        /// <param name="address">Email address to send to, if null will default to users email</param>
+        /// <param name="address">Email address to send to. If null, the email is sent to all members in the project</param>
         /// <param name="headers">Optional email headers to use</param>
         public bool Email(string address, string subject, string message, string data = "", Dictionary<string, string> headers = null)
         {

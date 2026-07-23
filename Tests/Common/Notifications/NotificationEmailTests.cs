@@ -47,6 +47,30 @@ namespace QuantConnect.Tests.Common.Notifications
         }
 
         [Test]
+        public void Constructor_SetsNullAddress_ToNull_ToSendToAllProjectMembers()
+        {
+            // a null address means the email will be sent to all members in the project
+            var email = new NotificationEmail(null, "subject", "message", "data");
+            Assert.IsNull(email.Address);
+        }
+
+        [TestCase("")]
+        [TestCase("   ")]
+        public void Constructor_ThrowsArgumentException_WhenAddressIsEmpty(string address)
+        {
+            // only a null address is sent to all members in the project
+            Assert.Throws<ArgumentException>(() => new NotificationEmail(address, "subject", "message", "data"));
+        }
+
+        [TestCase("jones@proseware.com,david.jones@proseware.com")]
+        [TestCase("jones@proseware.com, david.jones@proseware.com")]
+        public void Constructor_ThrowsArgumentException_WhenAddressIsCommaSeparated(string address)
+        {
+            // multiple addresses are not supported
+            Assert.Throws<ArgumentException>(() => new NotificationEmail(address, "subject", "message", "data"));
+        }
+
+        [Test]
         [TestCase("js@contoso.中国", true)]
         [TestCase("j@proseware.com9", true)]
         [TestCase("js@proseware.com9", true)]
