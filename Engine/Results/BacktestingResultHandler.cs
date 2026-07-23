@@ -469,11 +469,31 @@ namespace QuantConnect.Lean.Engine.Results
                     return null;
                 }
 
-                // The analyses read the charts without holding ChartLock, so hand them clones
-                Dictionary<string, Chart> charts;
+                // The analyses read the charts without holding ChartLock, so hand them clones,
+                // but only of the charts they read
+                var charts = new Dictionary<string, Chart>();
+                bool hasEquitySamples;
                 lock (ChartLock)
                 {
-                    charts = Charts.ToDictionary(kvp => kvp.Key, kvp => kvp.Value.Clone());
+                    foreach (var chartName in InRunResultsAnalyzer.RequiredCharts)
+                    {
+                        if (Charts.TryGetValue(chartName, out var chart))
+                        {
+                            charts[chartName] = chart.Clone();
+                        }
+                    }
+
+                    hasEquitySamples = Charts.TryGetValue(StrategyEquityKey, out var equityChart) &&
+                        equityChart.Series.TryGetValue(EquityKey, out var equitySeries) &&
+                        equitySeries.Values.Count > 0;
+                }
+
+                // Equity is not sampled while the algorithm warms up, so until the first sample exists
+                // the generated statistics are all-zero defaults that would flag a false non-positive
+                // portfolio value finding. Withhold them so the analyses reading them skip instead
+                if (Algorithm.IsWarmingUp || !hasEquitySamples)
+                {
+                    totalPerformance = null;
                 }
 
                 _inRunResultsAnalyzer ??= new InRunResultsAnalyzer(AlgorithmInstance, _job.Language);
