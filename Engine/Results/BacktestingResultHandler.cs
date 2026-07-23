@@ -14,6 +14,7 @@
  *
 */
 
+using Newtonsoft.Json;
 using QuantConnect.Algorithm;
 using QuantConnect.AlgorithmFactory.Python.Wrappers;
 using QuantConnect.Brokerages;
@@ -52,6 +53,9 @@ namespace QuantConnect.Lean.Engine.Results
 
         private BacktestProgressMonitor _progressMonitor;
 
+        private InRunResultsAnalyzer _inRunResultsAnalyzer;
+        private string _lastInRunAnalysisSignature = "[]";
+
         /// <summary>
         /// Calculates the capacity of a strategy per Symbol in real-time
         /// </summary>
@@ -61,6 +65,10 @@ namespace QuantConnect.Lean.Engine.Results
         private DateTime _nextSample;
         private string _algorithmId;
         private int _projectId;
+
+        private QCAlgorithm _algorithmInstance;
+
+        private QCAlgorithm AlgorithmInstance => _algorithmInstance ??= _job.Language == Language.Python ? (Algorithm as AlgorithmPythonWrapper)?.BaseAlgorithm : Algorithm as QCAlgorithm;
 
         /// <summary>
         /// Whether or not to run the results analysis at the end of the backtest.
@@ -227,6 +235,12 @@ namespace QuantConnect.Lean.Engine.Results
                         new Dictionary<string, AlgorithmPerformance>(),
                         // we store the last 100 order events, the final packet will contain the full list
                         TransactionHandler.OrderEvents.Reverse().Take(100).ToList(), state: GetAlgorithmState()));
+
+                    if (RunResultsAnalysis)
+                    {
+                        completeResult.Analysis = RunInRunResultsAnalysis(statisticsResult.TotalPerformance);
+                        SendInRunAnalysis(completeResult.Analysis, progress);
+                    }
 
                     StoreResult(new BacktestResultPacket(_job, completeResult, Algorithm.EndDate, Algorithm.StartDate, progress));
 
@@ -408,13 +422,12 @@ namespace QuantConnect.Lean.Engine.Results
                 // Run backtest analyzer
                 if (RunResultsAnalysis)
                 {
-                    var algorithm = _job.Language == Language.Python ? (Algorithm as AlgorithmPythonWrapper)?.BaseAlgorithm : Algorithm as QCAlgorithm;
                     List<string> logs;
                     lock (LogStore)
                     {
                         logs = LogStore.Select(x => x.Message).ToList();
                     }
-                    var analyzer = new ResultsAnalyzer(result.Results, algorithm, _job.Language, logs);
+                    var analyzer = new ResultsAnalyzer(result.Results, AlgorithmInstance, _job.Language, logs);
                     try
                     {
                         result.Results.Analysis = analyzer.Run();
@@ -438,6 +451,118 @@ namespace QuantConnect.Lean.Engine.Results
             {
                 Log.Error(err);
             }
+        }
+
+        /// <summary>
+        /// Runs the in-run results analyzer against a snapshot of the current intermediate backtest state.
+        /// Invoked periodically while the backtest is still running, unlike the full analysis performed
+        /// by <see cref="SendFinalResult"/> when the backtest ends.
+        /// </summary>
+        /// <param name="totalPerformance">The current total algorithm performance, for analyses that read portfolio statistics</param>
+        /// <returns>The failed analyses with solutions, or null if the analysis could not run</returns>
+        protected virtual IReadOnlyList<QuantConnect.Analysis> RunInRunResultsAnalysis(AlgorithmPerformance totalPerformance)
+        {
+            try
+            {
+                if (AlgorithmInstance == null)
+                {
+                    return null;
+                }
+
+                // The analyses read the charts without holding ChartLock, so hand them clones,
+                // but only of the charts they read
+                var charts = new Dictionary<string, Chart>();
+                bool hasEquitySamples;
+                lock (ChartLock)
+                {
+                    foreach (var chartName in InRunResultsAnalyzer.RequiredCharts)
+                    {
+                        if (Charts.TryGetValue(chartName, out var chart))
+                        {
+                            charts[chartName] = chart.Clone();
+                        }
+                    }
+
+                    hasEquitySamples = Charts.TryGetValue(StrategyEquityKey, out var equityChart) &&
+                        equityChart.Series.TryGetValue(EquityKey, out var equitySeries) &&
+                        equitySeries.Values.Count > 0;
+                }
+
+                // Equity is not sampled while the algorithm warms up, so until the first sample exists
+                // the generated statistics are all-zero defaults that would flag a false non-positive
+                // portfolio value finding. Withhold them so the analyses reading them skip instead
+                if (Algorithm.IsWarmingUp || !hasEquitySamples)
+                {
+                    totalPerformance = null;
+                }
+
+                _inRunResultsAnalyzer ??= new InRunResultsAnalyzer(AlgorithmInstance, _job.Language);
+
+                // Sample the engine speed counters for the algorithm speed analysis, but not while the
+                // algorithm is warming up: the warm-up pace would skew the speed metrics. The analyses
+                // themselves do run during warm-up, so conditions like orders submitted while warming up
+                // surface without waiting for warm-up to end
+                AlgorithmSpeedSample? speedSample = Algorithm.IsWarmingUp
+                    ? null
+                    : new AlgorithmSpeedSample(
+                        DateTime.UtcNow - StartTime,
+                        PerformanceTrackingTool?.DataPoints ?? 0,
+                        PerformanceTrackingTool?.HistoryDataPoints ?? 0,
+                        _progressMonitor?.ProcessedDays ?? 0,
+                        _progressMonitor?.TotalDays ?? 0);
+
+                // Only the order events and logs produced since the previous run are analyzed,
+                // the analyzer accumulates findings across runs
+                var orderEvents = TransactionHandler.OrderEvents.Skip(_inRunResultsAnalyzer.OrderEventsPosition).ToList();
+
+                List<string> logs;
+                lock (LogStore)
+                {
+                    logs = LogStore.Skip(_inRunResultsAnalyzer.LogsPosition).Select(x => x.Message).ToList();
+                }
+
+                var snapshot = new BacktestResult(new BacktestResultParameters(
+                    charts,
+                    TransactionHandler.Orders.ToDictionary(),
+                    Algorithm.Transactions.TransactionRecord,
+                    new Dictionary<string, string>(),
+                    new Dictionary<string, string>(),
+                    new Dictionary<string, AlgorithmPerformance>(),
+                    orderEvents,
+                    totalPerformance));
+
+                // Keep the time budget small: this runs on the result handler thread and delays message processing
+                return _inRunResultsAnalyzer.Run(snapshot, logs, speedSample, timeLimitSeconds: 1);
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex, "Error running in-run backtest analysis");
+                return null;
+            }
+        }
+
+        /// <summary>
+        /// Sends the in-run analysis findings to the browser in their own packet,
+        /// only when they changed since they were last sent.
+        /// </summary>
+        /// <param name="findings">The accumulated in-run analysis findings, or null if the analysis could not run</param>
+        /// <param name="progress">The current backtest progress</param>
+        private void SendInRunAnalysis(IReadOnlyList<QuantConnect.Analysis> findings, decimal progress)
+        {
+            if (findings == null)
+            {
+                return;
+            }
+
+            var signature = JsonConvert.SerializeObject(findings);
+            if (signature == _lastInRunAnalysisSignature)
+            {
+                return;
+            }
+            _lastInRunAnalysisSignature = signature;
+
+            MessagingHandler.Send(new BacktestResultPacket(_job, new BacktestResult { Analysis = findings },
+                Algorithm.EndDate, Algorithm.StartDate, progress));
         }
 
         /// <summary>

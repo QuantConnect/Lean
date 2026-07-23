@@ -44,6 +44,13 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
         /// <returns>Analysis results flagging the issue when ending equity is zero or negative.</returns>
         public IReadOnlyList<QuantConnect.Analysis> Run(Result result)
         {
+            if (result.TotalPerformance == null)
+            {
+                // The statistics are withheld when they are not meaningful yet,
+                // like while the algorithm warms up
+                return [];
+            }
+
             var hasEquity = result.TotalPerformance.PortfolioStatistics.EndEquity > 0;
             var potentialSolutions = hasEquity ? [] : Solutions();
             return SingleResponse(!hasEquity, potentialSolutions);

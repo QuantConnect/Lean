@@ -31,10 +31,31 @@ namespace QuantConnect.Lean.Engine.Results.Analysis
     {
         private readonly QCAlgorithm _algorithm;
         private readonly Language _language;
-        private readonly IReadOnlyList<string> _logs;
+        private IReadOnlyList<string> _logs;
         private SortedList<DateTime, decimal> _equityCurve;
         private SortedList<DateTime, decimal> _benchmarkEquityCurve;
         private Result _result;
+        private IReadOnlyCollection<BaseResultsAnalysis> _analyses;
+
+        /// <summary>
+        /// The diagnostic analyses to run. Created once and reused across runs,
+        /// since the analyses are stateless.
+        /// </summary>
+        protected IReadOnlyCollection<BaseResultsAnalysis> Analyses => _analyses ??= GetAnalyses();
+
+        /// <summary>
+        /// Whether the equity and benchmark curves should be built before running the analyses.
+        /// Building them requires a benchmark history request, so analyzers whose analyses
+        /// don't read the curves can skip it.
+        /// </summary>
+        protected virtual bool RequiresEquityCurves => true;
+
+        /// <summary>
+        /// The speed metrics tracked for the running backtest, made available to the analyses
+        /// through <see cref="ResultsAnalysisRunParameters.Speed"/>. Null unless the analyzer
+        /// tracks the algorithm speed, like the in-run analyzer does.
+        /// </summary>
+        protected virtual AlgorithmSpeedTracker SpeedTracker => null;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="ResultsAnalyzer"/> class.
@@ -62,51 +83,27 @@ namespace QuantConnect.Lean.Engine.Results.Analysis
         /// <returns>Up to <paramref name="maxFailedAnalyses"/> <see cref="QuantConnect.Analysis"/> entries with solutions, ranked by weight.</returns>
         public IReadOnlyList<QuantConnect.Analysis> Run(int timeLimitSeconds = 5, int maxFailedAnalyses = 10)
         {
-            (_equityCurve, _benchmarkEquityCurve) = ReadEquityCurve(_result, _algorithm);
-
-            var parameters = new ResultsAnalysisRunParameters(_result, _algorithm, _language, _logs, _equityCurve, _benchmarkEquityCurve);
-
-            // Instances are sorted by their own Weight — changing a weight automatically reorders execution.
-            var analyses = new BaseResultsAnalysis[]
+            var analyses = Analyses;
+            if (analyses.Count == 0)
             {
-                new PortfolioValueIsNotPositiveAnalysis(),
-                new FlatEquityCurveAnalysis(),
-                new InsufficientBuyingPowerOrderResponseErrorAnalysis(),
-                new MarginCallsAnalysis(),
-                new ExceedsShortableQuantityOrderResponseErrorAnalysis(),
-                new SecurityPriceZeroOrderResponseErrorAnalysis(),
-                new OrderQuantityZeroOrderResponseErrorAnalysis(),
-                new NonTradableSecurityOrderResponseErrorAnalysis(),
-                new BrokerageModelRefusedToSubmitOrderOrderResponseErrorAnalysis(),
-                new BrokerageModelRefusedToUpdateOrderOrderResponseErrorAnalysis(),
-                new TakeProfitAndStopLossOrdersAnalysis(),
-                new StaleOrderFillsAnalysis(),
-                new AlgorithmWarmingUpOrderResponseErrorAnalysis(),
-                new ExchangeNotOpenOrderResponseErrorAnalysis(),
-                new ForexConversionRateZeroOrderResponseErrorAnalysis(),
-                new OrderFillsDuringExtendedMarketHoursAnalysis(),
-                new ExceededMaximumOrdersOrderResponseErrorAnalysis(),
-                new UnsupportedOptionShortPositionExerciseAnalysis(),
-                new UnsupportedOptionExerciseQuantityAnalysis(),
-                new EuropeanOptionNotExpiredOnExerciseOrderResponseErrorAnalysis(),
-                new OptionOrderOnStockSplitOrderResponseErrorAnalysis(),
-                new MarketOnOpenNotAllowedDuringRegularHoursOrderResponseErrorAnalysis(),
-                new OrderQuantityLessThanLotSizeOrderResponseErrorAnalysis(),
-                new InsightsEmittedForDelistedSecuritiesAnalysis(),
-                new StatisticalSignificanceOfDailyReturnsAnalysis(),
-                new PerformanceRelativeToBenchmarkAnalysis(),
-                new CrisisEventsAnalysis(),
-                new ExecutionSpeedAnalysis(),
-                new PortfolioMarginUsageAnalysis(),
-                new ParameterCountAnalysis(),
-                new MonteCarloPercentileAnalysis(),
-            }.OrderByDescending(a => a.Weight);
+                return [];
+            }
+
+            _equityCurve = new();
+            _benchmarkEquityCurve = new();
+            if (RequiresEquityCurves)
+            {
+                (_equityCurve, _benchmarkEquityCurve) = ReadEquityCurve(_result, _algorithm);
+            }
+
+            var parameters = new ResultsAnalysisRunParameters(_result, _algorithm, _language, _logs, _equityCurve, _benchmarkEquityCurve, SpeedTracker);
 
             var responses = new List<QuantConnect.Analysis>();
             var timer = Stopwatch.StartNew();
             var timeLimit = TimeSpan.FromSeconds(timeLimitSeconds);
 
-            foreach (var analysis in analyses)
+            // Instances are sorted by their own Weight — changing a weight automatically reorders execution.
+            foreach (var analysis in analyses.OrderByDescending(a => a.Weight))
             {
                 if (responses.Count >= maxFailedAnalyses)
                 {
@@ -130,6 +127,56 @@ namespace QuantConnect.Lean.Engine.Results.Analysis
 
             return responses;
         }
+
+        /// <summary>
+        /// Sets the backtest data to analyze. Used by analyzers that are kept alive
+        /// and run multiple times against fresh data.
+        /// </summary>
+        /// <param name="result">The backtest result to analyze.</param>
+        /// <param name="logs">The list of log lines to analyze.</param>
+        protected void SetAnalysisData(Result result, IReadOnlyList<string> logs)
+        {
+            _result = result;
+            _logs = logs;
+        }
+
+        /// <summary>
+        /// Creates the set of diagnostic analyses to run against the backtest.
+        /// </summary>
+        protected virtual IReadOnlyCollection<BaseResultsAnalysis> GetAnalyses() =>
+        [
+            new PortfolioValueIsNotPositiveAnalysis(),
+            new FlatEquityCurveAnalysis(),
+            new InsufficientBuyingPowerOrderResponseErrorAnalysis(),
+            new MarginCallsAnalysis(),
+            new ExceedsShortableQuantityOrderResponseErrorAnalysis(),
+            new SecurityPriceZeroOrderResponseErrorAnalysis(),
+            new OrderQuantityZeroOrderResponseErrorAnalysis(),
+            new NonTradableSecurityOrderResponseErrorAnalysis(),
+            new BrokerageModelRefusedToSubmitOrderOrderResponseErrorAnalysis(),
+            new BrokerageModelRefusedToUpdateOrderOrderResponseErrorAnalysis(),
+            new TakeProfitAndStopLossOrdersAnalysis(),
+            new StaleOrderFillsAnalysis(),
+            new AlgorithmWarmingUpOrderResponseErrorAnalysis(),
+            new ExchangeNotOpenOrderResponseErrorAnalysis(),
+            new ForexConversionRateZeroOrderResponseErrorAnalysis(),
+            new OrderFillsDuringExtendedMarketHoursAnalysis(),
+            new ExceededMaximumOrdersOrderResponseErrorAnalysis(),
+            new UnsupportedOptionShortPositionExerciseAnalysis(),
+            new UnsupportedOptionExerciseQuantityAnalysis(),
+            new EuropeanOptionNotExpiredOnExerciseOrderResponseErrorAnalysis(),
+            new OptionOrderOnStockSplitOrderResponseErrorAnalysis(),
+            new MarketOnOpenNotAllowedDuringRegularHoursOrderResponseErrorAnalysis(),
+            new OrderQuantityLessThanLotSizeOrderResponseErrorAnalysis(),
+            new InsightsEmittedForDelistedSecuritiesAnalysis(),
+            new StatisticalSignificanceOfDailyReturnsAnalysis(),
+            new PerformanceRelativeToBenchmarkAnalysis(),
+            new CrisisEventsAnalysis(),
+            new ExecutionSpeedAnalysis(),
+            new PortfolioMarginUsageAnalysis(),
+            new ParameterCountAnalysis(),
+            new MonteCarloPercentileAnalysis(),
+        ];
 
         /// <summary>
         /// Reads the backtest's "Strategy Equity" chart and fetches SPY daily history to build
@@ -168,6 +215,11 @@ namespace QuantConnect.Lean.Engine.Results.Analysis
             {
                 var time = algorithm.Settings.DailyPreciseEndTime ? bar.EndTime.AddDays(1).Date : bar.EndTime;
                 benchmarkSeries.Add(time.Date.ConvertToUtc(exchangeTimeZone), bar.Close);
+            }
+
+            if (benchmarkSeries.Count == 0)
+            {
+                return (new(), new());
             }
 
             // ── 3. Resample both to daily data points ────────────────────────────
