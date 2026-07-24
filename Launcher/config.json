@@ -355,6 +355,9 @@
     "ema-slow": 20
   },
 
+  // provider used by QCAlgorithm.Optimize scheduled walk-forward optimization
+  "walk-forward-optimization-provider": "LocalWalkForwardOptimizationProvider",
+
   // specify supported languages when running regression tests
   "regression-test-languages": [ "CSharp", "Python" ],
 

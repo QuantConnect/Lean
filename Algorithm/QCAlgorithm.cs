@@ -58,6 +58,9 @@ using QuantConnect.Commands;
 using Newtonsoft.Json;
 using QuantConnect.Securities.Index;
 using QuantConnect.Api;
+using QuantConnect.Optimizer;
+using QuantConnect.Optimizer.Objectives;
+using QuantConnect.Optimizer.Parameters;
 using Common.Util;
 
 namespace QuantConnect.Algorithm
@@ -165,6 +168,7 @@ namespace QuantConnect.Algorithm
         private readonly HistoryRequestFactory _historyRequestFactory;
 
         private IApi _api;
+        private IWalkForwardOptimizationProvider _walkForwardOptimizationProvider = NullWalkForwardOptimizationProvider.Instance;
 
         /// <summary>
         /// QCAlgorithm Base Class Constructor - Initialize the underlying QCAlgorithm components.
@@ -3137,6 +3141,107 @@ namespace QuantConnect.Algorithm
         }
 
         /// <summary>
+        /// Schedules a walk-forward optimization using the specified date and time rules.
+        /// </summary>
+        /// <param name="dateRule">Specifies what dates the optimization should run</param>
+        /// <param name="timeRule">Specifies the times on those dates the optimization should run</param>
+        /// <param name="target">The optimization target used to select the winning parameter set</param>
+        /// <param name="parameters">The optimization parameters to evaluate</param>
+        /// <param name="constraints">The optional constraints to apply to optimization results</param>
+        [DocumentationAttribute(ParameterAndOptimization)]
+        [DocumentationAttribute(ScheduledEvents)]
+        public ScheduledEvent Optimize(
+            IDateRule dateRule,
+            ITimeRule timeRule,
+            Target target,
+            HashSet<OptimizationParameter> parameters,
+            IReadOnlyList<Constraint> constraints = null)
+        {
+            if (target == null)
+            {
+                throw new ArgumentNullException(nameof(target));
+            }
+
+            return ScheduleWalkForwardOptimization(dateRule, timeRule, triggerTime =>
+                new WalkForwardOptimizationRequest(this, triggerTime, target, parameters, constraints));
+        }
+
+        /// <summary>
+        /// Schedules a walk-forward optimization using the specified date and time rules.
+        /// </summary>
+        /// <param name="dateRule">Specifies what dates the optimization should run</param>
+        /// <param name="timeRule">Specifies the times on those dates the optimization should run</param>
+        /// <param name="targetSelector">Selects the winning parameter set from optimization backtests</param>
+        /// <param name="parameters">The optimization parameters to evaluate</param>
+        /// <param name="constraints">The optional constraints to apply to optimization results</param>
+        [DocumentationAttribute(ParameterAndOptimization)]
+        [DocumentationAttribute(ScheduledEvents)]
+        public ScheduledEvent Optimize(
+            IDateRule dateRule,
+            ITimeRule timeRule,
+            Func<IReadOnlyList<OptimizationBacktest>, ParameterSet> targetSelector,
+            HashSet<OptimizationParameter> parameters,
+            IReadOnlyList<Constraint> constraints = null)
+        {
+            if (targetSelector == null)
+            {
+                throw new ArgumentNullException(nameof(targetSelector));
+            }
+
+            return ScheduleWalkForwardOptimization(dateRule, timeRule, triggerTime =>
+                new WalkForwardOptimizationRequest(this, triggerTime, targetSelector, parameters, constraints));
+        }
+
+        private ScheduledEvent ScheduleWalkForwardOptimization(
+            IDateRule dateRule,
+            ITimeRule timeRule,
+            Func<DateTime, WalkForwardOptimizationRequest> requestFactory)
+        {
+            if (dateRule == null)
+            {
+                throw new ArgumentNullException(nameof(dateRule));
+            }
+            if (timeRule == null)
+            {
+                throw new ArgumentNullException(nameof(timeRule));
+            }
+            if (requestFactory == null)
+            {
+                throw new ArgumentNullException(nameof(requestFactory));
+            }
+
+            var name = $"Optimization: {dateRule.Name}: {timeRule.Name}";
+            return Schedule.On(name, dateRule, timeRule, (eventName, triggerTime) =>
+            {
+                RunWalkForwardOptimization(requestFactory(triggerTime));
+            });
+        }
+
+        private void RunWalkForwardOptimization(WalkForwardOptimizationRequest request)
+        {
+            if (AlgorithmMode == AlgorithmMode.Optimization)
+            {
+                Debug("Skipping walk-forward optimization because this algorithm is already running as an optimization child.");
+                return;
+            }
+
+            var result = _walkForwardOptimizationProvider.Optimize(request);
+            var parameterSet = result?.ParameterSet;
+            if (parameterSet == null && request.TargetSelector != null)
+            {
+                parameterSet = request.TargetSelector(result?.Backtests ?? Array.Empty<OptimizationBacktest>());
+            }
+
+            if (parameterSet?.Value == null)
+            {
+                Debug("Walk-forward optimization completed without a selected parameter set.");
+                return;
+            }
+
+            SetParameters(parameterSet.Value.ToDictionary(kvp => kvp.Key, kvp => kvp.Value));
+        }
+
+        /// <summary>
         /// Event invocator for the <see cref="InsightsGenerated"/> event
         /// </summary>
         /// <param name="insights">The collection of insights generaed at the current time step</param>
@@ -3173,6 +3278,16 @@ namespace QuantConnect.Algorithm
         public void SetApi(IApi api)
         {
             _api = api;
+        }
+
+        /// <summary>
+        /// Sets the walk-forward optimization provider.
+        /// </summary>
+        /// <param name="provider">The provider used to run walk-forward optimizations</param>
+        [DocumentationAttribute(ParameterAndOptimization)]
+        public void SetWalkForwardOptimizationProvider(IWalkForwardOptimizationProvider provider)
+        {
+            _walkForwardOptimizationProvider = provider ?? throw new ArgumentNullException(nameof(provider));
         }
 
         /// <summary>
