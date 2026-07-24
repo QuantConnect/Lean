@@ -1988,10 +1988,13 @@ namespace QuantConnect.Algorithm
         /// <param name="dataNormalizationMode">The price scaling mode to use for the security</param>
         /// <param name="contractDepthOffset">The continuous contract desired offset from the current front month.
         /// For example, 0 (default) will use the front month, 1 will use the back month contract</param>
+        /// <param name="dataMappingModeDaysOffset">The continuous contract mapping offset in tradeable days</param>
+        /// <param name="contractMonthCycle">Optional contract expiration months to use when walking continuous future contract depth</param>
         /// <returns>The new Security that was added to the algorithm</returns>
         [DocumentationAttribute(AddingData)]
         public Security AddSecurity(Symbol symbol, Resolution? resolution = null, bool? fillForward = null, decimal leverage = Security.NullLeverage, bool? extendedMarketHours = null,
-            DataMappingMode? dataMappingMode = null, DataNormalizationMode? dataNormalizationMode = null, int contractDepthOffset = 0)
+            DataMappingMode? dataMappingMode = null, DataNormalizationMode? dataNormalizationMode = null, int contractDepthOffset = 0,
+            int dataMappingModeDaysOffset = 0, int[] contractMonthCycle = null)
         {
             // allow users to specify negative numbers, we get the abs of it
             var contractOffset = (uint)Math.Abs(contractDepthOffset);
@@ -2031,7 +2034,9 @@ namespace QuantConnect.Algorithm
                     extendedMarketHours.Value,
                     isFilteredSubscription,
                     dataNormalizationMode: dataNormalizationMode.Value,
-                    contractDepthOffset: (uint)contractDepthOffset);
+                    contractDepthOffset: (uint)contractDepthOffset,
+                    dataMappingModeDaysOffset: dataMappingModeDaysOffset,
+                    contractMonthCycle: contractMonthCycle);
             }
             else
             {
@@ -2040,7 +2045,9 @@ namespace QuantConnect.Algorithm
                    securityFillForward,
                    extendedMarketHours.Value,
                    isFilteredSubscription,
-                   contractDepthOffset: (uint)contractDepthOffset);
+                   contractDepthOffset: (uint)contractDepthOffset,
+                   dataMappingModeDaysOffset: dataMappingModeDaysOffset,
+                   contractMonthCycle: contractMonthCycle);
             }
 
             var security = Securities.CreateSecurity(symbol, configs, leverage);
@@ -2077,6 +2084,8 @@ namespace QuantConnect.Algorithm
                             DataMappingMode = dataMappingMode ?? UniverseSettings.GetUniverseMappingModeOrDefault(symbol.SecurityType, symbol.ID.Market),
                             DataNormalizationMode = dataNormalizationMode ?? UniverseSettings.GetUniverseNormalizationModeOrDefault(symbol.SecurityType),
                             ContractDepthOffset = (int)contractOffset,
+                            DataMappingModeDaysOffset = dataMappingModeDaysOffset,
+                            ContractMonthCycle = contractMonthCycle,
                             SubscriptionDataTypes = dataTypes,
                             Asynchronous = UniverseSettings.Asynchronous
                         };
@@ -2214,11 +2223,14 @@ namespace QuantConnect.Algorithm
         /// <param name="dataNormalizationMode">The price scaling mode to use for the continuous future contract</param>
         /// <param name="contractDepthOffset">The continuous future contract desired offset from the current front month.
         /// For example, 0 (default) will use the front month, 1 will use the back month contract</param>
+        /// <param name="dataMappingModeDaysOffset">The continuous contract mapping offset in tradeable days</param>
+        /// <param name="contractMonthCycle">Optional contract expiration months to use when walking continuous future contract depth</param>
         /// <returns>The new <see cref="Future"/> security</returns>
         [DocumentationAttribute(AddingData)]
         public Future AddFuture(string ticker, Resolution? resolution = null, string market = null,
             bool? fillForward = null, decimal leverage = Security.NullLeverage, bool? extendedMarketHours = null,
-            DataMappingMode? dataMappingMode = null, DataNormalizationMode? dataNormalizationMode = null, int contractDepthOffset = 0)
+            DataMappingMode? dataMappingMode = null, DataNormalizationMode? dataNormalizationMode = null, int contractDepthOffset = 0,
+            int dataMappingModeDaysOffset = 0, int[] contractMonthCycle = null)
         {
             market = GetMarket(market, ticker, SecurityType.Future);
 
@@ -2232,7 +2244,8 @@ namespace QuantConnect.Algorithm
             }
 
             return (Future)AddSecurity(canonicalSymbol, resolution, fillForward, leverage, extendedMarketHours, dataMappingMode: dataMappingMode,
-                dataNormalizationMode: dataNormalizationMode, contractDepthOffset: contractDepthOffset);
+                dataNormalizationMode: dataNormalizationMode, contractDepthOffset: contractDepthOffset, dataMappingModeDaysOffset: dataMappingModeDaysOffset,
+                contractMonthCycle: contractMonthCycle);
         }
 
         /// <summary>

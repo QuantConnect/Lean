@@ -43,6 +43,13 @@ namespace QuantConnect.Data.Auxiliary
                 return 0;
             }
 
+            if (dataMappingMode == DataMappingMode.TradingDaysBeforeExpiry)
+            {
+                throw new NotSupportedException(
+                    $"{DataMappingMode.TradingDaysBeforeExpiry} does not support {dataNormalizationMode} normalization because continuous future factor files do not contain factors for shifted roll dates. " +
+                    $"Use {DataNormalizationMode.Raw} normalization or choose a factor-file-backed mapping mode.");
+            }
+
             var factor = 1m;
             if (dataNormalizationMode is DataNormalizationMode.BackwardsPanamaCanal or DataNormalizationMode.ForwardPanamaCanal)
             {

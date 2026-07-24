@@ -610,10 +610,14 @@ namespace QuantConnect.AlgorithmFactory.Python.Wrappers
         /// <param name="dataNormalizationMode">The price scaling mode to use for the security</param>
         /// <param name="contractDepthOffset">The continuous contract desired offset from the current front month.
         /// For example, 0 (default) will use the front month, 1 will use the back month contract</param>
+        /// <param name="dataMappingModeDaysOffset">The continuous contract mapping offset in tradeable days</param>
+        /// <param name="contractMonthCycle">Optional contract expiration months to use when walking continuous future contract depth</param>
         /// <returns>The new Security that was added to the algorithm</returns>
         public Security AddSecurity(Symbol symbol, Resolution? resolution = null, bool? fillForward = null, decimal leverage = Security.NullLeverage, bool? extendedMarketHours = null,
-            DataMappingMode? dataMappingMode = null, DataNormalizationMode? dataNormalizationMode = null, int contractDepthOffset = 0)
-            => _baseAlgorithm.AddSecurity(symbol, resolution, fillForward, leverage, extendedMarketHours, dataMappingMode, dataNormalizationMode, contractDepthOffset);
+            DataMappingMode? dataMappingMode = null, DataNormalizationMode? dataNormalizationMode = null, int contractDepthOffset = 0,
+            int dataMappingModeDaysOffset = 0, int[] contractMonthCycle = null)
+            => _baseAlgorithm.AddSecurity(symbol, resolution, fillForward, leverage, extendedMarketHours, dataMappingMode, dataNormalizationMode,
+                contractDepthOffset, dataMappingModeDaysOffset, contractMonthCycle);
 
         /// <summary>
         /// Creates and adds a new single <see cref="Future"/> contract to the algorithm
