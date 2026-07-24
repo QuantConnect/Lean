@@ -3216,9 +3216,13 @@ namespace QuantConnect.Algorithm
                 return true;
             }
 
-            var openOrderQuantity = Transactions.GetOpenOrdersRemainingQuantity(
-                // if 'updateOrderId' was given, ignore that orders quantity
-                order => order.Symbol == symbol && (!updateOrderId.HasValue || order.OrderId != updateOrderId.Value));
+            // if 'updateOrderId' was given, ignore that orders quantity. When a symbol has a resting
+            // one-cancels-the-other group, only the leg with the largest exposure counts, since exactly
+            // one leg of the group can ever execute
+            var openOrderQuantity = Transactions.GetOpenOrderTickets(
+                order => order.Symbol == symbol && (!updateOrderId.HasValue || order.OrderId != updateOrderId.Value))
+                .GetEffectiveOpenQuantityTickets()
+                .Aggregate(0m, (d, t) => d + t.QuantityRemaining);
 
             var portfolioQuantity = security.Holdings.Quantity;
             // We check portfolio and open orders beforehand to ensure that orderQuantity == 0 case does not return

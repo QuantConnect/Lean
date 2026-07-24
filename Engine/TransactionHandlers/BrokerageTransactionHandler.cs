@@ -818,7 +818,7 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
 
             lock (_lockHandleOrderEvent)
             {
-                var openOrderQuantity = openOrderTickets.Aggregate(0m, (d, t) => d + t.QuantityRemaining);
+                var openOrderQuantity = openOrderTickets.GetEffectiveOpenQuantityTickets().Aggregate(0m, (d, t) => d + t.QuantityRemaining);
                 return new ProjectedHoldings(security.Holdings.Quantity, openOrderQuantity);
             }
         }
@@ -916,6 +916,21 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
                 return validationResult;
             }
 
+            // in live trading, verify the brokerage actually supports this order group's execution type.
+            // Backtesting and paper trading are not gated here (note PaperBrokerage is a BacktestingBrokerage)
+            // because the engine simulates the group behavior itself (see BacktestingBrokerage)
+            if (!_brokerageIsBacktesting && order.GroupOrderManager != null &&
+                !_algorithm.BrokerageModel.SupportsGroupExecution(order.GroupOrderManager.ComboType))
+            {
+                var errorMessage = $"BrokerageModel declared unable to support the order group execution type " +
+                    $"{order.GroupOrderManager.ComboType} for orders: [{string.Join(",", orders.Select(o => o.Id))}]";
+                var response = OrderResponse.Error(request, OrderResponseErrorCode.BrokerageModelRefusedToSubmitOrder, errorMessage);
+
+                InvalidateOrders(orders, response.ErrorMessage);
+                _algorithm.Error(response.ErrorMessage);
+                return response;
+            }
+
             // verify that our current brokerage can actually take the order
             foreach (var kvp in securities)
             {
@@ -1006,8 +1021,9 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
                 return response;
             }
 
-            // If the order is not part of a ComboLegLimit update, validate sufficient buying power
-            if (order.GroupOrderManager == null)
+            // If the order is not part of a combo update, validate sufficient buying power.
+            // OCO (and other non-combo) groups allow per-leg updates, so they are still validated
+            if (order.GroupOrderManager == null || order.GroupOrderManager.ComboType != ComboType.Combo)
             {
                 var updatedOrder = order.Clone();
                 updatedOrder.ApplyUpdateOrderRequest(request);

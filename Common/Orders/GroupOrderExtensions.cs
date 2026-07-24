@@ -73,6 +73,32 @@ namespace QuantConnect.Orders
         }
 
         /// <summary>
+        /// Reduces a sequence of open order tickets down to the ones whose remaining quantity should count
+        /// towards a per-symbol open-order quantity aggregation (for example projected holdings or a shortable
+        /// check). Tickets that are not part of a group count individually; for a one-cancels-the-other group,
+        /// only the leg with the largest absolute remaining quantity counts, since exactly one leg of the
+        /// group can ever execute
+        /// </summary>
+        /// <param name="tickets">The open order tickets to reduce</param>
+        /// <returns>The tickets whose remaining quantity should count towards the aggregation</returns>
+        public static IEnumerable<OrderTicket> GetEffectiveOpenQuantityTickets(this IEnumerable<OrderTicket> tickets)
+        {
+            foreach (var group in tickets.GroupBy(ticket => ticket.SubmitRequest.GroupOrderManager?.Id))
+            {
+                if (group.Key == null || group.First().SubmitRequest.GroupOrderManager.ComboType != ComboType.OneCancelsTheOther)
+                {
+                    foreach (var ticket in group)
+                    {
+                        yield return ticket;
+                    }
+                    continue;
+                }
+
+                yield return group.OrderByDescending(ticket => Math.Abs(ticket.QuantityRemaining)).First();
+            }
+        }
+
+        /// <summary>
         /// Gets the securities corresponding to each order in the group
         /// </summary>
         /// <param name="orders">List of orders to map</param>

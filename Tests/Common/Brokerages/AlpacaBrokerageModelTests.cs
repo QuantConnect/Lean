@@ -75,5 +75,13 @@ namespace QuantConnect.Tests.Common.Brokerages
 
             Assert.That(canSubmit, Is.EqualTo(shouldSubmit));
         }
+
+        [TestCase(ComboType.Combo, true)]
+        [TestCase(ComboType.OneCancelsTheOther, true)]
+        public void SupportsGroupExecution(ComboType comboType, bool expected)
+        {
+            var brokerageModel = new AlpacaBrokerageModel();
+            Assert.That(brokerageModel.SupportsGroupExecution(comboType), Is.EqualTo(expected));
+        }
     }
 }

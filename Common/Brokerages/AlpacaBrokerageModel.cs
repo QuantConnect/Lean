@@ -133,6 +133,16 @@ namespace QuantConnect.Brokerages
         }
 
         /// <summary>
+        /// True when this brokerage can place order groups with the given execution type
+        /// </summary>
+        /// <param name="comboType">The execution type of the order group</param>
+        /// <returns>True if the brokerage supports the given order group execution type</returns>
+        public override bool SupportsGroupExecution(ComboType comboType)
+        {
+            return comboType == ComboType.OneCancelsTheOther || base.SupportsGroupExecution(comboType);
+        }
+
+        /// <summary>
         /// Returns the allowed Market-on-Open submission window for Alpaca.
         /// </summary>
         /// <param name="marketHours">The market hours segment for the security.</param>
