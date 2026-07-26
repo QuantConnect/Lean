@@ -41,6 +41,17 @@ namespace QuantConnect.Data
         public Resolution Resolution { get; set; }
 
         /// <summary>
+        /// The explicitly declared length of a single bar, when the stored data period differs from the
+        /// nominal period implied by <see cref="Resolution"/>. Null derives it from the resolution
+        /// </summary>
+        public TimeSpan? BarPeriod { get; set; }
+
+        /// <summary>
+        /// The length of a single bar for this request
+        /// </summary>
+        public TimeSpan BarSpan => BarPeriod ?? Resolution.ToTimeSpan();
+
+        /// <summary>
         /// Gets the requested fill forward resolution, set to null for no fill forward behavior.
         /// Will always return null when Resolution is set to Tick.
         /// </summary>
@@ -163,6 +174,7 @@ namespace QuantConnect.Data
                 hours, config.DataTimeZone, config.FillDataForward ? config.Resolution : (Resolution?)null,
                 config.ExtendedMarketHours, config.IsCustomData, config.DataNormalizationMode, config.TickType, config.DataMappingMode, config.ContractDepthOffset)
         {
+            BarPeriod = config.BarPeriod;
         }
 
         /// <summary>
@@ -174,6 +186,8 @@ namespace QuantConnect.Data
         public HistoryRequest(HistoryRequest request, Symbol newSymbol, DateTime newStartTimeUtc, DateTime newEndTimeUtc)
             : this (newStartTimeUtc, newEndTimeUtc, request.DataType, newSymbol, request.Resolution, request.ExchangeHours, request.DataTimeZone, request.FillForwardResolution,
                   request.IncludeExtendedMarketHours, request.IsCustomData, request.DataNormalizationMode, request.TickType, request.DataMappingMode, request.ContractDepthOffset)
-        { }
+        {
+            BarPeriod = request.BarPeriod;
+        }
     }
 }

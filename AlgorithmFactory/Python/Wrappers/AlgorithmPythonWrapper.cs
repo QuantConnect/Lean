@@ -612,8 +612,8 @@ namespace QuantConnect.AlgorithmFactory.Python.Wrappers
         /// For example, 0 (default) will use the front month, 1 will use the back month contract</param>
         /// <returns>The new Security that was added to the algorithm</returns>
         public Security AddSecurity(Symbol symbol, Resolution? resolution = null, bool? fillForward = null, decimal leverage = Security.NullLeverage, bool? extendedMarketHours = null,
-            DataMappingMode? dataMappingMode = null, DataNormalizationMode? dataNormalizationMode = null, int contractDepthOffset = 0)
-            => _baseAlgorithm.AddSecurity(symbol, resolution, fillForward, leverage, extendedMarketHours, dataMappingMode, dataNormalizationMode, contractDepthOffset);
+            DataMappingMode? dataMappingMode = null, DataNormalizationMode? dataNormalizationMode = null, int contractDepthOffset = 0, TimeSpan? barPeriod = null)
+            => _baseAlgorithm.AddSecurity(symbol, resolution, fillForward, leverage, extendedMarketHours, dataMappingMode, dataNormalizationMode, contractDepthOffset, barPeriod);
 
         /// <summary>
         /// Creates and adds a new single <see cref="Future"/> contract to the algorithm

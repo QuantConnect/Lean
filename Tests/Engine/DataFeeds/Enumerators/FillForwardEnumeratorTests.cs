@@ -68,6 +68,95 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
         }
 
         [Test]
+        public void DeclaredBarPeriodSuppressesSyntheticBars()
+        {
+            var time = new DateTime(2024, 9, 2, 9, 15, 0);
+            var thirtyMinutes = TimeSpan.FromMinutes(30);
+            var exchange = new EquityExchange(SecurityExchangeHours.AlwaysOpen(TimeZones.NewYork));
+
+            List<BaseData> CreateSource(TimeSpan period) => new List<BaseData>
+            {
+                new TradeBar { Time = time, Value = 1, Period = period, Volume = 100 },
+                new TradeBar { Time = time.AddMinutes(30), Value = 2, Period = period, Volume = 100 },
+                new TradeBar { Time = time.AddMinutes(60), Value = 3, Period = period, Volume = 100 }
+            };
+
+            (int actual, int filled, List<DateTime> endTimes) Enumerate(TimeSpan period)
+            {
+                var source = CreateSource(period).GetEnumerator();
+                using var fillForwardEnumerator = new FillForwardEnumerator(source, exchange, Ref.Create(period),
+                    false, time, time.AddMinutes(60).Add(period), period, exchange.TimeZone, false);
+
+                var actual = 0;
+                var filled = 0;
+                var endTimes = new List<DateTime>();
+                while (fillForwardEnumerator.MoveNext())
+                {
+                    if (fillForwardEnumerator.Current.IsFillForward)
+                    {
+                        filled++;
+                    }
+                    else
+                    {
+                        actual++;
+                        endTimes.Add(fillForwardEnumerator.Current.EndTime);
+                    }
+                }
+                return (actual, filled, endTimes);
+            }
+
+            // 30 minute data described as one minute: every gap is filled with synthetic bars
+            var asMinute = Enumerate(Time.OneMinute);
+            Assert.AreEqual(3, asMinute.actual);
+            Assert.Greater(asMinute.filled, 0, "Data described as one minute should be filled forward");
+            Assert.AreEqual(time.AddMinutes(1), asMinute.endTimes[0]);
+
+            // the same data described by its real period: nothing synthetic, and correct end times
+            var asThirtyMinutes = Enumerate(thirtyMinutes);
+            Assert.AreEqual(3, asThirtyMinutes.actual);
+            Assert.AreEqual(0, asThirtyMinutes.filled, "Complete data must not be filled forward");
+            CollectionAssert.AreEqual(
+                new[] { time.AddMinutes(30), time.AddMinutes(60), time.AddMinutes(90) },
+                asThirtyMinutes.endTimes);
+        }
+
+        [Test]
+        public void FillsForwardGenuineGapsWhenBarPeriodIsDeclared()
+        {
+            var time = new DateTime(2024, 9, 2, 9, 15, 0);
+            var thirtyMinutes = TimeSpan.FromMinutes(30);
+            var exchange = new EquityExchange(SecurityExchangeHours.AlwaysOpen(TimeZones.NewYork));
+
+            // an illiquid contract that does not trade between 09:45 and 10:45
+            var source = new List<BaseData>
+            {
+                new TradeBar { Time = time, Value = 1, Period = thirtyMinutes, Volume = 100 },
+                new TradeBar { Time = time.AddMinutes(90), Value = 2, Period = thirtyMinutes, Volume = 100 }
+            }.GetEnumerator();
+
+            using var fillForwardEnumerator = new FillForwardEnumerator(source, exchange, Ref.Create(thirtyMinutes),
+                false, time, time.AddMinutes(120), thirtyMinutes, exchange.TimeZone, false);
+
+            var filled = 0;
+            var actual = 0;
+            while (fillForwardEnumerator.MoveNext())
+            {
+                if (fillForwardEnumerator.Current.IsFillForward)
+                {
+                    filled++;
+                    Assert.AreEqual(0, ((TradeBar)fillForwardEnumerator.Current).Volume);
+                }
+                else
+                {
+                    actual++;
+                }
+            }
+
+            Assert.AreEqual(2, actual);
+            Assert.AreEqual(2, filled, "The two missing 30 minute bars should be filled forward");
+        }
+
+        [Test]
         public void DelistingEvents()
         {
             var dataResolution = Time.OneMinute;

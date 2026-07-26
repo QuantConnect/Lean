@@ -67,6 +67,16 @@ namespace QuantConnect.Data
         public TimeSpan Increment { get; }
 
         /// <summary>
+        /// The explicitly declared length of a single bar for this subscription, when the stored data
+        /// period differs from the nominal period implied by <see cref="Resolution"/>.
+        /// </summary>
+        /// <remarks>Null means the period is derived from <see cref="Resolution"/>, which is the default
+        /// behavior. This allows data whose true bar period is not one of the <see cref="Resolution"/>
+        /// values to be described accurately, so that bar end times, fill forward and consolidation all
+        /// operate on the real period instead of an assumed one.</remarks>
+        public TimeSpan? BarPeriod { get; }
+
+        /// <summary>
         /// True if wish to send old data when time gaps in data feed.
         /// </summary>
         public bool FillDataForward { get; }
@@ -197,6 +207,8 @@ namespace QuantConnect.Data
         /// <param name="dataMappingMode">The contract mapping mode to use for the security</param>
         /// <param name="contractDepthOffset">The continuous contract desired offset from the current front month.
         /// For example, 0 (default) will use the front month, 1 will use the back month contract</param>
+        /// <param name="barPeriod">The explicitly declared length of a single bar, when the stored data period
+        /// differs from the nominal period implied by <paramref name="resolution"/>. Null derives it from the resolution</param>
         public SubscriptionDataConfig(Type objectType,
             Symbol symbol,
             Resolution resolution,
@@ -211,12 +223,21 @@ namespace QuantConnect.Data
             DataNormalizationMode dataNormalizationMode = DataNormalizationMode.Adjusted,
             DataMappingMode dataMappingMode = DataMappingMode.OpenInterest,
             uint contractDepthOffset = 0,
-            bool mappedConfig = false)
+            bool mappedConfig = false,
+            TimeSpan? barPeriod = null)
         {
             if (objectType == null) throw new ArgumentNullException(nameof(objectType));
             if (symbol == null) throw new ArgumentNullException(nameof(symbol));
             if (dataTimeZone == null) throw new ArgumentNullException(nameof(dataTimeZone));
             if (exchangeTimeZone == null) throw new ArgumentNullException(nameof(exchangeTimeZone));
+            if (barPeriod.HasValue && barPeriod.Value <= TimeSpan.Zero)
+            {
+                throw new ArgumentOutOfRangeException(nameof(barPeriod), barPeriod, "Bar period must be positive");
+            }
+            if (barPeriod.HasValue && resolution == Resolution.Tick)
+            {
+                throw new ArgumentException("Bar period is not supported for tick resolution", nameof(barPeriod));
+            }
 
             Type = objectType;
             Resolution = resolution;
@@ -237,7 +258,8 @@ namespace QuantConnect.Data
 
             TickType = tickType ?? LeanData.GetCommonTickTypeForCommonDataTypes(objectType, SecurityType);
 
-            Increment = resolution.ToTimeSpan();
+            Increment = barPeriod ?? resolution.ToTimeSpan();
+            BarPeriod = barPeriod;
             //Ticks are individual sales and fillforward doesn't apply.
             FillDataForward = resolution == Resolution.Tick ? false : fillForward;
         }
@@ -265,6 +287,9 @@ namespace QuantConnect.Data
         /// For example, 0 (default) will use the front month, 1 will use the back month contract</param>
         /// <param name="mappedConfig">True if this is created as a mapped config. This is useful for continuous contract at live trading
         /// where we subscribe to the mapped symbol but want to preserve uniqueness</param>
+        /// <param name="barPeriod">The explicitly declared length of a single bar. When not provided, the source config's
+        /// value is inherited, unless <paramref name="resolution"/> changes the resolution, in which case the declared
+        /// period no longer describes the requested data and is dropped</param>
         public SubscriptionDataConfig(SubscriptionDataConfig config,
             Type objectType = null,
             Symbol symbol = null,
@@ -280,7 +305,8 @@ namespace QuantConnect.Data
             DataNormalizationMode? dataNormalizationMode = null,
             DataMappingMode? dataMappingMode = null,
             uint? contractDepthOffset = null,
-            bool? mappedConfig = null)
+            bool? mappedConfig = null,
+            TimeSpan? barPeriod = null)
             : this(
             objectType ?? config.Type,
             symbol ?? config.Symbol,
@@ -296,12 +322,26 @@ namespace QuantConnect.Data
             dataNormalizationMode ?? config.DataNormalizationMode,
             dataMappingMode ?? config.DataMappingMode,
             contractDepthOffset ?? config.ContractDepthOffset,
-            mappedConfig ?? false
+            mappedConfig ?? false,
+            barPeriod ?? GetInheritedBarPeriod(config, resolution)
             )
         {
             PriceScaleFactor = config.PriceScaleFactor;
             SumOfDividends = config.SumOfDividends;
             Consolidators = config.Consolidators;
+        }
+
+        /// <summary>
+        /// Helper for the copy constructor. A declared bar period describes the data of a specific resolution,
+        /// so it is only inherited when the copy keeps the source resolution.
+        /// </summary>
+        private static TimeSpan? GetInheritedBarPeriod(SubscriptionDataConfig config, Resolution? resolution)
+        {
+            if (resolution.HasValue && resolution.Value != config.Resolution)
+            {
+                return null;
+            }
+            return config.BarPeriod;
         }
 
         /// <summary>
@@ -327,6 +367,7 @@ namespace QuantConnect.Data
                 && ExchangeTimeZone.Equals(other.ExchangeTimeZone)
                 && ContractDepthOffset == other.ContractDepthOffset
                 && IsFilteredSubscription == other.IsFilteredSubscription
+                && BarPeriod == other.BarPeriod
                 && _mappedConfig == other._mappedConfig;
         }
 
@@ -368,6 +409,7 @@ namespace QuantConnect.Data
                 hashCode = (hashCode*397) ^ ExchangeTimeZone.Id.GetHashCode();// timezone hash is expensive, use id instead
                 hashCode = (hashCode*397) ^ ContractDepthOffset.GetHashCode();
                 hashCode = (hashCode*397) ^ IsFilteredSubscription.GetHashCode();
+                hashCode = (hashCode*397) ^ BarPeriod.GetHashCode();
                 hashCode = (hashCode*397) ^ _mappedConfig.GetHashCode();
                 return hashCode;
             }

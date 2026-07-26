@@ -40,6 +40,12 @@ namespace QuantConnect.Data.UniverseSelection
         public bool FillForward { get; set; }
 
         /// <summary>
+        /// The explicitly declared length of a single bar, when the stored data period differs from the
+        /// nominal period implied by <see cref="Resolution"/>. Null derives it from the resolution
+        /// </summary>
+        public TimeSpan? BarPeriod { get; set; }
+
+        /// <summary>
         /// If configured, will be used to determine universe selection schedule and filter or skip selection data
         /// that does not fit the schedule
         /// </summary>
@@ -127,6 +133,7 @@ namespace QuantConnect.Data.UniverseSelection
             Resolution = universeSettings.Resolution;
             Leverage = universeSettings.Leverage;
             FillForward = universeSettings.FillForward;
+            BarPeriod = universeSettings.BarPeriod;
             DataMappingMode = universeSettings.DataMappingMode;
             ContractDepthOffset = universeSettings.ContractDepthOffset;
             ExtendedMarketHours = universeSettings.ExtendedMarketHours;

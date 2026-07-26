@@ -89,7 +89,9 @@ namespace QuantConnect.Data
                 DataType = dataType,
                 Resolution = resolution.Value,
                 FillForwardResolution = fillForwardResolution,
-                TickType = subscription.TickType
+                TickType = subscription.TickType,
+                // a declared bar period describes the data of a specific resolution, drop it if the resolution changes
+                BarPeriod = resolution.Value == subscription.Resolution ? subscription.BarPeriod : null
             };
 
             if (extendedMarketHours != null)
@@ -136,9 +138,10 @@ namespace QuantConnect.Data
             SecurityExchangeHours exchange,
             DateTimeZone dataTimeZone,
             Type dataType,
-            bool? extendedMarketHours = null)
+            bool? extendedMarketHours = null,
+            TimeSpan? barPeriod = null)
         {
-            return GetStartTimeAlgoTz(_algorithm.UtcTime, symbol, periods, resolution, exchange, dataTimeZone, dataType, extendedMarketHours);
+            return GetStartTimeAlgoTz(_algorithm.UtcTime, symbol, periods, resolution, exchange, dataTimeZone, dataType, extendedMarketHours, barPeriod);
         }
 
         /// <summary>
@@ -164,7 +167,8 @@ namespace QuantConnect.Data
             SecurityExchangeHours exchange,
             DateTimeZone dataTimeZone,
             Type dataType,
-            bool? extendedMarketHours = null)
+            bool? extendedMarketHours = null,
+            TimeSpan? barPeriod = null)
         {
             var isExtendedMarketHours = false;
             // hour and daily resolution does no have extended market hours data. Same for chain universes
@@ -183,7 +187,7 @@ namespace QuantConnect.Data
                 }
             }
 
-            var timeSpan = resolution.ToTimeSpan();
+            var timeSpan = barPeriod ?? resolution.ToTimeSpan();
             // make this a minimum of one second
             timeSpan = timeSpan < Time.OneSecond ? Time.OneSecond : timeSpan;
 

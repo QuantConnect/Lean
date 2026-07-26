@@ -4247,7 +4247,10 @@ namespace QuantConnect.Algorithm
 
             // verify this consolidator will give reasonable results, if someone asks for second consolidation but we have minute
             // data we won't be able to do anything good, we'll call it second, but it would really just be minute!
-            if (period.HasValue && period.Value < subscription.Increment || resolution.HasValue && resolution.Value < subscription.Resolution)
+            // Both operands are compared as durations so that subscriptions declaring an explicit bar period are
+            // validated against the real period rather than the one implied by the resolution.
+            if (period.HasValue && period.Value < subscription.Increment ||
+                resolution.HasValue && resolution.Value.ToTimeSpan() < subscription.Increment)
             {
                 throw new ArgumentException($"Unable to create {symbol} consolidator because {symbol} is registered for " +
                     Invariant($"{subscription.Resolution.ToStringInvariant()} data. Consolidators require higher resolution data to produce lower resolution data.")
@@ -4268,7 +4271,8 @@ namespace QuantConnect.Algorithm
                     period = subscription.Increment;
                 }
 
-                if (period.HasValue && period.Value == subscription.Increment || resolution.HasValue && resolution.Value == subscription.Resolution)
+                if (period.HasValue && period.Value == subscription.Increment ||
+                    resolution.HasValue && resolution.Value.ToTimeSpan() == subscription.Increment)
                 {
                     consolidator = CreateIdentityConsolidator(subscription.Type);
                 }

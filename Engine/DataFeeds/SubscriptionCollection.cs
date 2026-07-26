@@ -185,7 +185,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     (operation == FillForwardResolutionOperation.AfterRemove // We are removing
                     && configuration.Increment == _fillForwardResolution.Value // True: We are removing the resolution we were using
                     // False: there is at least another one equal, no need to update, but we only look at those valid configuration which are the ones which set the FF resolution
-                    && _subscriptions.Keys.All(x => !ValidateFillForwardResolution(x) || x.Resolution != configuration.Resolution)))
+                    && _subscriptions.Keys.All(x => !ValidateFillForwardResolution(x) || x.Increment != configuration.Increment)))
                 )
             {
                 var configurations = (operation == FillForwardResolutionOperation.BeforeAdd)
@@ -193,10 +193,10 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
                 var eventArgs = new FillForwardResolutionChangedEvent { Old = _fillForwardResolution.Value };
                 _fillForwardResolution.Value = configurations.Where(ValidateFillForwardResolution)
-                                                             .Select(x => x.Resolution)
+                                                             .Select(x => x.Increment)
                                                              .Distinct()
-                                                             .DefaultIfEmpty(Resolution.Minute)
-                                                             .Min().ToTimeSpan();
+                                                             .DefaultIfEmpty(Resolution.Minute.ToTimeSpan())
+                                                             .Min();
                 if (_fillForwardResolution.Value != eventArgs.Old)
                 {
                     eventArgs.New = _fillForwardResolution.Value;

@@ -1015,7 +1015,10 @@ namespace QuantConnect.Orders.Fills
                     continue;
                 }
 
-                if (config.Resolution != Resolution.Hour && config.Resolution != Resolution.Daily)
+                // A bar long enough that filling at its close would be unrealistic: the order predates the bar,
+                // so it fills at the open. Expressed as a duration so that subscriptions declaring an explicit
+                // bar period are handled correctly. Equivalent to Resolution.Hour/Daily when none is declared.
+                if (config.Increment <= Time.OneMinute)
                 {
                     return false;
                 }
@@ -1051,10 +1054,9 @@ namespace QuantConnect.Orders.Fills
                 return true;
             }
 
-            // Use the lowest (finest) subscribed resolution to size a single bar.
+            // Use the lowest (finest) subscribed bar period to size a single bar.
             var resolutionSpan = subscriptionConfigs
-                .GetHighestResolution()
-                .ToTimeSpan();
+                .GetHighestResolutionSpan();
 
             // Tick data has no bar to wait for (zero span)
             if (resolutionSpan == TimeSpan.Zero)

@@ -13,6 +13,7 @@
  * limitations under the License.
 */
 
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using QuantConnect.Util;
@@ -38,6 +39,26 @@ namespace QuantConnect.Data
             return subscriptionDataConfigs
                 .Select(x => x.Resolution)
                 .DefaultIfEmpty(Resolution.Daily)
+                .Min();
+        }
+
+        /// <summary>
+        /// Extension method used to obtain the shortest bar period for a given set of
+        /// <see cref="SubscriptionDataConfig"/>, honoring any explicitly declared
+        /// <see cref="SubscriptionDataConfig.BarPeriod"/>
+        /// </summary>
+        /// <param name="subscriptionDataConfigs"></param>
+        /// <returns>The shortest bar period, <see cref="Resolution.Daily"/>'s period if there
+        /// are no subscriptions</returns>
+        /// <remarks>Equivalent to <see cref="GetHighestResolution"/> followed by
+        /// <see cref="Extensions.ToTimeSpan"/> for any subscription that does not declare a bar period,
+        /// since <see cref="Extensions.ToTimeSpan"/> is monotonic in the <see cref="Resolution"/> order</remarks>
+        public static TimeSpan GetHighestResolutionSpan(
+            this IEnumerable<SubscriptionDataConfig> subscriptionDataConfigs)
+        {
+            return subscriptionDataConfigs
+                .Select(x => x.Increment)
+                .DefaultIfEmpty(Resolution.Daily.ToTimeSpan())
                 .Min();
         }
 
