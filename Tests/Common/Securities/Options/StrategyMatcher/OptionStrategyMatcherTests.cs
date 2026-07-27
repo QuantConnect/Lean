@@ -85,5 +85,92 @@ namespace QuantConnect.Tests.Common.Securities.Options.StrategyMatcher
                 }
             }
         }
+
+        [Test]
+        public void MatchesOverlappingDebitSpreadsAsSpreadsInsteadOfLadder()
+        {
+            // two overlapping bull call spreads with interleaved strikes, same expiration.
+            // a leg-count-greedy match carves this book into a bull call ladder, whose second short leg is
+            // charged naked call margin, plus an unmatched long. the correct, margin-free solution is two spreads
+            var positions = OptionPositionCollection.Empty.AddRange(
+                Position(Call[598]),
+                Position(Call[600]),
+                Position(Call[603], -1),
+                Position(Call[605], -1)
+            );
+
+            var matcher = new OptionStrategyMatcher(OptionStrategyMatcherOptions.ForDefinitions(AllDefinitions));
+            var match = matcher.MatchOnce(positions);
+
+            Assert.AreEqual(2, match.Strategies.Count);
+            Assert.IsTrue(match.Strategies.All(strategy => strategy.Name == BullCallSpread.Name),
+                string.Join(", ", match.Strategies.Select(strategy => strategy.Name)));
+            // all four contracts must be consumed, either spread pairing is acceptable
+            Assert.AreEqual(4, match.Strategies.Sum(strategy => strategy.OptionLegs.Count));
+        }
+
+        [Test]
+        public void MatchLeavesNoShortContractUncoveredWhenFullCoverageExists()
+        {
+            // every short strike has a long at a lower strike available to cover it, same expiration:
+            // pairing shorts in ascending order against lower longs covers all of them, so no solution
+            // should leave a short contract uncovered (inside a ladder) or unmatched
+            var positions = OptionPositionCollection.Empty.AddRange(
+                Position(Call[598], 3), Position(Call[600], 2), Position(Call[604], 3), Position(Call[608], 2),
+                Position(Call[603], -3), Position(Call[605], -2), Position(Call[609], -2), Position(Call[613], -1)
+            );
+
+            var matcher = new OptionStrategyMatcher(OptionStrategyMatcherOptions.ForDefinitions(AllDefinitions));
+            var match = matcher.MatchOnce(positions);
+
+            var matchedShortQuantity = 0;
+            foreach (var strategy in match.Strategies)
+            {
+                // no strategy is allowed to hold net short calls, which would be charged naked call margin
+                Assert.GreaterOrEqual(strategy.OptionLegs.Sum(leg => leg.Quantity), 0,
+                    $"{strategy.Name}: {string.Join("|", strategy.OptionLegs.Select(leg => new OptionPosition(leg.Symbol, leg.Quantity)))}");
+
+                matchedShortQuantity -= strategy.OptionLegs.Where(leg => leg.Quantity < 0).Sum(leg => leg.Quantity);
+            }
+
+            // all 8 short contracts are matched into strategies covering them
+            Assert.AreEqual(8, matchedShortQuantity);
+        }
+
+        [Test]
+        public void MatchesTrueButterflyBookAsButterfly()
+        {
+            // a true butterfly book must not be decomposed into a bull call spread plus a bear call spread,
+            // which would require margin for the bear spread's strike width while the butterfly requires none
+            var positions = OptionPositionCollection.Empty.AddRange(
+                Position(Call[595]),
+                Position(Call[600], -2),
+                Position(Call[605])
+            );
+
+            var matcher = new OptionStrategyMatcher(OptionStrategyMatcherOptions.ForDefinitions(AllDefinitions));
+            var match = matcher.MatchOnce(positions);
+
+            Assert.AreEqual(1, match.Strategies.Count);
+            Assert.AreEqual(ButterflyCall.Name, match.Strategies.Single().Name);
+        }
+
+        [Test]
+        public void MatchesLadderBookAsLadderWhenNoBetterSolutionExists()
+        {
+            // an actual ladder book has one genuinely uncovered short either way it's grouped,
+            // so on equal scores the original leg-count-greedy solution is preserved
+            var positions = OptionPositionCollection.Empty.AddRange(
+                Position(Call[595]),
+                Position(Call[600], -1),
+                Position(Call[605], -1)
+            );
+
+            var matcher = new OptionStrategyMatcher(OptionStrategyMatcherOptions.ForDefinitions(AllDefinitions));
+            var match = matcher.MatchOnce(positions);
+
+            Assert.AreEqual(1, match.Strategies.Count);
+            Assert.AreEqual(BullCallLadder.Name, match.Strategies.Single().Name);
+        }
     }
 }

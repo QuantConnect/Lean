@@ -93,7 +93,9 @@ namespace QuantConnect.Securities.Option.StrategyMatcher
 
             if (objectiveFunction == null)
             {
-                objectiveFunction = new UnmatchedPositionCountOptionStrategyMatchObjectiveFunction();
+                // by default we prefer solutions minimizing the uncovered short option quantity,
+                // a proxy for the margin required to hold the resulting position groups
+                objectiveFunction = new UncoveredShortQuantityOptionStrategyMatchObjectiveFunction();
             }
 
             if (positionEnumerator == null)
