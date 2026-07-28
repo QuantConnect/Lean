@@ -13,6 +13,8 @@
  * limitations under the License.
 */
 
+using System.Linq;
+using QuantConnect.Brokerages;
 using QuantConnect.Data;
 using QuantConnect.Orders;
 
@@ -27,7 +29,14 @@ namespace QuantConnect.Algorithm.CSharp
     /// <meta name="tag" content="financial advisor" />
     public class FinancialAdvisorDemoAlgorithm : QCAlgorithm
     {
+        private const string GroupName = "TestGroupEQ";
+
         private Symbol _symbol;
+        private BrokerageAccountSnapshot _preOrderSnapshot;
+        private bool _initialSnapshotRefreshAccepted;
+        private bool _groupOrderSubmitted;
+        private int _groupOrderId;
+        private long _pendingReconcileGeneration = -1;
 
         /// <summary>
         /// Initialise the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must initialized.
@@ -47,7 +56,7 @@ namespace QuantConnect.Algorithm.CSharp
             DefaultOrderProperties = new InteractiveBrokersOrderProperties
             {
                 // account group created manually in IB/TWS
-                FaGroup = "TestGroupEQ",
+                FaGroup = GroupName,
                 // supported allocation methods are: EqualQuantity, NetLiq, AvailableEquity, PctChange
                 FaMethod = "EqualQuantity"
             };
@@ -65,6 +74,12 @@ namespace QuantConnect.Algorithm.CSharp
             //    // a sub-account linked to the Financial Advisor master account
             //    Account = "DU123456"
             //};
+
+            if (LiveMode)
+            {
+                _initialSnapshotRefreshAccepted =
+                    RequestBrokerageAccountSnapshotRefresh(new[] { GroupName });
+            }
         }
 
         /// <summary>
@@ -73,12 +88,126 @@ namespace QuantConnect.Algorithm.CSharp
         /// <param name="slice">Slice object keyed by symbol containing the stock data</param>
         public override void OnData(Slice slice)
         {
-            if (!Portfolio.Invested)
+            if (!LiveMode)
             {
-                // when logged into IB as a Financial Advisor, this call will use order properties
-                // set in the DefaultOrderProperties property of QCAlgorithm
-                SetHoldings(_symbol, 1);
+                if (!Portfolio.Invested)
+                {
+                    // when logged into IB as a Financial Advisor, this call will use order properties
+                    // set in the DefaultOrderProperties property of QCAlgorithm
+                    SetHoldings(_symbol, 1);
+                }
+                return;
             }
+
+            var snapshot = BrokerageAccountSnapshot;
+            if (_pendingReconcileGeneration >= 0)
+            {
+                if (!snapshot.IsReady ||
+                    snapshot.Generation <= _pendingReconcileGeneration)
+                {
+                    return;
+                }
+
+                ReconcileAccountPositions(snapshot);
+                _preOrderSnapshot = null;
+                _pendingReconcileGeneration = -1;
+                return;
+            }
+
+            if (!_initialSnapshotRefreshAccepted)
+            {
+                _initialSnapshotRefreshAccepted =
+                    RequestBrokerageAccountSnapshotRefresh(new[] { GroupName });
+                return;
+            }
+
+            if (_groupOrderSubmitted ||
+                !snapshot.IsReady ||
+                !snapshot.Groups.ContainsKey(GroupName))
+            {
+                return;
+            }
+
+            _preOrderSnapshot = snapshot;
+            var ticket = SetHoldings(
+                _symbol,
+                1,
+                asynchronous: true).FirstOrDefault();
+            if (ticket == null)
+            {
+                _preOrderSnapshot = null;
+                return;
+            }
+
+            _groupOrderId = ticket.OrderId;
+            _groupOrderSubmitted = true;
+        }
+
+        /// <summary>
+        /// Requests authoritative account reconciliation after the parent group order becomes terminal.
+        /// </summary>
+        /// <param name="orderEvent">The aggregate parent order event</param>
+        public override void OnOrderEvent(OrderEvent orderEvent)
+        {
+            if (!LiveMode ||
+                orderEvent.OrderId != _groupOrderId ||
+                !orderEvent.Status.IsClosed() ||
+                _pendingReconcileGeneration >= 0)
+            {
+                return;
+            }
+
+            _groupOrderId = 0;
+            _pendingReconcileGeneration = BrokerageAccountSnapshot.Generation;
+            if (!RequestBrokerageAccountSnapshotRefresh(new[] { GroupName }))
+            {
+                Error(
+                    $"The post-order snapshot refresh for Financial Advisor group " +
+                    $"'{GroupName}' was not accepted.");
+            }
+        }
+
+        private void ReconcileAccountPositions(
+            BrokerageAccountSnapshot currentSnapshot)
+        {
+            if (_preOrderSnapshot == null ||
+                !_preOrderSnapshot.Groups.TryGetValue(GroupName, out var group))
+            {
+                Error(
+                    $"The pre-order snapshot for Financial Advisor group " +
+                    $"'{GroupName}' is unavailable.");
+                return;
+            }
+
+            foreach (var accountId in group.AccountIds)
+            {
+                if (!_preOrderSnapshot.Accounts.TryGetValue(
+                        accountId,
+                        out var previousAccount) ||
+                    !currentSnapshot.Accounts.TryGetValue(
+                        accountId,
+                        out var currentAccount))
+                {
+                    Error(
+                        $"Account state for '{accountId}' is unavailable during " +
+                        $"Financial Advisor group reconciliation.");
+                    continue;
+                }
+
+                var previousQuantity = GetPositionQuantity(previousAccount);
+                var currentQuantity = GetPositionQuantity(currentAccount);
+                Log(
+                    $"FA reconciliation: account={accountId}, symbol={_symbol.Value}, " +
+                    $"before={previousQuantity}, after={currentQuantity}, " +
+                    $"change={currentQuantity - previousQuantity}");
+            }
+        }
+
+        private decimal GetPositionQuantity(BrokerageAccountState account)
+        {
+            return account.Positions
+                .Where(position => position.Symbol == _symbol)
+                .Sum(position => position.Quantity);
         }
     }
 }
