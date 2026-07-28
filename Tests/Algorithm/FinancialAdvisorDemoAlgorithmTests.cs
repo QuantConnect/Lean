@@ -279,11 +279,6 @@ namespace QuantConnect.Tests.Algorithm
                 RefreshRequestHook?.Invoke(this);
                 return true;
             }
-
-            public bool RequestConfiguredAccountSnapshotRefresh()
-            {
-                return false;
-            }
         }
     }
 }

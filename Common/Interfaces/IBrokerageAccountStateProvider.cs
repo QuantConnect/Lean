@@ -41,12 +41,5 @@ namespace QuantConnect.Interfaces
         bool RequestAccountSnapshotRefresh(
             IReadOnlyCollection<string> groupNames,
             IReadOnlyCollection<string> additionalAccountIds);
-
-        /// <summary>
-        /// Requests a refresh using the provider's existing scope. When no scope has been configured,
-        /// the provider selects its deployment-safe default.
-        /// </summary>
-        /// <returns>True if the request was accepted or coalesced; otherwise, false.</returns>
-        bool RequestConfiguredAccountSnapshotRefresh();
     }
 }

@@ -315,11 +315,6 @@ namespace QuantConnect.Tests.Algorithm
                 return true;
             }
 
-            public bool RequestConfiguredAccountSnapshotRefresh()
-            {
-                return true;
-            }
-
             public BrokerageAccountGroupAssignment GetAccountGroupAssignment()
             {
                 return BrokerageAccountGroupAssignment.Unavailable;
