@@ -857,6 +857,58 @@ namespace QuantConnect.Tests.Common.Orders
             Assert.AreEqual(decimal.MinValue, order.GroupOrderManager.LimitPrice);
         }
 
+        [Test]
+        public void DeserializesGroupOrderManagerWithoutComboTypeAsCombo()
+        {
+            // old-style JSON, from before the "comboType" field existed: must default to ComboType.Combo, not throw
+            const string json = @"{'Type':8,
+'Id':1,
+'ContingentId':0,
+'BrokerId':['1'],
+'Symbol':{'Value':'SPY','Permtick':'SPY'},
+'Price':100.086914328,
+'Time':'2010-03-04T14:31:00Z',
+'Quantity':100.0,
+'Status':3,
+'TimeInForce':0,
+'Tag':'',
+'SecurityType':1,
+'Direction':0,
+'GroupOrderManager':{'Id':1,'Count':2,'Quantity':100,'LimitPrice':210.1,'OrderIds':[1,2]}}";
+
+            var order = (ComboMarketOrder)DeserializeOrder<ComboMarketOrder>(json);
+
+            Assert.AreEqual(ComboType.Combo, order.GroupOrderManager.ComboType);
+        }
+
+        [Test]
+        public void RoundTripsLimitOrderWithOneCancelsTheOtherGroupOrderManagerTwice()
+        {
+            var groupOrderManager = new GroupOrderManager(1, 2, 100) { ComboType = ComboType.OneCancelsTheOther };
+            var expected = new LimitOrder(Symbols.SPY, 100, 210.10m, new DateTime(2015, 11, 23, 17, 15, 37), "oco")
+            {
+                GroupOrderManager = groupOrderManager,
+                Id = 12345
+            };
+            groupOrderManager.OrderIds.Add(12346);
+
+            AssertGroupOrderManagerSurvivesRoundTripTwice(expected);
+        }
+
+        [Test]
+        public void RoundTripsStopMarketOrderWithOneCancelsTheOtherGroupOrderManagerTwice()
+        {
+            var groupOrderManager = new GroupOrderManager(1, 2, 100) { ComboType = ComboType.OneCancelsTheOther };
+            var expected = new StopMarketOrder(Symbols.SPY, 100, 210.10m, new DateTime(2015, 11, 23, 17, 15, 37), "oco")
+            {
+                GroupOrderManager = groupOrderManager,
+                Id = 12345
+            };
+            groupOrderManager.OrderIds.Add(12346);
+
+            AssertGroupOrderManagerSurvivesRoundTripTwice(expected);
+        }
+
         private static T TestOrderType<T>(T expected)
             where T : Order
         {
@@ -904,6 +956,32 @@ namespace QuantConnect.Tests.Common.Orders
             Assert.AreEqual(expected.LimitPrice, actual.LimitPrice);
             Assert.AreEqual(expected.Direction, actual.Direction);
             CollectionAssert.AreEqual(expected.OrderIds, actual.OrderIds);
+        }
+
+        /// <summary>
+        /// Serializes and deserializes the given order twice in a row and checks that the OCO GroupOrderManager
+        /// (ComboType, Count and OrderIds) survives both round trips. The second round trip specifically catches a
+        /// bug where DeserializeGroupOrderManager drops a field that was never explicitly serialized because of
+        /// DefaultValueHandling.Ignore.
+        /// </summary>
+        private static void AssertGroupOrderManagerSurvivesRoundTripTwice(Order expected)
+        {
+            var expectedGroupOrderManager = expected.GroupOrderManager;
+
+            var json = JsonConvert.SerializeObject(expected);
+            var actual = DeserializeOrder<Order>(json);
+
+            Assert.AreEqual(ComboType.OneCancelsTheOther, actual.GroupOrderManager.ComboType);
+            Assert.AreEqual(expectedGroupOrderManager.Count, actual.GroupOrderManager.Count);
+            CollectionAssert.AreEqual(expectedGroupOrderManager.OrderIds, actual.GroupOrderManager.OrderIds);
+
+            // serialize/deserialize a second time, starting from the already-deserialized order
+            var json2 = JsonConvert.SerializeObject(actual);
+            var actual2 = DeserializeOrder<Order>(json2);
+
+            Assert.AreEqual(ComboType.OneCancelsTheOther, actual2.GroupOrderManager.ComboType);
+            Assert.AreEqual(expectedGroupOrderManager.Count, actual2.GroupOrderManager.Count);
+            CollectionAssert.AreEqual(expectedGroupOrderManager.OrderIds, actual2.GroupOrderManager.OrderIds);
         }
 
         private static Order DeserializeOrder<T>(string json) where T : Order

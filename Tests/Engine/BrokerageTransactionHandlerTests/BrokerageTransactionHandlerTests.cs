@@ -372,6 +372,60 @@ namespace QuantConnect.Tests.Engine.BrokerageTransactionHandlerTests
             Assert.IsEmpty(processedTicket);
         }
 
+        [Test]
+        public void GetProjectedHoldingsCountsOnlyTheMaxExposureLegOfAnOpenOneCancelsTheOtherGroup()
+        {
+            //Initializes the transaction handler
+            _transactionHandler = new TestBrokerageTransactionHandler();
+            using var brokerage = new BacktestingBrokerage(_algorithm);
+            _transactionHandler.Initialize(_algorithm, brokerage, new BacktestingResultHandler());
+
+            _algorithm.SetBrokerageModel(new DefaultBrokerageModel());
+            var security = _algorithm.AddEquity("SPY");
+            var price = 400m;
+            security.SetMarketPrice(new Tick(DateTime.Now, security.Symbol, price, price, price));
+            // an existing 100 share long position that the group order is meant to exit
+            security.Holdings.SetHoldings(price, 100);
+
+            var dateTime = DateTime.Now;
+            var groupOrderManager = new GroupOrderManager(1, 2, -100) { ComboType = ComboType.OneCancelsTheOther };
+
+            // take-profit leg: sell the full 100 share position
+            var takeProfitRequest = new SubmitOrderRequest(OrderType.Limit, security.Type, security.Symbol, -100, 0, 420m,
+                dateTime, "", groupOrderManager: groupOrderManager);
+            // stop-loss leg: sell the full 100 share position
+            var stopLossRequest = new SubmitOrderRequest(OrderType.StopMarket, security.Type, security.Symbol, -100, 380m, 0,
+                dateTime, "", groupOrderManager: groupOrderManager);
+
+            takeProfitRequest.SetOrderId(1);
+            stopLossRequest.SetOrderId(2);
+            groupOrderManager.OrderIds.Add(1);
+            groupOrderManager.OrderIds.Add(2);
+
+            // Mock the order processor
+            var orderProcessorMock = new Mock<IOrderProcessor>();
+            orderProcessorMock.Setup(m => m.GetOrderTicket(1)).Returns(new OrderTicket(_algorithm.Transactions, takeProfitRequest));
+            orderProcessorMock.Setup(m => m.GetOrderTicket(2)).Returns(new OrderTicket(_algorithm.Transactions, stopLossRequest));
+            _algorithm.Transactions.SetOrderProcessor(orderProcessorMock.Object);
+
+            // Act: both legs of the group are submitted and become open at the same time
+            var takeProfitTicket = _transactionHandler.Process(takeProfitRequest);
+            _transactionHandler.HandleOrderRequest(takeProfitRequest);
+
+            var stopLossTicket = _transactionHandler.Process(stopLossRequest);
+            _transactionHandler.HandleOrderRequest(stopLossRequest);
+
+            Assert.AreEqual(OrderStatus.Submitted, takeProfitTicket.Status);
+            Assert.AreEqual(OrderStatus.Submitted, stopLossTicket.Status);
+
+            var projectedHoldings = _transactionHandler.GetProjectedHoldings(security);
+
+            // both legs are still open, 100 shares each; only the max-exposure leg should count towards the
+            // open orders quantity, not the sum of both (exactly one leg of the group can ever execute)
+            Assert.AreEqual(100, projectedHoldings.HoldingsQuantity);
+            Assert.AreEqual(-100, projectedHoldings.OpenOrdersQuantity);
+        }
+
         [TestCase("NDX", "1.14", "1.15")]
         [TestCase("NDX", "1.16", "1.15")]
         [TestCase("NDX", "4.14", "4.10")]
@@ -609,6 +663,85 @@ namespace QuantConnect.Tests.Engine.BrokerageTransactionHandlerTests
             Assert.AreEqual(expectedLeg2LimitPrice, orderTicket2.Get(OrderField.LimitPrice));
 
             Assert.AreEqual(expectedGroupOrderLimitPrice, groupOrderManager.LimitPrice);
+        }
+
+        // real (non-backtesting) brokerage, brokerage model does not support OCO groups -> whole group is invalidated
+        [TestCase(false, false, true)]
+        // real (non-backtesting) brokerage, brokerage model supports OCO groups -> group is submitted normally
+        [TestCase(false, true, false)]
+        // backtesting/paper brokerage (PaperBrokerage is a BacktestingBrokerage), model does not support OCO groups ->
+        // the gate is not checked because the engine simulates the group itself, group is submitted normally
+        [TestCase(true, false, false)]
+        public void OneCancelsTheOtherGroupSubmissionRespectsLiveModeGate(bool useBacktestingBrokerage, bool supportsGroupExecution, bool expectInvalidated)
+        {
+            // the gate is keyed off whether the underlying brokerage is a BacktestingBrokerage (true for backtesting
+            // AND paper trading, since PaperBrokerage extends it), not off IAlgorithm.LiveMode: paper trading runs
+            // with LiveMode == true but must still be exempt from the gate
+            _algorithm.SetLiveMode(true);
+            _algorithm.SetBrokerageModel(new TestGroupExecutionBrokerageModel(supportsGroupExecution));
+
+            _transactionHandler = new TestBrokerageTransactionHandler();
+            // NoSubmitTestBrokerage stands in for a real (non-backtesting) brokerage here: unlike
+            // BacktestingBrokerage.PlaceOrder, it does not fire a Submitted OrderEvent on its own, so when the
+            // gate lets the group through we can only assert on the order response, not on reaching OrderStatus.Submitted
+            using Brokerage brokerage = useBacktestingBrokerage ? new BacktestingBrokerage(_algorithm) : new NoSubmitTestBrokerage(_algorithm);
+            _transactionHandler.Initialize(_algorithm, brokerage, new BacktestingResultHandler());
+
+            var security = _algorithm.Securities[_symbol];
+            var price = 1.12m;
+            security.SetMarketPrice(new Tick(DateTime.Now, security.Symbol, price, price, price));
+
+            var dateTime = DateTime.UtcNow;
+            var groupOrderManager = new GroupOrderManager(1, 2, 1000) { ComboType = ComboType.OneCancelsTheOther };
+
+            // a breakout style OCO pair: buy limit below market, buy stop above market
+            var orderRequest1 = new SubmitOrderRequest(OrderType.Limit, security.Type, security.Symbol, 1000, 0, 1.05m, dateTime, "",
+                groupOrderManager: groupOrderManager);
+            var orderRequest2 = new SubmitOrderRequest(OrderType.StopMarket, security.Type, security.Symbol, 1000, 1.20m, 0, dateTime, "",
+                groupOrderManager: groupOrderManager);
+
+            orderRequest1.SetOrderId(1);
+            orderRequest2.SetOrderId(2);
+            groupOrderManager.OrderIds.Add(1);
+            groupOrderManager.OrderIds.Add(2);
+
+            var orderProcessorMock = new Mock<IOrderProcessor>();
+            orderProcessorMock.Setup(m => m.GetOrderTicket(1)).Returns(new OrderTicket(_algorithm.Transactions, orderRequest1));
+            orderProcessorMock.Setup(m => m.GetOrderTicket(2)).Returns(new OrderTicket(_algorithm.Transactions, orderRequest2));
+            _algorithm.Transactions.SetOrderProcessor(orderProcessorMock.Object);
+
+            var orderTicket1 = _transactionHandler.Process(orderRequest1);
+            Assert.AreEqual(OrderStatus.New, orderTicket1.Status);
+            _transactionHandler.HandleOrderRequest(orderRequest1);
+
+            // still buffered: the group isn't complete yet, so the gate hasn't run for either leg
+            Assert.AreEqual(OrderStatus.New, orderTicket1.Status);
+
+            var orderTicket2 = _transactionHandler.Process(orderRequest2);
+            _transactionHandler.HandleOrderRequest(orderRequest2);
+
+            if (expectInvalidated)
+            {
+                // both legs are decided together: the whole group is invalidated
+                Assert.AreEqual(OrderStatus.Invalid, orderTicket1.Status);
+                Assert.AreEqual(OrderStatus.Invalid, orderTicket2.Status);
+                Assert.IsTrue(orderRequest2.Response.IsError);
+                Assert.AreEqual(OrderResponseErrorCode.BrokerageModelRefusedToSubmitOrder, orderRequest2.Response.ErrorCode);
+            }
+            else
+            {
+                // the group was not rejected by the gate: the request succeeded and reached the brokerage.
+                // only BacktestingBrokerage.PlaceOrder actually fires the Submitted event on its own, so we only
+                // assert the precise status for that case; for a real brokerage we assert it did not get invalidated
+                Assert.IsTrue(orderRequest2.Response.IsSuccess);
+                Assert.AreNotEqual(OrderStatus.Invalid, orderTicket1.Status);
+                Assert.AreNotEqual(OrderStatus.Invalid, orderTicket2.Status);
+                if (useBacktestingBrokerage)
+                {
+                    Assert.AreEqual(OrderStatus.Submitted, orderTicket1.Status);
+                    Assert.AreEqual(OrderStatus.Submitted, orderTicket2.Status);
+                }
+            }
         }
 
         [Test]
@@ -970,6 +1103,69 @@ namespace QuantConnect.Tests.Engine.BrokerageTransactionHandlerTests
             Assert.AreEqual(_algorithm.OrderEvents.Count, 2);
             Assert.IsTrue(_algorithm.OrderEvents[0].Status == OrderStatus.Submitted);
             Assert.IsTrue(_algorithm.OrderEvents[1].Status == OrderStatus.UpdateSubmitted);
+        }
+
+        // combo groups keep the pre-existing "manager means combo" skip: no buying power validation on update
+        [TestCase(ComboType.Combo, true)]
+        // OCO legs are validated like a regular order: an update the algorithm cannot afford is rejected
+        [TestCase(ComboType.OneCancelsTheOther, false)]
+        public void HandleUpdateOrderRequestValidatesBuyingPowerOnlyForNonComboGroups(ComboType comboType, bool expectUpdateSucceeds)
+        {
+            _algorithm.SetBrokerageModel(new DefaultBrokerageModel());
+
+            _transactionHandler = new TestBrokerageTransactionHandler();
+            using var brokerage = new BacktestingBrokerage(_algorithm);
+            _transactionHandler.Initialize(_algorithm, brokerage, new BacktestingResultHandler());
+
+            var security = _algorithm.Securities[_symbol];
+            var price = 1.12m;
+            security.SetMarketPrice(new Tick(DateTime.Now, security.Symbol, price, price, price));
+
+            var dateTime = DateTime.UtcNow;
+            var groupOrderManager = new GroupOrderManager(1, 2, 1000) { ComboType = comboType };
+
+            var orderRequest1 = new SubmitOrderRequest(OrderType.Limit, security.Type, security.Symbol, 1000, 0, 1.05m, dateTime, "",
+                groupOrderManager: groupOrderManager);
+            var orderRequest2 = new SubmitOrderRequest(OrderType.StopMarket, security.Type, security.Symbol, 1000, 1.20m, 0, dateTime, "",
+                groupOrderManager: groupOrderManager);
+
+            orderRequest1.SetOrderId(1);
+            orderRequest2.SetOrderId(2);
+            groupOrderManager.OrderIds.Add(1);
+            groupOrderManager.OrderIds.Add(2);
+
+            var orderProcessorMock = new Mock<IOrderProcessor>();
+            orderProcessorMock.Setup(m => m.GetOrderTicket(1)).Returns(new OrderTicket(_algorithm.Transactions, orderRequest1));
+            orderProcessorMock.Setup(m => m.GetOrderTicket(2)).Returns(new OrderTicket(_algorithm.Transactions, orderRequest2));
+            _algorithm.Transactions.SetOrderProcessor(orderProcessorMock.Object);
+
+            var orderTicket1 = _transactionHandler.Process(orderRequest1);
+            _transactionHandler.HandleOrderRequest(orderRequest1);
+            var orderTicket2 = _transactionHandler.Process(orderRequest2);
+            _transactionHandler.HandleOrderRequest(orderRequest2);
+
+            Assert.AreEqual(OrderStatus.Submitted, orderTicket1.Status);
+            Assert.AreEqual(OrderStatus.Submitted, orderTicket2.Status);
+
+            // a huge quantity increase on just one leg that the algorithm cannot possibly afford
+            var updateRequest = new UpdateOrderRequest(DateTime.Now, orderTicket1.OrderId, new UpdateOrderFields { Quantity = 1_000_000_000m });
+            _transactionHandler.Process(updateRequest);
+            _transactionHandler.HandleOrderRequest(updateRequest);
+
+            if (expectUpdateSucceeds)
+            {
+                Assert.IsTrue(updateRequest.Response.IsSuccess);
+                Assert.AreEqual(OrderStatus.UpdateSubmitted, orderTicket1.Status);
+            }
+            else
+            {
+                Assert.IsTrue(updateRequest.Response.IsError);
+                Assert.AreEqual(OrderResponseErrorCode.BrokerageFailedToUpdateOrder, updateRequest.Response.ErrorCode);
+                Assert.AreEqual(OrderStatus.Submitted, orderTicket1.Status);
+            }
+
+            // the sibling leg is untouched either way: updates apply per-leg
+            Assert.AreEqual(1000, orderTicket2.Quantity);
         }
 
         [Test]
@@ -2872,6 +3068,21 @@ namespace QuantConnect.Tests.Engine.BrokerageTransactionHandlerTests
             {
                 message = new BrokerageMessageEvent(0, 0, "");
                 return false;
+            }
+        }
+
+        internal class TestGroupExecutionBrokerageModel : DefaultBrokerageModel
+        {
+            private readonly bool _supportsOneCancelsTheOther;
+
+            public TestGroupExecutionBrokerageModel(bool supportsOneCancelsTheOther)
+            {
+                _supportsOneCancelsTheOther = supportsOneCancelsTheOther;
+            }
+
+            public override bool SupportsGroupExecution(ComboType comboType)
+            {
+                return comboType == ComboType.OneCancelsTheOther ? _supportsOneCancelsTheOther : base.SupportsGroupExecution(comboType);
             }
         }
 

@@ -2805,18 +2805,22 @@ namespace QuantConnect
         }
 
         /// <summary>
-        /// Turn order into an order ticket
+        /// Reads the prices an order carries. A price the given order type does not use comes back as null
         /// </summary>
-        /// <param name="order">The <see cref="Order"/> being converted</param>
-        /// <param name="transactionManager">The transaction manager, <see cref="SecurityTransactionManager"/></param>
-        /// <returns></returns>
-        public static OrderTicket ToOrderTicket(this Order order, SecurityTransactionManager transactionManager)
+        /// <param name="order">The <see cref="Order"/> to read the prices from</param>
+        /// <param name="limitPrice">The order's limit price, null when it has none</param>
+        /// <param name="stopPrice">The order's stop price, null when it has none</param>
+        /// <param name="triggerPrice">The order's trigger price, null when it has none</param>
+        /// <param name="trailingAmount">The order's trailing amount, null when it has none</param>
+        /// <param name="trailingAsPercentage">True when <paramref name="trailingAmount"/> is a percentage</param>
+        public static void GetOrderPrices(this Order order, out decimal? limitPrice, out decimal? stopPrice, out decimal? triggerPrice,
+            out decimal? trailingAmount, out bool trailingAsPercentage)
         {
-            var limitPrice = 0m;
-            var stopPrice = 0m;
-            var triggerPrice = 0m;
-            var trailingAmount = 0m;
-            var trailingAsPercentage = false;
+            limitPrice = null;
+            stopPrice = null;
+            triggerPrice = null;
+            trailingAmount = null;
+            trailingAsPercentage = false;
 
             switch (order.Type)
             {
@@ -2860,17 +2864,29 @@ namespace QuantConnect
                     limitPrice = legLimitOrder.LimitPrice;
                     break;
                 default:
-                    throw new ArgumentOutOfRangeException();
+                    throw new ArgumentOutOfRangeException(nameof(order), order.Type, "Unsupported order type.");
             }
+        }
+
+        /// <summary>
+        /// Turn order into an order ticket
+        /// </summary>
+        /// <param name="order">The <see cref="Order"/> being converted</param>
+        /// <param name="transactionManager">The transaction manager, <see cref="SecurityTransactionManager"/></param>
+        /// <returns></returns>
+        public static OrderTicket ToOrderTicket(this Order order, SecurityTransactionManager transactionManager)
+        {
+            order.GetOrderPrices(out var limitPrice, out var stopPrice, out var triggerPrice, out var trailingAmount,
+                out var trailingAsPercentage);
 
             var submitOrderRequest = new SubmitOrderRequest(order.Type,
                 order.SecurityType,
                 order.Symbol,
                 order.Quantity,
-                stopPrice,
-                limitPrice,
-                triggerPrice,
-                trailingAmount,
+                stopPrice ?? 0m,
+                limitPrice ?? 0m,
+                triggerPrice ?? 0m,
+                trailingAmount ?? 0m,
                 trailingAsPercentage,
                 order.Time,
                 order.Tag,

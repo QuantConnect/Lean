@@ -476,6 +476,13 @@ namespace QuantConnect.Orders
                     throw new ArgumentOutOfRangeException();
             }
             order.Status = OrderStatus.New;
+            // attach the group manager to any leg that doesn't carry one yet (plain Limit/StopMarket OCO legs).
+            // this must happen before the Id is set: the Id setter only registers the order into the group's
+            // OrderIds when the manager is already there.
+            if (order.GroupOrderManager == null && groupOrderManager != null)
+            {
+                order.GroupOrderManager = groupOrderManager;
+            }
             order.Id = orderId;
             return order;
         }
