@@ -667,6 +667,120 @@ namespace QuantConnect.Tests.Common.Securities
         }
 
         [Test]
+        public void OneCancelsTheOtherChecksOnlyMostExpensiveLegBuyingPower()
+        {
+            var (portfolio, orderProcessor) = CreateOneCancelsTheOtherPortfolio(10000m);
+            var groupOrderManager = new GroupOrderManager(1, 2, 50m) { ComboType = ComboType.OneCancelsTheOther };
+
+            // the "most expensive leg only" shortcut only applies to same-symbol legs, where comparing notional
+            // value is meaningful; mixed-symbol/mixed-security-type groups fall back to a conservative per-leg
+            // check instead, since an option's premium is not its margin requirement (see the sibling test below)
+            // AAPL leg: 50 shares at 100 = 5,000
+            var cheaperLeg = CreateOneCancelsTheOtherLeg(orderProcessor, OrderType.Limit, Symbols.AAPL, 50m, 0m, 100m, 1, groupOrderManager);
+            // AAPL leg: 60 shares at 100 = 6,000, the most expensive leg
+            var moreExpensiveLeg = CreateOneCancelsTheOtherLeg(orderProcessor, OrderType.StopMarket, Symbols.AAPL, 60m, 100m, 0m, 2, groupOrderManager);
+
+            // the sum of both legs (11,000) exceeds the 10,000 cash available, but a same-symbol OCO group only
+            // needs to afford its single most expensive leg (6,000), since exactly one leg can ever execute
+            var result = portfolio.HasSufficientBuyingPowerForOrder(new List<Order> { cheaperLeg, moreExpensiveLeg });
+
+            Assert.IsTrue(result.IsSufficient, result.Reason);
+        }
+
+        [Test]
+        public void OneCancelsTheOtherRejectsWhenMostExpensiveLegAloneIsUnaffordable()
+        {
+            var (portfolio, orderProcessor) = CreateOneCancelsTheOtherPortfolio(5500m);
+            var groupOrderManager = new GroupOrderManager(1, 2, 50m) { ComboType = ComboType.OneCancelsTheOther };
+
+            // AAPL leg: 50 shares at 100 = 5,000
+            var cheaperLeg = CreateOneCancelsTheOtherLeg(orderProcessor, OrderType.Limit, Symbols.AAPL, 50m, 0m, 100m, 1, groupOrderManager);
+            // AAPL leg: 60 shares at 100 = 6,000, the most expensive leg
+            var moreExpensiveLeg = CreateOneCancelsTheOtherLeg(orderProcessor, OrderType.StopMarket, Symbols.AAPL, 60m, 100m, 0m, 2, groupOrderManager);
+
+            // even the most expensive leg alone (6,000) is more than the 5,500 cash available
+            var result = portfolio.HasSufficientBuyingPowerForOrder(new List<Order> { cheaperLeg, moreExpensiveLeg });
+
+            Assert.IsFalse(result.IsSufficient);
+        }
+
+        [Test]
+        public void OneCancelsTheOtherWithDifferentSymbolsChecksEveryLegConservatively()
+        {
+            // AAPL alone ($5,000) is affordable, but there is no valid common notional metric across different
+            // symbols/security types (an option's premium is not its margin requirement), so a mixed-symbol OCO
+            // group conservatively requires every leg to individually pass, same as an ungrouped order list
+            var (portfolio, orderProcessor) = CreateOneCancelsTheOtherPortfolio(5500m);
+            var groupOrderManager = new GroupOrderManager(1, 2, 50m) { ComboType = ComboType.OneCancelsTheOther };
+
+            // AAPL leg: 50 shares at 100 = 5,000, affordable alone
+            var affordableLeg = CreateOneCancelsTheOtherLeg(orderProcessor, OrderType.Limit, Symbols.AAPL, 50m, 0m, 100m, 1, groupOrderManager);
+            // MSFT leg: 60 shares at 100 = 6,000, not affordable alone even though it is not the largest notional
+            // once compared using an invalid cross-symbol metric
+            var unaffordableLeg = CreateOneCancelsTheOtherLeg(orderProcessor, OrderType.StopMarket, Symbols.MSFT, 60m, 100m, 0m, 2, groupOrderManager);
+
+            var result = portfolio.HasSufficientBuyingPowerForOrder(new List<Order> { affordableLeg, unaffordableLeg });
+
+            Assert.IsFalse(result.IsSufficient);
+        }
+
+        [Test]
+        public void OneCancelsTheOtherWithSameSymbolLegsSkipsPositionGroupPath()
+        {
+            var (portfolio, orderProcessor) = CreateOneCancelsTheOtherPortfolio(10000m);
+            var groupOrderManager = new GroupOrderManager(1, 2, 50m) { ComboType = ComboType.OneCancelsTheOther };
+
+            // two legs on the same symbol would break the position-groups per-symbol dictionary if resolved as a
+            // regular combo; the OCO branch must run before the position-group path and never reach it
+            var takeProfitLeg = CreateOneCancelsTheOtherLeg(orderProcessor, OrderType.Limit, Symbols.AAPL, 50m, 0m, 95m, 1, groupOrderManager);
+            var stopLossLeg = CreateOneCancelsTheOtherLeg(orderProcessor, OrderType.StopMarket, Symbols.AAPL, 50m, 105m, 0m, 2, groupOrderManager);
+
+            HasSufficientBuyingPowerForOrderResult result = null;
+            Assert.DoesNotThrow(() => result = portfolio.HasSufficientBuyingPowerForOrder(new List<Order> { takeProfitLeg, stopLossLeg }));
+            Assert.IsTrue(result.IsSufficient);
+        }
+
+        private (SecurityPortfolioManager Portfolio, OrderProcessor OrderProcessor) CreateOneCancelsTheOtherPortfolio(decimal cash)
+        {
+            var securities = new SecurityManager(TimeKeeper);
+            var transactions = new SecurityTransactionManager(null, securities);
+            var orderProcessor = new OrderProcessor();
+            transactions.SetOrderProcessor(orderProcessor);
+            var portfolio = new SecurityPortfolioManager(securities, transactions, new AlgorithmSettings());
+            portfolio.CashBook[Currencies.USD].SetAmount(cash);
+
+            foreach (var symbol in new[] { Symbols.AAPL, Symbols.MSFT })
+            {
+                securities.Add(symbol, new Security(
+                    SecurityExchangeHours,
+                    CreateTradeBarDataConfig(SecurityType.Equity, symbol),
+                    new Cash(Currencies.USD, 0, 1m),
+                    SymbolProperties.GetDefault(Currencies.USD),
+                    ErrorCurrencyConverter.Instance,
+                    RegisteredSecurityDataTypesProvider.Null,
+                    new SecurityCache()
+                ));
+                securities[symbol].SetLeverage(1m);
+                securities[symbol].SetMarketPrice(new TradeBar { Time = DateTime.Now, Value = 100m });
+            }
+
+            return (portfolio, orderProcessor);
+        }
+
+        private static Order CreateOneCancelsTheOtherLeg(OrderProcessor orderProcessor, OrderType orderType, Symbol symbol, decimal quantity,
+            decimal stopPrice, decimal limitPrice, int orderId, GroupOrderManager groupOrderManager)
+        {
+            var request = new SubmitOrderRequest(orderType, SecurityType.Equity, symbol, quantity, stopPrice, limitPrice,
+                DateTime.UtcNow, "", groupOrderManager: groupOrderManager);
+            request.SetOrderId(orderId);
+
+            var order = Order.CreateOrder(request);
+            orderProcessor.AddOrder(order);
+            orderProcessor.AddTicket(new OrderTicket(null, request));
+            return order;
+        }
+
+        [Test]
         public void BuyingSellingFuturesDoesntAddToCash()
         {
             var securities = new SecurityManager(TimeKeeper);

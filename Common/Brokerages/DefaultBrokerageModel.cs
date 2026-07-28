@@ -361,6 +361,16 @@ namespace QuantConnect.Brokerages
         }
 
         /// <summary>
+        /// True when this brokerage can place order groups with the given execution type
+        /// </summary>
+        /// <param name="comboType">The execution type of the order group</param>
+        /// <returns>True if the brokerage supports the given order group execution type</returns>
+        public virtual bool SupportsGroupExecution(ComboType comboType)
+        {
+            return comboType == ComboType.Combo;
+        }
+
+        /// <summary>
         /// Gets a new margin interest rate model for the security
         /// </summary>
         /// <param name="security">The security to get a margin interest rate model for</param>

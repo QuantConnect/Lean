@@ -281,6 +281,44 @@ namespace QuantConnect.Tests.Common.Securities
         }
 
         [Test]
+        public void OneCancelsTheOtherSellPairDoesNotDoubleCountReservedQuantity()
+        {
+            // holding exactly 1 BTC: a sell-take-profit + sell-stop-loss OCO pair for the whole position must not
+            // be rejected for insufficient buying power. Without the sibling exclusion in
+            // CashBuyingPowerModel.GetOpenOrdersReservedQuantity, the stop-loss leg would see the take-profit
+            // leg's identical -1 BTC quantity as already reserved and double-count it
+            _portfolio.SetCash(0);
+            _portfolio.CashBook["BTC"].SetAmount(1m);
+
+            _btcusd = _algorithm.AddCrypto("BTCUSD");
+            _btcusd.SetLocalTimeKeeper(_timeKeeper);
+            _btcusd.SetMarketPrice(new Tick { Value = 15000m });
+            _algorithm.SetFinishedWarmingUp();
+
+            var groupOrderManager = new GroupOrderManager(1, 2, -1m) { ComboType = ComboType.OneCancelsTheOther };
+
+            // take-profit leg: sell the full 1 BTC position, already resting as an open order
+            var takeProfitRequest = new SubmitOrderRequest(OrderType.Limit, _btcusd.Type, _btcusd.Symbol, -1m, 0, 20000m,
+                DateTime.UtcNow, "", groupOrderManager: groupOrderManager);
+            takeProfitRequest.SetOrderId(1);
+            var takeProfitLeg = Order.CreateOrder(takeProfitRequest);
+            takeProfitLeg.Status = OrderStatus.Submitted;
+
+            // stop-loss leg: sell the full 1 BTC position, about to be checked for buying power
+            var stopLossRequest = new SubmitOrderRequest(OrderType.StopMarket, _btcusd.Type, _btcusd.Symbol, -1m, 10000m, 0,
+                DateTime.UtcNow, "", groupOrderManager: groupOrderManager);
+            stopLossRequest.SetOrderId(2);
+            var stopLossLeg = Order.CreateOrder(stopLossRequest);
+
+            var orderProcessor = new FakeOrderProcessor();
+            orderProcessor.AddOrder(takeProfitLeg);
+            _algorithm.Transactions.SetOrderProcessor(orderProcessor);
+
+            var result = _buyingPowerModel.HasSufficientBuyingPowerForOrder(_portfolio, _btcusd, stopLossLeg);
+            Assert.IsTrue(result.IsSufficient, result.Reason);
+        }
+
+        [Test]
         public void MarketBuyBtcWithUsdRequiresUsdInPortfolioPlusFees()
         {
             _portfolio.SetCash(20000);

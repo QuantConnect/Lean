@@ -1592,6 +1592,45 @@ namespace QuantConnect.Tests.Algorithm
         }
 
         [Test]
+        public void LiquidateCancelsOpenOneCancelsTheOtherGroupOnlyOnce()
+        {
+            Security msft;
+            var algo = GetAlgorithm(out msft, 1, 0);
+            var aapl = algo.AddEquity("AAPL");
+            // keep the exchange always open so the closing trade is a regular market order, not a MarketOnOpen/Close conversion
+            msft.Exchange.SetMarketHours(new List<MarketHoursSegment> { MarketHoursSegment.OpenAllDay() });
+            aapl.Exchange.SetMarketHours(new List<MarketHoursSegment> { MarketHoursSegment.OpenAllDay() });
+            Update(msft, 25);
+            Update(aapl, 25);
+            algo.Portfolio.SetCash(1000000);
+
+            // other, unrelated holdings besides the OCO group
+            msft.Holdings.SetHoldings(25, 100);
+            aapl.Holdings.SetHoldings(25, 50);
+
+            // an open OCO group with 2 legs on MSFT
+            var ocoTickets = algo.OneCancelsTheOtherOrder(Symbols.MSFT, -50m, limitPrice: 30m, stopPrice: 20m);
+            foreach (var ticket in ocoTickets)
+            {
+                Assert.AreNotEqual(OrderStatus.Invalid, ticket.Status);
+                // make the leg visible to Transactions.GetOpenOrders(), which Liquidate() reads
+                _fakeOrderProcessor.AddOrder(Order.CreateOrder(ticket.SubmitRequest));
+            }
+
+            List<OrderTicket> liquidatedTickets = null;
+            Assert.DoesNotThrow(() => liquidatedTickets = algo.Liquidate());
+
+            // only one of the 2 open legs should have actually received a cancel request: canceling one
+            // leg of a group cancels every leg, so Liquidate() must skip the sibling instead of canceling it too
+            var canceledLegsCount = ocoTickets.Count(ticket => ticket.CancelRequest != null);
+            Assert.AreEqual(1, canceledLegsCount);
+
+            // both symbols still got their closing market order
+            Assert.IsTrue(liquidatedTickets.Any(x => x.Symbol == Symbols.MSFT));
+            Assert.IsTrue(liquidatedTickets.Any(x => x.Symbol == Symbols.AAPL));
+        }
+
+        [Test]
         public void MarketOrdersAreSupportedForFuturesOnExtendedMarketHours()
         {
             var algo = GetAlgorithm(out _, 1, 0);
@@ -1800,6 +1839,64 @@ namespace QuantConnect.Tests.Algorithm
                     leg.OrderPrice = 10;
                     return leg;
                 }).ToList(), 1));
+            }
+        }
+
+        [Test]
+        public void OneCancelsTheOtherOrderReturnsLimitAndStopTicketsSharingGroupManager()
+        {
+            Security msft;
+            var algo = GetAlgorithm(out msft, 1, 0);
+            Update(msft, 25);
+
+            var tickets = algo.OneCancelsTheOtherOrder(Symbols.MSFT, -50m, limitPrice: 30m, stopPrice: 20m);
+
+            Assert.AreEqual(2, tickets.Count);
+            foreach (var ticket in tickets)
+            {
+                Assert.AreNotEqual(OrderStatus.Invalid, ticket.Status);
+                Assert.AreEqual(Symbols.MSFT, ticket.Symbol);
+                Assert.AreEqual(-50m, ticket.Quantity);
+            }
+
+            // the limit leg comes first, the stop market leg second, each with its own price
+            Assert.AreEqual(OrderType.Limit, tickets[0].OrderType);
+            Assert.AreEqual(30m, tickets[0].SubmitRequest.LimitPrice);
+            Assert.AreEqual(OrderType.StopMarket, tickets[1].OrderType);
+            Assert.AreEqual(20m, tickets[1].SubmitRequest.StopPrice);
+
+            var groupOrderManager = tickets[0].SubmitRequest.GroupOrderManager;
+            Assert.IsNotNull(groupOrderManager);
+            Assert.AreEqual(ComboType.OneCancelsTheOther, groupOrderManager.ComboType);
+            Assert.AreEqual(2, groupOrderManager.Count);
+            Assert.AreSame(groupOrderManager, tickets[1].SubmitRequest.GroupOrderManager);
+        }
+
+        [Test]
+        public void OneCancelsTheOtherOrderWithZeroQuantityThrowsArgumentException()
+        {
+            var algo = GetAlgorithm(out var msft, 1, 0);
+            Update(msft, 25);
+
+            Assert.Throws<ArgumentException>(() => algo.OneCancelsTheOtherOrder(Symbols.MSFT, 0m, limitPrice: 30m, stopPrice: 20m));
+        }
+
+        [Test]
+        public void OneCancelsTheOtherOrderAppliesTagAndPropertiesToBothLegs()
+        {
+            Security msft;
+            var algo = GetAlgorithm(out msft, 1, 0);
+            Update(msft, 25);
+
+            var groupProperties = new OrderProperties { TimeInForce = TimeInForce.GoodTilCanceled };
+            var tickets = algo.OneCancelsTheOtherOrder(Symbols.MSFT, -50m, limitPrice: 30m, stopPrice: 20m,
+                tag: "group-tag", orderProperties: groupProperties);
+
+            foreach (var ticket in tickets)
+            {
+                Assert.AreNotEqual(OrderStatus.Invalid, ticket.Status);
+                Assert.AreEqual("group-tag", ticket.SubmitRequest.Tag);
+                Assert.AreEqual(TimeInForce.GoodTilCanceled, ticket.SubmitRequest.OrderProperties.TimeInForce);
             }
         }
 

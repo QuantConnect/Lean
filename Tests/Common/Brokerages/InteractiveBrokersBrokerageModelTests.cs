@@ -229,6 +229,21 @@ namespace QuantConnect.Tests.Common.Brokerages
             Assert.IsTrue(canSubmit);
         }
 
+        [TestCase(ComboType.Combo, true)]
+        [TestCase(ComboType.OneCancelsTheOther, true)]
+        public void SupportsGroupExecution(ComboType comboType, bool expected)
+        {
+            Assert.That(_interactiveBrokersBrokerageModel.SupportsGroupExecution(comboType), Is.EqualTo(expected));
+        }
+
+        [Test]
+        public void SupportsGroupExecutionAddsOneCancelsTheOtherOnTopOfTheDefault()
+        {
+            // the default model rejects OneCancelsTheOther; IB's override is what turns it on
+            Assert.IsFalse(new DefaultBrokerageModel().SupportsGroupExecution(ComboType.OneCancelsTheOther));
+            Assert.IsTrue(_interactiveBrokersBrokerageModel.SupportsGroupExecution(ComboType.OneCancelsTheOther));
+        }
+
         private static List<Security> GetUnsupportedOptions()
         {
             // Index option
