@@ -17,6 +17,7 @@
 using System;
 using System.Collections.Generic;
 using NUnit.Framework;
+using Python.Runtime;
 using QuantConnect.Data;
 using QuantConnect.Data.Consolidators;
 using QuantConnect.Data.Market;
@@ -377,6 +378,46 @@ namespace QuantConnect.Tests.Common.Data
             Assert.IsNotNull(consolidated);
             Assert.AreEqual(Symbols.SPY, consolidated.Symbol);
             Assert.AreEqual(expectedEndTime, consolidated.EndTime);
+        }
+
+        [Test]
+        public void PyObjectConstructorThrowsDescriptiveErrorForUnsupportedPeriodType()
+        {
+            using (Py.GIL())
+            {
+                // A Resolution enum value is neither a timedelta nor a callable returning CalendarInfo,
+                // so the consolidator cannot create a period specification from it
+                using var pyResolution = Resolution.Daily.ToPython();
+                var exception = Assert.Throws<ArgumentException>(() => new QuoteBarConsolidator(pyResolution));
+
+                // The error must state the source value and its type and list the available constructor overloads.
+                // The value rendering is case-insensitive to support both pythonnet enum str() conventions ("Daily" and "DAILY")
+                Assert.That(exception.Message, Does.Contain("Daily").IgnoreCase);
+                Assert.That(exception.Message, Does.Contain("Resolution"));
+                Assert.That(exception.Message, Does.Contain("The following overloads are available:"));
+                Assert.That(exception.Message, Does.Contain("QuoteBarConsolidator(period: timedelta"));
+                Assert.That(exception.Message, Does.Contain("QuoteBarConsolidator(max_count: int"));
+                // The PyObject overload that just rejected the value is not hinted
+                Assert.That(exception.Message, Does.Not.Contain("pyfuncobj"));
+                Assert.That(exception.InnerException, Is.TypeOf<InvalidCastException>());
+            }
+        }
+
+        [Test]
+        public void QuoteBarConsolidatorFromResolutionCreatesConsolidatorWithExpectedPeriod()
+        {
+            var time = new DateTime(2015, 04, 13);
+            QuoteBar consolidated = null;
+            using var consolidator = QuoteBarConsolidator.FromResolution(Resolution.Minute);
+            consolidator.DataConsolidated += (sender, bar) => consolidated = bar;
+
+            consolidator.Update(new QuoteBar { Time = time, Period = Time.OneSecond });
+            Assert.IsNull(consolidated);
+
+            consolidator.Update(new QuoteBar { Time = time.AddMinutes(1), Period = Time.OneSecond });
+            Assert.IsNotNull(consolidated);
+            Assert.AreEqual(Time.OneMinute, consolidated.Period);
+            Assert.AreEqual(time, consolidated.Time);
         }
 
         private static void PushBarsThrough(int barCount, TimeSpan period, TradeBarConsolidator consolidator, ref DateTime time)

@@ -59,7 +59,7 @@ namespace QuantConnect.Data
             {
                 if (value is PyObject pyobject)
                 {
-                    Time = pyobject.As<DateTime>();
+                    Time = ConvertPropertyValue<DateTime>(pyobject, name);
                 }
                 else
                 {
@@ -70,7 +70,7 @@ namespace QuantConnect.Data
             {
                 if (value is PyObject pyobject)
                 {
-                    EndTime = pyobject.As<DateTime>();
+                    EndTime = ConvertPropertyValue<DateTime>(pyobject, name);
                 }
                 else
                 {
@@ -81,7 +81,7 @@ namespace QuantConnect.Data
             {
                 if (value is PyObject pyobject)
                 {
-                    Value = pyobject.As<decimal>();
+                    Value = ConvertPropertyValue<decimal>(pyobject, name);
                 }
                 else
                 {
@@ -98,7 +98,7 @@ namespace QuantConnect.Data
                 {
                     if (value is PyObject pyobject)
                     {
-                        Symbol = pyobject.As<Symbol>();
+                        Symbol = ConvertPropertyValue<Symbol>(pyobject, name);
                     }
                     else
                     {
@@ -195,6 +195,23 @@ namespace QuantConnect.Data
                 clone._storage.Add(kvp);
             }
             return clone;
+        }
+
+        /// <summary>
+        /// Converts the given Python value into the type expected by the reserved property with the given name
+        /// </summary>
+        private static T ConvertPropertyValue<T>(PyObject value, string name)
+        {
+            try
+            {
+                return value.As<T>();
+            }
+            catch (InvalidCastException exception)
+            {
+                throw new ArgumentException(
+                    $"Unable to set the '{name}' property from {value.ToDisplayString()}: it is not a supported {typeof(T).Name} value.",
+                    exception);
+            }
         }
     }
 }

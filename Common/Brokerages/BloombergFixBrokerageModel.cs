@@ -37,6 +37,7 @@ namespace QuantConnect.Brokerages
         {
             OrderType.Market,
             OrderType.MarketOnOpen,
+            OrderType.MarketOnClose,
             OrderType.Limit,
             OrderType.StopMarket,
             OrderType.StopLimit,

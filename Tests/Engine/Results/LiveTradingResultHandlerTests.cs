@@ -16,14 +16,22 @@
 
 using System;
 using System.Linq;
+using System.Threading;
+using System.Diagnostics;
 using NUnit.Framework;
+using QuantConnect.Orders;
 using QuantConnect.Packets;
+using QuantConnect.Logging;
 using QuantConnect.Securities;
 using QuantConnect.Interfaces;
+using QuantConnect.Data.Market;
+using QuantConnect.Orders.Fees;
+using QuantConnect.Configuration;
 using QuantConnect.Lean.Engine.Results;
 using QuantConnect.Lean.Engine.DataFeeds;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Tests.Engine.DataFeeds;
+using QuantConnect.Brokerages.Backtesting;
 using QuantConnect.Lean.Engine.TransactionHandlers;
 using QuantConnect.Tests.Common.Data.UniverseSelection;
 using QuantConnect.Data.Custom.IconicTypes;
@@ -313,9 +321,139 @@ namespace QuantConnect.Tests.Engine.Results
                 .Select(v => (v.Time, v.Open, v.High, v.Low, v.Close)).ToList());
         }
 
+        [Test]
+        public void HoldingsChangeForcesResultsStoreOnceSettled()
+        {
+            var settleDelay = TimeSpan.FromSeconds(2);
+            Config.Set("holdings-changed-store-delay", settleDelay.TotalSeconds.ToStringInvariant());
+            using var api = new Api.Api();
+            using var messaging = new QuantConnect.Messaging.Messaging();
+            var resultHandler = new TestableForceStoreOnSettledHoldingsResultHandler();
+
+            try
+            {
+                var algorithm = new AlgorithmStub(createDataManager: false);
+                var dataManager = new DataManagerStub(new TestDataFeed(), algorithm);
+                algorithm.SubscriptionManager.SetDataManager(dataManager);
+                // live algorithms run on wall-clock time, which the order event times the monitor tracks are in sync with
+                algorithm.SetDateTime(DateTime.UtcNow);
+                // normally initialized by the setup handlers, required for statistics generation
+                algorithm.Settings.TradingDaysPerYear = 365;
+                // crypto markets are always open, so the market orders fill right away regardless of when the test runs
+                var btc = algorithm.AddCrypto("BTCUSD", Resolution.Minute, Market.Coinbase);
+                btc.SetFeeModel(new ConstantFeeModel(0));
+                // the price time must be fresh relative to the order submission time (algorithm utc time) for the fills to happen
+                btc.SetMarketPrice(new TradeBar(algorithm.UtcTime.ConvertFromUtc(btc.Exchange.TimeZone), btc.Symbol, 100, 100, 100, 100, 100));
+                algorithm.PostInitialize();
+
+                var transactionHandler = new BacktestingTransactionHandler();
+                using var brokerage = new BacktestingBrokerage(algorithm);
+                transactionHandler.Initialize(algorithm, brokerage, resultHandler);
+                algorithm.Transactions.SetOrderProcessor(transactionHandler);
+
+                resultHandler.Initialize(new(new LiveNodePacket(), messaging, api, transactionHandler, null));
+                resultHandler.SetAlgorithm(algorithm, 100000);
+                algorithm.SetLocked();
+
+                // places an order for the given quantity, changing the holdings when it fills
+                OrderTicket Trade(decimal quantity, OrderType orderType = OrderType.Market, decimal limitPrice = 0)
+                {
+                    // keep the algorithm clock in sync with wall-clock time like in live trading,
+                    // so the order events are stamped with current times
+                    algorithm.SetDateTime(DateTime.UtcNow);
+                    var ticket = algorithm.Transactions.ProcessRequest(new SubmitOrderRequest(orderType, btc.Symbol.SecurityType,
+                        btc.Symbol, quantity, 0, limitPrice, algorithm.UtcTime, string.Empty));
+                    brokerage.Scan();
+                    return ticket;
+                }
+
+                var expectedStores = 1;
+                // the first update pass always stores because the scheduled store is due right away
+                Assert.IsTrue(resultHandler.WaitForStore(expectedStores, TimeSpan.FromSeconds(30)), "Initial scheduled store did not happen");
+
+                // without holdings changes, no store is forced even after the settle delay elapses
+                Assert.IsFalse(resultHandler.WaitForStore(expectedStores + 1, settleDelay + TimeSpan.FromSeconds(1)), "A store happened without holdings changes");
+
+                // a position is opened. The stopwatch is started before trading so the elapsed time
+                // is measured from no later than the order fill time
+                var stopwatch = Stopwatch.StartNew();
+                Trade(10);
+
+                // no store is forced before the holdings settle
+                Assert.IsFalse(resultHandler.WaitForStore(expectedStores + 1, TimeSpan.FromSeconds(1)), "A store was forced before the holdings settled");
+                // but once they settle, a store is forced without waiting for the scheduled one
+                Assert.IsTrue(resultHandler.WaitForStore(++expectedStores, settleDelay + TimeSpan.FromSeconds(5)), "No store was forced after the opened position settled");
+                Assert.GreaterOrEqual(stopwatch.Elapsed, settleDelay);
+
+                // the position is increased
+                Trade(10);
+                Assert.IsTrue(resultHandler.WaitForStore(++expectedStores, settleDelay + TimeSpan.FromSeconds(5)), "No store was forced after the increased position settled");
+
+                // the position is reduced
+                Trade(-5);
+                Assert.IsTrue(resultHandler.WaitForStore(++expectedStores, settleDelay + TimeSpan.FromSeconds(5)), "No store was forced after the reduced position settled");
+
+                // order events without fills don't force stores: a limit order far from the market price
+                // is submitted and then canceled without ever changing the holdings
+                var ticket = Trade(1, OrderType.Limit, limitPrice: 1);
+                ticket.Cancel();
+                Assert.IsFalse(resultHandler.WaitForStore(expectedStores + 1, settleDelay + TimeSpan.FromSeconds(1)), "A store was forced for order events without fills");
+
+                // the position is liquidated
+                Trade(-15);
+                Assert.IsTrue(resultHandler.WaitForStore(++expectedStores, settleDelay + TimeSpan.FromSeconds(5)), "No store was forced after the liquidation settled");
+
+                // a single settled change forces a single store
+                Assert.IsFalse(resultHandler.WaitForStore(expectedStores + 1, settleDelay + TimeSpan.FromSeconds(1)), "More than one store was forced for a single holdings change");
+            }
+            finally
+            {
+                resultHandler.Exit();
+                Config.Reset();
+            }
+        }
+
         private class TestableLiveTradingResultHandler : LiveTradingResultHandler
         {
             public void PublicTrimCharts(DateTime utcNow) => TrimCharts(utcNow);
+        }
+
+        private class TestableForceStoreOnSettledHoldingsResultHandler : LiveTradingResultHandler
+        {
+            private int _storeCount;
+
+            // speed up the update loop so the test can use short settle delays
+            protected override TimeSpan MainUpdateInterval => TimeSpan.FromMilliseconds(100);
+
+            public TestableForceStoreOnSettledHoldingsResultHandler()
+            {
+                // keep the scheduled store out of the way so only forced stores happen after the initial one
+                ChartUpdateInterval = TimeSpan.FromMinutes(10);
+            }
+
+            public bool WaitForStore(int count, TimeSpan timeout)
+            {
+                var start = DateTime.UtcNow;
+                while (DateTime.UtcNow - start < timeout)
+                {
+                    if (Interlocked.CompareExchange(ref _storeCount, 0, 0) >= count)
+                    {
+                        return true;
+                    }
+                    Thread.Sleep(50);
+                }
+                return Interlocked.CompareExchange(ref _storeCount, 0, 0) >= count;
+            }
+
+            protected override void StoreResult(Packet packet)
+            {
+                Interlocked.Increment(ref _storeCount);
+            }
+
+            public override string SaveLogs(string id, List<LogEntry> logs)
+            {
+                return string.Empty;
+            }
         }
 
         private class TestDataFeed : IDataFeed

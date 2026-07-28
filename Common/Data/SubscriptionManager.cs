@@ -47,7 +47,7 @@ namespace QuantConnect.Data
         ///     Returns an IEnumerable of Subscriptions
         /// </summary>
         /// <remarks>Will not return internal subscriptions</remarks>
-        public IEnumerable<SubscriptionDataConfig> Subscriptions => _subscriptionManager.SubscriptionManagerSubscriptions.Where(config => !config.IsInternalFeed);
+        public IEnumerable<SubscriptionDataConfig> Subscriptions => _subscriptionManager.SubscriptionManagerSubscriptions.Where(config => !config.IsInternalFeed).Memoize();
 
         /// <summary>
         ///     The different <see cref="TickType" /> each <see cref="SecurityType" /> supports

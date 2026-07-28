@@ -141,15 +141,25 @@ namespace QuantConnect.Lean.Engine.Storage
         /// <param name="algorithmMode">The algorithm mode</param>
         public virtual void Initialize(int userId, int projectId, string userToken, Controls controls, AlgorithmMode algorithmMode)
         {
-            AlgorithmStorageRoot = StorageRoot();
-
-            // create the root path if it does not exist
-            var directoryInfo = FileHandler.CreateDirectory(AlgorithmStorageRoot);
-            // full name will return a normalized path which is later easier to compare
-            AlgorithmStorageRoot = directoryInfo.FullName;
-
             Controls = controls;
             _algorithmMode = algorithmMode;
+
+            AlgorithmStorageRoot = StorageRoot();
+
+            // if the user has no storage access at all there's no point in creating the folder, which might even fail due to missing permissions
+            var storageAccess = Controls.StorageAccess;
+            if (storageAccess == null || storageAccess.Read || storageAccess.Write || storageAccess.Delete)
+            {
+                // create the root path if it does not exist
+                var directoryInfo = FileHandler.CreateDirectory(AlgorithmStorageRoot);
+                // full name will return a normalized path which is later easier to compare
+                AlgorithmStorageRoot = directoryInfo.FullName;
+            }
+            else
+            {
+                // no storage access so we don't create the folder, but still normalize the path so it's consistent for later comparisons
+                AlgorithmStorageRoot = Path.GetFullPath(AlgorithmStorageRoot);
+            }
 
             // if <= 0 we disable periodic persistence and make it synchronous
             if (Controls.PersistenceIntervalSeconds > 0)
@@ -157,7 +167,7 @@ namespace QuantConnect.Lean.Engine.Storage
                 _persistenceTimer = new Timer(_ => Persist(), null, Controls.PersistenceIntervalSeconds * 1000, Timeout.Infinite);
             }
 
-            Log.Trace($"LocalObjectStore.Initialize(): Storage Root: {directoryInfo.FullName}. StorageFileCount {controls.StorageFileCount}. StorageLimit {BytesToMb(controls.StorageLimit)}MB. StoragePermissions {Controls.StorageAccess}");
+            Log.Trace($"LocalObjectStore.Initialize(): Storage Root: {AlgorithmStorageRoot}. StorageFileCount {controls.StorageFileCount}. StorageLimit {BytesToMb(controls.StorageLimit)}MB. StoragePermissions {Controls.StorageAccess}");
         }
 
         /// <summary>

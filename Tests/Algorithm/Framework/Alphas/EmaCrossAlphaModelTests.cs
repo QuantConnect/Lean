@@ -53,7 +53,7 @@ namespace QuantConnect.Tests.Algorithm.Framework.Alphas
 
         protected override string GetExpectedModelName(IAlphaModel model)
         {
-            return $"{nameof(EmaCrossAlphaModel)}(12,26,Daily)";
+            return $"{nameof(EmaCrossAlphaModel)}(12,26,{GetEnumString(Resolution.Daily, model)})";
         }
 
         [Test]

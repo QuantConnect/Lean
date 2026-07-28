@@ -134,7 +134,7 @@ namespace QuantConnect.Securities.CurrencyConversion
         /// <summary>
         /// The securities which the conversion rate is based on
         /// </summary>
-        public IEnumerable<Security> ConversionRateSecurities => _steps.Select(step => step.RateSecurity);
+        public IEnumerable<Security> ConversionRateSecurities => _steps.Select(step => step.RateSecurity).Memoize();
 
         /// <summary>
         /// Initializes a new instance of the <see cref="SecurityCurrencyConversion"/> class.

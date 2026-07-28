@@ -21,6 +21,7 @@ using System.Threading.Tasks;
 using NodaTime;
 using NUnit.Framework;
 using Python.Runtime;
+using QuantConnect.Algorithm;
 using QuantConnect.Data;
 using QuantConnect.Data.Consolidators;
 using QuantConnect.Data.Market;
@@ -28,6 +29,7 @@ using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Logging;
 using QuantConnect.Statistics;
 using QuantConnect.Tests.Engine.DataFeeds;
+using QuantConnect.Util;
 
 namespace QuantConnect.Tests.Common.Data
 {
@@ -51,6 +53,23 @@ namespace QuantConnect.Tests.Common.Data
             {
                 Assert.IsTrue(types[i].Item2 == expectedTickTypes[i]);
             }
+        }
+
+        [Test]
+        public void SubscriptionsAreMemoizedExposingCount()
+        {
+            var algorithm = new QCAlgorithm();
+            algorithm.SubscriptionManager.SetDataManager(new DataManagerStub(algorithm));
+            algorithm.AddEquity("SPY");
+            algorithm.AddForex("EURUSD");
+
+            var subscriptions = algorithm.SubscriptionManager.Subscriptions;
+
+            // memoized so it exposes a Count property, which also enables len() in Python through Python.NET
+            Assert.IsInstanceOf<MemoizingEnumerable<SubscriptionDataConfig>>(subscriptions);
+            var memoizedSubscriptions = (MemoizingEnumerable<SubscriptionDataConfig>)subscriptions;
+            Assert.Greater(memoizedSubscriptions.Count, 0);
+            Assert.AreEqual(subscriptions.Count(), memoizedSubscriptions.Count);
         }
 
         [Test]

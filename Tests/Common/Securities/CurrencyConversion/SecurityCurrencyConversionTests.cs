@@ -22,6 +22,7 @@ using QuantConnect.Data.Market;
 using QuantConnect.Securities;
 using QuantConnect.Securities.CurrencyConversion;
 using QuantConnect.Tests.Engine.DataFeeds;
+using QuantConnect.Util;
 
 namespace QuantConnect.Tests.Common.Securities.CurrencyConversion
 {
@@ -89,6 +90,34 @@ namespace QuantConnect.Tests.Common.Securities.CurrencyConversion
             Assert.AreEqual(createdSecurities, securities);
             Assert.AreEqual(Symbols.BTCUSD, securities[0].Symbol);
             Assert.AreEqual(Symbols.EURUSD, securities[1].Symbol);
+        }
+
+        [Test]
+        public void ConversionRateSecuritiesAreMemoizedExposingCount()
+        {
+            var currencyConversion = SecurityCurrencyConversion.LinearSearch(
+                "BTC",
+                "EUR",
+                new List<Security>(0),
+                new List<Symbol> { Symbols.BTCUSD, Symbols.EURUSD },
+                CreateSecurity);
+
+            var securities = currencyConversion.ConversionRateSecurities;
+
+            // memoized so it exposes a Count property, which also enables len() in Python through Python.NET
+            Assert.IsInstanceOf<MemoizingEnumerable<Security>>(securities);
+            Assert.AreEqual(2, ((MemoizingEnumerable<Security>)securities).Count);
+        }
+
+        [Test]
+        public void ConstantConversionRateSecuritiesAreMemoizedExposingCount()
+        {
+            var currencyConversion = new ConstantCurrencyConversion("EUR", "USD", 1.2m);
+
+            var securities = currencyConversion.ConversionRateSecurities;
+
+            Assert.IsInstanceOf<MemoizingEnumerable<Security>>(securities);
+            Assert.AreEqual(0, ((MemoizingEnumerable<Security>)securities).Count);
         }
 
         [Test]

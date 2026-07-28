@@ -47,7 +47,7 @@ namespace QuantConnect.Tests.Algorithm.Framework.Alphas
 
         protected override string GetExpectedModelName(IAlphaModel model)
         {
-            return $"{nameof(RsiAlphaModel)}(14,Daily)";
+            return $"{nameof(RsiAlphaModel)}(14,{GetEnumString(Resolution.Daily, model)})";
         }
     }
 }

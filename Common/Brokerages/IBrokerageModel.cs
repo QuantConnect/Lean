@@ -299,6 +299,9 @@ namespace QuantConnect.Brokerages
                 case BrokerageName.Public:
                     return new PublicBrokerageModel(accountType);
 
+                case BrokerageName.BloombergFix:
+                    return new BloombergFixBrokerageModel(accountType);
+
                 default:
                     throw new ArgumentOutOfRangeException(nameof(brokerage), brokerage, null);
             }
@@ -407,6 +410,9 @@ namespace QuantConnect.Brokerages
 
                 case PublicBrokerageModel:
                     return BrokerageName.Public;
+
+                case BloombergFixBrokerageModel _:
+                    return BrokerageName.BloombergFix;
 
                 case DefaultBrokerageModel _:
                     return BrokerageName.Default;

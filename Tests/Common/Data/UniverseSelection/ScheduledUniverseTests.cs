@@ -18,6 +18,7 @@ using System.Collections.Generic;
 using System.Linq;
 using NodaTime;
 using NUnit.Framework;
+using Python.Runtime;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Scheduling;
 using QuantConnect.Securities;
@@ -100,6 +101,21 @@ namespace QuantConnect.Tests.Common.Data.UniverseSelection
 
             // Assert that there are no trigger times because 12PM is after the end time of 11AM
             Assert.IsEmpty(triggerTimes);
+        }
+
+        [Test]
+        public void PythonConstructorThrowsDescriptiveErrorWhenSelectorIsNotAFunction()
+        {
+            using (Py.GIL())
+            {
+                using var pySelector = "not a function".ToPython();
+                var exception = Assert.Throws<ArgumentException>(() =>
+                    new ScheduledUniverse(_dateRules.EveryDay(), _timeRules.At(12, 0), pySelector));
+
+                Assert.That(exception.Message, Does.Contain("'not a function'"));
+                Assert.That(exception.Message, Does.Contain("'str'"));
+                Assert.That(exception.Message, Does.Contain("it is not a function"));
+            }
         }
 
         [Test]

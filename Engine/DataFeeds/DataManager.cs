@@ -49,6 +49,9 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// so we use ConcurrentDictionary with byte value to minimize memory usage
         private readonly Dictionary<SubscriptionDataConfig, SubscriptionDataConfig> _subscriptionManagerSubscriptions = new();
 
+        /// Universe subscription requests that collided with a subscription pending removal, to be re-issued once it is removed
+        private readonly Dictionary<SubscriptionDataConfig, SubscriptionRequest> _pendingUniverseSubscriptionRequests = new();
+
         /// <summary>
         /// Event fired when a new subscription is added
         /// </summary>
@@ -255,6 +258,12 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         /// </summary>
         public void RemoveAllSubscriptions()
         {
+            // drop any parked universe subscription request, we don't want to re-issue them while tearing down
+            lock (_pendingUniverseSubscriptionRequests)
+            {
+                _pendingUniverseSubscriptionRequests.Clear();
+            }
+
             // remove each subscription from our collection
             foreach (var subscription in DataFeedSubscriptions)
             {
@@ -292,6 +301,21 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             {
                 if (!subscription.EndOfStream)
                 {
+                    if (request.IsUniverseSubscription
+                        && subscription.IsUniverseSelectionSubscription
+                        && subscription.Universes.All(universe => universe.DisposeRequested))
+                    {
+                        // a universe was removed and a new one with the same configuration was added in the same
+                        // time step. The stale subscription will be removed by the synchronizer in the next loop,
+                        // after performing one last selection for its disposed universes, so we park the new
+                        // universe's request and will re-issue it once the stale subscription is actually removed
+                        lock (_pendingUniverseSubscriptionRequests)
+                        {
+                            _pendingUniverseSubscriptionRequests[request.Configuration] = request;
+                        }
+                        return true;
+                    }
+
                     // duplicate subscription request
                     subscription.AddSubscriptionRequest(request);
                     // only result true if the existing subscription is internal, we actually added something from the users perspective
@@ -397,6 +421,21 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                         // this can be executed many times and its in the algorithm thread
                         Log.Debug($"DataManager.RemoveSubscription(): Removed {configuration}");
                     }
+
+                    // if a new universe with this same configuration was added while this subscription's removal was
+                    // pending, its subscription request was parked: the slot is now free, so we re-issue it.
+                    // We keep the request's original start time, which was already adjusted to the previous tradable
+                    // date when the universe was added, so that its first selection happens right away
+                    SubscriptionRequest pendingRequest;
+                    lock (_pendingUniverseSubscriptionRequests)
+                    {
+                        _pendingUniverseSubscriptionRequests.Remove(configuration, out pendingRequest);
+                    }
+                    if (pendingRequest != null && !pendingRequest.Universe.DisposeRequested)
+                    {
+                        AddSubscription(pendingRequest);
+                    }
+
                     return true;
                 }
             }

@@ -760,6 +760,103 @@ namespace QuantConnect.Tests.Common.Orders
             Assert.IsTrue(order.TimeInForce is DayTimeInForce);
         }
 
+        [TestCase(true)]
+        [TestCase(false)]
+        public void RoundTripsQuantityAtTheEdgeOfTheDecimalRange(bool positive)
+        {
+            // quantities out of the decimal range are clamped to decimal.MaxValue/MinValue at order creation,
+            // e.g. by the QCAlgorithm double quantity order methods, and must survive the JSON round trip
+            var quantity = positive ? decimal.MaxValue : decimal.MinValue;
+            var expected = new MarketOrder(Symbols.SPY, quantity, new DateTime(2015, 11, 23, 17, 15, 37), "now")
+            {
+                Id = 12345,
+                ContingentId = 123456,
+                BrokerId = new List<string> { "727", "54970" }
+            };
+
+            var actual = TestOrderType(expected);
+
+            Assert.AreEqual(quantity, actual.Quantity);
+        }
+
+        [Test]
+        public void RoundTripsOrderPricesAtTheEdgeOfTheDecimalRange()
+        {
+            var time = new DateTime(2015, 11, 23, 17, 15, 37);
+
+            var stopLimit = TestOrderType(new StopLimitOrder(Symbols.SPY, 100, decimal.MaxValue, decimal.MinValue, time));
+            Assert.AreEqual(decimal.MaxValue, stopLimit.StopPrice);
+            Assert.AreEqual(decimal.MinValue, stopLimit.LimitPrice);
+
+            var trailingStop = TestOrderType(new TrailingStopOrder(Symbols.SPY, 100, decimal.MaxValue, decimal.MaxValue, false, time));
+            Assert.AreEqual(decimal.MaxValue, trailingStop.StopPrice);
+            Assert.AreEqual(decimal.MaxValue, trailingStop.TrailingAmount);
+
+            var limitIfTouched = TestOrderType(new LimitIfTouchedOrder(Symbols.SPY, 100, decimal.MaxValue, decimal.MinValue, time));
+            Assert.AreEqual(decimal.MaxValue, limitIfTouched.TriggerPrice);
+            Assert.AreEqual(decimal.MinValue, limitIfTouched.LimitPrice);
+
+            var marketOrder = TestOrderType(new MarketOrder(Symbols.SPY, 100, time)
+            {
+                OrderSubmissionData = new OrderSubmissionData(decimal.MinValue, decimal.MaxValue, decimal.MaxValue)
+            });
+            Assert.AreEqual(decimal.MinValue, marketOrder.OrderSubmissionData.BidPrice);
+            Assert.AreEqual(decimal.MaxValue, marketOrder.OrderSubmissionData.AskPrice);
+            Assert.AreEqual(decimal.MaxValue, marketOrder.OrderSubmissionData.LastPrice);
+        }
+
+        [TestCase("79228162514264337593543950335.0")] // decimal.MaxValue as serialized to JSON
+        [TestCase("7.9228162514264338E+28")]
+        [TestCase("1E+300")]
+        public void DeserializesQuantityAndPriceTooLargeForDecimal(string value)
+        {
+            foreach (var (jsonValue, expected) in new[] { (value, decimal.MaxValue), ("-" + value, decimal.MinValue) })
+            {
+                var json = $@"{{'Type':0,
+'Id':1,
+'ContingentId':0,
+'BrokerId':['1'],
+'Symbol':{{'Value':'SPY','Permtick':'SPY'}},
+'Price':{jsonValue},
+'Time':'2010-03-04T14:31:00Z',
+'Quantity':{jsonValue},
+'Status':3,
+'TimeInForce':0,
+'Tag':'',
+'SecurityType':1,
+'Direction':0}}";
+
+                var order = DeserializeOrder<MarketOrder>(json);
+
+                Assert.AreEqual(expected, order.Quantity);
+                Assert.AreEqual(expected, order.Price);
+            }
+        }
+
+        [Test]
+        public void DeserializesGroupOrderManagerQuantityTooLargeForDecimal()
+        {
+            const string json = @"{'Type':8,
+'Id':1,
+'ContingentId':0,
+'BrokerId':['1'],
+'Symbol':{'Value':'SPY','Permtick':'SPY'},
+'Price':100.086914328,
+'Time':'2010-03-04T14:31:00Z',
+'Quantity':100.0,
+'Status':3,
+'TimeInForce':0,
+'Tag':'',
+'SecurityType':1,
+'Direction':0,
+'GroupOrderManager':{'Id':1,'Count':2,'Quantity':1E+300,'LimitPrice':-1E+300,'OrderIds':[1,2]}}";
+
+            var order = (ComboMarketOrder)DeserializeOrder<ComboMarketOrder>(json);
+
+            Assert.AreEqual(decimal.MaxValue, order.GroupOrderManager.Quantity);
+            Assert.AreEqual(decimal.MinValue, order.GroupOrderManager.LimitPrice);
+        }
+
         private static T TestOrderType<T>(T expected)
             where T : Order
         {

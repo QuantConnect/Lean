@@ -91,6 +91,7 @@ oanda,XPDUSD,cfd,Palladium,USD,1,0.001,1
 oanda,XPTUSD,cfd,Platinum,USD,1,0.001,1
 
 interactivebrokers,[*],cfd,,USD,1,0.01,1
+interactivebrokers,USDKRW,forex,USD/KRW,KRW,1,0.01,1
 interactivebrokers,IBUS500,cfd,US 500,USD,1,0.01,1
 interactivebrokers,IBUS30,cfd,US 30,USD,1,0.01,1
 interactivebrokers,IBUST100,cfd,US Tech 100,USD,1,0.01,1
@@ -414,6 +415,9 @@ hkfe,HSI,future,Hang Seng Index,HKD,50,1,1.0
 hkfe,[*],index,,HKD,1,0.01,1
 
 ose,[*],index,,JPY,1,0.01,1
+
+krx,KM,future,KOSPI 200 Index Futures,KRW,250000,0.05,1.0
+krx,[*],index,,KRW,1,0.01,1
 
 # Futures options -- will default to Futures contract specs in case no entry exists
 cbot,OZB,futureoption,U.S. Treasury Bond American Futures Options,USD,1000.0,0.015625,1.0

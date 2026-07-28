@@ -16,6 +16,7 @@
 using System;
 using System.Collections.Generic;
 using NUnit.Framework;
+using Python.Runtime;
 using QuantConnect.Data;
 
 namespace QuantConnect.Tests.Common.Data
@@ -67,6 +68,36 @@ namespace QuantConnect.Tests.Common.Data
             Assert.AreEqual(value, data.Value);
             Assert.AreEqual(value, data.Price);
             Assert.AreEqual(symbol, data.Symbol);
+        }
+
+        [Test]
+        public void SettingReservedPropertyWithUnsupportedPythonValueThrowsDescriptiveError()
+        {
+            var data = new DataType();
+            using (Py.GIL())
+            {
+                using var pyString = "not a valid value".ToPython();
+                using var pyInt = 123.ToPython();
+
+                var exception = Assert.Throws<ArgumentException>(() => data.SetProperty("time", pyString));
+                Assert.That(exception.Message, Does.Contain("'time'"));
+                Assert.That(exception.Message, Does.Contain("'str'"));
+                Assert.That(exception.Message, Does.Contain(nameof(DateTime)));
+                Assert.That(exception.InnerException, Is.TypeOf<InvalidCastException>());
+
+                exception = Assert.Throws<ArgumentException>(() => data.SetProperty("end_time", pyString));
+                Assert.That(exception.Message, Does.Contain("'end_time'"));
+                Assert.That(exception.Message, Does.Contain(nameof(DateTime)));
+
+                exception = Assert.Throws<ArgumentException>(() => data.SetProperty("value", pyString));
+                Assert.That(exception.Message, Does.Contain("'value'"));
+                Assert.That(exception.Message, Does.Contain(nameof(Decimal)));
+
+                exception = Assert.Throws<ArgumentException>(() => data.SetProperty("symbol", pyInt));
+                Assert.That(exception.Message, Does.Contain("'symbol'"));
+                Assert.That(exception.Message, Does.Contain("'int'"));
+                Assert.That(exception.Message, Does.Contain(nameof(Symbol)));
+            }
         }
 
         [Test]

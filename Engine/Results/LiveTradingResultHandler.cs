@@ -58,6 +58,8 @@ namespace QuantConnect.Lean.Engine.Results
 
         private readonly TimeSpan _storeInsightPeriod;
 
+        private readonly HoldingsChangeMonitor _holdingsChangeMonitor = new();
+
         private DateTime _nextPortfolioMarginUpdate;
         private DateTime _previousPortfolioMarginUpdate;
         private readonly TimeSpan _samplePortfolioPeriod;
@@ -108,6 +110,9 @@ namespace QuantConnect.Lean.Engine.Results
             _currentUtcDate = utcNow.Date;
 
             _nextPortfolioMarginUpdate = utcNow.RoundDown(_samplePortfolioPeriod).Add(_samplePortfolioPeriod);
+
+            _holdingsChangeMonitor.Monitor(parameters.TransactionHandler);
+
             base.Initialize(parameters);
         }
 
@@ -235,8 +240,10 @@ namespace QuantConnect.Lean.Engine.Results
                         MessagingHandler.Send(liveResultPacket);
                     }
 
-                    //Send full packet to storage.
-                    if (utcNow > _nextChartsUpdate)
+                    // Send full packet to storage. Holdings changes not yet persisted force a store once they
+                    // have settled for the configured delay, so the stored results reflect fills quickly
+                    // instead of waiting for the next scheduled store
+                    if (utcNow > _nextChartsUpdate || _holdingsChangeMonitor.ShouldForceStore(utcNow))
                     {
                         Log.Debug("LiveTradingResultHandler.Update(): Pre-store result");
                         var chartComplete = new Dictionary<string, Chart>();
@@ -258,6 +265,7 @@ namespace QuantConnect.Lean.Engine.Results
                             Algorithm.Transactions.TransactionRecord, holdings, Algorithm.Portfolio.CashBook, deltaStatistics,
                             runtimeStatistics, orderEvents, statistics.TotalPerformance, serverStatistics, state: GetAlgorithmState())));
                         StoreResult(complete);
+                        _holdingsChangeMonitor.MarkStored();
                         _nextChartsUpdate = DateTime.UtcNow.Add(ChartUpdateInterval);
                         Log.Debug("LiveTradingResultHandler.Update(): End-store result");
                     }
@@ -1339,6 +1347,53 @@ namespace QuantConnect.Lean.Engine.Results
         public void SetSummaryStatistic(string name, string value)
         {
             SummaryStatistic(name, value);
+        }
+
+        /// <summary>
+        /// Monitors the order events, keeping track of the last time the holdings changed by filtering fills,
+        /// so the update loop can force a store of the full results once the changes settle,
+        /// without waiting for the next scheduled store
+        /// </summary>
+        private class HoldingsChangeMonitor
+        {
+            private readonly TimeSpan _storeDelay = TimeSpan.FromSeconds(Config.GetDouble("holdings-changed-store-delay", 10));
+
+            private long _lastChangedTicks;
+            private long _lastStoredTicks;
+
+            /// <summary>
+            /// Monitors the order events to keep track of the last time the holdings changed
+            /// </summary>
+            public void Monitor(IOrderEventProvider orderEventProvider)
+            {
+                orderEventProvider.NewOrderEvent += OnNewOrderEvent;
+            }
+
+            /// <summary>
+            /// Determines whether the latest holdings changes have not been stored yet and have
+            /// settled for the configured delay, in which case a results store should be forced
+            /// </summary>
+            public bool ShouldForceStore(DateTime utcNow)
+            {
+                var lastChangedTicks = Interlocked.Read(ref _lastChangedTicks);
+                return lastChangedTicks > _lastStoredTicks && utcNow.Ticks >= lastChangedTicks + _storeDelay.Ticks;
+            }
+
+            /// <summary>
+            /// Marks the latest holdings changes as stored
+            /// </summary>
+            public void MarkStored()
+            {
+                _lastStoredTicks = Interlocked.Read(ref _lastChangedTicks);
+            }
+
+            private void OnNewOrderEvent(object sender, OrderEvent orderEvent)
+            {
+                if (orderEvent.Status.IsFill())
+                {
+                    Interlocked.Exchange(ref _lastChangedTicks, orderEvent.UtcTime.Ticks);
+                }
+            }
         }
     }
 }

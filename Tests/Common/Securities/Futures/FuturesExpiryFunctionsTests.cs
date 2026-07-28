@@ -56,6 +56,7 @@ namespace QuantConnect.Tests.Common.Securities.Futures
         private const string OneFortyFivePM = "13:45:00";
         private const string ThreeThirtyPM = "15:30:00";
         private const string FourFifteenPM = "16:15:00";
+        private const string ThreeTwentyPMKoreaTime = "15:20:00";
         private readonly SymbolPropertiesDatabase _symbolPropertiesDatabase = SymbolPropertiesDatabase.FromDataFolder();
 
         [OneTimeSetUp]
@@ -92,6 +93,29 @@ namespace QuantConnect.Tests.Common.Securities.Futures
             var expiration = FuturesExpiryFunctions.FuturesExpiryDictionary[canonical];
             var result = expiration(date);
             Assert.AreEqual(expected, result.Date);
+        }
+
+        // non-quarterly contract months must roll forward to the next month in the Mar/Jun/Sep/Dec cycle
+        [TestCase("20250101", "20250313")]
+        [TestCase("20250401", "20250612")]
+        [TestCase("20251001", "20251211")]
+        // normal case: the second Thursday of the contract month
+        [TestCase("20250301", "20250313")]
+        [TestCase("20250601", "20250612")]
+        // 6/13/2002 (local election day) is a holiday: the preceding business day
+        [TestCase("20020601", "20020612")]
+        // 9/12/2019 (Chuseok) is a holiday: the preceding business day
+        [TestCase("20190901", "20190911")]
+        // 9/11/2003 and 9/10/2003 (Chuseok) are holidays: walk back to 9/9
+        [TestCase("20030901", "20030909")]
+        public void Kospi200Futures(string input, string expectedStr)
+        {
+            var date = Time.ParseDate(input);
+            var expected = Time.ParseDate(expectedStr).Add(new TimeSpan(15, 20, 0));
+
+            var canonical = Symbol.Create(QuantConnect.Securities.Futures.Indices.Kospi200, SecurityType.Future, Market.KRX);
+            var expiration = FuturesExpiryFunctions.FuturesExpiryDictionary[canonical];
+            Assert.AreEqual(expected, expiration(date));
         }
 
         [Test]
@@ -396,6 +420,7 @@ namespace QuantConnect.Tests.Common.Securities.Futures
         [TestCase(QuantConnect.Securities.Futures.Indices.VIX, EightOClockChicagoTime)]
         [TestCase(QuantConnect.Securities.Futures.Indices.VIXMini, EightOClockChicagoTime)]
         [TestCase(QuantConnect.Securities.Futures.Indices.Nikkei225Yen, TwoThirtyPM)]
+        [TestCase(QuantConnect.Securities.Futures.Indices.Kospi200, ThreeTwentyPMKoreaTime)]
         [TestCase(QuantConnect.Securities.Futures.Indices.MSCITaiwanIndex, OneFortyFivePM)]
         [TestCase(QuantConnect.Securities.Futures.Indices.Nifty50, ThreeThirtyPM)]
         [TestCase(QuantConnect.Securities.Futures.Indices.BankNifty, ThreeThirtyPM)]

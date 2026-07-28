@@ -3040,6 +3040,20 @@ namespace QuantConnect
         }
 
         /// <summary>
+        /// Gets a string representation of the given Python object and its type
+        /// to be used in user-facing messages, e.g. "'Daily' of type 'Resolution'"
+        /// </summary>
+        /// <param name="pyObject">The Python object to represent</param>
+        /// <returns>The string representation of the Python object</returns>
+        public static string ToDisplayString(this PyObject pyObject)
+        {
+            using (Py.GIL())
+            {
+                return $"'{pyObject}' of type '{pyObject.GetPythonType().Name}'";
+            }
+        }
+
+        /// <summary>
         /// Safely convert PyObject to ManagedObject using Py.GIL Lock
         /// If no type is given it will convert the PyObject's Python Type to a ManagedObject Type
         /// in a attempt to resolve the target type to convert to.

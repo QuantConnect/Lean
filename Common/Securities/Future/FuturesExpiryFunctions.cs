@@ -793,6 +793,31 @@ namespace QuantConnect.Securities.Future
                 })
             },
 
+            // KOSPI 200 Index Futures (KM): http://global.krx.co.kr/contents/GLB/05/0503/0503010102/GLB0503010102.jsp
+            {Symbol.Create(Futures.Indices.Kospi200, SecurityType.Future, Market.KRX), (time =>
+                {
+                    // Listed contracts: four quarterly months (March, June, September, December) + two half-yearly months (June, December)
+                    // + one yearly month (December), all within the quarterly cycle
+                    while (!FutureExpirationCycles.HMUZ.Contains(time.Month))
+                    {
+                        time = time.AddMonths(1);
+                    }
+
+                    // Last trading day: the second Thursday of the contract month. Trading terminates at 15:20 KST on that day.
+                    // If the second Thursday is a holiday, the last trading day is the preceding business day.
+                    var market = Market.KRX;
+                    var symbol = Futures.Indices.Kospi200;
+                    var holidays = FuturesExpiryUtilityFunctions.GetExpirationHolidays(market, symbol);
+
+                    var lastTradingDay = FuturesExpiryUtilityFunctions.NthWeekday(time, 2, DayOfWeek.Thursday);
+                    while (holidays.Contains(lastTradingDay) || !lastTradingDay.IsCommonBusinessDay())
+                    {
+                        lastTradingDay = lastTradingDay.AddDays(-1);
+                    }
+                    return lastTradingDay.Add(new TimeSpan(15, 20, 0));
+                })
+            },
+
             // MSCI Europe Net Total Return (USD) Futures: https://www.theice.com/products/71512951/MSCI-Europe-NTR-Index-Future-USD & https://www.theice.com/publicdocs/futures_us/exchange_notices/ICE_Futures_US_2022_TRADING_HOLIDAY_CALENDAR_20211118.pdf
             {Symbol.Create(Futures.Indices.MSCIEuropeNTR, SecurityType.Future, Market.NYSELIFFE), (time =>
                 {

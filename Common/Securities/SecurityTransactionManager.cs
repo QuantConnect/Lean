@@ -20,6 +20,7 @@ using System.Threading;
 using QuantConnect.Interfaces;
 using QuantConnect.Logging;
 using QuantConnect.Orders;
+using QuantConnect.Util;
 using Python.Runtime;
 
 namespace QuantConnect.Securities
@@ -255,7 +256,7 @@ namespace QuantConnect.Securities
             }
 
             var cancelledOrders = new List<OrderTicket>();
-            foreach (var ticket in GetOpenOrderTickets())
+            foreach (var ticket in GetOpenOrderTickets(null, memoize: false))
             {
                 ticket.Cancel(Messages.SecurityTransactionManager.OrderCanceledByCancelOpenOrders(_algorithm.UtcTime));
                 cancelledOrders.Add(ticket);
@@ -277,7 +278,7 @@ namespace QuantConnect.Securities
             }
 
             var cancelledOrders = new List<OrderTicket>();
-            foreach (var ticket in GetOpenOrderTickets(x => x.Symbol == symbol))
+            foreach (var ticket in GetOpenOrderTickets(x => x.Symbol == symbol, memoize: false))
             {
                 ticket.Cancel(tag);
                 cancelledOrders.Add(ticket);
@@ -302,7 +303,7 @@ namespace QuantConnect.Securities
         /// <returns>An enumerable of <see cref="OrderTicket"/> matching the specified <paramref name="filter"/></returns>
         public IEnumerable<OrderTicket> GetOrderTickets(Func<OrderTicket, bool> filter = null)
         {
-            return _orderProcessor.GetOrderTickets(filter ?? (x => true));
+            return GetOrderTickets(filter, memoize: true);
         }
 
         /// <summary>
@@ -312,7 +313,21 @@ namespace QuantConnect.Securities
         /// <returns>An enumerable of <see cref="OrderTicket"/> matching the specified <paramref name="filter"/></returns>
         public IEnumerable<OrderTicket> GetOrderTickets(PyObject filter)
         {
-            return _orderProcessor.GetOrderTickets(filter.SafeAs<Func<OrderTicket, bool>>());
+            return GetOrderTickets(filter.SafeAs<Func<OrderTicket, bool>>(), memoize: true);
+        }
+
+        /// <summary>
+        /// Gets an enumerable of <see cref="OrderTicket"/> matching the specified <paramref name="filter"/>
+        /// </summary>
+        /// <param name="filter">The filter predicate used to find the required order tickets, null matches all</param>
+        /// <param name="memoize">True for enumerables handed back to user algorithms, which may enumerate them
+        /// multiple times. Engine paths that enumerate a single time should pass false, since memoization there
+        /// only adds allocation and locking overhead</param>
+        /// <returns>An enumerable of <see cref="OrderTicket"/> matching the specified <paramref name="filter"/></returns>
+        private IEnumerable<OrderTicket> GetOrderTickets(Func<OrderTicket, bool> filter, bool memoize)
+        {
+            var tickets = _orderProcessor.GetOrderTickets(filter ?? (x => true));
+            return memoize ? tickets.Memoize() : tickets;
         }
 
         /// <summary>
@@ -332,7 +347,7 @@ namespace QuantConnect.Securities
         /// <returns>An enumerable of opened <see cref="OrderTicket"/> matching the specified <paramref name="filter"/></returns>
         public IEnumerable<OrderTicket> GetOpenOrderTickets(Func<OrderTicket, bool> filter = null)
         {
-            return _orderProcessor.GetOpenOrderTickets(filter ?? (x => true));
+            return GetOpenOrderTickets(filter, memoize: true);
         }
 
         /// <summary>
@@ -350,7 +365,21 @@ namespace QuantConnect.Securities
             {
                 return GetOpenOrderTickets(pythonSymbol);
             }
-            return _orderProcessor.GetOpenOrderTickets(filter.SafeAs<Func<OrderTicket, bool>>());
+            return GetOpenOrderTickets(filter.SafeAs<Func<OrderTicket, bool>>(), memoize: true);
+        }
+
+        /// <summary>
+        /// Gets an enumerable of opened <see cref="OrderTicket"/> matching the specified <paramref name="filter"/>
+        /// </summary>
+        /// <param name="filter">The filter predicate used to find the required order tickets, null matches all</param>
+        /// <param name="memoize">True for enumerables handed back to user algorithms, which may enumerate them
+        /// multiple times. Engine paths that enumerate a single time should pass false, since memoization there
+        /// only adds allocation and locking overhead</param>
+        /// <returns>An enumerable of opened <see cref="OrderTicket"/> matching the specified <paramref name="filter"/></returns>
+        private IEnumerable<OrderTicket> GetOpenOrderTickets(Func<OrderTicket, bool> filter, bool memoize)
+        {
+            var tickets = _orderProcessor.GetOpenOrderTickets(filter ?? (x => true));
+            return memoize ? tickets.Memoize() : tickets;
         }
 
         /// <summary>
@@ -360,7 +389,7 @@ namespace QuantConnect.Securities
         /// <returns>Total quantity that hasn't been filled yet for all orders that were not filtered</returns>
         public decimal GetOpenOrdersRemainingQuantity(Func<OrderTicket, bool> filter = null)
         {
-            return GetOpenOrderTickets(filter)
+            return GetOpenOrderTickets(filter, memoize: false)
                 .Aggregate(0m, (d, t) => d + t.QuantityRemaining);
         }
 
@@ -380,8 +409,7 @@ namespace QuantConnect.Securities
                 return GetOpenOrdersRemainingQuantity(pythonSymbol);
             }
 
-            return GetOpenOrderTickets(filter)
-                .Aggregate(0m, (d, t) => d + t.QuantityRemaining);
+            return GetOpenOrdersRemainingQuantity(filter.SafeAs<Func<OrderTicket, bool>>());
         }
 
         /// <summary>
@@ -512,7 +540,7 @@ namespace QuantConnect.Securities
         /// <returns>All orders this order provider currently holds by the specified filter</returns>
         public IEnumerable<Order> GetOrders(Func<Order, bool> filter = null)
         {
-            return _orderProcessor.GetOrders(filter ?? (x => true));
+            return _orderProcessor.GetOrders(filter ?? (x => true)).Memoize();
         }
 
         /// <summary>
@@ -522,7 +550,7 @@ namespace QuantConnect.Securities
         /// <returns>All orders this order provider currently holds by the specified filter</returns>
         public IEnumerable<Order> GetOrders(PyObject filter)
         {
-            return _orderProcessor.GetOrders(filter.SafeAs<Func<Order, bool>>());
+            return _orderProcessor.GetOrders(filter.SafeAs<Func<Order, bool>>()).Memoize();
         }
 
         /// <summary>

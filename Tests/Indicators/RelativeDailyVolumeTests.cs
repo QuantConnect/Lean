@@ -113,6 +113,41 @@ namespace QuantConnect.Tests.Indicators
             Assert.IsFalse(rdv8.IsReady);
         }
 
+        [Test]
+        public void UsesMostRecentHistoricalSlotForIntradayGap()
+        {
+            // Regression test for the missing break in the fallback loop (GH #9629).
+            // When the current time-of-day has no exact historical slot, the denominator must
+            // come from the greatest historical slot <= the current time, not the last slot of the day.
+            var rdv = new RelativeDailyVolume(2);
+            var historicalDays = new[] { new DateTime(2024, 1, 1), new DateTime(2024, 1, 2) };
+            var tradeTimes = new[]
+            {
+                new TimeSpan(9, 30, 0),
+                new TimeSpan(9, 44, 0),
+                new TimeSpan(16, 0, 0),
+                new TimeSpan(16, 1, 0),
+            };
+
+            // Two historical days, each trading at the same four times with the same volume.
+            // Cumulative volume per slot: 09:30 -> 100, 09:44 -> 200, 16:00 -> 300, 16:01 -> 400.
+            foreach (var day in historicalDays)
+            {
+                foreach (var time in tradeTimes)
+                {
+                    rdv.Update(new TradeBar { Symbol = Symbols.AAPL, Low = 1, High = 2, Volume = 100, Time = day + time });
+                }
+            }
+
+            // Third day: a bar arrives at 09:45, which has no exact historical slot and sits in the
+            // intra-day gap between 09:44 and 16:00. The fallback must use the 09:44 slot (denominator 200).
+            // Without the break it would end on the 16:00 slot (denominator 300), giving 50/300 instead of 50/200.
+            rdv.Update(new TradeBar { Symbol = Symbols.AAPL, Low = 1, High = 2, Volume = 50, Time = new DateTime(2024, 1, 3, 9, 45, 0) });
+
+            Assert.IsTrue(rdv.IsReady);
+            Assert.AreEqual(50m / 200m, rdv.Current.Value);
+        }
+
         /// <summary>
         /// The final value of this indicator is zero because it uses the Volume of the bars it receives.
         /// Since RenkoBar's don't always have Volume, the final current value is zero. Therefore we

@@ -114,6 +114,7 @@ namespace QuantConnect.Indicators
                     if (relativeDataKeys[i] > currentTimeBar)
                     {
                         denominator = _relativeData[relativeDataKeys[i - 1]].Current.Value;
+                        break; // Stop at the first key greater than currentTimeBar, using the greatest slot <= currentTimeBar
                     }
                 }
             }

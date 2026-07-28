@@ -17,6 +17,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using QuantConnect.Util;
 
 namespace QuantConnect.Securities.CurrencyConversion
 {
@@ -65,7 +66,7 @@ namespace QuantConnect.Securities.CurrencyConversion
         /// <summary>
         /// The securities which the conversion rate is based on
         /// </summary>
-        public IEnumerable<Security> ConversionRateSecurities => Enumerable.Empty<Security>();
+        public IEnumerable<Security> ConversionRateSecurities => Enumerable.Empty<Security>().Memoize();
 
         /// <summary>
         /// Initializes a new instance of the <see cref="ConstantCurrencyConversion"/> class.

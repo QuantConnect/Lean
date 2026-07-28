@@ -28,6 +28,7 @@ using QuantConnect.Securities;
 using QuantConnect.Securities.CurrencyConversion;
 using QuantConnect.Tests.Common.Data.UniverseSelection;
 using QuantConnect.Tests.Engine.DataFeeds;
+using QuantConnect.Util;
 
 namespace QuantConnect.Tests.Common.Securities
 {
@@ -113,6 +114,40 @@ namespace QuantConnect.Tests.Common.Securities
 
             Assert.AreEqual(1, subscriptions.SubscriptionDataConfigService.GetSubscriptionDataConfigs(Symbols.USDJPY, includeInternalConfigs:true).Count);
             Assert.AreEqual(1, securities.Values.Count(x => x.Symbol == Symbols.USDJPY));
+        }
+
+        [Test]
+        public void SecuritySymbolsAreMemoizedExposingCount()
+        {
+            const int quantity = 100;
+            const decimal conversionRate = 1 / 100m;
+            var cash = new Cash("JPY", quantity, conversionRate);
+            var cashBook = new CashBook();
+            cashBook.Add("JPY", cash);
+            var subscriptions = new SubscriptionManager(NullTimeKeeper.Instance);
+            var dataManager = new DataManagerStub(TimeKeeper);
+            subscriptions.SetDataManager(dataManager);
+            var abcConfig = subscriptions.Add(Symbols.SPY, Resolution.Minute, TimeZone, TimeZone);
+            var securities = new SecurityManager(TimeKeeper);
+
+            securities.Add(
+                Symbols.SPY,
+                new Security(
+                    SecurityExchangeHours,
+                    abcConfig,
+                    new Cash(Currencies.USD, 0, 1m),
+                    SymbolProperties.GetDefault(cashBook.AccountCurrency),
+                    cashBook,
+                    RegisteredSecurityDataTypesProvider.Null,
+                    new SecurityCache()));
+            cash.EnsureCurrencyDataFeed(securities, subscriptions, MarketMap, SecurityChanges.None, dataManager.SecurityService, cashBook.AccountCurrency);
+
+            var securitySymbols = cash.SecuritySymbols;
+
+            // memoized so it exposes a Count property, which also enables len() in Python through Python.NET
+            Assert.IsInstanceOf<MemoizingEnumerable<Symbol>>(securitySymbols);
+            Assert.AreEqual(1, ((MemoizingEnumerable<Symbol>)securitySymbols).Count);
+            Assert.AreEqual(Symbols.USDJPY, securitySymbols.Single());
         }
 
         [Test]

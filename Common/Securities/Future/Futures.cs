@@ -1556,6 +1556,12 @@ namespace QuantConnect.Securities
             public const string HangSeng = "HSI";
 
             /// <summary>
+            /// KOSPI 200 Index Futures
+            /// </summary>
+            /// <returns>The symbol</returns>
+            public const string Kospi200 = "KM";
+
+            /// <summary>
             /// Micro E-mini S&amp;P 500 Index Futures
             /// </summary>
             /// <returns>The symbol</returns>
