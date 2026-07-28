@@ -739,6 +739,8 @@ namespace QuantConnect.Interfaces
         /// <param name="fillForward">If true, returns the last available data even if none in that timeslice. Default is <value>true</value></param>
         /// <param name="leverage">The requested leverage for this equity. Default is set by <see cref="SecurityInitializer"/></param>
         /// <param name="extendedMarketHours">Show the after market data as well</param>
+        /// <param name="barPeriod">The explicitly declared length of a single bar, when the stored data period
+        /// differs from the nominal period implied by <paramref name="resolution"/></param>
         /// <returns>The new <see cref="Future"/> security</returns>
         Future AddFutureContract(Symbol symbol, Resolution? resolution = null, bool fillForward = true, decimal leverage = 0m, bool extendedMarketHours = false);
 
@@ -751,7 +753,8 @@ namespace QuantConnect.Interfaces
         /// <param name="leverage">The requested leverage for this equity. Default is set by <see cref="SecurityInitializer"/></param>
         /// <param name="extendedMarketHours">Show the after market data as well</param>
         /// <returns>The new <see cref="Option"/> security</returns>
-        Option AddOptionContract(Symbol symbol, Resolution? resolution = null, bool fillForward = true, decimal leverage = 0m, bool extendedMarketHours = false);
+        Option AddOptionContract(Symbol symbol, Resolution? resolution = null, bool fillForward = true, decimal leverage = 0m,
+            bool extendedMarketHours = false, TimeSpan? barPeriod = null);
 
         /// <summary>
         /// Removes the security with the specified symbol. This will cancel all

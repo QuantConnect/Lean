@@ -57,6 +57,38 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         }
 
         [Test]
+        public void CreatedSubscriptionPreservesDeclaredBarAlignment()
+        {
+            var barPeriod = TimeSpan.FromMinutes(30);
+            var time = new DateTime(2020, 5, 21, 9, 15, 0);
+            var tradeBar = new TradeBar
+            {
+                Time = time,
+                Period = barPeriod,
+                Symbol = Symbols.SPY
+            };
+            var config = new SubscriptionDataConfig(
+                typeof(TradeBar),
+                Symbols.SPY,
+                Resolution.Minute,
+                TimeZones.Utc,
+                TimeZones.Utc,
+                false,
+                false,
+                false,
+                barPeriod: barPeriod
+            );
+            var exchangeHours = SecurityExchangeHours.AlwaysOpen(TimeZones.Utc);
+            var offsetProvider = new TimeZoneOffsetProvider(TimeZones.Utc, time.Date, time.Date.AddDays(1));
+
+            var subscription = SubscriptionData.Create(false, config, exchangeHours, offsetProvider,
+                tradeBar, config.DataNormalizationMode);
+
+            Assert.AreEqual(time, subscription.Data.Time);
+            Assert.AreEqual(time.Add(barPeriod), subscription.Data.EndTime);
+        }
+
+        [Test]
         public void CreatedSubscriptionDoesNotRoundDownForPeriodLessData()
         {
             var data = new MyCustomData

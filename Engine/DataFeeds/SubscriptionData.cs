@@ -84,6 +84,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 // note we do this after fetching the 'emitTimeUtc' which should use the end time set by the fill forward enumerator
                 if (barSpan != TimeSpan.Zero)
                 {
+                    var hasDeclaredBarAlignment = configuration.BarPeriod.HasValue
+                        && barSpan == configuration.Increment;
                     if (barSpan != configuration.Increment)
                     {
                         // when we detect a difference let's refetch the span in utc using noda time 'ConvertToUtc' that will not take into account day light savings difference
@@ -92,7 +94,10 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                         // Note: we don't use 'configuration.Increment' because during warmup, if the warmup resolution is set, we will emit data respecting it instead of the 'configuration'
                         barSpan = data.EndTime.ConvertToUtc(configuration.ExchangeTimeZone) - data.Time.ConvertToUtc(configuration.ExchangeTimeZone);
                     }
-                    data.Time = data.Time.ExchangeRoundDownInTimeZone(barSpan, exchangeHours, configuration.DataTimeZone, configuration.ExtendedMarketHours);
+                    if (!hasDeclaredBarAlignment)
+                    {
+                        data.Time = data.Time.ExchangeRoundDownInTimeZone(barSpan, exchangeHours, configuration.DataTimeZone, configuration.ExtendedMarketHours);
+                    }
                 }
             }
             else if (data.IsFillForward)

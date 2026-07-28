@@ -623,6 +623,8 @@ namespace QuantConnect.AlgorithmFactory.Python.Wrappers
         /// <param name="fillForward">If true, returns the last available data even if none in that timeslice. Default is <value>true</value></param>
         /// <param name="leverage">The requested leverage for this equity. Default is set by <see cref="SecurityInitializer"/></param>
         /// <param name="extendedMarketHours">Use extended market hours data</param>
+        /// <param name="barPeriod">The explicitly declared length of a single bar, when the stored data period
+        /// differs from the nominal period implied by <paramref name="resolution"/></param>
         /// <returns>The new <see cref="Future"/> security</returns>
         public Future AddFutureContract(Symbol symbol, Resolution? resolution = null, bool fillForward = true, decimal leverage = 0m,
             bool extendedMarketHours = false)
@@ -637,8 +639,9 @@ namespace QuantConnect.AlgorithmFactory.Python.Wrappers
         /// <param name="leverage">The requested leverage for this equity. Default is set by <see cref="SecurityInitializer"/></param>
         /// <param name="extendedMarketHours">Use extended market hours data</param>
         /// <returns>The new <see cref="Option"/> security</returns>
-        public Option AddOptionContract(Symbol symbol, Resolution? resolution = null, bool fillForward = true, decimal leverage = 0m, bool extendedMarketHours = false)
-            => _baseAlgorithm.AddOptionContract(symbol, resolution, fillForward, leverage, extendedMarketHours);
+        public Option AddOptionContract(Symbol symbol, Resolution? resolution = null, bool fillForward = true, decimal leverage = 0m,
+            bool extendedMarketHours = false, TimeSpan? barPeriod = null)
+            => _baseAlgorithm.AddOptionContract(symbol, resolution, fillForward, leverage, extendedMarketHours, barPeriod);
 
         /// <summary>
         /// Invoked at the end of every time step. This allows the algorithm

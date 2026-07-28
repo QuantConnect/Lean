@@ -258,6 +258,70 @@ namespace QuantConnect.Tests.Algorithm
             Assert.AreEqual(1, _algo.SubscriptionManager.Subscriptions.Count(x => x.Symbol == spx.Symbol));
         }
 
+        [Test]
+        public void OptionUniversePropagatesDeclaredBarPeriod()
+        {
+            var barPeriod = TimeSpan.FromMinutes(30);
+            var spx = _algo.AddIndex("SPX", Resolution.Minute, fillForward: true, barPeriod: barPeriod);
+            var canonical = _algo.AddIndexOption(spx.Symbol, Resolution.Minute, fillForward: true, barPeriod: barPeriod);
+            var universe = _algo.UniverseManager[canonical.Symbol];
+            var start = new DateTime(2024, 9, 2);
+            var end = start.AddDays(1);
+
+            var requests = universe.GetSubscriptionRequests(spx, start, end,
+                _algo.SubscriptionManager.SubscriptionDataConfigService).ToList();
+
+            Assert.That(requests.Select(x => x.Configuration.BarPeriod), Has.All.EqualTo(barPeriod));
+            var underlyingConfigs = _algo.SubscriptionManager.Subscriptions
+                .Where(x => x.Symbol == spx.Symbol).ToList();
+            Assert.AreEqual(1, underlyingConfigs.Count);
+            Assert.AreEqual(barPeriod, underlyingConfigs.Single().Increment);
+
+            var optionSymbol = Symbol.CreateOption(
+                spx.Symbol,
+                Market.USA,
+                OptionStyle.European,
+                OptionRight.Call,
+                3200m,
+                new DateTime(2024, 9, 20));
+            var option = _algo.AddIndexOptionContract(optionSymbol, Resolution.Minute,
+                fillForward: true, barPeriod: barPeriod);
+            requests = universe.GetSubscriptionRequests(option, start, end,
+                _algo.SubscriptionManager.SubscriptionDataConfigService).ToList();
+
+            Assert.That(requests.Select(x => x.Configuration.BarPeriod), Has.All.EqualTo(barPeriod));
+            Assert.That(requests.Select(x => x.Configuration.Increment), Has.All.EqualTo(barPeriod));
+        }
+
+        [Test]
+        public void AddOptionContractPropagatesDeclaredBarPeriodToUnderlying()
+        {
+            var barPeriod = TimeSpan.FromMinutes(30);
+            var underlying = Symbol.Create("SPX", SecurityType.Index, Market.USA);
+            var optionSymbol = Symbol.CreateOption(
+                underlying,
+                Market.USA,
+                OptionStyle.European,
+                OptionRight.Call,
+                3200m,
+                new DateTime(2024, 9, 20));
+
+            _algo.AddIndexOptionContract(optionSymbol, Resolution.Minute,
+                fillForward: true, barPeriod: barPeriod);
+
+            var underlyingConfigs = _algo.SubscriptionManager.Subscriptions
+                .Where(x => x.Symbol == underlying).ToList();
+            Assert.IsNotEmpty(underlyingConfigs);
+            Assert.That(underlyingConfigs.Select(x => x.BarPeriod), Has.All.EqualTo(barPeriod));
+            Assert.That(underlyingConfigs.Select(x => x.Increment), Has.All.EqualTo(barPeriod));
+
+            var optionConfigs = _algo.SubscriptionManager.Subscriptions
+                .Where(x => x.Symbol == optionSymbol).ToList();
+            Assert.IsNotEmpty(optionConfigs);
+            Assert.That(optionConfigs.Select(x => x.BarPeriod), Has.All.EqualTo(barPeriod));
+            Assert.That(optionConfigs.Select(x => x.Increment), Has.All.EqualTo(barPeriod));
+        }
+
         [TestCase("SPXW", "SPX")]
         [TestCase("RUTW", "RUT")]
         [TestCase("VIXW", "VIX")]

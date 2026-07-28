@@ -2008,7 +2008,7 @@ namespace QuantConnect.Algorithm
             // Short-circuit to AddOptionContract because it will add the underlying if required
             if (!isCanonical && symbol.SecurityType.IsOption())
             {
-                return AddOptionContract(symbol, resolution, securityFillForward, leverage, extendedMarketHours.Value);
+                return AddOptionContract(symbol, resolution, securityFillForward, leverage, extendedMarketHours.Value, barPeriod);
             }
 
             var securityResolution = resolution;
@@ -2298,18 +2298,20 @@ namespace QuantConnect.Algorithm
         /// <param name="fillForward">If true, this will fill in missing data points with the previous data point</param>
         /// <param name="leverage">The leverage to apply to the option contract</param>
         /// <param name="extendedMarketHours">Use extended market hours data</param>
+        /// <param name="barPeriod">The explicitly declared length of a single bar, when the stored data period
+        /// differs from the nominal period implied by <paramref name="resolution"/></param>
         /// <returns>Option security</returns>
         /// <exception cref="ArgumentException">Symbol is canonical (i.e. a generic Symbol returned from <see cref="AddFuture"/> or <see cref="AddOption(string, Resolution?, string, bool?, decimal)"/>)</exception>
         [DocumentationAttribute(AddingData)]
         public Option AddFutureOptionContract(Symbol symbol, Resolution? resolution = null, bool fillForward = true,
-            decimal leverage = Security.NullLeverage, bool extendedMarketHours = false)
+            decimal leverage = Security.NullLeverage, bool extendedMarketHours = false, TimeSpan? barPeriod = null)
         {
             if (symbol.IsCanonical())
             {
                 throw new ArgumentException("Expected non-canonical Symbol (i.e. a Symbol representing a specific Future contract");
             }
 
-            return AddOptionContract(symbol, resolution, fillForward, leverage, extendedMarketHours);
+            return AddOptionContract(symbol, resolution, fillForward, leverage, extendedMarketHours, barPeriod);
         }
 
         /// <summary>
@@ -2399,17 +2401,20 @@ namespace QuantConnect.Algorithm
         /// <param name="symbol">Symbol of the index option contract</param>
         /// <param name="resolution">Resolution of the index option contract, i.e. the granularity of the data</param>
         /// <param name="fillForward">If true, this will fill in missing data points with the previous data point</param>
+        /// <param name="barPeriod">The explicitly declared length of a single bar, when the stored data period
+        /// differs from the nominal period implied by <paramref name="resolution"/></param>
         /// <returns>Index Option Contract</returns>
         /// <exception cref="ArgumentException">The provided Symbol is not an <see cref="IndexOption"/></exception>
         [DocumentationAttribute(AddingData)]
-        public IndexOption AddIndexOptionContract(Symbol symbol, Resolution? resolution = null, bool fillForward = true)
+        public IndexOption AddIndexOptionContract(Symbol symbol, Resolution? resolution = null, bool fillForward = true,
+            TimeSpan? barPeriod = null)
         {
             if (symbol.SecurityType != SecurityType.IndexOption || symbol.IsCanonical())
             {
                 throw new ArgumentException("Symbol provided must be non-canonical and of type SecurityType.IndexOption");
             }
 
-            return (IndexOption)AddOptionContract(symbol, resolution, fillForward);
+            return (IndexOption)AddOptionContract(symbol, resolution, fillForward, barPeriod: barPeriod);
         }
 
         /// <summary>
@@ -2420,16 +2425,20 @@ namespace QuantConnect.Algorithm
         /// <param name="fillForward">If true, returns the last available data even if none in that timeslice. Default is <value>true</value></param>
         /// <param name="leverage">The requested leverage for this option. Default is set by <see cref="SecurityInitializer"/></param>
         /// <param name="extendedMarketHours">Use extended market hours data</param>
+        /// <param name="barPeriod">The explicitly declared length of a single bar, when the stored data period
+        /// differs from the nominal period implied by <paramref name="resolution"/></param>
         /// <returns>The new <see cref="Option"/> security</returns>
         [DocumentationAttribute(AddingData)]
         public Option AddOptionContract(Symbol symbol, Resolution? resolution = null, bool fillForward = true,
-            decimal leverage = Security.NullLeverage, bool extendedMarketHours = false)
+            decimal leverage = Security.NullLeverage, bool extendedMarketHours = false, TimeSpan? barPeriod = null)
         {
             if (symbol == null || !symbol.SecurityType.IsOption() || symbol.Underlying == null)
             {
                 throw new ArgumentException($"Unexpected option symbol {symbol}. " +
                     $"Please provide a valid option contract with it's underlying symbol set.");
             }
+
+            var securityBarPeriod = barPeriod ?? UniverseSettings.BarPeriod;
 
             // add underlying if not present
             var underlying = symbol.Underlying;
@@ -2439,7 +2448,8 @@ namespace QuantConnect.Algorithm
                 // The underlying might have been removed, let's see if there's already a subscription for it
                 (!underlyingSecurity.IsTradable && SubscriptionManager.SubscriptionDataConfigService.GetSubscriptionDataConfigs(underlying).Count == 0))
             {
-                underlyingSecurity = AddSecurity(underlying, resolution, fillForward, leverage, extendedMarketHours);
+                underlyingSecurity = AddSecurity(underlying, resolution, fillForward, leverage, extendedMarketHours,
+                    barPeriod: securityBarPeriod);
                 underlyingConfigs = SubscriptionManager.SubscriptionDataConfigService
                     .GetSubscriptionDataConfigs(underlying);
             }
@@ -2469,7 +2479,7 @@ namespace QuantConnect.Algorithm
             }
 
             var configs = SubscriptionManager.SubscriptionDataConfigService.Add(symbol, resolution, fillForward, extendedMarketHours,
-                dataNormalizationMode: DataNormalizationMode.Raw);
+                dataNormalizationMode: DataNormalizationMode.Raw, barPeriod: securityBarPeriod);
             var option = (Option)Securities.CreateSecurity(symbol, configs, leverage, underlying: underlyingSecurity);
 
             underlyingConfigs.SetDataNormalizationMode(DataNormalizationMode.Raw);
@@ -2487,7 +2497,8 @@ namespace QuantConnect.Algorithm
                 {
                     DataNormalizationMode = DataNormalizationMode.Raw,
                     Resolution = underlyingConfigs.GetHighestResolution(),
-                    ExtendedMarketHours = extendedMarketHours
+                    ExtendedMarketHours = extendedMarketHours,
+                    BarPeriod = securityBarPeriod
                 };
                 universe = AddUniverse(new OptionContractUniverse(new SubscriptionDataConfig(configs.First(),
                     // We can use any data type here, since we are not going to use the data.

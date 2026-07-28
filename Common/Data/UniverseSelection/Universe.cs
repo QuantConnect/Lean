@@ -294,7 +294,8 @@ namespace QuantConnect.Data.UniverseSelection
                 dataNormalizationMode: UniverseSettings.DataNormalizationMode,
                 subscriptionDataTypes: UniverseSettings.SubscriptionDataTypes,
                 dataMappingMode: UniverseSettings.DataMappingMode,
-                contractDepthOffset: (uint)Math.Abs(UniverseSettings.ContractDepthOffset));
+                contractDepthOffset: (uint)Math.Abs(UniverseSettings.ContractDepthOffset),
+                barPeriod: UniverseSettings.BarPeriod);
             return result.Select(config => new SubscriptionRequest(isUniverseSubscription: false,
                 universe: this,
                 security: security,
