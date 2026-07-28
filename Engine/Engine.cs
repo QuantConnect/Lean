@@ -260,6 +260,7 @@ namespace QuantConnect.Lean.Engine
                     }
 
                     //Initialize the internal state of algorithm and job: executes the algorithm.Initialize() method.
+                    SetBrokerageAccountServices(algorithm, brokerage);
                     initializeComplete = AlgorithmHandlers.Setup.Setup(new SetupHandlerParameters(dataManager.UniverseSelection, algorithm,
                         brokerage, job, AlgorithmHandlers.Results, AlgorithmHandlers.Transactions, AlgorithmHandlers.RealTime,
                         AlgorithmHandlers.DataCacheProvider, AlgorithmHandlers.MapFileProvider));
@@ -564,6 +565,19 @@ namespace QuantConnect.Lean.Engine
             provider.ReaderErrorDetected += (sender, args) => { AlgorithmHandlers.Results.RuntimeError(args.Message, args.StackTrace); };
 
             return provider;
+        }
+
+        private static void SetBrokerageAccountServices(IAlgorithm algorithm, IBrokerage brokerage)
+        {
+            if (algorithm is not IBrokerageAccountServiceConsumer consumer ||
+                brokerage is not IBrokerageAccountStateProvider provider)
+            {
+                return;
+            }
+
+            consumer.SetBrokerageAccountStateProvider(provider);
+            consumer.SetBrokerageAccountGroupManager(brokerage as IBrokerageAccountGroupManager);
+            consumer.SetBrokerageAccountGroupAllocationManager(brokerage as IBrokerageAccountGroupAllocationManager);
         }
 
         /// <summary>

@@ -46,6 +46,15 @@ namespace QuantConnect.Orders
         public int FaPercentage { get; set; }
 
         /// <summary>
+        /// The exact percentage for the percent change method, when a fractional value is required.
+        /// </summary>
+        /// <remarks>
+        /// When specified, <see cref="ExactFaPercentage"/> takes precedence over <see cref="FaPercentage"/>.
+        /// The conversion precedence is <c>ExactFaPercentage ?? FaPercentage</c>.
+        /// </remarks>
+        public decimal? ExactFaPercentage { get; set; }
+
+        /// <summary>
         /// The allocation profile to be used for the order (only used by Financial Advisors)
         /// </summary>
         /// <remarks>Mutually exclusive with FaGroup and Account</remarks>

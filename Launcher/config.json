@@ -106,7 +106,12 @@
   "ib-trading-mode": "paper",
   "ib-enable-delayed-streaming-data": false,
   "ib-weekly-restart-utc-time": "22:00:00",
+  // Optional FA group selection; empty enables multi-group operation.
   "ib-financial-advisors-group-filter": "",
+  // Allows algorithm-initiated changes to existing FA group membership and allocations; requires unified groups.
+  "ib-financial-advisors-group-management-enabled": false,
+  // Enables unified Allocation Group discovery and validation; legacy Profiles are unsupported.
+  "ib-financial-advisors-unified-groups-enabled": false,
 
   // tradier configuration
   "tradier-environment": "paper",

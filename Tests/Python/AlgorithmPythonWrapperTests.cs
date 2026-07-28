@@ -14,12 +14,15 @@
  *
 */
 
+using Moq;
 using NUnit.Framework;
 using Python.Runtime;
 using QuantConnect.AlgorithmFactory.Python.Wrappers;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using QuantConnect.Brokerages;
+using QuantConnect.Interfaces;
 using QuantConnect.Orders;
 
 namespace QuantConnect.Tests.Python
@@ -146,6 +149,210 @@ namespace QuantConnect.Tests.Python
                 Assert.Null(algorithm.RunTimeError);
                 Assert.DoesNotThrow(() => algorithm.OnEndOfDay(Symbols.SPY));
                 Assert.NotNull(algorithm.RunTimeError);
+            }
+        }
+
+        [Test]
+        public void BrokerageAccountServicesAvailableDuringInitializeTest()
+        {
+            using (Py.GIL())
+            {
+                var algorithm = GetAlgorithm(
+                    "def initialize(self): self.name = str(self.brokerage_account_snapshot.generation)");
+                var now = DateTime.UtcNow;
+                var snapshot = new BrokerageAccountSnapshot(
+                    BrokerageAccountSnapshotStatus.Ready,
+                    7,
+                    now,
+                    now,
+                    new Dictionary<string, BrokerageAccountGroup>(),
+                    new Dictionary<string, BrokerageAccountState>(),
+                    Array.Empty<string>(),
+                    "membership",
+                    "configuration",
+                    string.Empty);
+                var assignment = new BrokerageAccountGroupAssignment(
+                    BrokerageAccountGroupAssignmentStatus.Pending,
+                    8,
+                    now,
+                    "Account",
+                    "Group",
+                    Array.Empty<string>(),
+                    Array.Empty<string>(),
+                    "membership",
+                    string.Empty,
+                    "configuration",
+                    string.Empty,
+                    string.Empty);
+                var allocation = new BrokerageAccountGroupAllocationUpdate(
+                    BrokerageAccountGroupAllocationUpdateStatus.Pending,
+                    9,
+                    now,
+                    "Group",
+                    "Ratio",
+                    new Dictionary<string, decimal>(),
+                    null,
+                    "membership",
+                    string.Empty,
+                    "configuration",
+                    string.Empty,
+                    string.Empty);
+                var provider = new Mock<IBrokerageAccountStateProvider>();
+                provider.Setup(instance => instance.GetAccountSnapshot()).Returns(snapshot);
+                var groupManager = new Mock<IBrokerageAccountGroupManager>();
+                groupManager.Setup(instance => instance.GetAccountGroupAssignment()).Returns(assignment);
+                var allocationManager = new Mock<IBrokerageAccountGroupAllocationManager>();
+                allocationManager.Setup(instance => instance.GetAccountGroupAllocationUpdate()).Returns(allocation);
+                var consumer = (IBrokerageAccountServiceConsumer)algorithm;
+
+                consumer.SetBrokerageAccountStateProvider(provider.Object);
+                consumer.SetBrokerageAccountGroupManager(groupManager.Object);
+                consumer.SetBrokerageAccountGroupAllocationManager(allocationManager.Object);
+                algorithm.Initialize();
+
+                Assert.AreSame(snapshot, algorithm.BaseAlgorithm.BrokerageAccountSnapshot);
+                Assert.AreSame(assignment, algorithm.BaseAlgorithm.BrokerageAccountGroupAssignment);
+                Assert.AreSame(allocation, algorithm.BaseAlgorithm.BrokerageAccountGroupAllocationUpdate);
+                Assert.AreEqual("7", algorithm.Name);
+            }
+        }
+
+        [Test]
+        public void BrokerageAccountSnapshotDictionaryValuesAreAvailableFromPython()
+        {
+            using (Py.GIL())
+            {
+                var group = new BrokerageAccountGroup(
+                    "GroupA",
+                    "Equal",
+                    new[] { "AccountA" });
+                var groups = new Dictionary<string, BrokerageAccountGroup>
+                {
+                    [group.Name] = group
+                };
+                var accountDirectory =
+                    new Dictionary<string, BrokerageAccountDirectoryEntry>
+                    {
+                        ["AccountA"] = new(
+                            "AccountA",
+                            BrokerageAccountRelationship.Managed,
+                            new[] { group.Name })
+                    };
+                var accounts = new Dictionary<string, BrokerageAccountState>
+                {
+                    ["AccountA"] = new(
+                        "AccountA",
+                        new[] { group.Name },
+                        string.Empty,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        string.Empty,
+                        null,
+                        null)
+                };
+                var now = DateTime.UtcNow;
+                var snapshot = new BrokerageAccountSnapshot(
+                    BrokerageAccountSnapshotStatus.Ready,
+                    1,
+                    now,
+                    now,
+                    groups,
+                    accounts,
+                    Array.Empty<string>(),
+                    "membership",
+                    "configuration",
+                    string.Empty,
+                    managedAccountIds: new[] { "AccountA" },
+                    accountDirectory: accountDirectory);
+                var provider = new Mock<IBrokerageAccountStateProvider>();
+                provider.Setup(instance => instance.GetAccountSnapshot()).Returns(snapshot);
+                var algorithm = GetAlgorithm(
+                    "def initialize(self): self.name = " +
+                    "f'{len(list(self.brokerage_account_snapshot.account_directory.values))}:' + " +
+                    "f'{len(list(self.brokerage_account_snapshot.groups.values))}'");
+
+                ((IBrokerageAccountServiceConsumer)algorithm.BaseAlgorithm)
+                    .SetBrokerageAccountStateProvider(provider.Object);
+                algorithm.Initialize();
+
+                Assert.AreEqual("1:1", algorithm.Name);
+            }
+        }
+
+        [TestCase("request_brokerage_account_group_allocation_update")]
+        [TestCase("RequestBrokerageAccountGroupAllocationUpdate")]
+        public void NativePythonDictionaryCanRequestGroupAllocationUpdate(string methodName)
+        {
+            IReadOnlyDictionary<string, decimal> requestedAllocations = null;
+            var now = DateTime.UtcNow;
+            var snapshot = new BrokerageAccountSnapshot(
+                BrokerageAccountSnapshotStatus.Ready,
+                1,
+                now,
+                now,
+                new Dictionary<string, BrokerageAccountGroup>(),
+                new Dictionary<string, BrokerageAccountState>(),
+                Array.Empty<string>(),
+                "membership",
+                "configuration",
+                string.Empty);
+            var provider = new Mock<IBrokerageAccountStateProvider>();
+            provider.Setup(instance => instance.GetAccountSnapshot()).Returns(snapshot);
+            var manager = new Mock<IBrokerageAccountGroupAllocationManager>();
+            manager.Setup(instance => instance.RequestAccountGroupAllocationUpdate(
+                    "GroupA",
+                    It.IsAny<IReadOnlyDictionary<string, decimal>>(),
+                    "membership",
+                    "configuration"))
+                .Callback<string, IReadOnlyDictionary<string, decimal>, string, string>(
+                    (_, allocations, _, _) => requestedAllocations = allocations)
+                .Returns(true);
+
+            using (Py.GIL())
+            {
+                var algorithm = GetAlgorithm(
+                    $"def initialize(self): self.name = str(self.{methodName}(" +
+                    "'GroupA', {'AccountA': 1.25, 'accounta': 2}, " +
+                    "self.brokerage_account_snapshot))");
+                var consumer = (IBrokerageAccountServiceConsumer)algorithm.BaseAlgorithm;
+                consumer.SetBrokerageAccountStateProvider(provider.Object);
+                consumer.SetBrokerageAccountGroupAllocationManager(manager.Object);
+
+                algorithm.Initialize();
+
+                Assert.AreEqual("True", algorithm.Name);
+                Assert.AreEqual(1.25m, requestedAllocations["AccountA"]);
+                Assert.AreEqual(2m, requestedAllocations["accounta"]);
+            }
+        }
+
+        [Test]
+        public void NativePythonAllocationKeysDoNotLeakReferences()
+        {
+            using (Py.GIL())
+            {
+                var algorithm = new QuantConnect.Algorithm.QCAlgorithm();
+                using var key = new PyString("AccountA");
+                using var value = new PyFloat(1d);
+                using var allocations = new PyDict();
+                allocations.SetItem(key, value);
+                using dynamic sys = Py.Import("sys");
+                using var referencesBeforeResult = (PyObject)sys.getrefcount(key);
+                var referencesBefore = referencesBeforeResult.As<int>();
+
+                for (var i = 0; i < 1000; i++)
+                {
+                    Assert.IsFalse(algorithm.RequestBrokerageAccountGroupAllocationUpdate(
+                        "GroupA",
+                        allocations,
+                        BrokerageAccountSnapshot.Unavailable));
+                }
+
+                using var referencesAfterResult = (PyObject)sys.getrefcount(key);
+                Assert.AreEqual(referencesBefore, referencesAfterResult.As<int>());
             }
         }
 

@@ -42,6 +42,78 @@ namespace QuantConnect.Algorithm
         private readonly Dictionary<IntPtr, PythonIndicator> _pythonIndicators = new Dictionary<IntPtr, PythonIndicator>();
 
         /// <summary>
+        /// Requests an asynchronous replacement of an existing account group's allocation vector from a Python
+        /// dictionary using the version tokens from the supplied observed snapshot.
+        /// </summary>
+        /// <param name="groupName">Existing managed account group to update.</param>
+        /// <param name="accountAllocationValues">Complete per-account allocation vector.</param>
+        /// <param name="observedSnapshot">Ready snapshot observed while calculating the requested values.</param>
+        /// <returns>True when the request was accepted; otherwise, false.</returns>
+        [DocumentationAttribute(LiveTrading)]
+        public bool RequestBrokerageAccountGroupAllocationUpdate(
+            string groupName,
+            PyObject accountAllocationValues,
+            BrokerageAccountSnapshot observedSnapshot)
+        {
+            ArgumentNullException.ThrowIfNull(accountAllocationValues);
+            ArgumentNullException.ThrowIfNull(observedSnapshot);
+
+            var allocations = new Dictionary<string, decimal>(StringComparer.Ordinal);
+            using (Py.GIL())
+            {
+                if (!PyDict.IsDictType(accountAllocationValues))
+                {
+                    throw new ArgumentException(
+                        "Account allocation values must be a Python dictionary.",
+                        nameof(accountAllocationValues));
+                }
+
+                using var iterator = accountAllocationValues.GetIterator();
+                foreach (PyObject key in iterator)
+                {
+                    using (key)
+                    {
+                        if (!PyString.IsStringType(key))
+                        {
+                            throw new ArgumentException(
+                                "Account allocation dictionary keys must be strings.",
+                                nameof(accountAllocationValues));
+                        }
+
+                        var accountId = (string)key.AsManagedObject(typeof(string));
+                        ValidateBrokerageIdentifier(
+                            accountId,
+                            nameof(accountAllocationValues));
+                        using var value = accountAllocationValues.GetItem(key);
+                        decimal allocation;
+                        try
+                        {
+                            allocation = (decimal)value.AsManagedObject(typeof(decimal));
+                        }
+                        catch (Exception exception)
+                        {
+                            throw new ArgumentException(
+                                $"Allocation value for account '{accountId}' must be numeric.",
+                                nameof(accountAllocationValues),
+                                exception);
+                        }
+                        if (!allocations.TryAdd(accountId, allocation))
+                        {
+                            throw new ArgumentException(
+                                $"Allocation account identifier '{accountId}' is duplicated.",
+                                nameof(accountAllocationValues));
+                        }
+                    }
+                }
+            }
+
+            return RequestBrokerageAccountGroupAllocationUpdate(
+                groupName,
+                allocations,
+                observedSnapshot);
+        }
+
+        /// <summary>
         /// PandasConverter for this Algorithm
         /// </summary>
         public virtual PandasConverter PandasConverter { get; private set; }

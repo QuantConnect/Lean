@@ -47,7 +47,8 @@ namespace QuantConnect.AlgorithmFactory.Python.Wrappers
     /// <summary>
     /// Creates and wraps the algorithm written in python.
     /// </summary>
-    public class AlgorithmPythonWrapper : BasePythonWrapper<IAlgorithm>, IAlgorithm
+    public class AlgorithmPythonWrapper : BasePythonWrapper<IAlgorithm>, IAlgorithm,
+        IBrokerageAccountServiceConsumer
     {
         private readonly dynamic _onData;
         private readonly dynamic _onMarginCall;
@@ -678,6 +679,22 @@ namespace QuantConnect.AlgorithmFactory.Python.Wrappers
         /// Gets whether or not this algorithm has been locked and fully initialized
         /// </summary>
         public bool GetLocked() => _baseAlgorithm.GetLocked();
+
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA1033:Interface methods should be callable by child types",
+            Justification = "Engine-only service injection must not be exposed to Python algorithms.")]
+        void IBrokerageAccountServiceConsumer.SetBrokerageAccountStateProvider(IBrokerageAccountStateProvider provider) =>
+            ((IBrokerageAccountServiceConsumer)_baseAlgorithm).SetBrokerageAccountStateProvider(provider);
+
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA1033:Interface methods should be callable by child types",
+            Justification = "Engine-only service injection must not be exposed to Python algorithms.")]
+        void IBrokerageAccountServiceConsumer.SetBrokerageAccountGroupManager(IBrokerageAccountGroupManager manager) =>
+            ((IBrokerageAccountServiceConsumer)_baseAlgorithm).SetBrokerageAccountGroupManager(manager);
+
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA1033:Interface methods should be callable by child types",
+            Justification = "Engine-only service injection must not be exposed to Python algorithms.")]
+        void IBrokerageAccountServiceConsumer.SetBrokerageAccountGroupAllocationManager(
+            IBrokerageAccountGroupAllocationManager manager) =>
+            ((IBrokerageAccountServiceConsumer)_baseAlgorithm).SetBrokerageAccountGroupAllocationManager(manager);
 
         /// <summary>
         /// Gets a read-only dictionary with all current parameters
