@@ -485,9 +485,9 @@ namespace QuantConnect.Lean.Engine
             if (AlgorithmHandlers.Results != null)
             {
                 var message = $"Runtime Error: {err.Message}";
-                if (IsOutOfMemoryError(err))
+                if (TryGetOutOfMemoryErrorDetails(job, algorithm, err, out var outOfMemoryDetails))
                 {
-                    message += GetOutOfMemoryErrorDetails(job, algorithm);
+                    message += outOfMemoryDetails;
                 }
                 Log.Trace("Engine.Run(): Sending runtime error to user...");
                 AlgorithmHandlers.Results.LogMessage(message);
@@ -501,51 +501,44 @@ namespace QuantConnect.Lean.Engine
         }
 
         /// <summary>
-        /// Determines whether the given exception, or any exception in its inner exception chain,
-        /// is an <see cref="OutOfMemoryException"/>
-        /// </summary>
-        /// <param name="err">The exception to inspect</param>
-        internal static bool IsOutOfMemoryError(Exception err)
-        {
-            for (var exception = err; exception != null; exception = exception.InnerException)
-            {
-                if (exception is OutOfMemoryException)
-                {
-                    return true;
-                }
-            }
-            return false;
-        }
-
-        /// <summary>
-        /// Builds a summary of the algorithm state along with the most common causes of out of memory errors,
-        /// to be appended to the runtime error message to help diagnose the failure
+        /// Checks whether the given exception, or any exception in its inner exception chain, is an <see cref="OutOfMemoryException"/>,
+        /// producing details about the algorithm state and the common causes to be appended to the runtime error message
         /// </summary>
         /// <param name="job">Job we're processing</param>
-        /// <param name="algorithm">The algorithm instance that ran out of memory</param>
-        internal static string GetOutOfMemoryErrorDetails(AlgorithmNodePacket job, IAlgorithm algorithm)
+        /// <param name="algorithm">The algorithm instance that raised the error</param>
+        /// <param name="err">Error from algorithm stack</param>
+        /// <param name="details">The out of memory details, null if the error is not an out of memory error</param>
+        /// <returns>True if the error is an out of memory error</returns>
+        private static bool TryGetOutOfMemoryErrorDetails(AlgorithmNodePacket job, IAlgorithm algorithm, Exception err, out string details)
         {
-            var details = Invariant($" The algorithm exhausted its {job.RamAllocation}MB of RAM.");
+            details = null;
+            var exception = err;
+            while (exception != null && exception is not OutOfMemoryException)
+            {
+                exception = exception.InnerException;
+            }
+            if (exception == null)
+            {
+                return false;
+            }
+
+            details = Invariant($" The algorithm exhausted its {job.RamAllocation}MB of RAM.");
             if (algorithm != null)
             {
                 try
                 {
-                    details += Invariant($" At the time of the error it had {algorithm.Securities.Count} securities, {algorithm.SubscriptionManager.Count} data subscriptions and {algorithm.UniverseManager.Count} universes.");
+                    details += Invariant($" State: {algorithm.Securities.Count} securities, {algorithm.SubscriptionManager.Count} subscriptions, {algorithm.UniverseManager.Count} universes.");
                 }
-                catch (Exception exception)
+                catch (Exception stateException)
                 {
                     // best effort: don't let diagnostics collection replace the original error
-                    Log.Error(exception);
+                    Log.Error(stateException);
                 }
             }
-            return details +
-                " Common causes include: a universe that selects too many securities or too many data subscriptions for the allocated RAM;" +
-                " collections that grow without bound, such as lists or dictionaries accumulating data points, rolling windows or" +
-                " consolidators with very large periods, or keeping references to every history request result;" +
-                " and indicators or consolidators registered for many securities and never removed." +
-                " Consider reducing the universe size or number of subscriptions, using coarser data resolutions," +
-                " bounding cached collections and history lookback periods, unsubscribing/removing what is no longer needed," +
-                " or increasing the RAM allocation.";
+            details += " Common causes: universe/subscription count too high for the allocated RAM; unbounded buffers such as rolling windows," +
+                " consolidators or accumulated history results. Fixes: reduce universe size/subscriptions, use coarser resolutions," +
+                " bound buffers, or increase the RAM allocation.";
+            return true;
         }
 
         /// <summary>
