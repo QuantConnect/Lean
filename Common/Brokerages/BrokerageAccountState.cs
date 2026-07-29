@@ -35,7 +35,7 @@ namespace QuantConnect.Brokerages
         public IReadOnlyList<string> GroupNames { get; }
 
         /// <summary>
-        /// Gets the brokerage-reported account type.
+        /// Gets the brokerage-reported account type. May be empty when the brokerage omits the field.
         /// </summary>
         public string AccountType { get; }
 
@@ -94,7 +94,7 @@ namespace QuantConnect.Brokerages
         /// </summary>
         /// <param name="accountId">Brokerage account identifier.</param>
         /// <param name="groupNames">Account groups currently containing the account.</param>
-        /// <param name="accountType">Brokerage-reported account type.</param>
+        /// <param name="accountType">Brokerage-reported account type; may be empty when omitted.</param>
         /// <param name="netLiquidation">Account net liquidation value.</param>
         /// <param name="totalCashValue">Account total cash value.</param>
         /// <param name="availableFunds">Account available funds.</param>

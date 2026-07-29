@@ -283,6 +283,62 @@ namespace QuantConnect.Tests.Algorithm
                 services.AssignmentRequests[0].TargetAllocationValue);
         }
 
+        [TestCase("ContractsOrShares", "0", true, "0")]
+        [TestCase("ContractsOrShares", "-1", false, null)]
+        [TestCase("Ratio", "0", false, null)]
+        [TestCase("Ratio", "-1", false, null)]
+        [TestCase("Percent", "0", false, null)]
+        [TestCase("Percent", "-1", false, null)]
+        [TestCase("Equal", "-1", true, null)]
+        [TestCase("NetLiq", "0", true, null)]
+        [TestCase("AvailableEquity", "-1", true, null)]
+        public void ValidatesAllocationValueForDestinationSavedMethod(
+            string allocationMethod,
+            string allocationValue,
+            bool expectedRequest,
+            string expectedAllocationValue)
+        {
+            var services = new TestFinancialAdvisorServices
+            {
+                Snapshot = CreateSnapshot(
+                    1,
+                    new BrokerageAccountGroup(
+                        "TargetGroup",
+                        allocationMethod,
+                        Array.Empty<string>()),
+                    Entry(
+                        "AccountA",
+                        BrokerageAccountRelationship.Managed,
+                        "MOVE-East"))
+            };
+            var algorithm = CreateAlgorithm(
+                services,
+                new Dictionary<string, string>
+                {
+                    ["fa-allocation-value"] = allocationValue
+                });
+
+            algorithm.OnData(CreateEmptySlice());
+
+            Assert.AreEqual(
+                expectedRequest ? 1 : 0,
+                services.AssignmentRequests.Count);
+            if (expectedRequest)
+            {
+                Assert.AreEqual(
+                    expectedAllocationValue == null
+                        ? null
+                        : decimal.Parse(expectedAllocationValue),
+                    services.AssignmentRequests[0].TargetAllocationValue);
+            }
+            else
+            {
+                Assert.That(
+                    algorithm.ErrorMessages,
+                    Has.One.Contains("fa-allocation-value"));
+            }
+        }
+
         [Test]
         public void EmptyTargetRemovesMatchingAccountFromEveryGroup()
         {

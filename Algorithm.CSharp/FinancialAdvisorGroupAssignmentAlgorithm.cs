@@ -81,12 +81,6 @@ namespace QuantConnect.Algorithm.CSharp
             _cashChangeThreshold =
                 GetParameter("fa-cash-change-threshold", 1000m);
 
-            if (_targetAllocationValue <= 0)
-            {
-                throw new ArgumentOutOfRangeException(
-                    "fa-allocation-value",
-                    "The destination allocation value must be positive.");
-            }
             if (_cashChangeThreshold < 0)
             {
                 throw new ArgumentOutOfRangeException(
@@ -339,10 +333,34 @@ namespace QuantConnect.Algorithm.CSharp
             {
                 return true;
             }
-            if (new[] { "ContractsOrShares", "Ratio", "Percent" }.Contains(
+            if (destinationGroup.AllocationMethod.Equals(
+                    "ContractsOrShares",
+                    StringComparison.OrdinalIgnoreCase))
+            {
+                if (_targetAllocationValue < 0)
+                {
+                    Error(
+                        $"FA destination group '{destinationGroup.Name}' uses " +
+                        "ContractsOrShares, so fa-allocation-value cannot be negative.");
+                    return false;
+                }
+
+                allocationValue = _targetAllocationValue;
+                return true;
+            }
+            if (new[] { "Ratio", "Percent" }.Contains(
                     destinationGroup.AllocationMethod,
                     StringComparer.OrdinalIgnoreCase))
             {
+                if (_targetAllocationValue <= 0)
+                {
+                    Error(
+                        $"FA destination group '{destinationGroup.Name}' uses " +
+                        $"{destinationGroup.AllocationMethod}, so " +
+                        "fa-allocation-value must be positive.");
+                    return false;
+                }
+
                 allocationValue = _targetAllocationValue;
                 return true;
             }

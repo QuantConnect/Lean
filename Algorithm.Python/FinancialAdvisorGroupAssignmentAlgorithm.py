@@ -44,8 +44,7 @@ class FinancialAdvisorGroupAssignmentAlgorithm(QCAlgorithm):
         "availableequity",
         "equal"
     }
-    _USER_SPECIFIED_ALLOCATION_METHODS = {
-        "contractsorshares",
+    _POSITIVE_ALLOCATION_METHODS = {
         "ratio",
         "percent"
     }
@@ -77,8 +76,6 @@ class FinancialAdvisorGroupAssignmentAlgorithm(QCAlgorithm):
             raise ValueError(
                 "fa-allocation-value and fa-cash-change-threshold must be "
                 "decimal numbers.") from error
-        if self._allocation_value <= 0:
-            raise ValueError("fa-allocation-value must be positive.")
         if self._cash_change_threshold < 0:
             raise ValueError(
                 "fa-cash-change-threshold cannot be negative.")
@@ -467,10 +464,21 @@ class FinancialAdvisorGroupAssignmentAlgorithm(QCAlgorithm):
         if allocation_method in self._COMPUTED_ALLOCATION_METHODS:
             # NetLiq, AvailableEquity and Equal are calculated by TWS.
             return None
-        if allocation_method in \
-                self._USER_SPECIFIED_ALLOCATION_METHODS:
-            # ContractsOrShares, Ratio and Percent require an explicit
-            # positive value for the account being added.
+        if allocation_method == "contractsorshares":
+            if self._allocation_value < 0:
+                self.error(
+                    f"FA destination group '{target_group.name}' uses "
+                    f"ContractsOrShares, so fa-allocation-value cannot be "
+                    f"negative.")
+                return False
+            return self._allocation_value
+        if allocation_method in self._POSITIVE_ALLOCATION_METHODS:
+            if self._allocation_value <= 0:
+                self.error(
+                    f"FA destination group '{target_group.name}' uses "
+                    f"{target_group.allocation_method}, so "
+                    f"fa-allocation-value must be positive.")
+                return False
             return self._allocation_value
 
         self.error(
