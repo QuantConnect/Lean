@@ -56,6 +56,7 @@ namespace QuantConnect.Algorithm.CSharp
         private long _initialSnapshotRequestGeneration = -1;
         private bool _groupOrderSubmitted;
         private bool _orderSubmissionInProgress;
+        private bool _onDataStateActive;
         private int _groupOrderId;
         private int _invalidOrderAttemptCount;
         private DateTime _nextGroupOrderRetryUtc;
@@ -101,6 +102,8 @@ namespace QuantConnect.Algorithm.CSharp
                     RequestScheduledSnapshotRefresh);
                 _nextReconcileRefreshUtc = UtcTime;
                 _nextGroupOrderRetryUtc = UtcTime;
+                TryRequestInitialSnapshotRefresh(
+                    BrokerageAccountSnapshot);
             }
         }
 
@@ -121,118 +124,135 @@ namespace QuantConnect.Algorithm.CSharp
                 return;
             }
 
-            var snapshot = BrokerageAccountSnapshot;
-            var now = UtcTime;
-            string invalidOrderMessage;
-            bool requestReconcileRefresh;
             lock (_orderStateLock)
             {
-                requestReconcileRefresh =
-                    TryApplyTerminalOrderIntentLocked(
-                        snapshot.Generation,
-                        now,
-                        out invalidOrderMessage);
+                _onDataStateActive = true;
             }
-            if (invalidOrderMessage != null ||
-                requestReconcileRefresh)
+            try
             {
-                ReportTerminalOrderAction(
-                    invalidOrderMessage,
-                    requestReconcileRefresh,
-                    snapshot);
-                return;
-            }
-
-            BrokerageAccountSnapshot preOrderSnapshot = null;
-            var reconcile = false;
-            requestReconcileRefresh = false;
-            lock (_orderStateLock)
-            {
-                if (_pendingReconcileGeneration >= 0)
+                var snapshot = BrokerageAccountSnapshot;
+                var now = UtcTime;
+                string invalidOrderMessage;
+                bool requestReconcileRefresh;
+                lock (_orderStateLock)
                 {
-                    if (snapshot.IsReady &&
-                        snapshot.Generation >
-                            _pendingReconcileGeneration &&
-                        snapshot.CollectionStartedUtc >=
-                            _pendingReconcileTerminalUtc)
-                    {
-                        preOrderSnapshot = _preOrderSnapshot;
-                        _preOrderSnapshot = null;
-                        _pendingReconcileGeneration = -1;
-                        reconcile = true;
-                    }
-                    else
-                    {
-                        requestReconcileRefresh = true;
-                    }
+                    requestReconcileRefresh =
+                        TryApplyTerminalOrderIntentLocked(
+                            snapshot.Generation,
+                            now,
+                            out invalidOrderMessage);
                 }
-            }
-            if (reconcile)
-            {
-                ReconcileAccountPositions(
-                    preOrderSnapshot,
-                    snapshot);
-                return;
-            }
-            if (requestReconcileRefresh)
-            {
-                TryRequestReconcileRefresh(snapshot);
-                return;
-            }
-
-            bool requestInitialRefresh;
-            lock (_orderStateLock)
-            {
-                requestInitialRefresh =
-                    !_initialSnapshotRefreshAccepted ||
-                    !snapshot.IsReady ||
-                    snapshot.Generation <=
-                        _initialSnapshotRequestGeneration;
-            }
-            if (requestInitialRefresh)
-            {
-                TryRequestInitialSnapshotRefresh(snapshot);
-                return;
-            }
-            if (TryProcessScheduledSnapshotRefresh(snapshot))
-            {
-                return;
-            }
-
-            lock (_orderStateLock)
-            {
-                if (_groupOrderSubmitted ||
-                    _orderSubmissionInProgress ||
-                    _invalidOrderAttemptCount >=
-                        MaximumInvalidOrderAttempts ||
-                    UtcTime < _nextGroupOrderRetryUtc ||
-                    !snapshot.IsReady ||
-                    !snapshot.Groups.ContainsKey(GroupName))
+                if (invalidOrderMessage != null ||
+                    requestReconcileRefresh)
                 {
+                    ReportTerminalOrderAction(
+                        invalidOrderMessage,
+                        requestReconcileRefresh,
+                        snapshot);
                     return;
                 }
 
-                _preOrderSnapshot = snapshot;
-                _orderSubmissionInProgress = true;
-                _terminalEventsDuringSubmission.Clear();
-            }
+                BrokerageAccountSnapshot preOrderSnapshot = null;
+                var reconcile = false;
+                requestReconcileRefresh = false;
+                lock (_orderStateLock)
+                {
+                    if (_pendingReconcileGeneration >= 0)
+                    {
+                        if (snapshot.IsReady &&
+                            snapshot.Generation >
+                                _pendingReconcileGeneration &&
+                            snapshot.CollectionStartedUtc >=
+                                _pendingReconcileTerminalUtc)
+                        {
+                            preOrderSnapshot = _preOrderSnapshot;
+                            _preOrderSnapshot = null;
+                            _pendingReconcileGeneration = -1;
+                            reconcile = true;
+                        }
+                        else
+                        {
+                            requestReconcileRefresh = true;
+                        }
+                    }
+                }
+                if (reconcile)
+                {
+                    ReconcileAccountPositions(
+                        preOrderSnapshot,
+                        snapshot);
+                    return;
+                }
+                if (requestReconcileRefresh)
+                {
+                    TryRequestReconcileRefresh(snapshot);
+                    return;
+                }
 
-            var ticket = _submitGroupOrder();
-            var postSubmissionSnapshot = BrokerageAccountSnapshot;
-            var postSubmissionUtc = UtcTime;
-            lock (_orderStateLock)
-            {
-                requestReconcileRefresh =
-                    CompleteGroupOrderSubmissionLocked(
-                        ticket,
-                        postSubmissionSnapshot.Generation,
-                        postSubmissionUtc,
-                        out invalidOrderMessage);
+                bool requestInitialRefresh;
+                lock (_orderStateLock)
+                {
+                    requestInitialRefresh =
+                        !_initialSnapshotRefreshAccepted ||
+                        !snapshot.IsReady ||
+                        snapshot.Generation <=
+                            _initialSnapshotRequestGeneration;
+                }
+                if (requestInitialRefresh)
+                {
+                    TryRequestInitialSnapshotRefresh(snapshot);
+                    return;
+                }
+                if (TryProcessScheduledSnapshotRefresh(
+                        allowOnDataOwner: true))
+                {
+                    return;
+                }
+                lock (_orderStateLock)
+                {
+                    var submissionSnapshot =
+                        BrokerageAccountSnapshot;
+                    if (_groupOrderSubmitted ||
+                        _orderSubmissionInProgress ||
+                        _invalidOrderAttemptCount >=
+                            MaximumInvalidOrderAttempts ||
+                        UtcTime < _nextGroupOrderRetryUtc ||
+                        !submissionSnapshot.IsReady ||
+                        !submissionSnapshot.Groups.ContainsKey(
+                            GroupName))
+                    {
+                        return;
+                    }
+
+                    _preOrderSnapshot = submissionSnapshot;
+                    _orderSubmissionInProgress = true;
+                    _terminalEventsDuringSubmission.Clear();
+                }
+
+                var ticket = _submitGroupOrder();
+                var postSubmissionSnapshot = BrokerageAccountSnapshot;
+                var postSubmissionUtc = UtcTime;
+                lock (_orderStateLock)
+                {
+                    requestReconcileRefresh =
+                        CompleteGroupOrderSubmissionLocked(
+                            ticket,
+                            postSubmissionSnapshot.Generation,
+                            postSubmissionUtc,
+                            out invalidOrderMessage);
+                }
+                ReportTerminalOrderAction(
+                    invalidOrderMessage,
+                    requestReconcileRefresh,
+                    postSubmissionSnapshot);
             }
-            ReportTerminalOrderAction(
-                invalidOrderMessage,
-                requestReconcileRefresh,
-                postSubmissionSnapshot);
+            finally
+            {
+                lock (_orderStateLock)
+                {
+                    _onDataStateActive = false;
+                }
+            }
         }
 
         /// <summary>
@@ -247,72 +267,98 @@ namespace QuantConnect.Algorithm.CSharp
                 return;
             }
 
+            string invalidOrderMessage = null;
+            var reconcileRefreshRejected = false;
             lock (_orderStateLock)
             {
-                if (_orderSubmissionInProgress ||
-                    orderEvent.OrderId == _groupOrderId)
+                var terminalOrderEvent =
+                    new TerminalOrderEvent(orderEvent);
+                if (_orderSubmissionInProgress)
                 {
                     _terminalEventsDuringSubmission[orderEvent.OrderId] =
-                        new TerminalOrderEvent(orderEvent);
+                        terminalOrderEvent;
                 }
+                else if (orderEvent.OrderId == _groupOrderId &&
+                    _pendingReconcileGeneration < 0)
+                {
+                    var snapshot =
+                        BrokerageAccountSnapshot;
+                    var requestReconcileRefresh =
+                        ApplyTerminalOrderLocked(
+                            terminalOrderEvent,
+                            snapshot.Generation,
+                            UtcTime,
+                            out invalidOrderMessage);
+                    if (requestReconcileRefresh &&
+                        TryRequestReconcileRefreshLocked(
+                            snapshot,
+                            out var accepted))
+                    {
+                        reconcileRefreshRejected = !accepted;
+                    }
+                }
+            }
+            if (invalidOrderMessage != null)
+            {
+                Error(invalidOrderMessage);
+            }
+            if (reconcileRefreshRejected)
+            {
+                ReportReconcileRefreshRejection();
             }
         }
 
         private void TryRequestReconcileRefresh(BrokerageAccountSnapshot snapshot)
         {
-            var now = UtcTime;
+            var attempted = false;
+            var accepted = true;
             lock (_orderStateLock)
             {
-                if (_pendingReconcileGeneration < 0 ||
-                    snapshot.Status ==
-                        BrokerageAccountSnapshotStatus.Refreshing ||
-                    now < _nextReconcileRefreshUtc)
-                {
-                    return;
-                }
-
-                _nextReconcileRefreshUtc =
-                    now + ReconcileRetryInterval;
+                attempted = TryRequestReconcileRefreshLocked(
+                    snapshot,
+                    out accepted);
             }
-
-            if (!RequestBrokerageAccountSnapshotRefresh(new[] { GroupName }))
+            if (attempted && !accepted)
             {
-                Error(
-                    $"The post-order snapshot refresh for Financial Advisor group " +
-                    $"'{GroupName}' was not accepted.");
+                ReportReconcileRefreshRejection();
             }
+        }
+
+        private bool TryRequestReconcileRefreshLocked(
+            BrokerageAccountSnapshot snapshot,
+            out bool accepted)
+        {
+            accepted = true;
+            var now = UtcTime;
+            if (_pendingReconcileGeneration < 0 ||
+                snapshot.Status ==
+                    BrokerageAccountSnapshotStatus.Refreshing ||
+                now < _nextReconcileRefreshUtc)
+            {
+                return false;
+            }
+
+            _nextReconcileRefreshUtc =
+                now + ReconcileRetryInterval;
+            // The IB implementation only coalesces into its in-memory
+            // QueueRefresh while this sample state is protected.
+            accepted = RequestBrokerageAccountSnapshotRefresh(
+                new[] { GroupName });
+            return true;
         }
 
         private void TryRequestInitialSnapshotRefresh(
             BrokerageAccountSnapshot snapshot)
         {
-            var now = UtcTime;
+            var attempted = false;
+            var accepted = true;
             lock (_orderStateLock)
             {
-                if (snapshot.Status ==
-                        BrokerageAccountSnapshotStatus.Refreshing ||
-                    now < _nextReconcileRefreshUtc)
-                {
-                    return;
-                }
-
-                _nextReconcileRefreshUtc =
-                    now + ReconcileRetryInterval;
+                attempted = TryRequestInitialSnapshotRefreshLocked(
+                    snapshot,
+                    out accepted);
             }
-
-            var requestGeneration = snapshot.Generation;
-            var accepted =
-                RequestBrokerageAccountSnapshotRefresh(new[] { GroupName });
-            lock (_orderStateLock)
-            {
-                _initialSnapshotRefreshAccepted = accepted;
-                if (accepted)
-                {
-                    _initialSnapshotRequestGeneration =
-                        requestGeneration;
-                }
-            }
-            if (!accepted)
+            if (attempted && !accepted)
             {
                 Error(
                     $"The initial snapshot refresh for Financial Advisor group " +
@@ -320,25 +366,70 @@ namespace QuantConnect.Algorithm.CSharp
             }
         }
 
+        private bool TryRequestInitialSnapshotRefreshLocked(
+            BrokerageAccountSnapshot snapshot,
+            out bool accepted)
+        {
+            accepted = true;
+            var now = UtcTime;
+            if (snapshot.Status ==
+                    BrokerageAccountSnapshotStatus.Refreshing ||
+                now < _nextReconcileRefreshUtc)
+            {
+                return false;
+            }
+
+            _nextReconcileRefreshUtc =
+                now + ReconcileRetryInterval;
+            // The IB implementation only coalesces into its in-memory
+            // QueueRefresh while this sample state is protected.
+            accepted = RequestBrokerageAccountSnapshotRefresh(
+                new[] { GroupName });
+            _initialSnapshotRefreshAccepted = accepted;
+            if (accepted)
+            {
+                _initialSnapshotRequestGeneration =
+                    snapshot.Generation;
+            }
+            return true;
+        }
+
         private void RequestScheduledSnapshotRefresh()
         {
             Interlocked.Exchange(
                 ref _scheduledRefreshIntent,
                 1);
+            if (!TryProcessSnapshotRequestPriority())
+            {
+                TryProcessScheduledSnapshotRefresh();
+            }
         }
 
         private bool TryProcessScheduledSnapshotRefresh(
-            BrokerageAccountSnapshot snapshot)
+            bool allowOnDataOwner = false)
         {
             bool completeRefresh;
+            bool accepted;
             lock (_orderStateLock)
             {
-                if (_groupOrderId != 0 ||
+                if ((_onDataStateActive &&
+                        !allowOnDataOwner) ||
+                    _groupOrderId != 0 ||
                     _orderSubmissionInProgress ||
                     _pendingReconcileGeneration >= 0 ||
-                    !_initialSnapshotRefreshAccepted ||
-                    snapshot.Status ==
-                        BrokerageAccountSnapshotStatus.Refreshing)
+                    !_initialSnapshotRefreshAccepted)
+                {
+                    return false;
+                }
+                var snapshot =
+                    BrokerageAccountSnapshot;
+                if (snapshot.Status ==
+                    BrokerageAccountSnapshotStatus.Refreshing)
+                {
+                    return false;
+                }
+                if (snapshot.Generation <=
+                    _initialSnapshotRequestGeneration)
                 {
                     return false;
                 }
@@ -357,11 +448,13 @@ namespace QuantConnect.Algorithm.CSharp
                 {
                     _scheduledRefreshTopologyTicks = 0;
                 }
+                // The IB implementation only coalesces into its in-memory
+                // QueueRefresh while this sample state is protected.
+                accepted = completeRefresh
+                    ? RequestBrokerageAccountSnapshotRefresh()
+                    : RequestBrokerageAccountSnapshotRefresh(
+                        new[] { GroupName });
             }
-            var accepted = completeRefresh
-                ? RequestBrokerageAccountSnapshotRefresh()
-                : RequestBrokerageAccountSnapshotRefresh(
-                    new[] { GroupName });
             if (!accepted)
             {
                 Error(
@@ -372,6 +465,85 @@ namespace QuantConnect.Algorithm.CSharp
                             $"group '{GroupName}' was not accepted.");
             }
             return true;
+        }
+
+        private bool TryProcessSnapshotRequestPriority()
+        {
+            BrokerageAccountSnapshot snapshot;
+            BrokerageAccountSnapshot preOrderSnapshot = null;
+            var reconcile = false;
+            var initialRefreshRejected = false;
+            var reconcileRefreshRejected = false;
+            lock (_orderStateLock)
+            {
+                if (_onDataStateActive)
+                {
+                    return true;
+                }
+
+                snapshot = BrokerageAccountSnapshot;
+                if (_pendingReconcileGeneration >= 0)
+                {
+                    if (snapshot.IsReady &&
+                        snapshot.Generation >
+                            _pendingReconcileGeneration &&
+                        snapshot.CollectionStartedUtc >=
+                            _pendingReconcileTerminalUtc)
+                    {
+                        preOrderSnapshot = _preOrderSnapshot;
+                        _preOrderSnapshot = null;
+                        _pendingReconcileGeneration = -1;
+                        reconcile = true;
+                    }
+                    else if (TryRequestReconcileRefreshLocked(
+                            snapshot,
+                            out var accepted))
+                    {
+                        reconcileRefreshRejected = !accepted;
+                    }
+                }
+                else if (!_initialSnapshotRefreshAccepted ||
+                    !snapshot.IsReady ||
+                    snapshot.Generation <=
+                        _initialSnapshotRequestGeneration)
+                {
+                    if (TryRequestInitialSnapshotRefreshLocked(
+                            snapshot,
+                            out var accepted))
+                    {
+                        initialRefreshRejected = !accepted;
+                    }
+                }
+                else
+                {
+                    return false;
+                }
+            }
+
+            if (reconcile)
+            {
+                ReconcileAccountPositions(
+                    preOrderSnapshot,
+                    snapshot);
+            }
+            if (initialRefreshRejected)
+            {
+                Error(
+                    $"The initial snapshot refresh for Financial Advisor group " +
+                    $"'{GroupName}' was not accepted.");
+            }
+            if (reconcileRefreshRejected)
+            {
+                ReportReconcileRefreshRejection();
+            }
+            return true;
+        }
+
+        private void ReportReconcileRefreshRejection()
+        {
+            Error(
+                $"The post-order snapshot refresh for Financial Advisor group " +
+                $"'{GroupName}' was not accepted.");
         }
 
         private void ReconcileAccountPositions(

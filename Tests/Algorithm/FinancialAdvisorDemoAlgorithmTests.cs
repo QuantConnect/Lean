@@ -27,6 +27,7 @@ using QuantConnect.Data;
 using QuantConnect.Interfaces;
 using QuantConnect.Orders;
 using QuantConnect.Orders.Fees;
+using QuantConnect.Tests.Engine.DataFeeds;
 
 namespace QuantConnect.Tests.Algorithm
 {
@@ -92,10 +93,9 @@ namespace QuantConnect.Tests.Algorithm
 
             algorithm.OnOrderEvent(CreateOrderEvent(41, OrderStatus.Filled));
             Assert.AreEqual(
-                0,
+                1,
                 provider.RefreshRequestCount,
-                "OnOrderEvent must only publish terminal intent.");
-            algorithm.OnData(CreateEmptySlice());
+                "The installed terminal order must request reconciliation directly.");
 
             Assert.Multiple(() =>
             {
@@ -417,18 +417,15 @@ namespace QuantConnect.Tests.Algorithm
                 algorithm,
                 "RequestScheduledSnapshotRefresh");
             Assert.AreEqual(
-                0,
+                1,
                 provider.RefreshRequestCount,
-                "The scheduled callback must only publish refresh intent.");
-            algorithm.OnData(CreateEmptySlice());
+                "The scheduled callback must request directly.");
             InvokePrivateMethod(
                 algorithm,
                 "RequestScheduledSnapshotRefresh");
-            algorithm.OnData(CreateEmptySlice());
             InvokePrivateMethod(
                 algorithm,
                 "RequestScheduledSnapshotRefresh");
-            algorithm.OnData(CreateEmptySlice());
 
             Assert.Multiple(() =>
             {
@@ -449,7 +446,6 @@ namespace QuantConnect.Tests.Algorithm
             InvokePrivateMethod(
                 algorithm,
                 "RequestScheduledSnapshotRefresh");
-            algorithm.OnData(CreateEmptySlice());
             Assert.AreEqual(
                 3,
                 provider.RefreshRequestCount,
@@ -458,16 +454,13 @@ namespace QuantConnect.Tests.Algorithm
             algorithm.OnOrderEvent(
                 CreateOrderEvent(41, OrderStatus.Filled));
             Assert.AreEqual(
-                3,
+                4,
                 provider.RefreshRequestCount,
-                "OnOrderEvent must not call the account service.");
-            algorithm.OnData(CreateEmptySlice());
-            Assert.AreEqual(4, provider.RefreshRequestCount);
+                "The terminal event must request reconciliation directly.");
 
             InvokePrivateMethod(
                 algorithm,
                 "RequestScheduledSnapshotRefresh");
-            algorithm.OnData(CreateEmptySlice());
 
             Assert.AreEqual(
                 4,
@@ -519,29 +512,265 @@ namespace QuantConnect.Tests.Algorithm
                 }
             };
 
-            InvokePrivateMethod(
-                algorithm,
-                "RequestScheduledSnapshotRefresh");
-            var firstOnData = Task.Run(
-                () => algorithm.OnData(CreateEmptySlice()));
+            var firstCallback = Task.Run(
+                () => InvokePrivateMethod(
+                    algorithm,
+                    "RequestScheduledSnapshotRefresh"));
             Assert.IsTrue(
                 requestEntered.Wait(TimeSpan.FromSeconds(10)));
-            InvokePrivateMethod(
-                algorithm,
-                "RequestScheduledSnapshotRefresh");
+            var secondCallback = Task.Run(
+                () => InvokePrivateMethod(
+                    algorithm,
+                    "RequestScheduledSnapshotRefresh"));
             releaseRequest.Set();
             Assert.IsTrue(
-                firstOnData.Wait(TimeSpan.FromSeconds(10)));
-
-            Assert.AreEqual(1, provider.RefreshRequestCount);
-            algorithm.OnData(CreateEmptySlice());
-            algorithm.OnData(CreateEmptySlice());
+                firstCallback.Wait(TimeSpan.FromSeconds(10)));
+            Assert.IsTrue(
+                secondCallback.Wait(TimeSpan.FromSeconds(10)));
 
             Assert.AreEqual(
                 2,
                 provider.RefreshRequestCount,
-                "The concurrent callback must survive the first atomic " +
-                "consume without producing a duplicate third request.");
+                "Each concurrent callback must directly consume one coalesced intent.");
+        }
+
+        [Test]
+        public void ScheduledCallbackDuringOnDataIsRetainedForOnDataOwner()
+        {
+            var snapshot = CreateSnapshot(
+                BrokerageAccountSnapshotStatus.Ready,
+                7,
+                10m,
+                20m,
+                SnapshotTime);
+            var provider = new TestAccountStateProvider
+            {
+                Snapshot = snapshot
+            };
+            var algorithm = CreateAlgorithm(provider, snapshot);
+            SetPrivateField(algorithm, "_groupOrderId", 0);
+            using var snapshotRead = new ManualResetEventSlim();
+            using var releaseSnapshotRead = new ManualResetEventSlim();
+            provider.SnapshotReadHook = () =>
+            {
+                snapshotRead.Set();
+                Assert.IsTrue(
+                    releaseSnapshotRead.Wait(TimeSpan.FromSeconds(10)));
+            };
+
+            var onData = Task.Run(
+                () => algorithm.OnData(CreateEmptySlice()));
+            Assert.IsTrue(
+                snapshotRead.Wait(TimeSpan.FromSeconds(10)));
+
+            InvokePrivateMethod(
+                algorithm,
+                "RequestScheduledSnapshotRefresh");
+            Assert.AreEqual(
+                0,
+                provider.RefreshRequestCount,
+                "The callback must defer while OnData owns the state machine.");
+
+            releaseSnapshotRead.Set();
+            Assert.IsTrue(
+                onData.Wait(TimeSpan.FromSeconds(10)));
+
+            Assert.Multiple(() =>
+            {
+                Assert.AreEqual(
+                    1,
+                    provider.RefreshRequestCount,
+                    "OnData must consume the callback's retained intent.");
+                CollectionAssert.AreEqual(
+                    new[] { GroupName },
+                    provider.RequestedGroupHistory[0]);
+                Assert.AreEqual(
+                    0,
+                    GetPrivateField<int>(
+                        algorithm,
+                        "_scheduledRefreshIntent"));
+            });
+        }
+
+        [Test]
+        public void LiveCallbacksRefreshWithoutOnData()
+        {
+            var provider = new TestAccountStateProvider
+            {
+                Snapshot = CreateSnapshot(
+                    BrokerageAccountSnapshotStatus.Ready,
+                    7,
+                    10m,
+                    20m,
+                    SnapshotTime)
+            };
+            var algorithm = CreateInitializedAlgorithm(provider);
+
+            Assert.Multiple(() =>
+            {
+                Assert.AreEqual(
+                    1,
+                    provider.RefreshRequestCount,
+                    "Initialize must issue the first scoped request.");
+                CollectionAssert.AreEqual(
+                    new[] { GroupName },
+                    provider.RequestedGroupHistory[0]);
+            });
+
+            for (var tick = 1; tick <= 3; ++tick)
+            {
+                algorithm.SetDateTime(
+                    SnapshotTime.AddMinutes(tick));
+                provider.Snapshot = CreateSnapshot(
+                    BrokerageAccountSnapshotStatus.Ready,
+                    7 + tick,
+                    10m,
+                    20m,
+                    SnapshotTime.AddMinutes(tick));
+                InvokePrivateMethod(
+                    algorithm,
+                    "RequestScheduledSnapshotRefresh");
+            }
+
+            Assert.Multiple(() =>
+            {
+                Assert.AreEqual(4, provider.RefreshRequestCount);
+                CollectionAssert.AreEqual(
+                    new[] { GroupName },
+                    provider.RequestedGroupHistory[1]);
+                CollectionAssert.AreEqual(
+                    new[] { GroupName },
+                    provider.RequestedGroupHistory[2]);
+                CollectionAssert.IsEmpty(
+                    provider.RequestedGroupHistory[3],
+                    "The third callback must request complete state.");
+            });
+
+            var terminalSnapshot = provider.Snapshot;
+            SetPrivateField(
+                algorithm,
+                "_preOrderSnapshot",
+                terminalSnapshot);
+            SetPrivateField(
+                algorithm,
+                "_groupOrderSubmitted",
+                true);
+            SetPrivateField(
+                algorithm,
+                "_groupOrderId",
+                41);
+            long pendingGenerationAtRequest = -1;
+            DateTime terminalUtcAtRequest = default;
+            provider.RefreshRequestHook = _ =>
+            {
+                pendingGenerationAtRequest =
+                    GetPrivateField<long>(
+                        algorithm,
+                        "_pendingReconcileGeneration");
+                terminalUtcAtRequest =
+                    GetPrivateField<DateTime>(
+                        algorithm,
+                        "_pendingReconcileTerminalUtc");
+            };
+
+            algorithm.OnOrderEvent(
+                CreateOrderEvent(42, OrderStatus.Filled));
+            algorithm.OnOrderEvent(
+                CreateOrderEvent(41, OrderStatus.Filled));
+            algorithm.OnOrderEvent(
+                CreateOrderEvent(41, OrderStatus.Filled));
+
+            Assert.Multiple(() =>
+            {
+                Assert.AreEqual(
+                    5,
+                    provider.RefreshRequestCount,
+                    "Only the installed terminal order may request reconciliation.");
+                CollectionAssert.AreEqual(
+                    new[] { GroupName },
+                    provider.RequestedGroupHistory[4]);
+                Assert.AreEqual(
+                    terminalSnapshot.Generation,
+                    pendingGenerationAtRequest);
+                Assert.AreEqual(
+                    SnapshotTime,
+                    terminalUtcAtRequest);
+            });
+
+            var messageCount = algorithm.LogMessages.Count;
+            provider.Snapshot = CreateSnapshot(
+                BrokerageAccountSnapshotStatus.Ready,
+                terminalSnapshot.Generation + 1,
+                13m,
+                18m,
+                SnapshotTime.AddMinutes(3).AddTicks(1));
+            algorithm.SetDateTime(
+                SnapshotTime.AddMinutes(4));
+            InvokePrivateMethod(
+                algorithm,
+                "RequestScheduledSnapshotRefresh");
+
+            Assert.Multiple(() =>
+            {
+                Assert.AreEqual(
+                    5,
+                    provider.RefreshRequestCount,
+                    "The callback must consume the completed reconciliation " +
+                    "before issuing another cadence request.");
+                Assert.AreEqual(
+                    -1,
+                    GetPrivateField<long>(
+                        algorithm,
+                        "_pendingReconcileGeneration"));
+                Assert.IsNull(
+                    GetPrivateField<BrokerageAccountSnapshot>(
+                        algorithm,
+                        "_preOrderSnapshot"));
+                Assert.That(
+                    algorithm.LogMessages.Skip(messageCount),
+                    Has.One.Contains(
+                        "account=AccountA, symbol=SPY, before=10, after=13, change=3"));
+                Assert.That(
+                    algorithm.LogMessages.Skip(messageCount),
+                    Has.One.Contains(
+                        "account=AccountB, symbol=SPY, before=20, after=18, change=-2"));
+            });
+        }
+
+        [Test]
+        public void ScheduledCallbackRetriesRejectedInitialRequestWithoutOnData()
+        {
+            var provider = new TestAccountStateProvider
+            {
+                Snapshot = CreateSnapshot(
+                    BrokerageAccountSnapshotStatus.Ready,
+                    7,
+                    10m,
+                    20m,
+                    SnapshotTime)
+            };
+            provider.EnqueueRefreshResult(false);
+            var algorithm = CreateInitializedAlgorithm(provider);
+
+            algorithm.SetDateTime(
+                SnapshotTime.AddMinutes(1));
+            InvokePrivateMethod(
+                algorithm,
+                "RequestScheduledSnapshotRefresh");
+
+            Assert.Multiple(() =>
+            {
+                Assert.AreEqual(
+                    2,
+                    provider.RefreshRequestCount,
+                    "The next scheduled callback must retry rejected discovery.");
+                CollectionAssert.AreEqual(
+                    new[] { GroupName },
+                    provider.RequestedGroupHistory[0]);
+                CollectionAssert.AreEqual(
+                    new[] { GroupName },
+                    provider.RequestedGroupHistory[1]);
+            });
         }
 
         [TestCase(BrokerageAccountSnapshotStatus.Failed)]
@@ -618,6 +847,22 @@ namespace QuantConnect.Tests.Algorithm
             SetPrivateField(algorithm, "_initialSnapshotRefreshAccepted", true);
             SetPrivateField(algorithm, "_groupOrderSubmitted", true);
             SetPrivateField(algorithm, "_groupOrderId", 41);
+            return algorithm;
+        }
+
+        private static FinancialAdvisorDemoAlgorithm
+            CreateInitializedAlgorithm(
+                TestAccountStateProvider provider)
+        {
+            var algorithm = new FinancialAdvisorDemoAlgorithm();
+            algorithm.SubscriptionManager.SetDataManager(
+                new DataManagerStub(algorithm));
+            algorithm.SetLiveMode(true);
+            algorithm.SetDateTime(SnapshotTime);
+            ((IBrokerageAccountServiceConsumer)algorithm)
+                .SetBrokerageAccountStateProvider(provider);
+            algorithm.Initialize();
+            algorithm.SetLocked();
             return algorithm;
         }
 

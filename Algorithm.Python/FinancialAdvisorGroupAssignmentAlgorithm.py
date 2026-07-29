@@ -15,6 +15,7 @@ from AlgorithmImports import *
 from datetime import timedelta
 from decimal import Decimal, InvalidOperation
 from System.Threading import AutoResetEvent
+from threading import Lock
 import re
 
 
@@ -83,8 +84,11 @@ class FinancialAdvisorGroupAssignmentAlgorithm(QCAlgorithm):
 
         self._snapshot_request_generation = None
         self._snapshot_request_is_confirmation = False
+        self._initial_snapshot_refresh_accepted = False
+        self._initial_snapshot_request_generation = -1
         self._next_snapshot_refresh_utc = None
         self._scheduled_refresh_topology_ticks = 0
+        self._order_state_lock = Lock()
         # Python.NET cannot expose a persistent ref-int to Interlocked, so this
         # provides the same atomic, coalescing set-and-consume semantics.
         self._scheduled_refresh_intent = AutoResetEvent(False)
@@ -94,6 +98,8 @@ class FinancialAdvisorGroupAssignmentAlgorithm(QCAlgorithm):
         self._cash_confirmation_trigger_generation = None
 
         self._active_assignment_generation = None
+        self._assignment_submission_in_progress = False
+        self._on_data_state_active = False
         self._active_assignment_account_id = None
         self._active_assignment_snapshot_generation = -1
         self._minimum_ready_generation = None
@@ -106,11 +112,24 @@ class FinancialAdvisorGroupAssignmentAlgorithm(QCAlgorithm):
                 self.date_rules.every_day(),
                 self.time_rules.every(self._TOPOLOGY_REFRESH_INTERVAL),
                 self._request_scheduled_snapshot_refresh)
+            self._try_request_snapshot_refresh(
+                self.brokerage_account_snapshot,
+                is_confirmation=False,
+                is_initial_request=True)
 
     def on_data(self, data):
         if not self.live_mode:
             return
 
+        with self._order_state_lock:
+            self._on_data_state_active = True
+        try:
+            self._on_live_data()
+        finally:
+            with self._order_state_lock:
+                self._on_data_state_active = False
+
+    def _on_live_data(self):
         snapshot = self.brokerage_account_snapshot
         self._poll_assignment()
         if self._active_assignment_generation is not None:
@@ -118,7 +137,8 @@ class FinancialAdvisorGroupAssignmentAlgorithm(QCAlgorithm):
 
         self._observe_ready_snapshot(snapshot)
         self._drive_snapshot_refresh(snapshot)
-        if self._try_process_scheduled_snapshot_refresh(snapshot):
+        if self._try_process_scheduled_snapshot_refresh(
+                allow_on_data_owner=True):
             return
 
         if self._minimum_ready_generation is not None:
@@ -214,28 +234,8 @@ class FinancialAdvisorGroupAssignmentAlgorithm(QCAlgorithm):
         return abs(Decimal(str(current)) - Decimal(str(previous)))
 
     def _drive_snapshot_refresh(self, snapshot):
-        if self._snapshot_request_generation is not None:
-            if snapshot.status == BrokerageAccountSnapshotStatus.REFRESHING:
-                return
-            if snapshot.is_ready and \
-                    snapshot.generation > \
-                    self._snapshot_request_generation:
-                self._snapshot_request_generation = None
-                self._snapshot_request_is_confirmation = False
-            elif snapshot.status in (
-                    BrokerageAccountSnapshotStatus.FAILED,
-                    BrokerageAccountSnapshotStatus.STALE,
-                    BrokerageAccountSnapshotStatus.UNAVAILABLE):
-                purpose = "cash confirmation" \
-                    if self._snapshot_request_is_confirmation \
-                    else "discovery"
-                self.error(
-                    f"The FA {purpose} snapshot refresh completed as "
-                    f"{snapshot.status}; retrying.")
-                self._snapshot_request_generation = None
-                self._snapshot_request_is_confirmation = False
-            else:
-                return
+        if not self._update_snapshot_request_state(snapshot):
+            return
 
         if snapshot.status == BrokerageAccountSnapshotStatus.REFRESHING:
             return
@@ -249,77 +249,177 @@ class FinancialAdvisorGroupAssignmentAlgorithm(QCAlgorithm):
         if not snapshot.is_ready:
             self._try_request_snapshot_refresh(
                 snapshot,
-                is_confirmation=False)
+                is_confirmation=False,
+                is_initial_request=(
+                    not self._initial_snapshot_refresh_accepted or
+                    snapshot.generation <=
+                    self._initial_snapshot_request_generation))
+
+    def _update_snapshot_request_state(self, snapshot):
+        with self._order_state_lock:
+            can_continue, error_message = \
+                self._update_snapshot_request_state_locked(snapshot)
+        if error_message is not None:
+            self.error(error_message)
+        return can_continue
+
+    def _update_snapshot_request_state_locked(self, snapshot):
+        error_message = None
+        can_continue = True
+        if self._snapshot_request_generation is not None:
+            if snapshot.status == \
+                    BrokerageAccountSnapshotStatus.REFRESHING:
+                can_continue = False
+            elif snapshot.is_ready and \
+                    snapshot.generation > \
+                    self._snapshot_request_generation:
+                self._snapshot_request_generation = None
+                self._snapshot_request_is_confirmation = False
+            elif snapshot.status in (
+                    BrokerageAccountSnapshotStatus.FAILED,
+                    BrokerageAccountSnapshotStatus.STALE,
+                    BrokerageAccountSnapshotStatus.UNAVAILABLE):
+                purpose = "cash confirmation" \
+                    if self._snapshot_request_is_confirmation \
+                    else "discovery"
+                error_message = (
+                    f"The FA {purpose} snapshot refresh completed as "
+                    f"{snapshot.status}; retrying.")
+                self._snapshot_request_generation = None
+                self._snapshot_request_is_confirmation = False
+            else:
+                can_continue = False
+        return can_continue, error_message
 
     def _try_request_snapshot_refresh(
             self,
             snapshot,
             is_confirmation,
-            group_names=None):
+            group_names=None,
+            is_initial_request=False):
+        error_message = None
+        with self._order_state_lock:
+            error_message = self._try_request_snapshot_refresh_locked(
+                snapshot,
+                is_confirmation,
+                group_names,
+                is_initial_request)
+        if error_message is not None:
+            self.error(error_message)
+
+    def _try_request_snapshot_refresh_locked(
+            self,
+            snapshot,
+            is_confirmation,
+            group_names,
+            is_initial_request=False):
         if snapshot.status == BrokerageAccountSnapshotStatus.REFRESHING or \
                 (self._next_snapshot_refresh_utc is not None and
                  self.utc_time < self._next_snapshot_refresh_utc):
-            return
+            return None
 
         self._next_snapshot_refresh_utc = \
             self.utc_time + self._REFRESH_RETRY_INTERVAL
+        # The IB implementation only coalesces into its in-memory QueueRefresh
+        # while this sample state is protected.
         request_generation = snapshot.generation
         accepted = self.request_brokerage_account_snapshot_refresh() \
             if group_names is None \
             else self.request_brokerage_account_snapshot_refresh(group_names)
+        if is_initial_request:
+            self._initial_snapshot_refresh_accepted = accepted
+            if accepted:
+                self._initial_snapshot_request_generation = request_generation
         if accepted:
             self._snapshot_request_generation = request_generation
             self._snapshot_request_is_confirmation = is_confirmation
-            return
+            return None
 
         purpose = "cash confirmation" \
             if is_confirmation \
             else "discovery"
-        self.error(
-            f"The FA {purpose} snapshot refresh was not accepted; retrying.")
+        return f"The FA {purpose} snapshot refresh was not accepted; retrying."
 
     def _request_scheduled_snapshot_refresh(self):
         self._scheduled_refresh_intent.set()
+        self._try_process_scheduled_snapshot_refresh()
 
-    def _try_process_scheduled_snapshot_refresh(self, snapshot):
-        if self._snapshot_request_generation is not None or \
-                self._active_assignment_generation is not None or \
-                self._minimum_ready_generation is not None or \
-                self._cash_confirmation_trigger_generation is not None or \
-                snapshot.status == BrokerageAccountSnapshotStatus.REFRESHING or \
-                (self._next_snapshot_refresh_utc is not None and
-                 self.utc_time < self._next_snapshot_refresh_utc):
-            return False
-
-        group_names = None
-        if self._target_group_name:
-            target_group = self._find_target_group(snapshot)
-            group_names = [
-                self._target_group_name
-                if target_group is None
-                else target_group.name
-            ]
-        else:
-            group_names = [
-                group.name
-                for group in list(snapshot.all_groups.values)
-            ]
-            if not group_names:
+    def _try_process_scheduled_snapshot_refresh(
+            self,
+            allow_on_data_owner=False):
+        error_messages = []
+        with self._order_state_lock:
+            if self._on_data_state_active and not allow_on_data_owner:
+                return False
+            snapshot = self.brokerage_account_snapshot
+            can_continue, update_error = \
+                self._update_snapshot_request_state_locked(snapshot)
+            if update_error is not None:
+                error_messages.append(update_error)
+            if not can_continue and update_error is None:
+                return False
+            if not self._initial_snapshot_refresh_accepted or \
+                    snapshot.generation <= \
+                    self._initial_snapshot_request_generation:
+                request_error = self._try_request_snapshot_refresh_locked(
+                    snapshot,
+                    is_confirmation=False,
+                    group_names=None,
+                    is_initial_request=True)
+                if request_error is not None:
+                    error_messages.append(request_error)
+            elif self._snapshot_request_generation is None and \
+                    not snapshot.is_ready:
+                request_error = self._try_request_snapshot_refresh_locked(
+                    snapshot,
+                    is_confirmation=False,
+                    group_names=None)
+                if request_error is not None:
+                    error_messages.append(request_error)
+            elif self._snapshot_request_generation is not None or \
+                    self._active_assignment_generation is not None or \
+                    self._assignment_submission_in_progress or \
+                    self._minimum_ready_generation is not None or \
+                    self._cash_confirmation_trigger_generation is not None or \
+                    snapshot.status == \
+                    BrokerageAccountSnapshotStatus.REFRESHING or \
+                    (self._next_snapshot_refresh_utc is not None and
+                     self.utc_time < self._next_snapshot_refresh_utc):
+                return False
+            else:
                 group_names = None
-        if not self._scheduled_refresh_intent.wait_one(0):
-            return False
+                if self._target_group_name:
+                    target_group = self._find_target_group(snapshot)
+                    group_names = [
+                        self._target_group_name
+                        if target_group is None
+                        else target_group.name
+                    ]
+                else:
+                    group_names = [
+                        group.name
+                        for group in list(snapshot.all_groups.values)
+                    ]
+                    if not group_names:
+                        group_names = None
+                if not self._scheduled_refresh_intent.wait_one(0):
+                    return False
 
-        self._scheduled_refresh_topology_ticks += 1
-        complete_refresh = \
-            self._scheduled_refresh_topology_ticks == \
-            self._COMPLETE_REFRESH_TOPOLOGY_TICKS
-        if complete_refresh:
-            self._scheduled_refresh_topology_ticks = 0
-            group_names = None
-        self._try_request_snapshot_refresh(
-            snapshot,
-            is_confirmation=False,
-            group_names=group_names)
+                self._scheduled_refresh_topology_ticks += 1
+                complete_refresh = \
+                    self._scheduled_refresh_topology_ticks == \
+                    self._COMPLETE_REFRESH_TOPOLOGY_TICKS
+                if complete_refresh:
+                    self._scheduled_refresh_topology_ticks = 0
+                    group_names = None
+                request_error = self._try_request_snapshot_refresh_locked(
+                    snapshot,
+                    is_confirmation=False,
+                    group_names=group_names)
+                if request_error is not None:
+                    error_messages.append(request_error)
+        for error_message in error_messages:
+            self.error(error_message)
         return True
 
     def _poll_assignment(self):
@@ -389,11 +489,18 @@ class FinancialAdvisorGroupAssignmentAlgorithm(QCAlgorithm):
                 snapshot.generation
             return
 
-        accepted = self.request_brokerage_account_group_assignment(
-            account.account_id,
-            canonical_target_group_name,
-            allocation_value,
-            snapshot)
+        with self._order_state_lock:
+            self._assignment_submission_in_progress = True
+        accepted = False
+        try:
+            accepted = self.request_brokerage_account_group_assignment(
+                account.account_id,
+                canonical_target_group_name,
+                allocation_value,
+                snapshot)
+        finally:
+            with self._order_state_lock:
+                self._assignment_submission_in_progress = False
         if not accepted:
             self._next_assignment_retry_utc = \
                 self.utc_time + self._REFRESH_RETRY_INTERVAL
@@ -406,9 +513,10 @@ class FinancialAdvisorGroupAssignmentAlgorithm(QCAlgorithm):
         # Capture only after acceptance. The static Unavailable result is terminal,
         # so generation correlation is required before IsCompleted is meaningful.
         assignment = self.brokerage_account_group_assignment
-        self._active_assignment_generation = assignment.generation
-        self._active_assignment_account_id = account.account_id
-        self._active_assignment_snapshot_generation = snapshot.generation
+        with self._order_state_lock:
+            self._active_assignment_generation = assignment.generation
+            self._active_assignment_account_id = account.account_id
+            self._active_assignment_snapshot_generation = snapshot.generation
         self._last_membership_evaluation_generation = snapshot.generation
         self._next_assignment_retry_utc = None
         self.log(

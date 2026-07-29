@@ -162,10 +162,9 @@ namespace QuantConnect.Tests.Algorithm
                 algorithm,
                 "RequestScheduledSnapshotRefresh");
             Assert.AreEqual(
-                0,
+                1,
                 services.RefreshRequestCount,
-                "The scheduled callback must only publish refresh intent.");
-            algorithm.OnData(CreateEmptySlice());
+                "The scheduled callback must request directly.");
             services.Snapshot = CreateSnapshot(
                 2,
                 new BrokerageAccountGroup(
@@ -183,7 +182,6 @@ namespace QuantConnect.Tests.Algorithm
             InvokePrivateMethod(
                 algorithm,
                 "RequestScheduledSnapshotRefresh");
-            algorithm.OnData(CreateEmptySlice());
             services.Snapshot = CreateSnapshot(
                 3,
                 new BrokerageAccountGroup(
@@ -201,7 +199,6 @@ namespace QuantConnect.Tests.Algorithm
             InvokePrivateMethod(
                 algorithm,
                 "RequestScheduledSnapshotRefresh");
-            algorithm.OnData(CreateEmptySlice());
 
             Assert.Multiple(() =>
             {
@@ -278,30 +275,196 @@ namespace QuantConnect.Tests.Algorithm
                 }
             };
 
-            InvokePrivateMethod(
-                algorithm,
-                "RequestScheduledSnapshotRefresh");
-            var firstOnData = Task.Run(
-                () => algorithm.OnData(CreateEmptySlice()));
+            var firstCallback = Task.Run(
+                () => InvokePrivateMethod(
+                    algorithm,
+                    "RequestScheduledSnapshotRefresh"));
             Assert.IsTrue(
                 requestEntered.Wait(TimeSpan.FromSeconds(10)));
+            var secondCallback = Task.Run(
+                () => InvokePrivateMethod(
+                    algorithm,
+                    "RequestScheduledSnapshotRefresh"));
+            releaseRequest.Set();
+            Assert.IsTrue(
+                firstCallback.Wait(TimeSpan.FromSeconds(10)));
+            Assert.IsTrue(
+                secondCallback.Wait(TimeSpan.FromSeconds(10)));
+
+            algorithm.SetDateTime(
+                SnapshotTime.AddSeconds(5));
             InvokePrivateMethod(
                 algorithm,
                 "RequestScheduledSnapshotRefresh");
-            releaseRequest.Set();
-            Assert.IsTrue(
-                firstOnData.Wait(TimeSpan.FromSeconds(10)));
-
-            Assert.AreEqual(1, services.RefreshRequestCount);
-            algorithm.SetDateTime(SnapshotTime.AddSeconds(5));
-            algorithm.OnData(CreateEmptySlice());
-            algorithm.OnData(CreateEmptySlice());
 
             Assert.AreEqual(
                 2,
                 services.RefreshRequestCount,
-                "The concurrent callback must survive the first atomic " +
-                "consume without producing a duplicate third request.");
+                "The concurrent callback must survive the retry gate and be " +
+                "consumed by a later callback without OnData.");
+        }
+
+        [Test]
+        public void LiveCallbacksRefreshWithoutOnData()
+        {
+            BrokerageAccountSnapshot CreateReadySnapshot(long generation) =>
+                CreateSnapshot(
+                    generation,
+                    new BrokerageAccountGroup(
+                        "TargetGroup",
+                        "Equal",
+                        new[] { "AccountA" }),
+                    Entry(
+                        "AccountA",
+                        BrokerageAccountRelationship.Managed,
+                        "Hold-East",
+                        "TargetGroup"));
+
+            var services = new TestFinancialAdvisorServices
+            {
+                Snapshot = CreateReadySnapshot(1)
+            };
+            services.RefreshRequestHook = stateProvider =>
+                stateProvider.Snapshot = CreateReadySnapshot(
+                    stateProvider.Snapshot.Generation + 1);
+            var algorithm =
+                new FinancialAdvisorGroupAssignmentAlgorithm();
+            algorithm.SubscriptionManager.SetDataManager(
+                new DataManagerStub(algorithm));
+            algorithm.SetLiveMode(true);
+            algorithm.SetDateTime(SnapshotTime);
+            algorithm.SetParameters(
+                new Dictionary<string, string>());
+            var consumer =
+                (IBrokerageAccountServiceConsumer)algorithm;
+            consumer.SetBrokerageAccountStateProvider(services);
+            consumer.SetBrokerageAccountGroupManager(services);
+
+            algorithm.Initialize();
+            algorithm.SetLocked();
+
+            Assert.Multiple(() =>
+            {
+                Assert.AreEqual(
+                    1,
+                    services.RefreshRequestCount,
+                    "Initialize must issue complete discovery.");
+                CollectionAssert.IsEmpty(
+                    services.RequestedGroupHistory[0]);
+            });
+
+            for (var tick = 1; tick <= 3; ++tick)
+            {
+                algorithm.SetDateTime(
+                    SnapshotTime.AddMinutes(tick));
+                InvokePrivateMethod(
+                    algorithm,
+                    "RequestScheduledSnapshotRefresh");
+            }
+
+            Assert.Multiple(() =>
+            {
+                Assert.AreEqual(4, services.RefreshRequestCount);
+                CollectionAssert.AreEqual(
+                    new[] { "TargetGroup" },
+                    services.RequestedGroupHistory[1]);
+                CollectionAssert.AreEqual(
+                    new[] { "TargetGroup" },
+                    services.RequestedGroupHistory[2]);
+                CollectionAssert.IsEmpty(
+                    services.RequestedGroupHistory[3],
+                    "The third callback must request complete state.");
+                Assert.AreEqual(
+                    0,
+                    services.AssignmentRequests.Count,
+                    "No OnData call was made to enter mutation processing.");
+            });
+        }
+
+        [Test]
+        public void RejectedInitialReadySnapshotRetriesCompleteWithoutOnData()
+        {
+            BrokerageAccountSnapshot CreateReadySnapshot(long generation) =>
+                CreateSnapshot(
+                    generation,
+                    new BrokerageAccountGroup(
+                        "TargetGroup",
+                        "Equal",
+                        new[] { "AccountA" }),
+                    Entry(
+                        "AccountA",
+                        BrokerageAccountRelationship.Managed,
+                        "Hold-East",
+                        "TargetGroup"));
+
+            var services = new TestFinancialAdvisorServices
+            {
+                Snapshot = CreateReadySnapshot(1),
+                AcceptRefreshRequests = false
+            };
+            var algorithm =
+                new FinancialAdvisorGroupAssignmentAlgorithm();
+            algorithm.SubscriptionManager.SetDataManager(
+                new DataManagerStub(algorithm));
+            algorithm.SetLiveMode(true);
+            algorithm.SetDateTime(SnapshotTime);
+            algorithm.SetParameters(
+                new Dictionary<string, string>());
+            var consumer =
+                (IBrokerageAccountServiceConsumer)algorithm;
+            consumer.SetBrokerageAccountStateProvider(services);
+            consumer.SetBrokerageAccountGroupManager(services);
+
+            algorithm.Initialize();
+            algorithm.SetLocked();
+
+            Assert.Multiple(() =>
+            {
+                Assert.AreEqual(1, services.RefreshRequestCount);
+                CollectionAssert.IsEmpty(
+                    services.RequestedGroupHistory[0],
+                    "Initialize must attempt complete discovery.");
+            });
+
+            services.AcceptRefreshRequests = true;
+            services.RefreshRequestHook = stateProvider =>
+                stateProvider.Snapshot = CreateReadySnapshot(
+                    stateProvider.Snapshot.Generation + 1);
+            algorithm.SetDateTime(
+                SnapshotTime.AddSeconds(5));
+            InvokePrivateMethod(
+                algorithm,
+                "RequestScheduledSnapshotRefresh");
+
+            for (var tick = 1; tick <= 3; ++tick)
+            {
+                algorithm.SetDateTime(
+                    SnapshotTime.AddMinutes(tick));
+                InvokePrivateMethod(
+                    algorithm,
+                    "RequestScheduledSnapshotRefresh");
+            }
+
+            Assert.Multiple(() =>
+            {
+                Assert.AreEqual(5, services.RefreshRequestCount);
+                CollectionAssert.IsEmpty(
+                    services.RequestedGroupHistory[1],
+                    "The rejected initial request must retry complete discovery.");
+                CollectionAssert.AreEqual(
+                    new[] { "TargetGroup" },
+                    services.RequestedGroupHistory[2]);
+                CollectionAssert.AreEqual(
+                    new[] { "TargetGroup" },
+                    services.RequestedGroupHistory[3]);
+                CollectionAssert.IsEmpty(
+                    services.RequestedGroupHistory[4],
+                    "Initial retry must not advance the topology cadence.");
+                Assert.AreEqual(
+                    0,
+                    services.AssignmentRequests.Count,
+                    "No OnData call was made.");
+            });
         }
 
         [Test]
@@ -732,6 +895,19 @@ namespace QuantConnect.Tests.Algorithm
             services.AcceptRefreshRequests = false;
             algorithm.Initialize();
             services.AcceptRefreshRequests = true;
+            services.ResetRefreshRequests();
+            SetPrivateField(
+                algorithm,
+                "_nextRefreshRetryUtc",
+                SnapshotTime);
+            SetPrivateField(
+                algorithm,
+                "_initialSnapshotRefreshAccepted",
+                true);
+            SetPrivateField(
+                algorithm,
+                "_initialSnapshotRequestGeneration",
+                services.Snapshot.Generation - 1);
             algorithm.SetLocked();
             return algorithm;
         }
@@ -856,6 +1032,19 @@ namespace QuantConnect.Tests.Algorithm
             method.Invoke(instance, null);
         }
 
+        private static void SetPrivateField<T>(
+            object instance,
+            string name,
+            T value)
+        {
+            var field = instance.GetType().GetField(
+                name,
+                System.Reflection.BindingFlags.Instance |
+                System.Reflection.BindingFlags.NonPublic);
+            Assert.IsNotNull(field, $"Private field '{name}' was not found.");
+            field.SetValue(instance, value);
+        }
+
         private sealed class AccountEntry
         {
             public string AccountId { get; }
@@ -919,7 +1108,8 @@ namespace QuantConnect.Tests.Algorithm
             public int RefreshRequestCount { get; private set; }
             public long GenerationAtLastRefreshRequest { get; private set; }
             public Action<TestFinancialAdvisorServices>
-                RefreshRequestHook { get; set; }
+                RefreshRequestHook
+            { get; set; }
             public List<IReadOnlyCollection<string>> RequestedGroupHistory { get; } =
                 new();
 

@@ -57,6 +57,7 @@ class FinancialAdvisorDemoAlgorithm(QCAlgorithm):
         self._next_initial_snapshot_refresh_utc = None
         self._group_order_submitted = False
         self._order_submission_in_progress = False
+        self._on_data_state_active = False
         self._group_order_id = 0
         self._invalid_order_attempt_count = 0
         self._next_group_order_retry_utc = None
@@ -77,6 +78,8 @@ class FinancialAdvisorDemoAlgorithm(QCAlgorithm):
                 self.date_rules.every_day(),
                 self.time_rules.every(self._TOPOLOGY_REFRESH_INTERVAL),
                 self._request_scheduled_snapshot_refresh)
+            self._try_request_initial_snapshot_refresh(
+                self.brokerage_account_snapshot)
 
     def on_data(self, data):
         # on_data event is the primary entry point for your algorithm. Each new data point will be pumped in here.
@@ -88,6 +91,15 @@ class FinancialAdvisorDemoAlgorithm(QCAlgorithm):
                 self.set_holdings("SPY", 1)
             return
 
+        with self._order_state_lock:
+            self._on_data_state_active = True
+        try:
+            self._on_live_data()
+        finally:
+            with self._order_state_lock:
+                self._on_data_state_active = False
+
+    def _on_live_data(self):
         snapshot = self.brokerage_account_snapshot
         now = self.utc_time
         with self._order_state_lock:
@@ -139,20 +151,21 @@ class FinancialAdvisorDemoAlgorithm(QCAlgorithm):
         if request_initial_refresh:
             self._try_request_initial_snapshot_refresh(snapshot)
             return
-        if self._try_process_scheduled_snapshot_refresh(snapshot):
+        if self._try_process_scheduled_snapshot_refresh(
+                allow_on_data_owner=True):
             return
-
         with self._order_state_lock:
+            submission_snapshot = self.brokerage_account_snapshot
             if self._group_order_submitted or \
                     self._order_submission_in_progress or \
                     self._invalid_order_attempt_count >= \
                     self._MAXIMUM_INVALID_ORDER_ATTEMPTS or \
                     (self._next_group_order_retry_utc is not None and
                      self.utc_time < self._next_group_order_retry_utc) or \
-                    self._find_group(snapshot) is None:
+                    self._find_group(submission_snapshot) is None:
                 return
 
-            self._pre_order_snapshot = snapshot
+            self._pre_order_snapshot = submission_snapshot
             self._order_submission_in_progress = True
             self._terminal_events_during_submission.clear()
         tickets = self.set_holdings(self._symbol, 1, asynchronous=True)
@@ -177,65 +190,107 @@ class FinancialAdvisorDemoAlgorithm(QCAlgorithm):
                 not order_event.status.is_closed():
             return
 
+        invalid_order_message = None
+        reconcile_refresh_rejected = False
         with self._order_state_lock:
             terminal_order_event = (
                 order_event.status,
                 order_event.utc_time,
                 order_event.message)
-            if self._order_submission_in_progress or \
-                    order_event.order_id == self._group_order_id:
+            if self._order_submission_in_progress:
                 self._terminal_events_during_submission[
                     order_event.order_id] = terminal_order_event
+            elif order_event.order_id == self._group_order_id and \
+                    self._pending_reconcile_generation < 0:
+                snapshot = self.brokerage_account_snapshot
+                request_reconcile_refresh = False
+                invalid_order_message, request_reconcile_refresh = \
+                    self._apply_terminal_order_locked(
+                        order_event.order_id,
+                        terminal_order_event,
+                        snapshot.generation,
+                        self.utc_time)
+                if request_reconcile_refresh:
+                    attempted, accepted = \
+                        self._try_request_reconcile_refresh_locked(snapshot)
+                    reconcile_refresh_rejected = attempted and not accepted
+        if invalid_order_message is not None:
+            self.error(invalid_order_message)
+        if reconcile_refresh_rejected:
+            self._report_reconcile_refresh_rejection()
 
     def _try_request_initial_snapshot_refresh(self, snapshot):
-        now = self.utc_time
         with self._order_state_lock:
-            if snapshot.status == \
-                    BrokerageAccountSnapshotStatus.REFRESHING or \
-                    (self._next_initial_snapshot_refresh_utc is not None and
-                     now < self._next_initial_snapshot_refresh_utc):
-                return
-
-            self._next_initial_snapshot_refresh_utc = \
-                now + self._RECONCILE_RETRY_INTERVAL
-        request_generation = snapshot.generation
-        accepted = \
-            self.request_brokerage_account_snapshot_refresh([self._GROUP_NAME])
-        with self._order_state_lock:
-            self._initial_snapshot_refresh_accepted = accepted
-            if accepted:
-                self._initial_snapshot_request_generation = request_generation
-        if not accepted:
+            attempted, accepted = \
+                self._try_request_initial_snapshot_refresh_locked(snapshot)
+        if attempted and not accepted:
             self.error(
                 f"The initial snapshot refresh for Financial Advisor group "
                 f"'{self._GROUP_NAME}' was not accepted; retrying.")
 
-    def _try_request_reconcile_refresh(self, snapshot):
+    def _try_request_initial_snapshot_refresh_locked(self, snapshot):
         now = self.utc_time
-        with self._order_state_lock:
-            if self._pending_reconcile_generation < 0 or \
-                    snapshot.status == \
-                    BrokerageAccountSnapshotStatus.REFRESHING or \
-                    (self._next_reconcile_refresh_utc is not None and
-                     now < self._next_reconcile_refresh_utc):
-                return
+        if snapshot.status == \
+                BrokerageAccountSnapshotStatus.REFRESHING or \
+                (self._next_initial_snapshot_refresh_utc is not None and
+                 now < self._next_initial_snapshot_refresh_utc):
+            return False, True
 
-            self._next_reconcile_refresh_utc = \
-                now + self._RECONCILE_RETRY_INTERVAL
-        if not self.request_brokerage_account_snapshot_refresh([self._GROUP_NAME]):
-            self.error(
-                f"The post-order snapshot refresh for Financial Advisor group "
-                f"'{self._GROUP_NAME}' was not accepted.")
+        self._next_initial_snapshot_refresh_utc = \
+            now + self._RECONCILE_RETRY_INTERVAL
+        # The IB implementation only coalesces into its in-memory QueueRefresh
+        # while this sample state is protected.
+        accepted = self.request_brokerage_account_snapshot_refresh(
+            [self._GROUP_NAME])
+        self._initial_snapshot_refresh_accepted = accepted
+        if accepted:
+            self._initial_snapshot_request_generation = snapshot.generation
+        return True, accepted
+
+    def _try_request_reconcile_refresh(self, snapshot):
+        with self._order_state_lock:
+            attempted, accepted = \
+                self._try_request_reconcile_refresh_locked(snapshot)
+        if attempted and not accepted:
+            self._report_reconcile_refresh_rejection()
+
+    def _try_request_reconcile_refresh_locked(self, snapshot):
+        now = self.utc_time
+        if self._pending_reconcile_generation < 0 or \
+                snapshot.status == \
+                BrokerageAccountSnapshotStatus.REFRESHING or \
+                (self._next_reconcile_refresh_utc is not None and
+                 now < self._next_reconcile_refresh_utc):
+            return False, True
+
+        self._next_reconcile_refresh_utc = \
+            now + self._RECONCILE_RETRY_INTERVAL
+        # The IB implementation only coalesces into its in-memory QueueRefresh
+        # while this sample state is protected.
+        accepted = self.request_brokerage_account_snapshot_refresh(
+            [self._GROUP_NAME])
+        return True, accepted
 
     def _request_scheduled_snapshot_refresh(self):
         self._scheduled_refresh_intent.set()
+        if not self._try_process_snapshot_request_priority():
+            self._try_process_scheduled_snapshot_refresh()
 
-    def _try_process_scheduled_snapshot_refresh(self, snapshot):
+    def _try_process_scheduled_snapshot_refresh(
+            self,
+            allow_on_data_owner=False):
+        accepted = True
         with self._order_state_lock:
-            if self._group_order_id != 0 or \
+            if (self._on_data_state_active and
+                    not allow_on_data_owner) or \
+                    self._group_order_id != 0 or \
                     self._order_submission_in_progress or \
                     self._pending_reconcile_generation >= 0 or \
-                    not self._initial_snapshot_refresh_accepted or \
+                    not self._initial_snapshot_refresh_accepted:
+                return False
+            snapshot = self.brokerage_account_snapshot
+            if snapshot.generation <= \
+                    self._initial_snapshot_request_generation or \
                     snapshot.status == \
                     BrokerageAccountSnapshotStatus.REFRESHING:
                 return False
@@ -248,11 +303,13 @@ class FinancialAdvisorDemoAlgorithm(QCAlgorithm):
                 self._COMPLETE_REFRESH_TOPOLOGY_TICKS
             if complete_refresh:
                 self._scheduled_refresh_topology_ticks = 0
-        if complete_refresh:
-            accepted = self.request_brokerage_account_snapshot_refresh()
-        else:
-            accepted = self.request_brokerage_account_snapshot_refresh(
-                [self._GROUP_NAME])
+            # The IB implementation only coalesces into its in-memory
+            # QueueRefresh while this sample state is protected.
+            if complete_refresh:
+                accepted = self.request_brokerage_account_snapshot_refresh()
+            else:
+                accepted = self.request_brokerage_account_snapshot_refresh(
+                    [self._GROUP_NAME])
 
         if not accepted:
             purpose = "complete account-state" \
@@ -262,6 +319,61 @@ class FinancialAdvisorDemoAlgorithm(QCAlgorithm):
                 f"The scheduled Financial Advisor {purpose} snapshot "
                 f"refresh was not accepted.")
         return True
+
+    def _try_process_snapshot_request_priority(self):
+        snapshot = None
+        pre_order_snapshot = None
+        reconcile = False
+        initial_refresh_rejected = False
+        reconcile_refresh_rejected = False
+        with self._order_state_lock:
+            if self._on_data_state_active:
+                return True
+
+            snapshot = self.brokerage_account_snapshot
+            if self._pending_reconcile_generation >= 0:
+                if snapshot.is_ready and \
+                        snapshot.generation > \
+                        self._pending_reconcile_generation and \
+                        self._pending_reconcile_terminal_utc is not None and \
+                        snapshot.collection_started_utc >= \
+                        self._pending_reconcile_terminal_utc:
+                    pre_order_snapshot = self._pre_order_snapshot
+                    self._pre_order_snapshot = None
+                    self._pending_reconcile_generation = -1
+                    self._pending_reconcile_terminal_utc = None
+                    self._next_reconcile_refresh_utc = None
+                    reconcile = True
+                else:
+                    attempted, accepted = \
+                        self._try_request_reconcile_refresh_locked(snapshot)
+                    reconcile_refresh_rejected = attempted and not accepted
+            elif not self._initial_snapshot_refresh_accepted or \
+                    not snapshot.is_ready or \
+                    snapshot.generation <= \
+                    self._initial_snapshot_request_generation:
+                attempted, accepted = \
+                    self._try_request_initial_snapshot_refresh_locked(snapshot)
+                initial_refresh_rejected = attempted and not accepted
+            else:
+                return False
+
+        if reconcile:
+            self._reconcile_account_positions(
+                pre_order_snapshot,
+                snapshot)
+        if initial_refresh_rejected:
+            self.error(
+                f"The initial snapshot refresh for Financial Advisor group "
+                f"'{self._GROUP_NAME}' was not accepted; retrying.")
+        if reconcile_refresh_rejected:
+            self._report_reconcile_refresh_rejection()
+        return True
+
+    def _report_reconcile_refresh_rejection(self):
+        self.error(
+            f"The post-order snapshot refresh for Financial Advisor group "
+            f"'{self._GROUP_NAME}' was not accepted.")
 
     def _reconcile_account_positions(
             self,
