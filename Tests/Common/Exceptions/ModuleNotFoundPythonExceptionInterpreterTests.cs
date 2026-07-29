@@ -80,7 +80,7 @@ namespace QuantConnect.Tests.Common.Exceptions
             var interpreter = StackExceptionInterpreter.CreateFromAssemblies();
             exception = interpreter.Interpret(exception, NullExceptionInterpreter.Instance);
             Assert.True(exception.Message.Contains("No module named 'MissingClrNamespace'"));
-            Assert.True(exception.Message.Contains("AlgorithmImports"));
+            Assert.True(exception.Message.Contains("use an equivalent Python package instead"));
         }
 
         private Exception CreateExceptionFromType(Type type) => type == typeof(PythonException) ? _pythonException : (Exception)Activator.CreateInstance(type);
