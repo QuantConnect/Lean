@@ -33,8 +33,9 @@ namespace QuantConnect.Interfaces
         /// Implementations should coalesce duplicate requests and apply brokerage pacing limits.
         /// </summary>
         /// <param name="groupNames">
-        /// Brokerage account groups to refresh. An empty collection requests complete discovery of every group and
-        /// account managed by the brokerage connection.
+        /// Brokerage account groups to refresh. An empty collection requests discovery complete within the
+        /// provider's configured deployment scope; inspect <see cref="BrokerageAccountSnapshot.IsComplete"/>
+        /// on the published snapshot.
         /// </param>
         /// <param name="additionalAccountIds">Additional managed accounts to refresh outside the selected groups.</param>
         /// <returns>True if the request was accepted or coalesced; otherwise, false.</returns>

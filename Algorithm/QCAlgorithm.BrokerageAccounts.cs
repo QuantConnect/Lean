@@ -53,8 +53,9 @@ namespace QuantConnect.Algorithm
                 BrokerageAccountGroupAllocationUpdate.Unavailable;
 
         /// <summary>
-        /// Requests asynchronous complete discovery of every brokerage account group and managed account, including
-        /// account state for every managed account. An accepted request immediately changes
+        /// Requests asynchronous discovery complete within the provider's configured deployment scope. Inspect
+        /// <see cref="QuantConnect.Brokerages.BrokerageAccountSnapshot.IsComplete"/> on the published snapshot.
+        /// An accepted request immediately changes
         /// <see cref="BrokerageAccountSnapshot"/> to refreshing without advancing its generation. Poll for a ready
         /// snapshot with a generation greater than the value observed before this request.
         /// </summary>
