@@ -12,7 +12,8 @@
 # limitations under the License.
 
 from AlgorithmImports import *
-from datetime import timedelta
+from datetime import datetime, timedelta
+from threading import Lock
 
 ### <summary>
 ### This algorithm demonstrates unified Financial Advisor group orders and authoritative
@@ -27,8 +28,10 @@ class FinancialAdvisorDemoAlgorithm(QCAlgorithm):
 
     _GROUP_NAME = "TestGroupEQ"
     _RECONCILE_RETRY_INTERVAL = timedelta(seconds=5)
+    _INVALID_ORDER_RETRY_INTERVAL = timedelta(seconds=5)
     _TOPOLOGY_REFRESH_INTERVAL = timedelta(minutes=1)
     _COMPLETE_REFRESH_TOPOLOGY_TICKS = 3
+    _MAXIMUM_INVALID_ORDER_RETRIES = 3
 
     def initialize(self):
         # Initialise the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must be initialized.
@@ -38,12 +41,17 @@ class FinancialAdvisorDemoAlgorithm(QCAlgorithm):
         self.set_cash(100000)           #Set Strategy Cash
 
         self._symbol = self.add_equity("SPY", Resolution.SECOND).symbol
+        self._order_state_lock = Lock()
+        self._terminal_events_during_submission = {}
         self._pre_order_snapshot = None
         self._initial_snapshot_refresh_accepted = False
         self._initial_snapshot_request_generation = -1
         self._next_initial_snapshot_refresh_utc = None
         self._group_order_submitted = False
+        self._order_submission_in_progress = False
         self._group_order_id = 0
+        self._invalid_order_retry_count = 0
+        self._next_group_order_retry_utc = None
         self._pending_reconcile_generation = -1
         self._pending_reconcile_terminal_utc = None
         self._next_reconcile_refresh_utc = None
@@ -74,82 +82,141 @@ class FinancialAdvisorDemoAlgorithm(QCAlgorithm):
             return
 
         snapshot = self.brokerage_account_snapshot
-        if self._pending_reconcile_generation >= 0:
-            if snapshot.is_ready and \
-                    snapshot.generation > self._pending_reconcile_generation and \
-                    self._pending_reconcile_terminal_utc is not None and \
-                    snapshot.collection_started_utc >= self._pending_reconcile_terminal_utc:
-                self._reconcile_account_positions(snapshot)
-                self._pre_order_snapshot = None
-                self._pending_reconcile_generation = -1
-                self._pending_reconcile_terminal_utc = None
-                self._next_reconcile_refresh_utc = None
-            else:
-                self._try_request_reconcile_refresh(snapshot)
+        pre_order_snapshot = None
+        reconcile = False
+        request_reconcile_refresh = False
+        with self._order_state_lock:
+            if self._pending_reconcile_generation >= 0:
+                if snapshot.is_ready and \
+                        snapshot.generation > \
+                        self._pending_reconcile_generation and \
+                        self._pending_reconcile_terminal_utc is not None and \
+                        snapshot.collection_started_utc >= \
+                        self._pending_reconcile_terminal_utc:
+                    pre_order_snapshot = self._pre_order_snapshot
+                    self._pre_order_snapshot = None
+                    self._pending_reconcile_generation = -1
+                    self._pending_reconcile_terminal_utc = None
+                    self._next_reconcile_refresh_utc = None
+                    reconcile = True
+                else:
+                    request_reconcile_refresh = True
+        if reconcile:
+            self._reconcile_account_positions(
+                pre_order_snapshot,
+                snapshot)
+            return
+        if request_reconcile_refresh:
+            self._try_request_reconcile_refresh(snapshot)
             return
 
-        if not self._initial_snapshot_refresh_accepted or \
+        with self._order_state_lock:
+            request_initial_refresh = \
+                not self._initial_snapshot_refresh_accepted or \
                 not snapshot.is_ready or \
-                snapshot.generation <= self._initial_snapshot_request_generation:
+                snapshot.generation <= \
+                self._initial_snapshot_request_generation
+        if request_initial_refresh:
             self._try_request_initial_snapshot_refresh(snapshot)
             return
 
-        if self._group_order_submitted or \
-                self._find_group(snapshot) is None:
-            return
+        with self._order_state_lock:
+            if self._group_order_submitted or \
+                    self._order_submission_in_progress or \
+                    self._invalid_order_retry_count > \
+                    self._MAXIMUM_INVALID_ORDER_RETRIES or \
+                    (self._next_group_order_retry_utc is not None and
+                     self.utc_time < self._next_group_order_retry_utc) or \
+                    self._find_group(snapshot) is None:
+                return
 
-        self._pre_order_snapshot = snapshot
+            self._pre_order_snapshot = snapshot
+            self._order_submission_in_progress = True
+            self._terminal_events_during_submission.clear()
         tickets = self.set_holdings(self._symbol, 1, asynchronous=True)
         ticket = next(iter(tickets), None)
-        if ticket is None:
-            self._pre_order_snapshot = None
-            return
-
-        self._group_order_id = ticket.order_id
-        self._group_order_submitted = True
+        post_submission_snapshot = self.brokerage_account_snapshot
+        post_submission_utc = self.utc_time
+        with self._order_state_lock:
+            invalid_order_message, request_reconcile_refresh = \
+                self._complete_group_order_submission_locked(
+                    ticket,
+                    post_submission_snapshot.generation,
+                    post_submission_utc)
+        self._report_terminal_order_action(
+            invalid_order_message,
+            request_reconcile_refresh,
+            post_submission_snapshot)
 
     def on_order_event(self, order_event):
         """Requests authoritative account reconciliation after the parent group order becomes terminal."""
 
         if not self.live_mode or \
-                order_event.order_id != self._group_order_id or \
-                not order_event.status.is_closed() or \
-                self._pending_reconcile_generation >= 0:
+                not order_event.status.is_closed():
             return
 
-        self._pending_reconcile_generation = \
-            self.brokerage_account_snapshot.generation
-        self._pending_reconcile_terminal_utc = order_event.utc_time
-        self._next_reconcile_refresh_utc = self.utc_time
-        self._group_order_id = 0
-        self._try_request_reconcile_refresh(self.brokerage_account_snapshot)
+        snapshot = self.brokerage_account_snapshot
+        now = self.utc_time
+        with self._order_state_lock:
+            terminal_order_event = (
+                order_event.status,
+                order_event.utc_time,
+                order_event.message)
+            if self._order_submission_in_progress and \
+                    self._group_order_id == 0:
+                self._terminal_events_during_submission[
+                    order_event.order_id] = terminal_order_event
+                return
+            if order_event.order_id != self._group_order_id or \
+                    self._pending_reconcile_generation >= 0:
+                return
+
+            invalid_order_message, request_reconcile_refresh = \
+                self._apply_terminal_order_locked(
+                    order_event.order_id,
+                    terminal_order_event,
+                    snapshot.generation,
+                    now)
+        self._report_terminal_order_action(
+            invalid_order_message,
+            request_reconcile_refresh,
+            snapshot)
 
     def _try_request_initial_snapshot_refresh(self, snapshot):
-        if snapshot.status == BrokerageAccountSnapshotStatus.REFRESHING or \
-                (self._next_initial_snapshot_refresh_utc is not None and
-                 self.utc_time < self._next_initial_snapshot_refresh_utc):
-            return
+        now = self.utc_time
+        with self._order_state_lock:
+            if snapshot.status == \
+                    BrokerageAccountSnapshotStatus.REFRESHING or \
+                    (self._next_initial_snapshot_refresh_utc is not None and
+                     now < self._next_initial_snapshot_refresh_utc):
+                return
 
-        self._next_initial_snapshot_refresh_utc = \
-            self.utc_time + self._RECONCILE_RETRY_INTERVAL
+            self._next_initial_snapshot_refresh_utc = \
+                now + self._RECONCILE_RETRY_INTERVAL
         request_generation = snapshot.generation
-        self._initial_snapshot_refresh_accepted = \
+        accepted = \
             self.request_brokerage_account_snapshot_refresh([self._GROUP_NAME])
-        if self._initial_snapshot_refresh_accepted:
-            self._initial_snapshot_request_generation = request_generation
-        else:
+        with self._order_state_lock:
+            self._initial_snapshot_refresh_accepted = accepted
+            if accepted:
+                self._initial_snapshot_request_generation = request_generation
+        if not accepted:
             self.error(
                 f"The initial snapshot refresh for Financial Advisor group "
                 f"'{self._GROUP_NAME}' was not accepted; retrying.")
 
     def _try_request_reconcile_refresh(self, snapshot):
-        if snapshot.status == BrokerageAccountSnapshotStatus.REFRESHING or \
-                (self._next_reconcile_refresh_utc is not None and
-                 self.utc_time < self._next_reconcile_refresh_utc):
-            return
+        now = self.utc_time
+        with self._order_state_lock:
+            if self._pending_reconcile_generation < 0 or \
+                    snapshot.status == \
+                    BrokerageAccountSnapshotStatus.REFRESHING or \
+                    (self._next_reconcile_refresh_utc is not None and
+                     now < self._next_reconcile_refresh_utc):
+                return
 
-        self._next_reconcile_refresh_utc = \
-            self.utc_time + self._RECONCILE_RETRY_INTERVAL
+            self._next_reconcile_refresh_utc = \
+                now + self._RECONCILE_RETRY_INTERVAL
         if not self.request_brokerage_account_snapshot_refresh([self._GROUP_NAME]):
             self.error(
                 f"The post-order snapshot refresh for Financial Advisor group "
@@ -157,21 +224,30 @@ class FinancialAdvisorDemoAlgorithm(QCAlgorithm):
 
     def _request_scheduled_snapshot_refresh(self):
         snapshot = self.brokerage_account_snapshot
-        if not self.live_mode or \
-                self._group_order_id != 0 or \
-                self._pending_reconcile_generation >= 0 or \
-                snapshot.status == BrokerageAccountSnapshotStatus.REFRESHING:
-            return
-        if not self._initial_snapshot_refresh_accepted:
+        request_initial_refresh = False
+        complete_refresh = False
+        with self._order_state_lock:
+            if not self.live_mode or \
+                    self._group_order_id != 0 or \
+                    self._order_submission_in_progress or \
+                    self._pending_reconcile_generation >= 0 or \
+                    snapshot.status == \
+                    BrokerageAccountSnapshotStatus.REFRESHING:
+                return
+            if not self._initial_snapshot_refresh_accepted:
+                request_initial_refresh = True
+            else:
+                self._scheduled_refresh_topology_ticks += 1
+                complete_refresh = \
+                    self._scheduled_refresh_topology_ticks == \
+                    self._COMPLETE_REFRESH_TOPOLOGY_TICKS
+                if complete_refresh:
+                    self._scheduled_refresh_topology_ticks = 0
+        if request_initial_refresh:
             self._try_request_initial_snapshot_refresh(snapshot)
             return
 
-        self._scheduled_refresh_topology_ticks += 1
-        complete_refresh = \
-            self._scheduled_refresh_topology_ticks == \
-            self._COMPLETE_REFRESH_TOPOLOGY_TICKS
         if complete_refresh:
-            self._scheduled_refresh_topology_ticks = 0
             accepted = self.request_brokerage_account_snapshot_refresh()
         else:
             accepted = self.request_brokerage_account_snapshot_refresh(
@@ -185,8 +261,11 @@ class FinancialAdvisorDemoAlgorithm(QCAlgorithm):
                 f"The scheduled Financial Advisor {purpose} snapshot "
                 f"refresh was not accepted.")
 
-    def _reconcile_account_positions(self, current_snapshot):
-        group = self._find_group(self._pre_order_snapshot)
+    def _reconcile_account_positions(
+            self,
+            pre_order_snapshot,
+            current_snapshot):
+        group = self._find_group(pre_order_snapshot)
         if group is None:
             self.error(
                 f"The pre-order snapshot for Financial Advisor group "
@@ -195,7 +274,7 @@ class FinancialAdvisorDemoAlgorithm(QCAlgorithm):
 
         previous_accounts = {
             account.account_id.casefold(): account
-            for account in list(self._pre_order_snapshot.accounts.values)
+            for account in list(pre_order_snapshot.accounts.values)
         }
         current_accounts = {
             account.account_id.casefold(): account
@@ -217,6 +296,88 @@ class FinancialAdvisorDemoAlgorithm(QCAlgorithm):
                 f"FA reconciliation: account={account_id}, symbol={self._symbol}, "
                 f"before={previous_quantity}, after={current_quantity}, "
                 f"change={current_quantity - previous_quantity}")
+
+    def _complete_group_order_submission_locked(
+            self,
+            ticket,
+            snapshot_generation,
+            now):
+        self._order_submission_in_progress = False
+        if ticket is None:
+            self._pre_order_snapshot = None
+            self._group_order_submitted = False
+            self._terminal_events_during_submission.clear()
+            return None, False
+
+        self._group_order_id = ticket.order_id
+        self._group_order_submitted = True
+        ticket_status = ticket.status
+        terminal_order_event = \
+            self._terminal_events_during_submission.get(ticket.order_id)
+        self._terminal_events_during_submission.clear()
+        if terminal_order_event is None and ticket_status.is_closed():
+            response = ticket.submit_request.response
+            terminal_order_event = (
+                ticket_status,
+                now,
+                response.error_message)
+        if terminal_order_event is None:
+            self._invalid_order_retry_count = 0
+            return None, False
+
+        return self._apply_terminal_order_locked(
+            ticket.order_id,
+            terminal_order_event,
+            snapshot_generation,
+            now)
+
+    def _apply_terminal_order_locked(
+            self,
+            order_id,
+            terminal_order_event,
+            snapshot_generation,
+            now):
+        status, terminal_utc, message = terminal_order_event
+        self._group_order_id = 0
+        if status == OrderStatus.INVALID:
+            self._invalid_order_retry_count += 1
+            self._group_order_submitted = False
+            self._pre_order_snapshot = None
+            retry_allowed = \
+                self._invalid_order_retry_count <= \
+                self._MAXIMUM_INVALID_ORDER_RETRIES
+            self._next_group_order_retry_utc = \
+                now + self._INVALID_ORDER_RETRY_INTERVAL \
+                if retry_allowed else datetime.max
+            reason = message \
+                if message is not None and str(message).strip() \
+                else "No rejection reason was supplied."
+            retry_message = \
+                f"Retry {self._invalid_order_retry_count} of " \
+                f"{self._MAXIMUM_INVALID_ORDER_RETRIES} is scheduled." \
+                if retry_allowed \
+                else "The bounded retry limit was reached."
+            return (
+                f"Financial Advisor group order {order_id} was rejected: "
+                f"{reason} {retry_message}",
+                False)
+
+        self._invalid_order_retry_count = 0
+        # Publish the causal timestamps before making the generation pending.
+        self._pending_reconcile_terminal_utc = terminal_utc
+        self._next_reconcile_refresh_utc = now
+        self._pending_reconcile_generation = snapshot_generation
+        return None, True
+
+    def _report_terminal_order_action(
+            self,
+            invalid_order_message,
+            request_reconcile_refresh,
+            snapshot):
+        if invalid_order_message is not None:
+            self.error(invalid_order_message)
+        if request_reconcile_refresh:
+            self._try_request_reconcile_refresh(snapshot)
 
     def _find_group(self, snapshot):
         if snapshot is None:

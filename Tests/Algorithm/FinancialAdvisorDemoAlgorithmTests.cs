@@ -234,6 +234,163 @@ namespace QuantConnect.Tests.Algorithm
         }
 
         [Test]
+        public void TerminalEventDuringSetHoldingsStartsCausalReconciliation()
+        {
+            var snapshot = CreateSnapshot(
+                BrokerageAccountSnapshotStatus.Ready,
+                7,
+                10m,
+                20m,
+                SnapshotTime.AddMinutes(-1));
+            var provider = new TestAccountStateProvider
+            {
+                Snapshot = snapshot
+            };
+            var algorithm = CreateAlgorithm(provider, snapshot);
+            SetPrivateField(algorithm, "_groupOrderSubmitted", false);
+            SetPrivateField(algorithm, "_groupOrderId", 0);
+            SetPrivateField(
+                algorithm,
+                "_initialSnapshotRequestGeneration",
+                snapshot.Generation - 1);
+            var ticket = CreateOrderTicket(
+                algorithm,
+                41,
+                OrderStatus.New);
+            SetPrivateField(
+                algorithm,
+                "_submitGroupOrder",
+                new Func<OrderTicket>(() =>
+                {
+                    algorithm.OnOrderEvent(
+                        CreateOrderEvent(
+                            41,
+                            OrderStatus.Filled));
+                    return ticket;
+                }));
+
+            long generationObservedDuringRefresh = -1;
+            DateTime terminalObservedDuringRefresh = default;
+            provider.RefreshRequestHook = _ =>
+            {
+                generationObservedDuringRefresh =
+                    GetPrivateField<long>(
+                        algorithm,
+                        "_pendingReconcileGeneration");
+                terminalObservedDuringRefresh =
+                    GetPrivateField<DateTime>(
+                        algorithm,
+                        "_pendingReconcileTerminalUtc");
+            };
+
+            algorithm.OnData(CreateEmptySlice());
+
+            Assert.Multiple(() =>
+            {
+                Assert.AreEqual(1, provider.RefreshRequestCount);
+                Assert.AreEqual(
+                    snapshot.Generation,
+                    generationObservedDuringRefresh);
+                Assert.AreEqual(
+                    SnapshotTime,
+                    terminalObservedDuringRefresh,
+                    "The terminal timestamp must be visible before the " +
+                    "pending generation triggers a refresh.");
+                Assert.AreEqual(
+                    0,
+                    GetPrivateField<int>(
+                        algorithm,
+                        "_groupOrderId"));
+            });
+        }
+
+        [Test]
+        public void SynchronousInvalidOrderLogsReasonAndRetriesAfterBoundedDelay()
+        {
+            var snapshot = CreateSnapshot(
+                BrokerageAccountSnapshotStatus.Ready,
+                7,
+                10m,
+                20m,
+                SnapshotTime.AddMinutes(-1));
+            var provider = new TestAccountStateProvider
+            {
+                Snapshot = snapshot
+            };
+            var algorithm = CreateAlgorithm(provider, snapshot);
+            SetPrivateField(algorithm, "_groupOrderSubmitted", false);
+            SetPrivateField(algorithm, "_groupOrderId", 0);
+            SetPrivateField(
+                algorithm,
+                "_initialSnapshotRequestGeneration",
+                snapshot.Generation - 1);
+            var invalidTicket = CreateOrderTicket(
+                algorithm,
+                41,
+                OrderStatus.Invalid,
+                "saved allocation total is not lot-aligned");
+            var retryTicket = CreateOrderTicket(
+                algorithm,
+                42,
+                OrderStatus.New);
+            var submissionCount = 0;
+            SetPrivateField(
+                algorithm,
+                "_submitGroupOrder",
+                new Func<OrderTicket>(() =>
+                {
+                    ++submissionCount;
+                    if (submissionCount == 1)
+                    {
+                        algorithm.OnOrderEvent(
+                            CreateOrderEvent(
+                                41,
+                                OrderStatus.Invalid,
+                                "saved allocation total is not lot-aligned"));
+                        return invalidTicket;
+                    }
+                    return retryTicket;
+                }));
+
+            algorithm.OnData(CreateEmptySlice());
+            algorithm.OnData(CreateEmptySlice());
+
+            Assert.Multiple(() =>
+            {
+                Assert.AreEqual(
+                    1,
+                    submissionCount,
+                    "The retry must respect its bounded delay.");
+                Assert.IsFalse(
+                    GetPrivateField<bool>(
+                        algorithm,
+                        "_groupOrderSubmitted"));
+                Assert.That(
+                    algorithm.ErrorMessages,
+                    Has.One.Contains(
+                        "saved allocation total is not lot-aligned"));
+            });
+
+            algorithm.SetDateTime(SnapshotTime.AddSeconds(5));
+            algorithm.OnData(CreateEmptySlice());
+
+            Assert.Multiple(() =>
+            {
+                Assert.AreEqual(2, submissionCount);
+                Assert.IsTrue(
+                    GetPrivateField<bool>(
+                        algorithm,
+                        "_groupOrderSubmitted"));
+                Assert.AreEqual(
+                    42,
+                    GetPrivateField<int>(
+                        algorithm,
+                        "_groupOrderId"));
+                Assert.AreEqual(0, provider.RefreshRequestCount);
+            });
+        }
+
+        [Test]
         public void ScheduledRefreshPolicyUsesTwoScopedTicksThenOneCompleteTick()
         {
             var snapshot = CreateSnapshot(
@@ -379,7 +536,8 @@ namespace QuantConnect.Tests.Algorithm
 
         private static OrderEvent CreateOrderEvent(
             int orderId,
-            OrderStatus status)
+            OrderStatus status,
+            string message = null)
         {
             return new OrderEvent(
                 orderId,
@@ -389,7 +547,43 @@ namespace QuantConnect.Tests.Algorithm
                 OrderDirection.Buy,
                 100m,
                 status == OrderStatus.Filled ? 5m : 0m,
-                OrderFee.Zero);
+                OrderFee.Zero)
+            {
+                Message = message
+            };
+        }
+
+        private static OrderTicket CreateOrderTicket(
+            FinancialAdvisorDemoAlgorithm algorithm,
+            int orderId,
+            OrderStatus status,
+            string errorMessage = null)
+        {
+            var request = new SubmitOrderRequest(
+                OrderType.Market,
+                SecurityType.Equity,
+                Symbols.SPY,
+                1m,
+                0m,
+                0m,
+                SnapshotTime,
+                string.Empty,
+                asynchronous: true);
+            request.SetOrderId(orderId);
+            if (status == OrderStatus.Invalid)
+            {
+                return OrderTicket.InvalidSubmitRequest(
+                    algorithm.Transactions,
+                    request,
+                    OrderResponse.Error(
+                        request,
+                        OrderResponseErrorCode
+                            .BrokerageFailedToSubmitOrder,
+                        errorMessage));
+            }
+            return new OrderTicket(
+                algorithm.Transactions,
+                request);
         }
 
         private static Slice CreateEmptySlice()
@@ -483,6 +677,17 @@ namespace QuantConnect.Tests.Algorithm
                 BindingFlags.Instance | BindingFlags.NonPublic);
             Assert.IsNotNull(field, $"Private field '{name}' was not found.");
             field.SetValue(instance, value);
+        }
+
+        private static T GetPrivateField<T>(
+            object instance,
+            string name)
+        {
+            var field = instance.GetType().GetField(
+                name,
+                BindingFlags.Instance | BindingFlags.NonPublic);
+            Assert.IsNotNull(field, $"Private field '{name}' was not found.");
+            return (T)field.GetValue(instance);
         }
 
         private static void InvokePrivateMethod(
