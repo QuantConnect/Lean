@@ -30,7 +30,7 @@ A story example. You own 100 AAPL bought at $200. You want to take profit at $22
 - sell 100 AAPL, limit $220 (take profit)
 - sell 100 AAPL, stop $190 (stop loss)
 
-If the price reaches $220 first, the limit order fills and the stop order is canceled. If the price falls to $190 first, the stop order fills and the limit order is canceled. You can never sell 200 shares by mistake, because the group allows only one winner.
+If the price reaches $220 first, the limit order fills and the stop order is canceled. If the price falls to $190 first, the stop order fills and the limit order is canceled. You can never sell 200 shares by mistake, because the group can only ever sell the 100 shares it was given. If one leg fills only part of that, the other leg is made smaller by the same amount instead of being canceled — see "Partial fills" below.
 
 Important difference from the next PR: in an OCO group no order waits for another order to fill. The "wait until my parent fills" behavior is the **conditional (OTO)** order — that is PR 2. A bracket is the combination: OTO entry that triggers an OCO exit pair.
 
@@ -47,9 +47,9 @@ Other brokers with a native OCO order class: Alpaca (`order_class=oco`), Tradier
 
 ## Scope for v1
 
-- One OCO group = **2 or 3 orders: one main order and up to 2 more**. Why 3: the final goal (bracket) needs an OCO pair plus an entry, so 1 main + 2 child keeps the same shape and keeps testing small. Brokers allow more (IB 1+4, Webull 1+5), and the API takes a list, so raising the limit later does not break anything.
+- One OCO group from the user API = **2 orders: one limit leg and one stop market leg on one symbol, sharing one quantity**. The engine underneath works on a list of legs and handles 3, because the final goal (bracket) needs an OCO pair plus an entry. Brokers allow more (IB 1+4, Webull 1+5), so raising the limit later does not break anything.
 - Leg order types in v1: **Limit** and **StopMarket**. These are the two types a bracket needs. More types can come later.
-- Legs may use different symbols (IB allows it; useful for breakout strategies that watch two assets). The common case is one symbol.
+- Legs may use different symbols at the engine level (IB allows it; useful for breakout strategies that watch two assets). The user API takes one symbol — the common case; a multi-symbol overload can come later.
 - Backtesting and paper trading work first, with zero brokerage changes. Live support is opt-in per brokerage model; Alpaca and InteractiveBrokers ship first.
 
 ## Algorithm API
@@ -57,18 +57,17 @@ Other brokers with a native OCO order class: Alpaca (`order_class=oco`), Tradier
 One new method on `QCAlgorithm`:
 
 ```csharp
-public List<OrderTicket> OneCancelsTheOtherOrder(List<Order> orders,
+public List<OrderTicket> OneCancelsTheOtherOrder(Symbol symbol, decimal quantity, decimal limitPrice, decimal stopPrice,
     bool asynchronous = false, string tag = "", IOrderProperties orderProperties = null)
 ```
 
-The user builds the order objects with the public constructors and does not submit them; the method does the linking and the submitting. On success the result is one ticket per order, in the same position as the input list; when a pre-order check fails, nothing is placed and the list contains a single invalid ticket (the same failure shape combo orders have today).
+The method builds the two legs itself — a `LimitOrder` and a `StopMarketOrder` for the same signed quantity — links them and submits them. The result is two tickets: the limit leg first, the stop market leg second. When a pre-order check fails, nothing is placed and the list contains a single invalid ticket (the same failure shape combo orders have today).
 
-**Decision: the input is `List<Order>`.** A `List<Leg>` alternative was considered (the code review flagged that order objects carry engine-managed fields, a time argument, and their own properties). We keep `List<Order>` and neutralize each risk with explicit rules instead:
+**Decision: the input is scalar parameters, not a list of orders.** A `List<Order>` input was implemented first, and a `List<Leg>` alternative was considered before it. Both put engine order objects in the user's hands, and order objects carry engine-managed fields (status, broker ids, group manager), a `time` constructor argument the engine must ignore, and per-order tag/properties that fight with the group-level ones. Covering that needed a page of "fresh spec" rules and seven `ArgumentException` guards. Scalar parameters remove the whole problem:
 
-- **The passed orders are specs, nothing more.** The method reads only symbol, quantity and the leg prices, builds fresh `SubmitOrderRequest`s, and never registers the user's instances. The user's objects stay untouched; the tickets are the live handles.
-- **One source of truth for everything else.** The method-level `tag` and `orderProperties` apply to all legs; the per-order constructor `tag`/`properties` are ignored. Time in force comes from that single `orderProperties` (or `DefaultOrderProperties`), so all legs share one TIF **by construction** — no cross-leg TIF comparison is needed or performed.
-- **One clock.** The submitter stamps the algorithm's UtcTime on every leg's request; the constructor's `time` argument is ignored (a stale user time would corrupt Day-TIF expiry, and legs must share one clock or one could fill a bar early).
-- **Guard rails.** The method throws `ArgumentException` when a passed order already carries a `GroupOrderManager`, has a non-empty `BrokerId`, or has a status other than `None` — that catches accidental reuse of a live engine order (for example something returned by `Transactions.GetOrderById`). Passing the same instance twice is rejected too.
+- **The user never touches an `Order` object.** The method builds the legs internally, so there is no reused live order, no stale time, no per-leg tag or TIF to override — one source of truth by construction.
+- **Same shape as the rest of the order sugar.** `LimitOrder(symbol, quantity, limitPrice)` and `StopLimitOrder(symbol, quantity, stopPrice, limitPrice)` read the same way, and the future `BracketOrder(symbol, quantity, takeProfitLimitPrice, stopLossPrice, ...)` continues the pattern.
+- **Python-friendly.** `self.one_cancels_the_other_order(symbol, -100, limit_price=..., stop_price=...)` through the snake-case binding — no C# order construction from Python.
 
 Starting example:
 
@@ -80,23 +79,12 @@ public override void OnData(Slice slice)
         MarketOrder(_symbol, 100);
 
         // close the position either with profit at 220 or with protection at 190
-        var tickets = OneCancelsTheOtherOrder(new List<Order>
-        {
-            new LimitOrder(_symbol, -100, limitPrice: 220m, UtcTime),      // take profit
-            new StopMarketOrder(_symbol, -100, stopPrice: 190m, UtcTime)   // stop loss
-        });
+        var tickets = OneCancelsTheOtherOrder(_symbol, -100, limitPrice: 220m, stopPrice: 190m);
     }
 }
 ```
 
-Python gets `self.one_cancels_the_other_order([...])` through the snake-case binding. No Python algorithm in the repo constructs order objects today, so the Python regression twin is the acceptance test for the binding (a plain Python list of `LimitOrder`/`StopMarketOrder` into `List<Order>`).
-
-Validation at submit time, throwing `ArgumentException`:
-
-- the list has 2 or 3 orders;
-- every order type is Limit or StopMarket (v1);
-- every quantity is non-zero;
-- every order is a fresh spec (see the guard rails above: no group manager, no broker ids, status `None`, no duplicate instances).
+Validation at submit time, throwing `ArgumentException`: the quantity is non-zero. Everything the list input had to check — leg count, leg types, fresh specs, duplicate instances — cannot be expressed with this signature, so no guard is needed.
 
 Note there is no "same time in force" check: the group's TIF comes from the single `orderProperties`, so mixed TIF cannot happen.
 
@@ -185,7 +173,7 @@ Two places assume today that "has a `GroupOrderManager`" means "is a combo", and
 
 ### Live safety gate
 
-This is the one dangerous spot of the design. OCO legs are plain Limit/StopMarket orders, so every brokerage model whitelist accepts them one by one. A live brokerage that knows nothing about OCO would receive 2-3 normal orders and place them **without the cancel link**. The user thinks they have "one winner" protection; really both orders can fill. That must never happen silently.
+This is the one dangerous spot of the design. OCO legs are plain Limit/StopMarket orders, so every brokerage model whitelist accepts them one by one. A live brokerage that knows nothing about OCO would receive 2-3 normal orders and place them **without the cancel link**. The user thinks the group protects them; really both orders can fill in full. That must never happen silently.
 
 Guard: **one** new virtual on `DefaultBrokerageModel`, keyed by `ComboType` so it serves OCO now and OTO/bracket later without any new members:
 
@@ -200,39 +188,66 @@ Scope note: the handler only sees the model through the `IBrokerageModel` interf
 
 ### Lifecycle
 
-State walk-through for a 3-leg group (A = main, B, C):
+State walk-through for a 3-leg group (A = main, B, C — these are the engine rules; the user API places the 2-leg case):
 
 | # | Step | A | B | C | Events |
 |---|------|---|---|---|--------|
-| 0 | `OneCancelsTheOtherOrder()` returns 3 tickets | New | New | New | none (requests buffered until the last leg) |
+| 0 | The group is placed, one ticket per leg | New | New | New | none (requests buffered until the last leg) |
 | 1 | Group validated and placed | Submitted | Submitted | Submitted | 3x Submitted |
 | 2 | Leg B fully fills | Canceled | Filled | Canceled | one batch: Filled(B), Canceled(A, "OCO"), Canceled(C, "OCO") |
 | 3 | User cancels any one leg | Canceled | Canceled | Canceled | 3x Canceled (cancel one = cancel all) |
 | 4 | User updates a leg price | unchanged | unchanged | unchanged | UpdateSubmitted on that leg only |
 | 5 | Time in force expires | Canceled | Canceled | Canceled | 3x Canceled ("expired") |
 | 6 | Submit-time failure on any leg | Invalid | Invalid | Invalid | 3x Invalid via `InvalidateOrders` |
-| 7 | Leg B partially fills | Submitted | PartiallyFilled | Submitted | PartiallyFilled(B); siblings stay open (v1 rule, see open questions) |
+| 7 | Leg B partially fills 30 of 100 | Submitted, quantity 70 | PartiallyFilled | Submitted, quantity 70 | PartiallyFilled(B); A and C are reduced by 30 |
 
 The rules, short version:
 
-- One group, one winner.
-- The first leg that **fully** fills wins; every other open leg is canceled in the same event batch.
+- One group, one size. The group can never execute more than its own quantity.
+- After any fill of X on one leg, every other open leg is reduced by X. A leg reduced to zero is canceled in the same event batch.
+- Only one leg can fill per bar. The group stops as soon as a leg produces any fill, full or partial.
 - Cancel one leg = cancel the whole group.
 - Update one leg = only that leg changes.
-- A partial fill does not cancel the siblings (v1 engine rule). Careful: live brokers can be stricter — IB's `OcaType` field is documented as acting "when one order **or part of an order** executes", so at IB a partial execution can already cancel the siblings. The backtest keeps the simple rule; the live behavior belongs to the broker. See open questions.
+
+### Partial fills: reduce the siblings, do not cancel them
+
+A leg does not always fill in one piece. The rule is the one InteractiveBrokers uses: **take the filled
+quantity off the other legs.**
+
+The story trade again. You hold 100 shares, take profit at $220, stop loss at $190. The stop fills only 30:
+
+| Rule | The limit leg becomes | Result |
+| ---- | --------------------- | ------ |
+| Cancel siblings only on a **full** fill | still 100 | the group sells 130 — more than you own |
+| Cancel siblings on **any** fill | canceled | 70 shares left with no protection and no target |
+| **Reduce siblings by the filled amount** | 100 -> 70 | the total can never pass 100, and the rest stays protected |
+
+The third one is the only one with no bad side, so that is the rule.
+
+It also makes the design smaller, because "cancel" stops being a separate rule. Canceling on a full fill is
+just the case where the other legs are reduced to zero. One rule replaces two:
+
+> after a leg fills X, take X off every other open leg; a leg that reaches zero is canceled.
+
+Two notes for the implementation:
+
+- Reducing a leg changes its quantity, so the reduce step must also keep `GroupOrderManager.Quantity`
+  correct. Plain Limit/StopMarket legs do not sync it the way `ComboOrder` does.
+- The reduce rule and the one-leg-per-bar rule work together. The bar rule keeps a single pass simple; the
+  reduce rule keeps the running total correct across bars.
 
 ### Backtesting and paper
 
 Home: `BacktestingBrokerage.Scan` (`Brokerages/Backtesting/BacktestingBrokerage.cs:233`) gets a new branch after group resolution (`:272`): a group processor keyed on the manager's `ComboType`.
 
-Why not in `FillModel`: fill models are user-replaceable per security and overridable from Python. The OCO promise ("only one winner") must not depend on user code. The fill models keep doing what they do today — decide the fill price of a single leg. The group logic lives one level up.
+Why not in `FillModel`: fill models are user-replaceable per security and overridable from Python. The OCO promise ("never more than the group size") must not depend on user code. The fill models keep doing what they do today — decide the fill price of a single leg. The group logic lives one level up.
 
 Why not in `BrokerageTransactionHandler`: it is shared with real live trading, where the broker cancels the losing legs itself. Engine-side cancel there would double-cancel.
 
 The processor is deliberately not one big OCO method. It is a small set of **named steps** (private helpers in `BacktestingBrokerage`), because OTO and the bracket run the same steps in a different order:
 
 - `TryFillLeg(order, security, securities)` — evaluate one leg with its security's `FillModel`, honor its time in force, compute the fee. Knows nothing about groups.
-- `CancelOpenSiblings(orders, winner, events, reason)` — append a `Canceled` event for every still-open leg except the winner, into the **same** event batch. This *is* the OCO promise, as one function.
+- `ReduceOpenSiblings(orders, filledLeg, filledQuantity, events)` — take `filledQuantity` off every still-open leg except the one that filled, and append a `Canceled` event for any leg that reaches zero, into the **same** event batch. This *is* the OCO promise, as one function: the group can never execute more than its own size.
 - `EmitAndRemoveIfClosed(orders, events)` — send the batch, and drop the group from the pending set only when **every** leg is closed.
 - A fixed leg-evaluation order: stop-type legs first, then limit legs, then by Lean order Id. Deterministic, and pessimistic when one bar could fill two legs at once — the tie rule the bracket will inherit for its exits.
 - `ExpireGroup(orders, events)` — time in force expired on any leg: cancel every open leg of the group.
@@ -241,7 +256,7 @@ The OCO processor is then just a composition:
 
 1. Check expiry (`ExpireGroup`) and `CanExecuteOrder` per open leg.
 2. Buying power: only one leg can ever execute, so check the **most expensive leg**, not the sum. (Also practical: same-symbol duplicate legs break the group margin path — `PositionCollection` keys positions by symbol.)
-3. Evaluate open legs in the fixed order via `TryFillLeg`; the first leg that reaches `Filled` wins -> `CancelOpenSiblings`.
+3. Evaluate open legs in the fixed order via `TryFillLeg`. The **first leg that produces any fill** ends the pass, full or partial -> `ReduceOpenSiblings`. Stopping on a partial fill too is what keeps a second leg from executing in the same bar.
 4. `EmitAndRemoveIfClosed`.
 
 The pending-set invariant ships with this. Groups whose legs close at different times need one consistent rule — a closed leg stays in the pending set while any sibling is open, and leaves only when the whole group is closed — and that rule touches **five** places, not one (if any is missed, `TryGetGroupOrders` cannot resolve the group anymore and the surviving leg becomes uncancelable):
@@ -272,7 +287,7 @@ This is the map of every building block PR 1 creates, and who consumes it later.
 | Cancel one leg = cancel the group + skip-closed guard; group-aware `Liquidate` | BacktestingBrokerage + QCAlgorithm | ships | reused as is | reused as is |
 | Update path: combo-only skips narrowed to `ComboType == Combo`; `GroupOrderManager` consumer audit | Common + handler | ships | reused as is | reused as is |
 | `TryFillLeg` single-leg evaluation | BacktestingBrokerage | ships | reused as is | reused as is |
-| `CancelOpenSiblings` (the OCO step) | BacktestingBrokerage | ships | not used | reused on the two exits |
+| `ReduceOpenSiblings` (the OCO step) | BacktestingBrokerage | ships | not used | reused on the two exits |
 | Stops-first deterministic leg order | BacktestingBrokerage | ships | reused | reused (SL before TP on a tie) |
 | `EmitAndRemoveIfClosed` + the pending-set invariant (five touch points) | BacktestingBrokerage | ships | reused as is | reused as is |
 | Dormancy + activation step (children wait for the trigger; second message-bearing `Submitted` on activation; `OrderSubmissionData` re-stamped at activation) | BacktestingBrokerage | not needed | **ships in ADR 0003** | reused on the entry->exits switch |
@@ -284,11 +299,11 @@ How the three processors read once everything exists (sketch, not code):
 ```
 switch (group.ComboType)
 {
-    OneCancelsTheOther:  evaluate legs -> first Filled wins -> CancelOpenSiblings
+    OneCancelsTheOther:  evaluate legs -> first leg with any fill ends the pass -> ReduceOpenSiblings
     OneTriggersTheOther: trigger open?  -> TryFillLeg(trigger); on fill -> activate children
                          trigger filled? -> evaluate children independently (no OCO link)
     Bracket:             trigger open?  -> TryFillLeg(entry);  on fill -> activate children
-                         trigger filled? -> evaluate children -> first Filled wins -> CancelOpenSiblings
+                         trigger filled? -> evaluate children -> first leg with any fill -> ReduceOpenSiblings
 }
 ```
 
@@ -326,8 +341,8 @@ Repo: `Lean.Brokerages.InteractiveBrokers`. IB has no single "OCO request". Inst
 
 Plugin work:
 
-- Place: reuse the `_groupOrderCacheManager` gate (`QuantConnect.InteractiveBrokersBrokerage/InteractiveBrokersBrokerage.cs:1520`). When the whole group is buffered: give every leg its **own** IB order id (per-leg event routing needs distinct ids), set `OcaGroup = "lean-oco-{groupOrderManagerId}"` and `OcaType = 1` on each leg, then send the legs with `Transmit = false` on all but the last one. The official OCA sample uses exactly this technique ("to prevent accidental executions... transmitting the last order in the OCA will also cause the transmission of its predecessors") — the group goes live as one unit, but there is no `ParentId` (that is a bracket/OTO tool, not an OCO tool).
-- v1 uses `OcaType = 1`: "cancel all remaining orders with block", where "block" means overfill protection — IB routes only one order of the group to an exchange at a time, so two legs can never execute together. Types 2/3 instead *reduce* the remaining legs' quantity on fills (with/without block). One careful detail from the field docs: `OcaType` handling applies "when one order **or part of an order** executes" — so at IB even a partial execution can trigger the cancel of the siblings. The Lean backtest simulates the simpler full-fill rule; verify the exact partial behavior on paper TWS (open question).
+- Place: reuse the `_groupOrderCacheManager` gate (`QuantConnect.InteractiveBrokersBrokerage/InteractiveBrokersBrokerage.cs:1520`). When the whole group is buffered: give every leg its **own** IB order id (per-leg event routing needs distinct ids), set `OcaGroup = "lean-oco-{groupOrderManagerId}"` and `OcaType = 2` on each leg, then send the legs with `Transmit = false` on all but the last one. The official OCA sample uses exactly this technique ("to prevent accidental executions... transmitting the last order in the OCA will also cause the transmission of its predecessors") — the group goes live as one unit, but there is no `ParentId` (that is a bracket/OTO tool, not an OCO tool).
+- v1 uses `OcaType = 2`: "reduce remaining orders with block". This is the same rule the engine simulates (see "Partial fills" above): when a leg executes, IB takes that quantity off the other legs instead of canceling them outright, so the group can never execute more than its own size and the rest of the position keeps its protection. "Block" means overfill protection — IB routes only one order of the group to an exchange at a time, so two legs can never execute together. `OcaType = 1` cancels the remaining legs instead, and `3` reduces without the block; neither matches the engine rule. One detail from the field docs: `OcaType` handling applies "when one order **or part of an order** executes", which is exactly why the reduce type is the right one. Verify the exact partial behavior on paper TWS.
 - Events: the losing legs come back as `Cancelled`/`ApiCancelled` and map to Lean `Canceled`. Per-leg fills must **bypass** the combo fill buffering (`EmitOrderFill` holds fills of any order with a `GroupOrderManager` until all legs fill). The bypass condition is written once and generically — `ComboType != Combo` — because in *every* non-combo group some legs never fill (OCO losers now; OTO/bracket losers later), so the buffer would always run into its 30-second timeout.
 - Cancel: cancel one leg's id; TWS cancels the rest of the group.
 - Restart: `GetOpenOrders` must group open orders that share an `OcaGroup` string back into one Lean group with a rebuilt `GroupOrderManager` (`ComboType = OneCancelsTheOther`).
@@ -337,8 +352,8 @@ Plugin work:
 
 - `OrderJsonConverterTests`: round trip a plain `LimitOrder` and `StopMarketOrder` that carry an OCO `GroupOrderManager` — `ComboType`, `Count` and `OrderIds` survive **two** consecutive round trips (the second one catches the `DeserializeGroupOrderManager` drop combined with `DefaultValueHandling.Ignore`); old JSON without `comboType` loads as `Combo`.
 - `OrderTests` / factory: `Order.CreateOrder` attaches the manager to plain legs and the Id setter registers the leg into `OrderIds`.
-- `AlgorithmTradingTests`: `OneCancelsTheOtherOrder` returns one ticket per leg, all sharing one manager with `ComboType.OneCancelsTheOther`; validation rejects 1 leg, 4 legs, zero quantity, an unsupported order type, a reused live order (status/broker id/manager already set), and a duplicated instance; the user's passed orders stay untouched (status `None`, no ids) after submit; the group's TIF equals the passed `orderProperties` regardless of what the leg constructors carried.
-- `BacktestingBrokerageTests` (new): leg fills -> siblings canceled in one batch; stop-before-limit tie rule; cancel one leg -> whole group canceled, closed legs untouched; TIF expiry cancels the group; group leaves the pending set only when all legs are closed; partial fill leaves siblings open. Test the shared steps (`TryFillLeg`, `CancelOpenSiblings`, `EmitAndRemoveIfClosed`) through these group scenarios — they are the same code paths OTO and the bracket will run, so this suite is the safety net for the next two PRs too.
+- `AlgorithmTradingTests`: `OneCancelsTheOtherOrder` returns the limit ticket first and the stop market ticket second, both sharing one manager with `ComboType.OneCancelsTheOther` and each carrying its own price; zero quantity throws; the method-level `tag` and `orderProperties` (TIF) land on both legs.
+- `BacktestingBrokerageTests` (new): leg fills -> siblings canceled in one batch; stop-before-limit tie rule; cancel one leg -> whole group canceled, closed legs untouched; TIF expiry cancels the group; group leaves the pending set only when all legs are closed; a partial fill on the first-evaluated leg reduces the siblings by that quantity, does not cancel them, and does not let a second leg fill in the same pass. Test the shared steps (`TryFillLeg`, `ReduceOpenSiblings`, `EmitAndRemoveIfClosed`) through these group scenarios — they are the same code paths OTO and the bracket will run, so this suite is the safety net for the next two PRs too.
 - `BrokerageTransactionHandlerTests`: legs buffer until the group is complete; submit-time failure invalidates all legs; live-mode gate rejects the group when `SupportsGroupExecution(ComboType.OneCancelsTheOther)` is false and passes when true.
 - Brokerage model tests: the default model supports only `Combo`; Alpaca/IB overrides accept `OneCancelsTheOther` and enforce their constraints (Alpaca: 2 legs / same symbol / same side); `BrokerageModelPythonWrapper` forwards the gate and falls back to the default for Python models without the method.
 - Buying power tests: a cash account holding exactly the position can place the sell-TP + sell-SL pair (sibling exclusion in `CashBuyingPowerModel`); the group margin check uses the most expensive leg; `GetProjectedHoldings` counts one leg per OCO group; the shortable gate does not reject the second sell leg.
@@ -346,7 +361,7 @@ Plugin work:
 
 ## Regression algorithms (Algorithm.CSharp)
 
-Two self-verifying algorithms on SPY hourly, January 2019 (same data window the repo already uses for order-type regressions), C# + Python twins:
+Three self-verifying algorithms on SPY hourly, January 2019 (same data window the repo already uses for order-type regressions). The first two ship as C# + Python twins; the third is C# only, because it needs a custom fill model:
 
 `OneCancelsTheOtherOrderRegressionAlgorithm` — the winner path:
 
@@ -358,11 +373,9 @@ public override void OnData(Slice slice)
         MarketOrder(_spy, 100);
 
         // take profit +1% is reached by the January rally; the stop -30% can never fill
-        _tickets = OneCancelsTheOtherOrder(new List<Order>
-        {
-            new LimitOrder(_spy, -100, Math.Round(Securities[_spy].Price * 1.01m, 2), UtcTime),
-            new StopMarketOrder(_spy, -100, Math.Round(Securities[_spy].Price * 0.70m, 2), UtcTime)
-        });
+        _tickets = OneCancelsTheOtherOrder(_spy, -100,
+            limitPrice: Math.Round(Securities[_spy].Price * 1.01m, 2),
+            stopPrice: Math.Round(Securities[_spy].Price * 0.70m, 2));
     }
 }
 
@@ -379,16 +392,20 @@ public override void OnEndOfAlgorithm()
 
 Both algorithms also assert in `OnOrderEvent` that a `Canceled` sibling event arrives in the same batch as the winning `Filled` event, and that no leg ever fills after a sibling filled.
 
+`OneCancelsTheOtherOrderPartialFillRegressionAlgorithm` — the reduce path (C# only). A custom fill model executes the stop leg once, partially, and then goes quiet, so the limit leg finishes the group. Neither leg looks at the market price, so the case runs the same way every time instead of waiting for a bar to reach a trigger price. The stop executes 30 of the 100 shares, so the limit leg must shrink from 100 to 70 and sell only 70 — the assertion is on the leg's quantity, not just on the totals, because a group that simply stopped early would also end flat. Without the reduce the limit leg is still for 100, the group sells 130, and the algorithm fails.
+
+Two things this algorithm does deliberately: it throws from `OnOrderEvent` rather than from the fill model, because `TryFillLeg` catches fill-model exceptions into `Algorithm.Error` where they are not a test failure; and both fill overrides check `IsExchangeOpen`, so a bar outside market hours cannot let the limit leg execute on its own.
+
 ## Rollout plan
 
 - **PR 1 — Lean core (this ADR):** `ComboType` enum + property, `SubmitGroupOrder` + `OneCancelsTheOtherOrder` API, factory/JSON fixes, `SupportsGroupExecution` live gate, `BacktestingBrokerage` shared steps + OCO processor + cancel guard, unit tests, regression algorithms. No live enablement.
 - **PR 2 — Alpaca:** model opt-in + constraints, plugin OCO mapping, live lifecycle test on paper trading.
 - **PR 3 — InteractiveBrokers:** model opt-in, plugin OCA mapping, paper-TWS lifecycle test.
-- After that: **ADR 0003 conditional (OTO)** — appends the enum value, the `TriggerOrderId` field and the dormancy/activation step; everything else in the table above is reused. Then the **bracket PR** — a `BracketOrder` wrapper over `SubmitGroupOrder` plus the `Bracket` switch case that composes the dormancy step with `CancelOpenSiblings`. If the reuse plan holds, the bracket PR touches no serialization, no gate, no buffering and no new engine mechanics.
+- After that: **ADR 0003 conditional (OTO)** — appends the enum value, the `TriggerOrderId` field and the dormancy/activation step; everything else in the table above is reused. Then the **bracket PR** — a `BracketOrder` wrapper over `SubmitGroupOrder` plus the `Bracket` switch case that composes the dormancy step with `ReduceOpenSiblings`. If the reuse plan holds, the bracket PR touches no serialization, no gate, no buffering and no new engine mechanics.
 
 ## Open questions
 
-- **Partial fills.** v1's engine rule is: siblings are canceled only when a leg **fully** fills. Live brokers differ: IB's `OcaType` docs say the group handling fires "when one order or part of an order executes", so `OcaType 1` can cancel siblings already on a partial execution; Bitfinex cancels the sibling on a partial fill too; IB `OcaType` 2/3 instead *reduce* sibling quantities proportionally. So the backtest is an approximation. Options: (a) keep the simple v1 rule and document the gap, (b) cancel siblings on the first fill event including partials (closer to IB/Bitfinex, but can leave a position half unprotected in the TP/SL use case), (c) per-model simulation flavor. Needs a team decision; verify IB's real partial behavior on paper TWS either way.
+- ~~**Partial fills.**~~ **Decided:** reduce the siblings by the filled quantity instead of canceling them, matching IB `OcaType = 2`. See "Partial fills: reduce the siblings, do not cancel them" above. The two rejected options were "cancel only on a full fill", which lets the group execute more than its own size, and "cancel on any fill", which leaves the rest of the position unprotected. Still verify IB's real partial behavior on paper TWS.
 - **Max legs.** v1 caps at 3. Lift to a per-model limit later (IB 1+4 in TWS UI, Webull 1+5)?
 - **Different symbols in one group.** The engine allows it (IB does); the Alpaca model restricts to one symbol. Is max-leg buying power the right group check for the multi-symbol case?
 - **Live gate shape.** One virtual `SupportsGroupExecution(ComboType)` checked only in live mode is the proposed gate. Alternative: models reject in `CanSubmitOrder` by checking `order.GroupOrderManager?.ComboType` — but that needs an audit of every model, and it would need repeating for OTO and bracket. Confirm the single-method approach.

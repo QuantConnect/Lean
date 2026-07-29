@@ -206,22 +206,32 @@ namespace QuantConnect.Tests.Brokerages.Backtesting
         }
 
         [Test]
-        public void PartialFillLeavesSiblingsOpenAndGroupStaysPending()
+        public void PartialFillReducesSiblingsAndGroupStaysPending()
         {
             _fillModel.LimitPartialFillQuantity = 5m;
             var (limitOrder, stopOrder) = PlaceOcoGroup(limitPrice: 100m, stopPrice: 150m);
+            var groupQuantity = limitOrder.Quantity;
 
             _brokerage.Scan();
 
             Assert.AreEqual(1, _eventBatches.Count);
             var batch = _eventBatches.Single();
-            Assert.AreEqual(1, batch.Count);
+
+            // the partial fill and the sibling reduction land in the same batch
+            Assert.AreEqual(2, batch.Count);
             Assert.AreEqual(limitOrder.Id, batch[0].OrderId);
             Assert.AreEqual(OrderStatus.PartiallyFilled, batch[0].Status);
+            Assert.AreEqual(stopOrder.Id, batch[1].OrderId);
+            Assert.AreEqual(OrderStatus.UpdateSubmitted, batch[1].Status);
+            Assert.AreEqual(0m, batch[1].FillQuantity);
 
             Assert.AreEqual(OrderStatus.PartiallyFilled, limitOrder.Status);
-            // the sibling is untouched: still open, no cancel event fired for it
-            Assert.AreEqual(OrderStatus.Submitted, stopOrder.Status);
+
+            // the sibling stays open but is reduced by what the limit leg executed, so the two legs always cover the
+            // same outstanding quantity and the group can never execute more than it was given. The brokerage only
+            // emits the event, promoting the order to UpdateSubmitted is the transaction handler's job
+            Assert.IsFalse(stopOrder.Status.IsClosed());
+            Assert.AreEqual(groupQuantity - 5m, stopOrder.Quantity);
 
             // the group stays in the pending set - Scan() must keep finding both legs next time around
             var pending = GetPendingOrders();

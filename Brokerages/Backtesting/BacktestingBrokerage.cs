@@ -749,7 +749,6 @@ namespace QuantConnect.Brokerages.Backtesting
                 .ThenBy(o => o.Id);
 
             var legEvents = new List<OrderEvent>();
-            Order winner = null;
             foreach (var leg in openLegs)
             {
                 var fills = TryFillLeg(leg, securities[leg], securities);
@@ -759,17 +758,18 @@ namespace QuantConnect.Brokerages.Backtesting
                 }
 
                 legEvents.AddRange(fills);
-                if (fills.Any(f => f.Status == OrderStatus.Filled))
+
+                // any execution ends the pass for the whole group, a partial one just like a complete one. What this
+                // leg executed is quantity the group has spent, so it comes off every other leg before any of them is
+                // evaluated again. Without this a second leg executes on the same bar and the group trades more than
+                // the quantity it was given.
+                // TryFillLeg also reports plain status changes with no quantity, and those must not reduce anything
+                var executedQuantity = fills.Sum(fill => fill.FillQuantity);
+                if (executedQuantity != 0)
                 {
-                    // a partial fill does not cancel the siblings (v1 engine rule); only a full fill does
-                    winner = leg;
+                    ReduceOpenSiblings(orders, leg, executedQuantity, legEvents);
                     break;
                 }
-            }
-
-            if (winner != null)
-            {
-                CancelOpenSiblings(orders, winner, legEvents, "OCO");
             }
 
             if (legEvents.Count == 0)
@@ -843,21 +843,50 @@ namespace QuantConnect.Brokerages.Backtesting
         }
 
         /// <summary>
-        /// Cancels every other open leg of the group, appending a Canceled event for each into the same event
-        /// batch as the winning fill. This is the one-cancels-the-other promise; the bracket order type reuses
-        /// it for its own two exits
+        /// Takes the quantity a leg just executed off every other open leg of the group, appending the resulting
+        /// events into the same event batch as that execution. A leg left with nothing to execute is canceled, which
+        /// is what makes a complete fill on one leg cancel all the others. This is the one-cancels-the-other promise:
+        /// the group can never execute more than the quantity it was given, and every unit it has not executed yet
+        /// stays covered by every open leg. The bracket order type reuses it for its own two exits
         /// </summary>
-        private void CancelOpenSiblings(List<Order> orders, Order winner, List<OrderEvent> events, string reason)
+        /// <param name="orders">Every leg of the group</param>
+        /// <param name="executingLeg">The leg that just executed</param>
+        /// <param name="executedQuantity">The signed quantity that leg just executed</param>
+        /// <param name="events">The event batch of this pass, appended to in place</param>
+        /// <remarks>The quantity is written straight onto the order because the brokerage and the transaction handler
+        /// share the same <see cref="Order"/> instance, so <see cref="OrderTicket.Quantity"/> reports the new size
+        /// right away. Note this leaves <see cref="GroupOrderManager.Quantity"/> at the size the group was submitted
+        /// with, which is its correct meaning and is not read anywhere on this path</remarks>
+        private void ReduceOpenSiblings(List<Order> orders, Order executingLeg, decimal executedQuantity, List<OrderEvent> events)
         {
+            // the executing leg has just spent part of the quantity the whole group was given. Every open leg covers
+            // that same unexecuted quantity, so once the executing leg completes there is nothing left for any of them
+            var groupIsComplete = executingLeg.Status == OrderStatus.Filled;
+            var absoluteExecutedQuantity = Math.Abs(executedQuantity);
+
             foreach (var sibling in orders)
             {
-                if (sibling.Id == winner.Id || sibling.Status.IsClosed())
+                if (sibling.Id == executingLeg.Id || sibling.Status.IsClosed())
                 {
                     continue;
                 }
 
-                sibling.Status = OrderStatus.Canceled;
-                events.Add(new OrderEvent(sibling, Algorithm.UtcTime, OrderFee.Zero, reason) { Status = OrderStatus.Canceled });
+                var absoluteQuantity = sibling.AbsoluteQuantity - absoluteExecutedQuantity;
+                if (groupIsComplete || absoluteQuantity <= 0)
+                {
+                    // a leg with nothing left to execute is canceled keeping the quantity it was submitted with, so it
+                    // still reports what it was asked for. It must never be left open at zero: a zero quantity order
+                    // has no direction, no fill model fills it, and the group would be rescanned forever
+                    sibling.Status = OrderStatus.Canceled;
+                    events.Add(new OrderEvent(sibling, Algorithm.UtcTime, OrderFee.Zero, "OCO") { Status = OrderStatus.Canceled });
+                    continue;
+                }
+
+                // set the quantity before building the event so it carries the new size
+                sibling.Quantity = Math.Sign(sibling.Quantity) * absoluteQuantity;
+                events.Add(new OrderEvent(sibling, Algorithm.UtcTime, OrderFee.Zero,
+                    $"OCO: reduced by {absoluteExecutedQuantity} executed by leg {executingLeg.Id}")
+                { Status = OrderStatus.UpdateSubmitted });
             }
         }
 
