@@ -25,6 +25,10 @@ namespace QuantConnect.Algorithm.CSharp
 {
     /// <summary>
     /// This algorithm demonstrates unified Financial Advisor group orders and terminal-order snapshot reconciliation.
+    /// It requires ib-financial-advisors-unified-groups-enabled=true and an existing group whose saved
+    /// method is Equal, NetLiq, AvailableEquity, Ratio, or Percent. ContractsOrShares instead requires
+    /// updating and confirming the saved vector before submitting a parent with the exact saved total;
+    /// use FinancialAdvisorGroupAssignmentAlgorithm for that mutation and confirmed-readback pattern.
     /// </summary>
     /// <meta name="tag" content="using data" />
     /// <meta name="tag" content="using quantconnect" />
@@ -79,8 +83,9 @@ namespace QuantConnect.Algorithm.CSharp
             // The default order properties can be set here to choose the FA settings
             // to be automatically used in any order submission method (such as SetHoldings, Buy, Sell and Order)
 
-            // Use a unified FA Account Group. Leaving FaMethod blank uses the
-            // allocation method saved for the group in TWS.
+            // Use a unified FA Account Group. Leaving FaMethod blank uses the saved
+            // allocation method; this aggregate demo expects a computed, Ratio, or
+            // Percent group rather than ContractsOrShares.
             DefaultOrderProperties = new InteractiveBrokersOrderProperties
             {
                 // account group created manually in IB/TWS

@@ -18,8 +18,12 @@ from threading import Lock
 
 ### <summary>
 ### This algorithm demonstrates unified Financial Advisor group orders and authoritative
-### post-order account reconciliation. The group and its saved allocation method must
-### already exist in TWS, and ib-financial-advisors-unified-groups-enabled must be true.
+### post-order account reconciliation. It requires
+### ib-financial-advisors-unified-groups-enabled=true and an existing group whose saved
+### method is Equal, NetLiq, AvailableEquity, Ratio, or Percent. ContractsOrShares instead
+### requires updating and confirming the saved vector before submitting a parent with
+### the exact saved total; use FinancialAdvisorGroupAssignmentAlgorithm for that mutation
+### and confirmed-readback pattern.
 ### </summary>
 ### <meta name="tag" content="using data" />
 ### <meta name="tag" content="using quantconnect" />
@@ -61,8 +65,9 @@ class FinancialAdvisorDemoAlgorithm(QCAlgorithm):
         self._next_reconcile_refresh_utc = None
         self._scheduled_refresh_topology_ticks = 0
 
-        # Route every order to the existing group. Leaving fa_method blank makes
-        # TWS's saved group allocation method authoritative.
+        # Route every order to the existing group. Leaving fa_method blank uses the
+        # saved method; this aggregate demo expects a computed, Ratio, or Percent
+        # group rather than ContractsOrShares.
         self.default_order_properties = InteractiveBrokersOrderProperties()
         self.default_order_properties.fa_group = self._GROUP_NAME
 
