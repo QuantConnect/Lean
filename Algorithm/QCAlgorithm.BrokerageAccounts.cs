@@ -157,6 +157,10 @@ namespace QuantConnect.Algorithm
         /// Requests a complete allocation-vector replacement using the version tokens from the snapshot on which
         /// the algorithm based the requested values.
         /// </summary>
+        /// <remarks>
+        /// Account-identifier case handling is brokerage-defined. A provider may reject identifiers that differ only
+        /// by case as duplicates.
+        /// </remarks>
         /// <param name="groupName">Existing managed account group to update.</param>
         /// <param name="accountAllocationValues">Complete per-account allocation vector.</param>
         /// <param name="observedSnapshot">Ready snapshot observed while calculating the requested values.</param>
@@ -209,6 +213,10 @@ namespace QuantConnect.Algorithm
         /// Requests a complete allocation-vector replacement using the version tokens from the snapshot on which
         /// the algorithm based the requested values.
         /// </summary>
+        /// <remarks>
+        /// Account-identifier case handling is brokerage-defined. A provider may reject identifiers that differ only
+        /// by case as duplicates.
+        /// </remarks>
         /// <param name="groupName">Existing managed account group to update.</param>
         /// <param name="accountAllocationValues">Complete per-account allocation vector.</param>
         /// <param name="observedSnapshot">Ready snapshot observed while calculating the requested values.</param>

@@ -100,15 +100,15 @@ namespace QuantConnect.Tests.Algorithm
         }
 
         [Test]
-        public void AllocationIdentifiersAreWireCaseSensitive()
+        public void AllocationIdentifiersAreForwardedVerbatim()
         {
             var provider = new TestProvider(BrokerageAccountSnapshotStatus.Ready);
             var algorithm = new QCAlgorithm();
             InstallBrokerageAccountServices(algorithm, provider, null, provider);
+            const string accountId = "aCcOuNtA";
             var allocations = new Dictionary<string, decimal>
             {
-                ["AccountA"] = 1m,
-                ["accounta"] = 2m
+                [accountId] = 1m
             };
 
             Assert.IsTrue(algorithm.RequestBrokerageAccountGroupAllocationUpdate(
@@ -116,9 +116,9 @@ namespace QuantConnect.Tests.Algorithm
                 allocations,
                 provider.GetAccountSnapshot()));
 
-            Assert.AreEqual(2, provider.RequestedAllocations.Count);
-            Assert.AreEqual(1m, provider.RequestedAllocations["AccountA"]);
-            Assert.AreEqual(2m, provider.RequestedAllocations["accounta"]);
+            Assert.AreEqual(1, provider.RequestedAllocations.Count);
+            CollectionAssert.AreEqual(new[] { accountId }, provider.RequestedAllocations.Keys);
+            Assert.AreEqual(1m, provider.RequestedAllocations[accountId]);
         }
 
         [Test]
