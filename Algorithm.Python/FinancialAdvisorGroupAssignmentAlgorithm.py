@@ -14,6 +14,7 @@
 from AlgorithmImports import *
 from datetime import timedelta
 from decimal import Decimal, InvalidOperation
+from System.Threading import AutoResetEvent
 import re
 
 
@@ -84,6 +85,9 @@ class FinancialAdvisorGroupAssignmentAlgorithm(QCAlgorithm):
         self._snapshot_request_is_confirmation = False
         self._next_snapshot_refresh_utc = None
         self._scheduled_refresh_topology_ticks = 0
+        # Python.NET cannot expose a persistent ref-int to Interlocked, so this
+        # provides the same atomic, coalescing set-and-consume semantics.
+        self._scheduled_refresh_intent = AutoResetEvent(False)
 
         self._last_ready_snapshot = None
         self._last_observed_ready_generation = -1
@@ -96,17 +100,12 @@ class FinancialAdvisorGroupAssignmentAlgorithm(QCAlgorithm):
         self._last_membership_evaluation_generation = -1
         self._next_assignment_retry_utc = None
 
-        # Refreshes are permitted during Initialize; mutations deliberately wait
-        # for OnData, after LEAN has locked the initialized algorithm.
         if self.live_mode:
             # Every third one-minute topology tick expands to complete account state.
             self.schedule.on(
                 self.date_rules.every_day(),
                 self.time_rules.every(self._TOPOLOGY_REFRESH_INTERVAL),
                 self._request_scheduled_snapshot_refresh)
-            self._try_request_snapshot_refresh(
-                self.brokerage_account_snapshot,
-                is_confirmation=False)
 
     def on_data(self, data):
         if not self.live_mode:
@@ -119,6 +118,8 @@ class FinancialAdvisorGroupAssignmentAlgorithm(QCAlgorithm):
 
         self._observe_ready_snapshot(snapshot)
         self._drive_snapshot_refresh(snapshot)
+        if self._try_process_scheduled_snapshot_refresh(snapshot):
+            return
 
         if self._minimum_ready_generation is not None:
             if snapshot.is_ready and \
@@ -278,27 +279,19 @@ class FinancialAdvisorGroupAssignmentAlgorithm(QCAlgorithm):
             f"The FA {purpose} snapshot refresh was not accepted; retrying.")
 
     def _request_scheduled_snapshot_refresh(self):
-        snapshot = self.brokerage_account_snapshot
-        self._drive_snapshot_refresh(snapshot)
-        if not self.live_mode or \
-                self._snapshot_request_generation is not None or \
+        self._scheduled_refresh_intent.set()
+
+    def _try_process_scheduled_snapshot_refresh(self, snapshot):
+        if self._snapshot_request_generation is not None or \
                 self._active_assignment_generation is not None or \
                 self._minimum_ready_generation is not None or \
                 self._cash_confirmation_trigger_generation is not None or \
                 snapshot.status == BrokerageAccountSnapshotStatus.REFRESHING or \
                 (self._next_snapshot_refresh_utc is not None and
                  self.utc_time < self._next_snapshot_refresh_utc):
-            return
+            return False
 
-        self._scheduled_refresh_topology_ticks += 1
-        if self._scheduled_refresh_topology_ticks == \
-                self._COMPLETE_REFRESH_TOPOLOGY_TICKS:
-            self._scheduled_refresh_topology_ticks = 0
-            self._try_request_snapshot_refresh(
-                snapshot,
-                is_confirmation=False)
-            return
-
+        group_names = None
         if self._target_group_name:
             target_group = self._find_target_group(snapshot)
             group_names = [
@@ -312,15 +305,22 @@ class FinancialAdvisorGroupAssignmentAlgorithm(QCAlgorithm):
                 for group in list(snapshot.all_groups.values)
             ]
             if not group_names:
-                self._try_request_snapshot_refresh(
-                    snapshot,
-                    is_confirmation=False)
-                return
+                group_names = None
+        if not self._scheduled_refresh_intent.wait_one(0):
+            return False
 
+        self._scheduled_refresh_topology_ticks += 1
+        complete_refresh = \
+            self._scheduled_refresh_topology_ticks == \
+            self._COMPLETE_REFRESH_TOPOLOGY_TICKS
+        if complete_refresh:
+            self._scheduled_refresh_topology_ticks = 0
+            group_names = None
         self._try_request_snapshot_refresh(
             snapshot,
             is_confirmation=False,
             group_names=group_names)
+        return True
 
     def _poll_assignment(self):
         if self._active_assignment_generation is None:

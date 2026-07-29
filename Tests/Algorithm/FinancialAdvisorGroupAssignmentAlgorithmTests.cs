@@ -16,6 +16,8 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 using NUnit.Framework;
 using QuantConnect.Algorithm.CSharp;
 using QuantConnect.Brokerages;
@@ -159,6 +161,11 @@ namespace QuantConnect.Tests.Algorithm
             InvokePrivateMethod(
                 algorithm,
                 "RequestScheduledSnapshotRefresh");
+            Assert.AreEqual(
+                0,
+                services.RefreshRequestCount,
+                "The scheduled callback must only publish refresh intent.");
+            algorithm.OnData(CreateEmptySlice());
             services.Snapshot = CreateSnapshot(
                 2,
                 new BrokerageAccountGroup(
@@ -176,6 +183,7 @@ namespace QuantConnect.Tests.Algorithm
             InvokePrivateMethod(
                 algorithm,
                 "RequestScheduledSnapshotRefresh");
+            algorithm.OnData(CreateEmptySlice());
             services.Snapshot = CreateSnapshot(
                 3,
                 new BrokerageAccountGroup(
@@ -193,6 +201,7 @@ namespace QuantConnect.Tests.Algorithm
             InvokePrivateMethod(
                 algorithm,
                 "RequestScheduledSnapshotRefresh");
+            algorithm.OnData(CreateEmptySlice());
 
             Assert.Multiple(() =>
             {
@@ -208,6 +217,91 @@ namespace QuantConnect.Tests.Algorithm
                     services.RequestedGroupHistory[2],
                     "The third topology tick must issue one complete request.");
             });
+        }
+
+        [Test]
+        public void ConcurrentScheduledCallbackPreservesOneLaterRefreshIntent()
+        {
+            var firstSnapshot = CreateSnapshot(
+                1,
+                new BrokerageAccountGroup(
+                    "TargetGroup",
+                    "Equal",
+                    new[] { "AccountA" }),
+                Entry(
+                    "AccountA",
+                    BrokerageAccountRelationship.Managed,
+                    "Hold-East",
+                    "TargetGroup"));
+            var secondSnapshot = CreateSnapshot(
+                2,
+                new BrokerageAccountGroup(
+                    "TargetGroup",
+                    "Equal",
+                    new[] { "AccountA" }),
+                Entry(
+                    "AccountA",
+                    BrokerageAccountRelationship.Managed,
+                    "Hold-East",
+                    "TargetGroup"));
+            var thirdSnapshot = CreateSnapshot(
+                3,
+                new BrokerageAccountGroup(
+                    "TargetGroup",
+                    "Equal",
+                    new[] { "AccountA" }),
+                Entry(
+                    "AccountA",
+                    BrokerageAccountRelationship.Managed,
+                    "Hold-East",
+                    "TargetGroup"));
+            var services = new TestFinancialAdvisorServices
+            {
+                Snapshot = firstSnapshot
+            };
+            var algorithm = CreateAlgorithm(services);
+            services.ResetRefreshRequests();
+            using var requestEntered = new ManualResetEventSlim();
+            using var releaseRequest = new ManualResetEventSlim();
+            services.RefreshRequestHook = stateProvider =>
+            {
+                if (stateProvider.RefreshRequestCount == 1)
+                {
+                    requestEntered.Set();
+                    Assert.IsTrue(
+                        releaseRequest.Wait(TimeSpan.FromSeconds(10)));
+                    stateProvider.Snapshot = secondSnapshot;
+                }
+                else
+                {
+                    stateProvider.Snapshot = thirdSnapshot;
+                }
+            };
+
+            InvokePrivateMethod(
+                algorithm,
+                "RequestScheduledSnapshotRefresh");
+            var firstOnData = Task.Run(
+                () => algorithm.OnData(CreateEmptySlice()));
+            Assert.IsTrue(
+                requestEntered.Wait(TimeSpan.FromSeconds(10)));
+            InvokePrivateMethod(
+                algorithm,
+                "RequestScheduledSnapshotRefresh");
+            releaseRequest.Set();
+            Assert.IsTrue(
+                firstOnData.Wait(TimeSpan.FromSeconds(10)));
+
+            Assert.AreEqual(1, services.RefreshRequestCount);
+            algorithm.SetDateTime(SnapshotTime.AddSeconds(5));
+            algorithm.OnData(CreateEmptySlice());
+            algorithm.OnData(CreateEmptySlice());
+
+            Assert.AreEqual(
+                2,
+                services.RefreshRequestCount,
+                "The concurrent callback must survive the first atomic " +
+                "consume without producing a duplicate third request.");
         }
 
         [Test]
@@ -464,6 +558,7 @@ namespace QuantConnect.Tests.Algorithm
             InvokePrivateMethod(
                 algorithm,
                 "RequestScheduledSnapshotRefresh");
+            algorithm.OnData(CreateEmptySlice());
             services.Snapshot = CreateSnapshot(
                 11,
                 new BrokerageAccountGroup(
@@ -484,6 +579,7 @@ namespace QuantConnect.Tests.Algorithm
             InvokePrivateMethod(
                 algorithm,
                 "RequestScheduledSnapshotRefresh");
+            algorithm.OnData(CreateEmptySlice());
             services.Snapshot = CreateSnapshot(
                 12,
                 new BrokerageAccountGroup(
@@ -510,6 +606,7 @@ namespace QuantConnect.Tests.Algorithm
             InvokePrivateMethod(
                 algorithm,
                 "RequestScheduledSnapshotRefresh");
+            algorithm.OnData(CreateEmptySlice());
             services.Snapshot = CreateSnapshot(
                 13,
                 new BrokerageAccountGroup(
@@ -821,6 +918,8 @@ namespace QuantConnect.Tests.Algorithm
             public bool AcceptRefreshRequests { get; set; } = true;
             public int RefreshRequestCount { get; private set; }
             public long GenerationAtLastRefreshRequest { get; private set; }
+            public Action<TestFinancialAdvisorServices>
+                RefreshRequestHook { get; set; }
             public List<IReadOnlyCollection<string>> RequestedGroupHistory { get; } =
                 new();
 
@@ -836,6 +935,7 @@ namespace QuantConnect.Tests.Algorithm
                 ++RefreshRequestCount;
                 GenerationAtLastRefreshRequest = Snapshot.Generation;
                 RequestedGroupHistory.Add(groupNames.ToArray());
+                RefreshRequestHook?.Invoke(this);
                 return AcceptRefreshRequests;
             }
 

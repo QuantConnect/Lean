@@ -17,6 +17,8 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using System.Threading;
+using System.Threading.Tasks;
 using NUnit.Framework;
 using QuantConnect.Algorithm;
 using QuantConnect.Algorithm.CSharp;
@@ -89,6 +91,11 @@ namespace QuantConnect.Tests.Algorithm
             Assert.AreEqual(0, provider.RefreshRequestCount);
 
             algorithm.OnOrderEvent(CreateOrderEvent(41, OrderStatus.Filled));
+            Assert.AreEqual(
+                0,
+                provider.RefreshRequestCount,
+                "OnOrderEvent must only publish terminal intent.");
+            algorithm.OnData(CreateEmptySlice());
 
             Assert.Multiple(() =>
             {
@@ -409,12 +416,19 @@ namespace QuantConnect.Tests.Algorithm
             InvokePrivateMethod(
                 algorithm,
                 "RequestScheduledSnapshotRefresh");
+            Assert.AreEqual(
+                0,
+                provider.RefreshRequestCount,
+                "The scheduled callback must only publish refresh intent.");
+            algorithm.OnData(CreateEmptySlice());
             InvokePrivateMethod(
                 algorithm,
                 "RequestScheduledSnapshotRefresh");
+            algorithm.OnData(CreateEmptySlice());
             InvokePrivateMethod(
                 algorithm,
                 "RequestScheduledSnapshotRefresh");
+            algorithm.OnData(CreateEmptySlice());
 
             Assert.Multiple(() =>
             {
@@ -435,26 +449,99 @@ namespace QuantConnect.Tests.Algorithm
             InvokePrivateMethod(
                 algorithm,
                 "RequestScheduledSnapshotRefresh");
+            algorithm.OnData(CreateEmptySlice());
             Assert.AreEqual(
                 3,
                 provider.RefreshRequestCount,
                 "Scheduled policy must yield while the parent group order is active.");
 
-            provider.SnapshotReadHook = () => InvokePrivateMethod(
-                algorithm,
-                "RequestScheduledSnapshotRefresh");
             algorithm.OnOrderEvent(
                 CreateOrderEvent(41, OrderStatus.Filled));
+            Assert.AreEqual(
+                3,
+                provider.RefreshRequestCount,
+                "OnOrderEvent must not call the account service.");
+            algorithm.OnData(CreateEmptySlice());
             Assert.AreEqual(4, provider.RefreshRequestCount);
 
             InvokePrivateMethod(
                 algorithm,
                 "RequestScheduledSnapshotRefresh");
+            algorithm.OnData(CreateEmptySlice());
 
             Assert.AreEqual(
                 4,
                 provider.RefreshRequestCount,
                 "Scheduled policy must yield to terminal-order reconciliation.");
+        }
+
+        [Test]
+        public void ConcurrentScheduledCallbackPreservesOneLaterRefreshIntent()
+        {
+            var firstSnapshot = CreateSnapshot(
+                BrokerageAccountSnapshotStatus.Ready,
+                7,
+                10m,
+                20m,
+                SnapshotTime);
+            var secondSnapshot = CreateSnapshot(
+                BrokerageAccountSnapshotStatus.Ready,
+                8,
+                10m,
+                20m,
+                SnapshotTime.AddTicks(1));
+            var thirdSnapshot = CreateSnapshot(
+                BrokerageAccountSnapshotStatus.Ready,
+                9,
+                10m,
+                20m,
+                SnapshotTime.AddTicks(2));
+            var provider = new TestAccountStateProvider
+            {
+                Snapshot = firstSnapshot
+            };
+            var algorithm = CreateAlgorithm(provider, firstSnapshot);
+            SetPrivateField(algorithm, "_groupOrderId", 0);
+            using var requestEntered = new ManualResetEventSlim();
+            using var releaseRequest = new ManualResetEventSlim();
+            provider.RefreshRequestHook = stateProvider =>
+            {
+                if (stateProvider.RefreshRequestCount == 1)
+                {
+                    requestEntered.Set();
+                    Assert.IsTrue(
+                        releaseRequest.Wait(TimeSpan.FromSeconds(10)));
+                    stateProvider.Snapshot = secondSnapshot;
+                }
+                else
+                {
+                    stateProvider.Snapshot = thirdSnapshot;
+                }
+            };
+
+            InvokePrivateMethod(
+                algorithm,
+                "RequestScheduledSnapshotRefresh");
+            var firstOnData = Task.Run(
+                () => algorithm.OnData(CreateEmptySlice()));
+            Assert.IsTrue(
+                requestEntered.Wait(TimeSpan.FromSeconds(10)));
+            InvokePrivateMethod(
+                algorithm,
+                "RequestScheduledSnapshotRefresh");
+            releaseRequest.Set();
+            Assert.IsTrue(
+                firstOnData.Wait(TimeSpan.FromSeconds(10)));
+
+            Assert.AreEqual(1, provider.RefreshRequestCount);
+            algorithm.OnData(CreateEmptySlice());
+            algorithm.OnData(CreateEmptySlice());
+
+            Assert.AreEqual(
+                2,
+                provider.RefreshRequestCount,
+                "The concurrent callback must survive the first atomic " +
+                "consume without producing a duplicate third request.");
         }
 
         [TestCase(BrokerageAccountSnapshotStatus.Failed)]

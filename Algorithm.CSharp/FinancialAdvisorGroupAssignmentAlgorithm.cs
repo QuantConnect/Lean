@@ -17,6 +17,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
+using System.Threading;
 using QuantConnect.Brokerages;
 using QuantConnect.Data;
 
@@ -60,6 +61,7 @@ namespace QuantConnect.Algorithm.CSharp
         private long _minimumReadyGeneration = -1;
         private string _pendingAccountId = string.Empty;
         private int _scheduledRefreshTopologyTicks;
+        private int _scheduledRefreshIntent;
 
         /// <summary>
         /// Configures the alias rule, destination, allocation value, cash-change threshold,
@@ -96,7 +98,6 @@ namespace QuantConnect.Algorithm.CSharp
                     DateRules.EveryDay(),
                     TimeRules.Every(TopologyRefreshInterval),
                     RequestScheduledSnapshotRefresh);
-                TryRequestSnapshotRefresh(BrokerageAccountSnapshot);
             }
         }
 
@@ -114,6 +115,10 @@ namespace QuantConnect.Algorithm.CSharp
 
             var snapshot = BrokerageAccountSnapshot;
             UpdateRefreshRequestState(snapshot);
+            if (TryProcessScheduledSnapshotRefresh(snapshot))
+            {
+                return;
+            }
 
             if (PollAssignment())
             {
@@ -485,10 +490,15 @@ namespace QuantConnect.Algorithm.CSharp
 
         private void RequestScheduledSnapshotRefresh()
         {
-            var snapshot = BrokerageAccountSnapshot;
-            UpdateRefreshRequestState(snapshot);
-            if (!LiveMode ||
-                _refreshRequestOutstanding ||
+            Interlocked.Exchange(
+                ref _scheduledRefreshIntent,
+                1);
+        }
+
+        private bool TryProcessScheduledSnapshotRefresh(
+            BrokerageAccountSnapshot snapshot)
+        {
+            if (_refreshRequestOutstanding ||
                 _assignmentRequestAccepted ||
                 _minimumReadyGeneration >= 0 ||
                 _cashConfirmationRequired ||
@@ -496,40 +506,50 @@ namespace QuantConnect.Algorithm.CSharp
                     BrokerageAccountSnapshotStatus.Refreshing ||
                 UtcTime < _nextRefreshRetryUtc)
             {
-                return;
+                return false;
+            }
+
+            var completeRefresh =
+                _scheduledRefreshTopologyTicks + 1 ==
+                CompleteRefreshTopologyTicks;
+            IReadOnlyCollection<string> groupNames = null;
+            if (!completeRefresh)
+            {
+                if (_targetGroupName.Length == 0)
+                {
+                    groupNames = snapshot.AllGroups.Keys.ToArray();
+                    if (groupNames.Count == 0)
+                    {
+                        return false;
+                    }
+                }
+                else
+                {
+                    var destinationGroup =
+                        snapshot.AllGroups.Values.FirstOrDefault(
+                            group => group.Name.Equals(
+                                _targetGroupName,
+                                StringComparison.OrdinalIgnoreCase));
+                    groupNames = new[]
+                    {
+                        destinationGroup?.Name ?? _targetGroupName
+                    };
+                }
+            }
+            if (Interlocked.Exchange(
+                    ref _scheduledRefreshIntent,
+                    0) == 0)
+            {
+                return false;
             }
 
             ++_scheduledRefreshTopologyTicks;
-            if (_scheduledRefreshTopologyTicks ==
-                CompleteRefreshTopologyTicks)
+            if (completeRefresh)
             {
                 _scheduledRefreshTopologyTicks = 0;
-                TryRequestSnapshotRefresh(snapshot);
-                return;
-            }
-
-            IReadOnlyCollection<string> groupNames;
-            if (_targetGroupName.Length == 0)
-            {
-                groupNames = snapshot.AllGroups.Keys.ToArray();
-                if (groupNames.Count == 0)
-                {
-                    return;
-                }
-            }
-            else
-            {
-                var destinationGroup =
-                    snapshot.AllGroups.Values.FirstOrDefault(
-                        group => group.Name.Equals(
-                            _targetGroupName,
-                            StringComparison.OrdinalIgnoreCase));
-                groupNames = new[]
-                {
-                    destinationGroup?.Name ?? _targetGroupName
-                };
             }
             TryRequestSnapshotRefresh(snapshot, groupNames);
+            return true;
         }
     }
 }
