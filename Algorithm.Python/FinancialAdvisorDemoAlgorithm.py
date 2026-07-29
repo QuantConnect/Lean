@@ -12,6 +12,7 @@
 # limitations under the License.
 
 from AlgorithmImports import *
+from datetime import timedelta
 
 ### <summary>
 ### This algorithm demonstrates how to submit orders to a Financial Advisor account group, allocation profile or a single managed account.
@@ -23,6 +24,7 @@ from AlgorithmImports import *
 class FinancialAdvisorDemoAlgorithm(QCAlgorithm):
 
     _GROUP_NAME = "TestGroupEQ"
+    _RECONCILE_RETRY_INTERVAL = timedelta(seconds=5)
 
     def initialize(self):
         # Initialise the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must be initialized.
@@ -37,6 +39,8 @@ class FinancialAdvisorDemoAlgorithm(QCAlgorithm):
         self._group_order_submitted = False
         self._group_order_id = 0
         self._pending_reconcile_generation = -1
+        self._pending_reconcile_terminal_utc = None
+        self._next_reconcile_refresh_utc = None
 
         # The default order properties can be set here to choose the FA settings
         # to be automatically used in any order submission method (such as SetHoldings, Buy, Sell and Order)
@@ -74,13 +78,14 @@ class FinancialAdvisorDemoAlgorithm(QCAlgorithm):
 
         snapshot = self.brokerage_account_snapshot
         if self._pending_reconcile_generation >= 0:
-            if not snapshot.is_ready or \
-                    snapshot.generation <= self._pending_reconcile_generation:
-                return
-
-            self._reconcile_account_positions(snapshot)
-            self._pre_order_snapshot = None
-            self._pending_reconcile_generation = -1
+            if snapshot.is_ready and \
+                    snapshot.generation > self._pending_reconcile_generation and \
+                    snapshot.collection_started_utc >= self._pending_reconcile_terminal_utc:
+                self._reconcile_account_positions(snapshot)
+                self._pre_order_snapshot = None
+                self._pending_reconcile_generation = -1
+            else:
+                self._try_request_reconcile_refresh(snapshot)
             return
 
         if not self._initial_snapshot_refresh_accepted:
@@ -115,6 +120,17 @@ class FinancialAdvisorDemoAlgorithm(QCAlgorithm):
         self._group_order_id = 0
         self._pending_reconcile_generation = \
             self.brokerage_account_snapshot.generation
+        self._pending_reconcile_terminal_utc = order_event.utc_time
+        self._next_reconcile_refresh_utc = self.utc_time
+        self._try_request_reconcile_refresh(self.brokerage_account_snapshot)
+
+    def _try_request_reconcile_refresh(self, snapshot):
+        if snapshot.status == BrokerageAccountSnapshotStatus.REFRESHING or \
+                self.utc_time < self._next_reconcile_refresh_utc:
+            return
+
+        self._next_reconcile_refresh_utc = \
+            self.utc_time + self._RECONCILE_RETRY_INTERVAL
         if not self.request_brokerage_account_snapshot_refresh([self._GROUP_NAME]):
             self.error(
                 f"The post-order snapshot refresh for Financial Advisor group "

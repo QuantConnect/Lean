@@ -35,43 +35,53 @@ namespace QuantConnect.Tests.Algorithm
         private static readonly DateTime SnapshotTime =
             new(2026, 1, 2, 3, 4, 5, DateTimeKind.Utc);
 
-        [Test]
-        public void TerminalGroupOrderUsesSnapshotReconciliationTest()
+        [TestCase(BrokerageAccountSnapshotStatus.Failed)]
+        [TestCase(BrokerageAccountSnapshotStatus.Stale)]
+        public void TerminalGroupOrderUsesSnapshotReconciliationTest(
+            BrokerageAccountSnapshotStatus failureStatus)
         {
             var preOrderSnapshot = CreateSnapshot(
                 BrokerageAccountSnapshotStatus.Ready,
                 5,
                 10m,
-                20m);
+                20m,
+                SnapshotTime.AddMinutes(-2));
             var terminalTimeSnapshot = CreateSnapshot(
                 BrokerageAccountSnapshotStatus.Ready,
                 7,
                 11m,
-                19m);
-            var postRequestStaleSnapshot = CreateSnapshot(
-                BrokerageAccountSnapshotStatus.Stale,
+                19m,
+                SnapshotTime.AddSeconds(-10));
+            var failedRefreshSnapshot = CreateSnapshot(
+                failureStatus,
                 8,
                 13m,
-                18m);
+                18m,
+                SnapshotTime.AddSeconds(-5));
+            var causallyOldSnapshot = CreateSnapshot(
+                BrokerageAccountSnapshotStatus.Ready,
+                8,
+                13m,
+                18m,
+                SnapshotTime.AddTicks(-1));
+            var causallyValidSnapshot = CreateSnapshot(
+                BrokerageAccountSnapshotStatus.Ready,
+                9,
+                13m,
+                18m,
+                SnapshotTime);
             var provider = new TestAccountStateProvider
             {
                 Snapshot = terminalTimeSnapshot
             };
             provider.RefreshRequestHook = stateProvider =>
-                stateProvider.Snapshot = postRequestStaleSnapshot;
-            var algorithm = new FinancialAdvisorDemoAlgorithm();
-            SetPrivateField(
-                algorithm,
-                typeof(QCAlgorithm),
-                "_liveMode",
-                true);
-            ((IBrokerageAccountServiceConsumer)algorithm)
-                .SetBrokerageAccountStateProvider(provider);
-            SetPrivateField(algorithm, "_symbol", Symbols.SPY);
-            SetPrivateField(algorithm, "_preOrderSnapshot", preOrderSnapshot);
-            SetPrivateField(algorithm, "_initialSnapshotRefreshAccepted", true);
-            SetPrivateField(algorithm, "_groupOrderSubmitted", true);
-            SetPrivateField(algorithm, "_groupOrderId", 41);
+                stateProvider.Snapshot = stateProvider.RefreshRequestCount switch
+                {
+                    1 => failedRefreshSnapshot,
+                    2 => causallyOldSnapshot,
+                    _ => causallyValidSnapshot
+                };
+            var algorithm = CreateAlgorithm(provider, preOrderSnapshot);
 
             algorithm.OnOrderEvent(CreateOrderEvent(41, OrderStatus.Submitted));
             algorithm.OnOrderEvent(CreateOrderEvent(42, OrderStatus.Filled));
@@ -90,29 +100,37 @@ namespace QuantConnect.Tests.Algorithm
                     new[] { GroupName },
                     provider.RequestedGroups);
                 CollectionAssert.IsEmpty(provider.RequestedAdditionalAccounts);
-                Assert.AreSame(postRequestStaleSnapshot, provider.Snapshot);
+                Assert.AreSame(failedRefreshSnapshot, provider.Snapshot);
             });
 
             var messageCount = algorithm.LogMessages.Count;
-            provider.Snapshot = terminalTimeSnapshot;
             algorithm.OnData(CreateEmptySlice());
-            Assert.AreEqual(
-                messageCount,
-                algorithm.LogMessages.Count,
-                "A Ready snapshot at the terminal-time generation must not reconcile.");
+            Assert.Multiple(() =>
+            {
+                Assert.AreEqual(1, provider.RefreshRequestCount);
+                Assert.AreEqual(messageCount, algorithm.LogMessages.Count);
+            });
 
-            provider.Snapshot = postRequestStaleSnapshot;
+            algorithm.SetDateTime(SnapshotTime.AddSeconds(5));
             algorithm.OnData(CreateEmptySlice());
-            Assert.AreEqual(
-                messageCount,
-                algorithm.LogMessages.Count,
-                "A newer snapshot that is not Ready must not reconcile.");
+            Assert.AreEqual(2, provider.RefreshRequestCount);
+            Assert.AreSame(causallyOldSnapshot, provider.Snapshot);
 
-            provider.Snapshot = CreateSnapshot(
-                BrokerageAccountSnapshotStatus.Ready,
-                8,
-                13m,
-                18m);
+            algorithm.OnData(CreateEmptySlice());
+            Assert.Multiple(() =>
+            {
+                Assert.AreEqual(
+                    messageCount,
+                    algorithm.LogMessages.Count,
+                    "A newer snapshot collected before the terminal event must not reconcile.");
+                Assert.AreEqual(2, provider.RefreshRequestCount);
+            });
+
+            algorithm.SetDateTime(SnapshotTime.AddSeconds(10));
+            algorithm.OnData(CreateEmptySlice());
+            Assert.AreEqual(3, provider.RefreshRequestCount);
+            Assert.AreSame(causallyValidSnapshot, provider.Snapshot);
+
             algorithm.OnData(CreateEmptySlice());
 
             var reconciliationMessages = algorithm.LogMessages
@@ -141,10 +159,99 @@ namespace QuantConnect.Tests.Algorithm
                     algorithm.LogMessages.Count,
                     "A completed reconciliation must not run a second time.");
                 Assert.AreEqual(
-                    1,
+                    3,
                     provider.RefreshRequestCount,
                     "A duplicate terminal event must not request another refresh.");
             });
+        }
+
+        [Test]
+        public void RejectedReconciliationRefreshRetriesAfterCadenceAndSkipsRefreshingTest()
+        {
+            var preOrderSnapshot = CreateSnapshot(
+                BrokerageAccountSnapshotStatus.Ready,
+                5,
+                10m,
+                20m,
+                SnapshotTime.AddMinutes(-2));
+            var terminalTimeSnapshot = CreateSnapshot(
+                BrokerageAccountSnapshotStatus.Ready,
+                7,
+                11m,
+                19m,
+                SnapshotTime.AddSeconds(-10));
+            var refreshingSnapshot = CreateSnapshot(
+                BrokerageAccountSnapshotStatus.Refreshing,
+                7,
+                11m,
+                19m,
+                SnapshotTime);
+            var failedSnapshot = CreateSnapshot(
+                BrokerageAccountSnapshotStatus.Failed,
+                7,
+                11m,
+                19m,
+                SnapshotTime);
+            var reconciledSnapshot = CreateSnapshot(
+                BrokerageAccountSnapshotStatus.Ready,
+                8,
+                13m,
+                18m,
+                SnapshotTime);
+            var provider = new TestAccountStateProvider
+            {
+                Snapshot = terminalTimeSnapshot
+            };
+            provider.EnqueueRefreshResult(false);
+            provider.EnqueueRefreshResult(true);
+            provider.RefreshRequestHook = stateProvider =>
+                stateProvider.Snapshot = reconciledSnapshot;
+            var algorithm = CreateAlgorithm(provider, preOrderSnapshot);
+
+            algorithm.OnOrderEvent(CreateOrderEvent(41, OrderStatus.Filled));
+            algorithm.OnData(CreateEmptySlice());
+            Assert.AreEqual(
+                1,
+                provider.RefreshRequestCount,
+                "A rejected refresh must not retry before the bounded cadence.");
+
+            algorithm.SetDateTime(SnapshotTime.AddSeconds(5));
+            provider.Snapshot = refreshingSnapshot;
+            algorithm.OnData(CreateEmptySlice());
+            Assert.AreEqual(
+                1,
+                provider.RefreshRequestCount,
+                "A reconciliation request must not overlap an active refresh.");
+
+            provider.Snapshot = failedSnapshot;
+            algorithm.OnData(CreateEmptySlice());
+            Assert.AreEqual(2, provider.RefreshRequestCount);
+            Assert.AreSame(reconciledSnapshot, provider.Snapshot);
+
+            var messageCount = algorithm.LogMessages.Count;
+            algorithm.OnData(CreateEmptySlice());
+            Assert.AreEqual(messageCount + 2, algorithm.LogMessages.Count);
+        }
+
+        private static FinancialAdvisorDemoAlgorithm CreateAlgorithm(
+            TestAccountStateProvider provider,
+            BrokerageAccountSnapshot preOrderSnapshot)
+        {
+            var algorithm = new FinancialAdvisorDemoAlgorithm();
+            SetPrivateField(
+                algorithm,
+                typeof(QCAlgorithm),
+                "_liveMode",
+                true);
+            ((IBrokerageAccountServiceConsumer)algorithm)
+                .SetBrokerageAccountStateProvider(provider);
+            algorithm.SetDateTime(SnapshotTime);
+            SetPrivateField(algorithm, "_symbol", Symbols.SPY);
+            SetPrivateField(algorithm, "_preOrderSnapshot", preOrderSnapshot);
+            SetPrivateField(algorithm, "_initialSnapshotRefreshAccepted", true);
+            SetPrivateField(algorithm, "_groupOrderSubmitted", true);
+            SetPrivateField(algorithm, "_groupOrderId", 41);
+            return algorithm;
         }
 
         private static OrderEvent CreateOrderEvent(
@@ -174,7 +281,8 @@ namespace QuantConnect.Tests.Algorithm
             BrokerageAccountSnapshotStatus status,
             long generation,
             decimal accountAQuantity,
-            decimal accountBQuantity)
+            decimal accountBQuantity,
+            DateTime collectionStartedUtc)
         {
             var group = new BrokerageAccountGroup(
                 GroupName,
@@ -201,7 +309,8 @@ namespace QuantConnect.Tests.Algorithm
                 "membership",
                 "configuration",
                 string.Empty,
-                managedAccountIds: new[] { "AccountA", "AccountB" });
+                managedAccountIds: new[] { "AccountA", "AccountB" },
+                collectionStartedUtc: collectionStartedUtc);
         }
 
         private static BrokerageAccountState CreateAccount(
@@ -262,6 +371,10 @@ namespace QuantConnect.Tests.Algorithm
             public Action<TestAccountStateProvider> RefreshRequestHook { get; set; }
             public IReadOnlyCollection<string> RequestedGroups { get; private set; }
             public IReadOnlyCollection<string> RequestedAdditionalAccounts { get; private set; }
+            private readonly Queue<bool> _refreshResults = new();
+
+            public void EnqueueRefreshResult(bool accepted) =>
+                _refreshResults.Enqueue(accepted);
 
             public BrokerageAccountSnapshot GetAccountSnapshot()
             {
@@ -276,8 +389,13 @@ namespace QuantConnect.Tests.Algorithm
                 GenerationObservedAtRefreshRequest = Snapshot.Generation;
                 RequestedGroups = groupNames.ToArray();
                 RequestedAdditionalAccounts = additionalAccountIds.ToArray();
-                RefreshRequestHook?.Invoke(this);
-                return true;
+                var accepted =
+                    _refreshResults.Count == 0 || _refreshResults.Dequeue();
+                if (accepted)
+                {
+                    RefreshRequestHook?.Invoke(this);
+                }
+                return accepted;
             }
         }
     }

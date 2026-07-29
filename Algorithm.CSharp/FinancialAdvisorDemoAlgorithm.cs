@@ -13,6 +13,7 @@
  * limitations under the License.
 */
 
+using System;
 using System.Linq;
 using QuantConnect.Brokerages;
 using QuantConnect.Data;
@@ -30,6 +31,8 @@ namespace QuantConnect.Algorithm.CSharp
     public class FinancialAdvisorDemoAlgorithm : QCAlgorithm
     {
         private const string GroupName = "TestGroupEQ";
+        private static readonly TimeSpan ReconcileRetryInterval =
+            TimeSpan.FromSeconds(5);
 
         private Symbol _symbol;
         private BrokerageAccountSnapshot _preOrderSnapshot;
@@ -37,6 +40,8 @@ namespace QuantConnect.Algorithm.CSharp
         private bool _groupOrderSubmitted;
         private int _groupOrderId;
         private long _pendingReconcileGeneration = -1;
+        private DateTime _pendingReconcileTerminalUtc;
+        private DateTime _nextReconcileRefreshUtc;
 
         /// <summary>
         /// Initialise the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must initialized.
@@ -102,15 +107,18 @@ namespace QuantConnect.Algorithm.CSharp
             var snapshot = BrokerageAccountSnapshot;
             if (_pendingReconcileGeneration >= 0)
             {
-                if (!snapshot.IsReady ||
-                    snapshot.Generation <= _pendingReconcileGeneration)
+                if (snapshot.IsReady &&
+                    snapshot.Generation > _pendingReconcileGeneration &&
+                    snapshot.CollectionStartedUtc >= _pendingReconcileTerminalUtc)
                 {
-                    return;
+                    ReconcileAccountPositions(snapshot);
+                    _preOrderSnapshot = null;
+                    _pendingReconcileGeneration = -1;
                 }
-
-                ReconcileAccountPositions(snapshot);
-                _preOrderSnapshot = null;
-                _pendingReconcileGeneration = -1;
+                else
+                {
+                    TryRequestReconcileRefresh(snapshot);
+                }
                 return;
             }
 
@@ -159,6 +167,20 @@ namespace QuantConnect.Algorithm.CSharp
 
             _groupOrderId = 0;
             _pendingReconcileGeneration = BrokerageAccountSnapshot.Generation;
+            _pendingReconcileTerminalUtc = orderEvent.UtcTime;
+            _nextReconcileRefreshUtc = UtcTime;
+            TryRequestReconcileRefresh(BrokerageAccountSnapshot);
+        }
+
+        private void TryRequestReconcileRefresh(BrokerageAccountSnapshot snapshot)
+        {
+            if (snapshot.Status == BrokerageAccountSnapshotStatus.Refreshing ||
+                UtcTime < _nextReconcileRefreshUtc)
+            {
+                return;
+            }
+
+            _nextReconcileRefreshUtc = UtcTime + ReconcileRetryInterval;
             if (!RequestBrokerageAccountSnapshotRefresh(new[] { GroupName }))
             {
                 Error(
