@@ -37,10 +37,6 @@ namespace QuantConnect.Tests.Brokerages
         // ideally this class would be abstract, but I wanted to keep the order test cases here which use the
         // various parameters required from derived types
 
-        // shared across tests: NUnitLogHandler is stateless, and reusing one instance avoids
-        // an undisposed local when TryAddHandler rejects a duplicate (CA2000)
-        private static readonly NUnitLogHandler NUnitHandler = new();
-
         private IBrokerage _brokerage;
         private OrderProvider _orderProvider;
         private SecurityProvider _securityProvider;
