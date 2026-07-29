@@ -39,6 +39,7 @@ namespace QuantConnect.Tests.Algorithm
                 algorithm.BrokerageAccountGroupAllocationUpdate);
             Assert.IsFalse(algorithm.RequestBrokerageAccountSnapshotRefresh());
             Assert.IsFalse(algorithm.RequestBrokerageAccountSnapshotRefresh(Array.Empty<string>()));
+            algorithm.SetLocked();
             Assert.IsFalse(algorithm.RequestBrokerageAccountGroupAssignment(
                 "Account",
                 string.Empty,
@@ -100,11 +101,34 @@ namespace QuantConnect.Tests.Algorithm
         }
 
         [Test]
+        public void MutationsAreUnavailableUntilAlgorithmIsLocked()
+        {
+            var provider = new TestProvider(BrokerageAccountSnapshotStatus.Ready);
+            var algorithm = new QCAlgorithm();
+            InstallBrokerageAccountServices(algorithm, provider, provider, provider);
+
+            Assert.AreSame(provider.GetAccountSnapshot(), algorithm.BrokerageAccountSnapshot);
+            Assert.IsTrue(algorithm.RequestBrokerageAccountSnapshotRefresh());
+            Assert.IsFalse(algorithm.RequestBrokerageAccountGroupAssignment(
+                "Account",
+                "Group",
+                null,
+                provider.GetAccountSnapshot()));
+            Assert.IsFalse(algorithm.RequestBrokerageAccountGroupAllocationUpdate(
+                "Group",
+                new Dictionary<string, decimal> { ["Account"] = 1m },
+                provider.GetAccountSnapshot()));
+            Assert.IsFalse(provider.GroupAssignmentRequested);
+            Assert.IsFalse(provider.GroupAllocationUpdateRequested);
+        }
+
+        [Test]
         public void AllocationIdentifiersAreForwardedVerbatim()
         {
             var provider = new TestProvider(BrokerageAccountSnapshotStatus.Ready);
             var algorithm = new QCAlgorithm();
             InstallBrokerageAccountServices(algorithm, provider, null, provider);
+            algorithm.SetLocked();
             const string accountId = "aCcOuNtA";
             var allocations = new Dictionary<string, decimal>
             {
@@ -149,6 +173,7 @@ namespace QuantConnect.Tests.Algorithm
             var provider = new TestProvider(BrokerageAccountSnapshotStatus.Ready);
             var algorithm = new QCAlgorithm();
             InstallBrokerageAccountServices(algorithm, provider, null, provider);
+            algorithm.SetLocked();
             IDictionary<string, decimal> allocations =
                 new Dictionary<string, decimal> { ["AccountA"] = 1m };
 
@@ -165,6 +190,7 @@ namespace QuantConnect.Tests.Algorithm
             var provider = new TestProvider(BrokerageAccountSnapshotStatus.Ready);
             var algorithm = new QCAlgorithm();
             InstallBrokerageAccountServices(algorithm, provider, provider, provider);
+            algorithm.SetLocked();
             var observedSnapshot = CreateSnapshot(
                 BrokerageAccountSnapshotStatus.Ready,
                 "observed-membership",
@@ -202,6 +228,7 @@ namespace QuantConnect.Tests.Algorithm
             var provider = new TestProvider(status);
             var algorithm = new QCAlgorithm();
             InstallBrokerageAccountServices(algorithm, provider, provider, provider);
+            algorithm.SetLocked();
 
             Assert.IsFalse(algorithm.RequestBrokerageAccountGroupAssignment(
                 "Account",
@@ -222,6 +249,7 @@ namespace QuantConnect.Tests.Algorithm
             var provider = new TestProvider(BrokerageAccountSnapshotStatus.Ready);
             var algorithm = new QCAlgorithm();
             InstallBrokerageAccountServices(algorithm, provider, null, null);
+            algorithm.SetLocked();
 
             Assert.IsFalse(algorithm.RequestBrokerageAccountGroupAssignment(
                 "Account",
@@ -235,6 +263,7 @@ namespace QuantConnect.Tests.Algorithm
 
             algorithm = new QCAlgorithm();
             InstallBrokerageAccountServices(algorithm, null, provider, provider);
+            algorithm.SetLocked();
 
             Assert.IsFalse(algorithm.RequestBrokerageAccountGroupAssignment(
                 "Account",

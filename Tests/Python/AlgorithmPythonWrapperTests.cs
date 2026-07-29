@@ -22,6 +22,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using QuantConnect.Brokerages;
+using QuantConnect.Data;
 using QuantConnect.Interfaces;
 using QuantConnect.Orders;
 
@@ -316,14 +317,23 @@ namespace QuantConnect.Tests.Python
                 var algorithm = GetAlgorithm(
                     $"def initialize(self): self.name = str(self.{methodName}(" +
                     "'GroupA', {'AccountA': 1.25, 'accounta': 2}, " +
-                    "self.brokerage_account_snapshot))");
+                    $"self.brokerage_account_snapshot)){Environment.NewLine}" +
+                    $"    def on_data(self, slice): self.{methodName}(" +
+                    "'GroupA', {'AccountA': 1.25, 'accounta': 2}, " +
+                    "self.brokerage_account_snapshot)");
                 var consumer = (IBrokerageAccountServiceConsumer)algorithm.BaseAlgorithm;
                 consumer.SetBrokerageAccountStateProvider(provider.Object);
                 consumer.SetBrokerageAccountGroupAllocationManager(manager.Object);
 
                 algorithm.Initialize();
 
-                Assert.AreEqual("True", algorithm.Name);
+                Assert.AreEqual("False", algorithm.Name);
+                Assert.IsNull(requestedAllocations);
+
+                algorithm.BaseAlgorithm.SetLocked();
+                var nowUtc = DateTime.UtcNow;
+                algorithm.OnData(new Slice(nowUtc, Array.Empty<BaseData>(), nowUtc));
+
                 Assert.AreEqual(1.25m, requestedAllocations["AccountA"]);
                 Assert.AreEqual(2m, requestedAllocations["accounta"]);
             }

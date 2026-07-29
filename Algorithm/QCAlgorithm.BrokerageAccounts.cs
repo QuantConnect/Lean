@@ -105,6 +105,9 @@ namespace QuantConnect.Algorithm
         /// Requests an account-group assignment using the version tokens from the snapshot on which the
         /// algorithm based the requested change.
         /// </summary>
+        /// <remarks>
+        /// Account-group mutations are available only after algorithm initialization completes.
+        /// </remarks>
         /// <param name="accountId">Managed subaccount to assign.</param>
         /// <param name="targetGroupName">Destination group, or an empty string to remove every assignment.</param>
         /// <param name="targetAllocationValue">Optional brokerage-defined allocation value.</param>
@@ -135,6 +138,11 @@ namespace QuantConnect.Algorithm
                 ValidateBrokerageIdentifier(targetGroupName, nameof(targetGroupName));
             }
 
+            if (!GetLocked())
+            {
+                return false;
+            }
+
             if (_brokerageAccountGroupManager == null || _brokerageAccountStateProvider == null)
             {
                 return false;
@@ -158,6 +166,7 @@ namespace QuantConnect.Algorithm
         /// the algorithm based the requested values.
         /// </summary>
         /// <remarks>
+        /// Account-group mutations are available only after algorithm initialization completes.
         /// Account-identifier case handling is brokerage-defined. A provider may reject identifiers that differ only
         /// by case as duplicates.
         /// </remarks>
@@ -193,6 +202,11 @@ namespace QuantConnect.Algorithm
                 }
             }
 
+            if (!GetLocked())
+            {
+                return false;
+            }
+
             if (_brokerageAccountGroupAllocationManager == null || _brokerageAccountStateProvider == null)
             {
                 return false;
@@ -214,6 +228,7 @@ namespace QuantConnect.Algorithm
         /// the algorithm based the requested values.
         /// </summary>
         /// <remarks>
+        /// Account-group mutations are available only after algorithm initialization completes.
         /// Account-identifier case handling is brokerage-defined. A provider may reject identifiers that differ only
         /// by case as duplicates.
         /// </remarks>

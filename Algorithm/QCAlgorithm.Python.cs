@@ -45,6 +45,9 @@ namespace QuantConnect.Algorithm
         /// Requests an asynchronous replacement of an existing account group's allocation vector from a Python
         /// dictionary using the version tokens from the supplied observed snapshot.
         /// </summary>
+        /// <remarks>
+        /// Account-group mutations are available only after algorithm initialization completes.
+        /// </remarks>
         /// <param name="groupName">Existing managed account group to update.</param>
         /// <param name="accountAllocationValues">Complete per-account allocation vector.</param>
         /// <param name="observedSnapshot">Ready snapshot observed while calculating the requested values.</param>
