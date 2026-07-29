@@ -501,7 +501,7 @@ namespace QuantConnect.Lean.Engine
         }
 
         /// <summary>
-        /// Checks whether the given exception, or any exception in its inner exception chain, is an <see cref="OutOfMemoryException"/>,
+        /// Checks whether the given exception is an <see cref="OutOfMemoryException"/>,
         /// producing details about the algorithm state and the common causes to be appended to the runtime error message
         /// </summary>
         /// <param name="job">Job we're processing</param>
@@ -512,12 +512,7 @@ namespace QuantConnect.Lean.Engine
         private static bool TryGetOutOfMemoryErrorDetails(AlgorithmNodePacket job, IAlgorithm algorithm, Exception err, out string details)
         {
             details = null;
-            var exception = err;
-            while (exception != null && exception is not OutOfMemoryException)
-            {
-                exception = exception.InnerException;
-            }
-            if (exception == null)
+            if (err is not OutOfMemoryException)
             {
                 return false;
             }
@@ -537,7 +532,7 @@ namespace QuantConnect.Lean.Engine
             }
             details += " Common causes: universe/subscription count too high for the allocated RAM; unbounded buffers such as rolling windows," +
                 " consolidators or accumulated history results. Fixes: reduce universe size/subscriptions, use coarser resolutions," +
-                " bound buffers, or increase the RAM allocation.";
+                " or bound buffers.";
             return true;
         }
 
