@@ -102,8 +102,9 @@ namespace QuantConnect
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public static string ModuleNotFound(string moduleName)
             {
-                return $"No module named '{moduleName}'. If it is a C# namespace, call clr.AddReference(\"<AssemblyName>\") " +
-                    "before importing it. If it is a Python package, ensure it is installed in the environment.";
+                return $"No module named '{moduleName}'. If it is a Python package, ensure it is installed in the environment. " +
+                    "If it is a C# namespace, ensure the algorithm starts with 'from AlgorithmImports import *'. " +
+                    "Only custom C# libraries in local runs require clr.AddReference(\"<AssemblyName>\") before importing.";
             }
         }
 
