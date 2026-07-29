@@ -233,6 +233,62 @@ namespace QuantConnect.Tests.Algorithm
             Assert.AreEqual(messageCount + 2, algorithm.LogMessages.Count);
         }
 
+        [TestCase(BrokerageAccountSnapshotStatus.Failed)]
+        [TestCase(BrokerageAccountSnapshotStatus.Stale)]
+        public void InitialSnapshotRefreshRetriesRejectedAndFailedResults(
+            BrokerageAccountSnapshotStatus failureStatus)
+        {
+            var provider = new TestAccountStateProvider
+            {
+                Snapshot = CreateSnapshot(
+                    failureStatus,
+                    3,
+                    10m,
+                    20m,
+                    SnapshotTime)
+            };
+            provider.EnqueueRefreshResult(false);
+            provider.EnqueueRefreshResult(true);
+            var algorithm = new FinancialAdvisorDemoAlgorithm();
+            SetPrivateField(
+                algorithm,
+                typeof(QCAlgorithm),
+                "_liveMode",
+                true);
+            ((IBrokerageAccountServiceConsumer)algorithm)
+                .SetBrokerageAccountStateProvider(provider);
+            algorithm.SetDateTime(SnapshotTime);
+            SetPrivateField(
+                algorithm,
+                "_initialSnapshotRefreshAccepted",
+                true);
+            SetPrivateField(
+                algorithm,
+                "_nextReconcileRefreshUtc",
+                SnapshotTime);
+
+            algorithm.OnData(CreateEmptySlice());
+            algorithm.OnData(CreateEmptySlice());
+            Assert.AreEqual(
+                1,
+                provider.RefreshRequestCount,
+                "A rejected initial refresh must retain cadence-limited retry intent.");
+
+            algorithm.SetDateTime(SnapshotTime.AddSeconds(5));
+            algorithm.OnData(CreateEmptySlice());
+            Assert.AreEqual(
+                2,
+                provider.RefreshRequestCount,
+                "The rejected initial refresh must be retried.");
+
+            algorithm.SetDateTime(SnapshotTime.AddSeconds(10));
+            algorithm.OnData(CreateEmptySlice());
+            Assert.AreEqual(
+                3,
+                provider.RefreshRequestCount,
+                "An accepted refresh that remains Failed or Stale must be retried.");
+        }
+
         private static FinancialAdvisorDemoAlgorithm CreateAlgorithm(
             TestAccountStateProvider provider,
             BrokerageAccountSnapshot preOrderSnapshot)

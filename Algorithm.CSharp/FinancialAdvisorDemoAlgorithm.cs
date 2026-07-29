@@ -22,7 +22,7 @@ using QuantConnect.Orders;
 namespace QuantConnect.Algorithm.CSharp
 {
     /// <summary>
-    /// This algorithm demonstrates how to submit orders to a Financial Advisor account group, allocation profile or a single managed account.
+    /// This algorithm demonstrates unified Financial Advisor group orders and terminal-order snapshot reconciliation.
     /// </summary>
     /// <meta name="tag" content="using data" />
     /// <meta name="tag" content="using quantconnect" />
@@ -37,6 +37,7 @@ namespace QuantConnect.Algorithm.CSharp
         private Symbol _symbol;
         private BrokerageAccountSnapshot _preOrderSnapshot;
         private bool _initialSnapshotRefreshAccepted;
+        private long _initialSnapshotRequestGeneration = -1;
         private bool _groupOrderSubmitted;
         private int _groupOrderId;
         private long _pendingReconcileGeneration = -1;
@@ -57,33 +58,18 @@ namespace QuantConnect.Algorithm.CSharp
             // The default order properties can be set here to choose the FA settings
             // to be automatically used in any order submission method (such as SetHoldings, Buy, Sell and Order)
 
-            // Use a default FA Account Group with an Allocation Method
+            // Use a unified FA Account Group. Leaving FaMethod blank uses the
+            // allocation method saved for the group in TWS.
             DefaultOrderProperties = new InteractiveBrokersOrderProperties
             {
                 // account group created manually in IB/TWS
-                FaGroup = GroupName,
-                // supported allocation methods are: EqualQuantity, NetLiq, AvailableEquity, PctChange
-                FaMethod = "EqualQuantity"
+                FaGroup = GroupName
             };
-
-            // set a default FA Allocation Profile
-            //DefaultOrderProperties = new InteractiveBrokersOrderProperties
-            //{
-            //    // allocation profile created manually in IB/TWS
-            //    FaProfile = "TestProfileP"
-            //};
-
-            // send all orders to a single managed account
-            //DefaultOrderProperties = new InteractiveBrokersOrderProperties
-            //{
-            //    // a sub-account linked to the Financial Advisor master account
-            //    Account = "DU123456"
-            //};
 
             if (LiveMode)
             {
-                _initialSnapshotRefreshAccepted =
-                    RequestBrokerageAccountSnapshotRefresh(new[] { GroupName });
+                _nextReconcileRefreshUtc = UtcTime;
+                TryRequestInitialSnapshotRefresh(BrokerageAccountSnapshot);
             }
         }
 
@@ -122,10 +108,12 @@ namespace QuantConnect.Algorithm.CSharp
                 return;
             }
 
-            if (!_initialSnapshotRefreshAccepted)
+            if (!_initialSnapshotRefreshAccepted ||
+                !snapshot.IsReady ||
+                snapshot.Generation <=
+                    _initialSnapshotRequestGeneration)
             {
-                _initialSnapshotRefreshAccepted =
-                    RequestBrokerageAccountSnapshotRefresh(new[] { GroupName });
+                TryRequestInitialSnapshotRefresh(snapshot);
                 return;
             }
 
@@ -185,6 +173,32 @@ namespace QuantConnect.Algorithm.CSharp
             {
                 Error(
                     $"The post-order snapshot refresh for Financial Advisor group " +
+                    $"'{GroupName}' was not accepted.");
+            }
+        }
+
+        private void TryRequestInitialSnapshotRefresh(
+            BrokerageAccountSnapshot snapshot)
+        {
+            if (snapshot.Status == BrokerageAccountSnapshotStatus.Refreshing ||
+                UtcTime < _nextReconcileRefreshUtc)
+            {
+                return;
+            }
+
+            _nextReconcileRefreshUtc = UtcTime + ReconcileRetryInterval;
+            var requestGeneration = snapshot.Generation;
+            _initialSnapshotRefreshAccepted =
+                RequestBrokerageAccountSnapshotRefresh(new[] { GroupName });
+            if (_initialSnapshotRefreshAccepted)
+            {
+                _initialSnapshotRequestGeneration =
+                    requestGeneration;
+            }
+            else
+            {
+                Error(
+                    $"The initial snapshot refresh for Financial Advisor group " +
                     $"'{GroupName}' was not accepted.");
             }
         }

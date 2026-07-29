@@ -1,0 +1,663 @@
+/*
+ * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
+ * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+*/
+
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using NUnit.Framework;
+using QuantConnect.Algorithm.CSharp;
+using QuantConnect.Brokerages;
+using QuantConnect.Data;
+using QuantConnect.Interfaces;
+using QuantConnect.Tests.Engine.DataFeeds;
+
+namespace QuantConnect.Tests.Algorithm
+{
+    [TestFixture, Parallelizable(ParallelScope.All)]
+    public class FinancialAdvisorGroupAssignmentAlgorithmTests
+    {
+        private static readonly DateTime SnapshotTime =
+            new(2026, 1, 2, 3, 4, 5, DateTimeKind.Utc);
+
+        [Test]
+        public void SelectsOnlyManagedAliasMatchAndWaitsForCompletion()
+        {
+            var services = new TestFinancialAdvisorServices
+            {
+                Snapshot = CreateSnapshot(
+                    1,
+                    new BrokerageAccountGroup(
+                        "TargetGroup",
+                        "Equal",
+                        new[] { "AccountC" }),
+                    Entry(
+                        "AccountA",
+                        BrokerageAccountRelationship.Managed,
+                        "MOVE-East"),
+                    Entry(
+                        "AccountB",
+                        BrokerageAccountRelationship.Managed,
+                        "Hold-West"),
+                    Entry(
+                        "AccountC",
+                        BrokerageAccountRelationship.Managed,
+                        "move-South",
+                        "targetgroup"),
+                    Entry(
+                        "Master",
+                        BrokerageAccountRelationship.Primary,
+                        "MOVE-Primary"))
+            };
+            var algorithm = CreateAlgorithm(
+                services,
+                new Dictionary<string, string>
+                {
+                    ["fa-target-group"] = "targetgroup"
+                });
+
+            algorithm.OnData(CreateEmptySlice());
+
+            Assert.Multiple(() =>
+            {
+                Assert.AreEqual(1, services.AssignmentRequests.Count);
+                Assert.AreEqual(
+                    "AccountA",
+                    services.AssignmentRequests[0].AccountId);
+                Assert.AreEqual(
+                    "TargetGroup",
+                    services.AssignmentRequests[0].TargetGroupName);
+                Assert.IsNull(
+                    services.AssignmentRequests[0].TargetAllocationValue);
+                Assert.AreEqual(
+                    "membership-1",
+                    services.AssignmentRequests[0].MembershipHash);
+                Assert.AreEqual(
+                    "configuration-1",
+                    services.AssignmentRequests[0].ConfigurationVersion);
+            });
+
+            algorithm.OnData(CreateEmptySlice());
+            Assert.AreEqual(
+                1,
+                services.AssignmentRequests.Count,
+                "A Pending assignment must serialize later mutations.");
+
+            services.CompleteAssignment(
+                BrokerageAccountGroupAssignmentStatus.Succeeded,
+                new[] { "TargetGroup" });
+            algorithm.OnData(CreateEmptySlice());
+
+            services.Snapshot = CreateSnapshot(
+                2,
+                new BrokerageAccountGroup(
+                    "TargetGroup",
+                    "Equal",
+                    new[] { "AccountA", "AccountC" }),
+                Entry(
+                    "AccountA",
+                    BrokerageAccountRelationship.Managed,
+                    "MOVE-East",
+                    "TargetGroup"),
+                Entry(
+                    "AccountB",
+                    BrokerageAccountRelationship.Managed,
+                    "Hold-West"),
+                Entry(
+                    "AccountC",
+                    BrokerageAccountRelationship.Managed,
+                    "move-South",
+                    "TargetGroup"),
+                Entry(
+                    "Master",
+                    BrokerageAccountRelationship.Primary,
+                    "MOVE-Primary"));
+            algorithm.OnData(CreateEmptySlice());
+
+            Assert.Multiple(() =>
+            {
+                Assert.AreEqual(1, services.AssignmentRequests.Count);
+                Assert.That(
+                    algorithm.LogMessages,
+                    Has.One.Contains(
+                        "resulting groups=[TargetGroup]"));
+            });
+        }
+
+        [TestCase("Equal", null)]
+        [TestCase("NetLiq", null)]
+        [TestCase("AvailableEquity", null)]
+        [TestCase("ContractsOrShares", 2.5)]
+        [TestCase("Ratio", 2.5)]
+        [TestCase("Percent", 2.5)]
+        public void UsesAllocationValueRequiredBySavedMethod(
+            string allocationMethod,
+            double? expectedAllocationValue)
+        {
+            var services = new TestFinancialAdvisorServices
+            {
+                Snapshot = CreateSnapshot(
+                    1,
+                    new BrokerageAccountGroup(
+                        "TargetGroup",
+                        allocationMethod,
+                        Array.Empty<string>()),
+                    Entry(
+                        "AccountA",
+                        BrokerageAccountRelationship.Managed,
+                        "MOVE-East"))
+            };
+            var algorithm = CreateAlgorithm(
+                services,
+                new Dictionary<string, string>
+                {
+                    ["fa-allocation-value"] = "2.5"
+                });
+
+            algorithm.OnData(CreateEmptySlice());
+
+            Assert.AreEqual(1, services.AssignmentRequests.Count);
+            Assert.AreEqual(
+                expectedAllocationValue.HasValue
+                    ? Convert.ToDecimal(expectedAllocationValue.Value)
+                    : null,
+                services.AssignmentRequests[0].TargetAllocationValue);
+        }
+
+        [Test]
+        public void EmptyTargetRemovesMatchingAccountFromEveryGroup()
+        {
+            var services = new TestFinancialAdvisorServices
+            {
+                Snapshot = CreateSnapshot(
+                    4,
+                    new BrokerageAccountGroup(
+                        "ExistingGroup",
+                        "Equal",
+                        new[] { "AccountA", "AccountB" }),
+                    Entry(
+                        "AccountA",
+                        BrokerageAccountRelationship.Managed,
+                        "MOVE-East",
+                        "ExistingGroup"),
+                    Entry(
+                        "AccountB",
+                        BrokerageAccountRelationship.Managed,
+                        "Hold-West",
+                        "ExistingGroup"))
+            };
+            var algorithm = CreateAlgorithm(
+                services,
+                new Dictionary<string, string>
+                {
+                    ["fa-target-group"] = string.Empty
+                });
+
+            algorithm.OnData(CreateEmptySlice());
+
+            Assert.Multiple(() =>
+            {
+                Assert.AreEqual(1, services.AssignmentRequests.Count);
+                Assert.AreEqual(
+                    string.Empty,
+                    services.AssignmentRequests[0].TargetGroupName);
+                Assert.IsNull(
+                    services.AssignmentRequests[0].TargetAllocationValue);
+            });
+
+            services.CompleteAssignment(
+                BrokerageAccountGroupAssignmentStatus.Succeeded,
+                Array.Empty<string>());
+            algorithm.OnData(CreateEmptySlice());
+            services.Snapshot = CreateSnapshot(
+                5,
+                new BrokerageAccountGroup(
+                    "ExistingGroup",
+                    "Equal",
+                    new[] { "AccountB" }),
+                Entry(
+                    "AccountA",
+                    BrokerageAccountRelationship.Managed,
+                    "MOVE-East"),
+                Entry(
+                    "AccountB",
+                    BrokerageAccountRelationship.Managed,
+                    "Hold-West",
+                    "ExistingGroup"));
+            algorithm.OnData(CreateEmptySlice());
+
+            Assert.AreEqual(1, services.AssignmentRequests.Count);
+        }
+
+        [TestCase(true)]
+        [TestCase(false)]
+        public void FinancialChangeRequiresConfirmingReadyGeneration(
+            bool changeTotalCashValue)
+        {
+            var initialTotalCash = 100m;
+            var initialNetLiquidation = 1000m;
+            var changedTotalCash =
+                changeTotalCashValue ? 1200m : initialTotalCash;
+            var changedNetLiquidation =
+                changeTotalCashValue ? initialNetLiquidation : 2200m;
+            var services = new TestFinancialAdvisorServices
+            {
+                Snapshot = CreateSnapshot(
+                    10,
+                    new BrokerageAccountGroup(
+                        "TargetGroup",
+                        "Equal",
+                        new[] { "AccountA" }),
+                    Entry(
+                        "AccountA",
+                        BrokerageAccountRelationship.Managed,
+                        "MOVE-East",
+                        "TargetGroup",
+                        initialTotalCash,
+                        initialNetLiquidation))
+            };
+            var algorithm = CreateAlgorithm(
+                services,
+                new Dictionary<string, string>
+                {
+                    ["fa-cash-change-threshold"] = "1000"
+                });
+            services.ResetRefreshRequests();
+
+            algorithm.OnData(CreateEmptySlice());
+
+            services.Snapshot = CreateSnapshot(
+                10,
+                new BrokerageAccountGroup(
+                    "TargetGroup",
+                    "Equal",
+                    Array.Empty<string>()),
+                Entry(
+                    "AccountA",
+                    BrokerageAccountRelationship.Managed,
+                    "MOVE-East",
+                    totalCashValue: changedTotalCash,
+                    netLiquidation: changedNetLiquidation));
+            algorithm.OnData(CreateEmptySlice());
+            Assert.Multiple(() =>
+            {
+                Assert.AreEqual(0, services.RefreshRequestCount);
+                Assert.AreEqual(0, services.AssignmentRequests.Count);
+            });
+
+            algorithm.SetDateTime(SnapshotTime.AddSeconds(5));
+            services.Snapshot = CreateSnapshot(
+                11,
+                new BrokerageAccountGroup(
+                    "TargetGroup",
+                    "Equal",
+                    Array.Empty<string>()),
+                Entry(
+                    "AccountA",
+                    BrokerageAccountRelationship.Managed,
+                    "MOVE-East",
+                    totalCashValue: changedTotalCash,
+                    netLiquidation: changedNetLiquidation));
+            algorithm.OnData(CreateEmptySlice());
+
+            Assert.Multiple(() =>
+            {
+                Assert.AreEqual(1, services.RefreshRequestCount);
+                Assert.AreEqual(11, services.GenerationAtLastRefreshRequest);
+                Assert.AreEqual(0, services.AssignmentRequests.Count);
+            });
+
+            algorithm.OnData(CreateEmptySlice());
+            Assert.Multiple(() =>
+            {
+                Assert.AreEqual(1, services.RefreshRequestCount);
+                Assert.AreEqual(0, services.AssignmentRequests.Count);
+            });
+
+            services.Snapshot = CreateSnapshot(
+                12,
+                new BrokerageAccountGroup(
+                    "TargetGroup",
+                    "Equal",
+                    Array.Empty<string>()),
+                Entry(
+                    "AccountA",
+                    BrokerageAccountRelationship.Managed,
+                    "MOVE-East",
+                    totalCashValue: changedTotalCash,
+                    netLiquidation: changedNetLiquidation));
+            algorithm.OnData(CreateEmptySlice());
+
+            Assert.Multiple(() =>
+            {
+                Assert.AreEqual(1, services.AssignmentRequests.Count);
+                Assert.AreEqual(
+                    "AccountA",
+                    services.AssignmentRequests[0].AccountId);
+                Assert.AreEqual(
+                    "membership-12",
+                    services.AssignmentRequests[0].MembershipHash);
+            });
+        }
+
+        [Test]
+        public void FailedAssignmentIsReportedAndNotRetriedOnSameSnapshot()
+        {
+            var services = new TestFinancialAdvisorServices
+            {
+                Snapshot = CreateSnapshot(
+                    3,
+                    new BrokerageAccountGroup(
+                        "TargetGroup",
+                        "Equal",
+                        Array.Empty<string>()),
+                    Entry(
+                        "AccountA",
+                        BrokerageAccountRelationship.Managed,
+                        "MOVE-East"))
+            };
+            var algorithm = CreateAlgorithm(services);
+
+            algorithm.OnData(CreateEmptySlice());
+            services.CompleteAssignment(
+                BrokerageAccountGroupAssignmentStatus.Failed,
+                Array.Empty<string>(),
+                "distinctive readback failure");
+            algorithm.OnData(CreateEmptySlice());
+            algorithm.OnData(CreateEmptySlice());
+
+            Assert.Multiple(() =>
+            {
+                Assert.AreEqual(1, services.AssignmentRequests.Count);
+                Assert.That(
+                    algorithm.ErrorMessages,
+                    Has.One.Contains("distinctive readback failure"));
+            });
+
+            services.Snapshot = CreateSnapshot(
+                4,
+                new BrokerageAccountGroup(
+                    "TargetGroup",
+                    "Equal",
+                    Array.Empty<string>()),
+                Entry(
+                    "AccountA",
+                    BrokerageAccountRelationship.Managed,
+                    "MOVE-East"));
+            algorithm.OnData(CreateEmptySlice());
+
+            Assert.AreEqual(2, services.AssignmentRequests.Count);
+        }
+
+        private static FinancialAdvisorGroupAssignmentAlgorithm
+            CreateAlgorithm(
+                TestFinancialAdvisorServices services,
+                Dictionary<string, string> parameters = null)
+        {
+            var algorithm =
+                new FinancialAdvisorGroupAssignmentAlgorithm();
+            algorithm.SubscriptionManager.SetDataManager(
+                new DataManagerStub(algorithm));
+            algorithm.SetLiveMode(true);
+            algorithm.SetDateTime(SnapshotTime);
+            algorithm.SetParameters(
+                parameters ?? new Dictionary<string, string>());
+            var consumer =
+                (IBrokerageAccountServiceConsumer)algorithm;
+            consumer.SetBrokerageAccountStateProvider(services);
+            consumer.SetBrokerageAccountGroupManager(services);
+            services.AcceptRefreshRequests = false;
+            algorithm.Initialize();
+            services.AcceptRefreshRequests = true;
+            algorithm.SetLocked();
+            return algorithm;
+        }
+
+        private static Slice CreateEmptySlice()
+        {
+            return new Slice(
+                SnapshotTime,
+                Array.Empty<BaseData>(),
+                SnapshotTime);
+        }
+
+        private static AccountEntry Entry(
+            string accountId,
+            BrokerageAccountRelationship relationship,
+            string alias,
+            string groupName = "",
+            decimal totalCashValue = 100m,
+            decimal netLiquidation = 1000m)
+        {
+            return new AccountEntry(
+                accountId,
+                relationship,
+                alias,
+                string.IsNullOrEmpty(groupName)
+                    ? Array.Empty<string>()
+                    : new[] { groupName },
+                totalCashValue,
+                netLiquidation);
+        }
+
+        private static BrokerageAccountSnapshot CreateSnapshot(
+            long generation,
+            BrokerageAccountGroup group,
+            params AccountEntry[] entries)
+        {
+            var groups =
+                new Dictionary<string, BrokerageAccountGroup>
+                {
+                    [group.Name] = group
+                };
+            var directory =
+                entries.ToDictionary(
+                    entry => entry.AccountId,
+                    entry => new BrokerageAccountDirectoryEntry(
+                        entry.AccountId,
+                        entry.Relationship,
+                        entry.GroupNames,
+                        "INDIVIDUAL",
+                        string.Empty,
+                        entry.Alias),
+                    StringComparer.OrdinalIgnoreCase);
+            var managedEntries = entries
+                .Where(entry => entry.Relationship ==
+                    BrokerageAccountRelationship.Managed)
+                .ToArray();
+            var accounts =
+                managedEntries.ToDictionary(
+                    entry => entry.AccountId,
+                    entry => new BrokerageAccountState(
+                        entry.AccountId,
+                        entry.GroupNames,
+                        "INDIVIDUAL",
+                        entry.NetLiquidation,
+                        entry.TotalCashValue,
+                        null,
+                        null,
+                        null,
+                        "USD",
+                        new Dictionary<string, decimal>(),
+                        Array.Empty<BrokerageAccountPosition>()),
+                    StringComparer.OrdinalIgnoreCase);
+            var unassigned = managedEntries
+                .Where(entry => entry.GroupNames.Count == 0)
+                .Select(entry => entry.AccountId)
+                .ToArray();
+            var primary = entries.FirstOrDefault(
+                entry => entry.Relationship ==
+                    BrokerageAccountRelationship.Primary);
+
+            return new BrokerageAccountSnapshot(
+                BrokerageAccountSnapshotStatus.Ready,
+                generation,
+                SnapshotTime.AddTicks(generation),
+                SnapshotTime.AddTicks(generation),
+                groups,
+                accounts,
+                unassigned,
+                $"membership-{generation}",
+                $"configuration-{generation}",
+                string.Empty,
+                primary?.AccountId ?? string.Empty,
+                managedEntries.Select(entry => entry.AccountId).ToArray(),
+                groups,
+                directory,
+                true,
+                SnapshotTime.AddTicks(generation));
+        }
+
+        private sealed class AccountEntry
+        {
+            public string AccountId { get; }
+            public BrokerageAccountRelationship Relationship { get; }
+            public string Alias { get; }
+            public IReadOnlyList<string> GroupNames { get; }
+            public decimal TotalCashValue { get; }
+            public decimal NetLiquidation { get; }
+
+            public AccountEntry(
+                string accountId,
+                BrokerageAccountRelationship relationship,
+                string alias,
+                IReadOnlyList<string> groupNames,
+                decimal totalCashValue,
+                decimal netLiquidation)
+            {
+                AccountId = accountId;
+                Relationship = relationship;
+                Alias = alias;
+                GroupNames = groupNames;
+                TotalCashValue = totalCashValue;
+                NetLiquidation = netLiquidation;
+            }
+        }
+
+        private sealed class AssignmentRequest
+        {
+            public string AccountId { get; }
+            public string TargetGroupName { get; }
+            public string MembershipHash { get; }
+            public string ConfigurationVersion { get; }
+            public decimal? TargetAllocationValue { get; }
+
+            public AssignmentRequest(
+                string accountId,
+                string targetGroupName,
+                string membershipHash,
+                string configurationVersion,
+                decimal? targetAllocationValue)
+            {
+                AccountId = accountId;
+                TargetGroupName = targetGroupName;
+                MembershipHash = membershipHash;
+                ConfigurationVersion = configurationVersion;
+                TargetAllocationValue = targetAllocationValue;
+            }
+        }
+
+        private sealed class TestFinancialAdvisorServices :
+            IBrokerageAccountStateProvider,
+            IBrokerageAccountGroupManager
+        {
+            private long _assignmentGeneration;
+
+            public BrokerageAccountSnapshot Snapshot { get; set; }
+            public BrokerageAccountGroupAssignment Assignment { get; private set; } =
+                BrokerageAccountGroupAssignment.Unavailable;
+            public List<AssignmentRequest> AssignmentRequests { get; } = new();
+            public bool AcceptRefreshRequests { get; set; } = true;
+            public int RefreshRequestCount { get; private set; }
+            public long GenerationAtLastRefreshRequest { get; private set; }
+
+            public BrokerageAccountSnapshot GetAccountSnapshot()
+            {
+                return Snapshot;
+            }
+
+            public bool RequestAccountSnapshotRefresh(
+                IReadOnlyCollection<string> groupNames,
+                IReadOnlyCollection<string> additionalAccountIds)
+            {
+                ++RefreshRequestCount;
+                GenerationAtLastRefreshRequest = Snapshot.Generation;
+                return AcceptRefreshRequests;
+            }
+
+            public BrokerageAccountGroupAssignment GetAccountGroupAssignment()
+            {
+                return Assignment;
+            }
+
+            public bool RequestAccountGroupAssignment(
+                string accountId,
+                string targetGroupName,
+                string expectedMembershipHash,
+                string expectedGroupConfigurationVersion,
+                decimal? targetAllocationValue = null)
+            {
+                AssignmentRequests.Add(
+                    new AssignmentRequest(
+                        accountId,
+                        targetGroupName,
+                        expectedMembershipHash,
+                        expectedGroupConfigurationVersion,
+                        targetAllocationValue));
+                Assignment = new BrokerageAccountGroupAssignment(
+                    BrokerageAccountGroupAssignmentStatus.Pending,
+                    ++_assignmentGeneration,
+                    SnapshotTime,
+                    accountId,
+                    targetGroupName,
+                    Snapshot.AccountDirectory[accountId].GroupNames,
+                    Array.Empty<string>(),
+                    expectedMembershipHash,
+                    string.Empty,
+                    expectedGroupConfigurationVersion,
+                    string.Empty,
+                    string.Empty,
+                    targetAllocationValue);
+                return true;
+            }
+
+            public void CompleteAssignment(
+                BrokerageAccountGroupAssignmentStatus status,
+                IReadOnlyList<string> resultingGroupNames,
+                string errorMessage = "")
+            {
+                Assignment = new BrokerageAccountGroupAssignment(
+                    status,
+                    Assignment.Generation,
+                    SnapshotTime,
+                    Assignment.AccountId,
+                    Assignment.TargetGroupName,
+                    Assignment.PreviousGroupNames,
+                    resultingGroupNames,
+                    Assignment.ExpectedMembershipHash,
+                    $"resulting-membership-{Assignment.Generation}",
+                    Assignment.ExpectedGroupConfigurationVersion,
+                    $"resulting-configuration-{Assignment.Generation}",
+                    errorMessage,
+                    Assignment.TargetAllocationValue);
+            }
+
+            public void ResetRefreshRequests()
+            {
+                RefreshRequestCount = 0;
+                GenerationAtLastRefreshRequest = -1;
+            }
+        }
+    }
+}

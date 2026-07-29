@@ -94,6 +94,7 @@
     <Compile Include="ExpiryHelperAlphaModelFrameworkAlgorithm.py" />
     <Compile Include="FilteredIdentityAlgorithm.py" />
     <Compile Include="FinancialAdvisorDemoAlgorithm.py" />
+    <Compile Include="FinancialAdvisorGroupAssignmentAlgorithm.py" />
     <Compile Include="FractionalQuantityRegressionAlgorithm.py" />
     <Compile Include="FuturesMomentumAlgorithm.py" />
     <Compile Include="G10CurrencySelectionModelFrameworkAlgorithm.py" />

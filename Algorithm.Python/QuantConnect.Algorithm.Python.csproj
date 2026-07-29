@@ -209,6 +209,7 @@
     <None Include="ETFGlobalRotationAlgorithm.py" />
     <None Include="FilteredIdentityAlgorithm.py" />
     <None Include="FinancialAdvisorDemoAlgorithm.py" />
+    <None Include="FinancialAdvisorGroupAssignmentAlgorithm.py" />
     <None Include="FractionalQuantityRegressionAlgorithm.py" />
     <None Include="FuturesMomentumAlgorithm.py" />
     <None Include="HistoryAlgorithm.py" />

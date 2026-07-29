@@ -15,7 +15,9 @@ from AlgorithmImports import *
 from datetime import timedelta
 
 ### <summary>
-### This algorithm demonstrates how to submit orders to a Financial Advisor account group, allocation profile or a single managed account.
+### This algorithm demonstrates unified Financial Advisor group orders and authoritative
+### post-order account reconciliation. The group and its saved allocation method must
+### already exist in TWS, and ib-financial-advisors-unified-groups-enabled must be true.
 ### </summary>
 ### <meta name="tag" content="using data" />
 ### <meta name="tag" content="using quantconnect" />
@@ -36,35 +38,22 @@ class FinancialAdvisorDemoAlgorithm(QCAlgorithm):
         self._symbol = self.add_equity("SPY", Resolution.SECOND).symbol
         self._pre_order_snapshot = None
         self._initial_snapshot_refresh_accepted = False
+        self._initial_snapshot_request_generation = -1
+        self._next_initial_snapshot_refresh_utc = None
         self._group_order_submitted = False
         self._group_order_id = 0
         self._pending_reconcile_generation = -1
         self._pending_reconcile_terminal_utc = None
         self._next_reconcile_refresh_utc = None
 
-        # The default order properties can be set here to choose the FA settings
-        # to be automatically used in any order submission method (such as SetHoldings, Buy, Sell and Order)
-
-        # Use a default FA Account Group with an Allocation Method
+        # Route every order to the existing group. Leaving fa_method blank makes
+        # TWS's saved group allocation method authoritative.
         self.default_order_properties = InteractiveBrokersOrderProperties()
-        # account group created manually in IB/TWS
         self.default_order_properties.fa_group = self._GROUP_NAME
-        # supported allocation methods are: EqualQuantity, NetLiq, AvailableEquity, PctChange
-        self.default_order_properties.fa_method = "EqualQuantity"
-
-        # set a default FA Allocation Profile
-        # DefaultOrderProperties = InteractiveBrokersOrderProperties()
-        # allocation profile created manually in IB/TWS
-        # self.default_order_properties.fa_profile = "TestProfileP"
-
-        # send all orders to a single managed account
-        # DefaultOrderProperties = InteractiveBrokersOrderProperties()
-        # a sub-account linked to the Financial Advisor master account
-        # self.default_order_properties.account = "DU123456"
 
         if self.live_mode:
-            self._initial_snapshot_refresh_accepted = \
-                self.request_brokerage_account_snapshot_refresh([self._GROUP_NAME])
+            self._try_request_initial_snapshot_refresh(
+                self.brokerage_account_snapshot)
 
     def on_data(self, data):
         # on_data event is the primary entry point for your algorithm. Each new data point will be pumped in here.
@@ -80,21 +69,24 @@ class FinancialAdvisorDemoAlgorithm(QCAlgorithm):
         if self._pending_reconcile_generation >= 0:
             if snapshot.is_ready and \
                     snapshot.generation > self._pending_reconcile_generation and \
+                    self._pending_reconcile_terminal_utc is not None and \
                     snapshot.collection_started_utc >= self._pending_reconcile_terminal_utc:
                 self._reconcile_account_positions(snapshot)
                 self._pre_order_snapshot = None
                 self._pending_reconcile_generation = -1
+                self._pending_reconcile_terminal_utc = None
+                self._next_reconcile_refresh_utc = None
             else:
                 self._try_request_reconcile_refresh(snapshot)
             return
 
-        if not self._initial_snapshot_refresh_accepted:
-            self._initial_snapshot_refresh_accepted = \
-                self.request_brokerage_account_snapshot_refresh([self._GROUP_NAME])
+        if not self._initial_snapshot_refresh_accepted or \
+                not snapshot.is_ready or \
+                snapshot.generation <= self._initial_snapshot_request_generation:
+            self._try_request_initial_snapshot_refresh(snapshot)
             return
 
         if self._group_order_submitted or \
-                not snapshot.is_ready or \
                 self._find_group(snapshot) is None:
             return
 
@@ -124,9 +116,28 @@ class FinancialAdvisorDemoAlgorithm(QCAlgorithm):
         self._next_reconcile_refresh_utc = self.utc_time
         self._try_request_reconcile_refresh(self.brokerage_account_snapshot)
 
+    def _try_request_initial_snapshot_refresh(self, snapshot):
+        if snapshot.status == BrokerageAccountSnapshotStatus.REFRESHING or \
+                (self._next_initial_snapshot_refresh_utc is not None and
+                 self.utc_time < self._next_initial_snapshot_refresh_utc):
+            return
+
+        self._next_initial_snapshot_refresh_utc = \
+            self.utc_time + self._RECONCILE_RETRY_INTERVAL
+        request_generation = snapshot.generation
+        self._initial_snapshot_refresh_accepted = \
+            self.request_brokerage_account_snapshot_refresh([self._GROUP_NAME])
+        if self._initial_snapshot_refresh_accepted:
+            self._initial_snapshot_request_generation = request_generation
+        else:
+            self.error(
+                f"The initial snapshot refresh for Financial Advisor group "
+                f"'{self._GROUP_NAME}' was not accepted; retrying.")
+
     def _try_request_reconcile_refresh(self, snapshot):
         if snapshot.status == BrokerageAccountSnapshotStatus.REFRESHING or \
-                self.utc_time < self._next_reconcile_refresh_utc:
+                (self._next_reconcile_refresh_utc is not None and
+                 self.utc_time < self._next_reconcile_refresh_utc):
             return
 
         self._next_reconcile_refresh_utc = \
@@ -145,16 +156,17 @@ class FinancialAdvisorDemoAlgorithm(QCAlgorithm):
             return
 
         previous_accounts = {
-            account.account_id: account
+            account.account_id.casefold(): account
             for account in list(self._pre_order_snapshot.accounts.values)
         }
         current_accounts = {
-            account.account_id: account
+            account.account_id.casefold(): account
             for account in list(current_snapshot.accounts.values)
         }
         for account_id in group.account_ids:
-            previous_account = previous_accounts.get(account_id)
-            current_account = current_accounts.get(account_id)
+            account_key = account_id.casefold()
+            previous_account = previous_accounts.get(account_key)
+            current_account = current_accounts.get(account_key)
             if previous_account is None or current_account is None:
                 self.error(
                     f"Account state for '{account_id}' is unavailable during "
@@ -174,7 +186,7 @@ class FinancialAdvisorDemoAlgorithm(QCAlgorithm):
 
         return next((
             group for group in list(snapshot.groups.values)
-            if group.name == self._GROUP_NAME
+            if group.name.casefold() == self._GROUP_NAME.casefold()
         ), None)
 
     def _get_position_quantity(self, account):
