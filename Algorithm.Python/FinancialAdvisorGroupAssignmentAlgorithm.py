@@ -28,6 +28,8 @@ import re
 ###   ib-financial-advisors-unified-groups-enabled=true.
 ### - fa-alias-pattern is a case-insensitive regular expression.
 ### - An exactly empty fa-target-group removes matched accounts from every group.
+### - ContractsOrShares child values may be fractional, but their saved total must
+###   be lot-aligned; for a lot size of one, 12.5 + 7.5 = 20 is valid.
 ### </summary>
 ### <meta name="tag" content="financial advisor" />
 ### <meta name="tag" content="brokerage account groups" />

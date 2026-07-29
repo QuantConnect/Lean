@@ -29,6 +29,8 @@ namespace QuantConnect.Algorithm.CSharp
     /// ib-financial-advisors-group-management-enabled=true, which implies unified groups.
     /// The fa-alias-pattern parameter is a case-insensitive regular expression. An exact empty
     /// fa-target-group removes matching accounts from every group.
+    /// ContractsOrShares child values may be fractional, but their saved total must be lot-aligned;
+    /// for a lot size of one, 12.5 + 7.5 = 20 is valid.
     /// </summary>
     /// <meta name="tag" content="financial advisor" />
     /// <meta name="tag" content="live trading" />

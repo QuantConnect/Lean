@@ -31,7 +31,10 @@ namespace QuantConnect.Orders
         /// <summary>
         /// The account group for the order (only used by Financial Advisors)
         /// </summary>
-        /// <remarks>Mutually exclusive with FaProfile and Account</remarks>
+        /// <remarks>
+        /// Mutually exclusive with FaProfile and Account. Saved ContractsOrShares child values may be
+        /// fractional, but their total must be lot-aligned; for a lot size of one, 12.5 + 7.5 = 20 is valid.
+        /// </remarks>
         public string FaGroup { get; set; }
 
         /// <summary>
