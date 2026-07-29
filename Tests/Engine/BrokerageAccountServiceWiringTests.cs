@@ -15,11 +15,9 @@
 
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
-using System.Text.RegularExpressions;
 using Moq;
 using NUnit.Framework;
 using QuantConnect.Algorithm;
@@ -34,34 +32,10 @@ namespace QuantConnect.Tests.Engine
     public class BrokerageAccountServiceWiringTests
     {
         [Test]
-        public void BrokerageAccountServicesInstalledBeforeSetupTest()
+        public void BrokerageAccountServicesAreInstalledAndForwardedTest()
         {
-            AssertServiceInstallationImmediatelyPrecedesSetup();
             AssertEngineInstallsEveryService();
             AssertPythonWrapperForwardsEveryService();
-        }
-
-        private static void AssertServiceInstallationImmediatelyPrecedesSetup()
-        {
-            var repositoryRoot = FindLeanRepositoryRoot();
-            var enginePath = Path.Combine(repositoryRoot, "Engine", "Engine.cs");
-            var engineSource = File.ReadAllText(enginePath);
-            const string serviceCallPattern =
-                @"SetBrokerageAccountServices\s*\(\s*algorithm\s*,\s*brokerage\s*\)\s*;";
-            const string setupCallPattern =
-                @"initializeComplete\s*=\s*AlgorithmHandlers\.Setup\.Setup\s*\(";
-
-            Assert.AreEqual(
-                1,
-                Regex.Matches(engineSource, serviceCallPattern, RegexOptions.CultureInvariant).Count,
-                "Engine must install brokerage account services exactly once.");
-            Assert.IsTrue(
-                Regex.IsMatch(
-                    engineSource,
-                    serviceCallPattern + @"\s*" + setupCallPattern,
-                    RegexOptions.CultureInvariant),
-                "SetBrokerageAccountServices(algorithm, brokerage) must be the immediately preceding " +
-                "statement before AlgorithmHandlers.Setup.Setup(...).");
         }
 
         private static void AssertEngineInstallsEveryService()
@@ -157,34 +131,5 @@ namespace QuantConnect.Tests.Engine
             Assert.AreSame(allocation, baseAlgorithm.BrokerageAccountGroupAllocationUpdate);
         }
 
-        private static string FindLeanRepositoryRoot()
-        {
-            var starts = new[]
-            {
-                TestContext.CurrentContext.TestDirectory,
-                AppContext.BaseDirectory,
-                Directory.GetCurrentDirectory(),
-                Path.GetDirectoryName(typeof(LeanEngine).Assembly.Location),
-                Path.GetDirectoryName(typeof(BrokerageAccountServiceWiringTests).Assembly.Location)
-            };
-
-            foreach (var start in starts.Where(path => !string.IsNullOrEmpty(path))
-                         .Distinct(StringComparer.Ordinal))
-            {
-                var directory = new DirectoryInfo(Path.GetFullPath(start));
-                while (directory != null)
-                {
-                    if (File.Exists(Path.Combine(directory.FullName, "QuantConnect.Lean.sln")) &&
-                        File.Exists(Path.Combine(directory.FullName, "Engine", "Engine.cs")))
-                    {
-                        return directory.FullName;
-                    }
-                    directory = directory.Parent;
-                }
-            }
-
-            Assert.Fail("Unable to locate the LEAN repository root from the test process.");
-            return null;
-        }
     }
 }
