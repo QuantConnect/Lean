@@ -233,6 +233,73 @@ namespace QuantConnect.Tests.Algorithm
             Assert.AreEqual(messageCount + 2, algorithm.LogMessages.Count);
         }
 
+        [Test]
+        public void ScheduledRefreshPolicyUsesTwoScopedTicksThenOneCompleteTick()
+        {
+            var snapshot = CreateSnapshot(
+                BrokerageAccountSnapshotStatus.Ready,
+                7,
+                10m,
+                20m,
+                SnapshotTime);
+            var provider = new TestAccountStateProvider
+            {
+                Snapshot = snapshot
+            };
+            var algorithm = CreateAlgorithm(provider, snapshot);
+            SetPrivateField(algorithm, "_groupOrderId", 0);
+
+            InvokePrivateMethod(
+                algorithm,
+                "RequestScheduledSnapshotRefresh");
+            InvokePrivateMethod(
+                algorithm,
+                "RequestScheduledSnapshotRefresh");
+            InvokePrivateMethod(
+                algorithm,
+                "RequestScheduledSnapshotRefresh");
+
+            Assert.Multiple(() =>
+            {
+                Assert.AreEqual(3, provider.RefreshRequestCount);
+                Assert.AreEqual(3, provider.RequestedGroupHistory.Count);
+                CollectionAssert.AreEqual(
+                    new[] { GroupName },
+                    provider.RequestedGroupHistory[0]);
+                CollectionAssert.AreEqual(
+                    new[] { GroupName },
+                    provider.RequestedGroupHistory[1]);
+                CollectionAssert.IsEmpty(
+                    provider.RequestedGroupHistory[2],
+                    "The third topology tick must issue one complete request.");
+            });
+
+            SetPrivateField(algorithm, "_groupOrderId", 41);
+            InvokePrivateMethod(
+                algorithm,
+                "RequestScheduledSnapshotRefresh");
+            Assert.AreEqual(
+                3,
+                provider.RefreshRequestCount,
+                "Scheduled policy must yield while the parent group order is active.");
+
+            provider.SnapshotReadHook = () => InvokePrivateMethod(
+                algorithm,
+                "RequestScheduledSnapshotRefresh");
+            algorithm.OnOrderEvent(
+                CreateOrderEvent(41, OrderStatus.Filled));
+            Assert.AreEqual(4, provider.RefreshRequestCount);
+
+            InvokePrivateMethod(
+                algorithm,
+                "RequestScheduledSnapshotRefresh");
+
+            Assert.AreEqual(
+                4,
+                provider.RefreshRequestCount,
+                "Scheduled policy must yield to terminal-order reconciliation.");
+        }
+
         [TestCase(BrokerageAccountSnapshotStatus.Failed)]
         [TestCase(BrokerageAccountSnapshotStatus.Stale)]
         public void InitialSnapshotRefreshRetriesRejectedAndFailedResults(
@@ -418,6 +485,17 @@ namespace QuantConnect.Tests.Algorithm
             field.SetValue(instance, value);
         }
 
+        private static void InvokePrivateMethod(
+            object instance,
+            string name)
+        {
+            var method = instance.GetType().GetMethod(
+                name,
+                BindingFlags.Instance | BindingFlags.NonPublic);
+            Assert.IsNotNull(method, $"Private method '{name}' was not found.");
+            method.Invoke(instance, null);
+        }
+
         private sealed class TestAccountStateProvider :
             IBrokerageAccountStateProvider
         {
@@ -425,8 +503,11 @@ namespace QuantConnect.Tests.Algorithm
             public int RefreshRequestCount { get; private set; }
             public long GenerationObservedAtRefreshRequest { get; private set; }
             public Action<TestAccountStateProvider> RefreshRequestHook { get; set; }
+            public Action SnapshotReadHook { get; set; }
             public IReadOnlyCollection<string> RequestedGroups { get; private set; }
             public IReadOnlyCollection<string> RequestedAdditionalAccounts { get; private set; }
+            public List<IReadOnlyCollection<string>> RequestedGroupHistory { get; } =
+                new();
             private readonly Queue<bool> _refreshResults = new();
 
             public void EnqueueRefreshResult(bool accepted) =>
@@ -434,6 +515,9 @@ namespace QuantConnect.Tests.Algorithm
 
             public BrokerageAccountSnapshot GetAccountSnapshot()
             {
+                var hook = SnapshotReadHook;
+                SnapshotReadHook = null;
+                hook?.Invoke();
                 return Snapshot;
             }
 
@@ -445,6 +529,7 @@ namespace QuantConnect.Tests.Algorithm
                 GenerationObservedAtRefreshRequest = Snapshot.Generation;
                 RequestedGroups = groupNames.ToArray();
                 RequestedAdditionalAccounts = additionalAccountIds.ToArray();
+                RequestedGroupHistory.Add(RequestedGroups);
                 var accepted =
                     _refreshResults.Count == 0 || _refreshResults.Dequeue();
                 if (accepted)

@@ -15,6 +15,7 @@
 
 using System;
 using System.Linq;
+using System.Threading;
 using QuantConnect.Brokerages;
 using QuantConnect.Data;
 using QuantConnect.Orders;
@@ -33,6 +34,9 @@ namespace QuantConnect.Algorithm.CSharp
         private const string GroupName = "TestGroupEQ";
         private static readonly TimeSpan ReconcileRetryInterval =
             TimeSpan.FromSeconds(5);
+        private static readonly TimeSpan TopologyRefreshInterval =
+            TimeSpan.FromMinutes(1);
+        private const int CompleteRefreshTopologyTicks = 3;
 
         private Symbol _symbol;
         private BrokerageAccountSnapshot _preOrderSnapshot;
@@ -43,6 +47,7 @@ namespace QuantConnect.Algorithm.CSharp
         private long _pendingReconcileGeneration = -1;
         private DateTime _pendingReconcileTerminalUtc;
         private DateTime _nextReconcileRefreshUtc;
+        private int _scheduledRefreshTopologyTicks;
 
         /// <summary>
         /// Initialise the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must initialized.
@@ -68,6 +73,11 @@ namespace QuantConnect.Algorithm.CSharp
 
             if (LiveMode)
             {
+                // Every third one-minute topology tick expands to complete account state.
+                Schedule.On(
+                    DateRules.EveryDay(),
+                    TimeRules.Every(TopologyRefreshInterval),
+                    RequestScheduledSnapshotRefresh);
                 _nextReconcileRefreshUtc = UtcTime;
                 TryRequestInitialSnapshotRefresh(BrokerageAccountSnapshot);
             }
@@ -91,15 +101,17 @@ namespace QuantConnect.Algorithm.CSharp
             }
 
             var snapshot = BrokerageAccountSnapshot;
-            if (_pendingReconcileGeneration >= 0)
+            var pendingReconcileGeneration = Volatile.Read(
+                ref _pendingReconcileGeneration);
+            if (pendingReconcileGeneration >= 0)
             {
                 if (snapshot.IsReady &&
-                    snapshot.Generation > _pendingReconcileGeneration &&
+                    snapshot.Generation > pendingReconcileGeneration &&
                     snapshot.CollectionStartedUtc >= _pendingReconcileTerminalUtc)
                 {
                     ReconcileAccountPositions(snapshot);
                     _preOrderSnapshot = null;
-                    _pendingReconcileGeneration = -1;
+                    Volatile.Write(ref _pendingReconcileGeneration, -1);
                 }
                 else
                 {
@@ -135,7 +147,7 @@ namespace QuantConnect.Algorithm.CSharp
                 return;
             }
 
-            _groupOrderId = ticket.OrderId;
+            Volatile.Write(ref _groupOrderId, ticket.OrderId);
             _groupOrderSubmitted = true;
         }
 
@@ -146,17 +158,19 @@ namespace QuantConnect.Algorithm.CSharp
         public override void OnOrderEvent(OrderEvent orderEvent)
         {
             if (!LiveMode ||
-                orderEvent.OrderId != _groupOrderId ||
+                orderEvent.OrderId != Volatile.Read(ref _groupOrderId) ||
                 !orderEvent.Status.IsClosed() ||
-                _pendingReconcileGeneration >= 0)
+                Volatile.Read(ref _pendingReconcileGeneration) >= 0)
             {
                 return;
             }
 
-            _groupOrderId = 0;
-            _pendingReconcileGeneration = BrokerageAccountSnapshot.Generation;
+            Volatile.Write(
+                ref _pendingReconcileGeneration,
+                BrokerageAccountSnapshot.Generation);
             _pendingReconcileTerminalUtc = orderEvent.UtcTime;
             _nextReconcileRefreshUtc = UtcTime;
+            Volatile.Write(ref _groupOrderId, 0);
             TryRequestReconcileRefresh(BrokerageAccountSnapshot);
         }
 
@@ -200,6 +214,46 @@ namespace QuantConnect.Algorithm.CSharp
                 Error(
                     $"The initial snapshot refresh for Financial Advisor group " +
                     $"'{GroupName}' was not accepted.");
+            }
+        }
+
+        private void RequestScheduledSnapshotRefresh()
+        {
+            var snapshot = BrokerageAccountSnapshot;
+            if (!LiveMode ||
+                Volatile.Read(ref _groupOrderId) != 0 ||
+                Volatile.Read(ref _pendingReconcileGeneration) >= 0 ||
+                snapshot.Status == BrokerageAccountSnapshotStatus.Refreshing)
+            {
+                return;
+            }
+            if (!_initialSnapshotRefreshAccepted)
+            {
+                TryRequestInitialSnapshotRefresh(snapshot);
+                return;
+            }
+
+            ++_scheduledRefreshTopologyTicks;
+            var completeRefresh =
+                _scheduledRefreshTopologyTicks ==
+                CompleteRefreshTopologyTicks;
+            if (completeRefresh)
+            {
+                _scheduledRefreshTopologyTicks = 0;
+            }
+
+            var accepted = completeRefresh
+                ? RequestBrokerageAccountSnapshotRefresh()
+                : RequestBrokerageAccountSnapshotRefresh(
+                    new[] { GroupName });
+            if (!accepted)
+            {
+                Error(
+                    completeRefresh
+                        ? "The scheduled complete Financial Advisor snapshot " +
+                            "refresh was not accepted."
+                        : $"The scheduled topology refresh for Financial Advisor " +
+                            $"group '{GroupName}' was not accepted.");
             }
         }
 

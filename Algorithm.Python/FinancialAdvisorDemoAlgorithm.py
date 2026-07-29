@@ -27,6 +27,8 @@ class FinancialAdvisorDemoAlgorithm(QCAlgorithm):
 
     _GROUP_NAME = "TestGroupEQ"
     _RECONCILE_RETRY_INTERVAL = timedelta(seconds=5)
+    _TOPOLOGY_REFRESH_INTERVAL = timedelta(minutes=1)
+    _COMPLETE_REFRESH_TOPOLOGY_TICKS = 3
 
     def initialize(self):
         # Initialise the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must be initialized.
@@ -45,6 +47,7 @@ class FinancialAdvisorDemoAlgorithm(QCAlgorithm):
         self._pending_reconcile_generation = -1
         self._pending_reconcile_terminal_utc = None
         self._next_reconcile_refresh_utc = None
+        self._scheduled_refresh_topology_ticks = 0
 
         # Route every order to the existing group. Leaving fa_method blank makes
         # TWS's saved group allocation method authoritative.
@@ -52,6 +55,11 @@ class FinancialAdvisorDemoAlgorithm(QCAlgorithm):
         self.default_order_properties.fa_group = self._GROUP_NAME
 
         if self.live_mode:
+            # Every third one-minute topology tick expands to complete account state.
+            self.schedule.on(
+                self.date_rules.every_day(),
+                self.time_rules.every(self._TOPOLOGY_REFRESH_INTERVAL),
+                self._request_scheduled_snapshot_refresh)
             self._try_request_initial_snapshot_refresh(
                 self.brokerage_account_snapshot)
 
@@ -109,11 +117,11 @@ class FinancialAdvisorDemoAlgorithm(QCAlgorithm):
                 self._pending_reconcile_generation >= 0:
             return
 
-        self._group_order_id = 0
         self._pending_reconcile_generation = \
             self.brokerage_account_snapshot.generation
         self._pending_reconcile_terminal_utc = order_event.utc_time
         self._next_reconcile_refresh_utc = self.utc_time
+        self._group_order_id = 0
         self._try_request_reconcile_refresh(self.brokerage_account_snapshot)
 
     def _try_request_initial_snapshot_refresh(self, snapshot):
@@ -146,6 +154,36 @@ class FinancialAdvisorDemoAlgorithm(QCAlgorithm):
             self.error(
                 f"The post-order snapshot refresh for Financial Advisor group "
                 f"'{self._GROUP_NAME}' was not accepted.")
+
+    def _request_scheduled_snapshot_refresh(self):
+        snapshot = self.brokerage_account_snapshot
+        if not self.live_mode or \
+                self._group_order_id != 0 or \
+                self._pending_reconcile_generation >= 0 or \
+                snapshot.status == BrokerageAccountSnapshotStatus.REFRESHING:
+            return
+        if not self._initial_snapshot_refresh_accepted:
+            self._try_request_initial_snapshot_refresh(snapshot)
+            return
+
+        self._scheduled_refresh_topology_ticks += 1
+        complete_refresh = \
+            self._scheduled_refresh_topology_ticks == \
+            self._COMPLETE_REFRESH_TOPOLOGY_TICKS
+        if complete_refresh:
+            self._scheduled_refresh_topology_ticks = 0
+            accepted = self.request_brokerage_account_snapshot_refresh()
+        else:
+            accepted = self.request_brokerage_account_snapshot_refresh(
+                [self._GROUP_NAME])
+
+        if not accepted:
+            purpose = "complete account-state" \
+                if complete_refresh \
+                else f"topology for group '{self._GROUP_NAME}'"
+            self.error(
+                f"The scheduled Financial Advisor {purpose} snapshot "
+                f"refresh was not accepted.")
 
     def _reconcile_account_positions(self, current_snapshot):
         group = self._find_group(self._pre_order_snapshot)

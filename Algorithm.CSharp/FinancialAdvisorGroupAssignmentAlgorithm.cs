@@ -36,13 +36,14 @@ namespace QuantConnect.Algorithm.CSharp
     {
         private static readonly TimeSpan RefreshRetryInterval =
             TimeSpan.FromSeconds(5);
+        private static readonly TimeSpan TopologyRefreshInterval =
+            TimeSpan.FromMinutes(1);
+        private const int CompleteRefreshTopologyTicks = 3;
 
         private Regex _aliasPattern;
         private string _targetGroupName;
         private decimal _targetAllocationValue;
         private decimal _cashChangeThreshold;
-        private TimeSpan _snapshotRefreshInterval;
-        private DateTime _nextSnapshotRefreshUtc;
         private DateTime _nextRefreshRetryUtc;
         private bool _refreshRequestOutstanding;
         private long _refreshRequestedAfterGeneration = -1;
@@ -56,6 +57,7 @@ namespace QuantConnect.Algorithm.CSharp
         private long _assignmentSnapshotGeneration = -1;
         private long _minimumReadyGeneration = -1;
         private string _pendingAccountId = string.Empty;
+        private int _scheduledRefreshTopologyTicks;
 
         /// <summary>
         /// Configures the alias rule, destination, allocation value, cash-change threshold,
@@ -76,10 +78,6 @@ namespace QuantConnect.Algorithm.CSharp
                 GetParameter("fa-allocation-value", 1m);
             _cashChangeThreshold =
                 GetParameter("fa-cash-change-threshold", 1000m);
-            _snapshotRefreshInterval = TimeSpan.FromSeconds(
-                Math.Max(
-                    1,
-                    GetParameter("fa-snapshot-refresh-seconds", 60)));
 
             if (_targetAllocationValue <= 0)
             {
@@ -94,11 +92,15 @@ namespace QuantConnect.Algorithm.CSharp
                     "The cash-change threshold cannot be negative.");
             }
 
-            _nextSnapshotRefreshUtc = UtcTime;
             _nextRefreshRetryUtc = UtcTime;
             if (LiveMode)
             {
-                TryRequestSnapshotRefresh(BrokerageAccountSnapshot, true);
+                // Every third one-minute topology tick expands to complete account state.
+                Schedule.On(
+                    DateRules.EveryDay(),
+                    TimeRules.Every(TopologyRefreshInterval),
+                    RequestScheduledSnapshotRefresh);
+                TryRequestSnapshotRefresh(BrokerageAccountSnapshot);
             }
         }
 
@@ -127,7 +129,7 @@ namespace QuantConnect.Algorithm.CSharp
                 if (!snapshot.IsReady ||
                     snapshot.Generation <= _minimumReadyGeneration)
                 {
-                    TryRequestSnapshotRefresh(snapshot, true);
+                    TryRequestSnapshotRefresh(snapshot);
                     return;
                 }
                 _minimumReadyGeneration = -1;
@@ -136,9 +138,10 @@ namespace QuantConnect.Algorithm.CSharp
             if (_cashConfirmationRequired)
             {
                 if (!snapshot.IsReady ||
+                    !snapshot.IsComplete ||
                     snapshot.Generation <= _cashChangeGeneration)
                 {
-                    TryRequestSnapshotRefresh(snapshot, true);
+                    TryRequestSnapshotRefresh(snapshot);
                     return;
                 }
 
@@ -150,20 +153,19 @@ namespace QuantConnect.Algorithm.CSharp
             }
 
             if (_refreshRequestOutstanding ||
-                !snapshot.IsReady ||
-                !snapshot.IsComplete)
+                !snapshot.IsReady)
             {
-                TryRequestSnapshotRefresh(snapshot, true);
+                TryRequestSnapshotRefresh(snapshot);
                 return;
             }
 
             if (snapshot.Generation == _lastEvaluatedGeneration)
             {
-                TryRequestSnapshotRefresh(snapshot, false);
                 return;
             }
 
-            if (_cashBaselineSnapshot != null &&
+            if (snapshot.IsComplete &&
+                _cashBaselineSnapshot != null &&
                 snapshot.Generation > _cashBaselineSnapshot.Generation &&
                 HasMaterialFinancialChange(
                     _cashBaselineSnapshot,
@@ -177,18 +179,18 @@ namespace QuantConnect.Algorithm.CSharp
                 Log(
                     $"FA financial change detected at generation " +
                     $"{snapshot.Generation}: {changeDescription}. Requesting confirmation.");
-                TryRequestSnapshotRefresh(snapshot, true);
+                TryRequestSnapshotRefresh(snapshot);
                 return;
             }
 
-            if (_cashBaselineSnapshot == null ||
-                snapshot.Generation > _cashBaselineSnapshot.Generation)
+            if (snapshot.IsComplete &&
+                (_cashBaselineSnapshot == null ||
+                    snapshot.Generation > _cashBaselineSnapshot.Generation))
             {
                 _cashBaselineSnapshot = snapshot;
             }
 
             EvaluateGroupAssignment(snapshot);
-            TryRequestSnapshotRefresh(snapshot, false);
         }
 
         private bool PollAssignment()
@@ -421,8 +423,6 @@ namespace QuantConnect.Algorithm.CSharp
                 snapshot.Generation > _refreshRequestedAfterGeneration)
             {
                 _refreshRequestOutstanding = false;
-                _nextSnapshotRefreshUtc =
-                    UtcTime + _snapshotRefreshInterval;
             }
             else if (snapshot.Status ==
                     BrokerageAccountSnapshotStatus.Failed ||
@@ -435,32 +435,81 @@ namespace QuantConnect.Algorithm.CSharp
 
         private void TryRequestSnapshotRefresh(
             BrokerageAccountSnapshot snapshot,
-            bool required)
+            IReadOnlyCollection<string> groupNames = null)
         {
             if (_refreshRequestOutstanding ||
                 snapshot.Status ==
                     BrokerageAccountSnapshotStatus.Refreshing ||
-                UtcTime < _nextRefreshRetryUtc ||
-                (!required && UtcTime < _nextSnapshotRefreshUtc))
+                UtcTime < _nextRefreshRetryUtc)
             {
                 return;
             }
 
             _nextRefreshRetryUtc =
                 UtcTime + RefreshRetryInterval;
-            if (!RequestBrokerageAccountSnapshotRefresh())
+            var accepted = groupNames == null
+                ? RequestBrokerageAccountSnapshotRefresh()
+                : RequestBrokerageAccountSnapshotRefresh(groupNames);
+            if (!accepted)
             {
-                _nextSnapshotRefreshUtc = UtcTime;
                 Error(
-                    "The complete Financial Advisor snapshot refresh was " +
+                    $"{(groupNames == null ? "The complete" : "The scoped")} " +
+                    "Financial Advisor snapshot refresh was " +
                     "not accepted; the algorithm will retry.");
                 return;
             }
 
             _refreshRequestOutstanding = true;
             _refreshRequestedAfterGeneration = snapshot.Generation;
-            _nextSnapshotRefreshUtc =
-                UtcTime + _snapshotRefreshInterval;
+        }
+
+        private void RequestScheduledSnapshotRefresh()
+        {
+            var snapshot = BrokerageAccountSnapshot;
+            UpdateRefreshRequestState(snapshot);
+            if (!LiveMode ||
+                _refreshRequestOutstanding ||
+                _assignmentRequestAccepted ||
+                _minimumReadyGeneration >= 0 ||
+                _cashConfirmationRequired ||
+                snapshot.Status ==
+                    BrokerageAccountSnapshotStatus.Refreshing ||
+                UtcTime < _nextRefreshRetryUtc)
+            {
+                return;
+            }
+
+            ++_scheduledRefreshTopologyTicks;
+            if (_scheduledRefreshTopologyTicks ==
+                CompleteRefreshTopologyTicks)
+            {
+                _scheduledRefreshTopologyTicks = 0;
+                TryRequestSnapshotRefresh(snapshot);
+                return;
+            }
+
+            IReadOnlyCollection<string> groupNames;
+            if (_targetGroupName.Length == 0)
+            {
+                groupNames = snapshot.AllGroups.Keys.ToArray();
+                if (groupNames.Count == 0)
+                {
+                    return;
+                }
+            }
+            else
+            {
+                var destinationGroup =
+                    snapshot.AllGroups.Values.FirstOrDefault(
+                        group => group.Name.Equals(
+                            _targetGroupName,
+                            StringComparison.OrdinalIgnoreCase));
+                groupNames = new[]
+                {
+                    destinationGroup?.Name ?? _targetGroupName
+                };
+            }
+            TryRequestSnapshotRefresh(snapshot, groupNames);
         }
     }
 }
