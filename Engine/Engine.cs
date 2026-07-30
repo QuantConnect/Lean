@@ -345,10 +345,6 @@ namespace QuantConnect.Lean.Engine
                         AlgorithmHandlers.Results.DebugMessage(
                             $"Launching analysis for {job.AlgorithmId} with LEAN Engine v{Globals.Version}");
 
-                        var algorithmSynchronizer = new BrokerageAccountMutationReadinessSynchronizer(
-                            synchronizer,
-                            () => SetBrokerageAccountMutationServicesReady(algorithm, false));
-
                         //Create a new engine isolator class
                         var isolator = new Isolator();
 
@@ -361,7 +357,7 @@ namespace QuantConnect.Lean.Engine
                                 // -> Using this Data Feed,
                                 // -> Send Orders to this TransactionHandler,
                                 // -> Send Results to ResultHandler.
-                                algorithmManager.Run(job, algorithm, algorithmSynchronizer, AlgorithmHandlers.Transactions, AlgorithmHandlers.Results, AlgorithmHandlers.RealTime, SystemHandlers.LeanManager, isolator.CancellationTokenSource, performanceTrackingTool);
+                                algorithmManager.Run(job, algorithm, synchronizer, AlgorithmHandlers.Transactions, AlgorithmHandlers.Results, AlgorithmHandlers.RealTime, SystemHandlers.LeanManager, isolator.CancellationTokenSource, performanceTrackingTool);
                             }
                             catch (Exception err)
                             {
@@ -370,8 +366,8 @@ namespace QuantConnect.Lean.Engine
                             }
                             finally
                             {
-                                // Stream exhaustion closes the gate before OnEndOfAlgorithm;
-                                // this also covers failures before stream enumeration begins.
+                                // Disable mutation services after AlgorithmManager.Run completes
+                                // or throws, including failures before stream enumeration begins.
                                 SetBrokerageAccountMutationServicesReady(algorithm, false);
                             }
 
