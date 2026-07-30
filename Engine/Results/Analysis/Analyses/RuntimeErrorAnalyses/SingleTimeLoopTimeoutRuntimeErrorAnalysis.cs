@@ -51,26 +51,23 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
         {
             var solutions = new List<string>
             {
-                $"Look for heavy work inside a single event handler (`{FormatCode(nameof(QCAlgorithm.OnData), language)}`, scheduled events, universe selection functions): " +
-                    "large or nested loops over all securities, or values recomputed from scratch on every data update. " +
-                    "Cache the values and update them incrementally with rolling windows, consolidators or indicators instead.",
+                $"Avoid heavy work in event handlers (`{FormatCode(nameof(QCAlgorithm.OnData), language)}`, scheduled events, universe selection): " +
+                    "instead of recomputing values on every update, update them incrementally with rolling windows, consolidators or indicators.",
 
-                "If there is a universe, reduce its size and filter it: return from the selection functions only the securities the strategy actually trades, " +
-                    $"and narrow option and future chain universes with the `{FormatCode("SetFilter", language)}` contract filters (strikes and expirations).",
+                "Reduce the universe size: select only the securities the strategy trades, " +
+                    $"and narrow option and future chains with the `{FormatCode("SetFilter", language)}` strike and expiration filters.",
 
-                "Reduce the number of subscribed securities or the data resolution to lower the amount of data processed on each time loop.",
+                "Reduce the number of subscribed securities or the data resolution.",
 
-                "Avoid issuing large history requests inside event handlers; request only the period the strategy needs, " +
-                    "or maintain the data incrementally instead of re-requesting it on every data update.",
+                "Avoid large history requests inside event handlers; request only the period needed or maintain the data incrementally.",
 
-                $"If the algorithm trains a machine learning model, run the training through the `{FormatCode(nameof(QCAlgorithm.Train), language)}` method, " +
-                    "which allocates additional time for it to complete.",
+                $"Run machine learning training through the `{FormatCode(nameof(QCAlgorithm.Train), language)}` method, which allocates extra time for it.",
 
-                "Check for loops whose exit condition may never be met: an infinite loop in an event handler surfaces as this error.",
+                "Check for loops that may never exit: an infinite loop in an event handler surfaces as this error.",
             };
             if (language == Language.Python)
             {
-                solutions.Add("Vectorize heavy numeric Python loops with numpy or pandas operations, which run orders of magnitude faster.");
+                solutions.Add("Vectorize heavy numeric loops with numpy or pandas.");
             }
             return solutions;
         }

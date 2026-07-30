@@ -50,9 +50,9 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
         /// </summary>
         protected override List<string> Solutions(Language language) =>
         [
-            "Reduce the backtest period so the run completes within the allowed runtime.",
-
-            "Reduce the universe size and the data resolution to lower the total amount of data processed.",
+            "Reduce the universe size and the data resolution to lower the total amount of data processed. " +
+                "For options and futures, tighten the contract filters: narrower strike and expiration ranges, " +
+                "and fewer contracts per underlying.",
 
             "Review the algorithm code for inefficiencies: avoid recomputing values from scratch on every data update, " +
                 "and avoid history requests whose range grows as the backtest progresses.",
