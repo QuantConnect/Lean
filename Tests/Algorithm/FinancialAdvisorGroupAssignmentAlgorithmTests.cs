@@ -485,13 +485,22 @@ namespace QuantConnect.Tests.Algorithm
                 algorithm,
                 "RequestScheduledSnapshotRefresh");
 
+            var refreshedGroup = new BrokerageAccountGroup(
+                "TargetGroup",
+                "Equal",
+                new[] { "AccountA" });
+            var refreshedGroups =
+                new Dictionary<string, BrokerageAccountGroup>
+                {
+                    [refreshedGroup.Name] = refreshedGroup
+                };
             services.RefreshRequestHook = stateProvider =>
                 stateProvider.Snapshot = CreateSnapshot(
                     2,
-                    new BrokerageAccountGroup(
-                        "TargetGroup",
-                        "Equal",
-                        new[] { "AccountA" }),
+                    refreshedGroups,
+                    refreshedGroups,
+                    true,
+                    SnapshotTime.AddSeconds(270),
                     Entry(
                         "AccountA",
                         BrokerageAccountRelationship.Managed,

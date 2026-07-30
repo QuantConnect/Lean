@@ -206,8 +206,10 @@ class FinancialAdvisorDemoAlgorithm(QCAlgorithm):
     def on_order_event(self, order_event):
         """Requests authoritative account reconciliation after the parent group order becomes terminal."""
 
-        if not self.live_mode or \
-                not order_event.status.is_closed():
+        if not self.live_mode or order_event.status not in (
+                OrderStatus.FILLED,
+                OrderStatus.CANCELED,
+                OrderStatus.INVALID):
             return
 
         invalid_order_message = None
@@ -474,7 +476,10 @@ class FinancialAdvisorDemoAlgorithm(QCAlgorithm):
         terminal_order_event = \
             self._terminal_events_during_submission.get(ticket.order_id)
         self._terminal_events_during_submission.clear()
-        if terminal_order_event is None and ticket_status.is_closed():
+        if terminal_order_event is None and ticket_status in (
+                OrderStatus.FILLED,
+                OrderStatus.CANCELED,
+                OrderStatus.INVALID):
             response = ticket.submit_request.response
             terminal_order_event = (
                 ticket_status,

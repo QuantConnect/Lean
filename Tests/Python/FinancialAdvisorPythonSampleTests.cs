@@ -211,9 +211,10 @@ namespace QuantConnect.Tests.Python
                     algorithm.GetProperty<int>(
                         "_invalid_order_attempt_count"));
                 Assert.IsTrue(preOrderSnapshot.IsNone());
-                Assert.That(
-                    algorithm.LogMessages,
-                    Has.One.Contains("FA reconciliation"));
+                Assert.AreEqual(
+                    2,
+                    algorithm.LogMessages.Count(
+                        message => message.Contains("FA reconciliation")));
                 Assert.That(
                     algorithm.ErrorMessages,
                     Has.One.Contains("distinctive rejection"));
