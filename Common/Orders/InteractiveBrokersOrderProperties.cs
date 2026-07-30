@@ -38,9 +38,16 @@ namespace QuantConnect.Orders
         public string FaGroup { get; set; }
 
         /// <summary>
-        /// The allocation method for the account group order (only used by Financial Advisors)
-        /// Supported allocation methods are: Equal, NetLiq, AvailableEquity, PctChange
+        /// The legacy allocation-method override for the account group order (only used by
+        /// Financial Advisors). Supported legacy values are Equal, NetLiq, AvailableEquity,
+        /// and PctChange.
         /// </summary>
+        /// <remarks>
+        /// With unified Financial Advisor groups, leave this field blank so the order uses the
+        /// group's saved allocation method. For a saved PctChange group, set both
+        /// <see cref="FaGroup"/> and <c>FaMethod = "PctChange"</c> explicitly so the brokerage
+        /// selects the upstream placeholder-quantity fill-accounting path before submission.
+        /// </remarks>
         public string FaMethod { get; set; }
 
         /// <summary>
