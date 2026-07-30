@@ -46,7 +46,8 @@ namespace QuantConnect.Tests.Python
                 Snapshot = CreateAssignmentSnapshot(
                     2,
                     new[] { TargetGroupName },
-                    new[] { TargetGroupName, SourceGroupName })
+                    new[] { TargetGroupName, SourceGroupName },
+                    includeCompanionMembers: true)
             };
             using var algorithm = CreateAlgorithm(
                 "FinancialAdvisorGroupAssignmentAlgorithm",
@@ -67,7 +68,8 @@ namespace QuantConnect.Tests.Python
                 3,
                 new[] { TargetGroupName, SourceGroupName },
                 new[] { TargetGroupName, SourceGroupName },
-                SnapshotTime.AddSeconds(6));
+                SnapshotTime.AddSeconds(6),
+                includeCompanionMembers: true);
             services.ThrowNextAssignmentRequest = true;
             algorithm.SetDateTime(SnapshotTime.AddSeconds(10));
 
@@ -83,19 +85,33 @@ namespace QuantConnect.Tests.Python
             algorithm.SetDateTime(SnapshotTime.AddSeconds(15));
             InvokeScheduledCallback(algorithm);
             Assert.AreEqual(
+                1,
+                services.AssignmentRequestCount,
+                "A synchronous rejection must not retry against the same snapshot.");
+
+            services.Snapshot = CreateAssignmentSnapshot(
+                4,
+                new[] { TargetGroupName, SourceGroupName },
+                new[] { TargetGroupName, SourceGroupName },
+                SnapshotTime.AddSeconds(16),
+                includeCompanionMembers: true);
+            algorithm.SetDateTime(SnapshotTime.AddSeconds(20));
+            InvokeScheduledCallback(algorithm);
+            Assert.AreEqual(
                 2,
                 services.AssignmentRequestCount,
-                "The same snapshot must retry after a synchronous rejection.");
+                "A strictly newer snapshot may authorize the retry.");
 
             services.CompleteAssignment(
                 BrokerageAccountGroupAssignmentStatus.Succeeded,
                 new[] { TargetGroupName });
             services.Snapshot = CreateAssignmentSnapshot(
-                4,
+                5,
                 new[] { TargetGroupName, SourceGroupName },
                 new[] { TargetGroupName },
-                SnapshotTime.AddSeconds(16));
-            algorithm.SetDateTime(SnapshotTime.AddSeconds(20));
+                SnapshotTime.AddSeconds(21),
+                includeCompanionMembers: true);
+            algorithm.SetDateTime(SnapshotTime.AddSeconds(25));
             InvokeScheduledCallback(algorithm);
 
             Assert.Multiple(() =>
@@ -125,7 +141,7 @@ namespace QuantConnect.Tests.Python
                 Snapshot = CreateAssignmentSnapshot(
                     2,
                     new[] { TargetGroupName, SourceGroupName },
-                    new[] { SourceGroupName },
+                    Array.Empty<string>(),
                     allocationMethod: "Percent")
             };
             using var algorithm = CreateAlgorithm(
@@ -189,6 +205,123 @@ namespace QuantConnect.Tests.Python
                 Assert.AreEqual(1, services.AssignmentRequestCount);
                 Assert.IsNull(services.Assignment.TargetAllocationValue);
             });
+        }
+
+        [Test]
+        public void GroupAssignmentReturnedFalseRequiresNewerSnapshotInPython()
+        {
+            BrokerageAccountSnapshot Snapshot(long generation) =>
+                CreateAssignmentSnapshot(
+                    generation,
+                    new[] { TargetGroupName },
+                    Array.Empty<string>(),
+                    SnapshotTime.AddTicks(generation));
+            var services = new TestFinancialAdvisorServices
+            {
+                Snapshot = Snapshot(2),
+                RejectNextAssignmentRequest = true
+            };
+            using var algorithm = CreateAlgorithm(
+                "FinancialAdvisorGroupAssignmentAlgorithm",
+                services);
+
+            algorithm.OnData(CreateEmptySlice());
+            algorithm.SetDateTime(SnapshotTime.AddSeconds(5));
+            algorithm.OnData(CreateEmptySlice());
+
+            Assert.Multiple(() =>
+            {
+                Assert.AreEqual(1, services.AssignmentRequestCount);
+                Assert.AreEqual(1, services.RefreshRequestCount);
+            });
+
+            services.Snapshot = Snapshot(3);
+            algorithm.OnData(CreateEmptySlice());
+
+            Assert.AreEqual(2, services.AssignmentRequestCount);
+        }
+
+        [Test]
+        public void GroupAssignmentTerminalFailureRequiresNewerSnapshotInPython()
+        {
+            BrokerageAccountSnapshot Snapshot(long generation) =>
+                CreateAssignmentSnapshot(
+                    generation,
+                    new[] { TargetGroupName },
+                    Array.Empty<string>(),
+                    SnapshotTime.AddTicks(generation));
+            var services = new TestFinancialAdvisorServices
+            {
+                Snapshot = Snapshot(2)
+            };
+            using var algorithm = CreateAlgorithm(
+                "FinancialAdvisorGroupAssignmentAlgorithm",
+                services);
+
+            algorithm.OnData(CreateEmptySlice());
+            services.CompleteAssignment(
+                BrokerageAccountGroupAssignmentStatus.Failed,
+                Array.Empty<string>(),
+                "distinctive readback failure");
+            algorithm.OnData(CreateEmptySlice());
+            algorithm.OnData(CreateEmptySlice());
+
+            Assert.Multiple(() =>
+            {
+                Assert.AreEqual(1, services.AssignmentRequestCount);
+                Assert.AreEqual(1, services.RefreshRequestCount);
+                Assert.That(
+                    algorithm.ErrorMessages,
+                    Has.One.Contains("distinctive readback failure"));
+            });
+
+            services.Snapshot = Snapshot(3);
+            algorithm.OnData(CreateEmptySlice());
+
+            Assert.AreEqual(2, services.AssignmentRequestCount);
+        }
+
+        [Test]
+        public void GroupAssignmentFinalSourceMemberWaitsForTopologyChangeInPython()
+        {
+            BrokerageAccountSnapshot Snapshot(
+                long generation,
+                bool includeCompanionMembers) =>
+                CreateAssignmentSnapshot(
+                    generation,
+                    new[] { TargetGroupName, SourceGroupName },
+                    new[] { SourceGroupName },
+                    SnapshotTime.AddTicks(generation),
+                    includeCompanionMembers: includeCompanionMembers);
+            var services = new TestFinancialAdvisorServices
+            {
+                Snapshot = Snapshot(2, false)
+            };
+            using var algorithm = CreateAlgorithm(
+                "FinancialAdvisorGroupAssignmentAlgorithm",
+                services);
+
+            algorithm.OnData(CreateEmptySlice());
+            algorithm.SetDateTime(SnapshotTime.AddSeconds(90));
+            InvokeScheduledCallback(algorithm);
+            services.Snapshot = Snapshot(3, false);
+            algorithm.SetDateTime(SnapshotTime.AddSeconds(180));
+            InvokeScheduledCallback(algorithm);
+
+            Assert.Multiple(() =>
+            {
+                Assert.AreEqual(0, services.AssignmentRequestCount);
+                Assert.AreEqual(2, services.RefreshRequestCount);
+                Assert.IsTrue(
+                    algorithm.ErrorMessages.Any(message =>
+                        message.Contains("final member of source group")));
+            });
+
+            services.Snapshot = Snapshot(4, true);
+            algorithm.SetDateTime(SnapshotTime.AddSeconds(270));
+            InvokeScheduledCallback(algorithm);
+
+            Assert.AreEqual(1, services.AssignmentRequestCount);
         }
 
         [Test]
@@ -617,6 +750,7 @@ class FinancialAdvisorDemoAlgorithmUnderTest(FinancialAdvisorDemoAlgorithm):
                 BrokerageAccountGroupAssignment.Unavailable;
             public bool AcceptRefreshRequests { get; set; } = true;
             public bool ThrowNextAssignmentRequest { get; set; }
+            public bool RejectNextAssignmentRequest { get; set; }
             public int RefreshRequestCount { get; private set; }
             public int AssignmentRequestCount { get; private set; }
             public List<IReadOnlyCollection<string>> RequestedGroupHistory { get; } =
@@ -655,6 +789,11 @@ class FinancialAdvisorDemoAlgorithmUnderTest(FinancialAdvisorDemoAlgorithm):
                     throw new InvalidOperationException(
                         "distinctive synchronous rejection");
                 }
+                if (RejectNextAssignmentRequest)
+                {
+                    RejectNextAssignmentRequest = false;
+                    return false;
+                }
 
                 Assignment = new BrokerageAccountGroupAssignment(
                     BrokerageAccountGroupAssignmentStatus.Pending,
@@ -675,7 +814,8 @@ class FinancialAdvisorDemoAlgorithmUnderTest(FinancialAdvisorDemoAlgorithm):
 
             public void CompleteAssignment(
                 BrokerageAccountGroupAssignmentStatus status,
-                IReadOnlyCollection<string> resultingGroupNames)
+                IReadOnlyCollection<string> resultingGroupNames,
+                string errorMessage = "")
             {
                 Assignment = new BrokerageAccountGroupAssignment(
                     status,
@@ -689,7 +829,7 @@ class FinancialAdvisorDemoAlgorithmUnderTest(FinancialAdvisorDemoAlgorithm):
                     $"resulting-membership-{Assignment.Generation}",
                     Assignment.ExpectedGroupConfigurationVersion,
                     $"resulting-configuration-{Assignment.Generation}",
-                    string.Empty,
+                    errorMessage,
                     Assignment.TargetAllocationValue);
             }
 

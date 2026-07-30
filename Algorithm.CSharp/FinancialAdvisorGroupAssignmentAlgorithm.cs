@@ -66,6 +66,7 @@ namespace QuantConnect.Algorithm.CSharp
         private long _assignmentSnapshotGeneration = -1;
         private long _minimumReadyGeneration = -1;
         private string _pendingAccountId = string.Empty;
+        private string _lastFinalSourceMemberBlockKey = string.Empty;
         private int _scheduledRefreshTopologyTicks;
         private int _scheduledRefreshIntent;
 
@@ -185,6 +186,16 @@ namespace QuantConnect.Algorithm.CSharp
                 return true;
             }
 
+            if (Interlocked.CompareExchange(
+                    ref _scheduledRefreshIntent,
+                    0,
+                    0) != 0)
+            {
+                TryProcessScheduledSnapshotRefresh(
+                    allowStateMachineOwner: true);
+                return true;
+            }
+
             if (snapshot.Generation == _lastEvaluatedGeneration)
             {
                 return false;
@@ -282,6 +293,9 @@ namespace QuantConnect.Algorithm.CSharp
                     $"FA assignment failed: account={_pendingAccountId}, " +
                     $"assignment generation={assignment.Generation}, " +
                     $"error={assignment.ErrorMessage}");
+                _minimumReadyGeneration = Math.Max(
+                    _minimumReadyGeneration,
+                    _assignmentSnapshotGeneration);
             }
 
             _lastEvaluatedGeneration = Math.Max(
@@ -366,6 +380,37 @@ namespace QuantConnect.Algorithm.CSharp
                     requiredGroupNames);
                 return true;
             }
+
+            var finalSourceGroup = candidate.GroupNames
+                .Where(groupName => destinationGroup == null ||
+                    !groupName.Equals(
+                        destinationGroup.Name,
+                        StringComparison.OrdinalIgnoreCase))
+                .Select(groupName => snapshot.Groups[groupName])
+                .FirstOrDefault(group =>
+                    group.AccountIds.Count == 1 &&
+                    group.AccountIds[0].Equals(
+                        candidate.AccountId,
+                        StringComparison.OrdinalIgnoreCase));
+            if (finalSourceGroup != null)
+            {
+                var blockKey =
+                    $"{candidate.AccountId}\0{finalSourceGroup.Name}\0" +
+                    snapshot.GroupConfigurationVersion;
+                if (!blockKey.Equals(
+                        _lastFinalSourceMemberBlockKey,
+                        StringComparison.OrdinalIgnoreCase))
+                {
+                    _lastFinalSourceMemberBlockKey = blockKey;
+                    Error(
+                        $"FA assignment for account '{candidate.AccountId}' cannot " +
+                        $"remove the final member of source group " +
+                        $"'{finalSourceGroup.Name}'. Waiting for a scheduled topology " +
+                        "refresh before reevaluating.");
+                }
+                return true;
+            }
+            _lastFinalSourceMemberBlockKey = string.Empty;
 
             var assignmentBeforeRequest =
                 BrokerageAccountGroupAssignment;
@@ -629,6 +674,9 @@ namespace QuantConnect.Algorithm.CSharp
                 UtcTime + RefreshRetryInterval;
             // The IB implementation only coalesces into its in-memory
             // QueueRefresh while this sample state is protected.
+            var scheduledRefreshIntent = Interlocked.Exchange(
+                ref _scheduledRefreshIntent,
+                0);
             var accepted = groupNames == null
                 ? RequestBrokerageAccountSnapshotRefresh()
                 : RequestBrokerageAccountSnapshotRefresh(groupNames);
@@ -643,6 +691,12 @@ namespace QuantConnect.Algorithm.CSharp
             }
             if (!accepted)
             {
+                if (scheduledRefreshIntent != 0)
+                {
+                    Interlocked.Exchange(
+                        ref _scheduledRefreshIntent,
+                        1);
+                }
                 return
                     $"{(groupNames == null ? "The complete" : "The scoped")} " +
                     "Financial Advisor snapshot refresh was " +
@@ -656,19 +710,29 @@ namespace QuantConnect.Algorithm.CSharp
 
         private void RequestScheduledSnapshotRefresh()
         {
-            Interlocked.Exchange(
-                ref _scheduledRefreshIntent,
-                1);
             if (!TryEnterStateMachine())
             {
+                Interlocked.Exchange(
+                    ref _scheduledRefreshIntent,
+                    1);
                 return;
             }
             try
             {
-                if (!TryAdvanceStateMachine())
+                TryAdvanceStateMachine();
+
+                bool refreshRequestOutstanding;
+                lock (_orderStateLock)
                 {
-                    TryProcessScheduledSnapshotRefresh(
-                        allowStateMachineOwner: true);
+                    refreshRequestOutstanding =
+                        _refreshRequestOutstanding;
+                }
+                if (!refreshRequestOutstanding)
+                {
+                    Interlocked.Exchange(
+                        ref _scheduledRefreshIntent,
+                        1);
+                    TryAdvanceStateMachine();
                 }
             }
             finally
@@ -760,6 +824,12 @@ namespace QuantConnect.Algorithm.CSharp
                     errorMessage = TryRequestSnapshotRefreshLocked(
                         snapshot,
                         groupNames);
+                    if (errorMessage != null)
+                    {
+                        Interlocked.Exchange(
+                            ref _scheduledRefreshIntent,
+                            1);
+                    }
                 }
             }
             if (errorMessage != null)
