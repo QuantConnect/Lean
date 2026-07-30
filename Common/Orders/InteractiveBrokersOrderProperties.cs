@@ -52,8 +52,11 @@ namespace QuantConnect.Orders
         /// The exact percentage for the percent change method, when a fractional value is required.
         /// </summary>
         /// <remarks>
-        /// When specified, <see cref="ExactFaPercentage"/> takes precedence over <see cref="FaPercentage"/>.
-        /// The conversion precedence is <c>ExactFaPercentage ?? FaPercentage</c>.
+        /// When the brokerage has unified Financial Advisor groups enabled,
+        /// <see cref="ExactFaPercentage"/> takes precedence over <see cref="FaPercentage"/> and the
+        /// conversion precedence is <c>ExactFaPercentage ?? FaPercentage</c>. It is ignored when
+        /// unified groups are disabled, so <see cref="FaPercentage"/> must contain a usable integer
+        /// value for compatibility with the legacy conversion path.
         /// </remarks>
         public decimal? ExactFaPercentage { get; set; }
 
