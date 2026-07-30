@@ -335,7 +335,7 @@ namespace QuantConnect.Tests.Python
                 Snapshot = snapshot
             };
             using var algorithm = CreateAlgorithm(
-                "FinancialAdvisorDemoAlgorithm",
+                "FinancialAdvisorUnifiedGroupsDemoAlgorithm",
                 services);
             algorithm.SetProperty("_pre_order_snapshot", snapshot);
             algorithm.SetProperty("_group_order_submitted", true);
@@ -410,7 +410,7 @@ namespace QuantConnect.Tests.Python
                 Snapshot = preOrderSnapshot
             };
             using var algorithm = CreateAlgorithm(
-                "FinancialAdvisorDemoAlgorithm",
+                "FinancialAdvisorUnifiedGroupsDemoAlgorithm",
                 services);
             algorithm.SetProperty(
                 "_pre_order_snapshot",
@@ -498,6 +498,133 @@ namespace QuantConnect.Tests.Python
         }
 
         [Test]
+        public void DemoIncompletePreOrderMemberVectorDoesNotSubmitInPython()
+        {
+            var services = new TestFinancialAdvisorServices
+            {
+                Snapshot = CreateDemoSnapshot(
+                    2,
+                    SnapshotTime,
+                    includeAccountB: false)
+            };
+            using var algorithm =
+                CreateEmptyTicketDemoAlgorithm(services);
+
+            algorithm.OnData(CreateEmptySlice());
+
+            Assert.AreEqual(
+                0,
+                algorithm.GetProperty<int>("submission_count"));
+        }
+
+        [TestCase("Equal")]
+        [TestCase("NetLiq")]
+        [TestCase("AvailableEquity")]
+        [TestCase("Ratio")]
+        [TestCase("Percent")]
+        public void DemoSupportedSavedGroupMethodsPermitSubmissionInPython(
+            string allocationMethod)
+        {
+            var services = new TestFinancialAdvisorServices
+            {
+                Snapshot = CreateDemoSnapshot(
+                    2,
+                    SnapshotTime,
+                    allocationMethod: allocationMethod)
+            };
+            using var algorithm =
+                CreateEmptyTicketDemoAlgorithm(services);
+
+            algorithm.OnData(CreateEmptySlice());
+
+            Assert.AreEqual(
+                1,
+                algorithm.GetProperty<int>("submission_count"));
+        }
+
+        [Test]
+        public void DemoUnsupportedSavedGroupMethodDoesNotSubmitInPython()
+        {
+            var services = new TestFinancialAdvisorServices
+            {
+                Snapshot = CreateDemoSnapshot(
+                    2,
+                    SnapshotTime,
+                    allocationMethod: "ContractsOrShares")
+            };
+            using var algorithm =
+                CreateEmptyTicketDemoAlgorithm(services);
+
+            algorithm.OnData(CreateEmptySlice());
+
+            Assert.Multiple(() =>
+            {
+                Assert.AreEqual(
+                    0,
+                    algorithm.GetProperty<int>("submission_count"));
+                Assert.That(
+                    algorithm.ErrorMessages,
+                    Has.One.Contains(
+                        "unsupported saved allocation method 'ContractsOrShares'"));
+            });
+        }
+
+        [Test]
+        public void DemoReconciliationUsesLastSuccessfulUpdateWhenCollectionStartIsUnavailableInPython()
+        {
+            var preOrderSnapshot = CreateDemoSnapshot(
+                2,
+                SnapshotTime.AddMinutes(-2));
+            var services = new TestFinancialAdvisorServices
+            {
+                Snapshot = CreateDemoSnapshot(
+                    3,
+                    SnapshotTime.AddSeconds(-1))
+            };
+            using var algorithm = CreateAlgorithm(
+                "FinancialAdvisorUnifiedGroupsDemoAlgorithm",
+                services);
+            algorithm.SetProperty(
+                "_pre_order_snapshot",
+                preOrderSnapshot);
+            algorithm.SetProperty("_group_order_submitted", true);
+            algorithm.SetProperty("_group_order_id", 41);
+
+            using (Py.GIL())
+            {
+                algorithm.OnOrderEvent(
+                    CreateOrderEvent(
+                        41,
+                        OrderStatus.Filled,
+                        null));
+            }
+            services.Snapshot = CreateDemoSnapshot(
+                4,
+                default,
+                lastSuccessfulUpdateUtc:
+                    SnapshotTime.AddSeconds(5).AddTicks(1));
+            algorithm.SetDateTime(SnapshotTime.AddSeconds(10));
+            algorithm.OnData(CreateEmptySlice());
+
+            Assert.Multiple(() =>
+            {
+                Assert.AreEqual(1, services.RefreshRequestCount);
+                Assert.AreEqual(
+                    -1,
+                    algorithm.GetProperty<long>(
+                        "_pending_reconcile_generation"));
+                Assert.That(
+                    algorithm.LogMessages,
+                    Has.One.Contains(
+                        "account=AccountA, symbol=SPY, before=10, after=10, change=0"));
+                Assert.That(
+                    algorithm.LogMessages,
+                    Has.One.Contains(
+                        "account=AccountB, symbol=SPY, before=20, after=20, change=0"));
+            });
+        }
+
+        [Test]
         public void DemoRejectsOldSnapshotAndBoundsEmptyTicketRetriesInPython()
         {
             var services = new TestFinancialAdvisorServices
@@ -562,11 +689,11 @@ namespace QuantConnect.Tests.Python
             TestFinancialAdvisorServices services)
         {
             var moduleName =
-                $"FinancialAdvisorDemoAlgorithmTest_{Guid.NewGuid():N}";
+                $"FinancialAdvisorUnifiedGroupsDemoAlgorithmTest_{Guid.NewGuid():N}";
             var source = @"
-from FinancialAdvisorDemoAlgorithm import FinancialAdvisorDemoAlgorithm
+from FinancialAdvisorUnifiedGroupsDemoAlgorithm import FinancialAdvisorUnifiedGroupsDemoAlgorithm
 
-class FinancialAdvisorDemoAlgorithmUnderTest(FinancialAdvisorDemoAlgorithm):
+class FinancialAdvisorUnifiedGroupsDemoAlgorithmUnderTest(FinancialAdvisorUnifiedGroupsDemoAlgorithm):
     def initialize(self):
         self.submission_count = 0
         super().initialize()
@@ -657,11 +784,13 @@ class FinancialAdvisorDemoAlgorithmUnderTest(FinancialAdvisorDemoAlgorithm):
         private static BrokerageAccountSnapshot CreateDemoSnapshot(
             long generation,
             DateTime collectionStartedUtc,
-            bool includeAccountB = true)
+            bool includeAccountB = true,
+            string allocationMethod = "Equal",
+            DateTime? lastSuccessfulUpdateUtc = null)
         {
             var group = new BrokerageAccountGroup(
                 DemoGroupName,
-                "Equal",
+                allocationMethod,
                 new[] { "AccountA", "AccountB" });
             var groups =
                 new Dictionary<string, BrokerageAccountGroup>
@@ -688,7 +817,8 @@ class FinancialAdvisorDemoAlgorithmUnderTest(FinancialAdvisorDemoAlgorithm):
                 BrokerageAccountSnapshotStatus.Ready,
                 generation,
                 SnapshotTime.AddTicks(generation),
-                SnapshotTime.AddTicks(generation),
+                lastSuccessfulUpdateUtc ??
+                    SnapshotTime.AddTicks(generation),
                 groups,
                 accounts,
                 Array.Empty<string>(),

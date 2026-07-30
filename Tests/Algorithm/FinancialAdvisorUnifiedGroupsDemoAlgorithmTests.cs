@@ -32,7 +32,7 @@ using QuantConnect.Tests.Engine.DataFeeds;
 namespace QuantConnect.Tests.Algorithm
 {
     [TestFixture, Parallelizable(ParallelScope.All)]
-    public class FinancialAdvisorDemoAlgorithmTests
+    public class FinancialAdvisorUnifiedGroupsDemoAlgorithmTests
     {
         private const string GroupName = "TestGroupEQ";
         private static readonly DateTime SnapshotTime =
@@ -614,6 +614,204 @@ namespace QuantConnect.Tests.Algorithm
         }
 
         [Test]
+        public void IncompletePreOrderMemberVectorDoesNotSubmitGroupOrder()
+        {
+            var snapshot = CreateSnapshot(
+                BrokerageAccountSnapshotStatus.Ready,
+                7,
+                10m,
+                20m,
+                SnapshotTime,
+                includeAccountB: false);
+            var provider = new TestAccountStateProvider
+            {
+                Snapshot = snapshot
+            };
+            var algorithm = CreateAlgorithm(provider, snapshot);
+            SetPrivateField(algorithm, "_groupOrderSubmitted", false);
+            SetPrivateField(algorithm, "_groupOrderId", 0);
+            SetPrivateField<BrokerageAccountSnapshot>(
+                algorithm,
+                "_preOrderSnapshot",
+                null);
+            SetPrivateField(
+                algorithm,
+                "_initialSnapshotRequestGeneration",
+                snapshot.Generation - 1);
+            var submissionCount = 0;
+            SetPrivateField(
+                algorithm,
+                "_submitGroupOrder",
+                new Func<OrderTicket>(() =>
+                {
+                    ++submissionCount;
+                    return null;
+                }));
+
+            algorithm.OnData(CreateEmptySlice());
+
+            Assert.Multiple(() =>
+            {
+                Assert.AreEqual(0, submissionCount);
+                Assert.AreEqual(0, provider.RefreshRequestCount);
+                Assert.IsNull(
+                    GetPrivateField<BrokerageAccountSnapshot>(
+                        algorithm,
+                        "_preOrderSnapshot"));
+            });
+        }
+
+        [TestCase("Equal")]
+        [TestCase("NetLiq")]
+        [TestCase("AvailableEquity")]
+        [TestCase("Ratio")]
+        [TestCase("Percent")]
+        public void SupportedSavedGroupMethodsPermitSubmission(
+            string allocationMethod)
+        {
+            var snapshot = CreateSnapshot(
+                BrokerageAccountSnapshotStatus.Ready,
+                7,
+                10m,
+                20m,
+                SnapshotTime,
+                allocationMethod: allocationMethod);
+            var provider = new TestAccountStateProvider
+            {
+                Snapshot = snapshot
+            };
+            var algorithm = CreateAlgorithm(provider, snapshot);
+            SetPrivateField(algorithm, "_groupOrderSubmitted", false);
+            SetPrivateField(algorithm, "_groupOrderId", 0);
+            SetPrivateField<BrokerageAccountSnapshot>(
+                algorithm,
+                "_preOrderSnapshot",
+                null);
+            SetPrivateField(
+                algorithm,
+                "_initialSnapshotRequestGeneration",
+                snapshot.Generation - 1);
+            var submissionCount = 0;
+            SetPrivateField(
+                algorithm,
+                "_submitGroupOrder",
+                new Func<OrderTicket>(() =>
+                {
+                    ++submissionCount;
+                    return null;
+                }));
+
+            algorithm.OnData(CreateEmptySlice());
+
+            Assert.AreEqual(1, submissionCount);
+        }
+
+        [Test]
+        public void UnsupportedSavedGroupMethodDoesNotSubmit()
+        {
+            var snapshot = CreateSnapshot(
+                BrokerageAccountSnapshotStatus.Ready,
+                7,
+                10m,
+                20m,
+                SnapshotTime,
+                allocationMethod: "ContractsOrShares");
+            var provider = new TestAccountStateProvider
+            {
+                Snapshot = snapshot
+            };
+            var algorithm = CreateAlgorithm(provider, snapshot);
+            SetPrivateField(algorithm, "_groupOrderSubmitted", false);
+            SetPrivateField(algorithm, "_groupOrderId", 0);
+            SetPrivateField<BrokerageAccountSnapshot>(
+                algorithm,
+                "_preOrderSnapshot",
+                null);
+            SetPrivateField(
+                algorithm,
+                "_initialSnapshotRequestGeneration",
+                snapshot.Generation - 1);
+            var submissionCount = 0;
+            SetPrivateField(
+                algorithm,
+                "_submitGroupOrder",
+                new Func<OrderTicket>(() =>
+                {
+                    ++submissionCount;
+                    return null;
+                }));
+
+            algorithm.OnData(CreateEmptySlice());
+
+            Assert.Multiple(() =>
+            {
+                Assert.AreEqual(0, submissionCount);
+                Assert.That(
+                    algorithm.ErrorMessages,
+                    Has.One.Contains(
+                        "unsupported saved allocation method 'ContractsOrShares'"));
+            });
+        }
+
+        [Test]
+        public void ReconciliationUsesLastSuccessfulUpdateWhenCollectionStartIsUnavailable()
+        {
+            var preOrderSnapshot = CreateSnapshot(
+                BrokerageAccountSnapshotStatus.Ready,
+                5,
+                10m,
+                20m,
+                SnapshotTime.AddMinutes(-2));
+            var terminalSnapshot = CreateSnapshot(
+                BrokerageAccountSnapshotStatus.Ready,
+                7,
+                11m,
+                19m,
+                SnapshotTime.AddSeconds(-1));
+            var reconciledSnapshot = CreateSnapshot(
+                BrokerageAccountSnapshotStatus.Ready,
+                8,
+                13m,
+                18m,
+                default);
+            var provider = new TestAccountStateProvider
+            {
+                Snapshot = terminalSnapshot
+            };
+            provider.RefreshRequestHook = stateProvider =>
+                stateProvider.Snapshot = reconciledSnapshot;
+            var algorithm = CreateAlgorithm(
+                provider,
+                preOrderSnapshot);
+
+            algorithm.OnOrderEvent(
+                CreateOrderEvent(41, OrderStatus.Filled));
+            algorithm.OnData(CreateEmptySlice());
+
+            Assert.Multiple(() =>
+            {
+                Assert.AreEqual(1, provider.RefreshRequestCount);
+                Assert.AreEqual(
+                    -1,
+                    GetPrivateField<long>(
+                        algorithm,
+                        "_pendingReconcileGeneration"));
+                Assert.IsNull(
+                    GetPrivateField<BrokerageAccountSnapshot>(
+                        algorithm,
+                        "_preOrderSnapshot"));
+                Assert.That(
+                    algorithm.LogMessages,
+                    Has.One.Contains(
+                        "account=AccountA, symbol=SPY, before=10, after=13, change=3"));
+                Assert.That(
+                    algorithm.LogMessages,
+                    Has.One.Contains(
+                        "account=AccountB, symbol=SPY, before=20, after=18, change=-2"));
+            });
+        }
+
+        [Test]
         public void OldReadySnapshotRefreshesWithoutSubmittingOrder()
         {
             var snapshot = CreateSnapshot(
@@ -658,7 +856,7 @@ namespace QuantConnect.Tests.Algorithm
         [Test]
         public void RefreshCadenceIsNotPhaseLockedToMinuteData()
         {
-            var field = typeof(FinancialAdvisorDemoAlgorithm).GetField(
+            var field = typeof(FinancialAdvisorUnifiedGroupsDemoAlgorithm).GetField(
                 "TopologyRefreshInterval",
                 BindingFlags.Static | BindingFlags.NonPublic);
 
@@ -1066,7 +1264,7 @@ namespace QuantConnect.Tests.Algorithm
             };
             provider.EnqueueRefreshResult(false);
             provider.EnqueueRefreshResult(true);
-            var algorithm = new FinancialAdvisorDemoAlgorithm();
+            var algorithm = new FinancialAdvisorUnifiedGroupsDemoAlgorithm();
             SetPrivateField(
                 algorithm,
                 typeof(QCAlgorithm),
@@ -1106,11 +1304,11 @@ namespace QuantConnect.Tests.Algorithm
                 "An accepted refresh that remains Failed or Stale must be retried.");
         }
 
-        private static FinancialAdvisorDemoAlgorithm CreateAlgorithm(
+        private static FinancialAdvisorUnifiedGroupsDemoAlgorithm CreateAlgorithm(
             TestAccountStateProvider provider,
             BrokerageAccountSnapshot preOrderSnapshot)
         {
-            var algorithm = new FinancialAdvisorDemoAlgorithm();
+            var algorithm = new FinancialAdvisorUnifiedGroupsDemoAlgorithm();
             SetPrivateField(
                 algorithm,
                 typeof(QCAlgorithm),
@@ -1127,11 +1325,11 @@ namespace QuantConnect.Tests.Algorithm
             return algorithm;
         }
 
-        private static FinancialAdvisorDemoAlgorithm
+        private static FinancialAdvisorUnifiedGroupsDemoAlgorithm
             CreateInitializedAlgorithm(
                 TestAccountStateProvider provider)
         {
-            var algorithm = new FinancialAdvisorDemoAlgorithm();
+            var algorithm = new FinancialAdvisorUnifiedGroupsDemoAlgorithm();
             algorithm.SubscriptionManager.SetDataManager(
                 new DataManagerStub(algorithm));
             algorithm.SetLiveMode(true);
@@ -1163,7 +1361,7 @@ namespace QuantConnect.Tests.Algorithm
         }
 
         private static OrderTicket CreateOrderTicket(
-            FinancialAdvisorDemoAlgorithm algorithm,
+            FinancialAdvisorUnifiedGroupsDemoAlgorithm algorithm,
             int orderId,
             OrderStatus status,
             string errorMessage = null)
@@ -1209,11 +1407,12 @@ namespace QuantConnect.Tests.Algorithm
             decimal accountAQuantity,
             decimal accountBQuantity,
             DateTime collectionStartedUtc,
-            bool includeAccountB = true)
+            bool includeAccountB = true,
+            string allocationMethod = "Equal")
         {
             var group = new BrokerageAccountGroup(
                 GroupName,
-                "Equal",
+                allocationMethod,
                 new[] { "AccountA", "AccountB" });
             var groups = new Dictionary<string, BrokerageAccountGroup>
             {
@@ -1269,13 +1468,13 @@ namespace QuantConnect.Tests.Algorithm
         }
 
         private static void SetPrivateField<T>(
-            FinancialAdvisorDemoAlgorithm algorithm,
+            FinancialAdvisorUnifiedGroupsDemoAlgorithm algorithm,
             string name,
             T value)
         {
             SetPrivateField(
                 algorithm,
-                typeof(FinancialAdvisorDemoAlgorithm),
+                typeof(FinancialAdvisorUnifiedGroupsDemoAlgorithm),
                 name,
                 value);
         }
