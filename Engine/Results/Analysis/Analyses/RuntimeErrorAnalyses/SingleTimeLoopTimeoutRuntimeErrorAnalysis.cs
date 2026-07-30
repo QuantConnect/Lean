@@ -19,16 +19,19 @@ using System.Collections.Generic;
 namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
 {
     /// <summary>
-    /// Detects algorithms terminated because a single time loop exceeded the per-loop time limit,
-    /// emitted by the <see cref="Isolator"/> when the algorithm manager's time loop tracker trips
-    /// ("Algorithm took longer than N minutes on a single time loop").
+    /// Detects algorithms terminated because their code kept running past an engine time limit,
+    /// emitted by the <see cref="Isolator"/> when a single time loop exceeds the per-loop limit
+    /// ("Algorithm took longer than N minutes on a single time loop") or when the algorithm is
+    /// asked to stop but its code is still running once the shutdown grace period expires
+    /// ("Operation was canceled").
     /// </summary>
     public class SingleTimeLoopTimeoutRuntimeErrorAnalysis : RuntimeErrorAnalysis
     {
         /// <summary>
-        /// Gets the description of the single time loop timeout issue.
+        /// Gets the description of the time loop timeout issue.
         /// </summary>
-        public override string Issue { get; } = "A single time loop took longer than the maximum allowed, so the algorithm was terminated.";
+        public override string Issue { get; } = "The algorithm was terminated: a single time loop took longer than the maximum allowed, " +
+            "or its code kept running after a stop request.";
 
         /// <summary>
         /// Gets the severity weight for this analysis. A timeout is a fatal error that terminated
@@ -37,11 +40,12 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
         public override int Weight { get; } = 100;
 
         /// <summary>
-        /// Gets the patterns identifying the single time loop timeout error message.
+        /// Gets the patterns identifying the time loop timeout and forced cancellation error messages.
         /// </summary>
         protected override string[][] ErrorMessagePatterns { get; } =
         [
             ["took longer than", "single time loop"],
+            ["Operation was canceled"],
         ];
 
         /// <summary>
@@ -64,6 +68,9 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
                 $"Run machine learning training through the `{FormatCode(nameof(QCAlgorithm.Train), language)}` method, which allocates extra time for it.",
 
                 "Check for loops that may never exit: an infinite loop in an event handler surfaces as this error.",
+
+                "If the algorithm was stopped or deleted on purpose, an \"Operation was canceled\" error only means " +
+                    "its code was still running when the shutdown grace period expired, and can be ignored.",
             };
             if (language == Language.Python)
             {

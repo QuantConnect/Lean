@@ -43,13 +43,12 @@ namespace QuantConnect.Tests.Engine.Results
         private static RuntimeErrorAnalysis[] CreateAnalyses() =>
         [
             new SingleTimeLoopTimeoutRuntimeErrorAnalysis(),
-            new OperationCanceledRuntimeErrorAnalysis(),
             new MaximumRuntimeExceededRuntimeErrorAnalysis(),
         ];
 
         [TestCase(SingleTimeLoopError, typeof(SingleTimeLoopTimeoutRuntimeErrorAnalysis))]
         [TestCase(SingleTimeLoopWithAdditionalTimeError, typeof(SingleTimeLoopTimeoutRuntimeErrorAnalysis))]
-        [TestCase(OperationCanceledError, typeof(OperationCanceledRuntimeErrorAnalysis))]
+        [TestCase(OperationCanceledError, typeof(SingleTimeLoopTimeoutRuntimeErrorAnalysis))]
         [TestCase(MaximumRuntimeError, typeof(MaximumRuntimeExceededRuntimeErrorAnalysis))]
         [TestCase(MaximumRuntimeEngineError, typeof(MaximumRuntimeExceededRuntimeErrorAnalysis))]
         public void DetectsItsOwnRuntimeErrorFromState(string runtimeError, Type expectedAnalysisType)
