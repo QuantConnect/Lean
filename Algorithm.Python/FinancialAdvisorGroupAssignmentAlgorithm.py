@@ -443,12 +443,18 @@ class FinancialAdvisorGroupAssignmentAlgorithm(QCAlgorithm):
         canonical_target_group_name = "" \
             if target_group is None \
             else target_group.name
-        allocation_value = self._get_target_allocation_value(
-            target_group)
-        if allocation_value is False:
-            self._last_membership_evaluation_generation = \
-                snapshot.generation
-            return True
+        allocation_value = None
+        if target_group is not None and \
+                account.account_id.casefold() not in {
+                    account_id.casefold()
+                    for account_id in list(target_group.account_ids)
+                }:
+            allocation_value = self._get_target_allocation_value(
+                target_group)
+            if allocation_value is False:
+                self._last_membership_evaluation_generation = \
+                    snapshot.generation
+                return True
 
         required_group_names = self._get_assignment_group_names(
             target_group,

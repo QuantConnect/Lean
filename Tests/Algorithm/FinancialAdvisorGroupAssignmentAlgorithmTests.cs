@@ -804,17 +804,27 @@ namespace QuantConnect.Tests.Algorithm
             Assert.AreEqual(1, services.AssignmentRequests.Count);
         }
 
-        [Test]
-        public void CandidateAlreadyInTargetAndAnotherGroupMovesToExactlyTarget()
+        [TestCase("Percent", 40, 60)]
+        [TestCase("Ratio", 7.5, 2.5)]
+        [TestCase("ContractsOrShares", 19.75, 10.25)]
+        public void CandidateAlreadyInTargetPreservesItsSavedAllocation(
+            string allocationMethod,
+            double accountAAllocation,
+            double accountBAllocation)
         {
             var targetGroup = new BrokerageAccountGroup(
                 "TargetGroup",
-                "Equal",
-                new[] { "AccountA" });
+                allocationMethod,
+                new[] { "AccountA", "AccountB" },
+                new Dictionary<string, decimal>
+                {
+                    ["AccountA"] = Convert.ToDecimal(accountAAllocation),
+                    ["AccountB"] = Convert.ToDecimal(accountBAllocation)
+                });
             var sourceGroup = new BrokerageAccountGroup(
                 "SourceGroup",
                 "Equal",
-                new[] { "AccountA" });
+                new[] { "AccountA", "AccountC" });
             var groups =
                 new Dictionary<string, BrokerageAccountGroup>
                 {
@@ -833,9 +843,24 @@ namespace QuantConnect.Tests.Algorithm
                         "AccountA",
                         BrokerageAccountRelationship.Managed,
                         "MOVE-East",
-                        new[] { "TargetGroup", "SourceGroup" }))
+                        new[] { "TargetGroup", "SourceGroup" }),
+                    Entry(
+                        "AccountB",
+                        BrokerageAccountRelationship.Managed,
+                        string.Empty,
+                        new[] { "TargetGroup" }),
+                    Entry(
+                        "AccountC",
+                        BrokerageAccountRelationship.Managed,
+                        string.Empty,
+                        new[] { "SourceGroup" }))
             };
-            var algorithm = CreateAlgorithm(services);
+            var algorithm = CreateAlgorithm(
+                services,
+                new Dictionary<string, string>
+                {
+                    ["fa-allocation-value"] = "1"
+                });
 
             algorithm.OnData(CreateEmptySlice());
 
@@ -845,6 +870,8 @@ namespace QuantConnect.Tests.Algorithm
                 Assert.AreEqual(
                     "TargetGroup",
                     services.AssignmentRequests[0].TargetGroupName);
+                Assert.IsNull(
+                    services.AssignmentRequests[0].TargetAllocationValue);
             });
         }
 

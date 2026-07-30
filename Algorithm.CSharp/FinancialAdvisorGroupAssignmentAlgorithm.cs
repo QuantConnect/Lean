@@ -297,7 +297,6 @@ namespace QuantConnect.Algorithm.CSharp
             BrokerageAccountSnapshot snapshot)
         {
             BrokerageAccountGroup destinationGroup = null;
-            decimal? allocationValue = null;
             if (_targetGroupName.Length != 0)
             {
                 destinationGroup = snapshot.AllGroups.Values.FirstOrDefault(
@@ -309,14 +308,6 @@ namespace QuantConnect.Algorithm.CSharp
                     Error(
                         $"FA destination group '{_targetGroupName}' is not " +
                         $"present in Ready snapshot generation {snapshot.Generation}.");
-                    _lastEvaluatedGeneration = snapshot.Generation;
-                    return true;
-                }
-
-                if (!TryGetAllocationValue(
-                        destinationGroup,
-                        out allocationValue))
-                {
                     _lastEvaluatedGeneration = snapshot.Generation;
                     return true;
                 }
@@ -338,6 +329,18 @@ namespace QuantConnect.Algorithm.CSharp
             if (candidate == null)
             {
                 return false;
+            }
+
+            decimal? allocationValue = null;
+            if (destinationGroup != null &&
+                !destinationGroup.AccountIds.Contains(
+                    candidate.AccountId,
+                    StringComparer.OrdinalIgnoreCase) &&
+                !TryGetAllocationValue(
+                    destinationGroup,
+                    out allocationValue))
+            {
+                return true;
             }
 
             var requiredGroupNames = new List<string>();

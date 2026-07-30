@@ -149,6 +149,48 @@ namespace QuantConnect.Tests.Python
             }
         }
 
+        [TestCase("Percent", 40, 60)]
+        [TestCase("Ratio", 7.5, 2.5)]
+        [TestCase("ContractsOrShares", 19.75, 10.25)]
+        public void GroupAssignmentPreservesExistingTargetAllocationInPython(
+            string allocationMethod,
+            double accountAAllocation,
+            double accountBAllocation)
+        {
+            var services = new TestFinancialAdvisorServices
+            {
+                Snapshot = CreateAssignmentSnapshot(
+                    2,
+                    new[] { TargetGroupName, SourceGroupName },
+                    new[] { TargetGroupName, SourceGroupName },
+                    allocationMethod: allocationMethod,
+                    targetAccountAllocationValues:
+                        new Dictionary<string, decimal>
+                        {
+                            ["AccountA"] =
+                                Convert.ToDecimal(accountAAllocation),
+                            ["AccountB"] =
+                                Convert.ToDecimal(accountBAllocation)
+                        },
+                    includeCompanionMembers: true)
+            };
+            using var algorithm = CreateAlgorithm(
+                "FinancialAdvisorGroupAssignmentAlgorithm",
+                services,
+                new Dictionary<string, string>
+                {
+                    ["fa-allocation-value"] = "1"
+                });
+
+            algorithm.OnData(CreateEmptySlice());
+
+            Assert.Multiple(() =>
+            {
+                Assert.AreEqual(1, services.AssignmentRequestCount);
+                Assert.IsNull(services.Assignment.TargetAllocationValue);
+            });
+        }
+
         [Test]
         public void DemoInvalidOrderReconcilesBeforeRetryInPython()
         {
@@ -424,24 +466,35 @@ class FinancialAdvisorDemoAlgorithmUnderTest(FinancialAdvisorDemoAlgorithm):
             IReadOnlyCollection<string> selectedGroupNames,
             IReadOnlyCollection<string> accountGroupNames,
             DateTime? collectionStartedUtc = null,
-            string allocationMethod = "Equal")
+            string allocationMethod = "Equal",
+            IReadOnlyDictionary<string, decimal>
+                targetAccountAllocationValues = null,
+            bool includeCompanionMembers = false)
         {
+            var targetAccountIds = accountGroupNames.Contains(
+                    TargetGroupName,
+                    StringComparer.OrdinalIgnoreCase)
+                ? new List<string> { "AccountA" }
+                : new List<string>();
+            var sourceAccountIds = accountGroupNames.Contains(
+                    SourceGroupName,
+                    StringComparer.OrdinalIgnoreCase)
+                ? new List<string> { "AccountA" }
+                : new List<string>();
+            if (includeCompanionMembers)
+            {
+                targetAccountIds.Add("AccountB");
+                sourceAccountIds.Add("AccountC");
+            }
             var targetGroup = new BrokerageAccountGroup(
                 TargetGroupName,
                 allocationMethod,
-                accountGroupNames.Contains(
-                    TargetGroupName,
-                    StringComparer.OrdinalIgnoreCase)
-                    ? new[] { "AccountA" }
-                    : Array.Empty<string>());
+                targetAccountIds,
+                targetAccountAllocationValues);
             var sourceGroup = new BrokerageAccountGroup(
                 SourceGroupName,
                 "Equal",
-                accountGroupNames.Contains(
-                    SourceGroupName,
-                    StringComparer.OrdinalIgnoreCase)
-                    ? new[] { "AccountA" }
-                    : Array.Empty<string>());
+                sourceAccountIds);
             var allGroups =
                 new Dictionary<string, BrokerageAccountGroup>(
                     StringComparer.OrdinalIgnoreCase)
@@ -469,6 +522,25 @@ class FinancialAdvisorDemoAlgorithmUnderTest(FinancialAdvisorDemoAlgorithm):
                             string.Empty,
                             "MOVE-East")
                 };
+            if (includeCompanionMembers)
+            {
+                directory["AccountB"] =
+                    new BrokerageAccountDirectoryEntry(
+                        "AccountB",
+                        BrokerageAccountRelationship.Managed,
+                        new[] { TargetGroupName },
+                        "INDIVIDUAL",
+                        string.Empty,
+                        string.Empty);
+                directory["AccountC"] =
+                    new BrokerageAccountDirectoryEntry(
+                        "AccountC",
+                        BrokerageAccountRelationship.Managed,
+                        new[] { SourceGroupName },
+                        "INDIVIDUAL",
+                        string.Empty,
+                        string.Empty);
+            }
             var accounts =
                 new Dictionary<string, BrokerageAccountState>
                 {
@@ -477,6 +549,17 @@ class FinancialAdvisorDemoAlgorithmUnderTest(FinancialAdvisorDemoAlgorithm):
                         accountGroupNames,
                         0m)
                 };
+            if (includeCompanionMembers)
+            {
+                accounts["AccountB"] = CreateAccount(
+                    "AccountB",
+                    new[] { TargetGroupName },
+                    0m);
+                accounts["AccountC"] = CreateAccount(
+                    "AccountC",
+                    new[] { SourceGroupName },
+                    0m);
+            }
             var timestamp =
                 collectionStartedUtc ?? SnapshotTime;
 
@@ -491,7 +574,7 @@ class FinancialAdvisorDemoAlgorithmUnderTest(FinancialAdvisorDemoAlgorithm):
                 $"membership-{generation}",
                 $"configuration-{generation}",
                 string.Empty,
-                managedAccountIds: new[] { "AccountA" },
+                managedAccountIds: accounts.Keys.ToArray(),
                 allGroups: allGroups,
                 accountDirectory: directory,
                 isComplete: true,
