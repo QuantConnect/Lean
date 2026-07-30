@@ -42,20 +42,12 @@ namespace QuantConnect.Lean.Engine.Results.Analysis
 
         private readonly Dictionary<string, QuantConnect.Analysis> _findings = new();
 
-        private readonly AlgorithmSpeedTracker _speed = new();
-
         /// <summary>
         /// The equity and benchmark curves are not built for in-run analysis:
         /// none of the in-run analyses read them, and building them would issue
         /// a benchmark history request on every run.
         /// </summary>
         protected override bool RequiresEquityCurves => false;
-
-        /// <summary>
-        /// The in-run analyses read the algorithm speed metrics accumulated from the
-        /// samples received on each run.
-        /// </summary>
-        protected override AlgorithmSpeedTracker SpeedTracker => _speed;
 
         /// <summary>
         /// The names of the charts the in-run analyses read. Only these need to be
@@ -86,7 +78,7 @@ namespace QuantConnect.Lean.Engine.Results.Analysis
         /// <param name="algorithm">The algorithm instance used for history requests and settings.</param>
         /// <param name="language">The programming language the algorithm is written in.</param>
         public InRunResultsAnalyzer(QCAlgorithm algorithm, Language language)
-            : base(null, algorithm, language, null)
+            : base(null, algorithm, language, null, new AlgorithmSpeedTracker())
         {
         }
 
@@ -112,7 +104,7 @@ namespace QuantConnect.Lean.Engine.Results.Analysis
             SetAnalysisData(result, logs);
             if (speedSample.HasValue)
             {
-                _speed.AddSample(speedSample.Value);
+                SpeedTracker.AddSample(speedSample.Value);
             }
             var newFindings = Run(timeLimitSeconds, maxFailedAnalyses);
 

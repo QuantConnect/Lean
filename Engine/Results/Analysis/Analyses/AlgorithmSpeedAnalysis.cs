@@ -20,10 +20,11 @@ using static QuantConnect.StringExtensions;
 namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
 {
     /// <summary>
-    /// In-run analysis that tracks the algorithm's execution speed so the user can decide to stop
-    /// a slow backtest early. It reads the throughput and progress metrics accumulated by
-    /// <see cref="AlgorithmSpeedTracker"/> and reports slow processing speed, a long projected
+    /// Tracks the algorithm's execution speed from the throughput and progress metrics accumulated
+    /// by <see cref="AlgorithmSpeedTracker"/>, reporting slow processing speed, a long projected
     /// remaining runtime, degrading throughput, and history-request-dominated data loads.
+    /// It runs periodically while the backtest is in progress, so the user can decide to stop a
+    /// slow backtest early, and again on the final analysis against the whole run's metrics.
     /// Benchmark speeds: https://www.quantconnect.com/performance
     /// </summary>
     public class AlgorithmSpeedAnalysis : BaseResultsAnalysis
@@ -141,13 +142,24 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
             }
 
             var average = speed.DataPointsPerSecond ?? 0;
-            var remaining = speed.EstimatedRemainingTime();
-            var projection = remaining.HasValue
-                ? Invariant($"about {FormatDuration(remaining.Value)} remaining at the recent pace")
-                : "the remaining time cannot be estimated yet";
             var sample = Invariant($"Processing {FormatRate(recent.Value)} data points per second recently ") +
                 Invariant($"({FormatRate(average)} average); {speed.Progress * 100:F0}% complete after ") +
-                Invariant($"{FormatDuration(speed.Elapsed)}, {projection}.");
+                Invariant($"{FormatDuration(speed.Elapsed)}");
+
+            // No remaining time to project on the final analysis of a backtest that reached its end date
+            var remaining = speed.EstimatedRemainingTime();
+            if (remaining == null)
+            {
+                sample += ", the remaining time cannot be estimated yet.";
+            }
+            else if (remaining.Value > TimeSpan.Zero)
+            {
+                sample += Invariant($", about {FormatDuration(remaining.Value)} remaining at the recent pace.");
+            }
+            else
+            {
+                sample += ".";
+            }
 
             findings.Add(new(SlowExecutionName,
                 Invariant($"The algorithm is running below {SlowDataPointsPerSecond / 1000}k data points per second."),

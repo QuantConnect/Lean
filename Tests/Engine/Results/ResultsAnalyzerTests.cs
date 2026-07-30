@@ -140,13 +140,49 @@ namespace QuantConnect.Tests.Engine.Results
             Assert.AreEqual(1, analyzer.GetAnalysesCallCount);
         }
 
+        [Test]
+        public void SpeedTrackerIsPassedToTheAnalyses()
+        {
+            var tracker = new AlgorithmSpeedTracker();
+            ResultsAnalysisRunParameters seenParameters = null;
+            var fake = new FakeAnalysisA(10) { OnRun = parameters => seenParameters = parameters };
+            var analyzer = new TestResultsAnalyzer(false, tracker, fake);
+
+            analyzer.Run();
+
+            Assert.AreSame(tracker, seenParameters.Speed);
+        }
+
+        [Test]
+        public void DefaultAnalysisSetIncludesTheAlgorithmSpeedAnalysis()
+        {
+            var analyses = new DefaultSetResultsAnalyzer().DefaultAnalyses;
+
+            Assert.IsTrue(analyses.Any(analysis => analysis is AlgorithmSpeedAnalysis));
+        }
+
+        private sealed class DefaultSetResultsAnalyzer : ResultsAnalyzer
+        {
+            public DefaultSetResultsAnalyzer()
+                : base(null, null, Language.CSharp, null)
+            {
+            }
+
+            public IReadOnlyCollection<BaseResultsAnalysis> DefaultAnalyses => GetAnalyses();
+        }
+
         private class TestResultsAnalyzer : ResultsAnalyzer
         {
             private readonly bool _requiresEquityCurves;
             private readonly IReadOnlyCollection<BaseResultsAnalysis> _analyses;
 
             public TestResultsAnalyzer(bool requiresEquityCurves, params BaseResultsAnalysis[] analyses)
-                : base(null, null, Language.CSharp, null)
+                : this(requiresEquityCurves, null, analyses)
+            {
+            }
+
+            public TestResultsAnalyzer(bool requiresEquityCurves, AlgorithmSpeedTracker speedTracker, params BaseResultsAnalysis[] analyses)
+                : base(null, null, Language.CSharp, null, speedTracker)
             {
                 _requiresEquityCurves = requiresEquityCurves;
                 _analyses = analyses;

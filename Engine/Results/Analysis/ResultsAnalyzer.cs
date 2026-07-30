@@ -52,10 +52,11 @@ namespace QuantConnect.Lean.Engine.Results.Analysis
 
         /// <summary>
         /// The speed metrics tracked for the running backtest, made available to the analyses
-        /// through <see cref="ResultsAnalysisRunParameters.Speed"/>. Null unless the analyzer
-        /// tracks the algorithm speed, like the in-run analyzer does.
+        /// through <see cref="ResultsAnalysisRunParameters.Speed"/>. The in-run analyzer feeds
+        /// it a sample on each run; the final analyzer receives the same tracker so the speed
+        /// analysis also runs against the full-run metrics. Null when speed is not tracked.
         /// </summary>
-        protected virtual AlgorithmSpeedTracker SpeedTracker => null;
+        public AlgorithmSpeedTracker SpeedTracker { get; }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="ResultsAnalyzer"/> class.
@@ -64,12 +65,15 @@ namespace QuantConnect.Lean.Engine.Results.Analysis
         /// <param name="algorithm">The algorithm instance used for history requests and settings.</param>
         /// <param name="language">The programming language the algorithm is written in.</param>
         /// <param name="logs">The full list of log lines produced by the backtest.</param>
-        public ResultsAnalyzer(Result result, QCAlgorithm algorithm, Language language, IReadOnlyList<string> logs)
+        /// <param name="speedTracker">The speed metrics tracked for the backtest, or null when speed is not tracked.</param>
+        public ResultsAnalyzer(Result result, QCAlgorithm algorithm, Language language, IReadOnlyList<string> logs,
+            AlgorithmSpeedTracker speedTracker = null)
         {
             _result = result;
             _algorithm = algorithm;
             _language = language;
             _logs = logs;
+            SpeedTracker = speedTracker;
         }
 
         // ── Test chain ────────────────────────────────────────────────────────────
@@ -176,6 +180,7 @@ namespace QuantConnect.Lean.Engine.Results.Analysis
             new PerformanceRelativeToBenchmarkAnalysis(),
             new CrisisEventsAnalysis(),
             new ExecutionSpeedAnalysis(),
+            new AlgorithmSpeedAnalysis(),
             new PortfolioMarginUsageAnalysis(),
             new ParameterCountAnalysis(),
             new MonteCarloPercentileAnalysis(),

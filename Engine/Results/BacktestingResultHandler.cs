@@ -427,7 +427,16 @@ namespace QuantConnect.Lean.Engine.Results
                     {
                         logs = LogStore.Select(x => x.Message).ToList();
                     }
-                    var analyzer = new ResultsAnalyzer(result.Results, AlgorithmInstance, _job.Language, logs);
+                    // The final analysis reuses the speed metrics accumulated by the in-run analyzer,
+                    // adding one last sample so they cover the backtest through its end
+                    var speedTracker = _inRunResultsAnalyzer?.SpeedTracker;
+                    var speedSample = TakeAlgorithmSpeedSample();
+                    if (speedTracker != null && speedSample.HasValue)
+                    {
+                        speedTracker.AddSample(speedSample.Value);
+                    }
+
+                    var analyzer = new ResultsAnalyzer(result.Results, AlgorithmInstance, _job.Language, logs, speedTracker);
                     try
                     {
                         result.Results.Analysis = analyzer.Run();
@@ -498,18 +507,9 @@ namespace QuantConnect.Lean.Engine.Results
 
                 _inRunResultsAnalyzer ??= new InRunResultsAnalyzer(AlgorithmInstance, _job.Language);
 
-                // Sample the engine speed counters for the algorithm speed analysis, but not while the
-                // algorithm is warming up: the warm-up pace would skew the speed metrics. The analyses
-                // themselves do run during warm-up, so conditions like orders submitted while warming up
-                // surface without waiting for warm-up to end
-                AlgorithmSpeedSample? speedSample = Algorithm.IsWarmingUp
-                    ? null
-                    : new AlgorithmSpeedSample(
-                        DateTime.UtcNow - StartTime,
-                        PerformanceTrackingTool?.DataPoints ?? 0,
-                        PerformanceTrackingTool?.HistoryDataPoints ?? 0,
-                        _progressMonitor?.ProcessedDays ?? 0,
-                        _progressMonitor?.TotalDays ?? 0);
+                // The analyses themselves do run during warm-up (the speed sample is null then), so
+                // conditions like orders submitted while warming up surface without waiting for warm-up to end
+                var speedSample = TakeAlgorithmSpeedSample();
 
                 // Only the order events and logs produced since the previous run are analyzed,
                 // the analyzer accumulates findings across runs
@@ -539,6 +539,25 @@ namespace QuantConnect.Lean.Engine.Results
                 Log.Error(ex, "Error running in-run backtest analysis");
                 return null;
             }
+        }
+
+        /// <summary>
+        /// Takes a sample of the engine speed counters for the algorithm speed analysis.
+        /// Null while the algorithm warms up, since the warm-up pace would skew the speed metrics.
+        /// </summary>
+        private AlgorithmSpeedSample? TakeAlgorithmSpeedSample()
+        {
+            if (Algorithm == null || Algorithm.IsWarmingUp)
+            {
+                return null;
+            }
+
+            return new AlgorithmSpeedSample(
+                DateTime.UtcNow - StartTime,
+                PerformanceTrackingTool?.DataPoints ?? 0,
+                PerformanceTrackingTool?.HistoryDataPoints ?? 0,
+                _progressMonitor?.ProcessedDays ?? 0,
+                _progressMonitor?.TotalDays ?? 0);
         }
 
         /// <summary>

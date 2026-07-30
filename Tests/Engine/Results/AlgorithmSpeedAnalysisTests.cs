@@ -64,6 +64,23 @@ namespace QuantConnect.Tests.Engine.Results
         }
 
         [Test]
+        public void SlowExecutionOmitsTheProjectionWhenTheBacktestReachedItsEndDate()
+        {
+            // Slow throughout, but all the backtest days are processed, like on the final analysis
+            // of a completed backtest: no remaining time is projected and no long-runtime finding fails
+            var tracker = AlgorithmSpeedTrackerTests.BuildUniformTracker(samples: 7, stepSeconds: 30,
+                dataPointsPerStep: 300_000, historyDataPointsPerStep: 0, daysPerStep: 1, totalDays: 6);
+
+            var findings = new AlgorithmSpeedAnalysis().Run(tracker);
+
+            var finding = findings.Single();
+            Assert.AreEqual($"{nameof(AlgorithmSpeedAnalysis)} / {AlgorithmSpeedAnalysis.SlowExecutionName}", finding.Name);
+            var sample = (string)finding.Sample;
+            StringAssert.Contains("100% complete", sample);
+            StringAssert.DoesNotContain("remaining", sample);
+        }
+
+        [Test]
         public void FormatsRatesBelowOneThousandAsRawCounts()
         {
             // 100 data points per second: formatted as a raw count instead of "0.1k"
