@@ -55,13 +55,21 @@ namespace QuantConnect.Securities.Option.StrategyMatcher
         /// The definitions to be used for matching.
         /// </summary>
         public IEnumerable<OptionStrategyDefinition> Definitions
-            => _definitionEnumerator.Enumerate(_definitions);
+            => _enumeratedDefinitions ??= _definitionEnumerator.Enumerate(_definitions).ToList();
+
+        /// <summary>
+        /// The definitions to be used for matching, deprioritizing those leaving a short option leg uncovered
+        /// </summary>
+        public IEnumerable<OptionStrategyDefinition> CoveredShortsFirstDefinitions
+            => _coveredShortsFirstDefinitions ??= Definitions.OrderBy(HasUncoveredShortLeg).ToList();
 
         /// <summary>
         /// Objective function used to compare different match solutions for a given set of positions/definitions
         /// </summary>
         public IOptionStrategyMatchObjectiveFunction ObjectiveFunction { get; }
 
+        private List<OptionStrategyDefinition> _enumeratedDefinitions;
+        private List<OptionStrategyDefinition> _coveredShortsFirstDefinitions;
         private readonly IReadOnlyList<OptionStrategyDefinition> _definitions;
         private readonly IOptionPositionCollectionEnumerator _positionEnumerator;
         private readonly IOptionStrategyDefinitionEnumerator _definitionEnumerator;
@@ -120,6 +128,31 @@ namespace QuantConnect.Securities.Option.StrategyMatcher
         public int GetMaximumLegMatches(int legIndex)
         {
             return MaximumCountPerLeg[legIndex];
+        }
+
+        /// <summary>
+        /// Determines whether the definition, matched at the unit level, leaves a short option leg which isn't
+        /// covered by long legs of the same right or by the underlying lots the definition requires. Only ever
+        /// evaluated while building <see cref="CoveredShortsFirstDefinitions"/>, which is cached
+        /// </summary>
+        private static bool HasUncoveredShortLeg(OptionStrategyDefinition definition)
+        {
+            var netCalls = 0;
+            var netPuts = 0;
+            foreach (var leg in definition.Legs)
+            {
+                if (leg.Right == OptionRight.Call)
+                {
+                    netCalls += leg.Quantity;
+                }
+                else
+                {
+                    netPuts += leg.Quantity;
+                }
+            }
+
+            // long underlying lots cover short calls, short underlying lots cover short puts
+            return -netCalls > Math.Max(0, definition.UnderlyingLots) || -netPuts > Math.Max(0, -definition.UnderlyingLots);
         }
 
         /// <summary>

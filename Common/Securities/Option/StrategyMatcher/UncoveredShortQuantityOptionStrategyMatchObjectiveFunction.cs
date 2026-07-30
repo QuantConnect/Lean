@@ -52,16 +52,12 @@ namespace QuantConnect.Securities.Option.StrategyMatcher
                     }
                 }
 
-                // at the matching level underlying legs are expressed in lots,
-                // long lots cover short calls and short lots cover short puts
-                var underlyingLots = strategy.UnderlyingLegs.Sum(leg => leg.Quantity);
-                uncovered += Math.Max(0, -netCalls - Math.Max(0, underlyingLots));
-                uncovered += Math.Max(0, -netPuts - Math.Max(0, -underlyingLots));
+                uncovered += GetUncoveredQuantity(netCalls, netPuts, strategy.UnderlyingLegs.Sum(leg => leg.Quantity));
             }
 
             foreach (var position in unmatched)
             {
-                if (position.Quantity < 0 && position.Symbol.SecurityType.IsOption())
+                if (position.Quantity < 0 && !position.IsUnderlying)
                 {
                     // unmatched short options fall through to stand-alone groups charged naked option margin
                     uncovered -= position.Quantity;
@@ -69,6 +65,16 @@ namespace QuantConnect.Securities.Option.StrategyMatcher
             }
 
             return -uncovered;
+        }
+
+        /// <summary>
+        /// At the matching level underlying legs are expressed in lots,
+        /// long lots cover short calls and short lots cover short puts
+        /// </summary>
+        private static decimal GetUncoveredQuantity(decimal netCalls, decimal netPuts, decimal underlyingLots)
+        {
+            return Math.Max(0, -netCalls - Math.Max(0, underlyingLots))
+                + Math.Max(0, -netPuts - Math.Max(0, -underlyingLots));
         }
     }
 }

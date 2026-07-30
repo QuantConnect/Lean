@@ -13,9 +13,7 @@
  * limitations under the License.
 */
 
-using System;
 using System.Collections.Generic;
-using System.Linq;
 
 namespace QuantConnect.Securities.Option.StrategyMatcher
 {
@@ -54,9 +52,11 @@ namespace QuantConnect.Securities.Option.StrategyMatcher
             // first so that whenever the objective function scores another candidate equally this one is preserved
             var bestMatch = Match(Options.Definitions, positions, out var unmatched);
             var bestScore = Options.ObjectiveFunction.ComputeScore(positions, bestMatch, unmatched);
-            if (bestScore >= 0)
+            if (bestScore >= 0 || !CanCoverAnyShort(positions))
             {
-                // by convention solutions that can't be improved upon score zero, see IOptionStrategyMatchObjectiveFunction
+                // by convention solutions that can't be improved upon score zero, see IOptionStrategyMatchObjectiveFunction.
+                // re-ordering the definitions can only pay off when some short contract can actually be covered, so a book
+                // of naked shorts, by far the most common one reaching this point, skips the second matching pass
                 return bestMatch;
             }
 
@@ -65,7 +65,7 @@ namespace QuantConnect.Securities.Option.StrategyMatcher
             // into covered strategies whenever another grouping of the same positions allows it. this avoids
             // greedily carving, for instance, two overlapping bull call spreads into a bull call ladder, whose
             // uncovered short leg is charged naked option margin, plus an unmatched long contract
-            var candidateMatch = Match(Options.Definitions.OrderBy(HasUncoveredShortLeg), positions, out unmatched);
+            var candidateMatch = Match(Options.CoveredShortsFirstDefinitions, positions, out unmatched);
             var candidateScore = Options.ObjectiveFunction.ComputeScore(positions, candidateMatch, unmatched);
 
             return candidateScore > bestScore ? candidateMatch : bestMatch;
@@ -96,27 +96,37 @@ namespace QuantConnect.Securities.Option.StrategyMatcher
         }
 
         /// <summary>
-        /// Determines whether the definition, matched at the unit level, leaves a short option leg which isn't
-        /// covered by long legs of the same right or by the underlying lots the definition requires
+        /// Determines whether any short contract in the collection could be covered by a long contract of the same
+        /// right or by the underlying lots held, a precondition for a different grouping to reduce uncovered shorts
         /// </summary>
-        private static bool HasUncoveredShortLeg(OptionStrategyDefinition definition)
+        private static bool CanCoverAnyShort(OptionPositionCollection positions)
         {
-            var netCalls = 0;
-            var netPuts = 0;
-            foreach (var leg in definition.Legs)
+            var hasLongCall = false;
+            var hasShortCall = false;
+            var hasLongPut = false;
+            var hasShortPut = false;
+            foreach (var position in positions)
             {
-                if (leg.Right == OptionRight.Call)
+                if (position.IsUnderlying)
                 {
-                    netCalls += leg.Quantity;
+                    continue;
+                }
+
+                if (position.Right == OptionRight.Call)
+                {
+                    hasLongCall |= position.Quantity > 0;
+                    hasShortCall |= position.Quantity < 0;
                 }
                 else
                 {
-                    netPuts += leg.Quantity;
+                    hasLongPut |= position.Quantity > 0;
+                    hasShortPut |= position.Quantity < 0;
                 }
             }
 
             // long underlying lots cover short calls, short underlying lots cover short puts
-            return -netCalls > Math.Max(0, definition.UnderlyingLots) || -netPuts > Math.Max(0, -definition.UnderlyingLots);
+            return hasShortCall && (hasLongCall || positions.UnderlyingQuantity > 0)
+                || hasShortPut && (hasLongPut || positions.UnderlyingQuantity < 0);
         }
     }
 }
