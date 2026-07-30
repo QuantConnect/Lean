@@ -582,13 +582,9 @@ namespace QuantConnect.Lean.Engine
             consumer.SetBrokerageAccountGroupAllocationManager(brokerage as IBrokerageAccountGroupAllocationManager);
         }
 
-        private static void SetBrokerageAccountMutationServicesReady(IAlgorithm algorithm)
-        {
-            var baseAlgorithm = algorithm is AlgorithmPythonWrapper wrapper
-                ? wrapper.BaseAlgorithm
-                : algorithm as QCAlgorithm;
-            baseAlgorithm?.SetBrokerageAccountMutationServicesReady();
-        }
+        private static void SetBrokerageAccountMutationServicesReady(IAlgorithm algorithm) =>
+            (algorithm is AlgorithmPythonWrapper wrapper ? wrapper.BaseAlgorithm : algorithm as QCAlgorithm)
+                ?.SetBrokerageAccountMutationServicesReady();
 
         /// <summary>
         /// Save a list of trades to disk for a given path
