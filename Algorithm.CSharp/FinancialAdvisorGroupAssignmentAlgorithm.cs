@@ -33,6 +33,8 @@ namespace QuantConnect.Algorithm.CSharp
     /// fa-target-group removes matching accounts from every group.
     /// ContractsOrShares child values may be fractional, but their saved total must be lot-aligned;
     /// for a lot size of one, 12.5 + 7.5 = 20 is valid.
+    /// Do not request configuration mutations during OnEndOfAlgorithm or teardown: a request may be
+    /// accepted but is not guaranteed to reach the broker or publish a result.
     /// </summary>
     /// <meta name="tag" content="financial advisor" />
     /// <meta name="tag" content="live trading" />

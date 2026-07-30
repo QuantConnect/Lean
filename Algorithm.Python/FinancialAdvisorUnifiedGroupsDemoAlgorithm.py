@@ -26,6 +26,8 @@ from threading import Lock
 ### request_brokerage_account_group_allocation_update, then submitting a parent with the
 ### exact saved total. FinancialAdvisorGroupAssignmentAlgorithm demonstrates the
 ### asynchronous mutation/readback state machine, not complete-vector replacement.
+### Do not request configuration mutations during on_end_of_algorithm or teardown:
+### a request may be accepted but is not guaranteed to reach the broker or publish a result.
 ### </summary>
 ### <meta name="tag" content="using data" />
 ### <meta name="tag" content="using quantconnect" />

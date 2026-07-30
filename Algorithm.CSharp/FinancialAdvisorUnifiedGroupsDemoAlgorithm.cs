@@ -31,6 +31,8 @@ namespace QuantConnect.Algorithm.CSharp
     /// and confirming the complete saved vector with RequestBrokerageAccountGroupAllocationUpdate,
     /// then submitting a parent with the exact saved total. FinancialAdvisorGroupAssignmentAlgorithm
     /// demonstrates the asynchronous mutation/readback state machine, not complete-vector replacement.
+    /// Do not request configuration mutations during OnEndOfAlgorithm or teardown: a request may be
+    /// accepted but is not guaranteed to reach the broker or publish a result.
     /// </summary>
     /// <meta name="tag" content="using data" />
     /// <meta name="tag" content="using quantconnect" />

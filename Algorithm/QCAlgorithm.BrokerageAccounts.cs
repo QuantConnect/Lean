@@ -125,12 +125,18 @@ namespace QuantConnect.Algorithm
         /// </summary>
         /// <remarks>
         /// Account-group mutations are available only after algorithm initialization completes.
+        /// A request issued during or after <see cref="OnEndOfAlgorithm"/> may be accepted but is not
+        /// guaranteed to reach the broker or publish a result. Algorithms must not request configuration
+        /// mutations during teardown.
         /// </remarks>
         /// <param name="accountId">Managed subaccount to assign.</param>
         /// <param name="targetGroupName">Destination group, or an empty string to remove every assignment.</param>
         /// <param name="targetAllocationValue">Optional brokerage-defined allocation value.</param>
         /// <param name="observedSnapshot">Ready snapshot observed while calculating the requested change.</param>
-        /// <returns>True when the request was accepted; otherwise, false.</returns>
+        /// <returns>
+        /// True when the request was accepted for asynchronous processing while the algorithm is running;
+        /// otherwise, false.
+        /// </returns>
         [DocumentationAttribute(LiveTrading)]
         public bool RequestBrokerageAccountGroupAssignment(
             string accountId,
@@ -193,11 +199,17 @@ namespace QuantConnect.Algorithm
         /// Account-group mutations are available only after algorithm initialization completes.
         /// Account-identifier case handling is brokerage-defined. A provider may reject identifiers that differ only
         /// by case as duplicates.
+        /// A request issued during or after <see cref="OnEndOfAlgorithm"/> may be accepted but is not
+        /// guaranteed to reach the broker or publish a result. Algorithms must not request configuration
+        /// mutations during teardown.
         /// </remarks>
         /// <param name="groupName">Existing managed account group to update.</param>
         /// <param name="accountAllocationValues">Complete per-account allocation vector.</param>
         /// <param name="observedSnapshot">Ready snapshot observed while calculating the requested values.</param>
-        /// <returns>True when the request was accepted; otherwise, false.</returns>
+        /// <returns>
+        /// True when the request was accepted for asynchronous processing while the algorithm is running;
+        /// otherwise, false.
+        /// </returns>
         [DocumentationAttribute(LiveTrading)]
         public bool RequestBrokerageAccountGroupAllocationUpdate(
             string groupName,
@@ -262,11 +274,17 @@ namespace QuantConnect.Algorithm
         /// Account-group mutations are available only after algorithm initialization completes.
         /// Account-identifier case handling is brokerage-defined. A provider may reject identifiers that differ only
         /// by case as duplicates.
+        /// A request issued during or after <see cref="OnEndOfAlgorithm"/> may be accepted but is not
+        /// guaranteed to reach the broker or publish a result. Algorithms must not request configuration
+        /// mutations during teardown.
         /// </remarks>
         /// <param name="groupName">Existing managed account group to update.</param>
         /// <param name="accountAllocationValues">Complete per-account allocation vector.</param>
         /// <param name="observedSnapshot">Ready snapshot observed while calculating the requested values.</param>
-        /// <returns>True when the request was accepted; otherwise, false.</returns>
+        /// <returns>
+        /// True when the request was accepted for asynchronous processing while the algorithm is running;
+        /// otherwise, false.
+        /// </returns>
         [DocumentationAttribute(LiveTrading)]
         public bool RequestBrokerageAccountGroupAllocationUpdate(
             string groupName,
