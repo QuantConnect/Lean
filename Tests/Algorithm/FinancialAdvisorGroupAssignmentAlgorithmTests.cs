@@ -286,6 +286,42 @@ namespace QuantConnect.Tests.Algorithm
         }
 
         [Test]
+        public void UnavailableSnapshotClearsOutstandingRefreshForRetry()
+        {
+            var services = new TestFinancialAdvisorServices
+            {
+                Snapshot = CreateSnapshot(
+                    1,
+                    new BrokerageAccountGroup(
+                        "TargetGroup",
+                        "Equal",
+                        Array.Empty<string>()),
+                    Entry(
+                        "AccountA",
+                        BrokerageAccountRelationship.Managed,
+                        "Hold-East"))
+            };
+            var algorithm = CreateAlgorithm(services);
+            SetPrivateField(
+                algorithm,
+                "_refreshRequestOutstanding",
+                true);
+            SetPrivateField(
+                algorithm,
+                "_refreshRequestedAfterGeneration",
+                services.Snapshot.Generation);
+            services.Snapshot = BrokerageAccountSnapshot.Unavailable;
+
+            algorithm.OnData(CreateEmptySlice());
+
+            Assert.AreEqual(
+                1,
+                services.RefreshRequestCount,
+                "Unavailable is a terminal refresh result, so the sample " +
+                "must clear its outstanding marker and permit a retry.");
+        }
+
+        [Test]
         public void ConcurrentScheduledCallbackPreservesOneLaterRefreshIntent()
         {
             var firstSnapshot = CreateSnapshot(

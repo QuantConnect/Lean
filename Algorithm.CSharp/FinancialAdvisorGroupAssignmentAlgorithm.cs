@@ -652,7 +652,9 @@ namespace QuantConnect.Algorithm.CSharp
             else if (snapshot.Status ==
                     BrokerageAccountSnapshotStatus.Failed ||
                 snapshot.Status ==
-                    BrokerageAccountSnapshotStatus.Stale)
+                    BrokerageAccountSnapshotStatus.Stale ||
+                snapshot.Status ==
+                    BrokerageAccountSnapshotStatus.Unavailable)
             {
                 _refreshRequestOutstanding = false;
             }

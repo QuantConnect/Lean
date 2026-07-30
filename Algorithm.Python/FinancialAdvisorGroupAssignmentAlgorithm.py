@@ -38,6 +38,8 @@ import re
 ### <meta name="tag" content="live trading" />
 class FinancialAdvisorGroupAssignmentAlgorithm(QCAlgorithm):
 
+    _SYSTEM_DECIMAL_MAX_COEFFICIENT = \
+        79228162514264337593543950335
     _REFRESH_RETRY_INTERVAL = timedelta(seconds=5)
     _TOPOLOGY_REFRESH_INTERVAL = timedelta(seconds=90)
     _MAXIMUM_SNAPSHOT_AGE = timedelta(minutes=5)
@@ -64,17 +66,12 @@ class FinancialAdvisorGroupAssignmentAlgorithm(QCAlgorithm):
         self._target_group_name = self.get_parameter(
             "fa-target-group",
             "TargetGroup")
-        try:
-            self._allocation_value = Decimal(str(self.get_parameter(
-                "fa-allocation-value",
-                "1")))
-            self._cash_change_threshold = Decimal(str(self.get_parameter(
-                "fa-cash-change-threshold",
-                "1000")))
-        except InvalidOperation as error:
-            raise ValueError(
-                "fa-allocation-value and fa-cash-change-threshold must be "
-                "decimal numbers.") from error
+        self._allocation_value = self._get_decimal_parameter(
+            "fa-allocation-value",
+            "1")
+        self._cash_change_threshold = self._get_decimal_parameter(
+            "fa-cash-change-threshold",
+            "1000")
         if self._cash_change_threshold < 0:
             raise ValueError(
                 "fa-cash-change-threshold cannot be negative.")
@@ -95,6 +92,7 @@ class FinancialAdvisorGroupAssignmentAlgorithm(QCAlgorithm):
         self._cash_confirmation_trigger_generation = None
 
         self._active_assignment_generation = None
+        self._assignment_generation_before_request = None
         self._assignment_submission_in_progress = False
         self._state_machine_active = False
         self._active_assignment_account_id = None
@@ -140,7 +138,7 @@ class FinancialAdvisorGroupAssignmentAlgorithm(QCAlgorithm):
             return
 
         self._poll_assignment()
-        if self._active_assignment_generation is not None:
+        if self._assignment_generation_before_request is not None:
             return
 
         if self._minimum_ready_generation is not None:
@@ -371,7 +369,7 @@ class FinancialAdvisorGroupAssignmentAlgorithm(QCAlgorithm):
         with self._order_state_lock:
             snapshot = self.brokerage_account_snapshot
             if self._snapshot_request_generation is not None or \
-                    self._active_assignment_generation is not None or \
+                    self._assignment_generation_before_request is not None or \
                     self._assignment_submission_in_progress or \
                     self._minimum_ready_generation is not None or \
                     self._cash_confirmation_trigger_generation is not None or \
@@ -393,6 +391,8 @@ class FinancialAdvisorGroupAssignmentAlgorithm(QCAlgorithm):
             if complete_refresh:
                 self._scheduled_refresh_topology_ticks = 0
                 group_names = None
+            elif not group_names:
+                return True
             request_error = self._try_request_snapshot_refresh_locked(
                 snapshot,
                 is_confirmation=False,
@@ -405,15 +405,23 @@ class FinancialAdvisorGroupAssignmentAlgorithm(QCAlgorithm):
         return True
 
     def _poll_assignment(self):
-        if self._active_assignment_generation is None:
+        if self._assignment_generation_before_request is None:
             return
 
         assignment = self.brokerage_account_group_assignment
+        if self._active_assignment_generation is None:
+            if assignment.generation <= \
+                    self._assignment_generation_before_request or \
+                    assignment.account_id.casefold() != \
+                    self._active_assignment_account_id.casefold() or \
+                    assignment.status == \
+                    BrokerageAccountGroupAssignmentStatus.UNAVAILABLE:
+                return
+            self._active_assignment_generation = assignment.generation
+
         if assignment.generation != self._active_assignment_generation or \
                 assignment.account_id.casefold() != \
                 self._active_assignment_account_id.casefold() or \
-                assignment.status == \
-                BrokerageAccountGroupAssignmentStatus.UNAVAILABLE or \
                 not assignment.is_completed:
             return
 
@@ -435,6 +443,7 @@ class FinancialAdvisorGroupAssignmentAlgorithm(QCAlgorithm):
                 self._active_assignment_snapshot_generation
 
         self._active_assignment_generation = None
+        self._assignment_generation_before_request = None
         self._active_assignment_account_id = None
         self._active_assignment_snapshot_generation = -1
 
@@ -514,6 +523,8 @@ class FinancialAdvisorGroupAssignmentAlgorithm(QCAlgorithm):
             return True
         self._last_final_source_member_block_key = None
 
+        assignment_generation_before_request = \
+            self.brokerage_account_group_assignment.generation
         with self._order_state_lock:
             self._assignment_submission_in_progress = True
         accepted = False
@@ -523,6 +534,13 @@ class FinancialAdvisorGroupAssignmentAlgorithm(QCAlgorithm):
                 canonical_target_group_name,
                 allocation_value,
                 snapshot)
+            if accepted:
+                with self._order_state_lock:
+                    self._assignment_generation_before_request = \
+                        assignment_generation_before_request
+                    self._active_assignment_account_id = account.account_id
+                    self._active_assignment_snapshot_generation = \
+                        snapshot.generation
         except Exception as error:
             self._last_membership_evaluation_generation = \
                 snapshot.generation
@@ -555,19 +573,12 @@ class FinancialAdvisorGroupAssignmentAlgorithm(QCAlgorithm):
                 group_names=required_group_names)
             return True
 
-        # Capture only after acceptance. The static Unavailable result is terminal,
-        # so generation correlation is required before IsCompleted is meaningful.
-        assignment = self.brokerage_account_group_assignment
-        with self._order_state_lock:
-            self._active_assignment_generation = assignment.generation
-            self._active_assignment_account_id = account.account_id
-            self._active_assignment_snapshot_generation = snapshot.generation
         self._last_membership_evaluation_generation = snapshot.generation
         self.log(
             f"FA assignment accepted: account={account.account_id}, "
             f"target='{canonical_target_group_name}', "
             f"snapshotGeneration={snapshot.generation}, "
-            f"assignmentGeneration={assignment.generation}")
+            f"assignmentGeneration>{assignment_generation_before_request}")
         return True
 
     def _find_target_group(self, snapshot):
@@ -672,7 +683,7 @@ class FinancialAdvisorGroupAssignmentAlgorithm(QCAlgorithm):
                 group.name
                 for group in list(snapshot.all_groups.values)
             ]
-            return group_names if group_names else None
+            return group_names
 
         target_group = self._find_target_group(snapshot)
         target_name = self._target_group_name \
@@ -710,3 +721,41 @@ class FinancialAdvisorGroupAssignmentAlgorithm(QCAlgorithm):
         if authority_utc == datetime.min:
             authority_utc = snapshot.last_successful_update_utc
         return authority_utc >= self.utc_time - self._MAXIMUM_SNAPSHOT_AGE
+
+    def _get_decimal_parameter(self, name, default_value):
+        raw_value = self.get_parameter(name, default_value)
+        try:
+            value = Decimal(str(raw_value))
+        except (InvalidOperation, ValueError) as error:
+            raise ValueError(
+                f"Algorithm parameter '{name}' must be representable as "
+                "System.Decimal.") from error
+
+        if not self._is_system_decimal(value):
+            raise ValueError(
+                f"Algorithm parameter '{name}' must be representable as "
+                "System.Decimal.")
+        return value
+
+    @classmethod
+    def _is_system_decimal(cls, value):
+        if not value.is_finite() or \
+                value.copy_abs() > cls._SYSTEM_DECIMAL_MAX_COEFFICIENT:
+            return False
+
+        _, digits, exponent = value.as_tuple()
+        if not any(digits):
+            return True
+
+        digits = list(digits)
+        while exponent < 0 and digits[-1] == 0:
+            digits.pop()
+            exponent += 1
+
+        if exponent < -28:
+            return False
+
+        coefficient = int("".join(str(digit) for digit in digits))
+        if exponent > 0:
+            coefficient *= 10 ** exponent
+        return coefficient <= cls._SYSTEM_DECIMAL_MAX_COEFFICIENT

@@ -345,6 +345,10 @@ namespace QuantConnect.Lean.Engine
                         AlgorithmHandlers.Results.DebugMessage(
                             $"Launching analysis for {job.AlgorithmId} with LEAN Engine v{Globals.Version}");
 
+                        var algorithmSynchronizer = new BrokerageAccountMutationReadinessSynchronizer(
+                            synchronizer,
+                            () => SetBrokerageAccountMutationServicesReady(algorithm, false));
+
                         //Create a new engine isolator class
                         var isolator = new Isolator();
 
@@ -357,12 +361,18 @@ namespace QuantConnect.Lean.Engine
                                 // -> Using this Data Feed,
                                 // -> Send Orders to this TransactionHandler,
                                 // -> Send Results to ResultHandler.
-                                algorithmManager.Run(job, algorithm, synchronizer, AlgorithmHandlers.Transactions, AlgorithmHandlers.Results, AlgorithmHandlers.RealTime, SystemHandlers.LeanManager, isolator.CancellationTokenSource, performanceTrackingTool);
+                                algorithmManager.Run(job, algorithm, algorithmSynchronizer, AlgorithmHandlers.Transactions, AlgorithmHandlers.Results, AlgorithmHandlers.RealTime, SystemHandlers.LeanManager, isolator.CancellationTokenSource, performanceTrackingTool);
                             }
                             catch (Exception err)
                             {
                                 algorithm.SetRuntimeError(err, "AlgorithmManager.Run");
                                 return;
+                            }
+                            finally
+                            {
+                                // Stream exhaustion closes the gate before OnEndOfAlgorithm;
+                                // this also covers failures before stream enumeration begins.
+                                SetBrokerageAccountMutationServicesReady(algorithm, false);
                             }
 
                             Log.Trace("Engine.Run(): Exiting Algorithm Manager");
@@ -389,7 +399,6 @@ namespace QuantConnect.Lean.Engine
 
                     // notify the LEAN manager that the algorithm has finished
                     SystemHandlers.LeanManager.OnAlgorithmEnd();
-                    SetBrokerageAccountMutationServicesReady(algorithm, false);
 
                     try
                     {

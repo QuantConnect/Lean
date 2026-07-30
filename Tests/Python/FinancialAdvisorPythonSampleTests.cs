@@ -130,6 +130,116 @@ namespace QuantConnect.Tests.Python
             });
         }
 
+        [Test]
+        public void GroupAssignmentEmptyTopologyUsesThirdTickCompleteDiscoveryInPython()
+        {
+            var services = new TestFinancialAdvisorServices
+            {
+                Snapshot = CreateEmptyAssignmentSnapshot(2)
+            };
+            using var algorithm = CreateAlgorithm(
+                "FinancialAdvisorGroupAssignmentAlgorithm",
+                services,
+                new Dictionary<string, string>
+                {
+                    ["fa-target-group"] = string.Empty
+                });
+
+            for (var tick = 1; tick <= 3; ++tick)
+            {
+                algorithm.SetDateTime(
+                    SnapshotTime.AddSeconds(90 * tick));
+                InvokeScheduledCallback(algorithm);
+            }
+
+            Assert.Multiple(() =>
+            {
+                Assert.AreEqual(
+                    1,
+                    services.RefreshRequestCount,
+                    "The first two empty scoped ticks must not be mistaken " +
+                    "for complete refreshes.");
+                CollectionAssert.IsEmpty(
+                    services.RequestedGroupHistory.Single(),
+                    "The third topology tick must issue complete discovery.");
+            });
+        }
+
+        [TestCase("fa-allocation-value", "NaN")]
+        [TestCase("fa-allocation-value", "Infinity")]
+        [TestCase("fa-allocation-value", "-Infinity")]
+        [TestCase(
+            "fa-allocation-value",
+            "79228162514264337593543950336")]
+        [TestCase("fa-allocation-value", "1e-29")]
+        [TestCase("fa-cash-change-threshold", "NaN")]
+        [TestCase("fa-cash-change-threshold", "Infinity")]
+        [TestCase("fa-cash-change-threshold", "-Infinity")]
+        [TestCase(
+            "fa-cash-change-threshold",
+            "79228162514264337593543950336")]
+        [TestCase("fa-cash-change-threshold", "1e-29")]
+        public void GroupAssignmentRejectsNonSystemDecimalParametersInPython(
+            string parameterName,
+            string parameterValue)
+        {
+            var services = new TestFinancialAdvisorServices
+            {
+                Snapshot = CreateAssignmentSnapshot(
+                    2,
+                    new[] { TargetGroupName },
+                    Array.Empty<string>())
+            };
+
+            var exception = Assert.Throws<PythonException>(() =>
+                CreateAlgorithm(
+                    "FinancialAdvisorGroupAssignmentAlgorithm",
+                    services,
+                    new Dictionary<string, string>
+                    {
+                        [parameterName] = parameterValue
+                    }));
+
+            Assert.Multiple(() =>
+            {
+                StringAssert.Contains(parameterName, exception.Message);
+                StringAssert.Contains("System.Decimal", exception.Message);
+                Assert.AreEqual(0, services.AssignmentRequestCount);
+            });
+        }
+
+        [TestCase(
+            "79228162514264337593543950335",
+            "79228162514264337593543950335")]
+        [TestCase("1e-28", "0.0000000000000000000000000001")]
+        public void GroupAssignmentAcceptsRepresentableDecimalBoundaryInPython(
+            string allocationValue,
+            string expectedAllocationValue)
+        {
+            var services = new TestFinancialAdvisorServices
+            {
+                Snapshot = CreateAssignmentSnapshot(
+                    2,
+                    new[] { TargetGroupName },
+                    Array.Empty<string>(),
+                    allocationMethod: "ContractsOrShares")
+            };
+            using var algorithm = CreateAlgorithm(
+                "FinancialAdvisorGroupAssignmentAlgorithm",
+                services,
+                new Dictionary<string, string>
+                {
+                    ["fa-allocation-value"] = allocationValue
+                });
+
+            algorithm.OnData(CreateEmptySlice());
+
+            Assert.AreEqual(1, services.AssignmentRequestCount);
+            Assert.AreEqual(
+                decimal.Parse(expectedAllocationValue),
+                services.Assignment.TargetAllocationValue);
+        }
+
         [TestCase("100", 1)]
         [TestCase("100.01", 0)]
         public void GroupAssignmentValidatesPercentInPython(
@@ -239,6 +349,92 @@ namespace QuantConnect.Tests.Python
             algorithm.OnData(CreateEmptySlice());
 
             Assert.AreEqual(2, services.AssignmentRequestCount);
+        }
+
+        [Test]
+        public void GroupAssignmentWaitsForDelayedPendingPublicationInPython()
+        {
+            var services = new TestFinancialAdvisorServices
+            {
+                Snapshot = CreateAssignmentSnapshot(
+                    2,
+                    new[] { TargetGroupName },
+                    Array.Empty<string>()),
+                DelayNextAssignmentPublication = true
+            };
+            using var algorithm = CreateAlgorithm(
+                "FinancialAdvisorGroupAssignmentAlgorithm",
+                services);
+
+            algorithm.OnData(CreateEmptySlice());
+            algorithm.OnData(CreateEmptySlice());
+
+            Assert.Multiple(() =>
+            {
+                Assert.AreEqual(1, services.AssignmentRequestCount);
+                Assert.AreEqual(
+                    BrokerageAccountGroupAssignmentStatus.Unavailable,
+                    services.Assignment.Status);
+            });
+
+            services.PublishDelayedAssignment();
+            algorithm.OnData(CreateEmptySlice());
+            algorithm.OnData(CreateEmptySlice());
+            Assert.AreEqual(
+                1,
+                services.AssignmentRequestCount,
+                "Waiting for a delayed Pending result must not submit a " +
+                "duplicate mutation.");
+
+            services.CompleteAssignment(
+                BrokerageAccountGroupAssignmentStatus.Succeeded,
+                new[] { TargetGroupName });
+            services.Snapshot = CreateAssignmentSnapshot(
+                3,
+                new[] { TargetGroupName },
+                new[] { TargetGroupName },
+                SnapshotTime.AddSeconds(6));
+            algorithm.OnData(CreateEmptySlice());
+
+            Assert.Multiple(() =>
+            {
+                Assert.AreEqual(1, services.AssignmentRequestCount);
+                Assert.That(
+                    algorithm.LogMessages,
+                    Has.One.Contains("FA assignment succeeded"));
+            });
+        }
+
+        [Test]
+        public void GroupAssignmentAcceptsSynchronouslyPublishedTerminalResultInPython()
+        {
+            var services = new TestFinancialAdvisorServices
+            {
+                Snapshot = CreateAssignmentSnapshot(
+                    2,
+                    new[] { TargetGroupName },
+                    Array.Empty<string>()),
+                CompleteNextAssignmentSynchronously = true
+            };
+            using var algorithm = CreateAlgorithm(
+                "FinancialAdvisorGroupAssignmentAlgorithm",
+                services);
+
+            algorithm.OnData(CreateEmptySlice());
+            services.Snapshot = CreateAssignmentSnapshot(
+                3,
+                new[] { TargetGroupName },
+                new[] { TargetGroupName },
+                SnapshotTime.AddSeconds(6));
+            algorithm.OnData(CreateEmptySlice());
+
+            Assert.Multiple(() =>
+            {
+                Assert.AreEqual(1, services.AssignmentRequestCount);
+                Assert.That(
+                    algorithm.LogMessages,
+                    Has.One.Contains("FA assignment succeeded"));
+            });
         }
 
         [Test]
@@ -731,7 +927,15 @@ class FinancialAdvisorUnifiedGroupsDemoAlgorithmUnderTest(FinancialAdvisorUnifie
             consumer.SetBrokerageAccountGroupManager(services);
 
             services.AcceptRefreshRequests = false;
-            algorithm.Initialize();
+            try
+            {
+                algorithm.Initialize();
+            }
+            catch
+            {
+                algorithm.Dispose();
+                throw;
+            }
             algorithm.SetLocked();
             algorithm.BaseAlgorithm
                 .SetBrokerageAccountMutationServicesReady();
@@ -949,6 +1153,32 @@ class FinancialAdvisorUnifiedGroupsDemoAlgorithmUnderTest(FinancialAdvisorUnifie
                 collectionStartedUtc: timestamp);
         }
 
+        private static BrokerageAccountSnapshot CreateEmptyAssignmentSnapshot(
+            long generation)
+        {
+            var timestamp = SnapshotTime.AddTicks(generation);
+            return new BrokerageAccountSnapshot(
+                BrokerageAccountSnapshotStatus.Ready,
+                generation,
+                timestamp,
+                timestamp,
+                new Dictionary<string, BrokerageAccountGroup>(),
+                new Dictionary<string, BrokerageAccountState>(),
+                Array.Empty<string>(),
+                $"membership-{generation}",
+                $"configuration-{generation}",
+                string.Empty,
+                managedAccountIds: Array.Empty<string>(),
+                allGroups:
+                    new Dictionary<string, BrokerageAccountGroup>(),
+                accountDirectory:
+                    new Dictionary<
+                        string,
+                        BrokerageAccountDirectoryEntry>(),
+                isComplete: true,
+                collectionStartedUtc: timestamp);
+        }
+
         private static BrokerageAccountState CreateAccount(
             string accountId,
             IReadOnlyCollection<string> groupNames,
@@ -979,6 +1209,7 @@ class FinancialAdvisorUnifiedGroupsDemoAlgorithmUnderTest(FinancialAdvisorUnifie
             IBrokerageAccountGroupManager
         {
             private long _assignmentGeneration;
+            private BrokerageAccountGroupAssignment _delayedAssignment;
 
             public BrokerageAccountSnapshot Snapshot { get; set; }
             public BrokerageAccountGroupAssignment Assignment { get; private set; } =
@@ -986,6 +1217,8 @@ class FinancialAdvisorUnifiedGroupsDemoAlgorithmUnderTest(FinancialAdvisorUnifie
             public bool AcceptRefreshRequests { get; set; } = true;
             public bool ThrowNextAssignmentRequest { get; set; }
             public bool RejectNextAssignmentRequest { get; set; }
+            public bool DelayNextAssignmentPublication { get; set; }
+            public bool CompleteNextAssignmentSynchronously { get; set; }
             public int RefreshRequestCount { get; private set; }
             public int AssignmentRequestCount { get; private set; }
             public List<IReadOnlyCollection<string>> RequestedGroupHistory { get; } =
@@ -1035,7 +1268,7 @@ class FinancialAdvisorUnifiedGroupsDemoAlgorithmUnderTest(FinancialAdvisorUnifie
                     return false;
                 }
 
-                Assignment = new BrokerageAccountGroupAssignment(
+                var assignment = new BrokerageAccountGroupAssignment(
                     BrokerageAccountGroupAssignmentStatus.Pending,
                     ++_assignmentGeneration,
                     SnapshotTime,
@@ -1049,7 +1282,37 @@ class FinancialAdvisorUnifiedGroupsDemoAlgorithmUnderTest(FinancialAdvisorUnifie
                     string.Empty,
                     string.Empty,
                     targetAllocationValue);
+                if (DelayNextAssignmentPublication)
+                {
+                    DelayNextAssignmentPublication = false;
+                    _delayedAssignment = assignment;
+                }
+                else if (CompleteNextAssignmentSynchronously)
+                {
+                    CompleteNextAssignmentSynchronously = false;
+                    Assignment = CreateCompletedAssignment(
+                        assignment,
+                        BrokerageAccountGroupAssignmentStatus.Succeeded,
+                        new[] { targetGroupName },
+                        string.Empty);
+                }
+                else
+                {
+                    Assignment = assignment;
+                }
                 return true;
+            }
+
+            public void PublishDelayedAssignment()
+            {
+                if (_delayedAssignment == null)
+                {
+                    throw new InvalidOperationException(
+                        "No delayed assignment is available.");
+                }
+
+                Assignment = _delayedAssignment;
+                _delayedAssignment = null;
             }
 
             public void CompleteAssignment(
@@ -1057,20 +1320,34 @@ class FinancialAdvisorUnifiedGroupsDemoAlgorithmUnderTest(FinancialAdvisorUnifie
                 IReadOnlyCollection<string> resultingGroupNames,
                 string errorMessage = "")
             {
-                Assignment = new BrokerageAccountGroupAssignment(
+                Assignment = CreateCompletedAssignment(
+                    Assignment,
                     status,
-                    Assignment.Generation,
-                    SnapshotTime,
-                    Assignment.AccountId,
-                    Assignment.TargetGroupName,
-                    Assignment.PreviousGroupNames,
                     resultingGroupNames,
-                    Assignment.ExpectedMembershipHash,
-                    $"resulting-membership-{Assignment.Generation}",
-                    Assignment.ExpectedGroupConfigurationVersion,
-                    $"resulting-configuration-{Assignment.Generation}",
+                    errorMessage);
+            }
+
+            private static BrokerageAccountGroupAssignment
+                CreateCompletedAssignment(
+                    BrokerageAccountGroupAssignment assignment,
+                    BrokerageAccountGroupAssignmentStatus status,
+                    IReadOnlyCollection<string> resultingGroupNames,
+                    string errorMessage)
+            {
+                return new BrokerageAccountGroupAssignment(
+                    status,
+                    assignment.Generation,
+                    SnapshotTime,
+                    assignment.AccountId,
+                    assignment.TargetGroupName,
+                    assignment.PreviousGroupNames,
+                    resultingGroupNames,
+                    assignment.ExpectedMembershipHash,
+                    $"resulting-membership-{assignment.Generation}",
+                    assignment.ExpectedGroupConfigurationVersion,
+                    $"resulting-configuration-{assignment.Generation}",
                     errorMessage,
-                    Assignment.TargetAllocationValue);
+                    assignment.TargetAllocationValue);
             }
 
             public void ResetRefreshRequests()
