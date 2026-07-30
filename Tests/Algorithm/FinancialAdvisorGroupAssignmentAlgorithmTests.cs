@@ -1180,6 +1180,44 @@ namespace QuantConnect.Tests.Algorithm
                 services.AssignmentRequests[0].TargetAllocationValue);
         }
 
+        [TestCase("fa-allocation-value")]
+        [TestCase("fa-cash-change-threshold")]
+        public void MalformedDecimalParameterFailsInitialization(
+            string parameterName)
+        {
+            var services = new TestFinancialAdvisorServices
+            {
+                Snapshot = CreateSnapshot(
+                    1,
+                    new BrokerageAccountGroup(
+                        "TargetGroup",
+                        "Equal",
+                        Array.Empty<string>()),
+                    Entry(
+                        "AccountA",
+                        BrokerageAccountRelationship.Managed,
+                        "MOVE-East"))
+            };
+
+            var exception = Assert.Throws<ArgumentException>(() =>
+                CreateAlgorithm(
+                    services,
+                    new Dictionary<string, string>
+                    {
+                        [parameterName] = "1O"
+                    }));
+
+            Assert.Multiple(() =>
+            {
+                Assert.AreEqual(parameterName, exception.ParamName);
+                StringAssert.Contains(
+                    "must be a decimal number",
+                    exception.Message);
+                Assert.AreEqual(0, services.RefreshRequestCount);
+                Assert.AreEqual(0, services.AssignmentRequests.Count);
+            });
+        }
+
         [TestCase("ContractsOrShares", "0", true, "0")]
         [TestCase("ContractsOrShares", "-1", false, null)]
         [TestCase("Ratio", "0", false, null)]

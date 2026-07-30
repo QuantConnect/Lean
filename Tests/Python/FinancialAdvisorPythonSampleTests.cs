@@ -356,6 +356,9 @@ namespace QuantConnect.Tests.Python
                 CollectionAssert.AreEqual(
                     new[] { DemoGroupName },
                     services.RequestedGroupHistory.Single());
+                CollectionAssert.AreEquivalent(
+                    new[] { "AccountA", "AccountB" },
+                    services.RequestedAdditionalAccountHistory.Single());
                 Assert.AreEqual(
                     snapshot.Generation,
                     algorithm.GetProperty<long>(
@@ -393,6 +396,104 @@ namespace QuantConnect.Tests.Python
                 Assert.That(
                     algorithm.ErrorMessages,
                     Has.One.Contains("distinctive rejection"));
+            });
+        }
+
+        [Test]
+        public void DemoMissingMemberKeepsInvalidReconciliationPendingInPython()
+        {
+            var preOrderSnapshot = CreateDemoSnapshot(
+                2,
+                SnapshotTime);
+            var services = new TestFinancialAdvisorServices
+            {
+                Snapshot = preOrderSnapshot
+            };
+            using var algorithm = CreateAlgorithm(
+                "FinancialAdvisorDemoAlgorithm",
+                services);
+            algorithm.SetProperty(
+                "_pre_order_snapshot",
+                preOrderSnapshot);
+            algorithm.SetProperty("_group_order_submitted", true);
+            algorithm.SetProperty("_group_order_id", 41);
+
+            using (Py.GIL())
+            {
+                algorithm.OnOrderEvent(
+                    CreateOrderEvent(
+                        41,
+                        OrderStatus.Invalid,
+                        "distinctive rejection"));
+            }
+
+            services.Snapshot = CreateDemoSnapshot(
+                3,
+                SnapshotTime.AddSeconds(5).AddTicks(1),
+                includeAccountB: false);
+            algorithm.SetDateTime(SnapshotTime.AddSeconds(10));
+            var reconciliationMessageCount = algorithm.LogMessages.Count(
+                message => message.Contains("FA reconciliation"));
+            InvokeScheduledCallback(algorithm);
+
+            using (var retainedPreOrderSnapshot =
+                algorithm.GetProperty("_pre_order_snapshot"))
+            {
+                Assert.Multiple(() =>
+                {
+                    Assert.AreEqual(2, services.RefreshRequestCount);
+                    CollectionAssert.AreEquivalent(
+                        new[] { "AccountA", "AccountB" },
+                        services.RequestedAdditionalAccountHistory[0]);
+                    CollectionAssert.AreEquivalent(
+                        new[] { "AccountA", "AccountB" },
+                        services.RequestedAdditionalAccountHistory[1]);
+                    Assert.AreEqual(
+                        3,
+                        algorithm.GetProperty<long>(
+                            "_pending_reconcile_generation"),
+                        "The incomplete generation must not be reconsidered.");
+                    Assert.AreEqual(
+                        0,
+                        algorithm.GetProperty<int>(
+                            "_invalid_order_attempt_count"),
+                        "Missing account state must not authorize an Invalid retry.");
+                    Assert.AreEqual(
+                        reconciliationMessageCount,
+                        algorithm.LogMessages.Count(
+                            message => message.Contains("FA reconciliation")),
+                        "An incomplete snapshot must not emit partial reconciliation.");
+                    Assert.IsFalse(retainedPreOrderSnapshot.IsNone());
+                    Assert.That(
+                        algorithm.ErrorMessages,
+                        Has.One.Contains(
+                            "Account state for 'AccountB' is unavailable"));
+                });
+            }
+
+            services.Snapshot = CreateDemoSnapshot(
+                4,
+                SnapshotTime.AddSeconds(5).AddTicks(2));
+            algorithm.SetDateTime(SnapshotTime.AddSeconds(15));
+            InvokeScheduledCallback(algorithm);
+
+            using var clearedPreOrderSnapshot =
+                algorithm.GetProperty("_pre_order_snapshot");
+            Assert.Multiple(() =>
+            {
+                Assert.AreEqual(
+                    -1,
+                    algorithm.GetProperty<long>(
+                        "_pending_reconcile_generation"));
+                Assert.AreEqual(
+                    1,
+                    algorithm.GetProperty<int>(
+                        "_invalid_order_attempt_count"));
+                Assert.IsTrue(clearedPreOrderSnapshot.IsNone());
+                Assert.AreEqual(
+                    reconciliationMessageCount + 2,
+                    algorithm.LogMessages.Count(
+                        message => message.Contains("FA reconciliation")));
             });
         }
 
@@ -555,7 +656,8 @@ class FinancialAdvisorDemoAlgorithmUnderTest(FinancialAdvisorDemoAlgorithm):
 
         private static BrokerageAccountSnapshot CreateDemoSnapshot(
             long generation,
-            DateTime collectionStartedUtc)
+            DateTime collectionStartedUtc,
+            bool includeAccountB = true)
         {
             var group = new BrokerageAccountGroup(
                 DemoGroupName,
@@ -572,12 +674,15 @@ class FinancialAdvisorDemoAlgorithmUnderTest(FinancialAdvisorDemoAlgorithm):
                     ["AccountA"] = CreateAccount(
                         "AccountA",
                         new[] { group.Name },
-                        10m),
-                    ["AccountB"] = CreateAccount(
-                        "AccountB",
-                        new[] { group.Name },
-                        20m)
+                        10m)
                 };
+            if (includeAccountB)
+            {
+                accounts["AccountB"] = CreateAccount(
+                    "AccountB",
+                    new[] { group.Name },
+                    20m);
+            }
 
             return new BrokerageAccountSnapshot(
                 BrokerageAccountSnapshotStatus.Ready,
@@ -590,7 +695,7 @@ class FinancialAdvisorDemoAlgorithmUnderTest(FinancialAdvisorDemoAlgorithm):
                 $"membership-{generation}",
                 $"configuration-{generation}",
                 string.Empty,
-                managedAccountIds: accounts.Keys.ToArray(),
+                managedAccountIds: new[] { "AccountA", "AccountB" },
                 collectionStartedUtc: collectionStartedUtc);
         }
 
@@ -755,6 +860,9 @@ class FinancialAdvisorDemoAlgorithmUnderTest(FinancialAdvisorDemoAlgorithm):
             public int AssignmentRequestCount { get; private set; }
             public List<IReadOnlyCollection<string>> RequestedGroupHistory { get; } =
                 new();
+            public List<IReadOnlyCollection<string>>
+                RequestedAdditionalAccountHistory
+            { get; } = new();
 
             public BrokerageAccountSnapshot GetAccountSnapshot()
             {
@@ -767,6 +875,8 @@ class FinancialAdvisorDemoAlgorithmUnderTest(FinancialAdvisorDemoAlgorithm):
             {
                 ++RefreshRequestCount;
                 RequestedGroupHistory.Add(groupNames.ToArray());
+                RequestedAdditionalAccountHistory.Add(
+                    additionalAccountIds.ToArray());
                 return AcceptRefreshRequests;
             }
 

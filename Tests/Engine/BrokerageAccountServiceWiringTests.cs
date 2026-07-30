@@ -40,7 +40,7 @@ namespace QuantConnect.Tests.Engine
 
         [TestCase(false)]
         [TestCase(true)]
-        public void EngineMarksMutationServicesReadyForCSharpAndPythonAlgorithms(bool usePythonWrapper)
+        public void EngineControlsMutationServiceReadinessForCSharpAndPythonAlgorithms(bool usePythonWrapper)
         {
             var asOfUtc = new DateTime(2026, 1, 2, 3, 4, 5, DateTimeKind.Utc);
             var snapshot = new BrokerageAccountSnapshot(
@@ -96,9 +96,17 @@ namespace QuantConnect.Tests.Engine
                 null,
                 snapshot));
 
-            readinessMethod.Invoke(null, new object[] { algorithm });
+            readinessMethod.Invoke(null, new object[] { algorithm, true });
 
             Assert.IsTrue(baseAlgorithm.RequestBrokerageAccountGroupAssignment(
+                "Account",
+                "Group",
+                null,
+                snapshot));
+
+            readinessMethod.Invoke(null, new object[] { algorithm, false });
+
+            Assert.IsFalse(baseAlgorithm.RequestBrokerageAccountGroupAssignment(
                 "Account",
                 "Group",
                 null,

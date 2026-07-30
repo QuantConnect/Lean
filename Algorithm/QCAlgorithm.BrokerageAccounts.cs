@@ -322,13 +322,13 @@ namespace QuantConnect.Algorithm
             _brokerageAccountGroupAllocationManager = manager;
         }
 
-        internal void SetBrokerageAccountMutationServicesReady()
+        internal void SetBrokerageAccountMutationServicesReady(bool ready = true)
         {
             var provider = _brokerageAccountStateProvider;
             var groupManager = _brokerageAccountGroupManager;
             var allocationManager = _brokerageAccountGroupAllocationManager;
             _brokerageAccountMutationServicesReady =
-                provider != null && (groupManager != null || allocationManager != null);
+                ready && provider != null && (groupManager != null || allocationManager != null);
         }
 
         private static ReadOnlyCollection<string> NormalizeIdentifiers(

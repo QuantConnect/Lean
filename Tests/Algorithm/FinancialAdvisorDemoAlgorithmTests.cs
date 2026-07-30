@@ -106,7 +106,9 @@ namespace QuantConnect.Tests.Algorithm
                 CollectionAssert.AreEqual(
                     new[] { GroupName },
                     provider.RequestedGroups);
-                CollectionAssert.IsEmpty(provider.RequestedAdditionalAccounts);
+                CollectionAssert.AreEquivalent(
+                    new[] { "AccountA", "AccountB" },
+                    provider.RequestedAdditionalAccounts);
                 Assert.AreSame(failedRefreshSnapshot, provider.Snapshot);
             });
 
@@ -169,6 +171,134 @@ namespace QuantConnect.Tests.Algorithm
                     3,
                     provider.RefreshRequestCount,
                     "A duplicate terminal event must not request another refresh.");
+            });
+        }
+
+        [Test]
+        public void MissingMemberStateKeepsInvalidReconciliationPendingUntilNewerCompleteSnapshot()
+        {
+            var preOrderSnapshot = CreateSnapshot(
+                BrokerageAccountSnapshotStatus.Ready,
+                5,
+                10m,
+                20m,
+                SnapshotTime.AddMinutes(-2));
+            var terminalTimeSnapshot = CreateSnapshot(
+                BrokerageAccountSnapshotStatus.Ready,
+                7,
+                11m,
+                19m,
+                SnapshotTime.AddSeconds(-10));
+            var missingMemberSnapshot = CreateSnapshot(
+                BrokerageAccountSnapshotStatus.Ready,
+                8,
+                13m,
+                18m,
+                SnapshotTime,
+                includeAccountB: false);
+            var completeSnapshot = CreateSnapshot(
+                BrokerageAccountSnapshotStatus.Ready,
+                9,
+                13m,
+                18m,
+                SnapshotTime.AddTicks(1));
+            var provider = new TestAccountStateProvider
+            {
+                Snapshot = terminalTimeSnapshot
+            };
+            provider.RefreshRequestHook = stateProvider =>
+                stateProvider.Snapshot = stateProvider.RefreshRequestCount == 1
+                    ? missingMemberSnapshot
+                    : completeSnapshot;
+            var algorithm = CreateAlgorithm(provider, preOrderSnapshot);
+
+            algorithm.OnOrderEvent(
+                CreateOrderEvent(
+                    41,
+                    OrderStatus.Invalid,
+                    "distinctive rejection"));
+
+            Assert.Multiple(() =>
+            {
+                Assert.AreEqual(1, provider.RefreshRequestCount);
+                CollectionAssert.AreEquivalent(
+                    new[] { "AccountA", "AccountB" },
+                    provider.RequestedAdditionalAccountHistory[0]);
+                Assert.AreEqual(
+                    0,
+                    GetPrivateField<int>(
+                        algorithm,
+                        "_invalidOrderAttemptCount"));
+            });
+
+            algorithm.SetDateTime(SnapshotTime.AddSeconds(5));
+            var reconciliationMessageCount = algorithm.LogMessages.Count(
+                message => message.Contains("FA reconciliation"));
+            algorithm.OnData(CreateEmptySlice());
+
+            Assert.Multiple(() =>
+            {
+                Assert.AreEqual(2, provider.RefreshRequestCount);
+                CollectionAssert.AreEquivalent(
+                    new[] { "AccountA", "AccountB" },
+                    provider.RequestedAdditionalAccountHistory[1]);
+                Assert.AreEqual(
+                    missingMemberSnapshot.Generation,
+                    GetPrivateField<long>(
+                        algorithm,
+                        "_pendingReconcileGeneration"),
+                    "The incomplete generation must not be reconsidered.");
+                Assert.AreSame(
+                    preOrderSnapshot,
+                    GetPrivateField<BrokerageAccountSnapshot>(
+                        algorithm,
+                        "_preOrderSnapshot"));
+                Assert.IsTrue(
+                    GetPrivateField<bool>(
+                        algorithm,
+                        "_groupOrderSubmitted"));
+                Assert.AreEqual(
+                    0,
+                    GetPrivateField<int>(
+                        algorithm,
+                        "_invalidOrderAttemptCount"),
+                    "Missing account state must not authorize an Invalid retry.");
+                Assert.AreEqual(
+                    reconciliationMessageCount,
+                    algorithm.LogMessages.Count(
+                        message => message.Contains("FA reconciliation")),
+                    "An incomplete snapshot must not emit partial reconciliation.");
+                Assert.That(
+                    algorithm.ErrorMessages,
+                    Has.One.Contains("Account state for 'AccountB' is unavailable"));
+            });
+
+            algorithm.OnData(CreateEmptySlice());
+
+            Assert.Multiple(() =>
+            {
+                Assert.AreEqual(
+                    -1,
+                    GetPrivateField<long>(
+                        algorithm,
+                        "_pendingReconcileGeneration"));
+                Assert.IsNull(
+                    GetPrivateField<BrokerageAccountSnapshot>(
+                        algorithm,
+                        "_preOrderSnapshot"));
+                Assert.IsFalse(
+                    GetPrivateField<bool>(
+                        algorithm,
+                        "_groupOrderSubmitted"));
+                Assert.AreEqual(
+                    1,
+                    GetPrivateField<int>(
+                        algorithm,
+                        "_invalidOrderAttemptCount"));
+                Assert.AreEqual(
+                    reconciliationMessageCount + 2,
+                    algorithm.LogMessages.Count(
+                        message => message.Contains("FA reconciliation")));
             });
         }
 
@@ -1078,7 +1208,8 @@ namespace QuantConnect.Tests.Algorithm
             long generation,
             decimal accountAQuantity,
             decimal accountBQuantity,
-            DateTime collectionStartedUtc)
+            DateTime collectionStartedUtc,
+            bool includeAccountB = true)
         {
             var group = new BrokerageAccountGroup(
                 GroupName,
@@ -1090,9 +1221,13 @@ namespace QuantConnect.Tests.Algorithm
             };
             var accounts = new Dictionary<string, BrokerageAccountState>
             {
-                ["AccountA"] = CreateAccount("AccountA", accountAQuantity),
-                ["AccountB"] = CreateAccount("AccountB", accountBQuantity)
+                ["AccountA"] = CreateAccount("AccountA", accountAQuantity)
             };
+            if (includeAccountB)
+            {
+                accounts["AccountB"] =
+                    CreateAccount("AccountB", accountBQuantity);
+            }
 
             return new BrokerageAccountSnapshot(
                 status,
@@ -1192,6 +1327,9 @@ namespace QuantConnect.Tests.Algorithm
             public IReadOnlyCollection<string> RequestedAdditionalAccounts { get; private set; }
             public List<IReadOnlyCollection<string>> RequestedGroupHistory { get; } =
                 new();
+            public List<IReadOnlyCollection<string>>
+                RequestedAdditionalAccountHistory
+            { get; } = new();
             private readonly Queue<bool> _refreshResults = new();
 
             public void EnqueueRefreshResult(bool accepted) =>
@@ -1214,6 +1352,8 @@ namespace QuantConnect.Tests.Algorithm
                 RequestedGroups = groupNames.ToArray();
                 RequestedAdditionalAccounts = additionalAccountIds.ToArray();
                 RequestedGroupHistory.Add(RequestedGroups);
+                RequestedAdditionalAccountHistory.Add(
+                    RequestedAdditionalAccounts);
                 var accepted =
                     _refreshResults.Count == 0 || _refreshResults.Dequeue();
                 if (accepted)

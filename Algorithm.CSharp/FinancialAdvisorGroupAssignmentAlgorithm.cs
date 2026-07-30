@@ -15,6 +15,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading;
@@ -86,9 +87,9 @@ namespace QuantConnect.Algorithm.CSharp
                 RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
             _targetGroupName = GetParameter("fa-target-group", "TargetGroup");
             _targetAllocationValue =
-                GetParameter("fa-allocation-value", 1m);
+                GetDecimalParameter("fa-allocation-value", "1");
             _cashChangeThreshold =
-                GetParameter("fa-cash-change-threshold", 1000m);
+                GetDecimalParameter("fa-cash-change-threshold", "1000");
 
             if (_cashChangeThreshold < 0)
             {
@@ -110,6 +111,25 @@ namespace QuantConnect.Algorithm.CSharp
                     BrokerageAccountSnapshot,
                     isInitialRequest: true);
             }
+        }
+
+        private decimal GetDecimalParameter(
+            string name,
+            string defaultValue)
+        {
+            var value = GetParameter(name, defaultValue);
+            if (!decimal.TryParse(
+                    value,
+                    NumberStyles.Float,
+                    CultureInfo.InvariantCulture,
+                    out var result))
+            {
+                throw new ArgumentException(
+                    $"Algorithm parameter '{name}' must be a decimal number.",
+                    name);
+            }
+
+            return result;
         }
 
         /// <summary>

@@ -19,11 +19,12 @@ from threading import Lock
 ### <summary>
 ### This algorithm demonstrates unified Financial Advisor group orders and authoritative
 ### post-order account reconciliation. It requires
-### ib-financial-advisors-unified-groups-enabled=true and an existing group whose saved
-### method is Equal, NetLiq, AvailableEquity, Ratio, or Percent. ContractsOrShares instead
-### requires updating and confirming the saved vector before submitting a parent with
-### the exact saved total; use FinancialAdvisorGroupAssignmentAlgorithm for that mutation
-### and confirmed-readback pattern.
+### ib-financial-advisors-unified-groups-enabled=true,
+### ib-financial-advisors-group-filter to be empty, and an existing group whose saved method is
+### Equal, NetLiq, AvailableEquity, Ratio, or Percent. ContractsOrShares instead requires
+### updating and confirming the saved vector before submitting a parent with the exact
+### saved total; use FinancialAdvisorGroupAssignmentAlgorithm for that mutation and
+### confirmed-readback pattern.
 ### </summary>
 ### <meta name="tag" content="using data" />
 ### <meta name="tag" content="using quantconnect" />
@@ -120,29 +121,15 @@ class FinancialAdvisorDemoAlgorithm(QCAlgorithm):
                 snapshot)
             return
 
-        pre_order_snapshot = None
-        reconciled_terminal_order_event = None
-        reconcile = False
-        request_reconcile_refresh = False
         with self._order_state_lock:
-            if self._pending_reconcile_generation >= 0:
-                if self._is_snapshot_fresh(snapshot) and \
-                        snapshot.generation > \
-                        self._pending_reconcile_generation and \
-                        self._pending_reconcile_terminal_utc is not None and \
-                        snapshot.collection_started_utc >= \
-                        self._pending_reconcile_terminal_utc:
-                    pre_order_snapshot = self._pre_order_snapshot
-                    self._pre_order_snapshot = None
-                    reconciled_terminal_order_event = \
-                        self._pending_terminal_order_event
-                    self._pending_terminal_order_event = None
-                    self._pending_reconcile_generation = -1
-                    self._pending_reconcile_terminal_utc = None
-                    self._next_reconcile_refresh_utc = None
-                    reconcile = True
-                else:
-                    request_reconcile_refresh = True
+            reconcile, pre_order_snapshot, \
+                reconciled_terminal_order_event, \
+                request_reconcile_refresh, reconciliation_error = \
+                self._try_take_reconciliation_locked(
+                    snapshot,
+                    now)
+        if reconciliation_error is not None:
+            self.error(reconciliation_error)
         if reconcile:
             self._reconcile_account_positions(
                 pre_order_snapshot,
@@ -290,8 +277,13 @@ class FinancialAdvisorDemoAlgorithm(QCAlgorithm):
         # The IB implementation only coalesces into its in-memory QueueRefresh
         # while this sample state is protected.
         accepted = self.request_brokerage_account_snapshot_refresh(
-            [self._GROUP_NAME])
+            [self._GROUP_NAME],
+            self._get_reconciliation_account_ids_locked())
         return True, accepted
+
+    def _get_reconciliation_account_ids_locked(self):
+        group = self._find_group(self._pre_order_snapshot)
+        return [] if group is None else list(group.account_ids)
 
     def _request_scheduled_snapshot_refresh(self):
         self._scheduled_refresh_intent.set()
@@ -349,28 +341,20 @@ class FinancialAdvisorDemoAlgorithm(QCAlgorithm):
         reconcile = False
         initial_refresh_rejected = False
         reconcile_refresh_rejected = False
+        reconciliation_error = None
         with self._order_state_lock:
             if self._on_data_state_active:
                 return True
 
             snapshot = self.brokerage_account_snapshot
             if self._pending_reconcile_generation >= 0:
-                if self._is_snapshot_fresh(snapshot) and \
-                        snapshot.generation > \
-                        self._pending_reconcile_generation and \
-                        self._pending_reconcile_terminal_utc is not None and \
-                        snapshot.collection_started_utc >= \
-                        self._pending_reconcile_terminal_utc:
-                    pre_order_snapshot = self._pre_order_snapshot
-                    self._pre_order_snapshot = None
-                    reconciled_terminal_order_event = \
-                        self._pending_terminal_order_event
-                    self._pending_terminal_order_event = None
-                    self._pending_reconcile_generation = -1
-                    self._pending_reconcile_terminal_utc = None
-                    self._next_reconcile_refresh_utc = None
-                    reconcile = True
-                else:
+                reconcile, pre_order_snapshot, \
+                    reconciled_terminal_order_event, \
+                    request_reconcile_refresh, reconciliation_error = \
+                    self._try_take_reconciliation_locked(
+                        snapshot,
+                        self.utc_time)
+                if request_reconcile_refresh:
                     attempted, accepted = \
                         self._try_request_reconcile_refresh_locked(snapshot)
                     reconcile_refresh_rejected = attempted and not accepted
@@ -384,6 +368,8 @@ class FinancialAdvisorDemoAlgorithm(QCAlgorithm):
             else:
                 return False
 
+        if reconciliation_error is not None:
+            self.error(reconciliation_error)
         if reconcile:
             self._reconcile_account_positions(
                 pre_order_snapshot,
@@ -403,6 +389,69 @@ class FinancialAdvisorDemoAlgorithm(QCAlgorithm):
             self._report_reconcile_refresh_rejection()
         return True
 
+    def _try_take_reconciliation_locked(self, snapshot, now):
+        if self._pending_reconcile_generation < 0:
+            return False, None, None, False, None
+
+        if not self._is_snapshot_fresh(snapshot) or \
+                snapshot.generation <= \
+                self._pending_reconcile_generation or \
+                self._pending_reconcile_terminal_utc is None or \
+                snapshot.collection_started_utc < \
+                self._pending_reconcile_terminal_utc:
+            return False, None, None, True, None
+
+        reconciliation_error = \
+            self._get_reconciliation_account_state_error(
+                self._pre_order_snapshot,
+                snapshot)
+        if reconciliation_error is not None:
+            # Require another publication rather than reconsidering this
+            # incomplete generation on every state-machine callback.
+            self._pending_reconcile_generation = snapshot.generation
+            self._next_reconcile_refresh_utc = now
+            return False, None, None, True, reconciliation_error
+
+        pre_order_snapshot = self._pre_order_snapshot
+        self._pre_order_snapshot = None
+        terminal_order_event = self._pending_terminal_order_event
+        self._pending_terminal_order_event = None
+        self._pending_reconcile_generation = -1
+        self._pending_reconcile_terminal_utc = None
+        self._next_reconcile_refresh_utc = None
+        return True, pre_order_snapshot, terminal_order_event, False, None
+
+    def _get_reconciliation_account_state_error(
+            self,
+            pre_order_snapshot,
+            current_snapshot):
+        group = self._find_group(pre_order_snapshot)
+        if group is None:
+            return (
+                f"The pre-order snapshot for Financial Advisor group "
+                f"'{self._GROUP_NAME}' is unavailable; reconciliation remains "
+                f"pending.")
+
+        previous_account_ids = {
+            account.account_id.casefold()
+            for account in list(pre_order_snapshot.accounts.values)
+        }
+        current_account_ids = {
+            account.account_id.casefold()
+            for account in list(current_snapshot.accounts.values)
+        }
+        for account_id in group.account_ids:
+            account_key = account_id.casefold()
+            if account_key not in previous_account_ids or \
+                    account_key not in current_account_ids:
+                return (
+                    f"Account state for '{account_id}' is unavailable during "
+                    f"Financial Advisor group reconciliation; reconciliation "
+                    f"remains pending until a strictly newer snapshot contains "
+                    f"every original group member.")
+
+        return None
+
     def _report_reconcile_refresh_rejection(self):
         self.error(
             f"The post-order snapshot refresh for Financial Advisor group "
@@ -413,11 +462,6 @@ class FinancialAdvisorDemoAlgorithm(QCAlgorithm):
             pre_order_snapshot,
             current_snapshot):
         group = self._find_group(pre_order_snapshot)
-        if group is None:
-            self.error(
-                f"The pre-order snapshot for Financial Advisor group "
-                f"'{self._GROUP_NAME}' is unavailable.")
-            return
 
         previous_accounts = {
             account.account_id.casefold(): account
@@ -429,14 +473,8 @@ class FinancialAdvisorDemoAlgorithm(QCAlgorithm):
         }
         for account_id in group.account_ids:
             account_key = account_id.casefold()
-            previous_account = previous_accounts.get(account_key)
-            current_account = current_accounts.get(account_key)
-            if previous_account is None or current_account is None:
-                self.error(
-                    f"Account state for '{account_id}' is unavailable during "
-                    f"Financial Advisor group reconciliation.")
-                continue
-
+            previous_account = previous_accounts[account_key]
+            current_account = current_accounts[account_key]
             previous_quantity = self._get_position_quantity(previous_account)
             current_quantity = self._get_position_quantity(current_account)
             self.log(

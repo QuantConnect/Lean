@@ -25,10 +25,11 @@ namespace QuantConnect.Algorithm.CSharp
 {
     /// <summary>
     /// This algorithm demonstrates unified Financial Advisor group orders and terminal-order snapshot reconciliation.
-    /// It requires ib-financial-advisors-unified-groups-enabled=true and an existing group whose saved
-    /// method is Equal, NetLiq, AvailableEquity, Ratio, or Percent. ContractsOrShares instead requires
-    /// updating and confirming the saved vector before submitting a parent with the exact saved total;
-    /// use FinancialAdvisorGroupAssignmentAlgorithm for that mutation and confirmed-readback pattern.
+    /// It requires ib-financial-advisors-unified-groups-enabled=true,
+    /// ib-financial-advisors-group-filter to be empty, and an existing group whose saved method is Equal,
+    /// NetLiq, AvailableEquity, Ratio, or Percent. ContractsOrShares instead requires updating and
+    /// confirming the saved vector before submitting a parent with the exact saved total; use
+    /// FinancialAdvisorGroupAssignmentAlgorithm for that mutation and confirmed-readback pattern.
     /// </summary>
     /// <meta name="tag" content="using data" />
     /// <meta name="tag" content="using quantconnect" />
@@ -162,29 +163,20 @@ namespace QuantConnect.Algorithm.CSharp
                 TerminalOrderEvent reconciledTerminalOrderEvent = null;
                 var reconcile = false;
                 requestReconcileRefresh = false;
+                string reconciliationErrorMessage = null;
                 lock (_orderStateLock)
                 {
-                    if (_pendingReconcileGeneration >= 0)
-                    {
-                        if (IsSnapshotFresh(snapshot) &&
-                            snapshot.Generation >
-                                _pendingReconcileGeneration &&
-                            snapshot.CollectionStartedUtc >=
-                                _pendingReconcileTerminalUtc)
-                        {
-                            preOrderSnapshot = _preOrderSnapshot;
-                            _preOrderSnapshot = null;
-                            reconciledTerminalOrderEvent =
-                                _pendingTerminalOrderEvent;
-                            _pendingTerminalOrderEvent = null;
-                            _pendingReconcileGeneration = -1;
-                            reconcile = true;
-                        }
-                        else
-                        {
-                            requestReconcileRefresh = true;
-                        }
-                    }
+                    reconcile = TryTakeReconciliationLocked(
+                        snapshot,
+                        now,
+                        out preOrderSnapshot,
+                        out reconciledTerminalOrderEvent,
+                        out requestReconcileRefresh,
+                        out reconciliationErrorMessage);
+                }
+                if (reconciliationErrorMessage != null)
+                {
+                    Error(reconciliationErrorMessage);
                 }
                 if (reconcile)
                 {
@@ -366,8 +358,22 @@ namespace QuantConnect.Algorithm.CSharp
             // The IB implementation only coalesces into its in-memory
             // QueueRefresh while this sample state is protected.
             accepted = RequestBrokerageAccountSnapshotRefresh(
-                new[] { GroupName });
+                new[] { GroupName },
+                GetReconciliationAccountIdsLocked());
             return true;
+        }
+
+        private IReadOnlyCollection<string> GetReconciliationAccountIdsLocked()
+        {
+            if (_preOrderSnapshot != null &&
+                _preOrderSnapshot.Groups.TryGetValue(
+                    GroupName,
+                    out var group))
+            {
+                return group.AccountIds;
+            }
+
+            return Array.Empty<string>();
         }
 
         private void TryRequestInitialSnapshotRefresh(
@@ -499,6 +505,7 @@ namespace QuantConnect.Algorithm.CSharp
             var initialRefreshRejected = false;
             var reconcileRefreshRejected = false;
             string terminalOrderMessage = null;
+            string reconciliationErrorMessage = null;
             lock (_orderStateLock)
             {
                 if (_onDataStateActive)
@@ -509,21 +516,15 @@ namespace QuantConnect.Algorithm.CSharp
                 snapshot = BrokerageAccountSnapshot;
                 if (_pendingReconcileGeneration >= 0)
                 {
-                    if (IsSnapshotFresh(snapshot) &&
-                        snapshot.Generation >
-                            _pendingReconcileGeneration &&
-                        snapshot.CollectionStartedUtc >=
-                            _pendingReconcileTerminalUtc)
-                    {
-                        preOrderSnapshot = _preOrderSnapshot;
-                        _preOrderSnapshot = null;
-                        reconciledTerminalOrderEvent =
-                            _pendingTerminalOrderEvent;
-                        _pendingTerminalOrderEvent = null;
-                        _pendingReconcileGeneration = -1;
-                        reconcile = true;
-                    }
-                    else if (TryRequestReconcileRefreshLocked(
+                    reconcile = TryTakeReconciliationLocked(
+                        snapshot,
+                        UtcTime,
+                        out preOrderSnapshot,
+                        out reconciledTerminalOrderEvent,
+                        out var requestReconcileRefresh,
+                        out reconciliationErrorMessage);
+                    if (requestReconcileRefresh &&
+                        TryRequestReconcileRefreshLocked(
                             snapshot,
                             out var accepted))
                     {
@@ -561,6 +562,10 @@ namespace QuantConnect.Algorithm.CSharp
                             UtcTime);
                 }
             }
+            if (reconciliationErrorMessage != null)
+            {
+                Error(reconciliationErrorMessage);
+            }
             if (initialRefreshRejected)
             {
                 Error(
@@ -578,6 +583,86 @@ namespace QuantConnect.Algorithm.CSharp
             return true;
         }
 
+        private bool TryTakeReconciliationLocked(
+            BrokerageAccountSnapshot snapshot,
+            DateTime now,
+            out BrokerageAccountSnapshot preOrderSnapshot,
+            out TerminalOrderEvent terminalOrderEvent,
+            out bool requestRefresh,
+            out string errorMessage)
+        {
+            preOrderSnapshot = null;
+            terminalOrderEvent = null;
+            requestRefresh = false;
+            errorMessage = null;
+            if (_pendingReconcileGeneration < 0)
+            {
+                return false;
+            }
+
+            requestRefresh = true;
+            if (!IsSnapshotFresh(snapshot) ||
+                snapshot.Generation <= _pendingReconcileGeneration ||
+                snapshot.CollectionStartedUtc < _pendingReconcileTerminalUtc)
+            {
+                return false;
+            }
+
+            if (!HasCompleteReconciliationAccountState(
+                    _preOrderSnapshot,
+                    snapshot,
+                    out errorMessage))
+            {
+                // Require another publication rather than reconsidering this
+                // incomplete generation on every state-machine callback.
+                _pendingReconcileGeneration = snapshot.Generation;
+                _nextReconcileRefreshUtc = now;
+                return false;
+            }
+
+            preOrderSnapshot = _preOrderSnapshot;
+            _preOrderSnapshot = null;
+            terminalOrderEvent = _pendingTerminalOrderEvent;
+            _pendingTerminalOrderEvent = null;
+            _pendingReconcileGeneration = -1;
+            requestRefresh = false;
+            return true;
+        }
+
+        private static bool HasCompleteReconciliationAccountState(
+            BrokerageAccountSnapshot preOrderSnapshot,
+            BrokerageAccountSnapshot currentSnapshot,
+            out string errorMessage)
+        {
+            if (preOrderSnapshot == null ||
+                !preOrderSnapshot.Groups.TryGetValue(
+                    GroupName,
+                    out var group))
+            {
+                errorMessage =
+                    $"The pre-order snapshot for Financial Advisor group " +
+                    $"'{GroupName}' is unavailable; reconciliation remains pending.";
+                return false;
+            }
+
+            foreach (var accountId in group.AccountIds)
+            {
+                if (!preOrderSnapshot.Accounts.ContainsKey(accountId) ||
+                    !currentSnapshot.Accounts.ContainsKey(accountId))
+                {
+                    errorMessage =
+                        $"Account state for '{accountId}' is unavailable during " +
+                        "Financial Advisor group reconciliation; reconciliation " +
+                        "remains pending until a strictly newer snapshot contains " +
+                        "every original group member.";
+                    return false;
+                }
+            }
+
+            errorMessage = null;
+            return true;
+        }
+
         private void ReportReconcileRefreshRejection()
         {
             Error(
@@ -589,32 +674,12 @@ namespace QuantConnect.Algorithm.CSharp
             BrokerageAccountSnapshot preOrderSnapshot,
             BrokerageAccountSnapshot currentSnapshot)
         {
-            if (preOrderSnapshot == null ||
-                !preOrderSnapshot.Groups.TryGetValue(
-                    GroupName,
-                    out var group))
-            {
-                Error(
-                    $"The pre-order snapshot for Financial Advisor group " +
-                    $"'{GroupName}' is unavailable.");
-                return;
-            }
+            var group = preOrderSnapshot.Groups[GroupName];
 
             foreach (var accountId in group.AccountIds)
             {
-                if (!preOrderSnapshot.Accounts.TryGetValue(
-                        accountId,
-                        out var previousAccount) ||
-                    !currentSnapshot.Accounts.TryGetValue(
-                        accountId,
-                        out var currentAccount))
-                {
-                    Error(
-                        $"Account state for '{accountId}' is unavailable during " +
-                        $"Financial Advisor group reconciliation.");
-                    continue;
-                }
-
+                var previousAccount = preOrderSnapshot.Accounts[accountId];
+                var currentAccount = currentSnapshot.Accounts[accountId];
                 var previousQuantity = GetPositionQuantity(previousAccount);
                 var currentQuantity = GetPositionQuantity(currentAccount);
                 Log(

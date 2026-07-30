@@ -333,13 +333,13 @@ namespace QuantConnect.Lean.Engine
                     //Set algorithm as locked; set it to live mode if we're trading live, and set it to locked for no further updates.
                     algorithm.SetAlgorithmId(job.AlgorithmId);
                     algorithm.SetLocked();
-                    SetBrokerageAccountMutationServicesReady(algorithm);
 
                     //Load the associated handlers for transaction and realtime events:
                     AlgorithmHandlers.Transactions.Initialize(algorithm, brokerage, AlgorithmHandlers.Results);
                     try
                     {
                         AlgorithmHandlers.RealTime.Setup(algorithm, job, AlgorithmHandlers.Results, SystemHandlers.Api, algorithmManager.TimeLimit);
+                        SetBrokerageAccountMutationServicesReady(algorithm, true);
 
                         // Result manager scanning message queue: (started earlier)
                         AlgorithmHandlers.Results.DebugMessage(
@@ -389,6 +389,7 @@ namespace QuantConnect.Lean.Engine
 
                     // notify the LEAN manager that the algorithm has finished
                     SystemHandlers.LeanManager.OnAlgorithmEnd();
+                    SetBrokerageAccountMutationServicesReady(algorithm, false);
 
                     try
                     {
@@ -582,9 +583,9 @@ namespace QuantConnect.Lean.Engine
             consumer.SetBrokerageAccountGroupAllocationManager(brokerage as IBrokerageAccountGroupAllocationManager);
         }
 
-        private static void SetBrokerageAccountMutationServicesReady(IAlgorithm algorithm) =>
+        private static void SetBrokerageAccountMutationServicesReady(IAlgorithm algorithm, bool ready) =>
             (algorithm is AlgorithmPythonWrapper wrapper ? wrapper.BaseAlgorithm : algorithm as QCAlgorithm)
-                ?.SetBrokerageAccountMutationServicesReady();
+                ?.SetBrokerageAccountMutationServicesReady(ready);
 
         /// <summary>
         /// Save a list of trades to disk for a given path
