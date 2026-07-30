@@ -14,6 +14,8 @@
 */
 
 using System;
+using System.Linq;
+using System.Text.RegularExpressions;
 using Python.Runtime;
 using QuantConnect.Util;
 
@@ -24,6 +26,8 @@ namespace QuantConnect.Exceptions
     /// </summary>
     public class ModuleNotFoundPythonExceptionInterpreter : PythonExceptionInterpreter
     {
+        private static readonly Regex _camelCasedNameRegex = new Regex(@"^[A-Z][a-zA-Z0-9]*(\.[A-Z][a-zA-Z0-9]*)*$", RegexOptions.Compiled);
+
         /// <summary>
         /// Determines the order that an instance of this class should be called
         /// </summary>
@@ -60,10 +64,20 @@ namespace QuantConnect.Exceptions
             var pe = (PythonException)exception;
 
             var moduleName = pe.Message.GetStringBetweenChars('\'', '\'');
-            var message = Messages.ModuleNotFoundPythonExceptionInterpreter.ModuleNotFound(moduleName);
+            var message = Messages.ModuleNotFoundPythonExceptionInterpreter.ModuleNotFound(moduleName, IsCamelCased(moduleName));
             message += PythonUtil.PythonExceptionStackParser(pe.StackTrace);
 
             return new Exception(message, pe);
+        }
+
+        /// <summary>
+        /// Determines whether the module name follows .NET namespace casing (e.g. "QuantConnect.Indicators"):
+        /// every dot-separated segment starts with an uppercase letter and the name contains at least one
+        /// lowercase letter, so all-uppercase Python packages like "PIL" are not treated as assemblies.
+        /// </summary>
+        private static bool IsCamelCased(string moduleName)
+        {
+            return _camelCasedNameRegex.IsMatch(moduleName) && moduleName.Any(char.IsLower);
         }
     }
 }

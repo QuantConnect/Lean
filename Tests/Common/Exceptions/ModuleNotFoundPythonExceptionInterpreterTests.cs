@@ -83,6 +83,39 @@ namespace QuantConnect.Tests.Common.Exceptions
             Assert.True(exception.Message.Contains("use an equivalent Python package instead"));
         }
 
+        [Test]
+        [TestCase("FakeMissingAssembly", true)]
+        [TestCase("FakeMissingAssembly99", true)]
+        [TestCase("fake_missing_module", false)]
+        [TestCase("fakemissingmodule", false)]
+        [TestCase("FAKEMISSINGMODULE", false)]
+        [TestCase("Fake_Missing_Module", false)]
+        public void AddsDotNetAssemblyAdviceOnlyForCamelCasedModuleNames(string moduleName, bool expectDotNetAdvice)
+        {
+            PythonException pythonException = null;
+            using (Py.GIL())
+            {
+                try
+                {
+                    Py.Import(moduleName);
+                }
+                catch (PythonException exception)
+                {
+                    pythonException = exception;
+                }
+            }
+
+            Assert.IsNotNull(pythonException);
+
+            var interpreter = new ModuleNotFoundPythonExceptionInterpreter();
+            Assert.IsTrue(interpreter.CanInterpret(pythonException));
+
+            var interpretedException = interpreter.Interpret(pythonException, NullExceptionInterpreter.Instance);
+            StringAssert.Contains($"No module named '{moduleName}'", interpretedException.Message);
+            StringAssert.Contains("ensure it is installed in the environment", interpretedException.Message);
+            Assert.AreEqual(expectDotNetAdvice, interpretedException.Message.Contains(".NET assembly", StringComparison.Ordinal));
+        }
+
         private Exception CreateExceptionFromType(Type type) => type == typeof(PythonException) ? _pythonException : (Exception)Activator.CreateInstance(type);
     }
 }

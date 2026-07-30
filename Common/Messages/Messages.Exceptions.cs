@@ -96,14 +96,18 @@ namespace QuantConnect
         public static class ModuleNotFoundPythonExceptionInterpreter
         {
             /// <summary>
-            /// Returns a string message saying the given module could not be found. It also contains an advice on how to fix it,
-            /// both for C# namespaces and Python packages
+            /// Returns a string message saying the given module could not be found, with advice on how to fix it.
+            /// The .NET assembly advice is only included when the module name looks like a .NET namespace
             /// </summary>
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public static string ModuleNotFound(string moduleName)
+            public static string ModuleNotFound(string moduleName, bool isModuleNameCamelCased)
             {
-                return $"No module named '{moduleName}'. If it is a Python package, ensure it is installed in the environment. " +
-                    "If it is a .NET assembly, importing it is not supported, use an equivalent Python package instead.";
+                var message = $"No module named '{moduleName}'. If it is a Python package, ensure it is installed in the environment.";
+                if (isModuleNameCamelCased)
+                {
+                    message += " If it is a .NET assembly, importing it is not supported, use an equivalent Python package instead.";
+                }
+                return message;
             }
         }
 
