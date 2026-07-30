@@ -91,6 +91,47 @@ namespace QuantConnect
         }
 
         /// <summary>
+        /// Provides user-facing messages for the <see cref="Exceptions.ModuleNotFoundPythonExceptionInterpreter"/> class and its consumers or related classes
+        /// </summary>
+        public static class ModuleNotFoundPythonExceptionInterpreter
+        {
+            /// <summary>
+            /// Returns a string message saying the given module could not be found, with advice on how to fix it.
+            /// The .NET assembly advice is only included when the module name looks like a .NET namespace
+            /// </summary>
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public static string ModuleNotFound(string moduleName, bool isModuleNameCamelCased)
+            {
+                var message = $"No module named '{moduleName}'. If it is a Python package, ensure it is installed in the environment.";
+                if (isModuleNameCamelCased)
+                {
+                    message += " If it is a .NET assembly, importing it is not supported, use an equivalent Python package instead.";
+                }
+                return message;
+            }
+        }
+
+        /// <summary>
+        /// Provides user-facing messages for the <see cref="Exceptions.MultipleInheritancePythonExceptionInterpreter"/> class and its consumers or related classes
+        /// </summary>
+        public static class MultipleInheritancePythonExceptionInterpreter
+        {
+            /// <summary>
+            /// String message saying: cannot use multiple inheritance with managed classes
+            /// </summary>
+            public static string MultipleInheritanceExpectedSubstring = "cannot use multiple inheritance with managed classes";
+
+            /// <summary>
+            /// String message saying a Python class cannot inherit from multiple classes when one of them is a C# class.
+            /// It also contains an advice on how to fix it
+            /// </summary>
+            public static string InvalidMultipleInheritance =
+                "A Python class cannot inherit from multiple classes when one of them is a C# class, like QCAlgorithm. " +
+                "Keep the C# class as the only base and move the other bases' members into helper classes used via " +
+                "composition (e.g. self._helper = MyHelper()).";
+        }
+
+        /// <summary>
         /// Provides user-facing messages for the <see cref="Exceptions.NoMethodMatchPythonExceptionInterpreter"/> class and its consumers or related classes
         /// </summary>
         public static class NoMethodMatchPythonExceptionInterpreter
