@@ -101,23 +101,22 @@ namespace QuantConnect.Tests.Algorithm
         }
 
         [Test]
-        public void MutationsAreUnavailableUntilAlgorithmIsLocked()
+        public void PublicSetLockedDuringInitializeDoesNotEnableMutations()
         {
             var provider = new TestProvider(BrokerageAccountSnapshotStatus.Ready);
-            var algorithm = new QCAlgorithm();
-            InstallBrokerageAccountServices(algorithm, provider, provider, provider);
+            var algorithm = new PrematurelyLockedAlgorithm();
+            InstallBrokerageAccountServices(
+                algorithm,
+                provider,
+                provider,
+                provider,
+                mutationsReady: false);
 
+            algorithm.Initialize();
             Assert.AreSame(provider.GetAccountSnapshot(), algorithm.BrokerageAccountSnapshot);
             Assert.IsTrue(algorithm.RequestBrokerageAccountSnapshotRefresh());
-            Assert.IsFalse(algorithm.RequestBrokerageAccountGroupAssignment(
-                "Account",
-                "Group",
-                null,
-                provider.GetAccountSnapshot()));
-            Assert.IsFalse(algorithm.RequestBrokerageAccountGroupAllocationUpdate(
-                "Group",
-                new Dictionary<string, decimal> { ["Account"] = 1m },
-                provider.GetAccountSnapshot()));
+            Assert.IsFalse(algorithm.GroupAssignmentAccepted);
+            Assert.IsFalse(algorithm.GroupAllocationUpdateAccepted);
             Assert.IsFalse(provider.GroupAssignmentRequested);
             Assert.IsFalse(provider.GroupAllocationUpdateRequested);
         }
@@ -219,6 +218,35 @@ namespace QuantConnect.Tests.Algorithm
                 provider.AllocationExpectedGroupConfigurationVersion);
         }
 
+        [TestCase("", "configuration")]
+        [TestCase(" ", "configuration")]
+        [TestCase("membership", "")]
+        [TestCase("membership", " ")]
+        public void MutationsRejectReadySnapshotsWithBlankVersionTokens(
+            string membershipHash,
+            string groupConfigurationVersion)
+        {
+            var provider = new TestProvider(BrokerageAccountSnapshotStatus.Ready);
+            var algorithm = new QCAlgorithm();
+            InstallBrokerageAccountServices(algorithm, provider, provider, provider);
+            var observedSnapshot = CreateSnapshot(
+                BrokerageAccountSnapshotStatus.Ready,
+                membershipHash,
+                groupConfigurationVersion);
+
+            Assert.IsFalse(algorithm.RequestBrokerageAccountGroupAssignment(
+                "Account",
+                "Group",
+                null,
+                observedSnapshot));
+            Assert.IsFalse(algorithm.RequestBrokerageAccountGroupAllocationUpdate(
+                "Group",
+                new Dictionary<string, decimal> { ["Account"] = 1m },
+                observedSnapshot));
+            Assert.IsFalse(provider.GroupAssignmentRequested);
+            Assert.IsFalse(provider.GroupAllocationUpdateRequested);
+        }
+
         [TestCase(BrokerageAccountSnapshotStatus.Unavailable)]
         [TestCase(BrokerageAccountSnapshotStatus.Refreshing)]
         [TestCase(BrokerageAccountSnapshotStatus.Stale)]
@@ -298,12 +326,38 @@ namespace QuantConnect.Tests.Algorithm
             QCAlgorithm algorithm,
             IBrokerageAccountStateProvider stateProvider,
             IBrokerageAccountGroupManager groupManager,
-            IBrokerageAccountGroupAllocationManager allocationManager)
+            IBrokerageAccountGroupAllocationManager allocationManager,
+            bool mutationsReady = true)
         {
             var consumer = (IBrokerageAccountServiceConsumer)algorithm;
             consumer.SetBrokerageAccountStateProvider(stateProvider);
             consumer.SetBrokerageAccountGroupManager(groupManager);
             consumer.SetBrokerageAccountGroupAllocationManager(allocationManager);
+            if (mutationsReady)
+            {
+                algorithm.SetBrokerageAccountMutationServicesReady();
+            }
+        }
+
+        private sealed class PrematurelyLockedAlgorithm : QCAlgorithm
+        {
+            public bool GroupAssignmentAccepted { get; private set; }
+            public bool GroupAllocationUpdateAccepted { get; private set; }
+
+            public override void Initialize()
+            {
+                SetLocked();
+                var observedSnapshot = BrokerageAccountSnapshot;
+                GroupAssignmentAccepted = RequestBrokerageAccountGroupAssignment(
+                    "Account",
+                    "Group",
+                    null,
+                    observedSnapshot);
+                GroupAllocationUpdateAccepted = RequestBrokerageAccountGroupAllocationUpdate(
+                    "Group",
+                    new Dictionary<string, decimal> { ["Account"] = 1m },
+                    observedSnapshot);
+            }
         }
 
         private sealed class TestProvider : IBrokerageAccountStateProvider,

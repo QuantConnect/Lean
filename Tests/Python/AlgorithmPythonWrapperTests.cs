@@ -331,6 +331,7 @@ namespace QuantConnect.Tests.Python
                 Assert.IsNull(requestedAllocations);
 
                 algorithm.BaseAlgorithm.SetLocked();
+                algorithm.BaseAlgorithm.SetBrokerageAccountMutationServicesReady();
                 var nowUtc = DateTime.UtcNow;
                 algorithm.OnData(new Slice(nowUtc, Array.Empty<BaseData>(), nowUtc));
 

@@ -329,6 +329,8 @@ class FinancialAdvisorDemoAlgorithmUnderTest(FinancialAdvisorDemoAlgorithm):
             services.AcceptRefreshRequests = false;
             algorithm.Initialize();
             algorithm.SetLocked();
+            algorithm.BaseAlgorithm
+                .SetBrokerageAccountMutationServicesReady();
             services.AcceptRefreshRequests = true;
             services.ResetRefreshRequests();
             algorithm.SetDateTime(SnapshotTime.AddSeconds(5));

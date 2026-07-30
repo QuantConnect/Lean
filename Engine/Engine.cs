@@ -20,6 +20,7 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
+using QuantConnect.Algorithm;
 using QuantConnect.AlgorithmFactory.Python.Wrappers;
 using QuantConnect.Brokerages;
 using QuantConnect.Configuration;
@@ -332,6 +333,7 @@ namespace QuantConnect.Lean.Engine
                     //Set algorithm as locked; set it to live mode if we're trading live, and set it to locked for no further updates.
                     algorithm.SetAlgorithmId(job.AlgorithmId);
                     algorithm.SetLocked();
+                    SetBrokerageAccountMutationServicesReady(algorithm);
 
                     //Load the associated handlers for transaction and realtime events:
                     AlgorithmHandlers.Transactions.Initialize(algorithm, brokerage, AlgorithmHandlers.Results);
@@ -578,6 +580,14 @@ namespace QuantConnect.Lean.Engine
             consumer.SetBrokerageAccountStateProvider(provider);
             consumer.SetBrokerageAccountGroupManager(brokerage as IBrokerageAccountGroupManager);
             consumer.SetBrokerageAccountGroupAllocationManager(brokerage as IBrokerageAccountGroupAllocationManager);
+        }
+
+        private static void SetBrokerageAccountMutationServicesReady(IAlgorithm algorithm)
+        {
+            var baseAlgorithm = algorithm is AlgorithmPythonWrapper wrapper
+                ? wrapper.BaseAlgorithm
+                : algorithm as QCAlgorithm;
+            baseAlgorithm?.SetBrokerageAccountMutationServicesReady();
         }
 
         /// <summary>

@@ -26,31 +26,50 @@ namespace QuantConnect.Algorithm
         private volatile IBrokerageAccountStateProvider _brokerageAccountStateProvider;
         private volatile IBrokerageAccountGroupManager _brokerageAccountGroupManager;
         private volatile IBrokerageAccountGroupAllocationManager _brokerageAccountGroupAllocationManager;
+        private volatile bool _brokerageAccountMutationServicesReady;
 
         /// <summary>
         /// Gets the latest immutable brokerage account snapshot. Reading this property does not perform an
         /// external request.
         /// </summary>
         [DocumentationAttribute(LiveTrading)]
-        public BrokerageAccountSnapshot BrokerageAccountSnapshot =>
-            _brokerageAccountStateProvider?.GetAccountSnapshot() ?? BrokerageAccountSnapshot.Unavailable;
+        public BrokerageAccountSnapshot BrokerageAccountSnapshot
+        {
+            get
+            {
+                var provider = _brokerageAccountStateProvider;
+                return provider?.GetAccountSnapshot() ?? BrokerageAccountSnapshot.Unavailable;
+            }
+        }
 
         /// <summary>
         /// Gets the latest immutable brokerage account-group membership update result.
         /// Reading this property does not perform an external request.
         /// </summary>
         [DocumentationAttribute(LiveTrading)]
-        public BrokerageAccountGroupAssignment BrokerageAccountGroupAssignment =>
-            _brokerageAccountGroupManager?.GetAccountGroupAssignment() ?? BrokerageAccountGroupAssignment.Unavailable;
+        public BrokerageAccountGroupAssignment BrokerageAccountGroupAssignment
+        {
+            get
+            {
+                var manager = _brokerageAccountGroupManager;
+                return manager?.GetAccountGroupAssignment() ?? BrokerageAccountGroupAssignment.Unavailable;
+            }
+        }
 
         /// <summary>
         /// Gets the latest immutable brokerage account-group allocation update result.
         /// Reading this property does not perform an external request.
         /// </summary>
         [DocumentationAttribute(LiveTrading)]
-        public BrokerageAccountGroupAllocationUpdate BrokerageAccountGroupAllocationUpdate =>
-            _brokerageAccountGroupAllocationManager?.GetAccountGroupAllocationUpdate() ??
-                BrokerageAccountGroupAllocationUpdate.Unavailable;
+        public BrokerageAccountGroupAllocationUpdate BrokerageAccountGroupAllocationUpdate
+        {
+            get
+            {
+                var manager = _brokerageAccountGroupAllocationManager;
+                return manager?.GetAccountGroupAllocationUpdate() ??
+                    BrokerageAccountGroupAllocationUpdate.Unavailable;
+            }
+        }
 
         /// <summary>
         /// Requests asynchronous discovery complete within the provider's configured deployment scope. Inspect
@@ -63,7 +82,8 @@ namespace QuantConnect.Algorithm
         [DocumentationAttribute(LiveTrading)]
         public bool RequestBrokerageAccountSnapshotRefresh()
         {
-            return _brokerageAccountStateProvider?.RequestAccountSnapshotRefresh(
+            var provider = _brokerageAccountStateProvider;
+            return provider?.RequestAccountSnapshotRefresh(
                 Array.Empty<string>(), Array.Empty<string>()) ?? false;
         }
 
@@ -95,11 +115,8 @@ namespace QuantConnect.Algorithm
                     nameof(additionalAccountIds));
             }
 
-            if (_brokerageAccountStateProvider == null)
-            {
-                return false;
-            }
-            return _brokerageAccountStateProvider.RequestAccountSnapshotRefresh(groups, accounts);
+            var provider = _brokerageAccountStateProvider;
+            return provider?.RequestAccountSnapshotRefresh(groups, accounts) ?? false;
         }
 
         /// <summary>
@@ -139,26 +156,32 @@ namespace QuantConnect.Algorithm
                 ValidateBrokerageIdentifier(targetGroupName, nameof(targetGroupName));
             }
 
-            if (!GetLocked())
+            if (!_brokerageAccountMutationServicesReady)
             {
                 return false;
             }
 
-            if (_brokerageAccountGroupManager == null || _brokerageAccountStateProvider == null)
+            var manager = _brokerageAccountGroupManager;
+            var provider = _brokerageAccountStateProvider;
+            if (manager == null || provider == null)
             {
                 return false;
             }
 
-            if (!observedSnapshot.IsReady)
+            var membershipHash = observedSnapshot.MembershipHash;
+            var groupConfigurationVersion = observedSnapshot.GroupConfigurationVersion;
+            if (!observedSnapshot.IsReady ||
+                string.IsNullOrWhiteSpace(membershipHash) ||
+                string.IsNullOrWhiteSpace(groupConfigurationVersion))
             {
                 return false;
             }
 
-            return _brokerageAccountGroupManager.RequestAccountGroupAssignment(
+            return manager.RequestAccountGroupAssignment(
                 accountId,
                 targetGroupName,
-                observedSnapshot.MembershipHash,
-                observedSnapshot.GroupConfigurationVersion,
+                membershipHash,
+                groupConfigurationVersion,
                 targetAllocationValue);
         }
 
@@ -203,25 +226,32 @@ namespace QuantConnect.Algorithm
                 }
             }
 
-            if (!GetLocked())
+            if (!_brokerageAccountMutationServicesReady)
             {
                 return false;
             }
 
-            if (_brokerageAccountGroupAllocationManager == null || _brokerageAccountStateProvider == null)
-            {
-                return false;
-            }
-            if (!observedSnapshot.IsReady)
+            var manager = _brokerageAccountGroupAllocationManager;
+            var provider = _brokerageAccountStateProvider;
+            if (manager == null || provider == null)
             {
                 return false;
             }
 
-            return _brokerageAccountGroupAllocationManager.RequestAccountGroupAllocationUpdate(
+            var membershipHash = observedSnapshot.MembershipHash;
+            var groupConfigurationVersion = observedSnapshot.GroupConfigurationVersion;
+            if (!observedSnapshot.IsReady ||
+                string.IsNullOrWhiteSpace(membershipHash) ||
+                string.IsNullOrWhiteSpace(groupConfigurationVersion))
+            {
+                return false;
+            }
+
+            return manager.RequestAccountGroupAllocationUpdate(
                 groupName,
                 allocations,
-                observedSnapshot.MembershipHash,
-                observedSnapshot.GroupConfigurationVersion);
+                membershipHash,
+                groupConfigurationVersion);
         }
 
         /// <summary>
@@ -290,6 +320,15 @@ namespace QuantConnect.Algorithm
             IBrokerageAccountGroupAllocationManager manager)
         {
             _brokerageAccountGroupAllocationManager = manager;
+        }
+
+        internal void SetBrokerageAccountMutationServicesReady()
+        {
+            var provider = _brokerageAccountStateProvider;
+            var groupManager = _brokerageAccountGroupManager;
+            var allocationManager = _brokerageAccountGroupAllocationManager;
+            _brokerageAccountMutationServicesReady =
+                provider != null && (groupManager != null || allocationManager != null);
         }
 
         private static ReadOnlyCollection<string> NormalizeIdentifiers(

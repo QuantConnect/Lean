@@ -411,6 +411,7 @@ namespace QuantConnect.Tests.Algorithm
 
             algorithm.Initialize();
             algorithm.SetLocked();
+            algorithm.SetBrokerageAccountMutationServicesReady();
 
             Assert.Multiple(() =>
             {
@@ -643,6 +644,7 @@ namespace QuantConnect.Tests.Algorithm
 
             algorithm.Initialize();
             algorithm.SetLocked();
+            algorithm.SetBrokerageAccountMutationServicesReady();
 
             Assert.Multiple(() =>
             {
@@ -1330,6 +1332,7 @@ namespace QuantConnect.Tests.Algorithm
                 "_initialSnapshotRequestGeneration",
                 services.Snapshot.Generation - 1);
             algorithm.SetLocked();
+            algorithm.SetBrokerageAccountMutationServicesReady();
             return algorithm;
         }
 

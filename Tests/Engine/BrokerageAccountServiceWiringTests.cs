@@ -38,6 +38,79 @@ namespace QuantConnect.Tests.Engine
             AssertPythonWrapperForwardsEveryService();
         }
 
+        [TestCase(false)]
+        [TestCase(true)]
+        public void EngineMarksMutationServicesReadyForCSharpAndPythonAlgorithms(bool usePythonWrapper)
+        {
+            var asOfUtc = new DateTime(2026, 1, 2, 3, 4, 5, DateTimeKind.Utc);
+            var snapshot = new BrokerageAccountSnapshot(
+                BrokerageAccountSnapshotStatus.Ready,
+                7,
+                asOfUtc,
+                asOfUtc,
+                new Dictionary<string, BrokerageAccountGroup>(),
+                new Dictionary<string, BrokerageAccountState>(),
+                Array.Empty<string>(),
+                "membership",
+                "configuration",
+                string.Empty);
+            var brokerage = new Mock<IBrokerage>();
+            var stateProvider = brokerage.As<IBrokerageAccountStateProvider>();
+            var groupManager = brokerage.As<IBrokerageAccountGroupManager>();
+            stateProvider.Setup(instance => instance.GetAccountSnapshot()).Returns(snapshot);
+            groupManager
+                .Setup(instance => instance.RequestAccountGroupAssignment(
+                    "Account",
+                    "Group",
+                    "membership",
+                    "configuration",
+                    null))
+                .Returns(true);
+            var baseAlgorithm = new QCAlgorithm();
+            IAlgorithm algorithm = baseAlgorithm;
+            if (usePythonWrapper)
+            {
+                var wrapper = (AlgorithmPythonWrapper)RuntimeHelpers.GetUninitializedObject(
+                    typeof(AlgorithmPythonWrapper));
+                var baseAlgorithmField = typeof(AlgorithmPythonWrapper)
+                    .GetFields(BindingFlags.Instance | BindingFlags.NonPublic)
+                    .Single(field => field.FieldType == typeof(QCAlgorithm));
+                baseAlgorithmField.SetValue(wrapper, baseAlgorithm);
+                algorithm = wrapper;
+            }
+
+            var serviceMethod = typeof(LeanEngine).GetMethod(
+                "SetBrokerageAccountServices",
+                BindingFlags.NonPublic | BindingFlags.Static);
+            var readinessMethod = typeof(LeanEngine).GetMethod(
+                "SetBrokerageAccountMutationServicesReady",
+                BindingFlags.NonPublic | BindingFlags.Static);
+            Assert.IsNotNull(serviceMethod);
+            Assert.IsNotNull(readinessMethod);
+            serviceMethod.Invoke(null, new object[] { algorithm, brokerage.Object });
+            algorithm.SetLocked();
+
+            Assert.IsFalse(baseAlgorithm.RequestBrokerageAccountGroupAssignment(
+                "Account",
+                "Group",
+                null,
+                snapshot));
+
+            readinessMethod.Invoke(null, new object[] { algorithm });
+
+            Assert.IsTrue(baseAlgorithm.RequestBrokerageAccountGroupAssignment(
+                "Account",
+                "Group",
+                null,
+                snapshot));
+            groupManager.Verify(instance => instance.RequestAccountGroupAssignment(
+                "Account",
+                "Group",
+                "membership",
+                "configuration",
+                null), Times.Once);
+        }
+
         private static void AssertEngineInstallsEveryService()
         {
             var algorithm = new Mock<IAlgorithm>();
