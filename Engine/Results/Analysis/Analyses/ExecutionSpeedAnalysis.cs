@@ -26,9 +26,15 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
     public class ExecutionSpeedAnalysis : BaseResultsAnalysis
     {
         /// <summary>
+        /// The data points per second under which execution is reported as slow, from the platform
+        /// benchmarks. Also used by <see cref="AlgorithmSpeedAnalysis"/> while the backtest runs.
+        /// </summary>
+        public const int SlowDataPointsPerSecond = 40_000;
+
+        /// <summary>
         /// Gets the description of the slow execution issue.
         /// </summary>
-        public override string Issue { get; } = "The algorithm ran below 40k data points per second.";
+        public override string Issue { get; } = $"The algorithm ran below {SlowDataPointsPerSecond / 1000}k data points per second.";
 
         /// <summary>
         /// Gets the severity weight for the execution speed analysis.
@@ -48,10 +54,11 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
         /// Parses the backtest logs to determine execution speed and flags backtests that ran slowly.
         /// </summary>
         /// <param name="logs">The full list of log lines produced by the backtest.</param>
-        /// <returns>Analysis results flagging slow execution when below 40k data points per second and runtime is at least 10 seconds.</returns>
+        /// <returns>Analysis results flagging slow execution when below <see cref="SlowDataPointsPerSecond"/> and runtime is at least 10 seconds.</returns>
         public IReadOnlyList<QuantConnect.Analysis> Run(IReadOnlyList<string> logs)
         {
-            var result = TryGetDataPointsPerSecond(logs, out var timeInSeconds, out var dataPointsPerSecond) && timeInSeconds >= 10 && dataPointsPerSecond < 40
+            var result = TryGetDataPointsPerSecond(logs, out var timeInSeconds, out var dataPointsPerSecond) &&
+                timeInSeconds >= 10 && dataPointsPerSecond < SlowDataPointsPerSecond / 1000
                 ? $"The algorithm is slowly executing at only {dataPointsPerSecond}k data points per second"
                 : null;
 

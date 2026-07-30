@@ -30,12 +30,6 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
     public class AlgorithmSpeedAnalysis : BaseResultsAnalysis
     {
         /// <summary>
-        /// The data points per second under which execution is reported as slow,
-        /// matching the threshold used by <see cref="ExecutionSpeedAnalysis"/> on completed backtests.
-        /// </summary>
-        public const int SlowDataPointsPerSecond = 40_000;
-
-        /// <summary>
         /// The recent-to-initial throughput ratio under which throughput is reported as degrading.
         /// </summary>
         public const double DegradationRatio = 0.5;
@@ -136,7 +130,8 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
 
             var recent = speed.RecentDataPointsPerSecond();
             var previous = speed.RecentDataPointsPerSecond(skipLast: 1);
-            if (recent is null or >= SlowDataPointsPerSecond || previous is null or >= SlowDataPointsPerSecond)
+            if (recent is null or >= ExecutionSpeedAnalysis.SlowDataPointsPerSecond ||
+                previous is null or >= ExecutionSpeedAnalysis.SlowDataPointsPerSecond)
             {
                 return;
             }
@@ -162,7 +157,7 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
             }
 
             findings.Add(new(SlowExecutionName,
-                Invariant($"The algorithm is running below {SlowDataPointsPerSecond / 1000}k data points per second."),
+                Invariant($"The algorithm is running below {ExecutionSpeedAnalysis.SlowDataPointsPerSecond / 1000}k data points per second."),
                 sample,
                 null,
                 [
