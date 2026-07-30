@@ -312,7 +312,7 @@ namespace QuantConnect.Tests.Algorithm
         }
 
         [Test]
-        public void SynchronousInvalidOrderLogsReasonAndRetriesAfterBoundedDelay()
+        public void InvalidAfterPartialFillReconcilesBeforeBoundedRetry()
         {
             var snapshot = CreateSnapshot(
                 BrokerageAccountSnapshotStatus.Ready,
@@ -324,6 +324,13 @@ namespace QuantConnect.Tests.Algorithm
             {
                 Snapshot = snapshot
             };
+            provider.RefreshRequestHook = stateProvider =>
+                stateProvider.Snapshot = CreateSnapshot(
+                    BrokerageAccountSnapshotStatus.Ready,
+                    snapshot.Generation + 1,
+                    12m,
+                    20m,
+                    SnapshotTime);
             var algorithm = CreateAlgorithm(provider, snapshot);
             SetPrivateField(algorithm, "_groupOrderSubmitted", false);
             SetPrivateField(algorithm, "_groupOrderId", 0);
@@ -352,6 +359,10 @@ namespace QuantConnect.Tests.Algorithm
                         algorithm.OnOrderEvent(
                             CreateOrderEvent(
                                 41,
+                                OrderStatus.PartiallyFilled));
+                        algorithm.OnOrderEvent(
+                            CreateOrderEvent(
+                                41,
                                 OrderStatus.Invalid,
                                 "saved allocation total is not lot-aligned"));
                         return invalidTicket;
@@ -360,22 +371,47 @@ namespace QuantConnect.Tests.Algorithm
                 }));
 
             algorithm.OnData(CreateEmptySlice());
-            algorithm.OnData(CreateEmptySlice());
 
             Assert.Multiple(() =>
             {
                 Assert.AreEqual(
                     1,
                     submissionCount,
-                    "The retry must respect its bounded delay.");
-                Assert.IsFalse(
+                    "The Invalid parent must not retry before reconciliation.");
+                Assert.IsTrue(
                     GetPrivateField<bool>(
                         algorithm,
                         "_groupOrderSubmitted"));
+                Assert.AreEqual(1, provider.RefreshRequestCount);
+                Assert.AreEqual(
+                    snapshot.Generation,
+                    GetPrivateField<long>(
+                        algorithm,
+                        "_pendingReconcileGeneration"));
                 Assert.That(
                     algorithm.ErrorMessages,
                     Has.One.Contains(
                         "saved allocation total is not lot-aligned"));
+            });
+
+            var messageCount = algorithm.LogMessages.Count;
+            algorithm.OnData(CreateEmptySlice());
+            Assert.Multiple(() =>
+            {
+                Assert.AreEqual(1, submissionCount);
+                Assert.IsFalse(
+                    GetPrivateField<bool>(
+                        algorithm,
+                        "_groupOrderSubmitted"));
+                Assert.AreEqual(
+                    -1,
+                    GetPrivateField<long>(
+                        algorithm,
+                        "_pendingReconcileGeneration"));
+                Assert.That(
+                    algorithm.LogMessages.Skip(messageCount),
+                    Has.One.Contains(
+                        "account=AccountA, symbol=SPY, before=10, after=12, change=2"));
             });
 
             algorithm.SetDateTime(SnapshotTime.AddSeconds(5));
@@ -393,7 +429,118 @@ namespace QuantConnect.Tests.Algorithm
                     GetPrivateField<int>(
                         algorithm,
                         "_groupOrderId"));
+                Assert.AreEqual(1, provider.RefreshRequestCount);
+            });
+        }
+
+        [Test]
+        public void EmptySetHoldingsResultStopsAfterBoundedAttempts()
+        {
+            var snapshot = CreateSnapshot(
+                BrokerageAccountSnapshotStatus.Ready,
+                7,
+                10m,
+                20m,
+                SnapshotTime);
+            var provider = new TestAccountStateProvider
+            {
+                Snapshot = snapshot
+            };
+            var algorithm = CreateAlgorithm(provider, snapshot);
+            SetPrivateField(algorithm, "_groupOrderSubmitted", false);
+            SetPrivateField(algorithm, "_groupOrderId", 0);
+            SetPrivateField(
+                algorithm,
+                "_initialSnapshotRequestGeneration",
+                snapshot.Generation - 1);
+            var submissionCount = 0;
+            SetPrivateField(
+                algorithm,
+                "_submitGroupOrder",
+                new Func<OrderTicket>(() =>
+                {
+                    ++submissionCount;
+                    return null;
+                }));
+
+            for (var attempt = 0; attempt < 4; ++attempt)
+            {
+                algorithm.SetDateTime(
+                    SnapshotTime.AddSeconds(5 * attempt));
+                algorithm.OnData(CreateEmptySlice());
+            }
+
+            Assert.Multiple(() =>
+            {
+                Assert.AreEqual(
+                    3,
+                    submissionCount,
+                    "An empty SetHoldings result must have a bounded retry count.");
                 Assert.AreEqual(0, provider.RefreshRequestCount);
+                Assert.That(
+                    algorithm.ErrorMessages,
+                    Has.One.Contains("bounded retry limit was reached"));
+            });
+        }
+
+        [Test]
+        public void OldReadySnapshotRefreshesWithoutSubmittingOrder()
+        {
+            var snapshot = CreateSnapshot(
+                BrokerageAccountSnapshotStatus.Ready,
+                7,
+                10m,
+                20m,
+                SnapshotTime.AddMinutes(-6));
+            var provider = new TestAccountStateProvider
+            {
+                Snapshot = snapshot
+            };
+            var algorithm = CreateAlgorithm(provider, snapshot);
+            SetPrivateField(algorithm, "_groupOrderSubmitted", false);
+            SetPrivateField(algorithm, "_groupOrderId", 0);
+            SetPrivateField(
+                algorithm,
+                "_initialSnapshotRequestGeneration",
+                snapshot.Generation - 1);
+            var submissionCount = 0;
+            SetPrivateField(
+                algorithm,
+                "_submitGroupOrder",
+                new Func<OrderTicket>(() =>
+                {
+                    ++submissionCount;
+                    return null;
+                }));
+
+            algorithm.OnData(CreateEmptySlice());
+
+            Assert.Multiple(() =>
+            {
+                Assert.AreEqual(0, submissionCount);
+                Assert.AreEqual(1, provider.RefreshRequestCount);
+                CollectionAssert.AreEqual(
+                    new[] { GroupName },
+                    provider.RequestedGroups);
+            });
+        }
+
+        [Test]
+        public void RefreshCadenceIsNotPhaseLockedToMinuteData()
+        {
+            var field = typeof(FinancialAdvisorDemoAlgorithm).GetField(
+                "TopologyRefreshInterval",
+                BindingFlags.Static | BindingFlags.NonPublic);
+
+            Assert.IsNotNull(field);
+            var interval = (TimeSpan)field.GetValue(null);
+            Assert.Multiple(() =>
+            {
+                Assert.AreEqual(TimeSpan.FromSeconds(90), interval);
+                Assert.AreNotEqual(
+                    TimeSpan.Zero,
+                    TimeSpan.FromTicks(
+                        interval.Ticks % TimeSpan.FromMinutes(1).Ticks));
             });
         }
 
@@ -620,13 +767,13 @@ namespace QuantConnect.Tests.Algorithm
             for (var tick = 1; tick <= 3; ++tick)
             {
                 algorithm.SetDateTime(
-                    SnapshotTime.AddMinutes(tick));
+                    SnapshotTime.AddSeconds(90 * tick));
                 provider.Snapshot = CreateSnapshot(
                     BrokerageAccountSnapshotStatus.Ready,
                     7 + tick,
                     10m,
                     20m,
-                    SnapshotTime.AddMinutes(tick));
+                    SnapshotTime.AddSeconds(90 * tick));
                 InvokePrivateMethod(
                     algorithm,
                     "RequestScheduledSnapshotRefresh");
@@ -705,7 +852,7 @@ namespace QuantConnect.Tests.Algorithm
                 18m,
                 SnapshotTime.AddMinutes(3).AddTicks(1));
             algorithm.SetDateTime(
-                SnapshotTime.AddMinutes(4));
+                SnapshotTime.AddMinutes(6));
             InvokePrivateMethod(
                 algorithm,
                 "RequestScheduledSnapshotRefresh");

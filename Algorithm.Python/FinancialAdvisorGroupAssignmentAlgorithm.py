@@ -12,7 +12,7 @@
 # limitations under the License.
 
 from AlgorithmImports import *
-from datetime import timedelta
+from datetime import datetime, timedelta
 from decimal import Decimal, InvalidOperation
 from System.Threading import AutoResetEvent
 from threading import Lock
@@ -39,16 +39,13 @@ import re
 class FinancialAdvisorGroupAssignmentAlgorithm(QCAlgorithm):
 
     _REFRESH_RETRY_INTERVAL = timedelta(seconds=5)
-    _TOPOLOGY_REFRESH_INTERVAL = timedelta(minutes=1)
+    _TOPOLOGY_REFRESH_INTERVAL = timedelta(seconds=90)
+    _MAXIMUM_SNAPSHOT_AGE = timedelta(minutes=5)
     _COMPLETE_REFRESH_TOPOLOGY_TICKS = 3
     _COMPUTED_ALLOCATION_METHODS = {
         "netliq",
         "availableequity",
         "equal"
-    }
-    _POSITIVE_ALLOCATION_METHODS = {
-        "ratio",
-        "percent"
     }
 
     def initialize(self):
@@ -99,7 +96,7 @@ class FinancialAdvisorGroupAssignmentAlgorithm(QCAlgorithm):
 
         self._active_assignment_generation = None
         self._assignment_submission_in_progress = False
-        self._on_data_state_active = False
+        self._state_machine_active = False
         self._active_assignment_account_id = None
         self._active_assignment_snapshot_generation = -1
         self._minimum_ready_generation = None
@@ -107,7 +104,9 @@ class FinancialAdvisorGroupAssignmentAlgorithm(QCAlgorithm):
         self._next_assignment_retry_utc = None
 
         if self.live_mode:
-            # Every third one-minute topology tick expands to complete account state.
+            # The 90-second cadence is intentionally offset from minute data so a
+            # refresh cannot consume every OnData opportunity. Every third topology
+            # tick expands to complete account state.
             self.schedule.on(
                 self.date_rules.every_day(),
                 self.time_rules.every(self._TOPOLOGY_REFRESH_INTERVAL),
@@ -121,28 +120,31 @@ class FinancialAdvisorGroupAssignmentAlgorithm(QCAlgorithm):
         if not self.live_mode:
             return
 
+        self._try_run_live_state_machine()
+
+    def _try_run_live_state_machine(self):
         with self._order_state_lock:
-            self._on_data_state_active = True
+            if self._state_machine_active:
+                return False
+            self._state_machine_active = True
         try:
             self._on_live_data()
+            return True
         finally:
             with self._order_state_lock:
-                self._on_data_state_active = False
+                self._state_machine_active = False
 
     def _on_live_data(self):
         snapshot = self.brokerage_account_snapshot
+        if not self._update_snapshot_request_state(snapshot):
+            return
+
         self._poll_assignment()
         if self._active_assignment_generation is not None:
             return
 
-        self._observe_ready_snapshot(snapshot)
-        self._drive_snapshot_refresh(snapshot)
-        if self._try_process_scheduled_snapshot_refresh(
-                allow_on_data_owner=True):
-            return
-
         if self._minimum_ready_generation is not None:
-            if snapshot.is_ready and \
+            if self._is_snapshot_fresh(snapshot) and \
                     snapshot.generation > self._minimum_ready_generation:
                 self._minimum_ready_generation = None
             else:
@@ -151,16 +153,38 @@ class FinancialAdvisorGroupAssignmentAlgorithm(QCAlgorithm):
                     is_confirmation=False)
                 return
 
-        if self._active_assignment_generation is not None or \
-                self._snapshot_request_generation is not None or \
-                self._cash_confirmation_trigger_generation is not None or \
-                not snapshot.is_ready:
+        self._observe_ready_snapshot(snapshot)
+        if self._cash_confirmation_trigger_generation is not None:
+            self._try_request_snapshot_refresh(
+                snapshot,
+                is_confirmation=True)
             return
 
-        self._try_assign_next_account(snapshot)
+        if not self._initial_snapshot_refresh_accepted or \
+                snapshot.generation <= \
+                self._initial_snapshot_request_generation:
+            self._try_request_snapshot_refresh(
+                snapshot,
+                is_confirmation=False,
+                is_initial_request=True)
+            return
+
+        if self._snapshot_request_generation is not None:
+            return
+
+        if not self._is_snapshot_fresh(snapshot):
+            self._try_request_snapshot_refresh(
+                snapshot,
+                is_confirmation=False)
+            return
+
+        if self._try_assign_next_account(snapshot):
+            return
+
+        self._try_process_scheduled_snapshot_refresh()
 
     def _observe_ready_snapshot(self, snapshot):
-        if not snapshot.is_ready or \
+        if not self._is_snapshot_fresh(snapshot) or \
                 not snapshot.is_complete or \
                 snapshot.generation <= self._last_observed_ready_generation:
             return
@@ -232,28 +256,6 @@ class FinancialAdvisorGroupAssignmentAlgorithm(QCAlgorithm):
         if previous is None or current is None:
             return None
         return abs(Decimal(str(current)) - Decimal(str(previous)))
-
-    def _drive_snapshot_refresh(self, snapshot):
-        if not self._update_snapshot_request_state(snapshot):
-            return
-
-        if snapshot.status == BrokerageAccountSnapshotStatus.REFRESHING:
-            return
-
-        if self._cash_confirmation_trigger_generation is not None:
-            self._try_request_snapshot_refresh(
-                snapshot,
-                is_confirmation=True)
-            return
-
-        if not snapshot.is_ready:
-            self._try_request_snapshot_refresh(
-                snapshot,
-                is_confirmation=False,
-                is_initial_request=(
-                    not self._initial_snapshot_refresh_accepted or
-                    snapshot.generation <=
-                    self._initial_snapshot_request_generation))
 
     def _update_snapshot_request_state(self, snapshot):
         with self._order_state_lock:
@@ -342,82 +344,41 @@ class FinancialAdvisorGroupAssignmentAlgorithm(QCAlgorithm):
 
     def _request_scheduled_snapshot_refresh(self):
         self._scheduled_refresh_intent.set()
-        self._try_process_scheduled_snapshot_refresh()
+        self._try_run_live_state_machine()
 
-    def _try_process_scheduled_snapshot_refresh(
-            self,
-            allow_on_data_owner=False):
+    def _try_process_scheduled_snapshot_refresh(self):
         error_messages = []
         with self._order_state_lock:
-            if self._on_data_state_active and not allow_on_data_owner:
-                return False
             snapshot = self.brokerage_account_snapshot
-            can_continue, update_error = \
-                self._update_snapshot_request_state_locked(snapshot)
-            if update_error is not None:
-                error_messages.append(update_error)
-            if not can_continue and update_error is None:
-                return False
-            if not self._initial_snapshot_refresh_accepted or \
-                    snapshot.generation <= \
-                    self._initial_snapshot_request_generation:
-                request_error = self._try_request_snapshot_refresh_locked(
-                    snapshot,
-                    is_confirmation=False,
-                    group_names=None,
-                    is_initial_request=True)
-                if request_error is not None:
-                    error_messages.append(request_error)
-            elif self._snapshot_request_generation is None and \
-                    not snapshot.is_ready:
-                request_error = self._try_request_snapshot_refresh_locked(
-                    snapshot,
-                    is_confirmation=False,
-                    group_names=None)
-                if request_error is not None:
-                    error_messages.append(request_error)
-            elif self._snapshot_request_generation is not None or \
+            if self._snapshot_request_generation is not None or \
                     self._active_assignment_generation is not None or \
                     self._assignment_submission_in_progress or \
                     self._minimum_ready_generation is not None or \
                     self._cash_confirmation_trigger_generation is not None or \
+                    not self._is_snapshot_fresh(snapshot) or \
                     snapshot.status == \
                     BrokerageAccountSnapshotStatus.REFRESHING or \
                     (self._next_snapshot_refresh_utc is not None and
                      self.utc_time < self._next_snapshot_refresh_utc):
                 return False
-            else:
-                group_names = None
-                if self._target_group_name:
-                    target_group = self._find_target_group(snapshot)
-                    group_names = [
-                        self._target_group_name
-                        if target_group is None
-                        else target_group.name
-                    ]
-                else:
-                    group_names = [
-                        group.name
-                        for group in list(snapshot.all_groups.values)
-                    ]
-                    if not group_names:
-                        group_names = None
-                if not self._scheduled_refresh_intent.wait_one(0):
-                    return False
 
-                self._scheduled_refresh_topology_ticks += 1
-                complete_refresh = \
-                    self._scheduled_refresh_topology_ticks == \
-                    self._COMPLETE_REFRESH_TOPOLOGY_TICKS
-                if complete_refresh:
-                    self._scheduled_refresh_topology_ticks = 0
-                    group_names = None
-                request_error = self._try_request_snapshot_refresh_locked(
-                    snapshot,
-                    is_confirmation=False,
-                    group_names=group_names)
-                if request_error is not None:
-                    error_messages.append(request_error)
+            group_names = self._get_scheduled_group_names(snapshot)
+            if not self._scheduled_refresh_intent.wait_one(0):
+                return False
+
+            self._scheduled_refresh_topology_ticks += 1
+            complete_refresh = \
+                self._scheduled_refresh_topology_ticks == \
+                self._COMPLETE_REFRESH_TOPOLOGY_TICKS
+            if complete_refresh:
+                self._scheduled_refresh_topology_ticks = 0
+                group_names = None
+            request_error = self._try_request_snapshot_refresh_locked(
+                snapshot,
+                is_confirmation=False,
+                group_names=group_names)
+            if request_error is not None:
+                error_messages.append(request_error)
         for error_message in error_messages:
             self.error(error_message)
         return True
@@ -459,7 +420,7 @@ class FinancialAdvisorGroupAssignmentAlgorithm(QCAlgorithm):
                 self._last_membership_evaluation_generation or \
                 (self._next_assignment_retry_utc is not None and
                  self.utc_time < self._next_assignment_retry_utc):
-            return
+            return False
 
         target_group = self._find_target_group(snapshot)
         if self._target_group_name and target_group is None:
@@ -469,7 +430,7 @@ class FinancialAdvisorGroupAssignmentAlgorithm(QCAlgorithm):
                 f"{snapshot.generation}.")
             self._last_membership_evaluation_generation = \
                 snapshot.generation
-            return
+            return True
 
         account = self._find_assignment_candidate(
             snapshot,
@@ -477,7 +438,7 @@ class FinancialAdvisorGroupAssignmentAlgorithm(QCAlgorithm):
         if account is None:
             self._last_membership_evaluation_generation = \
                 snapshot.generation
-            return
+            return False
 
         canonical_target_group_name = "" \
             if target_group is None \
@@ -487,7 +448,23 @@ class FinancialAdvisorGroupAssignmentAlgorithm(QCAlgorithm):
         if allocation_value is False:
             self._last_membership_evaluation_generation = \
                 snapshot.generation
-            return
+            return True
+
+        required_group_names = self._get_assignment_group_names(
+            target_group,
+            account)
+        selected_group_keys = {
+            group.name.casefold()
+            for group in list(snapshot.groups.values)
+        }
+        if any(
+                group_name.casefold() not in selected_group_keys
+                for group_name in required_group_names):
+            self._try_request_snapshot_refresh(
+                snapshot,
+                is_confirmation=False,
+                group_names=required_group_names)
+            return True
 
         with self._order_state_lock:
             self._assignment_submission_in_progress = True
@@ -498,6 +475,15 @@ class FinancialAdvisorGroupAssignmentAlgorithm(QCAlgorithm):
                 canonical_target_group_name,
                 allocation_value,
                 snapshot)
+        except Exception as error:
+            self._next_assignment_retry_utc = \
+                self.utc_time + self._REFRESH_RETRY_INTERVAL
+            self.error(
+                f"FA assignment for account '{account.account_id}' was "
+                f"rejected synchronously for target "
+                f"'{canonical_target_group_name}' against snapshot "
+                f"generation {snapshot.generation}: {error}. Retrying.")
+            return True
         finally:
             with self._order_state_lock:
                 self._assignment_submission_in_progress = False
@@ -508,7 +494,7 @@ class FinancialAdvisorGroupAssignmentAlgorithm(QCAlgorithm):
                 f"FA assignment for account '{account.account_id}' was not "
                 f"accepted; retrying against snapshot generation "
                 f"{snapshot.generation}.")
-            return
+            return True
 
         # Capture only after acceptance. The static Unavailable result is terminal,
         # so generation correlation is required before IsCompleted is meaningful.
@@ -524,6 +510,7 @@ class FinancialAdvisorGroupAssignmentAlgorithm(QCAlgorithm):
             f"target='{canonical_target_group_name}', "
             f"snapshotGeneration={snapshot.generation}, "
             f"assignmentGeneration={assignment.generation}")
+        return True
 
     def _find_target_group(self, snapshot):
         if not self._target_group_name:
@@ -553,7 +540,7 @@ class FinancialAdvisorGroupAssignmentAlgorithm(QCAlgorithm):
             if target_key is None:
                 if current_groups:
                     return account
-            elif target_key not in current_groups:
+            elif current_groups != {target_key}:
                 return account
 
         return None
@@ -580,7 +567,7 @@ class FinancialAdvisorGroupAssignmentAlgorithm(QCAlgorithm):
                     f"negative.")
                 return False
             return self._allocation_value
-        if allocation_method in self._POSITIVE_ALLOCATION_METHODS:
+        if allocation_method == "ratio":
             if self._allocation_value <= 0:
                 self.error(
                     f"FA destination group '{target_group.name}' uses "
@@ -588,8 +575,62 @@ class FinancialAdvisorGroupAssignmentAlgorithm(QCAlgorithm):
                     f"fa-allocation-value must be positive.")
                 return False
             return self._allocation_value
+        if allocation_method == "percent":
+            if self._allocation_value <= 0 or \
+                    self._allocation_value > 100:
+                self.error(
+                    f"FA destination group '{target_group.name}' uses "
+                    f"Percent, so fa-allocation-value must be greater than "
+                    f"zero and no greater than 100.")
+                return False
+            return self._allocation_value
 
         self.error(
             f"FA destination group '{target_group.name}' uses unsupported "
             f"allocation method '{target_group.allocation_method}'.")
         return False
+
+    def _get_scheduled_group_names(self, snapshot):
+        if not self._target_group_name:
+            group_names = [
+                group.name
+                for group in list(snapshot.all_groups.values)
+            ]
+            return group_names if group_names else None
+
+        target_group = self._find_target_group(snapshot)
+        target_name = self._target_group_name \
+            if target_group is None else target_group.name
+        candidate = self._find_assignment_candidate(
+            snapshot,
+            target_group)
+        return self._get_assignment_group_names(
+            target_group,
+            candidate,
+            target_name)
+
+    @staticmethod
+    def _get_assignment_group_names(
+            target_group,
+            account,
+            target_name=None):
+        group_names = {}
+        if target_group is not None:
+            group_names[target_group.name.casefold()] = target_group.name
+        elif target_name:
+            group_names[target_name.casefold()] = target_name
+        if account is not None:
+            for group_name in account.group_names:
+                group_names.setdefault(
+                    group_name.casefold(),
+                    group_name)
+        return list(group_names.values())
+
+    def _is_snapshot_fresh(self, snapshot):
+        if snapshot is None or not snapshot.is_ready:
+            return False
+
+        authority_utc = snapshot.collection_started_utc
+        if authority_utc == datetime.min:
+            authority_utc = snapshot.last_successful_update_utc
+        return authority_utc >= self.utc_time - self._MAXIMUM_SNAPSHOT_AGE

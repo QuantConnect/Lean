@@ -217,6 +217,75 @@ namespace QuantConnect.Tests.Algorithm
         }
 
         [Test]
+        public void RefreshCadenceIsNotPhaseLockedToMinuteData()
+        {
+            var field =
+                typeof(FinancialAdvisorGroupAssignmentAlgorithm).GetField(
+                    "TopologyRefreshInterval",
+                    System.Reflection.BindingFlags.Static |
+                    System.Reflection.BindingFlags.NonPublic);
+
+            Assert.IsNotNull(field);
+            var interval = (TimeSpan)field.GetValue(null);
+            Assert.Multiple(() =>
+            {
+                Assert.AreEqual(TimeSpan.FromSeconds(90), interval);
+                Assert.AreNotEqual(
+                    0,
+                    interval.Ticks %
+                        TimeSpan.FromMinutes(1).Ticks);
+            });
+        }
+
+        [Test]
+        public void EmptyRemovalTopologyStillReachesThirdTickCompleteDiscovery()
+        {
+            var emptyGroups =
+                new Dictionary<string, BrokerageAccountGroup>();
+            var services = new TestFinancialAdvisorServices
+            {
+                Snapshot = CreateSnapshot(
+                    1,
+                    emptyGroups,
+                    emptyGroups,
+                    true,
+                    SnapshotTime,
+                    Array.Empty<AccountEntry>())
+            };
+            var algorithm = CreateAlgorithm(
+                services,
+                new Dictionary<string, string>
+                {
+                    ["fa-target-group"] = string.Empty
+                });
+
+            for (var tick = 1; tick <= 3; ++tick)
+            {
+                algorithm.SetDateTime(
+                    SnapshotTime.AddSeconds(90 * tick));
+                InvokePrivateMethod(
+                    algorithm,
+                    "RequestScheduledSnapshotRefresh");
+            }
+
+            Assert.Multiple(() =>
+            {
+                Assert.AreEqual(
+                    1,
+                    services.RefreshRequestCount,
+                    "Empty topology ticks must advance until the third tick " +
+                    "issues complete discovery.");
+                CollectionAssert.IsEmpty(
+                    services.RequestedGroupHistory.Single());
+                Assert.AreEqual(
+                    0,
+                    GetPrivateField<int>(
+                        algorithm,
+                        "_scheduledRefreshTopologyTicks"));
+            });
+        }
+
+        [Test]
         public void ConcurrentScheduledCallbackPreservesOneLaterRefreshIntent()
         {
             var firstSnapshot = CreateSnapshot(
@@ -382,6 +451,163 @@ namespace QuantConnect.Tests.Algorithm
         }
 
         [Test]
+        public void ScheduledCallbacksCompleteAssignmentWithoutOnData()
+        {
+            var initialSnapshot = CreateSnapshot(
+                1,
+                new BrokerageAccountGroup(
+                    "TargetGroup",
+                    "Equal",
+                    Array.Empty<string>()),
+                Entry(
+                    "AccountA",
+                    BrokerageAccountRelationship.Managed,
+                    "MOVE-East"));
+            var services = new TestFinancialAdvisorServices
+            {
+                Snapshot = initialSnapshot
+            };
+            var algorithm = CreateAlgorithm(services);
+
+            algorithm.SetDateTime(
+                SnapshotTime.AddSeconds(90));
+            InvokePrivateMethod(
+                algorithm,
+                "RequestScheduledSnapshotRefresh");
+            services.CompleteAssignment(
+                BrokerageAccountGroupAssignmentStatus.Succeeded,
+                new[] { "TargetGroup" });
+
+            algorithm.SetDateTime(
+                SnapshotTime.AddSeconds(180));
+            InvokePrivateMethod(
+                algorithm,
+                "RequestScheduledSnapshotRefresh");
+
+            services.RefreshRequestHook = stateProvider =>
+                stateProvider.Snapshot = CreateSnapshot(
+                    2,
+                    new BrokerageAccountGroup(
+                        "TargetGroup",
+                        "Equal",
+                        new[] { "AccountA" }),
+                    Entry(
+                        "AccountA",
+                        BrokerageAccountRelationship.Managed,
+                        "MOVE-East",
+                        "TargetGroup"));
+            algorithm.SetDateTime(
+                SnapshotTime.AddSeconds(270));
+            InvokePrivateMethod(
+                algorithm,
+                "RequestScheduledSnapshotRefresh");
+            algorithm.SetDateTime(
+                SnapshotTime.AddSeconds(360));
+            InvokePrivateMethod(
+                algorithm,
+                "RequestScheduledSnapshotRefresh");
+
+            Assert.Multiple(() =>
+            {
+                Assert.AreEqual(1, services.AssignmentRequests.Count);
+                Assert.That(
+                    algorithm.LogMessages,
+                    Has.One.Contains("FA assignment succeeded"));
+                Assert.AreEqual(
+                    -1,
+                    GetPrivateField<long>(
+                        algorithm,
+                        "_minimumReadyGeneration"));
+                CollectionAssert.IsEmpty(
+                    services.RequestedGroupHistory[0],
+                    "Mutation completion must request a confirming snapshot.");
+            });
+        }
+
+        [Test]
+        public void ScheduledCallbacksProcessCashConfirmationWithoutOnData()
+        {
+            var services = new TestFinancialAdvisorServices
+            {
+                Snapshot = CreateSnapshot(
+                    10,
+                    new BrokerageAccountGroup(
+                        "TargetGroup",
+                        "Equal",
+                        new[] { "AccountA" }),
+                    Entry(
+                        "AccountA",
+                        BrokerageAccountRelationship.Managed,
+                        "MOVE-East",
+                        "TargetGroup",
+                        totalCashValue: 100m,
+                        netLiquidation: 1000m))
+            };
+            var algorithm = CreateAlgorithm(
+                services,
+                new Dictionary<string, string>
+                {
+                    ["fa-cash-change-threshold"] = "1000"
+                });
+
+            algorithm.SetDateTime(
+                SnapshotTime.AddSeconds(90));
+            InvokePrivateMethod(
+                algorithm,
+                "RequestScheduledSnapshotRefresh");
+            services.ResetRefreshRequests();
+
+            services.Snapshot = CreateSnapshot(
+                11,
+                new BrokerageAccountGroup(
+                    "TargetGroup",
+                    "Equal",
+                    Array.Empty<string>()),
+                Entry(
+                    "AccountA",
+                    BrokerageAccountRelationship.Managed,
+                    "MOVE-East",
+                    totalCashValue: 1200m,
+                    netLiquidation: 1000m));
+            algorithm.SetDateTime(
+                SnapshotTime.AddSeconds(180));
+            InvokePrivateMethod(
+                algorithm,
+                "RequestScheduledSnapshotRefresh");
+
+            services.Snapshot = CreateSnapshot(
+                12,
+                new BrokerageAccountGroup(
+                    "TargetGroup",
+                    "Equal",
+                    Array.Empty<string>()),
+                Entry(
+                    "AccountA",
+                    BrokerageAccountRelationship.Managed,
+                    "MOVE-East",
+                    totalCashValue: 1200m,
+                    netLiquidation: 1000m));
+            algorithm.SetDateTime(
+                SnapshotTime.AddSeconds(270));
+            InvokePrivateMethod(
+                algorithm,
+                "RequestScheduledSnapshotRefresh");
+
+            Assert.Multiple(() =>
+            {
+                Assert.AreEqual(1, services.RefreshRequestCount);
+                CollectionAssert.IsEmpty(
+                    services.RequestedGroupHistory[0],
+                    "Cash changes require complete confirmation.");
+                Assert.AreEqual(1, services.AssignmentRequests.Count);
+                Assert.That(
+                    algorithm.LogMessages,
+                    Has.One.Contains(
+                        "cash-change confirmation is Ready at generation 12"));
+            });
+        }
+
+        [Test]
         public void RejectedInitialReadySnapshotRetriesCompleteWithoutOnData()
         {
             BrokerageAccountSnapshot CreateReadySnapshot(long generation) =>
@@ -500,6 +726,198 @@ namespace QuantConnect.Tests.Algorithm
             });
         }
 
+        [Test]
+        public void CrossGroupCandidateRefreshesDestinationAndEverySource()
+        {
+            var targetGroup = new BrokerageAccountGroup(
+                "TargetGroup",
+                "Equal",
+                Array.Empty<string>());
+            var sourceGroup = new BrokerageAccountGroup(
+                "SourceGroup",
+                "Equal",
+                new[] { "AccountA" });
+            var selectedGroups =
+                new Dictionary<string, BrokerageAccountGroup>
+                {
+                    [targetGroup.Name] = targetGroup
+                };
+            var allGroups =
+                new Dictionary<string, BrokerageAccountGroup>
+                {
+                    [targetGroup.Name] = targetGroup,
+                    [sourceGroup.Name] = sourceGroup
+                };
+            var services = new TestFinancialAdvisorServices
+            {
+                Snapshot = CreateSnapshot(
+                    1,
+                    selectedGroups,
+                    allGroups,
+                    false,
+                    SnapshotTime,
+                    Entry(
+                        "AccountA",
+                        BrokerageAccountRelationship.Managed,
+                        "MOVE-East",
+                        new[] { "SourceGroup" }))
+            };
+            var algorithm = CreateAlgorithm(services);
+
+            algorithm.OnData(CreateEmptySlice());
+
+            Assert.Multiple(() =>
+            {
+                Assert.AreEqual(0, services.AssignmentRequests.Count);
+                Assert.AreEqual(1, services.RefreshRequestCount);
+                CollectionAssert.AreEqual(
+                    new[] { "TargetGroup", "SourceGroup" },
+                    services.RequestedGroupHistory[0]);
+            });
+
+            services.Snapshot = CreateSnapshot(
+                2,
+                allGroups,
+                allGroups,
+                false,
+                SnapshotTime.AddTicks(2),
+                Entry(
+                    "AccountA",
+                    BrokerageAccountRelationship.Managed,
+                    "MOVE-East",
+                    new[] { "SourceGroup" }));
+            algorithm.SetDateTime(
+                SnapshotTime.AddSeconds(5));
+            algorithm.OnData(CreateEmptySlice());
+
+            Assert.AreEqual(1, services.AssignmentRequests.Count);
+        }
+
+        [Test]
+        public void CandidateAlreadyInTargetAndAnotherGroupMovesToExactlyTarget()
+        {
+            var targetGroup = new BrokerageAccountGroup(
+                "TargetGroup",
+                "Equal",
+                new[] { "AccountA" });
+            var sourceGroup = new BrokerageAccountGroup(
+                "SourceGroup",
+                "Equal",
+                new[] { "AccountA" });
+            var groups =
+                new Dictionary<string, BrokerageAccountGroup>
+                {
+                    [targetGroup.Name] = targetGroup,
+                    [sourceGroup.Name] = sourceGroup
+                };
+            var services = new TestFinancialAdvisorServices
+            {
+                Snapshot = CreateSnapshot(
+                    1,
+                    groups,
+                    groups,
+                    true,
+                    SnapshotTime,
+                    Entry(
+                        "AccountA",
+                        BrokerageAccountRelationship.Managed,
+                        "MOVE-East",
+                        new[] { "TargetGroup", "SourceGroup" }))
+            };
+            var algorithm = CreateAlgorithm(services);
+
+            algorithm.OnData(CreateEmptySlice());
+
+            Assert.Multiple(() =>
+            {
+                Assert.AreEqual(1, services.AssignmentRequests.Count);
+                Assert.AreEqual(
+                    "TargetGroup",
+                    services.AssignmentRequests[0].TargetGroupName);
+            });
+        }
+
+        [Test]
+        public void SynchronousAssignmentRejectionIsLoggedAndRetried()
+        {
+            BrokerageAccountSnapshot Snapshot(long generation) =>
+                CreateSnapshot(
+                    generation,
+                    new BrokerageAccountGroup(
+                        "TargetGroup",
+                        "Equal",
+                        Array.Empty<string>()),
+                    Entry(
+                        "AccountA",
+                        BrokerageAccountRelationship.Managed,
+                        "MOVE-East"));
+            var services = new TestFinancialAdvisorServices
+            {
+                Snapshot = Snapshot(1)
+            };
+            services.EnqueueAssignmentException(
+                new InvalidOperationException(
+                    "source group was outside the selected scope"));
+            var algorithm = CreateAlgorithm(services);
+
+            Assert.DoesNotThrow(
+                () => algorithm.OnData(CreateEmptySlice()));
+            Assert.Multiple(() =>
+            {
+                Assert.AreEqual(0, services.AssignmentRequests.Count);
+                Assert.AreEqual(1, services.RefreshRequestCount);
+                Assert.That(
+                    algorithm.ErrorMessages,
+                    Has.One.Contains(
+                        "source group was outside the selected scope"));
+            });
+
+            services.Snapshot = Snapshot(2);
+            algorithm.SetDateTime(
+                SnapshotTime.AddSeconds(5));
+            algorithm.OnData(CreateEmptySlice());
+
+            Assert.AreEqual(1, services.AssignmentRequests.Count);
+        }
+
+        [Test]
+        public void OldReadySnapshotRefreshesWithoutRequestingAssignment()
+        {
+            var group = new BrokerageAccountGroup(
+                "TargetGroup",
+                "Equal",
+                Array.Empty<string>());
+            var groups =
+                new Dictionary<string, BrokerageAccountGroup>
+                {
+                    [group.Name] = group
+                };
+            var services = new TestFinancialAdvisorServices
+            {
+                Snapshot = CreateSnapshot(
+                    1,
+                    groups,
+                    groups,
+                    true,
+                    SnapshotTime.AddMinutes(-6),
+                    Entry(
+                        "AccountA",
+                        BrokerageAccountRelationship.Managed,
+                        "MOVE-East"))
+            };
+            var algorithm = CreateAlgorithm(services);
+
+            algorithm.OnData(CreateEmptySlice());
+
+            Assert.Multiple(() =>
+            {
+                Assert.AreEqual(0, services.AssignmentRequests.Count);
+                Assert.AreEqual(1, services.RefreshRequestCount);
+                CollectionAssert.IsEmpty(
+                    services.RequestedGroupHistory[0]);
+            });
+        }
+
         [TestCase("Equal", null)]
         [TestCase("NetLiq", null)]
         [TestCase("AvailableEquity", null)]
@@ -544,8 +962,11 @@ namespace QuantConnect.Tests.Algorithm
         [TestCase("ContractsOrShares", "-1", false, null)]
         [TestCase("Ratio", "0", false, null)]
         [TestCase("Ratio", "-1", false, null)]
+        [TestCase("Ratio", "100.01", true, "100.01")]
         [TestCase("Percent", "0", false, null)]
         [TestCase("Percent", "-1", false, null)]
+        [TestCase("Percent", "100", true, "100")]
+        [TestCase("Percent", "100.01", false, null)]
         [TestCase("Equal", "-1", true, null)]
         [TestCase("NetLiq", "0", true, null)]
         [TestCase("AvailableEquity", "-1", true, null)]
@@ -939,6 +1360,23 @@ namespace QuantConnect.Tests.Algorithm
                 netLiquidation);
         }
 
+        private static AccountEntry Entry(
+            string accountId,
+            BrokerageAccountRelationship relationship,
+            string alias,
+            IReadOnlyList<string> groupNames,
+            decimal totalCashValue = 100m,
+            decimal netLiquidation = 1000m)
+        {
+            return new AccountEntry(
+                accountId,
+                relationship,
+                alias,
+                groupNames,
+                totalCashValue,
+                netLiquidation);
+        }
+
         private static BrokerageAccountSnapshot CreateSnapshot(
             long generation,
             BrokerageAccountGroup group,
@@ -962,6 +1400,23 @@ namespace QuantConnect.Tests.Algorithm
                 {
                     [group.Name] = group
                 };
+            return CreateSnapshot(
+                generation,
+                groups,
+                groups,
+                isComplete,
+                SnapshotTime.AddTicks(generation),
+                entries);
+        }
+
+        private static BrokerageAccountSnapshot CreateSnapshot(
+            long generation,
+            IReadOnlyDictionary<string, BrokerageAccountGroup> groups,
+            IReadOnlyDictionary<string, BrokerageAccountGroup> allGroups,
+            bool isComplete,
+            DateTime collectionStartedUtc,
+            params AccountEntry[] entries)
+        {
             var directory =
                 entries.ToDictionary(
                     entry => entry.AccountId,
@@ -1014,10 +1469,10 @@ namespace QuantConnect.Tests.Algorithm
                 string.Empty,
                 primary?.AccountId ?? string.Empty,
                 managedEntries.Select(entry => entry.AccountId).ToArray(),
-                groups,
+                allGroups,
                 directory,
                 isComplete,
-                SnapshotTime.AddTicks(generation));
+                collectionStartedUtc);
         }
 
         private static void InvokePrivateMethod(
@@ -1043,6 +1498,18 @@ namespace QuantConnect.Tests.Algorithm
                 System.Reflection.BindingFlags.NonPublic);
             Assert.IsNotNull(field, $"Private field '{name}' was not found.");
             field.SetValue(instance, value);
+        }
+
+        private static T GetPrivateField<T>(
+            object instance,
+            string name)
+        {
+            var field = instance.GetType().GetField(
+                name,
+                System.Reflection.BindingFlags.Instance |
+                System.Reflection.BindingFlags.NonPublic);
+            Assert.IsNotNull(field, $"Private field '{name}' was not found.");
+            return (T)field.GetValue(instance);
         }
 
         private sealed class AccountEntry
@@ -1099,6 +1566,7 @@ namespace QuantConnect.Tests.Algorithm
             IBrokerageAccountGroupManager
         {
             private long _assignmentGeneration;
+            private readonly Queue<Exception> _assignmentExceptions = new();
 
             public BrokerageAccountSnapshot Snapshot { get; set; }
             public BrokerageAccountGroupAssignment Assignment { get; private set; } =
@@ -1112,6 +1580,11 @@ namespace QuantConnect.Tests.Algorithm
             { get; set; }
             public List<IReadOnlyCollection<string>> RequestedGroupHistory { get; } =
                 new();
+
+            public void EnqueueAssignmentException(Exception exception)
+            {
+                _assignmentExceptions.Enqueue(exception);
+            }
 
             public BrokerageAccountSnapshot GetAccountSnapshot()
             {
@@ -1141,6 +1614,10 @@ namespace QuantConnect.Tests.Algorithm
                 string expectedGroupConfigurationVersion,
                 decimal? targetAllocationValue = null)
             {
+                if (_assignmentExceptions.Count != 0)
+                {
+                    throw _assignmentExceptions.Dequeue();
+                }
                 AssignmentRequests.Add(
                     new AssignmentRequest(
                         accountId,

@@ -42,9 +42,12 @@ namespace QuantConnect.Algorithm.CSharp
         private static readonly TimeSpan InvalidOrderRetryInterval =
             TimeSpan.FromSeconds(5);
         private static readonly TimeSpan TopologyRefreshInterval =
-            TimeSpan.FromMinutes(1);
+            TimeSpan.FromSeconds(90);
+        private static readonly TimeSpan MaximumSnapshotAge =
+            TimeSpan.FromMinutes(5);
         private const int CompleteRefreshTopologyTicks = 3;
         private const int MaximumInvalidOrderAttempts = 3;
+        private const int MaximumEmptyOrderAttempts = 3;
 
         private readonly object _orderStateLock = new();
         private readonly Dictionary<int, TerminalOrderEvent>
@@ -59,9 +62,11 @@ namespace QuantConnect.Algorithm.CSharp
         private bool _onDataStateActive;
         private int _groupOrderId;
         private int _invalidOrderAttemptCount;
+        private int _emptyOrderAttemptCount;
         private DateTime _nextGroupOrderRetryUtc;
         private long _pendingReconcileGeneration = -1;
         private DateTime _pendingReconcileTerminalUtc;
+        private TerminalOrderEvent _pendingTerminalOrderEvent;
         private DateTime _nextReconcileRefreshUtc;
         private int _scheduledRefreshTopologyTicks;
         private int _scheduledRefreshIntent;
@@ -95,7 +100,8 @@ namespace QuantConnect.Algorithm.CSharp
 
             if (LiveMode)
             {
-                // Every third one-minute topology tick expands to complete account state.
+                // The 90-second cadence cannot remain phase-locked to minute data;
+                // every third topology tick expands to complete account state.
                 Schedule.On(
                     DateRules.EveryDay(),
                     TimeRules.Every(TopologyRefreshInterval),
@@ -153,13 +159,14 @@ namespace QuantConnect.Algorithm.CSharp
                 }
 
                 BrokerageAccountSnapshot preOrderSnapshot = null;
+                TerminalOrderEvent reconciledTerminalOrderEvent = null;
                 var reconcile = false;
                 requestReconcileRefresh = false;
                 lock (_orderStateLock)
                 {
                     if (_pendingReconcileGeneration >= 0)
                     {
-                        if (snapshot.IsReady &&
+                        if (IsSnapshotFresh(snapshot) &&
                             snapshot.Generation >
                                 _pendingReconcileGeneration &&
                             snapshot.CollectionStartedUtc >=
@@ -167,6 +174,9 @@ namespace QuantConnect.Algorithm.CSharp
                         {
                             preOrderSnapshot = _preOrderSnapshot;
                             _preOrderSnapshot = null;
+                            reconciledTerminalOrderEvent =
+                                _pendingTerminalOrderEvent;
+                            _pendingTerminalOrderEvent = null;
                             _pendingReconcileGeneration = -1;
                             reconcile = true;
                         }
@@ -181,6 +191,17 @@ namespace QuantConnect.Algorithm.CSharp
                     ReconcileAccountPositions(
                         preOrderSnapshot,
                         snapshot);
+                    lock (_orderStateLock)
+                    {
+                        invalidOrderMessage =
+                            CompleteTerminalOrderReconciliationLocked(
+                                reconciledTerminalOrderEvent,
+                                now);
+                    }
+                    if (invalidOrderMessage != null)
+                    {
+                        Error(invalidOrderMessage);
+                    }
                     return;
                 }
                 if (requestReconcileRefresh)
@@ -194,7 +215,7 @@ namespace QuantConnect.Algorithm.CSharp
                 {
                     requestInitialRefresh =
                         !_initialSnapshotRefreshAccepted ||
-                        !snapshot.IsReady ||
+                        !IsSnapshotFresh(snapshot) ||
                         snapshot.Generation <=
                             _initialSnapshotRequestGeneration;
                 }
@@ -216,8 +237,10 @@ namespace QuantConnect.Algorithm.CSharp
                         _orderSubmissionInProgress ||
                         _invalidOrderAttemptCount >=
                             MaximumInvalidOrderAttempts ||
+                        _emptyOrderAttemptCount >=
+                            MaximumEmptyOrderAttempts ||
                         UtcTime < _nextGroupOrderRetryUtc ||
-                        !submissionSnapshot.IsReady ||
+                        !IsSnapshotFresh(submissionSnapshot) ||
                         !submissionSnapshot.Groups.ContainsKey(
                             GroupName))
                     {
@@ -471,9 +494,11 @@ namespace QuantConnect.Algorithm.CSharp
         {
             BrokerageAccountSnapshot snapshot;
             BrokerageAccountSnapshot preOrderSnapshot = null;
+            TerminalOrderEvent reconciledTerminalOrderEvent = null;
             var reconcile = false;
             var initialRefreshRejected = false;
             var reconcileRefreshRejected = false;
+            string terminalOrderMessage = null;
             lock (_orderStateLock)
             {
                 if (_onDataStateActive)
@@ -484,7 +509,7 @@ namespace QuantConnect.Algorithm.CSharp
                 snapshot = BrokerageAccountSnapshot;
                 if (_pendingReconcileGeneration >= 0)
                 {
-                    if (snapshot.IsReady &&
+                    if (IsSnapshotFresh(snapshot) &&
                         snapshot.Generation >
                             _pendingReconcileGeneration &&
                         snapshot.CollectionStartedUtc >=
@@ -492,6 +517,9 @@ namespace QuantConnect.Algorithm.CSharp
                     {
                         preOrderSnapshot = _preOrderSnapshot;
                         _preOrderSnapshot = null;
+                        reconciledTerminalOrderEvent =
+                            _pendingTerminalOrderEvent;
+                        _pendingTerminalOrderEvent = null;
                         _pendingReconcileGeneration = -1;
                         reconcile = true;
                     }
@@ -503,7 +531,7 @@ namespace QuantConnect.Algorithm.CSharp
                     }
                 }
                 else if (!_initialSnapshotRefreshAccepted ||
-                    !snapshot.IsReady ||
+                    !IsSnapshotFresh(snapshot) ||
                     snapshot.Generation <=
                         _initialSnapshotRequestGeneration)
                 {
@@ -525,6 +553,13 @@ namespace QuantConnect.Algorithm.CSharp
                 ReconcileAccountPositions(
                     preOrderSnapshot,
                     snapshot);
+                lock (_orderStateLock)
+                {
+                    terminalOrderMessage =
+                        CompleteTerminalOrderReconciliationLocked(
+                            reconciledTerminalOrderEvent,
+                            UtcTime);
+                }
             }
             if (initialRefreshRejected)
             {
@@ -535,6 +570,10 @@ namespace QuantConnect.Algorithm.CSharp
             if (reconcileRefreshRejected)
             {
                 ReportReconcileRefreshRejection();
+            }
+            if (terminalOrderMessage != null)
+            {
+                Error(terminalOrderMessage);
             }
             return true;
         }
@@ -598,9 +637,24 @@ namespace QuantConnect.Algorithm.CSharp
                 _preOrderSnapshot = null;
                 _groupOrderSubmitted = false;
                 _terminalEventsDuringSubmission.Clear();
+                ++_emptyOrderAttemptCount;
+                _nextGroupOrderRetryUtc =
+                    _emptyOrderAttemptCount <
+                        MaximumEmptyOrderAttempts
+                    ? now + InvalidOrderRetryInterval
+                    : DateTime.MaxValue;
+                if (_emptyOrderAttemptCount >=
+                    MaximumEmptyOrderAttempts)
+                {
+                    invalidOrderMessage =
+                        $"SetHoldings returned no Financial Advisor parent " +
+                        $"order ticket on {MaximumEmptyOrderAttempts} attempts; " +
+                        "the bounded retry limit was reached.";
+                }
                 return false;
             }
 
+            _emptyOrderAttemptCount = 0;
             _groupOrderId = ticket.OrderId;
             _groupOrderSubmitted = true;
             var ticketStatus = ticket.Status;
@@ -665,14 +719,6 @@ namespace QuantConnect.Algorithm.CSharp
             _groupOrderId = 0;
             if (terminalOrderEvent.Status == OrderStatus.Invalid)
             {
-                ++_invalidOrderAttemptCount;
-                _groupOrderSubmitted = false;
-                _preOrderSnapshot = null;
-                _nextGroupOrderRetryUtc =
-                    _invalidOrderAttemptCount <
-                        MaximumInvalidOrderAttempts
-                    ? now + InvalidOrderRetryInterval
-                    : DateTime.MaxValue;
                 var reason = string.IsNullOrWhiteSpace(
                         terminalOrderEvent.Message)
                     ? "No rejection reason was supplied."
@@ -680,22 +726,47 @@ namespace QuantConnect.Algorithm.CSharp
                 invalidOrderMessage =
                     $"Financial Advisor group order " +
                     $"{terminalOrderEvent.OrderId} was rejected: {reason} " +
-                    (_invalidOrderAttemptCount <
-                            MaximumInvalidOrderAttempts
-                        ? $"Attempt {_invalidOrderAttemptCount} of " +
-                            $"{MaximumInvalidOrderAttempts} was rejected; " +
-                            "the next attempt is scheduled."
-                        : "The bounded retry limit was reached.");
-                return false;
+                    "A newer account snapshot will be reconciled before " +
+                    "retry eligibility is decided.";
             }
 
-            _invalidOrderAttemptCount = 0;
             // Publish the causal timestamps before making the generation pending.
             _pendingReconcileTerminalUtc =
                 terminalOrderEvent.UtcTime;
+            _pendingTerminalOrderEvent = terminalOrderEvent;
             _nextReconcileRefreshUtc = now;
             _pendingReconcileGeneration = snapshotGeneration;
             return true;
+        }
+
+        private string CompleteTerminalOrderReconciliationLocked(
+            TerminalOrderEvent terminalOrderEvent,
+            DateTime now)
+        {
+            if (terminalOrderEvent == null ||
+                terminalOrderEvent.Status != OrderStatus.Invalid)
+            {
+                _invalidOrderAttemptCount = 0;
+                return null;
+            }
+
+            ++_invalidOrderAttemptCount;
+            _groupOrderSubmitted = false;
+            _nextGroupOrderRetryUtc =
+                _invalidOrderAttemptCount <
+                    MaximumInvalidOrderAttempts
+                ? now + InvalidOrderRetryInterval
+                : DateTime.MaxValue;
+            return _invalidOrderAttemptCount <
+                    MaximumInvalidOrderAttempts
+                ? $"Financial Advisor group order " +
+                    $"{terminalOrderEvent.OrderId} was reconciled after " +
+                    $"rejection. Attempt {_invalidOrderAttemptCount} of " +
+                    $"{MaximumInvalidOrderAttempts} was rejected; the next " +
+                    "attempt is scheduled."
+                : $"Financial Advisor group order " +
+                    $"{terminalOrderEvent.OrderId} was reconciled after " +
+                    "rejection. The bounded retry limit was reached.";
         }
 
         private void ReportTerminalOrderAction(
@@ -718,6 +789,22 @@ namespace QuantConnect.Algorithm.CSharp
             return account.Positions
                 .Where(position => position.Symbol == _symbol)
                 .Sum(position => position.Quantity);
+        }
+
+        private bool IsSnapshotFresh(
+            BrokerageAccountSnapshot snapshot)
+        {
+            if (!snapshot.IsReady)
+            {
+                return false;
+            }
+
+            var financialDataAsOfUtc =
+                snapshot.CollectionStartedUtc == default
+                    ? snapshot.LastSuccessfulUpdateUtc
+                    : snapshot.CollectionStartedUtc;
+            return financialDataAsOfUtc >=
+                UtcTime - MaximumSnapshotAge;
         }
 
         private sealed class TerminalOrderEvent

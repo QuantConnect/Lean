@@ -40,7 +40,9 @@ namespace QuantConnect.Algorithm.CSharp
         private static readonly TimeSpan RefreshRetryInterval =
             TimeSpan.FromSeconds(5);
         private static readonly TimeSpan TopologyRefreshInterval =
-            TimeSpan.FromMinutes(1);
+            TimeSpan.FromSeconds(90);
+        private static readonly TimeSpan MaximumSnapshotAge =
+            TimeSpan.FromMinutes(5);
         private const int CompleteRefreshTopologyTicks = 3;
 
         private readonly object _orderStateLock = new();
@@ -58,8 +60,7 @@ namespace QuantConnect.Algorithm.CSharp
         private long _cashChangeGeneration = -1;
         private long _lastEvaluatedGeneration = -1;
         private bool _assignmentRequestAccepted;
-        private bool _assignmentSubmissionInProgress;
-        private bool _onDataStateActive;
+        private bool _stateMachineActive;
         private long _assignmentGenerationBeforeRequest = -1;
         private long _pendingAssignmentGeneration = -1;
         private long _assignmentSnapshotGeneration = -1;
@@ -98,7 +99,8 @@ namespace QuantConnect.Algorithm.CSharp
             _nextRefreshRetryUtc = UtcTime;
             if (LiveMode)
             {
-                // Every third one-minute topology tick expands to complete account state.
+                // The 90-second cadence cannot remain phase-locked to minute data;
+                // every third topology tick expands to complete account state.
                 Schedule.On(
                     DateRules.EveryDay(),
                     TimeRules.Every(TopologyRefreshInterval),
@@ -121,99 +123,120 @@ namespace QuantConnect.Algorithm.CSharp
                 return;
             }
 
-            lock (_orderStateLock)
+            if (!TryEnterStateMachine())
             {
-                _onDataStateActive = true;
+                return;
             }
             try
             {
-                var snapshot = BrokerageAccountSnapshot;
-                UpdateRefreshRequestState(snapshot);
-                if (TryProcessScheduledSnapshotRefresh(
-                        allowOnDataOwner: true))
+                if (!TryAdvanceStateMachine())
                 {
-                    return;
+                    TryProcessScheduledSnapshotRefresh(
+                        allowStateMachineOwner: true);
                 }
-
-                if (PollAssignment())
-                {
-                    return;
-                }
-
-                if (_minimumReadyGeneration >= 0)
-                {
-                    if (!snapshot.IsReady ||
-                        snapshot.Generation <= _minimumReadyGeneration)
-                    {
-                        TryRequestSnapshotRefresh(snapshot);
-                        return;
-                    }
-                    _minimumReadyGeneration = -1;
-                }
-
-                if (_cashConfirmationRequired)
-                {
-                    if (!snapshot.IsReady ||
-                        !snapshot.IsComplete ||
-                        snapshot.Generation <= _cashChangeGeneration)
-                    {
-                        TryRequestSnapshotRefresh(snapshot);
-                        return;
-                    }
-
-                    _cashConfirmationRequired = false;
-                    _cashBaselineSnapshot = snapshot;
-                    Log(
-                        $"FA cash-change confirmation is Ready at generation " +
-                        $"{snapshot.Generation}; reevaluating group membership.");
-                }
-
-                if (_refreshRequestOutstanding ||
-                    !snapshot.IsReady)
-                {
-                    TryRequestSnapshotRefresh(snapshot);
-                    return;
-                }
-
-                if (snapshot.Generation == _lastEvaluatedGeneration)
-                {
-                    return;
-                }
-
-                if (snapshot.IsComplete &&
-                    _cashBaselineSnapshot != null &&
-                    snapshot.Generation > _cashBaselineSnapshot.Generation &&
-                    HasMaterialFinancialChange(
-                        _cashBaselineSnapshot,
-                        snapshot,
-                        out var changeDescription))
-                {
-                    _cashBaselineSnapshot = snapshot;
-                    _cashChangeGeneration = snapshot.Generation;
-                    _cashConfirmationRequired = true;
-                    _lastEvaluatedGeneration = snapshot.Generation;
-                    Log(
-                        $"FA financial change detected at generation " +
-                        $"{snapshot.Generation}: {changeDescription}. Requesting confirmation.");
-                    TryRequestSnapshotRefresh(snapshot);
-                    return;
-                }
-
-                if (snapshot.IsComplete &&
-                    (_cashBaselineSnapshot == null ||
-                        snapshot.Generation > _cashBaselineSnapshot.Generation))
-                {
-                    _cashBaselineSnapshot = snapshot;
-                }
-
-                EvaluateGroupAssignment(snapshot);
             }
             finally
             {
-                lock (_orderStateLock)
+                ExitStateMachine();
+            }
+        }
+
+        private bool TryAdvanceStateMachine()
+        {
+            var snapshot = BrokerageAccountSnapshot;
+            UpdateRefreshRequestState(snapshot);
+            if (PollAssignment())
+            {
+                return true;
+            }
+
+            if (_minimumReadyGeneration >= 0)
+            {
+                if (!IsSnapshotFresh(snapshot) ||
+                    snapshot.Generation <= _minimumReadyGeneration)
                 {
-                    _onDataStateActive = false;
+                    TryRequestSnapshotRefresh(snapshot);
+                    return true;
                 }
+                _minimumReadyGeneration = -1;
+            }
+
+            if (_cashConfirmationRequired)
+            {
+                if (!IsSnapshotFresh(snapshot) ||
+                    !snapshot.IsComplete ||
+                    snapshot.Generation <= _cashChangeGeneration)
+                {
+                    TryRequestSnapshotRefresh(snapshot);
+                    return true;
+                }
+
+                _cashConfirmationRequired = false;
+                _cashBaselineSnapshot = snapshot;
+                Log(
+                    $"FA cash-change confirmation is Ready at generation " +
+                    $"{snapshot.Generation}; reevaluating group membership.");
+            }
+
+            if (_refreshRequestOutstanding ||
+                !IsSnapshotFresh(snapshot))
+            {
+                TryRequestSnapshotRefresh(snapshot);
+                return true;
+            }
+
+            if (snapshot.Generation == _lastEvaluatedGeneration)
+            {
+                return false;
+            }
+
+            if (snapshot.IsComplete &&
+                _cashBaselineSnapshot != null &&
+                snapshot.Generation > _cashBaselineSnapshot.Generation &&
+                HasMaterialFinancialChange(
+                    _cashBaselineSnapshot,
+                    snapshot,
+                    out var changeDescription))
+            {
+                _cashBaselineSnapshot = snapshot;
+                _cashChangeGeneration = snapshot.Generation;
+                _cashConfirmationRequired = true;
+                _lastEvaluatedGeneration = snapshot.Generation;
+                Log(
+                    $"FA financial change detected at generation " +
+                    $"{snapshot.Generation}: {changeDescription}. Requesting confirmation.");
+                TryRequestSnapshotRefresh(snapshot);
+                return true;
+            }
+
+            if (snapshot.IsComplete &&
+                (_cashBaselineSnapshot == null ||
+                    snapshot.Generation > _cashBaselineSnapshot.Generation))
+            {
+                _cashBaselineSnapshot = snapshot;
+            }
+
+            return EvaluateGroupAssignment(snapshot);
+        }
+
+        private bool TryEnterStateMachine()
+        {
+            lock (_orderStateLock)
+            {
+                if (_stateMachineActive)
+                {
+                    return false;
+                }
+                _stateMachineActive = true;
+                return true;
+            }
+        }
+
+        private void ExitStateMachine()
+        {
+            lock (_orderStateLock)
+            {
+                _stateMachineActive = false;
             }
         }
 
@@ -270,7 +293,7 @@ namespace QuantConnect.Algorithm.CSharp
             return true;
         }
 
-        private void EvaluateGroupAssignment(
+        private bool EvaluateGroupAssignment(
             BrokerageAccountSnapshot snapshot)
         {
             BrokerageAccountGroup destinationGroup = null;
@@ -287,7 +310,7 @@ namespace QuantConnect.Algorithm.CSharp
                         $"FA destination group '{_targetGroupName}' is not " +
                         $"present in Ready snapshot generation {snapshot.Generation}.");
                     _lastEvaluatedGeneration = snapshot.Generation;
-                    return;
+                    return true;
                 }
 
                 if (!TryGetAllocationValue(
@@ -295,7 +318,7 @@ namespace QuantConnect.Algorithm.CSharp
                         out allocationValue))
                 {
                     _lastEvaluatedGeneration = snapshot.Generation;
-                    return;
+                    return true;
                 }
             }
 
@@ -303,9 +326,10 @@ namespace QuantConnect.Algorithm.CSharp
                 .Where(IsAliasMatch)
                 .Where(entry => destinationGroup == null
                     ? entry.GroupNames.Count != 0
-                    : !entry.GroupNames.Contains(
-                        destinationGroup.Name,
-                        StringComparer.OrdinalIgnoreCase))
+                    : entry.GroupNames.Count != 1 ||
+                        !entry.GroupNames[0].Equals(
+                            destinationGroup.Name,
+                            StringComparison.OrdinalIgnoreCase))
                 .OrderBy(
                     entry => entry.AccountId,
                     StringComparer.OrdinalIgnoreCase)
@@ -313,17 +337,38 @@ namespace QuantConnect.Algorithm.CSharp
             _lastEvaluatedGeneration = snapshot.Generation;
             if (candidate == null)
             {
-                return;
+                return false;
+            }
+
+            var requiredGroupNames = new List<string>();
+            if (destinationGroup != null)
+            {
+                requiredGroupNames.Add(destinationGroup.Name);
+            }
+            foreach (var sourceGroupName in candidate.GroupNames)
+            {
+                if (!requiredGroupNames.Contains(
+                        sourceGroupName,
+                        StringComparer.OrdinalIgnoreCase))
+                {
+                    requiredGroupNames.Add(sourceGroupName);
+                }
+            }
+            if (requiredGroupNames.Any(
+                    groupName => !snapshot.Groups.ContainsKey(groupName)))
+            {
+                _minimumReadyGeneration = snapshot.Generation;
+                TryRequestSnapshotRefresh(
+                    snapshot,
+                    requiredGroupNames);
+                return true;
             }
 
             var assignmentBeforeRequest =
                 BrokerageAccountGroupAssignment;
             var canonicalTarget = destinationGroup?.Name ?? string.Empty;
-            lock (_orderStateLock)
-            {
-                _assignmentSubmissionInProgress = true;
-            }
             var accepted = false;
+            Exception synchronousRejection = null;
             try
             {
                 accepted = RequestBrokerageAccountGroupAssignment(
@@ -332,22 +377,35 @@ namespace QuantConnect.Algorithm.CSharp
                     allocationValue,
                     snapshot);
             }
+            catch (Exception exception)
+            {
+                synchronousRejection = exception;
+            }
             finally
             {
-                lock (_orderStateLock)
+                if (accepted)
                 {
-                    _assignmentSubmissionInProgress = false;
-                    if (accepted)
-                    {
-                        _assignmentRequestAccepted = true;
-                        _assignmentGenerationBeforeRequest =
-                            assignmentBeforeRequest.Generation;
-                        _assignmentSnapshotGeneration =
-                            snapshot.Generation;
-                        _pendingAssignmentGeneration = -1;
-                        _pendingAccountId = candidate.AccountId;
-                    }
+                    _assignmentRequestAccepted = true;
+                    _assignmentGenerationBeforeRequest =
+                        assignmentBeforeRequest.Generation;
+                    _assignmentSnapshotGeneration =
+                        snapshot.Generation;
+                    _pendingAssignmentGeneration = -1;
+                    _pendingAccountId = candidate.AccountId;
                 }
+            }
+            if (synchronousRejection != null)
+            {
+                Error(
+                    $"FA assignment was rejected synchronously: " +
+                    $"account={candidate.AccountId}, target='{canonicalTarget}', " +
+                    $"snapshot generation={snapshot.Generation}, " +
+                    $"error={synchronousRejection.Message}");
+                _minimumReadyGeneration = snapshot.Generation;
+                TryRequestSnapshotRefresh(
+                    snapshot,
+                    requiredGroupNames);
+                return true;
             }
             if (!accepted)
             {
@@ -355,10 +413,15 @@ namespace QuantConnect.Algorithm.CSharp
                     $"FA assignment was not accepted: account={candidate.AccountId}, " +
                     $"target='{canonicalTarget}', snapshot generation=" +
                     $"{snapshot.Generation}.");
-                return;
+                _minimumReadyGeneration = snapshot.Generation;
+                TryRequestSnapshotRefresh(
+                    snapshot,
+                    requiredGroupNames);
+                return true;
             }
 
             PollAssignment();
+            return true;
         }
 
         private bool IsAliasMatch(
@@ -396,9 +459,9 @@ namespace QuantConnect.Algorithm.CSharp
                 allocationValue = _targetAllocationValue;
                 return true;
             }
-            if (new[] { "Ratio", "Percent" }.Contains(
-                    destinationGroup.AllocationMethod,
-                    StringComparer.OrdinalIgnoreCase))
+            if (destinationGroup.AllocationMethod.Equals(
+                    "Ratio",
+                    StringComparison.OrdinalIgnoreCase))
             {
                 if (_targetAllocationValue <= 0)
                 {
@@ -406,6 +469,23 @@ namespace QuantConnect.Algorithm.CSharp
                         $"FA destination group '{destinationGroup.Name}' uses " +
                         $"{destinationGroup.AllocationMethod}, so " +
                         "fa-allocation-value must be positive.");
+                    return false;
+                }
+
+                allocationValue = _targetAllocationValue;
+                return true;
+            }
+            if (destinationGroup.AllocationMethod.Equals(
+                    "Percent",
+                    StringComparison.OrdinalIgnoreCase))
+            {
+                if (_targetAllocationValue <= 0 ||
+                    _targetAllocationValue > 100)
+                {
+                    Error(
+                        $"FA destination group '{destinationGroup.Name}' uses " +
+                        "Percent, so fa-allocation-value must be greater than " +
+                        "zero and no greater than 100.");
                     return false;
                 }
 
@@ -576,17 +656,32 @@ namespace QuantConnect.Algorithm.CSharp
             Interlocked.Exchange(
                 ref _scheduledRefreshIntent,
                 1);
-            TryProcessScheduledSnapshotRefresh();
+            if (!TryEnterStateMachine())
+            {
+                return;
+            }
+            try
+            {
+                if (!TryAdvanceStateMachine())
+                {
+                    TryProcessScheduledSnapshotRefresh(
+                        allowStateMachineOwner: true);
+                }
+            }
+            finally
+            {
+                ExitStateMachine();
+            }
         }
 
         private bool TryProcessScheduledSnapshotRefresh(
-            bool allowOnDataOwner = false)
+            bool allowStateMachineOwner = false)
         {
             string errorMessage = null;
             lock (_orderStateLock)
             {
-                if (_onDataStateActive &&
-                    !allowOnDataOwner)
+                if (_stateMachineActive &&
+                    !allowStateMachineOwner)
                 {
                     return false;
                 }
@@ -612,10 +707,6 @@ namespace QuantConnect.Algorithm.CSharp
                             null);
                 }
                 else if (_refreshRequestOutstanding ||
-                    _assignmentRequestAccepted ||
-                    _assignmentSubmissionInProgress ||
-                    _minimumReadyGeneration >= 0 ||
-                    _cashConfirmationRequired ||
                     snapshot.Status ==
                         BrokerageAccountSnapshotStatus.Refreshing ||
                     UtcTime < _nextRefreshRetryUtc)
@@ -624,9 +715,21 @@ namespace QuantConnect.Algorithm.CSharp
                 }
                 else
                 {
+                    if (Interlocked.Exchange(
+                            ref _scheduledRefreshIntent,
+                            0) == 0)
+                    {
+                        return false;
+                    }
+
                     var completeRefresh =
                         _scheduledRefreshTopologyTicks + 1 ==
-                        CompleteRefreshTopologyTicks;
+                            CompleteRefreshTopologyTicks;
+                    ++_scheduledRefreshTopologyTicks;
+                    if (completeRefresh)
+                    {
+                        _scheduledRefreshTopologyTicks = 0;
+                    }
                     IReadOnlyCollection<string> groupNames = null;
                     if (!completeRefresh)
                     {
@@ -635,7 +738,7 @@ namespace QuantConnect.Algorithm.CSharp
                             groupNames = snapshot.AllGroups.Keys.ToArray();
                             if (groupNames.Count == 0)
                             {
-                                return false;
+                                return true;
                             }
                         }
                         else
@@ -651,18 +754,6 @@ namespace QuantConnect.Algorithm.CSharp
                             };
                         }
                     }
-                    if (Interlocked.Exchange(
-                            ref _scheduledRefreshIntent,
-                            0) == 0)
-                    {
-                        return false;
-                    }
-
-                    ++_scheduledRefreshTopologyTicks;
-                    if (completeRefresh)
-                    {
-                        _scheduledRefreshTopologyTicks = 0;
-                    }
                     errorMessage = TryRequestSnapshotRefreshLocked(
                         snapshot,
                         groupNames);
@@ -673,6 +764,22 @@ namespace QuantConnect.Algorithm.CSharp
                 Error(errorMessage);
             }
             return true;
+        }
+
+        private bool IsSnapshotFresh(
+            BrokerageAccountSnapshot snapshot)
+        {
+            if (!snapshot.IsReady)
+            {
+                return false;
+            }
+
+            var financialDataAsOfUtc =
+                snapshot.CollectionStartedUtc == default
+                    ? snapshot.LastSuccessfulUpdateUtc
+                    : snapshot.CollectionStartedUtc;
+            return financialDataAsOfUtc >=
+                UtcTime - MaximumSnapshotAge;
         }
     }
 }

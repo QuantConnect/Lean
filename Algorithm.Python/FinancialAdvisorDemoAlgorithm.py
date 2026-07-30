@@ -34,9 +34,11 @@ class FinancialAdvisorDemoAlgorithm(QCAlgorithm):
     _GROUP_NAME = "TestGroupEQ"
     _RECONCILE_RETRY_INTERVAL = timedelta(seconds=5)
     _INVALID_ORDER_RETRY_INTERVAL = timedelta(seconds=5)
-    _TOPOLOGY_REFRESH_INTERVAL = timedelta(minutes=1)
+    _TOPOLOGY_REFRESH_INTERVAL = timedelta(seconds=90)
+    _MAXIMUM_SNAPSHOT_AGE = timedelta(minutes=5)
     _COMPLETE_REFRESH_TOPOLOGY_TICKS = 3
     _MAXIMUM_INVALID_ORDER_ATTEMPTS = 3
+    _MAXIMUM_EMPTY_ORDER_ATTEMPTS = 3
 
     def initialize(self):
         # Initialise the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must be initialized.
@@ -60,9 +62,11 @@ class FinancialAdvisorDemoAlgorithm(QCAlgorithm):
         self._on_data_state_active = False
         self._group_order_id = 0
         self._invalid_order_attempt_count = 0
+        self._empty_order_attempt_count = 0
         self._next_group_order_retry_utc = None
         self._pending_reconcile_generation = -1
         self._pending_reconcile_terminal_utc = None
+        self._pending_terminal_order_event = None
         self._next_reconcile_refresh_utc = None
         self._scheduled_refresh_topology_ticks = 0
 
@@ -73,7 +77,9 @@ class FinancialAdvisorDemoAlgorithm(QCAlgorithm):
         self.default_order_properties.fa_group = self._GROUP_NAME
 
         if self.live_mode:
-            # Every third one-minute topology tick expands to complete account state.
+            # The 90-second cadence is intentionally offset from minute data so a
+            # refresh cannot consume every OnData opportunity. Every third topology
+            # tick expands to complete account state.
             self.schedule.on(
                 self.date_rules.every_day(),
                 self.time_rules.every(self._TOPOLOGY_REFRESH_INTERVAL),
@@ -115,11 +121,12 @@ class FinancialAdvisorDemoAlgorithm(QCAlgorithm):
             return
 
         pre_order_snapshot = None
+        reconciled_terminal_order_event = None
         reconcile = False
         request_reconcile_refresh = False
         with self._order_state_lock:
             if self._pending_reconcile_generation >= 0:
-                if snapshot.is_ready and \
+                if self._is_snapshot_fresh(snapshot) and \
                         snapshot.generation > \
                         self._pending_reconcile_generation and \
                         self._pending_reconcile_terminal_utc is not None and \
@@ -127,6 +134,9 @@ class FinancialAdvisorDemoAlgorithm(QCAlgorithm):
                         self._pending_reconcile_terminal_utc:
                     pre_order_snapshot = self._pre_order_snapshot
                     self._pre_order_snapshot = None
+                    reconciled_terminal_order_event = \
+                        self._pending_terminal_order_event
+                    self._pending_terminal_order_event = None
                     self._pending_reconcile_generation = -1
                     self._pending_reconcile_terminal_utc = None
                     self._next_reconcile_refresh_utc = None
@@ -137,6 +147,13 @@ class FinancialAdvisorDemoAlgorithm(QCAlgorithm):
             self._reconcile_account_positions(
                 pre_order_snapshot,
                 snapshot)
+            with self._order_state_lock:
+                terminal_order_message = \
+                    self._complete_terminal_order_reconciliation_locked(
+                        reconciled_terminal_order_event,
+                        now)
+            if terminal_order_message is not None:
+                self.error(terminal_order_message)
             return
         if request_reconcile_refresh:
             self._try_request_reconcile_refresh(snapshot)
@@ -145,7 +162,7 @@ class FinancialAdvisorDemoAlgorithm(QCAlgorithm):
         with self._order_state_lock:
             request_initial_refresh = \
                 not self._initial_snapshot_refresh_accepted or \
-                not snapshot.is_ready or \
+                not self._is_snapshot_fresh(snapshot) or \
                 snapshot.generation <= \
                 self._initial_snapshot_request_generation
         if request_initial_refresh:
@@ -160,8 +177,11 @@ class FinancialAdvisorDemoAlgorithm(QCAlgorithm):
                     self._order_submission_in_progress or \
                     self._invalid_order_attempt_count >= \
                     self._MAXIMUM_INVALID_ORDER_ATTEMPTS or \
+                    self._empty_order_attempt_count >= \
+                    self._MAXIMUM_EMPTY_ORDER_ATTEMPTS or \
                     (self._next_group_order_retry_utc is not None and
                      self.utc_time < self._next_group_order_retry_utc) or \
+                    not self._is_snapshot_fresh(submission_snapshot) or \
                     self._find_group(submission_snapshot) is None:
                 return
 
@@ -323,6 +343,7 @@ class FinancialAdvisorDemoAlgorithm(QCAlgorithm):
     def _try_process_snapshot_request_priority(self):
         snapshot = None
         pre_order_snapshot = None
+        reconciled_terminal_order_event = None
         reconcile = False
         initial_refresh_rejected = False
         reconcile_refresh_rejected = False
@@ -332,7 +353,7 @@ class FinancialAdvisorDemoAlgorithm(QCAlgorithm):
 
             snapshot = self.brokerage_account_snapshot
             if self._pending_reconcile_generation >= 0:
-                if snapshot.is_ready and \
+                if self._is_snapshot_fresh(snapshot) and \
                         snapshot.generation > \
                         self._pending_reconcile_generation and \
                         self._pending_reconcile_terminal_utc is not None and \
@@ -340,6 +361,9 @@ class FinancialAdvisorDemoAlgorithm(QCAlgorithm):
                         self._pending_reconcile_terminal_utc:
                     pre_order_snapshot = self._pre_order_snapshot
                     self._pre_order_snapshot = None
+                    reconciled_terminal_order_event = \
+                        self._pending_terminal_order_event
+                    self._pending_terminal_order_event = None
                     self._pending_reconcile_generation = -1
                     self._pending_reconcile_terminal_utc = None
                     self._next_reconcile_refresh_utc = None
@@ -349,7 +373,7 @@ class FinancialAdvisorDemoAlgorithm(QCAlgorithm):
                         self._try_request_reconcile_refresh_locked(snapshot)
                     reconcile_refresh_rejected = attempted and not accepted
             elif not self._initial_snapshot_refresh_accepted or \
-                    not snapshot.is_ready or \
+                    not self._is_snapshot_fresh(snapshot) or \
                     snapshot.generation <= \
                     self._initial_snapshot_request_generation:
                 attempted, accepted = \
@@ -362,6 +386,13 @@ class FinancialAdvisorDemoAlgorithm(QCAlgorithm):
             self._reconcile_account_positions(
                 pre_order_snapshot,
                 snapshot)
+            with self._order_state_lock:
+                terminal_order_message = \
+                    self._complete_terminal_order_reconciliation_locked(
+                        reconciled_terminal_order_event,
+                        self.utc_time)
+            if terminal_order_message is not None:
+                self.error(terminal_order_message)
         if initial_refresh_rejected:
             self.error(
                 f"The initial snapshot refresh for Financial Advisor group "
@@ -421,8 +452,22 @@ class FinancialAdvisorDemoAlgorithm(QCAlgorithm):
             self._pre_order_snapshot = None
             self._group_order_submitted = False
             self._terminal_events_during_submission.clear()
-            return None, False
+            self._empty_order_attempt_count += 1
+            retry_allowed = \
+                self._empty_order_attempt_count < \
+                self._MAXIMUM_EMPTY_ORDER_ATTEMPTS
+            self._next_group_order_retry_utc = \
+                now + self._INVALID_ORDER_RETRY_INTERVAL \
+                if retry_allowed else datetime.max
+            if retry_allowed:
+                return None, False
+            return (
+                f"SetHoldings returned no Financial Advisor parent order "
+                f"ticket on {self._MAXIMUM_EMPTY_ORDER_ATTEMPTS} attempts; "
+                f"the bounded retry limit was reached.",
+                False)
 
+        self._empty_order_attempt_count = 0
         self._group_order_id = ticket.order_id
         self._group_order_submitted = True
         ticket_status = ticket.status
@@ -474,37 +519,51 @@ class FinancialAdvisorDemoAlgorithm(QCAlgorithm):
             now):
         status, terminal_utc, message = terminal_order_event
         self._group_order_id = 0
+        invalid_order_message = None
         if status == OrderStatus.INVALID:
-            self._invalid_order_attempt_count += 1
-            self._group_order_submitted = False
-            self._pre_order_snapshot = None
-            retry_allowed = \
-                self._invalid_order_attempt_count < \
-                self._MAXIMUM_INVALID_ORDER_ATTEMPTS
-            self._next_group_order_retry_utc = \
-                now + self._INVALID_ORDER_RETRY_INTERVAL \
-                if retry_allowed else datetime.max
             reason = message \
                 if message is not None and str(message).strip() \
                 else "No rejection reason was supplied."
-            retry_message = (
-                f"Attempt {self._invalid_order_attempt_count} of "
-                f"{self._MAXIMUM_INVALID_ORDER_ATTEMPTS} was rejected; "
-                f"the next attempt is scheduled."
-                if retry_allowed
-                else "The bounded retry limit was reached."
-            )
-            return (
+            invalid_order_message = (
                 f"Financial Advisor group order {order_id} was rejected: "
-                f"{reason} {retry_message}",
-                False)
-
-        self._invalid_order_attempt_count = 0
+                f"{reason} A newer account snapshot will be reconciled "
+                f"before retry eligibility is decided.")
         # Publish the causal timestamps before making the generation pending.
         self._pending_reconcile_terminal_utc = terminal_utc
+        self._pending_terminal_order_event = (
+            order_id,
+            terminal_order_event)
         self._next_reconcile_refresh_utc = now
         self._pending_reconcile_generation = snapshot_generation
-        return None, True
+        return invalid_order_message, True
+
+    def _complete_terminal_order_reconciliation_locked(
+            self,
+            terminal_order_event,
+            now):
+        if terminal_order_event is None or \
+                terminal_order_event[1][0] != OrderStatus.INVALID:
+            self._invalid_order_attempt_count = 0
+            return None
+
+        self._invalid_order_attempt_count += 1
+        self._group_order_submitted = False
+        retry_allowed = \
+            self._invalid_order_attempt_count < \
+            self._MAXIMUM_INVALID_ORDER_ATTEMPTS
+        self._next_group_order_retry_utc = \
+            now + self._INVALID_ORDER_RETRY_INTERVAL \
+            if retry_allowed else datetime.max
+        order_id = terminal_order_event[0]
+        return (
+            f"Financial Advisor group order {order_id} was reconciled after "
+            f"rejection. Attempt {self._invalid_order_attempt_count} of "
+            f"{self._MAXIMUM_INVALID_ORDER_ATTEMPTS} was rejected; the next "
+            f"attempt is scheduled."
+            if retry_allowed
+            else
+            f"Financial Advisor group order {order_id} was reconciled after "
+            f"rejection. The bounded retry limit was reached.")
 
     def _report_terminal_order_action(
             self,
@@ -524,6 +583,15 @@ class FinancialAdvisorDemoAlgorithm(QCAlgorithm):
             group for group in list(snapshot.groups.values)
             if group.name.casefold() == self._GROUP_NAME.casefold()
         ), None)
+
+    def _is_snapshot_fresh(self, snapshot):
+        if snapshot is None or not snapshot.is_ready:
+            return False
+
+        authority_utc = snapshot.collection_started_utc
+        if authority_utc == datetime.min:
+            authority_utc = snapshot.last_successful_update_utc
+        return authority_utc >= self.utc_time - self._MAXIMUM_SNAPSHOT_AGE
 
     def _get_position_quantity(self, account):
         return sum(
