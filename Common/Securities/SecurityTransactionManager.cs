@@ -255,6 +255,9 @@ namespace QuantConnect.Securities
                 throw new InvalidOperationException(Messages.SecurityTransactionManager.CancelOpenOrdersNotAllowedOnInitializeOrWarmUp());
             }
 
+            // note: a leg whose sibling was already canceled by an earlier iteration (canceling one leg of a
+            // group cancels every leg) quietly no-ops here instead of failing loudly, so every ticket can safely
+            // go through the same Cancel() call and keep a real CancelRequest
             var cancelledOrders = new List<OrderTicket>();
             foreach (var ticket in GetOpenOrderTickets(null, memoize: false))
             {
@@ -277,6 +280,9 @@ namespace QuantConnect.Securities
                 throw new InvalidOperationException(Messages.SecurityTransactionManager.CancelOpenOrdersNotAllowedOnInitializeOrWarmUp());
             }
 
+            // note: a leg whose sibling was already canceled by an earlier iteration (canceling one leg of a
+            // group cancels every leg) quietly no-ops here instead of failing loudly, so every ticket can safely
+            // go through the same Cancel() call and keep a real CancelRequest
             var cancelledOrders = new List<OrderTicket>();
             foreach (var ticket in GetOpenOrderTickets(x => x.Symbol == symbol, memoize: false))
             {
@@ -390,6 +396,7 @@ namespace QuantConnect.Securities
         public decimal GetOpenOrdersRemainingQuantity(Func<OrderTicket, bool> filter = null)
         {
             return GetOpenOrderTickets(filter, memoize: false)
+                .GetEffectiveOpenQuantityTickets()
                 .Aggregate(0m, (d, t) => d + t.QuantityRemaining);
         }
 

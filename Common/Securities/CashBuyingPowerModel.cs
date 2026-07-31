@@ -423,6 +423,12 @@ namespace QuantConnect.Securities
                 }
             }
 
+            // resolved once instead of per candidate order: only a leg of a one-cancels-the-other group has
+            // siblings to exclude, so for every other order this stays null and the check below is a no-op
+            var oneCancelsTheOtherGroupId = order.GroupOrderManager?.ComboType == ComboType.OneCancelsTheOther
+                ? order.GroupOrderManager.Id
+                : (int?)null;
+
             // fetch open orders with matching symbol/side
             var openOrders = portfolio.Transactions.GetOpenOrders(x =>
                 {
@@ -432,6 +438,8 @@ namespace QuantConnect.Securities
                            dir == x.Direction &&
                            // don't count our current order
                            x.Id != order.Id &&
+                           // don't count siblings of the same one-cancels-the-other group: only one of them can ever execute
+                           (oneCancelsTheOtherGroupId == null || x.GroupOrderManager?.Id != oneCancelsTheOtherGroupId) &&
                            // only count working orders
                            (x.Type == OrderType.Limit || x.Type == OrderType.StopMarket);
                 }
