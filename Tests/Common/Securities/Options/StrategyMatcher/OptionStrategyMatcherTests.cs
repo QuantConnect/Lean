@@ -156,6 +156,48 @@ namespace QuantConnect.Tests.Common.Securities.Options.StrategyMatcher
         }
 
         [Test]
+        public void DoesNotCoverShortCallWithDistantLongWhenNakedMarginIsCheaper()
+        {
+            // covering the ladder's uncovered 600 short with the distant 700 long would carve a 150-wide bear
+            // call spread, margined at the strike width, costing more than the naked short margin (~20% of the
+            // underlying value). the ladder carve must be preserved instead
+            var positions = OptionPositionCollection.Empty.AddRange(
+                Position(Call[500]),
+                Position(Call[550], -1),
+                Position(Call[600], -1),
+                Position(Call[700])
+            );
+
+            var matcher = new OptionStrategyMatcher(OptionStrategyMatcherOptions.ForDefinitions(AllDefinitions));
+            var match = matcher.MatchOnce(positions);
+
+            var strategyNames = string.Join(", ", match.Strategies.Select(strategy => strategy.Name));
+            Assert.IsTrue(match.Strategies.Any(strategy => strategy.Name == BullCallLadder.Name), strategyNames);
+            Assert.IsFalse(match.Strategies.Any(strategy => strategy.Name == BearCallSpread.Name), strategyNames);
+        }
+
+        [Test]
+        public void DoesNotCoverShortPutWithDistantLongWhenNakedMarginIsCheaper()
+        {
+            // covering the ladder's uncovered 550 short with the distant 100 long would carve a 450-wide bull
+            // put spread, margined at the strike width, costing more than the naked short margin (~20% of the
+            // underlying value). the ladder carve must be preserved instead
+            var positions = OptionPositionCollection.Empty.AddRange(
+                Position(Put[650]),
+                Position(Put[600], -1),
+                Position(Put[550], -1),
+                Position(Put[100])
+            );
+
+            var matcher = new OptionStrategyMatcher(OptionStrategyMatcherOptions.ForDefinitions(AllDefinitions));
+            var match = matcher.MatchOnce(positions);
+
+            var strategyNames = string.Join(", ", match.Strategies.Select(strategy => strategy.Name));
+            Assert.IsTrue(match.Strategies.Any(strategy => strategy.Name == BearPutLadder.Name), strategyNames);
+            Assert.IsFalse(match.Strategies.Any(strategy => strategy.Name == BullPutSpread.Name), strategyNames);
+        }
+
+        [Test]
         public void MatchesLadderBookAsLadderWhenNoBetterSolutionExists()
         {
             // an actual ladder book has one genuinely uncovered short either way it's grouped,
