@@ -40,8 +40,8 @@ namespace QuantConnect.Securities.Option.StrategyMatcher
         /// Computes the score as the negated total quantity of uncovered short option contracts, so the solution
         /// covering the most short contracts wins and a solution without uncovered shorts scores zero, the maximum.
         /// A short leg is covered when its strategy holds, quantity for quantity, the underlying lots with the
-        /// offsetting sign or long options of the same right whose strike is on the debit side of the short strike
-        /// or within <see cref="MaximumCreditCoverWidthFactor"/> of it on the credit side
+        /// offsetting sign or long options of the same right which outlive it and whose strike is on the debit side
+        /// of the short strike or within <see cref="MaximumCreditCoverWidthFactor"/> of it on the credit side
         /// </summary>
         public decimal ComputeScore(OptionPositionCollection input, OptionStrategyMatch match, OptionPositionCollection unmatched)
         {
@@ -119,11 +119,13 @@ namespace QuantConnect.Securities.Option.StrategyMatcher
             {
                 // a single short leg takes from every long leg allowed to cover it, no ordering required
                 var shortStrike = 0m;
+                var shortExpiration = DateTime.MinValue;
                 for (var i = 0; i < legs.Count; i++)
                 {
                     if (legs[i].Right == right && legs[i].Quantity < 0)
                     {
                         shortStrike = legs[i].Strike;
+                        shortExpiration = legs[i].Expiration;
                         break;
                     }
                 }
@@ -132,7 +134,8 @@ namespace QuantConnect.Securities.Option.StrategyMatcher
                 for (var i = 0; i < legs.Count; i++)
                 {
                     var leg = legs[i];
-                    if (leg.Right == right && leg.Quantity > 0 && Covers(sign, shortStrike, leg.Strike))
+                    if (leg.Right == right && leg.Quantity > 0
+                        && Covers(sign, shortStrike, shortExpiration, leg.Strike, leg.Expiration))
                     {
                         cover += leg.Quantity;
                     }
@@ -146,8 +149,10 @@ namespace QuantConnect.Securities.Option.StrategyMatcher
             // are nested: taking from the shorts in that order never spends a long leg that a later short needed
             var shortStrikes = new decimal[shortLegCount];
             var shortQuantities = new decimal[shortLegCount];
+            var shortExpirations = new DateTime[shortLegCount];
             var longStrikes = new decimal[longLegCount];
             var longQuantities = new decimal[longLegCount];
+            var longExpirations = new DateTime[longLegCount];
             var shorts = 0;
             var longs = 0;
             for (var i = 0; i < legs.Count; i++)
@@ -166,15 +171,18 @@ namespace QuantConnect.Securities.Option.StrategyMatcher
                     {
                         shortStrikes[index] = shortStrikes[index - 1];
                         shortQuantities[index] = shortQuantities[index - 1];
+                        shortExpirations[index] = shortExpirations[index - 1];
                         index--;
                     }
                     shortStrikes[index] = leg.Strike;
                     shortQuantities[index] = -leg.Quantity;
+                    shortExpirations[index] = leg.Expiration;
                 }
                 else
                 {
                     longStrikes[longs] = leg.Strike;
-                    longQuantities[longs++] = leg.Quantity;
+                    longQuantities[longs] = leg.Quantity;
+                    longExpirations[longs++] = leg.Expiration;
                 }
             }
 
@@ -184,7 +192,8 @@ namespace QuantConnect.Securities.Option.StrategyMatcher
                 var remaining = shortQuantities[i];
                 for (var j = 0; j < longLegCount && remaining > 0; j++)
                 {
-                    if (longQuantities[j] > 0 && Covers(sign, shortStrikes[i], longStrikes[j]))
+                    if (longQuantities[j] > 0
+                        && Covers(sign, shortStrikes[i], shortExpirations[i], longStrikes[j], longExpirations[j]))
                     {
                         var quantity = Math.Min(remaining, longQuantities[j]);
                         remaining -= quantity;
@@ -203,12 +212,15 @@ namespace QuantConnect.Securities.Option.StrategyMatcher
 
         /// <summary>
         /// Determines whether a long leg covers a short leg of the same right at a margin below the naked short margin
-        /// proxy. This holds for every long on the debit side of the short strike, where the width is not positive and
-        /// the strategy requires no margin at all, and up to <see cref="MaximumCreditCoverWidthFactor"/> beyond it
+        /// proxy. The long must outlive the short, since a long expiring first leaves the short naked for the rest of
+        /// its life and the margin models charge those groups, the short calendar spreads, the naked short margin. It
+        /// must also sit on the debit side of the short strike, where the width is not positive and the strategy
+        /// requires no margin at all, or up to <see cref="MaximumCreditCoverWidthFactor"/> beyond it
         /// </summary>
-        private static bool Covers(int sign, decimal shortStrike, decimal longStrike)
+        private static bool Covers(int sign, decimal shortStrike, DateTime shortExpiration, decimal longStrike, DateTime longExpiration)
         {
-            return sign * (longStrike - shortStrike) <= MaximumCreditCoverWidthFactor * shortStrike;
+            return longExpiration >= shortExpiration
+                && sign * (longStrike - shortStrike) <= MaximumCreditCoverWidthFactor * shortStrike;
         }
     }
 }

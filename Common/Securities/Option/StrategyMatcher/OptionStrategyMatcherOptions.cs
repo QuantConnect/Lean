@@ -23,14 +23,15 @@ namespace QuantConnect.Securities.Option.StrategyMatcher
     /// Defines options that influence how the matcher operates.
     /// </summary>
     /// <remarks>
-    /// Many properties in this type are not implemented in the matcher but are provided to document
-    /// the types of things that can be added to the matcher in the future as necessary. Some of the
+    /// Some properties in this type are not implemented in the matcher but are provided to document the
+    /// types of things that can be added to it in the future as necessary. <see cref="MaximumDuration"/>
+    /// and <see cref="MaximumSolutionCount"/> are not consulted anywhere: the matcher evaluates a fixed
+    /// set of candidate solutions, which keeps its result independent of how long matching takes. Further
     /// features contemplated in this class would require updating the various matching/filtering/slicing
-    /// functions to accept these options, or a particular property. This is the case for the enumerators
-    /// which would be used to prioritize which positions to try and match first. A great implementation
-    /// of the <see cref="IOptionPositionCollectionEnumerator"/> would be to yield positions with the
-    /// highest margin requirements first. At time of writing, the goal is to achieve a workable rev0,
-    /// and we can later improve the efficiency/optimization of the matching process.
+    /// functions to accept these options, or a particular property. This is the case for the position
+    /// enumerator, which would be used to prioritize which positions to try and match first: a great
+    /// implementation of the <see cref="IOptionPositionCollectionEnumerator"/> would be to yield positions
+    /// with the highest margin requirements first.
     /// </remarks>
     public class OptionStrategyMatcherOptions
     {
@@ -54,6 +55,10 @@ namespace QuantConnect.Securities.Option.StrategyMatcher
         /// <summary>
         /// The definitions to be used for matching.
         /// </summary>
+        /// <remarks>
+        /// The configured <see cref="IOptionStrategyDefinitionEnumerator"/> is consulted once and its output is
+        /// cached, so an enumerator yielding a different order on each call has only its first order honored
+        /// </remarks>
         public IEnumerable<OptionStrategyDefinition> Definitions
             => _enumeratedDefinitions ??= _definitionEnumerator.Enumerate(_definitions).ToList();
 

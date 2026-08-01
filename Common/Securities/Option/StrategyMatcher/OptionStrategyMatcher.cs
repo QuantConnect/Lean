@@ -53,7 +53,11 @@ namespace QuantConnect.Securities.Option.StrategyMatcher
             // first so that whenever the objective function scores another candidate equally this one is preserved
             var bestMatch = Match(Options.Definitions, positions, out var unmatched);
             var bestScore = Options.ObjectiveFunction.ComputeScore(positions, bestMatch, unmatched);
-            if (bestScore >= 0 || -bestScore <= GetMinimumUncoveredQuantity(positions))
+            if (bestScore >= 0
+                // the bound below reads the score as a negated quantity of uncovered short contracts, which only the
+                // default objective function guarantees, so a custom one always gets to evaluate both candidates
+                || Options.ObjectiveFunction is UncoveredShortQuantityOptionStrategyMatchObjectiveFunction
+                    && -bestScore <= GetMinimumUncoveredQuantity(positions))
             {
                 // by convention solutions that can't be improved upon score zero, see IOptionStrategyMatchObjectiveFunction.
                 // matching again is also pointless once the first solution leaves no more short contracts uncovered than

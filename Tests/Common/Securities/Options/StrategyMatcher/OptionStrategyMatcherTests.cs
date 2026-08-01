@@ -14,6 +14,7 @@
 */
 
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using NUnit.Framework;
 using QuantConnect.Securities.Option.StrategyMatcher;
@@ -195,6 +196,89 @@ namespace QuantConnect.Tests.Common.Securities.Options.StrategyMatcher
             var strategyNames = string.Join(", ", match.Strategies.Select(strategy => strategy.Name));
             Assert.IsTrue(match.Strategies.Any(strategy => strategy.Name == BearPutLadder.Name), strategyNames);
             Assert.IsFalse(match.Strategies.Any(strategy => strategy.Name == BullPutSpread.Name), strategyNames);
+        }
+
+        [TestCase(OptionRight.Call)]
+        [TestCase(OptionRight.Put)]
+        public void ShortCalendarSpreadLeavesItsShortLegUncovered(OptionRight right)
+        {
+            // long the near expiration and short the far one at the same strike: once the long expires the short
+            // is naked for the rest of its life, which is why the margin model charges short calendar spreads the
+            // stand-alone naked short margin. the score must reflect that instead of reading the width as zero
+            var definition = right == OptionRight.Call ? ShortCallCalendarSpread : ShortPutCalendarSpread;
+            var positions = OptionPositionCollection.Empty.AddRange(
+                Position(Contract[right, 600m, 0], 1),
+                Position(Contract[right, 600m, 1], -1)
+            );
+
+            Assert.AreEqual(-1, ScoreSingleMatch(definition, positions));
+        }
+
+        [TestCase(OptionRight.Call)]
+        [TestCase(OptionRight.Put)]
+        public void CalendarSpreadCoversItsShortLeg(OptionRight right)
+        {
+            // short the near expiration and long the far one: the long outlives the short, the strategy requires
+            // no margin at all, and the score must not confuse it with the short calendar spread above
+            var definition = right == OptionRight.Call ? CallCalendarSpread : PutCalendarSpread;
+            var positions = OptionPositionCollection.Empty.AddRange(
+                Position(Contract[right, 600m, 0], -1),
+                Position(Contract[right, 600m, 1], 1)
+            );
+
+            Assert.AreEqual(0, ScoreSingleMatch(definition, positions));
+        }
+
+        [Test]
+        public void UnderlyingLotsCoverShortCalls()
+        {
+            // the underlying lots held by a covered call cover its short leg, so nothing is left uncovered
+            var positions = OptionPositionCollection.Empty.AddRange(
+                Position(Underlying, 100),
+                Position(Call[600m], -1)
+            );
+
+            Assert.AreEqual(0, ScoreSingleMatch(CoveredCall, positions));
+        }
+
+        [Test]
+        public void CustomObjectiveFunctionEvaluatesEveryCandidate()
+        {
+            // a book of naked shorts, where the default objective function knows no grouping can cover anything and
+            // skips the second candidate. a custom objective function makes no promise about what its score means,
+            // so it must be given both candidates to choose between
+            var positions = OptionPositionCollection.Empty.AddRange(
+                Position(Call[600m], -1),
+                Position(Call[605m], -1)
+            );
+
+            var objectiveFunction = new CountingObjectiveFunction();
+            var matcher = new OptionStrategyMatcher(OptionStrategyMatcherOptions.ForDefinitions(AllDefinitions)
+                .WithObjectiveFunction(objectiveFunction));
+            matcher.MatchOnce(positions);
+
+            Assert.AreEqual(2, objectiveFunction.Count);
+        }
+
+        private static decimal ScoreSingleMatch(OptionStrategyDefinition definition, OptionPositionCollection positions)
+        {
+            var options = OptionStrategyMatcherOptions.ForDefinitions(definition);
+            Assert.IsTrue(definition.TryMatchOnce(options, positions, out var match), $"{definition.Name} did not match");
+
+            var strategies = new List<QuantConnect.Securities.Option.OptionStrategy> { match.CreateStrategy() };
+            return options.ObjectiveFunction.ComputeScore(positions, new OptionStrategyMatch(strategies),
+                OptionPositionCollection.Empty);
+        }
+
+        private class CountingObjectiveFunction : IOptionStrategyMatchObjectiveFunction
+        {
+            public int Count { get; private set; }
+
+            public decimal ComputeScore(OptionPositionCollection input, OptionStrategyMatch match, OptionPositionCollection unmatched)
+            {
+                Count++;
+                return -1m;
+            }
         }
 
         [Test]
