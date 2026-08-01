@@ -15,7 +15,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Linq;
 
 namespace QuantConnect.Securities.Option.StrategyMatcher
 {
@@ -40,9 +39,9 @@ namespace QuantConnect.Securities.Option.StrategyMatcher
         /// <summary>
         /// Computes the score as the negated total quantity of uncovered short option contracts, so the solution
         /// covering the most short contracts wins and a solution without uncovered shorts scores zero, the maximum.
-        /// A short leg is covered when its strategy holds, quantity for quantity, long options of the same right on
-        /// the debit side (margin free) or within <see cref="MaximumCreditCoverWidthFactor"/> on the credit side,
-        /// or the underlying lots with the offsetting sign
+        /// A short leg is covered when its strategy holds, quantity for quantity, the underlying lots with the
+        /// offsetting sign or long options of the same right whose strike is on the debit side of the short strike
+        /// or within <see cref="MaximumCreditCoverWidthFactor"/> of it on the credit side
         /// </summary>
         public decimal ComputeScore(OptionPositionCollection input, OptionStrategyMatch match, OptionPositionCollection unmatched)
         {
@@ -51,7 +50,12 @@ namespace QuantConnect.Securities.Option.StrategyMatcher
             {
                 // at the matching level underlying legs are expressed in lots,
                 // long lots cover short calls and short lots cover short puts
-                var underlyingLots = strategy.UnderlyingLegs.Sum(leg => leg.Quantity);
+                var underlyingLots = 0m;
+                for (var i = 0; i < strategy.UnderlyingLegs.Count; i++)
+                {
+                    underlyingLots += strategy.UnderlyingLegs[i].Quantity;
+                }
+
                 uncovered += GetUncoveredQuantity(strategy.OptionLegs, OptionRight.Call, Math.Max(0, underlyingLots));
                 uncovered += GetUncoveredQuantity(strategy.OptionLegs, OptionRight.Put, Math.Max(0, -underlyingLots));
             }
@@ -72,13 +76,14 @@ namespace QuantConnect.Securities.Option.StrategyMatcher
         /// Determines the quantity of short contracts of the given right which the strategy's own long legs and
         /// underlying lots don't cover at a margin below the naked short margin proxy
         /// </summary>
-        private static decimal GetUncoveredQuantity(IEnumerable<OptionStrategy.OptionLegData> optionLegs, OptionRight right,
-            decimal underlyingCover)
+        private static decimal GetUncoveredQuantity(List<OptionStrategy.OptionLegData> legs, OptionRight right, decimal underlyingCover)
         {
-            List<StrikeQuantity> shorts = null;
-            List<StrikeQuantity> longs = null;
-            foreach (var leg in optionLegs)
+            var shortLegCount = 0;
+            var longLegCount = 0;
+            var shortQuantity = 0m;
+            for (var i = 0; i < legs.Count; i++)
             {
+                var leg = legs[i];
                 if (leg.Right != right || leg.Quantity == 0)
                 {
                     continue;
@@ -86,93 +91,124 @@ namespace QuantConnect.Securities.Option.StrategyMatcher
 
                 if (leg.Quantity < 0)
                 {
-                    (shorts ??= new List<StrikeQuantity>()).Add(new StrikeQuantity(leg.Strike, -leg.Quantity));
+                    shortLegCount++;
+                    shortQuantity -= leg.Quantity;
                 }
                 else
                 {
-                    (longs ??= new List<StrikeQuantity>()).Add(new StrikeQuantity(leg.Strike, leg.Quantity));
+                    longLegCount++;
                 }
             }
 
-            if (shorts == null)
+            if (shortLegCount == 0)
             {
+                // nothing short of this right, the most common case by far
                 return 0;
             }
 
-            // debit-side longs cover for free: at or below the short strike for calls, at or above for puts. sorting
-            // ascending for calls (descending for puts) makes each short's set of debit-side longs contain the sets
-            // of the shorts before it, so covering shorts in order never wastes a long another short needed. it also
-            // leaves credit-side longs enumerated nearest first, minimizing the width of credit-side covers below
-            var sign = right == OptionRight.Call ? 1 : -1;
-            shorts.Sort((left, other) => sign * left.Strike.CompareTo(other.Strike));
-            longs?.Sort((left, other) => sign * left.Strike.CompareTo(other.Strike));
-
-            foreach (var shortLeg in shorts)
+            if (longLegCount == 0)
             {
-                if (longs != null)
-                {
-                    foreach (var longLeg in longs)
-                    {
-                        if (shortLeg.Quantity == 0)
-                        {
-                            break;
-                        }
+                // no long of this right to pair with, only the underlying lots can cover
+                return Math.Max(0, shortQuantity - underlyingCover);
+            }
 
-                        if (sign * (shortLeg.Strike - longLeg.Strike) >= 0)
-                        {
-                            Cover(shortLeg, longLeg);
-                        }
+            // calls are covered by lower strikes and puts by higher ones
+            var sign = right == OptionRight.Call ? 1 : -1;
+
+            if (shortLegCount == 1)
+            {
+                // a single short leg takes from every long leg allowed to cover it, no ordering required
+                var shortStrike = 0m;
+                for (var i = 0; i < legs.Count; i++)
+                {
+                    if (legs[i].Right == right && legs[i].Quantity < 0)
+                    {
+                        shortStrike = legs[i].Strike;
+                        break;
                     }
                 }
 
-                var lots = Math.Min(shortLeg.Quantity, underlyingCover);
-                shortLeg.Quantity -= lots;
-                underlyingCover -= lots;
+                var cover = underlyingCover;
+                for (var i = 0; i < legs.Count; i++)
+                {
+                    var leg = legs[i];
+                    if (leg.Right == right && leg.Quantity > 0 && Covers(sign, shortStrike, leg.Strike))
+                    {
+                        cover += leg.Quantity;
+                    }
+                }
+
+                return Math.Max(0, shortQuantity - cover);
+            }
+
+            // several short legs of the same right, which only ladders and short butterflies produce. the set of long
+            // legs allowed to cover a short grows with the short's strike for calls, and shrinks for puts, so the sets
+            // are nested: taking from the shorts in that order never spends a long leg that a later short needed
+            var shortStrikes = new decimal[shortLegCount];
+            var shortQuantities = new decimal[shortLegCount];
+            var longStrikes = new decimal[longLegCount];
+            var longQuantities = new decimal[longLegCount];
+            var shorts = 0;
+            var longs = 0;
+            for (var i = 0; i < legs.Count; i++)
+            {
+                var leg = legs[i];
+                if (leg.Right != right || leg.Quantity == 0)
+                {
+                    continue;
+                }
+
+                if (leg.Quantity < 0)
+                {
+                    // insertion sort: ascending strike for calls, descending for puts
+                    var index = shorts++;
+                    while (index > 0 && sign * (shortStrikes[index - 1] - leg.Strike) > 0)
+                    {
+                        shortStrikes[index] = shortStrikes[index - 1];
+                        shortQuantities[index] = shortQuantities[index - 1];
+                        index--;
+                    }
+                    shortStrikes[index] = leg.Strike;
+                    shortQuantities[index] = -leg.Quantity;
+                }
+                else
+                {
+                    longStrikes[longs] = leg.Strike;
+                    longQuantities[longs++] = leg.Quantity;
+                }
             }
 
             var uncovered = 0m;
-            foreach (var shortLeg in shorts)
+            for (var i = 0; i < shortLegCount; i++)
             {
-                if (longs != null)
+                var remaining = shortQuantities[i];
+                for (var j = 0; j < longLegCount && remaining > 0; j++)
                 {
-                    foreach (var longLeg in longs)
+                    if (longQuantities[j] > 0 && Covers(sign, shortStrikes[i], longStrikes[j]))
                     {
-                        if (shortLeg.Quantity == 0)
-                        {
-                            break;
-                        }
-
-                        // a credit-side long caps the risk at the strike width, worth it only below the naked margin proxy
-                        if (sign * (longLeg.Strike - shortLeg.Strike) <= MaximumCreditCoverWidthFactor * shortLeg.Strike)
-                        {
-                            Cover(shortLeg, longLeg);
-                        }
+                        var quantity = Math.Min(remaining, longQuantities[j]);
+                        remaining -= quantity;
+                        longQuantities[j] -= quantity;
                     }
                 }
 
-                uncovered += shortLeg.Quantity;
+                var lots = Math.Min(remaining, underlyingCover);
+                remaining -= lots;
+                underlyingCover -= lots;
+                uncovered += remaining;
             }
 
             return uncovered;
         }
 
-        private static void Cover(StrikeQuantity shortLeg, StrikeQuantity longLeg)
+        /// <summary>
+        /// Determines whether a long leg covers a short leg of the same right at a margin below the naked short margin
+        /// proxy. This holds for every long on the debit side of the short strike, where the width is not positive and
+        /// the strategy requires no margin at all, and up to <see cref="MaximumCreditCoverWidthFactor"/> beyond it
+        /// </summary>
+        private static bool Covers(int sign, decimal shortStrike, decimal longStrike)
         {
-            var quantity = Math.Min(shortLeg.Quantity, longLeg.Quantity);
-            shortLeg.Quantity -= quantity;
-            longLeg.Quantity -= quantity;
-        }
-
-        private sealed class StrikeQuantity
-        {
-            public decimal Strike { get; }
-            public decimal Quantity { get; set; }
-
-            public StrikeQuantity(decimal strike, decimal quantity)
-            {
-                Strike = strike;
-                Quantity = quantity;
-            }
+            return sign * (longStrike - shortStrike) <= MaximumCreditCoverWidthFactor * shortStrike;
         }
     }
 }

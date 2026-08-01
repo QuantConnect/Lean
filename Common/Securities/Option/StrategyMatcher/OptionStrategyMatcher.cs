@@ -13,6 +13,7 @@
  * limitations under the License.
 */
 
+using System;
 using System.Collections.Generic;
 
 namespace QuantConnect.Securities.Option.StrategyMatcher
@@ -52,11 +53,12 @@ namespace QuantConnect.Securities.Option.StrategyMatcher
             // first so that whenever the objective function scores another candidate equally this one is preserved
             var bestMatch = Match(Options.Definitions, positions, out var unmatched);
             var bestScore = Options.ObjectiveFunction.ComputeScore(positions, bestMatch, unmatched);
-            if (bestScore >= 0 || !CanCoverAnyShort(positions))
+            if (bestScore >= 0 || -bestScore <= GetMinimumUncoveredQuantity(positions))
             {
                 // by convention solutions that can't be improved upon score zero, see IOptionStrategyMatchObjectiveFunction.
-                // re-ordering the definitions can only pay off when some short contract can actually be covered, so a book
-                // of naked shorts, by far the most common one reaching this point, skips the second matching pass
+                // matching again is also pointless once the first solution leaves no more short contracts uncovered than
+                // the positions themselves can possibly cover, which is the case for a book of naked shorts, for a book
+                // holding fewer longs than shorts, and generally whenever the first solution is already optimal
                 return bestMatch;
             }
 
@@ -96,15 +98,14 @@ namespace QuantConnect.Securities.Option.StrategyMatcher
         }
 
         /// <summary>
-        /// Determines whether any short contract in the collection could be covered by a long contract of the same
-        /// right or by the underlying lots held, a precondition for a different grouping to reduce uncovered shorts
+        /// Determines the smallest quantity of short contracts any grouping of these positions can leave uncovered.
+        /// A long contract covers at most its own quantity of shorts of the same right, and so does an underlying lot,
+        /// which bounds how much a different grouping could possibly improve on the solution already found
         /// </summary>
-        private static bool CanCoverAnyShort(OptionPositionCollection positions)
+        private static decimal GetMinimumUncoveredQuantity(OptionPositionCollection positions)
         {
-            var hasLongCall = false;
-            var hasShortCall = false;
-            var hasLongPut = false;
-            var hasShortPut = false;
+            var calls = 0m;
+            var puts = 0m;
             foreach (var position in positions)
             {
                 if (position.IsUnderlying)
@@ -114,19 +115,17 @@ namespace QuantConnect.Securities.Option.StrategyMatcher
 
                 if (position.Right == OptionRight.Call)
                 {
-                    hasLongCall |= position.Quantity > 0;
-                    hasShortCall |= position.Quantity < 0;
+                    calls += position.Quantity;
                 }
                 else
                 {
-                    hasLongPut |= position.Quantity > 0;
-                    hasShortPut |= position.Quantity < 0;
+                    puts += position.Quantity;
                 }
             }
 
             // long underlying lots cover short calls, short underlying lots cover short puts
-            return hasShortCall && (hasLongCall || positions.UnderlyingQuantity > 0)
-                || hasShortPut && (hasLongPut || positions.UnderlyingQuantity < 0);
+            return Math.Max(0, -calls - Math.Max(0, positions.UnderlyingQuantity))
+                + Math.Max(0, -puts - Math.Max(0, -positions.UnderlyingQuantity));
         }
     }
 }
