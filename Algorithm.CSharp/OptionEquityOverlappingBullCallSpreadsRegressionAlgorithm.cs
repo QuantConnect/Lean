@@ -55,13 +55,13 @@ namespace QuantConnect.Algorithm.CSharp
 
                     var initialMargin = Portfolio.MarginRemaining;
 
-                    // first debit spread: long the lowest strike, short the second highest
+                    // first debit spread: long the lowest strike, short the third lowest
                     MarketOrder(contracts[0].Symbol, 1);
                     MarketOrder(contracts[2].Symbol, -1);
 
                     AssertOptionStrategyIsPresent(OptionStrategyDefinitions.BullCallSpread.Name, 1);
 
-                    // second debit spread, overlapping the first: long the second lowest strike, short the highest
+                    // second debit spread, its strikes interleaved with the first: long the second lowest, short the fourth lowest
                     MarketOrder(contracts[1].Symbol, 1);
                     MarketOrder(contracts[3].Symbol, -1);
                     var freeMarginPostTrade = Portfolio.MarginRemaining;

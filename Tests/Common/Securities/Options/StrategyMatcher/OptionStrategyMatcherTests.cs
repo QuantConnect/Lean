@@ -260,6 +260,42 @@ namespace QuantConnect.Tests.Common.Securities.Options.StrategyMatcher
             Assert.AreEqual(2, objectiveFunction.Count);
         }
 
+        [Test]
+        public void DerivedObjectiveFunctionEvaluatesEveryCandidate()
+        {
+            // deriving from the default objective function doesn't carry over what its scores mean, so the bound
+            // taking the score for a quantity of uncovered contracts must not be applied to a derived one either
+            var positions = OptionPositionCollection.Empty.AddRange(
+                Position(Call[600m], -1),
+                Position(Call[605m], -1)
+            );
+
+            var objectiveFunction = new CountingDerivedObjectiveFunction();
+            var matcher = new OptionStrategyMatcher(OptionStrategyMatcherOptions.ForDefinitions(AllDefinitions)
+                .WithObjectiveFunction(objectiveFunction));
+            matcher.MatchOnce(positions);
+
+            Assert.AreEqual(2, objectiveFunction.Count);
+        }
+
+        [Test]
+        public void MatchesLadderBookAsLadderWhenNoBetterSolutionExists()
+        {
+            // an actual ladder book has one genuinely uncovered short either way it's grouped,
+            // so on equal scores the original leg-count-greedy solution is preserved
+            var positions = OptionPositionCollection.Empty.AddRange(
+                Position(Call[595]),
+                Position(Call[600], -1),
+                Position(Call[605], -1)
+            );
+
+            var matcher = new OptionStrategyMatcher(OptionStrategyMatcherOptions.ForDefinitions(AllDefinitions));
+            var match = matcher.MatchOnce(positions);
+
+            Assert.AreEqual(1, match.Strategies.Count);
+            Assert.AreEqual(BullCallLadder.Name, match.Strategies.Single().Name);
+        }
+
         private static decimal ScoreSingleMatch(OptionStrategyDefinition definition, OptionPositionCollection positions)
         {
             var options = OptionStrategyMatcherOptions.ForDefinitions(definition);
@@ -281,22 +317,17 @@ namespace QuantConnect.Tests.Common.Securities.Options.StrategyMatcher
             }
         }
 
-        [Test]
-        public void MatchesLadderBookAsLadderWhenNoBetterSolutionExists()
+        private class CountingDerivedObjectiveFunction : UncoveredShortQuantityOptionStrategyMatchObjectiveFunction,
+            IOptionStrategyMatchObjectiveFunction
         {
-            // an actual ladder book has one genuinely uncovered short either way it's grouped,
-            // so on equal scores the original leg-count-greedy solution is preserved
-            var positions = OptionPositionCollection.Empty.AddRange(
-                Position(Call[595]),
-                Position(Call[600], -1),
-                Position(Call[605], -1)
-            );
+            public int Count { get; private set; }
 
-            var matcher = new OptionStrategyMatcher(OptionStrategyMatcherOptions.ForDefinitions(AllDefinitions));
-            var match = matcher.MatchOnce(positions);
-
-            Assert.AreEqual(1, match.Strategies.Count);
-            Assert.AreEqual(BullCallLadder.Name, match.Strategies.Single().Name);
+            decimal IOptionStrategyMatchObjectiveFunction.ComputeScore(OptionPositionCollection input, OptionStrategyMatch match,
+                OptionPositionCollection unmatched)
+            {
+                Count++;
+                return -1m;
+            }
         }
     }
 }
