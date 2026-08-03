@@ -29,7 +29,7 @@ using QuantConnect.Statistics;
 namespace QuantConnect.Tests.Engine.Results
 {
     [TestFixture]
-    public class InRunResultsAnalyzerTests
+    public class InRunResultsAnalysisTests
     {
         private static readonly IReadOnlyList<string> SomeSolutions = new[] { "A solution" };
 
@@ -232,7 +232,7 @@ namespace QuantConnect.Tests.Engine.Results
             analyzer.Run(2, new[] { "log" });
 
             // Only the charts the in-run analyses read are requested from the provider
-            CollectionAssert.AreEqual(InRunResultsAnalyzer.RequiredCharts, analyzer.Provider.RequestedChartNames);
+            CollectionAssert.AreEqual(ResultsAnalyzer.RequiredCharts, analyzer.Provider.RequestedChartNames);
             Assert.IsTrue(seenParameters.Result.Charts.ContainsKey("a chart"));
             Assert.AreEqual(1, seenParameters.Result.Orders.Count);
             Assert.AreEqual(2, seenParameters.Result.OrderEvents.Count);
@@ -295,7 +295,7 @@ namespace QuantConnect.Tests.Engine.Results
             // so this must stay in sync with the charts the in-run analyses read
             CollectionAssert.AreEquivalent(
                 new[] { BaseResultsHandler.PortfolioMarginKey },
-                InRunResultsAnalyzer.RequiredCharts);
+                ResultsAnalyzer.RequiredCharts);
         }
 
         [Test]
@@ -329,7 +329,7 @@ namespace QuantConnect.Tests.Engine.Results
             return new List<QuantConnect.Analysis> { new(name, "An issue", sample, count, SomeSolutions) };
         }
 
-        private class TestInRunResultsAnalyzer : InRunResultsAnalyzer
+        private class TestInRunResultsAnalyzer : ResultsAnalyzer
         {
             private readonly IReadOnlyCollection<BaseResultsAnalysis> _analyses;
 
@@ -369,7 +369,7 @@ namespace QuantConnect.Tests.Engine.Results
             }
         }
 
-        private sealed class DefaultSetInRunResultsAnalyzer : InRunResultsAnalyzer
+        private sealed class DefaultSetInRunResultsAnalyzer : ResultsAnalyzer
         {
             public DefaultSetInRunResultsAnalyzer()
                 : base(null, Language.CSharp, new FakeDataProvider())
@@ -431,6 +431,9 @@ namespace QuantConnect.Tests.Engine.Results
             public override string Issue => "A fake issue";
 
             public override int Weight => _weight;
+
+            // The in-run instances only run the analyses declaring RunsInRun
+            public override bool RunsInRun { get; } = true;
 
             public override bool IsStateBased => StateBased;
 

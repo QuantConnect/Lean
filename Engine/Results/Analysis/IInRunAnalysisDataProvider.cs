@@ -19,9 +19,10 @@ using System.Collections.Generic;
 namespace QuantConnect.Lean.Engine.Results.Analysis
 {
     /// <summary>
-    /// Provides the <see cref="InRunResultsAnalyzer"/> access to the data of the running backtest.
-    /// Implemented by the result handler, which owns the data and its synchronization, while the
-    /// analyzer decides what to read and how much, keeping its incremental consumption state private.
+    /// Provides an in-run <see cref="ResultsAnalyzer"/> instance access to the data of the running
+    /// backtest. Implemented by the result handler, which owns the data and its synchronization,
+    /// while the analyzer decides what to read and how much, keeping its incremental consumption
+    /// state private.
     /// </summary>
     public interface IInRunAnalysisDataProvider
     {

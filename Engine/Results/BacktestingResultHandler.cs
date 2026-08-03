@@ -53,7 +53,7 @@ namespace QuantConnect.Lean.Engine.Results
 
         private BacktestProgressMonitor _progressMonitor;
 
-        private InRunResultsAnalyzer _inRunResultsAnalyzer;
+        private ResultsAnalyzer _inRunResultsAnalyzer;
         private string _lastInRunAnalysisSignature = "[]";
 
         /// <summary>
@@ -430,7 +430,7 @@ namespace QuantConnect.Lean.Engine.Results
                     // The final analysis reuses the speed metrics accumulated by the in-run analyzer,
                     // completed with one last sample so they cover the backtest through its end
                     var speedTracker = _inRunResultsAnalyzer?.CompleteSpeedTracking();
-                    var analyzer = new ResultsAnalyzer(result.Results, AlgorithmInstance, _job.Language, logs, speedTracker);
+                    var analyzer = ResultsAnalyzer.CreateForFinalAnalysis(result.Results, AlgorithmInstance, _job.Language, logs, speedTracker);
                     try
                     {
                         result.Results.Analysis = analyzer.Run();
@@ -473,7 +473,7 @@ namespace QuantConnect.Lean.Engine.Results
                     return null;
                 }
 
-                _inRunResultsAnalyzer ??= new InRunResultsAnalyzer(AlgorithmInstance, _job.Language, this);
+                _inRunResultsAnalyzer ??= ResultsAnalyzer.CreateForInRunAnalysis(AlgorithmInstance, _job.Language, this);
                 return _inRunResultsAnalyzer.Run(totalPerformance);
             }
             catch (Exception ex)

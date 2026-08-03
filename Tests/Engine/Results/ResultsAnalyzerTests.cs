@@ -201,6 +201,16 @@ namespace QuantConnect.Tests.Engine.Results
             }, stateBased);
         }
 
+        [Test]
+        public void InRunOperationsRequireAnInstanceCreatedWithADataProvider()
+        {
+            // This is a final-analysis instance: the in-run entry points need the data provider
+            var analyzer = new TestResultsAnalyzer(false, new FakeAnalysisA(10));
+
+            Assert.Throws<InvalidOperationException>(() => analyzer.Run(totalPerformance: null));
+            Assert.Throws<InvalidOperationException>(() => analyzer.CompleteSpeedTracking());
+        }
+
         private sealed class DefaultSetResultsAnalyzer : ResultsAnalyzer
         {
             public DefaultSetResultsAnalyzer()
