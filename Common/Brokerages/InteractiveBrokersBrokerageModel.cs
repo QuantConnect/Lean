@@ -83,6 +83,7 @@ namespace QuantConnect.Brokerages
             OrderType.StopLimit,
             OrderType.TrailingStop,
             OrderType.LimitIfTouched,
+            OrderType.PeggedToMidpoint,
             OrderType.ComboMarket,
             OrderType.ComboLimit,
             OrderType.ComboLegLimit,
