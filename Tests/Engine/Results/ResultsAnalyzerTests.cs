@@ -154,11 +154,12 @@ namespace QuantConnect.Tests.Engine.Results
         }
 
         [Test]
-        public void DefaultAnalysisSetIncludesTheAlgorithmSpeedAnalysis()
+        public void DefaultAnalysisSetIncludesTheAlgorithmSpeedAndRuntimeErrorAnalyses()
         {
             var analyses = new DefaultSetResultsAnalyzer().DefaultAnalyses;
 
             Assert.IsTrue(analyses.Any(analysis => analysis is AlgorithmSpeedAnalysis));
+            Assert.IsTrue(analyses.Any(analysis => analysis is SingleTimeLoopTimeoutRuntimeErrorAnalysis));
         }
 
         private sealed class DefaultSetResultsAnalyzer : ResultsAnalyzer
