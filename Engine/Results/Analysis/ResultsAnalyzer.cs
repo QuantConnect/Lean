@@ -150,7 +150,6 @@ namespace QuantConnect.Lean.Engine.Results.Analysis
         protected virtual IReadOnlyCollection<BaseResultsAnalysis> GetAnalyses() =>
         [
             new SingleTimeLoopTimeoutRuntimeErrorAnalysis(),
-            new MaximumRuntimeExceededRuntimeErrorAnalysis(),
             new PortfolioValueIsNotPositiveAnalysis(),
             new FlatEquityCurveAnalysis(),
             new InsufficientBuyingPowerOrderResponseErrorAnalysis(),

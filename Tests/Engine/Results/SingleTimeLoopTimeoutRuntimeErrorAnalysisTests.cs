@@ -14,7 +14,6 @@
  *
 */
 
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using NUnit.Framework;
@@ -23,7 +22,7 @@ using QuantConnect.Lean.Engine.Results.Analysis.Analyses;
 namespace QuantConnect.Tests.Engine.Results
 {
     [TestFixture]
-    public class RuntimeErrorAnalysesTests
+    public class SingleTimeLoopTimeoutRuntimeErrorAnalysisTests
     {
         private const string SingleTimeLoopError =
             "20240101 15:30:00.000 Runtime Error: Algorithm took longer than 10 minutes on a single time loop. CurrentTimeStepElapsed: 10.0 minutes";
@@ -40,37 +39,20 @@ namespace QuantConnect.Tests.Engine.Results
         private const string MaximumRuntimeEngineError =
             "Runtime Error: Failed to complete algorithm within 86400 seconds. Please make it run faster.";
 
-        private static RuntimeErrorAnalysis[] CreateAnalyses() =>
-        [
-            new SingleTimeLoopTimeoutRuntimeErrorAnalysis(),
-            new MaximumRuntimeExceededRuntimeErrorAnalysis(),
-        ];
-
-        [TestCase(SingleTimeLoopError, typeof(SingleTimeLoopTimeoutRuntimeErrorAnalysis))]
-        [TestCase(SingleTimeLoopWithAdditionalTimeError, typeof(SingleTimeLoopTimeoutRuntimeErrorAnalysis))]
-        [TestCase(OperationCanceledError, typeof(SingleTimeLoopTimeoutRuntimeErrorAnalysis))]
-        [TestCase(MaximumRuntimeError, typeof(MaximumRuntimeExceededRuntimeErrorAnalysis))]
-        [TestCase(MaximumRuntimeEngineError, typeof(MaximumRuntimeExceededRuntimeErrorAnalysis))]
-        public void DetectsItsOwnRuntimeErrorFromState(string runtimeError, Type expectedAnalysisType)
+        [TestCase(SingleTimeLoopError)]
+        [TestCase(SingleTimeLoopWithAdditionalTimeError)]
+        [TestCase(OperationCanceledError)]
+        [TestCase(MaximumRuntimeError)]
+        [TestCase(MaximumRuntimeEngineError)]
+        public void DetectsEachTimeoutRuntimeErrorFromState(string runtimeError)
         {
             var state = new Dictionary<string, string> { ["RuntimeError"] = runtimeError };
 
-            foreach (var analysis in CreateAnalyses())
-            {
-                var finding = analysis.Run(state, [], Language.CSharp).Single();
+            var finding = new SingleTimeLoopTimeoutRuntimeErrorAnalysis().Run(state, [], Language.CSharp).Single();
 
-                if (analysis.GetType() == expectedAnalysisType)
-                {
-                    Assert.AreEqual(expectedAnalysisType.Name, finding.Name);
-                    Assert.AreEqual(runtimeError, finding.Sample);
-                    Assert.IsNotEmpty(finding.Solutions);
-                }
-                else
-                {
-                    Assert.IsNull(finding.Sample, $"{analysis.GetType().Name} should not flag \"{runtimeError}\"");
-                    Assert.IsEmpty(finding.Solutions);
-                }
-            }
+            Assert.AreEqual(nameof(SingleTimeLoopTimeoutRuntimeErrorAnalysis), finding.Name);
+            Assert.AreEqual(runtimeError, finding.Sample);
+            Assert.IsNotEmpty(finding.Solutions);
         }
 
         [Test]
@@ -98,13 +80,10 @@ namespace QuantConnect.Tests.Engine.Results
                 "20240101 15:29:00.000 The download operation timed out after 5 minutes max wait",
             };
 
-            foreach (var analysis in CreateAnalyses())
-            {
-                var finding = analysis.Run(new Dictionary<string, string>(), logs, Language.CSharp).Single();
+            var finding = new SingleTimeLoopTimeoutRuntimeErrorAnalysis().Run(new Dictionary<string, string>(), logs, Language.CSharp).Single();
 
-                Assert.IsNull(finding.Sample);
-                Assert.IsEmpty(finding.Solutions);
-            }
+            Assert.IsNull(finding.Sample);
+            Assert.IsEmpty(finding.Solutions);
         }
 
         [TestCase("Runtime Error: System.DivideByZeroException: Attempted to divide by zero.")]
@@ -113,13 +92,10 @@ namespace QuantConnect.Tests.Engine.Results
         {
             var state = new Dictionary<string, string> { ["RuntimeError"] = runtimeError };
 
-            foreach (var analysis in CreateAnalyses())
-            {
-                var finding = analysis.Run(state, [], Language.CSharp).Single();
+            var finding = new SingleTimeLoopTimeoutRuntimeErrorAnalysis().Run(state, [], Language.CSharp).Single();
 
-                Assert.IsNull(finding.Sample);
-                Assert.IsEmpty(finding.Solutions);
-            }
+            Assert.IsNull(finding.Sample);
+            Assert.IsEmpty(finding.Solutions);
         }
 
         [TestCase(Language.CSharp, "Train", "OnData")]
