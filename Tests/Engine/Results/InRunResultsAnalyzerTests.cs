@@ -24,6 +24,7 @@ using QuantConnect.Lean.Engine.Results.Analysis;
 using QuantConnect.Lean.Engine.Results.Analysis.Analyses;
 using QuantConnect.Orders;
 using QuantConnect.Packets;
+using QuantConnect.Statistics;
 
 namespace QuantConnect.Tests.Engine.Results
 {
@@ -33,26 +34,22 @@ namespace QuantConnect.Tests.Engine.Results
         private static readonly IReadOnlyList<string> SomeSolutions = new[] { "A solution" };
 
         [Test]
-        public void PositionsAdvanceByTheConsumedOrderEventsAndLogs()
+        public void OrderEventAndLogStreamsAreConsumedIncrementally()
         {
             var analyzer = new TestInRunResultsAnalyzer(new FakeAnalysisA(10));
 
-            analyzer.Run(MakeResult(3), new[] { "log 1", "log 2" });
-            Assert.AreEqual(3, analyzer.OrderEventsPosition);
-            Assert.AreEqual(2, analyzer.LogsPosition);
+            analyzer.Run(3, new[] { "log 1", "log 2" });
+            analyzer.Run(5, new[] { "log 3" });
+            // Runs without new order events or logs don't move the read positions
+            analyzer.Run(0, null);
+            analyzer.Run(0, null);
 
-            analyzer.Run(MakeResult(5), new[] { "log 3" });
-            Assert.AreEqual(8, analyzer.OrderEventsPosition);
-            Assert.AreEqual(3, analyzer.LogsPosition);
-
-            // Null order events and logs don't move the positions
-            analyzer.Run(new BacktestResult(), null);
-            Assert.AreEqual(8, analyzer.OrderEventsPosition);
-            Assert.AreEqual(3, analyzer.LogsPosition);
+            CollectionAssert.AreEqual(new[] { 0, 3, 8, 8 }, analyzer.Provider.RequestedOrderEventsPositions);
+            CollectionAssert.AreEqual(new[] { 0, 2, 3, 3 }, analyzer.Provider.RequestedLogsPositions);
         }
 
         [Test]
-        public void PositionsAdvanceEvenWhenTheTimeLimitTruncatesTheRun()
+        public void StreamPositionsAdvanceEvenWhenTheTimeLimitTruncatesTheRun()
         {
             var truncatedRan = false;
             // The slow analysis has the higher weight so it runs first and exhausts the time limit
@@ -60,11 +57,14 @@ namespace QuantConnect.Tests.Engine.Results
             var truncated = new FakeAnalysisB(10) { OnRun = () => truncatedRan = true };
             var analyzer = new TestInRunResultsAnalyzer(slow, truncated);
 
-            analyzer.Run(MakeResult(4), new[] { "log 1" }, timeLimitSeconds: 1);
-
+            analyzer.Run(4, new[] { "log 1" }, timeLimitSeconds: 1);
             Assert.IsFalse(truncatedRan);
-            Assert.AreEqual(4, analyzer.OrderEventsPosition);
-            Assert.AreEqual(1, analyzer.LogsPosition);
+
+            // The next run still resumes after the consumed order events and logs
+            slow.OnRun = null;
+            analyzer.Run(0, null);
+            CollectionAssert.AreEqual(new[] { 0, 4 }, analyzer.Provider.RequestedOrderEventsPositions);
+            CollectionAssert.AreEqual(new[] { 0, 1 }, analyzer.Provider.RequestedLogsPositions);
         }
 
         [Test]
@@ -74,10 +74,10 @@ namespace QuantConnect.Tests.Engine.Results
             var analyzer = new TestInRunResultsAnalyzer(fake);
 
             fake.Findings = () => MakeFindings(nameof(FakeAnalysisA), "first sample", 3);
-            analyzer.Run(MakeResult(1), new[] { "log" });
+            analyzer.Run(1, new[] { "log" });
 
             fake.Findings = () => MakeFindings(nameof(FakeAnalysisA), "second sample", 2);
-            var findings = analyzer.Run(MakeResult(1), new[] { "log" });
+            var findings = analyzer.Run(1, new[] { "log" });
 
             var finding = findings.Single();
             Assert.AreEqual("first sample", finding.Sample);
@@ -93,8 +93,8 @@ namespace QuantConnect.Tests.Engine.Results
             };
             var analyzer = new TestInRunResultsAnalyzer(fake);
 
-            analyzer.Run(MakeResult(1), new[] { "log" });
-            var findings = analyzer.Run(MakeResult(1), new[] { "log" });
+            analyzer.Run(1, new[] { "log" });
+            var findings = analyzer.Run(1, new[] { "log" });
 
             Assert.AreEqual(2, findings.Single().Count);
         }
@@ -107,11 +107,11 @@ namespace QuantConnect.Tests.Engine.Results
                 Findings = () => MakeFindings(nameof(FakeAnalysisA), "sample", 4)
             };
             var analyzer = new TestInRunResultsAnalyzer(fake);
-            analyzer.Run(MakeResult(1), new[] { "log" });
+            analyzer.Run(1, new[] { "log" });
 
             // The next delta produces no new occurrences: the accumulated finding is still reported
             fake.Findings = () => new List<QuantConnect.Analysis>();
-            var findings = analyzer.Run(MakeResult(1), new[] { "log" });
+            var findings = analyzer.Run(1, new[] { "log" });
 
             var finding = findings.Single();
             Assert.AreEqual("sample", finding.Sample);
@@ -126,10 +126,10 @@ namespace QuantConnect.Tests.Engine.Results
                 Findings = () => MakeFindings(nameof(PortfolioValueIsNotPositiveAnalysis), "old sample", 2)
             };
             var analyzer = new TestInRunResultsAnalyzer(fake);
-            analyzer.Run(MakeResult(1), new[] { "log" });
+            analyzer.Run(1, new[] { "log" });
 
             fake.Findings = () => MakeFindings(nameof(PortfolioValueIsNotPositiveAnalysis), "new sample", 3);
-            var findings = analyzer.Run(MakeResult(1), new[] { "log" });
+            var findings = analyzer.Run(1, new[] { "log" });
 
             // Replaced, not accumulated: latest sample and count win
             var finding = findings.Single();
@@ -145,10 +145,10 @@ namespace QuantConnect.Tests.Engine.Results
                 Findings = () => MakeFindings(nameof(PortfolioValueIsNotPositiveAnalysis), "sample", 2)
             };
             var analyzer = new TestInRunResultsAnalyzer(fake);
-            Assert.IsNotEmpty(analyzer.Run(MakeResult(1), new[] { "log" }));
+            Assert.IsNotEmpty(analyzer.Run(1, new[] { "log" }));
 
             fake.Findings = () => new List<QuantConnect.Analysis>();
-            var findings = analyzer.Run(MakeResult(1), new[] { "log" });
+            var findings = analyzer.Run(1, new[] { "log" });
 
             Assert.IsEmpty(findings);
         }
@@ -166,10 +166,10 @@ namespace QuantConnect.Tests.Engine.Results
                     .ToList()
             };
             var analyzer = new TestInRunResultsAnalyzer(fake);
-            Assert.AreEqual(2, analyzer.Run(MakeResult(1), new[] { "log" }).Count);
+            Assert.AreEqual(2, analyzer.Run(1, new[] { "log" }).Count);
 
             fake.Findings = () => MakeFindings($"{stateBasedName} / SubA", "new sample a", 2);
-            var findings = analyzer.Run(MakeResult(1), new[] { "log" });
+            var findings = analyzer.Run(1, new[] { "log" });
 
             // SubB no longer fails and is dropped; SubA is replaced with the fresh finding
             var finding = findings.Single();
@@ -179,22 +179,79 @@ namespace QuantConnect.Tests.Engine.Results
         }
 
         [Test]
-        public void SpeedSamplesAreTrackedOnlyWhenProvided()
+        public void SpeedSamplesAreTrackedOnlyWhenTheProviderTakesThem()
         {
             AlgorithmSpeedTracker speed = null;
             var fake = new FakeAnalysisA(10) { OnParameters = parameters => speed = parameters.Speed };
             var analyzer = new TestInRunResultsAnalyzer(fake);
 
-            analyzer.Run(MakeResult(1), new[] { "log" });
+            analyzer.Run(1, new[] { "log" });
             Assert.IsNotNull(speed);
             Assert.AreEqual(0, speed.SampleCount);
 
-            analyzer.Run(MakeResult(1), new[] { "log" }, new AlgorithmSpeedSample(TimeSpan.FromSeconds(30), 100, 0, 1, 10));
+            analyzer.Run(1, new[] { "log" }, new AlgorithmSpeedSample(TimeSpan.FromSeconds(30), 100, 0, 1, 10));
             Assert.AreEqual(1, speed.SampleCount);
 
-            // No sample provided (e.g. while the algorithm warms up): the tracker is left untouched
-            analyzer.Run(MakeResult(1), new[] { "log" });
+            // No sample taken (e.g. while the algorithm warms up): the tracker is left untouched
+            analyzer.Run(1, new[] { "log" });
             Assert.AreEqual(1, speed.SampleCount);
+        }
+
+        [Test]
+        public void CompletedSpeedTrackingAddsAFinalSampleAndReturnsTheTracker()
+        {
+            AlgorithmSpeedTracker speed = null;
+            var fake = new FakeAnalysisA(10) { OnParameters = parameters => speed = parameters.Speed };
+            var analyzer = new TestInRunResultsAnalyzer(fake);
+            analyzer.Run(1, new[] { "log" }, new AlgorithmSpeedSample(TimeSpan.FromSeconds(30), 100, 0, 1, 10));
+
+            analyzer.Provider.NextSpeedSample = new AlgorithmSpeedSample(TimeSpan.FromSeconds(60), 200, 0, 2, 10);
+            var tracker = analyzer.CompleteSpeedTracking();
+
+            // The final analysis receives the same tracker the in-run analyses saw, with the final sample added
+            Assert.AreSame(speed, tracker);
+            Assert.AreEqual(2, tracker.SampleCount);
+
+            // Without a final sample (e.g. the algorithm never left warm-up), the tracker is left untouched
+            analyzer.Provider.NextSpeedSample = null;
+            Assert.AreEqual(2, analyzer.CompleteSpeedTracking().SampleCount);
+        }
+
+        [Test]
+        public void SnapshotIsBuiltFromTheDataProvider()
+        {
+            ResultsAnalysisRunParameters seenParameters = null;
+            var fake = new FakeAnalysisA(10) { OnParameters = parameters => seenParameters = parameters };
+            var analyzer = new TestInRunResultsAnalyzer(fake);
+            analyzer.Provider.Orders[1] = new MarketOrder();
+            analyzer.Provider.Charts["a chart"] = new Chart("a chart");
+
+            analyzer.Run(2, new[] { "log" });
+
+            // Only the charts the in-run analyses read are requested from the provider
+            CollectionAssert.AreEqual(InRunResultsAnalyzer.RequiredCharts, analyzer.Provider.RequestedChartNames);
+            Assert.IsTrue(seenParameters.Result.Charts.ContainsKey("a chart"));
+            Assert.AreEqual(1, seenParameters.Result.Orders.Count);
+            Assert.AreEqual(2, seenParameters.Result.OrderEvents.Count);
+            CollectionAssert.AreEqual(new[] { "log" }, seenParameters.Logs);
+        }
+
+        [Test]
+        public void StatisticsAreWithheldUntilEquityHasSamples()
+        {
+            BacktestResult seenResult = null;
+            var fake = new FakeAnalysisA(10) { OnParameters = parameters => seenResult = (BacktestResult)parameters.Result };
+            var analyzer = new TestInRunResultsAnalyzer(fake);
+            var performance = new AlgorithmPerformance();
+
+            // Equity has no samples yet: the all-zero default statistics are withheld
+            analyzer.Provider.EquityHasSamples = false;
+            analyzer.Run(performance);
+            Assert.IsNull(seenResult.TotalPerformance);
+
+            analyzer.Provider.EquityHasSamples = true;
+            analyzer.Run(performance);
+            Assert.AreSame(performance, seenResult.TotalPerformance);
         }
 
         [Test]
@@ -215,14 +272,14 @@ namespace QuantConnect.Tests.Engine.Results
             };
             var analyzer = new TestInRunResultsAnalyzer(lowWeight, midWeight, highWeight);
 
-            var findings = analyzer.Run(MakeResult(1), new[] { "log" });
+            var findings = analyzer.Run(1, new[] { "log" });
             CollectionAssert.AreEqual(
                 new[] { nameof(FakeAnalysisC), $"{nameof(FakeAnalysisB)} / Sub", nameof(FakeAnalysisA) },
                 findings.Select(finding => finding.Name));
 
             // The accumulated findings are capped to the top weighted ones
             lowWeight.Findings = midWeight.Findings = highWeight.Findings = () => new List<QuantConnect.Analysis>();
-            findings = analyzer.Run(MakeResult(1), new[] { "log" }, maxFailedAnalyses: 2);
+            findings = analyzer.Run(1, new[] { "log" }, maxFailedAnalyses: 2);
             CollectionAssert.AreEqual(
                 new[] { nameof(FakeAnalysisC), $"{nameof(FakeAnalysisB)} / Sub" },
                 findings.Select(finding => finding.Name));
@@ -231,7 +288,7 @@ namespace QuantConnect.Tests.Engine.Results
         [Test]
         public void RequiredChartsAreTheChartsReadByTheInRunAnalyses()
         {
-            // The result handler only clones these charts into the analyzed snapshot,
+            // The data provider only clones these charts into the analyzed snapshot,
             // so this must stay in sync with the charts the in-run analyses read
             CollectionAssert.AreEquivalent(
                 new[] { BaseResultsHandler.PortfolioMarginKey },
@@ -243,19 +300,11 @@ namespace QuantConnect.Tests.Engine.Results
         {
             var analyzer = new TestInRunResultsAnalyzer(new FakeAnalysisA(10));
 
-            analyzer.Run(MakeResult(1), new[] { "log" });
-            analyzer.Run(MakeResult(1), new[] { "log" });
+            analyzer.Run(1, new[] { "log" });
+            analyzer.Run(1, new[] { "log" });
 
             // Both the analysis chain and the findings ranking read the cached set
             Assert.AreEqual(1, analyzer.GetAnalysesCallCount);
-        }
-
-        private static BacktestResult MakeResult(int orderEventsCount)
-        {
-            return new BacktestResult
-            {
-                OrderEvents = Enumerable.Range(0, orderEventsCount).Select(_ => new OrderEvent()).ToList()
-            };
         }
 
         private static List<QuantConnect.Analysis> MakeFindings(string name, string sample, int? count)
@@ -267,19 +316,85 @@ namespace QuantConnect.Tests.Engine.Results
         {
             private readonly IReadOnlyCollection<BaseResultsAnalysis> _analyses;
 
+            public FakeDataProvider Provider { get; }
+
+            public int GetAnalysesCallCount { get; private set; }
+
             public TestInRunResultsAnalyzer(params BaseResultsAnalysis[] analyses)
-                : base(null, Language.CSharp)
+                : this(new FakeDataProvider(), analyses)
             {
+            }
+
+            private TestInRunResultsAnalyzer(FakeDataProvider provider, BaseResultsAnalysis[] analyses)
+                : base(null, Language.CSharp, provider)
+            {
+                Provider = provider;
                 _analyses = analyses;
             }
 
-            public int GetAnalysesCallCount { get; private set; }
+            /// <summary>
+            /// Appends the new order events and logs to the provider's streams and runs the analyzer,
+            /// mirroring the incremental stream growth the analyzer sees in a running backtest.
+            /// </summary>
+            public IReadOnlyList<QuantConnect.Analysis> Run(int newOrderEventsCount, string[] newLogs,
+                AlgorithmSpeedSample? speedSample = null, int timeLimitSeconds = 1, int maxFailedAnalyses = 10)
+            {
+                Provider.OrderEvents.AddRange(Enumerable.Range(0, newOrderEventsCount).Select(_ => new OrderEvent()));
+                Provider.Logs.AddRange(newLogs ?? Array.Empty<string>());
+                Provider.NextSpeedSample = speedSample;
+                return Run(totalPerformance: null, timeLimitSeconds, maxFailedAnalyses);
+            }
 
             protected override IReadOnlyCollection<BaseResultsAnalysis> GetAnalyses()
             {
                 GetAnalysesCallCount++;
                 return _analyses;
             }
+        }
+
+        private sealed class FakeDataProvider : IInRunAnalysisDataProvider
+        {
+            public Dictionary<int, Order> Orders { get; } = new();
+
+            public List<OrderEvent> OrderEvents { get; } = new();
+
+            public List<string> Logs { get; } = new();
+
+            public Dictionary<string, Chart> Charts { get; } = new();
+
+            public bool EquityHasSamples { get; set; } = true;
+
+            public AlgorithmSpeedSample? NextSpeedSample { get; set; }
+
+            public List<int> RequestedOrderEventsPositions { get; } = new();
+
+            public List<int> RequestedLogsPositions { get; } = new();
+
+            public IReadOnlyList<string> RequestedChartNames { get; private set; }
+
+            public IDictionary<int, Order> GetOrders() => Orders;
+
+            public List<OrderEvent> GetOrderEvents(int fromPosition)
+            {
+                RequestedOrderEventsPositions.Add(fromPosition);
+                return OrderEvents.Skip(fromPosition).ToList();
+            }
+
+            public IReadOnlyList<string> GetLogs(int fromPosition)
+            {
+                RequestedLogsPositions.Add(fromPosition);
+                return Logs.Skip(fromPosition).ToList();
+            }
+
+            public IDictionary<string, Chart> GetChartSnapshots(IReadOnlyList<string> chartNames)
+            {
+                RequestedChartNames = chartNames;
+                return Charts;
+            }
+
+            public bool HasEquitySamples() => EquityHasSamples;
+
+            public AlgorithmSpeedSample? TakeSpeedSample() => NextSpeedSample;
         }
 
         private class FakeAnalysis : BaseResultsAnalysis

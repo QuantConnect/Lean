@@ -56,7 +56,7 @@ namespace QuantConnect.Lean.Engine.Results.Analysis
         /// it a sample on each run; the final analyzer receives the same tracker so the speed
         /// analysis also runs against the full-run metrics. Null when speed is not tracked.
         /// </summary>
-        public AlgorithmSpeedTracker SpeedTracker { get; }
+        protected AlgorithmSpeedTracker SpeedTracker { get; }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="ResultsAnalyzer"/> class.

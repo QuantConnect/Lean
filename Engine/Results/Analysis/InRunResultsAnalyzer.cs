@@ -15,6 +15,8 @@
 */
 using QuantConnect.Algorithm;
 using QuantConnect.Lean.Engine.Results.Analysis.Analyses;
+using QuantConnect.Packets;
+using QuantConnect.Statistics;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -23,7 +25,8 @@ namespace QuantConnect.Lean.Engine.Results.Analysis
 {
     /// <summary>
     /// Runs a reduced suite of backtest diagnostic tests periodically while the backtest is still running,
-    /// against a snapshot of the current intermediate results.
+    /// against a snapshot of the current intermediate results pulled from the
+    /// <see cref="IInRunAnalysisDataProvider"/>.
     /// </summary>
     public class InRunResultsAnalyzer : ResultsAnalyzer
     {
@@ -41,6 +44,20 @@ namespace QuantConnect.Lean.Engine.Results.Analysis
         };
 
         private readonly Dictionary<string, QuantConnect.Analysis> _findings = new();
+        private readonly QCAlgorithm _algorithm;
+        private readonly IInRunAnalysisDataProvider _dataProvider;
+
+        /// <summary>
+        /// The number of order events already consumed by previous runs, from which the next run
+        /// resumes reading the order event stream.
+        /// </summary>
+        private int _orderEventsPosition;
+
+        /// <summary>
+        /// The number of log entries already consumed by previous runs, from which the next run
+        /// resumes reading the log stream.
+        /// </summary>
+        private int _logsPosition;
 
         /// <summary>
         /// The equity and benchmark curves are not built for in-run analysis:
@@ -50,46 +67,93 @@ namespace QuantConnect.Lean.Engine.Results.Analysis
         protected override bool RequiresEquityCurves => false;
 
         /// <summary>
-        /// The names of the charts the in-run analyses read. Only these need to be
-        /// cloned into the result snapshot passed to
-        /// <see cref="Run(Result, IReadOnlyList{string}, System.Nullable{AlgorithmSpeedSample}, int, int)"/>.
+        /// The names of the charts the in-run analyses read. Only these are requested
+        /// from the data provider on each run.
         /// </summary>
         public static IReadOnlyList<string> RequiredCharts { get; } = [BaseResultsHandler.PortfolioMarginKey];
 
         /// <summary>
-        /// The number of order events already consumed by previous runs. The order events
-        /// in the result passed to <see cref="Run(Result, IReadOnlyList{string}, System.Nullable{AlgorithmSpeedSample}, int, int)"/>
-        /// are expected to start at this position.
-        /// </summary>
-        public int OrderEventsPosition { get; private set; }
-
-        /// <summary>
-        /// The number of log entries already consumed by previous runs. The logs passed to
-        /// <see cref="Run(Result, IReadOnlyList{string}, System.Nullable{AlgorithmSpeedSample}, int, int)"/> are expected to start
-        /// at this position.
-        /// </summary>
-        public int LogsPosition { get; private set; }
-
-        /// <summary>
         /// Initializes a new instance of the <see cref="InRunResultsAnalyzer"/> class.
         /// The instance is expected to be kept alive for the duration of the backtest,
-        /// receiving fresh data on each <see cref="Run(Result, IReadOnlyList{string}, System.Nullable{AlgorithmSpeedSample}, int, int)"/> call.
+        /// pulling fresh data from <paramref name="dataProvider"/> on each
+        /// <see cref="Run(AlgorithmPerformance, int, int)"/> call.
         /// </summary>
         /// <param name="algorithm">The algorithm instance used for history requests and settings.</param>
         /// <param name="language">The programming language the algorithm is written in.</param>
-        public InRunResultsAnalyzer(QCAlgorithm algorithm, Language language)
+        /// <param name="dataProvider">Provides access to the data of the running backtest.</param>
+        public InRunResultsAnalyzer(QCAlgorithm algorithm, Language language, IInRunAnalysisDataProvider dataProvider)
             : base(null, algorithm, language, null, new AlgorithmSpeedTracker())
         {
+            _algorithm = algorithm;
+            _dataProvider = dataProvider;
+        }
+
+        /// <summary>
+        /// Runs the analyses against the current backtest state pulled from the data provider:
+        /// a snapshot of the orders and required charts, plus only the order events and log lines
+        /// produced since the previous run. The returned findings are the merge of this run's
+        /// findings into the ones accumulated by previous runs: findings from analyses scanning
+        /// the order event and log streams are accumulated (first sample kept, counts totaled),
+        /// while findings from state-based analyses are replaced on every run.
+        /// </summary>
+        /// <param name="totalPerformance">The current total algorithm performance, for analyses that read
+        /// portfolio statistics. Withheld from the analyses until the first equity sample exists, since
+        /// the statistics are all-zero defaults before that.</param>
+        /// <param name="timeLimitSeconds">Wall-clock seconds allowed for the full chain before early exit.
+        /// The default is small because the analysis runs on the result handler thread, delaying message
+        /// processing while it runs.</param>
+        /// <param name="maxFailedAnalyses">Maximum number of failing analyses to return.</param>
+        /// <returns>The accumulated findings, ranked by analysis weight.</returns>
+        public IReadOnlyList<QuantConnect.Analysis> Run(AlgorithmPerformance totalPerformance, int timeLimitSeconds = 1,
+            int maxFailedAnalyses = 10)
+        {
+            // The analyses read the charts without synchronizing with the result handler, so they get clones
+            var charts = _dataProvider.GetChartSnapshots(RequiredCharts);
+
+            // Equity is not sampled while the algorithm warms up, so until the first sample exists
+            // the generated statistics are all-zero defaults that would flag a false non-positive
+            // portfolio value finding. Withhold them so the analyses reading them skip instead
+            if (_algorithm?.IsWarmingUp == true || !_dataProvider.HasEquitySamples())
+            {
+                totalPerformance = null;
+            }
+
+            var snapshot = new BacktestResult(new BacktestResultParameters(
+                charts,
+                _dataProvider.GetOrders(),
+                _algorithm?.Transactions.TransactionRecord ?? new Dictionary<DateTime, decimal>(),
+                new Dictionary<string, string>(),
+                new Dictionary<string, string>(),
+                new Dictionary<string, AlgorithmPerformance>(),
+                _dataProvider.GetOrderEvents(_orderEventsPosition),
+                totalPerformance));
+            var logs = _dataProvider.GetLogs(_logsPosition);
+
+            // The analyses run during warm-up too (the speed sample is null then), so conditions like
+            // orders submitted while the algorithm warms up surface without waiting for warm-up to end
+            return Run(snapshot, logs, _dataProvider.TakeSpeedSample(), timeLimitSeconds, maxFailedAnalyses);
+        }
+
+        /// <summary>
+        /// Completes the speed metrics with one final sample so they cover the backtest through
+        /// its end, and returns the tracker for the final analysis to reuse. The tracker is left
+        /// untouched when no sample can be taken, like when the algorithm never left warm-up.
+        /// </summary>
+        public AlgorithmSpeedTracker CompleteSpeedTracking()
+        {
+            var speedSample = _dataProvider.TakeSpeedSample();
+            if (speedSample.HasValue)
+            {
+                SpeedTracker.AddSample(speedSample.Value);
+            }
+            return SpeedTracker;
         }
 
         /// <summary>
         /// Runs the analyses incrementally: <paramref name="result"/> and <paramref name="logs"/> are
-        /// expected to contain only the order events and log lines produced since the previous run
-        /// (per <see cref="OrderEventsPosition"/> and <see cref="LogsPosition"/>), and the returned
-        /// findings are the merge of this run's findings into the ones accumulated by previous runs.
-        /// Findings from analyses scanning the order event and log streams are accumulated
-        /// (first sample kept, counts totaled), while findings from state-based analyses are
-        /// replaced on every run.
+        /// expected to contain only the order events and log lines produced since the previous run,
+        /// and the returned findings are the merge of this run's findings into the ones accumulated
+        /// by previous runs.
         /// </summary>
         /// <param name="result">A snapshot of the current intermediate backtest result, holding only new order events.</param>
         /// <param name="logs">The log lines produced since the previous run.</param>
@@ -98,8 +162,8 @@ namespace QuantConnect.Lean.Engine.Results.Analysis
         /// <param name="timeLimitSeconds">Wall-clock seconds allowed for the full chain before early exit.</param>
         /// <param name="maxFailedAnalyses">Maximum number of failing analyses to return.</param>
         /// <returns>The accumulated findings, ranked by analysis weight.</returns>
-        public IReadOnlyList<QuantConnect.Analysis> Run(Result result, IReadOnlyList<string> logs, AlgorithmSpeedSample? speedSample = null,
-            int timeLimitSeconds = 1, int maxFailedAnalyses = 10)
+        private IReadOnlyList<QuantConnect.Analysis> Run(Result result, IReadOnlyList<string> logs, AlgorithmSpeedSample? speedSample,
+            int timeLimitSeconds, int maxFailedAnalyses)
         {
             SetAnalysisData(result, logs);
             if (speedSample.HasValue)
@@ -112,8 +176,8 @@ namespace QuantConnect.Lean.Engine.Results.Analysis
             // didn't get to run miss this delta until the final analysis re-scans the complete streams.
             // Stress tests show runs complete in a fraction of the time limit, but if its trace message
             // starts showing up in logs, revisit this (e.g. track per-analysis positions).
-            OrderEventsPosition += result.OrderEvents?.Count ?? 0;
-            LogsPosition += logs?.Count ?? 0;
+            _orderEventsPosition += result.OrderEvents?.Count ?? 0;
+            _logsPosition += logs?.Count ?? 0;
 
             // State-based analyses are recomputed from scratch each run: remove their previous
             // findings so they are replaced, or dropped if they no longer fail. If a time-limit

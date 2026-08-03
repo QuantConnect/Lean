@@ -37,7 +37,7 @@ namespace QuantConnect.Lean.Engine.Results
     /// <summary>
     /// Backtesting result handler passes messages back from the Lean to the User.
     /// </summary>
-    public class BacktestingResultHandler : BaseResultsHandler, IResultHandler
+    public class BacktestingResultHandler : BaseResultsHandler, IResultHandler, IInRunAnalysisDataProvider
     {
         private const double Samples = 4000;
         private const double MinimumSamplePeriod = 4;
@@ -428,14 +428,8 @@ namespace QuantConnect.Lean.Engine.Results
                         logs = LogStore.Select(x => x.Message).ToList();
                     }
                     // The final analysis reuses the speed metrics accumulated by the in-run analyzer,
-                    // adding one last sample so they cover the backtest through its end
-                    var speedTracker = _inRunResultsAnalyzer?.SpeedTracker;
-                    var speedSample = TakeAlgorithmSpeedSample();
-                    if (speedTracker != null && speedSample.HasValue)
-                    {
-                        speedTracker.AddSample(speedSample.Value);
-                    }
-
+                    // completed with one last sample so they cover the backtest through its end
+                    var speedTracker = _inRunResultsAnalyzer?.CompleteSpeedTracking();
                     var analyzer = new ResultsAnalyzer(result.Results, AlgorithmInstance, _job.Language, logs, speedTracker);
                     try
                     {
@@ -463,9 +457,10 @@ namespace QuantConnect.Lean.Engine.Results
         }
 
         /// <summary>
-        /// Runs the in-run results analyzer against a snapshot of the current intermediate backtest state.
-        /// Invoked periodically while the backtest is still running, unlike the full analysis performed
-        /// by <see cref="SendFinalResult"/> when the backtest ends.
+        /// Runs the in-run results analyzer against the current intermediate backtest state,
+        /// accessed through the <see cref="IInRunAnalysisDataProvider"/> implementation.
+        /// Invoked periodically while the backtest is still running, unlike the full analysis
+        /// performed by <see cref="SendFinalResult"/> when the backtest ends.
         /// </summary>
         /// <param name="totalPerformance">The current total algorithm performance, for analyses that read portfolio statistics</param>
         /// <returns>The failed analyses with solutions, or null if the analysis could not run</returns>
@@ -478,61 +473,8 @@ namespace QuantConnect.Lean.Engine.Results
                     return null;
                 }
 
-                // The analyses read the charts without holding ChartLock, so hand them clones,
-                // but only of the charts they read
-                var charts = new Dictionary<string, Chart>();
-                bool hasEquitySamples;
-                lock (ChartLock)
-                {
-                    foreach (var chartName in InRunResultsAnalyzer.RequiredCharts)
-                    {
-                        if (Charts.TryGetValue(chartName, out var chart))
-                        {
-                            charts[chartName] = chart.Clone();
-                        }
-                    }
-
-                    hasEquitySamples = Charts.TryGetValue(StrategyEquityKey, out var equityChart) &&
-                        equityChart.Series.TryGetValue(EquityKey, out var equitySeries) &&
-                        equitySeries.Values.Count > 0;
-                }
-
-                // Equity is not sampled while the algorithm warms up, so until the first sample exists
-                // the generated statistics are all-zero defaults that would flag a false non-positive
-                // portfolio value finding. Withhold them so the analyses reading them skip instead
-                if (Algorithm.IsWarmingUp || !hasEquitySamples)
-                {
-                    totalPerformance = null;
-                }
-
-                _inRunResultsAnalyzer ??= new InRunResultsAnalyzer(AlgorithmInstance, _job.Language);
-
-                // The analyses themselves do run during warm-up (the speed sample is null then), so
-                // conditions like orders submitted while warming up surface without waiting for warm-up to end
-                var speedSample = TakeAlgorithmSpeedSample();
-
-                // Only the order events and logs produced since the previous run are analyzed,
-                // the analyzer accumulates findings across runs
-                var orderEvents = TransactionHandler.OrderEvents.Skip(_inRunResultsAnalyzer.OrderEventsPosition).ToList();
-
-                List<string> logs;
-                lock (LogStore)
-                {
-                    logs = LogStore.Skip(_inRunResultsAnalyzer.LogsPosition).Select(x => x.Message).ToList();
-                }
-
-                var snapshot = new BacktestResult(new BacktestResultParameters(
-                    charts,
-                    TransactionHandler.Orders.ToDictionary(),
-                    Algorithm.Transactions.TransactionRecord,
-                    new Dictionary<string, string>(),
-                    new Dictionary<string, string>(),
-                    new Dictionary<string, AlgorithmPerformance>(),
-                    orderEvents,
-                    totalPerformance));
-
-                // Keep the time budget small: this runs on the result handler thread and delays message processing
-                return _inRunResultsAnalyzer.Run(snapshot, logs, speedSample, timeLimitSeconds: 1);
+                _inRunResultsAnalyzer ??= new InRunResultsAnalyzer(AlgorithmInstance, _job.Language, this);
+                return _inRunResultsAnalyzer.Run(totalPerformance);
             }
             catch (Exception ex)
             {
@@ -541,11 +483,67 @@ namespace QuantConnect.Lean.Engine.Results
             }
         }
 
+        #region IInRunAnalysisDataProvider implementation
+
+        /// <summary>
+        /// Gets the orders placed so far.
+        /// </summary>
+        IDictionary<int, Order> IInRunAnalysisDataProvider.GetOrders() => TransactionHandler.Orders.ToDictionary();
+
+        /// <summary>
+        /// Gets the order events produced from the given position in the order event stream.
+        /// </summary>
+        List<OrderEvent> IInRunAnalysisDataProvider.GetOrderEvents(int fromPosition)
+            => TransactionHandler.OrderEvents.Skip(fromPosition).ToList();
+
+        /// <summary>
+        /// Gets the log lines produced from the given position in the log stream.
+        /// </summary>
+        IReadOnlyList<string> IInRunAnalysisDataProvider.GetLogs(int fromPosition)
+        {
+            lock (LogStore)
+            {
+                return LogStore.Skip(fromPosition).Select(x => x.Message).ToList();
+            }
+        }
+
+        /// <summary>
+        /// Gets clones of the requested charts, safe for the analyses to read without holding the chart lock.
+        /// </summary>
+        IDictionary<string, Chart> IInRunAnalysisDataProvider.GetChartSnapshots(IReadOnlyList<string> chartNames)
+        {
+            var charts = new Dictionary<string, Chart>();
+            lock (ChartLock)
+            {
+                foreach (var chartName in chartNames)
+                {
+                    if (Charts.TryGetValue(chartName, out var chart))
+                    {
+                        charts[chartName] = chart.Clone();
+                    }
+                }
+            }
+            return charts;
+        }
+
+        /// <summary>
+        /// Whether the strategy equity chart has samples yet.
+        /// </summary>
+        bool IInRunAnalysisDataProvider.HasEquitySamples()
+        {
+            lock (ChartLock)
+            {
+                return Charts.TryGetValue(StrategyEquityKey, out var equityChart) &&
+                    equityChart.Series.TryGetValue(EquityKey, out var equitySeries) &&
+                    equitySeries.Values.Count > 0;
+            }
+        }
+
         /// <summary>
         /// Takes a sample of the engine speed counters for the algorithm speed analysis.
         /// Null while the algorithm warms up, since the warm-up pace would skew the speed metrics.
         /// </summary>
-        private AlgorithmSpeedSample? TakeAlgorithmSpeedSample()
+        AlgorithmSpeedSample? IInRunAnalysisDataProvider.TakeSpeedSample()
         {
             if (Algorithm == null || Algorithm.IsWarmingUp)
             {
@@ -559,6 +557,8 @@ namespace QuantConnect.Lean.Engine.Results
                 _progressMonitor?.ProcessedDays ?? 0,
                 _progressMonitor?.TotalDays ?? 0);
         }
+
+        #endregion
 
         /// <summary>
         /// Sends the in-run analysis findings to the browser in their own packet,
