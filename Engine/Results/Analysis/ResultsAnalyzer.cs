@@ -145,7 +145,9 @@ namespace QuantConnect.Lean.Engine.Results.Analysis
         }
 
         /// <summary>
-        /// Creates the set of diagnostic analyses to run against the backtest.
+        /// Creates the full set of diagnostic analyses to run against the backtest.
+        /// Each analysis declares through <see cref="BaseResultsAnalysis.RunsInRun"/> whether it can
+        /// also run while the backtest is in progress, which the in-run analyzer filters this set by.
         /// </summary>
         protected virtual IReadOnlyCollection<BaseResultsAnalysis> GetAnalyses() =>
         [

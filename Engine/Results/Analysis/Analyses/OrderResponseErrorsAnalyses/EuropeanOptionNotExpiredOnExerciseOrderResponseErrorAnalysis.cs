@@ -25,6 +25,11 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
     public class EuropeanOptionNotExpiredOnExerciseOrderResponseErrorAnalysis : MessageAnalysis
     {
         /// <summary>
+        /// This analysis reads only the result snapshot, so it also runs while the backtest is in progress.
+        /// </summary>
+        public override bool RunsInRun { get; } = true;
+
+        /// <summary>
         /// Gets a description of the premature European option exercise issue.
         /// </summary>
         public override string Issue { get; } = "The algorithm tried to exercise a European Option before its expiration date.";

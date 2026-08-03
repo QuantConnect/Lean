@@ -30,22 +30,16 @@ namespace QuantConnect.Lean.Engine.Results.Analysis
     /// </summary>
     public class InRunResultsAnalyzer : ResultsAnalyzer
     {
-        /// <summary>
-        /// Analyses that read the current backtest state (statistics, orders, charts) instead of scanning
-        /// the append-only order event and log streams. They must run against the full current state on
-        /// every run, and their previous findings are replaced instead of accumulated.
-        /// </summary>
-        private static readonly HashSet<string> StateBasedAnalyses = new()
-        {
-            nameof(PortfolioValueIsNotPositiveAnalysis),
-            nameof(TakeProfitAndStopLossOrdersAnalysis),
-            nameof(PortfolioMarginUsageAnalysis),
-            nameof(AlgorithmSpeedAnalysis),
-        };
-
         private readonly Dictionary<string, QuantConnect.Analysis> _findings = new();
         private readonly QCAlgorithm _algorithm;
         private readonly IInRunAnalysisDataProvider _dataProvider;
+
+        /// <summary>
+        /// The names of the analyses in the in-run set that declare themselves state-based
+        /// (see <see cref="BaseResultsAnalysis.IsStateBased"/>), whose findings are replaced
+        /// on every run instead of accumulated.
+        /// </summary>
+        private HashSet<string> _stateBasedAnalyses;
 
         /// <summary>
         /// The number of order events already consumed by previous runs, from which the next run
@@ -218,7 +212,14 @@ namespace QuantConnect.Lean.Engine.Results.Analysis
         /// <summary>
         /// Determines whether the given finding was produced by a state-based analysis.
         /// </summary>
-        private static bool IsStateBased(string findingName) => StateBasedAnalyses.Contains(BaseAnalysisName(findingName));
+        private bool IsStateBased(string findingName)
+        {
+            _stateBasedAnalyses ??= Analyses
+                .Where(analysis => analysis.IsStateBased)
+                .Select(analysis => analysis.GetType().Name)
+                .ToHashSet();
+            return _stateBasedAnalyses.Contains(BaseAnalysisName(findingName));
+        }
 
         /// <summary>
         /// Gets the analysis class name from a finding name, which aggregated
@@ -231,39 +232,11 @@ namespace QuantConnect.Lean.Engine.Results.Analysis
         }
 
         /// <summary>
-        /// Creates the set of diagnostic analyses to run while the backtest is in progress.
-        /// Only analyses that read the result snapshot (logs, orders, order events, charts) are
-        /// included: they are cheap, thread-safe, and detect error conditions whose findings
-        /// don't depend on the backtest being complete. Curve and statistics based analyses are
-        /// left to the final analysis, since partial-period statistics are noisy and require
-        /// history requests.
+        /// Creates the set of diagnostic analyses to run while the backtest is in progress:
+        /// the final analysis set filtered to the analyses declaring they can run in-run
+        /// (see <see cref="BaseResultsAnalysis.RunsInRun"/>).
         /// </summary>
-        protected override IReadOnlyCollection<BaseResultsAnalysis> GetAnalyses() =>
-        [
-            new PortfolioValueIsNotPositiveAnalysis(),
-            new InsufficientBuyingPowerOrderResponseErrorAnalysis(),
-            new MarginCallsAnalysis(),
-            new ExceedsShortableQuantityOrderResponseErrorAnalysis(),
-            new SecurityPriceZeroOrderResponseErrorAnalysis(),
-            new OrderQuantityZeroOrderResponseErrorAnalysis(),
-            new NonTradableSecurityOrderResponseErrorAnalysis(),
-            new BrokerageModelRefusedToSubmitOrderOrderResponseErrorAnalysis(),
-            new BrokerageModelRefusedToUpdateOrderOrderResponseErrorAnalysis(),
-            new TakeProfitAndStopLossOrdersAnalysis(),
-            new StaleOrderFillsAnalysis(),
-            new AlgorithmWarmingUpOrderResponseErrorAnalysis(),
-            new ExchangeNotOpenOrderResponseErrorAnalysis(),
-            new ForexConversionRateZeroOrderResponseErrorAnalysis(),
-            new ExceededMaximumOrdersOrderResponseErrorAnalysis(),
-            new UnsupportedOptionShortPositionExerciseAnalysis(),
-            new UnsupportedOptionExerciseQuantityAnalysis(),
-            new EuropeanOptionNotExpiredOnExerciseOrderResponseErrorAnalysis(),
-            new OptionOrderOnStockSplitOrderResponseErrorAnalysis(),
-            new MarketOnOpenNotAllowedDuringRegularHoursOrderResponseErrorAnalysis(),
-            new OrderQuantityLessThanLotSizeOrderResponseErrorAnalysis(),
-            new InsightsEmittedForDelistedSecuritiesAnalysis(),
-            new PortfolioMarginUsageAnalysis(),
-            new AlgorithmSpeedAnalysis(),
-        ];
+        protected override IReadOnlyCollection<BaseResultsAnalysis> GetAnalyses()
+            => base.GetAnalyses().Where(analysis => analysis.RunsInRun).ToList();
     }
 }

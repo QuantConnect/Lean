@@ -24,6 +24,11 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
     public class MarketOnOpenNotAllowedDuringRegularHoursOrderResponseErrorAnalysis : MessageAnalysis
     {
         /// <summary>
+        /// This analysis reads only the result snapshot, so it also runs while the backtest is in progress.
+        /// </summary>
+        public override bool RunsInRun { get; } = true;
+
+        /// <summary>
         /// Gets a description of the market-on-open during regular hours issue.
         /// </summary>
         public override string Issue { get; } = "The algorithm tried to place a market on open order for an asset when it's during regular trading hours.";

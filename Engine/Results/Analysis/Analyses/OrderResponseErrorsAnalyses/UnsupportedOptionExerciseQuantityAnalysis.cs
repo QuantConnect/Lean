@@ -24,6 +24,11 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
     public class UnsupportedOptionExerciseQuantityAnalysis : MessageAnalysis
     {
         /// <summary>
+        /// This analysis reads only the result snapshot, so it also runs while the backtest is in progress.
+        /// </summary>
+        public override bool RunsInRun { get; } = true;
+
+        /// <summary>
         /// Gets a description of the excess-quantity option exercise issue.
         /// </summary>
         public override string Issue { get; } = "The algorithm tried to exercise more Option contracts than it holds.";

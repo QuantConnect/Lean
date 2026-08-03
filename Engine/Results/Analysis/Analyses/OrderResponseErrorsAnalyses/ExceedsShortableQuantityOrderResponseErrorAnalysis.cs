@@ -26,6 +26,11 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
     public class ExceedsShortableQuantityOrderResponseErrorAnalysis : BaseResultsAnalysis
     {
         /// <summary>
+        /// This analysis reads only the result snapshot, so it also runs while the backtest is in progress.
+        /// </summary>
+        public override bool RunsInRun { get; } = true;
+
+        /// <summary>
         /// Gets a description of the exceeded shortable quantity issue.
         /// </summary>
         public override string Issue { get; } = "The algorithm tried to short a security but the shortable provider of the brokerage model stated there wasn't enough shares to borrow.";

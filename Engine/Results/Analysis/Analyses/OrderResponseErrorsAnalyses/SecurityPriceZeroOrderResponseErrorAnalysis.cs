@@ -24,6 +24,11 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
     public class SecurityPriceZeroOrderResponseErrorAnalysis : MessageAnalysis
     {
         /// <summary>
+        /// This analysis reads only the result snapshot, so it also runs while the backtest is in progress.
+        /// </summary>
+        public override bool RunsInRun { get; } = true;
+
+        /// <summary>
         /// Gets a description of the zero security price ordering issue.
         /// </summary>
         public override string Issue { get; } = "The algorithm tried to place an order or exercise an Option contract while the security price was $0.";

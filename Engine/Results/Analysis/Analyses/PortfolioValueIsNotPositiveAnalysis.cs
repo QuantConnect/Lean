@@ -23,6 +23,17 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
     public class PortfolioValueIsNotPositiveAnalysis : BaseResultsAnalysis
     {
         /// <summary>
+        /// This analysis reads only the result snapshot, so it also runs while the backtest is in progress.
+        /// </summary>
+        public override bool RunsInRun { get; } = true;
+
+        /// <summary>
+        /// This analysis reads the current portfolio statistics instead of scanning the order event
+        /// and log streams, so its in-run findings are replaced on every run.
+        /// </summary>
+        public override bool IsStateBased { get; } = true;
+
+        /// <summary>
         /// Gets the description of the non-positive portfolio equity issue.
         /// </summary>
         public override string Issue { get; } = "The portfolio equity dropped to zero or below.";

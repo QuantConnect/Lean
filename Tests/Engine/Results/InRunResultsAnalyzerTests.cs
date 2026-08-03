@@ -123,12 +123,13 @@ namespace QuantConnect.Tests.Engine.Results
         {
             var fake = new FakeAnalysisA(10)
             {
-                Findings = () => MakeFindings(nameof(PortfolioValueIsNotPositiveAnalysis), "old sample", 2)
+                StateBased = true,
+                Findings = () => MakeFindings(nameof(FakeAnalysisA), "old sample", 2)
             };
             var analyzer = new TestInRunResultsAnalyzer(fake);
             analyzer.Run(1, new[] { "log" });
 
-            fake.Findings = () => MakeFindings(nameof(PortfolioValueIsNotPositiveAnalysis), "new sample", 3);
+            fake.Findings = () => MakeFindings(nameof(FakeAnalysisA), "new sample", 3);
             var findings = analyzer.Run(1, new[] { "log" });
 
             // Replaced, not accumulated: latest sample and count win
@@ -142,7 +143,8 @@ namespace QuantConnect.Tests.Engine.Results
         {
             var fake = new FakeAnalysisA(10)
             {
-                Findings = () => MakeFindings(nameof(PortfolioValueIsNotPositiveAnalysis), "sample", 2)
+                StateBased = true,
+                Findings = () => MakeFindings(nameof(FakeAnalysisA), "sample", 2)
             };
             var analyzer = new TestInRunResultsAnalyzer(fake);
             Assert.IsNotEmpty(analyzer.Run(1, new[] { "log" }));
@@ -158,9 +160,10 @@ namespace QuantConnect.Tests.Engine.Results
         {
             // Aggregated analyses emit "AnalysisClass / SubAnalysis" finding names: state-based
             // behavior is determined by the base analysis name, replacement is keyed by the full name
-            var stateBasedName = nameof(PortfolioValueIsNotPositiveAnalysis);
+            var stateBasedName = nameof(FakeAnalysisA);
             var fake = new FakeAnalysisA(10)
             {
+                StateBased = true,
                 Findings = () => MakeFindings($"{stateBasedName} / SubA", "sample a", 1)
                     .Concat(MakeFindings($"{stateBasedName} / SubB", "sample b", 1))
                     .ToList()
@@ -296,6 +299,20 @@ namespace QuantConnect.Tests.Engine.Results
         }
 
         [Test]
+        public void DefaultAnalysisSetIsTheInRunCapableSubsetOfTheFinalSet()
+        {
+            var analyses = new DefaultSetInRunResultsAnalyzer().DefaultAnalyses;
+
+            Assert.IsNotEmpty(analyses);
+            Assert.IsTrue(analyses.All(analysis => analysis.RunsInRun));
+            // Representative membership checks: state-based and stream-based in-run analyses
+            // are included, final-only ones are not
+            Assert.IsTrue(analyses.Any(analysis => analysis is AlgorithmSpeedAnalysis));
+            Assert.IsTrue(analyses.Any(analysis => analysis is MarginCallsAnalysis));
+            Assert.IsFalse(analyses.Any(analysis => analysis is ExecutionSpeedAnalysis));
+        }
+
+        [Test]
         public void AnalysesAreCreatedOnceAndReusedAcrossRuns()
         {
             var analyzer = new TestInRunResultsAnalyzer(new FakeAnalysisA(10));
@@ -352,6 +369,16 @@ namespace QuantConnect.Tests.Engine.Results
             }
         }
 
+        private sealed class DefaultSetInRunResultsAnalyzer : InRunResultsAnalyzer
+        {
+            public DefaultSetInRunResultsAnalyzer()
+                : base(null, Language.CSharp, new FakeDataProvider())
+            {
+            }
+
+            public IReadOnlyCollection<BaseResultsAnalysis> DefaultAnalyses => Analyses;
+        }
+
         private sealed class FakeDataProvider : IInRunAnalysisDataProvider
         {
             public Dictionary<int, Order> Orders { get; } = new();
@@ -404,6 +431,10 @@ namespace QuantConnect.Tests.Engine.Results
             public override string Issue => "A fake issue";
 
             public override int Weight => _weight;
+
+            public override bool IsStateBased => StateBased;
+
+            public bool StateBased { get; set; }
 
             public Func<IReadOnlyList<QuantConnect.Analysis>> Findings { get; set; } = () => new List<QuantConnect.Analysis>();
 

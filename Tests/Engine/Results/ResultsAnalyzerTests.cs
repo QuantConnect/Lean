@@ -162,6 +162,45 @@ namespace QuantConnect.Tests.Engine.Results
             Assert.IsTrue(analyses.Any(analysis => analysis is SingleTimeLoopTimeoutRuntimeErrorAnalysis));
         }
 
+        [Test]
+        public void DefaultAnalysisSetDeclaresTheFinalOnlyAnalyses()
+        {
+            var finalOnly = new DefaultSetResultsAnalyzer().DefaultAnalyses
+                .Where(analysis => !analysis.RunsInRun)
+                .Select(analysis => analysis.GetType().Name);
+
+            // These need the completed run (runtime errors, equity curves, final statistics,
+            // completion logs) or read algorithm state that is not safe to access while it runs
+            CollectionAssert.AreEquivalent(new[]
+            {
+                nameof(SingleTimeLoopTimeoutRuntimeErrorAnalysis),
+                nameof(FlatEquityCurveAnalysis),
+                nameof(OrderFillsDuringExtendedMarketHoursAnalysis),
+                nameof(StatisticalSignificanceOfDailyReturnsAnalysis),
+                nameof(PerformanceRelativeToBenchmarkAnalysis),
+                nameof(CrisisEventsAnalysis),
+                nameof(ExecutionSpeedAnalysis),
+                nameof(ParameterCountAnalysis),
+                nameof(MonteCarloPercentileAnalysis),
+            }, finalOnly);
+        }
+
+        [Test]
+        public void DefaultAnalysisSetDeclaresTheStateBasedAnalyses()
+        {
+            var stateBased = new DefaultSetResultsAnalyzer().DefaultAnalyses
+                .Where(analysis => analysis.IsStateBased)
+                .Select(analysis => analysis.GetType().Name);
+
+            CollectionAssert.AreEquivalent(new[]
+            {
+                nameof(PortfolioValueIsNotPositiveAnalysis),
+                nameof(TakeProfitAndStopLossOrdersAnalysis),
+                nameof(PortfolioMarginUsageAnalysis),
+                nameof(AlgorithmSpeedAnalysis),
+            }, stateBased);
+        }
+
         private sealed class DefaultSetResultsAnalyzer : ResultsAnalyzer
         {
             public DefaultSetResultsAnalyzer()

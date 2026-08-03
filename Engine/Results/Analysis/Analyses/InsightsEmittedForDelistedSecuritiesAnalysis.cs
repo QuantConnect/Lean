@@ -24,6 +24,11 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
     public class InsightsEmittedForDelistedSecuritiesAnalysis : MessageAnalysis
     {
         /// <summary>
+        /// This analysis reads only the result snapshot, so it also runs while the backtest is in progress.
+        /// </summary>
+        public override bool RunsInRun { get; } = true;
+
+        /// <summary>
         /// Description of the delisted-security insight emission issue detected by this analysis.
         /// </summary>
         public override string Issue { get; } = "The algorithm emitted insights for delisted securities.";
