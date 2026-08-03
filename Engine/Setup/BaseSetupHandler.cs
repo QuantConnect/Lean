@@ -83,6 +83,35 @@ namespace QuantConnect.Lean.Engine.Setup
             UniverseSelection universeSelection,
             IReadOnlyCollection<string> currenciesToUpdateWhiteList = null)
         {
+            SetupCurrencyConversions(algorithm, universeSelection, null, currenciesToUpdateWhiteList);
+        }
+
+        /// <summary>
+        /// Will first check and add all the required conversion rate securities
+        /// and later will seed an initial value to them using the specified reference time.
+        /// </summary>
+        /// <param name="algorithm">The algorithm instance</param>
+        /// <param name="universeSelection">The universe selection instance</param>
+        /// <param name="referenceUtcTime">The UTC time to use as the reference for the history requests</param>
+        /// <param name="currenciesToUpdateWhiteList">
+        /// If passed, the currencies in the CashBook that are contained in this list will be updated.
+        /// By default, if not passed (null), all currencies in the cashbook without a properly set up currency conversion will be updated.
+        /// </param>
+        public static void SetupCurrencyConversions(
+            IAlgorithm algorithm,
+            UniverseSelection universeSelection,
+            DateTime referenceUtcTime,
+            IReadOnlyCollection<string> currenciesToUpdateWhiteList = null)
+        {
+            SetupCurrencyConversions(algorithm, universeSelection, (DateTime?)referenceUtcTime, currenciesToUpdateWhiteList);
+        }
+
+        private static void SetupCurrencyConversions(
+            IAlgorithm algorithm,
+            UniverseSelection universeSelection,
+            DateTime? referenceUtcTime,
+            IReadOnlyCollection<string> currenciesToUpdateWhiteList = null)
+        {
             // this is needed to have non-zero currency conversion rates during warmup
             // will also set the Cash.ConversionRateSecurity.
             // We don't let it seed the conversion rates here because we do that right below,
@@ -90,7 +119,14 @@ namespace QuantConnect.Lean.Engine.Setup
             universeSelection.EnsureCurrencyDataFeeds(SecurityChanges.None, seedNewCurrencies: false);
 
             // now set conversion rates
-            AlgorithmUtils.SeedCurrencyConversionRates(algorithm, currenciesToUpdateWhiteList);
+            if (referenceUtcTime.HasValue)
+            {
+                AlgorithmUtils.SeedCurrencyConversionRates(algorithm, referenceUtcTime.Value, currenciesToUpdateWhiteList);
+            }
+            else
+            {
+                AlgorithmUtils.SeedCurrencyConversionRates(algorithm, currenciesToUpdateWhiteList);
+            }
 
             Log.Trace($"BaseSetupHandler.SetupCurrencyConversions():{Environment.NewLine}" +
                 $"Account Type: {algorithm.BrokerageModel.AccountType}{Environment.NewLine}{Environment.NewLine}{algorithm.Portfolio.CashBook}");

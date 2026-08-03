@@ -33,8 +33,27 @@ namespace QuantConnect
         /// <param name="algorithm">The algorithm instance</param>
         public static void SeedSecurities(IReadOnlyCollection<Security> securities, IAlgorithm algorithm)
         {
+            SeedSecurities(securities, algorithm, null);
+        }
+
+        /// <summary>
+        /// Seeds the provided securities with their last known prices from the algorithm using the specified reference time
+        /// </summary>
+        /// <param name="securities">The securities to seed</param>
+        /// <param name="algorithm">The algorithm instance</param>
+        /// <param name="referenceUtcTime">The UTC time to use as the reference for the history requests</param>
+        public static void SeedSecurities(IReadOnlyCollection<Security> securities, IAlgorithm algorithm, DateTime referenceUtcTime)
+        {
+            SeedSecurities(securities, algorithm, (DateTime?)referenceUtcTime);
+        }
+
+        private static void SeedSecurities(IReadOnlyCollection<Security> securities, IAlgorithm algorithm, DateTime? referenceUtcTime)
+        {
             var securitiesToSeed = securities.Where(x => x.Price == 0);
-            var data = algorithm.GetLastKnownPrices(securitiesToSeed.Select(x => x.Symbol));
+            var symbols = securitiesToSeed.Select(x => x.Symbol);
+            var data = referenceUtcTime.HasValue
+                ? algorithm.GetLastKnownPrices(symbols, referenceUtcTime.Value)
+                : algorithm.GetLastKnownPrices(symbols);
 
             foreach (var security in securitiesToSeed)
             {
@@ -59,6 +78,27 @@ namespace QuantConnect
         /// </param>
         public static void SeedCurrencyConversionRates(IAlgorithm algorithm, IReadOnlyCollection<string> currenciesToUpdateWhiteList = null)
         {
+            SeedCurrencyConversionRates(algorithm, null, currenciesToUpdateWhiteList);
+        }
+
+        /// <summary>
+        /// Seeds an initial conversion rate for the cashbook currencies that don't have one yet using the specified reference time
+        /// </summary>
+        /// <param name="algorithm">The algorithm instance</param>
+        /// <param name="referenceUtcTime">The UTC time to use as the reference for the history requests</param>
+        /// <param name="currenciesToUpdateWhiteList">
+        /// If passed, only the currencies in the CashBook contained in this list will be updated.
+        /// By default, if not passed (null), all currencies in the cashbook without a properly set up currency conversion will be updated.
+        /// </param>
+        public static void SeedCurrencyConversionRates(IAlgorithm algorithm, DateTime referenceUtcTime,
+            IReadOnlyCollection<string> currenciesToUpdateWhiteList = null)
+        {
+            SeedCurrencyConversionRates(algorithm, (DateTime?)referenceUtcTime, currenciesToUpdateWhiteList);
+        }
+
+        private static void SeedCurrencyConversionRates(IAlgorithm algorithm, DateTime? referenceUtcTime,
+            IReadOnlyCollection<string> currenciesToUpdateWhiteList = null)
+        {
             Func<Cash, bool> cashToUpdateFilter = currenciesToUpdateWhiteList == null
                 ? (x) => x.CurrencyConversion != null && x.ConversionRate == 0
                 : (x) => currenciesToUpdateWhiteList.Contains(x.Symbol);
@@ -74,7 +114,7 @@ namespace QuantConnect
                 .Distinct()
                 .ToList();
 
-            SeedSecurities(securitiesToUpdate, algorithm);
+            SeedSecurities(securitiesToUpdate, algorithm, referenceUtcTime);
 
             foreach (var cash in cashToUpdate)
             {

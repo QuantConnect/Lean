@@ -324,9 +324,10 @@ namespace QuantConnect.Lean.Engine.Setup
                 dataAggregator?.Initialize(new() { AlgorithmSettings = algorithm.Settings });
 
                 //Finalize Initialization
+                var deploymentTimeUtc = algorithm.UtcTime;
                 algorithm.PostInitialize();
 
-                BaseSetupHandler.SetupCurrencyConversions(algorithm, parameters.UniverseSelection);
+                BaseSetupHandler.SetupCurrencyConversions(algorithm, parameters.UniverseSelection, deploymentTimeUtc);
 
                 if (algorithm.Portfolio.TotalPortfolioValue == 0)
                 {

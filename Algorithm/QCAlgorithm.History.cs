@@ -756,13 +756,24 @@ namespace QuantConnect.Algorithm
         [DocumentationAttribute(HistoricalData)]
         public DataDictionary<IEnumerable<BaseData>> GetLastKnownPrices(IEnumerable<Symbol> symbols)
         {
+            return GetLastKnownPrices(symbols, UtcTime);
+        }
+
+        /// <summary>
+        /// Yields data to warm up multiple securities for all their subscribed data types using the specified reference time
+        /// </summary>
+        /// <param name="symbols">The symbols we want to get seed data for</param>
+        /// <param name="referenceUtcTime">The UTC time to use as the reference for the history requests</param>
+        /// <returns>Securities historical data</returns>
+        public DataDictionary<IEnumerable<BaseData>> GetLastKnownPrices(IEnumerable<Symbol> symbols, DateTime referenceUtcTime)
+        {
             if (HistoryProvider == null)
             {
                 return new DataDictionary<IEnumerable<BaseData>>();
             }
 
             var data = new Dictionary<(Symbol, Type, TickType), BaseData>();
-            GetLastKnownPricesImpl(symbols, data);
+            GetLastKnownPricesImpl(symbols, data, referenceUtcTime);
 
             return data
                 .GroupBy(kvp => kvp.Key.Item1)
@@ -808,7 +819,7 @@ namespace QuantConnect.Algorithm
         }
 
         private void GetLastKnownPricesImpl(IEnumerable<Symbol> symbols, Dictionary<(Symbol, Type, TickType), BaseData> result,
-            int attempts = 0, IEnumerable<HistoryRequest> failedRequests = null)
+            DateTime referenceUtcTime, int attempts = 0, IEnumerable<HistoryRequest> failedRequests = null)
         {
             IEnumerable<HistoryRequest> historyRequests;
             var isRetry = failedRequests != null;
@@ -818,14 +829,14 @@ namespace QuantConnect.Algorithm
             if (attempts == 0)
             {
                 historyRequests = CreateBarCountHistoryRequests(symbols, SeedLookbackPeriod,
-                    fillForward: false, useAllSubscriptions: true)
+                    fillForward: false, useAllSubscriptions: true, referenceUtcTime: referenceUtcTime)
                     .SelectMany(request =>
                     {
                         // Make open interest request daily, higher resolutions will need greater periods to return data
                         if (request.DataType == typeof(OpenInterest) && request.Resolution < Resolution.Daily)
                         {
                             return CreateBarCountHistoryRequests([request.Symbol], typeof(OpenInterest), SeedLookbackPeriod,
-                                Resolution.Daily, fillForward: false, useAllSubscriptions: true);
+                                Resolution.Daily, fillForward: false, useAllSubscriptions: true, referenceUtcTime: referenceUtcTime);
                         }
 
                         if (request.Resolution < Resolution.Minute)
@@ -837,7 +848,7 @@ namespace QuantConnect.Algorithm
                             }
 
                             return CreateBarCountHistoryRequests([request.Symbol], dataType, SeedLookbackPeriod,
-                                Resolution.Minute, fillForward: false, useAllSubscriptions: true);
+                                Resolution.Minute, fillForward: false, useAllSubscriptions: true, referenceUtcTime: referenceUtcTime);
                         }
 
                         return [request];
@@ -856,7 +867,8 @@ namespace QuantConnect.Algorithm
                         var periods = resolution == Resolution.Daily
                             ? SeedRetryDailyLookbackPeriod
                             : resolution == Resolution.Hour ? SeedRetryHourLookbackPeriod : SeedRetryMinuteLookbackPeriod;
-                        return CreateBarCountHistoryRequests([group.Key], periods, resolution, fillForward: false, useAllSubscriptions: true)
+                        return CreateBarCountHistoryRequests([group.Key], periods, resolution, fillForward: false, useAllSubscriptions: true,
+                            referenceUtcTime: referenceUtcTime)
                             .Where(request => symbolRequests.Any(x => x.DataType == request.DataType));
                     })
                     .SelectMany(x => x);
@@ -865,7 +877,8 @@ namespace QuantConnect.Algorithm
             {
                 // Fall back to bigger daily requests as a last resort
                 historyRequests = CreateBarCountHistoryRequests(failedRequests.Select(x => x.Symbol).Distinct(),
-                    Math.Min(60, 5 * SeedRetryDailyLookbackPeriod), Resolution.Daily, fillForward: false, useAllSubscriptions: true);
+                    Math.Min(60, 5 * SeedRetryDailyLookbackPeriod), Resolution.Daily, fillForward: false, useAllSubscriptions: true,
+                    referenceUtcTime: referenceUtcTime);
             }
 
             var requests = historyRequests.ToArray();
@@ -874,7 +887,7 @@ namespace QuantConnect.Algorithm
                 return;
             }
 
-            foreach (var slice in History(requests))
+            foreach (var slice in History(requests, TimeZone, referenceUtcTime))
             {
                 for (var i = 0; i < requests.Length; i++)
                 {
@@ -924,7 +937,7 @@ namespace QuantConnect.Algorithm
             if (attempts < 2)
             {
                 // Give it another try to get data for all symbols and all data types
-                GetLastKnownPricesImpl(null, result, attempts + 1,
+                GetLastKnownPricesImpl(null, result, referenceUtcTime, attempts + 1,
                     requests.Where((request, i) => !result.ContainsKey((request.Symbol, request.DataType, request.TickType))));
             }
         }
@@ -1016,10 +1029,10 @@ namespace QuantConnect.Algorithm
             return result.Memoize();
         }
 
-        private IEnumerable<Slice> History(IEnumerable<HistoryRequest> requests, DateTimeZone timeZone)
+        private IEnumerable<Slice> History(IEnumerable<HistoryRequest> requests, DateTimeZone timeZone, DateTime? referenceUtcTime = null)
         {
             // filter out any universe securities that may have made it this far
-            var filteredRequests = GetFilterestRequests(requests);
+            var filteredRequests = GetFilterestRequests(requests, referenceUtcTime);
 
             // filter out future data to prevent look ahead bias
             var history = HistoryProvider.GetHistory(filteredRequests, timeZone);
@@ -1035,15 +1048,16 @@ namespace QuantConnect.Algorithm
             return history;
         }
 
-        private IEnumerable<HistoryRequest> GetFilterestRequests(IEnumerable<HistoryRequest> requests)
+        private IEnumerable<HistoryRequest> GetFilterestRequests(IEnumerable<HistoryRequest> requests, DateTime? referenceUtcTime = null)
         {
             var sentMessage = false;
+            var maximumEndTimeUtc = referenceUtcTime ?? UtcTime;
             foreach (var request in requests.Where(hr => HistoryRequestValid(hr.Symbol)))
             {
                 // prevent future requests
-                if (request.EndTimeUtc > UtcTime)
+                if (request.EndTimeUtc > maximumEndTimeUtc)
                 {
-                    var endTimeUtc = UtcTime;
+                    var endTimeUtc = maximumEndTimeUtc;
                     var startTimeUtc = request.StartTimeUtc;
                     if (request.StartTimeUtc > request.EndTimeUtc)
                     {
@@ -1118,7 +1132,8 @@ namespace QuantConnect.Algorithm
         /// </summary>
         private IEnumerable<HistoryRequest> CreateBarCountHistoryRequests(IEnumerable<Symbol> symbols, int periods, Resolution? resolution = null,
             bool? fillForward = null, bool? extendedMarketHours = null, DataMappingMode? dataMappingMode = null,
-            DataNormalizationMode? dataNormalizationMode = null, int? contractDepthOffset = null, bool useAllSubscriptions = false)
+            DataNormalizationMode? dataNormalizationMode = null, int? contractDepthOffset = null, bool useAllSubscriptions = false,
+            DateTime? referenceUtcTime = null)
         {
             // Materialize the symbols to avoid multiple enumeration
             var symbolsArray = symbols.ToArray();
@@ -1132,7 +1147,8 @@ namespace QuantConnect.Algorithm
                 dataMappingMode,
                 dataNormalizationMode,
                 contractDepthOffset,
-                useAllSubscriptions);
+                useAllSubscriptions,
+                referenceUtcTime);
         }
 
         /// <summary>
@@ -1140,7 +1156,8 @@ namespace QuantConnect.Algorithm
         /// </summary>
         private IEnumerable<HistoryRequest> CreateBarCountHistoryRequests(IEnumerable<Symbol> symbols, Type requestedType, int periods,
             Resolution? resolution = null, bool? fillForward = null, bool? extendedMarketHours = null, DataMappingMode? dataMappingMode = null,
-            DataNormalizationMode? dataNormalizationMode = null, int? contractDepthOffset = null, bool useAllSubscriptions = false)
+            DataNormalizationMode? dataNormalizationMode = null, int? contractDepthOffset = null, bool useAllSubscriptions = false,
+            DateTime? referenceUtcTime = null)
         {
             return symbols.Where(HistoryRequestValid).SelectMany(symbol =>
             {
@@ -1157,9 +1174,12 @@ namespace QuantConnect.Algorithm
                     var type = requestedType ?? config.Type;
                     var res = resolution ?? config.Resolution;
                     var exchange = GetExchangeHours(symbol, type);
-                    var start = _historyRequestFactory.GetStartTimeAlgoTz(symbol, periods, res, exchange, config.DataTimeZone,
-                        config.Type, extendedMarketHours);
-                    var end = Time;
+                    var start = referenceUtcTime.HasValue
+                        ? _historyRequestFactory.GetStartTimeAlgoTz(referenceUtcTime.Value, symbol, periods, res, exchange,
+                            config.DataTimeZone, config.Type, extendedMarketHours)
+                        : _historyRequestFactory.GetStartTimeAlgoTz(symbol, periods, res, exchange, config.DataTimeZone,
+                            config.Type, extendedMarketHours);
+                    var end = referenceUtcTime?.ConvertFromUtc(TimeZone) ?? Time;
 
                     return _historyRequestFactory.CreateHistoryRequest(config, start, end, exchange, res, fillForward,
                         extendedMarketHours, dataMappingMode, dataNormalizationMode, contractDepthOffset);

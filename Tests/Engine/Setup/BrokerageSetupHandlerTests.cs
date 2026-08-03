@@ -540,6 +540,46 @@ namespace QuantConnect.Tests.Engine.Setup
             Assert.Greater(algorithm.UtcTime, time);
         }
 
+        [Test]
+        public void CurrencyConversionSeedingUsesDeploymentTimeAfterWarmupClockIsRewound()
+        {
+            var algorithm = new WarmupTestAlgorithm();
+            var historyProvider = new RecordingHistoryProvider();
+            algorithm.SetHistoryProvider(historyProvider);
+
+            var job = GetJob();
+            var resultHandler = new Mock<IResultHandler>();
+            var transactionHandler = new Mock<ITransactionHandler>();
+            var realTimeHandler = new Mock<IRealTimeHandler>();
+            var brokerage = new Mock<IBrokerage>();
+
+            brokerage.Setup(x => x.IsConnected).Returns(true);
+            brokerage.Setup(x => x.AccountBaseCurrency).Returns(Currencies.USD);
+            brokerage.Setup(x => x.GetCashBalance()).Returns(new List<CashAmount>
+            {
+                new CashAmount(100, Currencies.EUR)
+            });
+            brokerage.Setup(x => x.GetAccountHoldings()).Returns(new List<Holding>());
+            brokerage.Setup(x => x.GetOpenOrders()).Returns(new List<Order>());
+
+            using var setupHandler = new BrokerageSetupHandler();
+            setupHandler.CreateBrokerage(job, algorithm, out var factory);
+            factory.Dispose();
+
+            Assert.IsTrue(setupHandler.Setup(new SetupHandlerParameters(algorithm.DataManager.UniverseSelection, algorithm, brokerage.Object, job,
+                resultHandler.Object, transactionHandler.Object, realTimeHandler.Object, TestGlobals.DataCacheProvider, TestGlobals.MapFileProvider)));
+
+            Assert.AreEqual(algorithm.DeploymentUtcTime - TimeSpan.FromDays(30), algorithm.WarmupStartUtcTime);
+            Assert.AreEqual(algorithm.WarmupStartUtcTime, algorithm.UtcTime);
+
+            var fxRequest = historyProvider.Requests.Single(request => request.Symbol.Value == "EURUSD");
+            Assert.AreEqual(algorithm.DeploymentUtcTime, fxRequest.EndTimeUtc,
+                $"Expected FX seeding request to end at deployment time {algorithm.DeploymentUtcTime:O}, but it ended at {fxRequest.EndTimeUtc:O}.");
+            Assert.AreNotEqual(algorithm.WarmupStartUtcTime, fxRequest.EndTimeUtc);
+            Assert.AreEqual(1.25m, algorithm.Portfolio.CashBook[Currencies.EUR].ConversionRate);
+            Assert.AreEqual(125m, setupHandler.StartingPortfolioValue);
+        }
+
         [TestCase(true, true)]
         [TestCase(true, false)]
         [TestCase(false, true)]
@@ -855,6 +895,24 @@ namespace QuantConnect.Tests.Engine.Setup
             }
         }
 
+        private class WarmupTestAlgorithm : TestAlgorithm
+        {
+            public DateTime DeploymentUtcTime { get; private set; }
+            public DateTime WarmupStartUtcTime { get; private set; }
+
+            public override void Initialize()
+            {
+                SetWarmup(TimeSpan.FromDays(30));
+            }
+
+            public override void PostInitialize()
+            {
+                DeploymentUtcTime = UtcTime;
+                base.PostInitialize();
+                WarmupStartUtcTime = UtcTime;
+            }
+        }
+
         internal static LiveNodePacket GetJob()
         {
             var job = new LiveNodePacket
@@ -913,6 +971,32 @@ namespace QuantConnect.Tests.Engine.Setup
                 var request = requestsList[0];
                 return new List<Slice>{ new Slice(DateTime.UtcNow,
                     new List<BaseData> {new QuoteBar(DateTime.MinValue, request.Symbol, new Bar(1, 2, 3, 4), 5, new Bar(1, 2, 3, 4), 5) }, DateTime.UtcNow)};
+            }
+        }
+
+        private class RecordingHistoryProvider : HistoryProviderBase
+        {
+            public List<Data.HistoryRequest> Requests { get; } = new List<Data.HistoryRequest>();
+
+            public override int DataPointCount { get; }
+
+            public override void Initialize(HistoryProviderInitializeParameters parameters)
+            {
+                throw new NotImplementedException();
+            }
+
+            public override IEnumerable<Slice> GetHistory(IEnumerable<Data.HistoryRequest> requests, DateTimeZone sliceTimeZone)
+            {
+                var requestsList = requests.ToList();
+                Requests.AddRange(requestsList);
+
+                return requestsList.Select(request => new Slice(request.EndTimeUtc,
+                    new List<BaseData>
+                    {
+                        new QuoteBar(request.EndTimeUtc, request.Symbol,
+                            new Bar(1.25m, 1.25m, 1.25m, 1.25m), 0,
+                            new Bar(1.25m, 1.25m, 1.25m, 1.25m), 0)
+                    }, request.EndTimeUtc));
             }
         }
     }

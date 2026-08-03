@@ -1107,6 +1107,14 @@ namespace QuantConnect.AlgorithmFactory.Python.Wrappers
         public DataDictionary<IEnumerable<BaseData>> GetLastKnownPrices(IEnumerable<Symbol> symbols) => _baseAlgorithm.GetLastKnownPrices(symbols);
 
         /// <summary>
+        /// Yields data to warm up multiple securities for all their subscribed data types using the specified reference time
+        /// </summary>
+        /// <param name="symbols">The symbols we want to get seed data for</param>
+        /// <param name="referenceUtcTime">The UTC time to use as the reference for the history requests</param>
+        /// <returns>Securities historical data</returns>
+        public DataDictionary<IEnumerable<BaseData>> GetLastKnownPrices(IEnumerable<Symbol> symbols, DateTime referenceUtcTime) => _baseAlgorithm.GetLastKnownPrices(symbols, referenceUtcTime);
+
+        /// <summary>
         /// Set the runtime error
         /// </summary>
         /// <param name="exception">Represents error that occur during execution</param>
