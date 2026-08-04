@@ -55,6 +55,11 @@ namespace QuantConnect.Lean.Engine.Results.Analysis
         private HashSet<string> _stateBasedAnalyses;
 
         /// <summary>
+        /// The weight of each analysis by name, for ranking the findings.
+        /// </summary>
+        private Dictionary<string, int> _analysisWeights;
+
+        /// <summary>
         /// The number of order events already consumed by previous in-run runs, from which the
         /// next run resumes reading the order event stream.
         /// </summary>
@@ -74,13 +79,17 @@ namespace QuantConnect.Lean.Engine.Results.Analysis
         protected bool IsInRun => _dataProvider != null;
 
         /// <summary>
-        /// The diagnostic analyses to run. Created once and reused across runs, since the analyses
-        /// are stateless. In-run instances filter the set to the analyses that declare they can run
-        /// while the backtest is in progress (see <see cref="BaseResultsAnalysis.RunsInRun"/>).
+        /// The diagnostic analyses to run, in execution order: descending by weight, so changing an
+        /// analysis weight automatically reorders execution. Created once and reused across runs,
+        /// since the analyses are stateless and their weights are constant. In-run instances filter
+        /// the set to the analyses that declare they can run while the backtest is in progress
+        /// (see <see cref="BaseResultsAnalysis.RunsInRun"/>).
         /// </summary>
-        protected IReadOnlyCollection<BaseResultsAnalysis> Analyses => _analyses ??= IsInRun
-            ? GetAnalyses().Where(analysis => analysis.RunsInRun).ToList()
-            : GetAnalyses();
+        protected IReadOnlyCollection<BaseResultsAnalysis> Analyses => _analyses ??= (IsInRun
+                ? GetAnalyses().Where(analysis => analysis.RunsInRun)
+                : GetAnalyses())
+            .OrderByDescending(analysis => analysis.Weight)
+            .ToList();
 
         /// <summary>
         /// Whether the equity and benchmark curves should be built before running the analyses.
@@ -200,8 +209,7 @@ namespace QuantConnect.Lean.Engine.Results.Analysis
             var timer = Stopwatch.StartNew();
             var timeLimit = TimeSpan.FromSeconds(timeLimitSeconds);
 
-            // Instances are sorted by their own Weight — changing a weight automatically reorders execution.
-            foreach (var analysis in analyses.OrderByDescending(a => a.Weight))
+            foreach (var analysis in analyses)
             {
                 if (responses.Count >= maxFailedAnalyses)
                 {
@@ -403,9 +411,9 @@ namespace QuantConnect.Lean.Engine.Results.Analysis
         /// </summary>
         private IReadOnlyList<QuantConnect.Analysis> RankFindings(int maxFailedAnalyses)
         {
-            var weights = Analyses.ToDictionary(analysis => analysis.GetType().Name, analysis => analysis.Weight);
+            _analysisWeights ??= Analyses.ToDictionary(analysis => analysis.GetType().Name, analysis => analysis.Weight);
             return _findings.Values
-                .OrderByDescending(finding => weights.GetValueOrDefault(BaseAnalysisName(finding.Name)))
+                .OrderByDescending(finding => _analysisWeights.GetValueOrDefault(BaseAnalysisName(finding.Name)))
                 .Take(maxFailedAnalyses)
                 .ToList();
         }
