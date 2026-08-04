@@ -29,7 +29,8 @@ using QuantConnect.Statistics;
 namespace QuantConnect.Tests.Engine.Results
 {
     /// <summary>
-    /// Tests the in-run mode of <see cref="ResultsAnalyzer"/>, driven through a fake
+    /// Tests the in-run mode of <see cref="ResultsAnalyzer"/>, driven through intermediate
+    /// results carrying truncated order and order event windows, complemented by a fake
     /// <see cref="IInRunAnalysisDataProvider"/>. The core, mode-independent behavior
     /// is covered by <see cref="ResultsAnalyzerTests"/>.
     /// </summary>
@@ -41,24 +42,50 @@ namespace QuantConnect.Tests.Engine.Results
         [Test]
         public void OrderEventAndLogStreamsAreConsumedIncrementally()
         {
-            var analyzer = new TestInRunResultsAnalyzer(new FakeAnalysisA(10));
+            var seenOrderEvents = new List<OrderEvent>();
+            var fake = new FakeAnalysisA(10) { OnParameters = parameters => seenOrderEvents.AddRange(parameters.Result.OrderEvents) };
+            var analyzer = new TestInRunResultsAnalyzer(fake);
 
+            // The order event windows fully overlap (every event fits in the window), but the
+            // watermark dedupes them: each event is analyzed exactly once, in chronological order
             analyzer.Run(3, new[] { "log 1", "log 2" });
             analyzer.Run(5, new[] { "log 3" });
-            // Runs without new order events or logs don't move the read positions
+            // Runs without new order events or logs produce empty deltas and don't move the log position
             analyzer.Run(0, null);
             analyzer.Run(0, null);
 
-            CollectionAssert.AreEqual(new[] { 0, 3, 8, 8 }, analyzer.Provider.RequestedOrderEventsPositions);
+            CollectionAssert.AreEqual(analyzer.OrderEventStream, seenOrderEvents);
             CollectionAssert.AreEqual(new[] { 0, 2, 3, 3 }, analyzer.Provider.RequestedLogsPositions);
+        }
+
+        [Test]
+        public void OrderEventsEvictedFromTheTruncatedWindowAreMissed()
+        {
+            var seenOrderEvents = new List<OrderEvent>();
+            var fake = new FakeAnalysisA(10) { OnParameters = parameters => seenOrderEvents.AddRange(parameters.Result.OrderEvents) };
+            var analyzer = new TestInRunResultsAnalyzer(fake);
+
+            // 3 new events, but only the newest 2 fit the window
+            analyzer.Run(3, null, orderEventsWindowSize: 2);
+            // 4 more events: the watermark is not in the window, so the whole window is new
+            // and the evicted events in between are missed
+            analyzer.Run(4, null, orderEventsWindowSize: 2);
+
+            var stream = analyzer.OrderEventStream;
+            CollectionAssert.AreEqual(new[] { stream[1], stream[2], stream[5], stream[6] }, seenOrderEvents);
         }
 
         [Test]
         public void StreamPositionsAdvanceEvenWhenTheTimeLimitTruncatesTheRun()
         {
+            var seenOrderEventCounts = new List<int>();
             var truncatedRan = false;
             // The slow analysis has the higher weight so it runs first and exhausts the time limit
-            var slow = new FakeAnalysisA(20) { OnRun = () => Thread.Sleep(1100) };
+            var slow = new FakeAnalysisA(20)
+            {
+                OnParameters = parameters => seenOrderEventCounts.Add(parameters.Result.OrderEvents.Count),
+                OnRun = () => Thread.Sleep(1100)
+            };
             var truncated = new FakeAnalysisB(10) { OnRun = () => truncatedRan = true };
             var analyzer = new TestInRunResultsAnalyzer(slow, truncated);
 
@@ -68,7 +95,7 @@ namespace QuantConnect.Tests.Engine.Results
             // The next run still resumes after the consumed order events and logs
             slow.OnRun = null;
             analyzer.Run(0, null);
-            CollectionAssert.AreEqual(new[] { 0, 4 }, analyzer.Provider.RequestedOrderEventsPositions);
+            CollectionAssert.AreEqual(new[] { 4, 0 }, seenOrderEventCounts);
             CollectionAssert.AreEqual(new[] { 0, 1 }, analyzer.Provider.RequestedLogsPositions);
         }
 
@@ -226,20 +253,19 @@ namespace QuantConnect.Tests.Engine.Results
         }
 
         [Test]
-        public void SnapshotIsBuiltFromTheDataProvider()
+        public void SnapshotIsBuiltFromTheIntermediateResult()
         {
             ResultsAnalysisRunParameters seenParameters = null;
             var fake = new FakeAnalysisA(10) { OnParameters = parameters => seenParameters = parameters };
             var analyzer = new TestInRunResultsAnalyzer(fake);
-            analyzer.Provider.Orders[1] = new MarketOrder();
-            analyzer.Provider.Charts["a chart"] = new Chart("a chart");
+            var charts = new Dictionary<string, Chart> { ["a chart"] = new Chart("a chart") };
+            var orders = new Dictionary<int, Order> { [1] = new MarketOrder() };
 
-            analyzer.Run(2, new[] { "log" });
+            analyzer.Run(2, new[] { "log" }, orders: orders, charts: charts);
 
-            // Only the charts the in-run analyses read are requested from the provider
-            CollectionAssert.AreEqual(ResultsAnalyzer.RequiredCharts, analyzer.Provider.RequestedChartNames);
-            Assert.IsTrue(seenParameters.Result.Charts.ContainsKey("a chart"));
-            Assert.AreEqual(1, seenParameters.Result.Orders.Count);
+            // The charts, orders and order events come from the intermediate result
+            Assert.AreSame(charts, seenParameters.Result.Charts);
+            Assert.AreSame(orders, seenParameters.Result.Orders);
             Assert.AreEqual(2, seenParameters.Result.OrderEvents.Count);
             CollectionAssert.AreEqual(new[] { "log" }, seenParameters.Logs);
         }
@@ -252,13 +278,20 @@ namespace QuantConnect.Tests.Engine.Results
             var analyzer = new TestInRunResultsAnalyzer(fake);
             var performance = new AlgorithmPerformance();
 
-            // Equity has no samples yet: the all-zero default statistics are withheld
-            analyzer.Provider.EquityHasSamples = false;
-            analyzer.Run(performance);
+            // The equity chart has no samples yet: the all-zero default statistics are withheld
+            analyzer.Run(new BacktestResult(), totalPerformance: performance);
             Assert.IsNull(seenResult.TotalPerformance);
 
-            analyzer.Provider.EquityHasSamples = true;
-            analyzer.Run(performance);
+            var equitySeries = new Series(BaseResultsHandler.EquityKey);
+            equitySeries.AddPoint(new DateTime(2024, 01, 02), 100000m);
+            var equityChart = new Chart(BaseResultsHandler.StrategyEquityKey);
+            equityChart.AddSeries(equitySeries);
+            var result = new BacktestResult
+            {
+                Charts = new Dictionary<string, Chart> { [equityChart.Name] = equityChart }
+            };
+
+            analyzer.Run(result, totalPerformance: performance);
             Assert.AreSame(performance, seenResult.TotalPerformance);
         }
 
@@ -291,16 +324,6 @@ namespace QuantConnect.Tests.Engine.Results
             CollectionAssert.AreEqual(
                 new[] { nameof(FakeAnalysisC), $"{nameof(FakeAnalysisB)} / Sub" },
                 findings.Select(finding => finding.Name));
-        }
-
-        [Test]
-        public void RequiredChartsAreTheChartsReadByTheInRunAnalyses()
-        {
-            // The data provider only clones these charts into the analyzed snapshot,
-            // so this must stay in sync with the charts the in-run analyses read
-            CollectionAssert.AreEquivalent(
-                new[] { BaseResultsHandler.PortfolioMarginKey },
-                ResultsAnalyzer.RequiredCharts);
         }
 
         [Test]
@@ -340,6 +363,12 @@ namespace QuantConnect.Tests.Engine.Results
 
             public FakeDataProvider Provider { get; }
 
+            /// <summary>
+            /// The full, chronological order event stream of the simulated backtest, from which the
+            /// intermediate results' truncated windows are built.
+            /// </summary>
+            public List<OrderEvent> OrderEventStream { get; } = new();
+
             public int GetAnalysesCallCount { get; private set; }
 
             public TestInRunResultsAnalyzer(params BaseResultsAnalysis[] analyses)
@@ -355,16 +384,29 @@ namespace QuantConnect.Tests.Engine.Results
             }
 
             /// <summary>
-            /// Appends the new order events and logs to the provider's streams and runs the analyzer,
-            /// mirroring the incremental stream growth the analyzer sees in a running backtest.
+            /// Appends the new order events and logs to the backtest's streams and runs the analyzer
+            /// against an intermediate result carrying the truncated, newest-first order events
+            /// window the backtesting result handler builds.
             /// </summary>
             public IReadOnlyList<QuantConnect.Analysis> Run(int newOrderEventsCount, string[] newLogs,
-                AlgorithmSpeedSample? speedSample = null, int timeLimitSeconds = 1, int maxFailedAnalyses = 10)
+                AlgorithmSpeedSample? speedSample = null, int timeLimitSeconds = 1, int maxFailedAnalyses = 10,
+                int orderEventsWindowSize = 100, Dictionary<int, Order> orders = null, Dictionary<string, Chart> charts = null)
             {
-                Provider.OrderEvents.AddRange(Enumerable.Range(0, newOrderEventsCount).Select(_ => new OrderEvent()));
+                for (var i = 0; i < newOrderEventsCount; i++)
+                {
+                    // One event per order, so the (order id, per-order event id) pairs stay unique
+                    OrderEventStream.Add(new OrderEvent { OrderId = OrderEventStream.Count + 1, Id = 1 });
+                }
                 Provider.Logs.AddRange(newLogs ?? Array.Empty<string>());
                 Provider.NextSpeedSample = speedSample;
-                return Run(totalPerformance: null, timeLimitSeconds, maxFailedAnalyses);
+
+                var result = new BacktestResult
+                {
+                    Charts = charts ?? new Dictionary<string, Chart>(),
+                    Orders = orders ?? new Dictionary<int, Order>(),
+                    OrderEvents = Enumerable.Reverse(OrderEventStream).Take(orderEventsWindowSize).ToList()
+                };
+                return Run(result, totalPerformance: null, timeLimitSeconds, maxFailedAnalyses);
             }
 
             protected override IReadOnlyCollection<BaseResultsAnalysis> GetAnalyses()
@@ -386,45 +428,17 @@ namespace QuantConnect.Tests.Engine.Results
 
         private sealed class FakeDataProvider : IInRunAnalysisDataProvider
         {
-            public Dictionary<int, Order> Orders { get; } = new();
-
-            public List<OrderEvent> OrderEvents { get; } = new();
-
             public List<string> Logs { get; } = new();
-
-            public Dictionary<string, Chart> Charts { get; } = new();
-
-            public bool EquityHasSamples { get; set; } = true;
 
             public AlgorithmSpeedSample? NextSpeedSample { get; set; }
 
-            public List<int> RequestedOrderEventsPositions { get; } = new();
-
             public List<int> RequestedLogsPositions { get; } = new();
-
-            public IReadOnlyList<string> RequestedChartNames { get; private set; }
-
-            public IDictionary<int, Order> GetOrders() => Orders;
-
-            public List<OrderEvent> GetOrderEvents(int fromPosition)
-            {
-                RequestedOrderEventsPositions.Add(fromPosition);
-                return OrderEvents.Skip(fromPosition).ToList();
-            }
 
             public IReadOnlyList<string> GetLogs(int fromPosition)
             {
                 RequestedLogsPositions.Add(fromPosition);
                 return Logs.Skip(fromPosition).ToList();
             }
-
-            public IDictionary<string, Chart> GetChartSnapshots(IReadOnlyList<string> chartNames)
-            {
-                RequestedChartNames = chartNames;
-                return Charts;
-            }
-
-            public bool HasEquitySamples() => EquityHasSamples;
 
             public AlgorithmSpeedSample? TakeSpeedSample() => NextSpeedSample;
         }

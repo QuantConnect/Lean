@@ -16,6 +16,7 @@
 using QuantConnect.Algorithm;
 using QuantConnect.Lean.Engine.Results.Analysis.Analyses;
 using QuantConnect.Logging;
+using QuantConnect.Orders;
 using QuantConnect.Packets;
 using QuantConnect.Securities;
 using QuantConnect.Statistics;
@@ -32,8 +33,8 @@ namespace QuantConnect.Lean.Engine.Results.Analysis
     /// a <b>final analysis</b> instance is created with the completed result and logs, and runs the
     /// full analysis set once; an <b>in-run analysis</b> instance is created with an
     /// <see cref="IInRunAnalysisDataProvider"/>, is kept alive for the duration of the backtest,
-    /// and periodically runs the in-run capable analyses incrementally against snapshots of the
-    /// intermediate results pulled from the provider.
+    /// and periodically runs the in-run capable analyses incrementally against the intermediate
+    /// results, complemented with data pulled from the provider.
     /// </summary>
     public class ResultsAnalyzer
     {
@@ -60,10 +61,14 @@ namespace QuantConnect.Lean.Engine.Results.Analysis
         private Dictionary<string, int> _analysisWeights;
 
         /// <summary>
-        /// The number of order events already consumed by previous in-run runs, from which the
-        /// next run resumes reading the order event stream.
+        /// The identity of the newest order event analyzed by previous in-run runs: the order id
+        /// and the per-order event id. The intermediate results carry a truncated, newest-first
+        /// window of the order events, so each run consumes the window until it finds this
+        /// watermark. When the watermark is not in the window the whole window is new, and any
+        /// events already evicted from it are missed until the final analysis re-scans the
+        /// complete stream.
         /// </summary>
-        private int _orderEventsPosition;
+        private (int OrderId, int Id)? _lastAnalyzedOrderEvent;
 
         /// <summary>
         /// The number of log entries already consumed by previous in-run runs, from which the
@@ -107,12 +112,6 @@ namespace QuantConnect.Lean.Engine.Results.Analysis
         /// not tracked.
         /// </summary>
         protected AlgorithmSpeedTracker SpeedTracker { get; }
-
-        /// <summary>
-        /// The names of the charts the in-run analyses read. Only these are requested
-        /// from the data provider on each in-run run.
-        /// </summary>
-        public static IReadOnlyList<string> RequiredCharts { get; } = [BaseResultsHandler.PortfolioMarginKey];
 
         /// <summary>
         /// Initializes a new instance of the <see cref="ResultsAnalyzer"/> class for the final
@@ -235,13 +234,18 @@ namespace QuantConnect.Lean.Engine.Results.Analysis
         }
 
         /// <summary>
-        /// Runs the in-run analyses against the current backtest state pulled from the data provider:
-        /// a snapshot of the orders and required charts, plus only the order events and log lines
-        /// produced since the previous run. The returned findings are the merge of this run's
-        /// findings into the ones accumulated by previous runs: findings from analyses scanning
-        /// the order event and log streams are accumulated (first sample kept, counts totaled),
-        /// while findings from state-based analyses are replaced on every run.
+        /// Runs the in-run analyses against the given intermediate backtest result, complemented
+        /// with the log lines produced since the previous run, pulled from the provider. The
+        /// returned findings are the merge of this run's findings into the ones accumulated by
+        /// previous runs: findings from analyses scanning the order event and log streams are
+        /// accumulated (first sample kept, counts totaled), while findings from state-based
+        /// analyses are replaced on every run.
         /// </summary>
+        /// <param name="result">The current intermediate backtest result. Its orders and order events
+        /// are windows truncated to the most recent ones, so the in-run analyses can miss orders and
+        /// events already evicted from them; the final analysis re-scans the complete data. Its charts
+        /// are the handler's live ones, read without synchronization: a torn read while the algorithm
+        /// thread updates them can fail a run, which the handler catches, and the next run retries.</param>
         /// <param name="totalPerformance">The current total algorithm performance, for analyses that read
         /// portfolio statistics. Withheld from the analyses until the first equity sample exists, since
         /// the statistics are all-zero defaults before that.</param>
@@ -250,36 +254,75 @@ namespace QuantConnect.Lean.Engine.Results.Analysis
         /// processing while it runs.</param>
         /// <param name="maxFailedAnalyses">Maximum number of failing analyses to return.</param>
         /// <returns>The accumulated findings, ranked by analysis weight.</returns>
-        public IReadOnlyList<QuantConnect.Analysis> Run(AlgorithmPerformance totalPerformance, int timeLimitSeconds = 1,
-            int maxFailedAnalyses = 10)
+        public IReadOnlyList<QuantConnect.Analysis> Run(BacktestResult result, AlgorithmPerformance totalPerformance,
+            int timeLimitSeconds = 1, int maxFailedAnalyses = 10)
         {
             ThrowIfNotInRunInstance();
-
-            // The analyses read the charts without synchronizing with the result handler, so they get clones
-            var charts = _dataProvider.GetChartSnapshots(RequiredCharts);
 
             // Equity is not sampled while the algorithm warms up, so until the first sample exists
             // the generated statistics are all-zero defaults that would flag a false non-positive
             // portfolio value finding. Withhold them so the analyses reading them skip instead
-            if (_algorithm?.IsWarmingUp == true || !_dataProvider.HasEquitySamples())
+            if (_algorithm?.IsWarmingUp == true || !HasEquitySamples(result))
             {
                 totalPerformance = null;
             }
 
             var snapshot = new BacktestResult(new BacktestResultParameters(
-                charts,
-                _dataProvider.GetOrders(),
-                _algorithm?.Transactions.TransactionRecord ?? new Dictionary<DateTime, decimal>(),
+                result?.Charts ?? new Dictionary<string, Chart>(),
+                result?.Orders ?? new Dictionary<int, Order>(),
+                result?.ProfitLoss ?? new Dictionary<DateTime, decimal>(),
                 new Dictionary<string, string>(),
                 new Dictionary<string, string>(),
                 new Dictionary<string, AlgorithmPerformance>(),
-                _dataProvider.GetOrderEvents(_orderEventsPosition),
+                ExtractNewOrderEvents(result?.OrderEvents),
                 totalPerformance));
             var logs = _dataProvider.GetLogs(_logsPosition);
 
             // The analyses run during warm-up too (the speed sample is null then), so conditions like
             // orders submitted while the algorithm warms up surface without waiting for warm-up to end
             return Run(snapshot, logs, _dataProvider.TakeSpeedSample(), timeLimitSeconds, maxFailedAnalyses);
+        }
+
+        /// <summary>
+        /// Whether the strategy equity chart in the given result has samples yet. Until the first
+        /// sample exists, the generated statistics are all-zero defaults.
+        /// </summary>
+        private static bool HasEquitySamples(Result result)
+        {
+            return result?.Charts != null &&
+                result.Charts.TryGetValue(BaseResultsHandler.StrategyEquityKey, out var equityChart) &&
+                equityChart.Series.TryGetValue(BaseResultsHandler.EquityKey, out var equitySeries) &&
+                equitySeries.Values.Count > 0;
+        }
+
+        /// <summary>
+        /// Extracts the order events not yet analyzed from the newest-first, truncated order events
+        /// window the intermediate results carry, returned in chronological order, and advances the
+        /// watermark to the newest one. The watermark advances even if the time limit later
+        /// truncates the run, so analyses that didn't get to run miss this delta until the final
+        /// analysis re-scans the complete stream — same trade-off as the log position advancement.
+        /// </summary>
+        private List<OrderEvent> ExtractNewOrderEvents(IReadOnlyList<OrderEvent> orderEvents)
+        {
+            var newOrderEvents = new List<OrderEvent>();
+            for (var i = 0; i < (orderEvents?.Count ?? 0); i++)
+            {
+                var orderEvent = orderEvents[i];
+                if (orderEvent.OrderId == _lastAnalyzedOrderEvent?.OrderId && orderEvent.Id == _lastAnalyzedOrderEvent?.Id)
+                {
+                    break;
+                }
+                newOrderEvents.Add(orderEvent);
+            }
+
+            if (newOrderEvents.Count > 0)
+            {
+                newOrderEvents.Reverse();
+                var newest = newOrderEvents[^1];
+                _lastAnalyzedOrderEvent = (newest.OrderId, newest.Id);
+            }
+
+            return newOrderEvents;
         }
 
         /// <summary>
@@ -375,11 +418,11 @@ namespace QuantConnect.Lean.Engine.Results.Analysis
             }
             var newFindings = Run(timeLimitSeconds, maxFailedAnalyses);
 
-            // The positions are advanced even when the time limit truncates a run, so the analyses that
-            // didn't get to run miss this delta until the final analysis re-scans the complete streams.
-            // Stress tests show runs complete in a fraction of the time limit, but if its trace message
-            // starts showing up in logs, revisit this (e.g. track per-analysis positions).
-            _orderEventsPosition += result.OrderEvents?.Count ?? 0;
+            // The log position is advanced (like the order event watermark was on extraction) even
+            // when the time limit truncates a run, so the analyses that didn't get to run miss this
+            // delta until the final analysis re-scans the complete streams. Stress tests show runs
+            // complete in a fraction of the time limit, but if its trace message starts showing up
+            // in logs, revisit this (e.g. track per-analysis positions).
             _logsPosition += logs?.Count ?? 0;
 
             // State-based analyses are recomputed from scratch each run: remove their previous

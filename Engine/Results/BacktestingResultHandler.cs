@@ -238,7 +238,7 @@ namespace QuantConnect.Lean.Engine.Results
 
                     if (RunResultsAnalysis)
                     {
-                        completeResult.Analysis = RunInRunResultsAnalysis(statisticsResult.TotalPerformance);
+                        completeResult.Analysis = RunInRunResultsAnalysis(completeResult, statisticsResult.TotalPerformance);
                         SendInRunAnalysis(completeResult.Analysis, progress);
                     }
 
@@ -457,14 +457,18 @@ namespace QuantConnect.Lean.Engine.Results
         }
 
         /// <summary>
-        /// Runs the in-run results analyzer against the current intermediate backtest state,
-        /// accessed through the <see cref="IInRunAnalysisDataProvider"/> implementation.
-        /// Invoked periodically while the backtest is still running, unlike the full analysis
-        /// performed by <see cref="SendFinalResult"/> when the backtest ends.
+        /// Runs the in-run results analyzer against the current intermediate backtest result,
+        /// complemented with data accessed through the <see cref="IInRunAnalysisDataProvider"/>
+        /// implementation. Invoked periodically while the backtest is still running, unlike the
+        /// full analysis performed by <see cref="SendFinalResult"/> when the backtest ends.
         /// </summary>
+        /// <param name="completeResult">The current intermediate backtest result. Its orders and order
+        /// events are truncated to the most recent ones, so the in-run analyses can miss data between
+        /// runs; the final analysis re-scans the complete streams.</param>
         /// <param name="totalPerformance">The current total algorithm performance, for analyses that read portfolio statistics</param>
         /// <returns>The failed analyses with solutions, or null if the analysis could not run</returns>
-        protected virtual IReadOnlyList<QuantConnect.Analysis> RunInRunResultsAnalysis(AlgorithmPerformance totalPerformance)
+        protected virtual IReadOnlyList<QuantConnect.Analysis> RunInRunResultsAnalysis(BacktestResult completeResult,
+            AlgorithmPerformance totalPerformance)
         {
             try
             {
@@ -474,7 +478,7 @@ namespace QuantConnect.Lean.Engine.Results
                 }
 
                 _inRunResultsAnalyzer ??= ResultsAnalyzer.CreateForInRunAnalysis(AlgorithmInstance, _job.Language, this);
-                return _inRunResultsAnalyzer.Run(totalPerformance);
+                return _inRunResultsAnalyzer.Run(completeResult, totalPerformance);
             }
             catch (Exception ex)
             {
@@ -486,17 +490,6 @@ namespace QuantConnect.Lean.Engine.Results
         #region IInRunAnalysisDataProvider implementation
 
         /// <summary>
-        /// Gets the orders placed so far.
-        /// </summary>
-        IDictionary<int, Order> IInRunAnalysisDataProvider.GetOrders() => TransactionHandler.Orders.ToDictionary();
-
-        /// <summary>
-        /// Gets the order events produced from the given position in the order event stream.
-        /// </summary>
-        List<OrderEvent> IInRunAnalysisDataProvider.GetOrderEvents(int fromPosition)
-            => TransactionHandler.OrderEvents.Skip(fromPosition).ToList();
-
-        /// <summary>
         /// Gets the log lines produced from the given position in the log stream.
         /// </summary>
         IReadOnlyList<string> IInRunAnalysisDataProvider.GetLogs(int fromPosition)
@@ -504,38 +497,6 @@ namespace QuantConnect.Lean.Engine.Results
             lock (LogStore)
             {
                 return LogStore.Skip(fromPosition).Select(x => x.Message).ToList();
-            }
-        }
-
-        /// <summary>
-        /// Gets clones of the requested charts, safe for the analyses to read without holding the chart lock.
-        /// </summary>
-        IDictionary<string, Chart> IInRunAnalysisDataProvider.GetChartSnapshots(IReadOnlyList<string> chartNames)
-        {
-            var charts = new Dictionary<string, Chart>();
-            lock (ChartLock)
-            {
-                foreach (var chartName in chartNames)
-                {
-                    if (Charts.TryGetValue(chartName, out var chart))
-                    {
-                        charts[chartName] = chart.Clone();
-                    }
-                }
-            }
-            return charts;
-        }
-
-        /// <summary>
-        /// Whether the strategy equity chart has samples yet.
-        /// </summary>
-        bool IInRunAnalysisDataProvider.HasEquitySamples()
-        {
-            lock (ChartLock)
-            {
-                return Charts.TryGetValue(StrategyEquityKey, out var equityChart) &&
-                    equityChart.Series.TryGetValue(EquityKey, out var equitySeries) &&
-                    equitySeries.Values.Count > 0;
             }
         }
 

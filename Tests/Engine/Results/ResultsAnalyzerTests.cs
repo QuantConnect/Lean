@@ -206,7 +206,7 @@ namespace QuantConnect.Tests.Engine.Results
             // This is a final-analysis instance: the in-run entry points need the data provider
             var analyzer = new TestResultsAnalyzer(false, new FakeAnalysisA(10));
 
-            Assert.Throws<InvalidOperationException>(() => analyzer.Run(totalPerformance: null));
+            Assert.Throws<InvalidOperationException>(() => analyzer.Run(result: null, totalPerformance: null));
             Assert.Throws<InvalidOperationException>(() => analyzer.CompleteSpeedTracking());
         }
 

@@ -13,44 +13,22 @@
  * limitations under the License.
  *
 */
-using QuantConnect.Orders;
 using System.Collections.Generic;
 
 namespace QuantConnect.Lean.Engine.Results.Analysis
 {
     /// <summary>
     /// Provides an in-run <see cref="ResultsAnalyzer"/> instance access to the data of the running
-    /// backtest. Implemented by the result handler, which owns the data and its synchronization,
-    /// while the analyzer decides what to read and how much, keeping its incremental consumption
-    /// state private.
+    /// backtest that the intermediate results handed to it don't carry. Implemented by the result
+    /// handler, which owns the data and its synchronization, while the analyzer decides what to
+    /// read and how much, keeping its incremental consumption state private.
     /// </summary>
     public interface IInRunAnalysisDataProvider
     {
         /// <summary>
-        /// Gets the orders placed so far.
-        /// </summary>
-        IDictionary<int, Order> GetOrders();
-
-        /// <summary>
-        /// Gets the order events produced from the given position in the order event stream.
-        /// </summary>
-        List<OrderEvent> GetOrderEvents(int fromPosition);
-
-        /// <summary>
         /// Gets the log lines produced from the given position in the log stream.
         /// </summary>
         IReadOnlyList<string> GetLogs(int fromPosition);
-
-        /// <summary>
-        /// Gets clones of the requested charts, safe to read without further synchronization.
-        /// </summary>
-        IDictionary<string, Chart> GetChartSnapshots(IReadOnlyList<string> chartNames);
-
-        /// <summary>
-        /// Whether the strategy equity chart has samples yet. Until the first sample exists,
-        /// the generated statistics are all-zero defaults.
-        /// </summary>
-        bool HasEquitySamples();
 
         /// <summary>
         /// Takes a sample of the engine speed counters, or null when the counters should
