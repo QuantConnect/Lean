@@ -26,6 +26,9 @@ namespace QuantConnect.Tests.Engine.Results
     [TestFixture]
     public class AlgorithmSpeedAnalysisTests
     {
+        private const string SlowCompletionLogLine =
+            "Algorithm Id:(BasicTemplateAlgorithm) completed in 120.50 seconds at 10k data points per second. Processing total of 1,205,000 data points.";
+
         [Test]
         public void NoFindingsWithoutSpeedMetrics()
         {
@@ -121,6 +124,66 @@ namespace QuantConnect.Tests.Engine.Results
 
             var findings = new AlgorithmSpeedAnalysis().Run(tracker);
             Assert.IsTrue(findings.Any(finding => finding.Name.EndsWith(AlgorithmSpeedAnalysis.SlowExecutionName, StringComparison.Ordinal)));
+        }
+
+        [Test]
+        public void CompletionLogLineIsTheSlowExecutionFallbackWhenSpeedIsNotTracked()
+        {
+            var logs = new[] { "Some log line", SlowCompletionLogLine, "Another log line" };
+
+            var findings = new AlgorithmSpeedAnalysis().Run(null, logs);
+
+            var finding = findings.Single();
+            Assert.AreEqual($"{nameof(AlgorithmSpeedAnalysis)} / {AlgorithmSpeedAnalysis.SlowExecutionName}", finding.Name);
+            StringAssert.Contains("10k data points per second", (string)finding.Sample);
+            StringAssert.Contains("whole", (string)finding.Sample);
+            Assert.IsNotEmpty(finding.Solutions);
+        }
+
+        [TestCase("Algorithm Id:(BasicTemplateAlgorithm) completed in 120.50 seconds at 85k data points per second. Processing total of 10,242,500 data points.",
+            TestName = "CompletionLogFallbackDoesNotFlagFastRuns")]
+        [TestCase("Algorithm Id:(BasicTemplateAlgorithm) completed in 5.20 seconds at 5k data points per second. Processing total of 26,000 data points.",
+            TestName = "CompletionLogFallbackDoesNotFlagVeryShortRuns")]
+        [TestCase("A log line without a completion line, like the deltas the in-run analysis cycles see",
+            TestName = "CompletionLogFallbackNeedsACompletionLine")]
+        public void CompletionLogFallbackOnlyFlagsSlowCompletedRuns(string logLine)
+        {
+            Assert.IsEmpty(new AlgorithmSpeedAnalysis().Run(null, new[] { logLine }));
+        }
+
+        [Test]
+        public void TrackedMetricsSupersedeTheCompletionLogFallback()
+        {
+            // Fast per the tracked metrics: the slow whole-run average in the log is not reported
+            var fastTracker = AlgorithmSpeedTrackerTests.BuildUniformTracker(samples: 7, stepSeconds: 30,
+                dataPointsPerStep: 3_000_000, historyDataPointsPerStep: 0, daysPerStep: 1, totalDays: 10);
+
+            Assert.IsEmpty(new AlgorithmSpeedAnalysis().Run(fastTracker, new[] { SlowCompletionLogLine }));
+
+            // Slow per the tracked metrics: a single metric-based finding, not the log-based one
+            var slowTracker = AlgorithmSpeedTrackerTests.BuildUniformTracker(samples: 7, stepSeconds: 30,
+                dataPointsPerStep: 300_000, historyDataPointsPerStep: 0, daysPerStep: 1, totalDays: 10);
+
+            var findings = new AlgorithmSpeedAnalysis().Run(slowTracker, new[] { SlowCompletionLogLine });
+
+            var finding = findings.Single();
+            Assert.AreEqual($"{nameof(AlgorithmSpeedAnalysis)} / {AlgorithmSpeedAnalysis.SlowExecutionName}", finding.Name);
+            StringAssert.Contains("recently", (string)finding.Sample);
+        }
+
+        [Test]
+        public void CompletionLogFallbackFiresWhenTheDataPointCountersAreNotWiredIn()
+        {
+            // The tracker samples calendar progress but the data point counters are always zero:
+            // the metrics cannot measure the speed, so the completion line's average is used
+            var tracker = AlgorithmSpeedTrackerTests.BuildUniformTracker(samples: 7, stepSeconds: 30,
+                dataPointsPerStep: 0, historyDataPointsPerStep: 0, daysPerStep: 1, totalDays: 10);
+
+            var findings = new AlgorithmSpeedAnalysis().Run(tracker, new[] { SlowCompletionLogLine });
+
+            var finding = findings.Single();
+            Assert.AreEqual($"{nameof(AlgorithmSpeedAnalysis)} / {AlgorithmSpeedAnalysis.SlowExecutionName}", finding.Name);
+            StringAssert.Contains("whole", (string)finding.Sample);
         }
 
         [Test]

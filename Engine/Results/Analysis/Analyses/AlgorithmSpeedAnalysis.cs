@@ -15,6 +15,8 @@
 */
 using System;
 using System.Collections.Generic;
+using System.Globalization;
+using System.Text.RegularExpressions;
 using static QuantConnect.StringExtensions;
 
 namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
@@ -25,10 +27,33 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
     /// remaining runtime, degrading throughput, and history-request-dominated data loads.
     /// It runs periodically while the backtest is in progress, so the user can decide to stop a
     /// slow backtest early, and again on the final analysis against the whole run's metrics.
+    /// When the tracked metrics cannot measure the processing speed, the engine's completion log
+    /// line is parsed for the whole-run average rate as a fallback; the line only exists once the
+    /// backtest ends, so the fallback can only fire on the final analysis.
     /// Benchmark speeds: https://www.quantconnect.com/performance
     /// </summary>
     public class AlgorithmSpeedAnalysis : BaseResultsAnalysis
     {
+        /// <summary>
+        /// Matches the engine's completion log line, capturing the execution time and the data
+        /// points per second (in thousands). Example match: "Algorithm Id:(Foo) completed in
+        /// 25.68 seconds at 85k data points per second." gives seconds=25.68, rate=85.
+        /// </summary>
+        private static readonly Regex CompletionLogLineRegex = new(
+            @"Algorithm Id:\([^)]+\) completed in ([\d.]+) seconds at (\d+)k data points per second\. Processing total of [\d,]+ data points\.",
+            RegexOptions.Compiled);
+
+        /// <summary>
+        /// The data points per second under which execution is reported as slow, from the platform benchmarks.
+        /// </summary>
+        public const int SlowDataPointsPerSecond = 40_000;
+
+        /// <summary>
+        /// The minimum runtime a completed backtest must have for its whole-run average rate,
+        /// parsed from the completion log line, to be worth reporting as slow.
+        /// </summary>
+        public const int MinimumCompletedRuntimeSeconds = 10;
+
         /// <summary>
         /// The recent-to-initial throughput ratio under which throughput is reported as degrading.
         /// </summary>
@@ -97,49 +122,63 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
         public override int Weight { get; } = 96;
 
         /// <summary>
-        /// Runs the algorithm speed analysis against the speed metrics tracked for the running backtest.
+        /// Runs the algorithm speed analysis against the speed metrics tracked for the backtest,
+        /// falling back to the completion log line when they cannot measure the speed.
         /// </summary>
-        public override IReadOnlyList<QuantConnect.Analysis> Run(ResultsAnalysisRunParameters parameters) => Run(parameters.Speed);
+        public override IReadOnlyList<QuantConnect.Analysis> Run(ResultsAnalysisRunParameters parameters) => Run(parameters.Speed, parameters.Logs);
 
         /// <summary>
         /// Runs the algorithm speed analysis against the given speed metrics.
         /// Each detected condition is reported as its own sub-finding. Every condition must hold for
         /// both the current recent window and the window as of the previous run, so a single noisy
         /// sample doesn't flag or clear a finding.
+        /// When the metrics cannot measure the processing speed — the tracker isn't wired in, the
+        /// backtest finished before it got enough samples, or the data point counters aren't fed —
+        /// the completion log line's whole-run average is used to detect slow execution instead.
         /// </summary>
         /// <param name="speed">The speed metrics tracked for the running backtest, or null when not tracked.</param>
-        /// <returns>The failed sub-findings, or empty when speed is not tracked or still within the warm-up span.</returns>
-        public IReadOnlyList<QuantConnect.Analysis> Run(AlgorithmSpeedTracker speed)
+        /// <param name="logs">The log lines to search for the completion line, or null when not available.</param>
+        /// <returns>The failed sub-findings, or empty when no speed condition failed or none could be measured.</returns>
+        public IReadOnlyList<QuantConnect.Analysis> Run(AlgorithmSpeedTracker speed, IReadOnlyList<string> logs = null)
         {
-            if (speed == null || speed.SampledSpan < MinimumSampledSpan)
+            var findings = new List<QuantConnect.Analysis>();
+            var speedMeasured = false;
+            if (speed != null && speed.SampledSpan >= MinimumSampledSpan)
             {
-                return [];
+                speedMeasured = AddSlowExecution(speed, findings);
+                AddLongProjectedRuntime(speed, findings);
+                AddThroughputDegradation(speed, findings);
+                AddHistoryRequestLoad(speed, findings);
             }
 
-            var findings = new List<QuantConnect.Analysis>();
-            AddSlowExecution(speed, findings);
-            AddLongProjectedRuntime(speed, findings);
-            AddThroughputDegradation(speed, findings);
-            AddHistoryRequestLoad(speed, findings);
+            if (!speedMeasured)
+            {
+                AddSlowExecutionFromCompletionLog(logs, findings);
+            }
+
             return CreateAggregatedResponse(findings);
         }
 
         /// <summary>
         /// Reports slow execution when the recent data points per second are below the platform benchmark.
         /// </summary>
-        private static void AddSlowExecution(AlgorithmSpeedTracker speed, List<QuantConnect.Analysis> findings)
+        /// <returns>Whether the speed could be measured, regardless of it being slow or not.</returns>
+        private static bool AddSlowExecution(AlgorithmSpeedTracker speed, List<QuantConnect.Analysis> findings)
         {
             if (!speed.HasDataPointCounts)
             {
-                return;
+                return false;
             }
 
             var recent = speed.RecentDataPointsPerSecond();
             var previous = speed.RecentDataPointsPerSecond(skipLast: 1);
-            if (recent is null or >= ExecutionSpeedAnalysis.SlowDataPointsPerSecond ||
-                previous is null or >= ExecutionSpeedAnalysis.SlowDataPointsPerSecond)
+            if (recent == null || previous == null)
             {
-                return;
+                return false;
+            }
+            if (recent >= SlowDataPointsPerSecond || previous >= SlowDataPointsPerSecond)
+            {
+                return true;
             }
 
             var average = speed.DataPointsPerSecond ?? 0;
@@ -163,7 +202,7 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
             }
 
             findings.Add(new(SlowExecutionName,
-                Invariant($"The algorithm is running below {ExecutionSpeedAnalysis.SlowDataPointsPerSecond / 1000}k data points per second."),
+                Invariant($"The algorithm is running below {SlowDataPointsPerSecond / 1000}k data points per second."),
                 sample,
                 null,
                 [
@@ -177,6 +216,46 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
 
                     "If the projected runtime is not acceptable, stop the backtest, apply the changes above, and run it again.",
                 ]));
+            return true;
+        }
+
+        /// <summary>
+        /// Fallback slow-execution detection for when the tracked metrics cannot measure the speed:
+        /// parses the engine's completion log line for the whole-run average rate. The line is only
+        /// logged once the backtest ends, so in-run log deltas never match and the fallback can
+        /// only fire on the final analysis.
+        /// </summary>
+        private static void AddSlowExecutionFromCompletionLog(IReadOnlyList<string> logs, List<QuantConnect.Analysis> findings)
+        {
+            for (var i = (logs?.Count ?? 0) - 1; i >= 0; i--)
+            {
+                var match = CompletionLogLineRegex.Match(logs[i]);
+                if (!match.Success)
+                {
+                    continue;
+                }
+
+                var timeInSeconds = double.Parse(match.Groups[1].Value, NumberFormatInfo.InvariantInfo);
+                var dataPointsPerSecond = int.Parse(match.Groups[2].Value, NumberFormatInfo.InvariantInfo);
+                if (timeInSeconds >= MinimumCompletedRuntimeSeconds && dataPointsPerSecond < SlowDataPointsPerSecond / 1000)
+                {
+                    findings.Add(new(SlowExecutionName,
+                        Invariant($"The algorithm is running below {SlowDataPointsPerSecond / 1000}k data points per second."),
+                        Invariant($"The algorithm executed at only {dataPointsPerSecond}k data points per second ") +
+                            Invariant($"over the whole {FormatDuration(TimeSpan.FromSeconds(timeInSeconds))} run."),
+                        null,
+                        [
+                            "Review the algorithm code for inefficiencies.",
+
+                            "If there is a universe, reduce its size.",
+
+                            "Reduce the data resolution.",
+
+                            "If the algorithm is training a model, reduce the amount of training data or reduce the number of epochs in the training process.",
+                        ]));
+                }
+                return;
+            }
         }
 
         /// <summary>

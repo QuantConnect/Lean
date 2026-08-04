@@ -314,7 +314,7 @@ namespace QuantConnect.Tests.Engine.Results
             // are included, final-only ones are not
             Assert.IsTrue(analyses.Any(analysis => analysis is AlgorithmSpeedAnalysis));
             Assert.IsTrue(analyses.Any(analysis => analysis is MarginCallsAnalysis));
-            Assert.IsFalse(analyses.Any(analysis => analysis is ExecutionSpeedAnalysis));
+            Assert.IsFalse(analyses.Any(analysis => analysis is MonteCarloPercentileAnalysis));
         }
 
         [Test]

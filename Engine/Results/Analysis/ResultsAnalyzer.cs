@@ -338,7 +338,6 @@ namespace QuantConnect.Lean.Engine.Results.Analysis
             new StatisticalSignificanceOfDailyReturnsAnalysis(),
             new PerformanceRelativeToBenchmarkAnalysis(),
             new CrisisEventsAnalysis(),
-            new ExecutionSpeedAnalysis(),
             new AlgorithmSpeedAnalysis(),
             new PortfolioMarginUsageAnalysis(),
             new ParameterCountAnalysis(),

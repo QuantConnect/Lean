@@ -179,7 +179,6 @@ namespace QuantConnect.Tests.Engine.Results
                 nameof(StatisticalSignificanceOfDailyReturnsAnalysis),
                 nameof(PerformanceRelativeToBenchmarkAnalysis),
                 nameof(CrisisEventsAnalysis),
-                nameof(ExecutionSpeedAnalysis),
                 nameof(ParameterCountAnalysis),
                 nameof(MonteCarloPercentileAnalysis),
             }, finalOnly);
