@@ -151,6 +151,56 @@ namespace QuantConnect.Tests.Engine.Results
         }
 
         [Test]
+        public void AccumulatedFindingsAreMutedOnceTheyReachTheMaxReportedOccurrences()
+        {
+            // The analyzer mutes accumulated findings once they reach 5 reported occurrences
+            var fake = new FakeAnalysisA(10)
+            {
+                Findings = () => MakeFindings(nameof(FakeAnalysisA), "sample", 3)
+            };
+            var analyzer = new TestInRunResultsAnalyzer(fake);
+
+            // Below the cap: reported
+            Assert.AreEqual(3, analyzer.Run(1, new[] { "log" }).Single().Count);
+            // The run that reaches the cap still reports the finding, with its full count
+            Assert.AreEqual(6, analyzer.Run(1, new[] { "log" }).Single().Count);
+            // Beyond the cap the finding keeps accumulating, but is no longer reported
+            Assert.IsEmpty(analyzer.Run(1, new[] { "log" }));
+            fake.Findings = () => new List<QuantConnect.Analysis>();
+            Assert.IsEmpty(analyzer.Run(1, new[] { "log" }));
+        }
+
+        [Test]
+        public void FindingsWhoseFirstOccurrencesAlreadyExceedTheCapAreReportedOnce()
+        {
+            // A single delta can carry more occurrences than the cap: the finding is still
+            // reported once before being muted, so it is never silently dropped
+            var fake = new FakeAnalysisA(10)
+            {
+                Findings = () => MakeFindings(nameof(FakeAnalysisA), "sample", 100)
+            };
+            var analyzer = new TestInRunResultsAnalyzer(fake);
+
+            Assert.AreEqual(100, analyzer.Run(1, new[] { "log" }).Single().Count);
+            Assert.IsEmpty(analyzer.Run(1, new[] { "log" }));
+        }
+
+        [Test]
+        public void StateBasedFindingsAreNotMutedByTheReportedOccurrencesCap()
+        {
+            // State-based counts are recomputed snapshots, not accumulated occurrences
+            var fake = new FakeAnalysisA(10)
+            {
+                StateBased = true,
+                Findings = () => MakeFindings(nameof(FakeAnalysisA), "sample", 100)
+            };
+            var analyzer = new TestInRunResultsAnalyzer(fake);
+
+            Assert.AreEqual(100, analyzer.Run(1, new[] { "log" }).Single().Count);
+            Assert.AreEqual(100, analyzer.Run(1, new[] { "log" }).Single().Count);
+        }
+
+        [Test]
         public void StateBasedFindingsAreReplacedOnEveryRun()
         {
             var fake = new FakeAnalysisA(10)

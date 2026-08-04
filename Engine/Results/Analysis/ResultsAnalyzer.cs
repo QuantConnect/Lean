@@ -40,8 +40,25 @@ namespace QuantConnect.Lean.Engine.Results.Analysis
     {
         private readonly QCAlgorithm _algorithm;
         private readonly Language _language;
+        /// <summary>
+        /// The accumulated occurrence count at which an in-run stream-based finding stops being
+        /// returned. A finding is returned while its occurrences are below this value, and one last
+        /// time on the run that reaches it; after that it keeps accumulating occurrences silently.
+        /// This bounds how often a recurring finding is re-reported, so consumers of the periodic
+        /// findings (like LLMs) see its first occurrences without the ever-growing count polluting
+        /// their context on every update. State-based findings are not affected: their counts are
+        /// recomputed snapshots, not accumulated occurrences.
+        /// </summary>
+        private const int MaxReportedFindingOccurrences = 5;
+
         private readonly IInRunAnalysisDataProvider _dataProvider;
         private readonly Dictionary<string, QuantConnect.Analysis> _findings = new();
+
+        /// <summary>
+        /// The names of the accumulated findings that reached <see cref="MaxReportedFindingOccurrences"/>
+        /// and are no longer included in the returned findings, while still accumulating occurrences.
+        /// </summary>
+        private readonly HashSet<string> _mutedFindings = new();
         private IReadOnlyList<string> _logs;
         private SortedList<DateTime, decimal> _equityCurve;
         private SortedList<DateTime, decimal> _benchmarkEquityCurve;
@@ -451,14 +468,29 @@ namespace QuantConnect.Lean.Engine.Results.Analysis
 
         /// <summary>
         /// Ranks the accumulated findings by their analysis weight, capped to the given maximum.
+        /// Muted findings are left out, and the returned stream-based findings that reached
+        /// <see cref="MaxReportedFindingOccurrences"/> are muted for the runs that follow.
         /// </summary>
         private IReadOnlyList<QuantConnect.Analysis> RankFindings(int maxFailedAnalyses)
         {
             _analysisWeights ??= Analyses.ToDictionary(analysis => analysis.GetType().Name, analysis => analysis.Weight);
-            return _findings.Values
+            var findings = _findings.Values
+                .Where(finding => !_mutedFindings.Contains(finding.Name))
                 .OrderByDescending(finding => _analysisWeights.GetValueOrDefault(BaseAnalysisName(finding.Name)))
                 .Take(maxFailedAnalyses)
                 .ToList();
+
+            // Only findings that were actually returned are muted, so a finding a truncated run
+            // never got to report is not silenced before it is seen at least once
+            foreach (var finding in findings)
+            {
+                if (!IsStateBased(finding.Name) && (finding.Count ?? 1) >= MaxReportedFindingOccurrences)
+                {
+                    _mutedFindings.Add(finding.Name);
+                }
+            }
+
+            return findings;
         }
 
         /// <summary>
