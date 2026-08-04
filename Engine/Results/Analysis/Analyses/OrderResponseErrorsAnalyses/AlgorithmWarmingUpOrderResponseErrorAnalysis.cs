@@ -26,11 +26,6 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
     public class AlgorithmWarmingUpOrderResponseErrorAnalysis : MessageAnalysis
     {
         /// <summary>
-        /// This analysis reads only the result snapshot, so it also runs while the backtest is in progress.
-        /// </summary>
-        public override bool RunsInRun { get; } = true;
-
-        /// <summary>
         /// Gets a description of the warm-up period ordering violation.
         /// </summary>
         public override string Issue { get; } = "One of the following cases occurred:\n" +

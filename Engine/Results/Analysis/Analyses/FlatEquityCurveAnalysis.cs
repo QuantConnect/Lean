@@ -25,6 +25,11 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
     public class FlatEquityCurveAnalysis : BaseResultsAnalysis
     {
         /// <summary>
+        /// This analysis scans the equity curve, which is only built for the final analysis.
+        /// </summary>
+        public override bool RunsInRun { get; } = false;
+
+        /// <summary>
         /// Gets the description of the flat equity curve issue.
         /// </summary>
         public override string Issue { get; } = "The equity curve is flat for several days in a row.";

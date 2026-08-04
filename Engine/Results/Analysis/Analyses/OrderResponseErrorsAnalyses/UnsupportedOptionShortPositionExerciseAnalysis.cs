@@ -24,11 +24,6 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
     public class UnsupportedOptionShortPositionExerciseAnalysis : MessageAnalysis
     {
         /// <summary>
-        /// This analysis reads only the result snapshot, so it also runs while the backtest is in progress.
-        /// </summary>
-        public override bool RunsInRun { get; } = true;
-
-        /// <summary>
         /// Gets a description of the short-position option exercise issue.
         /// </summary>
         public override string Issue { get; } = "The algorithm tried to exercise an Option contract for which it holds a short position.";

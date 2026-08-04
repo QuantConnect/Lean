@@ -24,11 +24,6 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
     public class ForexConversionRateZeroOrderResponseErrorAnalysis : MessageAnalysis
     {
         /// <summary>
-        /// This analysis reads only the result snapshot, so it also runs while the backtest is in progress.
-        /// </summary>
-        public override bool RunsInRun { get; } = true;
-
-        /// <summary>
         /// Gets a description of the zero Forex conversion rate issue.
         /// </summary>
         public override string Issue { get; } = "The algorithm tried to place an order for a Forex or Crypto pair but LEAN could't convert the value of the base currency to your account currency.";

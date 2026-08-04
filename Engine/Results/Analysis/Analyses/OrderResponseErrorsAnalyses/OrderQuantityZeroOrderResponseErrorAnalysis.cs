@@ -25,11 +25,6 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
     public class OrderQuantityZeroOrderResponseErrorAnalysis : MessageAnalysis
     {
         /// <summary>
-        /// This analysis reads only the result snapshot, so it also runs while the backtest is in progress.
-        /// </summary>
-        public override bool RunsInRun { get; } = true;
-
-        /// <summary>
         /// Gets a description of the zero order quantity issue.
         /// </summary>
         public override string Issue { get; } = "The algorithm tried to place an order that has zero quantity or tried to update an order to have a zero quantity.";

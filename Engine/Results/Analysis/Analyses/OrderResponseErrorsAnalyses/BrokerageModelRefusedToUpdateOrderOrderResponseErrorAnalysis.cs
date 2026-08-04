@@ -29,11 +29,6 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
     public class BrokerageModelRefusedToUpdateOrderOrderResponseErrorAnalysis : OrderResponseErrorAnalysis
     {
         /// <summary>
-        /// This analysis reads only the result snapshot, so it also runs while the backtest is in progress.
-        /// </summary>
-        public override bool RunsInRun { get; } = true;
-
-        /// <summary>
         /// Gets a description of the brokerage-refused-to-update-order issue.
         /// </summary>
         public override string Issue { get; } = "Brokerage model refused to update orders";

@@ -32,6 +32,12 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
         public const int SlowDataPointsPerSecond = 40_000;
 
         /// <summary>
+        /// This analysis reads the engine's completion logs, which only exist once the backtest ends.
+        /// While it runs, <see cref="AlgorithmSpeedAnalysis"/> tracks the algorithm's speed instead.
+        /// </summary>
+        public override bool RunsInRun { get; } = false;
+
+        /// <summary>
         /// Gets the description of the slow execution issue.
         /// </summary>
         public override string Issue { get; } = $"The algorithm ran below {SlowDataPointsPerSecond / 1000}k data points per second.";

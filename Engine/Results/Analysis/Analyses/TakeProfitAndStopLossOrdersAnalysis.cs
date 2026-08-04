@@ -27,11 +27,6 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
     public class TakeProfitAndStopLossOrdersAnalysis : BaseResultsAnalysis
     {
         /// <summary>
-        /// This analysis reads only the result snapshot, so it also runs while the backtest is in progress.
-        /// </summary>
-        public override bool RunsInRun { get; } = true;
-
-        /// <summary>
         /// This analysis reads the current orders collection instead of scanning the order event
         /// and log streams, so its in-run findings are replaced on every run.
         /// </summary>

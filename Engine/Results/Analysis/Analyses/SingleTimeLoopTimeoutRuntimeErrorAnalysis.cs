@@ -46,6 +46,11 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
         ];
 
         /// <summary>
+        /// A timeout runtime error terminates the backtest, so there is no in-progress run to analyze.
+        /// </summary>
+        public override bool RunsInRun { get; } = false;
+
+        /// <summary>
         /// Gets the description of the timeout issue.
         /// </summary>
         public override string Issue { get; } = "The algorithm was terminated: a single time loop took longer than the maximum allowed, " +

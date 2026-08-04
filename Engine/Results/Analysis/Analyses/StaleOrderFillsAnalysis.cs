@@ -26,11 +26,6 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
     public class StaleOrderFillsAnalysis : BaseResultsAnalysis
     {
         /// <summary>
-        /// This analysis reads only the result snapshot, so it also runs while the backtest is in progress.
-        /// </summary>
-        public override bool RunsInRun { get; } = true;
-
-        /// <summary>
         /// Gets the description of the stale order fill issue.
         /// </summary>
         public override string Issue { get; } = "Some orders filled at stale prices.";

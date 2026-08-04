@@ -36,11 +36,12 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
 
         /// <summary>
         /// Whether this analysis can also run while the backtest is still in progress, against a
-        /// snapshot of the intermediate results. Analyses that need the completed run (runtime
-        /// errors, equity curves, final statistics, completion logs) or that read algorithm state
-        /// that is not safe to access while it runs are left to the final analysis only.
+        /// snapshot of the intermediate results. Most analyses read only the result snapshot, so
+        /// this defaults to true. Analyses that need the completed run (runtime errors, equity
+        /// curves, final statistics, completion logs) or that read algorithm state that is not
+        /// safe to access while it runs override this to leave them to the final analysis only.
         /// </summary>
-        public virtual bool RunsInRun { get; }
+        public virtual bool RunsInRun { get; } = true;
 
         /// <summary>
         /// Whether this analysis reads the current backtest state (statistics, orders, charts)

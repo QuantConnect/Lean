@@ -25,11 +25,6 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
     public class MarginCallsAnalysis : MessageAnalysis
     {
         /// <summary>
-        /// This analysis reads only the result snapshot, so it also runs while the backtest is in progress.
-        /// </summary>
-        public override bool RunsInRun { get; } = true;
-
-        /// <summary>
         /// Description of the margin-call issue detected by this analysis.
         /// </summary>
         public override string Issue { get; } = "The algorithm encountered a margin call.";

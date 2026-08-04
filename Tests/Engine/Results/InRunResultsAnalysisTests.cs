@@ -432,9 +432,6 @@ namespace QuantConnect.Tests.Engine.Results
 
             public override int Weight => _weight;
 
-            // The in-run instances only run the analyses declaring RunsInRun
-            public override bool RunsInRun { get; } = true;
-
             public override bool IsStateBased => StateBased;
 
             public bool StateBased { get; set; }
