@@ -28,8 +28,13 @@ using QuantConnect.Statistics;
 
 namespace QuantConnect.Tests.Engine.Results
 {
+    /// <summary>
+    /// Tests the in-run mode of <see cref="ResultsAnalyzer"/>, driven through a fake
+    /// <see cref="IInRunAnalysisDataProvider"/>. The core, mode-independent behavior
+    /// is covered by <see cref="ResultsAnalyzerTests"/>.
+    /// </summary>
     [TestFixture]
-    public class InRunResultsAnalysisTests
+    public class ResultsAnalyzerInRunTests
     {
         private static readonly IReadOnlyList<string> SomeSolutions = new[] { "A solution" };
 
