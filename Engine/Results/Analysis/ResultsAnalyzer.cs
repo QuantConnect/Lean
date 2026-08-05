@@ -41,13 +41,11 @@ namespace QuantConnect.Lean.Engine.Results.Analysis
         private readonly QCAlgorithm _algorithm;
         private readonly Language _language;
         /// <summary>
-        /// The accumulated occurrence count at which an in-run stream-based finding stops being
-        /// returned. A finding is returned while its occurrences are below this value, and one last
-        /// time on the run that reaches it; after that it keeps accumulating occurrences silently.
-        /// This bounds how often a recurring finding is re-reported, so consumers of the periodic
-        /// findings (like LLMs) see its first occurrences without the ever-growing count polluting
-        /// their context on every update. State-based findings are not affected: their counts are
-        /// recomputed snapshots, not accumulated occurrences.
+        /// The occurrence count at which an in-run finding is muted: reported while below this
+        /// value and one last time on the run that reaches it, then no longer returned, so a
+        /// recurring finding is not re-sent to consumers (like LLMs) on every update.
+        /// Stream-based findings count their accumulated occurrences; state-based findings count
+        /// the runs they were reported in, since their counts are recomputed snapshots.
         /// </summary>
         private const int MaxReportedFindingOccurrences = 5;
 
@@ -55,10 +53,17 @@ namespace QuantConnect.Lean.Engine.Results.Analysis
         private readonly Dictionary<string, QuantConnect.Analysis> _findings = new();
 
         /// <summary>
-        /// The names of the accumulated findings that reached <see cref="MaxReportedFindingOccurrences"/>
-        /// and are no longer included in the returned findings, while still accumulating occurrences.
+        /// The names of the findings that reached <see cref="MaxReportedFindingOccurrences"/>
+        /// and are no longer included in the returned findings. Stream-based findings keep
+        /// accumulating occurrences while muted.
         /// </summary>
         private readonly HashSet<string> _mutedFindings = new();
+
+        /// <summary>
+        /// The number of runs each state-based finding has been reported in, used to mute it.
+        /// Never reset: a finding that clears and later fails again stays muted.
+        /// </summary>
+        private readonly Dictionary<string, int> _reportedStateBasedFindingRuns = new();
         private IReadOnlyList<string> _logs;
         private SortedList<DateTime, decimal> _equityCurve;
         private SortedList<DateTime, decimal> _benchmarkEquityCurve;
@@ -468,7 +473,7 @@ namespace QuantConnect.Lean.Engine.Results.Analysis
 
         /// <summary>
         /// Ranks the accumulated findings by their analysis weight, capped to the given maximum.
-        /// Muted findings are left out, and the returned stream-based findings that reached
+        /// Muted findings are left out, and the returned findings that reached
         /// <see cref="MaxReportedFindingOccurrences"/> are muted for the runs that follow.
         /// </summary>
         private IReadOnlyList<QuantConnect.Analysis> RankFindings(int maxFailedAnalyses)
@@ -484,7 +489,11 @@ namespace QuantConnect.Lean.Engine.Results.Analysis
             // never got to report is not silenced before it is seen at least once
             foreach (var finding in findings)
             {
-                if (!IsStateBased(finding.Name) && (finding.Count ?? 1) >= MaxReportedFindingOccurrences)
+                // State-based counts are recomputed snapshots, so count reported runs instead
+                var occurrences = IsStateBased(finding.Name)
+                    ? _reportedStateBasedFindingRuns[finding.Name] = _reportedStateBasedFindingRuns.GetValueOrDefault(finding.Name) + 1
+                    : finding.Count ?? 1;
+                if (occurrences >= MaxReportedFindingOccurrences)
                 {
                     _mutedFindings.Add(finding.Name);
                 }

@@ -186,9 +186,9 @@ namespace QuantConnect.Tests.Engine.Results
         }
 
         [Test]
-        public void StateBasedFindingsAreNotMutedByTheReportedOccurrencesCap()
+        public void StateBasedFindingsAreMutedOnceReportedInTheMaxOccurrenceRuns()
         {
-            // State-based counts are recomputed snapshots, not accumulated occurrences
+            // For state-based findings the cap counts reported runs, not the snapshot count
             var fake = new FakeAnalysisA(10)
             {
                 StateBased = true,
@@ -196,8 +196,33 @@ namespace QuantConnect.Tests.Engine.Results
             };
             var analyzer = new TestInRunResultsAnalyzer(fake);
 
-            Assert.AreEqual(100, analyzer.Run(1, new[] { "log" }).Single().Count);
-            Assert.AreEqual(100, analyzer.Run(1, new[] { "log" }).Single().Count);
+            for (var run = 0; run < 5; run++)
+            {
+                Assert.AreEqual(100, analyzer.Run(1, new[] { "log" }).Single().Count);
+            }
+            // Muted from the sixth run on, even though the analysis still fails
+            Assert.IsEmpty(analyzer.Run(1, new[] { "log" }));
+        }
+
+        [Test]
+        public void MutedStateBasedFindingsStayMutedWhenTheyClearAndFailAgain()
+        {
+            var fake = new FakeAnalysisA(10)
+            {
+                StateBased = true,
+                Findings = () => MakeFindings(nameof(FakeAnalysisA), "sample", 2)
+            };
+            var analyzer = new TestInRunResultsAnalyzer(fake);
+            for (var run = 0; run < 5; run++)
+            {
+                Assert.IsNotEmpty(analyzer.Run(1, new[] { "log" }));
+            }
+
+            // Clears, then fails again: the reported runs are not reset
+            fake.Findings = () => new List<QuantConnect.Analysis>();
+            Assert.IsEmpty(analyzer.Run(1, new[] { "log" }));
+            fake.Findings = () => MakeFindings(nameof(FakeAnalysisA), "sample", 2);
+            Assert.IsEmpty(analyzer.Run(1, new[] { "log" }));
         }
 
         [Test]
