@@ -79,7 +79,6 @@ namespace QuantConnect.Lean.Engine.Results
 
         private bool _sampleChartAlways;
         private bool _userExchangeIsOpen;
-        private bool _recaptureStartingPortfolioValue;
         private DateTime _lastChartSampleLogicCheck;
         private readonly Dictionary<string, SecurityExchangeHours> _exchangeHours;
 
@@ -778,11 +777,6 @@ namespace QuantConnect.Lean.Engine.Results
             base.SetAlgorithm(algorithm, startingPortfolioValue);
             Algorithm.SetStatisticsService(this);
 
-            // If the algorithm will warm up, the given starting portfolio value was captured with currency
-            // conversion rates seeded at the warm-up start, mixed with deploy-time holdings prices,
-            // so it will be re-captured once warm-up brings the conversion rates up to date
-            _recaptureStartingPortfolioValue = algorithm.IsWarmingUp;
-
             // we need to forward Console.Write messages to the algorithm's Debug function
             var debug = new FuncTextWriter(algorithm.Debug);
             var error = new FuncTextWriter(algorithm.Error);
@@ -1123,19 +1117,6 @@ namespace QuantConnect.Lean.Engine.Results
         public virtual void ProcessSynchronousEvents(bool forceProcess = false)
         {
             var time = DateTime.UtcNow;
-
-            if (_recaptureStartingPortfolioValue && !Algorithm.IsWarmingUp)
-            {
-                _recaptureStartingPortfolioValue = false;
-                // warm-up has brought the currency conversion rates up to date, so now both holdings prices
-                // and conversion rates are current and we can capture the real deploy-time portfolio value
-                UpdatePortfolioValues(time, force: true);
-                CumulativeMaxPortfolioValue = DailyPortfolioValue = StartingPortfolioValue = GetPortfolioValue();
-                // discard any equity bar built during warm-up so the first sample opens at the re-captured value
-                CurrentAlgorithmEquity = null;
-                Log.Trace("LiveTradingResultHandler.ProcessSynchronousEvents(): " +
-                    $"Re-captured starting portfolio value after warm-up: {StartingPortfolioValue.ToStringInvariant()}");
-            }
 
             // Check to see if we should update stored portfolio values
             UpdatePortfolioValues(time, forceProcess);

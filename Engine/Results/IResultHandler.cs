@@ -58,6 +58,12 @@ namespace QuantConnect.Lean.Engine.Results
         void OnSecuritiesChanged(SecurityChanges changes);
 
         /// <summary>
+        /// Event fired when the algorithm's warm-up period finishes, right before the algorithm's
+        /// <see cref="IAlgorithm.OnWarmupFinished"/> callback is triggered
+        /// </summary>
+        void OnWarmupFinished();
+
+        /// <summary>
         /// Initialize the result handler with this result packet.
         /// </summary>
         /// <param name="parameters">DTO parameters class to initialize a result handler</param>

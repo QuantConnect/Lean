@@ -222,15 +222,14 @@ namespace QuantConnect.Tests.Engine.Results
                 resultHandler.SetAlgorithm(algorithm, 90000);
                 Assert.AreEqual(90000, resultHandler.ExposedStartingPortfolioValue);
 
-                resultHandler.ProcessSynchronousEvents();
-
                 if (warmingUp)
                 {
                     // not re-captured while still warming up
+                    resultHandler.OnWarmupFinished();
                     Assert.AreEqual(90000, resultHandler.ExposedStartingPortfolioValue);
 
                     algorithm.SetFinishedWarmingUp();
-                    resultHandler.ProcessSynchronousEvents();
+                    resultHandler.OnWarmupFinished();
 
                     // re-captured once warm-up finished, when the conversion rates are up to date
                     Assert.AreEqual(120000, resultHandler.ExposedStartingPortfolioValue);
@@ -240,12 +239,13 @@ namespace QuantConnect.Tests.Engine.Results
                     // re-captured only once: it must not move with subsequent portfolio value changes
                     algorithm.Portfolio.CashBook[Currencies.USD].AddAmount(5000);
                     algorithm.Portfolio.InvalidateTotalPortfolioValue();
-                    resultHandler.ProcessSynchronousEvents();
+                    resultHandler.OnWarmupFinished();
                     Assert.AreEqual(120000, resultHandler.ExposedStartingPortfolioValue);
                 }
                 else
                 {
                     // without warm-up the setup-time value is already consistent and is kept
+                    resultHandler.OnWarmupFinished();
                     Assert.AreEqual(90000, resultHandler.ExposedStartingPortfolioValue);
                     Assert.AreEqual(90000, resultHandler.ExposedDailyPortfolioValue);
                     Assert.AreEqual(90000, resultHandler.ExposedCumulativeMaxPortfolioValue);
