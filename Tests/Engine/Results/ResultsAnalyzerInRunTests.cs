@@ -166,18 +166,18 @@ namespace QuantConnect.Tests.Engine.Results
         [Test]
         public void FindingsAreMutedOnceReturnedTheMaxNumberOfTimes()
         {
-            // A finding is returned 5 times and then muted, regardless of its occurrence counts
+            // A finding is returned 3 times and then muted, regardless of its occurrence counts
             var fake = new FakeAnalysisA(10)
             {
                 Findings = () => MakeFindings(nameof(FakeAnalysisA), "sample", 100)
             };
             var analyzer = new TestInRunResultsAnalyzer(fake);
 
-            for (var report = 1; report <= 5; report++)
+            for (var report = 1; report <= 3; report++)
             {
                 Assert.AreEqual(100 * report, analyzer.Run(1, new[] { "log" }).Single().Count);
             }
-            // Muted from the sixth run on, even though the finding keeps accumulating
+            // Muted from the fourth run on, even though the finding keeps accumulating
             Assert.IsEmpty(analyzer.Run(1, new[] { "log" }));
             fake.Findings = () => new List<QuantConnect.Analysis>();
             Assert.IsEmpty(analyzer.Run(1, new[] { "log" }));
@@ -193,11 +193,11 @@ namespace QuantConnect.Tests.Engine.Results
             };
             var analyzer = new TestInRunResultsAnalyzer(fake);
 
-            for (var report = 1; report <= 5; report++)
+            for (var report = 1; report <= 3; report++)
             {
                 Assert.AreEqual(100, analyzer.Run(1, new[] { "log" }).Single().Count);
             }
-            // Muted from the sixth run on, even though the analysis still fails
+            // Muted from the fourth run on, even though the analysis still fails
             Assert.IsEmpty(analyzer.Run(1, new[] { "log" }));
         }
 
@@ -210,7 +210,7 @@ namespace QuantConnect.Tests.Engine.Results
                 Findings = () => MakeFindings(nameof(FakeAnalysisA), "sample", 2)
             };
             var analyzer = new TestInRunResultsAnalyzer(fake);
-            for (var run = 0; run < 5; run++)
+            for (var run = 0; run < 3; run++)
             {
                 Assert.IsNotEmpty(analyzer.Run(1, new[] { "log" }));
             }

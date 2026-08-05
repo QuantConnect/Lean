@@ -44,7 +44,7 @@ namespace QuantConnect.Lean.Engine.Results.Analysis
         /// The number of times an in-run finding is returned before it is muted and no longer
         /// reported, so a recurring finding is not re-sent to consumers (like LLMs) on every update.
         /// </summary>
-        private const int MaxFindingReports = 5;
+        private const int MaxFindingReports = 3;
 
         private readonly bool _isInRun;
         private readonly DateTime _startTime;
