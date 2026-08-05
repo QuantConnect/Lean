@@ -72,6 +72,11 @@ namespace QuantConnect
         public const string JPY = "JPY";
 
         /// <summary>
+        /// KRW (South Korean won) currency string
+        /// </summary>
+        public const string KRW = "KRW";
+
+        /// <summary>
         /// Null currency used when a real one is not required
         /// </summary>
         public const string NullCurrency = "QCC";
@@ -87,6 +92,7 @@ namespace QuantConnect
             {USD, "$"},
             {GBP, "₤"},
             {JPY, "¥"},
+            {KRW, "₩"},
             {EUR, "€"},
             {"NZD", "$"},
             {"AUD", "$"},

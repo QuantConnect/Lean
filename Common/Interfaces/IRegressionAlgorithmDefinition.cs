@@ -53,5 +53,10 @@ namespace QuantConnect.Interfaces
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
         /// </summary>
         Dictionary<string, string> ExpectedStatistics { get; }
+
+        /// <summary>
+        /// Optional custom configuration values required by this regression algorithm.
+        /// </summary>
+        Dictionary<string, string> CustomConfigurations => null;
     }
 }

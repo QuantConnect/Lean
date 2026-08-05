@@ -71,6 +71,16 @@ namespace QuantConnect.Algorithm.CSharp
         /// </summary>
         public AlgorithmStatus AlgorithmStatus => AlgorithmStatus.RuntimeError;
 
+        /// <summary>
+        /// Limit time loop to 90 seconds and set leaky bucket capacity to one minute w/ zero refill
+        /// </summary>
+        public Dictionary<string, string> CustomConfigurations => new()
+        {
+            { "algorithm-manager-time-loop-maximum", "1.5" },
+            { "scheduled-event-leaky-bucket-capacity", "1" },
+            { "scheduled-event-leaky-bucket-refill-amount", "0" }
+        };
+
         public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>();
     }
 }
