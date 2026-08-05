@@ -217,10 +217,6 @@ namespace QuantConnect.Tests.Engine.Results
                 resultHandler.SetAlgorithm(algorithm, 90000);
                 Assert.AreEqual(90000, resultHandler.ExposedStartingPortfolioValue);
 
-                // not re-captured while still warming up
-                resultHandler.OnWarmupFinished();
-                Assert.AreEqual(90000, resultHandler.ExposedStartingPortfolioValue);
-
                 algorithm.SetFinishedWarmingUp();
                 resultHandler.OnWarmupFinished();
 

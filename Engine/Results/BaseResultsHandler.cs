@@ -662,11 +662,6 @@ namespace QuantConnect.Lean.Engine.Results
         /// </summary>
         public virtual void OnWarmupFinished()
         {
-            if (Algorithm.IsWarmingUp)
-            {
-                return;
-            }
-
             // warm-up has brought the currency conversion rates up to date, so now both holdings prices
             // and conversion rates are current and we can capture the real starting portfolio value
             UpdatePortfolioValues(Algorithm.UtcTime, force: true);
