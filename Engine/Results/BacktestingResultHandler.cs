@@ -37,7 +37,7 @@ namespace QuantConnect.Lean.Engine.Results
     /// <summary>
     /// Backtesting result handler passes messages back from the Lean to the User.
     /// </summary>
-    public class BacktestingResultHandler : BaseResultsHandler, IResultHandler, IInRunAnalysisDataProvider
+    public class BacktestingResultHandler : BaseResultsHandler, IResultHandler
     {
         private const double Samples = 4000;
         private const double MinimumSamplePeriod = 4;
@@ -422,11 +422,7 @@ namespace QuantConnect.Lean.Engine.Results
                 // Run backtest analyzer
                 if (RunResultsAnalysis)
                 {
-                    List<string> logs;
-                    lock (LogStore)
-                    {
-                        logs = LogStore.Select(x => x.Message).ToList();
-                    }
+                    var logs = CloneLogs();
                     // The final analysis reuses the speed metrics accumulated by the in-run analyzer,
                     // completed with one last sample so they cover the backtest through its end
                     var speedTracker = _inRunResultsAnalyzer?.CompleteSpeedTracking();
@@ -457,10 +453,9 @@ namespace QuantConnect.Lean.Engine.Results
         }
 
         /// <summary>
-        /// Runs the in-run results analyzer against the current intermediate backtest result,
-        /// complemented with data accessed through the <see cref="IInRunAnalysisDataProvider"/>
-        /// implementation. Invoked periodically while the backtest is still running, unlike the
-        /// full analysis performed by <see cref="SendFinalResult"/> when the backtest ends.
+        /// Runs the in-run results analyzer against the current intermediate backtest result and
+        /// the accumulated logs. Invoked periodically while the backtest is still running, unlike
+        /// the full analysis performed by <see cref="SendFinalResult"/> when the backtest ends.
         /// </summary>
         /// <param name="completeResult">The current intermediate backtest result. Its orders and order
         /// events are truncated to the most recent ones, so the in-run analyses can miss data between
@@ -477,8 +472,11 @@ namespace QuantConnect.Lean.Engine.Results
                     return null;
                 }
 
-                _inRunResultsAnalyzer ??= ResultsAnalyzer.CreateForInRunAnalysis(AlgorithmInstance, _job.Language, this);
-                return _inRunResultsAnalyzer.Run(completeResult, totalPerformance);
+                var logs = CloneLogs();
+
+                _inRunResultsAnalyzer ??= ResultsAnalyzer.CreateForInRunAnalysis(AlgorithmInstance, _job.Language,
+                    StartTime, PerformanceTrackingTool, _progressMonitor);
+                return _inRunResultsAnalyzer.Run(completeResult, logs, totalPerformance);
             }
             catch (Exception ex)
             {
@@ -487,39 +485,16 @@ namespace QuantConnect.Lean.Engine.Results
             }
         }
 
-        #region IInRunAnalysisDataProvider implementation
-
         /// <summary>
-        /// Gets the log lines produced from the given position in the log stream.
+        /// Takes a snapshot of the accumulated log messages under the log store lock.
         /// </summary>
-        IReadOnlyList<string> IInRunAnalysisDataProvider.GetLogs(int fromPosition)
+        private List<string> CloneLogs()
         {
             lock (LogStore)
             {
-                return LogStore.Skip(fromPosition).Select(x => x.Message).ToList();
+                return LogStore.Select(x => x.Message).ToList();
             }
         }
-
-        /// <summary>
-        /// Takes a sample of the engine speed counters for the algorithm speed analysis.
-        /// Null while the algorithm warms up, since the warm-up pace would skew the speed metrics.
-        /// </summary>
-        AlgorithmSpeedSample? IInRunAnalysisDataProvider.TakeSpeedSample()
-        {
-            if (Algorithm == null || Algorithm.IsWarmingUp)
-            {
-                return null;
-            }
-
-            return new AlgorithmSpeedSample(
-                DateTime.UtcNow - StartTime,
-                PerformanceTrackingTool?.DataPoints ?? 0,
-                PerformanceTrackingTool?.HistoryDataPoints ?? 0,
-                _progressMonitor?.ProcessedDays ?? 0,
-                _progressMonitor?.TotalDays ?? 0);
-        }
-
-        #endregion
 
         /// <summary>
         /// Sends the in-run analysis findings to the browser in their own packet,
@@ -772,11 +747,7 @@ namespace QuantConnect.Lean.Engine.Results
             if (!ExitTriggered)
             {
                 Log.Trace("BacktestingResultHandler.Exit(): starting...");
-                List<LogEntry> copy;
-                lock (LogStore)
-                {
-                    copy = LogStore.ToList();
-                }
+                var copy = CloneLogs();
                 ProcessSynchronousEvents(true);
                 Log.Trace("BacktestingResultHandler.Exit(): Saving logs...");
                 var logLocation = SaveLogs(_algorithmId, copy);

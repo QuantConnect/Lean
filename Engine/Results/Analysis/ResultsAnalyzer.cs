@@ -20,6 +20,7 @@ using QuantConnect.Orders;
 using QuantConnect.Packets;
 using QuantConnect.Securities;
 using QuantConnect.Statistics;
+using QuantConnect.Util;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -31,10 +32,9 @@ namespace QuantConnect.Lean.Engine.Results.Analysis
     /// Runs the suite of backtest diagnostic tests against a single backtest, in one of two modes
     /// depending on how the instance is created:
     /// a <b>final analysis</b> instance is created with the completed result and logs, and runs the
-    /// full analysis set once; an <b>in-run analysis</b> instance is created with an
-    /// <see cref="IInRunAnalysisDataProvider"/>, is kept alive for the duration of the backtest,
-    /// and periodically runs the in-run capable analyses incrementally against the intermediate
-    /// results, complemented with data pulled from the provider.
+    /// full analysis set once; an <b>in-run analysis</b> instance is created with the engine's
+    /// speed counters, is kept alive for the duration of the backtest, and periodically runs the
+    /// in-run capable analyses incrementally against the intermediate results and logs.
     /// </summary>
     public class ResultsAnalyzer
     {
@@ -46,7 +46,10 @@ namespace QuantConnect.Lean.Engine.Results.Analysis
         /// </summary>
         private const int MaxFindingReports = 5;
 
-        private readonly IInRunAnalysisDataProvider _dataProvider;
+        private readonly bool _isInRun;
+        private readonly DateTime _startTime;
+        private readonly PerformanceTrackingTool _performanceTrackingTool;
+        private readonly BacktestProgressMonitor _progressMonitor;
         private readonly Dictionary<string, QuantConnect.Analysis> _findings = new();
 
         /// <summary>
@@ -94,7 +97,7 @@ namespace QuantConnect.Lean.Engine.Results.Analysis
         /// (see <see cref="CreateForInRunAnalysis"/>), as opposed to the final analysis of a
         /// completed backtest.
         /// </summary>
-        protected bool IsInRun => _dataProvider != null;
+        protected bool IsInRun => _isInRun;
 
         /// <summary>
         /// The diagnostic analyses to run, in execution order: descending by weight, so changing an
@@ -152,11 +155,17 @@ namespace QuantConnect.Lean.Engine.Results.Analysis
         /// </summary>
         /// <param name="algorithm">The algorithm instance used for history requests and settings.</param>
         /// <param name="language">The programming language the algorithm is written in.</param>
-        /// <param name="dataProvider">Provides access to the data of the running backtest.</param>
-        protected ResultsAnalyzer(QCAlgorithm algorithm, Language language, IInRunAnalysisDataProvider dataProvider)
+        /// <param name="startTime">The UTC time the backtest started, for the speed samples' elapsed time.</param>
+        /// <param name="performanceTrackingTool">The engine's data point counters, for the speed samples.</param>
+        /// <param name="progressMonitor">The backtest day-progress monitor, for the speed samples.</param>
+        protected ResultsAnalyzer(QCAlgorithm algorithm, Language language, DateTime startTime,
+            PerformanceTrackingTool performanceTrackingTool, BacktestProgressMonitor progressMonitor)
             : this(null, algorithm, language, null, new AlgorithmSpeedTracker())
         {
-            _dataProvider = dataProvider;
+            _isInRun = true;
+            _startTime = startTime;
+            _performanceTrackingTool = performanceTrackingTool;
+            _progressMonitor = progressMonitor;
         }
 
         /// <summary>
@@ -178,17 +187,19 @@ namespace QuantConnect.Lean.Engine.Results.Analysis
 
         /// <summary>
         /// Creates an analyzer for in-run analysis of a backtest still in progress. The instance is
-        /// expected to be kept alive for the duration of the backtest, pulling fresh data from
-        /// <paramref name="dataProvider"/> on each <see cref="Run(AlgorithmPerformance, int, int)"/> call.
+        /// expected to be kept alive for the duration of the backtest, sampling the given engine
+        /// speed counters on each <see cref="Run(BacktestResult, IReadOnlyList{string}, AlgorithmPerformance, int, int)"/> call.
         /// </summary>
         /// <param name="algorithm">The algorithm instance used for history requests and settings.</param>
         /// <param name="language">The programming language the algorithm is written in.</param>
-        /// <param name="dataProvider">Provides access to the data of the running backtest.</param>
+        /// <param name="startTime">The UTC time the backtest started, for the speed samples' elapsed time.</param>
+        /// <param name="performanceTrackingTool">The engine's data point counters, for the speed samples.</param>
+        /// <param name="progressMonitor">The backtest day-progress monitor, for the speed samples.</param>
         /// <returns>The in-run analysis instance.</returns>
         public static ResultsAnalyzer CreateForInRunAnalysis(QCAlgorithm algorithm, Language language,
-            IInRunAnalysisDataProvider dataProvider)
+            DateTime startTime, PerformanceTrackingTool performanceTrackingTool, BacktestProgressMonitor progressMonitor)
         {
-            return new ResultsAnalyzer(algorithm, language, dataProvider);
+            return new ResultsAnalyzer(algorithm, language, startTime, performanceTrackingTool, progressMonitor);
         }
 
         // ── Test chain ────────────────────────────────────────────────────────────
@@ -247,18 +258,19 @@ namespace QuantConnect.Lean.Engine.Results.Analysis
         }
 
         /// <summary>
-        /// Runs the in-run analyses against the given intermediate backtest result, complemented
-        /// with the log lines produced since the previous run, pulled from the provider. The
-        /// returned findings are the merge of this run's findings into the ones accumulated by
-        /// previous runs: findings from analyses scanning the order event and log streams are
-        /// accumulated (first sample kept, counts totaled), while findings from state-based
-        /// analyses are replaced on every run.
+        /// Runs the in-run analyses against the given intermediate backtest result and the log
+        /// lines produced since the previous run. The returned findings are the merge of this
+        /// run's findings into the ones accumulated by previous runs: findings from analyses
+        /// scanning the order event and log streams are accumulated (first sample kept, counts
+        /// totaled), while findings from state-based analyses are replaced on every run.
         /// </summary>
         /// <param name="result">The current intermediate backtest result. Its orders and order events
         /// are windows truncated to the most recent ones, so the in-run analyses can miss orders and
         /// events already evicted from them; the final analysis re-scans the complete data. Its charts
         /// are the handler's live ones, read without synchronization: a torn read while the algorithm
         /// thread updates them can fail a run, which the handler catches, and the next run retries.</param>
+        /// <param name="logs">The full list of log lines produced so far; the analyzer analyzes the
+        /// lines past the ones consumed by previous runs.</param>
         /// <param name="totalPerformance">The current total algorithm performance, for analyses that read
         /// portfolio statistics. Withheld from the analyses until the first equity sample exists, since
         /// the statistics are all-zero defaults before that.</param>
@@ -267,8 +279,8 @@ namespace QuantConnect.Lean.Engine.Results.Analysis
         /// processing while it runs.</param>
         /// <param name="maxFailedAnalyses">Maximum number of failing analyses to return.</param>
         /// <returns>The accumulated findings, ranked by analysis weight.</returns>
-        public IReadOnlyList<QuantConnect.Analysis> Run(BacktestResult result, AlgorithmPerformance totalPerformance,
-            int timeLimitSeconds = 1, int maxFailedAnalyses = 10)
+        public IReadOnlyList<QuantConnect.Analysis> Run(BacktestResult result, IReadOnlyList<string> logs,
+            AlgorithmPerformance totalPerformance, int timeLimitSeconds = 1, int maxFailedAnalyses = 10)
         {
             ThrowIfNotInRunInstance();
 
@@ -289,11 +301,30 @@ namespace QuantConnect.Lean.Engine.Results.Analysis
                 new Dictionary<string, AlgorithmPerformance>(),
                 ExtractNewOrderEvents(result?.OrderEvents),
                 totalPerformance));
-            var logs = _dataProvider.GetLogs(_logsPosition);
+            var newLogs = logs?.Skip(_logsPosition).ToList();
 
             // The analyses run during warm-up too (the speed sample is null then), so conditions like
             // orders submitted while the algorithm warms up surface without waiting for warm-up to end
-            return Run(snapshot, logs, _dataProvider.TakeSpeedSample(), timeLimitSeconds, maxFailedAnalyses);
+            return Run(snapshot, newLogs, TakeSpeedSample(), timeLimitSeconds, maxFailedAnalyses);
+        }
+
+        /// <summary>
+        /// Takes a sample of the engine speed counters for the algorithm speed analysis.
+        /// Null while the algorithm warms up, since the warm-up pace would skew the speed metrics.
+        /// </summary>
+        protected virtual AlgorithmSpeedSample? TakeSpeedSample()
+        {
+            if (_algorithm == null || _algorithm.IsWarmingUp)
+            {
+                return null;
+            }
+
+            return new AlgorithmSpeedSample(
+                DateTime.UtcNow - _startTime,
+                _performanceTrackingTool?.DataPoints ?? 0,
+                _performanceTrackingTool?.HistoryDataPoints ?? 0,
+                _progressMonitor?.ProcessedDays ?? 0,
+                _progressMonitor?.TotalDays ?? 0);
         }
 
         /// <summary>
@@ -347,7 +378,7 @@ namespace QuantConnect.Lean.Engine.Results.Analysis
         {
             ThrowIfNotInRunInstance();
 
-            var speedSample = _dataProvider.TakeSpeedSample();
+            var speedSample = TakeSpeedSample();
             if (speedSample.HasValue)
             {
                 SpeedTracker.AddSample(speedSample.Value);
@@ -510,14 +541,13 @@ namespace QuantConnect.Lean.Engine.Results.Analysis
 
         /// <summary>
         /// Throws when this instance was not created for in-run analysis, guarding the members
-        /// that read the data provider.
+        /// that track incremental state across runs.
         /// </summary>
         private void ThrowIfNotInRunInstance()
         {
             if (!IsInRun)
             {
-                throw new InvalidOperationException(
-                    "This operation requires an instance created for in-run analysis, with a data provider.");
+                throw new InvalidOperationException("This operation requires an instance created for in-run analysis.");
             }
         }
 

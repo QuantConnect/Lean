@@ -30,9 +30,8 @@ namespace QuantConnect.Tests.Engine.Results
 {
     /// <summary>
     /// Tests the in-run mode of <see cref="ResultsAnalyzer"/>, driven through intermediate
-    /// results carrying truncated order and order event windows, complemented by a fake
-    /// <see cref="IInRunAnalysisDataProvider"/>. The core, mode-independent behavior
-    /// is covered by <see cref="ResultsAnalyzerTests"/>.
+    /// results carrying truncated order and order event windows plus the accumulated logs.
+    /// The core, mode-independent behavior is covered by <see cref="ResultsAnalyzerTests"/>.
     /// </summary>
     [TestFixture]
     public class ResultsAnalyzerInRunTests
@@ -43,19 +42,28 @@ namespace QuantConnect.Tests.Engine.Results
         public void OrderEventAndLogStreamsAreConsumedIncrementally()
         {
             var seenOrderEvents = new List<OrderEvent>();
-            var fake = new FakeAnalysisA(10) { OnParameters = parameters => seenOrderEvents.AddRange(parameters.Result.OrderEvents) };
+            var seenLogs = new List<string>();
+            var fake = new FakeAnalysisA(10)
+            {
+                OnParameters = parameters =>
+                {
+                    seenOrderEvents.AddRange(parameters.Result.OrderEvents);
+                    seenLogs.AddRange(parameters.Logs);
+                }
+            };
             var analyzer = new TestInRunResultsAnalyzer(fake);
 
             // The order event windows fully overlap (every event fits in the window), but the
-            // watermark dedupes them: each event is analyzed exactly once, in chronological order
+            // watermark dedupes them, and the full logs are sliced from the consumed position:
+            // each event and log line is analyzed exactly once, in chronological order
             analyzer.Run(3, new[] { "log 1", "log 2" });
             analyzer.Run(5, new[] { "log 3" });
-            // Runs without new order events or logs produce empty deltas and don't move the log position
+            // Runs without new order events or logs produce empty deltas
             analyzer.Run(0, null);
             analyzer.Run(0, null);
 
             CollectionAssert.AreEqual(analyzer.OrderEventStream, seenOrderEvents);
-            CollectionAssert.AreEqual(new[] { 0, 2, 3, 3 }, analyzer.Provider.RequestedLogsPositions);
+            CollectionAssert.AreEqual(new[] { "log 1", "log 2", "log 3" }, seenLogs);
         }
 
         [Test]
@@ -79,11 +87,16 @@ namespace QuantConnect.Tests.Engine.Results
         public void StreamPositionsAdvanceEvenWhenTheTimeLimitTruncatesTheRun()
         {
             var seenOrderEventCounts = new List<int>();
+            var seenLogCounts = new List<int>();
             var truncatedRan = false;
             // The slow analysis has the higher weight so it runs first and exhausts the time limit
             var slow = new FakeAnalysisA(20)
             {
-                OnParameters = parameters => seenOrderEventCounts.Add(parameters.Result.OrderEvents.Count),
+                OnParameters = parameters =>
+                {
+                    seenOrderEventCounts.Add(parameters.Result.OrderEvents.Count);
+                    seenLogCounts.Add(parameters.Logs.Count);
+                },
                 OnRun = () => Thread.Sleep(1100)
             };
             var truncated = new FakeAnalysisB(10) { OnRun = () => truncatedRan = true };
@@ -96,7 +109,7 @@ namespace QuantConnect.Tests.Engine.Results
             slow.OnRun = null;
             analyzer.Run(0, null);
             CollectionAssert.AreEqual(new[] { 4, 0 }, seenOrderEventCounts);
-            CollectionAssert.AreEqual(new[] { 0, 1 }, analyzer.Provider.RequestedLogsPositions);
+            CollectionAssert.AreEqual(new[] { 1, 0 }, seenLogCounts);
         }
 
         [Test]
@@ -273,7 +286,7 @@ namespace QuantConnect.Tests.Engine.Results
         }
 
         [Test]
-        public void SpeedSamplesAreTrackedOnlyWhenTheProviderTakesThem()
+        public void SpeedSamplesAreTrackedOnlyWhenTheyCanBeTaken()
         {
             AlgorithmSpeedTracker speed = null;
             var fake = new FakeAnalysisA(10) { OnParameters = parameters => speed = parameters.Speed };
@@ -299,7 +312,7 @@ namespace QuantConnect.Tests.Engine.Results
             var analyzer = new TestInRunResultsAnalyzer(fake);
             analyzer.Run(1, new[] { "log" }, new AlgorithmSpeedSample(TimeSpan.FromSeconds(30), 100, 0, 1, 10));
 
-            analyzer.Provider.NextSpeedSample = new AlgorithmSpeedSample(TimeSpan.FromSeconds(60), 200, 0, 2, 10);
+            analyzer.NextSpeedSample = new AlgorithmSpeedSample(TimeSpan.FromSeconds(60), 200, 0, 2, 10);
             var tracker = analyzer.CompleteSpeedTracking();
 
             // The final analysis receives the same tracker the in-run analyses saw, with the final sample added
@@ -307,7 +320,7 @@ namespace QuantConnect.Tests.Engine.Results
             Assert.AreEqual(2, tracker.SampleCount);
 
             // Without a final sample (e.g. the algorithm never left warm-up), the tracker is left untouched
-            analyzer.Provider.NextSpeedSample = null;
+            analyzer.NextSpeedSample = null;
             Assert.AreEqual(2, analyzer.CompleteSpeedTracking().SampleCount);
         }
 
@@ -338,7 +351,7 @@ namespace QuantConnect.Tests.Engine.Results
             var performance = new AlgorithmPerformance();
 
             // The equity chart has no samples yet: the all-zero default statistics are withheld
-            analyzer.Run(new BacktestResult(), totalPerformance: performance);
+            analyzer.Run(new BacktestResult(), logs: null, totalPerformance: performance);
             Assert.IsNull(seenResult.TotalPerformance);
 
             var equitySeries = new Series(BaseResultsHandler.EquityKey);
@@ -350,7 +363,7 @@ namespace QuantConnect.Tests.Engine.Results
                 Charts = new Dictionary<string, Chart> { [equityChart.Name] = equityChart }
             };
 
-            analyzer.Run(result, totalPerformance: performance);
+            analyzer.Run(result, logs: null, totalPerformance: performance);
             Assert.AreSame(performance, seenResult.TotalPerformance);
         }
 
@@ -420,32 +433,28 @@ namespace QuantConnect.Tests.Engine.Results
         {
             private readonly IReadOnlyCollection<BaseResultsAnalysis> _analyses;
 
-            public FakeDataProvider Provider { get; }
-
             /// <summary>
             /// The full, chronological order event stream of the simulated backtest, from which the
             /// intermediate results' truncated windows are built.
             /// </summary>
             public List<OrderEvent> OrderEventStream { get; } = new();
 
+            public List<string> Logs { get; } = new();
+
+            public AlgorithmSpeedSample? NextSpeedSample { get; set; }
+
             public int GetAnalysesCallCount { get; private set; }
 
             public TestInRunResultsAnalyzer(params BaseResultsAnalysis[] analyses)
-                : this(new FakeDataProvider(), analyses)
+                : base(null, Language.CSharp, default, null, null)
             {
-            }
-
-            private TestInRunResultsAnalyzer(FakeDataProvider provider, BaseResultsAnalysis[] analyses)
-                : base(null, Language.CSharp, provider)
-            {
-                Provider = provider;
                 _analyses = analyses;
             }
 
             /// <summary>
             /// Appends the new order events and logs to the backtest's streams and runs the analyzer
             /// against an intermediate result carrying the truncated, newest-first order events
-            /// window the backtesting result handler builds.
+            /// window the backtesting result handler builds, plus the full accumulated logs.
             /// </summary>
             public IReadOnlyList<QuantConnect.Analysis> Run(int newOrderEventsCount, string[] newLogs,
                 AlgorithmSpeedSample? speedSample = null, int timeLimitSeconds = 1, int maxFailedAnalyses = 10,
@@ -456,8 +465,8 @@ namespace QuantConnect.Tests.Engine.Results
                     // One event per order, so the (order id, per-order event id) pairs stay unique
                     OrderEventStream.Add(new OrderEvent { OrderId = OrderEventStream.Count + 1, Id = 1 });
                 }
-                Provider.Logs.AddRange(newLogs ?? Array.Empty<string>());
-                Provider.NextSpeedSample = speedSample;
+                Logs.AddRange(newLogs ?? Array.Empty<string>());
+                NextSpeedSample = speedSample;
 
                 var result = new BacktestResult
                 {
@@ -465,8 +474,10 @@ namespace QuantConnect.Tests.Engine.Results
                     Orders = orders ?? new Dictionary<int, Order>(),
                     OrderEvents = Enumerable.Reverse(OrderEventStream).Take(orderEventsWindowSize).ToList()
                 };
-                return Run(result, totalPerformance: null, timeLimitSeconds, maxFailedAnalyses);
+                return Run(result, Logs, totalPerformance: null, timeLimitSeconds, maxFailedAnalyses);
             }
+
+            protected override AlgorithmSpeedSample? TakeSpeedSample() => NextSpeedSample;
 
             protected override IReadOnlyCollection<BaseResultsAnalysis> GetAnalyses()
             {
@@ -478,28 +489,11 @@ namespace QuantConnect.Tests.Engine.Results
         private sealed class DefaultSetInRunResultsAnalyzer : ResultsAnalyzer
         {
             public DefaultSetInRunResultsAnalyzer()
-                : base(null, Language.CSharp, new FakeDataProvider())
+                : base(null, Language.CSharp, default, null, null)
             {
             }
 
             public IReadOnlyCollection<BaseResultsAnalysis> DefaultAnalyses => Analyses;
-        }
-
-        private sealed class FakeDataProvider : IInRunAnalysisDataProvider
-        {
-            public List<string> Logs { get; } = new();
-
-            public AlgorithmSpeedSample? NextSpeedSample { get; set; }
-
-            public List<int> RequestedLogsPositions { get; } = new();
-
-            public IReadOnlyList<string> GetLogs(int fromPosition)
-            {
-                RequestedLogsPositions.Add(fromPosition);
-                return Logs.Skip(fromPosition).ToList();
-            }
-
-            public AlgorithmSpeedSample? TakeSpeedSample() => NextSpeedSample;
         }
 
         private class FakeAnalysis : BaseResultsAnalysis
