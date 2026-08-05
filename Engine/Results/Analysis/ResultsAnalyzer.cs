@@ -41,29 +41,20 @@ namespace QuantConnect.Lean.Engine.Results.Analysis
         private readonly QCAlgorithm _algorithm;
         private readonly Language _language;
         /// <summary>
-        /// The occurrence count at which an in-run finding is muted: reported while below this
-        /// value and one last time on the run that reaches it, then no longer returned, so a
-        /// recurring finding is not re-sent to consumers (like LLMs) on every update.
-        /// Stream-based findings count their accumulated occurrences; state-based findings count
-        /// the runs they were reported in, since their counts are recomputed snapshots.
+        /// The number of times an in-run finding is returned before it is muted and no longer
+        /// reported, so a recurring finding is not re-sent to consumers (like LLMs) on every update.
         /// </summary>
-        private const int MaxReportedFindingOccurrences = 5;
+        private const int MaxFindingReports = 5;
 
         private readonly IInRunAnalysisDataProvider _dataProvider;
         private readonly Dictionary<string, QuantConnect.Analysis> _findings = new();
 
         /// <summary>
-        /// The names of the findings that reached <see cref="MaxReportedFindingOccurrences"/>
-        /// and are no longer included in the returned findings. Stream-based findings keep
-        /// accumulating occurrences while muted.
+        /// The number of times each finding has been returned, muting it once it reaches
+        /// <see cref="MaxFindingReports"/>. Never reset: a muted finding that clears and later
+        /// fails again stays muted.
         /// </summary>
-        private readonly HashSet<string> _mutedFindings = new();
-
-        /// <summary>
-        /// The number of runs each state-based finding has been reported in, used to mute it.
-        /// Never reset: a finding that clears and later fails again stays muted.
-        /// </summary>
-        private readonly Dictionary<string, int> _reportedStateBasedFindingRuns = new();
+        private readonly Dictionary<string, int> _findingReportCounts = new();
         private IReadOnlyList<string> _logs;
         private SortedList<DateTime, decimal> _equityCurve;
         private SortedList<DateTime, decimal> _benchmarkEquityCurve;
@@ -473,30 +464,23 @@ namespace QuantConnect.Lean.Engine.Results.Analysis
 
         /// <summary>
         /// Ranks the accumulated findings by their analysis weight, capped to the given maximum.
-        /// Muted findings are left out, and the returned findings that reached
-        /// <see cref="MaxReportedFindingOccurrences"/> are muted for the runs that follow.
+        /// Findings already returned <see cref="MaxFindingReports"/> times are muted and left out,
+        /// and each returned finding counts one report toward that cap.
         /// </summary>
         private IReadOnlyList<QuantConnect.Analysis> RankFindings(int maxFailedAnalyses)
         {
             _analysisWeights ??= Analyses.ToDictionary(analysis => analysis.GetType().Name, analysis => analysis.Weight);
             var findings = _findings.Values
-                .Where(finding => !_mutedFindings.Contains(finding.Name))
+                .Where(finding => _findingReportCounts.GetValueOrDefault(finding.Name) < MaxFindingReports)
                 .OrderByDescending(finding => _analysisWeights.GetValueOrDefault(BaseAnalysisName(finding.Name)))
                 .Take(maxFailedAnalyses)
                 .ToList();
 
-            // Only findings that were actually returned are muted, so a finding a truncated run
-            // never got to report is not silenced before it is seen at least once
+            // Only findings that are actually returned count toward muting, so a finding a
+            // truncated run never got to report is not silenced before it is seen
             foreach (var finding in findings)
             {
-                // State-based counts are recomputed snapshots, so count reported runs instead
-                var occurrences = IsStateBased(finding.Name)
-                    ? _reportedStateBasedFindingRuns[finding.Name] = _reportedStateBasedFindingRuns.GetValueOrDefault(finding.Name) + 1
-                    : finding.Count ?? 1;
-                if (occurrences >= MaxReportedFindingOccurrences)
-                {
-                    _mutedFindings.Add(finding.Name);
-                }
+                _findingReportCounts[finding.Name] = _findingReportCounts.GetValueOrDefault(finding.Name) + 1;
             }
 
             return findings;

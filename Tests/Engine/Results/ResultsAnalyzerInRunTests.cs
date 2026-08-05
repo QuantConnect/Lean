@@ -151,44 +151,28 @@ namespace QuantConnect.Tests.Engine.Results
         }
 
         [Test]
-        public void AccumulatedFindingsAreMutedOnceTheyReachTheMaxReportedOccurrences()
+        public void FindingsAreMutedOnceReturnedTheMaxNumberOfTimes()
         {
-            // The analyzer mutes accumulated findings once they reach 5 reported occurrences
-            var fake = new FakeAnalysisA(10)
-            {
-                Findings = () => MakeFindings(nameof(FakeAnalysisA), "sample", 3)
-            };
-            var analyzer = new TestInRunResultsAnalyzer(fake);
-
-            // Below the cap: reported
-            Assert.AreEqual(3, analyzer.Run(1, new[] { "log" }).Single().Count);
-            // The run that reaches the cap still reports the finding, with its full count
-            Assert.AreEqual(6, analyzer.Run(1, new[] { "log" }).Single().Count);
-            // Beyond the cap the finding keeps accumulating, but is no longer reported
-            Assert.IsEmpty(analyzer.Run(1, new[] { "log" }));
-            fake.Findings = () => new List<QuantConnect.Analysis>();
-            Assert.IsEmpty(analyzer.Run(1, new[] { "log" }));
-        }
-
-        [Test]
-        public void FindingsWhoseFirstOccurrencesAlreadyExceedTheCapAreReportedOnce()
-        {
-            // A single delta can carry more occurrences than the cap: the finding is still
-            // reported once before being muted, so it is never silently dropped
+            // A finding is returned 5 times and then muted, regardless of its occurrence counts
             var fake = new FakeAnalysisA(10)
             {
                 Findings = () => MakeFindings(nameof(FakeAnalysisA), "sample", 100)
             };
             var analyzer = new TestInRunResultsAnalyzer(fake);
 
-            Assert.AreEqual(100, analyzer.Run(1, new[] { "log" }).Single().Count);
+            for (var report = 1; report <= 5; report++)
+            {
+                Assert.AreEqual(100 * report, analyzer.Run(1, new[] { "log" }).Single().Count);
+            }
+            // Muted from the sixth run on, even though the finding keeps accumulating
+            Assert.IsEmpty(analyzer.Run(1, new[] { "log" }));
+            fake.Findings = () => new List<QuantConnect.Analysis>();
             Assert.IsEmpty(analyzer.Run(1, new[] { "log" }));
         }
 
         [Test]
-        public void StateBasedFindingsAreMutedOnceReportedInTheMaxOccurrenceRuns()
+        public void StateBasedFindingsAreMutedOnceReturnedTheMaxNumberOfTimes()
         {
-            // For state-based findings the cap counts reported runs, not the snapshot count
             var fake = new FakeAnalysisA(10)
             {
                 StateBased = true,
@@ -196,7 +180,7 @@ namespace QuantConnect.Tests.Engine.Results
             };
             var analyzer = new TestInRunResultsAnalyzer(fake);
 
-            for (var run = 0; run < 5; run++)
+            for (var report = 1; report <= 5; report++)
             {
                 Assert.AreEqual(100, analyzer.Run(1, new[] { "log" }).Single().Count);
             }
