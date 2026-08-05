@@ -243,6 +243,8 @@ namespace QuantConnect.Lean.Engine
                 // the time pulse are just to advance algorithm time, lets shortcut the loop here
                 if (timeSlice.IsTimePulse)
                 {
+                    // a time pulse might have been emitted just to align the algorithm time with the end of
+                    // the warm-up period, in which case OnWarmupFinished must fire here, at that aligned time
                     CheckWarmupFinished();
                     continue;
                 }
@@ -309,6 +311,8 @@ namespace QuantConnect.Lean.Engine
                 // security prices got updated
                 algorithm.Portfolio.InvalidateTotalPortfolioValue();
 
+                // if this time slice ended the warm-up period, notify now: after the data updates above,
+                // so OnWarmupFinished sees current prices, and before any user code runs post warm-up
                 CheckWarmupFinished();
 
                 if (timeSlice.Slice.SymbolChangedEvents.Count != 0)
