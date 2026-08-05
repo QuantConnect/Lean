@@ -161,6 +161,40 @@ namespace QuantConnect.Tests.Common.Orders.Fees
             Assert.AreEqual(1000 * 40m, fee.Value.Amount);
         }
 
+        [TestCase(false)]
+        [TestCase(true)]
+        public void KoreaFutureFee(bool canonical)
+        {
+            var symbol = Symbols.CreateFutureSymbol(Futures.Indices.Kospi200, SecurityIdentifier.DefaultDate);
+            if (!canonical)
+            {
+                symbol = Symbols.CreateFutureSymbol(Futures.Indices.Kospi200,
+                    FuturesExpiryFunctions.FuturesExpiryFunction(symbol)(new DateTime(2026, 9, 1)));
+            }
+            var entry = MarketHoursDatabase.FromDataFolder().GetEntry(symbol.ID.Market, symbol, symbol.SecurityType);
+            var properties = SymbolPropertiesDatabase.FromDataFolder()
+                .GetSymbolProperties(symbol.ID.Market, symbol, symbol.SecurityType, null);
+            var security = new Future(symbol, entry.ExchangeHours,
+                new Cash(properties.QuoteCurrency, 0, 0),
+                properties,
+                ErrorCurrencyConverter.Instance,
+                RegisteredSecurityDataTypesProvider.Null,
+                new SecurityCache()
+            );
+            security.SetMarketPrice(new Tick(new DateTime(2026, 8, 5), security.Symbol, 1046, 1046));
+
+            var fee = _feeModel.GetOrderFee(
+                new OrderFeeParameters(
+                    security,
+                    new MarketOrder(security.Symbol, 1, new DateTime(2026, 8, 5))
+                )
+            );
+
+            Assert.AreEqual(Currencies.KRW, fee.Value.Currency);
+            // 0.004% of the trade value: 1046 * 250,000 contract multiplier
+            Assert.AreEqual(10460m, fee.Value.Amount);
+        }
+
         [TestCase(OrderType.ComboMarket, 0.01, 250)]
         [TestCase(OrderType.ComboLimit, 0.01, 250)]
         [TestCase(OrderType.ComboLegLimit, 0.01, 250)]
