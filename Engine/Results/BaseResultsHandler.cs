@@ -60,8 +60,6 @@ namespace QuantConnect.Lean.Engine.Results
 
         private Bar _currentAlgorithmEquity;
 
-        private bool _recaptureStartingPortfolioValue;
-
         private List<ISeriesPoint> _temporaryPerformanceValues;
         private List<ISeriesPoint> _temporaryBenchmarkValues;
         private DateTime _temporaryChartsLastSampleTime;
@@ -527,11 +525,6 @@ namespace QuantConnect.Lean.Engine.Results
             AlgorithmCurrencySymbol = Currencies.GetCurrencySymbol(Algorithm.AccountCurrency);
             CumulativeMaxPortfolioValue = DailyPortfolioValue = StartingPortfolioValue = startingPortfolioValue;
 
-            // If the algorithm will warm up, the given starting portfolio value was captured with currency
-            // conversion rates seeded at the warm-up start, so it will be re-captured once warm-up
-            // brings the conversion rates up to date
-            _recaptureStartingPortfolioValue = algorithm.IsWarmingUp;
-
             _unrealizedProfit = new ReferenceWrapper<decimal>(0);
             _benchmarkValue = new ReferenceWrapper<decimal>(0);
             _portfolioValue = new ReferenceWrapper<decimal>(startingPortfolioValue);
@@ -663,45 +656,38 @@ namespace QuantConnect.Lean.Engine.Results
 
         /// <summary>
         /// Event fired when the algorithm's warm-up period finishes, right before the algorithm's
-        /// <see cref="IAlgorithm.OnWarmupFinished"/> callback is triggered
+        /// <see cref="IAlgorithm.OnWarmupFinished"/> callback is triggered.
+        /// Re-captures the starting portfolio value and dependent baselines, since the value captured
+        /// at setup time used currency conversion rates seeded at the warm-up start
         /// </summary>
         public virtual void OnWarmupFinished()
         {
-            RecaptureStartingPortfolioValueIfWarmupFinished(Algorithm.UtcTime);
-        }
-
-        /// <summary>
-        /// Re-captures the starting portfolio value and dependent baselines once warm-up completes,
-        /// since the value captured at setup time used currency conversion rates seeded at the warm-up start
-        /// </summary>
-        /// <param name="time">Current UTC time</param>
-        protected void RecaptureStartingPortfolioValueIfWarmupFinished(DateTime time)
-        {
-            if (_recaptureStartingPortfolioValue && !Algorithm.IsWarmingUp)
+            if (Algorithm.IsWarmingUp)
             {
-                _recaptureStartingPortfolioValue = false;
-                // warm-up has brought the currency conversion rates up to date, so now both holdings prices
-                // and conversion rates are current and we can capture the real starting portfolio value
-                UpdatePortfolioValues(time, force: true);
-                var currentPortfolioValue = GetPortfolioValue();
-                // only reassign values that actually changed, so unchanged ones keep their original decimal
-                // scale and their statistics string representation
-                if (CumulativeMaxPortfolioValue != currentPortfolioValue)
-                {
-                    CumulativeMaxPortfolioValue = currentPortfolioValue;
-                }
-                if (DailyPortfolioValue != currentPortfolioValue)
-                {
-                    DailyPortfolioValue = currentPortfolioValue;
-                }
-                if (StartingPortfolioValue != currentPortfolioValue)
-                {
-                    StartingPortfolioValue = currentPortfolioValue;
-                    // discard any equity bar built during warm-up so the first sample opens at the re-captured value
-                    CurrentAlgorithmEquity = null;
-                    Log.Trace($"{GetType().Name}.RecaptureStartingPortfolioValueIfWarmupFinished(): " +
-                        $"Re-captured starting portfolio value after warm-up: {StartingPortfolioValue.ToStringInvariant()}");
-                }
+                return;
+            }
+
+            // warm-up has brought the currency conversion rates up to date, so now both holdings prices
+            // and conversion rates are current and we can capture the real starting portfolio value
+            UpdatePortfolioValues(Algorithm.UtcTime, force: true);
+            var currentPortfolioValue = GetPortfolioValue();
+            // only reassign values that actually changed, so unchanged ones keep their original decimal
+            // scale and their statistics string representation
+            if (CumulativeMaxPortfolioValue != currentPortfolioValue)
+            {
+                CumulativeMaxPortfolioValue = currentPortfolioValue;
+            }
+            if (DailyPortfolioValue != currentPortfolioValue)
+            {
+                DailyPortfolioValue = currentPortfolioValue;
+            }
+            if (StartingPortfolioValue != currentPortfolioValue)
+            {
+                StartingPortfolioValue = currentPortfolioValue;
+                // discard any equity bar built during warm-up so the first sample opens at the re-captured value
+                CurrentAlgorithmEquity = null;
+                Log.Trace($"{GetType().Name}.OnWarmupFinished(): " +
+                    $"Re-captured starting portfolio value after warm-up: {StartingPortfolioValue.ToStringInvariant()}");
             }
         }
 
@@ -719,11 +705,6 @@ namespace QuantConnect.Lean.Engine.Results
         /// <param name="time">Current UTC time in the AlgorithmManager loop</param>
         public virtual void Sample(DateTime time)
         {
-            // The daily sample scheduled at the warm-up end can fire from the scheduled events scan, which flips
-            // the warm-up flag before the algorithm manager reaches its warm-up finished notification,
-            // so check for the re-capture here too before using the baselines
-            RecaptureStartingPortfolioValueIfWarmupFinished(time);
-
             // Force an update for our values before doing our daily sample
             UpdatePortfolioValues(time);
             UpdateBenchmarkValue(time);

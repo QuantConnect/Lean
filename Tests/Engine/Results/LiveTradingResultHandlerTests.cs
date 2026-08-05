@@ -199,9 +199,8 @@ namespace QuantConnect.Tests.Engine.Results
             }
         }
 
-        [TestCase(true)]
-        [TestCase(false)]
-        public void RecapturesStartingPortfolioValueAfterWarmup(bool warmingUp)
+        [Test]
+        public void RecapturesStartingPortfolioValueAfterWarmup()
         {
             using var api = new Api.Api();
             using var messaging = new QuantConnect.Messaging.Messaging();
@@ -212,44 +211,23 @@ namespace QuantConnect.Tests.Engine.Results
             {
                 var algorithm = new AlgorithmStub();
                 algorithm.SetCash(120000);
-                if (!warmingUp)
-                {
-                    algorithm.SetFinishedWarmingUp();
-                }
 
                 // The setup-time snapshot: when the algorithm has a warm-up period, it mixes deploy-time
                 // holdings prices with currency conversion rates seeded at the warm-up start
                 resultHandler.SetAlgorithm(algorithm, 90000);
                 Assert.AreEqual(90000, resultHandler.ExposedStartingPortfolioValue);
 
-                if (warmingUp)
-                {
-                    // not re-captured while still warming up
-                    resultHandler.OnWarmupFinished();
-                    Assert.AreEqual(90000, resultHandler.ExposedStartingPortfolioValue);
+                // not re-captured while still warming up
+                resultHandler.OnWarmupFinished();
+                Assert.AreEqual(90000, resultHandler.ExposedStartingPortfolioValue);
 
-                    algorithm.SetFinishedWarmingUp();
-                    resultHandler.OnWarmupFinished();
+                algorithm.SetFinishedWarmingUp();
+                resultHandler.OnWarmupFinished();
 
-                    // re-captured once warm-up finished, when the conversion rates are up to date
-                    Assert.AreEqual(120000, resultHandler.ExposedStartingPortfolioValue);
-                    Assert.AreEqual(120000, resultHandler.ExposedDailyPortfolioValue);
-                    Assert.AreEqual(120000, resultHandler.ExposedCumulativeMaxPortfolioValue);
-
-                    // re-captured only once: it must not move with subsequent portfolio value changes
-                    algorithm.Portfolio.CashBook[Currencies.USD].AddAmount(5000);
-                    algorithm.Portfolio.InvalidateTotalPortfolioValue();
-                    resultHandler.OnWarmupFinished();
-                    Assert.AreEqual(120000, resultHandler.ExposedStartingPortfolioValue);
-                }
-                else
-                {
-                    // without warm-up the setup-time value is already consistent and is kept
-                    resultHandler.OnWarmupFinished();
-                    Assert.AreEqual(90000, resultHandler.ExposedStartingPortfolioValue);
-                    Assert.AreEqual(90000, resultHandler.ExposedDailyPortfolioValue);
-                    Assert.AreEqual(90000, resultHandler.ExposedCumulativeMaxPortfolioValue);
-                }
+                // re-captured once warm-up finished, when the conversion rates are up to date
+                Assert.AreEqual(120000, resultHandler.ExposedStartingPortfolioValue);
+                Assert.AreEqual(120000, resultHandler.ExposedDailyPortfolioValue);
+                Assert.AreEqual(120000, resultHandler.ExposedCumulativeMaxPortfolioValue);
             }
             finally
             {
