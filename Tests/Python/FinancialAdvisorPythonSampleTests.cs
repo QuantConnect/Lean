@@ -131,6 +131,99 @@ namespace QuantConnect.Tests.Python
         }
 
         [Test]
+        public void GroupAssignmentCrossGroupCandidateRefreshesCompleteScopeInPython()
+        {
+            var services = new TestFinancialAdvisorServices
+            {
+                Snapshot = CreateAssignmentSnapshot(
+                    2,
+                    new[] { TargetGroupName },
+                    new[] { SourceGroupName },
+                    includeCompanionMembers: true)
+            };
+            using var algorithm = CreateAlgorithm(
+                "FinancialAdvisorGroupAssignmentAlgorithm",
+                services);
+
+            algorithm.OnData(CreateEmptySlice());
+
+            Assert.Multiple(() =>
+            {
+                Assert.AreEqual(0, services.AssignmentRequestCount);
+                Assert.AreEqual(1, services.RefreshRequestCount);
+                CollectionAssert.AreEqual(
+                    new[] { TargetGroupName, SourceGroupName },
+                    services.RequestedGroupHistory.Single());
+            });
+
+            services.Snapshot = CreateAssignmentSnapshot(
+                3,
+                new[] { TargetGroupName, SourceGroupName },
+                new[] { SourceGroupName },
+                SnapshotTime.AddSeconds(5),
+                includeCompanionMembers: true);
+            algorithm.SetDateTime(SnapshotTime.AddSeconds(5));
+            algorithm.OnData(CreateEmptySlice());
+
+            Assert.AreEqual(1, services.AssignmentRequestCount);
+        }
+
+        [TestCase(1100, 0)]
+        [TestCase(1100.01, 1)]
+        public void GroupAssignmentScheduledCashChangeMustExceedThresholdInPython(
+            double totalCashValue,
+            int expectedConfirmationRequests)
+        {
+            var services = new TestFinancialAdvisorServices
+            {
+                Snapshot = CreateAssignmentSnapshot(
+                    2,
+                    new[] { TargetGroupName },
+                    new[] { TargetGroupName },
+                    totalCashValue: 100m)
+            };
+            using var algorithm = CreateAlgorithm(
+                "FinancialAdvisorGroupAssignmentAlgorithm",
+                services,
+                new Dictionary<string, string>
+                {
+                    ["fa-cash-change-threshold"] = "1000"
+                });
+
+            algorithm.OnData(CreateEmptySlice());
+            services.ResetRefreshRequests();
+            algorithm.SetDateTime(SnapshotTime.AddSeconds(90));
+            InvokeScheduledCallback(algorithm);
+            services.Snapshot = CreateAssignmentSnapshot(
+                3,
+                new[] { TargetGroupName },
+                new[] { TargetGroupName },
+                SnapshotTime.AddSeconds(91),
+                totalCashValue: Convert.ToDecimal(totalCashValue));
+            algorithm.SetDateTime(SnapshotTime.AddSeconds(91));
+            algorithm.OnData(CreateEmptySlice());
+
+            Assert.Multiple(() =>
+            {
+                Assert.AreEqual(
+                    1 + expectedConfirmationRequests,
+                    services.RefreshRequestCount,
+                    "The scheduled scoped refresh is always requested; " +
+                    "only a strictly greater change adds confirmation.");
+                Assert.AreEqual(0, services.AssignmentRequestCount);
+                CollectionAssert.AreEqual(
+                    new[] { TargetGroupName },
+                    services.RequestedGroupHistory[0]);
+                if (expectedConfirmationRequests == 1)
+                {
+                    CollectionAssert.IsEmpty(
+                        services.RequestedGroupHistory[1],
+                        "Material cash changes require complete confirmation.");
+                }
+            });
+        }
+
+        [Test]
         public void GroupAssignmentEmptyTopologyUsesThirdTickCompleteDiscoveryInPython()
         {
             var services = new TestFinancialAdvisorServices
@@ -314,6 +407,58 @@ namespace QuantConnect.Tests.Python
             {
                 Assert.AreEqual(1, services.AssignmentRequestCount);
                 Assert.IsNull(services.Assignment.TargetAllocationValue);
+            });
+        }
+
+        [Test]
+        public void GroupAssignmentRejectsSavedPctChangeMethodInPython()
+        {
+            var services = new TestFinancialAdvisorServices
+            {
+                Snapshot = CreateAssignmentSnapshot(
+                    2,
+                    new[] { TargetGroupName, SourceGroupName },
+                    Array.Empty<string>(),
+                    allocationMethod: "PctChange")
+            };
+            using var algorithm = CreateAlgorithm(
+                "FinancialAdvisorGroupAssignmentAlgorithm",
+                services);
+
+            algorithm.OnData(CreateEmptySlice());
+
+            Assert.Multiple(() =>
+            {
+                Assert.AreEqual(0, services.AssignmentRequestCount);
+                Assert.That(
+                    algorithm.ErrorMessages,
+                    Has.One.Contains(
+                        "unsupported allocation method 'PctChange'"));
+            });
+        }
+
+        [Test]
+        public void GroupAssignmentNonLiveModeDoesNotUseBrokerageServicesInPython()
+        {
+            var services = new TestFinancialAdvisorServices
+            {
+                Snapshot = CreateAssignmentSnapshot(
+                    2,
+                    new[] { TargetGroupName },
+                    new[] { SourceGroupName })
+            };
+            using var algorithm = CreateAlgorithm(
+                "FinancialAdvisorGroupAssignmentAlgorithm",
+                services,
+                liveMode: false);
+
+            algorithm.OnData(CreateEmptySlice());
+            InvokeScheduledCallback(algorithm);
+
+            Assert.Multiple(() =>
+            {
+                Assert.AreEqual(0, services.RefreshRequestCount);
+                Assert.AreEqual(0, services.AssignmentRequestCount);
             });
         }
 
@@ -738,15 +883,17 @@ namespace QuantConnect.Tests.Python
                 algorithm.GetProperty<int>("submission_count"));
         }
 
-        [Test]
-        public void DemoUnsupportedSavedGroupMethodDoesNotSubmitInPython()
+        [TestCase("ContractsOrShares")]
+        [TestCase("PctChange")]
+        public void DemoUnsupportedSavedGroupMethodDoesNotSubmitInPython(
+            string allocationMethod)
         {
             var services = new TestFinancialAdvisorServices
             {
                 Snapshot = CreateDemoSnapshot(
                     2,
                     SnapshotTime,
-                    allocationMethod: "ContractsOrShares")
+                    allocationMethod: allocationMethod)
             };
             using var algorithm =
                 CreateEmptyTicketDemoAlgorithm(services);
@@ -761,7 +908,30 @@ namespace QuantConnect.Tests.Python
                 Assert.That(
                     algorithm.ErrorMessages,
                     Has.One.Contains(
-                        "unsupported saved allocation method 'ContractsOrShares'"));
+                        $"unsupported saved allocation method '{allocationMethod}'"));
+            });
+        }
+
+        [Test]
+        public void DemoNonLiveModeDoesNotUseBrokerageServicesInPython()
+        {
+            var services = new TestFinancialAdvisorServices
+            {
+                Snapshot = CreateDemoSnapshot(2, SnapshotTime)
+            };
+            using var algorithm = CreateEmptyTicketDemoAlgorithm(
+                services,
+                liveMode: false);
+
+            algorithm.OnData(CreateEmptySlice());
+            InvokeScheduledCallback(algorithm);
+
+            Assert.Multiple(() =>
+            {
+                Assert.AreEqual(0, services.RefreshRequestCount);
+                Assert.AreEqual(
+                    0,
+                    algorithm.GetProperty<int>("submission_count"));
             });
         }
 
@@ -882,7 +1052,8 @@ namespace QuantConnect.Tests.Python
         }
 
         private static AlgorithmPythonWrapper CreateEmptyTicketDemoAlgorithm(
-            TestFinancialAdvisorServices services)
+            TestFinancialAdvisorServices services,
+            bool liveMode = true)
         {
             var moduleName =
                 $"FinancialAdvisorUnifiedGroupsDemoAlgorithmTest_{Guid.NewGuid():N}";
@@ -906,18 +1077,20 @@ class FinancialAdvisorUnifiedGroupsDemoAlgorithmUnderTest(FinancialAdvisorUnifie
             }
             return CreateAlgorithm(
                 moduleName,
-                services);
+                services,
+                liveMode: liveMode);
         }
 
         private static AlgorithmPythonWrapper CreateAlgorithm(
             string moduleName,
             TestFinancialAdvisorServices services,
-            Dictionary<string, string> parameters = null)
+            Dictionary<string, string> parameters = null,
+            bool liveMode = true)
         {
             var algorithm = new AlgorithmPythonWrapper(moduleName);
             algorithm.BaseAlgorithm.SubscriptionManager.SetDataManager(
                 new DataManagerStub(algorithm.BaseAlgorithm));
-            algorithm.SetLiveMode(true);
+            algorithm.SetLiveMode(liveMode);
             algorithm.SetDateTime(SnapshotTime);
             algorithm.SetParameters(
                 parameters ?? new Dictionary<string, string>());
@@ -1041,7 +1214,9 @@ class FinancialAdvisorUnifiedGroupsDemoAlgorithmUnderTest(FinancialAdvisorUnifie
             string allocationMethod = "Equal",
             IReadOnlyDictionary<string, decimal>
                 targetAccountAllocationValues = null,
-            bool includeCompanionMembers = false)
+            bool includeCompanionMembers = false,
+            decimal totalCashValue = 100m,
+            decimal netLiquidation = 1000m)
         {
             var targetAccountIds = accountGroupNames.Contains(
                     TargetGroupName,
@@ -1119,7 +1294,9 @@ class FinancialAdvisorUnifiedGroupsDemoAlgorithmUnderTest(FinancialAdvisorUnifie
                     ["AccountA"] = CreateAccount(
                         "AccountA",
                         accountGroupNames,
-                        0m)
+                        0m,
+                        totalCashValue,
+                        netLiquidation)
                 };
             if (includeCompanionMembers)
             {
@@ -1182,14 +1359,16 @@ class FinancialAdvisorUnifiedGroupsDemoAlgorithmUnderTest(FinancialAdvisorUnifie
         private static BrokerageAccountState CreateAccount(
             string accountId,
             IReadOnlyCollection<string> groupNames,
-            decimal quantity)
+            decimal quantity,
+            decimal totalCashValue = 100m,
+            decimal netLiquidation = 1000m)
         {
             return new BrokerageAccountState(
                 accountId,
                 groupNames,
                 "INDIVIDUAL",
-                1000m,
-                100m,
+                netLiquidation,
+                totalCashValue,
                 null,
                 null,
                 null,

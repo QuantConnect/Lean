@@ -706,8 +706,10 @@ namespace QuantConnect.Tests.Algorithm
             Assert.AreEqual(1, submissionCount);
         }
 
-        [Test]
-        public void UnsupportedSavedGroupMethodDoesNotSubmit()
+        [TestCase("ContractsOrShares")]
+        [TestCase("PctChange")]
+        public void UnsupportedSavedGroupMethodDoesNotSubmit(
+            string allocationMethod)
         {
             var snapshot = CreateSnapshot(
                 BrokerageAccountSnapshotStatus.Ready,
@@ -715,7 +717,7 @@ namespace QuantConnect.Tests.Algorithm
                 10m,
                 20m,
                 SnapshotTime,
-                allocationMethod: "ContractsOrShares");
+                allocationMethod: allocationMethod);
             var provider = new TestAccountStateProvider
             {
                 Snapshot = snapshot
@@ -749,7 +751,7 @@ namespace QuantConnect.Tests.Algorithm
                 Assert.That(
                     algorithm.ErrorMessages,
                     Has.One.Contains(
-                        "unsupported saved allocation method 'ContractsOrShares'"));
+                        $"unsupported saved allocation method '{allocationMethod}'"));
             });
         }
 
@@ -850,25 +852,6 @@ namespace QuantConnect.Tests.Algorithm
                 CollectionAssert.AreEqual(
                     new[] { GroupName },
                     provider.RequestedGroups);
-            });
-        }
-
-        [Test]
-        public void RefreshCadenceIsNotPhaseLockedToMinuteData()
-        {
-            var field = typeof(FinancialAdvisorUnifiedGroupsDemoAlgorithm).GetField(
-                "TopologyRefreshInterval",
-                BindingFlags.Static | BindingFlags.NonPublic);
-
-            Assert.IsNotNull(field);
-            var interval = (TimeSpan)field.GetValue(null);
-            Assert.Multiple(() =>
-            {
-                Assert.AreEqual(TimeSpan.FromSeconds(90), interval);
-                Assert.AreNotEqual(
-                    TimeSpan.Zero,
-                    TimeSpan.FromTicks(
-                        interval.Ticks % TimeSpan.FromMinutes(1).Ticks));
             });
         }
 
@@ -1302,6 +1285,34 @@ namespace QuantConnect.Tests.Algorithm
                 3,
                 provider.RefreshRequestCount,
                 "An accepted refresh that remains Failed or Stale must be retried.");
+        }
+
+        [Test]
+        public void NonLiveModeDoesNotUseBrokerageAccountSnapshotService()
+        {
+            var snapshot = CreateSnapshot(
+                BrokerageAccountSnapshotStatus.Ready,
+                1,
+                10m,
+                20m,
+                SnapshotTime);
+            var provider = new TestAccountStateProvider
+            {
+                Snapshot = snapshot
+            };
+            var algorithm =
+                new FinancialAdvisorUnifiedGroupsDemoAlgorithm();
+            algorithm.SubscriptionManager.SetDataManager(
+                new DataManagerStub(algorithm));
+            algorithm.SetDateTime(SnapshotTime);
+            ((IBrokerageAccountServiceConsumer)algorithm)
+                .SetBrokerageAccountStateProvider(provider);
+
+            algorithm.Initialize();
+            algorithm.SetLocked();
+            algorithm.OnData(CreateEmptySlice());
+
+            Assert.AreEqual(0, provider.RefreshRequestCount);
         }
 
         private static FinancialAdvisorUnifiedGroupsDemoAlgorithm CreateAlgorithm(

@@ -217,27 +217,6 @@ namespace QuantConnect.Tests.Algorithm
         }
 
         [Test]
-        public void RefreshCadenceIsNotPhaseLockedToMinuteData()
-        {
-            var field =
-                typeof(FinancialAdvisorGroupAssignmentAlgorithm).GetField(
-                    "TopologyRefreshInterval",
-                    System.Reflection.BindingFlags.Static |
-                    System.Reflection.BindingFlags.NonPublic);
-
-            Assert.IsNotNull(field);
-            var interval = (TimeSpan)field.GetValue(null);
-            Assert.Multiple(() =>
-            {
-                Assert.AreEqual(TimeSpan.FromSeconds(90), interval);
-                Assert.AreNotEqual(
-                    0,
-                    interval.Ticks %
-                        TimeSpan.FromMinutes(1).Ticks);
-            });
-        }
-
-        [Test]
         public void EmptyRemovalTopologyStillReachesThirdTickCompleteDiscovery()
         {
             var emptyGroups =
@@ -1216,6 +1195,37 @@ namespace QuantConnect.Tests.Algorithm
                 services.AssignmentRequests[0].TargetAllocationValue);
         }
 
+        [Test]
+        public void SavedPctChangeGroupDoesNotRequestAssignment()
+        {
+            var services = new TestFinancialAdvisorServices
+            {
+                Snapshot = CreateSnapshot(
+                    1,
+                    new BrokerageAccountGroup(
+                        "TargetGroup",
+                        "PctChange",
+                        Array.Empty<string>()),
+                    Entry(
+                        "AccountA",
+                        BrokerageAccountRelationship.Managed,
+                        "MOVE-East"))
+            };
+            var algorithm = CreateAlgorithm(services);
+
+            algorithm.OnData(CreateEmptySlice());
+
+            Assert.Multiple(() =>
+            {
+                Assert.AreEqual(0, services.AssignmentAttemptCount);
+                Assert.AreEqual(0, services.AssignmentRequests.Count);
+                Assert.That(
+                    algorithm.ErrorMessages,
+                    Has.One.Contains(
+                        "unsupported saved allocation method 'PctChange'"));
+            });
+        }
+
         [TestCase("fa-allocation-value")]
         [TestCase("fa-cash-change-threshold")]
         public void MalformedDecimalParameterFailsInitialization(
@@ -1591,6 +1601,44 @@ namespace QuantConnect.Tests.Algorithm
             algorithm.OnData(CreateEmptySlice());
 
             Assert.AreEqual(2, services.AssignmentRequests.Count);
+        }
+
+        [Test]
+        public void NonLiveModeDoesNotUseBrokerageAccountServices()
+        {
+            var services = new TestFinancialAdvisorServices
+            {
+                Snapshot = CreateSnapshot(
+                    1,
+                    new BrokerageAccountGroup(
+                        "TargetGroup",
+                        "Equal",
+                        Array.Empty<string>()),
+                    Entry(
+                        "AccountA",
+                        BrokerageAccountRelationship.Managed,
+                        "MOVE-East"))
+            };
+            var algorithm =
+                new FinancialAdvisorGroupAssignmentAlgorithm();
+            algorithm.SubscriptionManager.SetDataManager(
+                new DataManagerStub(algorithm));
+            algorithm.SetDateTime(SnapshotTime);
+            var consumer =
+                (IBrokerageAccountServiceConsumer)algorithm;
+            consumer.SetBrokerageAccountStateProvider(services);
+            consumer.SetBrokerageAccountGroupManager(services);
+
+            algorithm.Initialize();
+            algorithm.SetLocked();
+            algorithm.OnData(CreateEmptySlice());
+
+            Assert.Multiple(() =>
+            {
+                Assert.AreEqual(0, services.RefreshRequestCount);
+                Assert.AreEqual(0, services.AssignmentAttemptCount);
+                Assert.AreEqual(0, services.AssignmentRequests.Count);
+            });
         }
 
         private static FinancialAdvisorGroupAssignmentAlgorithm

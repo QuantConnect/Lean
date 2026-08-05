@@ -98,66 +98,167 @@ namespace QuantConnect.Tests.Common.Brokerages
         }
 
         [Test]
-        public void SnapshotRoundTripsThroughJsonWithCompleteAccountDirectory()
+        public void CompleteSnapshotGraphIsImmutableAndRoundTripsWithoutDataLoss()
         {
             var collectionStartedUtc = AsOfUtc.AddMinutes(-1);
+            var lastSuccessfulUpdateUtc = AsOfUtc.AddMinutes(-2);
+            var allocationValues = new Dictionary<string, decimal> { ["AccountA"] = 1.5m };
             var group = new BrokerageAccountGroup(
                 "Group",
                 "Ratio",
                 new[] { "AccountA" },
-                new Dictionary<string, decimal> { ["AccountA"] = 1m });
+                allocationValues);
+            var unmappedPositions = new List<BrokerageAccountUnmappedPosition>
+            {
+                new(
+                    brokerageContractId: "123",
+                    brokerageSymbol: "ES",
+                    localSymbol: "ESZ6",
+                    brokerageSecurityType: "FUT",
+                    currency: "USD",
+                    exchange: "GLOBEX",
+                    primaryExchange: "CME",
+                    tradingClass: "ES",
+                    expiration: "20261218",
+                    strike: 0m,
+                    right: string.Empty,
+                    multiplier: "50",
+                    quantity: -2.5m,
+                    averagePrice: 5000.25m,
+                    modelCode: "UnmappedModel",
+                    errorMessage: "mapping failed",
+                    brokerageStrike: "raw-strike",
+                    brokerageAverageCost: "raw-cost")
+            };
             var account = new BrokerageAccountState(
                 "AccountA",
                 new[] { "Group" },
                 "Margin",
                 1000m,
                 100m,
-                900m,
-                900m,
+                800m,
+                700m,
                 2000m,
                 "USD",
                 new Dictionary<string, decimal> { ["USD"] = 100m },
-                new[] { new BrokerageAccountPosition(Symbols.SPY, 1.25m, 500m) });
+                new[] { new BrokerageAccountPosition(Symbols.SPY, 1.25m, 500m, "Model") },
+                unmappedPositions);
+            var allGroups = new Dictionary<string, BrokerageAccountGroup> { ["Group"] = group };
+            var accountDirectory = new Dictionary<string, BrokerageAccountDirectoryEntry>
+            {
+                ["Primary"] = new(
+                    "Primary",
+                    BrokerageAccountRelationship.Primary,
+                    Array.Empty<string>()),
+                ["AccountA"] = new(
+                    "AccountA",
+                    BrokerageAccountRelationship.Managed,
+                    new[] { "Group" },
+                    "Margin",
+                    "Family",
+                    "Alias")
+            };
             var snapshot = new BrokerageAccountSnapshot(
-                BrokerageAccountSnapshotStatus.Ready,
-                1,
+                BrokerageAccountSnapshotStatus.Failed,
+                7,
                 AsOfUtc,
-                AsOfUtc,
+                lastSuccessfulUpdateUtc,
                 new Dictionary<string, BrokerageAccountGroup> { ["Group"] = group },
                 new Dictionary<string, BrokerageAccountState> { ["AccountA"] = account },
                 Array.Empty<string>(),
                 "membership",
                 "configuration",
-                string.Empty,
+                "refresh failed",
                 "Primary",
                 new[] { "Primary", "AccountA" },
-                null,
-                new Dictionary<string, BrokerageAccountDirectoryEntry>
-                {
-                    ["Primary"] = new(
-                        "Primary",
-                        BrokerageAccountRelationship.Primary,
-                        Array.Empty<string>()),
-                    ["AccountA"] = new(
-                        "AccountA",
-                        BrokerageAccountRelationship.Managed,
-                        new[] { "Group" },
-                        "Margin",
-                        "Family",
-                        "Alias")
-                },
+                allGroups,
+                accountDirectory,
                 true,
                 collectionStartedUtc);
 
-            var roundTrip = JsonConvert.DeserializeObject<BrokerageAccountSnapshot>(
-                JsonConvert.SerializeObject(snapshot));
+            allocationValues["AccountA"] = 99m;
+            unmappedPositions.Clear();
+            allGroups.Clear();
+            accountDirectory.Clear();
+
+            var roundTrip = AssertRoundTrips(snapshot);
 
             Assert.IsNotNull(roundTrip);
+            Assert.AreEqual(BrokerageAccountSnapshotStatus.Failed, roundTrip.Status);
+            Assert.AreEqual(7, roundTrip.Generation);
+            Assert.AreEqual(AsOfUtc, roundTrip.AsOfUtc);
+            Assert.AreEqual(lastSuccessfulUpdateUtc, roundTrip.LastSuccessfulUpdateUtc);
             Assert.IsTrue(roundTrip.IsComplete);
+            Assert.IsTrue(roundTrip.HasUnmappedPositions);
             Assert.AreEqual(collectionStartedUtc, roundTrip.CollectionStartedUtc);
-            Assert.AreEqual("Alias", roundTrip.AccountDirectory["AccountA"].AccountAlias);
-            Assert.AreEqual(1.25m, roundTrip.Accounts["AccountA"].Positions[0].Quantity);
-            Assert.AreEqual(1m, roundTrip.Groups["Group"].AccountAllocationValues["AccountA"]);
+            Assert.AreEqual("Primary", roundTrip.PrimaryAccountId);
+            Assert.AreEqual("membership", roundTrip.MembershipHash);
+            Assert.AreEqual("configuration", roundTrip.GroupConfigurationVersion);
+            Assert.AreEqual("refresh failed", roundTrip.ErrorMessage);
+            CollectionAssert.AreEqual(new[] { "Primary", "AccountA" }, roundTrip.ManagedAccountIds);
+            Assert.IsEmpty(roundTrip.UnassignedAccountIds);
+            Assert.AreEqual("Ratio", roundTrip.Groups["Group"].AllocationMethod);
+            CollectionAssert.AreEqual(new[] { "AccountA" }, roundTrip.Groups["Group"].AccountIds);
+            Assert.AreEqual(1.5m, roundTrip.Groups["Group"].AccountAllocationValues["AccountA"]);
+            Assert.AreEqual(1, roundTrip.AllGroups.Count);
+
+            var directoryEntry = roundTrip.AccountDirectory["AccountA"];
+            Assert.AreEqual(BrokerageAccountRelationship.Managed, directoryEntry.Relationship);
+            CollectionAssert.AreEqual(new[] { "Group" }, directoryEntry.GroupNames);
+            Assert.AreEqual("Margin", directoryEntry.AccountType);
+            Assert.AreEqual("Family", directoryEntry.FamilyCode);
+            Assert.AreEqual("Alias", directoryEntry.AccountAlias);
+
+            var roundTripAccount = roundTrip.Accounts["AccountA"];
+            Assert.AreEqual("AccountA", roundTripAccount.AccountId);
+            CollectionAssert.AreEqual(new[] { "Group" }, roundTripAccount.GroupNames);
+            Assert.AreEqual("Margin", roundTripAccount.AccountType);
+            CollectionAssert.AreEqual(
+                new decimal?[] { 1000m, 100m, 800m, 700m, 2000m },
+                new[]
+                {
+                    roundTripAccount.NetLiquidation,
+                    roundTripAccount.TotalCashValue,
+                    roundTripAccount.AvailableFunds,
+                    roundTripAccount.ExcessLiquidity,
+                    roundTripAccount.BuyingPower
+                });
+            Assert.AreEqual("USD", roundTripAccount.ValuationCurrency);
+            Assert.AreEqual(100m, roundTripAccount.CashBalances["USD"]);
+            var position = roundTripAccount.Positions[0];
+            Assert.AreEqual(Symbols.SPY, position.Symbol);
+            Assert.AreEqual(1.25m, position.Quantity);
+            Assert.AreEqual(500m, position.AveragePrice);
+            Assert.AreEqual("Model", position.ModelCode);
+
+            var unmapped = roundTripAccount.UnmappedPositions[0];
+            Assert.AreEqual("123", unmapped.BrokerageContractId);
+            Assert.AreEqual("ES", unmapped.BrokerageSymbol);
+            Assert.AreEqual("ESZ6", unmapped.LocalSymbol);
+            Assert.AreEqual("FUT", unmapped.BrokerageSecurityType);
+            Assert.AreEqual("USD", unmapped.Currency);
+            Assert.AreEqual("GLOBEX", unmapped.Exchange);
+            Assert.AreEqual("CME", unmapped.PrimaryExchange);
+            Assert.AreEqual("ES", unmapped.TradingClass);
+            Assert.AreEqual("20261218", unmapped.Expiration);
+            Assert.AreEqual(0m, unmapped.Strike);
+            Assert.AreEqual("raw-strike", unmapped.BrokerageStrike);
+            Assert.AreEqual(string.Empty, unmapped.Right);
+            Assert.AreEqual("50", unmapped.Multiplier);
+            Assert.AreEqual(-2.5m, unmapped.Quantity);
+            Assert.AreEqual(5000.25m, unmapped.AveragePrice);
+            Assert.AreEqual("raw-cost", unmapped.BrokerageAverageCost);
+            Assert.AreEqual("UnmappedModel", unmapped.ModelCode);
+            Assert.AreEqual("mapping failed", unmapped.ErrorMessage);
+
+            Assert.Throws<NotSupportedException>(() =>
+                ((IDictionary<string, BrokerageAccountGroup>)snapshot.AllGroups).Clear());
+            Assert.Throws<NotSupportedException>(() =>
+                ((IDictionary<string, BrokerageAccountDirectoryEntry>)snapshot.AccountDirectory).Clear());
+            Assert.Throws<NotSupportedException>(() =>
+                ((IDictionary<string, decimal>)snapshot.Groups["Group"].AccountAllocationValues).Clear());
+            Assert.Throws<NotSupportedException>(() =>
+                ((IList<BrokerageAccountUnmappedPosition>)snapshot.Accounts["AccountA"].UnmappedPositions).Clear());
         }
 
         [Test]
@@ -635,6 +736,92 @@ namespace QuantConnect.Tests.Common.Brokerages
         }
 
         [Test]
+        public void MutationResultsAreImmutableAndRoundTripWithoutDataLoss()
+        {
+            var previousGroupNames = new List<string> { "Previous" };
+            var resultingGroupNames = new List<string> { "Result" };
+            var assignment = new BrokerageAccountGroupAssignment(
+                BrokerageAccountGroupAssignmentStatus.Succeeded,
+                11,
+                AsOfUtc,
+                "Account",
+                "Result",
+                previousGroupNames,
+                resultingGroupNames,
+                "expected-membership",
+                "resulting-membership",
+                "expected-configuration",
+                "resulting-configuration",
+                "assignment warning",
+                2.5m);
+            var requestedAllocations = new Dictionary<string, decimal> { ["Account"] = 1.5m };
+            var resultingAllocations = new Dictionary<string, decimal> { ["Account"] = 2.5m };
+            var allocation = new BrokerageAccountGroupAllocationUpdate(
+                BrokerageAccountGroupAllocationUpdateStatus.Failed,
+                12,
+                AsOfUtc,
+                "Result",
+                "Ratio",
+                requestedAllocations,
+                resultingAllocations,
+                "expected-membership",
+                "resulting-membership",
+                "expected-configuration",
+                "resulting-configuration",
+                "allocation failed");
+
+            previousGroupNames.Clear();
+            resultingGroupNames.Clear();
+            requestedAllocations["Account"] = 99m;
+            resultingAllocations.Clear();
+
+            var assignmentRoundTrip = AssertRoundTrips(assignment);
+            var allocationRoundTrip = AssertRoundTrips(allocation);
+
+            Assert.IsNotNull(assignmentRoundTrip);
+            Assert.AreEqual(BrokerageAccountGroupAssignmentStatus.Succeeded, assignmentRoundTrip.Status);
+            Assert.AreEqual(11, assignmentRoundTrip.Generation);
+            Assert.AreEqual(AsOfUtc, assignmentRoundTrip.AsOfUtc);
+            Assert.AreEqual("Account", assignmentRoundTrip.AccountId);
+            Assert.AreEqual("Result", assignmentRoundTrip.TargetGroupName);
+            Assert.AreEqual(2.5m, assignmentRoundTrip.TargetAllocationValue);
+            CollectionAssert.AreEqual(new[] { "Previous" }, assignmentRoundTrip.PreviousGroupNames);
+            CollectionAssert.AreEqual(new[] { "Result" }, assignmentRoundTrip.ResultingGroupNames);
+            Assert.AreEqual("expected-membership", assignmentRoundTrip.ExpectedMembershipHash);
+            Assert.AreEqual("resulting-membership", assignmentRoundTrip.ResultingMembershipHash);
+            Assert.AreEqual(
+                "expected-configuration",
+                assignmentRoundTrip.ExpectedGroupConfigurationVersion);
+            Assert.AreEqual(
+                "resulting-configuration",
+                assignmentRoundTrip.ResultingGroupConfigurationVersion);
+            Assert.AreEqual("assignment warning", assignmentRoundTrip.ErrorMessage);
+
+            Assert.IsNotNull(allocationRoundTrip);
+            Assert.AreEqual(BrokerageAccountGroupAllocationUpdateStatus.Failed, allocationRoundTrip.Status);
+            Assert.AreEqual(12, allocationRoundTrip.Generation);
+            Assert.AreEqual(AsOfUtc, allocationRoundTrip.AsOfUtc);
+            Assert.AreEqual("Result", allocationRoundTrip.GroupName);
+            Assert.AreEqual("Ratio", allocationRoundTrip.AllocationMethod);
+            Assert.AreEqual(1.5m, allocationRoundTrip.RequestedAccountAllocationValues["Account"]);
+            Assert.AreEqual(2.5m, allocationRoundTrip.ResultingAccountAllocationValues["Account"]);
+            Assert.AreEqual("expected-membership", allocationRoundTrip.ExpectedMembershipHash);
+            Assert.AreEqual("resulting-membership", allocationRoundTrip.ResultingMembershipHash);
+            Assert.AreEqual(
+                "expected-configuration",
+                allocationRoundTrip.ExpectedGroupConfigurationVersion);
+            Assert.AreEqual(
+                "resulting-configuration",
+                allocationRoundTrip.ResultingGroupConfigurationVersion);
+            Assert.AreEqual("allocation failed", allocationRoundTrip.ErrorMessage);
+
+            Assert.Throws<NotSupportedException>(() =>
+                ((IList<string>)assignment.PreviousGroupNames).Clear());
+            Assert.Throws<NotSupportedException>(() =>
+                ((IDictionary<string, decimal>)allocation.ResultingAccountAllocationValues).Clear());
+        }
+
+        [Test]
         public void MutationResultsRejectNegativeGeneration()
         {
             var assignment = Assert.Throws<ArgumentOutOfRangeException>(() =>
@@ -683,6 +870,15 @@ namespace QuantConnect.Tests.Common.Brokerages
                 string.Empty,
                 string.Empty,
                 string.Empty);
+        }
+
+        private static T AssertRoundTrips<T>(T value)
+        {
+            var json = JsonConvert.SerializeObject(value);
+            var roundTrip = JsonConvert.DeserializeObject<T>(json);
+
+            Assert.AreEqual(json, JsonConvert.SerializeObject(roundTrip));
+            return roundTrip;
         }
 
     }

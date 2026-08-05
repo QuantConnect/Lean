@@ -22,28 +22,10 @@ namespace QuantConnect.Tests.Common.Orders
     public class InteractiveBrokersOrderPropertiesTests
     {
         [Test]
-        public void ExactPercentageDoesNotMakeAssignmentOrderSignificant()
+        public void ExactPercentageDefaultsToNullAndClonePreservesItsValue()
         {
-            var exactFirst = new InteractiveBrokersOrderProperties
-            {
-                ExactFaPercentage = 12.5m,
-                FaPercentage = 25
-            };
-            var integerFirst = new InteractiveBrokersOrderProperties
-            {
-                FaPercentage = 25,
-                ExactFaPercentage = 12.5m
-            };
+            Assert.IsNull(new InteractiveBrokersOrderProperties().ExactFaPercentage);
 
-            Assert.AreEqual(25, exactFirst.FaPercentage);
-            Assert.AreEqual(12.5m, exactFirst.ExactFaPercentage);
-            Assert.AreEqual(integerFirst.FaPercentage, exactFirst.FaPercentage);
-            Assert.AreEqual(integerFirst.ExactFaPercentage, exactFirst.ExactFaPercentage);
-        }
-
-        [Test]
-        public void ClonePreservesExactPercentageIndependently()
-        {
             var properties = new InteractiveBrokersOrderProperties
             {
                 FaPercentage = 25,

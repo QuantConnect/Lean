@@ -44,9 +44,9 @@ namespace QuantConnect.Orders
         /// </summary>
         /// <remarks>
         /// With unified Financial Advisor groups, leave this field blank so the order uses the
-        /// group's saved allocation method. For a saved PctChange group, set both
-        /// <see cref="FaGroup"/> and <c>FaMethod = "PctChange"</c> explicitly so the brokerage
-        /// selects the upstream placeholder-quantity fill-accounting path before submission.
+        /// group's saved allocation method. Set both <see cref="FaGroup"/> and
+        /// <c>FaMethod = "PctChange"</c> only when requesting the legacy order-level percentage
+        /// change instruction, which uses placeholder-quantity fill accounting.
         /// </remarks>
         public string FaMethod { get; set; }
 

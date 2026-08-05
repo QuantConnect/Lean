@@ -101,6 +101,23 @@ namespace QuantConnect.Tests.Algorithm
         }
 
         [Test]
+        public void AdditionalAccountsRequireAnExplicitGroupScope()
+        {
+            var provider = new TestProvider(BrokerageAccountSnapshotStatus.Ready);
+            var algorithm = new QCAlgorithm();
+            InstallBrokerageAccountServices(algorithm, provider, provider, provider);
+
+            var exception = Assert.Throws<ArgumentException>(() =>
+                algorithm.RequestBrokerageAccountSnapshotRefresh(
+                    Array.Empty<string>(),
+                    new[] { "AccountA" }));
+
+            Assert.AreEqual("additionalAccountIds", exception.ParamName);
+            Assert.IsNull(provider.RequestedGroups);
+            Assert.IsNull(provider.RequestedAdditionalAccountIds);
+        }
+
+        [Test]
         public void PublicSetLockedDuringInitializeDoesNotEnableMutations()
         {
             var provider = new TestProvider(BrokerageAccountSnapshotStatus.Ready);
@@ -181,6 +198,51 @@ namespace QuantConnect.Tests.Algorithm
                 allocations,
                 provider.GetAccountSnapshot()));
             Assert.AreEqual(1m, provider.RequestedAllocations["AccountA"]);
+        }
+
+        [Test]
+        public void AllocationDictionaryIsCopiedBeforeAsynchronousHandoff()
+        {
+            var provider = new TestProvider(BrokerageAccountSnapshotStatus.Ready);
+            var algorithm = new QCAlgorithm();
+            InstallBrokerageAccountServices(algorithm, provider, null, provider);
+            algorithm.SetLocked();
+            var allocations = new Dictionary<string, decimal> { ["AccountA"] = 1m };
+
+            Assert.IsTrue(algorithm.RequestBrokerageAccountGroupAllocationUpdate(
+                "Group",
+                (IReadOnlyDictionary<string, decimal>)allocations,
+                provider.GetAccountSnapshot()));
+            allocations["AccountA"] = 2m;
+            allocations["AccountB"] = 3m;
+
+            Assert.AreEqual(1, provider.RequestedAllocations.Count);
+            Assert.AreEqual(1m, provider.RequestedAllocations["AccountA"]);
+            Assert.IsFalse(provider.RequestedAllocations.ContainsKey("AccountB"));
+        }
+
+        [Test]
+        public void AllocationEnumerableIsCopiedBeforeAsynchronousHandoff()
+        {
+            var provider = new TestProvider(BrokerageAccountSnapshotStatus.Ready);
+            var algorithm = new QCAlgorithm();
+            InstallBrokerageAccountServices(algorithm, provider, null, provider);
+            algorithm.SetLocked();
+            var allocations = new List<KeyValuePair<string, decimal>>
+            {
+                new("AccountA", 1m)
+            };
+
+            Assert.IsTrue(algorithm.RequestBrokerageAccountGroupAllocationUpdate(
+                "Group",
+                (IEnumerable<KeyValuePair<string, decimal>>)allocations,
+                provider.GetAccountSnapshot()));
+            allocations[0] = new KeyValuePair<string, decimal>("AccountA", 2m);
+            allocations.Add(new KeyValuePair<string, decimal>("AccountB", 3m));
+
+            Assert.AreEqual(1, provider.RequestedAllocations.Count);
+            Assert.AreEqual(1m, provider.RequestedAllocations["AccountA"]);
+            Assert.IsFalse(provider.RequestedAllocations.ContainsKey("AccountB"));
         }
 
         [Test]
@@ -302,6 +364,50 @@ namespace QuantConnect.Tests.Algorithm
                 "Group",
                 new Dictionary<string, decimal> { ["Account"] = 1m },
                 provider.GetAccountSnapshot()));
+        }
+
+        [Test]
+        public void PartialMutationProvidersOnlyEnableTheirOwnOperation()
+        {
+            var groupProvider = new TestProvider(BrokerageAccountSnapshotStatus.Ready);
+            var groupAlgorithm = new QCAlgorithm();
+            InstallBrokerageAccountServices(groupAlgorithm, groupProvider, groupProvider, null);
+            groupAlgorithm.SetLocked();
+
+            Assert.IsTrue(groupAlgorithm.RequestBrokerageAccountGroupAssignment(
+                "Account",
+                "Group",
+                null,
+                groupProvider.GetAccountSnapshot()));
+            Assert.IsFalse(groupAlgorithm.RequestBrokerageAccountGroupAllocationUpdate(
+                "Group",
+                new Dictionary<string, decimal> { ["Account"] = 1m },
+                groupProvider.GetAccountSnapshot()));
+            Assert.AreSame(
+                BrokerageAccountGroupAllocationUpdate.Unavailable,
+                groupAlgorithm.BrokerageAccountGroupAllocationUpdate);
+
+            var allocationProvider = new TestProvider(BrokerageAccountSnapshotStatus.Ready);
+            var allocationAlgorithm = new QCAlgorithm();
+            InstallBrokerageAccountServices(
+                allocationAlgorithm,
+                allocationProvider,
+                null,
+                allocationProvider);
+            allocationAlgorithm.SetLocked();
+
+            Assert.IsFalse(allocationAlgorithm.RequestBrokerageAccountGroupAssignment(
+                "Account",
+                "Group",
+                null,
+                allocationProvider.GetAccountSnapshot()));
+            Assert.IsTrue(allocationAlgorithm.RequestBrokerageAccountGroupAllocationUpdate(
+                "Group",
+                new Dictionary<string, decimal> { ["Account"] = 1m },
+                allocationProvider.GetAccountSnapshot()));
+            Assert.AreSame(
+                BrokerageAccountGroupAssignment.Unavailable,
+                allocationAlgorithm.BrokerageAccountGroupAssignment);
         }
 
         private static BrokerageAccountSnapshot CreateSnapshot(
