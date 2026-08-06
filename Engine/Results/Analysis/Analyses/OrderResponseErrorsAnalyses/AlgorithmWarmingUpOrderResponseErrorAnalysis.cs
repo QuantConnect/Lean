@@ -14,6 +14,7 @@
  *
 */
 using System.Collections.Generic;
+using System.Text.RegularExpressions;
 using QuantConnect.Interfaces;
 using QuantConnect.Lean.Engine.Results.Analysis.Analyses.Messages;
 
@@ -38,13 +39,14 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
         public override int Weight { get; } = 96;
 
         /// <summary>
-        /// Gets the message fragments that identify a warm-up period order error.
+        /// Gets the pattern that identifies a warm-up period order error. The method names are
+        /// language-formatted in the message (OnWarmupFinished for C#, on_warmup_finished for
+        /// Python), so a pattern is used instead of text fragments to match both.
         /// </summary>
-        protected override string[] ExpectedMessageText { get; } =
-        [
-            "This operation is not allowed in Initialize or during warm up: OrderRequest.",
-            ". Please move this code to the OnWarmupFinished() method.",
-        ];
+        protected override Regex ExpectedMessagePattern { get; } = new(
+            @"This operation is not allowed in Initialize or during warm up: OrderRequest\.\w+\. " +
+            @"Please move this code to the (OnWarmupFinished|on_warmup_finished)\(\) method\.",
+            RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
         /// <summary>
         /// Gets solutions suggesting moving orders out of the warm-up period.

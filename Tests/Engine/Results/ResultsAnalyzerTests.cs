@@ -163,6 +163,14 @@ namespace QuantConnect.Tests.Engine.Results
         }
 
         [Test]
+        public void DefaultAnalysisSetIncludesTheMarketOnCloseOrderTooLateAnalysis()
+        {
+            var analyses = new DefaultSetResultsAnalyzer().DefaultAnalyses;
+
+            Assert.IsTrue(analyses.Any(analysis => analysis is MarketOnCloseOrderTooLateOrderResponseErrorAnalysis));
+        }
+
+        [Test]
         public void DefaultAnalysisSetDeclaresTheFinalOnlyAnalyses()
         {
             var finalOnly = new DefaultSetResultsAnalyzer().DefaultAnalyses
