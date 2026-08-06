@@ -204,7 +204,7 @@ namespace QuantConnect.Tests.Algorithm
             var completeSnapshot = CreateSnapshot(
                 BrokerageAccountSnapshotStatus.Ready,
                 9,
-                13m,
+                12m,
                 18m,
                 SnapshotTime.AddTicks(1));
             var provider = new TestAccountStateProvider
@@ -291,7 +291,7 @@ namespace QuantConnect.Tests.Algorithm
                     GetPrivateField<BrokerageAccountSnapshot>(
                         algorithm,
                         "_preOrderSnapshot"));
-                Assert.IsFalse(
+                Assert.IsTrue(
                     GetPrivateField<bool>(
                         algorithm,
                         "_groupOrderSubmitted"));
@@ -301,9 +301,17 @@ namespace QuantConnect.Tests.Algorithm
                         algorithm,
                         "_invalidOrderAttemptCount"));
                 Assert.AreEqual(
+                    DateTime.MaxValue,
+                    GetPrivateField<DateTime>(
+                        algorithm,
+                        "_nextGroupOrderRetryUtc"));
+                Assert.AreEqual(
                     reconciliationMessageCount + 2,
                     algorithm.LogMessages.Count(
                         message => message.Contains("FA reconciliation")));
+                Assert.That(
+                    algorithm.ErrorMessages,
+                    Has.One.Contains("Automatic resubmission is disabled"));
             });
         }
 
@@ -447,7 +455,7 @@ namespace QuantConnect.Tests.Algorithm
         }
 
         [Test]
-        public void InvalidAfterPartialFillReconcilesBeforeBoundedRetry()
+        public void InvalidAfterPartialFillDisablesAutomaticRetry()
         {
             var snapshot = CreateSnapshot(
                 BrokerageAccountSnapshotStatus.Ready,
@@ -474,7 +482,6 @@ namespace QuantConnect.Tests.Algorithm
                 "_initialSnapshotRequestGeneration",
                 snapshot.Generation - 1);
             var submissionCount = 0;
-            var retryOrderId = 0;
             SetOrderProcessor(
                 algorithm,
                 request =>
@@ -485,7 +492,8 @@ namespace QuantConnect.Tests.Algorithm
                         algorithm.OnOrderEvent(
                             CreateOrderEvent(
                                 request.OrderId,
-                                OrderStatus.PartiallyFilled));
+                                OrderStatus.PartiallyFilled,
+                                fillQuantity: 2m));
                         algorithm.OnOrderEvent(
                             CreateOrderEvent(
                                 request.OrderId,
@@ -500,7 +508,6 @@ namespace QuantConnect.Tests.Algorithm
                                     .BrokerageFailedToSubmitOrder,
                                 "saved allocation total is not lot-aligned"));
                     }
-                    retryOrderId = request.OrderId;
                     return new OrderTicket(
                         algorithm.Transactions,
                         request);
@@ -535,7 +542,7 @@ namespace QuantConnect.Tests.Algorithm
             Assert.Multiple(() =>
             {
                 Assert.AreEqual(1, submissionCount);
-                Assert.IsFalse(
+                Assert.IsTrue(
                     GetPrivateField<bool>(
                         algorithm,
                         "_groupOrderSubmitted"));
@@ -548,6 +555,9 @@ namespace QuantConnect.Tests.Algorithm
                     algorithm.LogMessages.Skip(messageCount),
                     Has.One.Contains(
                         "account=AccountA, symbol=SPY, before=10, after=12, change=2"));
+                Assert.That(
+                    algorithm.ErrorMessages,
+                    Has.One.Contains("Automatic resubmission is disabled"));
             });
 
             algorithm.SetDateTime(SnapshotTime.AddSeconds(5));
@@ -555,16 +565,16 @@ namespace QuantConnect.Tests.Algorithm
 
             Assert.Multiple(() =>
             {
-                Assert.AreEqual(2, submissionCount);
+                Assert.AreEqual(1, submissionCount);
                 Assert.IsTrue(
                     GetPrivateField<bool>(
                         algorithm,
                         "_groupOrderSubmitted"));
                 Assert.AreEqual(
-                    retryOrderId,
-                    GetPrivateField<int>(
+                    DateTime.MaxValue,
+                    GetPrivateField<DateTime>(
                         algorithm,
-                        "_groupOrderId"));
+                        "_nextGroupOrderRetryUtc"));
                 Assert.AreEqual(
                     1,
                     GetPrivateField<int>(
@@ -572,6 +582,76 @@ namespace QuantConnect.Tests.Algorithm
                         "_invalidOrderAttemptCount"),
                     "A nonterminal retry must not erase earlier invalid attempts.");
                 Assert.AreEqual(1, provider.RefreshRequestCount);
+            });
+        }
+
+        [Test]
+        public void InvalidWithZeroPositionDeltaRetainsBoundedRetry()
+        {
+            var preOrderSnapshot = CreateSnapshot(
+                BrokerageAccountSnapshotStatus.Ready,
+                5,
+                10m,
+                20m,
+                SnapshotTime.AddMinutes(-1));
+            var provider = new TestAccountStateProvider
+            {
+                Snapshot = CreateSnapshot(
+                    BrokerageAccountSnapshotStatus.Ready,
+                    7,
+                    10m,
+                    20m,
+                    SnapshotTime.AddSeconds(-1))
+            };
+            provider.RefreshRequestHook = stateProvider =>
+                stateProvider.Snapshot = CreateSnapshot(
+                    BrokerageAccountSnapshotStatus.Ready,
+                    8,
+                    10m,
+                    20m,
+                    SnapshotTime.AddTicks(1));
+            var algorithm = CreateAlgorithm(provider, preOrderSnapshot);
+            var submissionCount = 0;
+            SetOrderProcessor(
+                algorithm,
+                request =>
+                {
+                    ++submissionCount;
+                    return new OrderTicket(algorithm.Transactions, request);
+                });
+
+            algorithm.OnOrderEvent(CreateOrderEvent(
+                41,
+                OrderStatus.Invalid,
+                "distinctive rejection"));
+            algorithm.OnData(CreateEmptySlice());
+
+            Assert.Multiple(() =>
+            {
+                Assert.IsFalse(GetPrivateField<bool>(
+                    algorithm,
+                    "_groupOrderSubmitted"));
+                Assert.AreEqual(1, GetPrivateField<int>(
+                    algorithm,
+                    "_invalidOrderAttemptCount"));
+                Assert.AreEqual(0, submissionCount);
+                Assert.That(
+                    algorithm.ErrorMessages,
+                    Has.One.Contains("the next attempt is scheduled"));
+            });
+
+            algorithm.SetDateTime(SnapshotTime.AddSeconds(5));
+            algorithm.OnData(CreateEmptySlice());
+
+            Assert.Multiple(() =>
+            {
+                Assert.AreEqual(1, submissionCount);
+                Assert.IsTrue(GetPrivateField<bool>(
+                    algorithm,
+                    "_groupOrderSubmitted"));
+                Assert.AreEqual(1, GetPrivateField<int>(
+                    algorithm,
+                    "_invalidOrderAttemptCount"));
             });
         }
 
@@ -1625,7 +1705,8 @@ namespace QuantConnect.Tests.Algorithm
         private static OrderEvent CreateOrderEvent(
             int orderId,
             OrderStatus status,
-            string message = null)
+            string message = null,
+            decimal? fillQuantity = null)
         {
             return new OrderEvent(
                 orderId,
@@ -1634,7 +1715,7 @@ namespace QuantConnect.Tests.Algorithm
                 status,
                 OrderDirection.Buy,
                 100m,
-                status == OrderStatus.Filled ? 5m : 0m,
+                fillQuantity ?? (status == OrderStatus.Filled ? 5m : 0m),
                 OrderFee.Zero)
             {
                 Message = message

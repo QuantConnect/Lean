@@ -161,7 +161,7 @@ namespace QuantConnect.Algorithm.CSharp
                 }
                 if (reconcile)
                 {
-                    ReconcileAccountPositions(
+                    var anyPositionChanged = ReconcileAccountPositions(
                         preOrderSnapshot,
                         snapshot);
                     lock (_orderStateLock)
@@ -169,7 +169,8 @@ namespace QuantConnect.Algorithm.CSharp
                         invalidOrderMessage =
                             CompleteTerminalOrderReconciliationLocked(
                                 reconciledTerminalOrderEvent,
-                                now);
+                                now,
+                                anyPositionChanged);
                     }
                     if (invalidOrderMessage != null)
                     {
@@ -584,7 +585,7 @@ namespace QuantConnect.Algorithm.CSharp
 
             if (reconcile)
             {
-                ReconcileAccountPositions(
+                var anyPositionChanged = ReconcileAccountPositions(
                     preOrderSnapshot,
                     snapshot);
                 lock (_orderStateLock)
@@ -592,7 +593,8 @@ namespace QuantConnect.Algorithm.CSharp
                     terminalOrderMessage =
                         CompleteTerminalOrderReconciliationLocked(
                             reconciledTerminalOrderEvent,
-                            UtcTime);
+                            UtcTime,
+                            anyPositionChanged);
                 }
             }
             if (reconciliationErrorMessage != null)
@@ -704,11 +706,12 @@ namespace QuantConnect.Algorithm.CSharp
                 $"'{GroupName}' was not accepted.");
         }
 
-        private void ReconcileAccountPositions(
+        private bool ReconcileAccountPositions(
             BrokerageAccountSnapshot preOrderSnapshot,
             BrokerageAccountSnapshot currentSnapshot)
         {
             var group = preOrderSnapshot.Groups[GroupName];
+            var anyPositionChanged = false;
 
             foreach (var accountId in group.AccountIds)
             {
@@ -716,11 +719,14 @@ namespace QuantConnect.Algorithm.CSharp
                 var currentAccount = currentSnapshot.Accounts[accountId];
                 var previousQuantity = GetPositionQuantity(previousAccount);
                 var currentQuantity = GetPositionQuantity(currentAccount);
+                var change = currentQuantity - previousQuantity;
+                anyPositionChanged |= change != 0m;
                 Log(
                     $"FA reconciliation: account={accountId}, symbol={_symbol.Value}, " +
                     $"before={previousQuantity}, after={currentQuantity}, " +
-                    $"change={currentQuantity - previousQuantity}");
+                    $"change={change}");
             }
+            return anyPositionChanged;
         }
 
         private bool CompleteGroupOrderSubmissionLocked(
@@ -792,7 +798,8 @@ namespace QuantConnect.Algorithm.CSharp
 
         private string CompleteTerminalOrderReconciliationLocked(
             TerminalOrderEvent terminalOrderEvent,
-            DateTime now)
+            DateTime now,
+            bool anyPositionChanged)
         {
             if (terminalOrderEvent == null ||
                 terminalOrderEvent.Status != OrderStatus.Invalid)
@@ -802,6 +809,17 @@ namespace QuantConnect.Algorithm.CSharp
             }
 
             ++_invalidOrderAttemptCount;
+            if (anyPositionChanged)
+            {
+                _groupOrderSubmitted = true;
+                _nextGroupOrderRetryUtc = DateTime.MaxValue;
+                return $"Financial Advisor group order " +
+                    $"{terminalOrderEvent.OrderId} was reconciled after rejection, " +
+                    $"but at least one original group member's {_symbol.Value} " +
+                    "position changed. Automatic resubmission is disabled to avoid " +
+                    "a duplicate allocation; review the account positions and order " +
+                    "in TWS before submitting again.";
+            }
             _groupOrderSubmitted = false;
             _nextGroupOrderRetryUtc =
                 _invalidOrderAttemptCount <

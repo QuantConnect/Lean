@@ -116,14 +116,15 @@ class FinancialAdvisorUnifiedGroupsDemoAlgorithm(QCAlgorithm):
         if reconciliation_error is not None:
             self.error(reconciliation_error)
         if reconcile:
-            self._reconcile_account_positions(
+            any_position_changed = self._reconcile_account_positions(
                 pre_order_snapshot,
                 snapshot)
             with self._order_state_lock:
                 terminal_order_message = \
                     self._complete_terminal_order_reconciliation_locked(
                         reconciled_terminal_order_event,
-                        now)
+                        now,
+                        any_position_changed)
             if terminal_order_message is not None:
                 self.error(terminal_order_message)
             return
@@ -391,14 +392,15 @@ class FinancialAdvisorUnifiedGroupsDemoAlgorithm(QCAlgorithm):
         if reconciliation_error is not None:
             self.error(reconciliation_error)
         if reconcile:
-            self._reconcile_account_positions(
+            any_position_changed = self._reconcile_account_positions(
                 pre_order_snapshot,
                 snapshot)
             with self._order_state_lock:
                 terminal_order_message = \
                     self._complete_terminal_order_reconciliation_locked(
                         reconciled_terminal_order_event,
-                        self.utc_time)
+                        self.utc_time,
+                        any_position_changed)
             if terminal_order_message is not None:
                 self.error(terminal_order_message)
         if initial_refresh_rejected:
@@ -491,16 +493,20 @@ class FinancialAdvisorUnifiedGroupsDemoAlgorithm(QCAlgorithm):
             account.account_id.casefold(): account
             for account in list(current_snapshot.accounts.values)
         }
+        any_position_changed = False
         for account_id in group.account_ids:
             account_key = account_id.casefold()
             previous_account = previous_accounts[account_key]
             current_account = current_accounts[account_key]
             previous_quantity = self._get_position_quantity(previous_account)
             current_quantity = self._get_position_quantity(current_account)
+            change = current_quantity - previous_quantity
+            any_position_changed = any_position_changed or change != 0
             self.log(
                 f"FA reconciliation: account={account_id}, symbol={self._symbol}, "
                 f"before={previous_quantity}, after={current_quantity}, "
-                f"change={current_quantity - previous_quantity}")
+                f"change={change}")
+        return any_position_changed
 
     def _complete_group_order_submission_locked(
             self,
@@ -561,13 +567,24 @@ class FinancialAdvisorUnifiedGroupsDemoAlgorithm(QCAlgorithm):
     def _complete_terminal_order_reconciliation_locked(
             self,
             terminal_order_event,
-            now):
+            now,
+            any_position_changed):
         if terminal_order_event is None or \
                 terminal_order_event[1][0] != OrderStatus.INVALID:
             self._invalid_order_attempt_count = 0
             return None
 
         self._invalid_order_attempt_count += 1
+        if any_position_changed:
+            self._group_order_submitted = True
+            self._next_group_order_retry_utc = datetime.max
+            order_id = terminal_order_event[0]
+            return (
+                f"Financial Advisor group order {order_id} was reconciled after "
+                f"rejection, but at least one original group member's "
+                f"{self._symbol} position changed. Automatic resubmission is "
+                f"disabled to avoid a duplicate allocation; review the account "
+                f"positions and order in TWS before submitting again.")
         self._group_order_submitted = False
         retry_allowed = \
             self._invalid_order_attempt_count < \

@@ -940,6 +940,67 @@ namespace QuantConnect.Tests.Python
         }
 
         [Test]
+        public void DemoInvalidAfterOffsettingPartialFillsDisablesRetryInPython()
+        {
+            var snapshot = CreateDemoSnapshot(2, SnapshotTime);
+            var services = new TestFinancialAdvisorServices
+            {
+                Snapshot = snapshot
+            };
+            using var algorithm = CreateDemoAlgorithm(
+                services,
+                out var orderProcessor);
+            algorithm.SetProperty("_pre_order_snapshot", snapshot);
+            algorithm.SetProperty("_group_order_submitted", true);
+            algorithm.SetProperty("_group_order_id", 41);
+
+            using (Py.GIL())
+            {
+                algorithm.OnOrderEvent(CreateOrderEvent(
+                    41,
+                    OrderStatus.PartiallyFilled,
+                    null,
+                    2m));
+                algorithm.OnOrderEvent(CreateOrderEvent(
+                    41,
+                    OrderStatus.Invalid,
+                    "distinctive partial-fill rejection"));
+            }
+
+            services.Snapshot = CreateDemoSnapshot(
+                3,
+                SnapshotTime.AddSeconds(5).AddTicks(1),
+                accountAQuantity: 12m,
+                accountBQuantity: 18m);
+            algorithm.SetDateTime(SnapshotTime.AddSeconds(10));
+            InvokeScheduledCallback(algorithm);
+            algorithm.SetDateTime(SnapshotTime.AddSeconds(20));
+            algorithm.OnData(CreateEmptySlice());
+
+            Assert.Multiple(() =>
+            {
+                Assert.AreEqual(-1, algorithm.GetProperty<long>(
+                    "_pending_reconcile_generation"));
+                Assert.AreEqual(1, algorithm.GetProperty<int>(
+                    "_invalid_order_attempt_count"));
+                Assert.IsTrue(algorithm.GetProperty<bool>(
+                    "_group_order_submitted"));
+                Assert.AreEqual(0, orderProcessor.ProcessedOrdersRequests.Count);
+                Assert.That(
+                    algorithm.LogMessages,
+                    Has.One.Contains(
+                        "account=AccountA, symbol=SPY, before=10.0, after=12.0, change=2.0"));
+                Assert.That(
+                    algorithm.LogMessages,
+                    Has.One.Contains(
+                        "account=AccountB, symbol=SPY, before=20.0, after=18.0, change=-2.0"));
+                Assert.That(
+                    algorithm.ErrorMessages,
+                    Has.One.Contains("Automatic resubmission is disabled"));
+            });
+        }
+
+        [Test]
         public void DemoNonInvalidTerminalResetsRetryCountAfterReconciliationInPython()
         {
             var snapshot = CreateDemoSnapshot(2, SnapshotTime);
@@ -1455,7 +1516,8 @@ namespace QuantConnect.Tests.Python
         private static OrderEvent CreateOrderEvent(
             int orderId,
             OrderStatus status,
-            string message)
+            string message,
+            decimal fillQuantity = 0m)
         {
             return new OrderEvent(
                 orderId,
@@ -1464,7 +1526,7 @@ namespace QuantConnect.Tests.Python
                 status,
                 OrderDirection.Buy,
                 0m,
-                0m,
+                fillQuantity,
                 OrderFee.Zero)
             {
                 Message = message
@@ -1476,7 +1538,9 @@ namespace QuantConnect.Tests.Python
             DateTime collectionStartedUtc,
             bool includeAccountB = true,
             string allocationMethod = "Equal",
-            DateTime? lastSuccessfulUpdateUtc = null)
+            DateTime? lastSuccessfulUpdateUtc = null,
+            decimal accountAQuantity = 10m,
+            decimal accountBQuantity = 20m)
         {
             var group = new BrokerageAccountGroup(
                 DemoGroupName,
@@ -1493,14 +1557,14 @@ namespace QuantConnect.Tests.Python
                     ["AccountA"] = CreateAccount(
                         "AccountA",
                         new[] { group.Name },
-                        10m)
+                        accountAQuantity)
                 };
             if (includeAccountB)
             {
                 accounts["AccountB"] = CreateAccount(
                     "AccountB",
                     new[] { group.Name },
-                    20m);
+                    accountBQuantity);
             }
 
             return new BrokerageAccountSnapshot(
