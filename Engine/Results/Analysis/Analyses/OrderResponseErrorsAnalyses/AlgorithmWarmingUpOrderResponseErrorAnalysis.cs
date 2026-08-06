@@ -39,11 +39,14 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
 
         /// <summary>
         /// Gets the message fragments that identify a warm-up period order error.
+        /// The method name is language-formatted in the message (OnWarmupFinished for C#,
+        /// on_warmup_finished for Python), so the fragments must not include it.
         /// </summary>
         protected override string[] ExpectedMessageText { get; } =
         [
             "This operation is not allowed in Initialize or during warm up: OrderRequest.",
-            ". Please move this code to the OnWarmupFinished() method.",
+            ". Please move this code to the ",
+            "() method.",
         ];
 
         /// <summary>
