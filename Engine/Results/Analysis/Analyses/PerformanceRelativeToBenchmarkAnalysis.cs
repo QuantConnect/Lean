@@ -25,6 +25,11 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
     public class PerformanceRelativeToBenchmarkAnalysis : BaseResultsAnalysis
     {
         /// <summary>
+        /// This analysis compares the equity and benchmark curves, which are only built for the final analysis.
+        /// </summary>
+        public override bool RunsInRun { get; } = false;
+
+        /// <summary>
         /// Gets the description of the underperformance relative to benchmark issue.
         /// </summary>
         public override string Issue { get; } = "The strategy has a lower Sharpe ratio than the benchmark.";

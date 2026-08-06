@@ -27,6 +27,12 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
     public class TakeProfitAndStopLossOrdersAnalysis : BaseResultsAnalysis
     {
         /// <summary>
+        /// This analysis reads the current orders collection instead of scanning the order event
+        /// and log streams, so its in-run findings are replaced on every run.
+        /// </summary>
+        public override bool IsStateBased { get; } = true;
+
+        /// <summary>
         /// Gets the description of the TP/SL order handling issue.
         /// </summary>
         public override string Issue { get; } = "The algorithm isn't correctly handling take-profit and stop-loss order pairs.";

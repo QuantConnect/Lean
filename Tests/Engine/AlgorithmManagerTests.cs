@@ -191,6 +191,10 @@ namespace QuantConnect.Tests.Engine
             {
             }
 
+            public void OnWarmupFinished()
+            {
+            }
+
             public void DebugMessage(string message)
             {
             }

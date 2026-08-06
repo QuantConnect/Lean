@@ -26,6 +26,11 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
     public class MonteCarloPercentileAnalysis : BaseResultsAnalysis
     {
         /// <summary>
+        /// This analysis runs simulations over the equity curve, which is only built for the final analysis.
+        /// </summary>
+        public override bool RunsInRun { get; } = false;
+
+        /// <summary>
         /// Gets the description of the overly optimistic equity curve issue.
         /// </summary>
         public override string Issue { get; } =  "The equity curve is very optimistic. " +

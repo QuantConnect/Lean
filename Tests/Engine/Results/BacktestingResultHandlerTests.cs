@@ -18,8 +18,11 @@ using NUnit.Framework;
 using QuantConnect.Algorithm.CSharp;
 using QuantConnect.Configuration;
 using QuantConnect.Lean.Engine.Results;
+using QuantConnect.Lean.Engine.TransactionHandlers;
 using QuantConnect.Logging;
+using QuantConnect.Packets;
 using QuantConnect.Report;
+using QuantConnect.Tests.Engine.DataFeeds;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -545,6 +548,45 @@ namespace QuantConnect.Tests.Engine.Results
 
                 return new KeyValuePair<DateTime, double>(x.Time, value);
             }));
+        }
+
+        [Test]
+        public void RecapturesStartingPortfolioValueAfterWarmup()
+        {
+            using var api = new Api.Api();
+            using var messaging = new QuantConnect.Messaging.Messaging();
+            var resultHandler = new TestableBacktestingResultHandler();
+            resultHandler.Initialize(new(new BacktestNodePacket(), messaging, api, new BacktestingTransactionHandler(), null));
+
+            try
+            {
+                var algorithm = new AlgorithmStub();
+                algorithm.SetCash(120000);
+
+                // The setup-time snapshot: when the algorithm has a warm-up period, it is captured
+                // with currency conversion rates seeded at the warm-up start
+                resultHandler.SetAlgorithm(algorithm, 90000);
+                Assert.AreEqual(90000, resultHandler.ExposedStartingPortfolioValue);
+
+                algorithm.SetFinishedWarmingUp();
+                resultHandler.OnWarmupFinished();
+
+                // re-captured once warm-up finished, when the conversion rates are up to date
+                Assert.AreEqual(120000, resultHandler.ExposedStartingPortfolioValue);
+                Assert.AreEqual(120000, resultHandler.ExposedDailyPortfolioValue);
+                Assert.AreEqual(120000, resultHandler.ExposedCumulativeMaxPortfolioValue);
+            }
+            finally
+            {
+                resultHandler.Exit();
+            }
+        }
+
+        private class TestableBacktestingResultHandler : BacktestingResultHandler
+        {
+            public decimal ExposedStartingPortfolioValue => StartingPortfolioValue;
+            public decimal ExposedDailyPortfolioValue => DailyPortfolioValue;
+            public decimal ExposedCumulativeMaxPortfolioValue => CumulativeMaxPortfolioValue;
         }
     }
 }
