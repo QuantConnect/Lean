@@ -428,6 +428,7 @@ namespace QuantConnect.Lean.Engine.Results.Analysis
             new EuropeanOptionNotExpiredOnExerciseOrderResponseErrorAnalysis(),
             new OptionOrderOnStockSplitOrderResponseErrorAnalysis(),
             new MarketOnOpenNotAllowedDuringRegularHoursOrderResponseErrorAnalysis(),
+            new MarketOnCloseOrderTooLateOrderResponseErrorAnalysis(),
             new OrderQuantityLessThanLotSizeOrderResponseErrorAnalysis(),
             new InsightsEmittedForDelistedSecuritiesAnalysis(),
             new StatisticalSignificanceOfDailyReturnsAnalysis(),
