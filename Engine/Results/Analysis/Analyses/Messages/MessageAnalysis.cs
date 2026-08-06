@@ -16,6 +16,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.RegularExpressions;
 
 namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses.Messages
 {
@@ -25,7 +26,18 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses.Messages
     /// </summary>
     public abstract class MessageAnalysis : BaseResultsAnalysis
     {
-        protected abstract string[] ExpectedMessageText { get; }
+        /// <summary>
+        /// The text fragments a message must all contain (case-insensitive) to identify the issue.
+        /// Ignored when <see cref="ExpectedMessagePattern"/> is set.
+        /// </summary>
+        protected virtual string[] ExpectedMessageText { get; }
+
+        /// <summary>
+        /// Optional regex that identifies the issue message, taking precedence over
+        /// <see cref="ExpectedMessageText"/>. Use it for messages with variable parts fragments
+        /// cannot pin down, like method names formatted by algorithm language.
+        /// </summary>
+        protected virtual Regex ExpectedMessagePattern { get; }
 
         /// <summary>
         /// Returns messages from <paramref name="messages"/> that contain all strings in <paramref name="expectedMessages"/>
@@ -42,12 +54,14 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses.Messages
             => Run(parameters.Logs, parameters.Language);
 
         /// <summary>
-        /// Runs the analysis by scanning <paramref name="messages"/> for the expected text fragments
-        /// and returns results with solutions when matches are found.
+        /// Runs the analysis by scanning <paramref name="messages"/> for the expected pattern or
+        /// text fragments and returns results with solutions when matches are found.
         /// </summary>
         public virtual IReadOnlyList<QuantConnect.Analysis> Run(IReadOnlyList<string> messages, Language language)
         {
-            var foundMessages = Match(messages, ExpectedMessageText).ToList();
+            var foundMessages = (ExpectedMessagePattern != null
+                ? messages.Where(message => ExpectedMessagePattern.IsMatch(message))
+                : Match(messages, ExpectedMessageText)).ToList();
             var solutions = foundMessages.Count > 0 ? Solutions(language) : [];
             return SingleResponse(foundMessages.Count > 0 ? foundMessages[0] : null, foundMessages.Count > 1 ? foundMessages.Count : null, solutions);
         }
