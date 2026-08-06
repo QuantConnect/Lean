@@ -31,14 +31,23 @@ namespace QuantConnect.Interfaces
         /// <summary>
         /// Requests an asynchronous refresh for the requested brokerage account groups and additional managed accounts.
         /// Implementations should coalesce duplicate requests and apply brokerage pacing limits.
+        /// Before accepted work proceeds, the implementation publishes a
+        /// <see cref="BrokerageAccountSnapshotStatus.Refreshing"/> snapshot without advancing its generation; a
+        /// coalesced request joins previously accepted work. A fast refresh can publish a terminal snapshot before the
+        /// caller's next read, so callers must not require observing
+        /// <see cref="BrokerageAccountSnapshotStatus.Refreshing"/>. Callers should enforce their own timeout and wait
+        /// for a <see cref="BrokerageAccountSnapshotStatus.Ready"/> snapshot with a later generation while handling
+        /// <see cref="BrokerageAccountSnapshotStatus.Failed"/> or <see cref="BrokerageAccountSnapshotStatus.Stale"/>.
         /// </summary>
         /// <param name="groupNames">
-        /// Brokerage account groups to refresh. An empty collection requests discovery complete within the
+        /// Brokerage account groups to refresh. An empty collection requests complete discovery within the
         /// provider's configured deployment scope; inspect <see cref="BrokerageAccountSnapshot.IsComplete"/>
         /// on the published snapshot.
         /// </param>
         /// <param name="additionalAccountIds">Additional managed accounts to refresh outside the selected groups.</param>
-        /// <returns>True if the request was accepted or coalesced; otherwise, false.</returns>
+        /// <returns>
+        /// True if the request was accepted or coalesced; otherwise, false. Acceptance does not indicate completion.
+        /// </returns>
         bool RequestAccountSnapshotRefresh(
             IReadOnlyCollection<string> groupNames,
             IReadOnlyCollection<string> additionalAccountIds);

@@ -16,6 +16,7 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Threading;
 using QuantConnect.Brokerages;
 using QuantConnect.Interfaces;
 
@@ -23,10 +24,14 @@ namespace QuantConnect.Algorithm
 {
     public partial class QCAlgorithm : IBrokerageAccountServiceConsumer
     {
+        private const int BrokerageAccountMutationServicesDisabled = 0;
+        private const int BrokerageAccountMutationServicesEnabled = 1;
+        private const int BrokerageAccountMutationServicesRevoked = 2;
+
         private volatile IBrokerageAccountStateProvider _brokerageAccountStateProvider;
         private volatile IBrokerageAccountGroupManager _brokerageAccountGroupManager;
         private volatile IBrokerageAccountGroupAllocationManager _brokerageAccountGroupAllocationManager;
-        private volatile bool _brokerageAccountMutationServicesReady;
+        private int _brokerageAccountMutationServicesState;
 
         /// <summary>
         /// Gets the latest immutable brokerage account snapshot. Reading this property does not perform an
@@ -72,13 +77,20 @@ namespace QuantConnect.Algorithm
         }
 
         /// <summary>
-        /// Requests asynchronous discovery complete within the provider's configured deployment scope. Inspect
+        /// Requests complete brokerage account discovery asynchronously within the provider's configured deployment
+        /// scope. Inspect
         /// <see cref="QuantConnect.Brokerages.BrokerageAccountSnapshot.IsComplete"/> on the published snapshot.
-        /// An accepted request immediately changes
-        /// <see cref="BrokerageAccountSnapshot"/> to refreshing without advancing its generation. Poll for a ready
-        /// snapshot with a generation greater than the value observed before this request.
+        /// Before accepted work proceeds, the provider publishes <see cref="BrokerageAccountSnapshotStatus.Refreshing"/>
+        /// without advancing its generation; a coalesced request joins previously accepted work. A fast refresh can
+        /// publish a terminal snapshot before the caller's next read, so observing
+        /// <see cref="BrokerageAccountSnapshotStatus.Refreshing"/> is not required. Enforce a caller-owned timeout,
+        /// handle <see cref="BrokerageAccountSnapshotStatus.Failed"/> or
+        /// <see cref="BrokerageAccountSnapshotStatus.Stale"/>, and require a later-generation
+        /// <see cref="BrokerageAccountSnapshotStatus.Ready"/> snapshot before treating the request as successful.
         /// </summary>
-        /// <returns>True when the request was accepted or coalesced; otherwise, false.</returns>
+        /// <returns>
+        /// True when the request was accepted or coalesced; otherwise, false. Acceptance does not indicate completion.
+        /// </returns>
         [DocumentationAttribute(LiveTrading)]
         public bool RequestBrokerageAccountSnapshotRefresh()
         {
@@ -89,13 +101,19 @@ namespace QuantConnect.Algorithm
 
         /// <summary>
         /// Requests an asynchronous brokerage account snapshot refresh for the specified account groups and
-        /// additional managed accounts. An accepted request immediately changes
-        /// <see cref="BrokerageAccountSnapshot"/> to refreshing without advancing its generation. Poll for a ready
-        /// snapshot with a generation greater than the value observed before this request.
+        /// additional managed accounts. Before accepted work proceeds, the provider publishes
+        /// <see cref="BrokerageAccountSnapshotStatus.Refreshing"/> without advancing its generation; a coalesced request
+        /// joins previously accepted work. A fast refresh can publish a terminal snapshot before the caller's next
+        /// read, so observing <see cref="BrokerageAccountSnapshotStatus.Refreshing"/> is not required. Enforce a
+        /// caller-owned timeout, handle <see cref="BrokerageAccountSnapshotStatus.Failed"/> or
+        /// <see cref="BrokerageAccountSnapshotStatus.Stale"/>, and require a later-generation
+        /// <see cref="BrokerageAccountSnapshotStatus.Ready"/> snapshot before treating the request as successful.
         /// </summary>
         /// <param name="groupNames">Brokerage account groups to include.</param>
         /// <param name="additionalAccountIds">Additional managed accounts to include outside the selected groups.</param>
-        /// <returns>True when the request was accepted or coalesced; otherwise, false.</returns>
+        /// <returns>
+        /// True when the request was accepted or coalesced; otherwise, false. Acceptance does not indicate completion.
+        /// </returns>
         /// <exception cref="ArgumentNullException"><paramref name="groupNames"/> is null.</exception>
         [DocumentationAttribute(LiveTrading)]
         public bool RequestBrokerageAccountSnapshotRefresh(
@@ -162,7 +180,8 @@ namespace QuantConnect.Algorithm
                 ValidateBrokerageIdentifier(targetGroupName, nameof(targetGroupName));
             }
 
-            if (!_brokerageAccountMutationServicesReady)
+            if (Volatile.Read(ref _brokerageAccountMutationServicesState) !=
+                BrokerageAccountMutationServicesEnabled)
             {
                 return false;
             }
@@ -238,7 +257,8 @@ namespace QuantConnect.Algorithm
                 }
             }
 
-            if (!_brokerageAccountMutationServicesReady)
+            if (Volatile.Read(ref _brokerageAccountMutationServicesState) !=
+                BrokerageAccountMutationServicesEnabled)
             {
                 return false;
             }
@@ -340,13 +360,34 @@ namespace QuantConnect.Algorithm
             _brokerageAccountGroupAllocationManager = manager;
         }
 
-        internal void SetBrokerageAccountMutationServicesReady(bool ready = true)
+        internal void SetBrokerageAccountMutationServicesReady(bool ready)
         {
-            var provider = _brokerageAccountStateProvider;
-            var groupManager = _brokerageAccountGroupManager;
-            var allocationManager = _brokerageAccountGroupAllocationManager;
-            _brokerageAccountMutationServicesReady =
-                ready && provider != null && (groupManager != null || allocationManager != null);
+            if (ready)
+            {
+                var provider = _brokerageAccountStateProvider;
+                var groupManager = _brokerageAccountGroupManager;
+                var allocationManager = _brokerageAccountGroupAllocationManager;
+                if (provider != null && (groupManager != null || allocationManager != null))
+                {
+                    Interlocked.CompareExchange(
+                        ref _brokerageAccountMutationServicesState,
+                        BrokerageAccountMutationServicesEnabled,
+                        BrokerageAccountMutationServicesDisabled);
+                }
+                return;
+            }
+
+            Interlocked.CompareExchange(
+                ref _brokerageAccountMutationServicesState,
+                BrokerageAccountMutationServicesDisabled,
+                BrokerageAccountMutationServicesEnabled);
+        }
+
+        internal void RevokeBrokerageAccountMutationServices()
+        {
+            Interlocked.Exchange(
+                ref _brokerageAccountMutationServicesState,
+                BrokerageAccountMutationServicesRevoked);
         }
 
         private static ReadOnlyCollection<string> NormalizeIdentifiers(

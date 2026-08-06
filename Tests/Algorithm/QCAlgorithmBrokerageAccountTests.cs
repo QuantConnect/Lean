@@ -441,7 +441,7 @@ namespace QuantConnect.Tests.Algorithm
             consumer.SetBrokerageAccountGroupAllocationManager(allocationManager);
             if (mutationsReady)
             {
-                algorithm.SetBrokerageAccountMutationServicesReady();
+                algorithm.SetBrokerageAccountMutationServicesReady(true);
             }
         }
 

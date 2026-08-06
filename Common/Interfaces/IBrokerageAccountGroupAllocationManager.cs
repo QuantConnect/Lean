@@ -39,7 +39,9 @@ namespace QuantConnect.Interfaces
         /// </remarks>
         /// <param name="groupName">Existing managed account group to update.</param>
         /// <param name="accountAllocationValues">Complete per-account allocation vector.</param>
-        /// <param name="expectedMembershipHash">Membership hash from the latest ready account snapshot.</param>
+        /// <param name="expectedMembershipHash">
+        /// <see cref="BrokerageAccountSnapshot.MembershipHash"/> from the latest ready account snapshot.
+        /// </param>
         /// <param name="expectedGroupConfigurationVersion">
         /// Brokerage-wide group configuration version from the latest ready account snapshot.
         /// </param>

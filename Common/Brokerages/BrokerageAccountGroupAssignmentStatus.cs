@@ -21,12 +21,13 @@ namespace QuantConnect.Brokerages
     public enum BrokerageAccountGroupAssignmentStatus
     {
         /// <summary>
-        /// The brokerage does not expose account-group management.
+        /// No assignment result is available. The brokerage may not expose account-group management, or no request
+        /// has yet produced a result.
         /// </summary>
         Unavailable,
 
         /// <summary>
-        /// The brokerage accepted the request and is processing it.
+        /// The asynchronous request was accepted for processing.
         /// </summary>
         Pending,
 

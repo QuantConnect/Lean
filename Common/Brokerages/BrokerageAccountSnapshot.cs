@@ -29,12 +29,11 @@ namespace QuantConnect.Brokerages
             new ReadOnlyDictionary<string, BrokerageAccountGroup>(new Dictionary<string, BrokerageAccountGroup>());
         private static readonly IReadOnlyDictionary<string, BrokerageAccountState> EmptyAccounts =
             new ReadOnlyDictionary<string, BrokerageAccountState>(new Dictionary<string, BrokerageAccountState>());
-        private static readonly IReadOnlyDictionary<string, BrokerageAccountDirectoryEntry> EmptyAccountDirectory =
-            new ReadOnlyDictionary<string, BrokerageAccountDirectoryEntry>(new Dictionary<string, BrokerageAccountDirectoryEntry>());
         private static readonly IReadOnlyList<string> EmptyAccountIds = Array.Empty<string>();
 
         /// <summary>
-        /// Snapshot returned when the brokerage does not expose account-level state.
+        /// Snapshot returned when no account-level state is available. The brokerage may not support this
+        /// capability, or no request has yet produced a snapshot.
         /// </summary>
         public static BrokerageAccountSnapshot Unavailable { get; } = new(
             BrokerageAccountSnapshotStatus.Unavailable,
@@ -79,7 +78,8 @@ namespace QuantConnect.Brokerages
         public IReadOnlyDictionary<string, BrokerageAccountGroup> Groups { get; }
 
         /// <summary>
-        /// Gets every account group discovered from the brokerage, including groups outside a scoped refresh.
+        /// Gets the complete group set supplied by the provider, including groups outside a scoped refresh. When the
+        /// provider omits this set, the constructor falls back to <see cref="Groups"/>.
         /// </summary>
         public IReadOnlyDictionary<string, BrokerageAccountGroup> AllGroups { get; }
 
@@ -94,26 +94,30 @@ namespace QuantConnect.Brokerages
         public IReadOnlyList<string> ManagedAccountIds { get; }
 
         /// <summary>
-        /// Gets the complete discovered account directory. Directory entries can exist without corresponding
-        /// account state in <see cref="Accounts"/> when the snapshot was scoped.
+        /// Gets the account directory supplied by the provider, or an empty directory when omitted. Directory entries
+        /// can exist without corresponding account state in <see cref="Accounts"/> when the snapshot was scoped.
         /// </summary>
         public IReadOnlyDictionary<string, BrokerageAccountDirectoryEntry> AccountDirectory { get; }
 
         /// <summary>
-        /// Gets the account states collected for selected group members and any explicitly requested additional accounts.
-        /// This collection and <see cref="UnassignedAccountIds"/> do not necessarily partition every managed account when
-        /// the brokerage connection is scoped to a subset of groups.
+        /// Gets the account states collected for selected group members and any explicitly requested additional accounts
+        /// during scoped discovery. Complete discovery includes every eligible managed subaccount. This collection and
+        /// <see cref="UnassignedAccountIds"/> do not necessarily partition every managed account when the brokerage
+        /// connection is scoped to a subset of groups.
         /// </summary>
         public IReadOnlyDictionary<string, BrokerageAccountState> Accounts { get; }
 
         /// <summary>
-        /// Gets managed subaccounts that are not members of any account group visible to the brokerage session.
-        /// Account state is included in <see cref="Accounts"/> only when it was explicitly requested.
+        /// Gets managed subaccounts that are not members of any account group visible to the brokerage session. During
+        /// scoped discovery, account state is included in <see cref="Accounts"/> only when it was explicitly requested;
+        /// complete discovery includes every eligible unassigned managed subaccount.
         /// </summary>
         public IReadOnlyList<string> UnassignedAccountIds { get; }
 
         /// <summary>
-        /// Gets the version of the selected group membership, managed-account universe, account aliases, and family codes.
+        /// Gets an opaque version of the selected group names, allocation methods, and membership, and of the
+        /// managed-account universe, account aliases, and family codes. Per-account allocation values are excluded;
+        /// use <see cref="GroupConfigurationVersion"/> to version the full group configuration.
         /// </summary>
         public string MembershipHash { get; }
 
@@ -123,7 +127,7 @@ namespace QuantConnect.Brokerages
         public string GroupConfigurationVersion { get; }
 
         /// <summary>
-        /// Gets the latest refresh failure reason, or an empty string when no failure occurred.
+        /// Gets the diagnostic associated with the current snapshot status, or an empty string when none is available.
         /// </summary>
         public string ErrorMessage { get; }
 
@@ -133,8 +137,8 @@ namespace QuantConnect.Brokerages
         public bool IsReady => Status == BrokerageAccountSnapshotStatus.Ready;
 
         /// <summary>
-        /// Gets whether <see cref="AllGroups"/> is complete and <see cref="Accounts"/> contains state for every
-        /// managed account other than the primary and aggregate reporting identifiers.
+        /// Gets whether the provider reports that <see cref="AllGroups"/> is complete and <see cref="Accounts"/>
+        /// contains state for every managed account other than the primary and aggregate reporting identifiers.
         /// </summary>
         public bool IsComplete { get; }
 
@@ -153,15 +157,20 @@ namespace QuantConnect.Brokerages
         /// <param name="groups">Brokerage groups selected for this snapshot.</param>
         /// <param name="accounts">Account states collected by this snapshot.</param>
         /// <param name="unassignedAccountIds">Managed accounts not assigned to any discovered group.</param>
-        /// <param name="membershipHash">Version of membership, managed accounts, aliases, and family codes.</param>
+        /// <param name="membershipHash">
+        /// Opaque version of selected group names, allocation methods, and membership, and of managed accounts,
+        /// aliases, and family codes. Per-account allocation values are excluded.
+        /// </param>
         /// <param name="groupConfigurationVersion">Opaque brokerage-wide group configuration version.</param>
-        /// <param name="errorMessage">Latest refresh failure reason.</param>
+        /// <param name="errorMessage">
+        /// Diagnostic associated with the current snapshot status, or an empty string when none is available.
+        /// </param>
         /// <param name="primaryAccountId">Primary account configured for the brokerage connection.</param>
         /// <param name="managedAccountIds">Account identifiers returned by managed-account discovery.</param>
-        /// <param name="allGroups">Every account group discovered from the brokerage.</param>
-        /// <param name="accountDirectory">Complete discovered account directory.</param>
+        /// <param name="allGroups">Complete account-group set, or null to reuse <paramref name="groups"/>.</param>
+        /// <param name="accountDirectory">Discovered account directory, or null for an empty directory.</param>
         /// <param name="isComplete">
-        /// True when all groups and managed account states are represented; otherwise, false.
+        /// Provider assertion that all groups and eligible managed account states are represented.
         /// </param>
         /// <param name="collectionStartedUtc">
         /// UTC time at which collection of the account data in this snapshot started, when available.
@@ -208,7 +217,7 @@ namespace QuantConnect.Brokerages
                 managedAccountIds ?? EmptyAccountIds,
                 nameof(managedAccountIds));
             AccountDirectory = BrokerageAccountCollection.CopyDictionary(
-                accountDirectory ?? EmptyAccountDirectory,
+                accountDirectory,
                 nameof(accountDirectory),
                 entry => entry?.AccountId);
             Accounts = BrokerageAccountCollection.CopyDictionary(
@@ -216,7 +225,7 @@ namespace QuantConnect.Brokerages
                 nameof(accounts),
                 account => account?.AccountId);
             UnassignedAccountIds = BrokerageAccountCollection.CopyIdentifiers(
-                unassignedAccountIds ?? EmptyAccountIds,
+                unassignedAccountIds,
                 nameof(unassignedAccountIds));
             MembershipHash = membershipHash ?? string.Empty;
             GroupConfigurationVersion = groupConfigurationVersion ?? string.Empty;
@@ -233,12 +242,17 @@ namespace QuantConnect.Brokerages
                     "generation",
                     "The snapshot generation cannot be negative.");
             }
-            if (Status == BrokerageAccountSnapshotStatus.Ready &&
-                (AsOfUtc == default || LastSuccessfulUpdateUtc == default))
+            if (Status == BrokerageAccountSnapshotStatus.Ready && AsOfUtc == default)
             {
                 throw new ArgumentException(
-                    "A ready snapshot requires publication and successful update times.",
+                    "A ready snapshot requires a publication time.",
                     "asOfUtc");
+            }
+            if (Status == BrokerageAccountSnapshotStatus.Ready && LastSuccessfulUpdateUtc == default)
+            {
+                throw new ArgumentException(
+                    "A ready snapshot requires a successful update time.",
+                    "lastSuccessfulUpdateUtc");
             }
         }
     }

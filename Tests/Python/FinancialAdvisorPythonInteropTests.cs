@@ -24,6 +24,7 @@ using QuantConnect.Brokerages;
 using QuantConnect.Data;
 using QuantConnect.Interfaces;
 using QuantConnect.Orders;
+using LeanEngine = QuantConnect.Lean.Engine.Engine;
 
 namespace QuantConnect.Tests.Python
 {
@@ -112,6 +113,63 @@ namespace QuantConnect.Tests.Python
                     Assert.AreEqual("7", algorithm.Name);
                 });
             }
+        }
+
+        [Test]
+        public void RealPythonWrapperHonorsMutationServiceBoundary()
+        {
+            var snapshot = CreateReadySnapshot(7, DateTime.UtcNow);
+            var provider = new Mock<IBrokerageAccountStateProvider>();
+            provider.Setup(instance => instance.GetAccountSnapshot())
+                .Returns(snapshot);
+            var manager = new Mock<IBrokerageAccountGroupManager>();
+            manager.Setup(instance => instance.RequestAccountGroupAssignment(
+                    "Account",
+                    "Group",
+                    "membership",
+                    "configuration",
+                    null))
+                .Returns(true);
+            using var algorithm = CreateAlgorithm("def initialize(self): pass");
+            var consumer = (IBrokerageAccountServiceConsumer)algorithm;
+            consumer.SetBrokerageAccountStateProvider(provider.Object);
+            consumer.SetBrokerageAccountGroupManager(manager.Object);
+            algorithm.Initialize();
+            algorithm.BaseAlgorithm.SetLocked();
+
+            Assert.IsFalse(algorithm.BaseAlgorithm
+                .RequestBrokerageAccountGroupAssignment(
+                    "Account",
+                    "Group",
+                    null,
+                    snapshot));
+
+            var acceptedInsideBoundary = false;
+            LeanEngine.RunWithBrokerageAccountMutationsEnabled(
+                algorithm,
+                () => acceptedInsideBoundary = algorithm.BaseAlgorithm
+                    .RequestBrokerageAccountGroupAssignment(
+                        "Account",
+                        "Group",
+                        null,
+                        snapshot));
+
+            Assert.Multiple(() =>
+            {
+                Assert.IsTrue(acceptedInsideBoundary);
+                Assert.IsFalse(algorithm.BaseAlgorithm
+                    .RequestBrokerageAccountGroupAssignment(
+                        "Account",
+                        "Group",
+                        null,
+                        snapshot));
+            });
+            manager.Verify(instance => instance.RequestAccountGroupAssignment(
+                "Account",
+                "Group",
+                "membership",
+                "configuration",
+                null), Times.Once);
         }
 
         [Test]
@@ -228,7 +286,7 @@ namespace QuantConnect.Tests.Python
 
                 algorithm.BaseAlgorithm.SetLocked();
                 algorithm.BaseAlgorithm
-                    .SetBrokerageAccountMutationServicesReady();
+                    .SetBrokerageAccountMutationServicesReady(true);
                 algorithm.OnData(
                     new Slice(now, Array.Empty<BaseData>(), now));
 
@@ -244,31 +302,31 @@ namespace QuantConnect.Tests.Python
             }
         }
 
-        [TestCase("42", "must be a Python dictionary")]
         [TestCase("{1: 2}", "keys must be strings")]
         [TestCase("{'AccountA': 'not-a-number'}", "must be numeric")]
         [TestCase("{'AccountA': 79228162514264337593543950336}", "must be numeric")]
-        public void InvalidNativePythonAllocationInputDoesNotReachManager(
+        public void InvalidNativePythonAllocationDictionaryThrowsManagedException(
             string allocationExpression,
             string expectedDiagnostic)
         {
             var manager = new Mock<IBrokerageAccountGroupAllocationManager>();
-            PythonException exception;
+            ArgumentException exception;
             using (Py.GIL())
             using (var algorithm = CreateReadyAllocationAlgorithm(
                 manager,
-                $"def request_invalid_allocation(self): return " +
-                "self.request_brokerage_account_group_allocation_update(" +
-                $"'GroupA', {allocationExpression}, " +
-                "self.brokerage_account_snapshot)"))
+                "def initialize(self): pass"))
+            using (var allocations = PythonEngine.Eval(allocationExpression))
             {
-                exception = Assert.Throws<PythonException>(() =>
-                    algorithm.InvokeVoidMethod(
-                        "request_invalid_allocation"));
+                exception = Assert.Throws<ArgumentException>(() =>
+                    algorithm.BaseAlgorithm
+                        .RequestBrokerageAccountGroupAllocationUpdate(
+                            "GroupA",
+                            allocations,
+                            algorithm.BaseAlgorithm.BrokerageAccountSnapshot));
             }
 
             StringAssert.Contains(expectedDiagnostic, exception.Message);
-            StringAssert.Contains("accountAllocationValues", exception.Message);
+            Assert.AreEqual("accountAllocationValues", exception.ParamName);
             manager.Verify(instance =>
                     instance.RequestAccountGroupAllocationUpdate(
                         It.IsAny<string>(),
@@ -279,26 +337,27 @@ namespace QuantConnect.Tests.Python
         }
 
         [Test]
-        public void NativePythonAllocationValidationReportsParameterAndSkipsManager()
+        public void NativePythonAllocationValidationThrowsManagedException()
         {
             var manager = new Mock<IBrokerageAccountGroupAllocationManager>();
-            PythonException exception;
+            ArgumentException exception;
             using (Py.GIL())
             using (var algorithm = CreateReadyAllocationAlgorithm(
                 manager,
-                "def request_invalid_allocation(self): return " +
-                "self.request_brokerage_account_group_allocation_update(" +
-                "'GroupA', {' AccountA': 1}, " +
-                "self.brokerage_account_snapshot)"))
+                "def initialize(self): pass"))
+            using (var allocations = PythonEngine.Eval("{' AccountA': 1}"))
             {
-                exception = Assert.Throws<PythonException>(() =>
-                    algorithm.InvokeVoidMethod(
-                        "request_invalid_allocation"));
+                exception = Assert.Throws<ArgumentException>(() =>
+                    algorithm.BaseAlgorithm
+                        .RequestBrokerageAccountGroupAllocationUpdate(
+                            "GroupA",
+                            allocations,
+                            algorithm.BaseAlgorithm.BrokerageAccountSnapshot));
             }
 
-            StringAssert.Contains(
+            Assert.AreEqual(
                 "accountAllocationValues",
-                exception.Message);
+                exception.ParamName);
             manager.Verify(instance =>
                     instance.RequestAccountGroupAllocationUpdate(
                         It.IsAny<string>(),
@@ -389,7 +448,7 @@ namespace QuantConnect.Tests.Python
                 algorithm.Initialize();
                 algorithm.BaseAlgorithm.SetLocked();
                 algorithm.BaseAlgorithm
-                    .SetBrokerageAccountMutationServicesReady();
+                    .SetBrokerageAccountMutationServicesReady(true);
                 return algorithm;
             }
             catch

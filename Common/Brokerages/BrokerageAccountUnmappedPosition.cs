@@ -61,12 +61,13 @@ namespace QuantConnect.Brokerages
         public string TradingClass { get; }
 
         /// <summary>
-        /// Gets the contract expiration.
+        /// Gets the brokerage last-trade-date or contract-month representation.
         /// </summary>
         public string Expiration { get; }
 
         /// <summary>
-        /// Gets the contract strike.
+        /// Gets the contract strike. When decimal conversion fails, this value is zero and
+        /// <see cref="BrokerageStrike"/> retains the brokerage representation.
         /// </summary>
         public decimal Strike { get; }
 
@@ -91,7 +92,8 @@ namespace QuantConnect.Brokerages
         public decimal Quantity { get; }
 
         /// <summary>
-        /// Gets the average position price.
+        /// Gets the normalized average position price. When conversion or normalization fails, this value is zero and
+        /// <see cref="BrokerageAverageCost"/> retains the brokerage representation.
         /// </summary>
         public decimal AveragePrice { get; }
 
@@ -106,7 +108,7 @@ namespace QuantConnect.Brokerages
         public string ModelCode { get; }
 
         /// <summary>
-        /// Gets the symbol-mapping error.
+        /// Gets symbol-mapping, numeric-conversion, and normalization diagnostics.
         /// </summary>
         public string ErrorMessage { get; }
 
@@ -121,14 +123,14 @@ namespace QuantConnect.Brokerages
         /// <param name="exchange">Contract exchange.</param>
         /// <param name="primaryExchange">Contract primary exchange.</param>
         /// <param name="tradingClass">Brokerage trading class.</param>
-        /// <param name="expiration">Contract expiration.</param>
-        /// <param name="strike">Contract strike.</param>
+        /// <param name="expiration">Brokerage last-trade-date or contract-month representation.</param>
+        /// <param name="strike">Contract strike, or zero when decimal conversion failed.</param>
         /// <param name="right">Contract right.</param>
         /// <param name="multiplier">Contract multiplier.</param>
         /// <param name="quantity">Signed position quantity.</param>
-        /// <param name="averagePrice">Average position price.</param>
+        /// <param name="averagePrice">Normalized average position price, or zero when conversion failed.</param>
         /// <param name="modelCode">Brokerage model code.</param>
-        /// <param name="errorMessage">Symbol-mapping error.</param>
+        /// <param name="errorMessage">Symbol-mapping, numeric-conversion, and normalization diagnostics.</param>
         /// <param name="brokerageStrike">Raw brokerage strike representation.</param>
         /// <param name="brokerageAverageCost">Raw brokerage average-cost representation.</param>
         public BrokerageAccountUnmappedPosition(

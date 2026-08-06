@@ -40,7 +40,7 @@ namespace QuantConnect.Interfaces
         /// <param name="accountId">Managed subaccount to assign.</param>
         /// <param name="targetGroupName">Destination group, or an empty string to leave the account unassigned.</param>
         /// <param name="expectedMembershipHash">
-        /// Membership, managed-account, and account-alias hash from the latest ready account snapshot.
+        /// <see cref="BrokerageAccountSnapshot.MembershipHash"/> from the latest ready account snapshot.
         /// </param>
         /// <param name="expectedGroupConfigurationVersion">
         /// Brokerage-wide group configuration version from the latest ready account snapshot.

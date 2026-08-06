@@ -195,7 +195,7 @@ namespace QuantConnect.Tests.Common.Brokerages
             Assert.AreEqual("membership", roundTrip.MembershipHash);
             Assert.AreEqual("configuration", roundTrip.GroupConfigurationVersion);
             Assert.AreEqual("refresh failed", roundTrip.ErrorMessage);
-            CollectionAssert.AreEqual(new[] { "Primary", "AccountA" }, roundTrip.ManagedAccountIds);
+            CollectionAssert.AreEqual(new[] { "AccountA", "Primary" }, roundTrip.ManagedAccountIds);
             Assert.IsEmpty(roundTrip.UnassignedAccountIds);
             Assert.AreEqual("Ratio", roundTrip.Groups["Group"].AllocationMethod);
             CollectionAssert.AreEqual(new[] { "AccountA" }, roundTrip.Groups["Group"].AccountIds);
@@ -259,6 +259,28 @@ namespace QuantConnect.Tests.Common.Brokerages
                 ((IDictionary<string, decimal>)snapshot.Groups["Group"].AccountAllocationValues).Clear());
             Assert.Throws<NotSupportedException>(() =>
                 ((IList<BrokerageAccountUnmappedPosition>)snapshot.Accounts["AccountA"].UnmappedPositions).Clear());
+        }
+
+        [Test]
+        public void DirectoryEntryDeserializesWhenOptionalMetadataIsOmitted()
+        {
+            const string json = """
+                {
+                    "accountId": "AccountA",
+                    "relationship": 3,
+                    "groupNames": ["Group"]
+                }
+                """;
+
+            var entry = JsonConvert.DeserializeObject<BrokerageAccountDirectoryEntry>(json);
+
+            Assert.IsNotNull(entry);
+            Assert.AreEqual("AccountA", entry.AccountId);
+            Assert.AreEqual(BrokerageAccountRelationship.Managed, entry.Relationship);
+            CollectionAssert.AreEqual(new[] { "Group" }, entry.GroupNames);
+            Assert.AreEqual(string.Empty, entry.AccountType);
+            Assert.AreEqual(string.Empty, entry.FamilyCode);
+            Assert.AreEqual(string.Empty, entry.AccountAlias);
         }
 
         [Test]
@@ -459,7 +481,7 @@ namespace QuantConnect.Tests.Common.Brokerages
 
             Assert.AreEqual("generation", negativeGeneration.ParamName);
             Assert.AreEqual("asOfUtc", missingPublicationTime.ParamName);
-            Assert.AreEqual("asOfUtc", missingSuccessfulUpdateTime.ParamName);
+            Assert.AreEqual("lastSuccessfulUpdateUtc", missingSuccessfulUpdateTime.ParamName);
         }
 
         [Test]

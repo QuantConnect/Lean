@@ -21,12 +21,13 @@ namespace QuantConnect.Brokerages
     public enum BrokerageAccountSnapshotStatus
     {
         /// <summary>
-        /// The brokerage does not expose account-level state.
+        /// No snapshot is available. The brokerage may not expose account-level state, or no request has yet
+        /// produced a snapshot.
         /// </summary>
         Unavailable,
 
         /// <summary>
-        /// A snapshot refresh is in progress.
+        /// An accepted snapshot refresh is queued or in progress.
         /// </summary>
         Refreshing,
 
@@ -36,7 +37,7 @@ namespace QuantConnect.Brokerages
         Ready,
 
         /// <summary>
-        /// The last successful snapshot is retained but is no longer current.
+        /// The snapshot is no longer current. Any data from the last successful refresh remains available.
         /// </summary>
         Stale,
 

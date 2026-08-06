@@ -39,7 +39,8 @@ namespace QuantConnect.Brokerages
         public IReadOnlyList<string> GroupNames { get; }
 
         /// <summary>
-        /// Gets the brokerage-reported account type when account state was collected.
+        /// Gets the brokerage-reported account type when account state was collected and the brokerage supplied it;
+        /// otherwise, an empty string.
         /// </summary>
         public string AccountType { get; }
 
@@ -59,25 +60,9 @@ namespace QuantConnect.Brokerages
         /// <param name="accountId">Brokerage account identifier.</param>
         /// <param name="relationship">Relationship to the brokerage connection.</param>
         /// <param name="groupNames">Discovered groups containing the account.</param>
-        /// <param name="accountType">Brokerage-reported account type.</param>
-        /// <param name="familyCode">Brokerage-provided account-family code.</param>
-        public BrokerageAccountDirectoryEntry(
-            string accountId,
-            BrokerageAccountRelationship relationship,
-            IEnumerable<string> groupNames,
-            string accountType = "",
-            string familyCode = "")
-            : this(accountId, relationship, groupNames, accountType, familyCode, string.Empty)
-        {
-        }
-
-        /// <summary>
-        /// Initializes an immutable brokerage account directory entry with an account alias.
-        /// </summary>
-        /// <param name="accountId">Brokerage account identifier.</param>
-        /// <param name="relationship">Relationship to the brokerage connection.</param>
-        /// <param name="groupNames">Discovered groups containing the account.</param>
-        /// <param name="accountType">Brokerage-reported account type.</param>
+        /// <param name="accountType">
+        /// Brokerage-reported account type, or an empty string when not collected or not supplied.
+        /// </param>
         /// <param name="familyCode">Brokerage-provided account-family code.</param>
         /// <param name="accountAlias">Brokerage-provided account alias.</param>
         [JsonConstructor]
@@ -85,9 +70,9 @@ namespace QuantConnect.Brokerages
             string accountId,
             BrokerageAccountRelationship relationship,
             IEnumerable<string> groupNames,
-            string accountType,
-            string familyCode,
-            string accountAlias)
+            string accountType = "",
+            string familyCode = "",
+            string accountAlias = "")
         {
             BrokerageAccountCollection.ValidateIdentifier(accountId, nameof(accountId));
             AccountId = accountId;

@@ -20,12 +20,13 @@ namespace QuantConnect.Brokerages
 {
     /// <summary>
     /// Immutable result of the latest brokerage account-group assignment.
-    /// A blank target group means the account should be unassigned from every group.
+    /// An empty target group means the account should be unassigned from every group.
     /// </summary>
     public class BrokerageAccountGroupAssignment
     {
         /// <summary>
-        /// Result returned when the brokerage does not expose account-group management.
+        /// Result returned when no assignment result is available. The brokerage may not support this capability,
+        /// or no request has yet produced a result.
         /// </summary>
         public static BrokerageAccountGroupAssignment Unavailable { get; } = new(
             BrokerageAccountGroupAssignmentStatus.Unavailable,
@@ -78,7 +79,8 @@ namespace QuantConnect.Brokerages
         public IReadOnlyList<string> PreviousGroupNames { get; }
 
         /// <summary>
-        /// Gets every group containing the account after confirmed readback.
+        /// Gets every group containing the account after confirmed readback. This value is meaningful only when
+        /// <see cref="Status"/> is <see cref="BrokerageAccountGroupAssignmentStatus.Succeeded"/>.
         /// </summary>
         public IReadOnlyList<string> ResultingGroupNames { get; }
 
@@ -88,7 +90,8 @@ namespace QuantConnect.Brokerages
         public string ExpectedMembershipHash { get; }
 
         /// <summary>
-        /// Gets the membership hash after confirmed readback and snapshot refresh.
+        /// Gets the membership hash after confirmed readback and snapshot refresh. This value is meaningful only
+        /// when <see cref="Status"/> is <see cref="BrokerageAccountGroupAssignmentStatus.Succeeded"/>.
         /// </summary>
         public string ResultingMembershipHash { get; }
 
@@ -98,22 +101,23 @@ namespace QuantConnect.Brokerages
         public string ExpectedGroupConfigurationVersion { get; }
 
         /// <summary>
-        /// Gets the brokerage-wide group configuration version after confirmed readback.
+        /// Gets the brokerage-wide group configuration version after confirmed readback. This value is meaningful
+        /// only when <see cref="Status"/> is <see cref="BrokerageAccountGroupAssignmentStatus.Succeeded"/>.
         /// </summary>
         public string ResultingGroupConfigurationVersion { get; }
 
         /// <summary>
-        /// Gets the failure reason, or an empty string when no failure occurred.
+        /// Gets a provider diagnostic, warning, or failure message, or an empty string when none is available.
         /// </summary>
         public string ErrorMessage { get; }
 
         /// <summary>
-        /// Gets whether the assignment is still being processed.
+        /// Gets whether this result has a pending status.
         /// </summary>
         public bool IsPending => Status == BrokerageAccountGroupAssignmentStatus.Pending;
 
         /// <summary>
-        /// Gets whether the immutable assignment result is in a terminal state.
+        /// Gets whether this result does not have a pending status.
         /// </summary>
         public bool IsCompleted => Status != BrokerageAccountGroupAssignmentStatus.Pending;
 
@@ -126,14 +130,20 @@ namespace QuantConnect.Brokerages
         /// <param name="accountId">Managed subaccount being assigned.</param>
         /// <param name="targetGroupName">Requested destination group, or an empty string for no group.</param>
         /// <param name="previousGroupNames">Groups containing the account before the operation.</param>
-        /// <param name="resultingGroupNames">Groups containing the account after confirmed readback.</param>
+        /// <param name="resultingGroupNames">
+        /// Groups containing the account after confirmed readback; meaningful only for a succeeded result.
+        /// </param>
         /// <param name="expectedMembershipHash">Membership hash supplied by the requesting snapshot.</param>
-        /// <param name="resultingMembershipHash">Membership hash after confirmed readback.</param>
+        /// <param name="resultingMembershipHash">
+        /// Membership hash after confirmed readback; meaningful only for a succeeded result.
+        /// </param>
         /// <param name="expectedGroupConfigurationVersion">
         /// Group configuration version supplied by the requesting snapshot.
         /// </param>
-        /// <param name="resultingGroupConfigurationVersion">Group configuration version after confirmed readback.</param>
-        /// <param name="errorMessage">Failure reason, or an empty string when no failure occurred.</param>
+        /// <param name="resultingGroupConfigurationVersion">
+        /// Group configuration version after confirmed readback; meaningful only for a succeeded result.
+        /// </param>
+        /// <param name="errorMessage">Provider diagnostic, warning, or failure message.</param>
         /// <param name="targetAllocationValue">Optional brokerage-defined destination allocation value.</param>
         public BrokerageAccountGroupAssignment(
             BrokerageAccountGroupAssignmentStatus status,

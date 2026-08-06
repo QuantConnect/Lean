@@ -20,7 +20,7 @@ using System.Linq;
 namespace QuantConnect.Brokerages
 {
     /// <summary>
-    /// Immutable brokerage account group and its authoritative members.
+    /// Immutable brokerage account group and its brokerage-reported members.
     /// </summary>
     public class BrokerageAccountGroup
     {
@@ -35,13 +35,13 @@ namespace QuantConnect.Brokerages
         public string AllocationMethod { get; }
 
         /// <summary>
-        /// Gets the authoritative account group members.
+        /// Gets the brokerage-reported account group members.
         /// </summary>
         public IReadOnlyList<string> AccountIds { get; }
 
         /// <summary>
-        /// Gets brokerage-defined per-account allocation values for user-specified allocation methods.
-        /// The collection is empty for allocation methods whose values are calculated by the brokerage.
+        /// Gets brokerage-defined per-account allocation values supplied for user-specified allocation methods. The
+        /// collection may be empty when the brokerage computes allocations.
         /// </summary>
         public IReadOnlyDictionary<string, decimal> AccountAllocationValues { get; }
 
@@ -50,7 +50,7 @@ namespace QuantConnect.Brokerages
         /// </summary>
         /// <param name="name">Brokerage account group name.</param>
         /// <param name="allocationMethod">Brokerage-defined allocation method.</param>
-        /// <param name="accountIds">Authoritative account group members.</param>
+        /// <param name="accountIds">Brokerage-reported account group members.</param>
         /// <param name="accountAllocationValues">Optional per-account allocation values.</param>
         public BrokerageAccountGroup(
             string name,

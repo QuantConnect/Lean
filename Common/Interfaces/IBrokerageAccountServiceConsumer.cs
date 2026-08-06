@@ -16,7 +16,8 @@
 namespace QuantConnect.Interfaces
 {
     /// <summary>
-    /// Algorithm capability used by live setup handlers to install optional brokerage account services.
+    /// Algorithm capability used by the engine to install optional brokerage account services before algorithm
+    /// initialization.
     /// </summary>
     public interface IBrokerageAccountServiceConsumer
     {
@@ -27,15 +28,17 @@ namespace QuantConnect.Interfaces
         void SetBrokerageAccountStateProvider(IBrokerageAccountStateProvider provider);
 
         /// <summary>
-        /// Installs the provider used to change brokerage account-group membership.
+        /// Installs the provider used to change brokerage account-group membership, or clears it when the brokerage
+        /// does not support this capability.
         /// </summary>
-        /// <param name="manager">Brokerage account-group manager.</param>
+        /// <param name="manager">Brokerage account-group manager, or null when unavailable.</param>
         void SetBrokerageAccountGroupManager(IBrokerageAccountGroupManager manager);
 
         /// <summary>
-        /// Installs the provider used to change brokerage account-group allocation values.
+        /// Installs the provider used to change brokerage account-group allocation values, or clears it when the
+        /// brokerage does not support this capability.
         /// </summary>
-        /// <param name="manager">Brokerage account-group allocation manager.</param>
+        /// <param name="manager">Brokerage account-group allocation manager, or null when unavailable.</param>
         void SetBrokerageAccountGroupAllocationManager(IBrokerageAccountGroupAllocationManager manager);
     }
 }
