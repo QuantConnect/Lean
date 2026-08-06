@@ -34,6 +34,8 @@ namespace QuantConnect.Algorithm.CSharp
     /// sample will not remove the final member from a source group.
     /// ContractsOrShares child values may be fractional, but their saved total must be lot-aligned;
     /// for a lot size of one, 12.5 + 7.5 = 20 is valid.
+    /// Percent requires 100 for the first member of an empty group and a value strictly between
+    /// zero and 100 when adding to a group that already has members.
     /// Do not request configuration mutations during OnEndOfAlgorithm or teardown: a request may be
     /// accepted but is not guaranteed to reach the broker or publish a result.
     /// </summary>
@@ -583,15 +585,20 @@ namespace QuantConnect.Algorithm.CSharp
                 {
                     return true;
                 }
-                if (_targetAllocationValue <= 0 ||
-                    _targetAllocationValue > 100 ||
-                    (_targetAllocationValue == 100 &&
-                        destinationGroup.AccountIds.Count != 0))
+                var targetGroupIsEmpty =
+                    destinationGroup.AccountIds.Count == 0;
+                if (targetGroupIsEmpty
+                    ? _targetAllocationValue != 100
+                    : _targetAllocationValue <= 0 ||
+                        _targetAllocationValue >= 100)
                 {
                     Error(
                         $"FA destination group '{destinationGroup.Name}' uses " +
-                        "Percent, so fa-allocation-value must be greater than zero " +
-                        "and less than 100 when the group already has members.");
+                        (targetGroupIsEmpty
+                            ? "Percent, so fa-allocation-value must be exactly 100 " +
+                                "when the group has no members."
+                            : "Percent, so fa-allocation-value must be greater than " +
+                                "zero and less than 100 when the group already has members."));
                     return false;
                 }
 

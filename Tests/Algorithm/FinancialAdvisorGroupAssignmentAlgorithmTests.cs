@@ -1315,7 +1315,7 @@ namespace QuantConnect.Tests.Algorithm
         [TestCase("AvailableEquity", null)]
         [TestCase("ContractsOrShares", 2.5)]
         [TestCase("Ratio", 2.5)]
-        [TestCase("Percent", 2.5)]
+        [TestCase("Percent", 100)]
         public void UsesAllocationValueRequiredBySavedMethod(
             string allocationMethod,
             double? expectedAllocationValue)
@@ -1337,7 +1337,8 @@ namespace QuantConnect.Tests.Algorithm
                 services,
                 new Dictionary<string, string>
                 {
-                    ["fa-allocation-value"] = "2.5"
+                    ["fa-allocation-value"] =
+                        allocationMethod == "Percent" ? "100" : "2.5"
                 });
 
             algorithm.OnData(CreateEmptySlice());
@@ -1440,8 +1441,11 @@ namespace QuantConnect.Tests.Algorithm
             });
         }
 
-        [Test]
-        public void PercentNewcomerCannotConsumeOneHundredPercentOfNonemptyGroup()
+        [TestCase("99.99", true)]
+        [TestCase("100", false)]
+        public void ValidatesPercentNewcomerForNonemptyGroup(
+            string allocationValue,
+            bool expectedRequest)
         {
             var targetGroup = new BrokerageAccountGroup(
                 "TargetGroup",
@@ -1449,7 +1453,7 @@ namespace QuantConnect.Tests.Algorithm
                 new[] { "AccountB" },
                 new Dictionary<string, decimal>
                 {
-                    ["AccountB"] = 100m
+                    ["AccountB"] = 0.01m
                 });
             var services = new TestFinancialAdvisorServices
             {
@@ -1470,17 +1474,29 @@ namespace QuantConnect.Tests.Algorithm
                 services,
                 new Dictionary<string, string>
                 {
-                    ["fa-allocation-value"] = "100"
+                    ["fa-allocation-value"] = allocationValue
                 });
 
             algorithm.OnData(CreateEmptySlice());
 
             Assert.Multiple(() =>
             {
-                Assert.AreEqual(0, services.AssignmentRequests.Count);
-                Assert.That(
-                    algorithm.ErrorMessages,
-                    Has.One.Contains("less than 100 when the group already has members"));
+                Assert.AreEqual(
+                    expectedRequest ? 1 : 0,
+                    services.AssignmentRequests.Count);
+                if (expectedRequest)
+                {
+                    Assert.AreEqual(
+                        decimal.Parse(allocationValue),
+                        services.AssignmentRequests[0].TargetAllocationValue);
+                }
+                else
+                {
+                    Assert.That(
+                        algorithm.ErrorMessages,
+                        Has.One.Contains(
+                            "less than 100 when the group already has members"));
+                }
             });
         }
 
@@ -1529,6 +1545,8 @@ namespace QuantConnect.Tests.Algorithm
         [TestCase("Ratio", "100.01", true, "100.01")]
         [TestCase("Percent", "0", false, null)]
         [TestCase("Percent", "-1", false, null)]
+        [TestCase("Percent", "2.5", false, null)]
+        [TestCase("Percent", "99.99", false, null)]
         [TestCase("Percent", "100", true, "100")]
         [TestCase("Percent", "100.01", false, null)]
         [TestCase("Equal", "-1", true, null)]

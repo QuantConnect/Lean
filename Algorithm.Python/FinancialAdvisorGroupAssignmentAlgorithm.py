@@ -33,6 +33,8 @@ import re
 ###   but this sample refuses to remove the final member of a source group.
 ### - ContractsOrShares child values may be fractional, but their saved total must
 ###   be lot-aligned; for a lot size of one, 12.5 + 7.5 = 20 is valid.
+### - Percent requires 100 for the first member of an empty group and a value
+###   strictly between zero and 100 when adding to a group that already has members.
 ### - Do not request configuration mutations during on_end_of_algorithm or teardown:
 ###   a request may be accepted but is not guaranteed to reach the broker or publish a result.
 ### </summary>
@@ -686,14 +688,19 @@ class FinancialAdvisorGroupAssignmentAlgorithm(QCAlgorithm):
         if allocation_method == "percent":
             if not required:
                 return None
-            if self._allocation_value <= 0 or \
-                    self._allocation_value > 100 or \
-                    (self._allocation_value == 100 and
-                     len(list(target_group.account_ids)) != 0):
+            target_group_is_empty = \
+                len(list(target_group.account_ids)) == 0
+            if (target_group_is_empty and self._allocation_value != 100) or \
+                    (not target_group_is_empty and
+                     (self._allocation_value <= 0 or
+                      self._allocation_value >= 100)):
                 self.error(
                     f"FA destination group '{target_group.name}' uses "
-                    f"Percent, so fa-allocation-value must be greater than zero "
-                    f"and less than 100 when the group already has members.")
+                    f"Percent, so fa-allocation-value must be " +
+                    ("exactly 100 when the group has no members."
+                     if target_group_is_empty else
+                     "greater than zero and less than 100 when the group "
+                     "already has members."))
                 return False
             return self._allocation_value
 

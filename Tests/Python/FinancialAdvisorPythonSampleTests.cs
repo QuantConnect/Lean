@@ -407,9 +407,12 @@ namespace QuantConnect.Tests.Python
                 services.Assignment.TargetAllocationValue);
         }
 
+        [TestCase("0", 0)]
+        [TestCase("2.5", 0)]
+        [TestCase("99.99", 0)]
         [TestCase("100", 1)]
         [TestCase("100.01", 0)]
-        public void GroupAssignmentValidatesPercentInPython(
+        public void GroupAssignmentValidatesPercentForEmptyGroupInPython(
             string allocationValue,
             int expectedRequests)
         {
@@ -434,7 +437,13 @@ namespace QuantConnect.Tests.Python
             Assert.AreEqual(
                 expectedRequests,
                 services.AssignmentRequestCount);
-            if (expectedRequests == 0)
+            if (expectedRequests != 0)
+            {
+                Assert.AreEqual(
+                    decimal.Parse(allocationValue),
+                    services.Assignment.TargetAllocationValue);
+            }
+            else
             {
                 Assert.That(
                     algorithm.ErrorMessages,
@@ -442,8 +451,11 @@ namespace QuantConnect.Tests.Python
             }
         }
 
-        [Test]
-        public void GroupAssignmentRejectsOneHundredPercentNewcomerForNonemptyGroupInPython()
+        [TestCase("99.99", 1)]
+        [TestCase("100", 0)]
+        public void GroupAssignmentValidatesPercentForNonemptyGroupInPython(
+            string allocationValue,
+            int expectedRequests)
         {
             var services = new TestFinancialAdvisorServices
             {
@@ -455,7 +467,7 @@ namespace QuantConnect.Tests.Python
                     targetAccountAllocationValues:
                         new Dictionary<string, decimal>
                         {
-                            ["AccountB"] = 100m
+                            ["AccountB"] = 0.01m
                         },
                     includeCompanionMembers: true)
             };
@@ -464,18 +476,29 @@ namespace QuantConnect.Tests.Python
                 services,
                 new Dictionary<string, string>
                 {
-                    ["fa-allocation-value"] = "100"
+                    ["fa-allocation-value"] = allocationValue
                 });
 
             algorithm.OnData(CreateEmptySlice());
 
             Assert.Multiple(() =>
             {
-                Assert.AreEqual(0, services.AssignmentRequestCount);
-                Assert.That(
-                    algorithm.ErrorMessages,
-                    Has.One.Contains(
-                        "less than 100 when the group already has members"));
+                Assert.AreEqual(
+                    expectedRequests,
+                    services.AssignmentRequestCount);
+                if (expectedRequests != 0)
+                {
+                    Assert.AreEqual(
+                        decimal.Parse(allocationValue),
+                        services.Assignment.TargetAllocationValue);
+                }
+                else
+                {
+                    Assert.That(
+                        algorithm.ErrorMessages,
+                        Has.One.Contains(
+                            "less than 100 when the group already has members"));
+                }
             });
         }
 
