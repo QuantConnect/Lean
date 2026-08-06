@@ -64,7 +64,9 @@ namespace QuantConnect.Orders
         /// Used only when unified Financial Advisor groups are enabled and an explicit <see cref="FaGroup"/> with
         /// <c>FaMethod = "PctChange"</c> selects the legacy order-level percentage-change route. On that route,
         /// <see cref="ExactFaPercentage"/> takes precedence over <see cref="FaPercentage"/>. The legacy conversion
-        /// path ignores this property and uses the integer <see cref="FaPercentage"/> value.
+        /// path ignores this property and uses the integer <see cref="FaPercentage"/> value. When reusing or cloning
+        /// these properties, clear <see cref="ExactFaPercentage"/> before relying on a newly assigned
+        /// <see cref="FaPercentage"/>.
         /// </remarks>
         public decimal? ExactFaPercentage { get; set; }
 
