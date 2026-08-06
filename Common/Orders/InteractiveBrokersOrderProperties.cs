@@ -32,8 +32,9 @@ namespace QuantConnect.Orders
         /// The account group for the order (only used by Financial Advisors)
         /// </summary>
         /// <remarks>
-        /// Mutually exclusive with FaProfile and Account. Saved ContractsOrShares child values may be
-        /// fractional, but their total must be lot-aligned; for a lot size of one, 12.5 + 7.5 = 20 is valid.
+        /// Mutually exclusive with FaProfile and Account. When unified Financial Advisor groups are enabled and the
+        /// group uses its saved ContractsOrShares allocation method, saved child values may be fractional, but their
+        /// total must be lot-aligned; for a lot size of one, 12.5 + 7.5 = 20 is valid.
         /// </remarks>
         public string FaGroup { get; set; }
 
@@ -43,10 +44,11 @@ namespace QuantConnect.Orders
         /// and PctChange.
         /// </summary>
         /// <remarks>
-        /// With unified Financial Advisor groups, leave this field blank so the order uses the
+        /// With unified Financial Advisor groups, leave this field empty so the order uses the
         /// group's saved allocation method. Set both <see cref="FaGroup"/> and
         /// <c>FaMethod = "PctChange"</c> only when requesting the legacy order-level percentage
-        /// change instruction, which uses placeholder-quantity fill accounting.
+        /// change instruction. LEAN writes its percentage to IB's FaPercentage field and sends zero as IB's
+        /// TotalQuantity.
         /// </remarks>
         public string FaMethod { get; set; }
 
@@ -59,11 +61,10 @@ namespace QuantConnect.Orders
         /// The exact percentage for the percent change method, when a fractional value is required.
         /// </summary>
         /// <remarks>
-        /// When the brokerage has unified Financial Advisor groups enabled,
-        /// <see cref="ExactFaPercentage"/> takes precedence over <see cref="FaPercentage"/> and the
-        /// conversion precedence is <c>ExactFaPercentage ?? FaPercentage</c>. It is ignored when
-        /// unified groups are disabled, so <see cref="FaPercentage"/> must contain a usable integer
-        /// value for compatibility with the legacy conversion path.
+        /// Used only when unified Financial Advisor groups are enabled and an explicit <see cref="FaGroup"/> with
+        /// <c>FaMethod = "PctChange"</c> selects the legacy order-level percentage-change route. On that route,
+        /// <see cref="ExactFaPercentage"/> takes precedence over <see cref="FaPercentage"/>. The legacy conversion
+        /// path ignores this property and uses the integer <see cref="FaPercentage"/> value.
         /// </remarks>
         public decimal? ExactFaPercentage { get; set; }
 
