@@ -205,6 +205,74 @@ namespace QuantConnect.Tests.Python
         }
 
         [Test]
+        public void GroupAssignmentInitialRefreshRequiresNewerReadySnapshotInPython()
+        {
+            BrokerageAccountSnapshot Snapshot(long generation) =>
+                CreateAssignmentSnapshot(
+                    generation,
+                    new[] { TargetGroupName },
+                    Array.Empty<string>());
+            var services = new TestFinancialAdvisorServices
+            {
+                Snapshot = Snapshot(2),
+                AcceptRefreshRequests = false
+            };
+            using var algorithm = new AlgorithmPythonWrapper(
+                "FinancialAdvisorGroupAssignmentAlgorithm");
+            algorithm.BaseAlgorithm.SubscriptionManager.SetDataManager(
+                new DataManagerStub(algorithm.BaseAlgorithm));
+            algorithm.SetLiveMode(true);
+            algorithm.SetDateTime(SnapshotTime);
+            algorithm.SetParameters(
+                new Dictionary<string, string>());
+            var consumer =
+                (IBrokerageAccountServiceConsumer)algorithm;
+            consumer.SetBrokerageAccountStateProvider(services);
+            consumer.SetBrokerageAccountGroupManager(services);
+
+            algorithm.Initialize();
+            algorithm.SetLocked();
+            algorithm.BaseAlgorithm.SetFinishedWarmingUp();
+            algorithm.BaseAlgorithm
+                .SetBrokerageAccountMutationServicesReady(true);
+            algorithm.OnData(CreateEmptySlice());
+
+            Assert.Multiple(() =>
+            {
+                Assert.AreEqual(1, services.RefreshRequestCount);
+                Assert.AreEqual(0, services.AssignmentRequestCount);
+                CollectionAssert.IsEmpty(
+                    services.RequestedGroupHistory[0],
+                    "The rejected initialization request must be complete.");
+            });
+
+            services.AcceptRefreshRequests = true;
+            algorithm.SetDateTime(SnapshotTime.AddSeconds(5));
+            InvokeScheduledCallback(algorithm);
+            algorithm.OnData(CreateEmptySlice());
+
+            Assert.Multiple(() =>
+            {
+                Assert.AreEqual(2, services.RefreshRequestCount);
+                Assert.AreEqual(0, services.AssignmentRequestCount);
+                CollectionAssert.IsEmpty(
+                    services.RequestedGroupHistory[1],
+                    "The initial retry must remain a complete request.");
+                Assert.IsTrue(algorithm.GetProperty<bool>(
+                    "_initial_snapshot_refresh_accepted"));
+                Assert.AreEqual(
+                    2,
+                    algorithm.GetProperty<long>(
+                        "_initial_snapshot_request_generation"));
+            });
+
+            services.Snapshot = Snapshot(3);
+            algorithm.OnData(CreateEmptySlice());
+
+            Assert.AreEqual(1, services.AssignmentRequestCount);
+        }
+
+        [Test]
         public void GroupAssignmentCrossGroupCandidateRefreshesCompleteScopeInPython()
         {
             var services = new TestFinancialAdvisorServices
@@ -962,6 +1030,56 @@ namespace QuantConnect.Tests.Python
             });
         }
 
+        [TestCase(true)]
+        [TestCase(false)]
+        public void DemoInvalidMembershipDriftDisablesRetryInPython(
+            bool memberAdded)
+        {
+            var preOrderSnapshot = CreateDemoSnapshot(
+                2,
+                SnapshotTime);
+            var currentSnapshot = CreateDemoSnapshot(
+                3,
+                SnapshotTime.AddSeconds(5).AddTicks(1),
+                groupAccountIds: memberAdded
+                    ? new[] { "AccountA", "AccountB", "AccountC" }
+                    : new[] { "AccountA" },
+                additionalAccountIds: memberAdded
+                    ? new[] { "AccountC" }
+                    : null);
+
+            AssertDemoInvalidReconciliationDisablesRetry(
+                preOrderSnapshot,
+                currentSnapshot,
+                "membership for Financial Advisor group 'TestGroupEQ' changed");
+        }
+
+        [TestCase(true)]
+        [TestCase(false)]
+        public void DemoInvalidUnmappedPositionDisablesRetryInPython(
+            bool preOrderPositionIsUnmapped)
+        {
+            var preOrderSnapshot = CreateDemoSnapshot(
+                2,
+                SnapshotTime,
+                unmappedAccountIds: preOrderPositionIsUnmapped
+                    ? new[] { "AccountA" }
+                    : null);
+            var currentSnapshot = CreateDemoSnapshot(
+                3,
+                SnapshotTime.AddSeconds(5).AddTicks(1),
+                unmappedAccountIds: preOrderPositionIsUnmapped
+                    ? null
+                    : new[] { "AccountA" });
+
+            AssertDemoInvalidReconciliationDisablesRetry(
+                preOrderSnapshot,
+                currentSnapshot,
+                preOrderPositionIsUnmapped
+                    ? "unmapped position in the pre-order snapshot"
+                    : "unmapped position in the post-order snapshot");
+        }
+
         [Test]
         public void DemoInvalidAfterOffsettingPartialFillsDisablesRetryInPython()
         {
@@ -1192,6 +1310,39 @@ namespace QuantConnect.Tests.Python
             Assert.AreEqual(
                 0,
                 orderProcessor.ProcessedOrdersRequests.Count);
+        }
+
+        [Test]
+        public void DemoEmptyGroupDoesNotSubmitAndReportsConfigurationOnceInPython()
+        {
+            var services = new TestFinancialAdvisorServices
+            {
+                Snapshot = CreateDemoSnapshot(
+                    2,
+                    SnapshotTime,
+                    groupAccountIds: Array.Empty<string>())
+            };
+            using var algorithm = CreateDemoAlgorithm(
+                services,
+                out var orderProcessor);
+
+            algorithm.OnData(CreateEmptySlice());
+            algorithm.OnData(CreateEmptySlice());
+
+            Assert.Multiple(() =>
+            {
+                Assert.AreEqual(
+                    0,
+                    orderProcessor.ProcessedOrdersRequests.Count);
+                Assert.That(
+                    algorithm.ErrorMessages,
+                    Has.One.Contains("has no members"));
+                Assert.AreEqual(
+                    1,
+                    algorithm.ErrorMessages.Count(message =>
+                        message.Contains("has no members")),
+                    "An unchanged empty group configuration must report once.");
+            });
         }
 
         [TestCase("Equal")]
@@ -1563,12 +1714,15 @@ namespace QuantConnect.Tests.Python
             string allocationMethod = "Equal",
             DateTime? lastSuccessfulUpdateUtc = null,
             decimal accountAQuantity = 10m,
-            decimal accountBQuantity = 20m)
+            decimal accountBQuantity = 20m,
+            IReadOnlyCollection<string> groupAccountIds = null,
+            IReadOnlyCollection<string> additionalAccountIds = null,
+            IReadOnlyCollection<string> unmappedAccountIds = null)
         {
             var group = new BrokerageAccountGroup(
                 DemoGroupName,
                 allocationMethod,
-                new[] { "AccountA", "AccountB" });
+                groupAccountIds ?? new[] { "AccountA", "AccountB" });
             var groups =
                 new Dictionary<string, BrokerageAccountGroup>
                 {
@@ -1579,15 +1733,47 @@ namespace QuantConnect.Tests.Python
                 {
                     ["AccountA"] = CreateAccount(
                         "AccountA",
-                        new[] { group.Name },
-                        accountAQuantity)
+                        group.AccountIds.Contains(
+                                "AccountA",
+                                StringComparer.OrdinalIgnoreCase)
+                            ? new[] { group.Name }
+                            : Array.Empty<string>(),
+                        accountAQuantity,
+                        hasUnmappedPosition:
+                            unmappedAccountIds?.Contains(
+                                "AccountA",
+                                StringComparer.OrdinalIgnoreCase) == true)
                 };
             if (includeAccountB)
             {
                 accounts["AccountB"] = CreateAccount(
                     "AccountB",
-                    new[] { group.Name },
-                    accountBQuantity);
+                    group.AccountIds.Contains(
+                            "AccountB",
+                            StringComparer.OrdinalIgnoreCase)
+                        ? new[] { group.Name }
+                        : Array.Empty<string>(),
+                    accountBQuantity,
+                    hasUnmappedPosition:
+                        unmappedAccountIds?.Contains(
+                            "AccountB",
+                            StringComparer.OrdinalIgnoreCase) == true);
+            }
+            foreach (var accountId in
+                additionalAccountIds ?? Array.Empty<string>())
+            {
+                accounts[accountId] = CreateAccount(
+                    accountId,
+                    group.AccountIds.Contains(
+                            accountId,
+                            StringComparer.OrdinalIgnoreCase)
+                        ? new[] { group.Name }
+                        : Array.Empty<string>(),
+                    0m,
+                    hasUnmappedPosition:
+                        unmappedAccountIds?.Contains(
+                            accountId,
+                            StringComparer.OrdinalIgnoreCase) == true);
             }
 
             return new BrokerageAccountSnapshot(
@@ -1602,7 +1788,10 @@ namespace QuantConnect.Tests.Python
                 $"membership-{generation}",
                 $"configuration-{generation}",
                 string.Empty,
-                managedAccountIds: new[] { "AccountA", "AccountB" },
+                managedAccountIds: group.AccountIds
+                    .Concat(accounts.Keys)
+                    .Distinct(StringComparer.OrdinalIgnoreCase)
+                    .ToArray(),
                 collectionStartedUtc: collectionStartedUtc);
         }
 
@@ -1781,7 +1970,8 @@ namespace QuantConnect.Tests.Python
             IReadOnlyCollection<string> groupNames,
             decimal quantity,
             decimal totalCashValue = 100m,
-            decimal netLiquidation = 1000m)
+            decimal netLiquidation = 1000m,
+            bool hasUnmappedPosition = false)
         {
             return new BrokerageAccountState(
                 accountId,
@@ -1800,7 +1990,89 @@ namespace QuantConnect.Tests.Python
                         Symbols.SPY,
                         quantity,
                         100m)
-                });
+                },
+                hasUnmappedPosition
+                    ? new[] { CreateUnmappedPosition() }
+                    : null);
+        }
+
+        private static BrokerageAccountUnmappedPosition
+            CreateUnmappedPosition()
+        {
+            return new BrokerageAccountUnmappedPosition(
+                brokerageContractId: "999",
+                brokerageSymbol: "UNKNOWN",
+                localSymbol: "UNKNOWN",
+                brokerageSecurityType: "STK",
+                currency: "USD",
+                exchange: "SMART",
+                primaryExchange: string.Empty,
+                tradingClass: string.Empty,
+                expiration: string.Empty,
+                strike: 0m,
+                right: string.Empty,
+                multiplier: "1",
+                quantity: 1m,
+                averagePrice: 100m,
+                errorMessage: "test mapping failure");
+        }
+
+        private static void AssertDemoInvalidReconciliationDisablesRetry(
+            BrokerageAccountSnapshot preOrderSnapshot,
+            BrokerageAccountSnapshot currentSnapshot,
+            string expectedReason)
+        {
+            var services = new TestFinancialAdvisorServices
+            {
+                Snapshot = preOrderSnapshot
+            };
+            using var algorithm = CreateDemoAlgorithm(
+                services,
+                out var orderProcessor);
+            algorithm.SetProperty(
+                "_pre_order_snapshot",
+                preOrderSnapshot);
+            algorithm.SetProperty("_group_order_submitted", true);
+            algorithm.SetProperty("_group_order_id", 41);
+
+            using (Py.GIL())
+            {
+                algorithm.OnOrderEvent(CreateOrderEvent(
+                    41,
+                    OrderStatus.Invalid,
+                    "distinctive rejection"));
+            }
+            services.Snapshot = currentSnapshot;
+            algorithm.SetDateTime(SnapshotTime.AddSeconds(10));
+            InvokeScheduledCallback(algorithm);
+
+            Assert.Multiple(() =>
+            {
+                Assert.AreEqual(1, services.RefreshRequestCount);
+                Assert.AreEqual(
+                    -1,
+                    algorithm.GetProperty<long>(
+                        "_pending_reconcile_generation"));
+                Assert.AreEqual(
+                    1,
+                    algorithm.GetProperty<int>(
+                        "_invalid_order_attempt_count"));
+                Assert.IsTrue(algorithm.GetProperty<bool>(
+                    "_group_order_submitted"));
+                Assert.AreEqual(
+                    9999,
+                    algorithm.GetProperty<DateTime>(
+                        "_next_group_order_retry_utc").Year);
+                Assert.AreEqual(
+                    0,
+                    orderProcessor.ProcessedOrdersRequests.Count);
+                Assert.That(
+                    algorithm.ErrorMessages,
+                    Has.One.Contains(expectedReason));
+                Assert.That(
+                    algorithm.ErrorMessages,
+                    Has.One.Contains("Automatic resubmission is disabled"));
+            });
         }
 
         private static class PythonPropertyTestHelper

@@ -144,6 +144,7 @@ namespace QuantConnect.Algorithm.CSharp
                 TerminalOrderEvent reconciledTerminalOrderEvent = null;
                 var reconcile = false;
                 var requestReconcileRefresh = false;
+                string automaticRetryBlockedReason = null;
                 string reconciliationErrorMessage = null;
                 lock (_orderStateLock)
                 {
@@ -153,6 +154,7 @@ namespace QuantConnect.Algorithm.CSharp
                         out preOrderSnapshot,
                         out reconciledTerminalOrderEvent,
                         out requestReconcileRefresh,
+                        out automaticRetryBlockedReason,
                         out reconciliationErrorMessage);
                 }
                 if (reconciliationErrorMessage != null)
@@ -161,16 +163,17 @@ namespace QuantConnect.Algorithm.CSharp
                 }
                 if (reconcile)
                 {
-                    var anyPositionChanged = ReconcileAccountPositions(
-                        preOrderSnapshot,
-                        snapshot);
+                    automaticRetryBlockedReason ??=
+                        ReconcileAccountPositions(
+                            preOrderSnapshot,
+                            snapshot);
                     lock (_orderStateLock)
                     {
                         invalidOrderMessage =
                             CompleteTerminalOrderReconciliationLocked(
                                 reconciledTerminalOrderEvent,
                                 now,
-                                anyPositionChanged);
+                                automaticRetryBlockedReason);
                     }
                     if (invalidOrderMessage != null)
                     {
@@ -224,7 +227,24 @@ namespace QuantConnect.Algorithm.CSharp
                     {
                         return;
                     }
-                    if (!IsSupportedGroupAllocationMethod(
+                    if (submissionGroup.AccountIds.Count == 0)
+                    {
+                        unsupportedGroup = true;
+                        var unsupportedGroupConfigurationKey =
+                            $"{submissionGroup.Name}\0empty\0" +
+                            submissionSnapshot.GroupConfigurationVersion;
+                        if (!unsupportedGroupConfigurationKey.Equals(
+                                _lastUnsupportedGroupConfigurationKey,
+                                StringComparison.OrdinalIgnoreCase))
+                        {
+                            _lastUnsupportedGroupConfigurationKey =
+                                unsupportedGroupConfigurationKey;
+                            unsupportedGroupError =
+                                $"Financial Advisor group '{GroupName}' has no members. " +
+                                "Add at least one account in TWS before submitting a group order.";
+                        }
+                    }
+                    else if (!IsSupportedGroupAllocationMethod(
                             submissionGroup.AllocationMethod))
                     {
                         unsupportedGroup = true;
@@ -539,6 +559,7 @@ namespace QuantConnect.Algorithm.CSharp
             var initialRefreshRejected = false;
             var reconcileRefreshRejected = false;
             string terminalOrderMessage = null;
+            string automaticRetryBlockedReason = null;
             string reconciliationErrorMessage = null;
             lock (_orderStateLock)
             {
@@ -556,6 +577,7 @@ namespace QuantConnect.Algorithm.CSharp
                         out preOrderSnapshot,
                         out reconciledTerminalOrderEvent,
                         out var requestReconcileRefresh,
+                        out automaticRetryBlockedReason,
                         out reconciliationErrorMessage);
                     if (requestReconcileRefresh &&
                         TryRequestReconcileRefreshLocked(
@@ -585,16 +607,17 @@ namespace QuantConnect.Algorithm.CSharp
 
             if (reconcile)
             {
-                var anyPositionChanged = ReconcileAccountPositions(
-                    preOrderSnapshot,
-                    snapshot);
+                automaticRetryBlockedReason ??=
+                    ReconcileAccountPositions(
+                        preOrderSnapshot,
+                        snapshot);
                 lock (_orderStateLock)
                 {
                     terminalOrderMessage =
                         CompleteTerminalOrderReconciliationLocked(
                             reconciledTerminalOrderEvent,
                             UtcTime,
-                            anyPositionChanged);
+                            automaticRetryBlockedReason);
                 }
             }
             if (reconciliationErrorMessage != null)
@@ -624,11 +647,13 @@ namespace QuantConnect.Algorithm.CSharp
             out BrokerageAccountSnapshot preOrderSnapshot,
             out TerminalOrderEvent terminalOrderEvent,
             out bool requestRefresh,
+            out string automaticRetryBlockedReason,
             out string errorMessage)
         {
             preOrderSnapshot = null;
             terminalOrderEvent = null;
             requestRefresh = false;
+            automaticRetryBlockedReason = null;
             errorMessage = null;
             if (_pendingReconcileGeneration < 0)
             {
@@ -647,6 +672,9 @@ namespace QuantConnect.Algorithm.CSharp
             if (!HasCompleteReconciliationAccountState(
                     _preOrderSnapshot,
                     snapshot,
+                    _pendingTerminalOrderEvent?.Status ==
+                        OrderStatus.Invalid,
+                    out automaticRetryBlockedReason,
                     out errorMessage))
             {
                 // Require another publication rather than reconsidering this
@@ -668,8 +696,11 @@ namespace QuantConnect.Algorithm.CSharp
         private static bool HasCompleteReconciliationAccountState(
             BrokerageAccountSnapshot preOrderSnapshot,
             BrokerageAccountSnapshot currentSnapshot,
+            bool validateAutomaticRetry,
+            out string automaticRetryBlockedReason,
             out string errorMessage)
         {
+            automaticRetryBlockedReason = null;
             if (preOrderSnapshot == null ||
                 !preOrderSnapshot.Groups.TryGetValue(
                     GroupName,
@@ -681,10 +712,27 @@ namespace QuantConnect.Algorithm.CSharp
                 return false;
             }
 
+            if (validateAutomaticRetry &&
+                (!currentSnapshot.Groups.TryGetValue(
+                    GroupName,
+                    out var currentGroup) ||
+                group.AccountIds.Count != currentGroup.AccountIds.Count ||
+                group.AccountIds.Except(
+                    currentGroup.AccountIds,
+                    StringComparer.OrdinalIgnoreCase).Any()))
+            {
+                automaticRetryBlockedReason =
+                    $"membership for Financial Advisor group '{GroupName}' changed " +
+                    "between the pre-order and post-order snapshots.";
+                errorMessage = null;
+                return true;
+            }
+
             foreach (var accountId in group.AccountIds)
             {
-                if (!preOrderSnapshot.Accounts.ContainsKey(accountId) ||
-                    !currentSnapshot.Accounts.ContainsKey(accountId))
+                if (!preOrderSnapshot.Accounts.TryGetValue(
+                        accountId,
+                        out var previousAccount))
                 {
                     errorMessage =
                         $"Account state for '{accountId}' is unavailable during " +
@@ -692,6 +740,35 @@ namespace QuantConnect.Algorithm.CSharp
                         "remains pending until a strictly newer snapshot contains " +
                         "every original group member.";
                     return false;
+                }
+                if (validateAutomaticRetry &&
+                    previousAccount.HasUnmappedPositions)
+                {
+                    automaticRetryBlockedReason =
+                        $"original group member '{accountId}' has an unmapped position " +
+                        "in the pre-order snapshot, so the order's effect cannot be proven.";
+                    errorMessage = null;
+                    return true;
+                }
+                if (!currentSnapshot.Accounts.TryGetValue(
+                        accountId,
+                        out var currentAccount))
+                {
+                    errorMessage =
+                        $"Account state for '{accountId}' is unavailable during " +
+                        "Financial Advisor group reconciliation; reconciliation " +
+                        "remains pending until a strictly newer snapshot contains " +
+                        "every original group member.";
+                    return false;
+                }
+                if (validateAutomaticRetry &&
+                    currentAccount.HasUnmappedPositions)
+                {
+                    automaticRetryBlockedReason =
+                        $"original group member '{accountId}' has an unmapped position " +
+                        "in the post-order snapshot, so the order's effect cannot be proven.";
+                    errorMessage = null;
+                    return true;
                 }
             }
 
@@ -706,7 +783,7 @@ namespace QuantConnect.Algorithm.CSharp
                 $"'{GroupName}' was not accepted.");
         }
 
-        private bool ReconcileAccountPositions(
+        private string ReconcileAccountPositions(
             BrokerageAccountSnapshot preOrderSnapshot,
             BrokerageAccountSnapshot currentSnapshot)
         {
@@ -726,7 +803,9 @@ namespace QuantConnect.Algorithm.CSharp
                     $"before={previousQuantity}, after={currentQuantity}, " +
                     $"change={change}");
             }
-            return anyPositionChanged;
+            return anyPositionChanged
+                ? $"at least one original group member's {_symbol.Value} position changed."
+                : null;
         }
 
         private bool CompleteGroupOrderSubmissionLocked(
@@ -799,7 +878,7 @@ namespace QuantConnect.Algorithm.CSharp
         private string CompleteTerminalOrderReconciliationLocked(
             TerminalOrderEvent terminalOrderEvent,
             DateTime now,
-            bool anyPositionChanged)
+            string automaticRetryBlockedReason)
         {
             if (terminalOrderEvent == null ||
                 terminalOrderEvent.Status != OrderStatus.Invalid)
@@ -809,16 +888,16 @@ namespace QuantConnect.Algorithm.CSharp
             }
 
             ++_invalidOrderAttemptCount;
-            if (anyPositionChanged)
+            if (automaticRetryBlockedReason != null)
             {
                 _groupOrderSubmitted = true;
                 _nextGroupOrderRetryUtc = DateTime.MaxValue;
                 return $"Financial Advisor group order " +
                     $"{terminalOrderEvent.OrderId} was reconciled after rejection, " +
-                    $"but at least one original group member's {_symbol.Value} " +
-                    "position changed. Automatic resubmission is disabled to avoid " +
-                    "a duplicate allocation; review the account positions and order " +
-                    "in TWS before submitting again.";
+                    $"but {automaticRetryBlockedReason} Automatic resubmission is " +
+                    "disabled to avoid a duplicate allocation; review the group " +
+                    "membership, account positions, and order in TWS before " +
+                    "submitting again.";
             }
             _groupOrderSubmitted = false;
             _nextGroupOrderRetryUtc =

@@ -809,6 +809,89 @@ namespace QuantConnect.Tests.Algorithm
         }
 
         [Test]
+        public void InitialRefreshRequiresANewerReadySnapshotBeforeAssignment()
+        {
+            BrokerageAccountSnapshot Snapshot(long generation) =>
+                CreateSnapshot(
+                    generation,
+                    new BrokerageAccountGroup(
+                        "TargetGroup",
+                        "Equal",
+                        Array.Empty<string>()),
+                    Entry(
+                        "AccountA",
+                        BrokerageAccountRelationship.Managed,
+                        "MOVE-East"));
+            var services = new TestFinancialAdvisorServices
+            {
+                Snapshot = Snapshot(1),
+                AcceptRefreshRequests = false
+            };
+            var algorithm =
+                new FinancialAdvisorGroupAssignmentAlgorithm();
+            algorithm.SubscriptionManager.SetDataManager(
+                new DataManagerStub(algorithm));
+            algorithm.SetLiveMode(true);
+            algorithm.SetDateTime(SnapshotTime);
+            algorithm.SetParameters(
+                new Dictionary<string, string>());
+            var consumer =
+                (IBrokerageAccountServiceConsumer)algorithm;
+            consumer.SetBrokerageAccountStateProvider(services);
+            consumer.SetBrokerageAccountGroupManager(services);
+
+            algorithm.Initialize();
+            algorithm.SetLocked();
+            algorithm.SetBrokerageAccountMutationServicesReady(true);
+            algorithm.OnData(CreateEmptySlice());
+
+            Assert.Multiple(() =>
+            {
+                Assert.AreEqual(1, services.RefreshRequestCount);
+                Assert.AreEqual(0, services.AssignmentRequests.Count);
+                CollectionAssert.IsEmpty(
+                    services.RequestedGroupHistory[0],
+                    "The rejected initialization request must be complete.");
+            });
+
+            services.AcceptRefreshRequests = true;
+            algorithm.SetDateTime(SnapshotTime.AddSeconds(5));
+            InvokePrivateMethod(
+                algorithm,
+                "RequestScheduledSnapshotRefresh");
+            algorithm.OnData(CreateEmptySlice());
+
+            Assert.Multiple(() =>
+            {
+                Assert.AreEqual(2, services.RefreshRequestCount);
+                Assert.AreEqual(0, services.AssignmentRequests.Count);
+                CollectionAssert.IsEmpty(
+                    services.RequestedGroupHistory[1],
+                    "The initial retry must remain a complete request.");
+                Assert.IsTrue(
+                    GetPrivateField<bool>(
+                        algorithm,
+                        "_initialSnapshotRefreshAccepted"));
+                Assert.AreEqual(
+                    1,
+                    GetPrivateField<long>(
+                        algorithm,
+                        "_initialSnapshotRequestGeneration"));
+            });
+
+            services.Snapshot = Snapshot(2);
+            algorithm.OnData(CreateEmptySlice());
+
+            Assert.Multiple(() =>
+            {
+                Assert.AreEqual(1, services.AssignmentRequests.Count);
+                Assert.AreEqual(
+                    "AccountA",
+                    services.AssignmentRequests[0].AccountId);
+            });
+        }
+
+        [Test]
         public void ScopedReadyTopologyCanDriveAssignment()
         {
             var services = new TestFinancialAdvisorServices
@@ -1880,6 +1963,73 @@ namespace QuantConnect.Tests.Algorithm
         }
 
         [Test]
+        public void AssignmentResultMustMatchPendingAccount()
+        {
+            var services = new TestFinancialAdvisorServices
+            {
+                Snapshot = CreateSnapshot(
+                    3,
+                    new BrokerageAccountGroup(
+                        "TargetGroup",
+                        "Equal",
+                        Array.Empty<string>()),
+                    Entry(
+                        "AccountA",
+                        BrokerageAccountRelationship.Managed,
+                        "MOVE-East"),
+                    Entry(
+                        "AccountB",
+                        BrokerageAccountRelationship.Managed,
+                        "Hold-West")),
+                DelayNextAssignmentPublication = true
+            };
+            var algorithm = CreateAlgorithm(services);
+
+            algorithm.OnData(CreateEmptySlice());
+            services.PublishAssignment(
+                2,
+                "AccountB",
+                BrokerageAccountGroupAssignmentStatus.Succeeded,
+                new[] { "TargetGroup" });
+            algorithm.OnData(CreateEmptySlice());
+
+            Assert.Multiple(() =>
+            {
+                Assert.IsTrue(
+                    GetPrivateField<bool>(
+                        algorithm,
+                        "_assignmentRequestAccepted"));
+                Assert.AreEqual(
+                    -1,
+                    GetPrivateField<long>(
+                        algorithm,
+                        "_pendingAssignmentGeneration"));
+                Assert.That(
+                    algorithm.LogMessages,
+                    Has.None.Contains("FA assignment succeeded"));
+            });
+
+            services.PublishAssignment(
+                3,
+                "accounta",
+                BrokerageAccountGroupAssignmentStatus.Succeeded,
+                new[] { "TargetGroup" });
+            algorithm.OnData(CreateEmptySlice());
+
+            Assert.Multiple(() =>
+            {
+                Assert.IsFalse(
+                    GetPrivateField<bool>(
+                        algorithm,
+                        "_assignmentRequestAccepted"));
+                Assert.That(
+                    algorithm.LogMessages,
+                    Has.One.Contains(
+                        "FA assignment succeeded: account=accounta"));
+            });
+        }
+
+        [Test]
         public void NonLiveModeDoesNotUseBrokerageAccountServices()
         {
             var services = new TestFinancialAdvisorServices
@@ -2260,6 +2410,7 @@ namespace QuantConnect.Tests.Algorithm
                 BrokerageAccountGroupAssignment.Unavailable;
             public List<AssignmentRequest> AssignmentRequests { get; } = new();
             public bool AcceptRefreshRequests { get; set; } = true;
+            public bool DelayNextAssignmentPublication { get; set; }
             public bool RejectNextAssignmentRequest { get; set; }
             public int RefreshRequestCount { get; private set; }
             public int AssignmentAttemptCount { get; private set; }
@@ -2320,7 +2471,7 @@ namespace QuantConnect.Tests.Algorithm
                         expectedMembershipHash,
                         expectedGroupConfigurationVersion,
                         targetAllocationValue));
-                Assignment = new BrokerageAccountGroupAssignment(
+                var assignment = new BrokerageAccountGroupAssignment(
                     BrokerageAccountGroupAssignmentStatus.Pending,
                     ++_assignmentGeneration,
                     SnapshotTime,
@@ -2334,6 +2485,14 @@ namespace QuantConnect.Tests.Algorithm
                     string.Empty,
                     string.Empty,
                     targetAllocationValue);
+                if (DelayNextAssignmentPublication)
+                {
+                    DelayNextAssignmentPublication = false;
+                }
+                else
+                {
+                    Assignment = assignment;
+                }
                 return true;
             }
 
@@ -2356,6 +2515,31 @@ namespace QuantConnect.Tests.Algorithm
                     $"resulting-configuration-{Assignment.Generation}",
                     errorMessage,
                     Assignment.TargetAllocationValue);
+            }
+
+            public void PublishAssignment(
+                long generation,
+                string accountId,
+                BrokerageAccountGroupAssignmentStatus status,
+                IReadOnlyList<string> resultingGroupNames)
+            {
+                _assignmentGeneration = Math.Max(
+                    _assignmentGeneration,
+                    generation);
+                Assignment = new BrokerageAccountGroupAssignment(
+                    status,
+                    generation,
+                    SnapshotTime,
+                    accountId,
+                    "TargetGroup",
+                    Array.Empty<string>(),
+                    resultingGroupNames,
+                    string.Empty,
+                    $"resulting-membership-{generation}",
+                    string.Empty,
+                    $"resulting-configuration-{generation}",
+                    string.Empty,
+                    null);
             }
 
             public void ResetRefreshRequests()

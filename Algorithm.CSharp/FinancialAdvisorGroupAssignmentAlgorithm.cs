@@ -178,6 +178,15 @@ namespace QuantConnect.Algorithm.CSharp
                 return true;
             }
 
+            if (!_initialSnapshotRefreshAccepted ||
+                snapshot.Generation <= _initialSnapshotRequestGeneration)
+            {
+                TryRequestSnapshotRefresh(
+                    snapshot,
+                    isInitialRequest: true);
+                return true;
+            }
+
             if (_minimumReadyGeneration >= 0)
             {
                 if (!IsSnapshotFresh(snapshot) ||
@@ -285,6 +294,13 @@ namespace QuantConnect.Algorithm.CSharp
             }
 
             var assignment = BrokerageAccountGroupAssignment;
+            if (!string.Equals(
+                    assignment.AccountId,
+                    _pendingAccountId,
+                    StringComparison.OrdinalIgnoreCase))
+            {
+                return true;
+            }
             if (_pendingAssignmentGeneration < 0)
             {
                 if (assignment.Status ==

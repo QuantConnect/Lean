@@ -655,6 +655,68 @@ namespace QuantConnect.Tests.Algorithm
             });
         }
 
+        [TestCase(true)]
+        [TestCase(false)]
+        public void InvalidWithMembershipDriftDisablesAutomaticRetry(
+            bool memberAdded)
+        {
+            var preOrderSnapshot = CreateSnapshot(
+                BrokerageAccountSnapshotStatus.Ready,
+                5,
+                10m,
+                20m,
+                SnapshotTime.AddMinutes(-1));
+            var currentSnapshot = CreateSnapshot(
+                BrokerageAccountSnapshotStatus.Ready,
+                6,
+                10m,
+                20m,
+                SnapshotTime.AddTicks(1),
+                groupAccountIds: memberAdded
+                    ? new[] { "AccountA", "AccountB", "AccountC" }
+                    : new[] { "AccountA" },
+                additionalAccountIds: memberAdded
+                    ? new[] { "AccountC" }
+                    : null);
+
+            AssertInvalidReconciliationDisablesRetry(
+                preOrderSnapshot,
+                currentSnapshot,
+                "membership for Financial Advisor group 'TestGroupEQ' changed");
+        }
+
+        [TestCase(true)]
+        [TestCase(false)]
+        public void InvalidWithUnmappedPositionDisablesAutomaticRetry(
+            bool preOrderPositionIsUnmapped)
+        {
+            var preOrderSnapshot = CreateSnapshot(
+                BrokerageAccountSnapshotStatus.Ready,
+                5,
+                10m,
+                20m,
+                SnapshotTime.AddMinutes(-1),
+                unmappedAccountIds: preOrderPositionIsUnmapped
+                    ? new[] { "AccountA" }
+                    : null);
+            var currentSnapshot = CreateSnapshot(
+                BrokerageAccountSnapshotStatus.Ready,
+                6,
+                10m,
+                20m,
+                SnapshotTime.AddTicks(1),
+                unmappedAccountIds: preOrderPositionIsUnmapped
+                    ? null
+                    : new[] { "AccountA" });
+
+            AssertInvalidReconciliationDisablesRetry(
+                preOrderSnapshot,
+                currentSnapshot,
+                preOrderPositionIsUnmapped
+                    ? "unmapped position in the pre-order snapshot"
+                    : "unmapped position in the post-order snapshot");
+        }
+
         [Test]
         public void NonInvalidTerminalResetsRetryCountOnlyAfterReconciliation()
         {
@@ -850,6 +912,53 @@ namespace QuantConnect.Tests.Algorithm
                     GetPrivateField<BrokerageAccountSnapshot>(
                         algorithm,
                         "_preOrderSnapshot"));
+            });
+        }
+
+        [Test]
+        public void EmptyGroupDoesNotSubmitAndReportsConfigurationOnce()
+        {
+            var snapshot = CreateSnapshot(
+                BrokerageAccountSnapshotStatus.Ready,
+                7,
+                10m,
+                20m,
+                SnapshotTime,
+                groupAccountIds: Array.Empty<string>());
+            var provider = new TestAccountStateProvider
+            {
+                Snapshot = snapshot
+            };
+            var algorithm = CreateInitializedAlgorithm(provider);
+            SetPrivateField(
+                algorithm,
+                "_initialSnapshotRequestGeneration",
+                snapshot.Generation - 1);
+            var submissionCount = 0;
+            SetOrderProcessor(
+                algorithm,
+                request =>
+                {
+                    ++submissionCount;
+                    return new OrderTicket(
+                        algorithm.Transactions,
+                        request);
+                });
+
+            algorithm.OnData(CreateEmptySlice());
+            algorithm.OnData(CreateEmptySlice());
+
+            Assert.Multiple(() =>
+            {
+                Assert.AreEqual(0, submissionCount);
+                Assert.That(
+                    algorithm.ErrorMessages,
+                    Has.One.Contains("has no members"));
+                Assert.AreEqual(
+                    1,
+                    algorithm.ErrorMessages.Count(message =>
+                        message.Contains("has no members")),
+                    "An unchanged empty group configuration must report once.");
             });
         }
 
@@ -1737,24 +1846,56 @@ namespace QuantConnect.Tests.Algorithm
             decimal accountBQuantity,
             DateTime collectionStartedUtc,
             bool includeAccountB = true,
-            string allocationMethod = "Equal")
+            string allocationMethod = "Equal",
+            IReadOnlyCollection<string> groupAccountIds = null,
+            IReadOnlyCollection<string> additionalAccountIds = null,
+            IReadOnlyCollection<string> unmappedAccountIds = null)
         {
             var group = new BrokerageAccountGroup(
                 GroupName,
                 allocationMethod,
-                new[] { "AccountA", "AccountB" });
+                groupAccountIds ?? new[] { "AccountA", "AccountB" });
             var groups = new Dictionary<string, BrokerageAccountGroup>
             {
                 [GroupName] = group
             };
             var accounts = new Dictionary<string, BrokerageAccountState>
             {
-                ["AccountA"] = CreateAccount("AccountA", accountAQuantity)
+                ["AccountA"] = CreateAccount(
+                    "AccountA",
+                    accountAQuantity,
+                    unmappedAccountIds?.Contains(
+                        "AccountA",
+                        StringComparer.OrdinalIgnoreCase) == true,
+                    group.AccountIds.Contains(
+                        "AccountA",
+                        StringComparer.OrdinalIgnoreCase))
             };
             if (includeAccountB)
             {
                 accounts["AccountB"] =
-                    CreateAccount("AccountB", accountBQuantity);
+                    CreateAccount(
+                        "AccountB",
+                        accountBQuantity,
+                        unmappedAccountIds?.Contains(
+                            "AccountB",
+                            StringComparer.OrdinalIgnoreCase) == true,
+                        group.AccountIds.Contains(
+                            "AccountB",
+                            StringComparer.OrdinalIgnoreCase));
+            }
+            foreach (var accountId in
+                additionalAccountIds ?? Array.Empty<string>())
+            {
+                accounts[accountId] = CreateAccount(
+                    accountId,
+                    0m,
+                    unmappedAccountIds?.Contains(
+                        accountId,
+                        StringComparer.OrdinalIgnoreCase) == true,
+                    group.AccountIds.Contains(
+                        accountId,
+                        StringComparer.OrdinalIgnoreCase));
             }
 
             return new BrokerageAccountSnapshot(
@@ -1768,17 +1909,24 @@ namespace QuantConnect.Tests.Algorithm
                 "membership",
                 "configuration",
                 string.Empty,
-                managedAccountIds: new[] { "AccountA", "AccountB" },
+                managedAccountIds: group.AccountIds
+                    .Concat(accounts.Keys)
+                    .Distinct(StringComparer.OrdinalIgnoreCase)
+                    .ToArray(),
                 collectionStartedUtc: collectionStartedUtc);
         }
 
         private static BrokerageAccountState CreateAccount(
             string accountId,
-            decimal quantity)
+            decimal quantity,
+            bool hasUnmappedPosition = false,
+            bool belongsToGroup = true)
         {
             return new BrokerageAccountState(
                 accountId,
-                new[] { GroupName },
+                belongsToGroup
+                    ? new[] { GroupName }
+                    : Array.Empty<string>(),
                 "INDIVIDUAL",
                 null,
                 null,
@@ -1793,7 +1941,81 @@ namespace QuantConnect.Tests.Algorithm
                         Symbols.SPY,
                         quantity,
                         100m)
-                });
+                },
+                hasUnmappedPosition
+                    ? new[] { CreateUnmappedPosition() }
+                    : null);
+        }
+
+        private static BrokerageAccountUnmappedPosition
+            CreateUnmappedPosition()
+        {
+            return new BrokerageAccountUnmappedPosition(
+                brokerageContractId: "999",
+                brokerageSymbol: "UNKNOWN",
+                localSymbol: "UNKNOWN",
+                brokerageSecurityType: "STK",
+                currency: "USD",
+                exchange: "SMART",
+                primaryExchange: string.Empty,
+                tradingClass: string.Empty,
+                expiration: string.Empty,
+                strike: 0m,
+                right: string.Empty,
+                multiplier: "1",
+                quantity: 1m,
+                averagePrice: 100m,
+                errorMessage: "test mapping failure");
+        }
+
+        private static void AssertInvalidReconciliationDisablesRetry(
+            BrokerageAccountSnapshot preOrderSnapshot,
+            BrokerageAccountSnapshot currentSnapshot,
+            string expectedReason)
+        {
+            var provider = new TestAccountStateProvider
+            {
+                Snapshot = preOrderSnapshot,
+                RefreshRequestHook = stateProvider =>
+                    stateProvider.Snapshot = currentSnapshot
+            };
+            var algorithm = CreateAlgorithm(provider, preOrderSnapshot);
+
+            algorithm.OnOrderEvent(CreateOrderEvent(
+                41,
+                OrderStatus.Invalid,
+                "distinctive rejection"));
+            algorithm.OnData(CreateEmptySlice());
+
+            Assert.Multiple(() =>
+            {
+                Assert.AreEqual(1, provider.RefreshRequestCount);
+                Assert.AreEqual(
+                    -1,
+                    GetPrivateField<long>(
+                        algorithm,
+                        "_pendingReconcileGeneration"));
+                Assert.AreEqual(
+                    1,
+                    GetPrivateField<int>(
+                        algorithm,
+                        "_invalidOrderAttemptCount"));
+                Assert.IsTrue(
+                    GetPrivateField<bool>(
+                        algorithm,
+                        "_groupOrderSubmitted"));
+                Assert.AreEqual(
+                    DateTime.MaxValue,
+                    GetPrivateField<DateTime>(
+                        algorithm,
+                        "_nextGroupOrderRetryUtc"));
+                Assert.That(
+                    algorithm.ErrorMessages,
+                    Has.One.Contains(expectedReason));
+                Assert.That(
+                    algorithm.ErrorMessages,
+                    Has.One.Contains("Automatic resubmission is disabled"));
+            });
         }
 
         private static void SetPrivateField<T>(

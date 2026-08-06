@@ -109,22 +109,25 @@ class FinancialAdvisorUnifiedGroupsDemoAlgorithm(QCAlgorithm):
         with self._order_state_lock:
             reconcile, pre_order_snapshot, \
                 reconciled_terminal_order_event, \
-                request_reconcile_refresh, reconciliation_error = \
+                request_reconcile_refresh, automatic_retry_blocked_reason, \
+                reconciliation_error = \
                 self._try_take_reconciliation_locked(
                     snapshot,
                     now)
         if reconciliation_error is not None:
             self.error(reconciliation_error)
         if reconcile:
-            any_position_changed = self._reconcile_account_positions(
-                pre_order_snapshot,
-                snapshot)
+            automatic_retry_blocked_reason = \
+                automatic_retry_blocked_reason or \
+                self._reconcile_account_positions(
+                    pre_order_snapshot,
+                    snapshot)
             with self._order_state_lock:
                 terminal_order_message = \
                     self._complete_terminal_order_reconciliation_locked(
                         reconciled_terminal_order_event,
                         now,
-                        any_position_changed)
+                        automatic_retry_blocked_reason)
             if terminal_order_message is not None:
                 self.error(terminal_order_message)
             return
@@ -161,7 +164,20 @@ class FinancialAdvisorUnifiedGroupsDemoAlgorithm(QCAlgorithm):
                         account_id not in submission_snapshot.accounts
                         for account_id in submission_group.account_ids):
                 return
-            if not self._is_supported_group_allocation_method(
+            if len(submission_group.account_ids) == 0:
+                unsupported_group = True
+                unsupported_group_configuration_key = (
+                    submission_group.name.casefold(),
+                    "empty",
+                    submission_snapshot.group_configuration_version)
+                if unsupported_group_configuration_key != \
+                        self._last_unsupported_group_configuration_key:
+                    self._last_unsupported_group_configuration_key = \
+                        unsupported_group_configuration_key
+                    unsupported_group_error = (
+                        f"Financial Advisor group '{self._GROUP_NAME}' has no members. "
+                        f"Add at least one account in TWS before submitting a group order.")
+            elif not self._is_supported_group_allocation_method(
                     submission_group.allocation_method):
                 unsupported_group = True
                 unsupported_group_configuration_key = (
@@ -371,7 +387,8 @@ class FinancialAdvisorUnifiedGroupsDemoAlgorithm(QCAlgorithm):
             if self._pending_reconcile_generation >= 0:
                 reconcile, pre_order_snapshot, \
                     reconciled_terminal_order_event, \
-                    request_reconcile_refresh, reconciliation_error = \
+                    request_reconcile_refresh, automatic_retry_blocked_reason, \
+                    reconciliation_error = \
                     self._try_take_reconciliation_locked(
                         snapshot,
                         self.utc_time)
@@ -392,15 +409,17 @@ class FinancialAdvisorUnifiedGroupsDemoAlgorithm(QCAlgorithm):
         if reconciliation_error is not None:
             self.error(reconciliation_error)
         if reconcile:
-            any_position_changed = self._reconcile_account_positions(
-                pre_order_snapshot,
-                snapshot)
+            automatic_retry_blocked_reason = \
+                automatic_retry_blocked_reason or \
+                self._reconcile_account_positions(
+                    pre_order_snapshot,
+                    snapshot)
             with self._order_state_lock:
                 terminal_order_message = \
                     self._complete_terminal_order_reconciliation_locked(
                         reconciled_terminal_order_event,
                         self.utc_time,
-                        any_position_changed)
+                        automatic_retry_blocked_reason)
             if terminal_order_message is not None:
                 self.error(terminal_order_message)
         if initial_refresh_rejected:
@@ -413,7 +432,7 @@ class FinancialAdvisorUnifiedGroupsDemoAlgorithm(QCAlgorithm):
 
     def _try_take_reconciliation_locked(self, snapshot, now):
         if self._pending_reconcile_generation < 0:
-            return False, None, None, False, None
+            return False, None, None, False, None, None
 
         if not self._is_snapshot_fresh(snapshot) or \
                 snapshot.generation <= \
@@ -421,18 +440,20 @@ class FinancialAdvisorUnifiedGroupsDemoAlgorithm(QCAlgorithm):
                 self._pending_reconcile_terminal_utc is None or \
                 self._get_snapshot_financial_data_as_of_utc(snapshot) < \
                 self._pending_reconcile_terminal_utc:
-            return False, None, None, True, None
+            return False, None, None, True, None, None
 
-        reconciliation_error = \
-            self._get_reconciliation_account_state_error(
+        reconciliation_error, automatic_retry_blocked_reason = \
+            self._get_reconciliation_account_state_result(
                 self._pre_order_snapshot,
-                snapshot)
+                snapshot,
+                self._pending_terminal_order_event is not None and
+                self._pending_terminal_order_event[1][0] == OrderStatus.INVALID)
         if reconciliation_error is not None:
             # Require another publication rather than reconsidering this
             # incomplete generation on every state-machine callback.
             self._pending_reconcile_generation = snapshot.generation
             self._next_reconcile_refresh_utc = now
-            return False, None, None, True, reconciliation_error
+            return False, None, None, True, None, reconciliation_error
 
         pre_order_snapshot = self._pre_order_snapshot
         self._pre_order_snapshot = None
@@ -441,38 +462,83 @@ class FinancialAdvisorUnifiedGroupsDemoAlgorithm(QCAlgorithm):
         self._pending_reconcile_generation = -1
         self._pending_reconcile_terminal_utc = None
         self._next_reconcile_refresh_utc = None
-        return True, pre_order_snapshot, terminal_order_event, False, None
+        return (
+            True,
+            pre_order_snapshot,
+            terminal_order_event,
+            False,
+            automatic_retry_blocked_reason,
+            None)
 
-    def _get_reconciliation_account_state_error(
+    def _get_reconciliation_account_state_result(
             self,
             pre_order_snapshot,
-            current_snapshot):
+            current_snapshot,
+            validate_automatic_retry):
         group = self._find_group(pre_order_snapshot)
         if group is None:
             return (
                 f"The pre-order snapshot for Financial Advisor group "
                 f"'{self._GROUP_NAME}' is unavailable; reconciliation remains "
-                f"pending.")
+                f"pending.",
+                None)
 
-        previous_account_ids = {
-            account.account_id.casefold()
+        if validate_automatic_retry:
+            current_group = self._find_group(current_snapshot)
+            previous_members = {
+                account_id.casefold()
+                for account_id in group.account_ids
+            }
+            current_members = set() if current_group is None else {
+                account_id.casefold()
+                for account_id in current_group.account_ids
+            }
+            if previous_members != current_members:
+                return (
+                    None,
+                    f"membership for Financial Advisor group '{self._GROUP_NAME}' "
+                    f"changed between the pre-order and post-order snapshots.")
+
+        previous_accounts = {
+            account.account_id.casefold(): account
             for account in list(pre_order_snapshot.accounts.values)
         }
-        current_account_ids = {
-            account.account_id.casefold()
+        current_accounts = {
+            account.account_id.casefold(): account
             for account in list(current_snapshot.accounts.values)
         }
         for account_id in group.account_ids:
             account_key = account_id.casefold()
-            if account_key not in previous_account_ids or \
-                    account_key not in current_account_ids:
+            previous_account = previous_accounts.get(account_key)
+            if previous_account is None:
                 return (
                     f"Account state for '{account_id}' is unavailable during "
                     f"Financial Advisor group reconciliation; reconciliation "
                     f"remains pending until a strictly newer snapshot contains "
-                    f"every original group member.")
+                    f"every original group member.",
+                    None)
+            if validate_automatic_retry and \
+                    previous_account.has_unmapped_positions:
+                return (
+                    None,
+                    f"original group member '{account_id}' has an unmapped position "
+                    f"in the pre-order snapshot, so the order's effect cannot be proven.")
+            current_account = current_accounts.get(account_key)
+            if current_account is None:
+                return (
+                    f"Account state for '{account_id}' is unavailable during "
+                    f"Financial Advisor group reconciliation; reconciliation "
+                    f"remains pending until a strictly newer snapshot contains "
+                    f"every original group member.",
+                    None)
+            if validate_automatic_retry and \
+                    current_account.has_unmapped_positions:
+                return (
+                    None,
+                    f"original group member '{account_id}' has an unmapped position "
+                    f"in the post-order snapshot, so the order's effect cannot be proven.")
 
-        return None
+        return None, None
 
     def _report_reconcile_refresh_rejection(self):
         self.error(
@@ -506,7 +572,10 @@ class FinancialAdvisorUnifiedGroupsDemoAlgorithm(QCAlgorithm):
                 f"FA reconciliation: account={account_id}, symbol={self._symbol}, "
                 f"before={previous_quantity}, after={current_quantity}, "
                 f"change={change}")
-        return any_position_changed
+        return (
+            f"at least one original group member's {self._symbol} position changed."
+            if any_position_changed
+            else None)
 
     def _complete_group_order_submission_locked(
             self,
@@ -568,23 +637,23 @@ class FinancialAdvisorUnifiedGroupsDemoAlgorithm(QCAlgorithm):
             self,
             terminal_order_event,
             now,
-            any_position_changed):
+            automatic_retry_blocked_reason):
         if terminal_order_event is None or \
                 terminal_order_event[1][0] != OrderStatus.INVALID:
             self._invalid_order_attempt_count = 0
             return None
 
         self._invalid_order_attempt_count += 1
-        if any_position_changed:
+        if automatic_retry_blocked_reason is not None:
             self._group_order_submitted = True
             self._next_group_order_retry_utc = datetime.max
             order_id = terminal_order_event[0]
             return (
                 f"Financial Advisor group order {order_id} was reconciled after "
-                f"rejection, but at least one original group member's "
-                f"{self._symbol} position changed. Automatic resubmission is "
-                f"disabled to avoid a duplicate allocation; review the account "
-                f"positions and order in TWS before submitting again.")
+                f"rejection, but {automatic_retry_blocked_reason} Automatic "
+                f"resubmission is disabled to avoid a duplicate allocation; "
+                f"review the group membership, account positions, and order in "
+                f"TWS before submitting again.")
         self._group_order_submitted = False
         retry_allowed = \
             self._invalid_order_attempt_count < \
