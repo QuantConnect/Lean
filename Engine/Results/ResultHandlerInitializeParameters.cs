@@ -17,6 +17,7 @@
 using QuantConnect.Packets;
 using QuantConnect.Interfaces;
 using QuantConnect.Lean.Engine.TransactionHandlers;
+using QuantConnect.Util;
 
 namespace QuantConnect.Lean.Engine.Results
 {
@@ -51,15 +52,23 @@ namespace QuantConnect.Lean.Engine.Results
         public IMapFileProvider MapFileProvider { get; set; }
 
         /// <summary>
+        /// The tool tracking the engine's performance counters, used by the in-run
+        /// algorithm speed analysis. Optional: may be null when the host doesn't track performance.
+        /// </summary>
+        public PerformanceTrackingTool PerformanceTrackingTool { get; set; }
+
+        /// <summary>
         /// Creates a new instance
         /// </summary>
-        public ResultHandlerInitializeParameters(AlgorithmNodePacket job, IMessagingHandler messagingHandler, IApi api, ITransactionHandler transactionHandler, IMapFileProvider mapFileProvider)
+        public ResultHandlerInitializeParameters(AlgorithmNodePacket job, IMessagingHandler messagingHandler, IApi api, ITransactionHandler transactionHandler,
+            IMapFileProvider mapFileProvider, PerformanceTrackingTool performanceTrackingTool = null)
         {
             Job = job;
             Api = api;
             MapFileProvider = mapFileProvider;
             MessagingHandler = messagingHandler;
             TransactionHandler = transactionHandler;
+            PerformanceTrackingTool = performanceTrackingTool;
         }
     }
 }

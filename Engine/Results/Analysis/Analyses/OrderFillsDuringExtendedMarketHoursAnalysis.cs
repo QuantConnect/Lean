@@ -27,6 +27,11 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
     public class OrderFillsDuringExtendedMarketHoursAnalysis : BaseResultsAnalysis
     {
         /// <summary>
+        /// This analysis reads the algorithm's securities, which are not safe to access while it runs.
+        /// </summary>
+        public override bool RunsInRun { get; } = false;
+
+        /// <summary>
         /// Gets the description of the extended market hours fill issue.
         /// </summary>
         public override string Issue { get; } = "The algorithm filled orders during extended market hours." +

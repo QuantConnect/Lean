@@ -104,12 +104,14 @@ namespace QuantConnect.Lean.Engine
                 //-> Initialize messaging system
                 SystemHandlers.Notify.SetAuthentication(job);
 
+                var performanceTrackingTool = new PerformanceTrackingTool();
+
                 //-> Set the result handler type for this algorithm job, and launch the associated result thread.
-                AlgorithmHandlers.Results.Initialize(new(job, SystemHandlers.Notify, SystemHandlers.Api, AlgorithmHandlers.Transactions, AlgorithmHandlers.MapFileProvider));
+                AlgorithmHandlers.Results.Initialize(
+                    new(job, SystemHandlers.Notify, SystemHandlers.Api, AlgorithmHandlers.Transactions, AlgorithmHandlers.MapFileProvider, performanceTrackingTool));
 
                 IBrokerage brokerage = null;
                 DataManager dataManager = null;
-                var performanceTrackingTool = new PerformanceTrackingTool();
                 var synchronizer = _liveMode ? new LiveSynchronizer() : new Synchronizer();
                 try
                 {

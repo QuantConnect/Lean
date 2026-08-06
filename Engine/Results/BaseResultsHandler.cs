@@ -307,6 +307,12 @@ namespace QuantConnect.Lean.Engine.Results
         protected IMapFileProvider MapFileProvider { get; set; }
 
         /// <summary>
+        /// The tool tracking the engine's performance counters, used by the in-run
+        /// algorithm speed analysis. May be null when the host doesn't track performance.
+        /// </summary>
+        protected PerformanceTrackingTool PerformanceTrackingTool { get; set; }
+
+        /// <summary>
         /// Creates a new instance
         /// </summary>
         protected BaseResultsHandler()
@@ -498,6 +504,7 @@ namespace QuantConnect.Lean.Engine.Results
             _updateRunner.Start();
             State["Hostname"] = _hostName;
             MapFileProvider = parameters.MapFileProvider;
+            PerformanceTrackingTool = parameters.PerformanceTrackingTool;
 
             SerializerSettings = new()
             {
@@ -596,9 +603,19 @@ namespace QuantConnect.Lean.Engine.Results
         /// <returns>The path to the logs</returns>
         public virtual string SaveLogs(string id, List<LogEntry> logs)
         {
+            return SaveLogs(id, logs.Select(x => x.Message));
+        }
+
+        /// <summary>
+        /// Returns the location of the logs
+        /// </summary>
+        /// <param name="id">Id that will be incorporated into the algorithm log name</param>
+        /// <param name="logLines">The log lines to save</param>
+        /// <returns>The path to the logs</returns>
+        public virtual string SaveLogs(string id, IEnumerable<string> logLines)
+        {
             var filename = $"{id}-log.txt";
             var path = GetResultsPath(filename);
-            var logLines = logs.Select(x => x.Message);
             File.WriteAllLines(path, logLines);
             return path;
         }
