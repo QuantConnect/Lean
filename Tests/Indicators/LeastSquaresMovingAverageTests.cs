@@ -72,6 +72,92 @@ namespace QuantConnect.Tests.Indicators
         }
 
         [Test]
+        public void WithReferenceRegressesAgainstBenchmarkWhenTargetArrivesFirst()
+        {
+            var indicator = new LeastSquaresMovingAverage("LSMA", Symbols.SPY, 3);
+
+            UpdatePair(indicator, 1, 3, targetFirst: true);
+            Assert.IsFalse(indicator.IsReady);
+
+            UpdatePair(indicator, 2, 5, targetFirst: true);
+            Assert.IsFalse(indicator.IsReady);
+
+            UpdatePair(indicator, 3, 7, targetFirst: true);
+
+            Assert.IsTrue(indicator.IsReady);
+            Assert.AreEqual(1m, Math.Round(indicator.Intercept.Current.Value, 8));
+            Assert.AreEqual(2m, Math.Round(indicator.Slope.Current.Value, 8));
+            Assert.AreEqual(7m, Math.Round(indicator.Current.Value, 8));
+        }
+
+        [Test]
+        public void WithReferenceRegressesAgainstBenchmarkWhenReferenceArrivesFirst()
+        {
+            var indicator = new LeastSquaresMovingAverage("LSMA", Symbols.SPY, 3);
+
+            UpdatePair(indicator, 5, 11, targetFirst: false);
+            Assert.IsFalse(indicator.IsReady);
+
+            UpdatePair(indicator, 6, 13, targetFirst: false);
+            Assert.IsFalse(indicator.IsReady);
+
+            UpdatePair(indicator, 7, 15, targetFirst: false);
+
+            Assert.IsTrue(indicator.IsReady);
+            Assert.AreEqual(1m, Math.Round(indicator.Intercept.Current.Value, 8));
+            Assert.AreEqual(2m, Math.Round(indicator.Slope.Current.Value, 8));
+            Assert.AreEqual(15m, Math.Round(indicator.Current.Value, 8));
+        }
+
+        [Test]
+        public void WithReferenceWaitsForMatchingTimes()
+        {
+            var indicator = new LeastSquaresMovingAverage("LSMA", Symbols.SPY, 2);
+            var time = DateTime.UtcNow;
+
+            indicator.Update(new IndicatorDataPoint(Symbols.AAPL, time, 3));
+            indicator.Update(new IndicatorDataPoint(Symbols.SPY, time.AddMinutes(1), 2));
+
+            Assert.IsFalse(indicator.IsReady);
+            Assert.AreEqual(0m, indicator.Current.Value);
+
+            indicator.Update(new IndicatorDataPoint(Symbols.AAPL, time.AddMinutes(1), 5));
+
+            Assert.IsFalse(indicator.IsReady);
+            Assert.AreEqual(5m, indicator.Current.Value);
+
+            UpdatePair(indicator, 3, 7, time.AddMinutes(2), targetFirst: true);
+
+            Assert.IsTrue(indicator.IsReady);
+            Assert.AreEqual(1m, Math.Round(indicator.Intercept.Current.Value, 8));
+            Assert.AreEqual(2m, Math.Round(indicator.Slope.Current.Value, 8));
+            Assert.AreEqual(7m, Math.Round(indicator.Current.Value, 8));
+        }
+
+        [Test]
+        public void WithReferenceResetsProperly()
+        {
+            var indicator = new LeastSquaresMovingAverage("LSMA", Symbols.SPY, 3);
+
+            UpdatePair(indicator, 1, 3, targetFirst: true);
+            UpdatePair(indicator, 2, 5, targetFirst: true);
+            UpdatePair(indicator, 3, 7, targetFirst: true);
+
+            Assert.IsTrue(indicator.IsReady);
+
+            indicator.Reset();
+
+            TestHelper.AssertIndicatorIsInDefaultState(indicator);
+
+            UpdatePair(indicator, 4, 9, targetFirst: false);
+            UpdatePair(indicator, 5, 11, targetFirst: false);
+            UpdatePair(indicator, 6, 13, targetFirst: false);
+
+            Assert.IsTrue(indicator.IsReady);
+            Assert.AreEqual(13m, Math.Round(indicator.Current.Value, 8));
+        }
+
+        [Test]
         public override void ResetsProperly()
         {
             var indicator = CreateIndicator();
@@ -107,6 +193,28 @@ namespace QuantConnect.Tests.Indicators
 
             indicator.Update(time.AddMinutes(period.Value - 1), Prices[period.Value - 1]);
             Assert.IsTrue(indicator.IsReady);
+        }
+
+        private static void UpdatePair(LeastSquaresMovingAverage indicator, decimal referenceValue, decimal targetValue, bool targetFirst)
+        {
+            UpdatePair(indicator, referenceValue, targetValue, DateTime.UtcNow.AddMinutes((double)referenceValue), targetFirst);
+        }
+
+        private static void UpdatePair(LeastSquaresMovingAverage indicator, decimal referenceValue, decimal targetValue, DateTime time, bool targetFirst)
+        {
+            var target = new IndicatorDataPoint(Symbols.AAPL, time, targetValue);
+            var reference = new IndicatorDataPoint(Symbols.SPY, time, referenceValue);
+
+            if (targetFirst)
+            {
+                indicator.Update(target);
+                indicator.Update(reference);
+            }
+            else
+            {
+                indicator.Update(reference);
+                indicator.Update(target);
+            }
         }
     }
 }
