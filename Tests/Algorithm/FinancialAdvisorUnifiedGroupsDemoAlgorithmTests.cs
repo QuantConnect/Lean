@@ -19,14 +19,19 @@ using System.Linq;
 using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
+using Moq;
 using NUnit.Framework;
 using QuantConnect.Algorithm;
 using QuantConnect.Algorithm.CSharp;
 using QuantConnect.Brokerages;
 using QuantConnect.Data;
+using QuantConnect.Data.Market;
 using QuantConnect.Interfaces;
 using QuantConnect.Orders;
 using QuantConnect.Orders.Fees;
+using QuantConnect.Scheduling;
+using QuantConnect.Securities;
+using QuantConnect.Tests.Common.Securities;
 using QuantConnect.Tests.Engine.DataFeeds;
 
 namespace QuantConnect.Tests.Algorithm
@@ -371,7 +376,7 @@ namespace QuantConnect.Tests.Algorithm
         }
 
         [Test]
-        public void TerminalEventDuringSetHoldingsStartsCausalReconciliation()
+        public void TerminalEventDuringMarketOrderStartsCausalReconciliation()
         {
             var snapshot = CreateSnapshot(
                 BrokerageAccountSnapshotStatus.Ready,
@@ -390,21 +395,20 @@ namespace QuantConnect.Tests.Algorithm
                 algorithm,
                 "_initialSnapshotRequestGeneration",
                 snapshot.Generation - 1);
-            var ticket = CreateOrderTicket(
+            var submissionCount = 0;
+            SetOrderProcessor(
                 algorithm,
-                41,
-                OrderStatus.New);
-            SetPrivateField(
-                algorithm,
-                "_submitGroupOrder",
-                new Func<OrderTicket>(() =>
+                request =>
                 {
+                    ++submissionCount;
                     algorithm.OnOrderEvent(
                         CreateOrderEvent(
-                            41,
+                            request.OrderId,
                             OrderStatus.Filled));
-                    return ticket;
-                }));
+                    return new OrderTicket(
+                        algorithm.Transactions,
+                        request);
+                });
 
             long generationObservedDuringRefresh = -1;
             DateTime terminalObservedDuringRefresh = default;
@@ -424,6 +428,7 @@ namespace QuantConnect.Tests.Algorithm
 
             Assert.Multiple(() =>
             {
+                Assert.AreEqual(1, submissionCount);
                 Assert.AreEqual(1, provider.RefreshRequestCount);
                 Assert.AreEqual(
                     snapshot.Generation,
@@ -468,37 +473,38 @@ namespace QuantConnect.Tests.Algorithm
                 algorithm,
                 "_initialSnapshotRequestGeneration",
                 snapshot.Generation - 1);
-            var invalidTicket = CreateOrderTicket(
-                algorithm,
-                41,
-                OrderStatus.Invalid,
-                "saved allocation total is not lot-aligned");
-            var retryTicket = CreateOrderTicket(
-                algorithm,
-                42,
-                OrderStatus.New);
             var submissionCount = 0;
-            SetPrivateField(
+            var retryOrderId = 0;
+            SetOrderProcessor(
                 algorithm,
-                "_submitGroupOrder",
-                new Func<OrderTicket>(() =>
+                request =>
                 {
                     ++submissionCount;
                     if (submissionCount == 1)
                     {
                         algorithm.OnOrderEvent(
                             CreateOrderEvent(
-                                41,
+                                request.OrderId,
                                 OrderStatus.PartiallyFilled));
                         algorithm.OnOrderEvent(
                             CreateOrderEvent(
-                                41,
+                                request.OrderId,
                                 OrderStatus.Invalid,
                                 "saved allocation total is not lot-aligned"));
-                        return invalidTicket;
+                        return OrderTicket.InvalidSubmitRequest(
+                            algorithm.Transactions,
+                            request,
+                            OrderResponse.Error(
+                                request,
+                                OrderResponseErrorCode
+                                    .BrokerageFailedToSubmitOrder,
+                                "saved allocation total is not lot-aligned"));
                     }
-                    return retryTicket;
-                }));
+                    retryOrderId = request.OrderId;
+                    return new OrderTicket(
+                        algorithm.Transactions,
+                        request);
+                });
 
             algorithm.OnData(CreateEmptySlice());
 
@@ -555,16 +561,79 @@ namespace QuantConnect.Tests.Algorithm
                         algorithm,
                         "_groupOrderSubmitted"));
                 Assert.AreEqual(
-                    42,
+                    retryOrderId,
                     GetPrivateField<int>(
                         algorithm,
                         "_groupOrderId"));
+                Assert.AreEqual(
+                    1,
+                    GetPrivateField<int>(
+                        algorithm,
+                        "_invalidOrderAttemptCount"),
+                    "A nonterminal retry must not erase earlier invalid attempts.");
                 Assert.AreEqual(1, provider.RefreshRequestCount);
             });
         }
 
         [Test]
-        public void EmptySetHoldingsResultStopsAfterBoundedAttempts()
+        public void NonInvalidTerminalResetsRetryCountOnlyAfterReconciliation()
+        {
+            var snapshot = CreateSnapshot(
+                BrokerageAccountSnapshotStatus.Ready,
+                7,
+                10m,
+                20m,
+                SnapshotTime.AddMinutes(-1));
+            var provider = new TestAccountStateProvider
+            {
+                Snapshot = snapshot
+            };
+            provider.RefreshRequestHook = stateProvider =>
+                stateProvider.Snapshot = CreateSnapshot(
+                    BrokerageAccountSnapshotStatus.Ready,
+                    snapshot.Generation + 1,
+                    11m,
+                    20m,
+                    SnapshotTime);
+            var algorithm = CreateAlgorithm(provider, snapshot);
+            SetPrivateField(algorithm, "_preOrderSnapshot", snapshot);
+            SetPrivateField(algorithm, "_groupOrderSubmitted", true);
+            SetPrivateField(algorithm, "_groupOrderId", 41);
+            SetPrivateField(algorithm, "_invalidOrderAttemptCount", 1);
+
+            algorithm.OnOrderEvent(
+                CreateOrderEvent(41, OrderStatus.Filled));
+
+            Assert.Multiple(() =>
+            {
+                Assert.AreEqual(1, provider.RefreshRequestCount);
+                Assert.AreEqual(
+                    1,
+                    GetPrivateField<int>(
+                        algorithm,
+                        "_invalidOrderAttemptCount"),
+                    "A terminal callback alone is not authoritative reconciliation.");
+            });
+
+            algorithm.OnData(CreateEmptySlice());
+
+            Assert.Multiple(() =>
+            {
+                Assert.AreEqual(
+                    0,
+                    GetPrivateField<int>(
+                        algorithm,
+                        "_invalidOrderAttemptCount"));
+                Assert.AreEqual(
+                    -1,
+                    GetPrivateField<long>(
+                        algorithm,
+                        "_pendingReconcileGeneration"));
+            });
+        }
+
+        [Test]
+        public void SynchronousMarketOrderFailureFailsClosedAndRethrows()
         {
             var snapshot = CreateSnapshot(
                 BrokerageAccountSnapshotStatus.Ready,
@@ -584,32 +653,74 @@ namespace QuantConnect.Tests.Algorithm
                 "_initialSnapshotRequestGeneration",
                 snapshot.Generation - 1);
             var submissionCount = 0;
-            SetPrivateField(
+            SetOrderProcessor(
                 algorithm,
-                "_submitGroupOrder",
-                new Func<OrderTicket>(() =>
+                request =>
                 {
                     ++submissionCount;
-                    return null;
-                }));
+                    if (submissionCount == 1)
+                    {
+                        algorithm.OnOrderEvent(
+                            CreateOrderEvent(
+                                request.OrderId,
+                                OrderStatus.Filled));
+                        throw new InvalidOperationException(
+                            "Synchronous order processor failure.");
+                    }
+                    return new OrderTicket(
+                        algorithm.Transactions,
+                        request);
+                });
 
-            for (var attempt = 0; attempt < 4; ++attempt)
-            {
-                algorithm.SetDateTime(
-                    SnapshotTime.AddSeconds(5 * attempt));
-                algorithm.OnData(CreateEmptySlice());
-            }
+            var exception = Assert.Throws<InvalidOperationException>(
+                () => algorithm.OnData(CreateEmptySlice()));
 
             Assert.Multiple(() =>
             {
                 Assert.AreEqual(
-                    3,
-                    submissionCount,
-                    "An empty SetHoldings result must have a bounded retry count.");
-                Assert.AreEqual(0, provider.RefreshRequestCount);
+                    "Synchronous order processor failure.",
+                    exception.Message);
+                Assert.AreEqual(1, submissionCount);
+                Assert.IsNull(
+                    GetPrivateField<BrokerageAccountSnapshot>(
+                        algorithm,
+                        "_preOrderSnapshot"));
+                Assert.IsFalse(
+                    GetPrivateField<bool>(
+                        algorithm,
+                        "_orderSubmissionInProgress"));
+                Assert.IsFalse(
+                    GetPrivateField<bool>(
+                        algorithm,
+                        "_onDataStateActive"));
+                Assert.IsTrue(
+                    GetPrivateField<bool>(
+                        algorithm,
+                        "_groupOrderSubmitted"));
+                Assert.AreEqual(
+                    0,
+                    ((System.Collections.IDictionary)
+                        GetPrivateField<object>(
+                            algorithm,
+                            "_terminalEventsDuringSubmission")).Count);
                 Assert.That(
                     algorithm.ErrorMessages,
-                    Has.One.Contains("bounded retry limit was reached"));
+                    Has.One.Contains(
+                        "Automatic resubmission is disabled"));
+            });
+
+            algorithm.OnData(CreateEmptySlice());
+
+            Assert.Multiple(() =>
+            {
+                Assert.AreEqual(
+                    1,
+                    submissionCount,
+                    "An indeterminate submission outcome must never auto-retry.");
+                Assert.IsTrue(
+                    GetPrivateField<bool>(
+                        algorithm,
+                        "_groupOrderSubmitted"));
             });
         }
 
@@ -639,14 +750,15 @@ namespace QuantConnect.Tests.Algorithm
                 "_initialSnapshotRequestGeneration",
                 snapshot.Generation - 1);
             var submissionCount = 0;
-            SetPrivateField(
+            SetOrderProcessor(
                 algorithm,
-                "_submitGroupOrder",
-                new Func<OrderTicket>(() =>
+                request =>
                 {
                     ++submissionCount;
-                    return null;
-                }));
+                    return new OrderTicket(
+                        algorithm.Transactions,
+                        request);
+                });
 
             algorithm.OnData(CreateEmptySlice());
 
@@ -680,7 +792,7 @@ namespace QuantConnect.Tests.Algorithm
             {
                 Snapshot = snapshot
             };
-            var algorithm = CreateAlgorithm(provider, snapshot);
+            var algorithm = CreateInitializedAlgorithm(provider);
             SetPrivateField(algorithm, "_groupOrderSubmitted", false);
             SetPrivateField(algorithm, "_groupOrderId", 0);
             SetPrivateField<BrokerageAccountSnapshot>(
@@ -692,18 +804,29 @@ namespace QuantConnect.Tests.Algorithm
                 "_initialSnapshotRequestGeneration",
                 snapshot.Generation - 1);
             var submissionCount = 0;
-            SetPrivateField(
+            SubmitOrderRequest submittedRequest = null;
+            SetOrderProcessor(
                 algorithm,
-                "_submitGroupOrder",
-                new Func<OrderTicket>(() =>
+                request =>
                 {
                     ++submissionCount;
-                    return null;
-                }));
+                    submittedRequest = request;
+                    return new OrderTicket(
+                        algorithm.Transactions,
+                        request);
+                });
 
             algorithm.OnData(CreateEmptySlice());
 
-            Assert.AreEqual(1, submissionCount);
+            Assert.Multiple(() =>
+            {
+                Assert.AreEqual(1, submissionCount);
+                Assert.AreEqual(1m, submittedRequest.Quantity);
+                Assert.AreEqual(
+                    GroupName,
+                    ((InteractiveBrokersOrderProperties)
+                        submittedRequest.OrderProperties).FaGroup);
+            });
         }
 
         [TestCase("ContractsOrShares")]
@@ -734,15 +857,17 @@ namespace QuantConnect.Tests.Algorithm
                 "_initialSnapshotRequestGeneration",
                 snapshot.Generation - 1);
             var submissionCount = 0;
-            SetPrivateField(
+            SetOrderProcessor(
                 algorithm,
-                "_submitGroupOrder",
-                new Func<OrderTicket>(() =>
+                request =>
                 {
                     ++submissionCount;
-                    return null;
-                }));
+                    return new OrderTicket(
+                        algorithm.Transactions,
+                        request);
+                });
 
+            algorithm.OnData(CreateEmptySlice());
             algorithm.OnData(CreateEmptySlice());
 
             Assert.Multiple(() =>
@@ -752,6 +877,11 @@ namespace QuantConnect.Tests.Algorithm
                     algorithm.ErrorMessages,
                     Has.One.Contains(
                         $"unsupported saved allocation method '{allocationMethod}'"));
+                Assert.AreEqual(
+                    1,
+                    algorithm.ErrorMessages.Count(message => message.Contains(
+                        $"unsupported saved allocation method '{allocationMethod}'")),
+                    "An unchanged group configuration must report once.");
             });
         }
 
@@ -834,14 +964,15 @@ namespace QuantConnect.Tests.Algorithm
                 "_initialSnapshotRequestGeneration",
                 snapshot.Generation - 1);
             var submissionCount = 0;
-            SetPrivateField(
+            SetOrderProcessor(
                 algorithm,
-                "_submitGroupOrder",
-                new Func<OrderTicket>(() =>
+                request =>
                 {
                     ++submissionCount;
-                    return null;
-                }));
+                    return new OrderTicket(
+                        algorithm.Transactions,
+                        request);
+                });
 
             algorithm.OnData(CreateEmptySlice());
 
@@ -924,6 +1055,83 @@ namespace QuantConnect.Tests.Algorithm
                 4,
                 provider.RefreshRequestCount,
                 "Scheduled policy must yield to terminal-order reconciliation.");
+        }
+
+        [Test]
+        public void LiveInitializeRegistersAndExecutesNinetySecondRefreshSchedule()
+        {
+            BrokerageAccountSnapshot CreateReadySnapshot(long generation) =>
+                CreateSnapshot(
+                    BrokerageAccountSnapshotStatus.Ready,
+                    generation,
+                    10m,
+                    20m,
+                    SnapshotTime);
+
+            var provider = new TestAccountStateProvider
+            {
+                Snapshot = CreateReadySnapshot(1)
+            };
+            provider.RefreshRequestHook = stateProvider =>
+                stateProvider.Snapshot = CreateReadySnapshot(
+                    stateProvider.Snapshot.Generation + 1);
+            var eventSchedule = new RecordingEventSchedule();
+            var algorithm = CreateAlgorithmForScheduleRegistration(
+                provider,
+                eventSchedule,
+                liveMode: true);
+
+            Assert.Multiple(() =>
+            {
+                Assert.AreEqual(1, eventSchedule.Events.Count);
+                Assert.AreEqual(
+                    1,
+                    provider.RefreshRequestCount,
+                    "Live initialization must issue the initial scoped refresh.");
+            });
+
+            using var scheduledEvent = eventSchedule.Events.Single();
+            var firstEventTime = scheduledEvent.NextEventUtcTime;
+            algorithm.SetDateTime(firstEventTime);
+            scheduledEvent.Scan(firstEventTime);
+            var secondEventTime = scheduledEvent.NextEventUtcTime;
+
+            Assert.Multiple(() =>
+            {
+                Assert.AreEqual(
+                    TimeSpan.FromSeconds(90),
+                    secondEventTime - firstEventTime);
+                Assert.AreEqual(2, provider.RefreshRequestCount);
+                CollectionAssert.AreEqual(
+                    new[] { GroupName },
+                    provider.RequestedGroupHistory.Last());
+            });
+        }
+
+        [Test]
+        public void NonLiveInitializeDoesNotRegisterRefreshSchedule()
+        {
+            var provider = new TestAccountStateProvider
+            {
+                Snapshot = CreateSnapshot(
+                    BrokerageAccountSnapshotStatus.Ready,
+                    1,
+                    10m,
+                    20m,
+                    SnapshotTime)
+            };
+            var eventSchedule = new RecordingEventSchedule();
+
+            CreateAlgorithmForScheduleRegistration(
+                provider,
+                eventSchedule,
+                liveMode: false);
+
+            Assert.Multiple(() =>
+            {
+                Assert.AreEqual(0, eventSchedule.Events.Count);
+                Assert.AreEqual(0, provider.RefreshRequestCount);
+            });
         }
 
         [Test]
@@ -1310,6 +1518,7 @@ namespace QuantConnect.Tests.Algorithm
 
             algorithm.Initialize();
             algorithm.SetLocked();
+            algorithm.Securities[Symbols.SPY].Holdings.SetHoldings(1m, 1m);
             algorithm.OnData(CreateEmptySlice());
 
             Assert.AreEqual(0, provider.RefreshRequestCount);
@@ -1336,6 +1545,47 @@ namespace QuantConnect.Tests.Algorithm
             return algorithm;
         }
 
+        private static void SetOrderProcessor(
+            FinancialAdvisorUnifiedGroupsDemoAlgorithm algorithm,
+            Func<SubmitOrderRequest, OrderTicket> process)
+        {
+            var security = algorithm.Securities.TryGetValue(
+                    Symbols.SPY,
+                    out var initializedSecurity)
+                ? initializedSecurity
+                : SecurityTests.GetSecurity();
+            security.SetMarketPrice(new Tick
+            {
+                Symbol = Symbols.SPY,
+                Time = SnapshotTime,
+                Value = 100m
+            });
+            if (initializedSecurity == null)
+            {
+                algorithm.Securities.Add(Symbols.SPY, security);
+            }
+            algorithm.Settings.FreePortfolioValuePercentage = 0m;
+            if (!algorithm.GetLocked())
+            {
+                algorithm.SetCash(100000m);
+            }
+            algorithm.SetFinishedWarmingUp();
+
+            var processor = new Mock<IOrderProcessor>(MockBehavior.Strict);
+            processor.SetupGet(candidate => candidate.OrdersCount)
+                .Returns(0);
+            processor
+                .Setup(candidate => candidate.GetOpenOrderTickets(
+                    It.IsAny<Func<OrderTicket, bool>>()))
+                .Returns(Array.Empty<OrderTicket>());
+            processor
+                .Setup(candidate => candidate.Process(
+                    It.IsAny<OrderRequest>()))
+                .Returns<OrderRequest>(request =>
+                    process((SubmitOrderRequest)request));
+            algorithm.Transactions.SetOrderProcessor(processor.Object);
+        }
+
         private static FinancialAdvisorUnifiedGroupsDemoAlgorithm
             CreateInitializedAlgorithm(
                 TestAccountStateProvider provider)
@@ -1347,6 +1597,26 @@ namespace QuantConnect.Tests.Algorithm
             algorithm.SetDateTime(SnapshotTime);
             ((IBrokerageAccountServiceConsumer)algorithm)
                 .SetBrokerageAccountStateProvider(provider);
+            algorithm.Initialize();
+            algorithm.SetLocked();
+            return algorithm;
+        }
+
+        private static FinancialAdvisorUnifiedGroupsDemoAlgorithm
+            CreateAlgorithmForScheduleRegistration(
+                TestAccountStateProvider provider,
+                IEventSchedule eventSchedule,
+                bool liveMode)
+        {
+            var algorithm = new FinancialAdvisorUnifiedGroupsDemoAlgorithm();
+            algorithm.SubscriptionManager.SetDataManager(
+                new DataManagerStub(algorithm));
+            algorithm.SetLiveMode(liveMode);
+            algorithm.SetDateTime(SnapshotTime);
+            algorithm.Schedule.SetEventSchedule(eventSchedule);
+            ((IBrokerageAccountServiceConsumer)algorithm)
+                .SetBrokerageAccountStateProvider(provider);
+
             algorithm.Initialize();
             algorithm.SetLocked();
             return algorithm;
@@ -1369,39 +1639,6 @@ namespace QuantConnect.Tests.Algorithm
             {
                 Message = message
             };
-        }
-
-        private static OrderTicket CreateOrderTicket(
-            FinancialAdvisorUnifiedGroupsDemoAlgorithm algorithm,
-            int orderId,
-            OrderStatus status,
-            string errorMessage = null)
-        {
-            var request = new SubmitOrderRequest(
-                OrderType.Market,
-                SecurityType.Equity,
-                Symbols.SPY,
-                1m,
-                0m,
-                0m,
-                SnapshotTime,
-                string.Empty,
-                asynchronous: true);
-            request.SetOrderId(orderId);
-            if (status == OrderStatus.Invalid)
-            {
-                return OrderTicket.InvalidSubmitRequest(
-                    algorithm.Transactions,
-                    request,
-                    OrderResponse.Error(
-                        request,
-                        OrderResponseErrorCode
-                            .BrokerageFailedToSubmitOrder,
-                        errorMessage));
-            }
-            return new OrderTicket(
-                algorithm.Transactions,
-                request);
         }
 
         private static Slice CreateEmptySlice()
@@ -1523,6 +1760,21 @@ namespace QuantConnect.Tests.Algorithm
                 BindingFlags.Instance | BindingFlags.NonPublic);
             Assert.IsNotNull(method, $"Private method '{name}' was not found.");
             method.Invoke(instance, null);
+        }
+
+        private sealed class RecordingEventSchedule : IEventSchedule
+        {
+            public List<ScheduledEvent> Events { get; } = new();
+
+            public void Add(ScheduledEvent scheduledEvent)
+            {
+                Events.Add(scheduledEvent);
+            }
+
+            public void Remove(ScheduledEvent scheduledEvent)
+            {
+                Events.Remove(scheduledEvent);
+            }
         }
 
         private sealed class TestAccountStateProvider :

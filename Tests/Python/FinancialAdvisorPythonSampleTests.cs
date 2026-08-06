@@ -43,6 +43,75 @@ namespace QuantConnect.Tests.Python
         private static readonly DateTime SnapshotTime =
             new(2026, 1, 2, 3, 4, 5, DateTimeKind.Utc);
 
+        [TestCase("FinancialAdvisorGroupAssignmentAlgorithm")]
+        [TestCase("FinancialAdvisorUnifiedGroupsDemoAlgorithm")]
+        public void LiveSamplesRegisterAndRunScheduledRefreshInPython(
+            string moduleName)
+        {
+            var assignmentSample = moduleName ==
+                "FinancialAdvisorGroupAssignmentAlgorithm";
+            var services = new TestFinancialAdvisorServices
+            {
+                Snapshot = assignmentSample
+                    ? CreateAssignmentSnapshot(
+                        2,
+                        new[] { TargetGroupName },
+                        new[] { TargetGroupName, SourceGroupName },
+                        includeCompanionMembers: true)
+                    : CreateDemoSnapshot(2, SnapshotTime)
+            };
+            var eventSchedule = new RecordingEventSchedule();
+            using var algorithm = CreateAlgorithm(
+                moduleName,
+                services,
+                eventSchedule: eventSchedule);
+
+            var scheduledEvent = eventSchedule.Events.Single();
+            scheduledEvent.SkipEventsUntil(SnapshotTime);
+            var firstEventUtc = scheduledEvent.NextEventUtcTime;
+            algorithm.SetDateTime(firstEventUtc);
+            scheduledEvent.Scan(firstEventUtc);
+            var secondEventUtc = scheduledEvent.NextEventUtcTime;
+
+            Assert.Multiple(() =>
+            {
+                Assert.AreEqual(
+                    TimeSpan.FromSeconds(90),
+                    secondEventUtc - firstEventUtc);
+                Assert.AreEqual(1, services.RefreshRequestCount);
+                CollectionAssert.AreEquivalent(
+                    assignmentSample
+                        ? new[] { TargetGroupName, SourceGroupName }
+                        : new[] { DemoGroupName },
+                    services.RequestedGroupHistory.Single());
+            });
+        }
+
+        [TestCase("FinancialAdvisorGroupAssignmentAlgorithm")]
+        [TestCase("FinancialAdvisorUnifiedGroupsDemoAlgorithm")]
+        public void NonLiveSamplesDoNotRegisterScheduledRefreshInPython(
+            string moduleName)
+        {
+            var services = new TestFinancialAdvisorServices
+            {
+                Snapshot = moduleName ==
+                    "FinancialAdvisorGroupAssignmentAlgorithm"
+                    ? CreateAssignmentSnapshot(
+                        2,
+                        new[] { TargetGroupName },
+                        new[] { TargetGroupName })
+                    : CreateDemoSnapshot(2, SnapshotTime)
+            };
+            var eventSchedule = new RecordingEventSchedule();
+            using var algorithm = CreateAlgorithm(
+                moduleName,
+                services,
+                liveMode: false,
+                eventSchedule: eventSchedule);
+
+            CollectionAssert.IsEmpty(eventSchedule.Events);
+        }
+
         [Test]
         public void GroupAssignmentScheduledCallbacksAdvanceMutationWithoutOnData()
         {
@@ -783,9 +852,9 @@ namespace QuantConnect.Tests.Python
             {
                 Snapshot = snapshot
             };
-            using var algorithm = CreateAlgorithm(
-                "FinancialAdvisorUnifiedGroupsDemoAlgorithm",
-                services);
+            using var algorithm = CreateDemoAlgorithm(
+                services,
+                out var orderProcessor);
             algorithm.SetProperty("_pre_order_snapshot", snapshot);
             algorithm.SetProperty("_group_order_submitted", true);
             algorithm.SetProperty("_group_order_id", 41);
@@ -825,8 +894,9 @@ namespace QuantConnect.Tests.Python
             algorithm.SetDateTime(SnapshotTime.AddSeconds(10));
             InvokeScheduledCallback(algorithm);
 
-            using var preOrderSnapshot =
-                algorithm.GetProperty("_pre_order_snapshot");
+            var preOrderSnapshotIsNone = PythonPropertyTestHelper.IsNone(
+                algorithm,
+                "_pre_order_snapshot");
             Assert.Multiple(() =>
             {
                 Assert.AreEqual(
@@ -837,7 +907,7 @@ namespace QuantConnect.Tests.Python
                     1,
                     algorithm.GetProperty<int>(
                         "_invalid_order_attempt_count"));
-                Assert.IsTrue(preOrderSnapshot.IsNone());
+                Assert.IsTrue(preOrderSnapshotIsNone);
                 Assert.AreEqual(
                     2,
                     algorithm.LogMessages.Count(
@@ -845,6 +915,78 @@ namespace QuantConnect.Tests.Python
                 Assert.That(
                     algorithm.ErrorMessages,
                     Has.One.Contains("distinctive rejection"));
+            });
+
+            algorithm.SetDateTime(SnapshotTime.AddSeconds(15));
+            algorithm.OnData(CreateEmptySlice());
+
+            Assert.AreEqual(
+                0,
+                orderProcessor.ProcessedOrdersRequests.Count,
+                "The deferred scheduled refresh must run before the retry.");
+
+            algorithm.SetDateTime(SnapshotTime.AddSeconds(20));
+            algorithm.OnData(CreateEmptySlice());
+
+            Assert.Multiple(() =>
+            {
+                Assert.AreEqual(1, orderProcessor.ProcessedOrdersRequests.Count);
+                Assert.AreEqual(
+                    1,
+                    algorithm.GetProperty<int>(
+                        "_invalid_order_attempt_count"),
+                    "A nonterminal retry must not erase earlier invalid attempts.");
+            });
+        }
+
+        [Test]
+        public void DemoNonInvalidTerminalResetsRetryCountAfterReconciliationInPython()
+        {
+            var snapshot = CreateDemoSnapshot(2, SnapshotTime);
+            var services = new TestFinancialAdvisorServices
+            {
+                Snapshot = snapshot
+            };
+            using var algorithm = CreateAlgorithm(
+                "FinancialAdvisorUnifiedGroupsDemoAlgorithm",
+                services);
+            algorithm.SetProperty("_pre_order_snapshot", snapshot);
+            algorithm.SetProperty("_group_order_submitted", true);
+            algorithm.SetProperty("_group_order_id", 41);
+            algorithm.SetProperty("_invalid_order_attempt_count", 1);
+
+            using (Py.GIL())
+            {
+                algorithm.OnOrderEvent(
+                    CreateOrderEvent(41, OrderStatus.Filled, null));
+            }
+
+            Assert.Multiple(() =>
+            {
+                Assert.AreEqual(1, services.RefreshRequestCount);
+                Assert.AreEqual(
+                    1,
+                    algorithm.GetProperty<int>(
+                        "_invalid_order_attempt_count"),
+                    "A terminal callback alone is not authoritative reconciliation.");
+            });
+
+            services.Snapshot = CreateDemoSnapshot(
+                3,
+                SnapshotTime.AddSeconds(5).AddTicks(1));
+            algorithm.SetDateTime(SnapshotTime.AddSeconds(10));
+            InvokeScheduledCallback(algorithm);
+
+            Assert.Multiple(() =>
+            {
+                Assert.AreEqual(
+                    0,
+                    algorithm.GetProperty<int>(
+                        "_invalid_order_attempt_count"));
+                Assert.AreEqual(
+                    -1,
+                    algorithm.GetProperty<long>(
+                        "_pending_reconcile_generation"));
             });
         }
 
@@ -885,40 +1027,40 @@ namespace QuantConnect.Tests.Python
                 message => message.Contains("FA reconciliation"));
             InvokeScheduledCallback(algorithm);
 
-            using (var retainedPreOrderSnapshot =
-                algorithm.GetProperty("_pre_order_snapshot"))
+            var retainedPreOrderSnapshotIsNone =
+                PythonPropertyTestHelper.IsNone(
+                    algorithm,
+                    "_pre_order_snapshot");
+            Assert.Multiple(() =>
             {
-                Assert.Multiple(() =>
-                {
-                    Assert.AreEqual(2, services.RefreshRequestCount);
-                    CollectionAssert.AreEquivalent(
-                        new[] { "AccountA", "AccountB" },
-                        services.RequestedAdditionalAccountHistory[0]);
-                    CollectionAssert.AreEquivalent(
-                        new[] { "AccountA", "AccountB" },
-                        services.RequestedAdditionalAccountHistory[1]);
-                    Assert.AreEqual(
-                        3,
-                        algorithm.GetProperty<long>(
-                            "_pending_reconcile_generation"),
-                        "The incomplete generation must not be reconsidered.");
-                    Assert.AreEqual(
-                        0,
-                        algorithm.GetProperty<int>(
-                            "_invalid_order_attempt_count"),
-                        "Missing account state must not authorize an Invalid retry.");
-                    Assert.AreEqual(
-                        reconciliationMessageCount,
-                        algorithm.LogMessages.Count(
-                            message => message.Contains("FA reconciliation")),
-                        "An incomplete snapshot must not emit partial reconciliation.");
-                    Assert.IsFalse(retainedPreOrderSnapshot.IsNone());
-                    Assert.That(
-                        algorithm.ErrorMessages,
-                        Has.One.Contains(
-                            "Account state for 'AccountB' is unavailable"));
-                });
-            }
+                Assert.AreEqual(2, services.RefreshRequestCount);
+                CollectionAssert.AreEquivalent(
+                    new[] { "AccountA", "AccountB" },
+                    services.RequestedAdditionalAccountHistory[0]);
+                CollectionAssert.AreEquivalent(
+                    new[] { "AccountA", "AccountB" },
+                    services.RequestedAdditionalAccountHistory[1]);
+                Assert.AreEqual(
+                    3,
+                    algorithm.GetProperty<long>(
+                        "_pending_reconcile_generation"),
+                    "The incomplete generation must not be reconsidered.");
+                Assert.AreEqual(
+                    0,
+                    algorithm.GetProperty<int>(
+                        "_invalid_order_attempt_count"),
+                    "Missing account state must not authorize an Invalid retry.");
+                Assert.AreEqual(
+                    reconciliationMessageCount,
+                    algorithm.LogMessages.Count(
+                        message => message.Contains("FA reconciliation")),
+                    "An incomplete snapshot must not emit partial reconciliation.");
+                Assert.IsFalse(retainedPreOrderSnapshotIsNone);
+                Assert.That(
+                    algorithm.ErrorMessages,
+                    Has.One.Contains(
+                        "Account state for 'AccountB' is unavailable"));
+            });
 
             services.Snapshot = CreateDemoSnapshot(
                 4,
@@ -926,8 +1068,9 @@ namespace QuantConnect.Tests.Python
             algorithm.SetDateTime(SnapshotTime.AddSeconds(15));
             InvokeScheduledCallback(algorithm);
 
-            using var clearedPreOrderSnapshot =
-                algorithm.GetProperty("_pre_order_snapshot");
+            var clearedPreOrderSnapshotIsNone = PythonPropertyTestHelper.IsNone(
+                algorithm,
+                "_pre_order_snapshot");
             Assert.Multiple(() =>
             {
                 Assert.AreEqual(
@@ -938,7 +1081,7 @@ namespace QuantConnect.Tests.Python
                     1,
                     algorithm.GetProperty<int>(
                         "_invalid_order_attempt_count"));
-                Assert.IsTrue(clearedPreOrderSnapshot.IsNone());
+                Assert.IsTrue(clearedPreOrderSnapshotIsNone);
                 Assert.AreEqual(
                     reconciliationMessageCount + 2,
                     algorithm.LogMessages.Count(
@@ -956,14 +1099,15 @@ namespace QuantConnect.Tests.Python
                     SnapshotTime,
                     includeAccountB: false)
             };
-            using var algorithm =
-                CreateEmptyTicketDemoAlgorithm(services);
+            using var algorithm = CreateDemoAlgorithm(
+                services,
+                out var orderProcessor);
 
             algorithm.OnData(CreateEmptySlice());
 
             Assert.AreEqual(
                 0,
-                algorithm.GetProperty<int>("submission_count"));
+                orderProcessor.ProcessedOrdersRequests.Count);
         }
 
         [TestCase("Equal")]
@@ -981,14 +1125,28 @@ namespace QuantConnect.Tests.Python
                     SnapshotTime,
                     allocationMethod: allocationMethod)
             };
-            using var algorithm =
-                CreateEmptyTicketDemoAlgorithm(services);
+            using var algorithm = CreateDemoAlgorithm(
+                services,
+                out var orderProcessor);
 
             algorithm.OnData(CreateEmptySlice());
 
-            Assert.AreEqual(
-                1,
-                algorithm.GetProperty<int>("submission_count"));
+            var request = (SubmitOrderRequest)
+                orderProcessor.ProcessedOrdersRequests.Values.Single();
+            Assert.Multiple(() =>
+            {
+                Assert.AreEqual(1, orderProcessor.ProcessedOrdersRequests.Count);
+                Assert.AreEqual(1m, request.Quantity);
+                Assert.AreEqual(
+                    DemoGroupName,
+                    ((InteractiveBrokersOrderProperties)
+                        request.OrderProperties).FaGroup);
+                Assert.IsTrue(
+                    algorithm.BaseAlgorithm.SubscriptionManager.Subscriptions
+                        .Where(config => config.Symbol == Symbols.SPY)
+                        .All(config => config.Resolution == Resolution.Minute),
+                    "The Python live sample must not depend on second-resolution data.");
+            });
         }
 
         [TestCase("ContractsOrShares")]
@@ -1003,20 +1161,27 @@ namespace QuantConnect.Tests.Python
                     SnapshotTime,
                     allocationMethod: allocationMethod)
             };
-            using var algorithm =
-                CreateEmptyTicketDemoAlgorithm(services);
+            using var algorithm = CreateDemoAlgorithm(
+                services,
+                out var orderProcessor);
 
+            algorithm.OnData(CreateEmptySlice());
             algorithm.OnData(CreateEmptySlice());
 
             Assert.Multiple(() =>
             {
                 Assert.AreEqual(
                     0,
-                    algorithm.GetProperty<int>("submission_count"));
+                    orderProcessor.ProcessedOrdersRequests.Count);
                 Assert.That(
                     algorithm.ErrorMessages,
                     Has.One.Contains(
                         $"unsupported saved allocation method '{allocationMethod}'"));
+                Assert.AreEqual(
+                    1,
+                    algorithm.ErrorMessages.Count(message => message.Contains(
+                        $"unsupported saved allocation method '{allocationMethod}'")),
+                    "An unchanged group configuration must report once.");
             });
         }
 
@@ -1027,19 +1192,20 @@ namespace QuantConnect.Tests.Python
             {
                 Snapshot = CreateDemoSnapshot(2, SnapshotTime)
             };
-            using var algorithm = CreateEmptyTicketDemoAlgorithm(
+            using var algorithm = CreateDemoAlgorithm(
                 services,
+                out var orderProcessor,
                 liveMode: false);
 
             algorithm.OnData(CreateEmptySlice());
-            InvokeScheduledCallback(algorithm);
 
             Assert.Multiple(() =>
             {
                 Assert.AreEqual(0, services.RefreshRequestCount);
                 Assert.AreEqual(
-                    0,
-                    algorithm.GetProperty<int>("submission_count"));
+                    1,
+                    orderProcessor.ProcessedOrdersRequests.Count,
+                    "Non-live mode must retain the ordinary SetHoldings path.");
             });
         }
 
@@ -1090,16 +1256,91 @@ namespace QuantConnect.Tests.Python
                 Assert.That(
                     algorithm.LogMessages,
                     Has.One.Contains(
-                        "account=AccountA, symbol=SPY, before=10, after=10, change=0"));
+                        "account=AccountA, symbol=SPY, before=10.0, after=10.0, change=0.0"));
                 Assert.That(
                     algorithm.LogMessages,
                     Has.One.Contains(
-                        "account=AccountB, symbol=SPY, before=20, after=20, change=0"));
+                        "account=AccountB, symbol=SPY, before=20.0, after=20.0, change=0.0"));
             });
         }
 
         [Test]
-        public void DemoRejectsOldSnapshotAndBoundsEmptyTicketRetriesInPython()
+        public void DemoSynchronousMarketOrderFailureFailsClosedInPython()
+        {
+            var services = new TestFinancialAdvisorServices
+            {
+                Snapshot = CreateDemoSnapshot(2, SnapshotTime)
+            };
+            using var algorithm = CreateDemoAlgorithm(
+                services,
+                out var innerOrderProcessor);
+            var submissionCount = 0;
+            var orderProcessor = new Mock<IOrderProcessor>();
+            orderProcessor.SetupGet(processor => processor.OrdersCount)
+                .Returns(() => innerOrderProcessor.OrdersCount);
+            orderProcessor
+                .Setup(processor => processor.Process(
+                    It.IsAny<OrderRequest>()))
+                .Returns((OrderRequest request) =>
+                {
+                    ++submissionCount;
+                    if (submissionCount == 1)
+                    {
+                        algorithm.OnOrderEvent(CreateOrderEvent(
+                            request.OrderId,
+                            OrderStatus.Filled,
+                            null));
+                        throw new InvalidOperationException(
+                            "distinctive synchronous MarketOrder failure");
+                    }
+                    return innerOrderProcessor.Process(request);
+                });
+            algorithm.BaseAlgorithm.Transactions.SetOrderProcessor(
+                orderProcessor.Object);
+
+            var exception = Assert.Catch<Exception>(() =>
+                algorithm.OnData(CreateEmptySlice()));
+
+            Assert.Multiple(() =>
+            {
+                StringAssert.Contains(
+                    "distinctive synchronous MarketOrder failure",
+                    exception.Message);
+                Assert.IsTrue(PythonPropertyTestHelper.IsNone(
+                    algorithm,
+                    "_pre_order_snapshot"));
+                Assert.IsFalse(algorithm.GetProperty<bool>(
+                    "_order_submission_in_progress"));
+                Assert.IsTrue(algorithm.GetProperty<bool>(
+                    "_group_order_submitted"));
+                Assert.AreEqual(
+                    0,
+                    PythonPropertyTestHelper.GetLength(
+                        algorithm,
+                        "_terminal_events_during_submission"));
+                Assert.That(
+                    algorithm.ErrorMessages,
+                    Has.One.Contains(
+                        "Automatic resubmission is disabled"));
+            });
+
+            Assert.DoesNotThrow(() => algorithm.OnData(CreateEmptySlice()));
+            Assert.Multiple(() =>
+            {
+                Assert.AreEqual(
+                    1,
+                    submissionCount,
+                    "An indeterminate submission outcome must never auto-retry.");
+                Assert.IsTrue(algorithm.GetProperty<bool>(
+                    "_group_order_submitted"));
+                Assert.IsFalse(algorithm.GetProperty<bool>(
+                    "_order_submission_in_progress"));
+                Assert.AreEqual(0, services.RefreshRequestCount);
+            });
+        }
+
+        [Test]
+        public void DemoRejectsOldSnapshotInPython()
         {
             var services = new TestFinancialAdvisorServices
             {
@@ -1107,97 +1348,60 @@ namespace QuantConnect.Tests.Python
                     2,
                     SnapshotTime.AddMinutes(-6))
             };
-            using var algorithm = CreateEmptyTicketDemoAlgorithm(services);
+            using var algorithm = CreateDemoAlgorithm(
+                services,
+                out var orderProcessor);
 
             algorithm.OnData(CreateEmptySlice());
             Assert.Multiple(() =>
             {
-                Assert.AreEqual(
-                    0,
-                    algorithm.GetProperty<int>("submission_count"),
-                    "A Ready but over-age snapshot must not authorize an order.");
+                Assert.AreEqual(0, orderProcessor.ProcessedOrdersRequests.Count);
                 Assert.AreEqual(1, services.RefreshRequestCount);
-            });
-
-            services.Snapshot = CreateDemoSnapshot(
-                3,
-                SnapshotTime.AddSeconds(5).AddTicks(1));
-            algorithm.SetDateTime(SnapshotTime.AddSeconds(10));
-            algorithm.OnData(CreateEmptySlice());
-            Assert.AreEqual(
-                1,
-                algorithm.GetProperty<int>("submission_count"));
-
-            algorithm.SetDateTime(SnapshotTime.AddSeconds(14));
-            algorithm.OnData(CreateEmptySlice());
-            Assert.AreEqual(
-                1,
-                algorithm.GetProperty<int>("submission_count"),
-                "An empty-ticket retry must respect the bounded delay.");
-
-            algorithm.SetDateTime(SnapshotTime.AddSeconds(15));
-            algorithm.OnData(CreateEmptySlice());
-            algorithm.SetDateTime(SnapshotTime.AddSeconds(20));
-            algorithm.OnData(CreateEmptySlice());
-            algorithm.SetDateTime(SnapshotTime.AddSeconds(25));
-            algorithm.OnData(CreateEmptySlice());
-
-            Assert.Multiple(() =>
-            {
-                Assert.AreEqual(
-                    3,
-                    algorithm.GetProperty<int>("submission_count"),
-                    "SetHoldings returning no tickets must stop at the retry limit.");
-                Assert.AreEqual(
-                    3,
-                    algorithm.GetProperty<int>(
-                        "_empty_order_attempt_count"));
-                Assert.That(
-                    algorithm.ErrorMessages,
-                    Has.One.Contains(
-                        "returned no Financial Advisor parent order ticket"));
             });
         }
 
-        private static AlgorithmPythonWrapper CreateEmptyTicketDemoAlgorithm(
+        private static AlgorithmPythonWrapper CreateDemoAlgorithm(
             TestFinancialAdvisorServices services,
+            out FakeOrderProcessor orderProcessor,
             bool liveMode = true)
         {
-            var moduleName =
-                $"FinancialAdvisorUnifiedGroupsDemoAlgorithmTest_{Guid.NewGuid():N}";
-            var source = @"
-from FinancialAdvisorUnifiedGroupsDemoAlgorithm import FinancialAdvisorUnifiedGroupsDemoAlgorithm
-
-class FinancialAdvisorUnifiedGroupsDemoAlgorithmUnderTest(FinancialAdvisorUnifiedGroupsDemoAlgorithm):
-    def initialize(self):
-        self.submission_count = 0
-        super().initialize()
-
-    def set_holdings(self, *args, **kwargs):
-        self.submission_count += 1
-        return []
-";
-            using (Py.GIL())
-            {
-                using var module = PyModule.FromString(
-                    moduleName,
-                    source);
-            }
-            return CreateAlgorithm(
-                moduleName,
+            var algorithm = CreateAlgorithm(
+                "FinancialAdvisorUnifiedGroupsDemoAlgorithm",
                 services,
                 liveMode: liveMode);
+            orderProcessor = new FakeOrderProcessor
+            {
+                TransactionManager = algorithm.BaseAlgorithm.Transactions
+            };
+            algorithm.BaseAlgorithm.Transactions.SetOrderProcessor(
+                orderProcessor);
+            algorithm.BaseAlgorithm.Securities[Symbols.SPY].SetMarketPrice(
+                new TradeBar(
+                    SnapshotTime,
+                    Symbols.SPY,
+                    100m,
+                    100m,
+                    100m,
+                    100m,
+                    100m));
+            return algorithm;
         }
 
         private static AlgorithmPythonWrapper CreateAlgorithm(
             string moduleName,
             TestFinancialAdvisorServices services,
             Dictionary<string, string> parameters = null,
-            bool liveMode = true)
+            bool liveMode = true,
+            IEventSchedule eventSchedule = null)
         {
             var algorithm = new AlgorithmPythonWrapper(moduleName);
             algorithm.BaseAlgorithm.SubscriptionManager.SetDataManager(
                 new DataManagerStub(algorithm.BaseAlgorithm));
+            if (eventSchedule != null)
+            {
+                algorithm.BaseAlgorithm.Schedule.SetEventSchedule(
+                    eventSchedule);
+            }
             algorithm.SetLiveMode(liveMode);
             algorithm.SetDateTime(SnapshotTime);
             algorithm.SetParameters(
@@ -1512,6 +1716,47 @@ class FinancialAdvisorUnifiedGroupsDemoAlgorithmUnderTest(FinancialAdvisorUnifie
                 });
         }
 
+        private static class PythonPropertyTestHelper
+        {
+            public static int GetLength(
+                AlgorithmPythonWrapper algorithm,
+                string propertyName)
+            {
+                using (Py.GIL())
+                using (var value = algorithm.GetProperty(propertyName))
+                using (var length = value.InvokeMethod("__len__"))
+                {
+                    return length.As<int>();
+                }
+            }
+
+            public static bool IsNone(
+                AlgorithmPythonWrapper algorithm,
+                string propertyName)
+            {
+                using (Py.GIL())
+                using (var value = algorithm.GetProperty(propertyName))
+                {
+                    return value.IsNone();
+                }
+            }
+        }
+
+        private sealed class RecordingEventSchedule : IEventSchedule
+        {
+            public List<ScheduledEvent> Events { get; } = new();
+
+            public void Add(ScheduledEvent scheduledEvent)
+            {
+                Events.Add(scheduledEvent);
+            }
+
+            public void Remove(ScheduledEvent scheduledEvent)
+            {
+                Events.Remove(scheduledEvent);
+            }
+        }
+
         private sealed class TestFinancialAdvisorServices :
             IBrokerageAccountStateProvider,
             IBrokerageAccountGroupManager
@@ -1662,6 +1907,7 @@ class FinancialAdvisorUnifiedGroupsDemoAlgorithmUnderTest(FinancialAdvisorUnifie
             {
                 RefreshRequestCount = 0;
                 RequestedGroupHistory.Clear();
+                RequestedAdditionalAccountHistory.Clear();
             }
         }
     }

@@ -26,13 +26,12 @@ namespace QuantConnect.Algorithm.CSharp
     /// <summary>
     /// This algorithm demonstrates unified Financial Advisor group orders and terminal-order snapshot reconciliation.
     /// It requires ib-financial-advisors-unified-groups-enabled=true,
-    /// ib-financial-advisors-group-filter to be empty, and an existing group whose saved method is Equal,
-    /// NetLiq, AvailableEquity, Ratio, or Percent. ContractsOrShares instead requires replacing
-    /// and confirming the complete saved vector with RequestBrokerageAccountGroupAllocationUpdate,
-    /// then submitting a parent with the exact saved total. FinancialAdvisorGroupAssignmentAlgorithm
-    /// demonstrates the asynchronous mutation/readback state machine, not complete-vector replacement.
-    /// Do not request configuration mutations during OnEndOfAlgorithm or teardown: a request may be
-    /// accepted but is not guaranteed to reach the broker or publish a result.
+    /// ib-financial-advisors-group-filter to be empty, and an existing group whose saved method is
+    /// Equal, NetLiq, AvailableEquity, Ratio, or Percent. This sample intentionally does not submit
+    /// ContractsOrShares group orders; those require replacing and confirming the complete saved
+    /// vector with RequestBrokerageAccountGroupAllocationUpdate, then submitting a parent with the
+    /// exact saved total. FinancialAdvisorGroupAssignmentAlgorithm demonstrates the asynchronous
+    /// mutation/readback state machine, not complete-vector replacement.
     /// </summary>
     /// <meta name="tag" content="using data" />
     /// <meta name="tag" content="using quantconnect" />
@@ -51,13 +50,13 @@ namespace QuantConnect.Algorithm.CSharp
             TimeSpan.FromMinutes(5);
         private const int CompleteRefreshTopologyTicks = 3;
         private const int MaximumInvalidOrderAttempts = 3;
-        private const int MaximumEmptyOrderAttempts = 3;
 
+        // The IB provider queues asynchronous refreshes without socket I/O, allowing request
+        // acceptance and sample state to be updated under this lock.
         private readonly object _orderStateLock = new();
         private readonly Dictionary<int, TerminalOrderEvent>
             _terminalEventsDuringSubmission = new();
         private Symbol _symbol;
-        private Func<OrderTicket> _submitGroupOrder;
         private BrokerageAccountSnapshot _preOrderSnapshot;
         private bool _initialSnapshotRefreshAccepted;
         private long _initialSnapshotRequestGeneration = -1;
@@ -66,7 +65,6 @@ namespace QuantConnect.Algorithm.CSharp
         private bool _onDataStateActive;
         private int _groupOrderId;
         private int _invalidOrderAttemptCount;
-        private int _emptyOrderAttemptCount;
         private DateTime _nextGroupOrderRetryUtc;
         private long _pendingReconcileGeneration = -1;
         private DateTime _pendingReconcileTerminalUtc;
@@ -74,9 +72,11 @@ namespace QuantConnect.Algorithm.CSharp
         private DateTime _nextReconcileRefreshUtc;
         private int _scheduledRefreshTopologyTicks;
         private int _scheduledRefreshIntent;
+        private string _lastUnsupportedGroupConfigurationKey;
 
         /// <summary>
-        /// Initialise the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must initialized.
+        /// Configures a unified group order, the algorithm-owned snapshot refresh policy, and
+        /// terminal-order snapshot reconciliation.
         /// </summary>
         public override void Initialize()
         {
@@ -85,27 +85,23 @@ namespace QuantConnect.Algorithm.CSharp
             SetCash(100000);             //Set Strategy Cash
 
             _symbol = AddEquity("SPY").Symbol;
-            _submitGroupOrder = () => SetHoldings(
-                _symbol,
-                1,
-                asynchronous: true).FirstOrDefault();
 
-            // The default order properties can be set here to choose the FA settings
-            // to be automatically used in any order submission method (such as SetHoldings, Buy, Sell and Order)
+            // DefaultOrderProperties supplies FA settings to order helpers when explicit order
+            // properties are not provided.
 
-            // Use a unified FA Account Group. Leaving FaMethod blank uses the saved
-            // allocation method; this aggregate demo expects a computed, Ratio, or
-            // Percent group rather than ContractsOrShares.
+            // Leaving FaMethod blank uses the saved allocation method. This sample submits only
+            // Equal, NetLiq, AvailableEquity, Ratio, or Percent group orders; it intentionally
+            // skips ContractsOrShares.
             DefaultOrderProperties = new InteractiveBrokersOrderProperties
             {
-                // account group created manually in IB/TWS
+                // Existing account group created manually in IB/TWS.
                 FaGroup = GroupName
             };
 
             if (LiveMode)
             {
-                // The 90-second cadence cannot remain phase-locked to minute data;
-                // every third topology tick expands to complete account state.
+                // Scoped group refreshes run every 90 seconds; every third tick expands to a
+                // complete-discovery request.
                 Schedule.On(
                     DateRules.EveryDay(),
                     TimeRules.Every(TopologyRefreshInterval),
@@ -118,17 +114,18 @@ namespace QuantConnect.Algorithm.CSharp
         }
 
         /// <summary>
-        /// OnData event is the primary entry point for your algorithm. Each new data point will be pumped in here.
+        /// Submits one configured order in backtests. In live mode, it waits for a Ready group
+        /// snapshot, submits the group order, and reconciles account state after the order terminates.
         /// </summary>
-        /// <param name="slice">Slice object keyed by symbol containing the stock data</param>
+        /// <param name="slice">The current data slice.</param>
         public override void OnData(Slice slice)
         {
             if (!LiveMode)
             {
                 if (!Portfolio.Invested)
                 {
-                    // when logged into IB as a Financial Advisor, this call will use order properties
-                    // set in the DefaultOrderProperties property of QCAlgorithm
+                    // Backtests submit one order using the configured DefaultOrderProperties without
+                    // running the live Financial Advisor snapshot and reconciliation workflow.
                     SetHoldings(_symbol, 1);
                 }
                 return;
@@ -143,29 +140,10 @@ namespace QuantConnect.Algorithm.CSharp
                 var snapshot = BrokerageAccountSnapshot;
                 var now = UtcTime;
                 string invalidOrderMessage;
-                bool requestReconcileRefresh;
-                lock (_orderStateLock)
-                {
-                    requestReconcileRefresh =
-                        TryApplyTerminalOrderIntentLocked(
-                            snapshot.Generation,
-                            now,
-                            out invalidOrderMessage);
-                }
-                if (invalidOrderMessage != null ||
-                    requestReconcileRefresh)
-                {
-                    ReportTerminalOrderAction(
-                        invalidOrderMessage,
-                        requestReconcileRefresh,
-                        snapshot);
-                    return;
-                }
-
                 BrokerageAccountSnapshot preOrderSnapshot = null;
                 TerminalOrderEvent reconciledTerminalOrderEvent = null;
                 var reconcile = false;
-                requestReconcileRefresh = false;
+                var requestReconcileRefresh = false;
                 string reconciliationErrorMessage = null;
                 lock (_orderStateLock)
                 {
@@ -225,6 +203,7 @@ namespace QuantConnect.Algorithm.CSharp
                     return;
                 }
                 string unsupportedGroupError = null;
+                var unsupportedGroup = false;
                 lock (_orderStateLock)
                 {
                     var submissionSnapshot =
@@ -233,8 +212,6 @@ namespace QuantConnect.Algorithm.CSharp
                         _orderSubmissionInProgress ||
                         _invalidOrderAttemptCount >=
                             MaximumInvalidOrderAttempts ||
-                        _emptyOrderAttemptCount >=
-                            MaximumEmptyOrderAttempts ||
                         UtcTime < _nextGroupOrderRetryUtc ||
                         !IsSnapshotFresh(submissionSnapshot) ||
                         !submissionSnapshot.Groups.TryGetValue(
@@ -249,25 +226,64 @@ namespace QuantConnect.Algorithm.CSharp
                     if (!IsSupportedGroupAllocationMethod(
                             submissionGroup.AllocationMethod))
                     {
-                        unsupportedGroupError =
-                            $"Financial Advisor group '{GroupName}' uses unsupported " +
-                            $"saved allocation method '{submissionGroup.AllocationMethod}'. " +
-                            "This sample supports Equal, NetLiq, AvailableEquity, Ratio, and Percent.";
+                        unsupportedGroup = true;
+                        var unsupportedGroupConfigurationKey =
+                            $"{submissionGroup.Name}\0{submissionGroup.AllocationMethod}\0" +
+                            submissionSnapshot.GroupConfigurationVersion;
+                        if (!unsupportedGroupConfigurationKey.Equals(
+                                _lastUnsupportedGroupConfigurationKey,
+                                StringComparison.OrdinalIgnoreCase))
+                        {
+                            _lastUnsupportedGroupConfigurationKey =
+                                unsupportedGroupConfigurationKey;
+                            unsupportedGroupError =
+                                $"Financial Advisor group '{GroupName}' uses unsupported " +
+                                $"saved allocation method '{submissionGroup.AllocationMethod}'. " +
+                                "This sample supports Equal, NetLiq, AvailableEquity, Ratio, and Percent.";
+                        }
                     }
                     else
                     {
+                        _lastUnsupportedGroupConfigurationKey = null;
                         _preOrderSnapshot = submissionSnapshot;
                         _orderSubmissionInProgress = true;
                         _terminalEventsDuringSubmission.Clear();
                     }
                 }
-                if (unsupportedGroupError != null)
+                if (unsupportedGroup)
                 {
-                    Error(unsupportedGroupError);
+                    if (unsupportedGroupError != null)
+                    {
+                        Error(unsupportedGroupError);
+                    }
                     return;
                 }
 
-                var ticket = _submitGroupOrder();
+                OrderTicket ticket;
+                try
+                {
+                    ticket = MarketOrder(
+                        _symbol,
+                        1,
+                        asynchronous: true);
+                }
+                catch
+                {
+                    lock (_orderStateLock)
+                    {
+                        _preOrderSnapshot = null;
+                        _orderSubmissionInProgress = false;
+                        // The request may have reached the brokerage even if submission threw.
+                        // Fail closed instead of risking a duplicate parent order.
+                        _groupOrderSubmitted = true;
+                        _terminalEventsDuringSubmission.Clear();
+                    }
+                    Error(
+                        "Financial Advisor group-order submission ended with an " +
+                        "indeterminate brokerage outcome. Automatic resubmission is disabled; " +
+                        "verify the order in TWS before restarting the algorithm.");
+                    throw;
+                }
                 var postSubmissionSnapshot = BrokerageAccountSnapshot;
                 var postSubmissionUtc = UtcTime;
                 lock (_orderStateLock)
@@ -296,7 +312,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Requests authoritative account reconciliation after the parent group order becomes terminal.
         /// </summary>
-        /// <param name="orderEvent">The aggregate parent order event</param>
+        /// <param name="orderEvent">The aggregate parent order event.</param>
         public override void OnOrderEvent(OrderEvent orderEvent)
         {
             if (!LiveMode ||
@@ -378,8 +394,6 @@ namespace QuantConnect.Algorithm.CSharp
 
             _nextReconcileRefreshUtc =
                 now + ReconcileRetryInterval;
-            // The IB implementation only coalesces into its in-memory
-            // QueueRefresh while this sample state is protected.
             accepted = RequestBrokerageAccountSnapshotRefresh(
                 new[] { GroupName },
                 GetReconciliationAccountIdsLocked());
@@ -433,8 +447,6 @@ namespace QuantConnect.Algorithm.CSharp
 
             _nextReconcileRefreshUtc =
                 now + ReconcileRetryInterval;
-            // The IB implementation only coalesces into its in-memory
-            // QueueRefresh while this sample state is protected.
             accepted = RequestBrokerageAccountSnapshotRefresh(
                 new[] { GroupName });
             _initialSnapshotRefreshAccepted = accepted;
@@ -500,8 +512,6 @@ namespace QuantConnect.Algorithm.CSharp
                 {
                     _scheduledRefreshTopologyTicks = 0;
                 }
-                // The IB implementation only coalesces into its in-memory
-                // QueueRefresh while this sample state is protected.
                 accepted = completeRefresh
                     ? RequestBrokerageAccountSnapshotRefresh()
                     : RequestBrokerageAccountSnapshotRefresh(
@@ -721,29 +731,6 @@ namespace QuantConnect.Algorithm.CSharp
         {
             invalidOrderMessage = null;
             _orderSubmissionInProgress = false;
-            if (ticket == null)
-            {
-                _preOrderSnapshot = null;
-                _groupOrderSubmitted = false;
-                _terminalEventsDuringSubmission.Clear();
-                ++_emptyOrderAttemptCount;
-                _nextGroupOrderRetryUtc =
-                    _emptyOrderAttemptCount <
-                        MaximumEmptyOrderAttempts
-                    ? now + InvalidOrderRetryInterval
-                    : DateTime.MaxValue;
-                if (_emptyOrderAttemptCount >=
-                    MaximumEmptyOrderAttempts)
-                {
-                    invalidOrderMessage =
-                        $"SetHoldings returned no Financial Advisor parent " +
-                        $"order ticket on {MaximumEmptyOrderAttempts} attempts; " +
-                        "the bounded retry limit was reached.";
-                }
-                return false;
-            }
-
-            _emptyOrderAttemptCount = 0;
             _groupOrderId = ticket.OrderId;
             _groupOrderSubmitted = true;
             var ticketStatus = ticket.Status;
@@ -763,34 +750,9 @@ namespace QuantConnect.Algorithm.CSharp
             }
             if (terminalOrderEvent == null)
             {
-                _invalidOrderAttemptCount = 0;
                 return false;
             }
 
-            return ApplyTerminalOrderLocked(
-                terminalOrderEvent,
-                snapshotGeneration,
-                now,
-                out invalidOrderMessage);
-        }
-
-        private bool TryApplyTerminalOrderIntentLocked(
-            long snapshotGeneration,
-            DateTime now,
-            out string invalidOrderMessage)
-        {
-            invalidOrderMessage = null;
-            if (_orderSubmissionInProgress ||
-                _groupOrderId == 0 ||
-                _pendingReconcileGeneration >= 0 ||
-                !_terminalEventsDuringSubmission.TryGetValue(
-                    _groupOrderId,
-                    out var terminalOrderEvent))
-            {
-                return false;
-            }
-
-            _terminalEventsDuringSubmission.Remove(_groupOrderId);
             return ApplyTerminalOrderLocked(
                 terminalOrderEvent,
                 snapshotGeneration,
@@ -819,7 +781,7 @@ namespace QuantConnect.Algorithm.CSharp
                     "retry eligibility is decided.";
             }
 
-            // Publish the causal timestamps before making the generation pending.
+            // Store the terminal event and timestamp before marking its snapshot generation pending.
             _pendingReconcileTerminalUtc =
                 terminalOrderEvent.UtcTime;
             _pendingTerminalOrderEvent = terminalOrderEvent;

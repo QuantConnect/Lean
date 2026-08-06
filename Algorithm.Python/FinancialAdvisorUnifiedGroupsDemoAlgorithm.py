@@ -17,17 +17,15 @@ from System.Threading import AutoResetEvent
 from threading import Lock
 
 ### <summary>
-### This algorithm demonstrates unified Financial Advisor group orders and authoritative
-### post-order account reconciliation. It requires
+### Demonstrates unified Financial Advisor group orders, bounded submission retries, and
+### authoritative post-order account reconciliation. It requires
 ### ib-financial-advisors-unified-groups-enabled=true,
 ### ib-financial-advisors-group-filter to be empty, and an existing group whose saved method is
-### Equal, NetLiq, AvailableEquity, Ratio, or Percent. ContractsOrShares instead requires
-### replacing and confirming the complete saved vector with
-### request_brokerage_account_group_allocation_update, then submitting a parent with the
-### exact saved total. FinancialAdvisorGroupAssignmentAlgorithm demonstrates the
+### Equal, NetLiq, AvailableEquity, Ratio, or Percent. This sample intentionally does not submit
+### ContractsOrShares group orders; those require replacing and confirming the complete saved
+### vector with request_brokerage_account_group_allocation_update, then submitting a parent with
+### the exact saved total. FinancialAdvisorGroupAssignmentAlgorithm demonstrates the
 ### asynchronous mutation/readback state machine, not complete-vector replacement.
-### Do not request configuration mutations during on_end_of_algorithm or teardown:
-### a request may be accepted but is not guaranteed to reach the broker or publish a result.
 ### </summary>
 ### <meta name="tag" content="using data" />
 ### <meta name="tag" content="using quantconnect" />
@@ -42,19 +40,19 @@ class FinancialAdvisorUnifiedGroupsDemoAlgorithm(QCAlgorithm):
     _MAXIMUM_SNAPSHOT_AGE = timedelta(minutes=5)
     _COMPLETE_REFRESH_TOPOLOGY_TICKS = 3
     _MAXIMUM_INVALID_ORDER_ATTEMPTS = 3
-    _MAXIMUM_EMPTY_ORDER_ATTEMPTS = 3
 
     def initialize(self):
-        # Initialise the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must be initialized.
+        # Configure a short backtest baseline; live mode enables the FA workflow below.
+        self.set_start_date(2013,10,7)
+        self.set_end_date(2013,10,11)
+        self.set_cash(100000)
 
-        self.set_start_date(2013,10,7)   #Set Start Date
-        self.set_end_date(2013,10,11)    #Set End Date
-        self.set_cash(100000)           #Set Strategy Cash
-
-        self._symbol = self.add_equity("SPY", Resolution.SECOND).symbol
+        self._symbol = self.add_equity("SPY", Resolution.MINUTE).symbol
         # Python.NET cannot expose a persistent ref-int to Interlocked, so this
         # provides the same atomic, coalescing set-and-consume semantics.
         self._scheduled_refresh_intent = AutoResetEvent(False)
+        # The provider queues the asynchronous refresh without socket I/O, allowing request
+        # acceptance and sample state to be updated in one critical section.
         self._order_state_lock = Lock()
         self._terminal_events_during_submission = {}
         self._pre_order_snapshot = None
@@ -66,24 +64,23 @@ class FinancialAdvisorUnifiedGroupsDemoAlgorithm(QCAlgorithm):
         self._on_data_state_active = False
         self._group_order_id = 0
         self._invalid_order_attempt_count = 0
-        self._empty_order_attempt_count = 0
         self._next_group_order_retry_utc = None
         self._pending_reconcile_generation = -1
         self._pending_reconcile_terminal_utc = None
         self._pending_terminal_order_event = None
         self._next_reconcile_refresh_utc = None
         self._scheduled_refresh_topology_ticks = 0
+        self._last_unsupported_group_configuration_key = None
 
-        # Route every order to the existing group. Leaving fa_method blank uses the
-        # saved method; this aggregate demo expects a computed, Ratio, or Percent
-        # group rather than ContractsOrShares.
+        # Route orders without explicit properties to the existing group. Leaving fa_method
+        # blank uses the saved method; this sample intentionally does not submit
+        # ContractsOrShares group orders.
         self.default_order_properties = InteractiveBrokersOrderProperties()
         self.default_order_properties.fa_group = self._GROUP_NAME
 
         if self.live_mode:
-            # The 90-second cadence is intentionally offset from minute data so a
-            # refresh cannot consume every OnData opportunity. Every third topology
-            # tick expands to complete account state.
+            # Scoped group refreshes run every 90 seconds; every third tick expands to a
+            # complete-discovery request. The algorithm owns this freshness policy.
             self.schedule.on(
                 self.date_rules.every_day(),
                 self.time_rules.every(self._TOPOLOGY_REFRESH_INTERVAL),
@@ -92,12 +89,9 @@ class FinancialAdvisorUnifiedGroupsDemoAlgorithm(QCAlgorithm):
                 self.brokerage_account_snapshot)
 
     def on_data(self, data):
-        # on_data event is the primary entry point for your algorithm. Each new data point will be pumped in here.
-
         if not self.live_mode:
             if not self.portfolio.invested:
-                # when logged into IB as a Financial Advisor, this call will use order properties
-                # set in the DefaultOrderProperties property of QCAlgorithm
+                # Exercise the ordinary SetHoldings path when FA brokerage services are absent.
                 self.set_holdings("SPY", 1)
             return
 
@@ -112,18 +106,6 @@ class FinancialAdvisorUnifiedGroupsDemoAlgorithm(QCAlgorithm):
     def _on_live_data(self):
         snapshot = self.brokerage_account_snapshot
         now = self.utc_time
-        with self._order_state_lock:
-            invalid_order_message, request_reconcile_refresh = \
-                self._try_apply_terminal_order_intent_locked(
-                    snapshot.generation,
-                    now)
-        if invalid_order_message is not None or request_reconcile_refresh:
-            self._report_terminal_order_action(
-                invalid_order_message,
-                request_reconcile_refresh,
-                snapshot)
-            return
-
         with self._order_state_lock:
             reconcile, pre_order_snapshot, \
                 reconciled_terminal_order_event, \
@@ -162,6 +144,7 @@ class FinancialAdvisorUnifiedGroupsDemoAlgorithm(QCAlgorithm):
                 allow_on_data_owner=True):
             return
         unsupported_group_error = None
+        unsupported_group = False
         with self._order_state_lock:
             submission_snapshot = self.brokerage_account_snapshot
             submission_group = self._find_group(submission_snapshot)
@@ -169,8 +152,6 @@ class FinancialAdvisorUnifiedGroupsDemoAlgorithm(QCAlgorithm):
                     self._order_submission_in_progress or \
                     self._invalid_order_attempt_count >= \
                     self._MAXIMUM_INVALID_ORDER_ATTEMPTS or \
-                    self._empty_order_attempt_count >= \
-                    self._MAXIMUM_EMPTY_ORDER_ATTEMPTS or \
                     (self._next_group_order_retry_utc is not None and
                      self.utc_time < self._next_group_order_retry_utc) or \
                     not self._is_snapshot_fresh(submission_snapshot) or \
@@ -181,20 +162,47 @@ class FinancialAdvisorUnifiedGroupsDemoAlgorithm(QCAlgorithm):
                 return
             if not self._is_supported_group_allocation_method(
                     submission_group.allocation_method):
-                unsupported_group_error = (
-                    f"Financial Advisor group '{self._GROUP_NAME}' uses unsupported "
-                    f"saved allocation method '{submission_group.allocation_method}'. "
-                    f"This sample supports Equal, NetLiq, AvailableEquity, Ratio, "
-                    f"and Percent.")
+                unsupported_group = True
+                unsupported_group_configuration_key = (
+                    submission_group.name.casefold(),
+                    submission_group.allocation_method.casefold(),
+                    submission_snapshot.group_configuration_version)
+                if unsupported_group_configuration_key != \
+                        self._last_unsupported_group_configuration_key:
+                    self._last_unsupported_group_configuration_key = \
+                        unsupported_group_configuration_key
+                    unsupported_group_error = (
+                        f"Financial Advisor group '{self._GROUP_NAME}' uses unsupported "
+                        f"saved allocation method '{submission_group.allocation_method}'. "
+                        f"This sample supports Equal, NetLiq, AvailableEquity, Ratio, "
+                        f"and Percent.")
             else:
+                self._last_unsupported_group_configuration_key = None
                 self._pre_order_snapshot = submission_snapshot
                 self._order_submission_in_progress = True
                 self._terminal_events_during_submission.clear()
-        if unsupported_group_error is not None:
-            self.error(unsupported_group_error)
+        if unsupported_group:
+            if unsupported_group_error is not None:
+                self.error(unsupported_group_error)
             return
-        tickets = self.set_holdings(self._symbol, 1, asynchronous=True)
-        ticket = next(iter(tickets), None)
+        try:
+            ticket = self.market_order(
+                self._symbol,
+                1,
+                asynchronous=True)
+        except Exception:
+            with self._order_state_lock:
+                self._pre_order_snapshot = None
+                self._order_submission_in_progress = False
+                # The request may have reached the brokerage even if submission threw.
+                # Fail closed instead of risking a duplicate parent order.
+                self._group_order_submitted = True
+                self._terminal_events_during_submission.clear()
+            self.error(
+                "Financial Advisor group-order submission ended with an "
+                "indeterminate brokerage outcome. Automatic resubmission is disabled; "
+                "verify the order in TWS before restarting the algorithm.")
+            raise
         post_submission_snapshot = self.brokerage_account_snapshot
         post_submission_utc = self.utc_time
         with self._order_state_lock:
@@ -265,8 +273,6 @@ class FinancialAdvisorUnifiedGroupsDemoAlgorithm(QCAlgorithm):
 
         self._next_initial_snapshot_refresh_utc = \
             now + self._RECONCILE_RETRY_INTERVAL
-        # The IB implementation only coalesces into its in-memory QueueRefresh
-        # while this sample state is protected.
         accepted = self.request_brokerage_account_snapshot_refresh(
             [self._GROUP_NAME])
         self._initial_snapshot_refresh_accepted = accepted
@@ -292,8 +298,6 @@ class FinancialAdvisorUnifiedGroupsDemoAlgorithm(QCAlgorithm):
 
         self._next_reconcile_refresh_utc = \
             now + self._RECONCILE_RETRY_INTERVAL
-        # The IB implementation only coalesces into its in-memory QueueRefresh
-        # while this sample state is protected.
         accepted = self.request_brokerage_account_snapshot_refresh(
             [self._GROUP_NAME],
             self._get_reconciliation_account_ids_locked())
@@ -335,8 +339,6 @@ class FinancialAdvisorUnifiedGroupsDemoAlgorithm(QCAlgorithm):
                 self._COMPLETE_REFRESH_TOPOLOGY_TICKS
             if complete_refresh:
                 self._scheduled_refresh_topology_ticks = 0
-            # The IB implementation only coalesces into its in-memory
-            # QueueRefresh while this sample state is protected.
             if complete_refresh:
                 accepted = self.request_brokerage_account_snapshot_refresh()
             else:
@@ -506,26 +508,6 @@ class FinancialAdvisorUnifiedGroupsDemoAlgorithm(QCAlgorithm):
             snapshot_generation,
             now):
         self._order_submission_in_progress = False
-        if ticket is None:
-            self._pre_order_snapshot = None
-            self._group_order_submitted = False
-            self._terminal_events_during_submission.clear()
-            self._empty_order_attempt_count += 1
-            retry_allowed = \
-                self._empty_order_attempt_count < \
-                self._MAXIMUM_EMPTY_ORDER_ATTEMPTS
-            self._next_group_order_retry_utc = \
-                now + self._INVALID_ORDER_RETRY_INTERVAL \
-                if retry_allowed else datetime.max
-            if retry_allowed:
-                return None, False
-            return (
-                f"SetHoldings returned no Financial Advisor parent order "
-                f"ticket on {self._MAXIMUM_EMPTY_ORDER_ATTEMPTS} attempts; "
-                f"the bounded retry limit was reached.",
-                False)
-
-        self._empty_order_attempt_count = 0
         self._group_order_id = ticket.order_id
         self._group_order_submitted = True
         ticket_status = ticket.status
@@ -542,32 +524,10 @@ class FinancialAdvisorUnifiedGroupsDemoAlgorithm(QCAlgorithm):
                 now,
                 response.error_message)
         if terminal_order_event is None:
-            self._invalid_order_attempt_count = 0
             return None, False
 
         return self._apply_terminal_order_locked(
             ticket.order_id,
-            terminal_order_event,
-            snapshot_generation,
-            now)
-
-    def _try_apply_terminal_order_intent_locked(
-            self,
-            snapshot_generation,
-            now):
-        if self._order_submission_in_progress or \
-                self._group_order_id == 0 or \
-                self._pending_reconcile_generation >= 0:
-            return None, False
-
-        terminal_order_event = \
-            self._terminal_events_during_submission.pop(
-                self._group_order_id,
-                None)
-        if terminal_order_event is None:
-            return None, False
-        return self._apply_terminal_order_locked(
-            self._group_order_id,
             terminal_order_event,
             snapshot_generation,
             now)
@@ -589,7 +549,7 @@ class FinancialAdvisorUnifiedGroupsDemoAlgorithm(QCAlgorithm):
                 f"Financial Advisor group order {order_id} was rejected: "
                 f"{reason} A newer account snapshot will be reconciled "
                 f"before retry eligibility is decided.")
-        # Publish the causal timestamps before making the generation pending.
+        # Store the terminal event and timestamp before marking reconciliation pending.
         self._pending_reconcile_terminal_utc = terminal_utc
         self._pending_terminal_order_event = (
             order_id,
