@@ -27,10 +27,11 @@ namespace QuantConnect.Algorithm.CSharp
     /// <summary>
     /// Demonstrates alias-driven movement of managed accounts between existing Financial Advisor groups.
     ///
-    /// PREREQUISITES: ib-financial-advisors-group-filter must be empty and
+    /// Live prerequisites: ib-financial-advisors-group-filter must be empty and
     /// ib-financial-advisors-group-management-enabled=true, which implies unified groups.
-    /// The fa-alias-pattern parameter is a case-insensitive regular expression. An exact empty
-    /// fa-target-group removes matching accounts from every group.
+    /// The fa-alias-pattern parameter is a case-insensitive regular expression. An empty
+    /// fa-target-group value requests removal of matching accounts from every group, but this
+    /// sample will not remove the final member from a source group.
     /// ContractsOrShares child values may be fractional, but their saved total must be lot-aligned;
     /// for a lot size of one, 12.5 + 7.5 = 20 is valid.
     /// Do not request configuration mutations during OnEndOfAlgorithm or teardown: a request may be
@@ -48,6 +49,8 @@ namespace QuantConnect.Algorithm.CSharp
             TimeSpan.FromMinutes(5);
         private const int CompleteRefreshTopologyTicks = 3;
 
+        // The IB provider queues asynchronous refreshes without socket I/O, allowing request
+        // acceptance and sample state to be updated under this lock.
         private readonly object _orderStateLock = new();
         private Regex _aliasPattern;
         private string _targetGroupName;
@@ -69,13 +72,14 @@ namespace QuantConnect.Algorithm.CSharp
         private long _assignmentSnapshotGeneration = -1;
         private long _minimumReadyGeneration = -1;
         private string _pendingAccountId = string.Empty;
-        private string _lastFinalSourceMemberBlockKey = string.Empty;
+        private string _lastFinalSourceMemberBlockKey;
+        private string _lastUnsupportedAllocationMethodKey = string.Empty;
         private int _scheduledRefreshTopologyTicks;
         private int _scheduledRefreshIntent;
 
         /// <summary>
-        /// Configures the alias rule, destination, allocation value, cash-change threshold,
-        /// and the algorithm-owned snapshot refresh cadence.
+        /// Configures the alias rule, destination, allocation value, cash/net-liquidation change
+        /// threshold, and algorithm-owned snapshot refresh policy.
         /// </summary>
         public override void Initialize()
         {
@@ -103,8 +107,8 @@ namespace QuantConnect.Algorithm.CSharp
             _nextRefreshRetryUtc = UtcTime;
             if (LiveMode)
             {
-                // The 90-second cadence cannot remain phase-locked to minute data;
-                // every third topology tick expands to complete account state.
+                // Scoped group refreshes run every 90 seconds; every third tick expands to a
+                // complete-discovery request.
                 Schedule.On(
                     DateRules.EveryDay(),
                     TimeRules.Every(TopologyRefreshInterval),
@@ -136,7 +140,7 @@ namespace QuantConnect.Algorithm.CSharp
 
         /// <summary>
         /// Polls asynchronous mutations, evaluates each authoritative snapshot generation once,
-        /// and owns the cadence used to discover external account changes.
+        /// and processes scheduled refreshes that discover external cash and net-liquidation changes.
         /// </summary>
         /// <param name="slice">The current data slice.</param>
         public override void OnData(Slice slice)
@@ -154,8 +158,7 @@ namespace QuantConnect.Algorithm.CSharp
             {
                 if (!TryAdvanceStateMachine())
                 {
-                    TryProcessScheduledSnapshotRefresh(
-                        allowStateMachineOwner: true);
+                    TryProcessScheduledSnapshotRefresh();
                 }
             }
             finally
@@ -213,8 +216,7 @@ namespace QuantConnect.Algorithm.CSharp
                     0,
                     0) != 0)
             {
-                TryProcessScheduledSnapshotRefresh(
-                    allowStateMachineOwner: true);
+                TryProcessScheduledSnapshotRefresh();
                 return true;
             }
 
@@ -349,7 +351,7 @@ namespace QuantConnect.Algorithm.CSharp
                 }
             }
 
-            var candidate = snapshot.AccountDirectory.Values
+            var candidates = snapshot.AccountDirectory.Values
                 .Where(IsAliasMatch)
                 .Where(entry => destinationGroup == null
                     ? entry.GroupNames.Count != 0
@@ -360,79 +362,97 @@ namespace QuantConnect.Algorithm.CSharp
                 .OrderBy(
                     entry => entry.AccountId,
                     StringComparer.OrdinalIgnoreCase)
-                .FirstOrDefault();
+                .ToArray();
             _lastEvaluatedGeneration = snapshot.Generation;
-            if (candidate == null)
+            if (candidates.Length == 0)
             {
                 return false;
             }
 
-            decimal? allocationValue = null;
-            if (destinationGroup != null &&
-                !destinationGroup.AccountIds.Contains(
-                    candidate.AccountId,
-                    StringComparer.OrdinalIgnoreCase) &&
-                !TryGetAllocationValue(
-                    destinationGroup,
-                    out allocationValue))
+            BrokerageAccountDirectoryEntry candidate = null;
+            BrokerageAccountDirectoryEntry firstBlockedCandidate = null;
+            BrokerageAccountGroup firstFinalSourceGroup = null;
+            List<string> requiredGroupNames = null;
+            foreach (var currentCandidate in candidates)
             {
-                return true;
-            }
-
-            var requiredGroupNames = new List<string>();
-            if (destinationGroup != null)
-            {
-                requiredGroupNames.Add(destinationGroup.Name);
-            }
-            foreach (var sourceGroupName in candidate.GroupNames)
-            {
-                if (!requiredGroupNames.Contains(
-                        sourceGroupName,
-                        StringComparer.OrdinalIgnoreCase))
+                var currentRequiredGroupNames = new List<string>();
+                if (destinationGroup != null)
                 {
-                    requiredGroupNames.Add(sourceGroupName);
+                    currentRequiredGroupNames.Add(destinationGroup.Name);
                 }
-            }
-            if (requiredGroupNames.Any(
-                    groupName => !snapshot.Groups.ContainsKey(groupName)))
-            {
-                _minimumReadyGeneration = snapshot.Generation;
-                TryRequestSnapshotRefresh(
-                    snapshot,
-                    requiredGroupNames);
-                return true;
-            }
+                foreach (var sourceGroupName in currentCandidate.GroupNames)
+                {
+                    if (!currentRequiredGroupNames.Contains(
+                            sourceGroupName,
+                            StringComparer.OrdinalIgnoreCase))
+                    {
+                        currentRequiredGroupNames.Add(sourceGroupName);
+                    }
+                }
+                var finalSourceGroup = currentCandidate.GroupNames
+                    .Where(groupName => destinationGroup == null ||
+                        !groupName.Equals(
+                            destinationGroup.Name,
+                            StringComparison.OrdinalIgnoreCase))
+                    .Where(snapshot.AllGroups.ContainsKey)
+                    .Select(groupName => snapshot.AllGroups[groupName])
+                    .FirstOrDefault(group =>
+                        group.AccountIds.Count == 1 &&
+                        group.AccountIds[0].Equals(
+                            currentCandidate.AccountId,
+                            StringComparison.OrdinalIgnoreCase));
+                if (finalSourceGroup != null)
+                {
+                    firstBlockedCandidate ??= currentCandidate;
+                    firstFinalSourceGroup ??= finalSourceGroup;
+                    continue;
+                }
+                if (currentRequiredGroupNames.Any(
+                        groupName => !snapshot.Groups.ContainsKey(groupName)))
+                {
+                    _minimumReadyGeneration = snapshot.Generation;
+                    TryRequestSnapshotRefresh(
+                        snapshot,
+                        currentRequiredGroupNames);
+                    return true;
+                }
 
-            var finalSourceGroup = candidate.GroupNames
-                .Where(groupName => destinationGroup == null ||
-                    !groupName.Equals(
-                        destinationGroup.Name,
-                        StringComparison.OrdinalIgnoreCase))
-                .Select(groupName => snapshot.Groups[groupName])
-                .FirstOrDefault(group =>
-                    group.AccountIds.Count == 1 &&
-                    group.AccountIds[0].Equals(
-                        candidate.AccountId,
-                        StringComparison.OrdinalIgnoreCase));
-            if (finalSourceGroup != null)
+                candidate = currentCandidate;
+                requiredGroupNames = currentRequiredGroupNames;
+                break;
+            }
+            if (candidate == null)
             {
-                var blockKey =
-                    $"{candidate.AccountId}\0{finalSourceGroup.Name}\0" +
-                    snapshot.GroupConfigurationVersion;
+                var blockKey = snapshot.GroupConfigurationVersion;
                 if (!blockKey.Equals(
                         _lastFinalSourceMemberBlockKey,
-                        StringComparison.OrdinalIgnoreCase))
+                        StringComparison.Ordinal))
                 {
                     _lastFinalSourceMemberBlockKey = blockKey;
                     Error(
-                        $"FA assignment for account '{candidate.AccountId}' cannot " +
+                        $"FA assignment for account '{firstBlockedCandidate.AccountId}' cannot " +
                         $"remove the final member of source group " +
-                        $"'{finalSourceGroup.Name}'. Waiting for a scheduled topology " +
+                        $"'{firstFinalSourceGroup.Name}'. Waiting for a scheduled topology " +
                         "refresh before reevaluating.");
                 }
                 return true;
             }
-            _lastFinalSourceMemberBlockKey = string.Empty;
+            _lastFinalSourceMemberBlockKey = null;
+
+            var requiresAllocationValue = destinationGroup != null &&
+                !destinationGroup.AccountIds.Contains(
+                    candidate.AccountId,
+                    StringComparer.OrdinalIgnoreCase);
+            decimal? allocationValue = null;
+            if (destinationGroup != null &&
+                !TryGetAllocationValue(
+                    destinationGroup,
+                    snapshot.GroupConfigurationVersion,
+                    requiresAllocationValue,
+                    out allocationValue))
+            {
+                return true;
+            }
 
             var assignmentBeforeRequest =
                 BrokerageAccountGroupAssignment;
@@ -505,6 +525,8 @@ namespace QuantConnect.Algorithm.CSharp
 
         private bool TryGetAllocationValue(
             BrokerageAccountGroup destinationGroup,
+            string groupConfigurationVersion,
+            bool required,
             out decimal? allocationValue)
         {
             allocationValue = null;
@@ -518,6 +540,10 @@ namespace QuantConnect.Algorithm.CSharp
                     "ContractsOrShares",
                     StringComparison.OrdinalIgnoreCase))
             {
+                if (!required)
+                {
+                    return true;
+                }
                 if (_targetAllocationValue < 0)
                 {
                     Error(
@@ -533,6 +559,10 @@ namespace QuantConnect.Algorithm.CSharp
                     "Ratio",
                     StringComparison.OrdinalIgnoreCase))
             {
+                if (!required)
+                {
+                    return true;
+                }
                 if (_targetAllocationValue <= 0)
                 {
                     Error(
@@ -549,13 +579,19 @@ namespace QuantConnect.Algorithm.CSharp
                     "Percent",
                     StringComparison.OrdinalIgnoreCase))
             {
+                if (!required)
+                {
+                    return true;
+                }
                 if (_targetAllocationValue <= 0 ||
-                    _targetAllocationValue > 100)
+                    _targetAllocationValue > 100 ||
+                    (_targetAllocationValue == 100 &&
+                        destinationGroup.AccountIds.Count != 0))
                 {
                     Error(
                         $"FA destination group '{destinationGroup.Name}' uses " +
-                        "Percent, so fa-allocation-value must be greater than " +
-                        "zero and no greater than 100.");
+                        "Percent, so fa-allocation-value must be greater than zero " +
+                        "and less than 100 when the group already has members.");
                     return false;
                 }
 
@@ -563,10 +599,24 @@ namespace QuantConnect.Algorithm.CSharp
                 return true;
             }
 
-            Error(
-                $"FA destination group '{destinationGroup.Name}' uses " +
-                $"unsupported saved allocation method " +
-                $"'{destinationGroup.AllocationMethod}'.");
+            var unsupportedMethodKey =
+                $"{destinationGroup.Name}\0{destinationGroup.AllocationMethod}\0" +
+                groupConfigurationVersion;
+            if (!unsupportedMethodKey.Equals(
+                    _lastUnsupportedAllocationMethodKey,
+                    StringComparison.OrdinalIgnoreCase))
+            {
+                _lastUnsupportedAllocationMethodKey = unsupportedMethodKey;
+                Error(destinationGroup.AllocationMethod.Equals(
+                        "PctChange",
+                        StringComparison.OrdinalIgnoreCase)
+                    ? $"FA destination group '{destinationGroup.Name}' uses saved " +
+                        "PctChange. IB paper TWS accepts that configuration, but " +
+                        "this LEAN sample does not mutate PctChange groups."
+                    : $"FA destination group '{destinationGroup.Name}' uses " +
+                        $"unsupported saved allocation method " +
+                        $"'{destinationGroup.AllocationMethod}'.");
+            }
             return false;
         }
 
@@ -696,8 +746,6 @@ namespace QuantConnect.Algorithm.CSharp
 
             _nextRefreshRetryUtc =
                 UtcTime + RefreshRetryInterval;
-            // The IB implementation only coalesces into its in-memory
-            // QueueRefresh while this sample state is protected.
             var scheduledRefreshIntent = Interlocked.Exchange(
                 ref _scheduledRefreshIntent,
                 0);
@@ -765,17 +813,11 @@ namespace QuantConnect.Algorithm.CSharp
             }
         }
 
-        private bool TryProcessScheduledSnapshotRefresh(
-            bool allowStateMachineOwner = false)
+        private bool TryProcessScheduledSnapshotRefresh()
         {
             string errorMessage = null;
             lock (_orderStateLock)
             {
-                if (_stateMachineActive &&
-                    !allowStateMachineOwner)
-                {
-                    return false;
-                }
                 var snapshot =
                     BrokerageAccountSnapshot;
                 UpdateRefreshRequestStateLocked(snapshot);

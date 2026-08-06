@@ -16,15 +16,20 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Moq;
 using NUnit.Framework;
 using Python.Runtime;
 using QuantConnect.Algorithm;
 using QuantConnect.AlgorithmFactory.Python.Wrappers;
 using QuantConnect.Brokerages;
 using QuantConnect.Data;
+using QuantConnect.Data.Market;
 using QuantConnect.Interfaces;
 using QuantConnect.Orders;
 using QuantConnect.Orders.Fees;
+using QuantConnect.Scheduling;
+using QuantConnect.Securities;
+using QuantConnect.Tests.Common.Securities;
 using QuantConnect.Tests.Engine.DataFeeds;
 
 namespace QuantConnect.Tests.Python
@@ -364,8 +369,45 @@ namespace QuantConnect.Tests.Python
             {
                 Assert.That(
                     algorithm.ErrorMessages,
-                    Has.One.Contains("no greater than 100"));
+                    Has.One.Contains("fa-allocation-value"));
             }
+        }
+
+        [Test]
+        public void GroupAssignmentRejectsOneHundredPercentNewcomerForNonemptyGroupInPython()
+        {
+            var services = new TestFinancialAdvisorServices
+            {
+                Snapshot = CreateAssignmentSnapshot(
+                    2,
+                    new[] { TargetGroupName, SourceGroupName },
+                    Array.Empty<string>(),
+                    allocationMethod: "Percent",
+                    targetAccountAllocationValues:
+                        new Dictionary<string, decimal>
+                        {
+                            ["AccountB"] = 100m
+                        },
+                    includeCompanionMembers: true)
+            };
+            using var algorithm = CreateAlgorithm(
+                "FinancialAdvisorGroupAssignmentAlgorithm",
+                services,
+                new Dictionary<string, string>
+                {
+                    ["fa-allocation-value"] = "100"
+                });
+
+            algorithm.OnData(CreateEmptySlice());
+
+            Assert.Multiple(() =>
+            {
+                Assert.AreEqual(0, services.AssignmentRequestCount);
+                Assert.That(
+                    algorithm.ErrorMessages,
+                    Has.One.Contains(
+                        "less than 100 when the group already has members"));
+            });
         }
 
         [TestCase("Percent", 40, 60)]
@@ -426,6 +468,14 @@ namespace QuantConnect.Tests.Python
                 services);
 
             algorithm.OnData(CreateEmptySlice());
+            services.Snapshot = CreateAssignmentSnapshot(
+                3,
+                new[] { TargetGroupName, SourceGroupName },
+                Array.Empty<string>(),
+                allocationMethod: "PctChange",
+                groupConfigurationVersion:
+                    services.Snapshot.GroupConfigurationVersion);
+            algorithm.OnData(CreateEmptySlice());
 
             Assert.Multiple(() =>
             {
@@ -433,7 +483,40 @@ namespace QuantConnect.Tests.Python
                 Assert.That(
                     algorithm.ErrorMessages,
                     Has.One.Contains(
-                        "unsupported allocation method 'PctChange'"));
+                        "IB paper TWS accepts that configuration"));
+                Assert.AreEqual(
+                    1,
+                    algorithm.ErrorMessages.Count(message =>
+                        message.Contains("does not mutate PctChange groups")),
+                    "An unchanged group configuration must report the unsupported method once.");
+            });
+        }
+
+        [Test]
+        public void ExistingPctChangeTargetMemberDoesNotRequestSourceRemovalInPython()
+        {
+            var services = new TestFinancialAdvisorServices
+            {
+                Snapshot = CreateAssignmentSnapshot(
+                    2,
+                    new[] { TargetGroupName, SourceGroupName },
+                    new[] { TargetGroupName, SourceGroupName },
+                    allocationMethod: "PctChange",
+                    includeCompanionMembers: true)
+            };
+            using var algorithm = CreateAlgorithm(
+                "FinancialAdvisorGroupAssignmentAlgorithm",
+                services);
+
+            algorithm.OnData(CreateEmptySlice());
+
+            Assert.Multiple(() =>
+            {
+                Assert.AreEqual(0, services.AssignmentRequestCount);
+                Assert.That(
+                    algorithm.ErrorMessages,
+                    Has.One.Contains(
+                        "this LEAN sample does not mutate PctChange groups"));
             });
         }
 
@@ -453,7 +536,6 @@ namespace QuantConnect.Tests.Python
                 liveMode: false);
 
             algorithm.OnData(CreateEmptySlice());
-            InvokeScheduledCallback(algorithm);
 
             Assert.Multiple(() =>
             {
@@ -663,6 +745,32 @@ namespace QuantConnect.Tests.Python
             InvokeScheduledCallback(algorithm);
 
             Assert.AreEqual(1, services.AssignmentRequestCount);
+        }
+
+        [Test]
+        public void GroupAssignmentFinalSourceDoesNotStarveLaterCandidateInPython()
+        {
+            var services = new TestFinancialAdvisorServices
+            {
+                Snapshot = CreateAssignmentSnapshot(
+                    2,
+                    new[] { TargetGroupName },
+                    new[] { SourceGroupName },
+                    includeEligibleAliasCandidate: true)
+            };
+            using var algorithm = CreateAlgorithm(
+                "FinancialAdvisorGroupAssignmentAlgorithm",
+                services);
+
+            algorithm.OnData(CreateEmptySlice());
+
+            Assert.Multiple(() =>
+            {
+                Assert.AreEqual(1, services.AssignmentRequestCount);
+                Assert.AreEqual("AccountB", services.Assignment.AccountId);
+                Assert.IsFalse(algorithm.ErrorMessages.Any(message =>
+                    message.Contains("final member of source group")));
+            });
         }
 
         [Test]
@@ -1110,8 +1218,9 @@ class FinancialAdvisorUnifiedGroupsDemoAlgorithmUnderTest(FinancialAdvisorUnifie
                 throw;
             }
             algorithm.SetLocked();
+            algorithm.BaseAlgorithm.SetFinishedWarmingUp();
             algorithm.BaseAlgorithm
-                .SetBrokerageAccountMutationServicesReady();
+                .SetBrokerageAccountMutationServicesReady(true);
             services.AcceptRefreshRequests = true;
             services.ResetRefreshRequests();
             algorithm.SetDateTime(SnapshotTime.AddSeconds(5));
@@ -1215,8 +1324,10 @@ class FinancialAdvisorUnifiedGroupsDemoAlgorithmUnderTest(FinancialAdvisorUnifie
             IReadOnlyDictionary<string, decimal>
                 targetAccountAllocationValues = null,
             bool includeCompanionMembers = false,
+            bool includeEligibleAliasCandidate = false,
             decimal totalCashValue = 100m,
-            decimal netLiquidation = 1000m)
+            decimal netLiquidation = 1000m,
+            string groupConfigurationVersion = null)
         {
             var targetAccountIds = accountGroupNames.Contains(
                     TargetGroupName,
@@ -1288,6 +1399,17 @@ class FinancialAdvisorUnifiedGroupsDemoAlgorithmUnderTest(FinancialAdvisorUnifie
                         string.Empty,
                         string.Empty);
             }
+            if (includeEligibleAliasCandidate)
+            {
+                directory["AccountB"] =
+                    new BrokerageAccountDirectoryEntry(
+                        "AccountB",
+                        BrokerageAccountRelationship.Managed,
+                        Array.Empty<string>(),
+                        "INDIVIDUAL",
+                        string.Empty,
+                        "MOVE-West");
+            }
             var accounts =
                 new Dictionary<string, BrokerageAccountState>
                 {
@@ -1309,6 +1431,13 @@ class FinancialAdvisorUnifiedGroupsDemoAlgorithmUnderTest(FinancialAdvisorUnifie
                     new[] { SourceGroupName },
                     0m);
             }
+            if (includeEligibleAliasCandidate)
+            {
+                accounts["AccountB"] = CreateAccount(
+                    "AccountB",
+                    Array.Empty<string>(),
+                    0m);
+            }
             var timestamp =
                 collectionStartedUtc ?? SnapshotTime;
 
@@ -1321,7 +1450,7 @@ class FinancialAdvisorUnifiedGroupsDemoAlgorithmUnderTest(FinancialAdvisorUnifie
                 accounts,
                 Array.Empty<string>(),
                 $"membership-{generation}",
-                $"configuration-{generation}",
+                groupConfigurationVersion ?? $"configuration-{generation}",
                 string.Empty,
                 managedAccountIds: accounts.Keys.ToArray(),
                 allGroups: allGroups,

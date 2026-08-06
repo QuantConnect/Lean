@@ -21,7 +21,7 @@ import re
 
 ### <summary>
 ### Demonstrates alias-driven Financial Advisor group assignment, confirmed mutation
-### results, and cash-change-driven snapshot reconciliation.
+### results, and confirming snapshots after material cash or net-liquidation changes.
 ###
 ### LIVE PREREQUISITES:
 ### - ib-financial-advisors-group-filter must be empty. A configured filter rejects
@@ -29,7 +29,8 @@ import re
 ### - ib-financial-advisors-group-management-enabled=true is required and implies
 ###   ib-financial-advisors-unified-groups-enabled=true.
 ### - fa-alias-pattern is a case-insensitive regular expression.
-### - An exactly empty fa-target-group removes matched accounts from every group.
+### - Setting fa-target-group to an empty string requests removal of a matched account from every group,
+###   but this sample refuses to remove the final member of a source group.
 ### - ContractsOrShares child values may be fractional, but their saved total must
 ###   be lot-aligned; for a lot size of one, 12.5 + 7.5 = 20 is valid.
 ### - Do not request configuration mutations during on_end_of_algorithm or teardown:
@@ -84,6 +85,8 @@ class FinancialAdvisorGroupAssignmentAlgorithm(QCAlgorithm):
         self._initial_snapshot_request_generation = -1
         self._next_snapshot_refresh_utc = None
         self._scheduled_refresh_topology_ticks = 0
+        # The provider queues the asynchronous refresh without socket I/O, allowing request
+        # acceptance and sample state to be updated in one critical section.
         self._order_state_lock = Lock()
         # Python.NET cannot expose a persistent ref-int to Interlocked, so this
         # provides the same atomic, coalescing set-and-consume semantics.
@@ -95,18 +98,17 @@ class FinancialAdvisorGroupAssignmentAlgorithm(QCAlgorithm):
 
         self._active_assignment_generation = None
         self._assignment_generation_before_request = None
-        self._assignment_submission_in_progress = False
         self._state_machine_active = False
         self._active_assignment_account_id = None
         self._active_assignment_snapshot_generation = -1
         self._minimum_ready_generation = None
         self._last_membership_evaluation_generation = -1
         self._last_final_source_member_block_key = None
+        self._last_unsupported_allocation_method_key = None
 
         if self.live_mode:
-            # The 90-second cadence is intentionally offset from minute data so a
-            # refresh cannot consume every OnData opportunity. Every third topology
-            # tick expands to complete account state.
+            # Scoped group refreshes run every 90 seconds; every third tick expands to a
+            # complete-discovery request. The algorithm owns this freshness policy.
             self.schedule.on(
                 self.date_rules.every_day(),
                 self.time_rules.every(self._TOPOLOGY_REFRESH_INTERVAL),
@@ -326,8 +328,6 @@ class FinancialAdvisorGroupAssignmentAlgorithm(QCAlgorithm):
 
         self._next_snapshot_refresh_utc = \
             self.utc_time + self._REFRESH_RETRY_INTERVAL
-        # The IB implementation only coalesces into its in-memory QueueRefresh
-        # while this sample state is protected.
         request_generation = snapshot.generation
         scheduled_refresh_intent = \
             self._scheduled_refresh_intent.wait_one(0)
@@ -372,7 +372,6 @@ class FinancialAdvisorGroupAssignmentAlgorithm(QCAlgorithm):
             snapshot = self.brokerage_account_snapshot
             if self._snapshot_request_generation is not None or \
                     self._assignment_generation_before_request is not None or \
-                    self._assignment_submission_in_progress or \
                     self._minimum_ready_generation is not None or \
                     self._cash_confirmation_trigger_generation is not None or \
                     not self._is_snapshot_fresh(snapshot) or \
@@ -464,10 +463,10 @@ class FinancialAdvisorGroupAssignmentAlgorithm(QCAlgorithm):
                 snapshot.generation
             return True
 
-        account = self._find_assignment_candidate(
+        candidates = list(self._find_assignment_candidates(
             snapshot,
-            target_group)
-        if account is None:
+            target_group))
+        if not candidates:
             self._last_membership_evaluation_generation = \
                 snapshot.generation
             return False
@@ -475,60 +474,74 @@ class FinancialAdvisorGroupAssignmentAlgorithm(QCAlgorithm):
         canonical_target_group_name = "" \
             if target_group is None \
             else target_group.name
-        allocation_value = None
-        if target_group is not None and \
-                account.account_id.casefold() not in {
+        selected_group_keys = {
+            group.name.casefold()
+            for group in list(snapshot.groups.values)
+        }
+        account = None
+        required_group_names = None
+        first_blocked_account = None
+        first_final_source_group = None
+        for candidate in candidates:
+            candidate_group_names = self._get_assignment_group_names(
+                target_group,
+                candidate)
+            final_source_group = self._find_final_source_group(
+                snapshot,
+                target_group,
+                candidate)
+            if final_source_group is not None:
+                if first_blocked_account is None:
+                    first_blocked_account = candidate
+                    first_final_source_group = final_source_group
+                continue
+
+            if any(
+                    group_name.casefold() not in selected_group_keys
+                    for group_name in candidate_group_names):
+                self._try_request_snapshot_refresh(
+                    snapshot,
+                    is_confirmation=False,
+                    group_names=candidate_group_names)
+                return True
+
+            account = candidate
+            required_group_names = candidate_group_names
+            break
+
+        if account is None:
+            self._last_membership_evaluation_generation = \
+                snapshot.generation
+            block_key = snapshot.group_configuration_version
+            if block_key != self._last_final_source_member_block_key:
+                self._last_final_source_member_block_key = block_key
+                self.error(
+                    f"FA assignment for account "
+                    f"'{first_blocked_account.account_id}' cannot remove the "
+                    f"final member of source group "
+                    f"'{first_final_source_group.name}'. Waiting for a "
+                    f"scheduled topology refresh before reevaluating.")
+            return True
+        self._last_final_source_member_block_key = None
+
+        requires_allocation_value = target_group is not None and \
+            account.account_id.casefold() not in {
                     account_id.casefold()
                     for account_id in list(target_group.account_ids)
-                }:
+                }
+        allocation_value = None
+        if target_group is not None:
             allocation_value = self._get_target_allocation_value(
-                target_group)
+                target_group,
+                snapshot.group_configuration_version,
+                requires_allocation_value)
             if allocation_value is False:
                 self._last_membership_evaluation_generation = \
                     snapshot.generation
                 return True
 
-        required_group_names = self._get_assignment_group_names(
-            target_group,
-            account)
-        selected_group_keys = {
-            group.name.casefold()
-            for group in list(snapshot.groups.values)
-        }
-        if any(
-                group_name.casefold() not in selected_group_keys
-                for group_name in required_group_names):
-            self._try_request_snapshot_refresh(
-                snapshot,
-                is_confirmation=False,
-                group_names=required_group_names)
-            return True
-
-        final_source_group = self._find_final_source_group(
-            snapshot,
-            target_group,
-            account)
-        if final_source_group is not None:
-            self._last_membership_evaluation_generation = \
-                snapshot.generation
-            block_key = (
-                account.account_id.casefold(),
-                final_source_group.name.casefold(),
-                snapshot.group_configuration_version)
-            if block_key != self._last_final_source_member_block_key:
-                self._last_final_source_member_block_key = block_key
-                self.error(
-                    f"FA assignment for account '{account.account_id}' cannot "
-                    f"remove the final member of source group "
-                    f"'{final_source_group.name}'. Waiting for a scheduled "
-                    f"topology refresh before reevaluating.")
-            return True
-        self._last_final_source_member_block_key = None
-
         assignment_generation_before_request = \
             self.brokerage_account_group_assignment.generation
-        with self._order_state_lock:
-            self._assignment_submission_in_progress = True
         accepted = False
         try:
             accepted = self.request_brokerage_account_group_assignment(
@@ -558,9 +571,6 @@ class FinancialAdvisorGroupAssignmentAlgorithm(QCAlgorithm):
                 is_confirmation=False,
                 group_names=required_group_names)
             return True
-        finally:
-            with self._order_state_lock:
-                self._assignment_submission_in_progress = False
         if not accepted:
             self._last_membership_evaluation_generation = \
                 snapshot.generation
@@ -593,7 +603,7 @@ class FinancialAdvisorGroupAssignmentAlgorithm(QCAlgorithm):
             if group.name.casefold() == target_key
         ), None)
 
-    def _find_assignment_candidate(self, snapshot, target_group):
+    def _find_assignment_candidates(self, snapshot, target_group):
         target_key = None \
             if target_group is None \
             else target_group.name.casefold()
@@ -610,11 +620,14 @@ class FinancialAdvisorGroupAssignmentAlgorithm(QCAlgorithm):
             }
             if target_key is None:
                 if current_groups:
-                    return account
+                    yield account
             elif current_groups != {target_key}:
-                return account
+                yield account
 
-        return None
+    def _find_assignment_candidate(self, snapshot, target_group):
+        return next(
+            self._find_assignment_candidates(snapshot, target_group),
+            None)
 
     @staticmethod
     def _find_final_source_group(snapshot, target_group, account):
@@ -628,7 +641,7 @@ class FinancialAdvisorGroupAssignmentAlgorithm(QCAlgorithm):
         }
         account_key = account.account_id.casefold()
         return next((
-            group for group in list(snapshot.groups.values)
+            group for group in list(snapshot.all_groups.values)
             if group.name.casefold() in source_group_keys and
             len(list(group.account_ids)) == 1 and
             list(group.account_ids)[0].casefold() == account_key
@@ -640,15 +653,19 @@ class FinancialAdvisorGroupAssignmentAlgorithm(QCAlgorithm):
             bool(account.account_alias) and \
             self._alias_pattern.search(account.account_alias) is not None
 
-    def _get_target_allocation_value(self, target_group):
-        if target_group is None:
-            return None
-
+    def _get_target_allocation_value(
+            self,
+            target_group,
+            group_configuration_version,
+            required):
         allocation_method = target_group.allocation_method.casefold()
         if allocation_method in self._COMPUTED_ALLOCATION_METHODS:
-            # NetLiq, AvailableEquity and Equal are calculated by TWS.
+            # IB calculates NetLiq, AvailableEquity, and Equal allocations, so the
+            # assignment request does not provide a child allocation value.
             return None
         if allocation_method == "contractsorshares":
+            if not required:
+                return None
             if self._allocation_value < 0:
                 self.error(
                     f"FA destination group '{target_group.name}' uses "
@@ -657,6 +674,8 @@ class FinancialAdvisorGroupAssignmentAlgorithm(QCAlgorithm):
                 return False
             return self._allocation_value
         if allocation_method == "ratio":
+            if not required:
+                return None
             if self._allocation_value <= 0:
                 self.error(
                     f"FA destination group '{target_group.name}' uses "
@@ -665,18 +684,37 @@ class FinancialAdvisorGroupAssignmentAlgorithm(QCAlgorithm):
                 return False
             return self._allocation_value
         if allocation_method == "percent":
+            if not required:
+                return None
             if self._allocation_value <= 0 or \
-                    self._allocation_value > 100:
+                    self._allocation_value > 100 or \
+                    (self._allocation_value == 100 and
+                     len(list(target_group.account_ids)) != 0):
                 self.error(
                     f"FA destination group '{target_group.name}' uses "
-                    f"Percent, so fa-allocation-value must be greater than "
-                    f"zero and no greater than 100.")
+                    f"Percent, so fa-allocation-value must be greater than zero "
+                    f"and less than 100 when the group already has members.")
                 return False
             return self._allocation_value
 
-        self.error(
-            f"FA destination group '{target_group.name}' uses unsupported "
-            f"allocation method '{target_group.allocation_method}'.")
+        unsupported_method_key = (
+            target_group.name.casefold(),
+            allocation_method,
+            group_configuration_version)
+        if unsupported_method_key != \
+                self._last_unsupported_allocation_method_key:
+            self._last_unsupported_allocation_method_key = \
+                unsupported_method_key
+            if allocation_method == "pctchange":
+                self.error(
+                    f"FA destination group '{target_group.name}' uses saved "
+                    f"PctChange. IB paper TWS accepts that configuration, but "
+                    f"this LEAN sample does not mutate PctChange groups.")
+            else:
+                self.error(
+                    f"FA destination group '{target_group.name}' uses "
+                    f"unsupported saved allocation method "
+                    f"'{target_group.allocation_method}'.")
         return False
 
     def _get_scheduled_group_names(self, snapshot):
