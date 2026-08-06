@@ -168,6 +168,23 @@ namespace QuantConnect.Lean.Engine
 
             //Loop over the queues: get a data collection, then pass them all into relevent methods in the algorithm.
             Log.Trace($"AlgorithmManager.Run(): Begin DataStream - Start: {algorithm.StartDate} Stop: {algorithm.EndDate} Time: {algorithm.Time} Warmup: {algorithm.IsWarmingUp}");
+            var wasWarmingUp = algorithm.IsWarmingUp;
+            void CheckWarmupFinished()
+            {
+                if (wasWarmingUp && !algorithm.IsWarmingUp)
+                {
+                    // warmup finished: notify the result handler first so it can re-capture the starting
+                    // portfolio value before any user code gets a chance to trade
+                    wasWarmingUp = false;
+                    results.OnWarmupFinished();
+                    // we trigger this callback here and not internally in the algorithm so that we can go through python if required
+                    algorithm.OnWarmupFinished();
+                    algorithm.Debug("Algorithm finished warming up.");
+                    Log.Trace($"AlgorithmManager.Run(): Subscriptions count after warm up: {algorithm.SubscriptionManager.Count}");
+                    results.SendStatusUpdate(AlgorithmStatus.Running, "100");
+                }
+            }
+
             foreach (var timeSlice in Stream(algorithm, synchronizer, results, token))
             {
                 // reset our timer on each loop
@@ -226,6 +243,9 @@ namespace QuantConnect.Lean.Engine
                 // the time pulse are just to advance algorithm time, lets shortcut the loop here
                 if (timeSlice.IsTimePulse)
                 {
+                    // a time pulse might have been emitted just to align the algorithm time with the end of
+                    // the warm-up period, in which case OnWarmupFinished must fire here, at that aligned time
+                    CheckWarmupFinished();
                     continue;
                 }
 
@@ -290,6 +310,10 @@ namespace QuantConnect.Lean.Engine
 
                 // security prices got updated
                 algorithm.Portfolio.InvalidateTotalPortfolioValue();
+
+                // if this time slice ended the warm-up period, notify now: after the data updates above,
+                // so OnWarmupFinished sees current prices, and before any user code runs post warm-up
+                CheckWarmupFinished();
 
                 if (timeSlice.Slice.SymbolChangedEvents.Count != 0)
                 {
@@ -722,16 +746,6 @@ namespace QuantConnect.Lean.Engine
                         Log.Trace($"AlgorithmManager.Stream(): Subscriptions count before warm up: {algorithm.SubscriptionManager.Count}");
                         logSubscriptionCountFlag = true;
                     }
-                }
-                else if (warmingUp)
-                {
-                    // warmup finished, send an update
-                    warmingUp = false;
-                    // we trigger this callback here and not internally in the algorithm so that we can go through python if required
-                    algorithm.OnWarmupFinished();
-                    algorithm.Debug("Algorithm finished warming up.");
-                    Log.Trace($"AlgorithmManager.Stream(): Subscriptions count after warm up: {algorithm.SubscriptionManager.Count}");
-                    results.SendStatusUpdate(AlgorithmStatus.Running, "100");
                 }
                 yield return timeSlice;
             }
