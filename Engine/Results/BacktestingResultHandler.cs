@@ -737,7 +737,11 @@ namespace QuantConnect.Lean.Engine.Results
             if (!ExitTriggered)
             {
                 Log.Trace("BacktestingResultHandler.Exit(): starting...");
-                var copy = CloneLogs();
+                List<LogEntry> copy;
+                lock (LogStore)
+                {
+                    copy = LogStore.ToList();
+                }
                 ProcessSynchronousEvents(true);
                 Log.Trace("BacktestingResultHandler.Exit(): Saving logs...");
                 var logLocation = SaveLogs(_algorithmId, copy);
