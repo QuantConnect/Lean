@@ -1779,6 +1779,106 @@ namespace QuantConnect.Data.Fundamental
         private AmortizationSupplementalIncomeStatement _amortizationSupplemental;
 
         /// <summary>
+        /// Gains or losses on the disposal of businesses. It is a supplemental value which would be reported outside consolidated statements.
+        /// </summary>
+        /// <remarks>
+        /// Morningstar DataId: 20452
+        /// </remarks>
+        [JsonProperty("20452")]
+        public DisposalofBusinessesSupplementalIncomeStatement DisposalofBusinessesSupplemental => _disposalofBusinessesSupplemental ??= new(_timeProvider, _securityIdentifier);
+        private DisposalofBusinessesSupplementalIncomeStatement _disposalofBusinessesSupplemental;
+
+        /// <summary>
+        /// Income or expense from operations that have been discontinued. It is a supplemental value which would be reported outside consolidated statements.
+        /// </summary>
+        /// <remarks>
+        /// Morningstar DataId: 20453
+        /// </remarks>
+        [JsonProperty("20453")]
+        public DiscontinuedOperationsSupplementalIncomeStatement DiscontinuedOperationsSupplemental => _discontinuedOperationsSupplemental ??= new(_timeProvider, _securityIdentifier);
+        private DiscontinuedOperationsSupplementalIncomeStatement _discontinuedOperationsSupplemental;
+
+        /// <summary>
+        /// Gains or losses on the disposal of assets. It is a supplemental value which would be reported outside consolidated statements.
+        /// </summary>
+        /// <remarks>
+        /// Morningstar DataId: 20454
+        /// </remarks>
+        [JsonProperty("20454")]
+        public AssetDisposalsSupplementalIncomeStatement AssetDisposalsSupplemental => _assetDisposalsSupplemental ??= new(_timeProvider, _securityIdentifier);
+        private AssetDisposalsSupplementalIncomeStatement _assetDisposalsSupplemental;
+
+        /// <summary>
+        /// Impairment, write off or write down of capital assets. It is a supplemental value which would be reported outside consolidated statements.
+        /// </summary>
+        /// <remarks>
+        /// Morningstar DataId: 20455
+        /// </remarks>
+        [JsonProperty("20455")]
+        public ImpairmentWriteOffWriteDownofCapitalAssetsSupplementalIncomeStatement ImpairmentWriteOffWriteDownofCapitalAssetsSupplemental => _impairmentWriteOffWriteDownofCapitalAssetsSupplemental ??= new(_timeProvider, _securityIdentifier);
+        private ImpairmentWriteOffWriteDownofCapitalAssetsSupplementalIncomeStatement _impairmentWriteOffWriteDownofCapitalAssetsSupplemental;
+
+        /// <summary>
+        /// Impairment or write off of goodwill. It is a supplemental value which would be reported outside consolidated statements.
+        /// </summary>
+        /// <remarks>
+        /// Morningstar DataId: 20456
+        /// </remarks>
+        [JsonProperty("20456")]
+        public GoodwillImpairmentWriteOffSupplementalIncomeStatement GoodwillImpairmentWriteOffSupplemental => _goodwillImpairmentWriteOffSupplemental ??= new(_timeProvider, _securityIdentifier);
+        private GoodwillImpairmentWriteOffSupplementalIncomeStatement _goodwillImpairmentWriteOffSupplemental;
+
+        /// <summary>
+        /// Impairment, write off or write down of assets other than capital assets. It is a supplemental value which would be reported outside consolidated statements.
+        /// </summary>
+        /// <remarks>
+        /// Morningstar DataId: 20457
+        /// </remarks>
+        [JsonProperty("20457")]
+        public ImpairmentWriteOffWriteDownofOtherAssetsSupplementalIncomeStatement ImpairmentWriteOffWriteDownofOtherAssetsSupplemental => _impairmentWriteOffWriteDownofOtherAssetsSupplemental ??= new(_timeProvider, _securityIdentifier);
+        private ImpairmentWriteOffWriteDownofOtherAssetsSupplementalIncomeStatement _impairmentWriteOffWriteDownofOtherAssetsSupplemental;
+
+        /// <summary>
+        /// Gains or losses arising from the extinguishment of debt. It is a supplemental value which would be reported outside consolidated statements.
+        /// </summary>
+        /// <remarks>
+        /// Morningstar DataId: 20458
+        /// </remarks>
+        [JsonProperty("20458")]
+        public GainLossOnExtinguishmentofDebtSupplementalIncomeStatement GainLossOnExtinguishmentofDebtSupplemental => _gainLossOnExtinguishmentofDebtSupplemental ??= new(_timeProvider, _securityIdentifier);
+        private GainLossOnExtinguishmentofDebtSupplementalIncomeStatement _gainLossOnExtinguishmentofDebtSupplemental;
+
+        /// <summary>
+        /// Income or expense arising from the restructuring of debt. It is a supplemental value which would be reported outside consolidated statements.
+        /// </summary>
+        /// <remarks>
+        /// Morningstar DataId: 20459
+        /// </remarks>
+        [JsonProperty("20459")]
+        public DebtRestructuringSupplementalIncomeStatement DebtRestructuringSupplemental => _debtRestructuringSupplemental ??= new(_timeProvider, _securityIdentifier);
+        private DebtRestructuringSupplementalIncomeStatement _debtRestructuringSupplemental;
+
+        /// <summary>
+        /// Income or expense arising from litigation. It is a supplemental value which would be reported outside consolidated statements.
+        /// </summary>
+        /// <remarks>
+        /// Morningstar DataId: 20460
+        /// </remarks>
+        [JsonProperty("20460")]
+        public LitigationIncomeExpenseSupplementalIncomeStatement LitigationIncomeExpenseSupplemental => _litigationIncomeExpenseSupplemental ??= new(_timeProvider, _securityIdentifier);
+        private LitigationIncomeExpenseSupplementalIncomeStatement _litigationIncomeExpenseSupplemental;
+
+        /// <summary>
+        /// Income or expense arising from mergers and acquisitions. It is a supplemental value which would be reported outside consolidated statements.
+        /// </summary>
+        /// <remarks>
+        /// Morningstar DataId: 20461
+        /// </remarks>
+        [JsonProperty("20461")]
+        public MergerAndAcquisitionIncomeExpenseSupplementalIncomeStatement MergerAndAcquisitionIncomeExpenseSupplemental => _mergerAndAcquisitionIncomeExpenseSupplemental ??= new(_timeProvider, _securityIdentifier);
+        private MergerAndAcquisitionIncomeExpenseSupplementalIncomeStatement _mergerAndAcquisitionIncomeExpenseSupplemental;
+
+        /// <summary>
         /// Total revenue as reported by the company, may be the same or not the same as Morningstar's standardized definition.
         /// </summary>
         /// <remarks>
