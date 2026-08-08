@@ -328,6 +328,15 @@ namespace QuantConnect.Data.Fundamental
         public double DilutedMarketCap => FundamentalService.Get<double>(_timeProvider.GetUtcNow(), _securityIdentifier, FundamentalProperty.CompanyProfile_DilutedMarketCap);
 
         /// <summary>
+        /// A description of the company's business, its history and its operations, in English.
+        /// </summary>
+        /// <remarks>
+        /// Morningstar DataId: 2002
+        /// </remarks>
+        [JsonProperty("2002")]
+        public string LongDescription => FundamentalService.Get<string>(_timeProvider.GetUtcNow(), _securityIdentifier, FundamentalProperty.CompanyProfile_LongDescription);
+
+        /// <summary>
         /// Creates a new instance for the given time and security
         /// </summary>
         public CompanyProfile(ITimeProvider timeProvider, SecurityIdentifier securityIdentifier)
