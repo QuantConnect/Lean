@@ -337,6 +337,16 @@ namespace QuantConnect.Data.Fundamental
         public string LongDescription => FundamentalService.Get<string>(_timeProvider.GetUtcNow(), _securityIdentifier, FundamentalProperty.CompanyProfile_LongDescription);
 
         /// <summary>
+        /// The number of shares available for public trading, that is the shares outstanding less
+        /// those held closely, by insiders or by the company itself.
+        /// </summary>
+        /// <remarks>
+        /// Morningstar DataId: 42006
+        /// </remarks>
+        [JsonProperty("42006")]
+        public double Float => FundamentalService.Get<double>(_timeProvider.GetUtcNow(), _securityIdentifier, FundamentalProperty.CompanyProfile_Float);
+
+        /// <summary>
         /// Creates a new instance for the given time and security
         /// </summary>
         public CompanyProfile(ITimeProvider timeProvider, SecurityIdentifier securityIdentifier)
