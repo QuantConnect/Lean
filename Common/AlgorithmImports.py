@@ -41,6 +41,7 @@ from QuantConnect.Python import *
 from QuantConnect.Storage import *
 from QuantConnect.Research import *
 from QuantConnect.Commands import *
+from QuantConnect.Optimizer import *
 from QuantConnect.Algorithm import *
 from QuantConnect.Statistics import *
 from QuantConnect.Parameters import *
@@ -54,6 +55,7 @@ from QuantConnect.DataSource import *
 from QuantConnect.Orders.Fees import *
 from QuantConnect.Data.Custom import *
 from QuantConnect.Data.Market import *
+from QuantConnect.Optimizer.Objectives import *
 from QuantConnect.Lean.Engine import *
 from QuantConnect.Orders.Fills import *
 from QuantConnect.Configuration import *
@@ -70,6 +72,7 @@ from QuantConnect.Securities.Future import *
 from QuantConnect.Data.Consolidators import *
 from QuantConnect.Orders.TimeInForces import *
 from QuantConnect.Algorithm.Framework import *
+from QuantConnect.Optimizer.Parameters import *
 from QuantConnect.Algorithm.Selection import *
 from QuantConnect.Securities.Positions import *
 from QuantConnect.Orders.OptionExercise import *
