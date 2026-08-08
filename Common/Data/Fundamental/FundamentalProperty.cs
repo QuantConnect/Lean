@@ -3673,6 +3673,7 @@ namespace QuantConnect.Data.Fundamental
         CompanyProfile_SharesOutstandingWithBalanceSheetEndingDate,
         CompanyProfile_ReasonofSharesChange,
         CompanyProfile_DilutedMarketCap,
+        CompanyProfile_LongDescription,
         AssetClassification_StockType,
         AssetClassification_StyleBox,
         AssetClassification_GrowthGrade,
