@@ -62,6 +62,7 @@ namespace QuantConnect.Data.Fundamental
         SecurityReference_SecuritySymbol,
         SecurityReference_ExchangeId,
         SecurityReference_CurrencyId,
+        SecurityReference_ISIN,
         SecurityReference_IPODate,
         SecurityReference_IsDepositaryReceipt,
         SecurityReference_DepositaryReceiptRatio,
