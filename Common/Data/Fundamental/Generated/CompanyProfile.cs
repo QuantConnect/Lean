@@ -317,6 +317,17 @@ namespace QuantConnect.Data.Fundamental
         public string ReasonofSharesChange => FundamentalService.Get<string>(_timeProvider.GetUtcNow(), _securityIdentifier, FundamentalProperty.CompanyProfile_ReasonofSharesChange);
 
         /// <summary>
+        /// The market capitalisation of the company on a fully diluted basis, that is including the
+        /// shares that would exist if all convertible instruments were converted and all options and
+        /// warrants exercised.
+        /// </summary>
+        /// <remarks>
+        /// Morningstar DataId: 40011
+        /// </remarks>
+        [JsonProperty("40011")]
+        public double DilutedMarketCap => FundamentalService.Get<double>(_timeProvider.GetUtcNow(), _securityIdentifier, FundamentalProperty.CompanyProfile_DilutedMarketCap);
+
+        /// <summary>
         /// Creates a new instance for the given time and security
         /// </summary>
         public CompanyProfile(ITimeProvider timeProvider, SecurityIdentifier securityIdentifier)
