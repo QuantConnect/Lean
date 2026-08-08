@@ -254,6 +254,43 @@ namespace QuantConnect.Data.Fundamental
         public DateTime ExpectedFiscalYearEnd => FundamentalService.Get<DateTime>(_timeProvider.GetUtcNow(), _securityIdentifier, FundamentalProperty.CompanyReference_ExpectedFiscalYearEnd);
 
         /// <summary>
+        /// Indicator to denote if the company is a special purpose acquisition company (SPAC).
+        /// </summary>
+        /// <remarks>
+        /// Morningstar DataId: 28
+        /// </remarks>
+        [JsonProperty("28")]
+        public bool IsSPAC => FundamentalService.Get<bool>(_timeProvider.GetUtcNow(), _securityIdentifier, FundamentalProperty.CompanyReference_IsSPAC);
+
+        /// <summary>
+        /// Indicator to denote if the company is a master limited partnership (MLP).
+        /// </summary>
+        /// <remarks>
+        /// Morningstar DataId: 29
+        /// </remarks>
+        [JsonProperty("29")]
+        public bool IsMLP => FundamentalService.Get<bool>(_timeProvider.GetUtcNow(), _securityIdentifier, FundamentalProperty.CompanyReference_IsMLP);
+
+        /// <summary>
+        /// Indicator to denote if the company is a business development company (BDC).
+        /// </summary>
+        /// <remarks>
+        /// Morningstar DataId: 30
+        /// </remarks>
+        [JsonProperty("30")]
+        public bool IsBDC => FundamentalService.Get<bool>(_timeProvider.GetUtcNow(), _securityIdentifier, FundamentalProperty.CompanyReference_IsBDC);
+
+        /// <summary>
+        /// The Legal Entity Identifier (LEI), a twenty character code identifying the company as a
+        /// party to financial transactions.
+        /// </summary>
+        /// <remarks>
+        /// Morningstar DataId: 31
+        /// </remarks>
+        [JsonProperty("31")]
+        public string LEI => FundamentalService.Get<string>(_timeProvider.GetUtcNow(), _securityIdentifier, FundamentalProperty.CompanyReference_LEI);
+
+        /// <summary>
         /// Creates a new instance for the given time and security
         /// </summary>
         public CompanyReference(ITimeProvider timeProvider, SecurityIdentifier securityIdentifier)
