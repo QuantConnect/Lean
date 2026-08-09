@@ -27,8 +27,9 @@ namespace QuantConnect.Algorithm.CSharp
     /// <summary>
     /// Demonstrates alias-driven movement of managed accounts between existing Financial Advisor groups.
     ///
-    /// Live prerequisites: ib-financial-advisors-group-filter must be empty and
-    /// ib-financial-advisors-group-management-enabled=true, which implies unified groups.
+    /// Live prerequisites: ib-financial-advisors-group-filter must be empty, and both
+    /// ib-financial-advisors-group-management-enabled=true and
+    /// ib-financial-advisors-unified-groups-enabled=true are required.
     /// The fa-alias-pattern parameter is a case-insensitive regular expression. An empty
     /// fa-target-group value requests removal of matching accounts from every group, but this
     /// sample will not remove the final member from a source group.

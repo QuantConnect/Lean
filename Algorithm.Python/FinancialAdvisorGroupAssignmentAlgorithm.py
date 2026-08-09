@@ -26,8 +26,8 @@ import re
 ### LIVE PREREQUISITES:
 ### - ib-financial-advisors-group-filter must be empty. A configured filter rejects
 ###   movement to any other destination group.
-### - ib-financial-advisors-group-management-enabled=true is required and implies
-###   ib-financial-advisors-unified-groups-enabled=true.
+### - ib-financial-advisors-group-management-enabled=true and
+###   ib-financial-advisors-unified-groups-enabled=true are both required.
 ### - fa-alias-pattern is a case-insensitive regular expression.
 ### - Setting fa-target-group to an empty string requests removal of a matched account from every group,
 ###   but this sample refuses to remove the final member of a source group.
