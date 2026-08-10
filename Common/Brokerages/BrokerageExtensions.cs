@@ -35,6 +35,11 @@ namespace QuantConnect.Brokerages
         private const string LocateBrokerTag = "5700";
 
         /// <summary>
+        /// The FIX tag number of LocateReqd, sent next to the locate broker on short sells
+        /// </summary>
+        private const string LocateRequiredTag = "114";
+
+        /// <summary>
         /// The default set of order types that are not allowed to cross zero holdings.
         /// This is used by <see cref="ValidateCrossZeroOrder"/> when no custom set is provided.
         /// </summary>
@@ -209,7 +214,9 @@ namespace QuantConnect.Brokerages
                 return false;
             }
 
-            if (string.IsNullOrEmpty(fixProperties.LocateBroker) && !fixProperties.AdditionalProperties.ContainsKey(LocateBrokerTag))
+            if (string.IsNullOrEmpty(fixProperties.LocateBroker)
+                && !fixProperties.AdditionalProperties.ContainsKey(LocateBrokerTag)
+                && !fixProperties.AdditionalProperties.ContainsKey(LocateRequiredTag))
             {
                 return false;
             }
@@ -233,6 +240,7 @@ namespace QuantConnect.Brokerages
 
             fixProperties.LocateBroker = null;
             fixProperties.AdditionalProperties.Remove(LocateBrokerTag);
+            fixProperties.AdditionalProperties.Remove(LocateRequiredTag);
             return true;
         }
     }
