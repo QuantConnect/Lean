@@ -21,9 +21,9 @@ namespace QuantConnect.Securities.Option.StrategyMatcher
     public interface IOptionStrategyMatchObjectiveFunction
     {
         /// <summary>
-        /// Evaluates the objective function for the provided match solution. Solution with the highest score will be selected
-        /// as the solution. NOTE: This part of the match has not been implemented as of 2020-11-06 as it's only evaluating the
-        /// first solution match (MatchOnce).
+        /// Evaluates the objective function for the provided match solution. The solution with the highest score will be
+        /// selected as the solution. By convention, solutions that can't be improved upon score zero, the maximum, which
+        /// allows the matcher to skip evaluating additional candidate solutions.
         /// </summary>
         decimal ComputeScore(OptionPositionCollection input, OptionStrategyMatch match, OptionPositionCollection unmatched);
     }

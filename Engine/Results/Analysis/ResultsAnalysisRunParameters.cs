@@ -56,6 +56,12 @@ namespace QuantConnect.Lean.Engine.Results.Analysis
         public SortedList<DateTime, decimal> BenchmarkEquityCurve { get; }
 
         /// <summary>
+        /// The speed metrics tracked for the running backtest.
+        /// Only available for in-run analysis; null on the final analysis.
+        /// </summary>
+        public AlgorithmSpeedTracker Speed { get; }
+
+        /// <summary>
         /// Initializes a new instance of the <see cref="ResultsAnalysisRunParameters"/> class with the specified dependencies.
         /// </summary>
         public ResultsAnalysisRunParameters(
@@ -64,7 +70,8 @@ namespace QuantConnect.Lean.Engine.Results.Analysis
             Language language,
             IReadOnlyList<string> logs,
             SortedList<DateTime, decimal> equityCurve,
-            SortedList<DateTime, decimal> benchmarkEquityCurve)
+            SortedList<DateTime, decimal> benchmarkEquityCurve,
+            AlgorithmSpeedTracker speed = null)
         {
             Result = result;
             Algorithm = algorithm;
@@ -72,6 +79,7 @@ namespace QuantConnect.Lean.Engine.Results.Analysis
             Logs = logs;
             EquityCurve = equityCurve;
             BenchmarkEquityCurve = benchmarkEquityCurve;
+            Speed = speed;
         }
     }
 }

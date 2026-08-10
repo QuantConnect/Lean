@@ -307,6 +307,12 @@ namespace QuantConnect.Lean.Engine.Results
         protected IMapFileProvider MapFileProvider { get; set; }
 
         /// <summary>
+        /// The tool tracking the engine's performance counters, used by the in-run
+        /// algorithm speed analysis. May be null when the host doesn't track performance.
+        /// </summary>
+        protected PerformanceTrackingTool PerformanceTrackingTool { get; set; }
+
+        /// <summary>
         /// Creates a new instance
         /// </summary>
         protected BaseResultsHandler()
@@ -498,6 +504,7 @@ namespace QuantConnect.Lean.Engine.Results
             _updateRunner.Start();
             State["Hostname"] = _hostName;
             MapFileProvider = parameters.MapFileProvider;
+            PerformanceTrackingTool = parameters.PerformanceTrackingTool;
 
             SerializerSettings = new()
             {
@@ -653,6 +660,38 @@ namespace QuantConnect.Lean.Engine.Results
         /// <remarks>Useful so that live trading implementation can freeze the returned value if there is no user exchange open
         /// so we ignore extended market hours updates</remarks>
         protected decimal GetPortfolioValue() => _portfolioValue.Value;
+
+        /// <summary>
+        /// Event fired when the algorithm's warm-up period finishes, right before the algorithm's
+        /// <see cref="IAlgorithm.OnWarmupFinished"/> callback is triggered.
+        /// Re-captures the starting portfolio value and dependent baselines, since the value captured
+        /// at setup time used currency conversion rates seeded at the warm-up start
+        /// </summary>
+        public virtual void OnWarmupFinished()
+        {
+            // warm-up has brought the currency conversion rates up to date, so now both holdings prices
+            // and conversion rates are current and we can capture the real starting portfolio value
+            UpdatePortfolioValues(Algorithm.UtcTime, force: true);
+            var currentPortfolioValue = GetPortfolioValue();
+            // only reassign values that actually changed, so unchanged ones keep their original decimal
+            // scale and their statistics string representation
+            if (CumulativeMaxPortfolioValue != currentPortfolioValue)
+            {
+                CumulativeMaxPortfolioValue = currentPortfolioValue;
+            }
+            if (DailyPortfolioValue != currentPortfolioValue)
+            {
+                DailyPortfolioValue = currentPortfolioValue;
+            }
+            if (StartingPortfolioValue != currentPortfolioValue)
+            {
+                StartingPortfolioValue = currentPortfolioValue;
+                // discard any equity bar built during warm-up so the first sample opens at the re-captured value
+                CurrentAlgorithmEquity = null;
+                Log.Trace($"{GetType().Name}.OnWarmupFinished(): " +
+                    $"Re-captured starting portfolio value after warm-up: {StartingPortfolioValue.ToStringInvariant()}");
+            }
+        }
 
         /// <summary>
         /// Gets the current benchmark value
