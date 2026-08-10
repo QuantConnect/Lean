@@ -1,4 +1,4 @@
-name: Sync upstream
+name: Sync Upstream to Sync Branch
 
 on:
   schedule:
@@ -7,7 +7,10 @@ on:
 
 permissions:
   contents: write
-  pull-requests: write
+
+concurrency:
+  group: sync-upstream-to-sync-branch
+  cancel-in-progress: false
 
 env:
   UPSTREAM_REPO: https://github.com/QuantConnect/Lean.git
@@ -19,107 +22,85 @@ jobs:
   sync:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
+      - name: Checkout repository
         uses: actions/checkout@v4
         with:
           ref: ${{ env.DOWNSTREAM_BRANCH }}
-          token: ${{ secrets.PAT_TOKEN }}
           fetch-depth: 0
-          persist-credentials: true
+          token: ${{ secrets.PAT_TOKEN || github.token }}
 
-      - name: Configure Git
+      - name: Configure Git identity
         run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git config user.name "lean-sync-bot"
+          git config user.email "lean-sync-bot@users.noreply.github.com"
 
-      - name: Add upstream remote and fetch
-        run: |
-          set -euo pipefail
-          git remote add upstream "$UPSTREAM_REPO" || true
-          git fetch upstream --prune --tags
-          git fetch origin --prune
-
-      - name: Check for new upstream commits
-        id: check_upstream
+      - name: Sync upstream into sync branch
+        env:
+          HAS_PAT_TOKEN: ${{ secrets.PAT_TOKEN != '' }}
         run: |
           set -euo pipefail
 
-          # Count commits upstream is ahead of the downstream branch
-          AHEAD=$(git rev-list --left-right --count origin/${{ env.DOWNSTREAM_BRANCH }}...upstream/${{ env.UPSTREAM_BRANCH }} | awk '{print $2}')
-          echo "ahead=$AHEAD" >> "$GITHUB_OUTPUT"
-          echo "Upstream is $AHEAD commit(s) ahead of ${{ env.DOWNSTREAM_BRANCH }}"
+          if git remote get-url upstream > /dev/null 2>&1; then
+            git remote set-url upstream "$UPSTREAM_REPO"
+          else
+            git remote add upstream "$UPSTREAM_REPO"
+          fi
 
-          if [ "$AHEAD" -eq 0 ]; then
-            echo "No new upstream commits. Exiting."
+          git fetch upstream "$UPSTREAM_BRANCH"
+          git fetch origin "$DOWNSTREAM_BRANCH"
+
+          if git ls-remote --exit-code --heads origin "$SYNC_BRANCH" > /dev/null 2>&1; then
+            git fetch origin "$SYNC_BRANCH"
+            git checkout -B "$SYNC_BRANCH" "origin/$SYNC_BRANCH"
+          else
+            git checkout -B "$SYNC_BRANCH" "origin/$DOWNSTREAM_BRANCH"
+          fi
+
+          BEFORE_SHA=$(git rev-parse HEAD)
+
+          set +e
+          git merge --no-edit "upstream/$UPSTREAM_BRANCH"
+          MERGE_EXIT=$?
+          set -e
+
+          if [ "$MERGE_EXIT" -ne 0 ]; then
+            CONFLICT_FILES=$(git diff --name-only --diff-filter=U || true)
+            {
+              echo "## Upstream Sync Conflict"
+              echo "Automatic sync could not merge upstream/$UPSTREAM_BRANCH into $SYNC_BRANCH."
+              echo
+              echo "Conflicting files:"
+              echo "$CONFLICT_FILES" | sed 's/^/- /'
+              echo
+              echo "Resolve the conflicts on $SYNC_BRANCH and re-run this workflow."
+            } >> "$GITHUB_STEP_SUMMARY"
+            exit 1
+          fi
+
+          AFTER_SHA=$(git rev-parse HEAD)
+
+          if [ "$BEFORE_SHA" = "$AFTER_SHA" ]; then
+            echo "No new upstream commits to sync." >> "$GITHUB_STEP_SUMMARY"
             exit 0
           fi
 
-      - name: Create or update local upstream branch
-        if: steps.check_upstream.outputs.ahead != '0'
-        run: |
-          set -euo pipefail
-          git checkout -B upstream-${{ env.UPSTREAM_BRANCH }} upstream/${{ env.UPSTREAM_BRANCH }}
-          echo "Local upstream-${{ env.UPSTREAM_BRANCH }} branch updated to upstream/${{ env.UPSTREAM_BRANCH }}"
-
-      - name: Create sync branch and merge upstream changes
-        if: steps.check_upstream.outputs.ahead != '0'
-        run: |
-          set -euo pipefail
-
-          # Create the sync branch from the downstream branch
-          git checkout -B ${{ env.SYNC_BRANCH }} origin/${{ env.DOWNSTREAM_BRANCH }}
-
-          # Merge upstream changes into the sync branch
-          echo "Merging upstream/${{ env.UPSTREAM_BRANCH }} into ${{ env.SYNC_BRANCH }}"
-          git merge upstream/${{ env.UPSTREAM_BRANCH }} --no-edit
-
-          # Push the sync branch
-          git push --force-with-lease origin ${{ env.SYNC_BRANCH }}
-
-      - name: Check for existing PR
-        id: check_pr
-        if: steps.check_upstream.outputs.ahead != '0'
-        run: |
-          set -euo pipefail
-
-          PR_JSON=$(gh pr list --head ${{ env.SYNC_BRANCH }} --base ${{ env.DOWNSTREAM_BRANCH }} --state open --json number --jq '.[0] // empty')
-
-          if [ -n "$PR_JSON" ]; then
-            PR_NUMBER=$(echo "$PR_JSON" | jq -r '.number')
-            echo "pr_exists=true" >> "$GITHUB_OUTPUT"
-            echo "pr_number=$PR_NUMBER" >> "$GITHUB_OUTPUT"
-            echo "Existing PR found: #$PR_NUMBER"
-          else
-            echo "pr_exists=false" >> "$GITHUB_OUTPUT"
-            echo "No existing PR found"
+          WORKFLOW_CHANGES=$(git diff --name-only "$BEFORE_SHA" "$AFTER_SHA" -- '.github/workflows/**' || true)
+          if [ -n "$WORKFLOW_CHANGES" ] && [ "$HAS_PAT_TOKEN" != "true" ]; then
+            {
+              echo "## Upstream Sync Needs PAT_TOKEN"
+              echo "The upstream merge changed workflow files, which the default GITHUB_TOKEN cannot push."
+              echo
+              echo "Changed workflow files:"
+              echo "$WORKFLOW_CHANGES" | sed 's/^/- /'
+            } >> "$GITHUB_STEP_SUMMARY"
+            exit 1
           fi
-        env:
-          GH_TOKEN: ${{ github.token }}
 
-      - name: Create PR from sync branch to downstream branch
-        if: steps.check_upstream.outputs.ahead != '0' && steps.check_pr.outputs.pr_exists == 'false'
-        run: |
-          set -euo pipefail
-
-          gh api --method POST "repos/${{ github.repository }}/pulls" \
-            -f base="${{ env.DOWNSTREAM_BRANCH }}" \
-            -f head="${{ env.SYNC_BRANCH }}" \
-            -f title="chore: sync from upstream QuantConnect/Lean" \
-            -f body="Automated sync from upstream QuantConnect/Lean. This PR updates \`${{ env.DOWNSTREAM_BRANCH }}\` with the latest changes from upstream's \`${{ env.UPSTREAM_BRANCH }}\` branch." \
-            --jq '.html_url'
-        env:
-          GH_TOKEN: ${{ github.token }}
-
-      - name: Merge existing PR
-        if: steps.check_upstream.outputs.ahead != '0' && steps.check_pr.outputs.pr_exists == 'true'
-        run: |
-          set -euo pipefail
-
-          PR_NUMBER=${{ steps.check_pr.outputs.pr_number }}
-          echo "Merging PR #$PR_NUMBER"
-
-          gh api --method PUT "repos/${{ github.repository }}/pulls/$PR_NUMBER/merge" \
-            -f merge_method=squash \
-            --jq '.message'
-        env:
-          GH_TOKEN: ${{ github.token }}
+          git push -u origin "$SYNC_BRANCH"
+          {
+            echo "## Upstream Sync Completed"
+            echo "- Previous sync SHA: $BEFORE_SHA"
+            echo "- New sync SHA: $AFTER_SHA"
+            echo "- Source: upstream/$UPSTREAM_BRANCH"
+            echo "- Destination: $SYNC_BRANCH"
+          } >> "$GITHUB_STEP_SUMMARY"
