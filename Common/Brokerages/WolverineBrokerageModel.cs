@@ -76,6 +76,9 @@ namespace QuantConnect.Brokerages
                     Messages.DefaultBrokerageModel.UnsupportedOrderType(this, order, SupportedOrderTypes));
                 return false;
             }
+
+            BrokerageExtensions.TryRemoveLocateFromNonShortOrder(order.Properties, order.Direction, security.Holdings.Quantity);
+
             return base.CanSubmitOrder(security, order, out message);
         }
 

@@ -21,13 +21,8 @@ namespace QuantConnect.Orders
     /// <summary>
     /// The terminal link order properties
     /// </summary>
-    public class TerminalLinkOrderProperties : OrderProperties
+    public class TerminalLinkOrderProperties : FixOrderProperties
     {
-        /// <summary>
-        /// The EMSX Instructions is the free form instructions that may be sent to the broker
-        /// </summary>
-        public string Notes { get; set; }
-
         /// <summary>
         /// The EMSX Handling Instruction is the instructions for handling the order or route.The values can be
         /// preconfigured or a value customized by the broker.
@@ -73,14 +68,6 @@ namespace QuantConnect.Orders
         /// The EMSX broker code
         /// </summary>
         public string Broker { get; set; }
-
-        /// <summary>
-        /// The EMSX locate broker code identifying the counterparty the shares are being borrowed
-        /// from for a short sale (EMSX_LOCATE_BROKER, e.g. "BMTB"). Maps to the LocBrkr field on
-        /// the EMSX trading ticket. Setting this (or <see cref="LocateId"/>) on a short equity sale
-        /// causes the brokerage to emit EMSX_LOCATE_REQ = "Y" alongside.
-        /// </summary>
-        public string LocateBroker { get; set; }
 
         /// <summary>
         /// The EMSX locate confirmation/ticket id returned by the lending broker (EMSX_LOCATE_ID).

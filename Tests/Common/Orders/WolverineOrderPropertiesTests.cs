@@ -11,24 +11,26 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- *
 */
 
-namespace QuantConnect.Orders
-{
-    /// <summary>
-    /// Wolverine order properties
-    /// </summary>
-    public class WolverineOrderProperties : FixOrderProperties
-    {
-        /// <summary>
-        /// The exchange post fix to apply if any
-        /// </summary>
-        public string ExchangePostFix { get; set; }
+using NUnit.Framework;
+using QuantConnect.Orders;
 
-        /// <summary>
-        /// Can optionally specify the position side in the order direction (buy-to-open, sell-to-close, etc.) instead of the default handling
-        /// </summary>
-        public OrderPosition? PositionSide { get; set; }
+namespace QuantConnect.Tests.Common.Orders
+{
+    [TestFixture]
+    public class WolverineOrderPropertiesTests
+    {
+        // LocateBroker lives on the FixOrderProperties base; Wolverine exposes it through inheritance.
+        [Test]
+        public void InheritsLocateBrokerFromFixOrderProperties()
+        {
+            var properties = new WolverineOrderProperties();
+            Assert.IsInstanceOf<FixOrderProperties>(properties);
+            Assert.IsNull(properties.LocateBroker);
+
+            properties.LocateBroker = "MLCO";
+            Assert.AreEqual("MLCO", properties.LocateBroker);
+        }
     }
 }

@@ -16,6 +16,7 @@
 
 using System;
 using System.Linq;
+using QuantConnect.Interfaces;
 using QuantConnect.Orders;
 using QuantConnect.Securities;
 using System.Collections.Generic;
@@ -27,6 +28,12 @@ namespace QuantConnect.Brokerages
     /// </summary>
     public static class BrokerageExtensions
     {
+        /// <summary>
+        /// The FIX custom tag number carrying the locate broker when it is sent through
+        /// <see cref="FixOrderProperties.AdditionalProperties"/> instead of <see cref="FixOrderProperties.LocateBroker"/>
+        /// </summary>
+        private const string LocateBrokerTag = "5700";
+
         /// <summary>
         /// The default set of order types that are not allowed to cross zero holdings.
         /// This is used by <see cref="ValidateCrossZeroOrder"/> when no custom set is provided.
@@ -183,6 +190,49 @@ namespace QuantConnect.Brokerages
                 OrderDirection.Sell => holdingsQuantity <= 0 ? OrderPosition.SellToOpen : OrderPosition.SellToClose,
                 _ => throw new ArgumentOutOfRangeException(nameof(orderDirection), orderDirection, "Invalid order direction")
             };
+        }
+
+        /// <summary>
+        /// Removes the locate broker from the order properties when the order does not open a short
+        /// position. A locate belongs only on a short sell, so brokers reject it on any other order.
+        /// A position side set in the order properties overrides the holdings-based mapping.
+        /// </summary>
+        /// <param name="properties">The order properties</param>
+        /// <param name="orderDirection">The order direction</param>
+        /// <param name="holdingsQuantity">The current holdings quantity</param>
+        /// <returns>True when a locate was removed from the order properties</returns>
+        public static bool TryRemoveLocateFromNonShortOrder(IOrderProperties properties, OrderDirection orderDirection, decimal holdingsQuantity)
+        {
+            var fixProperties = properties as FixOrderProperties;
+            if (fixProperties == null)
+            {
+                return false;
+            }
+
+            if (string.IsNullOrEmpty(fixProperties.LocateBroker) && !fixProperties.AdditionalProperties.ContainsKey(LocateBrokerTag))
+            {
+                return false;
+            }
+
+            var positionSide = default(OrderPosition?);
+            switch (fixProperties)
+            {
+                case TerminalLinkOrderProperties terminalLink:
+                    positionSide = terminalLink.PositionSide;
+                    break;
+                case WolverineOrderProperties wolverine:
+                    positionSide = wolverine.PositionSide;
+                    break;
+            }
+
+            if ((positionSide ?? GetOrderPosition(orderDirection, holdingsQuantity)) == OrderPosition.SellToOpen)
+            {
+                return false;
+            }
+
+            fixProperties.LocateBroker = null;
+            fixProperties.AdditionalProperties.Remove(LocateBrokerTag);
+            return true;
         }
     }
 }

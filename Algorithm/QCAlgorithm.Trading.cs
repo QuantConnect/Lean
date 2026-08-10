@@ -14,6 +14,7 @@
 */
 
 using QuantConnect.Algorithm.Framework.Portfolio;
+using QuantConnect.Brokerages;
 using QuantConnect.Interfaces;
 using QuantConnect.Orders;
 using QuantConnect.Orders.TimeInForces;
@@ -1083,6 +1084,10 @@ namespace QuantConnect.Algorithm
                     $"The security with symbol '{request.Symbol}' is marked as non-tradable."
                 );
             }
+
+            // A locate broker belongs only on a short sell; drop it from any other order so brokers do not reject it
+            BrokerageExtensions.TryRemoveLocateFromNonShortOrder(request.OrderProperties,
+                request.Quantity < 0 ? OrderDirection.Sell : OrderDirection.Buy, security.Holdings.Quantity);
 
             var price = security.Price;
 
