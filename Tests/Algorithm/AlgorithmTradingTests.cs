@@ -1930,18 +1930,23 @@ namespace QuantConnect.Tests.Algorithm
             // Act
             algo.MarketOrder(Symbols.MSFT, quantity, orderProperties: properties);
 
-            // Assert
+            // Assert: the submitted request carries the locate only when the order opens a short
+            var submitted = (FixOrderProperties)((SubmitOrderRequest)_fakeOrderProcessor.ProcessedOrdersRequests[1]).OrderProperties;
             if (locateKept)
             {
-                Assert.AreEqual(locateBrokerBefore, properties.LocateBroker);
-                CollectionAssert.AreEquivalent(additionalPropertiesBefore, properties.AdditionalProperties);
+                Assert.AreEqual(locateBrokerBefore, submitted.LocateBroker);
+                CollectionAssert.AreEquivalent(additionalPropertiesBefore, submitted.AdditionalProperties);
             }
             else
             {
-                Assert.IsNull(properties.LocateBroker);
-                Assert.IsFalse(properties.AdditionalProperties.ContainsKey("5700"));
-                Assert.IsFalse(properties.AdditionalProperties.ContainsKey("114"));
+                Assert.IsNull(submitted.LocateBroker);
+                Assert.IsFalse(submitted.AdditionalProperties.ContainsKey("5700"));
+                Assert.IsFalse(submitted.AdditionalProperties.ContainsKey("114"));
             }
+
+            // The algorithm's own object is never touched
+            Assert.AreEqual(locateBrokerBefore, properties.LocateBroker);
+            CollectionAssert.AreEquivalent(additionalPropertiesBefore, properties.AdditionalProperties);
         }
 
         private static BloombergFixOrderProperties CreateLocateTagProperties()
@@ -1950,6 +1955,33 @@ namespace QuantConnect.Tests.Algorithm
             properties.AdditionalProperties["114"] = "N";
             properties.AdditionalProperties["5700"] = "MLCO";
             return properties;
+        }
+
+        // Reusing one properties object across orders must not lose the locate for a later short:
+        // the cleanup may only touch the order it checked, never the algorithm's own object.
+        [Test]
+        public void MarketOrderLocateCleanupDoesNotMutateReusedProperties()
+        {
+            // Arrange
+            Security msft;
+            var algo = GetAlgorithm(out msft, 2m, 0);
+            Update(msft, 100m);
+            var properties = new BloombergFixOrderProperties { LocateBroker = "MLCO" };
+
+            // Act: close the long first, then open the short, both with the same properties object
+            algo.Portfolio[Symbols.MSFT].SetHoldings(100m, 10m);
+            algo.MarketOrder(Symbols.MSFT, -10, orderProperties: properties);
+            algo.Portfolio[Symbols.MSFT].SetHoldings(100m, 0m);
+            algo.MarketOrder(Symbols.MSFT, -10, orderProperties: properties);
+
+            // Assert: the algorithm's object still carries the locate for the short leg
+            Assert.AreEqual("MLCO", properties.LocateBroker);
+
+            // The close leg went out without the locate, the short leg with it
+            var closeRequest = (SubmitOrderRequest)_fakeOrderProcessor.ProcessedOrdersRequests[1];
+            var shortRequest = (SubmitOrderRequest)_fakeOrderProcessor.ProcessedOrdersRequests[2];
+            Assert.IsNull(((FixOrderProperties)closeRequest.OrderProperties).LocateBroker);
+            Assert.AreEqual("MLCO", ((FixOrderProperties)shortRequest.OrderProperties).LocateBroker);
         }
 
         private static object[] LiquidateWorksAsExpectedTestCases =
