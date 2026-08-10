@@ -1913,7 +1913,7 @@ namespace QuantConnect.Tests.Algorithm
                 .SetName("SellToCloseDropsLocateTags");
             yield return new TestCaseData(new WolverineOrderProperties { LocateBroker = "MLCO", PositionSide = OrderPosition.SellToOpen }, 20m, -10m, true)
                 .SetName("PositionSideShortKeepsLocateOverHoldings");
-            yield return new TestCaseData(new TerminalLinkOrderProperties { LocateBroker = "MLCO", PositionSide = OrderPosition.SellToClose }, 0m, -10m, false)
+            yield return new TestCaseData(new WolverineOrderProperties { LocateBroker = "MLCO", PositionSide = OrderPosition.SellToClose }, 0m, -10m, false)
                 .SetName("PositionSideCloseDropsLocateOverHoldings");
         }
 

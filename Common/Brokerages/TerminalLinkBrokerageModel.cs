@@ -71,6 +71,22 @@ namespace QuantConnect.Brokerages
                 return false;
             }
 
+            // The locate belongs only on a short (SHRT) order, so it goes together with the locate broker
+            if (order.Properties is TerminalLinkOrderProperties properties)
+            {
+                if (BrokerageExtensions.TryRemoveLocateFromNonShortOrder(properties, order.Quantity, security.Holdings.Quantity))
+                {
+                    properties.LocateId = null;
+                }
+                else if (!properties.PositionSide.HasValue && !properties.AutomaticPositionSides)
+                {
+                    // Holdings map to the SHRT side only when AutomaticPositionSides is on;
+                    // without it the plain direction is sent, never a short
+                    properties.LocateBroker = null;
+                    properties.LocateId = null;
+                }
+            }
+
             return base.CanSubmitOrder(security, order, out message);
         }
 
