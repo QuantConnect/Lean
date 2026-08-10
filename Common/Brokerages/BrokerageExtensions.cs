@@ -198,10 +198,10 @@ namespace QuantConnect.Brokerages
         /// A position side set in the order properties overrides the holdings-based mapping.
         /// </summary>
         /// <param name="properties">The order properties</param>
-        /// <param name="orderDirection">The order direction</param>
+        /// <param name="quantity">The order quantity; the sign gives the order direction</param>
         /// <param name="holdingsQuantity">The current holdings quantity</param>
         /// <returns>True when a locate was removed from the order properties</returns>
-        public static bool TryRemoveLocateFromNonShortOrder(IOrderProperties properties, OrderDirection orderDirection, decimal holdingsQuantity)
+        public static bool TryRemoveLocateFromNonShortOrder(IOrderProperties properties, decimal quantity, decimal holdingsQuantity)
         {
             var fixProperties = properties as FixOrderProperties;
             if (fixProperties == null)
@@ -225,6 +225,7 @@ namespace QuantConnect.Brokerages
                     break;
             }
 
+            var orderDirection = quantity < 0 ? OrderDirection.Sell : OrderDirection.Buy;
             if ((positionSide ?? GetOrderPosition(orderDirection, holdingsQuantity)) == OrderPosition.SellToOpen)
             {
                 return false;

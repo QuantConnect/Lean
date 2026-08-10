@@ -71,7 +71,7 @@ namespace QuantConnect.Brokerages
                 return false;
             }
 
-            BrokerageExtensions.TryRemoveLocateFromNonShortOrder(order.Properties, order.Direction, security.Holdings.Quantity);
+            BrokerageExtensions.TryRemoveLocateFromNonShortOrder(order.Properties, order.Quantity, security.Holdings.Quantity);
 
             return base.CanSubmitOrder(security, order, out message);
         }
