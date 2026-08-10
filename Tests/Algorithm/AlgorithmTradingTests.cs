@@ -1892,6 +1892,66 @@ namespace QuantConnect.Tests.Algorithm
             return hashSufficientBuyingPower.IsSufficient;
         }
 
+        // A locate broker belongs only on a short sell. Each case: the order properties carrying
+        // the locate, the holdings before the order, the order quantity, and whether the locate
+        // must survive the pre order checks.
+        private static IEnumerable<TestCaseData> LocateCleanupCases()
+        {
+            yield return new TestCaseData(new BloombergFixOrderProperties { LocateBroker = "MLCO" }, 0m, -10m, true)
+                .SetName("ShortSellKeepsLocateBroker");
+            yield return new TestCaseData(new BloombergFixOrderProperties { LocateBroker = "MLCO" }, 0m, 10m, false)
+                .SetName("BuyToOpenDropsLocateBroker");
+            yield return new TestCaseData(new BloombergFixOrderProperties { LocateBroker = "MLCO" }, 20m, -10m, false)
+                .SetName("SellToCloseDropsLocateBroker");
+            yield return new TestCaseData(new BloombergFixOrderProperties { LocateBroker = "MLCO" }, -10m, 10m, false)
+                .SetName("BuyToCloseDropsLocateBroker");
+            yield return new TestCaseData(CreateLocateTagProperties(), 0m, -10m, true)
+                .SetName("ShortSellKeepsLocateTags");
+            yield return new TestCaseData(CreateLocateTagProperties(), 20m, -10m, false)
+                .SetName("SellToCloseDropsLocateTags");
+            yield return new TestCaseData(new WolverineOrderProperties { LocateBroker = "MLCO", PositionSide = OrderPosition.SellToOpen }, 20m, -10m, true)
+                .SetName("PositionSideShortKeepsLocateOverHoldings");
+            yield return new TestCaseData(new TerminalLinkOrderProperties { LocateBroker = "MLCO", PositionSide = OrderPosition.SellToClose }, 0m, -10m, false)
+                .SetName("PositionSideCloseDropsLocateOverHoldings");
+        }
+
+        [TestCaseSource(nameof(LocateCleanupCases))]
+        public void MarketOrderKeepsLocateOnlyOnShortSells(FixOrderProperties properties, decimal holdings, decimal quantity, bool locateKept)
+        {
+            // Arrange
+            Security msft;
+            var algo = GetAlgorithm(out msft, 2m, 0);
+            Update(msft, 100m);
+            algo.Portfolio[Symbols.MSFT].SetHoldings(100m, holdings);
+
+            var locateBrokerBefore = properties.LocateBroker;
+            var additionalPropertiesBefore = new Dictionary<string, string>(properties.AdditionalProperties);
+
+            // Act
+            algo.MarketOrder(Symbols.MSFT, quantity, orderProperties: properties);
+
+            // Assert
+            if (locateKept)
+            {
+                Assert.AreEqual(locateBrokerBefore, properties.LocateBroker);
+                CollectionAssert.AreEquivalent(additionalPropertiesBefore, properties.AdditionalProperties);
+            }
+            else
+            {
+                Assert.IsNull(properties.LocateBroker);
+                Assert.IsFalse(properties.AdditionalProperties.ContainsKey("5700"));
+                Assert.IsFalse(properties.AdditionalProperties.ContainsKey("114"));
+            }
+        }
+
+        private static BloombergFixOrderProperties CreateLocateTagProperties()
+        {
+            var properties = new BloombergFixOrderProperties();
+            properties.AdditionalProperties["114"] = "N";
+            properties.AdditionalProperties["5700"] = "MLCO";
+            return properties;
+        }
+
         private static object[] LiquidateWorksAsExpectedTestCases =
         {
             new object[] { Language.CSharp, true, true, TimeInForce.Day },
