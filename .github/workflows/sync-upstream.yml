@@ -23,6 +23,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           ref: ${{ env.DOWNSTREAM_BRANCH }}
+          token: ${{ secrets.PAT_TOKEN }}
           fetch-depth: 0
           persist-credentials: true
 
