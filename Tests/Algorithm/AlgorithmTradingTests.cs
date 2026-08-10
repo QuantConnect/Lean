@@ -1905,6 +1905,8 @@ namespace QuantConnect.Tests.Algorithm
                 .SetName("SellToCloseDropsLocateBroker");
             yield return new TestCaseData(new BloombergFixOrderProperties { LocateBroker = "MLCO" }, -10m, 10m, false)
                 .SetName("BuyToCloseDropsLocateBroker");
+            yield return new TestCaseData(new BloombergFixOrderProperties { LocateBroker = "MLCO" }, 100m, -300m, true)
+                .SetName("CrossZeroSellKeepsLocateBroker");
             yield return new TestCaseData(CreateLocateTagProperties(), 0m, -10m, true)
                 .SetName("ShortSellKeepsLocateTags");
             yield return new TestCaseData(CreateLocateTagProperties(), 20m, -10m, false)

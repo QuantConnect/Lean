@@ -214,9 +214,10 @@ namespace QuantConnect.Brokerages
                 return false;
             }
 
-            if (string.IsNullOrEmpty(fixProperties.LocateBroker)
-                && !fixProperties.AdditionalProperties.ContainsKey(LocateBrokerTag)
-                && !fixProperties.AdditionalProperties.ContainsKey(LocateRequiredTag))
+            var additionalProperties = fixProperties.AdditionalProperties;
+            var hasLocateTags = additionalProperties != null
+                && (additionalProperties.ContainsKey(LocateBrokerTag) || additionalProperties.ContainsKey(LocateRequiredTag));
+            if (string.IsNullOrEmpty(fixProperties.LocateBroker) && !hasLocateTags)
             {
                 return false;
             }
@@ -232,15 +233,18 @@ namespace QuantConnect.Brokerages
                     break;
             }
 
-            var orderDirection = quantity < 0 ? OrderDirection.Sell : OrderDirection.Buy;
-            if ((positionSide ?? GetOrderPosition(orderDirection, holdingsQuantity)) == OrderPosition.SellToOpen)
+            // A sell that ends below zero opens a short, cross-zero sells included
+            var opensShort = positionSide.HasValue
+                ? positionSide.Value == OrderPosition.SellToOpen
+                : quantity < 0 && holdingsQuantity + quantity < 0;
+            if (opensShort)
             {
                 return false;
             }
 
             fixProperties.LocateBroker = null;
-            fixProperties.AdditionalProperties.Remove(LocateBrokerTag);
-            fixProperties.AdditionalProperties.Remove(LocateRequiredTag);
+            additionalProperties?.Remove(LocateBrokerTag);
+            additionalProperties?.Remove(LocateRequiredTag);
             return true;
         }
     }
