@@ -203,6 +203,30 @@ namespace QuantConnect
                 return $@"Trying to perform a summation, subtraction, multiplication or division between {
                     types} objects throws a TypeError exception. To prevent the exception, ensure that both values share the same type.";
             }
+
+            /// <summary>
+            /// Hint appended when the invalid operands are a datetime.datetime and a datetime.date
+            /// </summary>
+            public static string DatetimeDateOperationHint =
+                " To operate between them, use the date part of the datetime value, e.g.: (expiry.date() - today).days or self.time.date().";
+        }
+
+        /// <summary>
+        /// Provides user-facing messages for the <see cref="Exceptions.DatetimeDateComparisonPythonExceptionInterpreter"/> class and its consumers or related classes
+        /// </summary>
+        public static class DatetimeDateComparisonPythonExceptionInterpreter
+        {
+            /// <summary>
+            /// Expected substring of the TypeError raised when comparing a datetime.datetime with a datetime.date
+            /// </summary>
+            public static string CantCompareExpectedSubstring = "can't compare datetime.datetime to datetime.date";
+
+            /// <summary>
+            /// User-facing message for datetime.datetime vs datetime.date comparisons
+            /// </summary>
+            public static string InvalidDatetimeDateComparison =
+                "Trying to compare 'datetime.datetime' and 'datetime.date' objects throws a TypeError exception. " +
+                "To prevent the exception, compare using the date part of the datetime value, e.g.: self.time.date() <= some_date.";
         }
     }
 }

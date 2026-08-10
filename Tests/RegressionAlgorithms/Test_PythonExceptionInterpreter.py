@@ -32,6 +32,15 @@ class Test_PythonExceptionInterpreter(QCAlgorithm):
     def unsupported_operand(self):
         x = None + "Pepe Grillo"
 
+    def unsupported_operand_datetime_date(self):
+        x = datetime(2020, 1, 2) - date(2020, 1, 1)
+
+    def unsupported_operand_date_datetime(self):
+        x = date(2020, 1, 1) - datetime(2020, 1, 2)
+
+    def datetime_date_comparison(self):
+        x = datetime(2020, 1, 2) < date(2020, 1, 1)
+
     def module_not_found(self):
         from MissingClrNamespace.Distributions import Normal
 

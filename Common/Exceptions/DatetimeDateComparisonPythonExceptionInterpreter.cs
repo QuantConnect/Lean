@@ -20,9 +20,9 @@ using QuantConnect.Util;
 namespace QuantConnect.Exceptions
 {
     /// <summary>
-    /// Interprets <see cref="UnsupportedOperandPythonExceptionInterpreter"/> instances
+    /// Interprets TypeError exceptions raised when comparing datetime.datetime and datetime.date objects
     /// </summary>
-    public class UnsupportedOperandPythonExceptionInterpreter : PythonExceptionInterpreter
+    public class DatetimeDateComparisonPythonExceptionInterpreter : PythonExceptionInterpreter
     {
         /// <summary>
         /// Determines the order that an instance of this class should be called
@@ -37,7 +37,7 @@ namespace QuantConnect.Exceptions
         public override bool CanInterpret(Exception exception)
         {
             return base.CanInterpret(exception) &&
-                exception.Message.Contains(Messages.UnsupportedOperandPythonExceptionInterpreter.UnsupportedOperandTypeExpectedSubstring);
+                exception.Message.Contains(Messages.DatetimeDateComparisonPythonExceptionInterpreter.CantCompareExpectedSubstring);
         }
 
         /// <summary>
@@ -50,12 +50,7 @@ namespace QuantConnect.Exceptions
         {
             var pe = (PythonException)exception;
 
-            var types = pe.Message.Split(':')[1].Trim();
-            var message = Messages.UnsupportedOperandPythonExceptionInterpreter.InvalidObjectTypesForOperation(types);
-            if (types.Contains("'datetime.datetime'") && types.Contains("'datetime.date'"))
-            {
-                message += Messages.UnsupportedOperandPythonExceptionInterpreter.DatetimeDateOperationHint;
-            }
+            var message = Messages.DatetimeDateComparisonPythonExceptionInterpreter.InvalidDatetimeDateComparison;
             message += PythonUtil.PythonExceptionStackParser(pe.StackTrace);
 
             return new Exception(message, pe);
