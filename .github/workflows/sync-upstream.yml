@@ -1,4 +1,4 @@
-name: Sync Upstream to Sync Branch
+name: Sync Upstream to Master
 
 on:
   schedule:
@@ -9,14 +9,13 @@ permissions:
   contents: write
 
 concurrency:
-  group: sync-upstream-to-sync-branch
+  group: sync-upstream-to-master
   cancel-in-progress: false
 
 env:
   UPSTREAM_REPO: https://github.com/QuantConnect/Lean.git
   UPSTREAM_BRANCH: master
-  DOWNSTREAM_BRANCH: my-master
-  SYNC_BRANCH: sync/upstream-master
+  TARGET_BRANCH: master
 
 jobs:
   sync:
@@ -25,7 +24,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
-          ref: ${{ env.DOWNSTREAM_BRANCH }}
+          ref: ${{ env.TARGET_BRANCH }}
           fetch-depth: 0
           token: ${{ secrets.PAT_TOKEN || github.token }}
 
@@ -34,7 +33,7 @@ jobs:
           git config user.name "lean-sync-bot"
           git config user.email "lean-sync-bot@users.noreply.github.com"
 
-      - name: Sync upstream into sync branch
+      - name: Sync upstream into master
         env:
           HAS_PAT_TOKEN: ${{ secrets.PAT_TOKEN != '' }}
         run: |
@@ -47,14 +46,8 @@ jobs:
           fi
 
           git fetch upstream "$UPSTREAM_BRANCH"
-          git fetch origin "$DOWNSTREAM_BRANCH"
-
-          if git ls-remote --exit-code --heads origin "$SYNC_BRANCH" > /dev/null 2>&1; then
-            git fetch origin "$SYNC_BRANCH"
-            git checkout -B "$SYNC_BRANCH" "origin/$SYNC_BRANCH"
-          else
-            git checkout -B "$SYNC_BRANCH" "origin/$DOWNSTREAM_BRANCH"
-          fi
+          git fetch origin "$TARGET_BRANCH"
+          git checkout -B "$TARGET_BRANCH" "origin/$TARGET_BRANCH"
 
           BEFORE_SHA=$(git rev-parse HEAD)
 
@@ -67,12 +60,12 @@ jobs:
             CONFLICT_FILES=$(git diff --name-only --diff-filter=U || true)
             {
               echo "## Upstream Sync Conflict"
-              echo "Automatic sync could not merge upstream/$UPSTREAM_BRANCH into $SYNC_BRANCH."
+              echo "Automatic sync could not merge upstream/$UPSTREAM_BRANCH into $TARGET_BRANCH."
               echo
               echo "Conflicting files:"
               echo "$CONFLICT_FILES" | sed 's/^/- /'
               echo
-              echo "Resolve the conflicts on $SYNC_BRANCH and re-run this workflow."
+              echo "Resolve the conflicts on $TARGET_BRANCH and re-run this workflow."
             } >> "$GITHUB_STEP_SUMMARY"
             exit 1
           fi
@@ -96,11 +89,11 @@ jobs:
             exit 1
           fi
 
-          git push -u origin "$SYNC_BRANCH"
+          git push origin "$TARGET_BRANCH"
           {
             echo "## Upstream Sync Completed"
-            echo "- Previous sync SHA: $BEFORE_SHA"
-            echo "- New sync SHA: $AFTER_SHA"
+            echo "- Previous master SHA: $BEFORE_SHA"
+            echo "- New master SHA: $AFTER_SHA"
             echo "- Source: upstream/$UPSTREAM_BRANCH"
-            echo "- Destination: $SYNC_BRANCH"
+            echo "- Destination: origin/$TARGET_BRANCH"
           } >> "$GITHUB_STEP_SUMMARY"

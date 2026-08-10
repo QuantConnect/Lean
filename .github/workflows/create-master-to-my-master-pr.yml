@@ -1,0 +1,69 @@
+name: Create or Update Master to My-Master PR
+
+on:
+  workflow_run:
+    workflows: ["Sync Upstream to Master"]
+    types: [completed]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pull-requests: write
+
+concurrency:
+  group: master-to-my-master-pr
+  cancel-in-progress: false
+
+env:
+  SOURCE_BRANCH: master
+  TARGET_BRANCH: my-master
+
+jobs:
+  pr:
+    if: ${{ github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success' }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ env.TARGET_BRANCH }}
+          fetch-depth: 0
+
+      - name: Ensure branches are up to date
+        run: |
+          set -euo pipefail
+          git fetch origin "${{ env.SOURCE_BRANCH }}" "${{ env.TARGET_BRANCH }}"
+
+      - name: Create or update master to my-master PR
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          REPO_OWNER: ${{ github.repository_owner }}
+        run: |
+          set -euo pipefail
+
+          if git diff --quiet "origin/$TARGET_BRANCH" "origin/$SOURCE_BRANCH"; then
+            echo "No content changes to merge from $SOURCE_BRANCH into $TARGET_BRANCH." >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+
+          OPEN_PR_NUMBER=$(gh api --method GET "repos/$REPO/pulls" \
+            -f state=open \
+            -f base="$TARGET_BRANCH" \
+            -f head="$REPO_OWNER:$SOURCE_BRANCH" \
+            --jq '.[0].number // empty')
+
+          if [ -n "$OPEN_PR_NUMBER" ]; then
+            echo "Open PR #$OPEN_PR_NUMBER already exists for $SOURCE_BRANCH -> $TARGET_BRANCH."
+            gh api --method POST "repos/$REPO/issues/$OPEN_PR_NUMBER/comments" \
+              -f body="Automated update: \`$SOURCE_BRANCH\` now includes the latest changes from \`QuantConnect/Lean:$SOURCE_BRANCH\`." \
+              --jq '.html_url'
+            exit 0
+          fi
+
+          gh api --method POST "repos/$REPO/pulls" \
+            -f base="$TARGET_BRANCH" \
+            -f head="$SOURCE_BRANCH" \
+            -f title="chore: sync master into my-master" \
+            -f body="## Automated Upstream Sync PR\n\nThis pull request was created automatically after merging \`QuantConnect/Lean:master\` into this repository's \`master\` branch.\n\n- Source branch: \`master\`\n- Target branch: \`my-master\`\n- Trigger: scheduled/manual upstream sync workflow\n\nPlease review and merge when ready." \
+            --jq '.html_url'
