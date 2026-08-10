@@ -94,7 +94,7 @@ jobs:
             echo "No existing PR found"
           fi
         env:
-          GH_TOKEN: ${{ secrets.PAT_TOKEN }}
+          GH_TOKEN: ${{ github.token }}
 
       - name: Create PR from sync branch to downstream branch
         if: steps.check_upstream.outputs.ahead != '0' && steps.check_pr.outputs.pr_exists == 'false'
@@ -107,7 +107,7 @@ jobs:
             --title "chore: sync from upstream QuantConnect/Lean" \
             --body "Automated sync from upstream QuantConnect/Lean. This PR updates \`${{ env.DOWNSTREAM_BRANCH }}\` with the latest changes from upstream's \`${{ env.UPSTREAM_BRANCH }}\` branch."
         env:
-          GH_TOKEN: ${{ secrets.PAT_TOKEN }}
+          GH_TOKEN: ${{ github.token }}
 
       - name: Merge existing PR
         if: steps.check_upstream.outputs.ahead != '0' && steps.check_pr.outputs.pr_exists == 'true'
@@ -119,4 +119,4 @@ jobs:
 
           gh pr merge "$PR_NUMBER" --squash --delete-branch=false
         env:
-          GH_TOKEN: ${{ secrets.PAT_TOKEN }}
+          GH_TOKEN: ${{ github.token }}
