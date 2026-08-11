@@ -2105,6 +2105,29 @@ namespace QuantConnect.Algorithm
             return flatten ? history : TryCleanupCollectionDataFrame(typeof(T), history);
         }
 
+        /// <summary>
+        /// Creates the lazy pandas data frame of a typed history result, so the conversion is only performed
+        /// if the data frame is actually accessed. The caller shares the memoized history enumerable with the
+        /// lazy conversion so that accessing the data frame does not re-execute the history request.
+        /// </summary>
+        /// <param name="data">The typed history data points</param>
+        /// <param name="dataType">The requested history data type.
+        /// Used to clean up the data frame of collection types, defaults to <typeparamref name="T"/></param>
+        private Lazy<PyObject> GetTypedHistoryDataFrame<T>(IEnumerable<T> data, Type dataType = null)
+            where T : IBaseData
+        {
+            return new Lazy<PyObject>(() =>
+            {
+                if (PandasConverter == null)
+                {
+                    // The pandas converter is only set for Python algorithms and research (see SetPandasConverter)
+                    throw new InvalidOperationException(
+                        "The DataFrame property is only available when running Python algorithms or research notebooks.");
+                }
+                return TryCleanupCollectionDataFrame(dataType ?? typeof(T), PandasConverter.GetDataFrame(data));
+            }, isThreadSafe: false);
+        }
+
         private IEnumerable<T> RemoveMemoizing<T>(IEnumerable<T> data)
         {
             var memoizingEnumerable = data as MemoizingEnumerable<T>;

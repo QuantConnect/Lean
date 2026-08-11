@@ -57,7 +57,7 @@ namespace QuantConnect.Algorithm.CSharp
             _dailySma = new SimpleMovingAverage(14);
 
             // get the last calendar year's worth of SPY data at the configured resolution (daily)
-            var tradeBarHistory = History<TradeBar>("SPY", TimeSpan.FromDays(365));
+            IEnumerable<TradeBar> tradeBarHistory = History<TradeBar>("SPY", TimeSpan.FromDays(365));
             AssertHistoryCount("History<TradeBar>(\"SPY\", TimeSpan.FromDays(365))", tradeBarHistory, 250, SPY);
 
             // get the last calendar day's worth of SPY data at the specified resolution
