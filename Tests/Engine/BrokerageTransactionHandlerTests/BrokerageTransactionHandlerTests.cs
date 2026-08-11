@@ -277,6 +277,144 @@ namespace QuantConnect.Tests.Engine.BrokerageTransactionHandlerTests
             Assert.AreEqual(-1000, orderTicket.Quantity);
         }
 
+        // A locate belongs only on an order that opens a short position. Each case: the order
+        // properties carrying the locate, the holdings before the order, the order quantity, and
+        // whether the locate must survive the submit. A position side set in the properties wins
+        // over the holdings-based mapping.
+        private static IEnumerable<TestCaseData> LocateCleanupCases()
+        {
+            // Bloomberg carries the locate as raw fix tags
+            yield return new TestCaseData(CreateLocateBrokerTagProperties(), 0m, -10m, true)
+                .SetName("ShortSellKeepsLocateBroker");
+            yield return new TestCaseData(CreateLocateBrokerTagProperties(), 0m, 10m, false)
+                .SetName("BuyToOpenDropsLocateBroker");
+            yield return new TestCaseData(CreateLocateBrokerTagProperties(), 20m, -10m, false)
+                .SetName("SellToCloseDropsLocateBroker");
+            yield return new TestCaseData(CreateLocateBrokerTagProperties(), -10m, 10m, false)
+                .SetName("BuyToCloseDropsLocateBroker");
+            yield return new TestCaseData(CreateLocateBrokerTagProperties(), 100m, -300m, true)
+                .SetName("CrossZeroSellKeepsLocateBroker");
+            yield return new TestCaseData(CreateLocateTagProperties(), 0m, -10m, true)
+                .SetName("ShortSellKeepsLocateTags");
+            yield return new TestCaseData(CreateLocateTagProperties(), 20m, -10m, false)
+                .SetName("SellToCloseDropsLocateTags");
+
+            // TerminalLink keeps the locate broker and locate id together; either one alone counts
+            yield return new TestCaseData(new TerminalLinkOrderProperties { LocateBroker = "MLCO", LocateId = "LOC-123" }, 0m, -10m, true)
+                .SetName("ShortSellKeepsTerminalLinkLocate");
+            yield return new TestCaseData(new TerminalLinkOrderProperties { LocateBroker = "MLCO", LocateId = "LOC-123" }, 100m, -300m, true)
+                .SetName("CrossZeroSellKeepsTerminalLinkLocate");
+            yield return new TestCaseData(new TerminalLinkOrderProperties { LocateBroker = "MLCO", LocateId = "LOC-123" }, 20m, -10m, false)
+                .SetName("SellToCloseDropsTerminalLinkLocate");
+            yield return new TestCaseData(new TerminalLinkOrderProperties { LocateId = "LOC-123" }, 0m, -10m, true)
+                .SetName("ShortSellKeepsLoneLocateId");
+            yield return new TestCaseData(new TerminalLinkOrderProperties { LocateId = "LOC-123" }, 20m, -10m, false)
+                .SetName("SellToCloseDropsLoneLocateId");
+            yield return new TestCaseData(new TerminalLinkOrderProperties { LocateBroker = "MLCO", LocateId = "LOC-123", PositionSide = OrderPosition.SellToOpen }, 20m, -10m, true)
+                .SetName("TerminalLinkPositionSideShortKeepsLocate");
+            yield return new TestCaseData(new TerminalLinkOrderProperties { LocateBroker = "MLCO", LocateId = "LOC-123", PositionSide = OrderPosition.SellToClose }, 0m, -10m, false)
+                .SetName("TerminalLinkPositionSideCloseDropsLocate");
+
+            // Wolverine carries the locate broker only
+            yield return new TestCaseData(new WolverineOrderProperties { LocateBroker = "MLCO", PositionSide = OrderPosition.SellToOpen }, 20m, -10m, true)
+                .SetName("WolverinePositionSideShortKeepsLocate");
+            yield return new TestCaseData(new WolverineOrderProperties { LocateBroker = "MLCO", PositionSide = OrderPosition.SellToClose }, 0m, -10m, false)
+                .SetName("WolverinePositionSideCloseDropsLocate");
+        }
+
+        [TestCaseSource(nameof(LocateCleanupCases))]
+        public void KeepsLocateOnlyOnShortSells(IOrderProperties properties, decimal holdings, decimal quantity, bool locateKept)
+        {
+            //Initializes the transaction handler
+            _transactionHandler = new TestBrokerageTransactionHandler();
+            using var brokerage = new BacktestingBrokerage(_algorithm);
+            _transactionHandler.Initialize(_algorithm, brokerage, new BacktestingResultHandler());
+
+            // Creates the order
+            _algorithm.SetBrokerageModel(BrokerageName.Default);
+            var security = _algorithm.AddSecurity(Symbols.AAPL);
+            security.SetMarketPrice(new Tick(DateTime.UtcNow.AddDays(-1), security.Symbol, 100m, 100m, 100m));
+            security.Holdings.SetHoldings(100m, holdings);
+            var locateBefore = GetLocateState(properties);
+            var orderRequest = new SubmitOrderRequest(OrderType.Market, security.Type, security.Symbol, quantity, 0, 0, DateTime.UtcNow, "", properties);
+
+            // Mock the the order processor
+            var orderProcessorMock = new Mock<IOrderProcessor>();
+            orderProcessorMock.Setup(m => m.GetOrderTicket(It.IsAny<int>())).Returns(new OrderTicket(_algorithm.Transactions, orderRequest));
+            _algorithm.Transactions.SetOrderProcessor(orderProcessorMock.Object);
+
+            // Act
+            var orderTicket = _transactionHandler.Process(orderRequest);
+            _transactionHandler.HandleOrderRequest(orderRequest);
+
+            // Assert: the placed order carries the locate only when it opens a short
+            Assert.IsTrue(orderRequest.Response.IsSuccess);
+            var placed = _transactionHandler.GetOrderById(orderTicket.OrderId).Properties;
+            Assert.AreEqual(locateKept ? locateBefore : default, GetLocateState(placed));
+
+            // The caller's own object is never touched
+            Assert.AreEqual(locateBefore, GetLocateState(properties));
+        }
+
+        [Test]
+        public void RemovingLocateSendsOneTimeWarning()
+        {
+            //Initializes the transaction handler
+            _transactionHandler = new TestBrokerageTransactionHandler();
+            using var brokerage = new BacktestingBrokerage(_algorithm);
+            _transactionHandler.Initialize(_algorithm, brokerage, new BacktestingResultHandler());
+
+            _algorithm.SetBrokerageModel(BrokerageName.Default);
+            var security = _algorithm.AddSecurity(Symbols.AAPL);
+            security.SetMarketPrice(new Tick(DateTime.UtcNow.AddDays(-1), security.Symbol, 100m, 100m, 100m));
+            security.Holdings.SetHoldings(100m, 20m);
+
+            // Two sells that close the long, each dropping its locate
+            _algorithm.Transactions.SetOrderProcessor(_transactionHandler);
+            for (var i = 0; i < 2; i++)
+            {
+                var properties = new TerminalLinkOrderProperties { LocateBroker = "MLCO" };
+                var orderRequest = new SubmitOrderRequest(OrderType.Market, security.Type, security.Symbol, -10, 0, 0, DateTime.UtcNow, "", properties);
+                _algorithm.Transactions.ProcessRequest(orderRequest);
+                _transactionHandler.HandleOrderRequest(orderRequest);
+                Assert.IsTrue(orderRequest.Response.IsSuccess);
+
+                // The order got a cleaned clone; the caller's own object is never touched
+                Assert.IsNull(((TerminalLinkOrderProperties)_transactionHandler.GetOrderById(orderRequest.OrderId).Properties).LocateBroker);
+                Assert.AreEqual("MLCO", properties.LocateBroker);
+            }
+
+            // The warning goes out once, for the first removal only
+            Assert.AreEqual(1, _algorithm.ErrorMessages.Count(message => message.Contains("locate", StringComparison.OrdinalIgnoreCase)));
+        }
+
+        // The locate fields of each supported properties type as one comparable value;
+        // all null means the order carries no locate.
+        private static (string LocateBroker, string LocateId, string LocateBrokerTag, string LocateReqdTag) GetLocateState(IOrderProperties properties)
+        {
+            return properties switch
+            {
+                TerminalLinkOrderProperties terminalLink => (terminalLink.LocateBroker, terminalLink.LocateId, null, null),
+                WolverineOrderProperties wolverine => (wolverine.LocateBroker, null, null, null),
+                FixOrderProperties fix => (null, null, fix.AdditionalProperties.GetValueOrDefault("5700"), fix.AdditionalProperties.GetValueOrDefault("114")),
+                _ => default
+            };
+        }
+
+        private static BloombergFixOrderProperties CreateLocateBrokerTagProperties()
+        {
+            // the property is a passthrough of the 5700 tag in AdditionalProperties
+            return new BloombergFixOrderProperties { LocateBroker = "MLCO" };
+        }
+
+        private static BloombergFixOrderProperties CreateLocateTagProperties()
+        {
+            var properties = new BloombergFixOrderProperties();
+            properties.AdditionalProperties["114"] = "N";
+            properties.AdditionalProperties["5700"] = "MLCO";
+            return properties;
+        }
+
         [Test]
         public void OrderIsNotPlacedWhenOrderIsLowerThanLotSize()
         {

@@ -16,6 +16,7 @@
 
 using System;
 using System.Linq;
+using QuantConnect.Interfaces;
 using QuantConnect.Orders;
 using QuantConnect.Securities;
 using System.Collections.Generic;
@@ -183,6 +184,71 @@ namespace QuantConnect.Brokerages
                 OrderDirection.Sell => holdingsQuantity <= 0 ? OrderPosition.SellToOpen : OrderPosition.SellToClose,
                 _ => throw new ArgumentOutOfRangeException(nameof(orderDirection), orderDirection, "Invalid order direction")
             };
+        }
+
+        /// <summary>
+        /// Removes the locate from an order that does not open a short position.
+        /// A locate belongs only on short sells; brokers reject it on any other order.
+        /// A position side set in the properties wins over the holdings check.
+        /// The edit goes into a copy; the given instance is never touched.
+        /// </summary>
+        /// <param name="properties">The order properties to check</param>
+        /// <param name="quantity">The order quantity; the sign gives the order direction</param>
+        /// <param name="holdingsQuantity">The current holdings quantity</param>
+        /// <returns>A copy of the properties without the locate; null when there is nothing to remove</returns>
+        public static IOrderProperties RemoveLocateFromNonShortOrder(IOrderProperties properties, decimal quantity, decimal holdingsQuantity)
+        {
+            switch (properties)
+            {
+                case TerminalLinkOrderProperties terminalLink:
+                    if ((string.IsNullOrEmpty(terminalLink.LocateBroker) && string.IsNullOrEmpty(terminalLink.LocateId))
+                        || IsShortOpen(terminalLink.PositionSide, quantity, holdingsQuantity))
+                    {
+                        return null;
+                    }
+                    var terminalLinkCopy = (TerminalLinkOrderProperties)terminalLink.Clone();
+                    terminalLinkCopy.LocateBroker = null;
+                    terminalLinkCopy.LocateId = null;
+                    return terminalLinkCopy;
+
+                case WolverineOrderProperties wolverine:
+                    if (string.IsNullOrEmpty(wolverine.LocateBroker) || IsShortOpen(wolverine.PositionSide, quantity, holdingsQuantity))
+                    {
+                        return null;
+                    }
+                    var wolverineCopy = (WolverineOrderProperties)wolverine.Clone();
+                    wolverineCopy.LocateBroker = null;
+                    return wolverineCopy;
+
+                case BloombergFixOrderProperties bloombergFix:
+                    if ((string.IsNullOrEmpty(bloombergFix.LocateBroker) && string.IsNullOrEmpty(bloombergFix.LocateReqd))
+                        || IsShortOpen(null, quantity, holdingsQuantity))
+                    {
+                        return null;
+                    }
+                    var bloombergFixCopy = (BloombergFixOrderProperties)bloombergFix.Clone();
+                    bloombergFixCopy.LocateBroker = null;
+                    bloombergFixCopy.LocateReqd = null;
+                    return bloombergFixCopy;
+
+                default:
+                    return null;
+            }
+        }
+
+        /// <summary>
+        /// Whether the order opens a short position. A position side set in the order properties
+        /// wins over the holdings-based mapping.
+        /// </summary>
+        private static bool IsShortOpen(OrderPosition? positionSide, decimal quantity, decimal holdingsQuantity)
+        {
+            if (positionSide.HasValue)
+            {
+                return positionSide.Value == OrderPosition.SellToOpen;
+            }
+
+            // A sell that ends below zero opens a short, cross-zero sells included
+            return Extensions.GetOrderDirection(quantity) == OrderDirection.Sell && holdingsQuantity + quantity < 0;
         }
     }
 }

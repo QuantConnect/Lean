@@ -13,6 +13,8 @@
  * limitations under the License.
 */
 
+using System.Collections.Generic;
+
 namespace QuantConnect.Orders
 {
     /// <summary>
@@ -20,5 +22,36 @@ namespace QuantConnect.Orders
     /// </summary>
     public class BloombergFixOrderProperties : FixOrderProperties
     {
+        /// <summary>
+        /// The broker the shares are borrowed from for a short sale.
+        /// Reads and writes fix tag LocateBroker 5700 in <see cref="FixOrderProperties.AdditionalProperties"/>.
+        /// </summary>
+        public string LocateBroker
+        {
+            get { return AdditionalProperties?.GetValueOrDefault("5700"); }
+            set { SetTag("5700", value); }
+        }
+
+        /// <summary>
+        /// Whether a locate is required for the short sale, "Y" or "N".
+        /// Reads and writes fix tag LocateReqd 114 in <see cref="FixOrderProperties.AdditionalProperties"/>.
+        /// </summary>
+        public string LocateReqd
+        {
+            get { return AdditionalProperties?.GetValueOrDefault("114"); }
+            set { SetTag("114", value); }
+        }
+
+        private void SetTag(string tag, string value)
+        {
+            if (value == null)
+            {
+                AdditionalProperties?.Remove(tag);
+            }
+            else
+            {
+                AdditionalProperties[tag] = value;
+            }
+        }
     }
 }
