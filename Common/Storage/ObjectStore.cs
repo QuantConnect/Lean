@@ -17,9 +17,12 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Xml.Serialization;
 using Newtonsoft.Json;
+using Python.Runtime;
 using QuantConnect.Interfaces;
 using QuantConnect.Packets;
 
@@ -30,6 +33,23 @@ namespace QuantConnect.Storage
     /// </summary>
     public class ObjectStore : IObjectStore
     {
+        // The single source of the key charset/extension rules, also enforced by the LocalObjectStore implementation
+        private static readonly Regex SupportedKeyRegex = new(@"^\.?[a-zA-Z0-9\\/_#\-\$= ]+\.?[a-zA-Z0-9]*$", RegexOptions.Compiled);
+        private static readonly Regex UnsupportedKeyCharactersRegex = new(@"[^a-zA-Z0-9\\/_#\-\$= .]", RegexOptions.Compiled);
+        private static readonly Regex KeyExtensionRegex = new(@"^[a-zA-Z0-9]+$", RegexOptions.Compiled);
+
+        // Python helpers for the PyObject APIs, lazily created under the GIL
+        private static PyObject _jsonSerializeMethod;
+        private static PyObject _jsonDeserializeMethod;
+        private static PyObject _dataFrameSerializeMethod;
+
+        /// <summary>
+        /// Human readable description of the format an object store key must follow, stated in key validation errors
+        /// </summary>
+        public static string SupportedKeyRules { get; } = "keys may only contain english letters, numbers, spaces and the characters" +
+            " '/', '\\', '_', '#', '-', '$' and '=', plus at most one '.' followed by a letters-and-numbers-only extension," +
+            " e.g. 'folder/trade_log-2024.csv'";
+
         /// <summary>
         /// Gets the maximum storage limit in bytes
         /// </summary>
@@ -160,6 +180,57 @@ namespace QuantConnect.Storage
         }
 
         /// <summary>
+        /// Determines whether the given key follows the object store key format, see <see cref="SupportedKeyRules"/>
+        /// </summary>
+        /// <param name="key">The object store key to validate</param>
+        /// <returns>True if the key is supported</returns>
+        public static bool IsSupportedKey(string key)
+        {
+            return !string.IsNullOrEmpty(key) && SupportedKeyRegex.IsMatch(key)
+                // just in case
+                && key.Count(c => c == '/') <= 100 && key.Count(c => c == '\\') <= 100;
+        }
+
+        /// <summary>
+        /// Converts an arbitrary name into a supported object store key by replacing every unsupported character
+        /// with '_', keeping at most the final '.extension'. Useful for programmatically-built keys, for instance
+        /// from user-facing names: 'trade log: AI &amp; Cloud.csv' becomes 'trade log_ AI _ Cloud.csv'
+        /// </summary>
+        /// <param name="key">The arbitrary name to sanitize</param>
+        /// <returns>A key following <see cref="SupportedKeyRules"/></returns>
+        public static string SanitizeKey(string key)
+        {
+            if (string.IsNullOrEmpty(key))
+            {
+                throw new ArgumentException("ObjectStore.SanitizeKey(): key cannot be null or empty", nameof(key));
+            }
+            if (IsSupportedKey(key))
+            {
+                return key;
+            }
+
+            var sanitized = UnsupportedKeyCharactersRegex.Replace(key, "_");
+
+            // a single trailing '.extension' of letters and numbers is allowed: keep the last dot if it
+            // introduces a valid extension and replace every other dot
+            var lastDot = sanitized.LastIndexOf('.');
+            if (lastDot > 0 && KeyExtensionRegex.IsMatch(sanitized.Substring(lastDot + 1)))
+            {
+                sanitized = sanitized.Substring(0, lastDot).Replace('.', '_') + sanitized.Substring(lastDot);
+            }
+            else if (lastDot >= 0)
+            {
+                sanitized = sanitized.Replace('.', '_');
+            }
+
+            if (!IsSupportedKey(sanitized))
+            {
+                throw new ArgumentException($"ObjectStore.SanitizeKey(): unable to sanitize key '{key}': object store {SupportedKeyRules}");
+            }
+            return sanitized;
+        }
+
+        /// <summary>
         /// Returns the JSON deserialized object data for the specified path
         /// </summary>
         /// <param name="path">The object path</param>
@@ -172,6 +243,28 @@ namespace QuantConnect.Storage
 
             var json = Read(path, encoding);
             return JsonConvert.DeserializeObject<T>(json, settings);
+        }
+
+        /// <summary>
+        /// Returns the JSON deserialized object data for the specified path as Python objects,
+        /// or the given default value if the key is not present
+        /// </summary>
+        /// <param name="path">The object path</param>
+        /// <param name="defaultValue">Value to return when the key is not present. Defaults to None</param>
+        /// <returns>The deserialized Python object, or <paramref name="defaultValue"/> if the key is not present</returns>
+        public PyObject ReadJson(string path, PyObject defaultValue = null)
+        {
+            if (!ContainsKey(path))
+            {
+                return defaultValue;
+            }
+            var json = Read(path);
+            using (Py.GIL())
+            {
+                EnsurePythonHelpers();
+                using var pyJson = json.ToPython();
+                return _jsonDeserializeMethod.Invoke(pyJson);
+            }
         }
 
         /// <summary>
@@ -240,6 +333,19 @@ namespace QuantConnect.Storage
         }
 
         /// <summary>
+        /// Saves the object data in text format for the specified path.
+        /// Alias of <see cref="Save(string, string, Encoding)"/>
+        /// </summary>
+        /// <param name="path">The object path</param>
+        /// <param name="text">The string object to be saved</param>
+        /// <param name="encoding">The string encoding used, <see cref="Encoding.UTF8"/> by default</param>
+        /// <returns>True if the object was saved successfully</returns>
+        public bool SaveText(string path, string text, Encoding encoding = null)
+        {
+            return Save(path, text, encoding);
+        }
+
+        /// <summary>
         /// Saves the object data in JSON format for the specified path
         /// </summary>
         /// <param name="path">The object path</param>
@@ -253,6 +359,47 @@ namespace QuantConnect.Storage
 
             var json = JsonConvert.SerializeObject(obj, settings);
             return SaveString(path, json, encoding);
+        }
+
+        /// <summary>
+        /// Saves the given Python object in JSON format for the specified path, tolerating types the standard
+        /// json module rejects: datetime/date/time are stored in ISO-8601 format, Decimal and numpy scalars as
+        /// numbers and any other unsupported type (e.g. Symbol) as its string representation. Non-string
+        /// dictionary keys are stringified
+        /// </summary>
+        /// <param name="path">The object path</param>
+        /// <param name="obj">The Python object to be saved</param>
+        /// <returns>True if the object was saved successfully</returns>
+        public bool SaveJson(string path, PyObject obj)
+        {
+            string json;
+            using (Py.GIL())
+            {
+                EnsurePythonHelpers();
+                using var result = _jsonSerializeMethod.Invoke(obj);
+                json = result.As<string>();
+            }
+            return Save(path, json);
+        }
+
+        /// <summary>
+        /// Saves the given pandas DataFrame (or Series) for the specified path, in JSON format if the
+        /// path has a '.json' extension and as CSV otherwise
+        /// </summary>
+        /// <param name="path">The object path</param>
+        /// <param name="dataFrame">The pandas DataFrame or Series to be saved</param>
+        /// <returns>True if the object was saved successfully</returns>
+        public bool SaveDataframe(string path, PyObject dataFrame)
+        {
+            string serialized;
+            using (Py.GIL())
+            {
+                EnsurePythonHelpers();
+                using var pyPath = (path ?? string.Empty).ToPython();
+                using var result = _dataFrameSerializeMethod.Invoke(dataFrame, pyPath);
+                serialized = result.As<string>();
+            }
+            return Save(path, serialized);
         }
 
         /// <summary>
@@ -297,6 +444,60 @@ namespace QuantConnect.Storage
         public void Dispose()
         {
             _store.Dispose();
+        }
+
+        /// <summary>
+        /// Lazily creates the Python helper methods backing the PyObject APIs. Must be called under the GIL
+        /// </summary>
+        private static void EnsurePythonHelpers()
+        {
+            if (_jsonSerializeMethod == null)
+            {
+                var module = PyModule.FromString("object_store_helpers", @"from json import dumps, loads
+from datetime import datetime, date, time
+from decimal import Decimal
+try:
+    import numpy
+except ImportError:
+    numpy = None
+
+def _default(value):
+    if isinstance(value, (datetime, date, time)):
+        return value.isoformat()
+    if isinstance(value, Decimal):
+        return float(value)
+    if numpy is not None and isinstance(value, numpy.generic):
+        return value.item()
+    # Symbol and any other type json does not handle
+    return str(value)
+
+def _normalize(value):
+    if isinstance(value, dict):
+        # json requires str/int/float/bool/None keys: stringify anything else (Symbol, datetime, ...)
+        return { (k if isinstance(k, (str, int, float, bool)) or k is None else str(_default(k))): _normalize(v)
+            for k, v in value.items() }
+    if isinstance(value, (list, tuple, set)):
+        return [_normalize(v) for v in value]
+    return value
+
+def serialize(value):
+    return dumps(_normalize(value), default=_default)
+
+def deserialize(json_string):
+    return loads(json_string)
+
+def serialize_dataframe(value, key):
+    if not hasattr(value, 'to_csv'):
+        raise TypeError(f'save_dataframe() expects a pandas DataFrame or Series but received {type(value).__name__}')
+    if key.lower().endswith('.json'):
+        return value.to_json()
+    return value.to_csv()
+");
+                _jsonDeserializeMethod = module.GetAttr("deserialize");
+                _dataFrameSerializeMethod = module.GetAttr("serialize_dataframe");
+                // last so partial initialization is never observed
+                _jsonSerializeMethod = module.GetAttr("serialize");
+            }
         }
     }
 }
