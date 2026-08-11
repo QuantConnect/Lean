@@ -21,6 +21,7 @@ using NUnit.Framework;
 using Python.Runtime;
 using QuantConnect.Algorithm;
 using QuantConnect.Data;
+using QuantConnect.Data.Consolidators;
 using QuantConnect.Data.Market;
 using QuantConnect.Indicators;
 using QuantConnect.Lean.Engine.DataFeeds;
@@ -844,6 +845,64 @@ def get_indicator(algo, symbol):
             // The indicator should have been updated during the warm-up period
             var lastInput = testModule.GetAttr("LastInputTracker").GetAttr("last_input").GetAndDispose<TradeBar>();
             Assert.IsNotNull(lastInput);
+        }
+
+        [Test]
+        public void RegistersIndicatorWithCalendar()
+        {
+            var rsi = new RelativeStrengthIndex(2);
+            Assert.DoesNotThrow(() => _algorithm.RegisterIndicator(_equity, rsi, Calendar.Weekly));
+
+            // feed the registered consolidator trade bars crossing a week boundary so the weekly bar is emitted
+            var consolidator = _algorithm.SubscriptionManager.Subscriptions
+                .Single(x => x.Symbol == _equity && x.Consolidators.Count == 1).Consolidators.Single();
+            var time = new DateTime(2013, 10, 7);
+            consolidator.Update(new TradeBar(time, _equity, 10, 20, 5, 15, 100, Time.OneDay));
+            consolidator.Update(new TradeBar(time.AddDays(7), _equity, 10, 20, 5, 15, 100, Time.OneDay));
+
+            Assert.AreEqual(1, rsi.Samples);
+        }
+
+        [Test]
+        public void RegistersIndicatorWithCalendarFromPython()
+        {
+            using var _ = Py.GIL();
+            var testModule = PyModule.FromString("testModule",
+                @"
+from AlgorithmImports import *
+
+def register(algo, symbol):
+    rsi = RelativeStrengthIndex(14)
+    algo.register_indicator(symbol, rsi, Calendar.WEEKLY)
+    return rsi
+");
+
+            using var pyAlgo = _algorithm.ToPython();
+            using var pySymbol = _equity.ToPython();
+            Assert.DoesNotThrow(() => testModule.GetAttr("register").Invoke(pyAlgo, pySymbol).Dispose());
+
+            Assert.AreEqual(1, _algorithm.SubscriptionManager.Subscriptions.Sum(x => x.Consolidators.Count));
+        }
+
+        [Test]
+        public void TradeBarIndicatorOnQuoteOnlyFeedIsFedCollapsedTradeBars()
+        {
+            var eurusd = _algorithm.AddForex("EURUSD", market: Market.Oanda).Symbol;
+
+            // OnBalanceVolume consumes trade bars but forex only has quote bars, used to throw
+            // 'Consolidator outputs type QuoteBar but indicator expects input type TradeBar'
+            var obv = new OnBalanceVolume();
+            Assert.DoesNotThrow(() => _algorithm.RegisterIndicator(eurusd, obv, Resolution.Hour));
+
+            // feed the registered consolidator quote bars, the indicator receives collapsed trade bars
+            var consolidator = _algorithm.SubscriptionManager.Subscriptions
+                .Single(x => x.Symbol == eurusd && x.Consolidators.Count == 1).Consolidators.Single();
+            var time = new DateTime(2013, 10, 7, 10, 0, 0);
+            var bar = new Bar(1m, 2m, 0.5m, 1.5m);
+            consolidator.Update(new QuoteBar(time, eurusd, bar, 0, bar, 0, Time.OneMinute));
+            consolidator.Update(new QuoteBar(time.AddHours(1), eurusd, bar, 0, bar, 0, Time.OneMinute));
+
+            Assert.AreEqual(1, obv.Samples);
         }
     }
 }
