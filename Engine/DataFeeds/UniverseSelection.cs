@@ -17,6 +17,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using QuantConnect.Benchmarks;
+using QuantConnect.Configuration;
 using QuantConnect.Data;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Interfaces;
@@ -42,6 +43,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         private bool _initializedSecurityBenchmark;
         private bool _anyDoesNotHaveFundamentalDataWarningLogged;
         private readonly SecurityChangesConstructor _securityChangesConstructor;
+        private bool _optionUniverseSelectionSizeWarningSent;
+        private readonly int _optionUniverseContractsWarningThreshold = Config.GetInt("option-universe-contracts-warning-threshold", 500);
 
         /// <summary>
         /// Initializes a new instance of the <see cref="UniverseSelection"/> class
@@ -183,6 +186,11 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             {
                 // materialize the enumerable into a set for processing
                 universe.Selected = selectSymbolsResult.ToHashSet();
+
+                if (universe is OptionChainUniverse optionChainUniverse)
+                {
+                    WarnOnLargeOptionUniverseSelection(optionChainUniverse);
+                }
             }
 
             // first check for no pending removals, even if the universe selection
@@ -471,6 +479,52 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             }
 
             return SecurityChanges.None;
+        }
+
+        /// <summary>
+        /// Warns, once per algorithm, when option universe selections accumulate contracts beyond
+        /// 'option-universe-contracts-warning-threshold'. Every selected contract materializes into data subscriptions,
+        /// and wide filters, or many chained per-underlying option universes, are a recurring cause of out of memory
+        /// kills and multi-hour stalls. Warn only, never fail: the run may still succeed
+        /// </summary>
+        internal void WarnOnLargeOptionUniverseSelection(OptionChainUniverse universe)
+        {
+            if (_optionUniverseSelectionSizeWarningSent || _optionUniverseContractsWarningThreshold <= 0)
+            {
+                return;
+            }
+
+            // aggregate over all option universes: many chained per-underlying chains are as heavy as a single wide one.
+            // Note that 'Selected' includes the prepended underlying symbol, which is not a contract
+            var totalContracts = 0;
+            var universeCount = 0;
+            foreach (var kvp in _algorithm.UniverseManager)
+            {
+                if (kvp.Value is OptionChainUniverse optionUniverse && optionUniverse.Selected != null)
+                {
+                    totalContracts += Math.Max(0, optionUniverse.Selected.Count - 1);
+                    universeCount++;
+                }
+            }
+            if (universeCount == 0)
+            {
+                // not registered in the universe manager, count the given universe only
+                universeCount = 1;
+                totalContracts = Math.Max(0, universe.Selected.Count - 1);
+            }
+
+            if (totalContracts < _optionUniverseContractsWarningThreshold)
+            {
+                return;
+            }
+
+            _optionUniverseSelectionSizeWarningSent = true;
+            var latestCount = Math.Max(0, universe.Selected.Count - 1);
+            _algorithm.Debug($"Warning: option universe selections have reached ~{totalContracts} contracts across {universeCount}" +
+                $" option universe(s), latest: {latestCount} contracts for {universe.Option.Symbol.Underlying.Value}. Each selected" +
+                " contract adds data subscriptions, which can slow down the algorithm and run it out of memory. Consider narrowing" +
+                " the universe filter (SetFilter/set_filter strikes and expiration ranges) or trading specific contracts found via" +
+                " OptionChain()/option_chain() and added with AddOptionContract/add_option_contract.");
         }
 
         private void RemoveSecurityFromUniverse(

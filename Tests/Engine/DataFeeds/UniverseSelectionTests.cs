@@ -18,6 +18,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Moq;
 using NUnit.Framework;
+using QuantConnect.Configuration;
 using QuantConnect.Data;
 using QuantConnect.Data.Fundamental;
 using QuantConnect.Data.UniverseSelection;
@@ -33,6 +34,56 @@ namespace QuantConnect.Tests.Engine.DataFeeds
     [TestFixture]
     public class UniverseSelectionTests
     {
+        [Test]
+        public void WarnsOnLargeOptionUniverseSelection()
+        {
+            Config.Set("option-universe-contracts-warning-threshold", "10");
+            try
+            {
+                var algorithm = new AlgorithmStub(new MockDataFeed());
+                algorithm.SetStartDate(2014, 6, 6);
+                var option = algorithm.AddOption("AAPL");
+                // OnEndOfTimeStep will add all pending universe additions
+                algorithm.OnEndOfTimeStep();
+                var universe = algorithm.UniverseManager.Values.OfType<OptionChainUniverse>().Single();
+
+                // below the threshold: no warning
+                universe.Selected = CreateOptionSelection(option.Symbol.Underlying, 5);
+                algorithm.DataManager.UniverseSelection.WarnOnLargeOptionUniverseSelection(universe);
+                Assert.AreEqual(0, OptionUniverseWarningCount(algorithm));
+
+                // above the threshold: warns
+                universe.Selected = CreateOptionSelection(option.Symbol.Underlying, 15);
+                algorithm.DataManager.UniverseSelection.WarnOnLargeOptionUniverseSelection(universe);
+                Assert.AreEqual(1, OptionUniverseWarningCount(algorithm));
+
+                // only warns once per algorithm
+                algorithm.DataManager.UniverseSelection.WarnOnLargeOptionUniverseSelection(universe);
+                Assert.AreEqual(1, OptionUniverseWarningCount(algorithm));
+            }
+            finally
+            {
+                Config.Reset();
+            }
+        }
+
+        private static int OptionUniverseWarningCount(AlgorithmStub algorithm)
+        {
+            return algorithm.DebugMessages.Count(x => x.Contains("option universe selections"));
+        }
+
+        private static HashSet<Symbol> CreateOptionSelection(Symbol underlying, int contractCount)
+        {
+            // option universe selections have the underlying symbol prepended
+            var selected = new HashSet<Symbol> { underlying };
+            var expiry = new DateTime(2014, 7, 19);
+            for (var i = 0; i < contractCount; i++)
+            {
+                selected.Add(Symbol.CreateOption(underlying, Market.USA, OptionStyle.American, OptionRight.Call, 100 + i, expiry));
+            }
+            return selected;
+        }
+
         [Test]
         public void CreatedEquityIsNotAddedToSymbolCache()
         {
