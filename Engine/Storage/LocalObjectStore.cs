@@ -19,7 +19,6 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Text.RegularExpressions;
 using System.Threading;
 using QuantConnect.Configuration;
 using QuantConnect.Interfaces;
@@ -112,7 +111,6 @@ namespace QuantConnect.Lean.Engine.Storage
         }
 
         private Timer _persistenceTimer;
-        private Regex _pathRegex = new(@"^\.?[a-zA-Z0-9\\/_#\-\$= ]+\.?[a-zA-Z0-9]*$", RegexOptions.Compiled);
         private readonly ConcurrentDictionary<string, ObjectStoreEntry> _storage = new();
         private readonly object _persistLock = new object();
 
@@ -292,7 +290,14 @@ namespace QuantConnect.Lean.Engine.Storage
             // Ensure we have the key, also takes care of null or improper access
             if (!ContainsKey(path))
             {
-                throw new KeyNotFoundException($"Object with path '{path}' was not found in the current project. " +
+                // list the available keys so a near-miss (typo, wrong extension) is visible in the error itself
+                var keys = Keys;
+                var sample = string.Join(", ", keys.Take(10).Select(key => $"'{key}'"));
+                if (keys.Count > 10)
+                {
+                    sample += ", ...";
+                }
+                throw new KeyNotFoundException($"Object with path '{path}' was not found in the current project. Keys: [{sample}]. " +
                     "Please use ObjectStore.ContainsKey(key) to check if an object exists before attempting to read."
                 );
             }
@@ -326,14 +331,12 @@ namespace QuantConnect.Lean.Engine.Storage
             {
                 throw new InvalidOperationException($"LocalObjectStore.SaveBytes(): {NoWritePermissionsError}");
             }
-            else if (!_pathRegex.IsMatch(path))
+            else if (!ObjectStore.IsSupportedKey(path))
             {
-                throw new ArgumentException($"LocalObjectStore: path is not supported: '{path}'");
-            }
-            else if (path.Count(c => c == '/') > 100 || path.Count(c => c == '\\') > 100)
-            {
-                // just in case
-                throw new ArgumentException($"LocalObjectStore: path is not supported: '{path}'");
+                // state the rules in the error: keys are often built from user-facing names and only fail here,
+                // frequently in OnEndOfAlgorithm after an otherwise green run
+                throw new ArgumentException($"LocalObjectStore: path is not supported: '{path}'. Object store {ObjectStore.SupportedKeyRules}." +
+                    $" Use ObjectStore.{nameof(ObjectStore.SanitizeKey)}(name) to convert an arbitrary name into a supported path.");
             }
 
             // after we check the regex

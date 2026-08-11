@@ -541,6 +541,104 @@ namespace QuantConnect.Tests.Common.Storage
             Assert.IsTrue(error.Message.Contains("Please use ObjectStore.ContainsKey(key)"));
         }
 
+        [Test]
+        public void KeyNotFoundErrorListsTheAvailableKeys()
+        {
+            // dedicated store instance: its in-memory keys are listed first in the error
+            using var store = new ObjectStore(new TestLocalObjectStore());
+            store.Initialize(0, 0, "", new Controls() { PersistenceIntervalSeconds = -1 }, AlgorithmMode.Backtesting);
+            Assert.IsTrue(store.SaveBytes("available_key_a.txt", new byte[] { 1 }));
+            Assert.IsTrue(store.SaveBytes("available_key_b.txt", new byte[] { 1 }));
+
+            var error = Assert.Throws<KeyNotFoundException>(() => store.ReadBytes("missing.missing"));
+
+            Assert.IsTrue(error.Message.Contains("Keys: ["), error.Message);
+            Assert.IsTrue(error.Message.Contains("'available_key_a.txt'"), error.Message);
+            Assert.IsTrue(error.Message.Contains("'available_key_b.txt'"), error.Message);
+
+            store.Delete("available_key_a.txt");
+            store.Delete("available_key_b.txt");
+        }
+
+        [Test]
+        public void KeyNotFoundErrorTruncatesTheAvailableKeysListAtTen()
+        {
+            using var store = new ObjectStore(new TestLocalObjectStore());
+            store.Initialize(0, 0, "", new Controls() { PersistenceIntervalSeconds = -1 }, AlgorithmMode.Backtesting);
+            for (var i = 0; i < 11; i++)
+            {
+                Assert.IsTrue(store.SaveBytes($"truncation_key_{i}.txt", new byte[] { 1 }));
+            }
+
+            var error = Assert.Throws<KeyNotFoundException>(() => store.ReadBytes("missing.missing"));
+
+            Assert.IsTrue(error.Message.Contains(", ...]"), error.Message);
+
+            for (var i = 0; i < 11; i++)
+            {
+                store.Delete($"truncation_key_{i}.txt");
+            }
+        }
+
+        [TestCase("my_key", true)]
+        [TestCase("./my_key/nested\\file.csv", true)]
+        [TestCase("file with spaces #1-$=.txt", true)]
+        [TestCase("trade_log_ai_hardware_&_cloud.csv", false)]
+        [TestCase("file.tar.gz", false)]
+        [TestCase("file.name_v2", false)]
+        [TestCase("**abc**", false)]
+        [TestCase("", false)]
+        [TestCase(null, false)]
+        public void ValidatesKeys(string key, bool isSupported)
+        {
+            Assert.AreEqual(isSupported, ObjectStore.IsSupportedKey(key));
+        }
+
+        [Test]
+        public void UnsupportedKeyErrorStatesTheKeyRules()
+        {
+            var error = Assert.Throws<ArgumentException>(
+                () => _store.SaveBytes("trade_log_ai_hardware_&_cloud.csv", new byte[] { 1 }));
+
+            Assert.IsTrue(error.Message.Contains("path is not supported: 'trade_log_ai_hardware_&_cloud.csv'"), error.Message);
+            Assert.IsTrue(error.Message.Contains(ObjectStore.SupportedKeyRules), error.Message);
+            Assert.IsTrue(error.Message.Contains("SanitizeKey"), error.Message);
+        }
+
+        [TestCase("my_key/file.csv", "my_key/file.csv")]
+        [TestCase("trade_log_ai_hardware_&_cloud.csv", "trade_log_ai_hardware___cloud.csv")]
+        [TestCase("trade log: AI & Cloud.csv", "trade log_ AI _ Cloud.csv")]
+        [TestCase("file.tar.gz", "file_tar.gz")]
+        [TestCase("résumé.pdf", "r_sum_.pdf")]
+        [TestCase("a..", "a__")]
+        [TestCase("100%.json", "100_.json")]
+        public void SanitizeKeyReturnsAStorableKey(string key, string expectedSanitizedKey)
+        {
+            var sanitized = ObjectStore.SanitizeKey(key);
+
+            Assert.AreEqual(expectedSanitizedKey, sanitized);
+            Assert.IsTrue(ObjectStore.IsSupportedKey(sanitized));
+            Assert.IsTrue(_store.SaveBytes(sanitized, new byte[] { 1 }));
+
+            _store.Delete(sanitized);
+        }
+
+        [TestCase(null)]
+        [TestCase("")]
+        public void SanitizeKeyThrowsOnNullOrEmptyKey(string key)
+        {
+            Assert.Throws<ArgumentException>(() => ObjectStore.SanitizeKey(key));
+        }
+
+        [Test]
+        public void SaveTextIsAnAliasOfSave()
+        {
+            Assert.IsTrue(_store.SaveText("save_text_alias.txt", "abc"));
+            Assert.AreEqual("abc", _store.Read("save_text_alias.txt"));
+
+            _store.Delete("save_text_alias.txt");
+        }
+
         [TestCase("my_key", "./LocalObjectStoreTests/my_key")]
         [TestCase("test/123", "./LocalObjectStoreTests/test/123")]
         [TestCase("**abc**", null)]
@@ -1013,6 +1111,64 @@ def add_data(object_store):
                 // Reset
                 testModule.GetAttr("clean_data").Invoke();
                 testObjectStore.Dispose();
+            }
+        }
+
+        [Test]
+        public void PythonSaveJsonReadJsonSaveDataframeAndSanitizeKey()
+        {
+            using (Py.GIL())
+            {
+                var testModule = PyModule.FromString("TestObjectStoreErgonomics",
+                    @"
+from AlgorithmImports import *
+from datetime import datetime
+from decimal import Decimal
+
+def test(object_store):
+    symbol = Symbol.create('SPY', SecurityType.EQUITY, Market.USA)
+
+    # save_json tolerates datetime/date/Decimal/Symbol values and non-string dictionary keys
+    object_store.save_json('ergonomics/log.json', {
+        'time': datetime(2024, 1, 2, 3, 4, 5),
+        'date': datetime(2024, 1, 1).date(),
+        'qty': Decimal('1.5'),
+        'symbol': symbol,
+        'fills': [{symbol: 10}]
+    })
+    data = object_store.read_json('ergonomics/log.json')
+    # symbols are stored as their string representation, which depends on the symbol cache state
+    assert data == {
+        'time': '2024-01-02T03:04:05',
+        'date': '2024-01-01',
+        'qty': 1.5,
+        'symbol': str(symbol),
+        'fills': [{str(symbol): 10}]
+    }, data
+
+    # read_json returns the given default when the key is missing
+    assert object_store.read_json('ergonomics/missing.json') is None
+    assert object_store.read_json('ergonomics/missing.json', {'a': 1}) == {'a': 1}
+
+    # save_text is an alias of save
+    object_store.save_text('ergonomics/report.txt', 'hello')
+    assert object_store.read('ergonomics/report.txt') == 'hello'
+
+    # save_dataframe stores a DataFrame as CSV
+    import pandas as pd
+    frame = pd.DataFrame({'a': [1, 2], 'b': [3.5, 4.5]})
+    object_store.save_dataframe('ergonomics/frame.csv', frame)
+    assert 'a,b' in object_store.read('ergonomics/frame.csv')
+
+    # sanitize_key is reachable from the instance
+    assert object_store.sanitize_key('trade_log_ai_hardware_&_cloud.csv') == 'trade_log_ai_hardware___cloud.csv'
+
+    for key in ['ergonomics/log.json', 'ergonomics/report.txt', 'ergonomics/frame.csv']:
+        object_store.delete(key)
+");
+
+                dynamic test = testModule.GetAttr("test");
+                Assert.DoesNotThrow(() => test(_store));
             }
         }
 
