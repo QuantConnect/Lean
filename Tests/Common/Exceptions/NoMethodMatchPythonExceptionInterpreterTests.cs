@@ -162,8 +162,7 @@ namespace QuantConnect.Tests.Common.Exceptions
         [Test]
         public void InterpretPrefersStructuredAttributesOverMessageParsing()
         {
-            // The fixture raises a TypeError whose message names 'parsed_name' but whose
-            // structured attributes name 'structured_name'; the attributes must win.
+            // The fixture's message names 'parsed_name' but its attributes name 'structured_name'
             var pythonException = ThrowFixtureMethod("no_method_match_with_structured_attributes");
 
             var interpreter = new NoMethodMatchPythonExceptionInterpreter();
@@ -178,8 +177,7 @@ namespace QuantConnect.Tests.Common.Exceptions
         [Test]
         public void InterpretFallsBackToMessageParsingWithoutStructuredAttributes()
         {
-            // Same message shape but no structured attributes (older pythonnet versions):
-            // the interpreter must extract the method name and hint from the message.
+            // Same message shape but no attributes, as raised by older pythonnet versions
             var pythonException = ThrowFixtureMethod("no_method_match_without_structured_attributes");
 
             var interpreter = new NoMethodMatchPythonExceptionInterpreter();

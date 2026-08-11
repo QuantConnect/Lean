@@ -25,9 +25,8 @@ namespace QuantConnect.Exceptions
     public class NoMethodMatchPythonExceptionInterpreter : PythonExceptionInterpreter
     {
         /// <summary>
-        /// Attribute names pythonnet attaches to the bind-failure TypeError, carrying the
-        /// data its message is built from: the snake_case method name and the rendered
-        /// overloads hint block exactly as it appears at the end of the message.
+        /// Attributes pythonnet attaches to the bind-failure TypeError with the data its
+        /// message is built from: the method name and the overloads hint block.
         /// </summary>
         private const string MethodNameAttribute = "_clr_method_name";
         private const string OverloadsHintAttribute = "_clr_overloads_hint";
@@ -58,8 +57,6 @@ namespace QuantConnect.Exceptions
         {
             var pe = (PythonException)exception;
 
-            // Prefer the structured data pythonnet attaches to the bind-failure TypeError,
-            // falling back to parsing the message for versions that do not attach it.
             TryGetStructuredBindFailureData(pe, out var methodName, out var overloadsHint);
 
             methodName ??= GetMethodName(pe.Message);
@@ -77,10 +74,9 @@ namespace QuantConnect.Exceptions
         }
 
         /// <summary>
-        /// Reads the structured bind-failure data pythonnet attaches to the TypeError so
-        /// the method name and overloads hint do not have to be parsed out of the message.
-        /// Both outputs are null when the attributes are absent (raised by a pythonnet
-        /// version that does not attach them) or cannot be read.
+        /// Reads the structured bind-failure data pythonnet attaches to the TypeError.
+        /// Outputs are null when the attributes are absent (older pythonnet) or unreadable,
+        /// so the caller falls back to parsing the message.
         /// </summary>
         private static void TryGetStructuredBindFailureData(PythonException exception, out string methodName,
             out string overloadsHint)
@@ -110,7 +106,7 @@ namespace QuantConnect.Exceptions
                     }
                 }
 
-                // Normalize so the caller's null-coalescing fallback kicks in
+                // Empty means absent so the caller's null-coalescing fallback kicks in
                 if (string.IsNullOrEmpty(methodName))
                 {
                     methodName = null;
@@ -122,7 +118,6 @@ namespace QuantConnect.Exceptions
             }
             catch
             {
-                // Fall back to message parsing on any failure reading the attributes
                 methodName = null;
                 overloadsHint = null;
             }
