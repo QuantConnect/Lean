@@ -153,6 +153,16 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
                 return null;
             }
 
+            // The canonical continuous futures contract is not tradable, so instead of producing a quantity that will
+            // only generate an invalid order, fail loudly here. Continuous contract data gives the canonical security
+            // a non-zero price, so without this check a plausible-looking quantity would be silently computed.
+            // Other canonical symbols (options) have no price and are already rejected by the zero-price check below.
+            if (security.Symbol.IsCanonical() && security.Symbol.SecurityType == SecurityType.Future)
+            {
+                algorithm.Error(Messages.PortfolioTarget.UnableToComputeOrderQuantityForCanonicalSymbol(security.Symbol));
+                return null;
+            }
+
             if (security.Price == 0)
             {
                 algorithm.Error(symbol.GetZeroPriceMessage());

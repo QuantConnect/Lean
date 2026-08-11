@@ -20,6 +20,7 @@ using QuantConnect.Algorithm.Framework.Portfolio;
 using QuantConnect.Data.Market;
 using QuantConnect.Securities;
 using QuantConnect.Tests.Engine;
+using QuantConnect.Tests.Engine.DataFeeds;
 
 namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
 {
@@ -92,6 +93,22 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
             var target = PortfolioTarget.Percent(algorithm, security.Symbol, targetPercent);
 
             Assert.IsNull(target);
+        }
+
+        [Test]
+        public void PercentReturnsNullForCanonicalFutureSymbol()
+        {
+            var algorithm = new AlgorithmStub();
+            algorithm.SetFinishedWarmingUp();
+            var future = algorithm.AddFuture(Futures.Indices.SP500EMini);
+            // continuous contract data gives the canonical security a price, but it is still not tradable
+            future.SetMarketPrice(new Tick { Value = 100m });
+
+            var target = PortfolioTarget.Percent(algorithm, future.Symbol, 1m);
+
+            Assert.IsNull(target);
+            Assert.IsTrue(algorithm.ErrorMessages.Any(x => x.Contains("canonical")),
+                "Expected an error message explaining the canonical symbol is not tradable");
         }
 
         [TestCase(-3, true)]

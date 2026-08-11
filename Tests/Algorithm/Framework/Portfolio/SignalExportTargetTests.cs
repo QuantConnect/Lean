@@ -322,7 +322,11 @@ namespace QuantConnect.Tests.Algorithm.Framework.Portfolio
             algorithm.SetFinishedWarmingUp();
             algorithm.SetCash(100000);
 
-            var security = algorithm.AddSecurity(securityType, ticker);
+            // Canonical future symbols are not tradable and cannot have holdings nor a target quantity computed
+            // for them, so we use a specific contract
+            var security = securityType == SecurityType.Future
+                ? algorithm.AddFutureContract(Symbol.CreateFuture(ticker, Market.CME, new DateTime(2022, 3, 18)))
+                : algorithm.AddSecurity(securityType, ticker);
             security.SetMarketPrice(new Tick(new DateTime(2022, 01, 04), security.Symbol, 144.80m, 144.82m));
             security.Holdings.SetHoldings(144.81m, quantity);
 
