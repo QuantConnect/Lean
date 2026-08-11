@@ -38,6 +38,20 @@ namespace QuantConnect.Algorithm
 
         private bool _dataDictionaryTickWarningSent;
 
+        // Large history request diagnostics: huge or repeatedly re-fetched requests are a recurring cause of
+        // multi-hour stalls and out of memory kills, warn upfront instead of failing with an opaque error later.
+        // A single request over the cells threshold triggers the size warning; requests over threshold divided by
+        // 'OverlappingRequestSizeDivisor' are tracked for the "re-fetch an overlapping window every day/selection"
+        // pattern, warning after 'OverlappingRequestsWarningCount' consecutive overlapping calls
+        private const int OverlappingRequestsWarningCount = 30;
+        private const int OverlappingRequestSizeDivisor = 50;
+        private readonly long _historyRequestCellsWarningThreshold = Config.GetInt("history-request-cells-warning-threshold", 5000000);
+        private bool _largeHistoryRequestWarningSent;
+        private bool _overlappingHistoryRequestsWarningSent;
+        private int _consecutiveOverlappingHistoryRequests;
+        private DateTime _previousLargeHistoryRequestStartUtc;
+        private DateTime _previousLargeHistoryRequestEndUtc;
+
         /// <summary>
         /// Gets or sets the history provider for the algorithm
         /// </summary>
@@ -1019,7 +1033,9 @@ namespace QuantConnect.Algorithm
         private IEnumerable<Slice> History(IEnumerable<HistoryRequest> requests, DateTimeZone timeZone)
         {
             // filter out any universe securities that may have made it this far
-            var filteredRequests = GetFilterestRequests(requests);
+            var filteredRequests = GetFilterestRequests(requests).ToList();
+
+            WarnOnLargeHistoryRequests(filteredRequests);
 
             // filter out future data to prevent look ahead bias
             var history = HistoryProvider.GetHistory(filteredRequests, timeZone);
@@ -1033,6 +1049,93 @@ namespace QuantConnect.Algorithm
             }
 
             return history;
+        }
+
+        /// <summary>
+        /// Emits one-time warnings for history requests that are likely to stall the algorithm or run it out of memory:
+        /// a single call estimated over <see cref="_historyRequestCellsWarningThreshold"/> data cells (bars x columns),
+        /// and repeated calls with time windows overlapping the previous call, e.g. re-fetching a long lookback on
+        /// every day or universe selection instead of updating incrementally
+        /// </summary>
+        private void WarnOnLargeHistoryRequests(List<HistoryRequest> requests)
+        {
+            if (_largeHistoryRequestWarningSent && _overlappingHistoryRequestsWarningSent || requests.Count == 0)
+            {
+                return;
+            }
+
+            long estimatedCells = 0;
+            var startUtc = DateTime.MaxValue;
+            var endUtc = DateTime.MinValue;
+            foreach (var request in requests)
+            {
+                estimatedCells += EstimateDataCells(request);
+                if (request.StartTimeUtc < startUtc)
+                {
+                    startUtc = request.StartTimeUtc;
+                }
+                if (request.EndTimeUtc > endUtc)
+                {
+                    endUtc = request.EndTimeUtc;
+                }
+            }
+
+            if (!_largeHistoryRequestWarningSent && estimatedCells >= _historyRequestCellsWarningThreshold)
+            {
+                _largeHistoryRequestWarningSent = true;
+                Debug($"Warning: large history request, estimated at ~{estimatedCells.ToStringInvariant("N0")} data cells" +
+                    $" across {requests.Count} request(s). Large history calls are slow and can run the algorithm out of memory:" +
+                    " consider requesting fewer symbols, a shorter period or a coarser resolution.");
+            }
+
+            if (!_overlappingHistoryRequestsWarningSent && estimatedCells >= _historyRequestCellsWarningThreshold / OverlappingRequestSizeDivisor)
+            {
+                var overlaps = startUtc < _previousLargeHistoryRequestEndUtc && endUtc > _previousLargeHistoryRequestStartUtc;
+                _consecutiveOverlappingHistoryRequests = overlaps ? _consecutiveOverlappingHistoryRequests + 1 : 0;
+                _previousLargeHistoryRequestStartUtc = startUtc;
+                _previousLargeHistoryRequestEndUtc = endUtc;
+
+                if (_consecutiveOverlappingHistoryRequests >= OverlappingRequestsWarningCount)
+                {
+                    _overlappingHistoryRequestsWarningSent = true;
+                    Debug($"Warning: history() has been called {OverlappingRequestsWarningCount}+ times with time windows overlapping" +
+                        " the previous call. Re-fetching a long lookback repeatedly is slow: consider fetching history once and keeping" +
+                        " it updated with a rolling window, consolidators or indicator warm up, or shortening the lookback.");
+                }
+            }
+        }
+
+        /// <summary>
+        /// Rough order-of-magnitude estimate of the data cells (bars x columns) a history request will produce
+        /// </summary>
+        private static long EstimateDataCells(HistoryRequest request)
+        {
+            var span = request.EndTimeUtc - request.StartTimeUtc;
+            if (span <= TimeSpan.Zero)
+            {
+                return 0;
+            }
+
+            // ~5 tradable days a week; sub-daily resolutions only have data during regular market hours
+            var tradableDays = Math.Max(1, span.TotalDays * 5 / 7);
+            double bars;
+            switch (request.Resolution)
+            {
+                case Resolution.Daily:
+                    bars = tradableDays;
+                    break;
+                case Resolution.Tick:
+                    // unknowable upfront, use a conservative 1 data point per second of market time
+                    bars = tradableDays * request.ExchangeHours.RegularMarketDuration.TotalSeconds;
+                    break;
+                default:
+                    bars = tradableDays * (request.ExchangeHours.RegularMarketDuration / request.Resolution.ToTimeSpan());
+                    break;
+            }
+
+            // approximate data frame column counts per data point
+            var columns = request.TickType == TickType.Quote ? 10 : request.TickType == TickType.OpenInterest ? 1 : 5;
+            return (long)(bars * columns);
         }
 
         private IEnumerable<HistoryRequest> GetFilterestRequests(IEnumerable<HistoryRequest> requests)
