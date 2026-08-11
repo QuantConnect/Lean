@@ -187,15 +187,16 @@ namespace QuantConnect.Brokerages
         }
 
         /// <summary>
-        /// Removes the locate broker from the order properties when the order does not open a short
-        /// position. A locate belongs only on a short sell, so brokers reject it on any other order.
-        /// A position side set in the order properties overrides the holdings-based mapping.
+        /// Removes the locate from an order that does not open a short position.
+        /// A locate belongs only on short sells; brokers reject it on any other order.
+        /// A position side set in the properties wins over the holdings check.
+        /// The edit goes into a copy; the given instance is never touched.
         /// </summary>
-        /// <param name="properties">The order properties to edit</param>
+        /// <param name="properties">The order properties to check</param>
         /// <param name="quantity">The order quantity; the sign gives the order direction</param>
         /// <param name="holdingsQuantity">The current holdings quantity</param>
-        /// <returns>True when a locate was removed from the order properties</returns>
-        public static bool TryRemoveLocateFromNonShortOrder(IOrderProperties properties, decimal quantity, decimal holdingsQuantity)
+        /// <returns>A copy of the properties without the locate; null when there is nothing to remove</returns>
+        public static IOrderProperties RemoveLocateFromNonShortOrder(IOrderProperties properties, decimal quantity, decimal holdingsQuantity)
         {
             switch (properties)
             {
@@ -203,32 +204,37 @@ namespace QuantConnect.Brokerages
                     if ((string.IsNullOrEmpty(terminalLink.LocateBroker) && string.IsNullOrEmpty(terminalLink.LocateId))
                         || IsShortOpen(terminalLink.PositionSide, quantity, holdingsQuantity))
                     {
-                        return false;
+                        return null;
                     }
-                    terminalLink.LocateBroker = null;
-                    terminalLink.LocateId = null;
-                    return true;
+                    var terminalLinkCopy = (TerminalLinkOrderProperties)terminalLink.Clone();
+                    terminalLinkCopy.LocateBroker = null;
+                    terminalLinkCopy.LocateId = null;
+                    return terminalLinkCopy;
 
                 case WolverineOrderProperties wolverine:
                     if (string.IsNullOrEmpty(wolverine.LocateBroker) || IsShortOpen(wolverine.PositionSide, quantity, holdingsQuantity))
                     {
-                        return false;
+                        return null;
                     }
-                    wolverine.LocateBroker = null;
-                    return true;
+                    var wolverineCopy = (WolverineOrderProperties)wolverine.Clone();
+                    wolverineCopy.LocateBroker = null;
+                    return wolverineCopy;
 
                 case FixOrderProperties fixProperties:
                     var additionalProperties = fixProperties.AdditionalProperties;
-                    if (additionalProperties == null || IsShortOpen(null, quantity, holdingsQuantity))
+                    if (additionalProperties == null
+                        || (!additionalProperties.ContainsKey("5700") && !additionalProperties.ContainsKey("114"))
+                        || IsShortOpen(null, quantity, holdingsQuantity))
                     {
-                        return false;
+                        return null;
                     }
-
-                    // single '|' so both tags are always removed: LocateBroker <5700>, LocateReqd <114>
-                    return additionalProperties.Remove("5700") | additionalProperties.Remove("114");
+                    var fixCopy = (FixOrderProperties)fixProperties.Clone();
+                    fixCopy.AdditionalProperties.Remove("5700"); // LocateBroker <5700>
+                    fixCopy.AdditionalProperties.Remove("114"); // LocateReqd <114>
+                    return fixCopy;
 
                 default:
-                    return false;
+                    return null;
             }
         }
 

@@ -1770,15 +1770,15 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
 
         /// <summary>
         /// Runs sanity checks over the order properties before the order is placed.
-        /// A check edits a copy of the properties, so the caller's own instance stays untouched.
+        /// A check that edits the properties returns an edited copy, so the caller's own instance stays untouched.
         /// </summary>
         private void SanitizeOrderProperties(Order order, Security security)
         {
             // a locate belongs only on an order that opens a short position; brokers reject it on any other order
-            var properties = order.Properties?.Clone();
-            if (BrokerageExtensions.TryRemoveLocateFromNonShortOrder(properties, order.Quantity, security.Holdings.Quantity))
+            var sanitizedProperties = BrokerageExtensions.RemoveLocateFromNonShortOrder(order.Properties, order.Quantity, security.Holdings.Quantity);
+            if (sanitizedProperties != null)
             {
-                order.Properties = properties;
+                order.Properties = sanitizedProperties;
 
                 if (!_loggedLocateRemovedWarning)
                 {
