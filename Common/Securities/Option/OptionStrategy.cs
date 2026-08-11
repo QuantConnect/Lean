@@ -61,7 +61,7 @@ namespace QuantConnect.Securities.Option
         {
             Name = name;
             CanonicalOption = canonicalSymbol;
-            Underlying = canonicalSymbol.Underlying;
+            Underlying = canonicalSymbol?.Underlying;
             OptionLegs = optionLegs ?? new List<OptionLegData>();
             UnderlyingLegs = underlyingLegs ?? new List<UnderlyingLegData>();
 
@@ -128,7 +128,8 @@ namespace QuantConnect.Securities.Option
                 {
                     optionLegs.Add(optionLeg);
 
-                    if (canonicalSymbol == null)
+                    // legs created from strike/expiration data don't have a symbol until the strategy is traded
+                    if (canonicalSymbol == null && optionLeg.Symbol != null)
                     {
                         canonicalSymbol = optionLeg.Symbol.Canonical;
                     }
@@ -161,6 +162,31 @@ namespace QuantConnect.Securities.Option
             /// Strike price of the leg
             /// </summary>
             public decimal Strike { get; set; }
+
+            /// <summary>
+            /// Creates a new instance of <see cref="OptionLegData"/>
+            /// </summary>
+            public OptionLegData()
+            {
+            }
+
+            /// <summary>
+            /// Creates a new instance of <see cref="OptionLegData"/> from the specified parameters.
+            /// The leg symbol is created from the strategy's canonical option symbol when the strategy is traded
+            /// </summary>
+            /// <param name="quantity">The quantity of the leg</param>
+            /// <param name="right">The option right of the leg</param>
+            /// <param name="strike">The strike price of the leg</param>
+            /// <param name="expiration">The expiration date of the leg</param>
+            /// <param name="orderPrice">Optional order limit price of the leg</param>
+            public OptionLegData(int quantity, OptionRight right, decimal strike, DateTime expiration, decimal? orderPrice = null)
+            {
+                Quantity = quantity;
+                Right = right;
+                Strike = strike;
+                Expiration = expiration;
+                OrderPrice = orderPrice;
+            }
 
             /// <summary>
             /// Creates a new instance of <see cref="OptionLegData"/> from the specified parameters

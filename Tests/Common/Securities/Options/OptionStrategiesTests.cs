@@ -17,6 +17,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using NUnit.Framework;
+using Python.Runtime;
 
 using QuantConnect.Securities.Option;
 using QuantConnect.Securities.Option.StrategyMatcher;
@@ -1627,6 +1628,52 @@ namespace QuantConnect.Tests.Common.Securities.Options
             });
             var leg = strategy.OptionLegs.Single();
             Assert.AreEqual(contractSymbol, leg.Symbol);
+        }
+
+        [Test]
+        public void CreatesOptionLegDataFromStrikeAndExpiration()
+        {
+            var expiration = new DateTime(2023, 08, 18);
+            var leg = new OptionStrategy.OptionLegData(-1, OptionRight.Put, 4000m, expiration);
+
+            Assert.AreEqual(-1, leg.Quantity);
+            Assert.AreEqual(OptionRight.Put, leg.Right);
+            Assert.AreEqual(4000m, leg.Strike);
+            Assert.AreEqual(expiration, leg.Expiration);
+            Assert.IsNull(leg.OrderPrice);
+            Assert.IsNull(leg.Symbol);
+
+            // the leg symbol is created from the canonical option symbol when used in a strategy
+            var strategy = new OptionStrategy("Test Strategy", Symbols.SPY_Option_Chain, new List<OptionStrategy.OptionLegData> { leg });
+            var expectedSymbol = Symbol.CreateOption(Symbols.SPY, Market.USA, OptionStyle.American, OptionRight.Put, 4000m, expiration);
+            Assert.AreEqual(expectedSymbol, strategy.OptionLegs.Single().Symbol);
+        }
+
+        [TestCase("date")]
+        [TestCase("datetime")]
+        public void CreatesOptionLegDataFromPython(string expiryType)
+        {
+            // Production deployments trying to build strategy legs from Python failed with
+            // "Trying to dynamically access a method that does not exist" because OptionLegData had no
+            // (quantity, right, strike, expiration) constructor. Both date and datetime must be accepted for expiry
+            using (Py.GIL())
+            {
+                var testModule = PyModule.FromString("testModule",
+                    @"
+from AlgorithmImports import *
+from datetime import date, datetime
+
+def create_leg(expiry_type):
+    expiry = date(2023, 8, 18) if expiry_type == 'date' else datetime(2023, 8, 18)
+    return OptionStrategy.OptionLegData(-1, OptionRight.PUT, 4000, expiry)
+");
+                var leg = testModule.GetAttr("create_leg").Invoke(expiryType.ToPython()).As<OptionStrategy.OptionLegData>();
+
+                Assert.AreEqual(-1, leg.Quantity);
+                Assert.AreEqual(OptionRight.Put, leg.Right);
+                Assert.AreEqual(4000m, leg.Strike);
+                Assert.AreEqual(new DateTime(2023, 08, 18), leg.Expiration);
+            }
         }
     }
 }

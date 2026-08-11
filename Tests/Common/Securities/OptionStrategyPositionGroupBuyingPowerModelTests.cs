@@ -1151,6 +1151,71 @@ namespace QuantConnect.Tests.Common.Securities
             ComputeAndAssertQuantityForDeltaBuyingPower(positionGroup, -1, -usedMargin / 2);
         }
 
+        [Test]
+        public void FallsBackToPerLegMarginForDegeneratePositionGroup()
+        {
+            var positionGroup = SetUpOptionStrategy(OptionStrategyDefinitions.BullCallSpread, 1);
+
+            // A group whose legs don't fit the matched strategy's expected shape, like a bull call spread group
+            // missing its long leg, used to hard-crash margin computations with
+            // "InvalidOperationException: Sequence contains no matching element"
+            var shortLeg = positionGroup.Positions.Single(position => position.Quantity < 0);
+            var degenerateGroup = new PositionGroup(positionGroup.BuyingPowerModel, 1, shortLeg);
+
+            var security = _portfolio.Securities[shortLeg.Symbol];
+            var expectedMaintenanceMargin = Math.Abs(security.BuyingPowerModel.GetMaintenanceMargin(
+                MaintenanceMarginParameters.ForQuantityAtCurrentPrice(security, shortLeg.Quantity)));
+            var expectedInitialMargin = Math.Abs(((OptionInitialMargin)security.BuyingPowerModel.GetInitialMarginRequirement(
+                new InitialMarginParameters(security, shortLeg.Quantity))).ValueWithoutPremium);
+
+            var maintenanceMargin = 0m;
+            var initialMargin = (OptionInitialMargin)null;
+            Assert.DoesNotThrow(() => maintenanceMargin = degenerateGroup.BuyingPowerModel.GetMaintenanceMargin(
+                new PositionGroupMaintenanceMarginParameters(_portfolio, degenerateGroup)));
+            Assert.DoesNotThrow(() => initialMargin = (OptionInitialMargin)degenerateGroup.BuyingPowerModel.GetInitialMarginRequirement(
+                new PositionGroupInitialMarginParameters(_portfolio, degenerateGroup)));
+
+            Assert.AreEqual(expectedMaintenanceMargin, maintenanceMargin);
+            Assert.AreEqual(expectedInitialMargin, initialMargin.ValueWithoutPremium);
+        }
+
+        [Test]
+        public void FallsBackToPerLegMarginForStrategiesWithoutMarginModeling()
+        {
+            var positionGroup = SetUpOptionStrategy(OptionStrategyDefinitions.BullCallSpread, 1);
+            var orderedLegs = positionGroup.Positions.OrderBy(position => position.Symbol.ID.StrikePrice).ToList();
+            var lowerStrikeSymbol = orderedLegs[0].Symbol;
+            var higherStrikeSymbol = orderedLegs[1].Symbol;
+
+            // A strategy the matcher can produce but which has no specific margin modeling, like the backspreads,
+            // used to hard-crash margin computations with NotImplementedException
+            var callBackspread = OptionStrategies.CallBackspread(lowerStrikeSymbol.Canonical,
+                lowerStrikeSymbol.ID.StrikePrice, higherStrikeSymbol.ID.StrikePrice, lowerStrikeSymbol.ID.Date);
+            var backspreadGroup = new PositionGroup(new OptionStrategyPositionGroupBuyingPowerModel(callBackspread), 1,
+                new Position(lowerStrikeSymbol, -1, 1), new Position(higherStrikeSymbol, 2, 2));
+
+            var expectedMaintenanceMargin = 0m;
+            var expectedInitialMargin = 0m;
+            foreach (var position in backspreadGroup.Positions)
+            {
+                var security = _portfolio.Securities[position.Symbol];
+                expectedMaintenanceMargin += Math.Abs(security.BuyingPowerModel.GetMaintenanceMargin(
+                    MaintenanceMarginParameters.ForQuantityAtCurrentPrice(security, position.Quantity)));
+                expectedInitialMargin += Math.Abs(((OptionInitialMargin)security.BuyingPowerModel.GetInitialMarginRequirement(
+                    new InitialMarginParameters(security, position.Quantity))).ValueWithoutPremium);
+            }
+
+            var maintenanceMargin = 0m;
+            var initialMargin = (OptionInitialMargin)null;
+            Assert.DoesNotThrow(() => maintenanceMargin = backspreadGroup.BuyingPowerModel.GetMaintenanceMargin(
+                new PositionGroupMaintenanceMarginParameters(_portfolio, backspreadGroup)));
+            Assert.DoesNotThrow(() => initialMargin = (OptionInitialMargin)backspreadGroup.BuyingPowerModel.GetInitialMarginRequirement(
+                new PositionGroupInitialMarginParameters(_portfolio, backspreadGroup)));
+
+            Assert.AreEqual(expectedMaintenanceMargin, maintenanceMargin);
+            Assert.AreEqual(expectedInitialMargin, initialMargin.ValueWithoutPremium);
+        }
+
         /// <remarks>
         /// TODO: Revisit the explicit test cases when we can take into account premium for strategies with zero margin.
         /// </remarks>
