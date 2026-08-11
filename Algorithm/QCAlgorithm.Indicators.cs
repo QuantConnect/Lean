@@ -3397,10 +3397,11 @@ namespace QuantConnect.Algorithm
         /// <see cref="SMA(Symbol, int, Resolution?, Func{IBaseData, decimal})"/> or
         /// <see cref="Consolidate(Symbol, Resolution, Action{TradeBar})"/>, so they stop receiving data updates and
         /// no longer consume resources. Indicators created for multiple symbols, e.g.
-        /// <see cref="B(Symbol, Symbol, int, Resolution?)"/>, are completely deregistered when any of their symbols
-        /// is deregistered. Typically called from <see cref="QCAlgorithm.OnSecuritiesChanged"/> for each removed
-        /// security, which avoids leaking consolidators on universe churn; alternatively see
-        /// <see cref="IAlgorithmSettings.AutomaticIndicatorDeregistration"/>.
+        /// <see cref="B(Symbol, Symbol, int, Resolution?, Func{IBaseData, IBaseDataBar})"/>, are completely
+        /// deregistered when any of their symbols is deregistered. Typically called from
+        /// <see cref="QCAlgorithm.OnSecuritiesChanged"/> for each removed security, which avoids leaking
+        /// consolidators on universe churn; alternatively see
+        /// <see cref="QuantConnect.Interfaces.IAlgorithmSettings.AutomaticIndicatorDeregistration"/>.
         /// Indicators registered through the RegisterIndicator overloads are also deregistered. Consolidators added
         /// directly through <see cref="SubscriptionManager"/> without an indicator are not tracked and are unaffected,
         /// intentionally allowing them to be kept across universe removals.
