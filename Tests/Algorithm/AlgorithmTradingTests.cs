@@ -1892,11 +1892,13 @@ namespace QuantConnect.Tests.Algorithm
             return hashSufficientBuyingPower.IsSufficient;
         }
 
-        // A locate broker belongs only on a short sell. Each case: the order properties carrying
-        // the locate, the holdings before the order, the order quantity, and whether the locate
-        // must survive the pre order checks.
+        // A locate belongs only on an order that opens a short position. Each case: the order
+        // properties carrying the locate, the holdings before the order, the order quantity, and
+        // whether the locate must survive the pre order checks. A position side set in the
+        // properties wins over the holdings-based mapping.
         private static IEnumerable<TestCaseData> LocateCleanupCases()
         {
+            // Bloomberg carries the locate as raw fix tags
             yield return new TestCaseData(CreateLocateBrokerTagProperties(), 0m, -10m, true)
                 .SetName("ShortSellKeepsLocateBroker");
             yield return new TestCaseData(CreateLocateBrokerTagProperties(), 0m, 10m, false)
@@ -1911,61 +1913,62 @@ namespace QuantConnect.Tests.Algorithm
                 .SetName("ShortSellKeepsLocateTags");
             yield return new TestCaseData(CreateLocateTagProperties(), 20m, -10m, false)
                 .SetName("SellToCloseDropsLocateTags");
+
+            // TerminalLink keeps the locate broker and locate id together; either one alone counts
+            yield return new TestCaseData(new TerminalLinkOrderProperties { LocateBroker = "MLCO", LocateId = "LOC-123" }, 0m, -10m, true)
+                .SetName("ShortSellKeepsTerminalLinkLocate");
+            yield return new TestCaseData(new TerminalLinkOrderProperties { LocateBroker = "MLCO", LocateId = "LOC-123" }, 100m, -300m, true)
+                .SetName("CrossZeroSellKeepsTerminalLinkLocate");
+            yield return new TestCaseData(new TerminalLinkOrderProperties { LocateBroker = "MLCO", LocateId = "LOC-123" }, 20m, -10m, false)
+                .SetName("SellToCloseDropsTerminalLinkLocate");
+            yield return new TestCaseData(new TerminalLinkOrderProperties { LocateId = "LOC-123" }, 0m, -10m, true)
+                .SetName("ShortSellKeepsLoneLocateId");
+            yield return new TestCaseData(new TerminalLinkOrderProperties { LocateId = "LOC-123" }, 20m, -10m, false)
+                .SetName("SellToCloseDropsLoneLocateId");
+            yield return new TestCaseData(new TerminalLinkOrderProperties { LocateBroker = "MLCO", LocateId = "LOC-123", PositionSide = OrderPosition.SellToOpen }, 20m, -10m, true)
+                .SetName("TerminalLinkPositionSideShortKeepsLocate");
+            yield return new TestCaseData(new TerminalLinkOrderProperties { LocateBroker = "MLCO", LocateId = "LOC-123", PositionSide = OrderPosition.SellToClose }, 0m, -10m, false)
+                .SetName("TerminalLinkPositionSideCloseDropsLocate");
+
+            // Wolverine carries the locate broker only
+            yield return new TestCaseData(new WolverineOrderProperties { LocateBroker = "MLCO", PositionSide = OrderPosition.SellToOpen }, 20m, -10m, true)
+                .SetName("WolverinePositionSideShortKeepsLocate");
+            yield return new TestCaseData(new WolverineOrderProperties { LocateBroker = "MLCO", PositionSide = OrderPosition.SellToClose }, 0m, -10m, false)
+                .SetName("WolverinePositionSideCloseDropsLocate");
         }
 
         [TestCaseSource(nameof(LocateCleanupCases))]
-        public void MarketOrderKeepsLocateOnlyOnShortSells(FixOrderProperties properties, decimal holdings, decimal quantity, bool locateKept)
+        public void MarketOrderKeepsLocateOnlyOnShortSells(IOrderProperties properties, decimal holdings, decimal quantity, bool locateKept)
         {
             // Arrange
             Security msft;
             var algo = GetAlgorithm(out msft, 2m, 0);
             Update(msft, 100m);
             algo.Portfolio[Symbols.MSFT].SetHoldings(100m, holdings);
-
-            var additionalPropertiesBefore = new Dictionary<string, string>(properties.AdditionalProperties);
-
-            // Act
-            algo.MarketOrder(Symbols.MSFT, quantity, orderProperties: properties);
-
-            // Assert: the submitted request carries the locate tags only when the order opens a short
-            var submitted = (FixOrderProperties)((SubmitOrderRequest)_fakeOrderProcessor.ProcessedOrdersRequests[1]).OrderProperties;
-            if (locateKept)
-            {
-                CollectionAssert.AreEquivalent(additionalPropertiesBefore, submitted.AdditionalProperties);
-            }
-            else
-            {
-                Assert.IsFalse(submitted.AdditionalProperties.ContainsKey("5700"));
-                Assert.IsFalse(submitted.AdditionalProperties.ContainsKey("114"));
-            }
-
-            // The algorithm's own object is never touched
-            CollectionAssert.AreEquivalent(additionalPropertiesBefore, properties.AdditionalProperties);
-        }
-
-        // A position side set in the order properties wins over the holdings-based mapping
-        // when the cleanup decides whether the order opens a short.
-        [TestCase(OrderPosition.SellToOpen, 20, -10, true)]
-        [TestCase(OrderPosition.SellToClose, 0, -10, false)]
-        public void MarketOrderPositionSideWinsOverHoldingsForLocateCleanup(OrderPosition positionSide,
-            decimal holdings, decimal quantity, bool locateKept)
-        {
-            // Arrange
-            Security msft;
-            var algo = GetAlgorithm(out msft, 2m, 0);
-            Update(msft, 100m);
-            algo.Portfolio[Symbols.MSFT].SetHoldings(100m, holdings);
-            var properties = new WolverineOrderProperties { LocateBroker = "MLCO", PositionSide = positionSide };
+            var locateBefore = GetLocateState(properties);
 
             // Act
             algo.MarketOrder(Symbols.MSFT, quantity, orderProperties: properties);
 
             // Assert: the submitted request carries the locate only when the order opens a short
-            var submitted = (WolverineOrderProperties)((SubmitOrderRequest)_fakeOrderProcessor.ProcessedOrdersRequests[1]).OrderProperties;
-            Assert.AreEqual(locateKept ? "MLCO" : null, submitted.LocateBroker);
+            var submitted = ((SubmitOrderRequest)_fakeOrderProcessor.ProcessedOrdersRequests[1]).OrderProperties;
+            Assert.AreEqual(locateKept ? locateBefore : default, GetLocateState(submitted));
 
             // The algorithm's own object is never touched
-            Assert.AreEqual("MLCO", properties.LocateBroker);
+            Assert.AreEqual(locateBefore, GetLocateState(properties));
+        }
+
+        // The locate fields of each supported properties type as one comparable value;
+        // all null means the order carries no locate.
+        private static (string LocateBroker, string LocateId, string LocateBrokerTag, string LocateReqdTag) GetLocateState(IOrderProperties properties)
+        {
+            return properties switch
+            {
+                TerminalLinkOrderProperties terminalLink => (terminalLink.LocateBroker, terminalLink.LocateId, null, null),
+                WolverineOrderProperties wolverine => (wolverine.LocateBroker, null, null, null),
+                FixOrderProperties fix => (null, null, fix.AdditionalProperties.GetValueOrDefault("5700"), fix.AdditionalProperties.GetValueOrDefault("114")),
+                _ => default
+            };
         }
 
         private static BloombergFixOrderProperties CreateLocateBrokerTagProperties()

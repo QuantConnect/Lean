@@ -87,42 +87,6 @@ namespace QuantConnect.Tests.Common.Brokerages
             Assert.AreEqual("NotSupported", message.Code);
         }
 
-        // The locate belongs only on a short (SHRT) order: an explicit position side wins, holdings
-        // apply only with AutomaticPositionSides on; otherwise the plain direction is sent, never a short.
-        [TestCase(null, false, 0, -10, false)]
-        [TestCase(null, true, 0, -10, true)]
-        [TestCase(null, true, 100, -300, true)]
-        [TestCase(null, true, 20, -10, false)]
-        [TestCase(OrderPosition.SellToOpen, false, 20, -10, true)]
-        [TestCase(OrderPosition.SellToClose, false, 0, -10, false)]
-        public void CanSubmitOrder_KeepsLocateOnlyOnShortSells(OrderPosition? positionSide, bool automaticPositionSides,
-            decimal holdings, decimal quantity, bool locateKept)
-        {
-            var algo = new AlgorithmStub();
-            var security = algo.AddSecurity(SecurityType.Equity, "SPY");
-            security.Holdings.SetHoldings(100m, holdings);
-            var properties = new TerminalLinkOrderProperties
-            {
-                LocateBroker = "MLCO",
-                LocateId = "LOC-123",
-                PositionSide = positionSide,
-                AutomaticPositionSides = automaticPositionSides
-            };
-            var order = new MarketOrder(security.Symbol, quantity, new DateTime(2024, 1, 2), properties: properties);
-
-            Assert.IsTrue(_brokerageModel.CanSubmitOrder(security, order, out var message), message?.Message);
-            if (locateKept)
-            {
-                Assert.AreEqual("MLCO", properties.LocateBroker);
-                Assert.AreEqual("LOC-123", properties.LocateId);
-            }
-            else
-            {
-                Assert.IsNull(properties.LocateBroker);
-                Assert.IsNull(properties.LocateId);
-            }
-        }
-
         [Test]
         public void CannotUpdateOrder()
         {
