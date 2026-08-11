@@ -76,8 +76,7 @@ namespace QuantConnect.Commands
         public override CommandResultPacket Run(IAlgorithm algorithm)
         {
             Symbol = GetSymbol(Ticker, SecurityType, Market, Symbol);
-            // Clone: pre order checks may edit the properties, and these are the algorithm's defaults
-            var request = new SubmitOrderRequest(OrderType, Symbol.SecurityType, Symbol, Quantity, StopPrice, LimitPrice, DateTime.UtcNow, Tag, algorithm.DefaultOrderProperties?.Clone());
+            var request = new SubmitOrderRequest(OrderType, Symbol.SecurityType, Symbol, Quantity, StopPrice, LimitPrice, DateTime.UtcNow, Tag, algorithm.DefaultOrderProperties);
             var ticket = algorithm.SubmitOrderRequest(request);
             var response = ticket.GetMostRecentOrderResponse();
             var message = Messages.OrderCommand.CommandInfo(OrderType, Symbol, Quantity, response);

@@ -1897,24 +1897,20 @@ namespace QuantConnect.Tests.Algorithm
         // must survive the pre order checks.
         private static IEnumerable<TestCaseData> LocateCleanupCases()
         {
-            yield return new TestCaseData(new BloombergFixOrderProperties { LocateBroker = "MLCO" }, 0m, -10m, true)
+            yield return new TestCaseData(CreateLocateBrokerTagProperties(), 0m, -10m, true)
                 .SetName("ShortSellKeepsLocateBroker");
-            yield return new TestCaseData(new BloombergFixOrderProperties { LocateBroker = "MLCO" }, 0m, 10m, false)
+            yield return new TestCaseData(CreateLocateBrokerTagProperties(), 0m, 10m, false)
                 .SetName("BuyToOpenDropsLocateBroker");
-            yield return new TestCaseData(new BloombergFixOrderProperties { LocateBroker = "MLCO" }, 20m, -10m, false)
+            yield return new TestCaseData(CreateLocateBrokerTagProperties(), 20m, -10m, false)
                 .SetName("SellToCloseDropsLocateBroker");
-            yield return new TestCaseData(new BloombergFixOrderProperties { LocateBroker = "MLCO" }, -10m, 10m, false)
+            yield return new TestCaseData(CreateLocateBrokerTagProperties(), -10m, 10m, false)
                 .SetName("BuyToCloseDropsLocateBroker");
-            yield return new TestCaseData(new BloombergFixOrderProperties { LocateBroker = "MLCO" }, 100m, -300m, true)
+            yield return new TestCaseData(CreateLocateBrokerTagProperties(), 100m, -300m, true)
                 .SetName("CrossZeroSellKeepsLocateBroker");
             yield return new TestCaseData(CreateLocateTagProperties(), 0m, -10m, true)
                 .SetName("ShortSellKeepsLocateTags");
             yield return new TestCaseData(CreateLocateTagProperties(), 20m, -10m, false)
                 .SetName("SellToCloseDropsLocateTags");
-            yield return new TestCaseData(new WolverineOrderProperties { LocateBroker = "MLCO", PositionSide = OrderPosition.SellToOpen }, 20m, -10m, true)
-                .SetName("PositionSideShortKeepsLocateOverHoldings");
-            yield return new TestCaseData(new WolverineOrderProperties { LocateBroker = "MLCO", PositionSide = OrderPosition.SellToClose }, 0m, -10m, false)
-                .SetName("PositionSideCloseDropsLocateOverHoldings");
         }
 
         [TestCaseSource(nameof(LocateCleanupCases))]
@@ -1926,29 +1922,57 @@ namespace QuantConnect.Tests.Algorithm
             Update(msft, 100m);
             algo.Portfolio[Symbols.MSFT].SetHoldings(100m, holdings);
 
-            var locateBrokerBefore = properties.LocateBroker;
             var additionalPropertiesBefore = new Dictionary<string, string>(properties.AdditionalProperties);
 
             // Act
             algo.MarketOrder(Symbols.MSFT, quantity, orderProperties: properties);
 
-            // Assert: the submitted request carries the locate only when the order opens a short
+            // Assert: the submitted request carries the locate tags only when the order opens a short
             var submitted = (FixOrderProperties)((SubmitOrderRequest)_fakeOrderProcessor.ProcessedOrdersRequests[1]).OrderProperties;
             if (locateKept)
             {
-                Assert.AreEqual(locateBrokerBefore, submitted.LocateBroker);
                 CollectionAssert.AreEquivalent(additionalPropertiesBefore, submitted.AdditionalProperties);
             }
             else
             {
-                Assert.IsNull(submitted.LocateBroker);
                 Assert.IsFalse(submitted.AdditionalProperties.ContainsKey("5700"));
                 Assert.IsFalse(submitted.AdditionalProperties.ContainsKey("114"));
             }
 
             // The algorithm's own object is never touched
-            Assert.AreEqual(locateBrokerBefore, properties.LocateBroker);
             CollectionAssert.AreEquivalent(additionalPropertiesBefore, properties.AdditionalProperties);
+        }
+
+        // A position side set in the order properties wins over the holdings-based mapping
+        // when the cleanup decides whether the order opens a short.
+        [TestCase(OrderPosition.SellToOpen, 20, -10, true)]
+        [TestCase(OrderPosition.SellToClose, 0, -10, false)]
+        public void MarketOrderPositionSideWinsOverHoldingsForLocateCleanup(OrderPosition positionSide,
+            decimal holdings, decimal quantity, bool locateKept)
+        {
+            // Arrange
+            Security msft;
+            var algo = GetAlgorithm(out msft, 2m, 0);
+            Update(msft, 100m);
+            algo.Portfolio[Symbols.MSFT].SetHoldings(100m, holdings);
+            var properties = new WolverineOrderProperties { LocateBroker = "MLCO", PositionSide = positionSide };
+
+            // Act
+            algo.MarketOrder(Symbols.MSFT, quantity, orderProperties: properties);
+
+            // Assert: the submitted request carries the locate only when the order opens a short
+            var submitted = (WolverineOrderProperties)((SubmitOrderRequest)_fakeOrderProcessor.ProcessedOrdersRequests[1]).OrderProperties;
+            Assert.AreEqual(locateKept ? "MLCO" : null, submitted.LocateBroker);
+
+            // The algorithm's own object is never touched
+            Assert.AreEqual("MLCO", properties.LocateBroker);
+        }
+
+        private static BloombergFixOrderProperties CreateLocateBrokerTagProperties()
+        {
+            var properties = new BloombergFixOrderProperties();
+            properties.AdditionalProperties["5700"] = "MLCO";
+            return properties;
         }
 
         private static BloombergFixOrderProperties CreateLocateTagProperties()
@@ -1968,7 +1992,7 @@ namespace QuantConnect.Tests.Algorithm
             Security msft;
             var algo = GetAlgorithm(out msft, 2m, 0);
             Update(msft, 100m);
-            var properties = new BloombergFixOrderProperties { LocateBroker = "MLCO" };
+            var properties = CreateLocateBrokerTagProperties();
 
             // Act: close the long first, then open the short, both with the same properties object
             algo.Portfolio[Symbols.MSFT].SetHoldings(100m, 10m);
@@ -1977,13 +2001,13 @@ namespace QuantConnect.Tests.Algorithm
             algo.MarketOrder(Symbols.MSFT, -10, orderProperties: properties);
 
             // Assert: the algorithm's object still carries the locate for the short leg
-            Assert.AreEqual("MLCO", properties.LocateBroker);
+            Assert.AreEqual("MLCO", properties.AdditionalProperties["5700"]);
 
             // The close leg went out without the locate, the short leg with it
             var closeRequest = (SubmitOrderRequest)_fakeOrderProcessor.ProcessedOrdersRequests[1];
             var shortRequest = (SubmitOrderRequest)_fakeOrderProcessor.ProcessedOrdersRequests[2];
-            Assert.IsNull(((FixOrderProperties)closeRequest.OrderProperties).LocateBroker);
-            Assert.AreEqual("MLCO", ((FixOrderProperties)shortRequest.OrderProperties).LocateBroker);
+            Assert.IsFalse(((FixOrderProperties)closeRequest.OrderProperties).AdditionalProperties.ContainsKey("5700"));
+            Assert.AreEqual("MLCO", ((FixOrderProperties)shortRequest.OrderProperties).AdditionalProperties["5700"]);
         }
 
         private static object[] LiquidateWorksAsExpectedTestCases =

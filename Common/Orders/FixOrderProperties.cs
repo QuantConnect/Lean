@@ -40,12 +40,6 @@ namespace QuantConnect.Orders
         public string Notes { get; set; }
 
         /// <summary>
-        /// The broker the shares are borrowed from for a short sale. Brokerages send it only on
-        /// short sell orders; the FIX tag carrying it is brokerage specific (e.g. 5700).
-        /// </summary>
-        public string LocateBroker { get; set; }
-
-        /// <summary>
         /// Automated execution order, private, no broker intervention
         /// </summary>
         public const char AutomatedExecutionOrderPrivate = '1';

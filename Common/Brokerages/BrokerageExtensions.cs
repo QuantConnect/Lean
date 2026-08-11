@@ -29,17 +29,6 @@ namespace QuantConnect.Brokerages
     public static class BrokerageExtensions
     {
         /// <summary>
-        /// The FIX custom tag number carrying the locate broker when it is sent through
-        /// <see cref="FixOrderProperties.AdditionalProperties"/> instead of <see cref="FixOrderProperties.LocateBroker"/>
-        /// </summary>
-        private const string LocateBrokerTag = "5700";
-
-        /// <summary>
-        /// The FIX tag number of LocateReqd, sent next to the locate broker on short sells
-        /// </summary>
-        private const string LocateRequiredTag = "114";
-
-        /// <summary>
         /// The default set of order types that are not allowed to cross zero holdings.
         /// This is used by <see cref="ValidateCrossZeroOrder"/> when no custom set is provided.
         /// </summary>
@@ -208,44 +197,53 @@ namespace QuantConnect.Brokerages
         /// <returns>True when a locate was removed from the order properties</returns>
         public static bool TryRemoveLocateFromNonShortOrder(IOrderProperties properties, decimal quantity, decimal holdingsQuantity)
         {
-            var fixProperties = properties as FixOrderProperties;
-            if (fixProperties == null)
-            {
-                return false;
-            }
-
-            var additionalProperties = fixProperties.AdditionalProperties;
-            var hasLocateTags = additionalProperties != null
-                && (additionalProperties.ContainsKey(LocateBrokerTag) || additionalProperties.ContainsKey(LocateRequiredTag));
-            if (string.IsNullOrEmpty(fixProperties.LocateBroker) && !hasLocateTags)
-            {
-                return false;
-            }
-
-            var positionSide = default(OrderPosition?);
-            switch (fixProperties)
+            switch (properties)
             {
                 case TerminalLinkOrderProperties terminalLink:
-                    positionSide = terminalLink.PositionSide;
-                    break;
+                    if (string.IsNullOrEmpty(terminalLink.LocateBroker) || IsShortOpen(terminalLink.PositionSide, quantity, holdingsQuantity))
+                    {
+                        return false;
+                    }
+                    terminalLink.LocateBroker = null;
+                    return true;
+
                 case WolverineOrderProperties wolverine:
-                    positionSide = wolverine.PositionSide;
-                    break;
+                    if (string.IsNullOrEmpty(wolverine.LocateBroker) || IsShortOpen(wolverine.PositionSide, quantity, holdingsQuantity))
+                    {
+                        return false;
+                    }
+                    wolverine.LocateBroker = null;
+                    return true;
+
+                case FixOrderProperties fixProperties:
+                    var additionalProperties = fixProperties.AdditionalProperties;
+                    if (additionalProperties == null || IsShortOpen(null, quantity, holdingsQuantity))
+                    {
+                        return false;
+                    }
+
+                    additionalProperties.Remove("5700"); // 5700 = LocateBroker
+                    additionalProperties.Remove("114"); // 114 = LocateReqd
+                    return true;
+
+                default:
+                    return false;
+            }
+        }
+
+        /// <summary>
+        /// Whether the order opens a short position. A position side set in the order properties
+        /// wins over the holdings-based mapping.
+        /// </summary>
+        private static bool IsShortOpen(OrderPosition? positionSide, decimal quantity, decimal holdingsQuantity)
+        {
+            if (positionSide.HasValue)
+            {
+                return positionSide.Value == OrderPosition.SellToOpen;
             }
 
             // A sell that ends below zero opens a short, cross-zero sells included
-            var opensShort = positionSide.HasValue
-                ? positionSide.Value == OrderPosition.SellToOpen
-                : quantity < 0 && holdingsQuantity + quantity < 0;
-            if (opensShort)
-            {
-                return false;
-            }
-
-            fixProperties.LocateBroker = null;
-            additionalProperties?.Remove(LocateBrokerTag);
-            additionalProperties?.Remove(LocateRequiredTag);
-            return true;
+            return Extensions.GetOrderDirection(quantity) == OrderDirection.Sell && holdingsQuantity + quantity < 0;
         }
     }
 }

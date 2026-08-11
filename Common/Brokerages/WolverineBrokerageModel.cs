@@ -76,7 +76,6 @@ namespace QuantConnect.Brokerages
                     Messages.DefaultBrokerageModel.UnsupportedOrderType(this, order, SupportedOrderTypes));
                 return false;
             }
-
             return base.CanSubmitOrder(security, order, out message);
         }
 
