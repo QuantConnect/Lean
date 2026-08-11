@@ -16,6 +16,7 @@
 using System;
 using System.Threading;
 using QuantConnect.Util;
+using QuantConnect.Logging;
 using System.Collections.Generic;
 
 namespace QuantConnect.Scheduling
@@ -106,6 +107,22 @@ namespace QuantConnect.Scheduling
                 catch
                 {
                     // pass
+                }
+
+                consumer.AdditionalMinutesRequested++;
+                if (consumer.Name != null)
+                {
+                    // name the long-running work upfront: an opaque isolator kill minutes later is much harder to act on.
+                    // The first crossing of the one minute mark is the actionable heads-up, following ones are informational
+                    var message = $"TimeMonitor.ProcessConsumer(): '{consumer.Name}' has been executing for over {consumer.AdditionalMinutesRequested} minute(s)";
+                    if (consumer.AdditionalMinutesRequested == 1)
+                    {
+                        Log.Error($"{message}. It will be stopped once the algorithm time loop limit is exhausted");
+                    }
+                    else
+                    {
+                        Log.Trace(message);
+                    }
                 }
             }
         }
