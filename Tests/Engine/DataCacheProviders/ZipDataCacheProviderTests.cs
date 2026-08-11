@@ -52,6 +52,35 @@ namespace QuantConnect.Tests.Engine.DataCacheProviders
         }
 
         [Test]
+        public void FetchRethrowsOutOfMemoryAsMemoryDiagnostic()
+        {
+            // Ionic wraps the allocation failure into ZipException("Cannot read that as a ZipFile"), which used to be
+            // logged as a corrupt zip file and swallowed, see A-abb25be1. We want an honest memory diagnostic instead.
+            using var dataCacheProvider = new ZipDataCacheProvider(new OutOfMemoryDataProvider());
+
+            var exception = Assert.Throws<OutOfMemoryException>(
+                () => dataCacheProvider.Fetch("/data/option/usa/daily/pep_2026_trade_american.zip#entry.csv"));
+
+            StringAssert.Contains("ran out of memory", exception.Message);
+            StringAssert.DoesNotContain("Corrupt zip", exception.Message);
+            Assert.IsNotNull(exception.InnerException);
+        }
+
+        [Test]
+        public void FetchDoesNotThrowOnCorruptZipFile()
+        {
+            // a truly corrupt file must keep the previous behavior: log and return null instead of throwing
+            using var dataCacheProvider = new ZipDataCacheProvider(TestGlobals.DataProvider, cacheTimer: 0.1);
+
+            var tempZipFile = Path.GetTempFileName().Replace(".tmp", ".zip", StringComparison.InvariantCulture);
+            File.WriteAllText(tempZipFile, "corrupted zip");
+
+            Stream result = null;
+            Assert.DoesNotThrow(() => result = dataCacheProvider.Fetch(tempZipFile + "#testEntry.csv"));
+            Assert.IsNull(result);
+        }
+
+        [Test]
         public void StoreFailsCorruptedFile()
         {
             var dataCacheProvider = new ZipDataCacheProvider(TestGlobals.DataProvider, cacheTimer: 0.1);
@@ -71,6 +100,35 @@ namespace QuantConnect.Tests.Engine.DataCacheProviders
         {
             dataCacheProvider.Fetch(_tempZipFileEntry);
             dataCacheProvider.Store(_tempZipFileEntry, data);
+        }
+
+        /// <summary>
+        /// Provider whose streams fail allocation-style, simulating reading a zip while the process is out of memory
+        /// </summary>
+        private class OutOfMemoryDataProvider : IDataProvider
+        {
+            public event EventHandler<DataProviderNewDataRequestEventArgs> NewDataRequest;
+
+            public Stream Fetch(string key)
+            {
+                NewDataRequest?.Invoke(this, null);
+                return new OutOfMemoryStream();
+            }
+
+            private class OutOfMemoryStream : Stream
+            {
+                public override bool CanRead => true;
+                public override bool CanSeek => true;
+                public override bool CanWrite => false;
+                public override long Length => 1024;
+                public override long Position { get; set; }
+
+                public override void Flush() { }
+                public override int Read(byte[] buffer, int offset, int count) => throw new OutOfMemoryException();
+                public override long Seek(long offset, SeekOrigin origin) => Position;
+                public override void SetLength(long value) => throw new NotSupportedException();
+                public override void Write(byte[] buffer, int offset, int count) => throw new NotSupportedException();
+            }
         }
     }
 }
