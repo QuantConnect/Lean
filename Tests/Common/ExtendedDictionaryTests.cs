@@ -233,55 +233,36 @@ def set(dictionary, key, value):
             Assert.IsInstanceOf<KeyNotFoundException>(exception.InnerException);
         }
 
-        [Test]
-        public void ConcreteDictionariesHandleNullKeysGracefully()
+        private static IEnumerable<TestCaseData> NullKeyTestCases()
         {
             var time = new DateTime(2025, 1, 1);
-
             var securities = new SecurityManager(new TimeKeeper(time, TimeZones.NewYork));
-            Assert.IsFalse(securities.ContainsKey(null));
-            Assert.IsFalse(securities.TryGetValue(null, out _));
-            Assert.IsNull(securities.get(null));
 
-            var portfolio = new SecurityPortfolioManager(securities, new SecurityTransactionManager(null, securities), new AlgorithmSettings());
-            Assert.IsFalse(portfolio.ContainsKey(null));
-            Assert.IsFalse(portfolio.TryGetValue(null, out _));
-            Assert.IsNull(portfolio.get(null));
+            yield return new TestCaseData(securities).SetArgDisplayNames(nameof(SecurityManager));
+            yield return new TestCaseData(new SecurityPortfolioManager(securities, new SecurityTransactionManager(null, securities), new AlgorithmSettings()))
+                .SetArgDisplayNames(nameof(SecurityPortfolioManager));
+            yield return new TestCaseData(new CashBook()).SetArgDisplayNames(nameof(CashBook));
+            yield return new TestCaseData(new Slice(time, new List<BaseData>(), time)).SetArgDisplayNames(nameof(Slice));
+            yield return new TestCaseData(new TradeBars()).SetArgDisplayNames(nameof(TradeBars));
+            yield return new TestCaseData(new OptionChains()).SetArgDisplayNames(nameof(OptionChains));
+            yield return new TestCaseData(new FuturesChains()).SetArgDisplayNames(nameof(FuturesChains));
+            yield return new TestCaseData(new UniverseManager()).SetArgDisplayNames(nameof(UniverseManager));
+            yield return new TestCaseData(new SecurityPositionGroupModel()).SetArgDisplayNames(nameof(SecurityPositionGroupModel));
+        }
 
-            var cashBook = new CashBook();
-            Assert.IsFalse(cashBook.ContainsKey(null));
-            Assert.IsFalse(cashBook.TryGetValue(null, out _));
-            Assert.IsNull(cashBook.get(null));
+        [TestCaseSource(nameof(NullKeyTestCases))]
+        public void DictionariesHandleNullKeysGracefully(object dictionary)
+        {
+            AssertNullKeyIsHandledGracefully((dynamic)dictionary);
+        }
 
-            var slice = new Slice(time, new List<BaseData>(), time);
-            Assert.IsFalse(slice.ContainsKey(null));
-            Assert.IsFalse(slice.TryGetValue(null, out _));
-            Assert.IsNull(slice.get(null));
-
-            var tradeBars = new TradeBars();
-            Assert.IsFalse(tradeBars.ContainsKey(null));
-            Assert.IsFalse(tradeBars.TryGetValue(null, out _));
-            Assert.IsNull(tradeBars.get(null));
-
-            var optionChains = new OptionChains();
-            Assert.IsFalse(optionChains.ContainsKey(null));
-            Assert.IsFalse(optionChains.TryGetValue(null, out _));
-            Assert.IsNull(optionChains.get(null));
-
-            var futuresChains = new FuturesChains();
-            Assert.IsFalse(futuresChains.ContainsKey(null));
-            Assert.IsFalse(futuresChains.TryGetValue(null, out _));
-            Assert.IsNull(futuresChains.get(null));
-
-            var universeManager = new UniverseManager();
-            Assert.IsFalse(universeManager.ContainsKey(null));
-            Assert.IsFalse(universeManager.TryGetValue(null, out _));
-            Assert.IsNull(universeManager.get(null));
-
-            var positionGroups = new SecurityPositionGroupModel();
-            Assert.IsFalse(positionGroups.ContainsKey(null));
-            Assert.IsFalse(positionGroups.TryGetValue(null, out _));
-            Assert.IsNull(positionGroups.get(null));
+        private static void AssertNullKeyIsHandledGracefully<TKey, TValue>(ExtendedDictionary<TKey, TValue> dictionary)
+            where TKey : class
+            where TValue : class
+        {
+            Assert.IsFalse(dictionary.ContainsKey(null));
+            Assert.IsFalse(dictionary.TryGetValue(null, out _));
+            Assert.IsNull(dictionary.get(null));
         }
 
         private class TestDictionary<TKey, TValue> : ExtendedDictionary<TKey, TValue>
