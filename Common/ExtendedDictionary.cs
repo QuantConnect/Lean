@@ -52,13 +52,23 @@ namespace QuantConnect
         /// <summary>
         /// Gets the value associated with the specified key.
         /// </summary>
-        /// <returns>
-        /// true if the object that implements <see cref="T:System.Collections.Generic.IDictionary`2"/> contains an element with the specified key; otherwise, false.
-        /// </returns>
         /// <param name="key">The key whose value to get.</param>
-        /// <param name="value">When this method returns, the value associated with the specified key, if the key is found; otherwise, the default value for the type of the <paramref name="value"/> parameter. This parameter is passed uninitialized.</param>
-        /// <exception cref="T:System.ArgumentNullException"><paramref name="key"/> is null.</exception>
-        public abstract bool TryGetValue(TKey key, out TValue value);
+        /// <returns>The value associated with the specified key if found; otherwise, the default value for TValue.</returns>
+        public TValue GetValue(TKey key)
+        {
+            return get(key);
+        }
+
+        /// <summary>
+        /// Gets the value associated with the specified key, or the provided default value if not found.
+        /// </summary>
+        /// <param name="key">The key whose value to get.</param>
+        /// <param name="value">The value to return if the key is not found.</param>
+        /// <returns>The value associated with the specified key if found; otherwise, the provided default value.</returns>
+        public TValue GetValue(TKey key, TValue value)
+        {
+            return get(key, value);
+        }
 
         /// <summary>
         /// Checks if the dictionary contains the specified key.
@@ -67,7 +77,19 @@ namespace QuantConnect
         /// <returns>true if the dictionary contains an element with the specified key; otherwise, false.</returns>
         public virtual bool ContainsKey(TKey key)
         {
-            return key != null && TryGetValue(key, out _);
+            if (key == null)
+            {
+                return false;
+            }
+
+            foreach (var item in GetItems())
+            {
+                if (EqualityComparer<TKey>.Default.Equals(item.Key, key))
+                {
+                    return true;
+                }
+            }
+            return false;
         }
 
         /// <summary>
@@ -91,6 +113,31 @@ namespace QuantConnect
         /// An <see cref="T:System.Collections.Generic.ICollection`1"/> containing the values in the object that implements <see cref="T:System.Collections.Generic.IDictionary`2"/>.
         /// </returns>
         protected abstract IEnumerable<TValue> GetValues { get; }
+
+        /// <summary>
+        /// Tries to get the value associated with the specified key.
+        /// Default implementation enumerates GetItems(); derived types can override for efficiency.
+        /// </summary>
+        public virtual bool TryGetValue(TKey key, out TValue value)
+        {
+            if (key == null)
+            {
+                value = default;
+                return false;
+            }
+
+            foreach (var kvp in GetItems())
+            {
+                if (EqualityComparer<TKey>.Default.Equals(kvp.Key, key))
+                {
+                    value = kvp.Value;
+                    return true;
+                }
+            }
+
+            value = default;
+            return false;
+        }
 
         /// <summary>
         /// Gets a value indicating whether the <see cref="IDictionary"/> object is read-only.
@@ -270,11 +317,14 @@ namespace QuantConnect
             {
                 throw new KeyNotFoundException(Messages.ExtendedDictionary.KeyNotFoundDueToNone);
             }
+
             if (TryGetValue(key, out TValue data))
             {
                 Remove(key);
+                return data;
             }
-            return data;
+
+            throw new KeyNotFoundException(Messages.ExtendedDictionary.KeyNotFoundDueToNoData(this, key));
         }
 
         /// <summary>

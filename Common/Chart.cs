@@ -101,7 +101,7 @@ namespace QuantConnect
             //If we dont already have this series, add to the chrt:
             if (!Series.TryAdd(series.Name, series))
             {
-                throw new DuplicateNameException($"Chart.AddSeries(): ${Messages.Chart.ChartSeriesAlreadyExists}");
+                throw new DuplicateNameException("A series with the same name already exists in this chart.");
             }
         }
 

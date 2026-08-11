@@ -51,6 +51,9 @@
     </Content>
   </ItemGroup>
   <ItemGroup>
+    <PackageReference Include="Accord" Version="3.6.0" />
+  </ItemGroup>
+  <ItemGroup>
     <ProjectReference Include="..\Engine\QuantConnect.Lean.Engine.csproj" />
   </ItemGroup>
 </Project>

@@ -20,6 +20,7 @@ using Newtonsoft.Json;
 using QuantConnect.Logging;
 using QuantConnect.Securities;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 
 namespace QuantConnect.Securities.Positions
 {
@@ -47,19 +48,19 @@ namespace QuantConnect.Securities.Positions
         /// The different positions groups
         /// </summary>
         [JsonProperty(DefaultValueHandling = DefaultValueHandling.Ignore)]
-        public List<PositionGroupState> PositionGroups { get; set; }
+        public Collection<PositionGroupState> PositionGroups { get; } = new Collection<PositionGroupState>();
 
         /// <summary>
         /// Gets the cash book that keeps track of all currency holdings (only settled cash)
         /// </summary>
         [JsonProperty(DefaultValueHandling = DefaultValueHandling.Ignore)]
-        public Dictionary<string, Cash> CashBook { get; set; }
+        public Dictionary<string, Cash> CashBook { get; } = new Dictionary<string, Cash>();
 
         /// <summary>
         /// Gets the cash book that keeps track of all currency holdings (only unsettled cash)
         /// </summary>
         [JsonProperty(DefaultValueHandling = DefaultValueHandling.Ignore)]
-        public Dictionary<string, Cash> UnsettledCashBook { get; set; }
+        public Dictionary<string, Cash> UnsettledCashBook { get; } = new Dictionary<string, Cash>();
 
         /// <summary>
         /// Helper method to create the portfolio state snapshot
@@ -69,50 +70,55 @@ namespace QuantConnect.Securities.Positions
             try
             {
                 var totalMarginUsed = 0m;
-                var positionGroups = new List<PositionGroupState>(portfolioManager.Positions.Groups.Count);
+                var result = new PortfolioState
+                {
+                    Time = utcNow,
+                    TotalPortfolioValue = currentPortfolioValue,
+                    TotalMarginUsed = 0m
+                };
+
                 foreach (var group in portfolioManager.Positions.Groups)
                 {
                     var buyingPowerForPositionGroup = group.BuyingPowerModel.GetReservedBuyingPowerForPositionGroup(portfolioManager, group);
 
                     var positionGroupState = new PositionGroupState
                     {
-                        MarginUsed = buyingPowerForPositionGroup,
-                        Positions = group.Positions.ToList()
+                        MarginUsed = buyingPowerForPositionGroup
                     };
+
+                    foreach (var pos in group.Positions)
+                    {
+                        positionGroupState.Positions.Add(pos);
+                    }
+
                     if (currentPortfolioValue != 0)
                     {
                         positionGroupState.PortfolioValuePercentage = (buyingPowerForPositionGroup / currentPortfolioValue).RoundToSignificantDigits(4);
                     }
 
-                    positionGroups.Add(positionGroupState);
+                    result.PositionGroups.Add(positionGroupState);
                     totalMarginUsed += buyingPowerForPositionGroup;
                 }
 
-                var result = new PortfolioState
-                {
-                    Time = utcNow,
-                    TotalPortfolioValue = currentPortfolioValue,
-                    TotalMarginUsed = totalMarginUsed,
-                    CashBook = portfolioManager.CashBook.Where(pair => pair.Value.Amount != 0).ToDictionary(pair => pair.Key, pair => pair.Value)
-                };
+                result.TotalMarginUsed = totalMarginUsed;
 
-                var unsettledCashBook = portfolioManager.UnsettledCashBook
-                    .Where(pair => pair.Value.Amount != 0)
-                    .ToDictionary(pair => pair.Key, pair => pair.Value);
-                if (positionGroups.Count > 0)
+                foreach (var pair in portfolioManager.CashBook.Where(pair => pair.Value.Amount != 0))
                 {
-                    result.PositionGroups = positionGroups;
+                    result.CashBook[pair.Key] = pair.Value;
                 }
-                if (unsettledCashBook.Count > 0)
+
+                foreach (var pair in portfolioManager.UnsettledCashBook.Where(pair => pair.Value.Amount != 0))
                 {
-                    result.UnsettledCashBook = unsettledCashBook;
+                    result.UnsettledCashBook[pair.Key] = pair.Value;
                 }
+
+                // If no items were added, JSON DefaultValueHandling.Ignore will omit them.
                 return result;
             }
             catch (Exception e)
             {
                 Log.Error(e);
-                return null;
+                throw;
             }
         }
     }
@@ -141,6 +147,6 @@ namespace QuantConnect.Securities.Positions
         /// <summary>
         /// The positions which compose this group
         /// </summary>
-        public List<IPosition> Positions { get; set; }
+        public Collection<IPosition> Positions { get; } = new Collection<IPosition>();
     }
 }

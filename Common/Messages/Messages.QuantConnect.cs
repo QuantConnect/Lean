@@ -80,42 +80,42 @@ namespace QuantConnect
             /// <summary>
             /// Returns a string message saying: Return Over Maximum Drawdown
             /// </summary>
-            public static string ReturnOverMaximumDrawdownKey = "Return Over Maximum Drawdown";
+            public static readonly string ReturnOverMaximumDrawdownKey = "Return Over Maximum Drawdown";
 
             /// <summary>
             /// Returns a string message saying: Portfolio Turnover
             /// </summary>
-            public static string PortfolioTurnoverKey = "Portfolio Turnover";
+            public static readonly string PortfolioTurnoverKey = "Portfolio Turnover";
 
             /// <summary>
             /// Returns a string message saying: Total Insights Generated
             /// </summary>
-            public static string TotalInsightsGeneratedKey = "Total Insights Generated";
+            public static readonly string TotalInsightsGeneratedKey = "Total Insights Generated";
 
             /// <summary>
             /// Returns a string message saying: Total Insights Closed
             /// </summary>
-            public static string TotalInsightsClosedKey = "Total Insights Closed";
+            public static readonly string TotalInsightsClosedKey = "Total Insights Closed";
 
             /// <summary>
             /// Returns a string message saying: Total Insights Analysis Completed
             /// </summary>
-            public static string TotalInsightsAnalysisCompletedKey = "Total Insights Analysis Completed";
+            public static readonly string TotalInsightsAnalysisCompletedKey = "Total Insights Analysis Completed";
 
             /// <summary>
             /// Returns a string message saying: Long Insight Count
             /// </summary>
-            public static string LongInsightCountKey = "Long Insight Count";
+            public static readonly string LongInsightCountKey = "Long Insight Count";
 
             /// <summary>
             /// Returns a string message saying: Short Insight Count
             /// </summary>
-            public static string ShortInsightCountKey = "Short Insight Count";
+            public static readonly string ShortInsightCountKey = "Short Insight Count";
 
             /// <summary>
             /// Returns a string message saying: Long/Short Ratio
             /// </summary>
-            public static string LongShortRatioKey = "Long/Short Ratio";
+            public static readonly string LongShortRatioKey = "Long/Short Ratio";
         }
 
         /// <summary>
@@ -126,7 +126,7 @@ namespace QuantConnect
             /// <summary>
             /// Returns a string message saying Chart series name already exists
             /// </summary>
-            public static string ChartSeriesAlreadyExists = "Chart series name already exists";
+            public const string ChartSeriesAlreadyExists = "Chart series name already exists";
         }
 
         /// <summary>
@@ -175,31 +175,31 @@ namespace QuantConnect
         }
 
         /// <summary>
-        /// Provides user-facing messages for the <see cref="QuantConnect.ExtendedDictionary{T}"/> class and its consumers or related classes
+        /// Provides user-facing messages for the <see cref="QuantConnect.ExtendedDictionary{TKey,TValue}"/> class and its consumers or related classes
         /// </summary>
         public static class ExtendedDictionary
         {
             /// <summary>
             /// Returns a string message saying the types deriving from ExtendedDictionary must implement the void Clear() method
             /// </summary>
-            public static string ClearMethodNotImplemented = "Types deriving from 'ExtendedDictionary' must implement the 'void Clear() method.";
+            public static readonly string ClearMethodNotImplemented = "Types deriving from 'ExtendedDictionary' must implement the 'void Clear() method.";
 
             /// <summary>
             /// Returns a string message saying the types deriving from ExtendedDictionary must implement the void Remove(Symbol) method
             /// </summary>
-            public static string RemoveMethodNotImplemented =
+            public static readonly string RemoveMethodNotImplemented =
                 "Types deriving from 'ExtendedDictionary' must implement the 'void Remove(Symbol) method.";
 
             /// <summary>
             /// Returns a string message saying the types deriving from ExtendedDictionary must implement the T this[Symbol] method
             /// </summary>
-            public static string IndexerBySymbolNotImplemented =
+            public static readonly string IndexerBySymbolNotImplemented =
                 "Types deriving from 'ExtendedDictionary' must implement the 'T this[Symbol] method.";
 
             /// <summary>
             /// Returns a string with the error message we receive from Python when we try to pop a key with a null value in the ExtendedDictionary. It also shows a recommendation for solving this problem
             /// </summary>
-            public static string KeyNotFoundDueToNone = $"KeyError: None. Please check if the key is None before trying to access it or use data.pop(key, default) to return a default value instead of raising an exception.";
+            public static readonly string KeyNotFoundDueToNone = "KeyError: None. Please check if the key is None before trying to access it or use data.pop(key, default) to return a default value instead of raising an exception.";
 
             /// <summary>
             /// Returns a string message saying Clear/clear method call is an invalid operation. It also says that the given instance

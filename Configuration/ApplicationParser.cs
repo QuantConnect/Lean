@@ -79,7 +79,7 @@ namespace QuantConnect.Configuration
                             optionsObject[optionKey] = subDictionary;
                             break;
                         default:
-                            throw new ArgumentOutOfRangeException();
+                            throw new InvalidOperationException($"Unsupported option type: {matchingOption?.Type}");
                     }
                 }
 

@@ -14,6 +14,7 @@
 */
 
 using System;
+using System.Globalization;
 using QuantConnect.Interfaces;
 using QuantConnect.Securities;
 using QuantConnect.Orders.Fills;
@@ -27,7 +28,7 @@ namespace QuantConnect
     public class AlgorithmSettings : IAlgorithmSettings
     {
         private static TimeSpan _defaultDatabasesRefreshPeriod =
-            TimeSpan.TryParse(Config.Get("databases-refresh-period", "1.00:00:00"), out var refreshPeriod) ? refreshPeriod : Time.OneDay;
+            TimeSpan.TryParse(Config.Get("databases-refresh-period", "1.00:00:00"), CultureInfo.InvariantCulture, out var refreshPeriod) ? refreshPeriod : Time.OneDay;
 
         // We default this to true so that we don't terminate live algorithms when the
         // brokerage account has existing holdings for an asset that is not supported by Lean.
@@ -77,7 +78,7 @@ namespace QuantConnect
         /// </summary>
         /// <remarks>
         /// All securities added with <see cref="IAlgorithm.AddSecurity"/> are counted as one,
-        /// with the exception of options and futures where every single contract in a chain counts as one.
+        /// with the exception of options and futures where
         /// </remarks>
         [Obsolete("This property is deprecated. Please observe data subscription limits set by your brokerage to avoid runtime errors.")]
         public int DataSubscriptionLimit { get; set; } = int.MaxValue;
@@ -121,24 +122,7 @@ namespace QuantConnect
         public Resolution? WarmupResolution { get; set; }
 
         /// <summary>
-        /// The warmup resolution to use if any
-        /// </summary>
-        /// <remarks>This allows improving the warmup speed by setting it to a lower resolution than the one added in the algorithm.
-        /// Pass through version to be user friendly</remarks>
-        public Resolution? WarmUpResolution
-        {
-            get
-            {
-                return WarmupResolution;
-            }
-            set
-            {
-                WarmupResolution = value;
-            }
-        }
-
-        /// <summary>
-        /// Number of trading days per year for this Algorithm's portfolio statistics.
+        /// Gets or sets the number of trading days per year for this Algorithm's portfolio statistics.
         /// </summary>
         /// <remarks>Effect on
         /// <see cref="Statistics.PortfolioStatistics.AnnualVariance"/>,

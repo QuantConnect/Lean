@@ -50,17 +50,17 @@ namespace QuantConnect.Data.Auxiliary
         }
 
         /// <summary>
-        /// Gets a <see cref="MapFileResolver"/> representing all the map
+        /// Returns a <see cref="MapFileResolver"/> representing all the map
         /// files for the specified market
         /// </summary>
         /// <param name="auxiliaryDataKey">Key used to fetch a map file resolver. Specifying market and security type</param>
-        /// <returns>A <see cref="MapFileRow"/> containing all map files for the specified market</returns>
-        public MapFileResolver Get(AuxiliaryDataKey auxiliaryDataKey)
+        /// <returns>A <see cref="MapFileResolver"/> containing all map files for the specified market</returns>
+        public MapFileResolver GetMapFileResolver(AuxiliaryDataKey auxiliaryDataKey)
         {
-            return _cache.GetOrAdd(auxiliaryDataKey, GetMapFileResolver);
+            return _cache.GetOrAdd(auxiliaryDataKey, CreateMapFileResolver);
         }
 
-        private MapFileResolver GetMapFileResolver(AuxiliaryDataKey key)
+        private MapFileResolver CreateMapFileResolver(AuxiliaryDataKey key)
         {
             var securityType = key.SecurityType;
             var market = key.Market;
@@ -71,7 +71,7 @@ namespace QuantConnect.Data.Auxiliary
                 // only write this message once per application instance
                 if (Interlocked.CompareExchange(ref _wroteTraceStatement, 1, 0) == 0)
                 {
-                    Log.Error($"LocalDiskMapFileProvider.GetMapFileResolver({market}): " +
+                    Log.Error($"LocalDiskMapFileProvider.CreateMapFileResolver({market}): " +
                         $"The specified directory does not exist: {mapFileDirectory}"
                     );
                 }

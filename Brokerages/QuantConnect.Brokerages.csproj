@@ -29,6 +29,7 @@
     <Message Text="SelectedOptimization $(SelectedOptimization)" Importance="high" />
   </Target>
   <ItemGroup>
+    <PackageReference Include="Accord" Version="3.6.0" />
     <PackageReference Include="CsvHelper" Version="19.0.0" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.2" />
     <PackageReference Include="RestSharp" Version="106.12.0" />

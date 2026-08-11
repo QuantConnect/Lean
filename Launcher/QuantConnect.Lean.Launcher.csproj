@@ -36,6 +36,7 @@
     <Message Text="SelectedOptimization $(SelectedOptimization)" Importance="high" />
   </Target>
   <ItemGroup>
+    <PackageReference Include="Accord" Version="3.6.0" />
     <PackageReference Include="DynamicInterop" Version="0.9.1" />
   </ItemGroup>
   <ItemGroup>

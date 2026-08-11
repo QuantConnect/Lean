@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -55,7 +55,7 @@ namespace QuantConnect.Interfaces
         /// <param name="key">Key to be searched in the dictionary</param>
         /// <returns>The value for the specified key if key is in dictionary.
         /// None if the key is not found and value is not specified.</returns>
-        TValue get(TKey key);
+        TValue GetValue(TKey key);
 
         /// <summary>
         /// Returns the value for the specified key if key is in dictionary.
@@ -64,7 +64,7 @@ namespace QuantConnect.Interfaces
         /// <param name="value">Value to be returned if the key is not found. The default value is null.</param>
         /// <returns>The value for the specified key if key is in dictionary.
         /// value if the key is not found and value is specified.</returns>
-        TValue get(TKey key, TValue value);
+        TValue GetValue(TKey key, TValue value);
 
         /// <summary>
         /// Returns a view object that displays a list of dictionary's (key, value) tuple pairs.
