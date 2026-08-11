@@ -25,6 +25,14 @@ namespace QuantConnect.Exceptions
     public class NoMethodMatchPythonExceptionInterpreter : PythonExceptionInterpreter
     {
         /// <summary>
+        /// Attribute names pythonnet attaches to the bind-failure TypeError, carrying the
+        /// data its message is built from: the snake_case method name and the rendered
+        /// overloads hint block exactly as it appears at the end of the message.
+        /// </summary>
+        private const string MethodNameAttribute = "_clr_method_name";
+        private const string OverloadsHintAttribute = "_clr_overloads_hint";
+
+        /// <summary>
         /// Determines the order that an instance of this class should be called
         /// </summary>
         public override int Order => 0;
@@ -50,10 +58,14 @@ namespace QuantConnect.Exceptions
         {
             var pe = (PythonException)exception;
 
-            var methodName = GetMethodName(pe.Message);
+            // Prefer the structured data pythonnet attaches to the bind-failure TypeError,
+            // falling back to parsing the message for versions that do not attach it.
+            TryGetStructuredBindFailureData(pe, out var methodName, out var overloadsHint);
+
+            methodName ??= GetMethodName(pe.Message);
             var message = Messages.NoMethodMatchPythonExceptionInterpreter.AttemptedToAccessMethodThatDoesNotExist(methodName);
 
-            var overloadsHint = GetOverloadsHint(pe.Message);
+            overloadsHint ??= GetOverloadsHint(pe.Message);
             if (!string.IsNullOrEmpty(overloadsHint))
             {
                 message += $" {overloadsHint}";
@@ -62,6 +74,58 @@ namespace QuantConnect.Exceptions
             message += PythonUtil.PythonExceptionStackParser(pe.StackTrace);
 
             return new MissingMethodException(message, pe);
+        }
+
+        /// <summary>
+        /// Reads the structured bind-failure data pythonnet attaches to the TypeError so
+        /// the method name and overloads hint do not have to be parsed out of the message.
+        /// Both outputs are null when the attributes are absent (raised by a pythonnet
+        /// version that does not attach them) or cannot be read.
+        /// </summary>
+        private static void TryGetStructuredBindFailureData(PythonException exception, out string methodName,
+            out string overloadsHint)
+        {
+            methodName = null;
+            overloadsHint = null;
+
+            try
+            {
+                var value = exception.Value;
+                if (value == null)
+                {
+                    return;
+                }
+
+                using (Py.GIL())
+                {
+                    if (value.HasAttr(MethodNameAttribute))
+                    {
+                        using var nameAttribute = value.GetAttr(MethodNameAttribute);
+                        methodName = nameAttribute.As<string>();
+                    }
+                    if (value.HasAttr(OverloadsHintAttribute))
+                    {
+                        using var hintAttribute = value.GetAttr(OverloadsHintAttribute);
+                        overloadsHint = hintAttribute.As<string>();
+                    }
+                }
+
+                // Normalize so the caller's null-coalescing fallback kicks in
+                if (string.IsNullOrEmpty(methodName))
+                {
+                    methodName = null;
+                }
+                if (string.IsNullOrEmpty(overloadsHint))
+                {
+                    overloadsHint = null;
+                }
+            }
+            catch
+            {
+                // Fall back to message parsing on any failure reading the attributes
+                methodName = null;
+                overloadsHint = null;
+            }
         }
 
         /// <summary>

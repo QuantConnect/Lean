@@ -159,6 +159,47 @@ namespace QuantConnect.Tests.Common.Exceptions
             Assert.That(exception.Message, Does.Contain("rsi("));
         }
 
+        [Test]
+        public void InterpretPrefersStructuredAttributesOverMessageParsing()
+        {
+            // The fixture raises a TypeError whose message names 'parsed_name' but whose
+            // structured attributes name 'structured_name'; the attributes must win.
+            var pythonException = ThrowFixtureMethod("no_method_match_with_structured_attributes");
+
+            var interpreter = new NoMethodMatchPythonExceptionInterpreter();
+            var exception = interpreter.Interpret(pythonException, NullExceptionInterpreter.Instance);
+
+            Assert.That(exception.Message, Does.Contain("required by the structured_name method"));
+            Assert.That(exception.Message, Does.Contain("The expected signature is:"));
+            Assert.That(exception.Message, Does.Contain("structured_name(x: int)"));
+            Assert.That(exception.Message, Does.Not.Contain("parsed_name"));
+        }
+
+        [Test]
+        public void InterpretFallsBackToMessageParsingWithoutStructuredAttributes()
+        {
+            // Same message shape but no structured attributes (older pythonnet versions):
+            // the interpreter must extract the method name and hint from the message.
+            var pythonException = ThrowFixtureMethod("no_method_match_without_structured_attributes");
+
+            var interpreter = new NoMethodMatchPythonExceptionInterpreter();
+            var exception = interpreter.Interpret(pythonException, NullExceptionInterpreter.Instance);
+
+            Assert.That(exception.Message, Does.Contain("required by the parsed_name method"));
+            Assert.That(exception.Message, Does.Contain("The following overloads are available:"));
+            Assert.That(exception.Message, Does.Contain("parsed_name(x: str)"));
+        }
+
+        private static PythonException ThrowFixtureMethod(string methodName)
+        {
+            using (Py.GIL())
+            {
+                var module = Py.Import("Test_PythonExceptionInterpreter");
+                var algorithm = module.GetAttr("Test_PythonExceptionInterpreter").Invoke();
+                return Assert.Throws<PythonException>(() => algorithm.GetAttr(methodName).Invoke());
+            }
+        }
+
         private Exception CreateExceptionFromType(Type type) => type == typeof(PythonException) ? _pythonException : (Exception)Activator.CreateInstance(type);
     }
 }

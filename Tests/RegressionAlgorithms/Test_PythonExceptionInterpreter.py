@@ -29,6 +29,22 @@ class Test_PythonExceptionInterpreter(QCAlgorithm):
         # so no RSI overload matches the given arguments.
         self._indicator = self.rsi(symbol, 15, Resolution.DAILY)
 
+    def no_method_match_with_structured_attributes(self):
+        # Synthesizes the TypeError pythonnet raises on a bind failure, carrying the
+        # structured attributes but a different method name in the message, so tests
+        # can verify the attributes take precedence over message parsing.
+        error = TypeError("No method matches given arguments for parsed_name: (<class 'str'>). "
+                          "The following overloads are available:\n  parsed_name(x: str)")
+        error._clr_method_name = 'structured_name'
+        error._clr_overloads_hint = 'The expected signature is:\n  structured_name(x: int)'
+        raise error
+
+    def no_method_match_without_structured_attributes(self):
+        # The bind-failure message shape from pythonnet versions that do not attach
+        # the structured attributes; the interpreter must fall back to parsing it.
+        raise TypeError("No method matches given arguments for parsed_name: (<class 'str'>). "
+                        "The following overloads are available:\n  parsed_name(x: str)")
+
     def unsupported_operand(self):
         x = None + "Pepe Grillo"
 
