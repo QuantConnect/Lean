@@ -709,6 +709,33 @@ def get_consolidator():
             Assert.AreEqual(0, algorithm.SubscriptionManager.Subscriptions.Sum(x => x.Consolidators.Count));
         }
 
+        [Test]
+        public void RemoveConsolidatorDisposesScanWrapperEvenWithoutSubscriptions()
+        {
+            var algorithm = new AlgorithmStub();
+            var symbol = algorithm.AddEquity("SPY").Symbol;
+
+            using var consolidator = new TradeBarConsolidator(TimeSpan.FromHours(1));
+            algorithm.SubscriptionManager.AddConsolidator(symbol, consolidator);
+
+            var consolidatorsField = typeof(SubscriptionManager)
+                .GetField("_consolidators", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+            var wrappers = (Dictionary<IDataConsolidator, ConsolidatorWrapper>)consolidatorsField.GetValue(algorithm.SubscriptionManager);
+            Assert.AreEqual(1, wrappers.Count);
+            var wrapper = wrappers[consolidator];
+
+            // simulate the security having left the universe: its subscription data configs are gone before
+            // the consolidator is removed. The scan wrapper must still be disposed, otherwise
+            // 'ScanPastConsolidators' would re-enqueue and re-scan it forever, leaking the consolidator
+            algorithm.SubscriptionManager.SetDataManager(new DataManagerStub(algorithm));
+            Assert.IsEmpty(algorithm.SubscriptionManager.SubscriptionDataConfigService.GetSubscriptionDataConfigs(symbol));
+
+            algorithm.SubscriptionManager.RemoveConsolidator(symbol, consolidator);
+
+            Assert.AreEqual(0, wrappers.Count);
+            Assert.IsTrue(wrapper.Disposed);
+        }
+
         [Test, Parallelizable(ParallelScope.None)]
         public void RunRemoveConsolidatorsRegressionAlgorithm()
         {

@@ -15,6 +15,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Collections.Specialized;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Globalization;
@@ -211,6 +212,19 @@ namespace QuantConnect.Algorithm
             SubscriptionManager = new SubscriptionManager(_timeKeeper);
 
             Securities = new SecurityManager(_timeKeeper);
+            Securities.CollectionChanged += (sender, args) =>
+            {
+                // automatically dispose helper-created indicators and consolidators when a security is completely
+                // removed from the algorithm, so universe churn doesn't leak consolidators. Opt-in via settings
+                // because some algorithms intentionally keep indicators alive across removals to reuse them on re-add
+                if (Settings.AutomaticIndicatorDeregistration && args.Action == NotifyCollectionChangedAction.Remove)
+                {
+                    foreach (Security security in args.OldItems)
+                    {
+                        DeregisterAll(security.Symbol);
+                    }
+                }
+            };
             Transactions = new SecurityTransactionManager(this, Securities);
             OrderFactory = new OrderFactory(this);
             Portfolio = new SecurityPortfolioManager(Securities, Transactions, Settings, DefaultOrderProperties);
