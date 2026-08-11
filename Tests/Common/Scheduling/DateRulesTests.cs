@@ -1095,6 +1095,78 @@ wrongCustomDateRule = 1
         }
 
         [Test]
+        public void EveryIntervalDaysEmitsEveryNDays()
+        {
+            var rules = GetDateRules();
+            var rule = rules.Every(TimeSpan.FromDays(3));
+            Assert.AreEqual("Every 3 days", rule.Name);
+
+            var dates = rule.GetDates(new DateTime(2000, 01, 01), new DateTime(2000, 01, 31)).ToList();
+
+            // anchored at the start date, every 3rd day: Jan 1, 4, 7, ..., 31
+            Assert.AreEqual(11, dates.Count);
+            Assert.AreEqual(new DateTime(2000, 01, 01), dates[0]);
+            for (var i = 1; i < dates.Count; i++)
+            {
+                Assert.AreEqual(TimeSpan.FromDays(3), dates[i] - dates[i - 1]);
+            }
+        }
+
+        [TestCase(0)]
+        [TestCase(-24)]
+        [TestCase(12)]
+        [TestCase(36)]
+        public void EveryIntervalValidatesWholeDayInterval(int hours)
+        {
+            var rules = GetDateRules();
+            Assert.Throws<ArgumentException>(() => rules.Every(TimeSpan.FromHours(hours)));
+        }
+
+        [Test]
+        public void EveryWithTimeDeltaInPython()
+        {
+            var rules = GetDateRules();
+            using (Py.GIL())
+            {
+                using var module = PyModule.FromString("testModule", @"
+from datetime import timedelta
+
+def create_rule(rules):
+    return rules.Every(timedelta(days=2))
+");
+                dynamic createRule = module.GetAttr("create_rule");
+                var rule = (createRule(rules) as PyObject).GetAndDispose<IDateRule>();
+                Assert.AreEqual("Every 2 days", rule.Name);
+
+                var dates = rule.GetDates(new DateTime(2000, 01, 01), new DateTime(2000, 01, 07)).ToList();
+                CollectionAssert.AreEqual(new[]
+                {
+                    new DateTime(2000, 01, 01), new DateTime(2000, 01, 03), new DateTime(2000, 01, 05), new DateTime(2000, 01, 07)
+                }, dates);
+            }
+        }
+
+        [Test]
+        public void DateRulePropertiesAreCallableTolerantInPython()
+        {
+            var rules = GetDateRules();
+            using (Py.GIL())
+            {
+                using var module = PyModule.FromString("testModule", @"
+def call_rule(rule):
+    return rule()
+");
+                dynamic callRule = module.GetAttr("call_rule");
+                foreach (var rule in new[] { rules.Today, rules.Tomorrow })
+                {
+                    // calling the rule as if it were a method returns the rule itself
+                    var result = (callRule(rule) as PyObject).GetAndDispose<IDateRule>();
+                    Assert.AreEqual(rule.Name, result.Name);
+                }
+            }
+        }
+
+        [Test]
         public void DateRuleDoesNotConflictWithTimeRuleDueToExtendedMarketHours()
         {
             var algorithm = new AlgorithmStub();
