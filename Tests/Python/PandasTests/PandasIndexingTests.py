@@ -59,6 +59,56 @@ class PandasDataFrameTests():
         except KeyError as e:
             return str(e)
 
+    def test_keyerror_describes_missing_column(self):
+        # A missing column error must describe the frame: available columns and index levels
+        try:
+            self.spydf['volume']
+        except KeyError as e:
+            return str(e)
+
+    def test_keyerror_describes_index_level_key(self):
+        # 'symbol' is an index level, not a column: the error must say so
+        try:
+            self.spydf[['symbol', 'lastprice']]
+        except KeyError as e:
+            return str(e)
+
+    def test_keyerror_describes_symbol_in_index(self):
+        # The requested symbol exists but lives in the index, not in the columns
+        try:
+            self.spydf['spy']
+        except KeyError as e:
+            return str(e)
+
+    def test_keyerror_describes_missing_symbol(self):
+        # A cached symbol with no data in the frame must be called out as missing data
+        try:
+            self.spydf.loc[self.aapl]
+        except KeyError as e:
+            return str(e)
+
+    def test_get_symbol_returns_subframe(self):
+        # df.get(symbol) returns the symbol sub-frame when the symbol is in the index
+        subframe = self.spydf.get(self.spy)
+        return (subframe is not None
+            and 'lastprice' in subframe.columns
+            and subframe.index.nlevels == 1
+            and len(subframe) == 100)
+
+    def test_get_ticker_returns_subframe(self):
+        # df.get(ticker) maps the ticker through the symbol cache before the index lookup
+        subframe = self.spydf.get('spy')
+        return subframe is not None and len(subframe) == 100
+
+    def test_get_missing_symbol_returns_none(self):
+        # df.get of a symbol with no data returns None (or the default), never raises
+        return self.spydf.get(self.aapl) is None and self.spydf.get(self.aapl, 'default') == 'default'
+
+    def test_get_column_keeps_pandas_semantics(self):
+        # df.get of a column still returns the column, and plain missing keys still return None
+        column = self.spydf.get('lastprice')
+        return column is not None and len(column) == 100 and self.spydf.get('banana') is None
+
     def test_contains_user_defined_columns_with_spaces(self, column_name):
         # Adds a column, then try accessing it.
         # If the colums has white spaces, it should not fail
