@@ -221,16 +221,14 @@ namespace QuantConnect.Brokerages
                     return wolverineCopy;
 
                 case BloombergFixOrderProperties bloombergFix:
-                    var additionalProperties = bloombergFix.AdditionalProperties;
-                    if (additionalProperties == null
-                        || (!additionalProperties.ContainsKey("5700") && !additionalProperties.ContainsKey("114"))
+                    if ((string.IsNullOrEmpty(bloombergFix.LocateBroker) && string.IsNullOrEmpty(bloombergFix.LocateReqd))
                         || IsShortOpen(null, quantity, holdingsQuantity))
                     {
                         return null;
                     }
                     var bloombergFixCopy = (BloombergFixOrderProperties)bloombergFix.Clone();
-                    bloombergFixCopy.AdditionalProperties.Remove("5700"); // LocateBroker <5700>
-                    bloombergFixCopy.AdditionalProperties.Remove("114"); // LocateReqd <114>
+                    bloombergFixCopy.LocateBroker = null;
+                    bloombergFixCopy.LocateReqd = null;
                     return bloombergFixCopy;
 
                 default:

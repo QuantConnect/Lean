@@ -403,9 +403,8 @@ namespace QuantConnect.Tests.Engine.BrokerageTransactionHandlerTests
 
         private static BloombergFixOrderProperties CreateLocateBrokerTagProperties()
         {
-            var properties = new BloombergFixOrderProperties();
-            properties.AdditionalProperties["5700"] = "MLCO";
-            return properties;
+            // the property is a passthrough of the 5700 tag in AdditionalProperties
+            return new BloombergFixOrderProperties { LocateBroker = "MLCO" };
         }
 
         private static BloombergFixOrderProperties CreateLocateTagProperties()
