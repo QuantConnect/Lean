@@ -709,6 +709,150 @@ def get_consolidator():
             Assert.AreEqual(0, algorithm.SubscriptionManager.Subscriptions.Sum(x => x.Consolidators.Count));
         }
 
+        [Test]
+        public void AddConsolidatorAdaptsTradeBarConsolidatorsForQuoteOnlySubscriptions()
+        {
+            var algorithm = new AlgorithmStub();
+            var eurusd = algorithm.AddForex("EURUSD", market: QuantConnect.Market.Oanda).Symbol;
+
+            using var consolidator = new TradeBarConsolidator(TimeSpan.FromHours(1));
+            TradeBar consolidated = null;
+            consolidator.DataConsolidated += (_, bar) => consolidated = bar;
+
+            algorithm.SubscriptionManager.AddConsolidator(eurusd, consolidator);
+
+            // the registered consolidator is an adapter that accepts the quote bars of the subscription
+            var subscription = algorithm.SubscriptionManager.Subscriptions.Single(x => x.Symbol == eurusd);
+            var registered = subscription.Consolidators.Single();
+            Assert.IsInstanceOf<QuoteBarToTradeBarAdapter>(registered);
+            Assert.AreEqual(typeof(QuoteBar), registered.InputType);
+
+            // pump two quote bars an hour apart, the first hour bar is emitted when the second one arrives
+            var time = new DateTime(2014, 5, 5, 10, 0, 0);
+            var bid = new Bar(1m, 2m, 0.5m, 1.5m);
+            var ask = new Bar(1.1m, 2.1m, 0.6m, 1.7m);
+            registered.Update(new QuoteBar(time, eurusd, bid, 0, ask, 0, Time.OneMinute));
+            registered.Update(new QuoteBar(time.AddHours(1), eurusd, bid, 0, ask, 0, Time.OneMinute));
+
+            Assert.IsNotNull(consolidated);
+            // trade bars collapsed from quote bars carry the mid-point prices and zero volume
+            Assert.AreEqual(1.6m, consolidated.Close);
+            Assert.AreEqual(0, consolidated.Volume);
+        }
+
+        [Test]
+        public void RemoveConsolidatorRemovesTheQuoteToTradeBarAdapter()
+        {
+            var algorithm = new AlgorithmStub();
+            var eurusd = algorithm.AddForex("EURUSD", market: QuantConnect.Market.Oanda).Symbol;
+
+            var consolidator = new TradeBarConsolidator(TimeSpan.FromHours(1));
+            algorithm.SubscriptionManager.AddConsolidator(eurusd, consolidator);
+            Assert.AreEqual(1, algorithm.SubscriptionManager.Subscriptions.Sum(x => x.Consolidators.Count));
+
+            // users hold and remove the consolidator they created, not the adapter wrapping it
+            algorithm.SubscriptionManager.RemoveConsolidator(eurusd, consolidator);
+            Assert.AreEqual(0, algorithm.SubscriptionManager.Subscriptions.Sum(x => x.Consolidators.Count));
+        }
+
+        [Test]
+        public void CanAddAndRemovePythonConsolidatorAdaptedToQuoteOnlyFeed()
+        {
+            using var _ = Py.GIL();
+            var module = PyModule.FromString("testModule",
+                    @"
+from AlgorithmImports import *
+
+class CustomTradeBarConsolidator(PythonConsolidator):
+
+    def __init__(self):
+
+        #IDataConsolidator required vars for all consolidators
+        self.consolidated = None
+        self.working_data = None
+        self.input_type = TradeBar
+        self.output_type = TradeBar
+
+    def update(self, data):
+        pass
+
+    def scan(self, time):
+        pass
+
+def get_consolidator():
+    return CustomTradeBarConsolidator()
+");
+
+            var algorithm = new AlgorithmStub();
+            var eurusd = algorithm.AddForex("EURUSD", market: QuantConnect.Market.Oanda).Symbol;
+
+            var pyConsolidator = module.GetAttr("get_consolidator").Invoke();
+
+            // the trade bar python consolidator is adapted into the quote-only subscription
+            algorithm.SubscriptionManager.AddConsolidator(eurusd, pyConsolidator);
+            var subscription = algorithm.SubscriptionManager.Subscriptions.Single(x => x.Symbol == eurusd);
+            Assert.IsInstanceOf<QuoteBarToTradeBarAdapter>(subscription.Consolidators.Single());
+
+            algorithm.SubscriptionManager.RemoveConsolidator(eurusd, pyConsolidator);
+            Assert.AreEqual(0, algorithm.SubscriptionManager.Subscriptions.Sum(x => x.Consolidators.Count));
+        }
+
+        [Test]
+        public void AddConsolidatorRejectsPeriodsSmallerThanTheSubscriptionPeriodAtRegistration()
+        {
+            var algorithm = new AlgorithmStub();
+            var spy = algorithm.AddEquity("SPY", Resolution.Daily).Symbol;
+
+            using var consolidator = new TradeBarConsolidator(TimeSpan.FromMinutes(5));
+            var exception = Assert.Throws<ArgumentException>(() => algorithm.SubscriptionManager.AddConsolidator(spy, consolidator));
+            StringAssert.Contains("is smaller than the daily subscription period", exception.Message);
+        }
+
+        [TestCase("period-equal")]
+        [TestCase("period-larger")]
+        [TestCase("count")]
+        [TestCase("calendar")]
+        public void AddConsolidatorAcceptsValidPeriodsAtRegistration(string testCase)
+        {
+            var algorithm = new AlgorithmStub();
+            var spy = algorithm.AddEquity("SPY", Resolution.Daily).Symbol;
+
+            using var consolidator = testCase switch
+            {
+                "period-equal" => new TradeBarConsolidator(TimeSpan.FromDays(1)),
+                "period-larger" => new TradeBarConsolidator(TimeSpan.FromDays(7)),
+                // count and calendar driven consolidators have no fixed time span period to validate
+                "count" => new TradeBarConsolidator(10),
+                _ => new TradeBarConsolidator(Calendar.Weekly)
+            };
+            Assert.DoesNotThrow(() => algorithm.SubscriptionManager.AddConsolidator(spy, consolidator));
+        }
+
+        [Test]
+        public void AddConsolidatorThrowsClearMessageForNullSymbol()
+        {
+            var algorithm = new AlgorithmStub();
+            algorithm.AddEquity("SPY");
+
+            // e.g. Future.Mapped can still be null when the consolidator is added, we used to throw a raw NRE
+            using var consolidator = new TradeBarConsolidator(TimeSpan.FromHours(1));
+            var exception = Assert.Throws<ArgumentNullException>(() => algorithm.SubscriptionManager.AddConsolidator(null, consolidator));
+            StringAssert.Contains("Future.Mapped", exception.Message);
+        }
+
+        [Test]
+        public void AddConsolidatorTypeMismatchErrorSuggestsConsolidateApi()
+        {
+            var algorithm = new AlgorithmStub();
+            // custom data is trade-only, and quote consolidators are not adapted into it
+            var symbol = algorithm.AddData<TradeBar>("CUSTOM", Resolution.Daily).Symbol;
+
+            using var consolidator = new QuoteBarConsolidator(TimeSpan.FromDays(1));
+            var exception = Assert.Throws<ArgumentException>(() => algorithm.SubscriptionManager.AddConsolidator(symbol, consolidator));
+            StringAssert.Contains("Type mismatch found between consolidator and symbol", exception.Message);
+            StringAssert.Contains("self.consolidate()", exception.Message);
+        }
+
         [Test, Parallelizable(ParallelScope.None)]
         public void RunRemoveConsolidatorsRegressionAlgorithm()
         {

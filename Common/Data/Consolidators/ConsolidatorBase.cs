@@ -48,6 +48,15 @@ namespace QuantConnect.Data.Consolidators
         public abstract IBaseData WorkingData { get; }
 
         /// <summary>
+        /// The fixed time span between consolidated bars when the consolidator is driven by an explicit
+        /// time span period; null for count-based, mixed-mode, calendar and non-period consolidators.
+        /// Lets <see cref="SubscriptionManager"/> validate the period against the subscription resolution
+        /// at registration time instead of failing when the first data point arrives
+        /// (see <see cref="PeriodCountConsolidatorBase{T,TConsolidated}.Update(T)"/>)
+        /// </summary>
+        internal virtual TimeSpan? FixedTimeSpanPeriod => null;
+
+        /// <summary>
         /// Gets the type consumed by this consolidator
         /// </summary>
         public abstract Type InputType { get; }
