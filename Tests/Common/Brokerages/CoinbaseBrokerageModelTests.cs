@@ -274,10 +274,14 @@ namespace QuantConnect.Tests.Common.Brokerages
         [Test]
         public void ThrowsWhenCalledWithMarginAccountType()
         {
-            Assert.Throws<ArgumentException>(() =>
+            var exception = Assert.Throws<ArgumentException>(() =>
             {
                 new CoinbaseBrokerageModel(AccountType.Margin);
-            }, "The Coinbase brokerage does not currently support Margin trading.");
+            });
+
+            // the error must name the supported configuration
+            StringAssert.Contains("The Coinbase brokerage does not currently support Margin trading.", exception.Message);
+            StringAssert.Contains($"Only AccountType.{AccountType.Cash} is supported.", exception.Message);
         }
     }
 }

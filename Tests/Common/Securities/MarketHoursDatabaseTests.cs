@@ -93,6 +93,34 @@ namespace QuantConnect.Tests.Common.Securities
         }
 
         [Test]
+        public void GetEntryFailureNamesMarketsWithAnEntryForTheTicker()
+        {
+            var dataBase = MarketHoursDatabase.FromDataFolder();
+
+            var exception = Assert.Throws<ArgumentException>(() => dataBase.GetEntry(Market.Oanda, "BTCUSD", SecurityType.Crypto));
+
+            StringAssert.Contains("Unable to locate exchange hours for Crypto-oanda-BTCUSD", exception.Message);
+            StringAssert.Contains($"Markets with a 'BTCUSD' {SecurityType.Crypto} entry:", exception.Message);
+            StringAssert.Contains(Market.Coinbase, exception.Message);
+            StringAssert.Contains(Market.Kraken, exception.Message);
+        }
+
+        [Test]
+        public void GetEntryFailureNamesMarketsWithEntriesForTheSecurityType()
+        {
+            var dataBase = MarketHoursDatabase.FromDataFolder();
+
+            // SPY is not in the symbol properties database for any market (equity entries are market-wide),
+            // so the message falls back to naming the markets that have equity exchange hours entries
+            var exception = Assert.Throws<ArgumentException>(() => dataBase.GetEntry("non-existing-market", "SPY", SecurityType.Equity));
+
+            StringAssert.Contains("Unable to locate exchange hours for Equity-non-existing-market-SPY", exception.Message);
+            StringAssert.Contains($"Markets with {SecurityType.Equity} entries:", exception.Message);
+            StringAssert.Contains(Market.USA, exception.Message);
+            StringAssert.Contains(Market.India, exception.Message);
+        }
+
+        [Test]
         public void CorrectlyReadsUsEquityMarketHours()
         {
             string file = Path.Combine("TestData", "SampleMarketHoursDatabase.json");

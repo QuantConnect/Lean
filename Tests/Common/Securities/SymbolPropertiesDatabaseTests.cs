@@ -211,6 +211,28 @@ namespace QuantConnect.Tests.Common.Securities
             Assert.IsNotEmpty(spList);
         }
 
+        [Test]
+        public void GetsMarketsForSymbol()
+        {
+            var db = SymbolPropertiesDatabase.FromDataFolder();
+
+            var markets = db.GetMarketsForSymbol("BTCUSD", SecurityType.Crypto);
+
+            CollectionAssert.Contains(markets, Market.Coinbase);
+            CollectionAssert.Contains(markets, Market.Bitfinex);
+            CollectionAssert.Contains(markets, Market.Kraken);
+            CollectionAssert.DoesNotContain(markets, Market.Oanda);
+            CollectionAssert.AreEqual(markets.OrderBy(market => market).ToList(), markets);
+
+            // markets are per security type
+            var cryptoFutureMarkets = db.GetMarketsForSymbol("BTCUSD", SecurityType.CryptoFuture);
+            CollectionAssert.Contains(cryptoFutureMarkets, Market.Binance);
+            CollectionAssert.DoesNotContain(cryptoFutureMarkets, Market.Coinbase);
+
+            // unknown ticker yields no markets
+            Assert.IsEmpty(db.GetMarketsForSymbol("NOTATICKER", SecurityType.Crypto));
+        }
+
         [TestCase(Market.USA, SecurityType.Equity)]
         [TestCase(Market.USA, SecurityType.Option)]
         public void GetSymbolPropertiesListHasOneRow(string market, SecurityType securityType)

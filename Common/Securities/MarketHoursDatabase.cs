@@ -212,8 +212,34 @@ namespace QuantConnect.Securities
 
                     throw new ArgumentException(exception);
                 }
-                // there was nothing that really matched exactly
-                throw new ArgumentException(Messages.MarketHoursDatabase.ExchangeHoursNotFound(key));
+
+                // There was nothing that really matched exactly: fail fast naming what was requested and what does exist,
+                // e.g. adding 'BTCUSD' crypto for the 'oanda' market will name the markets that do have a 'BTCUSD' crypto entry,
+                // instead of only surfacing the internal database key
+                var message = Messages.MarketHoursDatabase.ExchangeHoursNotFound(key);
+                var marketsWithTicker = !string.IsNullOrEmpty(symbol)
+                    ? SymbolPropertiesDatabase.FromDataFolder().GetMarketsForSymbol(symbol, securityType)
+                    : new List<string>();
+                if (marketsWithTicker.Count > 0)
+                {
+                    message += $" {Messages.MarketHoursDatabase.MarketsWithTickerEntry(symbol, securityType, marketsWithTicker)}";
+                }
+                else
+                {
+                    // the ticker isn't in the symbol properties database for any market, so name the markets
+                    // that have exchange hours entries for the requested security type instead
+                    var marketsWithSecurityType = Entries.Keys
+                        .Where(entryKey => entryKey.SecurityType == securityType && entryKey.Market != key.Market)
+                        .Select(entryKey => entryKey.Market)
+                        .Distinct()
+                        .OrderBy(entryMarket => entryMarket)
+                        .ToList();
+                    if (marketsWithSecurityType.Count > 0)
+                    {
+                        message += $" {Messages.MarketHoursDatabase.MarketsWithSecurityTypeEntries(securityType, marketsWithSecurityType)}";
+                    }
+                }
+                throw new ArgumentException(message);
             }
 
             return entry;
