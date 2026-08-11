@@ -14,6 +14,7 @@
 */
 
 using System;
+using System.Text.RegularExpressions;
 using Python.Runtime;
 using QuantConnect.Util;
 
@@ -36,8 +37,15 @@ namespace QuantConnect.Exceptions
         /// <returns>True if the exception can be interpreted, false otherwise</returns>
         public override bool CanInterpret(Exception exception)
         {
-            return base.CanInterpret(exception) &&
-                exception.Message.Contains(Messages.UnsupportedOperandPythonExceptionInterpreter.UnsupportedOperandTypeExpectedSubstring);
+            if (!base.CanInterpret(exception))
+            {
+                return false;
+            }
+            return exception.Message.Contains(Messages.UnsupportedOperandPythonExceptionInterpreter.UnsupportedOperandTypeExpectedSubstring) ||
+                // "can't compare datetime.datetime to datetime.date", the ordering flavor of mixing datetimes and dates,
+                // e.g. 'self.time.date() <= some_stored_datetime'
+                (exception.Message.Contains(Messages.UnsupportedOperandPythonExceptionInterpreter.CannotCompareTypesSubstring) &&
+                    HasDatetimeAndDateOperands(exception.Message));
         }
 
         /// <summary>
@@ -50,11 +58,37 @@ namespace QuantConnect.Exceptions
         {
             var pe = (PythonException)exception;
 
-            var types = pe.Message.Split(':')[1].Trim();
-            var message = Messages.UnsupportedOperandPythonExceptionInterpreter.InvalidObjectTypesForOperation(types);
+            string message;
+            if (pe.Message.Contains(Messages.UnsupportedOperandPythonExceptionInterpreter.UnsupportedOperandTypeExpectedSubstring))
+            {
+                var types = pe.Message.Split(':')[1].Trim();
+                message = Messages.UnsupportedOperandPythonExceptionInterpreter.InvalidObjectTypesForOperation(types);
+            }
+            else
+            {
+                // "can't compare {left} to {right}"
+                var match = Regex.Match(pe.Message, @"can't compare (?<left>\S+) to (?<right>\S+)");
+                var types = match.Success
+                    ? $"'{match.Groups["left"].Value}' and '{match.Groups["right"].Value}'"
+                    : "'datetime.datetime' and 'datetime.date'";
+                message = Messages.UnsupportedOperandPythonExceptionInterpreter.InvalidObjectTypesForComparison(types);
+            }
+
+            if (HasDatetimeAndDateOperands(pe.Message))
+            {
+                // The single most common shape of this error is expiry math like '(contract.id.date - self.time.date()).days',
+                // so point users at the supported alternatives
+                message += Messages.UnsupportedOperandPythonExceptionInterpreter.DatetimeAndDateOperandsHint;
+            }
             message += PythonUtil.PythonExceptionStackParser(pe.StackTrace);
 
             return new Exception(message, pe);
+        }
+
+        private static bool HasDatetimeAndDateOperands(string message)
+        {
+            // "datetime.date" is a prefix of "datetime.datetime", so require a word boundary after ".date"
+            return Regex.IsMatch(message, @"datetime\.datetime\b") && Regex.IsMatch(message, @"datetime\.date\b");
         }
     }
 }

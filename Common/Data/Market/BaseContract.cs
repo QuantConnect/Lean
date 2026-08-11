@@ -49,6 +49,34 @@ namespace QuantConnect.Data.Market
         public DateTime Expiry => Symbol.ID.Date;
 
         /// <summary>
+        /// Gets the number of whole days until the contract expires, based on the contract's current time.
+        /// Shorthand alias of <see cref="DaysToExpiry()"/>
+        /// </summary>
+        [PandasIgnore]
+        public int DTE => DaysToExpiry();
+
+        /// <summary>
+        /// Gets the number of whole days between the contract's current time (<see cref="Time"/>) and <see cref="Expiry"/>
+        /// </summary>
+        /// <returns>The number of whole days until the contract expires</returns>
+        public int DaysToExpiry()
+        {
+            return DaysToExpiry(Time);
+        }
+
+        /// <summary>
+        /// Gets the number of whole days between the given reference and <see cref="Expiry"/>.
+        /// From Python, the reference accepts both <c>datetime</c> and <c>date</c> instances, avoiding the
+        /// TypeError users hit when manually mixing them, e.g. <c>(contract.expiry - self.time.date()).days</c>
+        /// </summary>
+        /// <param name="reference">The date to measure from. Only the date part is used</param>
+        /// <returns>The number of whole days from the given reference until the contract expires</returns>
+        public int DaysToExpiry(DateTime reference)
+        {
+            return (Expiry.Date - reference.Date).Days;
+        }
+
+        /// <summary>
         /// Gets the local date time this contract's data was last updated
         /// </summary>
         [PandasIgnore]

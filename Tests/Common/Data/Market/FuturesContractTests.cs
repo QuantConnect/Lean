@@ -112,6 +112,19 @@ namespace QuantConnect.Tests.Common.Data.Market
         }
 
         [Test]
+        public void DaysToExpiryFromContractTimeAndExplicitReference()
+        {
+            // Future_CLF19_Jan2019 expires on 2018-12-19
+            var futureContract = new FuturesContract(Symbols.Future_CLF19_Jan2019) { Time = new DateTime(2018, 12, 10, 17, 0, 0) };
+
+            Assert.AreEqual(9, futureContract.DaysToExpiry());
+            Assert.AreEqual(futureContract.DaysToExpiry(), futureContract.DTE);
+
+            Assert.AreEqual(1, futureContract.DaysToExpiry(new DateTime(2018, 12, 18)));
+            Assert.AreEqual(-1, futureContract.DaysToExpiry(new DateTime(2018, 12, 20, 23, 59, 59)));
+        }
+
+        [Test]
         public void OpenInterest()
         {
             var futureContract = new FuturesContract(Symbols.Future_CLF19_Jan2019);

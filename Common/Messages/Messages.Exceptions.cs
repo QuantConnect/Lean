@@ -195,6 +195,19 @@ namespace QuantConnect
             public static string UnsupportedOperandTypeExpectedSubstring = "unsupported operand type";
 
             /// <summary>
+            /// Substring of the TypeError CPython raises when ordering datetime.datetime against datetime.date,
+            /// e.g. "can't compare datetime.datetime to datetime.date"
+            /// </summary>
+            public static string CannotCompareTypesSubstring = "can't compare";
+
+            /// <summary>
+            /// Additional guidance appended when the offending operands are datetime.datetime and datetime.date
+            /// </summary>
+            public static string DatetimeAndDateOperandsHint =
+                " When mixing datetime and date values, align the types first, e.g. 'self.time.date()'." +
+                " For expiry math, option and future contracts provide 'contract.days_to_expiry(reference)', which accepts both types, and 'contract.dte'.";
+
+            /// <summary>
             /// Returns a message for invalid object types for operation
             /// </summary>
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -203,6 +216,65 @@ namespace QuantConnect
                 return $@"Trying to perform a summation, subtraction, multiplication or division between {
                     types} objects throws a TypeError exception. To prevent the exception, ensure that both values share the same type.";
             }
+
+            /// <summary>
+            /// Returns a message for an invalid comparison between two object types
+            /// </summary>
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public static string InvalidObjectTypesForComparison(string types)
+            {
+                return $"Trying to compare {types} objects throws a TypeError exception. To prevent the exception, ensure that both values share the same type.";
+            }
+        }
+
+        /// <summary>
+        /// Provides user-facing messages for the <see cref="Exceptions.TzInfoPythonExceptionInterpreter"/> class and its consumers or related classes
+        /// </summary>
+        public static class TzInfoPythonExceptionInterpreter
+        {
+            /// <summary>
+            /// Substring of the TypeError CPython raises when a non-tzinfo object is passed as a tzinfo argument
+            /// </summary>
+            public static string TzInfoSubclassExpectedSubstring = "of a tzinfo subclass";
+
+            /// <summary>
+            /// Substring identifying NodaTime time zone types, e.g. 'CachedDateTimeZone', the type of the TimeZones values
+            /// </summary>
+            public static string DateTimeZoneTypeSubstring = "DateTimeZone";
+
+            /// <summary>
+            /// Message explaining that Lean time zones are not Python tzinfo instances and pointing at zoneinfo
+            /// </summary>
+            public static string LeanTimeZoneUsedAsTzInfo =
+                "Trying to use a Lean time zone like 'TimeZones.NEW_YORK' where Python expects a tzinfo instance throws a TypeError exception," +
+                " because Lean time zones are NodaTime DateTimeZone objects intended for Lean APIs." +
+                " Use Python's zoneinfo module instead, e.g. 'datetime.now(ZoneInfo(\"America/New_York\"))'." +
+                " 'ZoneInfo' is imported by AlgorithmImports, and 'ZoneInfo(str(TimeZones.NEW_YORK))' converts any Lean time zone.";
+        }
+
+        /// <summary>
+        /// Provides user-facing messages for the <see cref="Exceptions.GenericTypeParameterPythonExceptionInterpreter"/> class and its consumers or related classes
+        /// </summary>
+        public static class GenericTypeParameterPythonExceptionInterpreter
+        {
+            /// <summary>
+            /// The TypeError message pythonnet raises when a generic type is indexed with something that is not a .NET type
+            /// </summary>
+            public static string TypesExpectedSubstring = "type(s) expected";
+
+            /// <summary>
+            /// The TypeError message pythonnet raises when the Array type is indexed with something that is not a .NET type
+            /// </summary>
+            public static string TypeExpectedSubstring = "type expected";
+
+            /// <summary>
+            /// Message explaining that Python types cannot parameterize .NET generic types and pointing at the alternatives
+            /// </summary>
+            public static string InvalidGenericTypeParameter =
+                "Trying to parameterize a .NET generic type with a Python type throws a TypeError exception." +
+                " Python types like 'datetime' cannot be used as generic type parameters: use a .NET type, e.g. 'from System import DateTime'" +
+                " then 'RollingWindow[DateTime](10)', or one of the supported aliases int, float, bool and str." +
+                " The untyped 'RollingWindow(10)' also accepts values of any type.";
         }
     }
 }

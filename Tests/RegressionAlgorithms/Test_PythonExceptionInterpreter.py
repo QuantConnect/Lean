@@ -32,6 +32,18 @@ class Test_PythonExceptionInterpreter(QCAlgorithm):
     def unsupported_operand(self):
         x = None + "Pepe Grillo"
 
+    def datetime_and_date_subtraction(self):
+        x = datetime.now() - datetime.now().date()
+
+    def datetime_and_date_comparison(self):
+        x = datetime.now() <= datetime.now().date()
+
+    def lean_time_zone_as_tzinfo(self):
+        x = datetime.now(TimeZones.NEW_YORK)
+
+    def python_type_as_generic_type_parameter(self):
+        x = RollingWindow[datetime](10)
+
     def module_not_found(self):
         from MissingClrNamespace.Distributions import Normal
 

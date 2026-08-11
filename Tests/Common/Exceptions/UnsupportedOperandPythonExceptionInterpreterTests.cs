@@ -83,6 +83,84 @@ namespace QuantConnect.Tests.Common.Exceptions
             Assert.True(exception.Message.Contains("x = None + \"Pepe Grillo\""));
         }
 
+        [Test]
+        public void NonDatetimeOperandsDoNotGetTheDatetimeHint()
+        {
+            var interpreted = new UnsupportedOperandPythonExceptionInterpreter()
+                .Interpret(_pythonException, NullExceptionInterpreter.Instance);
+            Assert.False(interpreted.Message.Contains("days_to_expiry"));
+        }
+
+        [Test]
+        public void DatetimeAndDateSubtractionGetsTheDatetimeHint()
+        {
+            // (contract.id.date - self.time.date()).days, the most common fleet shape of this error
+            var exception = CreatePythonException("datetime_and_date_subtraction");
+            var interpreter = new UnsupportedOperandPythonExceptionInterpreter();
+            Assert.True(interpreter.CanInterpret(exception));
+
+            var interpreted = interpreter.Interpret(exception, NullExceptionInterpreter.Instance);
+            Assert.True(interpreted.Message.Contains("'datetime.datetime' and 'datetime.date'"), interpreted.Message);
+            Assert.True(interpreted.Message.Contains("days_to_expiry"), interpreted.Message);
+            Assert.True(interpreted.Message.Contains(".date()"), interpreted.Message);
+        }
+
+        [Test]
+        public void DatetimeAndDateComparisonIsInterpretedWithTheDatetimeHint()
+        {
+            // "can't compare datetime.datetime to datetime.date", e.g. self.time.date() <= some_stored_datetime
+            var exception = CreatePythonException("datetime_and_date_comparison");
+            var interpreter = new UnsupportedOperandPythonExceptionInterpreter();
+            Assert.True(interpreter.CanInterpret(exception));
+
+            var interpreted = interpreter.Interpret(exception, NullExceptionInterpreter.Instance);
+            Assert.True(interpreted.Message.Contains("Trying to compare"), interpreted.Message);
+            Assert.True(interpreted.Message.Contains("'datetime.datetime'"), interpreted.Message);
+            Assert.True(interpreted.Message.Contains("'datetime.date'"), interpreted.Message);
+            Assert.True(interpreted.Message.Contains("days_to_expiry"), interpreted.Message);
+        }
+
+        [Test]
+        public void OtherComparisonTypeErrorsAreNotInterpreted()
+        {
+            // "can't compare offset-naive and offset-aware datetimes" is not the datetime-vs-date shape
+            PythonException exception = null;
+            using (Py.GIL())
+            {
+                try
+                {
+                    PythonEngine.Exec("from datetime import datetime, timezone\ndatetime.now() < datetime.now(timezone.utc)");
+                }
+                catch (PythonException pythonException)
+                {
+                    exception = pythonException;
+                }
+            }
+
+            Assert.IsNotNull(exception);
+            Assert.False(new UnsupportedOperandPythonExceptionInterpreter().CanInterpret(exception));
+        }
+
+        internal static PythonException CreatePythonException(string methodName)
+        {
+            using (Py.GIL())
+            {
+                var module = Py.Import("Test_PythonExceptionInterpreter");
+                dynamic algorithm = module.GetAttr("Test_PythonExceptionInterpreter").Invoke();
+
+                try
+                {
+                    algorithm.InvokeMethod(methodName);
+                }
+                catch (PythonException pythonException)
+                {
+                    return pythonException;
+                }
+            }
+
+            throw new InvalidOperationException($"Expected '{methodName}' to throw a PythonException");
+        }
+
         private Exception CreateExceptionFromType(Type type) => type == typeof(PythonException) ? _pythonException : (Exception)Activator.CreateInstance(type);
     }
 }
