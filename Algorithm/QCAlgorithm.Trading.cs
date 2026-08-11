@@ -870,11 +870,11 @@ namespace QuantConnect.Algorithm
         /// <param name="asynchronous">Send the order asynchronously (false). Otherwise we'll block until it fills</param>
         /// <param name="tag">String tag for the order (optional)</param>
         /// <param name="orderProperties">The order properties to use. Defaults to <see cref="DefaultOrderProperties"/></param>
-        /// <returns>Sequence of order tickets, one for each leg</returns>
+        /// <returns>The combo order ticket, a list of order tickets, one for each leg</returns>
         [DocumentationAttribute(TradingAndOrders)]
-        public List<OrderTicket> ComboMarketOrder(List<Leg> legs, int quantity, bool asynchronous = false, string tag = "", IOrderProperties orderProperties = null)
+        public ComboOrderTicket ComboMarketOrder(List<Leg> legs, int quantity, bool asynchronous = false, string tag = "", IOrderProperties orderProperties = null)
         {
-            return SubmitComboOrder(legs, quantity, 0, asynchronous, tag, orderProperties);
+            return new ComboOrderTicket(SubmitComboOrder(legs, quantity, 0, asynchronous, tag, orderProperties));
         }
 
         /// <summary>
@@ -885,10 +885,10 @@ namespace QuantConnect.Algorithm
         /// <param name="asynchronous">Send the order asynchronously (false). Otherwise we'll block until it is fully submitted</param>
         /// <param name="tag">String tag for the order (optional)</param>
         /// <param name="orderProperties">The order properties to use. Defaults to <see cref="DefaultOrderProperties"/></param>
-        /// <returns>Sequence of order tickets, one for each leg</returns>
+        /// <returns>The combo order ticket, a list of order tickets, one for each leg</returns>
         /// <exception cref="ArgumentException">If not every leg has a defined limit price</exception>
         [DocumentationAttribute(TradingAndOrders)]
-        public List<OrderTicket> ComboLegLimitOrder(List<Leg> legs, int quantity, bool asynchronous = false,
+        public ComboOrderTicket ComboLegLimitOrder(List<Leg> legs, int quantity, bool asynchronous = false,
             string tag = "", IOrderProperties orderProperties = null)
         {
             if (legs.Any(x => x.OrderPrice == null || x.OrderPrice == 0))
@@ -896,7 +896,7 @@ namespace QuantConnect.Algorithm
                 throw new ArgumentException("ComboLegLimitOrder requires a limit price for each leg");
             }
 
-            return SubmitComboOrder(legs, quantity, 0, asynchronous, tag, orderProperties);
+            return new ComboOrderTicket(SubmitComboOrder(legs, quantity, 0, asynchronous, tag, orderProperties));
         }
 
         /// <summary>
@@ -909,10 +909,10 @@ namespace QuantConnect.Algorithm
         /// <param name="asynchronous">Send the order asynchronously (false). Otherwise we'll block until it is fully submitted</param>
         /// <param name="tag">String tag for the order (optional)</param>
         /// <param name="orderProperties">The order properties to use. Defaults to <see cref="DefaultOrderProperties"/></param>
-        /// <returns>Sequence of order tickets, one for each leg</returns>
+        /// <returns>The combo order ticket, a list of order tickets, one for each leg</returns>
         /// <exception cref="ArgumentException">If the order type is neither ComboMarket, ComboLimit nor ComboLegLimit</exception>
         [DocumentationAttribute(TradingAndOrders)]
-        public List<OrderTicket> ComboLimitOrder(List<Leg> legs, int quantity, decimal limitPrice,
+        public ComboOrderTicket ComboLimitOrder(List<Leg> legs, int quantity, decimal limitPrice,
             bool asynchronous = false, string tag = "", IOrderProperties orderProperties = null)
         {
             if (limitPrice == 0)
@@ -925,7 +925,7 @@ namespace QuantConnect.Algorithm
                 throw new ArgumentException("ComboLimitOrder does not support limit prices for individual legs");
             }
 
-            return SubmitComboOrder(legs, quantity, limitPrice, asynchronous, tag, orderProperties);
+            return new ComboOrderTicket(SubmitComboOrder(legs, quantity, limitPrice, asynchronous, tag, orderProperties));
         }
 
         private List<OrderTicket> GenerateOptionStrategyOrders(OptionStrategy strategy, int strategyQuantity, bool asynchronous, string tag, IOrderProperties orderProperties)
@@ -1419,6 +1419,28 @@ namespace QuantConnect.Algorithm
         }
 
         /// <summary>
+        /// Liquidate the holdings of the security referenced by the given ticker
+        /// </summary>
+        /// <remarks>If the ticker is not a known symbol this fails pointing to the tag parameter, absorbing the
+        /// common 'Liquidate(tag)' call shape where the tag would otherwise silently bind to the symbol argument</remarks>
+        /// <param name="ticker">The ticker of the asset to liquidate</param>
+        /// <param name="asynchronous">Flag to indicate if the symbols should be liquidated asynchronously</param>
+        /// <param name="tag">Custom tag to know who is calling this</param>
+        /// <param name="orderProperties">Order properties to use</param>
+        [DocumentationAttribute(TradingAndOrders)]
+        public List<OrderTicket> Liquidate(string ticker, bool asynchronous = false, string tag = null, IOrderProperties orderProperties = null)
+        {
+            if (!SymbolCache.TryGetSymbol(ticker, out var symbol))
+            {
+                throw new ArgumentException($"Liquidate(): '{ticker}' is not a recognized symbol. " +
+                    "The first argument must be a Symbol, a ticker or a list of them. " +
+                    $"To pass a custom tag use Liquidate(tag: \"{ticker}\")");
+            }
+
+            return Liquidate(symbol, asynchronous, tag, orderProperties);
+        }
+
+        /// <summary>
         /// Liquidate all holdings and cancel open orders. Called at the end of day for tick-strategies.
         /// </summary>
         /// <param name="symbolToLiquidate">Symbol we wish to liquidate</param>
@@ -1429,6 +1451,44 @@ namespace QuantConnect.Algorithm
         public List<int> Liquidate(Symbol symbolToLiquidate, string tag)
         {
             return Liquidate(symbol: symbolToLiquidate, tag: tag).Select(x => x.OrderId).ToList();
+        }
+
+        /// <summary>
+        /// Sends a market order to adjust the holdings of the given symbol to the target notional value
+        /// in units of the account currency, rounding the target quantity down to the security's lot size.
+        /// Unlike <see cref="SetHoldings(Symbol, decimal, bool, bool, string, IOrderProperties)"/>, which targets a
+        /// percentage of the total portfolio value, this targets an absolute position value: for derivatives, the
+        /// contract multiplier is included, so the target quantity is targetNotional / (price x multiplier)
+        /// </summary>
+        /// <param name="symbol">Symbol of the asset to trade</param>
+        /// <param name="targetNotional">The target notional value of the holdings, in units of the account currency</param>
+        /// <param name="asynchronous">Send the order asynchronously (false). Otherwise we'll block until it fills</param>
+        /// <param name="tag">Place a custom order property or tag (e.g. indicator data).</param>
+        /// <param name="orderProperties">The order properties to use. Defaults to <see cref="DefaultOrderProperties"/></param>
+        /// <returns>The order ticket instance, or null if the current holdings already match the target</returns>
+        [DocumentationAttribute(TradingAndOrders)]
+        public OrderTicket OrderTargetNotional(Symbol symbol, decimal targetNotional, bool asynchronous = false, string tag = "",
+            IOrderProperties orderProperties = null)
+        {
+            var security = GetSecurityForOrder(symbol);
+
+            // the current notional value of a single unit, including the contract multiplier and currency conversion
+            var unitValue = security.Holdings.GetQuantityValue(1).InAccountCurrency;
+            if (unitValue == 0)
+            {
+                throw new InvalidOperationException($"OrderTargetNotional(): {symbol.Value}: unable to compute an order quantity for " +
+                    $"the target notional {targetNotional}: the security has no market price yet. Warm up the algorithm or wait for " +
+                    "data before placing the order.");
+            }
+
+            var targetQuantity = OrderSizing.AdjustByLotSize(security, targetNotional / unitValue);
+            var quantity = targetQuantity - security.Holdings.Quantity;
+            if (quantity == 0)
+            {
+                return null;
+            }
+
+            return MarketOrder(symbol, quantity, asynchronous, tag, orderProperties);
         }
 
         /// <summary>

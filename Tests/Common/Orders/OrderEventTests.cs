@@ -50,6 +50,35 @@ namespace QuantConnect.Tests.Common.Orders
             Assert.IsTrue(json.Contains("LimitPrice", StringComparison.InvariantCulture));
             Assert.IsTrue(json.Contains("StopPrice", StringComparison.InvariantCulture));
             Assert.IsTrue(json.Contains(value: "IsInTheMoney", StringComparison.InvariantCulture));
+
+            // the flat shortcut properties are not serialized
+            Assert.IsFalse(json.Contains("OrderFeeAmount", StringComparison.InvariantCulture));
+            Assert.IsFalse(json.Contains("GroupId", StringComparison.InvariantCulture));
+        }
+
+        [Test]
+        public void OrderFeeAmountShortcut()
+        {
+            var order = new MarketOrder(Symbols.BTCUSD, 0.123m, DateTime.UtcNow);
+            var orderEvent = new OrderEvent(order, DateTime.UtcNow, new OrderFee(new CashAmount(88, Currencies.USD)));
+
+            Assert.AreEqual(88m, orderEvent.OrderFeeAmount);
+            Assert.AreEqual(0m, new OrderEvent().OrderFeeAmount);
+        }
+
+        [Test]
+        public void GroupIdComesFromTheTicketGroupOrderManager()
+        {
+            var groupOrderManager = new GroupOrderManager(11, 2, 10);
+            var request = new SubmitOrderRequest(OrderType.ComboMarket, SecurityType.Option, Symbols.SPY_C_192_Feb19_2016,
+                10, 0, 0, DateTime.UtcNow, "", groupOrderManager: groupOrderManager);
+            var order = new ComboMarketOrder(Symbols.SPY_C_192_Feb19_2016, 10, DateTime.UtcNow, groupOrderManager);
+
+            var orderEvent = new OrderEvent(order, DateTime.UtcNow, OrderFee.Zero);
+            Assert.IsNull(orderEvent.GroupId);
+
+            orderEvent.Ticket = new OrderTicket(null, request);
+            Assert.AreEqual(11, orderEvent.GroupId);
         }
 
         [Test]

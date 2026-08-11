@@ -75,6 +75,13 @@ namespace QuantConnect.Orders
         public OrderFee OrderFee { get; set; }
 
         /// <summary>
+        /// The fee amount associated with the order, shortcut for <see cref="OrderFee"/>.Value.Amount.
+        /// The two-level 'OrderFee.Value.Amount' is hard to discover, especially from Python
+        /// </summary>
+        [JsonIgnore]
+        public decimal OrderFeeAmount => OrderFee?.Value.Amount ?? 0m;
+
+        /// <summary>
         /// Fill price information about the order
         /// </summary>
         [ProtoMember(7)]
@@ -232,6 +239,12 @@ namespace QuantConnect.Orders
         /// </summary>
         [JsonIgnore]
         public OrderTicket Ticket { get; set; }
+
+        /// <summary>
+        /// The unique id of the order group this event's order belongs to, if it is a combo order leg, null otherwise
+        /// </summary>
+        [JsonIgnore]
+        public int? GroupId => Ticket?.SubmitRequest?.GroupOrderManager?.Id;
 
         /// <summary>
         /// Order Event empty constructor required for json converter

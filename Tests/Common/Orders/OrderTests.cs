@@ -44,6 +44,17 @@ namespace QuantConnect.Tests.Common.Orders
             Assert.AreEqual(parameters.ExpectedValue, value);
         }
 
+        [Test]
+        public void GroupOrderManagerIdShortcut()
+        {
+            var groupOrderManager = new GroupOrderManager(7, 2, 10);
+            var comboOrder = new ComboMarketOrder(Symbols.SPY_C_192_Feb19_2016, 10, DateTime.UtcNow, groupOrderManager);
+            Assert.AreEqual(7, comboOrder.GroupOrderManagerId);
+
+            var marketOrder = new MarketOrder(Symbols.SPY, 10, DateTime.UtcNow);
+            Assert.IsNull(marketOrder.GroupOrderManagerId);
+        }
+
         [TestCase(OrderDirection.Sell, 300, 0.1, true, 270)]
         [TestCase(OrderDirection.Sell, 300, 30, false, 270)]
         [TestCase(OrderDirection.Buy, 300, 0.1, true, 330)]
