@@ -200,11 +200,13 @@ namespace QuantConnect.Brokerages
             switch (properties)
             {
                 case TerminalLinkOrderProperties terminalLink:
-                    if (string.IsNullOrEmpty(terminalLink.LocateBroker) || IsShortOpen(terminalLink.PositionSide, quantity, holdingsQuantity))
+                    if ((string.IsNullOrEmpty(terminalLink.LocateBroker) && string.IsNullOrEmpty(terminalLink.LocateId))
+                        || IsShortOpen(terminalLink.PositionSide, quantity, holdingsQuantity))
                     {
                         return false;
                     }
                     terminalLink.LocateBroker = null;
+                    terminalLink.LocateId = null;
                     return true;
 
                 case WolverineOrderProperties wolverine:
@@ -222,8 +224,8 @@ namespace QuantConnect.Brokerages
                         return false;
                     }
 
-                    additionalProperties.Remove("5700"); // 5700 = LocateBroker
-                    additionalProperties.Remove("114"); // 114 = LocateReqd
+                    additionalProperties.Remove("5700"); // LocateBroker <5700> 
+                    additionalProperties.Remove("114"); // LocateReqd <114> 
                     return true;
 
                 default:
