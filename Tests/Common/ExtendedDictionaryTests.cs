@@ -16,9 +16,13 @@
 using NUnit.Framework;
 using Python.Runtime;
 using QuantConnect.Statistics;
+using System;
 using System.Collections.Generic;
 using System.Linq;
+using QuantConnect.Data;
 using QuantConnect.Data.Market;
+using QuantConnect.Securities;
+using QuantConnect.Securities.Positions;
 
 namespace QuantConnect.Tests.Common
 {
@@ -227,6 +231,57 @@ def set(dictionary, key, value):
 
             exception = Assert.Throws<ClrBubbledException>(() => module.InvokeMethod("get", pyDict, pyStringNonExistingSymbol));
             Assert.IsInstanceOf<KeyNotFoundException>(exception.InnerException);
+        }
+
+        [Test]
+        public void ConcreteDictionariesHandleNullKeysGracefully()
+        {
+            var time = new DateTime(2025, 1, 1);
+
+            var securities = new SecurityManager(new TimeKeeper(time, TimeZones.NewYork));
+            Assert.IsFalse(securities.ContainsKey(null));
+            Assert.IsFalse(securities.TryGetValue(null, out _));
+            Assert.IsNull(securities.get(null));
+
+            var portfolio = new SecurityPortfolioManager(securities, new SecurityTransactionManager(null, securities), new AlgorithmSettings());
+            Assert.IsFalse(portfolio.ContainsKey(null));
+            Assert.IsFalse(portfolio.TryGetValue(null, out _));
+            Assert.IsNull(portfolio.get(null));
+
+            var cashBook = new CashBook();
+            Assert.IsFalse(cashBook.ContainsKey(null));
+            Assert.IsFalse(cashBook.TryGetValue(null, out _));
+            Assert.IsNull(cashBook.get(null));
+
+            var slice = new Slice(time, new List<BaseData>(), time);
+            Assert.IsFalse(slice.ContainsKey(null));
+            Assert.IsFalse(slice.TryGetValue(null, out _));
+            Assert.IsNull(slice.get(null));
+
+            var tradeBars = new TradeBars();
+            Assert.IsFalse(tradeBars.ContainsKey(null));
+            Assert.IsFalse(tradeBars.TryGetValue(null, out _));
+            Assert.IsNull(tradeBars.get(null));
+
+            var optionChains = new OptionChains();
+            Assert.IsFalse(optionChains.ContainsKey(null));
+            Assert.IsFalse(optionChains.TryGetValue(null, out _));
+            Assert.IsNull(optionChains.get(null));
+
+            var futuresChains = new FuturesChains();
+            Assert.IsFalse(futuresChains.ContainsKey(null));
+            Assert.IsFalse(futuresChains.TryGetValue(null, out _));
+            Assert.IsNull(futuresChains.get(null));
+
+            var universeManager = new UniverseManager();
+            Assert.IsFalse(universeManager.ContainsKey(null));
+            Assert.IsFalse(universeManager.TryGetValue(null, out _));
+            Assert.IsNull(universeManager.get(null));
+
+            var positionGroups = new SecurityPositionGroupModel();
+            Assert.IsFalse(positionGroups.ContainsKey(null));
+            Assert.IsFalse(positionGroups.TryGetValue(null, out _));
+            Assert.IsNull(positionGroups.get(null));
         }
 
         private class TestDictionary<TKey, TValue> : ExtendedDictionary<TKey, TValue>
