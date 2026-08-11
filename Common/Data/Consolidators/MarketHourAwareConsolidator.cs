@@ -28,12 +28,13 @@ namespace QuantConnect.Data.Consolidators
     {
         private readonly bool _dailyStrictEndTimeEnabled;
         private readonly bool _extendedMarketHours;
+        private readonly TimeSpan _period;
         private bool _useStrictEndTime;
 
         /// <summary>
         /// The consolidation period requested
         /// </summary>
-        protected TimeSpan Period { get; }
+        public override TimeSpan? Period => _period;
 
         /// <summary>
         /// The consolidator instance
@@ -75,7 +76,7 @@ namespace QuantConnect.Data.Consolidators
         public MarketHourAwareConsolidator(bool dailyStrictEndTimeEnabled, Resolution resolution, Type dataType, TickType tickType, bool extendedMarketHours)
         {
             _dailyStrictEndTimeEnabled = dailyStrictEndTimeEnabled;
-            Period = resolution.ToTimeSpan();
+            _period = resolution.ToTimeSpan();
             _extendedMarketHours = extendedMarketHours;
 
             Consolidator = CreateConsolidator(resolution, dataType, tickType);
@@ -94,7 +95,7 @@ namespace QuantConnect.Data.Consolidators
         public MarketHourAwareConsolidator(bool dailyStrictEndTimeEnabled, TimeSpan period, Type dataType, TickType tickType, bool extendedMarketHours)
         {
             _dailyStrictEndTimeEnabled = dailyStrictEndTimeEnabled;
-            Period = period;
+            _period = period;
             _extendedMarketHours = extendedMarketHours;
 
             // when the period exactly matches a standard resolution, reuse the resolution based consolidation so its
@@ -123,23 +124,23 @@ namespace QuantConnect.Data.Consolidators
                 {
                     return resolution == Resolution.Daily
                         ? new TickConsolidator(DailyStrictEndTime)
-                        : new TickConsolidator(Period);
+                        : new TickConsolidator(_period);
                 }
                 return resolution == Resolution.Daily
                     ? new TickQuoteBarConsolidator(DailyStrictEndTime)
-                    : new TickQuoteBarConsolidator(Period);
+                    : new TickQuoteBarConsolidator(_period);
             }
             if (dataType == typeof(TradeBar))
             {
                 return resolution == Resolution.Daily
                     ? new TradeBarConsolidator(DailyStrictEndTime)
-                    : new TradeBarConsolidator(Period);
+                    : new TradeBarConsolidator(_period);
             }
             if (dataType == typeof(QuoteBar))
             {
                 return resolution == Resolution.Daily
                     ? new QuoteBarConsolidator(DailyStrictEndTime)
-                    : new QuoteBarConsolidator(Period);
+                    : new QuoteBarConsolidator(_period);
             }
             throw new ArgumentNullException(nameof(dataType), $"{dataType.Name} not supported");
         }
@@ -179,7 +180,7 @@ namespace QuantConnect.Data.Consolidators
             // the data resolution is hour and the exchange opens at any point in time over the data.Time to data.EndTime interval
             if (_extendedMarketHours ||
                 ExchangeHours.IsOpen(data.Time, false) ||
-                (Period == Time.OneDay && (data.EndTime - data.Time >= Time.OneHour) && ExchangeHours.IsOpen(data.Time, data.EndTime, false)))
+                (_period == Time.OneDay && (data.EndTime - data.Time >= Time.OneHour) && ExchangeHours.IsOpen(data.Time, data.EndTime, false)))
             {
                 Consolidator.Update(data);
             }
@@ -238,9 +239,9 @@ namespace QuantConnect.Data.Consolidators
         protected virtual CalendarInfo DailyStrictEndTime(DateTime dateTime)
         {
             // strict end times describe a single daily bar, so periods larger than a day fall back to standard period consolidation
-            if (!_useStrictEndTime || Period > Time.OneDay)
+            if (!_useStrictEndTime || _period > Time.OneDay)
             {
-                return new(Period > Time.OneDay ? dateTime : dateTime.RoundDown(Period), Period);
+                return new(_period > Time.OneDay ? dateTime : dateTime.RoundDown(_period), _period);
             }
             return LeanData.GetDailyCalendar(dateTime, ExchangeHours, _extendedMarketHours);
         }
@@ -253,9 +254,9 @@ namespace QuantConnect.Data.Consolidators
         {
             if (ExchangeHours == null || ExchangeHours.IsMarketAlwaysOpen)
             {
-                return new(dateTime.RoundDown(Period), Period);
+                return new(dateTime.RoundDown(_period), _period);
             }
-            return LeanData.GetIntradayCalendar(dateTime, Period, ExchangeHours, _extendedMarketHours);
+            return LeanData.GetIntradayCalendar(dateTime, _period, ExchangeHours, _extendedMarketHours);
         }
 
         /// <summary>
@@ -263,7 +264,7 @@ namespace QuantConnect.Data.Consolidators
         /// </summary>
         protected virtual bool UseStrictEndTime(Symbol symbol)
         {
-            return LeanData.UseStrictEndTime(_dailyStrictEndTimeEnabled, symbol, Period, ExchangeHours);
+            return LeanData.UseStrictEndTime(_dailyStrictEndTimeEnabled, symbol, _period, ExchangeHours);
         }
 
         /// <summary>

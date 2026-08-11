@@ -28,11 +28,48 @@ namespace QuantConnect.Indicators
     public abstract partial class IndicatorBase : WindowBase<IndicatorDataPoint>, IIndicator
     {
         /// <summary>
+        /// Tracks whether any indicator on the current thread is being updated. Indicators routinely read
+        /// each other's 'Current' while computing, e.g. MACD reads its EMAs before they are ready, so the
+        /// not-ready read warning only applies to reads happening outside of any indicator update
+        /// </summary>
+        [ThreadStatic]
+        private static int _updateScopeDepth;
+
+        /// <summary>
+        /// True once the not-ready 'Current' read warning is no longer applicable for this indicator,
+        /// either because it was already logged or because the indicator got ready. Keeps the hot path
+        /// to a single boolean check
+        /// </summary>
+        private bool _notReadyCurrentWarningDisabled;
+
+        /// <summary>
         /// The data consolidators associated with this indicator if any
         /// </summary>
         /// <remarks>These references allow us to unregister an indicator from getting future data updates through it's consolidators.
         /// We need multiple consolitadors because some indicators consume data from multiple different symbols</remarks>
         public ISet<IDataConsolidator> Consolidators { get; } = new HashSet<IDataConsolidator>();
+
+        /// <summary>
+        /// Gets the current state of this indicator. If the state has not been updated
+        /// then the time on the value will equal DateTime.MinValue.
+        /// </summary>
+        /// <remarks>Reading 'Current' while the indicator is not ready yields a meaningless value, a common
+        /// silent logic bug, so the first such user read logs a warning naming the samples needed vs received</remarks>
+        public override IndicatorDataPoint Current
+        {
+            get
+            {
+                if (!_notReadyCurrentWarningDisabled)
+                {
+                    ValidateCurrentAccess();
+                }
+                return base.Current;
+            }
+            protected set
+            {
+                base.Current = value;
+            }
+        }
 
         /// <summary>
         /// Gets the previous state of this indicator. If the state has not been updated
@@ -99,6 +136,82 @@ namespace QuantConnect.Indicators
         /// <param name="input">The value to use to update this indicator</param>
         /// <returns>True if this indicator is ready, false otherwise</returns>
         public abstract bool Update(IBaseData input);
+
+        /// <summary>
+        /// Updating an indicator with a raw value is not supported: an update always requires a time.
+        /// This overload exists to turn a common misuse, e.g. 'indicator.update(bar.close)' in Python, which
+        /// otherwise surfaces as a hard to understand runtime binding error, into a prescriptive error naming
+        /// the valid update forms. Python numeric values bind to it through their double conversion.
+        /// It takes a double on purpose: a decimal overload would make existing 'Update(IndicatorDataPoint)'
+        /// C# call sites ambiguous through the data point's implicit decimal conversion
+        /// </summary>
+        /// <param name="value">The value the indicator was incorrectly updated with</param>
+        public bool Update(double value)
+        {
+            if (this is IndicatorBase<IndicatorDataPoint>)
+            {
+                throw new NotSupportedException($"{GetType().Name}.Update() requires a time for each new value." +
+                    " Use one of the following methods instead: Update(DateTime, decimal), e.g. 'indicator.Update(bar.EndTime, bar.Close)', or Update(IndicatorDataPoint)");
+            }
+
+            var suggestions = new List<string>
+            {
+                "Update(TradeBar)",
+                "Update(QuoteBar)"
+            };
+
+            if (this is IndicatorBase<IBaseData>)
+            {
+                suggestions.Add("Update(Tick)");
+            }
+
+            throw new NotSupportedException($"{GetType().Name} does not support being updated with just a value: it requires a full data bar." +
+                $" Use one of the following methods instead: {string.Join(", ", suggestions)}");
+        }
+
+        /// <summary>
+        /// Flags the current thread as updating an indicator, see <see cref="_updateScopeDepth"/>
+        /// </summary>
+        protected static void EnterUpdateScope()
+        {
+            _updateScopeDepth++;
+        }
+
+        /// <summary>
+        /// Removes the indicator updating flag from the current thread, see <see cref="_updateScopeDepth"/>
+        /// </summary>
+        protected static void ExitUpdateScope()
+        {
+            _updateScopeDepth--;
+        }
+
+        /// <summary>
+        /// Logs a warning, once per indicator, when 'Current' is read outside of any indicator update
+        /// while this indicator is not ready yet
+        /// </summary>
+        private void ValidateCurrentAccess()
+        {
+            if (IsReady)
+            {
+                // once ready the warning no longer applies, disable the check so reads only cost a boolean check
+                _notReadyCurrentWarningDisabled = true;
+                return;
+            }
+
+            if (_updateScopeDepth != 0)
+            {
+                // internal read from another indicator's update, not a user read
+                return;
+            }
+
+            _notReadyCurrentWarningDisabled = true;
+            var samplesNeeded = (this as IIndicatorWarmUpPeriodProvider)?.WarmUpPeriod;
+            var samplesReceived = $"received {Samples} sample{(Samples == 1 ? string.Empty : "s")}";
+            var requirement = samplesNeeded > 0 ? $"{samplesReceived} but requires {samplesNeeded}" : samplesReceived;
+            Log.Error($"IndicatorBase.Current: The indicator '{Name}' is not ready yet, it has {requirement}." +
+                " Its value is not meaningful until 'IsReady' is true. Either check 'IsReady' before reading 'Current', or warm the indicator up," +
+                " e.g. with 'Settings.AutomaticIndicatorWarmUp = true' or 'algorithm.WarmUpIndicator()'. This message is only logged once per indicator.");
+        }
 
         /// <summary>
         /// ToString Overload for Indicator Base
@@ -185,45 +298,53 @@ namespace QuantConnect.Indicators
         /// <returns>True if this indicator is ready, false otherwise</returns>
         public override bool Update(IBaseData input)
         {
-            T _previousSymbolInput = default(T);
-            if (_previousInput.TryGetValue(input.Symbol.ID, out _previousSymbolInput) && input.EndTime < _previousSymbolInput.EndTime)
+            EnterUpdateScope();
+            try
             {
-                if (!_loggedForwardOnlyIndicatorError)
+                T _previousSymbolInput = default(T);
+                if (_previousInput.TryGetValue(input.Symbol.ID, out _previousSymbolInput) && input.EndTime < _previousSymbolInput.EndTime)
                 {
-                    _loggedForwardOnlyIndicatorError = true;
-                    // if we receive a time in the past, log once and return
-                    Log.Error($"IndicatorBase.Update(): This is a forward only indicator: {Name} Input: {input.EndTime:u} Previous: {_previousSymbolInput.EndTime:u}. It will not be updated with this input.");
+                    if (!_loggedForwardOnlyIndicatorError)
+                    {
+                        _loggedForwardOnlyIndicatorError = true;
+                        // if we receive a time in the past, log once and return
+                        Log.Error($"IndicatorBase.Update(): This is a forward only indicator: {Name} Input: {input.EndTime:u} Previous: {_previousSymbolInput.EndTime:u}. It will not be updated with this input.");
+                    }
+                    return IsReady;
+                }
+                if (!ReferenceEquals(input, _previousSymbolInput))
+                {
+                    // compute a new value and update our previous time
+                    Samples++;
+
+                    if (!(input is T))
+                    {
+                        if (typeof(T) == typeof(IndicatorDataPoint))
+                        {
+                            input = new IndicatorDataPoint(input.Symbol, input.EndTime, input.Value);
+                        }
+                        else
+                        {
+                            throw new ArgumentException($"IndicatorBase.Update() 'input' expected to be of type {typeof(T)} but is of type {input.GetType()}");
+                        }
+                    }
+                    _previousInput[input.Symbol.ID] = (T)input;
+
+                    var nextResult = ValidateAndComputeNextValue((T)input);
+                    if (nextResult.Status == IndicatorStatus.Success)
+                    {
+                        Current = new IndicatorDataPoint(input.Symbol, input.EndTime, nextResult.Value);
+
+                        // let others know we've produced a new data point
+                        OnUpdated(Current);
+                    }
                 }
                 return IsReady;
             }
-            if (!ReferenceEquals(input, _previousSymbolInput))
+            finally
             {
-                // compute a new value and update our previous time
-                Samples++;
-
-                if (!(input is T))
-                {
-                    if (typeof(T) == typeof(IndicatorDataPoint))
-                    {
-                        input = new IndicatorDataPoint(input.Symbol, input.EndTime, input.Value);
-                    }
-                    else
-                    {
-                        throw new ArgumentException($"IndicatorBase.Update() 'input' expected to be of type {typeof(T)} but is of type {input.GetType()}");
-                    }
-                }
-                _previousInput[input.Symbol.ID] = (T)input;
-
-                var nextResult = ValidateAndComputeNextValue((T)input);
-                if (nextResult.Status == IndicatorStatus.Success)
-                {
-                    Current = new IndicatorDataPoint(input.Symbol, input.EndTime, nextResult.Value);
-
-                    // let others know we've produced a new data point
-                    OnUpdated(Current);
-                }
+                ExitUpdateScope();
             }
-            return IsReady;
         }
 
         /// <summary>

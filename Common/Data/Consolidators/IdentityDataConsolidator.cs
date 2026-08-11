@@ -52,6 +52,12 @@ namespace QuantConnect.Data.Consolidators
         }
 
         /// <summary>
+        /// Gets the period of time each consolidated bar spans. This consolidator emits each input as is,
+        /// which is expressed as a zero period
+        /// </summary>
+        public override TimeSpan? Period => TimeSpan.Zero;
+
+        /// <summary>
         /// Updates this consolidator with the specified data
         /// </summary>
         /// <param name="data">The new data for the consolidator</param>

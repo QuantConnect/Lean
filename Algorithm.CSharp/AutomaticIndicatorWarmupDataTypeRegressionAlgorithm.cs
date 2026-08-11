@@ -65,13 +65,12 @@ namespace QuantConnect.Algorithm.CSharp
             // force spy for use Raw data mode so that it matches the used when unsubscribed which uses the universe settings
             SubscriptionManager.SubscriptionDataConfigService.GetSubscriptionDataConfigs(spy).SetDataNormalizationMode(DataNormalizationMode.Raw);
 
-            // Test case: custom IndicatorBase<QuoteBar> indicator using Future subscribed symbol
+            // Test case: custom IndicatorBase<QuoteBar> indicator using Future subscribed symbol.
+            // Since 'Settings.AutomaticIndicatorWarmUp' is enabled, registering with a consolidator warms the indicator up
             var indicator = new CustomIndicator();
             var consolidator = CreateConsolidator(TimeSpan.FromMinutes(2), typeof(QuoteBar));
             RegisterIndicator(_symbol, indicator, consolidator);
 
-            AssertIndicatorState(indicator, isReady: false);
-            WarmUpIndicator(_symbol, indicator);
             AssertIndicatorState(indicator, isReady: true);
 
             // Test case: SimpleMovingAverage<IndicatorDataPoint> using Future Subscribed symbol (should use TradeBar)
@@ -151,7 +150,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of the algorithm history
         /// </summary>
-        public int AlgorithmHistoryDataPoints => 85;
+        public int AlgorithmHistoryDataPoints => 87;
 
         /// <summary>
         /// Final status of the algorithm

@@ -24,7 +24,8 @@ namespace QuantConnect.Interfaces
     public interface IAlgorithmSettings
     {
         /// <summary>
-        /// Gets whether or not WarmUpIndicator is allowed to warm up indicators
+        /// Gets whether or not indicators are automatically warmed up with historical data when created
+        /// through the indicator helper methods or registered through 'RegisterIndicator'
         /// </summary>
         bool AutomaticIndicatorWarmUp { get; set; }
 
