@@ -191,7 +191,7 @@ namespace QuantConnect.Brokerages
         /// position. A locate belongs only on a short sell, so brokers reject it on any other order.
         /// A position side set in the order properties overrides the holdings-based mapping.
         /// </summary>
-        /// <param name="properties">The order properties</param>
+        /// <param name="properties">The order properties to edit</param>
         /// <param name="quantity">The order quantity; the sign gives the order direction</param>
         /// <param name="holdingsQuantity">The current holdings quantity</param>
         /// <returns>True when a locate was removed from the order properties</returns>
@@ -224,9 +224,8 @@ namespace QuantConnect.Brokerages
                         return false;
                     }
 
-                    additionalProperties.Remove("5700"); // LocateBroker <5700> 
-                    additionalProperties.Remove("114"); // LocateReqd <114> 
-                    return true;
+                    // single '|' so both tags are always removed: LocateBroker <5700>, LocateReqd <114>
+                    return additionalProperties.Remove("5700") | additionalProperties.Remove("114");
 
                 default:
                     return false;

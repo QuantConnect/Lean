@@ -14,7 +14,6 @@
 */
 
 using QuantConnect.Algorithm.Framework.Portfolio;
-using QuantConnect.Brokerages;
 using QuantConnect.Interfaces;
 using QuantConnect.Orders;
 using QuantConnect.Orders.TimeInForces;
@@ -1085,9 +1084,6 @@ namespace QuantConnect.Algorithm
                 );
             }
 
-            // A locate broker belongs only on a short sell; drop it from any other order so brokers do not reject it
-            BrokerageExtensions.TryRemoveLocateFromNonShortOrder(request.OrderProperties, request.Quantity, security.Holdings.Quantity);
-
             var price = security.Price;
 
             //Check the exchange is open before sending a exercise orders
@@ -1713,9 +1709,8 @@ namespace QuantConnect.Algorithm
             IOrderProperties properties, bool asynchronous, decimal stopPrice = 0m, decimal limitPrice = 0m, decimal triggerPrice = 0m, decimal trailingAmount = 0m,
             bool trailingAsPercentage = false, GroupOrderManager groupOrderManager = null)
         {
-            // Clone: pre order checks may edit the properties, and callers reuse their instance across orders
             return new SubmitOrderRequest(orderType, security.Type, security.Symbol, quantity, stopPrice, limitPrice, triggerPrice, trailingAmount,
-                trailingAsPercentage, UtcTime, tag, properties?.Clone(), groupOrderManager, asynchronous);
+                trailingAsPercentage, UtcTime, tag, properties, groupOrderManager, asynchronous);
         }
 
         private static void CheckComboOrderSizing(List<Leg> legs, decimal quantity)
