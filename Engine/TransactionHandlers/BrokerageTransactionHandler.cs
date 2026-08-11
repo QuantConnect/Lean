@@ -1368,6 +1368,18 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
                         // unexpected error, we need to close down shop
                         _algorithm.SetRuntimeError(err, "Order Event Handler");
                     }
+
+                    // Engine-guaranteed bracket order (OCO) management, after the user's OnOrderEvent so the
+                    // triggering event is delivered before the events of the requests it generates: the entry
+                    // fill places the protective legs, a leg fill cancels its sibling and an unrelated order
+                    // closing the position cancels the remaining legs. See BracketOrderTicket
+                    if (_algorithm.Transactions.ProcessBracketOrderEvent(orderEvent) && SynchronousProcessing)
+                    {
+                        // drain the generated requests before the next fill scan so a canceled sibling leg
+                        // cannot also fill when a single bar spans both leg prices (deterministic: the leg
+                        // with the lower order id, the stop loss, wins)
+                        ProcessPendingRequests();
+                    }
                 }
 
                 LogOrderEvent(orderEvent);

@@ -14,6 +14,7 @@
 */
 
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
@@ -44,6 +45,12 @@ namespace QuantConnect.Securities
         private TimeSpan _marketOrderFillTimeout = TimeSpan.MinValue;
 
         private IOrderProcessor _orderProcessor;
+
+        /// <summary>
+        /// The current bracket order of each symbol. Completed brackets are removed by
+        /// <see cref="ProcessBracketOrderEvent"/>, inactive leftovers are replaced by <see cref="AddBracketOrder"/>
+        /// </summary>
+        private readonly ConcurrentDictionary<Symbol, BracketOrderTicket> _bracketOrders = new();
 
         /// <summary>
         /// Gets the time the security information was last updated
@@ -222,6 +229,84 @@ namespace QuantConnect.Securities
         public OrderTicket AddOrder(SubmitOrderRequest request)
         {
             return ProcessRequest(request);
+        }
+
+        /// <summary>
+        /// Registers the given bracket order and submits its entry order. Once the entry fills, the
+        /// engine places the protective exit legs and keeps them linked with one-cancels-the-other
+        /// semantics, see <see cref="BracketOrderTicket"/>
+        /// </summary>
+        /// <param name="bracket">The bracket order to register and submit</param>
+        /// <exception cref="InvalidOperationException">A bracket order is still active for the symbol.
+        /// Placing a new one on top of it would strand the previous protective legs against a position
+        /// they no longer track, so the caller must cancel or complete the previous bracket first</exception>
+        public void AddBracketOrder(BracketOrderTicket bracket)
+        {
+            while (true)
+            {
+                if (_bracketOrders.TryGetValue(bracket.Symbol, out var existing))
+                {
+                    if (existing.IsActive)
+                    {
+                        throw new InvalidOperationException(
+                            $"A bracket order is already active for {bracket.Symbol}. Placing a new one would leave " +
+                            "the previous stop loss/take profit legs unmanaged. Cancel it first, e.g. " +
+                            "'Transactions.GetBracketOrderTicket(symbol).Cancel()', or wait for it to complete.");
+                    }
+                    if (_bracketOrders.TryUpdate(bracket.Symbol, bracket, existing))
+                    {
+                        break;
+                    }
+                }
+                else if (_bracketOrders.TryAdd(bracket.Symbol, bracket))
+                {
+                    break;
+                }
+            }
+
+            // submit after registering: in live trading the entry can fill while the submission call is
+            // still in flight and the fill must already find the bracket to place the exit legs
+            bracket.SubmitEntryOrder();
+        }
+
+        /// <summary>
+        /// Gets the active bracket order for the specified symbol, or null if there is none
+        /// </summary>
+        /// <param name="symbol">The symbol to get the active bracket order for</param>
+        public BracketOrderTicket GetBracketOrderTicket(Symbol symbol)
+        {
+            return _bracketOrders.TryGetValue(symbol, out var bracket) && bracket.IsActive ? bracket : null;
+        }
+
+        /// <summary>
+        /// Routes an order event to the symbol's bracket order, if any, driving the engine-guaranteed
+        /// one-cancels-the-other behavior: the entry fill places the exit legs, a leg fill cancels its
+        /// sibling and an unrelated order closing or flipping the position cancels the remaining legs.
+        /// Called by the transaction handler for every order event
+        /// </summary>
+        /// <param name="orderEvent">The order event to process</param>
+        /// <returns>True if any order request was issued as a result</returns>
+        public bool ProcessBracketOrderEvent(OrderEvent orderEvent)
+        {
+            if (_bracketOrders.IsEmpty || !_bracketOrders.TryGetValue(orderEvent.Symbol, out var bracket))
+            {
+                return false;
+            }
+
+            decimal holdingsQuantity = 0;
+            if (_securities.TryGetValue(orderEvent.Symbol, out var security))
+            {
+                holdingsQuantity = security.Holdings.Quantity;
+            }
+
+            var requestsIssued = bracket.HandleOrderEvent(orderEvent, holdingsQuantity);
+            if (!bracket.IsActive)
+            {
+                // remove only if it's still this same bracket, a new one might have been registered
+                // by the user's OnOrderEvent handler already
+                _bracketOrders.TryRemove(new KeyValuePair<Symbol, BracketOrderTicket>(orderEvent.Symbol, bracket));
+            }
+            return requestsIssued;
         }
 
         /// <summary>
