@@ -27,6 +27,8 @@ using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Interfaces;
 using QuantConnect.Notifications;
 using QuantConnect.Orders;
+using QuantConnect.Orders.Slippage;
+using System.Collections.Specialized;
 using QuantConnect.Parameters;
 using QuantConnect.Scheduling;
 using QuantConnect.Securities;
@@ -146,6 +148,7 @@ namespace QuantConnect.Algorithm
 
         // flips to true when the user
         private bool _userSetSecurityInitializer;
+        private ISlippageModel _slippageModel;
 
         // warmup resolution variables
         private TimeSpan? _warmupTimeSpan;
@@ -1407,7 +1410,53 @@ namespace QuantConnect.Algorithm
 
                     // restore the saved leverage
                     security.SetLeverage(leverage);
+
+                    // restore the algorithm-level slippage model, if set, over the brokerage default
+                    if (_slippageModel != null)
+                    {
+                        security.SetSlippageModel(_slippageModel);
+                    }
                 }
+            }
+        }
+
+        /// <summary>
+        /// Sets the slippage model for all securities in the algorithm, including securities added afterwards,
+        /// for instance through universe selection
+        /// </summary>
+        /// <remarks>Individual securities can override this model by calling
+        /// <see cref="Security.SetSlippageModel(ISlippageModel)"/> after this method, e.g. from
+        /// <see cref="OnSecuritiesChanged(SecurityChanges)"/> for securities added by universe selection</remarks>
+        /// <param name="slippageModel">The slippage model to use</param>
+        [DocumentationAttribute(Modeling)]
+        public void SetSlippageModel(ISlippageModel slippageModel)
+        {
+            if (slippageModel == null)
+            {
+                throw new ArgumentNullException(nameof(slippageModel));
+            }
+
+            if (_slippageModel == null)
+            {
+                // First call: subscribe so that securities added later also get the model.
+                // The add event fires after the security initializer (e.g. BrokerageModelSecurityInitializer)
+                // has run, so this model takes precedence over the brokerage default
+                Securities.CollectionChanged += (sender, changedEventArgs) =>
+                {
+                    if (changedEventArgs.Action == NotifyCollectionChangedAction.Add)
+                    {
+                        foreach (Security security in changedEventArgs.NewItems)
+                        {
+                            security.SetSlippageModel(_slippageModel);
+                        }
+                    }
+                };
+            }
+            _slippageModel = slippageModel;
+
+            foreach (var kvp in Securities)
+            {
+                kvp.Value.SetSlippageModel(slippageModel);
             }
         }
 

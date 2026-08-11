@@ -38,7 +38,7 @@ namespace QuantConnect.Orders.Slippage
     /// the market regime is not taken into account,
     /// and the market environment does not have many market makers at that time,
     /// so it is recommend to recalibrate with reference to the original paper.</remark>
-    public class MarketImpactSlippageModel : ISlippageModel
+    public class MarketImpactSlippageModel : SlippageModel
     {
         private readonly IAlgorithm _algorithm;
         private readonly bool _nonNegative;
@@ -94,7 +94,7 @@ namespace QuantConnect.Orders.Slippage
         /// <summary>
         /// Slippage Model. Return a decimal cash slippage approximation on the order.
         /// </summary>
-        public decimal GetSlippageApproximation(Security asset, Order order)
+        public override decimal GetSlippageApproximation(Security asset, Order order)
         {
             if (asset.Type == SecurityType.Forex || asset.Type == SecurityType.Cfd)
             {

@@ -20,7 +20,7 @@ namespace QuantConnect.Orders.Slippage
     /// <summary>
     /// Null slippage model, which provider no slippage
     /// </summary>
-    public sealed class NullSlippageModel : ISlippageModel
+    public sealed class NullSlippageModel : SlippageModel
     {
         /// <summary>
         /// The null slippage model instance
@@ -30,7 +30,7 @@ namespace QuantConnect.Orders.Slippage
         /// <summary>
         /// Will return no slippage
         /// </summary>
-        public decimal GetSlippageApproximation(Security asset, Order order)
+        public override decimal GetSlippageApproximation(Security asset, Order order)
         {
             return 0;
         }

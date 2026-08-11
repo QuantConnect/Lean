@@ -17,6 +17,7 @@
 using System;
 using NodaTime;
 using NUnit.Framework;
+using Python.Runtime;
 using QuantConnect.Algorithm;
 using QuantConnect.Brokerages;
 using QuantConnect.Data;
@@ -159,6 +160,92 @@ namespace QuantConnect.Tests.Common.Securities
 
             // Assert
             Assert.IsTrue(_tradeBarSecurity.Price == 0);
+        }
+
+        [Test]
+        public void PythonConstructorAcceptsBoundMethodSeeder()
+        {
+            // Reproduces the fleet trap: BrokerageModelSecurityInitializer(self.brokerage_model, self._seed_function)
+            // failed with "No method matches given arguments for .ctor: (InteractiveBrokersBrokerageModel, <class 'method'>)"
+            using (Py.GIL())
+            {
+                var module = PyModule.FromString(nameof(PythonConstructorAcceptsBoundMethodSeeder), @"
+from AlgorithmImports import *
+
+class SeederHolder:
+    def __init__(self):
+        self.called = False
+
+    def seed(self, security):
+        self.called = True
+        return TradeBar(datetime(2013, 10, 10), security.symbol, 10, 10, 10, 10, 100)
+
+def create_initializer(brokerage_model, holder):
+    return BrokerageModelSecurityInitializer(brokerage_model, holder.seed)
+");
+                var holder = module.GetAttr("SeederHolder").Invoke();
+                using var initializer = module.GetAttr("create_initializer")
+                    .Invoke(new DefaultBrokerageModel().ToPython(), holder);
+                initializer.As<ISecurityInitializer>().Initialize(_tradeBarSecurity);
+
+                Assert.IsTrue(holder.GetAttr("called").As<bool>());
+                Assert.AreEqual(10m, _tradeBarSecurity.Price);
+            }
+        }
+
+        [Test]
+        public void PythonConstructorAcceptsSecuritySeederInstance()
+        {
+            using (Py.GIL())
+            {
+                var module = PyModule.FromString(nameof(PythonConstructorAcceptsSecuritySeederInstance), @"
+from AlgorithmImports import *
+
+def create_initializer(brokerage_model, seeder):
+    return BrokerageModelSecurityInitializer(brokerage_model, seeder)
+");
+                using var initializer = module.GetAttr("create_initializer")
+                    .Invoke(new DefaultBrokerageModel().ToPython(), SecuritySeeder.Null.ToPython());
+                Assert.DoesNotThrow(() => initializer.As<ISecurityInitializer>().Initialize(_tradeBarSecurity));
+                Assert.AreEqual(0m, _tradeBarSecurity.Price);
+            }
+        }
+
+        [Test]
+        public void PythonConstructorAcceptsNoneSeeder()
+        {
+            using (Py.GIL())
+            {
+                var module = PyModule.FromString(nameof(PythonConstructorAcceptsNoneSeeder), @"
+from AlgorithmImports import *
+
+def create_initializer(brokerage_model):
+    return BrokerageModelSecurityInitializer(brokerage_model, None)
+");
+                using var initializer = module.GetAttr("create_initializer").Invoke(new DefaultBrokerageModel().ToPython());
+                Assert.DoesNotThrow(() => initializer.As<ISecurityInitializer>().Initialize(_tradeBarSecurity));
+                Assert.AreEqual(0m, _tradeBarSecurity.Price);
+            }
+        }
+
+        [Test]
+        public void PythonConstructorRejectsNonCallableSeeder()
+        {
+            using (Py.GIL())
+            {
+                var module = PyModule.FromString(nameof(PythonConstructorRejectsNonCallableSeeder), @"
+from AlgorithmImports import *
+
+class NotASeeder:
+    pass
+
+def create_initializer(brokerage_model):
+    return BrokerageModelSecurityInitializer(brokerage_model, NotASeeder())
+");
+                var exception = Assert.Catch<Exception>(
+                    () => module.GetAttr("create_initializer").Invoke(new DefaultBrokerageModel().ToPython()));
+                Assert.That(exception.Message, Does.Contain("unsupported security seeder").And.Contain("ISecuritySeeder"));
+            }
         }
 
         [Test]

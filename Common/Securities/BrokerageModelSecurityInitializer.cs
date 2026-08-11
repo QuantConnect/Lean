@@ -14,6 +14,8 @@
  *
 */
 
+using System;
+using Python.Runtime;
 using QuantConnect.Brokerages;
 
 namespace QuantConnect.Securities
@@ -47,6 +49,43 @@ namespace QuantConnect.Securities
         {
             _brokerageModel = brokerageModel;
             _securitySeeder = securitySeeder;
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="BrokerageModelSecurityInitializer"/> class
+        /// for the specified algorithm
+        /// </summary>
+        /// <param name="brokerageModel">The brokerage model used to initialize the security models</param>
+        /// <param name="securitySeeder">An <see cref="ISecuritySeeder"/> instance or a Python callable, like
+        /// the algorithm's get_last_known_price method, used to seed the initial price of the security.
+        /// It can also be None, in which case no seeding is performed</param>
+        public BrokerageModelSecurityInitializer(IBrokerageModel brokerageModel, PyObject securitySeeder)
+        {
+            _brokerageModel = brokerageModel;
+            using (Py.GIL())
+            {
+                if (securitySeeder is null || securitySeeder.IsNone())
+                {
+                    _securitySeeder = SecuritySeeder.Null;
+                }
+                else if (securitySeeder.TryConvert<ISecuritySeeder>(out var seeder))
+                {
+                    _securitySeeder = seeder;
+                }
+                else if (securitySeeder.IsCallable())
+                {
+                    // Wrap python callables, like a get_last_known_price method reference or a lambda,
+                    // the same way QCAlgorithm.SetSecurityInitializer accepts a function
+                    _securitySeeder = new FuncSecuritySeeder(securitySeeder);
+                }
+                else
+                {
+                    throw new ArgumentException(
+                        $"BrokerageModelSecurityInitializer(): unsupported security seeder '{securitySeeder.GetPythonType().Name}'. " +
+                        "Please provide an ISecuritySeeder instance (e.g. FuncSecuritySeeder), a callable taking a Security " +
+                        "and returning its seed data (e.g. self.get_last_known_price), or None to skip seeding.");
+                }
+            }
         }
 
         /// <summary>

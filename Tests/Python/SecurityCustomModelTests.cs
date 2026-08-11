@@ -19,6 +19,7 @@ using Python.Runtime;
 using QuantConnect.Algorithm;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
+using QuantConnect.Orders;
 using QuantConnect.Python;
 using QuantConnect.Securities;
 using QuantConnect.Securities.Equity;
@@ -72,6 +73,71 @@ namespace QuantConnect.Tests.Python
             var pyObject = CreateCustomBuyingPowerModel(code);
             Assert.Throws<NotImplementedException>(() => spy.SetBuyingPowerModel(pyObject));
         }
+
+        [Test]
+        [TestCase(true)]
+        [TestCase(false)]
+        public void SetSlippageModelSuccess(bool isChild)
+        {
+            var spy = GetSecurity<Equity>(Symbols.SPY, Resolution.Daily);
+            var time = new DateTime(2018, 8, 20, 15, 0, 0);
+            spy.SetMarketPrice(new Tick(time, Symbols.SPY, 100m, 100m));
+
+            // Test two custom slippage models.
+            // The first inherits from the C# SlippageModel base class and the other is 100% python.
+            // Subclassing the ISlippageModel interface is not supported by pythonnet
+            // (fails with "interface takes exactly one argument" at instantiation),
+            // the concrete SlippageModel base class is the supported base.
+            var code = isChild
+                ? CreateCustomSlippageModelFromSlippageModelCode()
+                : CreateCustomSlippageModelCode();
+
+            using (Py.GIL())
+            {
+                var module = PyModule.FromString("CustomSlippageModel", code);
+                spy.SetSlippageModel(module.GetAttr("CustomSlippageModel").Invoke());
+            }
+
+            Assert.IsAssignableFrom<SlippageModelPythonWrapper>(spy.SlippageModel);
+
+            var order = new MarketOrder(spy.Symbol, 1, time);
+            Assert.AreEqual(0.12m, spy.SlippageModel.GetSlippageApproximation(spy, order));
+        }
+
+        [Test]
+        public void SetSlippageModelChildWithoutOverrideUsesBaseImplementation()
+        {
+            var spy = GetSecurity<Equity>(Symbols.SPY, Resolution.Daily);
+            var time = new DateTime(2018, 8, 20, 15, 0, 0);
+            spy.SetMarketPrice(new Tick(time, Symbols.SPY, 100m, 100m));
+
+            using (Py.GIL())
+            {
+                var module = PyModule.FromString("CustomSlippageModelNoOverride", @"
+from AlgorithmImports import *
+
+class CustomSlippageModel(SlippageModel):
+    pass");
+                spy.SetSlippageModel(module.GetAttr("CustomSlippageModel").Invoke());
+            }
+
+            var order = new MarketOrder(spy.Symbol, 1, time);
+            Assert.AreEqual(0m, spy.SlippageModel.GetSlippageApproximation(spy, order));
+        }
+
+        private string CreateCustomSlippageModelCode() => @"
+from AlgorithmImports import *
+
+class CustomSlippageModel:
+    def get_slippage_approximation(self, asset, order):
+        return 0.12";
+
+        private string CreateCustomSlippageModelFromSlippageModelCode() => @"
+from AlgorithmImports import *
+
+class CustomSlippageModel(SlippageModel):
+    def get_slippage_approximation(self, asset, order):
+        return 0.12";
 
         private PyObject CreateCustomBuyingPowerModel(string code)
         {
