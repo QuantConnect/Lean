@@ -306,7 +306,7 @@ namespace QuantConnect.Orders
                     {
                         // one-cancels-the-other: this leg exited the bracket's position, its sibling
                         // must not fill too (both legs filling on a gapping bar flips the position,
-                        // exhausting margin: fleet deployment A-20b9ed)
+                        // exhausting margin)
                         requestsIssued |= TryCancel(sibling, $"Bracket #{_entryRequest.OrderId} sibling leg filled");
                     }
                     else if (orderEvent.Status == OrderStatus.PartiallyFilled && IsTicketOpen(sibling))
@@ -326,7 +326,7 @@ namespace QuantConnect.Orders
                 {
                     // an unrelated order for the same symbol filled: keep the protective legs in sync
                     // with the remaining position so a stranded leg cannot idle against a closed position
-                    // (fleet deployment A-6eb8558a: dangling stop leg produced 1931x InsufficientBuyingPower)
+                    // (a dangling stop leg would otherwise repeatedly reject with InsufficientBuyingPower)
                     if (holdingsQuantity == 0 || Math.Sign(holdingsQuantity) != Math.Sign(Quantity))
                     {
                         requestsIssued |= TryCancel(StopLossTicket, $"Bracket #{_entryRequest.OrderId} position closed");

@@ -60,7 +60,7 @@ namespace QuantConnect.Tests.Engine.BrokerageTransactionHandlerTests
             _brokerage = new BacktestingBrokerage(_algorithm);
             _transactionHandler.Initialize(_algorithm, _brokerage, new BacktestingResultHandler());
             _algorithm.Transactions.SetOrderProcessor(_transactionHandler);
-            // as in backtesting deployments: fills are synchronous, MarketOrder must not wait
+            // as in backtesting: fills are synchronous, MarketOrder must not wait
             _algorithm.Transactions.MarketOrderFillTimeout = TimeSpan.Zero;
         }
 
