@@ -175,6 +175,7 @@ namespace QuantConnect.Indicators
             _srsi.Reset();
             _priceChangeRatios.Reset();
             _trendStreak = 0;
+            _previousInput = null;
             base.Reset();
         }
     }

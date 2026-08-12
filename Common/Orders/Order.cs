@@ -157,7 +157,7 @@ namespace QuantConnect.Orders
         /// Additional properties of the order
         /// </summary>
         [JsonProperty(PropertyName = "properties")]
-        public IOrderProperties Properties { get; private set; }
+        public IOrderProperties Properties { get; internal set; }
 
         /// <summary>
         /// The symbol's security type

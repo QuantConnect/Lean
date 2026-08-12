@@ -141,6 +141,7 @@ namespace QuantConnect.Indicators
             _averageTrueRange.Reset();
             _previousTrailingLowerBand = 0;
             _previousTrailingUpperBand = 0;
+            _previousClose = 0;
             _prevSuper = -1;
             base.Reset();
         }

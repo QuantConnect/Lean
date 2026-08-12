@@ -62,6 +62,8 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
         private bool _firstRoundOffMessage;
         // this bool is used to check if the warning message for price rounding has been displayed for the first time
         private bool _hasLoggedPriceRoundingWarning;
+        // this bool is used to check if the warning message for a removed locate has been displayed for the first time
+        private bool _loggedLocateRemovedWarning;
 
         // this value is used for determining how confident we are in our cash balance update
         private long _lastFillTimeTicks;
@@ -879,6 +881,9 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
 
             // rounds the order prices
             RoundOrderPrices(order, security, comboIsReady, securities);
+
+            // drops order properties values that do not belong on this order
+            SanitizeOrderProperties(order, security);
 
             // Set order price adjustment mode
             SetPriceAdjustmentMode(order, _algorithm);
@@ -1760,6 +1765,26 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
             else
             {
                 return order.Quantity;
+            }
+        }
+
+        /// <summary>
+        /// Runs sanity checks over the order properties before the order is placed.
+        /// A check that edits the properties returns an edited copy, so the caller's own instance stays untouched.
+        /// </summary>
+        private void SanitizeOrderProperties(Order order, Security security)
+        {
+            // a locate belongs only on an order that opens a short position; brokers reject it on any other order
+            var sanitizedProperties = BrokerageExtensions.RemoveLocateFromNonShortOrder(order.Properties, order.Quantity, security.Holdings.Quantity);
+            if (sanitizedProperties != null)
+            {
+                order.Properties = sanitizedProperties;
+
+                if (!_loggedLocateRemovedWarning)
+                {
+                    _loggedLocateRemovedWarning = true;
+                    _algorithm.Error("Warning: The locate broker and locate reqd fields belong only on orders that open a short position, they were removed from the order.");
+                }
             }
         }
 
