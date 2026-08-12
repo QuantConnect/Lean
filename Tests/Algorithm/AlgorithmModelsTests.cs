@@ -44,7 +44,7 @@ namespace QuantConnect.Tests.Algorithm
         [Test]
         public void NoneFrameworkModelsAreAcceptedAsNullModels()
         {
-            // Reproduces the fleet trap where 'self.set_risk_management(None)' raised
+            // Reproduces 'self.set_risk_management(None)' raising
             // "IRiskManagementModel must be fully implemented. Please implement these missing methods on NoneType: ManageRisk"
             using (Py.GIL())
             {
@@ -120,7 +120,7 @@ def set_none_models(algo):
         [Test]
         public void AlgorithmSlippageModelIsAppliedToAllSecurities_Python()
         {
-            // Reproduces the fleet trap: "'Theop' object has no attribute 'set_slippage_model'"
+            // Reproduces "'MyAlgorithm' object has no attribute 'set_slippage_model'"
             var spy = _algorithm.AddEquity("SPY", Resolution.Daily);
 
             using (Py.GIL())

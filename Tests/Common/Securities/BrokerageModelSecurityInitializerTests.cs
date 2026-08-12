@@ -165,7 +165,7 @@ namespace QuantConnect.Tests.Common.Securities
         [Test]
         public void PythonConstructorAcceptsBoundMethodSeeder()
         {
-            // Reproduces the fleet trap: BrokerageModelSecurityInitializer(self.brokerage_model, self._seed_function)
+            // Reproduces BrokerageModelSecurityInitializer(self.brokerage_model, self._seed_function)
             // failed with "No method matches given arguments for .ctor: (InteractiveBrokersBrokerageModel, <class 'method'>)"
             using (Py.GIL())
             {
