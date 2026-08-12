@@ -15,6 +15,7 @@
 */
 
 using System.Collections.Generic;
+using Common.Util;
 using QuantConnect.Interfaces;
 
 namespace QuantConnect.Orders
@@ -28,9 +29,10 @@ namespace QuantConnect.Orders
         /// Custom EMSX fields to send with the order. The key is the EMSX element name
         /// and the value is the element value, e.g. AdditionalProperties["EMSX_CFD_FLAG"] = "1"
         /// </summary>
-        /// <remarks>Starts empty and is only ever added to or removed from; it cannot be replaced
-        /// wholesale, which keeps the dictionary the single store behind the typed properties below</remarks>
-        public Dictionary<string, string> AdditionalProperties { get; private set; } = [];
+        /// <remarks>Starts empty. Python cannot assign a plain dict to it, since pythonnet has no
+        /// conversion for it; add the entries one by one, bulk load them from a dict with update(),
+        /// and reset with clear()</remarks>
+        public BaseExtendedDictionary<string, string> AdditionalProperties { get; set; } = [];
 
         /// <summary>
         /// The EMSX Instructions is the free form instructions that may be sent to the broker
@@ -104,7 +106,7 @@ namespace QuantConnect.Orders
         /// </summary>
         public bool IsCfdTrade
         {
-            get { return AdditionalProperties?.GetValueOrDefault("EMSX_CFD_FLAG") == "1"; }
+            get { return AdditionalProperties != null && AdditionalProperties.TryGetValue("EMSX_CFD_FLAG", out var flag) && flag == "1"; }
             set { SetTag("EMSX_CFD_FLAG", value ? "1" : null); }
         }
 
@@ -134,7 +136,7 @@ namespace QuantConnect.Orders
         public override IOrderProperties Clone()
         {
             var clone = (TerminalLinkOrderProperties)MemberwiseClone();
-            clone.AdditionalProperties = new Dictionary<string, string>(AdditionalProperties);
+            clone.AdditionalProperties = new BaseExtendedDictionary<string, string>(AdditionalProperties);
             return clone;
         }
 

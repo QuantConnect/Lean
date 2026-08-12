@@ -13,6 +13,7 @@
  * limitations under the License.
 */
 
+using System;
 using NUnit.Framework;
 using Python.Runtime;
 using QuantConnect.Orders;
@@ -179,8 +180,8 @@ def getOrderProperties() -> TerminalLinkOrderProperties:
         {
             using (Py.GIL())
             {
-                // clear() is how a caller resets the dictionary, standing in for the setter it does
-                // not have; it takes the typed properties reading from it back to their defaults.
+                // clear() resets the dictionary, taking the typed properties reading from it back to
+                // their defaults.
                 var module = PyModule.FromString("additionalPropertiesClearModule",
                     @"
 from AlgorithmImports import *
@@ -203,13 +204,40 @@ def getOrderProperties() -> TerminalLinkOrderProperties:
         }
 
         [Test]
-        public void AdditionalPropertiesCannotBeReplacedFromPython()
+        public void UpdatesAdditionalPropertiesFromPlainPythonDictionary()
         {
             using (Py.GIL())
             {
-                // The dictionary is add/remove only. A setter would invite assigning a plain Python
-                // dict, which pythonnet cannot convert to Dictionary<string, string>, and would let
-                // a caller swap out the store the typed properties read from.
+                // update() is the way to bulk load from a plain Python dict; it takes a PyObject, so
+                // it sidesteps the conversion that plain assignment cannot do.
+                var module = PyModule.FromString("additionalPropertiesUpdateModule",
+                    @"
+from AlgorithmImports import *
+
+def getOrderProperties() -> TerminalLinkOrderProperties:
+    properties = TerminalLinkOrderProperties()
+    properties.additional_properties.update({ ""EMSX_CFD_FLAG"": ""1"", ""EMSX_ODD_LOT"": ""0"" })
+    return properties
+");
+
+                dynamic getOrderProperties = module.GetAttr("getOrderProperties");
+                var properties = (TerminalLinkOrderProperties)getOrderProperties();
+
+                Assert.IsNotNull(properties);
+                Assert.AreEqual(2, properties.AdditionalProperties.Count);
+                Assert.AreEqual("0", properties.AdditionalProperties["EMSX_ODD_LOT"]);
+                Assert.IsTrue(properties.IsCfdTrade);
+            }
+        }
+
+        [Test]
+        public void AssigningPlainPythonDictionaryToAdditionalPropertiesThrows()
+        {
+            using (Py.GIL())
+            {
+                // pythonnet has no conversion from a Python dict to Dictionary<string, string>, so
+                // the natural looking assignment fails at runtime; the entries have to be added to
+                // the dictionary the properties already own.
                 var module = PyModule.FromString("additionalPropertiesReplacementModule",
                     @"
 from AlgorithmImports import *
@@ -222,7 +250,9 @@ def getOrderProperties() -> TerminalLinkOrderProperties:
 
                 dynamic getOrderProperties = module.GetAttr("getOrderProperties");
 
-                Assert.Throws<PythonException>(() => getOrderProperties());
+                var exception = Assert.Throws<PythonException>(() => getOrderProperties());
+                Assert.IsTrue(exception.Message.Contains("cannot be converted", StringComparison.InvariantCulture),
+                    $"Expected a conversion failure, got: {exception.Message}");
             }
         }
 
