@@ -14,6 +14,7 @@
 */
 
 using System;
+using System.Collections.Generic;
 using NUnit.Framework;
 using QuantConnect.Data.Market;
 using QuantConnect.Indicators;
@@ -60,6 +61,35 @@ namespace QuantConnect.Tests.Indicators
             Assert.AreNotEqual(0, STR.BasicLowerBand);
             Assert.AreNotEqual(0, STR.CurrentTrailingUpperBand);
             Assert.AreNotEqual(0, STR.CurrentTrailingLowerBand);
+        }
+
+        [Test]
+        public void ProducesTheSameValuesAfterReset()
+        {
+            // a one period average true range is ready on the first update, so the trailing band
+            // comparison reads the previous close before any bar has assigned it
+            var superTrend = new SuperTrend(1, 3);
+            var reference = new DateTime(2024, 1, 1);
+            var bars = new[]
+            {
+                new TradeBar(reference, Symbols.SPY, 10m, 11m, 9m, 10.5m, 0, Time.OneDay),
+                new TradeBar(reference.AddDays(1), Symbols.SPY, 10.5m, 12m, 10m, 11.5m, 0, Time.OneDay)
+            };
+
+            var expected = new List<decimal>();
+            foreach (var bar in bars)
+            {
+                superTrend.Update(bar);
+                expected.Add(superTrend.Current.Value);
+            }
+
+            superTrend.Reset();
+
+            for (var i = 0; i < bars.Length; i++)
+            {
+                superTrend.Update(bars[i]);
+                Assert.AreEqual(expected[i], superTrend.Current.Value);
+            }
         }
 
         [Test]
