@@ -77,9 +77,21 @@ namespace QuantConnect.Brokerages
         }
 
         /// <summary>
-        /// Will process or enqueue a message for later processing it. Works for <typeparamref name="T"/> and
-        /// for any other type registered through <see cref="RegisterMessageType{TMessage}"/> - the type is
-        /// inferred from the argument, so the call looks the same either way.
+        /// Will process or enqueue a message for later processing it
+        /// </summary>
+        /// <param name="message">The new message</param>
+        public void HandleNewMessage(T message)
+        {
+            if (message != null)
+            {
+                _queue.Enqueue(message);
+            }
+        }
+
+        /// <summary>
+        /// Same as <see cref="HandleNewMessage(T)"/>, for any other type registered through
+        /// <see cref="RegisterMessageType{TMessage}"/> - the type is inferred from the argument,
+        /// so the call looks the same either way.
         /// </summary>
         /// <param name="message">The new message</param>
         public void HandleNewMessage<TMessage>(TMessage message)
