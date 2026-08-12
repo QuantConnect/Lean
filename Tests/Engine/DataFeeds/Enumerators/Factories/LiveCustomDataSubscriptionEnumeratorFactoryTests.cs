@@ -549,6 +549,51 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators.Factories
             enumerator.DisposeSafely();
         }
 
+        [Test]
+        public void RespectsRefreshGate()
+        {
+            var referenceLocal = new DateTime(2017, 10, 12);
+            var referenceUtc = referenceLocal.ConvertToUtc(TimeZones.NewYork);
+
+            var timeProvider = new ManualTimeProvider(referenceUtc);
+
+            var dataSourceReader = new Mock<ISubscriptionDataSourceReader>();
+            dataSourceReader.Setup(dsr => dsr.Read(It.IsAny<SubscriptionDataSource>()))
+                .Returns(() => new[] { new LocalFileData { EndTime = timeProvider.GetUtcNow().ConvertFromUtc(TimeZones.NewYork) } })
+                .Verifiable();
+
+            var config = new SubscriptionDataConfig(typeof(LocalFileData), Symbols.SPY, Resolution.Daily, TimeZones.NewYork, TimeZones.NewYork, false, false, false);
+            var request = GetSubscriptionRequest(config, referenceUtc.AddDays(-1), referenceUtc.AddDays(1));
+
+            var interval = TimeSpan.FromMinutes(30);
+            var canRefresh = false;
+            var factory = new TestableLiveCustomDataSubscriptionEnumeratorFactory(timeProvider, dataSourceReader.Object, interval, utcTime => canRefresh);
+            using var enumerator = factory.CreateEnumerator(request, null);
+
+            // while the gate is closed the source is never read, regardless of how much time passes
+            Assert.IsTrue(enumerator.MoveNext());
+            Assert.IsNull(enumerator.Current);
+            for (var i = 0; i < 5; i++)
+            {
+                timeProvider.Advance(interval);
+                Assert.IsTrue(enumerator.MoveNext());
+                Assert.IsNull(enumerator.Current);
+            }
+            dataSourceReader.Verify(dsr => dsr.Read(It.IsAny<SubscriptionDataSource>()), Times.Never);
+
+            // the gate checks are rate limited like source refreshes, so within the same interval nothing is read either
+            canRefresh = true;
+            Assert.IsTrue(enumerator.MoveNext());
+            Assert.IsNull(enumerator.Current);
+            dataSourceReader.Verify(dsr => dsr.Read(It.IsAny<SubscriptionDataSource>()), Times.Never);
+
+            // once the gate is open, the next refresh reads the source
+            timeProvider.Advance(interval);
+            Assert.IsTrue(enumerator.MoveNext());
+            Assert.IsNotNull(enumerator.Current);
+            dataSourceReader.Verify(dsr => dsr.Read(It.IsAny<SubscriptionDataSource>()), Times.Once);
+        }
+
         private static void VerifyGetSourceInvocationCount(Mock<ISubscriptionDataSourceReader> dataSourceReader, int count, string source, SubscriptionTransportMedium medium, FileFormat fileFormat)
         {
             dataSourceReader.Verify(dsr => dsr.Read(It.Is<SubscriptionDataSource>(sds =>
@@ -630,8 +675,9 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators.Factories
         {
             private readonly ISubscriptionDataSourceReader _dataSourceReader;
 
-            public TestableLiveCustomDataSubscriptionEnumeratorFactory(ITimeProvider timeProvider, ISubscriptionDataSourceReader dataSourceReader, TimeSpan? minimumIntervalCheck = null)
-                : base(timeProvider, null, minimumIntervalCheck: minimumIntervalCheck)
+            public TestableLiveCustomDataSubscriptionEnumeratorFactory(ITimeProvider timeProvider, ISubscriptionDataSourceReader dataSourceReader,
+                TimeSpan? minimumIntervalCheck = null, Func<DateTime, bool> canRefresh = null)
+                : base(timeProvider, null, minimumIntervalCheck: minimumIntervalCheck, canRefresh: canRefresh)
             {
                 _dataSourceReader = dataSourceReader;
             }

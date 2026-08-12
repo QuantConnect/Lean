@@ -621,6 +621,65 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             Assert.IsNotEmpty(selectedSymbols);
         }
 
+        [TestCase(SecurityType.Option)]
+        [TestCase(SecurityType.IndexOption)]
+        public void OptionChainSelectionIsDelayedUntilCloseToMarketOpen(SecurityType securityType)
+        {
+            // start the algorithm during the night: the universe file should not be read until close to the market open
+            _startDate = securityType == SecurityType.Option
+                ? new DateTime(2015, 12, 24, 2, 0, 0)
+                : new DateTime(2021, 01, 04, 2, 0, 0);
+            var startDateUtc = _startDate.ConvertToUtc(_algorithm.TimeZone);
+            _manualTimeProvider.SetCurrentTimeUtc(startDateUtc);
+            var endDate = _startDate.AddDays(1);
+
+            _algorithm.SetBenchmark(x => 1);
+
+            var feed = RunDataFeed(runPostInitialize: false);
+
+            var firstSelectionTimeUtc = DateTime.MinValue;
+            List<Symbol> selectedSymbols = null;
+
+            var option = securityType == SecurityType.Option
+                ? _algorithm.AddOption("GOOG")
+                : _algorithm.AddIndexOption("SPX");
+            option.SetFilter(universe =>
+            {
+                firstSelectionTimeUtc = universe.LocalTime.ConvertToUtc(option.Exchange.TimeZone);
+                selectedSymbols = (List<Symbol>)universe;
+
+                return universe;
+            });
+
+            _algorithm.PostInitialize();
+
+            // allow time for the exchange to pick up the selection point
+            Thread.Sleep(50);
+
+            ConsumeBridge(feed, TimeSpan.FromSeconds(15), true, ts =>
+            {
+                if (firstSelectionTimeUtc != default)
+                {
+                    // we got what we wanted shortcut unit test
+                    _manualTimeProvider.SetCurrentTimeUtc(Time.EndOfTime);
+                }
+            },
+            endDate: endDate,
+            secondsTimeStep: 60);
+
+            var exchangeHours = option.Exchange.Hours;
+            var marketOpenUtc = exchangeHours
+                .GetNextMarketOpen(startDateUtc.ConvertFromUtc(exchangeHours.TimeZone), extendedMarketHours: false)
+                .ConvertToUtc(exchangeHours.TimeZone);
+
+            Assert.AreNotEqual(DateTime.MinValue, firstSelectionTimeUtc);
+            // selection should have been delayed to at most one hour before the market open, instead of happening right away
+            Assert.GreaterOrEqual(firstSelectionTimeUtc, marketOpenUtc.AddHours(-1));
+            Assert.LessOrEqual(firstSelectionTimeUtc, marketOpenUtc);
+            Assert.IsNotNull(selectedSymbols);
+            Assert.IsNotEmpty(selectedSymbols);
+        }
+
         [Test]
         public void CustomUniverseImmediateSelection()
         {
