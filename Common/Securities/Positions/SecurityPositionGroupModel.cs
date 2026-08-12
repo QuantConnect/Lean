@@ -246,7 +246,7 @@ namespace QuantConnect.Securities.Positions
         /// <returns>True if a group with the specified key was found, false otherwise</returns>
         public override bool TryGetValue(PositionGroupKey key, out IPositionGroup value)
         {
-            if (key == null)
+            if (ReferenceEquals(key, null))
             {
                 value = null;
                 return false;

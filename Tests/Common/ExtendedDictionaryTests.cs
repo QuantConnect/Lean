@@ -243,6 +243,7 @@ def set(dictionary, key, value):
                 .SetArgDisplayNames(nameof(SecurityPortfolioManager));
             yield return new TestCaseData(new CashBook()).SetArgDisplayNames(nameof(CashBook));
             yield return new TestCaseData(new Slice(time, new List<BaseData>(), time)).SetArgDisplayNames(nameof(Slice));
+            yield return new TestCaseData(new DataDictionary<TradeBar>()).SetArgDisplayNames("DataDictionary");
             yield return new TestCaseData(new TradeBars()).SetArgDisplayNames(nameof(TradeBars));
             yield return new TestCaseData(new OptionChains()).SetArgDisplayNames(nameof(OptionChains));
             yield return new TestCaseData(new FuturesChains()).SetArgDisplayNames(nameof(FuturesChains));

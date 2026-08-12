@@ -147,7 +147,7 @@ namespace QuantConnect.Securities
         /// <returns>Bool true if contains this symbol pair</returns>
         public override bool ContainsKey(Symbol symbol)
         {
-            if (symbol == null)
+            if (ReferenceEquals(symbol, null))
             {
                 return false;
             }
@@ -256,7 +256,7 @@ namespace QuantConnect.Securities
         /// <returns>True on successfully locating the security object</returns>
         public override bool TryGetValue(Symbol symbol, out Security security)
         {
-            if (symbol == null)
+            if (ReferenceEquals(symbol, null))
             {
                 security = null;
                 return false;
