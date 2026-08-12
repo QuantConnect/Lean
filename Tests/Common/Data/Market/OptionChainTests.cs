@@ -212,7 +212,7 @@ namespace QuantConnect.Tests.Common.Data.Market
         public void AtMatchesSaturdayExpiryByLastTradingDate()
         {
             // Pre-2015 equity option metadata uses Saturday expiration dates: a user asking for the
-            // last trading date (Friday) must still match the chain (fleet evidence: strict
+            // last trading date (Friday) must still match the chain (strict
             // date(2012, 2, 17) equality matched zero contracts because metadata says 2012-02-18)
             var saturdayExpiry = new DateTime(2012, 2, 18);
             var chainTime = new DateTime(2012, 2, 13, 10, 0, 0);
