@@ -396,9 +396,15 @@ namespace QuantConnect.Tests.Engine.BrokerageTransactionHandlerTests
             {
                 TerminalLinkOrderProperties terminalLink => (terminalLink.LocateBroker, terminalLink.LocateId, null, null),
                 WolverineOrderProperties wolverine => (wolverine.LocateBroker, null, null, null),
-                FixOrderProperties fix => (null, null, fix.AdditionalProperties.GetValueOrDefault("5700"), fix.AdditionalProperties.GetValueOrDefault("114")),
+                FixOrderProperties fix => (null, null, GetTag(fix, "5700"), GetTag(fix, "114")),
                 _ => default
             };
+        }
+
+        private static string GetTag(FixOrderProperties properties, string tag)
+        {
+            properties.AdditionalProperties.TryGetValue(tag, out var value);
+            return value;
         }
 
         private static BloombergFixOrderProperties CreateLocateBrokerTagProperties()
