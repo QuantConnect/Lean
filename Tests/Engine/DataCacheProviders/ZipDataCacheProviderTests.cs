@@ -55,7 +55,7 @@ namespace QuantConnect.Tests.Engine.DataCacheProviders
         public void FetchRethrowsOutOfMemoryAsMemoryDiagnostic()
         {
             // Ionic wraps the allocation failure into ZipException("Cannot read that as a ZipFile"), which used to be
-            // logged as a corrupt zip file and swallowed, see A-abb25be1. We want an honest memory diagnostic instead.
+            // logged as a corrupt zip file and swallowed. We want an honest memory diagnostic instead.
             using var dataCacheProvider = new ZipDataCacheProvider(new OutOfMemoryDataProvider());
 
             var exception = Assert.Throws<OutOfMemoryException>(
