@@ -73,7 +73,7 @@ namespace QuantConnect.Securities.Option
             catch (InvalidOperationException exception)
             {
                 // A position group whose legs don't fit the matched strategy's expected shape must not crash the algorithm:
-                // legging into spreads with sequential market orders hard-crashed production deployments with
+                // legging into spreads with sequential market orders could hard-crash the algorithm with
                 // "Sequence contains no matching element" when a margin call probed a degenerate trial group
                 // (GH #9612 guarded the zero-quantity probes; this guards any remaining degenerate shape).
                 // Fall back to margining each leg individually, a conservative estimate that ignores leg offsets.
@@ -337,7 +337,7 @@ namespace QuantConnect.Securities.Option
             catch (InvalidOperationException exception)
             {
                 // A position group whose legs don't fit the matched strategy's expected shape must not crash the algorithm:
-                // legging into spreads with sequential market orders hard-crashed production deployments with
+                // legging into spreads with sequential market orders could hard-crash the algorithm with
                 // "Sequence contains no matching element" when a margin call probed a degenerate trial group
                 // (GH #9612 guarded the zero-quantity probes; this guards any remaining degenerate shape).
                 // Fall back to margining each leg individually, a conservative estimate that ignores leg offsets.

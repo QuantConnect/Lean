@@ -1653,7 +1653,7 @@ namespace QuantConnect.Tests.Common.Securities.Options
         [TestCase("datetime")]
         public void CreatesOptionLegDataFromPython(string expiryType)
         {
-            // Production deployments trying to build strategy legs from Python failed with
+            // Building strategy legs from Python used to fail with
             // "Trying to dynamically access a method that does not exist" because OptionLegData had no
             // (quantity, right, strike, expiration) constructor. Both date and datetime must be accepted for expiry
             using (Py.GIL())
