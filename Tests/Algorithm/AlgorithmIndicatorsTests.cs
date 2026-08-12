@@ -859,7 +859,7 @@ def get_indicator(algo, symbol):
         [Test]
         public void RegisterIndicatorWithConsolidatorWarmsUpForexIndicatorWithQuoteData()
         {
-            // forex is quote only: warming up must not request trade data, see GH Agents issue #305 (improvement #8)
+            // forex is quote only: warming up must not request trade data
             _algorithm.SetDateTime(new DateTime(2014, 5, 9));
             var eurusd = _algorithm.AddForex("EURUSD", Resolution.Minute, Market.Oanda).Symbol;
 

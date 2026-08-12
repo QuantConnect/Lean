@@ -366,7 +366,7 @@ namespace QuantConnect.Tests.Indicators
         [TestCase("AverageTrueRange(10)", "Update(TradeBar)")]
         public void ScalarUpdateThrowsPrescriptiveErrorFromPython(string indicator, string expectedSuggestion)
         {
-            // reproduces the fleet crash 'sd.rsi.update(bar.close)': the raw value must bind to the
+            // reproduces the common misuse 'rsi.update(bar.close)': the raw value must bind to the
             // Update(double) overload instead of failing with a cryptic runtime binding error
             using (Py.GIL())
             {
