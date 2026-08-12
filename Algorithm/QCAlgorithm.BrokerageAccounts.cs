@@ -87,6 +87,8 @@ namespace QuantConnect.Algorithm
         /// handle <see cref="BrokerageAccountSnapshotStatus.Failed"/> or
         /// <see cref="BrokerageAccountSnapshotStatus.Stale"/>, and require a later-generation
         /// <see cref="BrokerageAccountSnapshotStatus.Ready"/> snapshot before treating the request as successful.
+        /// Snapshot generations and collection timestamps do not guarantee visibility of activity reported through
+        /// another brokerage stream, such as a recent execution.
         /// </summary>
         /// <returns>
         /// True when the request was accepted or coalesced; otherwise, false. Acceptance does not indicate completion.
@@ -108,6 +110,8 @@ namespace QuantConnect.Algorithm
         /// caller-owned timeout, handle <see cref="BrokerageAccountSnapshotStatus.Failed"/> or
         /// <see cref="BrokerageAccountSnapshotStatus.Stale"/>, and require a later-generation
         /// <see cref="BrokerageAccountSnapshotStatus.Ready"/> snapshot before treating the request as successful.
+        /// Snapshot generations and collection timestamps do not guarantee visibility of activity reported through
+        /// another brokerage stream, such as a recent execution.
         /// </summary>
         /// <param name="groupNames">Brokerage account groups to include.</param>
         /// <param name="additionalAccountIds">Additional managed accounts to include outside the selected groups.</param>
@@ -115,6 +119,10 @@ namespace QuantConnect.Algorithm
         /// True when the request was accepted or coalesced; otherwise, false. Acceptance does not indicate completion.
         /// </returns>
         /// <exception cref="ArgumentNullException"><paramref name="groupNames"/> is null.</exception>
+        /// <exception cref="ArgumentException">
+        /// A group or account identifier is invalid or duplicated, or additional accounts were supplied without a
+        /// group scope.
+        /// </exception>
         [DocumentationAttribute(LiveTrading)]
         public bool RequestBrokerageAccountSnapshotRefresh(
             IEnumerable<string> groupNames,
@@ -155,6 +163,13 @@ namespace QuantConnect.Algorithm
         /// True when the request was accepted for asynchronous processing while the algorithm is running;
         /// otherwise, false.
         /// </returns>
+        /// <exception cref="ArgumentNullException">
+        /// <paramref name="targetGroupName"/> or <paramref name="observedSnapshot"/> is null.
+        /// </exception>
+        /// <exception cref="ArgumentException">
+        /// <paramref name="accountId"/> is invalid, or <paramref name="targetGroupName"/> is neither a valid
+        /// identifier nor the exact empty string.
+        /// </exception>
         [DocumentationAttribute(LiveTrading)]
         public bool RequestBrokerageAccountGroupAssignment(
             string accountId,
@@ -229,6 +244,12 @@ namespace QuantConnect.Algorithm
         /// True when the request was accepted for asynchronous processing while the algorithm is running;
         /// otherwise, false.
         /// </returns>
+        /// <exception cref="ArgumentNullException">
+        /// <paramref name="accountAllocationValues"/> or <paramref name="observedSnapshot"/> is null.
+        /// </exception>
+        /// <exception cref="ArgumentException">
+        /// <paramref name="groupName"/> or an allocation account identifier is invalid or duplicated.
+        /// </exception>
         [DocumentationAttribute(LiveTrading)]
         public bool RequestBrokerageAccountGroupAllocationUpdate(
             string groupName,
@@ -305,6 +326,12 @@ namespace QuantConnect.Algorithm
         /// True when the request was accepted for asynchronous processing while the algorithm is running;
         /// otherwise, false.
         /// </returns>
+        /// <exception cref="ArgumentNullException">
+        /// <paramref name="accountAllocationValues"/> or <paramref name="observedSnapshot"/> is null.
+        /// </exception>
+        /// <exception cref="ArgumentException">
+        /// <paramref name="groupName"/> or an allocation account identifier is invalid or duplicated.
+        /// </exception>
         [DocumentationAttribute(LiveTrading)]
         public bool RequestBrokerageAccountGroupAllocationUpdate(
             string groupName,

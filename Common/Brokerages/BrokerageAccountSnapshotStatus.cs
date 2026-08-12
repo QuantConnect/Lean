@@ -37,12 +37,13 @@ namespace QuantConnect.Brokerages
         Ready,
 
         /// <summary>
-        /// The snapshot is no longer current. Any data from the last successful refresh remains available.
+        /// The snapshot is no longer current. Previously collected data remains available when present.
         /// </summary>
         Stale,
 
         /// <summary>
-        /// The latest snapshot refresh failed.
+        /// The latest snapshot refresh failed to publish usable current state. See
+        /// <see cref="BrokerageAccountSnapshot.ErrorMessage"/> for details.
         /// </summary>
         Failed
     }

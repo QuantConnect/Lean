@@ -238,6 +238,63 @@ namespace QuantConnect.Tests.Python
             }
         }
 
+        [Test]
+        public void DecimalSnapshotValueProjectsToPythonFloat()
+        {
+            var group = new BrokerageAccountGroup(
+                "GroupA",
+                "Ratio",
+                new[] { "AccountA" },
+                new Dictionary<string, decimal>
+                {
+                    ["AccountA"] = 0.1m
+                });
+            var now = DateTime.UtcNow;
+            var snapshot = new BrokerageAccountSnapshot(
+                BrokerageAccountSnapshotStatus.Ready,
+                1,
+                now,
+                now,
+                new Dictionary<string, BrokerageAccountGroup>
+                {
+                    [group.Name] = group
+                },
+                new Dictionary<string, BrokerageAccountState>(),
+                Array.Empty<string>(),
+                "membership",
+                "configuration",
+                string.Empty,
+                managedAccountIds: new[] { "AccountA" });
+            var provider = new Mock<IBrokerageAccountStateProvider>();
+            provider.Setup(instance => instance.GetAccountSnapshot())
+                .Returns(snapshot);
+
+            using (Py.GIL())
+            using (var algorithm = CreateAlgorithm(
+                "def initialize(self): from decimal import Decimal; " +
+                "value = self.brokerage_account_snapshot.groups['GroupA']." +
+                "account_allocation_values['AccountA']; " +
+                "self.name = f\"{type(value).__name__}:" +
+                "{Decimal.from_float(value) != Decimal('0.1')}\""))
+            {
+                ((IBrokerageAccountServiceConsumer)algorithm.BaseAlgorithm)
+                    .SetBrokerageAccountStateProvider(provider.Object);
+                algorithm.Initialize();
+
+                Assert.Multiple(() =>
+                {
+                    Assert.AreEqual(
+                        0.1m,
+                        group.AccountAllocationValues["AccountA"],
+                        "The managed snapshot retains its exact decimal value.");
+                    Assert.AreEqual(
+                        "float:True",
+                        algorithm.Name,
+                        "Python.NET projects System.Decimal through a Python float, which cannot preserve every decimal exactly.");
+                });
+            }
+        }
+
         [TestCase("request_brokerage_account_group_allocation_update")]
         [TestCase("RequestBrokerageAccountGroupAllocationUpdate")]
         public void NativePythonDictionaryCanRequestGroupAllocationUpdate(
@@ -365,34 +422,6 @@ namespace QuantConnect.Tests.Python
                         It.IsAny<string>(),
                         It.IsAny<string>()),
                 Times.Never);
-        }
-
-        [TestCase("exact_fa_percentage")]
-        [TestCase("ExactFaPercentage")]
-        public void ExactFaPercentageRoundTripsAcrossPythonBoundary(
-            string propertyName)
-        {
-            using (Py.GIL())
-            using (var algorithm = CreateAlgorithm(
-                "def initialize(self):" + Environment.NewLine +
-                "        self.default_order_properties = " +
-                "InteractiveBrokersOrderProperties()" + Environment.NewLine +
-                $"        self.default_order_properties.{propertyName} = 12.125" +
-                Environment.NewLine +
-                "        self.name = str(" +
-                $"self.default_order_properties.{propertyName})"))
-            {
-                algorithm.Initialize();
-
-                var properties =
-                    (InteractiveBrokersOrderProperties)
-                    algorithm.DefaultOrderProperties;
-                Assert.Multiple(() =>
-                {
-                    Assert.AreEqual(12.125m, properties.ExactFaPercentage);
-                    Assert.AreEqual("12.125", algorithm.Name);
-                });
-            }
         }
 
         [Test]

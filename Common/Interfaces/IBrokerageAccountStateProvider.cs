@@ -38,6 +38,8 @@ namespace QuantConnect.Interfaces
         /// <see cref="BrokerageAccountSnapshotStatus.Refreshing"/>. Callers should enforce their own timeout and wait
         /// for a <see cref="BrokerageAccountSnapshotStatus.Ready"/> snapshot with a later generation while handling
         /// <see cref="BrokerageAccountSnapshotStatus.Failed"/> or <see cref="BrokerageAccountSnapshotStatus.Stale"/>.
+        /// Snapshot generations and collection timestamps do not guarantee visibility of activity reported through
+        /// another brokerage stream, such as a recent execution.
         /// </summary>
         /// <param name="groupNames">
         /// Brokerage account groups to refresh. An empty collection requests complete discovery within the

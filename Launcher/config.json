@@ -110,8 +110,8 @@
   "ib-financial-advisors-group-filter": "",
   // Allows algorithm-initiated changes to existing FA group membership and allocations; requires unified groups.
   "ib-financial-advisors-group-management-enabled": false,
-  // Controls the recognized IB Gateway Allocation Groups setting: true selects it and fails if the enabled state
-  // cannot be established; false deselects it. When enabled, legacy Profiles are unsupported.
+  // Controls the recognized IB Gateway "Use Account Groups with Allocation Methods" setting: true selects it and
+  // fails if the enabled state cannot be established; false deselects it. When enabled, legacy Profiles are unsupported.
   "ib-financial-advisors-unified-groups-enabled": false,
 
   // tradier configuration

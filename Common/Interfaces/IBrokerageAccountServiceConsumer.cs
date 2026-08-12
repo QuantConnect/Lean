@@ -19,6 +19,11 @@ namespace QuantConnect.Interfaces
     /// Algorithm capability used by the engine to install optional brokerage account services before algorithm
     /// initialization.
     /// </summary>
+    /// <remarks>
+    /// Custom consumers control how they access the installed services and gate mutations. The engine and brokerage
+    /// retain ownership of the services' lifetimes. The standard lifecycle and mutation gating provided by
+    /// <c>QCAlgorithm</c> and its Python wrapper is not automatically applied to other consumers.
+    /// </remarks>
     public interface IBrokerageAccountServiceConsumer
     {
         /// <summary>

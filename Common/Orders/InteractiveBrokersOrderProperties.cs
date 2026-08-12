@@ -39,16 +39,14 @@ namespace QuantConnect.Orders
         public string FaGroup { get; set; }
 
         /// <summary>
-        /// The legacy allocation-method override for the account group order (only used by
-        /// Financial Advisors). Supported legacy values are Equal, NetLiq, AvailableEquity,
-        /// and PctChange.
+        /// The allocation-method override for the account group order (only used by Financial Advisors).
         /// </summary>
         /// <remarks>
-        /// With unified Financial Advisor groups, leave this field empty so the order uses the
-        /// group's saved allocation method. Set both <see cref="FaGroup"/> and
-        /// <c>FaMethod = "PctChange"</c> only when requesting the legacy order-level percentage
-        /// change instruction. LEAN writes its percentage to IB's FaPercentage field and sends zero as IB's
-        /// TotalQuantity.
+        /// When <see cref="FaGroup"/> is explicitly set, supported values remain order overrides and are validated
+        /// against the saved group configuration whenever a Ready snapshot is available. Leave this field empty to
+        /// use the group's saved allocation method; this requires a Ready brokerage account snapshot containing the
+        /// group. PctChange is not supported by unified Financial Advisor groups. When unified groups are disabled,
+        /// the legacy integer <see cref="FaPercentage"/> route remains available for PctChange.
         /// </remarks>
         public string FaMethod { get; set; }
 
@@ -56,19 +54,6 @@ namespace QuantConnect.Orders
         /// The percentage for the percent change method (only used by Financial Advisors)
         /// </summary>
         public int FaPercentage { get; set; }
-
-        /// <summary>
-        /// The exact percentage for the percent change method, when a fractional value is required.
-        /// </summary>
-        /// <remarks>
-        /// Used only when unified Financial Advisor groups are enabled and an explicit <see cref="FaGroup"/> with
-        /// <c>FaMethod = "PctChange"</c> selects the legacy order-level percentage-change route. On that route,
-        /// <see cref="ExactFaPercentage"/> takes precedence over <see cref="FaPercentage"/>. The legacy conversion
-        /// path ignores this property and uses the integer <see cref="FaPercentage"/> value. When reusing or cloning
-        /// these properties, clear <see cref="ExactFaPercentage"/> before relying on a newly assigned
-        /// <see cref="FaPercentage"/>.
-        /// </remarks>
-        public decimal? ExactFaPercentage { get; set; }
 
         /// <summary>
         /// The allocation profile to be used for the order (only used by Financial Advisors)

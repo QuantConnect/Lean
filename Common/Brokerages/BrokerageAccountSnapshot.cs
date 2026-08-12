@@ -23,6 +23,11 @@ namespace QuantConnect.Brokerages
     /// <summary>
     /// Immutable account-level brokerage state for multi-account structures.
     /// </summary>
+    /// <remarks>
+    /// <see cref="AsOfUtc"/>, <see cref="LastSuccessfulUpdateUtc"/>, and
+    /// <see cref="CollectionStartedUtc"/> describe snapshot publication and collection chronology; none guarantees
+    /// visibility of activity reported through another brokerage stream, such as a recent execution.
+    /// </remarks>
     public class BrokerageAccountSnapshot
     {
         private static readonly IReadOnlyDictionary<string, BrokerageAccountGroup> EmptyGroups =
