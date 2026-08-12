@@ -150,12 +150,7 @@ namespace QuantConnect.Tests.Indicators
                 Add(symbol);
             }
 
-            // Set to the first EMA values to account for past A/D Difference values that we don't have access
             Reset();
-            Summation.Time = new DateTime(2022, 6, 30);
-            Summation.Value = -606.25m;
-            McClellanOscillator.EMAFast.Update(new DateTime(2022, 6, 30), -209.85m);
-            McClellanOscillator.EMASlow.Update(new DateTime(2022, 6, 30), -186.41m);
         }
 
         public void TestUpdate(IndicatorDataPoint input)
@@ -190,6 +185,12 @@ namespace QuantConnect.Tests.Indicators
             {
                 _symbols[symbol] = 0m;
             }
+
+            // Set to the first EMA values to account for past A/D Difference values that we don't have access
+            Summation.Time = new DateTime(2022, 6, 30);
+            Summation.Value = -606.25m;
+            McClellanOscillator.EMAFast.Update(new DateTime(2022, 6, 30), -209.85m);
+            McClellanOscillator.EMASlow.Update(new DateTime(2022, 6, 30), -186.41m);
         }
     }
 }
