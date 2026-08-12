@@ -15,6 +15,7 @@
 */
 
 using System.Collections.Generic;
+using QuantConnect.Interfaces;
 
 namespace QuantConnect.Orders
 {
@@ -23,6 +24,14 @@ namespace QuantConnect.Orders
     /// </summary>
     public class TerminalLinkOrderProperties : OrderProperties
     {
+        /// <summary>
+        /// Custom EMSX fields to send with the order. The key is the EMSX element name
+        /// and the value is the element value, e.g. AdditionalProperties["EMSX_CFD_FLAG"] = "1"
+        /// </summary>
+        /// <remarks>Starts empty and is only ever added to or removed from; it cannot be replaced
+        /// wholesale, which keeps the dictionary the single store behind the typed properties below</remarks>
+        public Dictionary<string, string> AdditionalProperties { get; private set; } = [];
+
         /// <summary>
         /// The EMSX Instructions is the free form instructions that may be sent to the broker
         /// </summary>
@@ -89,6 +98,17 @@ namespace QuantConnect.Orders
         public string LocateId { get; set; }
 
         /// <summary>
+        /// Indicates if the order is a contract for differences (CFD) trade (EMSX_CFD_FLAG).
+        /// This field is applicable to trades on an order level, and does not populate on a per
+        /// security basis.
+        /// </summary>
+        public bool IsCfdTrade
+        {
+            get { return AdditionalProperties?.GetValueOrDefault("EMSX_CFD_FLAG") == "1"; }
+            set { SetTag("EMSX_CFD_FLAG", value ? "1" : null); }
+        }
+
+        /// <summary>
         /// The EMSX order strategy details.
         /// Strategy parameters must be appended in the correct order as expected by EMSX.
         /// </summary>
@@ -104,6 +124,31 @@ namespace QuantConnect.Orders
         /// </summary>
         /// <remarks>Has precedence over <see cref="AutomaticPositionSides"/></remarks>
         public OrderPosition? PositionSide { get; set; }
+
+        /// <summary>
+        /// Returns a new instance clone of this object
+        /// </summary>
+        /// <remarks>Deep copies <see cref="AdditionalProperties"/> so edits on the clone, e.g. the
+        /// locate cleanup in BrokerageExtensions.RemoveLocateFromNonShortOrder, never reach the
+        /// instance the algorithm holds on to</remarks>
+        public override IOrderProperties Clone()
+        {
+            var clone = (TerminalLinkOrderProperties)MemberwiseClone();
+            clone.AdditionalProperties = new Dictionary<string, string>(AdditionalProperties);
+            return clone;
+        }
+
+        private void SetTag(string tag, string value)
+        {
+            if (value == null)
+            {
+                AdditionalProperties?.Remove(tag);
+            }
+            else
+            {
+                AdditionalProperties[tag] = value;
+            }
+        }
 
         /// <summary>
         /// Models an EMSX order strategy parameter

@@ -100,5 +100,152 @@ def getOrderProperties() -> TerminalLinkOrderProperties:
                 Assert.AreEqual("LOC-123", properties.LocateId);
             }
         }
+
+        [Test]
+        public void IsCfdTradeDefaultsToFalse()
+        {
+            // A regular trade is the EMSX default, and the value for which the brokerage sends no
+            // EMSX_CFD_FLAG at all, so it must be what an untouched instance reports.
+            var properties = new TerminalLinkOrderProperties();
+            Assert.IsFalse(properties.IsCfdTrade);
+        }
+
+        [Test]
+        public void CloneDoesNotShareAdditionalProperties()
+        {
+            // Order properties are reused across orders and cloned before being edited, e.g. by
+            // BrokerageExtensions.RemoveLocateFromNonShortOrder; a shared dictionary would let an
+            // edit on the copy leak back into the caller's instance.
+            var properties = new TerminalLinkOrderProperties { IsCfdTrade = true };
+
+            var clone = (TerminalLinkOrderProperties)properties.Clone();
+            clone.IsCfdTrade = false;
+
+            Assert.IsTrue(properties.IsCfdTrade);
+        }
+
+        [Test]
+        public void SetsIsCfdTradeFromPython()
+        {
+            using (Py.GIL())
+            {
+                var module = PyModule.FromString("cfdTradeModule",
+                    @"
+from AlgorithmImports import *
+
+def getOrderProperties() -> TerminalLinkOrderProperties:
+    properties = TerminalLinkOrderProperties()
+    properties.is_cfd_trade = True
+    return properties
+");
+
+                dynamic getOrderProperties = module.GetAttr("getOrderProperties");
+                var properties = (TerminalLinkOrderProperties)getOrderProperties();
+
+                Assert.IsNotNull(properties);
+                Assert.IsTrue(properties.IsCfdTrade);
+            }
+        }
+
+        [Test]
+        public void SetsAdditionalPropertiesEntryFromPython()
+        {
+            using (Py.GIL())
+            {
+                var module = PyModule.FromString("additionalPropertiesEntryModule",
+                    @"
+from AlgorithmImports import *
+
+def getOrderProperties() -> TerminalLinkOrderProperties:
+    properties = TerminalLinkOrderProperties()
+    properties.additional_properties[""EMSX_CFD_FLAG""] = ""1""
+    properties.additional_properties[""EMSX_ODD_LOT""] = ""0""
+    return properties
+");
+
+                dynamic getOrderProperties = module.GetAttr("getOrderProperties");
+                var properties = (TerminalLinkOrderProperties)getOrderProperties();
+
+                Assert.IsNotNull(properties);
+                Assert.AreEqual(2, properties.AdditionalProperties.Count);
+                Assert.AreEqual("0", properties.AdditionalProperties["EMSX_ODD_LOT"]);
+                // an entry written through the dictionary is visible on the typed property
+                Assert.IsTrue(properties.IsCfdTrade);
+            }
+        }
+
+        [Test]
+        public void ClearsAdditionalPropertiesFromPython()
+        {
+            using (Py.GIL())
+            {
+                // clear() is how a caller resets the dictionary, standing in for the setter it does
+                // not have; it takes the typed properties reading from it back to their defaults.
+                var module = PyModule.FromString("additionalPropertiesClearModule",
+                    @"
+from AlgorithmImports import *
+
+def getOrderProperties() -> TerminalLinkOrderProperties:
+    properties = TerminalLinkOrderProperties()
+    properties.is_cfd_trade = True
+    properties.additional_properties[""EMSX_ODD_LOT""] = ""0""
+    properties.additional_properties.clear()
+    return properties
+");
+
+                dynamic getOrderProperties = module.GetAttr("getOrderProperties");
+                var properties = (TerminalLinkOrderProperties)getOrderProperties();
+
+                Assert.IsNotNull(properties);
+                Assert.IsEmpty(properties.AdditionalProperties);
+                Assert.IsFalse(properties.IsCfdTrade);
+            }
+        }
+
+        [Test]
+        public void AdditionalPropertiesCannotBeReplacedFromPython()
+        {
+            using (Py.GIL())
+            {
+                // The dictionary is add/remove only. A setter would invite assigning a plain Python
+                // dict, which pythonnet cannot convert to Dictionary<string, string>, and would let
+                // a caller swap out the store the typed properties read from.
+                var module = PyModule.FromString("additionalPropertiesReplacementModule",
+                    @"
+from AlgorithmImports import *
+
+def getOrderProperties() -> TerminalLinkOrderProperties:
+    properties = TerminalLinkOrderProperties()
+    properties.additional_properties = { ""EMSX_CFD_FLAG"": ""1"" }
+    return properties
+");
+
+                dynamic getOrderProperties = module.GetAttr("getOrderProperties");
+
+                Assert.Throws<PythonException>(() => getOrderProperties());
+            }
+        }
+
+        [Test]
+        public void ReadsAdditionalPropertiesEntryWrittenByTypedPropertyFromPython()
+        {
+            using (Py.GIL())
+            {
+                var module = PyModule.FromString("additionalPropertiesReadModule",
+                    @"
+from AlgorithmImports import *
+
+def getCfdFlag() -> str:
+    properties = TerminalLinkOrderProperties()
+    properties.is_cfd_trade = True
+    return properties.additional_properties[""EMSX_CFD_FLAG""]
+");
+
+                dynamic getCfdFlag = module.GetAttr("getCfdFlag");
+                var flag = (string)getCfdFlag();
+
+                Assert.AreEqual("1", flag);
+            }
+        }
     }
 }
