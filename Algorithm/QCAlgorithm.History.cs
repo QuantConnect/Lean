@@ -1561,11 +1561,9 @@ namespace QuantConnect.Algorithm
         }
 
         /// <summary>
-        /// Large history request diagnostics: huge or repeatedly re-fetched requests are a recurring cause of
-        /// multi-hour stalls and out of memory kills, warn upfront instead of failing with an opaque error later.
-        /// A single call over the cells threshold triggers the size warning; calls over threshold divided by
-        /// <see cref="OverlappingRequestSizeDivisor"/> are tracked for the "re-fetch an overlapping window every
-        /// day/selection" pattern, warning after <see cref="OverlappingRequestsWarningCount"/> consecutive overlapping calls
+        /// One-time warnings for history requests likely to stall the algorithm or run it out of memory:
+        /// a single call over the cells threshold, or repeated large calls with overlapping time windows,
+        /// e.g. re-fetching a long lookback every day instead of updating incrementally
         /// </summary>
         private sealed class LargeHistoryRequestDiagnostics
         {
@@ -1580,10 +1578,7 @@ namespace QuantConnect.Algorithm
             private DateTime _previousRequestEndUtc;
 
             /// <summary>
-            /// Emits one-time warnings for history requests that are likely to stall the algorithm or run it out of memory:
-            /// a single call estimated over <see cref="_cellsWarningThreshold"/> data cells (bars x columns),
-            /// and repeated calls with time windows overlapping the previous call, e.g. re-fetching a long lookback on
-            /// every day or universe selection instead of updating incrementally
+            /// Checks the given requests and emits the applicable warnings through the given debug callback
             /// </summary>
             public void WarnOnLargeHistoryRequests(List<HistoryRequest> requests, Action<string> debug)
             {
@@ -1612,8 +1607,8 @@ namespace QuantConnect.Algorithm
                 {
                     _largeRequestWarningSent = true;
                     debug($"Warning: large history request, estimated at ~{estimatedCells.ToStringInvariant("N0")} data cells" +
-                        $" across {requests.Count} request(s). Large history calls are slow and can run the algorithm out of memory:" +
-                        " consider requesting fewer symbols, a shorter period or a coarser resolution.");
+                        $" across {requests.Count} request(s). This can be slow and memory intensive: request fewer symbols," +
+                        " a shorter period or a coarser resolution.");
                 }
 
                 if (!_overlappingRequestsWarningSent && estimatedCells >= _cellsWarningThreshold / OverlappingRequestSizeDivisor)
@@ -1626,9 +1621,9 @@ namespace QuantConnect.Algorithm
                     if (_consecutiveOverlappingRequests >= OverlappingRequestsWarningCount)
                     {
                         _overlappingRequestsWarningSent = true;
-                        debug($"Warning: history() has been called {OverlappingRequestsWarningCount}+ times with time windows overlapping" +
-                            " the previous call. Re-fetching a long lookback repeatedly is slow: consider fetching history once and keeping" +
-                            " it updated with a rolling window, consolidators or indicator warm up, or shortening the lookback.");
+                        debug($"Warning: history() has been called {OverlappingRequestsWarningCount}+ consecutive times with" +
+                            " overlapping time windows. Instead of re-fetching a long lookback, fetch it once and keep it updated" +
+                            " with a rolling window, consolidators or indicator warm up.");
                     }
                 }
             }

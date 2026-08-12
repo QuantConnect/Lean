@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -54,9 +54,8 @@ namespace QuantConnect.Lean.Engine
         /// <param name="timeLoopMaximum">Specifies the maximum amount of time the algorithm is permitted to
         /// spend in a single time loop. This value can be overriden if certain actions are taken by the
         /// algorithm, such as invoking the training methods.</param>
-        /// <param name="timeLoopWarningThreshold">Elapsed time of a single time loop after which a warning is
-        /// logged, once per time step, so a slow handler is flagged well before the time loop maximum stops the
-        /// algorithm. Defaults to one minute; a non positive value disables the warning</param>
+        /// <param name="timeLoopWarningThreshold">Elapsed time of a single time loop after which a warning is logged,
+        /// once per time step. Defaults to one minute; a non positive value disables the warning</param>
         public AlgorithmTimeLimitManager(ITokenBucket additionalTimeBucket, TimeSpan timeLoopMaximum, TimeSpan? timeLoopWarningThreshold = null)
         {
             _timeLoopMaximum = timeLoopMaximum;
@@ -107,19 +106,18 @@ namespace QuantConnect.Lean.Engine
             TimeSpan currentTimeStepElapsed;
             var message = IsOutOfTime(out currentTimeStepElapsed) ? GetErrorMessage(currentTimeStepElapsed) : string.Empty;
 
-            // warn early about an abnormally long time step: waiting for the time loop maximum to stop the algorithm
-            // costs many opaque minutes, while a warning naming the elapsed time is immediately actionable
+            // warn early about an abnormally long time step: an isolator kill minutes later is opaque,
+            // the elapsed-time warning is actionable now
             if (message.Length == 0 && !_stopped && !_timeStepWarningSent
                 && _timeLoopWarningThreshold > TimeSpan.Zero && currentTimeStepElapsed > _timeLoopWarningThreshold)
             {
                 _timeStepWarningSent = true;
-                // override message flood protection: the message text repeats for every slow time step (at most one
-                // line per warning threshold of wall-clock time) and each occurrence is relevant
+                // override flood protection: the same text repeats for each slow time step and each occurrence matters
                 Log.Error("AlgorithmTimeLimitManager.IsWithinLimit(): " +
-                    $"the current algorithm time step has been executing for {currentTimeStepElapsed.TotalMinutes.ToStringInvariant("0.0")} minutes; " +
-                    $"the algorithm will be stopped if a single time step exceeds {_timeLoopMaximum.TotalMinutes.ToStringInvariant()} minutes. " +
-                    "If a scheduled event is running it is named in a 'TimeMonitor' log entry; other common causes are large" +
-                    " history() requests, heavy work in data event handlers (e.g. on_data) or an infinite loop.",
+                    $"the current time step has been executing for {currentTimeStepElapsed.TotalMinutes.ToStringInvariant("0.0")} minutes" +
+                    $" and the algorithm will be stopped if it exceeds {_timeLoopMaximum.TotalMinutes.ToStringInvariant()} minutes." +
+                    " Common causes: a slow scheduled event (named in 'TimeMonitor' logs), large history() requests," +
+                    " heavy on_data work or an infinite loop.",
                     overrideMessageFloodProtection: true);
             }
 

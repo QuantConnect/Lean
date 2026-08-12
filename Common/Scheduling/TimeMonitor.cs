@@ -112,8 +112,7 @@ namespace QuantConnect.Scheduling
                 consumer.AdditionalMinutesRequested++;
                 if (consumer.Name != null)
                 {
-                    // name the long-running work upfront: an opaque isolator kill minutes later is much harder to act on.
-                    // The first crossing of the one minute mark is the actionable heads-up, following ones are informational
+                    // name the long-running work: the first minute crossing is the actionable heads-up, later ones are informational
                     var message = $"TimeMonitor.ProcessConsumer(): '{consumer.Name}' has been executing for over {consumer.AdditionalMinutesRequested} minute(s)";
                     if (consumer.AdditionalMinutesRequested == 1)
                     {

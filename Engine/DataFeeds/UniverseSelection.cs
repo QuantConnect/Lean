@@ -482,10 +482,9 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         }
 
         /// <summary>
-        /// Warns, once per algorithm, when option universe selections accumulate contracts beyond
-        /// 'option-universe-contracts-warning-threshold'. Every selected contract materializes into data subscriptions,
-        /// and wide filters, or many chained per-underlying option universes, are a recurring cause of out of memory
-        /// kills and multi-hour stalls. Warn only, never fail: the run may still succeed
+        /// Warns once per algorithm when option universes select more contracts than
+        /// 'option-universe-contracts-warning-threshold', a recurring cause of out of memory kills and stalls.
+        /// Warn only, never fail: the run may still succeed
         /// </summary>
         internal void WarnOnLargeOptionUniverseSelection(OptionChainUniverse universe)
         {
@@ -494,8 +493,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 return;
             }
 
-            // aggregate over all option universes: many chained per-underlying chains are as heavy as a single wide one.
-            // Note that 'Selected' includes the prepended underlying symbol, which is not a contract
+            // aggregate over all option universes: many small chains are as heavy as a single wide one.
+            // 'Selected' includes the prepended underlying symbol, which is not a contract
             var totalContracts = 0;
             var universeCount = 0;
             foreach (var kvp in _algorithm.UniverseManager)
@@ -521,10 +520,9 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             _optionUniverseSelectionSizeWarningSent = true;
             var latestCount = Math.Max(0, universe.Selected.Count - 1);
             _algorithm.Debug($"Warning: option universe selections have reached ~{totalContracts} contracts across {universeCount}" +
-                $" option universe(s), latest: {latestCount} contracts for {universe.Option.Symbol.Underlying.Value}. Each selected" +
-                " contract adds data subscriptions, which can slow down the algorithm and run it out of memory. Consider narrowing" +
-                " the universe filter (SetFilter/set_filter strikes and expiration ranges) or trading specific contracts found via" +
-                " OptionChain()/option_chain() and added with AddOptionContract/add_option_contract.");
+                $" universe(s), latest: {latestCount} for {universe.Option.Symbol.Underlying.Value}. Each contract adds data" +
+                " subscriptions, increasing time and memory usage. Narrow the filter (SetFilter/set_filter) or add specific" +
+                " contracts (AddOptionContract/add_option_contract).");
         }
 
         private void RemoveSecurityFromUniverse(

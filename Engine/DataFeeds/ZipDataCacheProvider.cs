@@ -113,8 +113,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     stream?.DisposeSafely();
                     if (err is OutOfMemoryException)
                     {
-                        // let the memory diagnostic bubble up: returning a null stream here would just resurface
-                        // as a confusing downstream failure while the process is dying anyway
+                        // let the memory diagnostic bubble up instead of resurfacing as a confusing downstream failure
                         throw;
                     }
                     Log.Error(err, "Inner try/catch");
@@ -435,10 +434,9 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         }
 
         /// <summary>
-        /// Rethrows the given exception as an honest memory diagnostic if it is, or wraps, an <see cref="OutOfMemoryException"/>.
-        /// Ionic wraps allocation failures while reading a zip into 'ZipException: Cannot read that as a ZipFile', which we would
-        /// otherwise log as a corrupt zip file and swallow, sending users down a data-integrity path when the process is actually
-        /// out of memory, usually due to too many subscriptions or too much data being requested
+        /// Rethrows as a memory diagnostic if the exception is, or wraps, an <see cref="OutOfMemoryException"/>.
+        /// Ionic wraps allocation failures into 'ZipException: Cannot read that as a ZipFile', which would otherwise
+        /// be logged as a corrupt zip file and swallowed
         /// </summary>
         private static void RethrowIfOutOfMemory(Exception exception, string filename, string entryName)
         {
@@ -448,7 +446,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 {
                     var entry = entryName != null ? "#" + entryName : string.Empty;
                     throw new OutOfMemoryException("ZipDataCacheProvider.Fetch(): ran out of memory reading " + filename + entry +
-                        ". This indicates memory exhaustion, not a corrupt data file: reduce the number of subscriptions" +
+                        ". This is memory exhaustion, not a corrupt data file: reduce the number of subscriptions" +
                         " (e.g. narrow option universe filters) or the amount of data requested.", exception);
                 }
             }
