@@ -527,7 +527,7 @@ namespace QuantConnect.Data
         /// <returns>True if this instance contains data for the symbol, false otherwise</returns>
         public override bool ContainsKey(Symbol symbol)
         {
-            return _data.Value.ContainsKey(symbol);
+            return !ReferenceEquals(symbol, null) && _data.Value.ContainsKey(symbol);
         }
 
         /// <summary>
@@ -540,7 +540,7 @@ namespace QuantConnect.Data
         {
             data = null;
             SymbolData symbolData;
-            if (_data.Value.TryGetValue(symbol, out symbolData))
+            if (!ReferenceEquals(symbol, null) && _data.Value.TryGetValue(symbol, out symbolData))
             {
                 data = symbolData.GetData();
                 return data != null;

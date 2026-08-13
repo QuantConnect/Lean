@@ -52,6 +52,15 @@ class PythonDictionaryFeatureRegressionAlgorithm(QCAlgorithm):
         if spy is None:
             raise AssertionError('SPY is not in Slice')
 
+        if slice.contains_key(None):
+            raise AssertionError('Slice.contains_key(None) should return False instead of throwing')
+
+        if slice.get(None) is not None:
+            raise AssertionError('Slice.get(None) should return None instead of throwing')
+
+        if slice.bars.contains_key(None):
+            raise AssertionError('TradeBars.contains_key(None) should return False instead of throwing')
+
         for symbol, bar in slice.bars.items():
             self.plot(symbol, 'Price', bar.close)
 
@@ -74,6 +83,16 @@ class PythonDictionaryFeatureRegressionAlgorithm(QCAlgorithm):
         if aapl is not None:
             raise AssertionError('aapl is not None')
 
+        # A None key should behave like a missing key instead of throwing,
+        # e.g. when a symbol field is only assigned later in the algorithm
+        none_symbol = None
+        price = self.securities[none_symbol].price if self.securities.contains_key(none_symbol) else None
+        if price is not None:
+            raise AssertionError('Securities.contains_key(None) should return False instead of throwing')
+
+        if self.securities.get(none_symbol) is not None:
+            raise AssertionError('Securities.get(None) should return None instead of throwing')
+
         for symbol, security in self.securities.items():
             self.plot(symbol, 'Price', security.price)
 
@@ -94,6 +113,12 @@ class PythonDictionaryFeatureRegressionAlgorithm(QCAlgorithm):
         aapl = self.portfolio.get(self.aapl_symbol)
         if aapl is not None:
             raise AssertionError('aapl is not None')
+
+        if self.portfolio.contains_key(None):
+            raise AssertionError('Portfolio.contains_key(None) should return False instead of throwing')
+
+        if self.portfolio.get(None) is not None:
+            raise AssertionError('Portfolio.get(None) should return None instead of throwing')
 
         for symbol, holdings in self.portfolio.items():
             msg = f'{symbol}: {holdings.leverage}'
