@@ -102,7 +102,7 @@ namespace QuantConnect.Lean.Engine
             TimeLimit = new AlgorithmTimeLimitManager(
                 CreateTokenBucket(job?.Controls?.TrainingLimits),
                 TimeSpan.FromMinutes(Config.GetDouble("algorithm-manager-time-loop-maximum", 20)),
-                TimeSpan.FromMinutes(Config.GetDouble("algorithm-manager-time-loop-warning", 1))
+                TimeSpan.FromMinutes(Config.GetDouble("algorithm-manager-time-loop-warning", 3))
             );
         }
 

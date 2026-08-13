@@ -55,11 +55,11 @@ namespace QuantConnect.Lean.Engine
         /// spend in a single time loop. This value can be overriden if certain actions are taken by the
         /// algorithm, such as invoking the training methods.</param>
         /// <param name="timeLoopWarningThreshold">Elapsed time of a single time loop after which a warning is logged,
-        /// once per time step. Defaults to one minute; a non positive value disables the warning</param>
+        /// once per time step. Defaults to three minutes; a non positive value disables the warning</param>
         public AlgorithmTimeLimitManager(ITokenBucket additionalTimeBucket, TimeSpan timeLoopMaximum, TimeSpan? timeLoopWarningThreshold = null)
         {
             _timeLoopMaximum = timeLoopMaximum;
-            _timeLoopWarningThreshold = timeLoopWarningThreshold ?? TimeSpan.FromMinutes(1);
+            _timeLoopWarningThreshold = timeLoopWarningThreshold ?? TimeSpan.FromMinutes(3);
             AdditionalTimeBucket = additionalTimeBucket;
             _currentTimeStepTime = new ReferenceWrapper<DateTime>(DateTime.MinValue);
         }
