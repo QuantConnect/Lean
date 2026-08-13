@@ -124,6 +124,8 @@ namespace QuantConnect.Lean.Engine
             //Initialize:
             _algorithm = algorithm;
             _performanceTrackingTool = performanceTrackingTool;
+            // surface time limit warnings in the user's logs, not just the engine log
+            TimeLimit.UserWarningHandler = results.DebugMessage;
 
             var token = cancellationTokenSource.Token;
             _cancellationTokenSource = cancellationTokenSource;

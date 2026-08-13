@@ -69,8 +69,10 @@ namespace QuantConnect.Tests.Engine
                 var logHandler = new QueueLogHandler();
                 Log.LogHandler = logHandler;
 
+                var userWarnings = new List<string>();
                 var timeManager = new AlgorithmTimeLimitManager(TokenBucket.Null, TimeSpan.FromMinutes(20),
                     timeLoopWarningThreshold: TimeSpan.FromMilliseconds(5));
+                timeManager.UserWarningHandler = userWarnings.Add;
                 timeManager.StartNewTimeStep();
                 // the first call initializes the current time step start time
                 Assert.IsTrue(timeManager.IsWithinLimit().IsWithinCustomLimits);
@@ -80,11 +82,13 @@ namespace QuantConnect.Tests.Engine
                 var result = timeManager.IsWithinLimit();
                 Assert.IsTrue(result.IsWithinCustomLimits, result.ErrorMessage);
                 Assert.AreEqual(1, WarningCount(logHandler));
+                Assert.AreEqual(1, userWarnings.Count(x => x.Contains("time step has been executing")));
 
                 // only warns once per time step
                 Thread.Sleep(20);
                 Assert.IsTrue(timeManager.IsWithinLimit().IsWithinCustomLimits);
                 Assert.AreEqual(1, WarningCount(logHandler));
+                Assert.AreEqual(1, userWarnings.Count);
 
                 // a new slow time step warns again
                 timeManager.StartNewTimeStep();
@@ -92,6 +96,7 @@ namespace QuantConnect.Tests.Engine
                 Thread.Sleep(50);
                 Assert.IsTrue(timeManager.IsWithinLimit().IsWithinCustomLimits);
                 Assert.AreEqual(2, WarningCount(logHandler));
+                Assert.AreEqual(2, userWarnings.Count);
             }
             finally
             {
@@ -108,14 +113,17 @@ namespace QuantConnect.Tests.Engine
                 var logHandler = new QueueLogHandler();
                 Log.LogHandler = logHandler;
 
-                // default one minute warning threshold
+                // default three minute warning threshold
+                var userWarnings = new List<string>();
                 var timeManager = new AlgorithmTimeLimitManager(TokenBucket.Null, TimeSpan.FromMinutes(20));
+                timeManager.UserWarningHandler = userWarnings.Add;
                 timeManager.StartNewTimeStep();
                 Assert.IsTrue(timeManager.IsWithinLimit().IsWithinCustomLimits);
                 Thread.Sleep(20);
                 Assert.IsTrue(timeManager.IsWithinLimit().IsWithinCustomLimits);
 
                 Assert.AreEqual(0, WarningCount(logHandler));
+                Assert.AreEqual(0, userWarnings.Count);
             }
             finally
             {

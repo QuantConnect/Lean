@@ -153,6 +153,8 @@ namespace QuantConnect.Tests.Common
             {
                 var logHandler = new QueueLogHandler();
                 Log.LogHandler = logHandler;
+                var userWarnings = new List<string>();
+                _timeMonitor.UserWarningHandler = userWarnings.Add;
 
                 var timeProvider = new ManualTimeProvider(new DateTime(2000, 01, 01));
                 var provider = new FakeIsolatorLimitResultProvider();
@@ -171,6 +173,9 @@ namespace QuantConnect.Tests.Common
                 Assert.AreEqual(1, provider.Invocations.Count);
                 Assert.AreEqual(1, logHandler.Logs.Count(
                     entry => entry.Message.Contains("'My Slow Scheduled Event' has been executing for over 1 minute")));
+                // the warning also reaches the user
+                Assert.AreEqual(1, userWarnings.Count(
+                    message => message.Contains("'My Slow Scheduled Event' has been executing for over 1 minute")));
 
                 // give time to the monitor to register the time consumer ended
                 _timeMonitorEvent.WaitOne();
@@ -179,6 +184,7 @@ namespace QuantConnect.Tests.Common
             finally
             {
                 Log.LogHandler = previousLogHandler;
+                _timeMonitor.UserWarningHandler = null;
             }
         }
 

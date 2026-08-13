@@ -37,6 +37,12 @@ namespace QuantConnect.Scheduling
         protected List<TimeConsumer> TimeConsumers { get; init; }
 
         /// <summary>
+        /// Optional handler used to also surface long-running work warnings to the user,
+        /// e.g. through the result handler's debug messages. Engine logs alone don't reach the user's logs
+        /// </summary>
+        public Action<string> UserWarningHandler { get; set; }
+
+        /// <summary>
         /// Returns the number of time consumers currently being monitored
         /// </summary>
         public int Count
@@ -113,14 +119,15 @@ namespace QuantConnect.Scheduling
                 if (consumer.Name != null)
                 {
                     // name the long-running work: the first minute crossing is the actionable heads-up, later ones are informational
-                    var message = $"TimeMonitor.ProcessConsumer(): '{consumer.Name}' has been executing for over {consumer.AdditionalMinutesRequested} minute(s)";
+                    var message = $"'{consumer.Name}' has been executing for over {consumer.AdditionalMinutesRequested} minute(s)";
                     if (consumer.AdditionalMinutesRequested == 1)
                     {
-                        Log.Error($"{message}. It will be stopped once the algorithm time loop limit is exhausted");
+                        Log.Error($"TimeMonitor.ProcessConsumer(): {message}. It will be stopped once the algorithm time loop limit is exhausted");
+                        UserWarningHandler?.Invoke($"Warning: {message}. It will be stopped once the algorithm time loop limit is exhausted");
                     }
                     else
                     {
-                        Log.Trace(message);
+                        Log.Trace($"TimeMonitor.ProcessConsumer(): {message}");
                     }
                 }
             }

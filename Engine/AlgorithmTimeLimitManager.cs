@@ -45,6 +45,12 @@ namespace QuantConnect.Lean.Engine
         public ITokenBucket AdditionalTimeBucket { get; }
 
         /// <summary>
+        /// Optional handler used to also surface the slow time step warning to the user,
+        /// e.g. through the result handler's debug messages. Engine logs alone don't reach the user's logs
+        /// </summary>
+        public Action<string> UserWarningHandler { get; set; }
+
+        /// <summary>
         /// Initializes a new instance of <see cref="AlgorithmTimeLimitManager"/> to manage the
         /// creation of <see cref="IsolatorLimitResult"/> instances as it pertains to the
         /// algorithm manager's time loop
@@ -112,13 +118,13 @@ namespace QuantConnect.Lean.Engine
                 && _timeLoopWarningThreshold > TimeSpan.Zero && currentTimeStepElapsed > _timeLoopWarningThreshold)
             {
                 _timeStepWarningSent = true;
-                // override flood protection: the same text repeats for each slow time step and each occurrence matters
-                Log.Error("AlgorithmTimeLimitManager.IsWithinLimit(): " +
-                    $"the current time step has been executing for {currentTimeStepElapsed.TotalMinutes.ToStringInvariant("0.0")} minutes" +
+                var warning = $"the current time step has been executing for {currentTimeStepElapsed.TotalMinutes.ToStringInvariant("0.0")} minutes" +
                     $" and the algorithm will be stopped if it exceeds {_timeLoopMaximum.TotalMinutes.ToStringInvariant()} minutes." +
                     " Common causes: a slow scheduled event (named in 'TimeMonitor' logs), large history() requests," +
-                    " heavy on_data work or an infinite loop.",
-                    overrideMessageFloodProtection: true);
+                    " heavy on_data work or an infinite loop.";
+                // override flood protection: the same text repeats for each slow time step and each occurrence matters
+                Log.Error($"AlgorithmTimeLimitManager.IsWithinLimit(): {warning}", overrideMessageFloodProtection: true);
+                UserWarningHandler?.Invoke($"Warning: {warning}");
             }
 
             return new IsolatorLimitResult(currentTimeStepElapsed, message);
