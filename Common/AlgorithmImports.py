@@ -29,7 +29,6 @@ for file in os.listdir(path):
     if file.endswith(".dll") and file.startswith("QuantConnect."):
         AddReference(file.replace(".dll", ""))
 
-import System
 from System import *
 from System.Drawing import *
 
@@ -102,7 +101,7 @@ import json
 
 # "from System import *" shadows Python's builtin Exception with System.Exception, whose
 # except clauses do not catch Python exceptions (TypeError, KeyError, ...).
-# Restore the builtin; the CLR type remains available as System.Exception.
+# Restore the builtin; "import System" gives explicit access to the CLR type if needed.
 from builtins import Exception
 
 QCAlgorithmFramework = QCAlgorithm
