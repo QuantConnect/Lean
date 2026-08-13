@@ -229,6 +229,12 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         public void LiveChainSelection(SecurityType securityType, Resolution resolution, int expirationDatesFilter, bool strictEndTimes)
         {
             _startDate = securityType == SecurityType.IndexOption ? new DateTime(2021, 1, 4) : new DateTime(2014, 6, 9);
+            if (securityType.IsOption())
+            {
+                // option chain universe files are only read while the market is open or close to opening,
+                // so we start within that window, half an hour before the market open (9:30 NY)
+                _startDate = _startDate.AddHours(securityType == SecurityType.IndexOption ? 14 : 13);
+            }
             _manualTimeProvider.SetCurrentTimeUtc(_startDate);
             var endDate = _startDate.AddDays(securityType == SecurityType.Future ? 5 : 1);
 
@@ -265,20 +271,23 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             }
             _algorithm.OnEndOfTimeStep();
 
+            var expectedSelections = securityType == SecurityType.Future ? 2 : 1;
+
             // allow time for the exchange to pick up the selection point
             Thread.Sleep(50);
             ConsumeBridge(feed, TimeSpan.FromSeconds(5), true, ts =>
             {
-                if (selectionHappened == 2)
+                if (selectionHappened == expectedSelections)
                 {
                     // we got what we wanted shortcut unit test
                     _manualTimeProvider.SetCurrentTimeUtc(Time.EndOfTime);
                 }
             },
             endDate: endDate,
-            secondsTimeStep: 60 * 60);
+            // a slower time step for options so the simulated clock doesn't race past the universe file refresh window
+            // between the real-time custom exchange polls
+            secondsTimeStep: securityType == SecurityType.Future ? 60 * 60 : 60);
 
-            var expectedSelections = securityType == SecurityType.Future ? 2 : 1;
             Assert.AreEqual(expectedSelections, selectionHappened);
         }
 
@@ -656,7 +665,9 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             // allow time for the exchange to pick up the selection point
             Thread.Sleep(50);
 
-            ConsumeBridge(feed, TimeSpan.FromSeconds(15), true, ts =>
+            // the timeout needs to be generous: the simulated clock advances one minute per loop iteration
+            // and it has several simulated hours to go through before the universe file refresh window is reached
+            ConsumeBridge(feed, TimeSpan.FromSeconds(30), true, ts =>
             {
                 if (firstSelectionTimeUtc != default)
                 {
