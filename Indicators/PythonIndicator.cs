@@ -129,6 +129,23 @@ namespace QuantConnect.Indicators
         public int WarmUpPeriod { get; protected set; }
 
         /// <summary>
+        /// Resets this indicator to its initial state
+        /// </summary>
+        public override void Reset()
+        {
+            // GetMethod throws when the attribute is absent, and returns null when it is CSharp
+            if (_indicatorWrapper != null && _indicatorWrapper.HasAttr(nameof(Reset)))
+            {
+                using (Py.GIL())
+                {
+                    _indicatorWrapper.GetMethod(nameof(Reset), pythonOnly: true)?.Invoke().Dispose();
+                }
+            }
+            _isReady = false;
+            base.Reset();
+        }
+
+        /// <summary>
         /// Computes the next value of this indicator from the given state
         /// </summary>
         /// <param name="input">The input given to the indicator</param>
