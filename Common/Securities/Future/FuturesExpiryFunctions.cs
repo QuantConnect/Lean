@@ -58,6 +58,24 @@ namespace QuantConnect.Securities.Future
                     return FuturesExpiryUtilityFunctions.NthLastBusinessDay(time,3, holidays);
                 })
             },
+            // 1-Ounce Gold (1OZ): https://www.cmegroup.com/markets/metals/precious/1-ounce-gold.contractSpecs.html
+            {Symbol.Create(Futures.Metals.OneOunceGold, SecurityType.Future, Market.COMEX), (time =>
+                {
+                    var market = Market.COMEX;
+                    var symbol = Futures.Metals.OneOunceGold;
+                    var holidays = FuturesExpiryUtilityFunctions.GetExpirationHolidays(market, symbol);
+                    // Bi-monthly contracts (Feb/2, Apr/4, Jun/6, Aug/8, Oct/10, Dec/12 cycle)
+                    while (!FutureExpirationCycles.GJMQVZ.Contains(time.Month))
+                    {
+                        time = time.AddMonths(1);
+                    }
+
+                    // This contract is cash settled, so it stops trading before the contract month even starts.
+                    // Trading terminates on the third last business day of the month prior to the contract month.
+                    var previousMonth = time.AddMonths(-1);
+                    return FuturesExpiryUtilityFunctions.NthLastBusinessDay(previousMonth, 3, holidays);
+                })
+            },
             // Silver (SI): http://www.cmegroup.com/trading/metals/precious/silver_contract_specifications.html
             {Symbol.Create(Futures.Metals.Silver, SecurityType.Future, Market.COMEX), (time =>
                 {
@@ -1672,6 +1690,48 @@ namespace QuantConnect.Securities.Future
 
                      // Trading terminates on the 7th business day before the last business day of the contract month.
                     return FuturesExpiryUtilityFunctions.NthLastBusinessDay(time, 8, holidays);
+                })
+            },
+            // Micro Ultra 10-Year U.S. Treasury Note (MTN): https://www.cmegroup.com/markets/interest-rates/us-treasury/micro-ultra-10-year-us-treasury-note.contractSpecs.html
+            {Symbol.Create(Futures.Financials.MicroUltraTenYearUSTreasuryNote, SecurityType.Future, Market.CBOT), (time =>
+                {
+                    var market = Market.CBOT;
+                    var symbol = Futures.Financials.MicroUltraTenYearUSTreasuryNote;
+                    var holidays = FuturesExpiryUtilityFunctions.GetExpirationHolidays(market, symbol);
+
+                    // Quarterly contracts (Mar, Jun, Sep, Dec), the same cycle as the Ultra 10-Year (TN)
+                    while (!FutureExpirationCycles.HMUZ.Contains(time.Month))
+                    {
+                        time = time.AddMonths(1);
+                    }
+
+                    // This contract is cash settled against TN instead of delivering notes, so it stops
+                    // trading earlier than TN does.
+                    // Trading terminates 2 business days before the first delivery day of the contract
+                    // month. The first delivery day is the first business day of that month.
+                    var firstDeliveryDay = FuturesExpiryUtilityFunctions.NthBusinessDay(time, 1, holidays);
+                    return FuturesExpiryUtilityFunctions.AddBusinessDays(firstDeliveryDay, -2, holidays);
+                })
+            },
+            // Micro Ultra U.S. Treasury Bond (MWN): https://www.cmegroup.com/markets/interest-rates/us-treasury/micro-ultra-us-treasury-bond.contractSpecs.html
+            {Symbol.Create(Futures.Financials.MicroUltraUSTreasuryBond, SecurityType.Future, Market.CBOT), (time =>
+                {
+                    var market = Market.CBOT;
+                    var symbol = Futures.Financials.MicroUltraUSTreasuryBond;
+                    var holidays = FuturesExpiryUtilityFunctions.GetExpirationHolidays(market, symbol);
+
+                    // Quarterly contracts (Mar, Jun, Sep, Dec), the same cycle as the Ultra Bond (UB)
+                    while (!FutureExpirationCycles.HMUZ.Contains(time.Month))
+                    {
+                        time = time.AddMonths(1);
+                    }
+
+                    // This contract is cash settled against UB instead of delivering bonds, so it stops
+                    // trading earlier than UB does.
+                    // Trading terminates 2 business days before the first delivery day of the contract
+                    // month. The first delivery day is the first business day of that month.
+                    var firstDeliveryDay = FuturesExpiryUtilityFunctions.NthBusinessDay(time, 1, holidays);
+                    return FuturesExpiryUtilityFunctions.AddBusinessDays(firstDeliveryDay, -2, holidays);
                 })
             },
             // Energy group

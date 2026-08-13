@@ -388,6 +388,8 @@ namespace QuantConnect.Tests.Common.Securities.Futures
         [TestCase(QuantConnect.Securities.Futures.Financials.UltraUSTreasuryBond, TwelveOne)]
         [TestCase(QuantConnect.Securities.Futures.Financials.UltraTenYearUSTreasuryNote, Zero)]
         [TestCase(QuantConnect.Securities.Futures.Financials.MicroY10TreasuryNote, Zero)]
+        [TestCase(QuantConnect.Securities.Futures.Financials.MicroUltraTenYearUSTreasuryNote, Zero)]
+        [TestCase(QuantConnect.Securities.Futures.Financials.MicroUltraUSTreasuryBond, Zero)]
         public void FinancialsExpiryDateFunction_WithDifferentDates_ShouldFollowContract(string symbol, string dayTime)
         {
             Assert.IsTrue(_data.ContainsKey(symbol), "Symbol " + symbol + " not present in Test Data");
@@ -505,6 +507,7 @@ namespace QuantConnect.Tests.Common.Securities.Futures
         [TestCase(QuantConnect.Securities.Futures.Metals.MiniNYSilver, OneTwentyFivePM)]
         [TestCase(QuantConnect.Securities.Futures.Metals.Gold100Oz, OneThirtyPM)]
         [TestCase(QuantConnect.Securities.Futures.Metals.Silver5000Oz, OneTwentyFivePM)]
+        [TestCase(QuantConnect.Securities.Futures.Metals.OneOunceGold, Zero)]
         public void MetalsExpiryDateFunction_WithDifferentDates_ShouldFollowContract(string symbol, string dayTime)
         {
             Assert.IsTrue(_data.ContainsKey(symbol), "Symbol " + symbol + " not present in Test Data");
