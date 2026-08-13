@@ -13,8 +13,6 @@
  * limitations under the License.
 */
 
-using System.Collections.Generic;
-
 namespace QuantConnect.Orders
 {
     /// <summary>
@@ -28,7 +26,7 @@ namespace QuantConnect.Orders
         /// </summary>
         public string LocateBroker
         {
-            get { return AdditionalProperties?.GetValueOrDefault("5700"); }
+            get { return GetTag("5700"); }
             set { SetTag("5700", value); }
         }
 
@@ -38,8 +36,13 @@ namespace QuantConnect.Orders
         /// </summary>
         public string LocateReqd
         {
-            get { return AdditionalProperties?.GetValueOrDefault("114"); }
+            get { return GetTag("114"); }
             set { SetTag("114", value); }
+        }
+
+        private string GetTag(string tag)
+        {
+            return AdditionalProperties != null && AdditionalProperties.TryGetValue(tag, out var value) ? value : null;
         }
 
         private void SetTag(string tag, string value)
