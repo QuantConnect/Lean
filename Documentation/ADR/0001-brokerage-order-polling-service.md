@@ -7,7 +7,8 @@ Proposed - 2026-08-07
 Pilot implemented - 2026-08-13: CharlesSchwab is the first plugin on the service
 (`Lean.Brokerages.CharlesSchwab`, draft PR #107). Its own `OrderUpdatePollingService` and diff are deleted;
 what remains in the plugin is what this document says remains - the read with its sweep window, the
-model-to-state mapping, and the seeded stream-to-polling handover through `SeedAndStart`.
+model-to-state mapping, the leg id assignment shared with the stream's `OrderAccepted`, the replace
+reporting, and the seeded stream-to-polling handover through `SeedAndStart`.
 
 ## Purpose
 
@@ -517,10 +518,12 @@ instead of something the loop calls itself: the message handler sits between the
 and the queue keeps the order right. The handler's message type also has to cover both the stream's model and the
 snapshot — the next section is how it does.
 
-One requirement travels with the queue: the place request, the `BrokerId` assignment and the `Submitted` report
-must all happen inside the same `WithLockedStream` block that the snapshots queue behind. That is what guarantees
-a queued snapshot always resolves the id and finds the status the request already reported. Schwab's fallback path
-does all three inside the lock today.
+One requirement travels with the queue: the place request, the record the sweep needs to assign the ids, and
+the watch must all happen inside the same `WithLockedStream` block that the snapshots queue behind. The leg ids
+themselves are assigned by the first sweep that sees the order, from the snapshot: only the broker says which
+leg id belongs to which symbol, so an id derived from the request's leg order would be a guess. The assignment
+is the same code the stream's `OrderAccepted` runs, and it is what releases the plugin's place wait. A report the
+plugin makes itself — a replace — sits in the same block, with its seed. Schwab's fallback path works this way today.
 
 ### One lock for two message types
 
@@ -690,9 +693,14 @@ A replace moves the state, because the registry is keyed by brokerage id and a r
 Inside the same locked block that reports `UpdateSubmitted`, the plugin moves it across:
 `TryGetLastOrderState(oldId, out var lastSeen)`, then `Watch(newId, lastSeen)`, then `Unwatch(oldId)`. A broker
 whose replacement counts its executions from zero seeds the new id with a fresh `Submitted` snapshot instead of
-moving the old state — Schwab's replace path does exactly that. The same seed rule covers a plugin that reports
-`Submitted` from the request path, as Schwab does without the stream: watch the new id with a `Submitted` snapshot
-in that block, so the next sweep does not repeat the submit.
+moving the old state — Schwab's replace path does exactly that. The seed rule is simply: what the plugin reports
+itself, it seeds in the same locked block, so the next sweep does not repeat it. A plain place reports nothing —
+Schwab watches the main id and keeps the placement's Lean orders by symbol; the first sweep to see the order
+assigns each leg id from the snapshot — one shared method with the stream's `OrderAccepted`, because only the
+broker says which leg id belongs to which symbol — and reports the submit through the diff, one poll interval
+later at most. The assignment also releases the three minute place wait, so the same `MissingWebSocketResponse`
+error guards a placement nothing ever confirms, on the stream and on the poll alike. The watch doubles as the
+alarm: an id the broker never lists raises `OrderNotAcknowledged` instead of staying silent.
 
 ### Seed before Start
 
@@ -857,8 +865,10 @@ inline `Task.Delay` block with `Watch` on the unknown ids.
   whose leg ids are derived rather than returned by the broker should verify they resolve and warn when they do
   not — the service skips silently.
 - Routing: handing the service its message handler at construction and forwarding `OrderEvents` to `OnOrderEvents`.
-- Reporting without the stream: Schwab's submit and replace events from the REST reply stay in the plugin; the
-  service only asks that they seed the registry (see "One registry for the stream and the poll").
+- Reporting without the stream: Schwab's replace events from the REST reply stay in the plugin; the
+  service only asks that they seed the registry (see "One registry for the stream and the poll"). A plain place
+  is not reported by the plugin at all — it watches the main id, and the first sweep assigns the leg ids by
+  symbol and reports the submit.
 - Deciding what an unacknowledged order means.
 
 ## Alternatives not taken
@@ -934,7 +944,7 @@ inline `Task.Delay` block with `Watch` on the unknown ids.
    write it.
 3. CharlesSchwab and Public.com: delete their service class and their fill/close diff. What stays is real and
    named: the read and its sweep window, the model-to-state mapping, Schwab's stream-unavailable switch and its
-   without-stream submit and replace reporting. Two behavior changes are intentional: a Public poll that shows a
+   without-stream replace reporting. Two behavior changes are intentional: a Public poll that shows a
    new fill and the cancel together now emits both — today's code drops the cancel
    (`PublicBrokerage.Brokerage.cs:629-638`) — and polled fills are priced at the broker's reported price of the
    sweep, so Public's change-of-average recovery and Schwab's per-execution prices become per-sweep prices while
