@@ -437,6 +437,43 @@ namespace QuantConnect.Brokerages.Services
         }
 
         /// <summary>
+        /// The whole handover from a stream to polling, in the only safe order: process what the stream
+        /// already delivered, seed the registry with one <see cref="Watch(string, BrokerOrderState)"/> per
+        /// open Lean order, then <see cref="Start"/>. Does nothing while polling already runs.
+        /// </summary>
+        /// <example>
+        /// The stream reported 100 of 233 shares, the seed carries 100, so the first sweep reports only the other 133.
+        /// </example>
+        /// <param name="drainBufferedMessages">Processes the stream messages still waiting in the plugin's
+        /// message handler, so the seeds count every fill the stream delivered. Null skips the step.</param>
+        /// <param name="seed">Builds the seed for one open Lean order: the brokerage id, the order's status
+        /// and the cumulative filled quantity already reported. A null return skips the order, and a null
+        /// callback skips seeding.</param>
+        public void SeedAndStart(Action drainBufferedMessages = null, Func<Order, BrokerOrderState> seed = null)
+        {
+            if (IsPolling)
+            {
+                return;
+            }
+
+            drainBufferedMessages?.Invoke();
+
+            if (seed != null)
+            {
+                foreach (var openLeanOrder in _orderProvider?.GetOpenOrders() ?? [])
+                {
+                    var lastSeen = seed(openLeanOrder);
+                    if (lastSeen != null && !string.IsNullOrEmpty(lastSeen.BrokerageOrderId))
+                    {
+                        Watch(lastSeen.BrokerageOrderId, lastSeen);
+                    }
+                }
+            }
+
+            Start();
+        }
+
+        /// <summary>
         /// Starts the background polling task. Idempotent while running; after <see cref="Stop"/> a later
         /// call resumes polling. Does nothing once the service has been disposed.
         /// </summary>

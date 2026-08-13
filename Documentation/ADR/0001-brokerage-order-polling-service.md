@@ -431,6 +431,11 @@ public abstract class BrokerageOrderPollingService : IDisposable
     /// </summary>
     public void ProcessOrderState(BrokerOrderState orderState);
 
+    /// <summary>The whole handover from a stream to polling, in the only safe order: process what the
+    /// stream already delivered, seed one watch per open Lean order, then Start. Both callbacks are
+    /// optional. See "Seed before Start".</summary>
+    public void SeedAndStart(Action drainBufferedMessages = null, Func<Order, BrokerOrderState> seed = null);
+
     public void Start();
     public void Stop();
     public void Dispose();
@@ -697,19 +702,24 @@ in that block, so the next sweep does not repeat the submit.
 ### Seed before Start
 
 Polling never starts first: the stream reported orders before it, and the registry must know what was already
-reported before the first sweep runs. So every `Start` that follows stream time begins with a handover:
+reported before the first sweep runs. So every `Start` that follows stream time begins with a handover, and the
+service owns its order — `SeedAndStart(drainBufferedMessages, seed)` does nothing while polling already runs, and
+otherwise runs three steps:
 
-1. Drain the message buffer with an empty `WithLockedStream` block, so every fill the stream already delivered is
-   counted. Nothing slips in after the drain, because the switch runs on the stream's own thread — the only thread
-   that delivers stream messages.
-2. Seed the registry with one `Watch(id, lastSeen)` per open Lean order: the status comes from the Lean order, the
-   cumulative filled quantity from the plugin's own bookkeeping. Orders the stream already closed need no seed —
-   the diff skips every order Lean has closed.
+1. `drainBufferedMessages` — the plugin passes `() => _messageHandler.WithLockedStream(() => { })`, so every fill
+   the stream already delivered is counted. Nothing slips in after it, because the switch runs on the stream's own
+   thread — the only thread that delivers stream messages.
+2. One `seed(openLeanOrder)` call per open Lean order, each becoming a `Watch(id, lastSeen)`: the plugin returns
+   the brokerage id, the order's status and the cumulative filled quantity from its own bookkeeping. Orders the
+   stream already closed need no seed — the diff skips every order Lean has closed, and a null return skips the
+   order.
 3. `Start`.
 
-The first sweep then continues from what the stream reported instead of repeating it. A fallback-mode plugin does
-this once, because its stream never comes back — Schwab's `SeedRegistryFromOpenOrders` is the working example. A
-gap-mode plugin repeats it on every drop: seed, `Start`, and `Stop` when the stream returns.
+Both callbacks are optional: a plugin with no message handler passes no drain, a plugin whose stream reported
+nothing passes no seed. The first sweep then continues from what the stream reported instead of repeating it. A
+fallback-mode plugin makes this one call, because its stream never comes back — Schwab's `ToSeedState` is the
+working example of the seed callback. A gap-mode plugin repeats the call on every drop, and `Stop`s when the
+stream returns.
 
 The seed source already exists in most streaming plugins, because they keep the same bookkeeping Schwab does — the
 cumulative quantity already reported, per Lean order: Webull's `_orderIdToPreviousCumulativeQuantity`
@@ -731,7 +741,7 @@ does. `Dispose` is the one-way door.
 Three rules for a plugin that uses this:
 
 - **Seed before every `Start`.** While the socket was up the stream was reporting and the registry was not
-  listening. The seed hands over what was reported — see "Seed before Start".
+  listening. `SeedAndStart` hands over what was reported, in the right order — see "Seed before Start".
 - **Sweep once after the stream returns, before stopping.** The socket coming back does not replay what it missed,
   and no plugin re-reads orders on reconnect today. One last sweep closes the gap.
 - **Coming back is not always allowed.** Schwab must stay on polling for the rest of the run, because reconnecting
@@ -830,12 +840,11 @@ in the background. The `_noSubmissionOrderTypes` guess (`MarketOnOpen`, `ComboLe
 becomes a real check: the broker either lists the order, and `Submitted` is true, or it does not, and the brokerage
 is asked instead of Lean inventing an event.
 
-The same three lines cover a dropped socket, in any streaming plugin:
+The same two lines cover a dropped socket, in any streaming plugin:
 
 ```csharp
-// where the brokerage already handles the connection going down
-SeedRegistryFromOpenOrders();   // one Watch(id, lastSeen) per open Lean order, see "Seed before Start"
-_orderPollingService.Start();
+// where the brokerage already handles the connection going down; see "Seed before Start"
+_orderPollingService.SeedAndStart(() => _messageHandler.WithLockedStream(() => { }), ToSeedState);
 
 // on reconnect: one last sweep for the gap, then hand the job back to the stream
 _orderPollingService.Stop();

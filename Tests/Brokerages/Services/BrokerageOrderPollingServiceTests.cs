@@ -577,5 +577,67 @@ namespace QuantConnect.Tests.Brokerages.Services
             _service.Start();
             Assert.IsFalse(_service.IsPolling);
         }
+
+        [Test]
+        public void SeedAndStartDrainsThenSeedsThenStarts()
+        {
+            AddOrder(233m, "42", OrderStatus.Submitted);
+            var steps = new List<string>();
+
+            _service.SeedAndStart(
+                drainBufferedMessages: () => steps.Add("drain"),
+                seed: order =>
+                {
+                    steps.Add($"seed:{order.BrokerId[0]}");
+                    // the stream already reported 100 of the 233 shares
+                    return State(order.BrokerId[0], order.Status, filled: 100m);
+                });
+
+            Assert.IsTrue(_service.IsPolling);
+            CollectionAssert.AreEqual(new[] { "drain", "seed:42" }, steps);
+
+            // the first sweep continues from the seed: only the other 133 shares are reported
+            _service.ProcessOrderState(State("42", OrderStatus.Filled, filled: 233m, price: 310m));
+            Assert.AreEqual(1, _orderEvents.Count);
+            Assert.AreEqual(OrderStatus.Filled, _orderEvents[0].Status);
+            Assert.AreEqual(133m, _orderEvents[0].FillQuantity);
+        }
+
+        [Test]
+        public void SeedAndStartWithoutCallbacksJustStarts()
+        {
+            _service.SeedAndStart();
+
+            Assert.IsTrue(_service.IsPolling);
+            Assert.IsEmpty(_orderEvents);
+        }
+
+        [Test]
+        public void SeedAndStartWhilePollingDoesNothing()
+        {
+            AddOrder(100m, "42");
+            _service.Start();
+
+            var callCount = 0;
+            _service.SeedAndStart(drainBufferedMessages: () => callCount++, seed: _ => { callCount++; return null; });
+
+            Assert.IsTrue(_service.IsPolling);
+            Assert.AreEqual(0, callCount);
+        }
+
+        [Test]
+        public void SeedWithoutBrokerageIdIsSkipped()
+        {
+            AddOrder(100m, "42");
+            AddOrder(100m, "43");
+
+            _service.SeedAndStart(seed: order => order.BrokerId[0] == "42"
+                ? null
+                : new BrokerOrderState { Status = OrderStatus.Submitted });
+
+            Assert.IsTrue(_service.IsPolling);
+            Assert.IsFalse(_service.TryGetLastOrderState("42", out _));
+            Assert.IsFalse(_service.TryGetLastOrderState("43", out _));
+        }
     }
 }
