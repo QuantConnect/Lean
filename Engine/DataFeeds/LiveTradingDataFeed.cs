@@ -42,11 +42,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
     {
         private static readonly int MaximumWarmupHistoryDaysLookBack = Config.GetInt("maximum-warmup-history-days-look-back", 5);
 
-        // when the expected universe file is not available yet, we fall back to the backup universe file ("*.backup"),
-        // if any, as a last resort, when the market is open or within this time span before the next market open
-        private static readonly TimeSpan UniverseFileBackupFallbackWindow =
-            TimeSpan.FromMinutes(Config.GetInt("universe-file-backup-fallback-minutes", 30));
-
         private LiveNodePacket _job;
 
         // used to get current time
@@ -362,7 +357,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     // we adjust time to the previous tradable date
                     time => Time.GetStartTimeForTradeBars(request.Security.Exchange.Hours, time, Time.OneDay, 1, false, config.DataTimeZone, _algorithm.Settings.DailyPreciseEndTime),
                     TimeSpan.FromMinutes(10),
-                    sourceAdjustment: GetUniverseFileBackupSourceAdjustment(request)
+                    // when the expected universe file is not available yet, fall back to the backup universe file as a last resort
+                    fallBackToBackupUniverseFiles: true
                 );
                 var enumeratorStack = factory.CreateEnumerator(request, _dataProvider);
 
@@ -419,53 +415,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     + TimeSpan.FromSeconds(DateTime.UtcNow.Second));
             }
             return _scheduledUniverseUtcTimeShift.Value;
-        }
-
-        /// <summary>
-        /// Gets a source adjustment for universe files as a safety net for when the expected universe file
-        /// is not available yet: when the market is open or close to opening (within <see cref="UniverseFileBackupFallbackWindow"/>
-        /// of the next market open), it falls back to the backup universe file ("*.backup") if present, as a last resort
-        /// </summary>
-        private Func<SubscriptionDataSource, DateTime, SubscriptionDataSource> GetUniverseFileBackupSourceAdjustment(SubscriptionRequest request)
-        {
-            var exchangeHours = request.Security.Exchange.Hours;
-            return (source, utcNow) =>
-            {
-                if (source.TransportMedium != SubscriptionTransportMedium.LocalFile)
-                {
-                    return source;
-                }
-
-                var localTime = utcNow.ConvertFromUtc(exchangeHours.TimeZone);
-                // only fall back when the market is open or close to opening, when the expected universe file should already be available
-                if (!exchangeHours.IsOpen(localTime, extendedMarketHours: false)
-                    // if the market is closed, GetNextMarketOpen returns the next day open
-                    && exchangeHours.GetNextMarketOpen(localTime, extendedMarketHours: false) - localTime > UniverseFileBackupFallbackWindow)
-                {
-                    return source;
-                }
-
-                if (CanFetchDataSource(source))
-                {
-                    return source;
-                }
-
-                var backupSource = new SubscriptionDataSource(source.Source + ".backup", source.TransportMedium, source.Format);
-                if (CanFetchDataSource(backupSource))
-                {
-                    Log.Trace($"LiveTradingDataFeed.GetUniverseFileBackupSourceAdjustment(): universe file '{source.Source}' is not available, " +
-                        $"falling back to backup universe file '{backupSource.Source}'");
-                    return backupSource;
-                }
-
-                return source;
-            };
-        }
-
-        private bool CanFetchDataSource(SubscriptionDataSource source)
-        {
-            using var stream = _dataProvider.Fetch(source.Source);
-            return stream != null;
         }
 
         /// <summary>

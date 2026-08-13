@@ -18,9 +18,11 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Python.Runtime;
+using QuantConnect.Configuration;
 using QuantConnect.Data;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Interfaces;
+using QuantConnect.Logging;
 using QuantConnect.Util;
 
 namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
@@ -30,10 +32,15 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
     /// </summary>
     public class LiveCustomDataSubscriptionEnumeratorFactory : ISubscriptionEnumeratorFactory
     {
+        // when the expected universe file is not available yet, we fall back to the backup universe file ("*.backup"),
+        // if any, as a last resort, when the market is open or within this time span before the next market open
+        private static readonly TimeSpan UniverseFileBackupFallbackWindow =
+            TimeSpan.FromMinutes(Config.GetInt("universe-file-backup-fallback-minutes", 30));
+
         private readonly TimeSpan _minimumIntervalCheck;
         private readonly ITimeProvider _timeProvider;
         private readonly Func<DateTime, DateTime> _dateAdjustment;
-        private readonly Func<SubscriptionDataSource, DateTime, SubscriptionDataSource> _sourceAdjustment;
+        private readonly bool _fallBackToBackupUniverseFiles;
         private readonly IObjectStore _objectStore;
 
         /// <summary>
@@ -43,17 +50,17 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
         /// <param name="objectStore">The object store to use</param>
         /// <param name="dateAdjustment">Func that allows adjusting the datetime to use</param>
         /// <param name="minimumIntervalCheck">Allows specifying the minimum interval between each enumerator refresh and data check, default is 30 minutes</param>
-        /// <param name="sourceAdjustment">Optional func that allows adjusting the data source to read from, given the source and the current utc time,
-        /// e.g. to fall back to an alternative source when the expected one is not available.
-        /// It is evaluated at the same cadence as the enumerator refreshes</param>
+        /// <param name="fallBackToBackupUniverseFiles">Whether to fall back to the backup universe file ("*.backup"), if any, as a last resort
+        /// when the expected universe file is not available and the market is open or close to opening.
+        /// Only meaningful for universe subscriptions backed by local files</param>
         public LiveCustomDataSubscriptionEnumeratorFactory(ITimeProvider timeProvider, IObjectStore objectStore,
             Func<DateTime, DateTime> dateAdjustment = null, TimeSpan? minimumIntervalCheck = null,
-            Func<SubscriptionDataSource, DateTime, SubscriptionDataSource> sourceAdjustment = null)
+            bool fallBackToBackupUniverseFiles = false)
         {
             _timeProvider = timeProvider;
             _dateAdjustment = dateAdjustment;
             _minimumIntervalCheck = minimumIntervalCheck ?? TimeSpan.FromMinutes(30);
-            _sourceAdjustment = sourceAdjustment;
+            _fallBackToBackupUniverseFiles = fallBackToBackupUniverseFiles;
             _objectStore = objectStore;
         }
 
@@ -72,6 +79,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
             var frontier = Ref.Create(_dateAdjustment?.Invoke(request.StartTimeLocal) ?? request.StartTimeLocal);
             var lastSourceRefreshTime = DateTime.MinValue;
             var sourceFactory = config.GetBaseDataInstance();
+            var sourceAdjustment = _fallBackToBackupUniverseFiles ? GetUniverseFileBackupSourceAdjustment(request, dataProvider) : null;
 
             // this is refreshing the enumerator stack for each new source
             var refresher = new RefreshEnumerator<BaseData>(() =>
@@ -93,9 +101,9 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
                     return Enumerable.Empty<BaseData>().GetEnumerator();
                 }
 
-                if (_sourceAdjustment != null)
+                if (sourceAdjustment != null)
                 {
-                    source = _sourceAdjustment(source, utcNow);
+                    source = sourceAdjustment(source, utcNow);
                 }
 
                 // fetch the new source and enumerate the data source reader
@@ -211,6 +219,55 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
             )
         {
             return SubscriptionDataSourceReader.ForSource(source, dataCacheProvider, config, date, true, baseDataInstance, dataProvider, _objectStore);
+        }
+
+        /// <summary>
+        /// Gets a source adjustment for universe files as a safety net for when the expected universe file
+        /// is not available yet: when the market is open or close to opening (within <see cref="UniverseFileBackupFallbackWindow"/>
+        /// of the next market open), it falls back to the backup universe file ("*.backup") if present, as a last resort.
+        /// It is evaluated at the same cadence as the enumerator refreshes
+        /// </summary>
+        private static Func<SubscriptionDataSource, DateTime, SubscriptionDataSource> GetUniverseFileBackupSourceAdjustment(
+            SubscriptionRequest request, IDataProvider dataProvider)
+        {
+            var exchangeHours = request.Security.Exchange.Hours;
+            return (source, utcNow) =>
+            {
+                if (source.TransportMedium != SubscriptionTransportMedium.LocalFile)
+                {
+                    return source;
+                }
+
+                var localTime = utcNow.ConvertFromUtc(exchangeHours.TimeZone);
+                // only fall back when the market is open or close to opening, when the expected universe file should already be available
+                if (!exchangeHours.IsOpen(localTime, extendedMarketHours: false)
+                    // if the market is closed, GetNextMarketOpen returns the next day open
+                    && exchangeHours.GetNextMarketOpen(localTime, extendedMarketHours: false) - localTime > UniverseFileBackupFallbackWindow)
+                {
+                    return source;
+                }
+
+                if (CanFetchDataSource(dataProvider, source))
+                {
+                    return source;
+                }
+
+                var backupSource = new SubscriptionDataSource(source.Source + ".backup", source.TransportMedium, source.Format);
+                if (CanFetchDataSource(dataProvider, backupSource))
+                {
+                    Log.Trace($"LiveCustomDataSubscriptionEnumeratorFactory.GetUniverseFileBackupSourceAdjustment(): universe file '{source.Source}' is not available, " +
+                        $"falling back to backup universe file '{backupSource.Source}'");
+                    return backupSource;
+                }
+
+                return source;
+            };
+        }
+
+        private static bool CanFetchDataSource(IDataProvider dataProvider, SubscriptionDataSource source)
+        {
+            using var stream = dataProvider.Fetch(source.Source);
+            return stream != null;
         }
 
         private bool SourceRequiresFastForward(SubscriptionDataSource source)
