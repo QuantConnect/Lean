@@ -20,6 +20,20 @@ class Test_PythonExceptionInterpreter(QCAlgorithm):
     def key_error(self):
         x = dict()['SPY']
 
+    def key_error_object_key(self):
+        # KeyError whose message is "<QuantConnect.Symbol object at 0x...>": the key must be read from args
+        symbol = Symbol.create('SPY', SecurityType.EQUITY, Market.USA)
+        x = dict()[symbol]
+
+    def attribute_error_quote_bar_volume(self):
+        x = QuoteBar().volume
+
+    def attribute_error_trade_bar_ask_price(self):
+        x = TradeBar().ask_price
+
+    def attribute_error_generic(self):
+        x = QuoteBar().not_an_attribute
+
     def no_method_match(self):
         self.set_cash('SPY')
 

@@ -81,7 +81,7 @@ namespace QuantConnect.Data.Market
                     return data;
                 }
                 CheckForImplicitlyCreatedSymbol(symbol);
-                throw new KeyNotFoundException($"'{symbol}' wasn't found in the {GetType().GetBetterTypeName()} object, likely because there was no-data at this moment in time and it wasn't possible to fillforward historical data. Please check the data exists before accessing it with data.ContainsKey(\"{symbol}\")");
+                throw new KeyNotFoundException(Messages.ExtendedDictionary.KeyNotFoundDueToNoData(this, symbol));
             }
             set
             {

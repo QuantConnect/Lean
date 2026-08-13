@@ -26,6 +26,7 @@ namespace QuantConnect.Tests.Common.Exceptions
     public class KeyErrorPythonExceptionInterpreterTests
     {
         private PythonException _pythonException;
+        private PythonException _objectKeyPythonException;
 
         [SetUp]
         public void Setup()
@@ -43,6 +44,16 @@ namespace QuantConnect.Tests.Common.Exceptions
                 catch (PythonException pythonException)
                 {
                     _pythonException = pythonException;
+                }
+
+                try
+                {
+                    // dict()[Symbol.create('SPY', ...)]
+                    algorithm.key_error_object_key();
+                }
+                catch (PythonException pythonException)
+                {
+                    _objectKeyPythonException = pythonException;
                 }
             }
         }
@@ -71,6 +82,28 @@ namespace QuantConnect.Tests.Common.Exceptions
             var interpreter = new KeyErrorPythonExceptionInterpreter();
             var constraint = expectThrow ? (IResolveConstraint)Throws.Exception : Throws.Nothing;
             Assert.That(() => interpreter.Interpret(exception, NullExceptionInterpreter.Instance), constraint);
+        }
+
+        [Test]
+        public void NamesStringKeyAndSuggestsSafeAccess()
+        {
+            var interpreted = new KeyErrorPythonExceptionInterpreter().Interpret(_pythonException, NullExceptionInterpreter.Instance);
+
+            StringAssert.Contains("The key 'SPY' was not found in the collection", interpreted.Message);
+            StringAssert.Contains("collection.get(key)", interpreted.Message);
+            StringAssert.Contains("if key in collection:", interpreted.Message);
+        }
+
+        [Test]
+        public void NamesObjectKeyReadFromExceptionArgs()
+        {
+            // the KeyError message is "<QuantConnect.Symbol object at 0x...>", which used to render a blank key:
+            // "ensure that the  key exist in the collection"
+            var interpreted = new KeyErrorPythonExceptionInterpreter().Interpret(_objectKeyPythonException, NullExceptionInterpreter.Instance);
+
+            StringAssert.Contains("The key 'SPY", interpreted.Message);
+            StringAssert.DoesNotContain("The key ''", interpreted.Message);
+            StringAssert.DoesNotContain("object at 0x", interpreted.Message);
         }
 
         [Test]
