@@ -33,6 +33,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
         private readonly TimeSpan _minimumIntervalCheck;
         private readonly ITimeProvider _timeProvider;
         private readonly Func<DateTime, DateTime> _dateAdjustment;
+        private readonly Func<SubscriptionDataSource, DateTime, SubscriptionDataSource> _sourceAdjustment;
         private readonly IObjectStore _objectStore;
 
         /// <summary>
@@ -42,12 +43,17 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
         /// <param name="objectStore">The object store to use</param>
         /// <param name="dateAdjustment">Func that allows adjusting the datetime to use</param>
         /// <param name="minimumIntervalCheck">Allows specifying the minimum interval between each enumerator refresh and data check, default is 30 minutes</param>
+        /// <param name="sourceAdjustment">Optional func that allows adjusting the data source to read from, given the source and the current utc time,
+        /// e.g. to fall back to an alternative source when the expected one is not available.
+        /// It is evaluated at the same cadence as the enumerator refreshes</param>
         public LiveCustomDataSubscriptionEnumeratorFactory(ITimeProvider timeProvider, IObjectStore objectStore,
-            Func<DateTime, DateTime> dateAdjustment = null, TimeSpan? minimumIntervalCheck = null)
+            Func<DateTime, DateTime> dateAdjustment = null, TimeSpan? minimumIntervalCheck = null,
+            Func<SubscriptionDataSource, DateTime, SubscriptionDataSource> sourceAdjustment = null)
         {
             _timeProvider = timeProvider;
             _dateAdjustment = dateAdjustment;
             _minimumIntervalCheck = minimumIntervalCheck ?? TimeSpan.FromMinutes(30);
+            _sourceAdjustment = sourceAdjustment;
             _objectStore = objectStore;
         }
 
@@ -85,6 +91,11 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
                 {
                     // a null source is equivalent to an unreachable source: no data this cycle, retry on the next refresh
                     return Enumerable.Empty<BaseData>().GetEnumerator();
+                }
+
+                if (_sourceAdjustment != null)
+                {
+                    source = _sourceAdjustment(source, utcNow);
                 }
 
                 // fetch the new source and enumerate the data source reader

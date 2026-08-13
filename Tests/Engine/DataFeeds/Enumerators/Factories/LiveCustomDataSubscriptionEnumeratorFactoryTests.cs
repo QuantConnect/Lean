@@ -549,6 +549,51 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators.Factories
             enumerator.DisposeSafely();
         }
 
+        [Test]
+        public void AllowsAdjustingTheDataSource()
+        {
+            var referenceLocal = new DateTime(2017, 10, 12);
+            var referenceUtc = new DateTime(2017, 10, 12).ConvertToUtc(TimeZones.NewYork);
+
+            var timeProvider = new ManualTimeProvider(referenceUtc);
+
+            var dataSourceReader = new Mock<ISubscriptionDataSourceReader>();
+            dataSourceReader.Setup(dsr => dsr.Read(It.IsAny<SubscriptionDataSource>()))
+                .Returns(() => new[] { new LocalFileData { EndTime = referenceLocal.AddSeconds(1) } })
+                .Verifiable();
+
+            var config = new SubscriptionDataConfig(typeof(LocalFileData), Symbols.SPY, Resolution.Daily, TimeZones.NewYork, TimeZones.NewYork, false, false, false);
+            var request = GetSubscriptionRequest(config, referenceUtc.AddSeconds(-1), referenceUtc.AddDays(1));
+
+            var sourceAdjustmentTimesUtc = new List<DateTime>();
+            var factory = new TestableLiveCustomDataSubscriptionEnumeratorFactory(timeProvider, dataSourceReader.Object,
+                sourceAdjustment: (source, utcNow) =>
+                {
+                    sourceAdjustmentTimesUtc.Add(utcNow);
+                    return new SubscriptionDataSource(source.Source + ".backup", source.TransportMedium, source.Format);
+                });
+            using var enumerator = factory.CreateEnumerator(request, null);
+
+            Assert.IsTrue(enumerator.MoveNext());
+            Assert.IsNotNull(enumerator.Current);
+
+            // the adjusted source is the one that gets read, not the original one
+            VerifyGetSourceInvocationCount(dataSourceReader, 1, "local.file.source.backup", SubscriptionTransportMedium.LocalFile, FileFormat.Csv);
+            VerifyGetSourceInvocationCount(dataSourceReader, 0, "local.file.source", SubscriptionTransportMedium.LocalFile, FileFormat.Csv);
+
+            CollectionAssert.AreEqual(new[] { referenceUtc }, sourceAdjustmentTimesUtc);
+
+            // the source adjustment is rate limited like the source refreshes
+            Assert.IsTrue(enumerator.MoveNext());
+            Assert.IsNull(enumerator.Current);
+            Assert.AreEqual(1, sourceAdjustmentTimesUtc.Count);
+
+            timeProvider.Advance(TimeSpan.FromMinutes(30));
+            Assert.IsTrue(enumerator.MoveNext());
+            Assert.AreEqual(2, sourceAdjustmentTimesUtc.Count);
+            Assert.AreEqual(referenceUtc.AddMinutes(30), sourceAdjustmentTimesUtc[1]);
+        }
+
         private static void VerifyGetSourceInvocationCount(Mock<ISubscriptionDataSourceReader> dataSourceReader, int count, string source, SubscriptionTransportMedium medium, FileFormat fileFormat)
         {
             dataSourceReader.Verify(dsr => dsr.Read(It.Is<SubscriptionDataSource>(sds =>
@@ -630,8 +675,9 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators.Factories
         {
             private readonly ISubscriptionDataSourceReader _dataSourceReader;
 
-            public TestableLiveCustomDataSubscriptionEnumeratorFactory(ITimeProvider timeProvider, ISubscriptionDataSourceReader dataSourceReader, TimeSpan? minimumIntervalCheck = null)
-                : base(timeProvider, null, minimumIntervalCheck: minimumIntervalCheck)
+            public TestableLiveCustomDataSubscriptionEnumeratorFactory(ITimeProvider timeProvider, ISubscriptionDataSourceReader dataSourceReader,
+                TimeSpan? minimumIntervalCheck = null, Func<SubscriptionDataSource, DateTime, SubscriptionDataSource> sourceAdjustment = null)
+                : base(timeProvider, null, minimumIntervalCheck: minimumIntervalCheck, sourceAdjustment: sourceAdjustment)
             {
                 _dataSourceReader = dataSourceReader;
             }

@@ -17,6 +17,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Threading;
 using Microsoft.CodeAnalysis;
@@ -280,6 +281,104 @@ namespace QuantConnect.Tests.Engine.DataFeeds
 
             var expectedSelections = securityType == SecurityType.Future ? 2 : 1;
             Assert.AreEqual(expectedSelections, selectionHappened);
+        }
+
+        [TestCase(SecurityType.Option, false)]
+        [TestCase(SecurityType.Option, true)]
+        [TestCase(SecurityType.IndexOption, false)]
+        [TestCase(SecurityType.IndexOption, true)]
+        public void ChainSelectionFallsBackToBackupUniverseFileCloseToMarketOpen(SecurityType securityType, bool universeFileAvailable)
+        {
+            // start close to the market open (9:15 NY), within the backup universe file fallback window (30 minutes before the open by default)
+            _startDate = securityType == SecurityType.Option
+                ? new DateTime(2014, 6, 9, 13, 15, 0)
+                : new DateTime(2021, 1, 4, 14, 15, 0);
+            _manualTimeProvider.SetCurrentTimeUtc(_startDate);
+            var endDate = _startDate.AddDays(1);
+
+            _algorithm.SetBenchmark(x => 1);
+
+            var dataProvider = new BackupUniverseFileDataProvider(hideUniverseFiles: !universeFileAvailable);
+            var feed = RunDataFeed(runPostInitialize: false, dataProvider: dataProvider);
+
+            var selectionHappened = 0;
+            List<OptionUniverse> selectedContracts = null;
+            var option = securityType == SecurityType.Option
+                ? _algorithm.AddOption("AAPL")
+                : _algorithm.AddIndexOption("SPX");
+            option.SetFilter(universe =>
+            {
+                selectionHappened++;
+                selectedContracts = universe.ToList();
+
+                return universe;
+            });
+
+            _algorithm.PostInitialize();
+
+            // allow time for the exchange to pick up the selection point
+            Thread.Sleep(50);
+
+            ConsumeBridge(feed, TimeSpan.FromSeconds(30), true, ts =>
+            {
+                if (selectionHappened > 0)
+                {
+                    // we got what we wanted shortcut unit test
+                    _manualTimeProvider.SetCurrentTimeUtc(Time.EndOfTime);
+                }
+            },
+            endDate: endDate,
+            secondsTimeStep: 60);
+
+            Assert.AreEqual(1, selectionHappened);
+            Assert.IsNotNull(selectedContracts);
+            Assert.IsNotEmpty(selectedContracts);
+
+            if (universeFileAvailable)
+            {
+                // the universe file was available, so the backup file should not have even been checked
+                Assert.AreEqual(0, dataProvider.BackupUniverseFileRequests);
+            }
+            else
+            {
+                Assert.AreNotEqual(0, dataProvider.UniverseFileRequests);
+                Assert.AreNotEqual(0, dataProvider.BackupUniverseFileRequests);
+            }
+        }
+
+        [Test]
+        public void ChainSelectionDoesNotFallBackToBackupUniverseFileFarFromMarketOpen()
+        {
+            // start during the night: far from the market open, the missing universe file should not fall back to the backup file
+            _startDate = new DateTime(2014, 6, 9, 6, 0, 0);
+            _manualTimeProvider.SetCurrentTimeUtc(_startDate);
+            // stop before entering the fallback window, 30 minutes (by default) before the 9:30 NY market open
+            var endDate = new DateTime(2014, 6, 9, 12, 0, 0);
+
+            _algorithm.SetBenchmark(x => 1);
+
+            var dataProvider = new BackupUniverseFileDataProvider(hideUniverseFiles: true);
+            var feed = RunDataFeed(runPostInitialize: false, dataProvider: dataProvider);
+
+            var selectionHappened = 0;
+            var option = _algorithm.AddOption("AAPL");
+            option.SetFilter(universe =>
+            {
+                selectionHappened++;
+                return universe;
+            });
+
+            _algorithm.PostInitialize();
+
+            // allow time for the exchange to pick up the selection point
+            Thread.Sleep(50);
+
+            ConsumeBridge(feed, TimeSpan.FromSeconds(30), true, ts => { }, endDate: endDate, secondsTimeStep: 60);
+
+            // the universe file was tried but never available, and the backup file should not have been used
+            Assert.AreEqual(0, selectionHappened);
+            Assert.AreNotEqual(0, dataProvider.UniverseFileRequests);
+            Assert.AreEqual(0, dataProvider.BackupUniverseFileRequests);
         }
 
         [Test]
@@ -2914,7 +3013,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             Func<FuncDataQueueHandler, IEnumerable<BaseData>> getNextTicksFunction = null,
             Func<Symbol, bool, string, IEnumerable<Symbol>> lookupSymbolsFunction = null,
             Func<bool> canPerformSelection = null, IDataQueueHandler dataQueueHandler = null,
-            bool runPostInitialize = true)
+            bool runPostInitialize = true, IDataProvider dataProvider = null)
         {
             _algorithm.SetStartDate(_startDate);
             _algorithm.SetDateTime(_manualTimeProvider.GetUtcNow());
@@ -2988,7 +3087,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
 
             _feed = new TestableLiveTradingDataFeed(_algorithm.Settings, dataQueueHandler ?? _dataQueueHandler);
             _feed.TestDataQueueHandlerManager.TimeProvider = _manualTimeProvider;
-            var fileProvider = TestGlobals.DataProvider;
+            var fileProvider = dataProvider ?? TestGlobals.DataProvider;
             var marketHoursDatabase = MarketHoursDatabase.FromDataFolder();
             var symbolPropertiesDataBase = SymbolPropertiesDatabase.FromDataFolder();
             var securityService = new SecurityService(_algorithm.Portfolio.CashBook, marketHoursDatabase, symbolPropertiesDataBase, _algorithm, RegisteredSecurityDataTypesProvider.Null, new SecurityCacheProvider(_algorithm.Portfolio), algorithm: _algorithm);
@@ -3085,6 +3184,49 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         private class Count
         {
             public int Value;
+        }
+
+        private class BackupUniverseFileDataProvider : IDataProvider
+        {
+            private readonly IDataProvider _dataProvider = TestGlobals.DataProvider;
+            private readonly bool _hideUniverseFiles;
+
+            private int _universeFileRequests;
+            private int _backupUniverseFileRequests;
+
+            public int UniverseFileRequests => _universeFileRequests;
+            public int BackupUniverseFileRequests => _backupUniverseFileRequests;
+
+            public event EventHandler<DataProviderNewDataRequestEventArgs> NewDataRequest;
+
+            public BackupUniverseFileDataProvider(bool hideUniverseFiles)
+            {
+                _hideUniverseFiles = hideUniverseFiles;
+            }
+
+            public Stream Fetch(string key)
+            {
+                if (key.Contains("universes", StringComparison.InvariantCulture))
+                {
+                    if (key.EndsWith(".csv.backup", StringComparison.InvariantCulture))
+                    {
+                        Interlocked.Increment(ref _backupUniverseFileRequests);
+                        // serve the backup universe file contents from the actual universe file
+                        return _dataProvider.Fetch(key.Substring(0, key.Length - ".backup".Length));
+                    }
+
+                    if (key.EndsWith(".csv", StringComparison.InvariantCulture))
+                    {
+                        Interlocked.Increment(ref _universeFileRequests);
+                        if (_hideUniverseFiles)
+                        {
+                            return null;
+                        }
+                    }
+                }
+
+                return _dataProvider.Fetch(key);
+            }
         }
 
         private static IEnumerable<BaseData> ProduceBenchmarkTicks(FuncDataQueueHandler fdqh, Count count)
