@@ -4313,6 +4313,27 @@ def get_history(algorithm, symbol):
         }
 
         [Test]
+        public void WarnsOnLargeTickHistoryRequest()
+        {
+            Config.Set("history-request-cells-warning-threshold", "1000000");
+            try
+            {
+                var algorithm = CreateAlgorithmForHistoryWarningTests();
+                var symbol = algorithm.AddEquity("SPY", Resolution.Tick).Symbol;
+
+                // one market day estimated at 10 ticks per second: 234,000 bars x 5 columns > 1,000,000 cells.
+                // At 1 tick per second the estimate would stay under the threshold and miss the warning
+                algorithm.History(new[] { symbol }, TimeSpan.FromDays(1), Resolution.Tick);
+
+                Assert.AreEqual(1, algorithm.DebugMessages.Count(x => x.Contains("large history request")));
+            }
+            finally
+            {
+                Config.Reset();
+            }
+        }
+
+        [Test]
         public void DoesNotWarnOnSmallHistoryRequest()
         {
             // default threshold

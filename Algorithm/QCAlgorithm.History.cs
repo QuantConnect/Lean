@@ -1569,6 +1569,7 @@ namespace QuantConnect.Algorithm
         {
             private const int OverlappingRequestsWarningCount = 30;
             private const int OverlappingRequestSizeDivisor = 50;
+            private const int AssumedTicksPerSecond = 10;
 
             private readonly long _cellsWarningThreshold = Config.GetInt("history-request-cells-warning-threshold", 5000000);
             private bool _largeRequestWarningSent;
@@ -1582,49 +1583,59 @@ namespace QuantConnect.Algorithm
             /// </summary>
             public void WarnOnLargeHistoryRequests(List<HistoryRequest> requests, Action<string> debug)
             {
-                if (_largeRequestWarningSent && _overlappingRequestsWarningSent || requests.Count == 0)
+                try
                 {
-                    return;
-                }
-
-                long estimatedCells = 0;
-                var startUtc = DateTime.MaxValue;
-                var endUtc = DateTime.MinValue;
-                foreach (var request in requests)
-                {
-                    estimatedCells += EstimateDataCells(request);
-                    if (request.StartTimeUtc < startUtc)
+                    if (_largeRequestWarningSent && _overlappingRequestsWarningSent || requests.Count == 0)
                     {
-                        startUtc = request.StartTimeUtc;
+                        return;
                     }
-                    if (request.EndTimeUtc > endUtc)
+
+                    long estimatedCells = 0;
+                    var startUtc = DateTime.MaxValue;
+                    var endUtc = DateTime.MinValue;
+                    foreach (var request in requests)
                     {
-                        endUtc = request.EndTimeUtc;
+                        estimatedCells += EstimateDataCells(request);
+                        if (request.StartTimeUtc < startUtc)
+                        {
+                            startUtc = request.StartTimeUtc;
+                        }
+                        if (request.EndTimeUtc > endUtc)
+                        {
+                            endUtc = request.EndTimeUtc;
+                        }
+                    }
+
+                    if (!_largeRequestWarningSent && estimatedCells >= _cellsWarningThreshold)
+                    {
+                        _largeRequestWarningSent = true;
+                        debug($"Warning: large history request, estimated at ~{estimatedCells.ToStringInvariant("N0")} data cells" +
+                            $" across {requests.Count} request(s). This can be slow and memory intensive: request fewer symbols," +
+                            " a shorter period or a coarser resolution.");
+                    }
+
+                    if (!_overlappingRequestsWarningSent && estimatedCells >= _cellsWarningThreshold / OverlappingRequestSizeDivisor)
+                    {
+                        var overlaps = startUtc < _previousRequestEndUtc && endUtc > _previousRequestStartUtc;
+                        _consecutiveOverlappingRequests = overlaps ? _consecutiveOverlappingRequests + 1 : 0;
+                        _previousRequestStartUtc = startUtc;
+                        _previousRequestEndUtc = endUtc;
+
+                        if (_consecutiveOverlappingRequests >= OverlappingRequestsWarningCount)
+                        {
+                            _overlappingRequestsWarningSent = true;
+                            debug($"Warning: history() has been called {OverlappingRequestsWarningCount}+ consecutive times with" +
+                                " overlapping time windows. Instead of re-fetching a long lookback, fetch it once and keep it updated" +
+                                " with a rolling window, consolidators or indicator warm up.");
+                        }
                     }
                 }
-
-                if (!_largeRequestWarningSent && estimatedCells >= _cellsWarningThreshold)
+                catch (Exception exception)
                 {
+                    // diagnostics must never interfere with the algorithm: log, disable and move on
                     _largeRequestWarningSent = true;
-                    debug($"Warning: large history request, estimated at ~{estimatedCells.ToStringInvariant("N0")} data cells" +
-                        $" across {requests.Count} request(s). This can be slow and memory intensive: request fewer symbols," +
-                        " a shorter period or a coarser resolution.");
-                }
-
-                if (!_overlappingRequestsWarningSent && estimatedCells >= _cellsWarningThreshold / OverlappingRequestSizeDivisor)
-                {
-                    var overlaps = startUtc < _previousRequestEndUtc && endUtc > _previousRequestStartUtc;
-                    _consecutiveOverlappingRequests = overlaps ? _consecutiveOverlappingRequests + 1 : 0;
-                    _previousRequestStartUtc = startUtc;
-                    _previousRequestEndUtc = endUtc;
-
-                    if (_consecutiveOverlappingRequests >= OverlappingRequestsWarningCount)
-                    {
-                        _overlappingRequestsWarningSent = true;
-                        debug($"Warning: history() has been called {OverlappingRequestsWarningCount}+ consecutive times with" +
-                            " overlapping time windows. Instead of re-fetching a long lookback, fetch it once and keep it updated" +
-                            " with a rolling window, consolidators or indicator warm up.");
-                    }
+                    _overlappingRequestsWarningSent = true;
+                    QuantConnect.Logging.Log.Error(exception);
                 }
             }
 
@@ -1648,8 +1659,9 @@ namespace QuantConnect.Algorithm
                         bars = tradableDays;
                         break;
                     case Resolution.Tick:
-                        // unknowable upfront, use a conservative 1 data point per second of market time
-                        bars = tradableDays * request.ExchangeHours.RegularMarketDuration.TotalSeconds;
+                        // unknowable upfront: liquid symbols see ~10 trades and 100+ quotes per second,
+                        // so 10 data points per second of market time is still on the low side
+                        bars = tradableDays * request.ExchangeHours.RegularMarketDuration.TotalSeconds * AssumedTicksPerSecond;
                         break;
                     default:
                         bars = tradableDays * (request.ExchangeHours.RegularMarketDuration / request.Resolution.ToTimeSpan());
