@@ -42,7 +42,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
     {
         private static readonly int MaximumWarmupHistoryDaysLookBack = Config.GetInt("maximum-warmup-history-days-look-back", 5);
 
-        // when the expected chain universe file is not available yet, we fall back to the backup universe file ("*.backup"),
+        // when the expected universe file is not available yet, we fall back to the backup universe file ("*.backup"),
         // if any, as a last resort, when the market is open or within this time span before the next market open
         private static readonly TimeSpan UniverseFileBackupFallbackWindow =
             TimeSpan.FromMinutes(Config.GetInt("universe-file-backup-fallback-minutes", 30));
@@ -422,17 +422,12 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         }
 
         /// <summary>
-        /// Gets a source adjustment for chain universe files as a safety net for when the expected universe file
+        /// Gets a source adjustment for universe files as a safety net for when the expected universe file
         /// is not available yet: when the market is open or close to opening (within <see cref="UniverseFileBackupFallbackWindow"/>
         /// of the next market open), it falls back to the backup universe file ("*.backup") if present, as a last resort
         /// </summary>
         private Func<SubscriptionDataSource, DateTime, SubscriptionDataSource> GetUniverseFileBackupSourceAdjustment(SubscriptionRequest request)
         {
-            if (request.Universe is not (OptionChainUniverse or FuturesChainUniverse))
-            {
-                return null;
-            }
-
             var exchangeHours = request.Security.Exchange.Hours;
             return (source, utcNow) =>
             {

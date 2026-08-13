@@ -283,16 +283,25 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             Assert.AreEqual(expectedSelections, selectionHappened);
         }
 
-        [TestCase(SecurityType.Option, false)]
-        [TestCase(SecurityType.Option, true)]
-        [TestCase(SecurityType.IndexOption, false)]
-        [TestCase(SecurityType.IndexOption, true)]
-        public void ChainSelectionFallsBackToBackupUniverseFileCloseToMarketOpen(SecurityType securityType, bool universeFileAvailable)
+        [TestCase("OptionChain", false)]
+        [TestCase("OptionChain", true)]
+        [TestCase("IndexOptionChain", false)]
+        [TestCase("IndexOptionChain", true)]
+        [TestCase("CoarseFundamental", false)]
+        [TestCase("CoarseFundamental", true)]
+        [TestCase("EtfConstituents", false)]
+        [TestCase("EtfConstituents", true)]
+        public void UniverseSelectionFallsBackToBackupUniverseFileCloseToMarketOpen(string universeKind, bool universeFileAvailable)
         {
             // start close to the market open (9:15 NY), within the backup universe file fallback window (30 minutes before the open by default)
-            _startDate = securityType == SecurityType.Option
-                ? new DateTime(2014, 6, 9, 13, 15, 0)
-                : new DateTime(2021, 1, 4, 14, 15, 0);
+            _startDate = universeKind switch
+            {
+                "OptionChain" => new DateTime(2014, 6, 9, 13, 15, 0),
+                "IndexOptionChain" => new DateTime(2021, 1, 4, 14, 15, 0),
+                "CoarseFundamental" => new DateTime(2014, 3, 26, 13, 15, 0),
+                "EtfConstituents" => new DateTime(2020, 12, 1, 14, 15, 0),
+                _ => throw new ArgumentException($"Unexpected universe kind: {universeKind}")
+            };
             _manualTimeProvider.SetCurrentTimeUtc(_startDate);
             var endDate = _startDate.AddDays(1);
 
@@ -302,17 +311,47 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             var feed = RunDataFeed(runPostInitialize: false, dataProvider: dataProvider);
 
             var selectionHappened = 0;
-            List<OptionUniverse> selectedContracts = null;
-            var option = securityType == SecurityType.Option
-                ? _algorithm.AddOption("AAPL")
-                : _algorithm.AddIndexOption("SPX");
-            option.SetFilter(universe =>
+            var selectedCount = 0;
+
+            IEnumerable<Symbol> CoarseFilter(IEnumerable<CoarseFundamental> coarse)
             {
                 selectionHappened++;
-                selectedContracts = universe.ToList();
+                var symbols = coarse.Select(x => x.Symbol).ToList();
+                selectedCount = symbols.Count;
+                return symbols;
+            }
 
-                return universe;
-            });
+            switch (universeKind)
+            {
+                case "OptionChain":
+                case "IndexOptionChain":
+                    var option = universeKind == "OptionChain"
+                        ? _algorithm.AddOption("AAPL")
+                        : _algorithm.AddIndexOption("SPX");
+                    option.SetFilter(universe =>
+                    {
+                        selectionHappened++;
+                        selectedCount = universe.Count();
+                        return universe;
+                    });
+                    break;
+
+                case "CoarseFundamental":
+                    _algorithm.UniverseSettings.Resolution = Resolution.Daily;
+                    _algorithm.AddUniverse(CoarseFilter);
+                    break;
+
+                case "EtfConstituents":
+                    var spy = _algorithm.AddEquity("SPY").Symbol;
+                    _algorithm.AddUniverse(_algorithm.Universe.ETF(spy, constituentsData =>
+                    {
+                        selectionHappened++;
+                        var symbols = constituentsData.Select(x => x.Symbol).ToList();
+                        selectedCount = symbols.Count;
+                        return symbols;
+                    }));
+                    break;
+            }
 
             _algorithm.PostInitialize();
 
@@ -331,8 +370,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             secondsTimeStep: 60);
 
             Assert.AreEqual(1, selectionHappened);
-            Assert.IsNotNull(selectedContracts);
-            Assert.IsNotEmpty(selectedContracts);
+            Assert.AreNotEqual(0, selectedCount);
 
             if (universeFileAvailable)
             {
@@ -3206,7 +3244,9 @@ namespace QuantConnect.Tests.Engine.DataFeeds
 
             public Stream Fetch(string key)
             {
-                if (key.Contains("universes", StringComparison.InvariantCulture))
+                // coarse fundamental files are universe files too, they just don't live under a "universes" folder
+                if (key.Contains("universes", StringComparison.InvariantCulture)
+                    || key.Replace('\\', '/').Contains("fundamental/coarse", StringComparison.InvariantCulture))
                 {
                     if (key.EndsWith(".csv.backup", StringComparison.InvariantCulture))
                     {
