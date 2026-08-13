@@ -33,7 +33,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
         private readonly TimeSpan _minimumIntervalCheck;
         private readonly ITimeProvider _timeProvider;
         private readonly Func<DateTime, DateTime> _dateAdjustment;
-        private readonly Func<DateTime, bool> _canRefresh;
         private readonly IObjectStore _objectStore;
 
         /// <summary>
@@ -43,15 +42,12 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
         /// <param name="objectStore">The object store to use</param>
         /// <param name="dateAdjustment">Func that allows adjusting the datetime to use</param>
         /// <param name="minimumIntervalCheck">Allows specifying the minimum interval between each enumerator refresh and data check, default is 30 minutes</param>
-        /// <param name="canRefresh">Optional predicate that determines, given the current utc time, whether the source can be refreshed and read.
-        /// It is evaluated at the same cadence as the refresh interval, so once it returns true the source will be read within one interval</param>
         public LiveCustomDataSubscriptionEnumeratorFactory(ITimeProvider timeProvider, IObjectStore objectStore,
-            Func<DateTime, DateTime> dateAdjustment = null, TimeSpan? minimumIntervalCheck = null, Func<DateTime, bool> canRefresh = null)
+            Func<DateTime, DateTime> dateAdjustment = null, TimeSpan? minimumIntervalCheck = null)
         {
             _timeProvider = timeProvider;
             _dateAdjustment = dateAdjustment;
             _minimumIntervalCheck = minimumIntervalCheck ?? TimeSpan.FromMinutes(30);
-            _canRefresh = canRefresh;
             _objectStore = objectStore;
         }
 
@@ -83,13 +79,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
                 }
 
                 lastSourceRefreshTime = utcNow;
-
-                // the refresh gate, if any, is rate limited like the source refreshes so it's not evaluated in a tight loop
-                if (_canRefresh != null && !_canRefresh(utcNow))
-                {
-                    return Enumerable.Empty<BaseData>().GetEnumerator();
-                }
-
                 var localDate = _dateAdjustment?.Invoke(utcNow.ConvertFromUtc(config.ExchangeTimeZone).Date) ?? utcNow.ConvertFromUtc(config.ExchangeTimeZone).Date;
                 var source = sourceFactory.GetSource(config, localDate, true);
                 if (source == null)

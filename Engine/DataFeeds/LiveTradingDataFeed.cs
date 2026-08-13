@@ -61,10 +61,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         private static ReferenceWrapper<DateTime> _lastUtcDateShiftUpdate;
         private static ReferenceWrapper<TimeSpan> _scheduledUniverseUtcTimeShift;
 
-        // option chain universe files can be big, so we delay reading them until the market is open or close to opening
-        // instead of reading them around the clock
-        private static readonly TimeSpan PreOpenUniverseFileRefreshWindow = TimeSpan.FromHours(1);
-
         /// <summary>
         /// Public flag indicator that the thread is still busy.
         /// </summary>
@@ -360,8 +356,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     _algorithm.ObjectStore,
                     // we adjust time to the previous tradable date
                     time => Time.GetStartTimeForTradeBars(request.Security.Exchange.Hours, time, Time.OneDay, 1, false, config.DataTimeZone, _algorithm.Settings.DailyPreciseEndTime),
-                    TimeSpan.FromMinutes(10),
-                    canRefresh: GetUniverseFileRefreshGate(request)
+                    TimeSpan.FromMinutes(10)
                 );
                 var enumeratorStack = factory.CreateEnumerator(request, _dataProvider);
 
@@ -418,28 +413,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     + TimeSpan.FromSeconds(DateTime.UtcNow.Second));
             }
             return _scheduledUniverseUtcTimeShift.Value;
-        }
-
-        /// <summary>
-        /// Gets a gate for reading a universe file, for universes whose files should not be read around the clock,
-        /// like option chains, which can be big: they are only read while the market is open
-        /// or within <see cref="PreOpenUniverseFileRefreshWindow"/> of the next market open
-        /// </summary>
-        private static Func<DateTime, bool> GetUniverseFileRefreshGate(SubscriptionRequest request)
-        {
-            if (request.Universe is not OptionChainUniverse)
-            {
-                return null;
-            }
-
-            var exchangeHours = request.Security.Exchange.Hours;
-            return utcNow =>
-            {
-                var localTime = utcNow.ConvertFromUtc(exchangeHours.TimeZone);
-                return exchangeHours.IsOpen(localTime, extendedMarketHours: false)
-                    // if the market is closed, GetNextMarketOpen returns the next day open
-                    || exchangeHours.GetNextMarketOpen(localTime, extendedMarketHours: false) - localTime <= PreOpenUniverseFileRefreshWindow;
-            };
         }
 
         /// <summary>

@@ -229,12 +229,6 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         public void LiveChainSelection(SecurityType securityType, Resolution resolution, int expirationDatesFilter, bool strictEndTimes)
         {
             _startDate = securityType == SecurityType.IndexOption ? new DateTime(2021, 1, 4) : new DateTime(2014, 6, 9);
-            if (securityType.IsOption())
-            {
-                // option chain universe files are only read while the market is open or close to opening,
-                // so we start within that window, half an hour before the market open (9:30 NY)
-                _startDate = _startDate.AddHours(securityType == SecurityType.IndexOption ? 14 : 13);
-            }
             _manualTimeProvider.SetCurrentTimeUtc(_startDate);
             var endDate = _startDate.AddDays(securityType == SecurityType.Future ? 5 : 1);
 
@@ -271,23 +265,20 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             }
             _algorithm.OnEndOfTimeStep();
 
-            var expectedSelections = securityType == SecurityType.Future ? 2 : 1;
-
             // allow time for the exchange to pick up the selection point
             Thread.Sleep(50);
             ConsumeBridge(feed, TimeSpan.FromSeconds(5), true, ts =>
             {
-                if (selectionHappened == expectedSelections)
+                if (selectionHappened == 2)
                 {
                     // we got what we wanted shortcut unit test
                     _manualTimeProvider.SetCurrentTimeUtc(Time.EndOfTime);
                 }
             },
             endDate: endDate,
-            // a slower time step for options so the simulated clock doesn't race past the universe file refresh window
-            // between the real-time custom exchange polls
-            secondsTimeStep: securityType == SecurityType.Future ? 60 * 60 : 60);
+            secondsTimeStep: 60 * 60);
 
+            var expectedSelections = securityType == SecurityType.Future ? 2 : 1;
             Assert.AreEqual(expectedSelections, selectionHappened);
         }
 
@@ -626,67 +617,6 @@ namespace QuantConnect.Tests.Engine.DataFeeds
 
             Assert.AreEqual(startDateUtc, firstSelectionTimeUtc);
             Assert.GreaterOrEqual(timeSliceCount, 1);
-            Assert.IsNotNull(selectedSymbols);
-            Assert.IsNotEmpty(selectedSymbols);
-        }
-
-        [TestCase(SecurityType.Option)]
-        [TestCase(SecurityType.IndexOption)]
-        public void OptionChainSelectionIsDelayedUntilCloseToMarketOpen(SecurityType securityType)
-        {
-            // start the algorithm during the night: the universe file should not be read until close to the market open
-            _startDate = securityType == SecurityType.Option
-                ? new DateTime(2015, 12, 24, 2, 0, 0)
-                : new DateTime(2021, 01, 04, 2, 0, 0);
-            var startDateUtc = _startDate.ConvertToUtc(_algorithm.TimeZone);
-            _manualTimeProvider.SetCurrentTimeUtc(startDateUtc);
-            var endDate = _startDate.AddDays(1);
-
-            _algorithm.SetBenchmark(x => 1);
-
-            var feed = RunDataFeed(runPostInitialize: false);
-
-            var firstSelectionTimeUtc = DateTime.MinValue;
-            List<Symbol> selectedSymbols = null;
-
-            var option = securityType == SecurityType.Option
-                ? _algorithm.AddOption("GOOG")
-                : _algorithm.AddIndexOption("SPX");
-            option.SetFilter(universe =>
-            {
-                firstSelectionTimeUtc = universe.LocalTime.ConvertToUtc(option.Exchange.TimeZone);
-                selectedSymbols = (List<Symbol>)universe;
-
-                return universe;
-            });
-
-            _algorithm.PostInitialize();
-
-            // allow time for the exchange to pick up the selection point
-            Thread.Sleep(50);
-
-            // the timeout needs to be generous: the simulated clock advances one minute per loop iteration
-            // and it has several simulated hours to go through before the universe file refresh window is reached
-            ConsumeBridge(feed, TimeSpan.FromSeconds(30), true, ts =>
-            {
-                if (firstSelectionTimeUtc != default)
-                {
-                    // we got what we wanted shortcut unit test
-                    _manualTimeProvider.SetCurrentTimeUtc(Time.EndOfTime);
-                }
-            },
-            endDate: endDate,
-            secondsTimeStep: 60);
-
-            var exchangeHours = option.Exchange.Hours;
-            var marketOpenUtc = exchangeHours
-                .GetNextMarketOpen(startDateUtc.ConvertFromUtc(exchangeHours.TimeZone), extendedMarketHours: false)
-                .ConvertToUtc(exchangeHours.TimeZone);
-
-            Assert.AreNotEqual(DateTime.MinValue, firstSelectionTimeUtc);
-            // selection should have been delayed to at most one hour before the market open, instead of happening right away
-            Assert.GreaterOrEqual(firstSelectionTimeUtc, marketOpenUtc.AddHours(-1));
-            Assert.LessOrEqual(firstSelectionTimeUtc, marketOpenUtc);
             Assert.IsNotNull(selectedSymbols);
             Assert.IsNotEmpty(selectedSymbols);
         }
