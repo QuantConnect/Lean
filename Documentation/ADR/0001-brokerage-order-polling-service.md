@@ -4,6 +4,11 @@
 
 Proposed - 2026-08-07
 
+Pilot implemented - 2026-08-13: CharlesSchwab is the first plugin on the service
+(`Lean.Brokerages.CharlesSchwab`, draft PR #107). Its own `OrderUpdatePollingService` and diff are deleted;
+what remains in the plugin is what this document says remains - the read with its sweep window, the
+model-to-state mapping, and the seeded stream-to-polling handover through `SeedAndStart`.
+
 ## Purpose
 
 Three brokerage plugins have already written the same thing, and a fourth one needs it and does not have it:
@@ -370,14 +375,16 @@ namespace QuantConnect.Brokerages.Services;
 /// </summary>
 public abstract class BrokerageOrderPollingService : IDisposable
 {
-    /// <summary>Initializes what both modes share: the route, the order provider, and the two time
-    /// settings with their defaults. Each snapshot the sweep returns is handed to
-    /// <paramref name="route"/>, normally the brokerage's message handler.</summary>
-    protected BrokerageOrderPollingService(Action<BrokerOrderState> route, IOrderProvider orderProvider,
+    /// <summary>Initializes what both modes share: the message handler wiring, the order provider, and
+    /// the two time settings with their defaults. The service wires the handler both ways itself: it
+    /// registers <see cref="ProcessOrderState"/> and enqueues every polled snapshot, so one handler
+    /// serializes polled snapshots with everything else the brokerage processes. A null handler routes
+    /// each snapshot straight into <see cref="ProcessOrderState"/>.</summary>
+    protected BrokerageOrderPollingService(BrokerageConcurrentMessageHandler messageHandler, IOrderProvider orderProvider,
         TimeSpan? pollInterval = null, TimeSpan? watchTimeout = null);
 
     /// <summary>One read of the broker, giving the states the sweep saw. The loop calls it every
-    /// poll interval, hands each state to the route, and counts a throw as one failed sweep.</summary>
+    /// poll interval, hands each state to the message handler, and counts a throw as one failed sweep.</summary>
     protected abstract IEnumerable<BrokerOrderState> Sweep();
 
     /// <summary>A copy of the ids a sweep still has to read: everything tracked whose end was not
@@ -425,16 +432,15 @@ public abstract class BrokerageOrderPollingService : IDisposable
 
     /// <summary>
     /// Compares a snapshot with the last state seen for the same order and raises
-    /// <see cref="OrderEvents"/> with what is new. Register it on the message handler for
-    /// <see cref="BrokerOrderState"/>, so polled orders queue behind an order request that holds
-    /// the stream lock.
+    /// <see cref="OrderEvents"/> with what is new. The constructor registers it on the message
+    /// handler, so polled orders queue behind an order request that holds the stream lock.
     /// </summary>
     public void ProcessOrderState(BrokerOrderState orderState);
 
     /// <summary>The whole handover from a stream to polling, in the only safe order: process what the
-    /// stream already delivered, seed one watch per open Lean order, then Start. Both callbacks are
+    /// stream already delivered, seed one watch per open Lean order, then Start. The seed callback is
     /// optional. See "Seed before Start".</summary>
-    public void SeedAndStart(Action drainBufferedMessages = null, Func<Order, BrokerOrderState> seed = null);
+    public void SeedAndStart(Func<Order, BrokerOrderState> seed = null);
 
     public void Start();
     public void Stop();
@@ -449,7 +455,7 @@ public abstract class BrokerageOrderPollingService : IDisposable
 /// </summary>
 public class PerOrderIdPollingService : BrokerageOrderPollingService
 {
-    public PerOrderIdPollingService(Func<string, BrokerOrderState> readOrder, Action<BrokerOrderState> route,
+    public PerOrderIdPollingService(Func<string, BrokerOrderState> readOrder, BrokerageConcurrentMessageHandler messageHandler,
         IOrderProvider orderProvider, TimeSpan? pollInterval = null, TimeSpan? watchTimeout = null);
 }
 
@@ -458,7 +464,7 @@ public class PerOrderIdPollingService : BrokerageOrderPollingService
 /// </summary>
 public class AllOrdersPollingService : BrokerageOrderPollingService
 {
-    public AllOrdersPollingService(Func<IEnumerable<BrokerOrderState>> readAllOrders, Action<BrokerOrderState> route,
+    public AllOrdersPollingService(Func<IEnumerable<BrokerOrderState>> readAllOrders, BrokerageConcurrentMessageHandler messageHandler,
         IOrderProvider orderProvider, TimeSpan? pollInterval = null, TimeSpan? watchTimeout = null);
 }
 ```
@@ -506,8 +512,8 @@ still reporting `Submitted` for the same order. If the fill goes out first, the 
 back to open, and Lean then accepts a cancel or update on it that the broker rejects. Schwab hit exactly this and
 fixed it by pushing polled orders through the same message handler as stream messages, so they wait in the queue
 while an order request holds the stream lock (`WithLockedStream`,
-`Brokerages/BrokerageMessageQueue.cs:98`). That is why `ProcessOrderState` is a separate public method
-instead of something the loop calls itself: the brokerage puts its message handler between the read and the diff,
+`Brokerages/BrokerageConcurrentMessageHandler.cs:99`). That is why `ProcessOrderState` is a separate public method
+instead of something the loop calls itself: the message handler sits between the read and the diff,
 and the queue keeps the order right. The handler's message type also has to cover both the stream's model and the
 snapshot — the next section is how it does.
 
@@ -525,45 +531,34 @@ plugin that owns both models, and it cannot be the shared answer — every plugi
 have to add the interface to its own wire models, and the core `BrokerOrderState` cannot implement a per-plugin
 interface.
 
-So the handler is split instead, and the split ships with the service. The lock, the buffer and the drain loop
-move unchanged into a new class, `BrokerageMessageQueue` (`Brokerages/BrokerageMessageQueue.cs`): the buffer holds
-`object`, and every dequeued message is raised through a `MessageReceived` event, in arrival order.
-`BrokerageConcurrentMessageHandler<T>` stays as a thin wrapper over one queue, with the same public surface every
-plugin compiles against today, plus one method:
+So a second, non-generic `BrokerageConcurrentMessageHandler` ships with the service, in the same file
+(`Brokerages/BrokerageConcurrentMessageHandler.cs`). It wraps a `BrokerageConcurrentMessageHandler<object>`
+inside, so the lock, the buffer and the drain loop are the exact same code, not a copy. Any number of listeners
+register, one per message type, and every source enqueues through one `HandleNewMessage(object)`:
 
 ```csharp
-// the stream type, exactly as today
-_messageHandler = new BrokerageConcurrentMessageHandler<AccountContent>(OnAccountContent, concurrencyEnabled);
+_messageHandler = new BrokerageConcurrentMessageHandler(concurrencyEnabled);
+_messageHandler.Register<AccountContent>(OnAccountContent);   // the stream's own type
+// the polling service registers its own BrokerOrderState listener itself, in its constructor
 
-// one more line, and snapshots share the same lock — no marker interface, no second handler
-_messageHandler.RegisterMessageType<BrokerOrderState>(_orderPollingService.ProcessOrderState);
-
-// one method for both; the compiler picks the type from the argument
+// one method for both sources
 _messageHandler.HandleNewMessage(accountContent);
 _messageHandler.HandleNewMessage(orderState);
 ```
 
-`RegisterMessageType` subscribes a filter on the queue's event: a dequeued message runs one `is` check per
-registered type and lands in the action that matches. `HandleNewMessage` becomes generic, with the type inferred
-from the argument, so every existing call in every plugin compiles unchanged.
+`Register` subscribes a filter: a dequeued message runs one `is` check per registered type and lands in every
+listener that matches, in registration order; a message no listener matches is dropped. A plugin that adopts the
+service switches its handler field to the non-generic class and turns the constructor callback into one
+`Register` call — the stream's hot path pays one type check per registered type, nanoseconds next to the lock the
+path already takes. The shared lock across two types has its own tests
+(`Tests/Brokerages/BrokerageConcurrentMessageHandlerMultiSourceTests.cs`).
 
-The stream's hot path pays nothing for this. The filter is created once at registration, never per message; the
-buffer stored references before and stores references now (`T` was already constrained to `class`); the lock code
-moved without an edit. Per message, the old direct delegate call becomes an event invoke plus one type check per
-registered type — nanoseconds next to the lock the path already takes. The existing handler tests pass against
-the split unchanged (`Tests/Brokerages/BrokerageConcurrentMessageHandlerTests.cs` — ordering, backpressure, single
-drainer, exception recovery), and the shared lock across two types has its own
-(`Tests/Brokerages/BrokerageMessageQueueTests.cs`).
-
-One rule of the split is absolute: **the generic `BrokerageConcurrentMessageHandler<T>` stays.** Thirteen live
-plugins hold a field of it today — CharlesSchwab, Public.com, Alpaca, Binance, TradeStation, Tastytrade, Webull,
-ByBit, Eze, OANDA, IG, dYdX and TerminalLink — plus the Template scaffold. Removing or reshaping `<T>` breaks all
-of them at once. So the class keeps its name, both constructors, `HandleNewMessage(T message)`,
-`WithLockedStream` and `Dispose`, and every plugin recompiles with zero edits. The riskiest call shape was
-checked one repo at a time: Schwab, Public and Eze pass `_messageHandler.HandleNewMessage` as a delegate
-(`CharlesSchwabBrokerage.OrderUpdatePolling.cs:65`, `PublicBrokerage.cs:182`, `EzeBrokerage.cs:259`), and all
-three still compile; the one shape that could not — a bare `null` argument, which type inference cannot resolve —
-appears in no repo.
+One rule is absolute: **the generic `BrokerageConcurrentMessageHandler<T>` stays byte-identical to master.**
+Thirteen live plugins hold a field of it today — CharlesSchwab, Public.com, Alpaca, Binance, TradeStation,
+Tastytrade, Webull, ByBit, Eze, OANDA, IG, dYdX and TerminalLink — plus the Template scaffold. It is not edited,
+not even additively: the non-generic class reuses it by composition, and its tests
+(`Tests/Brokerages/BrokerageConcurrentMessageHandlerTests.cs`) stay untouched with it. Only a plugin that adopts
+the polling service moves to the non-generic class, one plugin at a time.
 
 ### The diff
 
@@ -703,20 +698,20 @@ in that block, so the next sweep does not repeat the submit.
 
 Polling never starts first: the stream reported orders before it, and the registry must know what was already
 reported before the first sweep runs. So every `Start` that follows stream time begins with a handover, and the
-service owns its order — `SeedAndStart(drainBufferedMessages, seed)` does nothing while polling already runs, and
-otherwise runs three steps:
+service owns its order — `SeedAndStart(seed)` does nothing while polling already runs, and otherwise runs three
+steps:
 
-1. `drainBufferedMessages` — the plugin passes `() => _messageHandler.WithLockedStream(() => { })`, so every fill
-   the stream already delivered is counted. Nothing slips in after it, because the switch runs on the stream's own
-   thread — the only thread that delivers stream messages.
+1. Drain the message handler — the service runs an empty `WithLockedStream` block on the handler it was built
+   with, so every fill the stream already delivered is counted. Nothing slips in after it, because the switch
+   runs on the stream's own thread — the only thread that delivers stream messages.
 2. One `seed(openLeanOrder)` call per open Lean order, each becoming a `Watch(id, lastSeen)`: the plugin returns
    the brokerage id, the order's status and the cumulative filled quantity from its own bookkeeping. Orders the
    stream already closed need no seed — the diff skips every order Lean has closed, and a null return skips the
    order.
 3. `Start`.
 
-Both callbacks are optional: a plugin with no message handler passes no drain, a plugin whose stream reported
-nothing passes no seed. The first sweep then continues from what the stream reported instead of repeating it. A
+The seed callback is optional: a plugin whose stream reported nothing passes no seed, and without a message
+handler there is nothing to drain. The first sweep then continues from what the stream reported instead of repeating it. A
 fallback-mode plugin makes this one call, because its stream never comes back — Schwab's `ToSeedState` is the
 working example of the seed callback. A gap-mode plugin repeats the call on every drop, and `Stop`s when the
 stream returns.
@@ -789,24 +784,23 @@ WatchTimeout = watchTimeout ?? TimeSpan.FromMinutes(1);
 ```
 
 `brokerage-order-poll-interval-ms` is one new generic config entry, so the interval can be tuned once for every
-brokerage that uses the default. Core helpers already work this way: the message queue reads
+brokerage that uses the default. Core helpers already work this way: the message handler reads
 `brokerage-concurrent-message-handler-buffer-size` in its constructor
-(`Brokerages/BrokerageMessageQueue.cs:55`). The 3000 ms default is the value Schwab runs today.
+(`Brokerages/BrokerageConcurrentMessageHandler.cs:56`). The 3000 ms default is the value Schwab runs today.
 
 ## Wiring, per plugin
 
 The general shape, for a streaming brokerage with a bulk endpoint — the class is the mode:
 
 ```csharp
-// bulk broker: one request per sweep reads the whole account
+// bulk broker: one request per sweep reads the whole account. The service wires itself onto the
+// handler: it registers its diff as a listener and enqueues every snapshot, so the plugin never
+// touches that relationship again.
 _orderPollingService = new AllOrdersPollingService(
     () => _apiClient.GetAllOrders().Select(ToOrderState),   // read: model -> snapshot
-    _messageHandler.HandleNewMessage,                     // route: through the message handler
+    _messageHandler,
     _orderProvider, pollInterval: TimeSpan.FromSeconds(3), watchTimeout: TimeSpan.FromMinutes(1));
 _orderPollingService.OrderEvents += (_, orderEvents) => OnOrderEvents(orderEvents);
-
-// the handler dequeues a snapshot and hands it to the diff
-_messageHandler.RegisterMessageType<BrokerOrderState>(_orderPollingService.ProcessOrderState);
 ```
 
 A per-id broker only changes the class and the read — this is Public.com's own constructor today, snapshot
@@ -815,7 +809,7 @@ instead of its DTO:
 ```csharp
 _orderPollingService = new PerOrderIdPollingService(
     brokerageId => ToOrderState(_apiClient.GetOrderById(brokerageId)),
-    _messageHandler.HandleNewMessage,
+    _messageHandler,
     _orderProvider);   // nothing passed: brokerage-order-poll-interval-ms decides, default 3000 ms
 ```
 
@@ -844,7 +838,7 @@ The same two lines cover a dropped socket, in any streaming plugin:
 
 ```csharp
 // where the brokerage already handles the connection going down; see "Seed before Start"
-_orderPollingService.SeedAndStart(() => _messageHandler.WithLockedStream(() => { }), ToSeedState);
+_orderPollingService.SeedAndStart(ToSeedState);
 
 // on reconnect: one last sweep for the gap, then hand the job back to the stream
 _orderPollingService.Stop();
@@ -862,7 +856,7 @@ inline `Task.Delay` block with `Watch` on the unknown ids.
   execution history to the two numbers (Schwab sums its execution legs and takes the newest leg's price). A plugin
   whose leg ids are derived rather than returned by the broker should verify they resolve and warn when they do
   not — the service skips silently.
-- Routing: passing snapshots through its message handler and forwarding `OrderEvents` to `OnOrderEvents`.
+- Routing: handing the service its message handler at construction and forwarding `OrderEvents` to `OnOrderEvents`.
 - Reporting without the stream: Schwab's submit and replace events from the REST reply stay in the plugin; the
   service only asks that they seed the registry (see "One registry for the stream and the poll").
 - Deciding what an unacknowledged order means.
@@ -888,14 +882,14 @@ inline `Task.Delay` block with `Watch` on the unknown ids.
 - **A marker interface as the message handler's type** — Schwab's current answer to two message types in one
   handler (`IOrderUpdateMessage`). As the shared answer it fails the same way the core interface does: every
   plugin edits its wire models, and the core `BrokerOrderState` cannot implement a per-plugin interface.
-  Replaced by the `BrokerageMessageQueue` split (see "One lock for two message types").
+  Replaced by the non-generic multi-source handler (see "One lock for two message types").
 - **A dual-generic handler**, `BrokerageConcurrentMessageHandler<T, U>` with the stream type and the polled type.
   Rejected: every existing plugin migrates to the new shape even with no polling, a plugin with no stream (IB)
-  has no honest `T`, and a third source would need `<T, U, V>`. The queue split adds a type with a registration
-  call instead of a type parameter.
+  has no honest `T`, and a third source would need `<T, U, V>`. The non-generic handler adds a `Register` call
+  instead of a type parameter.
 - **A handler base class that queues work items (`Action`) instead of messages.** The typed wrapper would then
   wrap every stream message in a new closure — one allocation per message on the hottest path a brokerage has.
-  The queue split keeps the message itself in the buffer and allocates only at registration.
+  The non-generic handler keeps the message itself in the buffer and allocates only at registration.
 - **Put it on the `Brokerage` base class, driven by the engine, like the cash sync.**
   `ShouldPerformCashSync` / `PerformCashSync` (`Brokerages/Brokerage.cs:480`, called from
   `Engine/TransactionHandlers/BrokerageTransactionHandler.cs:731`) is the existing shape for core-driven periodic
@@ -925,7 +919,7 @@ inline `Task.Delay` block with `Watch` on the unknown ids.
 | Several fills inside one sweep share one price | Quantities stay exact; the price is the broker's reported price at sweep time. Tradier ships this trade-off today (`TradierBrokerage.cs:1469-1472`); a shorter poll interval narrows it. |
 | Polling adds requests on brokers with tight rate limits | Watch mode reads only while an order is unacknowledged, and the interval is a constructor argument the plugin picks. |
 | A bulk read is expensive on some plugins — `GetOpenOrders()` rebuilds Lean orders and maps symbols on every call | The action converts straight from the broker's wire model to the snapshot, skipping the Lean `Order` build entirely; and in watch mode a sweep only runs while something is pending. |
-| A plugin passes `ProcessOrderState` as the route and gets fill-before-submit | The route is documented as "your message handler", and wiring it right is two lines: `RegisterMessageType<BrokerOrderState>(ProcessOrderState)` once, `HandleNewMessage` as the route. Schwab and Public have a handler; IB and Tradier do not, and adding one is named in their rollout steps. |
+| A plugin wires the handler wrong and gets fill-before-submit | The misuse is gone: the service takes the handler in its constructor and wires both directions itself. A plugin either hands over its handler, or passes null and the poll loop is the only caller of the diff. Schwab and Public have a handler; IB and Tradier do not, and adding one is named in their rollout steps. |
 | The stream and the poll both see the same fill in watch mode | The registry works in both directions: the stream writes what it reports (`UpdateOrderState`) and checks before reporting (`TryGetLastOrderState`). Named as the one non-optional wiring rule for polling beside a live stream. |
 | The watch timeout cannot tell "never arrived" from "filled instantly" | It does not try. `OrderNotAcknowledged` hands the question to the brokerage, which has the endpoints to answer it. |
 | Polling while the stream is down misses the fills that happened during the gap | Only when the read carries no fill data. A read with fill numbers recovers them — the state has the fields, so this is a property of the broker's endpoint, not of the service. |
@@ -933,8 +927,8 @@ inline `Task.Delay` block with `Watch` on the unknown ids.
 
 ## Rollout
 
-1. This PR: the `BrokerageMessageQueue` split of the message handler, the service, the snapshot, and their unit
-   tests, no brokerage changes. The split keeps the handler's public surface, so every plugin compiles as before.
+1. This PR: the non-generic multi-source message handler, the service, the snapshot, and their unit
+   tests, no brokerage changes. The generic handler is untouched, so every plugin compiles as before.
 2. InteractiveBrokers: add the message handler it does not have, then replace the `NoBrokerageResponse` error and
    the invented `Submitted` with a watch. This is the proof that the abstraction holds for a plugin that did not
    write it.

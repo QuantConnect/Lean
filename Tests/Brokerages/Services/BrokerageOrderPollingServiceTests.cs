@@ -16,6 +16,7 @@
 using System;
 using System.Linq;
 using System.Threading;
+using System.Threading.Tasks;
 using NUnit.Framework;
 using QuantConnect.Orders;
 using System.Collections.Generic;
@@ -37,7 +38,7 @@ namespace QuantConnect.Tests.Brokerages.Services
             _orderProvider = new OrderProvider();
             _orderEvents = new List<OrderEvent>();
             // the read is unused: these tests drive the diff directly through ProcessOrderState
-            _service = new AllOrdersPollingService(() => Array.Empty<BrokerOrderState>(), route: null, _orderProvider,
+            _service = new AllOrdersPollingService(() => Array.Empty<BrokerOrderState>(), messageHandler: null, _orderProvider,
                 pollInterval: TimeSpan.FromMilliseconds(50), watchTimeout: TimeSpan.FromMilliseconds(120));
             _service.OrderEvents += (_, orderEvents) => _orderEvents.AddRange(orderEvents);
         }
@@ -405,7 +406,7 @@ namespace QuantConnect.Tests.Brokerages.Services
             var raised = new List<OrderNotAcknowledgedEventArgs>();
             using var service = new PerOrderIdPollingService(
                 _ => null,   // the broker never knows the id
-                route: null,
+                messageHandler: null,
                 _orderProvider,
                 pollInterval: TimeSpan.FromMilliseconds(25),
                 watchTimeout: TimeSpan.FromMilliseconds(75));
@@ -442,7 +443,7 @@ namespace QuantConnect.Tests.Brokerages.Services
             var fired = 0;
             using var service = new PerOrderIdPollingService(
                 _ => null,
-                route: null,
+                messageHandler: null,
                 _orderProvider,
                 pollInterval: TimeSpan.FromMilliseconds(25),
                 watchTimeout: TimeSpan.FromMilliseconds(75));
@@ -467,7 +468,7 @@ namespace QuantConnect.Tests.Brokerages.Services
             using var warned = new AutoResetEvent(false);
             using var service = new AllOrdersPollingService(
                 () => fail ? throw new Exception("read failed") : Array.Empty<BrokerOrderState>(),
-                route: null,
+                messageHandler: null,
                 _orderProvider,
                 pollInterval: TimeSpan.FromMilliseconds(25));
             service.Message += (_, message) =>
@@ -505,14 +506,13 @@ namespace QuantConnect.Tests.Brokerages.Services
         }
 
         [Test]
-        public void PerOrderIdSweepReadsOnlyWatchedIdsAndRoutesTheStates()
+        public void PerOrderIdSweepReadsOnlyWatchedIdsAndProcessesTheStates()
         {
             AddOrder(100m, "42");
             var readIds = new List<string>();
-            using var routed = new ManualResetEventSlim(false);
-            // the route loops each state back into the diff, standing in for the message handler
-            PerOrderIdPollingService service = null;
-            using var serviceReference = service = new PerOrderIdPollingService(
+            using var processed = new ManualResetEventSlim(false);
+            // no message handler: the loop hands each state straight into the diff
+            using var service = new PerOrderIdPollingService(
                 brokerageId =>
                 {
                     lock (readIds)
@@ -521,7 +521,7 @@ namespace QuantConnect.Tests.Brokerages.Services
                     }
                     return State(brokerageId, OrderStatus.Submitted);
                 },
-                route: orderState => service.ProcessOrderState(orderState),
+                messageHandler: null,
                 _orderProvider,
                 pollInterval: TimeSpan.FromMilliseconds(25));
             var events = new List<OrderEvent>();
@@ -531,7 +531,7 @@ namespace QuantConnect.Tests.Brokerages.Services
                 {
                     events.AddRange(orderEvents);
                 }
-                routed.Set();
+                processed.Set();
             };
 
             // nothing watched: sweeps read nothing
@@ -543,7 +543,7 @@ namespace QuantConnect.Tests.Brokerages.Services
             }
 
             service.Watch("42");
-            Assert.IsTrue(routed.Wait(TimeSpan.FromSeconds(5)), "the watched id never produced an event");
+            Assert.IsTrue(processed.Wait(TimeSpan.FromSeconds(5)), "the watched id never produced an event");
             service.Stop();
 
             lock (readIds)
@@ -579,22 +579,20 @@ namespace QuantConnect.Tests.Brokerages.Services
         }
 
         [Test]
-        public void SeedAndStartDrainsThenSeedsThenStarts()
+        public void SeedAndStartSeedsThenStarts()
         {
             AddOrder(233m, "42", OrderStatus.Submitted);
-            var steps = new List<string>();
+            var seeded = new List<string>();
 
-            _service.SeedAndStart(
-                drainBufferedMessages: () => steps.Add("drain"),
-                seed: order =>
-                {
-                    steps.Add($"seed:{order.BrokerId[0]}");
-                    // the stream already reported 100 of the 233 shares
-                    return State(order.BrokerId[0], order.Status, filled: 100m);
-                });
+            _service.SeedAndStart(order =>
+            {
+                seeded.Add(order.BrokerId[0]);
+                // the stream already reported 100 of the 233 shares
+                return State(order.BrokerId[0], order.Status, filled: 100m);
+            });
 
             Assert.IsTrue(_service.IsPolling);
-            CollectionAssert.AreEqual(new[] { "drain", "seed:42" }, steps);
+            CollectionAssert.AreEqual(new[] { "42" }, seeded);
 
             // the first sweep continues from the seed: only the other 133 shares are reported
             _service.ProcessOrderState(State("42", OrderStatus.Filled, filled: 233m, price: 310m));
@@ -604,7 +602,59 @@ namespace QuantConnect.Tests.Brokerages.Services
         }
 
         [Test]
-        public void SeedAndStartWithoutCallbacksJustStarts()
+        public void SeedAndStartDrainsTheMessageHandlerBeforeSeeding()
+        {
+            AddOrder(233m, "42", OrderStatus.Submitted);
+            var steps = new List<string>();
+            using var handler = new BrokerageConcurrentMessageHandler();
+            using var service = new AllOrdersPollingService(() => Array.Empty<BrokerOrderState>(), handler, _orderProvider,
+                pollInterval: TimeSpan.FromMilliseconds(50));
+            service.OrderEvents += (_, orderEvents) =>
+            {
+                lock (steps)
+                {
+                    steps.AddRange(orderEvents.Select(orderEvent => $"event:{orderEvent.FillQuantity}"));
+                }
+            };
+
+            using var lockedEvent = new ManualResetEventSlim(false);
+            using var releaseEvent = new ManualResetEventSlim(false);
+            // an order request is in flight while the stream dies
+            var orderRequest = Task.Run(() => handler.WithLockedStream(() =>
+            {
+                lockedEvent.Set();
+                releaseEvent.Wait();
+            }));
+            lockedEvent.Wait();
+
+            // the stream delivered a fill that is still buffered behind the order request
+            handler.HandleNewMessage(State("42", OrderStatus.PartiallyFilled, filled: 100m, price: 310m));
+
+            var seedAndStart = Task.Run(() => service.SeedAndStart(openOrder =>
+            {
+                lock (steps)
+                {
+                    steps.Add("seed");
+                }
+                return State(openOrder.BrokerId[0], openOrder.Status, filled: 100m);
+            }));
+
+            // the handover waits for the order request instead of seeding early
+            Assert.IsFalse(seedAndStart.Wait(TimeSpan.FromMilliseconds(100)));
+
+            releaseEvent.Set();
+            Task.WaitAll(orderRequest, seedAndStart);
+
+            Assert.IsTrue(service.IsPolling);
+            lock (steps)
+            {
+                // the buffered fill was processed before the seeds were taken
+                CollectionAssert.AreEqual(new[] { "event:100", "seed" }, steps);
+            }
+        }
+
+        [Test]
+        public void SeedAndStartWithoutSeedJustStarts()
         {
             _service.SeedAndStart();
 
@@ -619,7 +669,7 @@ namespace QuantConnect.Tests.Brokerages.Services
             _service.Start();
 
             var callCount = 0;
-            _service.SeedAndStart(drainBufferedMessages: () => callCount++, seed: _ => { callCount++; return null; });
+            _service.SeedAndStart(_ => { callCount++; return null; });
 
             Assert.IsTrue(_service.IsPolling);
             Assert.AreEqual(0, callCount);

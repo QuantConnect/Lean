@@ -34,15 +34,16 @@ namespace QuantConnect.Brokerages.Services
         /// Creates a new <see cref="AllOrdersPollingService"/>.
         /// </summary>
         /// <param name="readAllOrders">Reads every order the broker lists, one state per brokerage order id.</param>
-        /// <param name="route">Where each state a sweep returns goes, normally the brokerage's message handler.</param>
+        /// <param name="messageHandler">The brokerage's message handler; the service registers itself and
+        /// enqueues every polled state through it. Null processes each state directly.</param>
         /// <param name="orderProvider">Resolves brokerage order ids to Lean orders.</param>
         /// <param name="pollInterval">How long the loop sleeps between sweeps. Null falls back to the
         /// <c>brokerage-order-poll-interval-ms</c> configuration entry, default 3000 ms.</param>
         /// <param name="watchTimeout">How long a watched order may stay unreported before
         /// <see cref="BrokerageOrderPollingService.OrderNotAcknowledged"/> is raised. Null falls back to one minute.</param>
-        public AllOrdersPollingService(Func<IEnumerable<BrokerOrderState>> readAllOrders, Action<BrokerOrderState> route,
+        public AllOrdersPollingService(Func<IEnumerable<BrokerOrderState>> readAllOrders, BrokerageConcurrentMessageHandler messageHandler,
             IOrderProvider orderProvider, TimeSpan? pollInterval = null, TimeSpan? watchTimeout = null)
-            : base(route, orderProvider, pollInterval, watchTimeout)
+            : base(messageHandler, orderProvider, pollInterval, watchTimeout)
         {
             _readAllOrders = readAllOrders;
         }

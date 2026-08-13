@@ -14,19 +14,24 @@
 */
 
 using System;
+using System.Threading;
+using QuantConnect.Logging;
+using System.Collections.Generic;
+using QuantConnect.Configuration;
 
 namespace QuantConnect.Brokerages
 {
     /// <summary>
     /// Brokerage helper class to lock message stream while executing an action, for example placing an order
     /// </summary>
-    /// <remarks>A thin wrapper around <see cref="BrokerageMessageQueue"/>: the lock, buffer and dispatch all
-    /// live there now, so a second source with its own message type can be handled through the exact same
-    /// lock this handler uses - see <see cref="RegisterMessageType{TMessage}"/>.</remarks>
     public class BrokerageConcurrentMessageHandler<T> : IDisposable
         where T : class
     {
-        private readonly BrokerageMessageQueue _queue;
+        private readonly Action<T> _processMessages;
+        private readonly Queue<T> _messageBuffer;
+        private readonly ILock _lock;
+        private readonly ManualResetEventSlim _messagesProcessedEvent;
+        private readonly int _maxMessageBufferSize;
 
         /// <summary>
         /// Creates a new instance
@@ -44,28 +49,11 @@ namespace QuantConnect.Brokerages
         /// <param name="concurrencyEnabled">Whether to enable concurrent order submission</param>
         public BrokerageConcurrentMessageHandler(Action<T> processMessages, bool concurrencyEnabled)
         {
-            _queue = new BrokerageMessageQueue(concurrencyEnabled);
-            RegisterMessageType(processMessages);
-        }
-
-        /// <summary>
-        /// Registers another message type this handler also processes, alongside <typeparamref name="T"/>.
-        /// A source with its own message type - for example the order polling service - registers here once,
-        /// then calls <see cref="HandleNewMessage{TMessage}"/> like anything else, and its messages queue
-        /// behind the exact same lock as <typeparamref name="T"/> instead of getting a second, independent
-        /// lock that would not actually serialize against this one.
-        /// </summary>
-        /// <param name="processMessages">The action to call for each new message of this type</param>
-        public void RegisterMessageType<TMessage>(Action<TMessage> processMessages)
-            where TMessage : class
-        {
-            _queue.MessageReceived += message =>
-            {
-                if (message is TMessage typed)
-                {
-                    processMessages(typed);
-                }
-            };
+            _processMessages = processMessages;
+            _messageBuffer = new Queue<T>();
+            _lock = concurrencyEnabled ? new ReaderWriterLockWrapper() : new MonitorWrapper();
+            _messagesProcessedEvent = new ManualResetEventSlim(false);
+            _maxMessageBufferSize = Config.GetInt("brokerage-concurrent-message-handler-buffer-size", 20);
         }
 
         /// <summary>
@@ -73,7 +61,8 @@ namespace QuantConnect.Brokerages
         /// </summary>
         public void Dispose()
         {
-            _queue.Dispose();
+            _lock.Dispose();
+            _messagesProcessedEvent.Dispose();
         }
 
         /// <summary>
@@ -82,24 +71,25 @@ namespace QuantConnect.Brokerages
         /// <param name="message">The new message</param>
         public void HandleNewMessage(T message)
         {
-            if (message != null)
+            lock (_messageBuffer)
             {
-                _queue.Enqueue(message);
-            }
-        }
-
-        /// <summary>
-        /// Same as <see cref="HandleNewMessage(T)"/>, for any other type registered through
-        /// <see cref="RegisterMessageType{TMessage}"/> - the type is inferred from the argument,
-        /// so the call looks the same either way.
-        /// </summary>
-        /// <param name="message">The new message</param>
-        public void HandleNewMessage<TMessage>(TMessage message)
-            where TMessage : class
-        {
-            if (message != null)
-            {
-                _queue.Enqueue(message);
+                if (_lock.TryEnterReadLockImmediately())
+                {
+                    try
+                    {
+                        ProcessMessages(message);
+                    }
+                    finally
+                    {
+                        _lock.ExitReadLock();
+                    }
+                }
+                else if (message != default)
+                {
+                    // if someone has the lock just enqueue the new message they will process any remaining messages
+                    // if by chance they are about to free the lock, no worries, we will always process first any remaining message first see 'ProcessMessages'
+                    _messageBuffer.Enqueue(message);
+                }
             }
         }
 
@@ -108,7 +98,226 @@ namespace QuantConnect.Brokerages
         /// </summary>
         public void WithLockedStream(Action code)
         {
-            _queue.WithLockedStream(code);
+            // Let's limit the amount of messages we can buffer, so we wait until
+            // consumers process a full queue of messages before we potentially add more
+            var queueIsFull = false;
+            lock (_messageBuffer)
+            {
+                queueIsFull = _messageBuffer.Count >= _maxMessageBufferSize;
+            }
+            if (queueIsFull)
+            {
+                _messagesProcessedEvent.Wait();
+                _messagesProcessedEvent.Reset();
+            }
+
+            _lock.EnterWriteLock();
+            try
+            {
+                code();
+            }
+            finally
+            {
+                // once we finish our 'code' we will process any message that come through,
+                // to make sure no message get's left behind (race condition between us finishing 'ProcessMessages'
+                // and some message being enqueued to it, we just take a lock on the buffer
+                lock (_messageBuffer)
+                {
+                    var lockedStreams = _lock.CurrentWriteCount;
+
+                    // we release the semaphore first so by the time we release '_messageBuffer' any new message is processed immediately and not enqueued
+                    _lock.ExitWriteLock();
+                    // only process if no other threads will process them after us
+                    if (lockedStreams == 1)
+                    {
+                        ProcessMessages();
+                    }
+                }
+            }
+        }
+
+        /// <summary>
+        /// Process any pending message and the provided one if any
+        /// </summary>
+        /// <remarks>To be called owing the stream lock</remarks>
+        private void ProcessMessages(T message = null)
+        {
+            try
+            {
+                if (message != null)
+                {
+                    _messageBuffer.Enqueue(message);
+                }
+
+                // double check there isn't any pending message
+                while (_messageBuffer.TryDequeue(out var e))
+                {
+                    try
+                    {
+                        _processMessages(e);
+                    }
+                    catch (Exception ex)
+                    {
+                        Log.Error(ex);
+                    }
+                }
+            }
+            finally
+            {
+                _messagesProcessedEvent.Set();
+            }
+        }
+
+        private interface ILock : IDisposable
+        {
+            int CurrentWriteCount { get; }
+
+            void ExitReadLock();
+
+            bool TryEnterReadLockImmediately();
+
+            void EnterWriteLock();
+
+            void ExitWriteLock();
+        }
+
+        /// <summary>
+        /// A simple reader/writer lock implementation that allows us to switch the meaning of read and write locks
+        /// so that it can be used for single reader and multiple writers scenario.
+        ///
+        /// We want to allow multiple producers so, for example, a brokerage can be placing multiple orders concurrently,
+        /// since the transaction handler can have multiple threads processing orders.
+        /// But, on the other side, we need to ensure that messages are processed only when no producers are writing
+        /// to the stream (hence only one reader). For example, a brokerage needs the to lock the stream and
+        /// only handle incoming order event messages after it releases the lock, but we now support multiple streams
+        /// (so multiple orders) so we wait for all the current producers to release the lock before processing any messages.
+        /// </summary>
+        private class ReaderWriterLockWrapper : ILock
+        {
+            private readonly ReaderWriterLockSlim _lock;
+
+            public int CurrentWriteCount => _lock.CurrentReadCount;
+
+            public ReaderWriterLockWrapper()
+            {
+                _lock = new ReaderWriterLockSlim(LockRecursionPolicy.NoRecursion);
+            }
+            public void ExitReadLock() => _lock.ExitWriteLock();
+            public bool TryEnterReadLockImmediately() => _lock.TryEnterWriteLock(0);
+            public void EnterWriteLock() => _lock.EnterReadLock();
+            public void ExitWriteLock() => _lock.ExitReadLock();
+
+            public void Dispose()
+            {
+                _lock.Dispose();
+            }
+        }
+
+        private class MonitorWrapper : ILock
+        {
+            private readonly object _lockObject;
+
+            private long _currentWriteCount;
+
+            public int CurrentWriteCount => (int)Interlocked.Read(ref _currentWriteCount);
+
+            public MonitorWrapper()
+            {
+                _lockObject = new object();
+            }
+
+            public void ExitReadLock() => Monitor.Exit(_lockObject);
+
+            public bool TryEnterReadLockImmediately() => Monitor.TryEnter(_lockObject);
+
+            public void EnterWriteLock()
+            {
+                Monitor.Enter(_lockObject);
+                Interlocked.Exchange(ref _currentWriteCount, 1);
+            }
+
+            public void ExitWriteLock()
+            {
+                Interlocked.Exchange(ref _currentWriteCount, 0);
+                Monitor.Exit(_lockObject);
+            }
+
+            public void Dispose()
+            {
+            }
+        }
+    }
+
+    /// <summary>
+    /// The multi-source version of <see cref="BrokerageConcurrentMessageHandler{T}"/>: one lock and one buffer,
+    /// any number of listeners. Each source registers its own message type through <see cref="Register{TMessage}"/>
+    /// and enqueues through the same <see cref="HandleNewMessage"/> - for example a websocket stream and the
+    /// order polling service - so no two listeners ever run at the same time, and none runs while an order
+    /// request holds <see cref="WithLockedStream"/>.
+    /// </summary>
+    public class BrokerageConcurrentMessageHandler : IDisposable
+    {
+        /// <summary>
+        /// The single-type handler, with <c>object</c> as the message type, owns the lock, the buffer and the
+        /// dispatch, so both classes share one synchronization implementation.
+        /// </summary>
+        private readonly BrokerageConcurrentMessageHandler<object> _handler;
+
+        /// <summary>
+        /// One filter per registered listener. A field-like event, so registering a new listener while
+        /// messages flow is safe.
+        /// </summary>
+        private event Action<object> ProcessMessage;
+
+        /// <summary>
+        /// Creates a new instance
+        /// </summary>
+        /// <param name="concurrencyEnabled">Whether to enable concurrent order submission</param>
+        public BrokerageConcurrentMessageHandler(bool concurrencyEnabled = false)
+        {
+            _handler = new BrokerageConcurrentMessageHandler<object>(message => ProcessMessage?.Invoke(message), concurrencyEnabled);
+        }
+
+        /// <summary>
+        /// Registers a listener for one message type. A dequeued message runs every listener whose type
+        /// matches, in registration order; a message no listener matches is dropped.
+        /// </summary>
+        /// <param name="processMessages">The action to call for each new message of this type</param>
+        public void Register<TMessage>(Action<TMessage> processMessages)
+            where TMessage : class
+        {
+            ProcessMessage += message =>
+            {
+                if (message is TMessage typedMessage)
+                {
+                    processMessages(typedMessage);
+                }
+            };
+        }
+
+        /// <summary>
+        /// Will process or enqueue a message for later processing it
+        /// </summary>
+        /// <param name="message">The new message</param>
+        public void HandleNewMessage(object message)
+        {
+            _handler.HandleNewMessage(message);
+        }
+
+        /// <summary>
+        /// Lock the streaming processing while we're sending orders as sometimes they fill before the call returns.
+        /// </summary>
+        public void WithLockedStream(Action code)
+        {
+            _handler.WithLockedStream(code);
+        }
+
+        /// <summary>
+        /// Disposes of the resources used by this instance
+        /// </summary>
+        public void Dispose()
+        {
+            _handler.Dispose();
         }
     }
 }

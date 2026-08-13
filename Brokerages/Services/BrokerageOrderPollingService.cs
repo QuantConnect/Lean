@@ -53,9 +53,15 @@ namespace QuantConnect.Brokerages.Services
         private readonly Dictionary<string, OrderStateEntry> _orderStates = new();
 
         /// <summary>
-        /// Where each state a sweep returns goes, normally the brokerage's message handler. The handler
-        /// dispatches it back into <see cref="ProcessOrderState"/>, so polled states queue behind an order
-        /// request that holds the stream lock.
+        /// The brokerage's message handler, when it has one. The constructor wires it both ways: polled
+        /// states enqueue here, and <see cref="ProcessOrderState"/> is registered as their listener, so
+        /// polled states queue behind an order request that holds the stream lock.
+        /// </summary>
+        private readonly BrokerageConcurrentMessageHandler _messageHandler;
+
+        /// <summary>
+        /// Where each state a sweep returns goes: the message handler, or without one straight into
+        /// <see cref="ProcessOrderState"/>.
         /// </summary>
         private readonly Action<BrokerOrderState> _route;
 
@@ -123,19 +129,32 @@ namespace QuantConnect.Brokerages.Services
         public TimeSpan WatchTimeout { get; }
 
         /// <summary>
-        /// Initializes what both modes share: the route, the order provider, and the two time settings
-        /// with their defaults.
+        /// Initializes what both modes share: the message handler wiring, the order provider, and the two
+        /// time settings with their defaults.
         /// </summary>
-        /// <param name="route">Where each state a sweep returns goes, normally the brokerage's message handler.</param>
+        /// <param name="messageHandler">The brokerage's message handler. The service wires it both ways
+        /// itself: it registers <see cref="ProcessOrderState"/> and enqueues every polled state, so one
+        /// handler serializes polled states with everything else the brokerage processes. Null routes each
+        /// state straight into <see cref="ProcessOrderState"/> - only the poll loop calls it then, so the
+        /// calls are still one at a time.</param>
         /// <param name="orderProvider">Resolves brokerage order ids to Lean orders.</param>
         /// <param name="pollInterval">How long the loop sleeps between sweeps. Null falls back to the
         /// <c>brokerage-order-poll-interval-ms</c> configuration entry, default 3000 ms.</param>
         /// <param name="watchTimeout">How long a watched order may stay unreported before
         /// <see cref="OrderNotAcknowledged"/> is raised. Null falls back to one minute.</param>
-        protected BrokerageOrderPollingService(Action<BrokerOrderState> route, IOrderProvider orderProvider,
+        protected BrokerageOrderPollingService(BrokerageConcurrentMessageHandler messageHandler, IOrderProvider orderProvider,
             TimeSpan? pollInterval = null, TimeSpan? watchTimeout = null)
         {
-            _route = route;
+            if (messageHandler != null)
+            {
+                _messageHandler = messageHandler;
+                _route = messageHandler.HandleNewMessage;
+                messageHandler.Register<BrokerOrderState>(ProcessOrderState);
+            }
+            else
+            {
+                _route = ProcessOrderState;
+            }
             _orderProvider = orderProvider;
             PollInterval = pollInterval ?? TimeSpan.FromMilliseconds(Config.GetInt("brokerage-order-poll-interval-ms", 3000));
             WatchTimeout = watchTimeout ?? TimeSpan.FromMinutes(1);
@@ -283,10 +302,10 @@ namespace QuantConnect.Brokerages.Services
 
         /// <summary>
         /// Compares a state with the last one seen for the same order and raises <see cref="OrderEvents"/>
-        /// with what is new: the submit first, then fills, then a close. Register it on the message handler
-        /// for <see cref="BrokerOrderState"/>, so polled orders queue behind an order request that holds the
-        /// stream lock. Not safe to run twice at the same time - the handler already runs it one call at a
-        /// time, and a caller without a handler must do the same.
+        /// with what is new: the submit first, then fills, then a close. The constructor registers it on the
+        /// message handler, so polled orders queue behind an order request that holds the stream lock. Not
+        /// safe to run twice at the same time - the handler runs it one call at a time, and without a
+        /// handler only the poll loop calls it.
         /// </summary>
         /// <param name="orderState">The state a sweep read from the broker.</param>
         public void ProcessOrderState(BrokerOrderState orderState)
@@ -444,19 +463,19 @@ namespace QuantConnect.Brokerages.Services
         /// <example>
         /// The stream reported 100 of 233 shares, the seed carries 100, so the first sweep reports only the other 133.
         /// </example>
-        /// <param name="drainBufferedMessages">Processes the stream messages still waiting in the plugin's
-        /// message handler, so the seeds count every fill the stream delivered. Null skips the step.</param>
         /// <param name="seed">Builds the seed for one open Lean order: the brokerage id, the order's status
         /// and the cumulative filled quantity already reported. A null return skips the order, and a null
         /// callback skips seeding.</param>
-        public void SeedAndStart(Action drainBufferedMessages = null, Func<Order, BrokerOrderState> seed = null)
+        public void SeedAndStart(Func<Order, BrokerOrderState> seed = null)
         {
             if (IsPolling)
             {
                 return;
             }
 
-            drainBufferedMessages?.Invoke();
+            // an empty locked block waits for any order request in flight and processes the stream messages
+            // it buffered, so the seeds below count every fill the stream delivered
+            _messageHandler?.WithLockedStream(() => { });
 
             if (seed != null)
             {
