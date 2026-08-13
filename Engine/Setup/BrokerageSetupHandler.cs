@@ -487,9 +487,21 @@ namespace QuantConnect.Lean.Engine.Setup
             // populate the algorithm with the account's outstanding orders
             var openOrders = brokerage.GetOpenOrders();
 
+            var zeroQuantityWarningSent = false;
             // add options first to ensure raw data normalization mode is set on the equity underlyings
             foreach (var order in openOrders.OrderByDescending(x => x.SecurityType))
             {
+                if (order.Quantity == 0)
+                {
+                    Log.Trace($"BrokerageSetupHandler.Setup(): Ignoring open order with zero quantity: {order}");
+                    if (!zeroQuantityWarningSent)
+                    {
+                        zeroQuantityWarningSent = true;
+                        resultHandler.DebugMessage($"Ignoring open {order.Type} order '{string.Join(",", order.BrokerId)}' for {order.Symbol.Value} with zero quantity, please double check your holdings.");
+                    }
+                    continue;
+                }
+
                 // verify existing holding security type
                 Security security;
                 if (!GetOrAddUnrequestedSecurity(algorithm, order.Symbol, order.SecurityType, out security))

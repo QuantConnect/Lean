@@ -94,8 +94,9 @@ namespace QuantConnect.Tests.Engine.Setup
                 Assert.AreEqual(OrderStatus.Submitted, order.Status);
             }
 
-            // Warn the user about each open order
-            Assert.AreEqual(_resultHandler.PersistentMessages.Count, 4);
+            // Warn the user about each open order, plus a single warning for the two zero quantity orders
+            Assert.AreEqual(_resultHandler.PersistentMessages.Count, 5);
+            Assert.AreEqual(1, _resultHandler.PersistentMessages.Count(x => ((DebugPacket)x).Message.Contains("zero quantity", StringComparison.InvariantCulture)));
 
             // Market order
             Assert.AreEqual(_transactionHandler.OrderTickets.First(x => x.Value.OrderType == OrderType.Market).Value.Quantity, 100);
@@ -965,7 +966,10 @@ namespace QuantConnect.Tests.Engine.Setup
                 marketOrderWithPrice,
                 new LimitOrder(Symbols.SPY, -quantity, pricePlusDelta, time),
                 new StopMarketOrder(Symbols.SPY, quantity, pricePlusDelta, time),
-                new StopLimitOrder(Symbols.SPY, quantity, pricePlusDelta, priceMinusDelta, time)
+                new StopLimitOrder(Symbols.SPY, quantity, pricePlusDelta, priceMinusDelta, time),
+                // orders with zero quantity should be ignored, with a single user warning
+                new LimitOrder(Symbols.SPY, 0, pricePlusDelta, time) { BrokerId = new List<string> { "zero-qty-1" } },
+                new MarketOrder(Symbols.SPY, 0, time) { BrokerId = new List<string> { "zero-qty-2" } }
             };
         }
 
