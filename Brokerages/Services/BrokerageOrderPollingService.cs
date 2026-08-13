@@ -367,7 +367,7 @@ namespace QuantConnect.Brokerages.Services
                     {
                         if (leanOrder.Status == OrderStatus.New)
                         {
-                            orderEvents.Add(new OrderEvent(leanOrder, timeUtc, OrderFee.Zero, "Submitted by order polling")
+                            orderEvents.Add(new OrderEvent(leanOrder, timeUtc, OrderFee.Zero, "Submitted by polling")
                             {
                                 Status = OrderStatus.Submitted
                             });
@@ -652,7 +652,7 @@ namespace QuantConnect.Brokerages.Services
                     entry.UnacknowledgedFor += PollInterval;
                     if (entry.UnacknowledgedFor >= WatchTimeout)
                     {
-                        (expired ??= new()).Add(new OrderNotAcknowledgedEventArgs(brokerageId, entry.UnacknowledgedFor));
+                        (expired ??= []).Add(new OrderNotAcknowledgedEventArgs(brokerageId, entry.UnacknowledgedFor));
                     }
                 }
 
