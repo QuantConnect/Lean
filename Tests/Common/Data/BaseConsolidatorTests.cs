@@ -31,6 +31,11 @@ namespace QuantConnect.Tests.Common.Data
     {
         protected abstract IDataConsolidator CreateConsolidator();
 
+        /// <summary>
+        /// Whether the test values are expected to close at least one bar
+        /// </summary>
+        protected virtual bool EmitsConsolidatedBars => true;
+
         protected virtual void AssertConsolidator(IDataConsolidator consolidator)
         {
             Assert.IsNull(consolidator.Consolidated);
@@ -102,7 +107,14 @@ namespace QuantConnect.Tests.Common.Data
             }
 
             Assert.AreEqual(consolidatedBarsBefore.Count, consolidatedBarsAfter.Count);
-            consolidatedBarsBefore.Zip<IBaseData, IBaseData, bool>(consolidatedBarsAfter, AssertConsolidatedValues);
+            if (EmitsConsolidatedBars)
+            {
+                CollectionAssert.IsNotEmpty(consolidatedBarsBefore);
+            }
+            foreach (var (before, after) in consolidatedBarsBefore.Zip(consolidatedBarsAfter))
+            {
+                AssertConsolidatedValues(before, after);
+            }
             consolidator.Dispose();
         }
     }
