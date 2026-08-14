@@ -182,6 +182,24 @@ namespace QuantConnect.Data.Fundamental
         public int CANNAICS => FundamentalService.Get<int>(_timeProvider.GetUtcNow(), _securityIdentifier, FundamentalProperty.AssetClassification_CANNAICS);
 
         /// <summary>
+        /// Structural credit risk: standard deviations between current asset value and the default point
+        /// </summary>
+        /// <remarks>
+        /// Morningstar DataId: 45001
+        /// </remarks>
+        [JsonProperty("45001")]
+        public double DistanceToDefault => FundamentalService.Get<double>(_timeProvider.GetUtcNow(), _securityIdentifier, FundamentalProperty.AssetClassification_DistanceToDefault);
+
+        /// <summary>
+        /// The probability the company defaults within one year, derived from distance to default
+        /// </summary>
+        /// <remarks>
+        /// Morningstar DataId: 45002
+        /// </remarks>
+        [JsonProperty("45002")]
+        public double ProbabilityOfDefault => FundamentalService.Get<double>(_timeProvider.GetUtcNow(), _securityIdentifier, FundamentalProperty.AssetClassification_ProbabilityOfDefault);
+
+        /// <summary>
         /// Creates a new instance for the given time and security
         /// </summary>
         public AssetClassification(ITimeProvider timeProvider, SecurityIdentifier securityIdentifier)
