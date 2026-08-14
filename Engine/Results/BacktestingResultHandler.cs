@@ -232,7 +232,10 @@ namespace QuantConnect.Lean.Engine.Results
                         runtimeStatistics,
                         new Dictionary<string, AlgorithmPerformance>(),
                         // we store the last 100 order events, the final packet will contain the full list
-                        TransactionHandler.OrderEvents.Reverse().Take(100).ToList(), state: GetAlgorithmState()));
+                        TransactionHandler.OrderEvents.Reverse().Take(100).ToList(), state: GetAlgorithmState()))
+                    {
+                        ServerStatistics = serverStatistics
+                    };
 
                     if (RunResultsAnalysis)
                     {
