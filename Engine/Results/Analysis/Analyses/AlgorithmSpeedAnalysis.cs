@@ -125,7 +125,9 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
         /// Runs the algorithm speed analysis against the speed metrics tracked for the backtest,
         /// falling back to the completion log line when they cannot measure the speed.
         /// </summary>
-        public override IReadOnlyList<QuantConnect.Analysis> Run(ResultsAnalysisRunParameters parameters) => Run(parameters.Speed, parameters.Logs);
+        public override IReadOnlyList<QuantConnect.Analysis> Run(ResultsAnalysisRunParameters parameters)
+            => Run(parameters.Speed, parameters.Logs, parameters.Language,
+                performanceTrackingEnabled: parameters.Algorithm?.Settings.PerformanceSamplePeriod > TimeSpan.Zero);
 
         /// <summary>
         /// Runs the algorithm speed analysis against the given speed metrics.
@@ -138,22 +140,26 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
         /// </summary>
         /// <param name="speed">The speed metrics tracked for the running backtest, or null when not tracked.</param>
         /// <param name="logs">The log lines to search for the completion line, or null when not available.</param>
+        /// <param name="language">The programming language the algorithm is written in.</param>
+        /// <param name="performanceTrackingEnabled">Whether the algorithm already has performance tracking enabled,
+        /// so the findings don't suggest enabling it again.</param>
         /// <returns>The failed sub-findings, or empty when no speed condition failed or none could be measured.</returns>
-        public IReadOnlyList<QuantConnect.Analysis> Run(AlgorithmSpeedTracker speed, IReadOnlyList<string> logs = null)
+        public IReadOnlyList<QuantConnect.Analysis> Run(AlgorithmSpeedTracker speed, IReadOnlyList<string> logs = null,
+            Language language = Language.CSharp, bool performanceTrackingEnabled = false)
         {
             var findings = new List<QuantConnect.Analysis>();
             var speedMeasured = false;
             if (speed != null && speed.SampledSpan >= MinimumSampledSpan)
             {
-                speedMeasured = AddSlowExecution(speed, findings);
+                speedMeasured = AddSlowExecution(speed, findings, language, performanceTrackingEnabled);
                 AddLongProjectedRuntime(speed, findings);
-                AddThroughputDegradation(speed, findings);
+                AddThroughputDegradation(speed, findings, language, performanceTrackingEnabled);
                 AddHistoryRequestLoad(speed, findings);
             }
 
             if (!speedMeasured)
             {
-                AddSlowExecutionFromCompletionLog(logs, findings);
+                AddSlowExecutionFromCompletionLog(logs, findings, language, performanceTrackingEnabled);
             }
 
             return CreateAggregatedResponse(findings);
@@ -163,7 +169,8 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
         /// Reports slow execution when the recent data points per second are below the platform benchmark.
         /// </summary>
         /// <returns>Whether the speed could be measured, regardless of it being slow or not.</returns>
-        private static bool AddSlowExecution(AlgorithmSpeedTracker speed, List<QuantConnect.Analysis> findings)
+        private static bool AddSlowExecution(AlgorithmSpeedTracker speed, List<QuantConnect.Analysis> findings,
+            Language language, bool performanceTrackingEnabled)
         {
             if (!speed.HasDataPointCounts)
             {
@@ -208,6 +215,8 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
                 [
                     "Review the algorithm code for inefficiencies.",
 
+                    .. PerformanceTrackingSolutions(language, performanceTrackingEnabled),
+
                     "If there is a universe, reduce its size.",
 
                     "Reduce the data resolution.",
@@ -225,7 +234,8 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
         /// logged once the backtest ends, so in-run log deltas never match and the fallback can
         /// only fire on the final analysis.
         /// </summary>
-        private static void AddSlowExecutionFromCompletionLog(IReadOnlyList<string> logs, List<QuantConnect.Analysis> findings)
+        private static void AddSlowExecutionFromCompletionLog(IReadOnlyList<string> logs, List<QuantConnect.Analysis> findings,
+            Language language, bool performanceTrackingEnabled)
         {
             for (var i = (logs?.Count ?? 0) - 1; i >= 0; i--)
             {
@@ -246,6 +256,8 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
                         null,
                         [
                             "Review the algorithm code for inefficiencies.",
+
+                            .. PerformanceTrackingSolutions(language, performanceTrackingEnabled),
 
                             "If there is a universe, reduce its size.",
 
@@ -315,7 +327,8 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
         /// <see cref="DegradationRatio"/> of the early-run baseline. Requires enough samples for the
         /// baseline and recent windows to not overlap.
         /// </summary>
-        private static void AddThroughputDegradation(AlgorithmSpeedTracker speed, List<QuantConnect.Analysis> findings)
+        private static void AddThroughputDegradation(AlgorithmSpeedTracker speed, List<QuantConnect.Analysis> findings,
+            Language language, bool performanceTrackingEnabled)
         {
             if (!speed.HasDataPointCounts || speed.SampleCount < 2 * AlgorithmSpeedTracker.RecentWindowSamples + 1)
             {
@@ -344,6 +357,8 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
                     "If there is a universe, check whether the number of selected securities keeps growing; remove securities that are no longer used.",
 
                     "Check the algorithm's memory usage: sustained growth causes garbage collection pressure that slows the whole run down.",
+
+                    .. PerformanceTrackingSolutions(language, performanceTrackingEnabled),
                 ]));
         }
 
@@ -372,6 +387,27 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
 
                     "Reduce the period or resolution of the history requests.",
                 ]));
+        }
+
+        /// <summary>
+        /// The performance tracking suggestion shared by the findings whose diagnosis needs to locate
+        /// where the execution time is spent: setting <see cref="AlgorithmSettings.PerformanceSamplePeriod"/>
+        /// adds a "Performance" chart with the engine's time breakdown on the next run.
+        /// Empty when the algorithm already has performance tracking enabled.
+        /// </summary>
+        private static IEnumerable<string> PerformanceTrackingSolutions(Language language, bool performanceTrackingEnabled)
+        {
+            if (performanceTrackingEnabled)
+            {
+                yield break;
+            }
+
+            yield return $"To see where the execution time is spent, set the " +
+                $"`{FormatCode(nameof(AlgorithmSettings.PerformanceSamplePeriod), language)}` setting, like " +
+                (language == Language.Python
+                    ? "`self.settings.performance_sample_period = timedelta(days=1)`"
+                    : "`Settings.PerformanceSamplePeriod = TimeSpan.FromDays(1);`") +
+                ", and rerun to get a \"Performance\" time-breakdown chart.";
         }
 
         /// <summary>
