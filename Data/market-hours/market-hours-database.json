@@ -97439,7 +97439,23 @@
         }
       ],
       "saturday": [],
-      "holidays": [],
+      "holidays": [
+        "1/15/2026",
+        "1/26/2026",
+        "3/3/2026",
+        "3/26/2026",
+        "3/31/2026",
+        "4/3/2026",
+        "4/14/2026",
+        "5/1/2026",
+        "5/28/2026",
+        "6/26/2026",
+        "9/14/2026",
+        "10/2/2026",
+        "10/20/2026",
+        "11/10/2026",
+        "11/24/2026"
+      ],
       "earlyCloses": {}
     },
     "Future-india-[*]": {
@@ -102921,6 +102937,115 @@
       ],
       "saturday": [],
       "holidays": []
+    },
+    "IndexOption-india-[*]": {
+      "dataTimeZone": "Asia/Kolkata",
+      "exchangeTimeZone": "Asia/Kolkata",
+      "sunday": [],
+      "monday": [
+        {
+          "start": "09:00:00",
+          "end": "09:15:00",
+          "state": "premarket"
+        },
+        {
+          "start": "09:15:00",
+          "end": "15:30:00",
+          "state": "market"
+        },
+        {
+          "start": "15:40:00",
+          "end": "16:00:00",
+          "state": "postmarket"
+        }
+      ],
+      "tuesday": [
+        {
+          "start": "09:00:00",
+          "end": "09:15:00",
+          "state": "premarket"
+        },
+        {
+          "start": "09:15:00",
+          "end": "15:30:00",
+          "state": "market"
+        },
+        {
+          "start": "15:40:00",
+          "end": "16:00:00",
+          "state": "postmarket"
+        }
+      ],
+      "wednesday": [
+        {
+          "start": "09:00:00",
+          "end": "09:15:00",
+          "state": "premarket"
+        },
+        {
+          "start": "09:15:00",
+          "end": "15:30:00",
+          "state": "market"
+        },
+        {
+          "start": "15:40:00",
+          "end": "16:00:00",
+          "state": "postmarket"
+        }
+      ],
+      "thursday": [
+        {
+          "start": "09:00:00",
+          "end": "09:15:00",
+          "state": "premarket"
+        },
+        {
+          "start": "09:15:00",
+          "end": "15:30:00",
+          "state": "market"
+        },
+        {
+          "start": "15:40:00",
+          "end": "16:00:00",
+          "state": "postmarket"
+        }
+      ],
+      "friday": [
+        {
+          "start": "09:00:00",
+          "end": "09:15:00",
+          "state": "premarket"
+        },
+        {
+          "start": "09:15:00",
+          "end": "15:30:00",
+          "state": "market"
+        },
+        {
+          "start": "15:40:00",
+          "end": "16:00:00",
+          "state": "postmarket"
+        }
+      ],
+      "saturday": [],
+      "holidays": [
+        "1/15/2026",
+        "1/26/2026",
+        "3/3/2026",
+        "3/26/2026",
+        "3/31/2026",
+        "4/3/2026",
+        "4/14/2026",
+        "5/1/2026",
+        "5/28/2026",
+        "6/26/2026",
+        "9/14/2026",
+        "10/2/2026",
+        "10/20/2026",
+        "11/10/2026",
+        "11/24/2026"
+      ],
+      "earlyCloses": {}
     },
     "IndexOption-usa-[*]": {
       "dataTimeZone": "America/New_York",
