@@ -7,8 +7,12 @@ Proposed - 2026-08-07
 Pilot implemented - 2026-08-13: CharlesSchwab is the first plugin on the service
 (`Lean.Brokerages.CharlesSchwab`, draft PR #107). Its own `OrderUpdatePollingService` and diff are deleted;
 what remains in the plugin is what this document says remains - the read with its sweep window, the
-model-to-state mapping, the leg id assignment shared with the stream's `OrderAccepted`, the replace
-reporting, and the seeded stream-to-polling handover through `SeedAndStart`.
+model-to-state mapping, the leg id assignment shared with the stream's `OrderAccepted`, and the seeded
+stream-to-polling handover through `SeedAndStart`.
+
+Replacement watch implemented - 2026-08-14: a polled replace goes through `WatchReplacement` and the diff
+reports the update submit. The plugin's own replace reporting and its by-position leg id derivation are
+deleted. Backed by the replace survey (see "A replace, across the brokers").
 
 ## Purpose
 
@@ -420,6 +424,11 @@ public abstract class BrokerageOrderPollingService : IDisposable
     /// the request path, and to move state onto the new id of a replace.</summary>
     public void Watch(string brokerageId, BrokerOrderState lastSeen);
 
+    /// <summary>Watches the new brokerage order id of a replace and drops the replaced id in the same
+    /// step, so the first state to carry the new id reports the update submit. The new id starts with
+    /// no fill state; a broker that carries fills across a replace seeds with Watch instead.</summary>
+    public void WatchReplacement(string brokerageId, string previousBrokerageId);
+
     /// <summary>Stops watching an order and drops its state.</summary>
     public void Unwatch(string brokerageId);
 
@@ -518,12 +527,16 @@ instead of something the loop calls itself: the message handler sits between the
 and the queue keeps the order right. The handler's message type also has to cover both the stream's model and the
 snapshot — the next section is how it does.
 
-One requirement travels with the queue: the place request, the record the sweep needs to assign the ids, and
+One requirement travels with the queue: the order request, the record the sweep needs to assign the ids, and
 the watch must all happen inside the same `WithLockedStream` block that the snapshots queue behind. The leg ids
 themselves are assigned by the first sweep that sees the order, from the snapshot: only the broker says which
-leg id belongs to which symbol, so an id derived from the request's leg order would be a guess. The assignment
-is the same code the stream's `OrderAccepted` runs, and it is what releases the plugin's place wait. A report the
-plugin makes itself — a replace — sits in the same block, with its seed. Schwab's fallback path works this way today.
+leg id belongs to which symbol, so an id derived from the request's leg order would be a guess. The
+placement's assignment is the same code the stream's `OrderAccepted` runs, and it is what releases the
+plugin's place wait. A replace has a mirror of it, fed from its own pending record: its assignment moves
+each Lean order onto its new id and marks it through `WatchReplacement`, so the diff reports the update
+submit instead of a plain submit. Nothing waits on a replacement - the replace reply already confirmed it,
+and the watch raises `OrderNotAcknowledged` if the broker never lists it. Schwab's fallback path works this
+way today.
 
 ### One lock for two message types
 
@@ -580,6 +593,8 @@ the Lean order is still New, and the snapshot is not a reject. Lean requires it 
 any fill, and a market order can already be Filled the first time a poll sees it. The
 second gate matters in bulk mode beside a live stream: orders the stream already
 confirmed are not New in Lean, so a sweep seeing them for the first time stays quiet.
+The marked exception is the new id of a replace: WatchReplacement flagged it, its Lean
+order is already past New, and the first state reports UpdateSubmitted instead.
 
 then the fills, so a close can never outrun a fill of the same order:
     a fill needs both numbers: without a FillPrice nothing is emitted and
@@ -689,18 +704,103 @@ Everything it owes the service is one seed at the moment the stream dies (see "S
 complements the plugin's existing logic, it never replaces it — and in fallback mode the stream and the service
 never even touch while the stream lives.
 
-A replace moves the state, because the registry is keyed by brokerage id and a replace gives the order a new one.
-Inside the same locked block that reports `UpdateSubmitted`, the plugin moves it across:
-`TryGetLastOrderState(oldId, out var lastSeen)`, then `Watch(newId, lastSeen)`, then `Unwatch(oldId)`. A broker
-whose replacement counts its executions from zero seeds the new id with a fresh `Submitted` snapshot instead of
-moving the old state — Schwab's replace path does exactly that. The seed rule is simply: what the plugin reports
-itself, it seeds in the same locked block, so the next sweep does not repeat it. A plain place reports nothing —
-Schwab watches the main id and keeps the placement's Lean orders by symbol; the first sweep to see the order
-assigns each leg id from the snapshot — one shared method with the stream's `OrderAccepted`, because only the
-broker says which leg id belongs to which symbol — and reports the submit through the diff, one poll interval
-later at most. The assignment also releases the three minute place wait, so the same `MissingWebSocketResponse`
-error guards a placement nothing ever confirms, on the stream and on the poll alike. The watch doubles as the
-alarm: an id the broker never lists raises `OrderNotAcknowledged` instead of staying silent.
+A place and a replace are reported the same way: not by the plugin. For a place, Schwab watches the main id
+and keeps the placement's Lean orders by symbol; the first sweep to see the order assigns each leg id from
+the snapshot — one shared method with the stream's `OrderAccepted`, because only the broker says which leg id
+belongs to which symbol — and reports the submit through the diff, one poll interval later at most. For a
+replace, its own pending record goes in under the new main id, and a mirror of the assignment handles it: it
+moves each Lean order onto its new leg id and marks it with `WatchReplacement`, which drops the replaced id
+in the same call — so the dead order's last snapshot reports nothing — and makes the diff report the update
+submit instead of a plain submit. The new id starts with no fill state, because a Charles Schwab replacement counts
+its executions from zero; a broker that carries fills across a replace moves the state instead:
+`TryGetLastOrderState(oldId, out var lastSeen)`, then `Watch(newId, lastSeen)`, then `Unwatch(oldId)`.
+
+The seed rule stays for what a plugin still reports itself: it seeds in the same locked block, so the next
+sweep does not repeat it. The assignment also releases the three minute place wait, so the same
+`MissingWebSocketResponse` error guards a placement nothing ever confirms, on the stream and on the poll
+alike. A replacement has no wait of its own - the replace reply already confirmed it. The watch doubles as
+the alarm: an id the broker never lists raises `OrderNotAcknowledged` instead of staying silent.
+
+### A replace, across the brokers
+
+A replace is the one order action that can change the key the registry lives on. Whether it does is the
+broker's design, not the plugin's choice — so before deciding what the service should own here, the update
+path of nine sibling plugins was read, twice (a survey pass and a line-by-line check pass), for the four
+facts that matter to a poll: does the id change, where does the new id come from, who reports
+`UpdateSubmitted` today, and what happens to the fill count.
+
+| Plugin | Update | Id after a replace | New id from | `UpdateSubmitted` reported by | Fills after |
+| --- | --- | --- | --- | --- | --- |
+| CharlesSchwab | yes, combos too | new — one per leg | REST reply, legs from snapshot/stream | plugin after REST (poll mode); stream `ChangeAccepted` | reset |
+| Tastytrade | yes, combos too | new — one for all legs | REST reply | stream `Routed`/`Live`, waited 100 s | unknown |
+| Alpaca | yes, no combos | new | REST reply | stream `Replaced` only | unknown |
+| InteractiveBrokers | yes, combos too | same — modified in place | — | stream `orderStatus` + an updated flag | carry over |
+| TradeStation | yes, combos too | same | — (the reply's `OrderID` is never read) | plugin after REST; the stream echo is swallowed | carry over |
+| Tradier | price and type only | same | — | plugin after REST | carry over |
+| Public.com | single-leg only | same | — (the reply echoes the id) | plugin after REST | carry over |
+| Webull | single-leg only | same (`client_order_id` kept) | — | stream `MODIFY_SUCCESS` | carry over |
+| ByBit | futures amend only | same | — | plugin after REST | carry over |
+| Binance | no — cancel and re-create | — | — | never emitted | — |
+
+The rows in code: IB re-sends the same broker id (`InteractiveBrokersBrokerage.cs:1599,1626`), TradeStation
+PUTs to the existing id and never reads the reply's `OrderID` (`Api/TradeStationApiClient.cs:329-335`),
+Tradier's PUT has no quantity parameter at all (`TradierBrokerage.cs:486-507`), Public replaces in place
+with the id echoed back (`Api/ApiClient.cs:351-362`), Webull keeps the `client_order_id` that is the Lean
+`BrokerId` (`Api/ApiClient.cs:595-605`), ByBit amends futures under the same id
+(`Api/BybitTradeApiEndpoint.cs:94-100`) and cannot amend spot (`BybitBrokerage.Brokerage.cs:200-204`), and
+Binance's `UpdateOrder` throws (`BinanceBrokerage.cs:346-349`).
+
+**The same-id half needs nothing new from the service.** The watched id survives the replace, and the fill
+count continues on it — all six carry-over cells are verified in code, e.g. TradeStation's cumulative
+`ExecQuantity` delta is never reset by an update (`TradeStationBrokerage.cs:1187-1194`). And the report
+itself can never come from a sweep: the state carries a status and two fill numbers, no price and no
+quantity, so a modified order polls exactly like an unmodified one. The rule for a same-id plugin is
+Tradier's and Public's, already shipping: report `UpdateSubmitted` right after the REST reply
+(`TradierBrokerage.cs:970-971`, `PublicBrokerage.Brokerage.cs:687`) and leave the registry alone — Public
+runs on this service today and its `UpdateOrder` makes no service call. The two that report from the stream
+instead (IB `InteractiveBrokersBrokerage.cs:2359,2380`, Webull `WebullBrokerage.Brokerage.cs:448-453`)
+simply have no update report while their channel is down; on adoption they move the report next to the REST
+reply, like the other four.
+
+**The cancel-replace half is where the report can move into the service.** All three learn the new id
+synchronously, from the REST reply itself: Schwab's `UpdateOrder` result, Alpaca's `PatchOrderAsync`
+response (`AlpacaBrokerage.cs:782-793`), Tastytrade's `ReplaceOrderById` return
+(`Api/TastytradeApiClient.cs:172-186`). So the plugin can always watch the new id inside the same locked
+block as the request — the same rule the place already follows. What no REST reply gives is the
+confirmation that the replacement is live: Tastytrade holds its `UpdateSubmitted` until the stream says the
+new order is `Routed`/`Live` and waits 100 seconds for that (`TastytradeBrokerage.Brokerage.cs:431,530-533`),
+and Alpaca reports it only from the stream's `Replaced` event (`AlpacaBrokerage.cs:677,1058-1059`), so with
+the stream down it is never reported. The first sweep that lists the new id is exactly that confirmation.
+So the general shape is one addition, the mirror of the place rule: a **replacement watch** —
+`WatchReplacement(newBrokerageId, previousBrokerageId)` marks the new id and drops the old one in one
+locked step, and the diff's first state for a marked id whose Lean order is open but past `New` reports
+`UpdateSubmitted`, "Update submitted by polling". Combos fit both shapes: Tastytrade's whole combo takes
+one new id (`TastytradeBrokerage.Brokerage.cs:416`), and Schwab's per-leg ids go through the same by-symbol
+assignment its place already runs.
+
+**Dropping the old id is a correctness step, not housekeeping.** A cancel-replace ends the old order at the
+broker, and the old order's last snapshot says so — Schwab lists it `Replaced`, Tastytrade sends
+`Cancelled` for it, Alpaca `Replaced`. A registry still holding the old id could read that as the Lean
+order's end. The streaming plugins prove the hazard is real: Tastytrade swallows exactly this `Cancelled`
+today (`TastytradeBrokerage.Brokerage.cs:575-581`), and Schwab's status mapping keeps `Replaced`
+non-terminal on purpose. The replacement watch removes the old entry in the same call, and once the plugin
+re-keys the Lean order the old id no longer resolves — both guards, one step.
+
+**The fill count restarts with the id.** Schwab's replacement counts its executions from zero, so the new
+entry starts at zero reported. Alpaca and Tastytrade leave no evidence either way in code or tests —
+"unknown" is the honest cell. A broker that turns out to carry fills across a replace seeds instead of
+starting fresh: `TryGetLastOrderState(oldId)` then `Watch(newId, lastSeen)`, two calls that already exist.
+
+**Telling Lean about the new id stays in the plugin.** Three plugins, three conventions: Schwab swaps the
+whole `BrokerId` list through `OnOrderIdChangedEvent`, Tastytrade does the same right after the REST reply
+(`TastytradeBrokerage.Brokerage.cs:416`), and Alpaca appends the new id and reads `BrokerId.Last()` from
+then on (`AlpacaBrokerage.cs:789-793`). The service never touches `Order.BrokerId` — the plugin tells
+Lean, the service only watches.
+
+So the seed rule above stands for the same-id half — what a plugin reports itself, it seeds — and the
+cancel-replace half gets the replacement watch instead: one additive method and one diff branch. Schwab,
+the pilot, runs on it: its polled replace goes through a mirror of its place's by-symbol assignment and the
+diff reports the update submit. The by-position leg id derivation its first pilot shipped with is deleted.
 
 ### Seed before Start
 
@@ -865,10 +965,9 @@ inline `Task.Delay` block with `Watch` on the unknown ids.
   whose leg ids are derived rather than returned by the broker should verify they resolve and warn when they do
   not — the service skips silently.
 - Routing: handing the service its message handler at construction and forwarding `OrderEvents` to `OnOrderEvents`.
-- Reporting without the stream: Schwab's replace events from the REST reply stay in the plugin; the
-  service only asks that they seed the registry (see "One registry for the stream and the poll"). A plain place
-  is not reported by the plugin at all — it watches the main id, and the first sweep assigns the leg ids by
-  symbol and reports the submit.
+- Reporting without the stream: the plugin reports neither the place nor the replace itself. It watches the
+  main id, the first sweep assigns the leg ids by symbol — a replacement's through `WatchReplacement` — and
+  the diff reports the submit or the update submit.
 - Deciding what an unacknowledged order means.
 
 ## Alternatives not taken
@@ -918,6 +1017,18 @@ inline `Task.Delay` block with `Watch` on the unknown ids.
   price precision for one broker at the cost of a second diff branch every plugin has to reason about. If it is
   ever wanted, it comes back as one additive nullable field without breaking anyone — the same goes for a
   `GetOrderExecutions` API on `IBrokerage`.
+- **Arm the replacement watch from the `OrderIdChanged` event instead of `WatchReplacement`.** The plugin
+  already raises `OnOrderIdChangedEvent` when a replace re-keys a Lean order, so the service could subscribe
+  to it instead of offering a method. Rejected three times over. The event does not mean "replace": Lean
+  core raises it on a plain place — the cross-zero flow assigns the second part's id through it
+  (`Brokerages/Brokerage.cs:842`) — and Binance assigns every initial id with it, so the service would
+  report an update submit for a placement. The event does not carry the previous id, and the service cannot
+  recover it: the transaction handler subscribes first and swaps `order.BrokerId` before a later subscriber
+  runs (`Engine/TransactionHandlers/BrokerageTransactionHandler.cs:1497`), so the old registry entries could
+  not be dropped. And a stream-alive plugin raises the event while reporting `UpdateSubmitted` itself, so an
+  event-armed service would report it a second time. The reuse that works is locality, not wiring: the
+  plugin calls `WatchReplacement` on the same line where it builds the id-changed event, with the old and
+  new id it already holds.
 - **Leave it in the plugins.** It is already written three times, and the fourth copy would be IB's.
 
 ## Risks
@@ -944,7 +1055,7 @@ inline `Task.Delay` block with `Watch` on the unknown ids.
    write it.
 3. CharlesSchwab and Public.com: delete their service class and their fill/close diff. What stays is real and
    named: the read and its sweep window, the model-to-state mapping, Schwab's stream-unavailable switch and its
-   without-stream replace reporting. Two behavior changes are intentional: a Public poll that shows a
+   by-symbol leg id assignment. Two behavior changes are intentional: a Public poll that shows a
    new fill and the cancel together now emits both — today's code drops the cancel
    (`PublicBrokerage.Brokerage.cs:629-638`) — and polled fills are priced at the broker's reported price of the
    sweep, so Public's change-of-average recovery and Schwab's per-execution prices become per-sweep prices while
