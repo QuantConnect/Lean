@@ -232,6 +232,34 @@ namespace QuantConnect.Brokerages.Services
         }
 
         /// <summary>
+        /// Watches the new brokerage order id of a replace and drops the replaced id in the same step.
+        /// The first state to carry the new id reports the order as update submitted, which a stream
+        /// would otherwise do. The new id starts with no fill state, because a replacement that counts
+        /// its executions from zero must not inherit the old order's numbers; a broker that carries the
+        /// fills across a replace seeds with <see cref="Watch(string, BrokerOrderState)"/> instead.
+        /// </summary>
+        /// <param name="brokerageId">The brokerage order id the replacement runs under.</param>
+        /// <param name="previousBrokerageId">The replaced brokerage order id, or null when it is unknown.</param>
+        public void WatchReplacement(string brokerageId, string previousBrokerageId)
+        {
+            lock (_lock)
+            {
+                if (previousBrokerageId != null)
+                {
+                    _orderStates.Remove(previousBrokerageId);
+                }
+
+                if (!_orderStates.TryGetValue(brokerageId, out var entry))
+                {
+                    entry = new OrderStateEntry();
+                    _orderStates[brokerageId] = entry;
+                }
+                entry.Watched = true;
+                entry.IsReplacement = true;
+            }
+        }
+
+        /// <summary>
         /// Stops watching an order and drops its state.
         /// </summary>
         /// <param name="brokerageId">The brokerage order id to stop watching.</param>
@@ -358,7 +386,9 @@ namespace QuantConnect.Brokerages.Services
 
                 // the submit first, once: when nothing was emitted for the id yet, the Lean order is still New,
                 // and the state is not a reject. Lean requires it before any fill, and a market order can
-                // already be Filled the first time a poll sees it.
+                // already be Filled the first time a poll sees it. The new id of a replace is the one case
+                // where the Lean order is already past New: there the state proves the replacement is live,
+                // so the update submit goes out instead.
                 if (!entry.SubmitReported
                     && (entry.LastSeen == null || entry.LastSeen.Status == OrderStatus.New)
                     && orderState.Status != OrderStatus.Invalid)
@@ -370,6 +400,14 @@ namespace QuantConnect.Brokerages.Services
                             orderEvents.Add(new OrderEvent(leanOrder, timeUtc, OrderFee.Zero, "Submitted by polling")
                             {
                                 Status = OrderStatus.Submitted
+                            });
+                            entry.SubmitReported = true;
+                        }
+                        else if (entry.IsReplacement && !leanOrder.Status.IsClosed())
+                        {
+                            orderEvents.Add(new OrderEvent(leanOrder, timeUtc, OrderFee.Zero, "Update submitted by polling")
+                            {
+                                Status = OrderStatus.UpdateSubmitted
                             });
                             entry.SubmitReported = true;
                         }
@@ -705,6 +743,12 @@ namespace QuantConnect.Brokerages.Services
             /// Set by <see cref="Watch(string)"/>: the watch timeout only applies to explicitly watched orders.
             /// </summary>
             public bool Watched;
+
+            /// <summary>
+            /// Set by <see cref="WatchReplacement"/>: the id is the new id of a replace, so the first
+            /// state to carry it reports the update submit instead of a plain submit.
+            /// </summary>
+            public bool IsReplacement;
 
             /// <summary>
             /// Set once anything carried the id: a polled state, a stream write, or a seed. Stops the

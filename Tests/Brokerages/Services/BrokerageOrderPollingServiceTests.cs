@@ -102,6 +102,65 @@ namespace QuantConnect.Tests.Brokerages.Services
         }
 
         [Test]
+        public void ReplacementWatchReportsUpdateSubmittedOnce()
+        {
+            // a replace moved the order onto a new brokerage id, and the plugin marked the new id
+            var order = AddOrder(100m, "42", OrderStatus.Submitted);
+            order.BrokerId.Clear();
+            order.BrokerId.Add("43");
+            _service.WatchReplacement("43", "42");
+
+            _service.ProcessOrderState(State("43", OrderStatus.Submitted));
+
+            var updateSubmit = _orderEvents.Single();
+            Assert.AreEqual(OrderStatus.UpdateSubmitted, updateSubmit.Status);
+            Assert.AreEqual("Update submitted by polling", updateSubmit.Message);
+
+            // the same state again reports nothing new
+            _service.ProcessOrderState(State("43", OrderStatus.Submitted));
+            Assert.AreEqual(1, _orderEvents.Count);
+        }
+
+        [Test]
+        public void ReplacementWatchDropsThePreviousIdAndCountsFillsFromZero()
+        {
+            // the old id already reported a fill, then the replace re-keys the order. The replacement
+            // counts its executions from zero, so its first fill must not be shrunk by the old total.
+            var order = AddOrder(200m, "42", OrderStatus.Submitted);
+            _service.ProcessOrderState(State("42", OrderStatus.PartiallyFilled, filled: 100m, price: 310m));
+            Assert.AreEqual(100m, _orderEvents.Single().FillQuantity);
+
+            order.BrokerId.Clear();
+            order.BrokerId.Add("43");
+            _service.WatchReplacement("43", "42");
+            _orderEvents.Clear();
+
+            // the first state of the new id can already carry a fill: the update submit still goes first
+            _service.ProcessOrderState(State("43", OrderStatus.PartiallyFilled, filled: 40m, price: 311m));
+
+            Assert.AreEqual(2, _orderEvents.Count);
+            Assert.AreEqual(OrderStatus.UpdateSubmitted, _orderEvents[0].Status);
+            Assert.AreEqual(OrderStatus.PartiallyFilled, _orderEvents[1].Status);
+            Assert.AreEqual(40m, _orderEvents[1].FillQuantity);
+
+            // the old order's own end no longer resolves to the Lean order, so it reports nothing
+            _service.ProcessOrderState(State("42", OrderStatus.Canceled));
+            Assert.AreEqual(2, _orderEvents.Count);
+        }
+
+        [Test]
+        public void LiveOrderWithoutReplacementMarkStaysQuiet()
+        {
+            // an order the stream already confirmed, or one adopted at startup: it is past New in Lean
+            // and its id carries no replacement mark, so a sweep seeing it for the first time stays quiet
+            AddOrder(100m, "42", OrderStatus.Submitted);
+
+            _service.ProcessOrderState(State("42", OrderStatus.Submitted));
+
+            Assert.IsEmpty(_orderEvents);
+        }
+
+        [Test]
         public void CumulativeFillsNeverRepeat()
         {
             // the ADR's worked example: long 1000, two 100-share fills at the same price
