@@ -256,6 +256,15 @@ namespace QuantConnect.Data.Fundamental
         public string MarketDataID => FundamentalService.Get<string>(_timeProvider.GetUtcNow(), _securityIdentifier, FundamentalProperty.SecurityReference_MarketDataID);
 
         /// <summary>
+        /// Whether the security is in its initial public offering period
+        /// </summary>
+        /// <remarks>
+        /// Morningstar DataId: 45008
+        /// </remarks>
+        [JsonProperty("45008")]
+        public bool IsIPO => FundamentalService.Get<bool>(_timeProvider.GetUtcNow(), _securityIdentifier, FundamentalProperty.SecurityReference_IsIPO);
+
+        /// <summary>
         /// Creates a new instance for the given time and security
         /// </summary>
         public SecurityReference(ITimeProvider timeProvider, SecurityIdentifier securityIdentifier)

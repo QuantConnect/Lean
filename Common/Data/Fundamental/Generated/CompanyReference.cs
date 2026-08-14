@@ -291,6 +291,24 @@ namespace QuantConnect.Data.Fundamental
         public string LEI => FundamentalService.Get<string>(_timeProvider.GetUtcNow(), _securityIdentifier, FundamentalProperty.CompanyReference_LEI);
 
         /// <summary>
+        /// Whether the company is a shell company
+        /// </summary>
+        /// <remarks>
+        /// Morningstar DataId: 45003
+        /// </remarks>
+        [JsonProperty("45003")]
+        public bool IsShellCompany => FundamentalService.Get<bool>(_timeProvider.GetUtcNow(), _securityIdentifier, FundamentalProperty.CompanyReference_IsShellCompany);
+
+        /// <summary>
+        /// The state or country the company is incorporated in
+        /// </summary>
+        /// <remarks>
+        /// Morningstar DataId: 45004
+        /// </remarks>
+        [JsonProperty("45004")]
+        public string StateOrCountryOfIncorporation => FundamentalService.Get<string>(_timeProvider.GetUtcNow(), _securityIdentifier, FundamentalProperty.CompanyReference_StateOrCountryOfIncorporation);
+
+        /// <summary>
         /// Creates a new instance for the given time and security
         /// </summary>
         public CompanyReference(ITimeProvider timeProvider, SecurityIdentifier securityIdentifier)
