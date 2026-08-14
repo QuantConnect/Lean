@@ -347,6 +347,33 @@ namespace QuantConnect.Data.Fundamental
         public double Float => FundamentalService.Get<double>(_timeProvider.GetUtcNow(), _securityIdentifier, FundamentalProperty.CompanyProfile_Float);
 
         /// <summary>
+        /// The number of full time employees
+        /// </summary>
+        /// <remarks>
+        /// Morningstar DataId: 45005
+        /// </remarks>
+        [JsonProperty("45005")]
+        public int FullTimeEmployeeNumber => FundamentalService.Get<int>(_timeProvider.GetUtcNow(), _securityIdentifier, FundamentalProperty.CompanyProfile_FullTimeEmployeeNumber);
+
+        /// <summary>
+        /// The number of part time employees
+        /// </summary>
+        /// <remarks>
+        /// Morningstar DataId: 45006
+        /// </remarks>
+        [JsonProperty("45006")]
+        public int PartTimeEmployeeNumber => FundamentalService.Get<int>(_timeProvider.GetUtcNow(), _securityIdentifier, FundamentalProperty.CompanyProfile_PartTimeEmployeeNumber);
+
+        /// <summary>
+        /// Shares the company holds in treasury
+        /// </summary>
+        /// <remarks>
+        /// Morningstar DataId: 45007
+        /// </remarks>
+        [JsonProperty("45007")]
+        public long TreasuryShares => FundamentalService.Get<long>(_timeProvider.GetUtcNow(), _securityIdentifier, FundamentalProperty.CompanyProfile_TreasuryShares);
+
+        /// <summary>
         /// Creates a new instance for the given time and security
         /// </summary>
         public CompanyProfile(ITimeProvider timeProvider, SecurityIdentifier securityIdentifier)
