@@ -14,6 +14,18 @@ Replacement watch implemented - 2026-08-14: a polled replace goes through `Watch
 reports the update submit. The plugin's own replace reporting and its by-position leg id derivation are
 deleted. Backed by the replace survey (see "A replace, across the brokers").
 
+Pilot verified live - 2026-08-14: place, replace, cancel and fill were reported correctly by the polled
+connection running next to a streaming one, on real CharlesSchwab accounts. The diff's documented edges
+showed up as designed: a market order already filled on its first listing reports the submit and the fill
+in one batch, and the executions of one sweep arrive as one event.
+
+Second plugin adopted - 2026-08-15: Public.com runs on `PerOrderIdPollingService`
+(`Lean.Brokerages.Public`, draft PR #6). Its own service class, diff and snapshot model are deleted; the
+plugin keeps the get-order read and the model-to-state mapping. Its same-id replace stays plugin-side, so
+`WatchReplacement` is not wired, and a get-order 404 maps to a null state - the contract's "the broker
+does not know the id". One rollout intention changed: Public kept its change-of-average price recovery,
+moved into its mapping (see "The diff", pricing).
+
 ## Purpose
 
 Three brokerage plugins have already written the same thing, and a fourth one needs it and does not have it:
@@ -634,9 +646,11 @@ identical to the first and be lost.
 Pricing is deliberately simple: the new part takes the state's `FillPrice`, as the broker reported it. When several
 fills land inside one sweep, the quantity is still exact and the price is the broker's reported price at sweep
 time, not each fill's own — Tradier's poller ships exactly this trade-off today and documents it
-(`TradierBrokerage.cs:1469-1472`). Public today recovers the exact increment price from the change of the average
-(`PublicBrokerage.Brokerage.cs:697`); the service drops that arithmetic on purpose — it amplifies broker rounding
-and can even go negative on a tiny part, while the simple price needs no guard at all.
+(`TradierBrokerage.cs:1469-1472`). Public recovers the exact increment price from the change of the average;
+the service refuses that arithmetic on purpose — it amplifies broker rounding and can even go negative on a
+tiny part, while the simple price needs no guard at all. Public's adoption kept the recovery anyway, but inside
+its own mapping: the state's `FillPrice` arrives already recovered, with a guard that falls back to the plain
+average when the new part is not positive. The service still only copies the price it is given.
 
 One more detail is load-bearing. **State outlives the terminal event.** Forgetting an order the moment its
 `Canceled` goes out re-reports every fill if the next sweep lands before Lean applies the event — Schwab's own ADR
@@ -1055,11 +1069,10 @@ inline `Task.Delay` block with `Watch` on the unknown ids.
    write it.
 3. CharlesSchwab and Public.com: delete their service class and their fill/close diff. What stays is real and
    named: the read and its sweep window, the model-to-state mapping, Schwab's stream-unavailable switch and its
-   by-symbol leg id assignment. Two behavior changes are intentional: a Public poll that shows a
-   new fill and the cancel together now emits both — today's code drops the cancel
-   (`PublicBrokerage.Brokerage.cs:629-638`) — and polled fills are priced at the broker's reported price of the
-   sweep, so Public's change-of-average recovery and Schwab's per-execution prices become per-sweep prices while
-   the quantities stay exact.
+   by-symbol leg id assignment. One behavior change is intentional: a Public poll that shows a
+   new fill and the cancel together now emits both — the old code dropped the cancel. Schwab's per-execution
+   prices become per-sweep prices while the quantities stay exact; Public kept its change-of-average price
+   recovery inside its mapping, so its part prices stay exact too.
 4. Tradier: replace the inline re-check block with a watch. Tradier splits orders across zero, so one brokerage
    order can cover only part of the Lean quantity — its watch resolves submissions only, and fills stay on its
    existing path.
