@@ -59,6 +59,8 @@ namespace QuantConnect.Data.Fundamental
         CompanyReference_IsMLP,
         CompanyReference_IsBDC,
         CompanyReference_LEI,
+        CompanyReference_IsShellCompany,
+        CompanyReference_StateOrCountryOfIncorporation,
         SecurityReference_SecuritySymbol,
         SecurityReference_ExchangeId,
         SecurityReference_CurrencyId,
@@ -84,6 +86,7 @@ namespace QuantConnect.Data.Fundamental
         SecurityReference_ParValue,
         SecurityReference_TradingStatus,
         SecurityReference_MarketDataID,
+        SecurityReference_IsIPO,
         FinancialStatements_PeriodEndingDate_OneMonth,
         FinancialStatements_PeriodEndingDate_TwoMonths,
         FinancialStatements_PeriodEndingDate_ThreeMonths,
@@ -3675,6 +3678,9 @@ namespace QuantConnect.Data.Fundamental
         CompanyProfile_DilutedMarketCap,
         CompanyProfile_LongDescription,
         CompanyProfile_Float,
+        CompanyProfile_FullTimeEmployeeNumber,
+        CompanyProfile_PartTimeEmployeeNumber,
+        CompanyProfile_TreasuryShares,
         AssetClassification_StockType,
         AssetClassification_StyleBox,
         AssetClassification_GrowthGrade,
@@ -3692,6 +3698,8 @@ namespace QuantConnect.Data.Fundamental
         AssetClassification_ValueScore,
         AssetClassification_NACE,
         AssetClassification_CANNAICS,
+        AssetClassification_DistanceToDefault,
+        AssetClassification_ProbabilityOfDefault,
 #pragma warning restore CS1591, CA1707
     }
 }
