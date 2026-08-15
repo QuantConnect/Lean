@@ -175,12 +175,19 @@ class CustomSimpleMovingAverage(PythonIndicator):
             var indicator = CreateIndicator();
             var reference = new DateTime(2024, 1, 1);
 
-            for (var i = 0; i < 3; i++)
+            // Enough points to reach IsReady, otherwise asserting it is false after the reset
+            // passes on an indicator that was never ready.
+            for (var i = 0; i < 20; i++)
             {
                 indicator.Update(new IndicatorDataPoint(reference.AddDays(i), 100m + i));
             }
+            Assert.IsTrue(indicator.IsReady);
 
             indicator.Reset();
+
+            Assert.AreEqual(0, indicator.Samples);
+            Assert.IsFalse(indicator.IsReady);
+
             indicator.Update(new IndicatorDataPoint(reference, 100m));
 
             Assert.AreEqual(100m, indicator.Current.Value);
