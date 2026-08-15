@@ -13,8 +13,10 @@
  * limitations under the License.
 */
 
-using System.IO;
+using System;
 using System.Collections.Generic;
+using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using NUnit.Framework;
 using Python.Runtime;
@@ -26,6 +28,8 @@ namespace QuantConnect.Tests.Common.Python
     [TestFixture]
     public class PythonInitializerTests
     {
+        private const string ShutdownChildProcess = "LEAN_PYTHON_SHUTDOWN_CHILD_PROCESS";
+
         [Test]
         public void AlgorithmLocationIsAlwaysBeforeOtherPaths()
         {
@@ -48,6 +52,53 @@ namespace QuantConnect.Tests.Common.Python
 
             Assert.AreNotEqual(-1, algorithmDirectoryIndex, string.Join(", ", paths));
             Assert.Less(algorithmDirectoryIndex, testDirectoryIndex);
+        }
+
+        [Test]
+        [NonParallelizable]
+        public void ShutdownCompletesWithoutLeakingGil()
+        {
+            if (Environment.GetEnvironmentVariable(ShutdownChildProcess) == "1")
+            {
+                PythonInitializer.Initialize();
+                Assert.IsTrue(new Isolator().ExecuteWithTimeLimit(
+                    TimeSpan.FromSeconds(10), PythonInitializer.Shutdown, -1));
+                Assert.IsFalse(PythonEngine.IsInitialized);
+
+                GC.Collect();
+                GC.WaitForPendingFinalizers();
+                return;
+            }
+
+            var startInfo = new ProcessStartInfo("dotnet")
+            {
+                RedirectStandardOutput = true,
+                RedirectStandardError = true,
+                UseShellExecute = false,
+                WorkingDirectory = TestContext.CurrentContext.TestDirectory
+            };
+            startInfo.ArgumentList.Add("vstest");
+            startInfo.ArgumentList.Add(typeof(PythonInitializerTests).Assembly.Location);
+            startInfo.ArgumentList.Add($"--Tests:{typeof(PythonInitializerTests).FullName}.{nameof(ShutdownCompletesWithoutLeakingGil)}");
+            startInfo.ArgumentList.Add("--Logger:console;verbosity=detailed");
+            startInfo.Environment[ShutdownChildProcess] = "1";
+            startInfo.Environment["PYTHONNET_PYDLL"] = Runtime.PythonDLL;
+
+            using var process = Process.Start(startInfo);
+            var standardOutput = process.StandardOutput.ReadToEndAsync();
+            var standardError = process.StandardError.ReadToEndAsync();
+
+            if (!process.WaitForExit((int)TimeSpan.FromMinutes(1).TotalMilliseconds))
+            {
+                process.Kill(entireProcessTree: true);
+                process.WaitForExit();
+                Assert.Fail("Timed out waiting for the Python shutdown child process.");
+            }
+
+            var output = standardOutput.GetAwaiter().GetResult() + standardError.GetAwaiter().GetResult();
+            Assert.AreEqual(0, process.ExitCode, output);
+            StringAssert.DoesNotContain("GIL must always be released", output);
+            StringAssert.DoesNotContain("Py.GILState.Finalize", output);
         }
 
         private static IEnumerable<string> GetPythonPaths()

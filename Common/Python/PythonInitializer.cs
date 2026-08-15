@@ -82,7 +82,6 @@ namespace QuantConnect.Python
 
                 try
                 {
-                    var pyLock = Py.GIL();
                     Log.Trace($"PythonInitializer.Shutdown(): calling engine shutdown...");
                     PythonEngine.Shutdown();
                 }
