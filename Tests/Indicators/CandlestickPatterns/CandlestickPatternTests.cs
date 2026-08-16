@@ -156,6 +156,9 @@ namespace QuantConnect.Tests.Indicators.CandlestickPatterns
         [Test, TestCaseSource(nameof(PatternTestParameters))]
         public void WarmsUpProperly(CandlestickPattern indicator, string columnName, string testFileName)
         {
+            // the sample count below only means anything from a known starting point
+            indicator.Reset();
+
             var period = indicator.WarmUpPeriod;
             var startDate = new DateTime(2019, 1, 1);
 
