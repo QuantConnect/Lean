@@ -262,10 +262,16 @@ namespace QuantConnect.Indicators
         {
             var appendedData = new List<double[]>();
             var laggedErrors = LaggedSeries(_maOrder, _residuals.ToArray());
-            for (var i = 0; i < laggedErrors.Length; i++)
+            // lags[i] is the AR row for time i + _arOrder and laggedErrors[j] the MA row for
+            // time j + _maOrder, so the two are only the same row when the orders match.
+            // Walking laggedErrors and indexing lags by the same counter ran off the end of
+            // lags whenever _arOrder > _maOrder, and paired rows from different times when
+            // it was the other way round.
+            var offset = Math.Max(_arOrder, _maOrder);
+            for (var t = offset; t < data.Length; t++)
             {
-                var doubles = lags[i].ToList();
-                doubles.AddRange(laggedErrors[i]);
+                var doubles = lags[t - _arOrder].ToList();
+                doubles.AddRange(laggedErrors[t - _maOrder]);
                 appendedData.Add(doubles.ToArray());
             }
 
@@ -274,7 +280,7 @@ namespace QuantConnect.Indicators
             {
                 try
                 {
-                    maFits = Fit.MultiDim(appendedData.ToArray(), data.Skip(_maOrder).ToArray(),
+                    maFits = Fit.MultiDim(appendedData.ToArray(), data.Skip(offset).ToArray(),
                 method: DirectRegressionMethod.NormalEquations, intercept: _intercept);
                 }
                 catch (Exception ex)
@@ -293,22 +299,24 @@ namespace QuantConnect.Indicators
                     // It's worth saying that if intercept flag is set to true, the number of columns of the initial
                     // matrix (appendedData) is increased in one. For more information, please see the implementation
                     // of Fit.MultiDim() method (Ctrl + right click)
-                    var size = appendedData.ToArray()[0].Length + (_intercept ? 1 : 0);
+                    // Each row is _arOrder AR lags followed by _maOrder lagged errors, which
+                    // is the width even when there are no rows at all to read it off.
+                    var size = _arOrder + _maOrder + (_intercept ? 1 : 0);
                     maFits = new double[size];
                 }
             }
             else
             {
-                maFits = Fit.MultiDim(appendedData.ToArray(), data.Skip(_maOrder).ToArray(),
+                maFits = Fit.MultiDim(appendedData.ToArray(), data.Skip(offset).ToArray(),
                 method: DirectRegressionMethod.NormalEquations, intercept: _intercept);
             }
 
-            for (var i = _maOrder; i < data.Length; i++) // Calculate the error assoc. with model.
+            for (var i = offset; i < data.Length; i++) // Calculate the error assoc. with model.
             {
                 var paramVector = _intercept
                     ? Vector.Build.Dense(maFits.Skip(1).ToArray())
                     : Vector.Build.Dense(maFits);
-                var residual = data[i] - Vector.Build.Dense(appendedData[i - _maOrder]).DotProduct(paramVector);
+                var residual = data[i] - Vector.Build.Dense(appendedData[i - offset]).DotProduct(paramVector);
                 errorMa += Math.Pow(residual, 2);
             }
 
@@ -359,7 +367,9 @@ namespace QuantConnect.Indicators
                     // aforementioned matrix and b is the data. Thus, the size of the response x is n
                     //
                     // For more information, please see the implementation of Fit.MultiDim() method (Ctrl + right click)
-                    var size = lags.ToArray()[0].Length;
+                    // Each row holds _arOrder lags, and reading that width off row zero threw
+                    // when the fit had failed because there were no rows at all.
+                    var size = _arOrder;
                     arFits = new double[size];
                 }
             }

@@ -53,6 +53,22 @@ namespace QuantConnect.Tests.Indicators
                 (ind, expected) => Assert.AreEqual(expected, (double) ARIMA.Current.Value, 10d));
         }
 
+        [TestCase(2, 0, 1)]
+        [TestCase(3, 1, 1)]
+        [TestCase(4, 0, 2)]
+        public void AcceptsAnAutoRegressiveOrderAboveTheMovingAverageOrder(int arOrder, int diffOrder, int maOrder)
+        {
+            var arima = new AutoRegressiveIntegratedMovingAverage(arOrder, diffOrder, maOrder, 50, true);
+            var reference = new DateTime(2020, 1, 1);
+
+            for (var i = 0; i < 60; i++)
+            {
+                arima.Update(reference.AddDays(i), 100m + (decimal)Math.Sin(i / 3d) * 5m);
+            }
+
+            Assert.IsTrue(arima.IsReady);
+        }
+
         [Test]
         public void PredictionErrorAgainstExternalData()
         {
