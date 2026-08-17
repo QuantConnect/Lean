@@ -347,7 +347,10 @@ namespace QuantConnect.Lean.Engine.Results
                             result.Results.TotalPerformance,
                             result.Results.AlgorithmConfiguration,
                             result.Results.State,
-                            result.Results.Analysis));
+                            result.Results.Analysis))
+                        {
+                            ServerStatistics = result.Results.ServerStatistics
+                        };
 
                         if (result.Results.Charts.TryGetValue(PortfolioMarginKey, out var marginChart))
                         {
