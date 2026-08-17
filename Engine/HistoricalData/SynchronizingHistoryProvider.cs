@@ -67,15 +67,22 @@ namespace QuantConnect.Lean.Engine.HistoricalData
                 var data = new List<DataFeedPacket>();
                 foreach (var subscription in subscriptions.Where(subscription => !subscription.EndOfStream))
                 {
-                    if (subscription.Current == null && !subscription.MoveNext())
+                    // initial pump. We do it here and not when creating the subscriptions so
+                    // that parallel workers can all start as fast as possible. MoveNext returning true
+                    // does not guarantee data, so keep pumping until we get some or the stream ends
+                    while (subscription.Current == null && subscription.MoveNext())
                     {
-                        // initial pump. We do it here and not when creating the subscriptions so
-                        // that parallel workers can all start as fast as possible
+                    }
+
+                    if (subscription.Current == null)
+                    {
+                        // no data available for this subscription
                         continue;
                     }
 
                     DataFeedPacket packet = null;
-                    while (subscription.Current.EmitTimeUtc <= frontier)
+                    // the advance below can also return true without data, leaving Current null
+                    while (subscription.Current != null && subscription.Current.EmitTimeUtc <= frontier)
                     {
                         if (packet == null)
                         {

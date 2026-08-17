@@ -15,6 +15,7 @@
 */
 
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using NUnit.Framework;
 using QuantConnect.Data;
@@ -149,10 +150,30 @@ namespace QuantConnect.Tests.Engine.HistoricalData
             }
         }
 
-        private void Setup(DeploymentTarget deploymentTarget)
+        [Test]
+        public void FailingHistoryProviderDoesNotBringTheAlgorithmDown()
+        {
+            TearDown();
+            Setup(DeploymentTarget.LocalPlatform, nameof(ThrowingHistoryProvider));
+            var symbol = Symbol.Create("WM", SecurityType.Equity, Market.USA);
+
+            var request = TestsHelpers.GetHistoryRequest(symbol, new DateTime(2008, 01, 01), new DateTime(2008, 01, 05), Resolution.Daily, TickType.Trade);
+
+            // providers build their result lazily, so the failure surfaces while the manager is
+            // enumerating them, past the try/catch guarding the GetHistory call
+            List<Slice> result = null;
+            Assert.DoesNotThrow(() => result = _historyProviderWrapper.GetHistory(new[] { request }, TimeZones.NewYork).ToList());
+
+            // the remaining provider still serves the request
+            Assert.IsNotEmpty(result);
+            Assert.AreEqual(5, _historyProviderWrapper.DataPointCount);
+        }
+
+        private void Setup(DeploymentTarget deploymentTarget, params string[] extraHistoryProviders)
         {
             _historyProviderWrapper = new();
-            var historyProviders = Newtonsoft.Json.JsonConvert.SerializeObject(new[] { nameof(SubscriptionDataReaderHistoryProvider), nameof(TestHistoryProvider) });
+            var historyProviders = Newtonsoft.Json.JsonConvert.SerializeObject(
+                new[] { nameof(SubscriptionDataReaderHistoryProvider), nameof(TestHistoryProvider) }.Concat(extraHistoryProviders).ToArray());
             var jobWithArrayHistoryProviders = new LiveNodePacket
             {
                 HistoryProvider = historyProviders,

@@ -154,7 +154,7 @@ namespace QuantConnect.Lean.Engine.HistoricalData
                         // doesn't support this history request, that's okay
                         continue;
                     }
-                    historyEnumerators.Add(history.GetEnumerator());
+                    historyEnumerators.Add(WrapProviderHistory(history, historyProvider.GetType().Name).GetEnumerator());
 
                     if (_job != null && _job.DeploymentTarget == DeploymentTarget.CloudPlatform
                         && _historyProviders.Count > 1 && historyRequests.All(x => x.Symbol.SecurityType == SecurityType.Equity))
@@ -168,9 +168,9 @@ namespace QuantConnect.Lean.Engine.HistoricalData
                         break;
                     }
                 }
-                catch (Exception e)
+                catch (Exception exception)
                 {
-                    // ignore
+                    Log.Error(exception, $"HistoryProviderManager.GetHistory(): {historyProvider.GetType().Name} failed to create the history enumerable, skipping it");
                 }
             }
             using var synchronizer = new SynchronizingSliceEnumerator(historyEnumerators);
@@ -202,6 +202,33 @@ namespace QuantConnect.Lean.Engine.HistoricalData
             if (latestMergeSlice != null)
             {
                 yield return latestMergeSlice;
+            }
+        }
+
+        /// <summary>
+        /// Wraps a provider's history so a failure while enumerating it drops that provider instead of
+        /// bringing the algorithm down. Providers build their result lazily, so an exception in their logic
+        /// surfaces here, on the first MoveNext, and not in the try/catch guarding their GetHistory call.
+        /// </summary>
+        private static IEnumerable<Slice> WrapProviderHistory(IEnumerable<Slice> history, string historyProviderName)
+        {
+            using var enumerator = history.GetEnumerator();
+            while (true)
+            {
+                try
+                {
+                    if (!enumerator.MoveNext())
+                    {
+                        break;
+                    }
+                }
+                catch (Exception exception)
+                {
+                    Log.Error(exception, $"HistoryProviderManager.GetHistory(): {historyProviderName} failed while providing history, skipping it");
+                    break;
+                }
+
+                yield return enumerator.Current;
             }
         }
 
