@@ -1063,6 +1063,14 @@ A test stages broker time by swapping that property between waits: set the worki
 the events, set the half-filled snapshot, wait, set the filled one. One config line per test shortens
 the poll interval (Schwab sets `charles-schwab-order-poll-interval-ms` to 100 ms), and the fixture's
 setup puts it back, so no test changes the pace of the next one.
+
+And the test plays the transaction handler: every fixture subscribes to `OrdersStatusChanged` and
+writes each reported status back onto the Lean order before anything else (Schwab's `ApplyOrderStatus`
+helper) — the same closing of the loop Lean does live. The diff decides from the Lean order: the
+submit goes out only while the order is still `New`, and an id leaves the registry only once its order
+closed. A fixture that skips the write-back gets duplicate submits and orders that never stop being
+read. The asserts then follow the live trading cycle, on the collected events in the order it produces
+them: the submit, the fills, the close.
  
 ### The mock data is recorded, not invented
 
