@@ -467,6 +467,25 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators.Factories
             }
         }
 
+        [Test]
+        public void NullSourceYieldsNoData()
+        {
+            var referenceLocal = new DateTime(2017, 10, 12);
+            var referenceUtc = referenceLocal.ConvertToUtc(TimeZones.NewYork);
+            var timeProvider = new ManualTimeProvider(referenceUtc);
+            var dataSourceReader = new Mock<ISubscriptionDataSourceReader>();
+            var config = new SubscriptionDataConfig(typeof(NullSourceData), Symbols.SPY, Resolution.Second,
+                TimeZones.NewYork, TimeZones.NewYork, false, false, false);
+            var request = GetSubscriptionRequest(config, referenceUtc.AddSeconds(-1), referenceUtc.AddDays(1));
+            var factory = new TestableLiveCustomDataSubscriptionEnumeratorFactory(timeProvider, dataSourceReader.Object);
+
+            using var enumerator = factory.CreateEnumerator(request, null);
+
+            Assert.IsTrue(enumerator.MoveNext());
+            Assert.IsNull(enumerator.Current);
+            dataSourceReader.Verify(reader => reader.Read(It.IsAny<SubscriptionDataSource>()), Times.Never);
+        }
+
         [TestCase(10)]
         [TestCase(60)]
         [TestCase(0)]
@@ -586,6 +605,14 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators.Factories
             public override SubscriptionDataSource GetSource(SubscriptionDataConfig config, DateTime date, bool isLiveMode)
             {
                 return new SubscriptionDataSource("local.file.source", SubscriptionTransportMedium.LocalFile);
+            }
+        }
+
+        class NullSourceData : BaseData
+        {
+            public override SubscriptionDataSource GetSource(SubscriptionDataConfig config, DateTime date, bool isLiveMode)
+            {
+                return null;
             }
         }
 

@@ -81,6 +81,10 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
                 lastSourceRefreshTime = utcNow;
                 var localDate = _dateAdjustment?.Invoke(utcNow.ConvertFromUtc(config.ExchangeTimeZone).Date) ?? utcNow.ConvertFromUtc(config.ExchangeTimeZone).Date;
                 var source = sourceFactory.GetSource(config, localDate, true);
+                if (source == null)
+                {
+                    return Enumerable.Empty<BaseData>().GetEnumerator();
+                }
 
                 // fetch the new source and enumerate the data source reader
                 var enumerator = EnumerateDataSourceReader(config, dataProvider, frontier, source, localDate, sourceFactory);
