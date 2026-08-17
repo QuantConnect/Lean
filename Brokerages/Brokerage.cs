@@ -29,6 +29,7 @@ using System.Collections.Concurrent;
 using QuantConnect.Api;
 using QuantConnect.Brokerages.Authentication;
 using QuantConnect.Brokerages.CrossZero;
+using QuantConnect.Brokerages.Services;
 using QuantConnect.Util;
 
 namespace QuantConnect.Brokerages
@@ -149,11 +150,11 @@ namespace QuantConnect.Brokerages
         public abstract void Disconnect();
 
         /// <summary>
-        /// Dispose of the brokerage instance
+        /// Dispose of the brokerage instance, including the order polling service when one was created
         /// </summary>
         public virtual void Dispose()
         {
-            // NOP
+            OrderPollingService.DisposeSafely();
         }
 
         /// <summary>
@@ -346,6 +347,98 @@ namespace QuantConnect.Brokerages
             handler.AuthenticationFailed += (_, ex) => OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Error, "OAuthenticationFailed", ex.Message));
             return handler;
         }
+
+        #region Order Polling
+
+        /// <summary>
+        /// The order polling service one of the create overloads built and wired, null until then. The brokerage
+        /// calls Watch, WatchReplacement, Start, Stop and SeedAndStart on it at its own lifecycle points;
+        /// <see cref="Dispose"/> disposes it.
+        /// </summary>
+        protected BrokerageOrderPollingService OrderPollingService { get; private set; }
+
+        /// <summary>
+        /// Returns true while the order polling service is running
+        /// </summary>
+        protected bool IsOrderPolling => OrderPollingService?.IsPolling == true;
+
+        /// <summary>
+        /// Creates a <see cref="PerOrderIdPollingService"/>, for a broker with a get-order endpoint, and wires it
+        /// into this brokerage: polled order events reach <see cref="OnOrderEvents"/>, polling outage warnings
+        /// reach <see cref="OnMessage"/>, and an order the broker never reports goes to
+        /// <see cref="OnOrderPollingNotAcknowledged"/>. The created service is kept in <see cref="OrderPollingService"/>.
+        /// </summary>
+        /// <param name="readOrder">Reads the current state of one order by its brokerage id. A null
+        /// return means the broker does not know the id.</param>
+        /// <param name="messageHandler">The brokerage's message handler; the service registers itself and
+        /// enqueues every polled state through it. Null processes each state directly.</param>
+        /// <param name="orderProvider">Resolves brokerage order ids to Lean orders.</param>
+        /// <param name="pollInterval">How long the loop sleeps between sweeps. Null falls back to the
+        /// <c>brokerage-order-poll-interval-ms</c> configuration entry, default 3000 ms.</param>
+        /// <param name="watchTimeout">How long a watched order may stay unreported before
+        /// <see cref="OnOrderPollingNotAcknowledged"/> is called. Null falls back to one minute.</param>
+        /// <returns>The created and wired service.</returns>
+        protected PerOrderIdPollingService CreateOrderPollingService(Func<string, BrokerOrderState> readOrder,
+            BrokerageConcurrentMessageHandler messageHandler, IOrderProvider orderProvider,
+            TimeSpan? pollInterval = null, TimeSpan? watchTimeout = null)
+        {
+            var service = new PerOrderIdPollingService(readOrder, messageHandler, orderProvider, pollInterval, watchTimeout);
+            WireOrderPollingService(service);
+            return service;
+        }
+
+        /// <summary>
+        /// Creates an <see cref="AllOrdersPollingService"/>, for a broker with only a bulk orders endpoint, and
+        /// wires it into this brokerage the same way as the per-order overload.
+        /// </summary>
+        /// <param name="readAllOrders">Reads every order the broker lists, one state per brokerage order id.</param>
+        /// <param name="messageHandler">The brokerage's message handler; the service registers itself and
+        /// enqueues every polled state through it. Null processes each state directly.</param>
+        /// <param name="orderProvider">Resolves brokerage order ids to Lean orders.</param>
+        /// <param name="pollInterval">How long the loop sleeps between sweeps. Null falls back to the
+        /// <c>brokerage-order-poll-interval-ms</c> configuration entry, default 3000 ms.</param>
+        /// <param name="watchTimeout">How long a watched order may stay unreported before
+        /// <see cref="OnOrderPollingNotAcknowledged"/> is called. Null falls back to one minute.</param>
+        /// <returns>The created and wired service.</returns>
+        protected AllOrdersPollingService CreateOrderPollingService(Func<IEnumerable<BrokerOrderState>> readAllOrders,
+            BrokerageConcurrentMessageHandler messageHandler, IOrderProvider orderProvider,
+            TimeSpan? pollInterval = null, TimeSpan? watchTimeout = null)
+        {
+            var service = new AllOrdersPollingService(readAllOrders, messageHandler, orderProvider, pollInterval, watchTimeout);
+            WireOrderPollingService(service);
+            return service;
+        }
+
+        /// <summary>
+        /// Stores the created service and forwards its events onto the brokerage events
+        /// </summary>
+        /// <param name="service">The service one of the create overloads built.</param>
+        private void WireOrderPollingService(BrokerageOrderPollingService service)
+        {
+            if (OrderPollingService != null)
+            {
+                throw new InvalidOperationException($"{Name}: an order polling service was already created.");
+            }
+
+            service.OrderEvents += (_, orderEvents) => OnOrderEvents(orderEvents);
+            service.Message += (_, message) => OnMessage(message);
+            service.OrderNotAcknowledged += (_, notAcknowledged) => OnOrderPollingNotAcknowledged(notAcknowledged);
+            OrderPollingService = service;
+        }
+
+        /// <summary>
+        /// Called when the broker never reported a watched order for the whole watch timeout. The default
+        /// sends one warning message; override it to decide what the silence means for this broker.
+        /// </summary>
+        /// <param name="notAcknowledged">The brokerage order id and how long it was watched.</param>
+        protected virtual void OnOrderPollingNotAcknowledged(OrderNotAcknowledgedEventArgs notAcknowledged)
+        {
+            OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Warning, "OrderNotAcknowledged",
+                $"{Name} never reported order '{notAcknowledged.BrokerageOrderId}' after " +
+                $"{notAcknowledged.WatchedFor.TotalSeconds:F0} seconds of polling. The order may not have been accepted, verify it manually."));
+        }
+
+        #endregion
 
         /// <summary>
         /// Helper method that will try to get the live holdings from the provided brokerage data collection else will default to the algorithm state
