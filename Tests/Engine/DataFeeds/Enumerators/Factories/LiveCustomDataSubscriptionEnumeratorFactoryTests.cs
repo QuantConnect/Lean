@@ -520,6 +520,35 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators.Factories
             VerifyGetSourceInvocationCount(dataSourceReader, 2, "local.file.source", SubscriptionTransportMedium.LocalFile, FileFormat.Csv);
         }
 
+        [Test]
+        public void ToleratesNullSource()
+        {
+            var referenceUtc = new DateTime(2017, 10, 12).ConvertToUtc(TimeZones.NewYork);
+            var timeProvider = new ManualTimeProvider(referenceUtc);
+            var dataSourceReader = new Mock<ISubscriptionDataSourceReader>();
+
+            var config = new SubscriptionDataConfig(typeof(NullSourceData), Symbols.SPY, Resolution.Second, TimeZones.NewYork, TimeZones.NewYork, false, false, false);
+            var request = GetSubscriptionRequest(config, referenceUtc.AddSeconds(-1), referenceUtc.AddDays(1));
+
+            var factory = new TestableLiveCustomDataSubscriptionEnumeratorFactory(timeProvider, dataSourceReader.Object);
+            var enumerator = factory.CreateEnumerator(request, null);
+
+            Assert.DoesNotThrow(() =>
+            {
+                Assert.IsTrue(enumerator.MoveNext());
+                Assert.IsNull(enumerator.Current);
+
+                // the refresh cycle keeps tolerating the null source
+                timeProvider.AdvanceSeconds(1);
+                Assert.IsTrue(enumerator.MoveNext());
+                Assert.IsNull(enumerator.Current);
+            });
+
+            dataSourceReader.Verify(dsr => dsr.Read(It.IsAny<SubscriptionDataSource>()), Times.Never);
+
+            enumerator.DisposeSafely();
+        }
+
         private static void VerifyGetSourceInvocationCount(Mock<ISubscriptionDataSourceReader> dataSourceReader, int count, string source, SubscriptionTransportMedium medium, FileFormat fileFormat)
         {
             dataSourceReader.Verify(dsr => dsr.Read(It.Is<SubscriptionDataSource>(sds =>
@@ -586,6 +615,14 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators.Factories
             public override SubscriptionDataSource GetSource(SubscriptionDataConfig config, DateTime date, bool isLiveMode)
             {
                 return new SubscriptionDataSource("local.file.source", SubscriptionTransportMedium.LocalFile);
+            }
+        }
+
+        class NullSourceData : BaseData
+        {
+            public override SubscriptionDataSource GetSource(SubscriptionDataConfig config, DateTime date, bool isLiveMode)
+            {
+                return null;
             }
         }
 
