@@ -26,6 +26,22 @@ plugin keeps the get-order read and the model-to-state mapping. Its same-id repl
 does not know the id". One rollout intention changed: Public kept its change-of-average price recovery,
 moved into its mapping (see "The diff", pricing).
 
+Wiring moved into core - 2026-08-17: the root `Brokerage` class gained the seam the base-class section
+describes - two protected `CreateOrderPollingService` overloads whose read-callback signature picks the
+mode, the service as a protected `OrderPollingService` property with `IsOrderPolling`, a virtual
+`OnOrderPollingNotAcknowledged` for the silence warning, and a `Dispose` that covers the service.
+CharlesSchwab and Public.com were moved onto it: the creation, the three event forwards and the dispose
+call left both plugins (see "Wiring, per plugin").
+
+Third plugin adopted - 2026-08-17: Tradier runs on `PerOrderIdPollingService`
+(`Lean.Brokerages.Tradier`, branch `feature-core-order-polling-service`). Its fill timer, `CheckForFills`
+diff, order cache and unknown-id verification are deleted (~230 lines); the plugin keeps the get-order
+read and the mapping. Tradier is the first adopter that splits orders across zero: the legs chain from
+the read through the base cross-zero helpers, and the second leg's watch seed carries what the first leg
+filled (see "A cross-zero order, two ids"). Two behavior changes are intentional: orders placed outside
+Lean are ignored - a per-id read never sees them, where the old code raised a fatal "UnknownOrderId"
+error - and the fee attaches once per Lean order instead of once per broker leg.
+
 ## Purpose
 
 Three brokerage plugins have already written the same thing, and a fourth one needs it and does not have it:
@@ -667,7 +683,8 @@ handler whether to accept the order, and adopts it with `AddOpenOrder`. TradeSta
 stream (`TradeStationBrokerage.cs:1088`); a poll can feed the same door.
 
 Not in this PR, for one reason: telling "placed outside Lean" apart from "ours, id not assigned yet" needs care —
-Tradier's 2-second recheck exists exactly because an unknown id can turn out to be ours a moment later. The safe
+the 2-second recheck Tradier's replaced poll carried existed exactly because an unknown id can turn out to be
+ours a moment later. The safe
 shape is: only an id that stays unknown across several sweeps, and is not inside any order request, gets raised as
 a new brokerage-side order. That rule can be added to the diff later without changing the snapshot or the API, so
 it is future work, not part of this design.
@@ -816,6 +833,32 @@ cancel-replace half gets the replacement watch instead: one additive method and 
 the pilot, runs on it: its polled replace goes through a mirror of its place's by-symbol assignment and the
 diff reports the update submit. The by-position leg id derivation its first pilot shipped with is deleted.
 
+### A cross-zero order, two ids
+
+A broker that cannot cross a position through zero gets two brokerage orders for one Lean order: a closing
+leg, then an opening leg the base class places when the first one fills
+(`TryHandleRemainingCrossZeroOrder`, `Brokerages/Brokerage.cs:892`). That breaks the diff's frame twice.
+The diff calls a fill final only when the cumulative reaches the Lean order's whole quantity, and neither
+leg reaches it alone. And the trigger for the second leg is the first leg's *broker-side* fill — a state
+the diff never surfaces, because at that point the Lean order is only half done.
+
+Tradier, the first adopter with this split, keeps both jobs in the read, on the base helpers that already
+own the pending leg:
+
+- The read sees the closing leg filled at the broker and hands `TryHandleRemainingCrossZeroOrder` a
+  `Filled` event carrying the unreported part. The helper knows whether a remaining leg is pending — for
+  every other order it declines and nothing happens. When it takes the event, it reports the fill as
+  `PartiallyFilled` and places the second leg itself; the read then records the state through
+  `UpdateOrderState`, so the sweep's own diff stays silent.
+- The second leg's watch seed carries what the first leg filled, and its reads add the same offset to the
+  leg's own cumulative. The diff's frame is whole again: the leg's last fill reaches the Lean quantity and
+  reports `Filled`.
+
+The service itself needs nothing new for this — the seed, `UpdateOrderState` and `TryGetLastOrderState`
+were already there. What it costs the plugin is one map (the first leg's filled quantity, keyed by the
+Lean order id between the second leg's request and its watch, then by the second leg's brokerage id for
+the reads) and one closed-order hook in the read.
+
 ### Seed before Start
 
 Polling never starts first: the stream reported orders before it, and the registry must know what was already
@@ -912,28 +955,33 @@ brokerage that uses the default. Core helpers already work this way: the message
 
 ## Wiring, per plugin
 
-The general shape, for a streaming brokerage with a bulk endpoint — the class is the mode:
+The general shape, for a streaming brokerage with a bulk endpoint. The root `Brokerage` class owns the
+wiring: one protected create call builds the service, forwards its events onto the brokerage events,
+stores it in the protected `OrderPollingService` property and hands it to `Dispose`. The read callback's
+signature picks the mode — a bulk read can only build an `AllOrdersPollingService`:
 
 ```csharp
 // bulk broker: one request per sweep reads the whole account. The service wires itself onto the
 // handler: it registers its diff as a listener and enqueues every snapshot, so the plugin never
 // touches that relationship again.
-_orderPollingService = new AllOrdersPollingService(
+CreateOrderPollingService(
     () => _apiClient.GetAllOrders().Select(ToOrderState),   // read: model -> snapshot
     _messageHandler,
     _orderProvider, pollInterval: TimeSpan.FromSeconds(3), watchTimeout: TimeSpan.FromMinutes(1));
-_orderPollingService.OrderEvents += (_, orderEvents) => OnOrderEvents(orderEvents);
 ```
 
-A per-id broker only changes the class and the read — this is Public.com's own constructor today, snapshot
-instead of its DTO:
+A per-id broker only changes the read — one call replaces Public.com's construction, its three event
+forwards and its dispose line:
 
 ```csharp
-_orderPollingService = new PerOrderIdPollingService(
-    brokerageId => ToOrderState(_apiClient.GetOrderById(brokerageId)),
-    _messageHandler,
-    _orderProvider);   // nothing passed: brokerage-order-poll-interval-ms decides, default 3000 ms
+CreateOrderPollingService(ReadOrderState, _messageHandler, _orderProvider);
+// BrokerOrderState ReadOrderState(string brokerageId): get-order by id, a 404 maps to null.
+// Nothing else passed: brokerage-order-poll-interval-ms decides the interval, default 3000 ms.
 ```
+
+What silence means is one override per plugin: `OnOrderPollingNotAcknowledged` defaults to a single
+warning built from the brokerage name, and Schwab overrides it to keep the wording its live pilot
+verified.
 
 InteractiveBrokers, the plugin with no answer today, adopts `AllOrdersPollingService` (it has no per-id request) with
 the thinnest possible mapping — id and status from the orders `reqAllOpenOrders` returns, fill fields left null.
@@ -943,8 +991,8 @@ The first step stays thin:
 
 ```csharp
 // IBPlaceOrder, instead of blocking up to 5 minutes and then killing the run
-_orderPollingService.Watch(ibOrderId.ToStringInvariant());
-_orderPollingService.Start();   // idempotent; Stop once nothing is watched
+OrderPollingService.Watch(ibOrderId.ToStringInvariant());
+OrderPollingService.Start();   // idempotent; Stop once nothing is watched
 ```
 
 One honest cost first: IB has no `BrokerageConcurrentMessageHandler` today — only Schwab and Public do — so its
@@ -960,15 +1008,15 @@ The same two lines cover a dropped socket, in any streaming plugin:
 
 ```csharp
 // where the brokerage already handles the connection going down; see "Seed before Start"
-_orderPollingService.SeedAndStart(ToSeedState);
+OrderPollingService.SeedAndStart(ToSeedState);
 
 // on reconnect: one last sweep for the gap, then hand the job back to the stream
-_orderPollingService.Stop();
+OrderPollingService.Stop();
 ```
 
 CharlesSchwab and Public.com delete their own service class **and their diff**, and keep only the mapping from
-their models to the snapshot. Schwab keeps its own rule of never going back to the stream. Tradier replaces the
-inline `Task.Delay` block with `Watch` on the unknown ids.
+their models to the snapshot. Schwab keeps its own rule of never going back to the stream. Tradier deletes its
+fill timer and `CheckForFills` diff the same way; its cross-zero split is "A cross-zero order, two ids".
 
 ## What stays in the plugin
 
@@ -978,11 +1026,111 @@ inline `Task.Delay` block with `Watch` on the unknown ids.
   execution history to the two numbers (Schwab sums its execution legs and takes the newest leg's price). A plugin
   whose leg ids are derived rather than returned by the broker should verify they resolve and warn when they do
   not — the service skips silently.
-- Routing: handing the service its message handler at construction and forwarding `OrderEvents` to `OnOrderEvents`.
+- Routing: handing the create call its message handler, or null when the poll loop is the only caller of
+  the diff. The event forwards and the dispose are the base class's job.
 - Reporting without the stream: the plugin reports neither the place nor the replace itself. It watches the
   main id, the first sweep assigns the leg ids by symbol — a replacement's through `WatchReplacement` — and
   the diff reports the submit or the update submit.
-- Deciding what an unacknowledged order means.
+- Deciding what an unacknowledged order means — the `OnOrderPollingNotAcknowledged` override; the default
+  is one warning built from the brokerage name.
+
+## Testing the polling in a plugin
+
+The service's own behavior — the diff, the watch, the registry — is covered once, in Lean's
+`Tests/Brokerages/Services/BrokerageOrderPollingServiceTests.cs`. A plugin does not test the service
+again: it tests its read, its mapping and its wiring **through** the service. The offline tests carry
+the everyday coverage; the live tests prove the whole path against the real broker — and for a plugin
+starting from nothing they come first, because their runs record the data the offline tests replay. The reference is the Schwab pilot's fixture,
+`Lean.Brokerages.CharlesSchwab/QuantConnect.CharlesSchwabBrokerage.Tests/CharlesSchwabBrokerageOrderUpdatePollingTests.cs`;
+its mock classes sit next to it in `Tests/Models`.
+
+### The test doubles
+
+Two subclasses, and no reflection:
+
+- A mock brokerage deriving from the real one. It runs the normal initialization and overrides exactly
+  the edges: the API client factory returns a mock, the socket is replaced with one a test can feed
+  captured messages into, and the protected polling trigger gets a public wrapper (Schwab's
+  `SwitchToOrderUpdatePolling` calls its stream-loss handler; a polling-primary plugin just calls
+  `Connect`). It also plays the transaction handler's part where a test has none: its
+  `OnOrderIdChangedEvent` override moves the new broker id onto the order, so a sweep can find a
+  replacement.
+- A mock API client deriving from the real one. The read's source is a settable property (Schwab: the
+  order collection its bulk read returns; a per-id broker sets the get-order response), and an
+  `AutoResetEvent` fires when the read runs, so a test waits for the next sweep instead of sleeping.
+
+A test stages broker time by swapping that property between waits: set the working snapshot, wait for
+the events, set the half-filled snapshot, wait, set the filled one. One config line per test shortens
+the poll interval (Schwab sets `charles-schwab-order-poll-interval-ms` to 100 ms), and the fixture's
+setup puts it back, so no test changes the pace of the next one.
+ 
+### The mock data is recorded, not invented
+
+Every snapshot and stream message in the offline tests is a copy of something the broker really sent.
+That sets the build order for a new plugin: one with no `TestData/` folder and no captured payloads
+cannot start with the offline tests, because there is nothing to feed them. It starts with one live
+test — write it, and run it by hand against a real account. The debug log of that run holds the
+broker's real JSON responses and raw socket messages; copying them out is what creates the mock data,
+and the offline tests come second, replaying it. Getting a payload is a manual, one-time step:
+
+- REST order JSON comes from one live run: run the plugin (or one of the live tests below) with debug
+  logging and copy the orders-endpoint response from the log, or save it to a `TestData/*.json` file
+  (Schwab keeps `REST_GET_OPEN_ORDERS.json`). Paste it with its real ids, and write a comment naming
+  the recorded order and its story — "order 1002449136610: two option legs, ended EXPIRED".
+- Raw socket messages are copied from the same live log (Schwab's sits at `bin/Debug/log.txt` after one
+  Explicit run) and fed through the mock socket, so the wrapper handles them exactly like live bytes.
+- A staged sequence interpolates only what the stage changes into one recorded skeleton — Schwab's
+  `BuildRigMarketOrderJson(status, filledQuantity, executionActivities)` replays a real market order's
+  five executions one sweep at a time.
+
+A note for the AI model driving an adoption: the log only records what the code writes to it. Before
+the capture run, go through every request path the polling touches — the order read, place, replace,
+cancel, and the socket's message handling — and check that each one traces the broker's raw response
+(`Log.Trace`). Where a path is silent, add the trace and warn the developer which paths were silent:
+the capture run only records payloads on a build that has the logging.
+
+Short payloads stay inline in the test as verbatim strings; only large or shared ones go to
+`TestData/*.json`.
+
+### Offline tests
+
+These run without credentials, through the real order methods of the mock brokerage, and no request
+leaves the test. What they must show, per plugin — the list is the checklist for the next adopter:
+
+- **Place while polling**: the sweep reports the submit; a recorded terminal snapshot reports the close
+  once; a rejected snapshot reports `Invalid` carrying the broker's words; the fills of one sweep
+  arrive as one event; a staged sequence reports every partial fill; a working order without fill data
+  does not stop the sweep. A combo plugin adds the leg id assignment from the snapshot by symbol.
+- **Stream-to-polling handover**, for a hybrid plugin: the stream reports part of a fill and the seeded
+  poll reports only the rest; the same fill split differently by the two paths stays consistent; a leg
+  the stream already closed is not repeated by the poll.
+- **Event ordering**: a fill arriving within the first sweep still reports `Submitted` before `Filled`,
+  and `UpdateSubmitted` before `Filled` after a replace — the proof the message-handler lock holds.
+- **The whole lifecycle**: place, update, cancel while polling, and the same on the stream, so the two
+  paths can be compared event for event.
+- **The plugin's own edges**: Schwab adds its sweep window (a read reaches back to the oldest open
+  order) and its closed-socket subscription guards; Tradier adds its cross-zero legs.
+
+### Live tests
+
+The live half is `[Explicit]`, run by hand during market hours against a real account, with the cost
+spelled out in the reason string — "takes the single streamer connection", "places real orders", "buys
+real shares" — so nobody runs it by accident. Schwab's `WebSocketVsPolling` category runs two brokerage
+connections side by side: the first loses the stream and falls back to polling, the second keeps
+streaming, and every test asserts the same lifecycle on both. What proved worth copying:
+
+- Place-update-cancel first: the full lifecycle on a limit order resting far from the market costs
+  nothing and checks the submit, the update submit and the cancel on both connections.
+- Fills on a cheap liquid stock next: market and limit orders sized to a few dollars, run until
+  `Filled`.
+- Account hygiene inside the test: a flat-account pre-check that sells leftovers before asserting, a
+  sell-back after every real buy — seeding the holdings first, so the sell maps to the right
+  instruction — and `cleanup:` log lines separating the hygiene from the behavior under test.
+- Partial-fill hunting is its own test and it logs instead of asserting: a bid resting inside the
+  spread for the whole balance may catch a partial fill, but nothing can force one, so a hard assert
+  would only make the test flaky. The developer adjusts the price to the live quote before running.
+- One live run doubles as the recorder: its debug log is where the offline tests' REST and socket
+  payloads come from.
 
 ## Alternatives not taken
 
@@ -1045,6 +1193,78 @@ inline `Task.Delay` block with `Watch` on the unknown ids.
   new id it already holds.
 - **Leave it in the plugins.** It is already written three times, and the fourth copy would be IB's.
 
+### A base brokerage class that owns the wiring
+
+Every adopter wires the service the same way: create the mode class with the read callback, forward
+`OrderEvents` to `OnOrderEvents` and `Message` to `OnMessage`, decide what `OrderNotAcknowledged` means, and
+dispose the service with the brokerage. So the tempting next step is to move that wiring into an inheritance
+layer — one abstract brokerage class that owns the service and asks the plugin only for overrides:
+
+```csharp
+public abstract class BaseWebSocketsAndPollingServiceBrokerage : BaseWebsocketsBrokerage
+{
+    // owns the service, forwards its events, disposes it with the brokerage
+    protected abstract IEnumerable<BrokerOrderState> ReadOrderStates();   // or a per-id read
+    protected virtual BrokerOrderState ToSeedState(Order order) => null;
+}
+```
+
+The attraction is real: a developer who picks the base class is told by the compiler what to implement,
+instead of reading this document. Considered and not taken, on three facts.
+
+**The class cannot reach the plugins that need it.** A C# class inherits one class, so a layer under
+`BaseWebsocketsBrokerage` serves only the plugins that already sit there — and most do not:
+
+| Plugin | Base class today | Order updates today | Could inherit it |
+| --- | --- | --- | --- |
+| CharlesSchwab | `BaseWebsocketsBrokerage` | account activity stream, this service as the fallback | yes |
+| Tradier | `BaseWebsocketsBrokerage` | its own inline poll | yes |
+| Binance (+ US and futures variants) | `BaseWebsocketsBrokerage` | user data stream | only through `BinanceBrokerage` — the variants subclass it |
+| ByBit | `BaseWebsocketsBrokerage` | user data stream | yes, as a fallback only |
+| dYdX | `BaseWebsocketsBrokerage` | subaccounts channel | yes, as a fallback only |
+| Eze | `BaseWebsocketsBrokerage` | websocket protobuf push | yes, as a fallback only |
+| Public.com | `Brokerage` | none — this service is the order path | **no** |
+| InteractiveBrokers | `Brokerage`, `sealed` | vendor TCP callback SDK | **no** |
+| TradeStation | `Brokerage` | HTTP stream, not a websocket | **no** |
+| Alpaca | `Brokerage` | vendor SDK streaming client | **no** |
+| Tastytrade | `Brokerage` | its own two-socket wrapper | no — a base class migration first |
+| WeBull | `Brokerage` | its own websocket order events | no — a base class migration first |
+| IG | `Brokerage` | Lightstreamer vendor SDK | no |
+| OANDA | `Brokerage`, through its own `OandaRestApiBase` | HTTP transaction stream | no — its own hierarchy holds the slot |
+| TerminalLink | `Brokerage` | Bloomberg session API | no |
+| TradingTechnologies, Fix.Bloomberg, Fix.InteractiveBrokers | `Brokerage` / `FixBrokerage` | FIX execution reports | no |
+
+Only the first six rows sit on `BaseWebsocketsBrokerage`, and only two of those poll. The two plugins this
+document opens with as the ones that need polling most — Public.com, with no order stream at all
+(`PublicBrokerage.cs:42` extends plain `Brokerage`), and InteractiveBrokers, whose lost reply ends the run
+(`InteractiveBrokersBrokerage.cs:68`, a `sealed` class on the vendor SDK) — are exactly the two the class
+can never serve.
+
+**Serving both sides means writing the class twice.** The only way around the table is a second abstract
+class with the same body under `Brokerage`, next to the websocket one. The bodies cannot be shared: a class
+inherits one class, and a default interface method can neither hold the service field nor call the protected
+`OnOrderEvents`. That is the same wiring twice in core, edited in pairs forever, and a fix applied to one
+copy and not the other quietly makes the two halves behave differently.
+
+**The overrides are not where the adoption work is.** Counted on the two adopters: the wiring a base class
+could absorb is about 30 lines in Schwab and about 45 in Public — the creation, three event forwards, one
+dispose call. What it cannot absorb is everything else the plugin writes: the read and the mapping (~200
+lines in Schwab, ~45 in Public), the `Watch` calls inside the order methods, and the start trigger, which is
+broker policy — Public starts polling in `Connect` because the service is its connection, Schwab starts it
+when the stream is taken away. The class cannot even own the stop: `Disconnect` is abstract on `Brokerage`
+(`Brokerages/Brokerage.cs:149`), so `Stop` stays a line the plugin writes either way. An abstract read would
+guard the one step nobody gets wrong, and guard it for a third of the plugins.
+
+The place that reaches every row of the table is the root `Brokerage` class, the way the cross-zero
+helpers and `CreateOAuthTokenHandler` already sit there as protected members only some plugins use
+(`Brokerages/Brokerage.cs:604`, `:342`): one protected creation helper per mode, whose read-callback
+signature picks the class, the service as a protected property, and a `Dispose` that covers it. Every
+brokerage derives from `Brokerage`, the sealed IB class included, and constructing the service directly
+stays possible — the helper is additive. Implemented that way on 2026-08-17: the seam is the two
+`CreateOrderPollingService` overloads, `OrderPollingService`, `IsOrderPolling` and the virtual
+`OnOrderPollingNotAcknowledged`, and Schwab, Public.com and Tradier all create their service through it
+(see "Wiring, per plugin"). The abstract class this section declines stays declined.
+
 ## Risks
 
 | Risk | What we do about it |
@@ -1054,7 +1274,7 @@ inline `Task.Delay` block with `Watch` on the unknown ids.
 | Several fills inside one sweep share one price | Quantities stay exact; the price is the broker's reported price at sweep time. Tradier ships this trade-off today (`TradierBrokerage.cs:1469-1472`); a shorter poll interval narrows it. |
 | Polling adds requests on brokers with tight rate limits | Watch mode reads only while an order is unacknowledged, and the interval is a constructor argument the plugin picks. |
 | A bulk read is expensive on some plugins — `GetOpenOrders()` rebuilds Lean orders and maps symbols on every call | The action converts straight from the broker's wire model to the snapshot, skipping the Lean `Order` build entirely; and in watch mode a sweep only runs while something is pending. |
-| A plugin wires the handler wrong and gets fill-before-submit | The misuse is gone: the service takes the handler in its constructor and wires both directions itself. A plugin either hands over its handler, or passes null and the poll loop is the only caller of the diff. Schwab and Public have a handler; IB and Tradier do not, and adding one is named in their rollout steps. |
+| A plugin wires the handler wrong and gets fill-before-submit | The misuse is gone: the service takes the handler in its constructor and wires both directions itself. A plugin either hands over its handler, or passes null and the poll loop is the only caller of the diff. Schwab and Public have a handler; Tradier adopted with null — its submit event goes out before the watch begins, so the poll cannot outrun it — and IB's rollout step still names adding one. |
 | The stream and the poll both see the same fill in watch mode | The registry works in both directions: the stream writes what it reports (`UpdateOrderState`) and checks before reporting (`TryGetLastOrderState`). Named as the one non-optional wiring rule for polling beside a live stream. |
 | The watch timeout cannot tell "never arrived" from "filled instantly" | It does not try. `OrderNotAcknowledged` hands the question to the brokerage, which has the endpoints to answer it. |
 | Polling while the stream is down misses the fills that happened during the gap | Only when the read carries no fill data. A read with fill numbers recovers them — the state has the fields, so this is a property of the broker's endpoint, not of the service. |
@@ -1062,17 +1282,21 @@ inline `Task.Delay` block with `Watch` on the unknown ids.
 
 ## Rollout
 
-1. This PR: the non-generic multi-source message handler, the service, the snapshot, and their unit
-   tests, no brokerage changes. The generic handler is untouched, so every plugin compiles as before.
+1. This PR: the non-generic multi-source message handler, the service, the snapshot, their unit tests,
+   and the protected create seam on `Brokerage`. The generic handler is untouched, so every plugin
+   compiles as before, and no plugin is forced onto the seam.
 2. InteractiveBrokers: add the message handler it does not have, then replace the `NoBrokerageResponse` error and
    the invented `Submitted` with a watch. This is the proof that the abstraction holds for a plugin that did not
    write it.
-3. CharlesSchwab and Public.com: delete their service class and their fill/close diff. What stays is real and
-   named: the read and its sweep window, the model-to-state mapping, Schwab's stream-unavailable switch and its
-   by-symbol leg id assignment. One behavior change is intentional: a Public poll that shows a
+3. CharlesSchwab and Public.com (done): delete their service class and their fill/close diff. What stays is real
+   and named: the read and its sweep window, the model-to-state mapping, Schwab's stream-unavailable switch and
+   its by-symbol leg id assignment. One behavior change is intentional: a Public poll that shows a
    new fill and the cancel together now emits both — the old code dropped the cancel. Schwab's per-execution
    prices become per-sweep prices while the quantities stay exact; Public kept its change-of-average price
    recovery inside its mapping, so its part prices stay exact too.
-4. Tradier: replace the inline re-check block with a watch. Tradier splits orders across zero, so one brokerage
-   order can cover only part of the Lean quantity — its watch resolves submissions only, and fills stay on its
-   existing path.
+4. Tradier (done, further than planned here): the step was a watch for submissions with fills staying on its own
+   path. The adoption moved the fill path itself onto `PerOrderIdPollingService` and handles the cross-zero split
+   as "A cross-zero order, two ids" describes. Two costs are accepted: a sweep is one gated request per watched
+   order instead of one bulk request — the one-order-per-symbol rule keeps that count small, and an idle account
+   now polls nothing at all — and orders placed outside Lean are ignored, where the old code raised a fatal
+   "UnknownOrderId" error.
