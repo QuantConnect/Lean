@@ -113,6 +113,11 @@ namespace QuantConnect.Data.Market
 
         private static Symbol GetCanonicalOptionSymbol(Symbol symbol)
         {
+            if (ReferenceEquals(symbol, null))
+            {
+                return null;
+            }
+
             if (symbol.SecurityType.HasOptions())
             {
                 return Symbol.CreateCanonicalOption(symbol);

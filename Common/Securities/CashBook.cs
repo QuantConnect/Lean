@@ -279,7 +279,7 @@ namespace QuantConnect.Securities
         /// <param name="symbol">Key.</param>
         public override bool ContainsKey(string symbol)
         {
-            return _currencies.ContainsKey(symbol);
+            return !ReferenceEquals(symbol, null) && _currencies.ContainsKey(symbol);
         }
 
         /// <summary>
@@ -291,6 +291,11 @@ namespace QuantConnect.Securities
         /// <param name="value">Value.</param>
         public override bool TryGetValue(string symbol, out Cash value)
         {
+            if (ReferenceEquals(symbol, null))
+            {
+                value = null;
+                return false;
+            }
             return _currencies.TryGetValue(symbol, out value);
         }
 

@@ -162,6 +162,12 @@ namespace QuantConnect.Api
         public IDictionary<string, string> RuntimeStatistics { get; set; }
 
         /// <summary>
+        /// Server status information, including CPU/RAM usage, ect...
+        /// </summary>
+        [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
+        public IDictionary<string, string> ServerStatistics { get; set; }
+
+        /// <summary>
         /// A power gauge for backtests, time and parameters to estimate the overfitting risk
         /// </summary>
         public ResearchGuide ResearchGuide { get; set; }

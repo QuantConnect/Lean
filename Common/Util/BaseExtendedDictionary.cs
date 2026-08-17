@@ -83,6 +83,11 @@ namespace Common.Util
         /// <returns>true if the key was found; otherwise, false</returns>
         public override bool TryGetValue(TKey key, out TValue value)
         {
+            if (ReferenceEquals(key, null))
+            {
+                value = default;
+                return false;
+            }
             return Dictionary.TryGetValue(key, out value);
         }
 
@@ -170,7 +175,7 @@ namespace Common.Util
         /// <returns>true if the dictionary contains an element with the specified key; otherwise, false</returns>
         public override bool ContainsKey(TKey key)
         {
-            return Dictionary.ContainsKey(key);
+            return !ReferenceEquals(key, null) && Dictionary.ContainsKey(key);
         }
 
         /// <summary>

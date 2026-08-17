@@ -251,7 +251,7 @@ namespace QuantConnect
 
             if (IsReadOnly)
             {
-                throw new KeyNotFoundException(Messages.ExtendedDictionary.KeyNotFoundDueToNoData(this, key));
+                throw new KeyNotFoundException(Messages.ExtendedDictionary.SetDefaultKeyNotFoundDueToNoData(this, key));
             }
 
             this[key] = default_value;
