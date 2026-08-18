@@ -60,15 +60,8 @@ namespace QuantConnect.Tests.Brokerages.Services
 
         private static BrokerOrderState State(string brokerageId, OrderStatus status, decimal? filled = null, decimal? price = null, string message = null)
         {
-            return new BrokerOrderState
-            {
-                BrokerageOrderId = brokerageId,
-                Status = status,
-                FilledQuantity = filled,
-                FillPrice = price,
-                TimeUtc = new DateTime(2026, 8, 12, 14, 30, 0, DateTimeKind.Utc),
-                Message = message
-            };
+            return new BrokerOrderState(brokerageId, status, new DateTime(2026, 8, 12, 14, 30, 0, DateTimeKind.Utc),
+                filledQuantity: filled, fillPrice: price, message: message);
         }
 
         [Test]
@@ -638,12 +631,12 @@ namespace QuantConnect.Tests.Brokerages.Services
         }
 
         [Test]
-        public void SeedAndStartSeedsThenStarts()
+        public void StartWithPreLoadSeedsTheRegistryThenStarts()
         {
             AddOrder(233m, "42", OrderStatus.Submitted);
             var seeded = new List<string>();
 
-            _service.SeedAndStart(order =>
+            _service.Start(order =>
             {
                 seeded.Add(order.BrokerId[0]);
                 // the stream already reported 100 of the 233 shares
@@ -661,7 +654,7 @@ namespace QuantConnect.Tests.Brokerages.Services
         }
 
         [Test]
-        public void SeedAndStartDrainsTheMessageHandlerBeforeSeeding()
+        public void StartWithPreLoadDrainsTheMessageHandlerBeforeSeeding()
         {
             AddOrder(233m, "42", OrderStatus.Submitted);
             var steps = new List<string>();
@@ -689,7 +682,7 @@ namespace QuantConnect.Tests.Brokerages.Services
             // the stream delivered a fill that is still buffered behind the order request
             handler.HandleNewMessage(State("42", OrderStatus.PartiallyFilled, filled: 100m, price: 310m));
 
-            var seedAndStart = Task.Run(() => service.SeedAndStart(openOrder =>
+            var seededStart = Task.Run(() => service.Start(openOrder =>
             {
                 lock (steps)
                 {
@@ -699,10 +692,10 @@ namespace QuantConnect.Tests.Brokerages.Services
             }));
 
             // the handover waits for the order request instead of seeding early
-            Assert.IsFalse(seedAndStart.Wait(TimeSpan.FromMilliseconds(100)));
+            Assert.IsFalse(seededStart.Wait(TimeSpan.FromMilliseconds(100)));
 
             releaseEvent.Set();
-            Task.WaitAll(orderRequest, seedAndStart);
+            Task.WaitAll(orderRequest, seededStart);
 
             Assert.IsTrue(service.IsPolling);
             lock (steps)
@@ -713,22 +706,22 @@ namespace QuantConnect.Tests.Brokerages.Services
         }
 
         [Test]
-        public void SeedAndStartWithoutSeedJustStarts()
+        public void StartWithNullPreLoadJustStarts()
         {
-            _service.SeedAndStart();
+            _service.Start(preLoadOpenOrders: null);
 
             Assert.IsTrue(_service.IsPolling);
             Assert.IsEmpty(_orderEvents);
         }
 
         [Test]
-        public void SeedAndStartWhilePollingDoesNothing()
+        public void StartWithPreLoadWhilePollingDoesNothing()
         {
             AddOrder(100m, "42");
             _service.Start();
 
             var callCount = 0;
-            _service.SeedAndStart(_ => { callCount++; return null; });
+            _service.Start(_ => { callCount++; return null; });
 
             Assert.IsTrue(_service.IsPolling);
             Assert.AreEqual(0, callCount);
@@ -740,7 +733,7 @@ namespace QuantConnect.Tests.Brokerages.Services
             AddOrder(100m, "42");
             AddOrder(100m, "43");
 
-            _service.SeedAndStart(seed: order => order.BrokerId[0] == "42"
+            _service.Start(preLoadOpenOrders: order => order.BrokerId[0] == "42"
                 ? null
                 : new BrokerOrderState { Status = OrderStatus.Submitted });
 

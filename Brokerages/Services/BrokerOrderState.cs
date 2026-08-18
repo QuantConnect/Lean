@@ -60,5 +60,46 @@ namespace QuantConnect.Brokerages.Services
         /// The broker's own words for a closing status, e.g. the reject reason.
         /// </summary>
         public string Message { get; set; }
+
+        /// <summary>
+        /// Creates an empty state the caller fills through the properties.
+        /// </summary>
+        public BrokerOrderState()
+        {
+        }
+
+        /// <summary>
+        /// Creates a state with no fill numbers: the id, the status, the time and the broker's words
+        /// for a closing status.
+        /// </summary>
+        /// <param name="brokerageOrderId">The brokerage order id.</param>
+        /// <param name="status">The Lean status the brokerage maps its broker's own status to.</param>
+        /// <param name="timeUtc">When the brokerage reported this state, in UTC.</param>
+        /// <param name="message">The broker's own words for a closing status.</param>
+        public BrokerOrderState(string brokerageOrderId, OrderStatus status, DateTime timeUtc, string message)
+            : this(brokerageOrderId, status, timeUtc, filledQuantity: null, fillPrice: null, message: message)
+        {
+        }
+
+        /// <summary>
+        /// Creates a state from what one read saw. Only the first three are always known; the fill
+        /// numbers and the message stay null when the read does not carry them.
+        /// </summary>
+        /// <param name="brokerageOrderId">The brokerage order id.</param>
+        /// <param name="status">The Lean status the brokerage maps its broker's own status to.</param>
+        /// <param name="timeUtc">When the brokerage reported this state, in UTC.</param>
+        /// <param name="filledQuantity">The total absolute quantity filled so far.</param>
+        /// <param name="fillPrice">The price the broker reports for the fills.</param>
+        /// <param name="message">The broker's own words for a closing status.</param>
+        public BrokerOrderState(string brokerageOrderId, OrderStatus status, DateTime timeUtc,
+            decimal? filledQuantity = null, decimal? fillPrice = null, string message = null)
+        {
+            BrokerageOrderId = brokerageOrderId;
+            Status = status;
+            TimeUtc = timeUtc;
+            FilledQuantity = filledQuantity;
+            FillPrice = fillPrice;
+            Message = message;
+        }
     }
 }

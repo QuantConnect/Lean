@@ -352,7 +352,8 @@ namespace QuantConnect.Brokerages
 
         /// <summary>
         /// The order polling service one of the create overloads built and wired, null until then. The brokerage
-        /// calls Watch, WatchReplacement, Start, Stop and SeedAndStart on it at its own lifecycle points;
+        /// calls Watch, WatchReplacement, Start - plain or with its pre-load callback - and Stop on it at
+        /// its own lifecycle points;
         /// <see cref="Dispose"/> disposes it.
         /// </summary>
         protected BrokerageOrderPollingService OrderPollingService { get; private set; }
@@ -424,6 +425,9 @@ namespace QuantConnect.Brokerages
             service.Message += (_, message) => OnMessage(message);
             service.OrderNotAcknowledged += (_, notAcknowledged) => OnOrderPollingNotAcknowledged(notAcknowledged);
             OrderPollingService = service;
+
+            Log.Trace($"Brokerage.WireOrderPollingService(): {Name} created a {service.GetType().Name}: " +
+                $"poll interval {service.PollInterval.TotalMilliseconds}ms, watch timeout {service.WatchTimeout.TotalSeconds}s.");
         }
 
         /// <summary>

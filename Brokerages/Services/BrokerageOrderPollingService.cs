@@ -495,16 +495,16 @@ namespace QuantConnect.Brokerages.Services
 
         /// <summary>
         /// The whole handover from a stream to polling, in the only safe order: process what the stream
-        /// already delivered, seed the registry with one <see cref="Watch(string, BrokerOrderState)"/> per
-        /// open Lean order, then <see cref="Start"/>. Does nothing while polling already runs.
+        /// already delivered, pre-load the registry with one <see cref="Watch(string, BrokerOrderState)"/>
+        /// per open Lean order, then start the loop. Does nothing while polling already runs.
         /// </summary>
         /// <example>
-        /// The stream reported 100 of 233 shares, the seed carries 100, so the first sweep reports only the other 133.
+        /// The stream reported 100 of 233 shares, the pre-load carries 100, so the first sweep reports only the other 133.
         /// </example>
-        /// <param name="seed">Builds the seed for one open Lean order: the brokerage id, the order's status
-        /// and the cumulative filled quantity already reported. A null return skips the order, and a null
-        /// callback skips seeding.</param>
-        public void SeedAndStart(Func<Order, BrokerOrderState> seed = null)
+        /// <param name="preLoadOpenOrders">Builds the state another path already reported for one open Lean
+        /// order: the brokerage id, the order's status and the cumulative filled quantity. A null return
+        /// skips the order, and a null callback pre-loads nothing.</param>
+        public void Start(Func<Order, BrokerOrderState> preLoadOpenOrders)
         {
             if (IsPolling)
             {
@@ -512,19 +512,27 @@ namespace QuantConnect.Brokerages.Services
             }
 
             // an empty locked block waits for any order request in flight and processes the stream messages
-            // it buffered, so the seeds below count every fill the stream delivered
+            // it buffered, so the pre-load below counts every fill the stream delivered
             _messageHandler?.WithLockedStream(() => { });
 
-            if (seed != null)
+            if (preLoadOpenOrders != null)
             {
+                Log.Trace($"{GetType().Name}.{nameof(Start)}(): pre-loading the open orders.");
+
+                var openOrderCount = 0;
+                var preLoadedCount = 0;
                 foreach (var openLeanOrder in _orderProvider?.GetOpenOrders() ?? [])
                 {
-                    var lastSeen = seed(openLeanOrder);
+                    openOrderCount++;
+                    var lastSeen = preLoadOpenOrders(openLeanOrder);
                     if (lastSeen != null && !string.IsNullOrEmpty(lastSeen.BrokerageOrderId))
                     {
                         Watch(lastSeen.BrokerageOrderId, lastSeen);
+                        preLoadedCount++;
                     }
                 }
+
+                Log.Trace($"{GetType().Name}.{nameof(Start)}(): pre-loaded {preLoadedCount} of {openOrderCount} open order(s).");
             }
 
             Start();
