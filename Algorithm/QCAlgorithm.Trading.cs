@@ -36,6 +36,7 @@ namespace QuantConnect.Algorithm
         private bool _isGtdTfiForMooAndMocOrdersValidationWarningSent;
         private bool _isOptionsOrderOnStockSplitWarningSent;
         private bool _liquidateSymbolNotFoundWarningSent;
+        private bool _isSequentialOptionLegOrdersWarningSent;
 
         /// <summary>
         /// Transaction Manager - Process transaction fills and order management.
@@ -277,6 +278,21 @@ namespace QuantConnect.Algorithm
                         _isDailyResolutionMarketOrderConversionWarningSent = true;
                     }
                     return convertedTicket;
+                }
+            }
+
+            // Legging into multi-leg option positions with sequential market orders works but exposes the user to
+            // execution risk between fills and to naked margin on the intermediate positions. Hint at combo orders once
+            if (!_isSequentialOptionLegOrdersWarningSent && security.Type.IsOption())
+            {
+                var canonical = security.Symbol.Canonical;
+                if (Portfolio.Positions.Groups.Any(group => group.Positions.Any(position => position.Symbol != security.Symbol
+                    && position.Symbol.SecurityType.IsOption() && position.Symbol.Canonical == canonical)))
+                {
+                    Debug("Warning: detected market orders on individual option contracts while already holding other contracts of the " +
+                        "same option chain. To enter a multi-leg option position atomically and get option strategy margin benefits, " +
+                        "consider using a combo order (ComboMarketOrder) or an OptionStrategies helper with Buy/Sell instead.");
+                    _isSequentialOptionLegOrdersWarningSent = true;
                 }
             }
 

@@ -15,9 +15,11 @@
 
 using System;
 using System.Linq;
+using QuantConnect.Logging;
 using QuantConnect.Orders.Fees;
 using QuantConnect.Securities.Positions;
 using QuantConnect.Securities.Option.StrategyMatcher;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using QuantConnect.Orders;
 
@@ -31,6 +33,9 @@ namespace QuantConnect.Securities.Option
     /// </remarks>
     public class OptionStrategyPositionGroupBuyingPowerModel : PositionGroupBuyingPowerModel
     {
+        // one entry per strategy name and caller so the per-leg margin fallback is logged only once per case
+        private static readonly ConcurrentDictionary<string, byte> _perLegMarginFallbacksLogged = new();
+
         private readonly OptionStrategy _optionStrategy;
 
         /// <summary>
@@ -60,7 +65,29 @@ namespace QuantConnect.Securities.Option
                 // we could be liquidating a position
                 return new MaintenanceMargin(0);
             }
-            else if (_optionStrategy.Name == OptionStrategyDefinitions.ProtectivePut.Name || _optionStrategy.Name == OptionStrategyDefinitions.ProtectiveCall.Name)
+
+            try
+            {
+                return GetOptionStrategyMaintenanceMargin(parameters);
+            }
+            catch (InvalidOperationException exception)
+            {
+                // A position group whose legs don't fit the matched strategy's expected shape must not crash the algorithm:
+                // legging into spreads with sequential market orders could hard-crash the algorithm with
+                // "Sequence contains no matching element" when a margin call probed a degenerate trial group
+                // (GH #9612 guarded the zero-quantity probes; this guards any remaining degenerate shape).
+                // Fall back to margining each leg individually, a conservative estimate that ignores leg offsets.
+                LogPerLegMarginFallback(nameof(GetMaintenanceMargin), exception.Message, parameters.PositionGroup);
+                return new MaintenanceMargin(GetPerLegMaintenanceMargin(parameters.PositionGroup, parameters.Portfolio));
+            }
+        }
+
+        /// <summary>
+        /// Gets the maintenance margin for the strategy modeled by this instance
+        /// </summary>
+        private MaintenanceMargin GetOptionStrategyMaintenanceMargin(PositionGroupMaintenanceMarginParameters parameters)
+        {
+            if (_optionStrategy.Name == OptionStrategyDefinitions.ProtectivePut.Name || _optionStrategy.Name == OptionStrategyDefinitions.ProtectiveCall.Name)
             {
                 // Minimum (((10% * Call/Put Strike Price) + Call/Put Out of the Money Amount), Short Stock/Long Maintenance Requirement)
                 var optionPosition = parameters.PositionGroup.Positions.FirstOrDefault(position => position.Symbol.SecurityType.IsOption());
@@ -284,7 +311,11 @@ namespace QuantConnect.Securities.Option
                 return GetPutLadderMargin(parameters, true);
             }
 
-            throw new NotImplementedException($"Option strategy {_optionStrategy.Name} margin modeling has yet to be implemented");
+            // A strategy the matcher can produce but which has no margin modeling (e.g. the backspreads):
+            // margin each leg individually instead of crashing the algorithm
+            LogPerLegMarginFallback(nameof(GetMaintenanceMargin),
+                $"Option strategy {_optionStrategy.Name} margin modeling has yet to be implemented", parameters.PositionGroup);
+            return new MaintenanceMargin(GetPerLegMaintenanceMargin(parameters.PositionGroup, parameters.Portfolio));
         }
 
         /// <summary>
@@ -299,6 +330,28 @@ namespace QuantConnect.Securities.Option
                 return OptionInitialMargin.Zero;
             }
 
+            try
+            {
+                return GetOptionStrategyInitialMargin(parameters);
+            }
+            catch (InvalidOperationException exception)
+            {
+                // A position group whose legs don't fit the matched strategy's expected shape must not crash the algorithm:
+                // legging into spreads with sequential market orders could hard-crash the algorithm with
+                // "Sequence contains no matching element" when a margin call probed a degenerate trial group
+                // (GH #9612 guarded the zero-quantity probes; this guards any remaining degenerate shape).
+                // Fall back to margining each leg individually, a conservative estimate that ignores leg offsets.
+                LogPerLegMarginFallback(nameof(GetInitialMarginRequirement), exception.Message, parameters.PositionGroup);
+                return new OptionInitialMargin(GetPerLegInitialMargin(parameters.PositionGroup, parameters.Portfolio),
+                    GetPositionGroupPremium(parameters.PositionGroup, parameters.Portfolio));
+            }
+        }
+
+        /// <summary>
+        /// Gets the initial margin required for the strategy modeled by this instance
+        /// </summary>
+        private InitialMargin GetOptionStrategyInitialMargin(PositionGroupInitialMarginParameters parameters)
+        {
             var result = 0m;
 
             if (_optionStrategy == null)
@@ -423,18 +476,30 @@ namespace QuantConnect.Securities.Option
             }
             else
             {
-                throw new NotImplementedException($"Option strategy {_optionStrategy.Name} margin modeling has yet to be implemented");
+                // A strategy the matcher can produce but which has no margin modeling (e.g. the backspreads):
+                // margin each leg individually instead of crashing the algorithm
+                LogPerLegMarginFallback(nameof(GetInitialMarginRequirement),
+                    $"Option strategy {_optionStrategy.Name} margin modeling has yet to be implemented", parameters.PositionGroup);
+                result = GetPerLegInitialMargin(parameters.PositionGroup, parameters.Portfolio);
             }
 
-            // Add premium to initial margin only when it is positive (the user must pay the premium)
+            return new OptionInitialMargin(result, GetPositionGroupPremium(parameters.PositionGroup, parameters.Portfolio));
+        }
+
+        /// <summary>
+        /// Gets the premium of the option positions in the group, which is added to the initial margin
+        /// only when it is positive (the user must pay the premium)
+        /// </summary>
+        private static decimal GetPositionGroupPremium(IPositionGroup positionGroup, SecurityPortfolioManager portfolio)
+        {
             var premium = 0m;
-            foreach (var position in parameters.PositionGroup.Positions.Where(position => position.Symbol.SecurityType.IsOption()))
+            foreach (var position in positionGroup.Positions.Where(position => position.Symbol.SecurityType.IsOption()))
             {
-                var option = (Option)parameters.Portfolio.Securities[position.Symbol];
+                var option = (Option)portfolio.Securities[position.Symbol];
                 premium += option.Holdings.GetQuantityValue(position.Quantity).InAccountCurrency;
             }
 
-            return new OptionInitialMargin(result, premium);
+            return premium;
         }
 
         /// <summary>
@@ -665,6 +730,54 @@ namespace QuantConnect.Securities.Option
                 var security = (Option)parameters.Portfolio.Securities[shortNakedPut.Symbol];
                 var margin = security.BuyingPowerModel.GetInitialMarginRequirement(new InitialMarginParameters(security, shortNakedPut.Quantity));
                 return new MaintenanceMargin(Math.Abs(margin));
+            }
+        }
+
+        /// <summary>
+        /// Returns the sum of each leg's maintenance margin as if it was held outside of the group.
+        /// Used as a safe, conservative fallback when the strategy-specific margin cannot be computed
+        /// </summary>
+        private static decimal GetPerLegMaintenanceMargin(IPositionGroup positionGroup, SecurityPortfolioManager portfolio)
+        {
+            var margin = 0m;
+            foreach (var position in positionGroup.Positions)
+            {
+                var security = portfolio.Securities[position.Symbol];
+                margin += Math.Abs(security.BuyingPowerModel.GetMaintenanceMargin(
+                    MaintenanceMarginParameters.ForQuantityAtCurrentPrice(security, position.Quantity)));
+            }
+
+            return margin;
+        }
+
+        /// <summary>
+        /// Returns the sum of each leg's initial margin (without premium) as if it was held outside of the group.
+        /// Used as a safe, conservative fallback when the strategy-specific margin cannot be computed
+        /// </summary>
+        private static decimal GetPerLegInitialMargin(IPositionGroup positionGroup, SecurityPortfolioManager portfolio)
+        {
+            var margin = 0m;
+            foreach (var position in positionGroup.Positions)
+            {
+                var security = portfolio.Securities[position.Symbol];
+                var initialMargin = security.BuyingPowerModel.GetInitialMarginRequirement(new InitialMarginParameters(security, position.Quantity));
+                var optionInitialMargin = initialMargin as OptionInitialMargin;
+                margin += Math.Abs(optionInitialMargin?.ValueWithoutPremium ?? initialMargin);
+            }
+
+            return margin;
+        }
+
+        /// <summary>
+        /// Logs that the strategy margin could not be computed for a position group and each leg will be margined individually.
+        /// Logged only once per strategy and caller to avoid flooding, since these models are re-created on every group resolution
+        /// </summary>
+        private void LogPerLegMarginFallback(string caller, string reason, IPositionGroup positionGroup)
+        {
+            if (_perLegMarginFallbacksLogged.TryAdd($"{_optionStrategy?.Name}:{caller}", 0))
+            {
+                Log.Error($"OptionStrategyPositionGroupBuyingPowerModel.{caller}(): unable to compute the strategy margin for the '{_optionStrategy?.Name}' " +
+                    $"position group {positionGroup.Key}: {reason}. Falling back to margining each leg individually.");
             }
         }
     }
