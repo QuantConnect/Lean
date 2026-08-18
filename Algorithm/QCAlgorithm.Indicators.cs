@@ -56,6 +56,13 @@ namespace QuantConnect.Algorithm
             "Period"
         };
 
+        // Per symbol tracking of the indicators and consolidators created through the algorithm helper methods,
+        // so they can be deregistered in bulk when a security is removed, see 'DeregisterAll'. Without cleanup,
+        // universe churn accumulates consolidators that are scanned forever, leaking until out of memory
+        private readonly Dictionary<Symbol, HashSet<IndicatorBase>> _registeredIndicators = new();
+        private readonly Dictionary<Symbol, HashSet<IDataConsolidator>> _registeredConsolidators = new();
+        private readonly object _registrationsLock = new();
+
         /// <summary>
         /// Gets whether or not WarmUpIndicator is allowed to warm up indicators
         /// </summary>
@@ -3372,6 +3379,61 @@ namespace QuantConnect.Algorithm
             }
 
             indicator.Consolidators.Clear();
+
+            // drop it from the per symbol tracking so 'DeregisterAll' doesn't hold on to it. An indicator can be
+            // tracked under multiple symbols (e.g. Beta), so we sweep all entries
+            lock (_registrationsLock)
+            {
+                foreach (var indicators in _registeredIndicators.Values)
+                {
+                    indicators.Remove(indicator);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Deregisters all indicators and consolidators for the given symbol that were created through the algorithm
+        /// helper methods, e.g. <see cref="RSI(Symbol, int, MovingAverageType, Resolution?, Func{IBaseData, decimal})"/>,
+        /// <see cref="SMA(Symbol, int, Resolution?, Func{IBaseData, decimal})"/> or
+        /// <see cref="Consolidate(Symbol, Resolution, Action{TradeBar})"/>, so they stop receiving data updates and
+        /// no longer consume resources. Indicators created for multiple symbols, e.g.
+        /// <see cref="B(Symbol, Symbol, int, Resolution?, Func{IBaseData, IBaseDataBar})"/>, are completely
+        /// deregistered when any of their symbols is deregistered. Typically called from
+        /// <see cref="QCAlgorithm.OnSecuritiesChanged"/> for each removed security, which avoids leaking
+        /// consolidators on universe churn; alternatively see
+        /// <see cref="QuantConnect.Interfaces.IAlgorithmSettings.AutomaticIndicatorDeregistration"/>.
+        /// Indicators registered through the RegisterIndicator overloads are also deregistered. Consolidators added
+        /// directly through <see cref="SubscriptionManager"/> without an indicator are not tracked and are unaffected,
+        /// intentionally allowing them to be kept across universe removals.
+        /// </summary>
+        /// <param name="symbol">The symbol whose helper-created indicators and consolidators will be deregistered</param>
+        [DocumentationAttribute(ConsolidatingData)]
+        [DocumentationAttribute(Indicators)]
+        public void DeregisterAll(Symbol symbol)
+        {
+            HashSet<IndicatorBase> indicators;
+            HashSet<IDataConsolidator> consolidators;
+            lock (_registrationsLock)
+            {
+                _registeredIndicators.Remove(symbol, out indicators);
+                _registeredConsolidators.Remove(symbol, out consolidators);
+            }
+
+            if (indicators != null)
+            {
+                foreach (var indicator in indicators)
+                {
+                    DeregisterIndicator(indicator);
+                }
+            }
+
+            if (consolidators != null)
+            {
+                foreach (var consolidator in consolidators)
+                {
+                    SubscriptionManager.RemoveConsolidator(symbol, consolidator);
+                }
+            }
         }
 
         /// <summary>
@@ -4454,6 +4516,27 @@ namespace QuantConnect.Algorithm
 
             // register the consolidator for automatic updates via SubscriptionManager
             SubscriptionManager.AddConsolidator(symbol, consolidator, tickType);
+
+            // track helper-created indicators and consolidators per symbol so 'DeregisterAll' can dispose them in bulk
+            lock (_registrationsLock)
+            {
+                if (indicatorBase != null)
+                {
+                    if (!_registeredIndicators.TryGetValue(symbol, out var indicators))
+                    {
+                        _registeredIndicators[symbol] = indicators = new();
+                    }
+                    indicators.Add(indicatorBase);
+                }
+                else
+                {
+                    if (!_registeredConsolidators.TryGetValue(symbol, out var consolidators))
+                    {
+                        _registeredConsolidators[symbol] = consolidators = new();
+                    }
+                    consolidators.Add(consolidator);
+                }
+            }
         }
 
         private DateTime GetIndicatorAdjustedHistoryStart(IndicatorBase indicator, IEnumerable<Symbol> symbols, DateTime start, DateTime end, Resolution? resolution = null)
