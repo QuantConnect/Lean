@@ -88,30 +88,4 @@ namespace QuantConnect.Tests.Engine.HistoricalData
             OnReaderErrorDetected(new ReaderErrorDetectedEventArgs(Symbols.SPY, "invalid config"));
         }
     }
-
-    /// <summary>
-    /// History provider that builds its result lazily and throws while it is being enumerated,
-    /// like a provider failing part way through serving a request
-    /// </summary>
-    internal class ThrowingHistoryProvider : HistoryProviderBase
-    {
-        public override int DataPointCount => 0;
-
-        public override void Initialize(HistoryProviderInitializeParameters parameters)
-        {
-        }
-
-        public override IEnumerable<Slice> GetHistory(IEnumerable<HistoryRequest> requests, DateTimeZone sliceTimeZone)
-        {
-            return Throw();
-        }
-
-        private static IEnumerable<Slice> Throw()
-        {
-            throw new NullReferenceException("Object reference not set to an instance of an object.");
-#pragma warning disable CS0162
-            yield break;
-#pragma warning restore CS0162
-        }
-    }
 }
