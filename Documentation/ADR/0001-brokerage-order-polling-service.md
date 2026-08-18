@@ -19,7 +19,7 @@ connection running next to a streaming one, on real CharlesSchwab accounts. The 
 showed up as designed: a market order already filled on its first listing reports the submit and the fill
 in one batch, and the executions of one sweep arrive as one event.
 
-Second plugin adopted - 2026-08-15: Public.com runs on `PerOrderIdPollingService`
+Second plugin adopted - 2026-08-15: Public.com runs on `SingleOrderPollingService`
 (`Lean.Brokerages.Public`, draft PR #6). Its own service class, diff and snapshot model are deleted; the
 plugin keeps the get-order read and the model-to-state mapping. Its same-id replace stays plugin-side, so
 `WatchReplacement` is not wired, and a get-order 404 maps to a null state - the contract's "the broker
@@ -33,7 +33,7 @@ mode, the service as a protected `OrderPollingService` property with `IsOrderPol
 CharlesSchwab and Public.com were moved onto it: the creation, the three event forwards and the dispose
 call left both plugins (see "Wiring, per plugin").
 
-Third plugin adopted - 2026-08-17: Tradier runs on `PerOrderIdPollingService`
+Third plugin adopted - 2026-08-17: Tradier runs on `SingleOrderPollingService`
 (`Lean.Brokerages.Tradier`, draft PR #54). Its fill timer, `CheckForFills`
 diff, order cache and unknown-id verification are deleted (~230 lines); the plugin keeps the get-order
 read and the mapping. Tradier is the first adopter that splits orders across zero: the legs chain from
@@ -78,6 +78,16 @@ property-fill constructor left with it: every builder goes through the construct
 constructors default the time to `DateTime.UtcNow` when none is passed. All three adopters and the
 tests renamed and simplified with it.
 
+Mode classes renamed - 2026-08-19: `PerOrderIdPollingService` and `AllOrdersPollingService` became
+`SingleOrderPollingService` and `BulkOrdersPollingService` - named for the request shape one sweep
+sends: one order per request, or one request for everything the broker lists. The abstract parent took
+Lean's `Base` prefix with it: `BaseBrokerageOrderPollingService`.
+
+Constructor chains and clearer names - 2026-08-19: `watchTimeout` became `notificationTimeout` - the
+silence that raises `BrokerageOrderNeverNotified`; the read callbacks became `getBrokerageOrderById` and
+`getAllBrokerageOrders`; both mode classes offer three chained constructors instead of optional
+parameters; and the defaults read `3 * 1000` and `60 * 1000` milliseconds in code and docs alike.
+
 ## Purpose
 
 Three brokerage plugins have already written the same thing, and a fourth one needs it and does not have it:
@@ -93,7 +103,7 @@ happened to an order, and it is not reliable.** It can be absent, it can be take
 and it can stay up while quietly missing an update. In all four shapes the broker still knows the answer over HTTP,
 and nobody asks.
 
-This document proposes one helper class in Lean core, `BrokerageOrderPollingService`, that any brokerage can create
+This document proposes one helper class in Lean core, `BaseBrokerageOrderPollingService`, that any brokerage can create
 and use. The brokerage picks one of two classes — read one order by its brokerage id, or read all orders — and
 hands the service a read callback that converts each order from the broker's own model into one shared snapshot
 shape. Every N seconds the service runs the read, and the snapshots travel through the brokerage's message handler
@@ -262,8 +272,8 @@ choice, made when it picks the class.
 
 ### Where it lives
 
-`Lean/Brokerages/Services/OrderPolling/BrokerageOrderPollingService.cs` — the base class — with
-`PerOrderIdPollingService.cs` and `AllOrdersPollingService.cs` next to it, in namespace
+`Lean/Brokerages/Services/OrderPolling/BaseBrokerageOrderPollingService.cs` — the base class — with
+`SingleOrderPollingService.cs` and `BulkOrdersPollingService.cs` next to it, in namespace
 `QuantConnect.Brokerages.Services.OrderPolling`. The data shapes live one level deeper, in `Models/` with
 the matching namespace suffix: `BrokerageOrderSnapshot.cs` and `BrokerageOrderNeverNotifiedEventArgs.cs`.
 
@@ -368,7 +378,7 @@ legFill = leanOrder.Quantity * newPart / abs(leanOrder.GroupOrderManager.Quantit
 The state has no quantity field because the service does not need one: it already knows the brokerage id, so it
 reads the group quantity from the Lean orders themselves. That number equals the broker's own order quantity — the
 group quantity is exactly what the combo was placed with. Public's replaced diff split fills this way, and
-the rule moved into the service's fan-out (`Brokerages/Services/OrderPolling/BrokerageOrderPollingService.cs`). One rule for the mapping follows:
+the rule moved into the service's fan-out (`Brokerages/Services/OrderPolling/BaseBrokerageOrderPollingService.cs`). One rule for the mapping follows:
 `FilledQuantity` of a shared-id combo is in strategy units, the same units the group quantity counts in.
 
 A worked example, from a real Public.com order — 5 AAPL strangles, one brokerage id, a put leg and a call leg with
@@ -449,17 +459,17 @@ namespace QuantConnect.Brokerages.Services.OrderPolling;
 /// Used when a brokerage has no order stream, when the stream is unavailable, or to resolve an order
 /// the broker never replied about. The base class owns everything both modes share — the loop, the
 /// watch registry, the compare and the events. What one sweep reads is the subclass:
-/// <see cref="PerOrderIdPollingService"/> or <see cref="AllOrdersPollingService"/>.
+/// <see cref="SingleOrderPollingService"/> or <see cref="BulkOrdersPollingService"/>.
 /// </summary>
-public abstract class BrokerageOrderPollingService : IDisposable
+public abstract class BaseBrokerageOrderPollingService : IDisposable
 {
     /// <summary>Initializes what both modes share: the message handler wiring, the order provider, and
     /// the two time settings with their defaults. The service wires the handler both ways itself: it
     /// registers <see cref="ProcessOrderState"/> and enqueues every polled snapshot, so one handler
     /// serializes polled snapshots with everything else the brokerage processes. A null handler routes
     /// each snapshot straight into <see cref="ProcessOrderState"/>.</summary>
-    protected BrokerageOrderPollingService(BrokerageConcurrentMessageHandler messageHandler, IOrderProvider orderProvider,
-        TimeSpan? pollInterval = null, TimeSpan? watchTimeout = null);
+    protected BaseBrokerageOrderPollingService(BrokerageConcurrentMessageHandler messageHandler, IOrderProvider orderProvider,
+        TimeSpan? pollInterval = null, TimeSpan? notificationTimeout = null);
 
     /// <summary>One read of the broker, giving the states the sweep saw. The loop calls it every
     /// poll interval, hands each state to the message handler, and counts a throw as one failed sweep.</summary>
@@ -472,7 +482,7 @@ public abstract class BrokerageOrderPollingService : IDisposable
     /// <summary>The order events one snapshot produced. Raised inside <see cref="ProcessOrderState"/>, never empty.</summary>
     public event EventHandler<List<OrderEvent>> OrderEvents;
 
-    /// <summary>A watched order that nothing reported for <c>watchTimeout</c> of polling.
+    /// <summary>A watched order that nothing reported for <c>notificationTimeout</c> of polling.
     /// Raised once; the id is unwatched with it.</summary>
     public event EventHandler<BrokerageOrderNeverNotifiedEventArgs> BrokerageOrderNeverNotified;
 
@@ -486,7 +496,7 @@ public abstract class BrokerageOrderPollingService : IDisposable
     public TimeSpan PollInterval { get; }
 
     /// <summary>How long a watched order may stay completely unreported, in polling time.</summary>
-    public TimeSpan WatchTimeout { get; }
+    public TimeSpan NotificationTimeout { get; }
 
     /// <summary>Watches a brokerage order id, with nothing seen for it yet. Idempotent: watching an
     /// already-watched id never overwrites its state.</summary>
@@ -533,22 +543,24 @@ public abstract class BrokerageOrderPollingService : IDisposable
 /// <summary>
 /// For a broker with a get-order endpoint. A sweep calls the read once per watched brokerage id —
 /// no request when nothing is watched. A null return means the broker does not know the id, so the
-/// watch timeout keeps counting. A read that throws is logged and skipped, so one bad id cannot
+/// notification timeout keeps counting. A read that throws is logged and skipped, so one bad id cannot
 /// starve the others; the sweep only counts as failed when every read of the sweep failed.
 /// </summary>
-public class PerOrderIdPollingService : BrokerageOrderPollingService
+public class SingleOrderPollingService : BaseBrokerageOrderPollingService
 {
-    public PerOrderIdPollingService(Func<string, BrokerageOrderSnapshot> readOrder, BrokerageConcurrentMessageHandler messageHandler,
-        IOrderProvider orderProvider, TimeSpan? pollInterval = null, TimeSpan? watchTimeout = null);
+    public SingleOrderPollingService(Func<string, BrokerageOrderSnapshot> getBrokerageOrderById, BrokerageConcurrentMessageHandler messageHandler,
+        IOrderProvider orderProvider, TimeSpan? pollInterval, TimeSpan? notificationTimeout);
+    // two shorter overloads chain to it: (read, handler, provider) and (read, handler, provider, pollInterval)
 }
 
 /// <summary>
 /// For a broker with only a bulk endpoint. A sweep calls the read once, whatever is watched.
 /// </summary>
-public class AllOrdersPollingService : BrokerageOrderPollingService
+public class BulkOrdersPollingService : BaseBrokerageOrderPollingService
 {
-    public AllOrdersPollingService(Func<IEnumerable<BrokerageOrderSnapshot>> readAllOrders, BrokerageConcurrentMessageHandler messageHandler,
-        IOrderProvider orderProvider, TimeSpan? pollInterval = null, TimeSpan? watchTimeout = null);
+    public BulkOrdersPollingService(Func<IEnumerable<BrokerageOrderSnapshot>> getAllBrokerageOrders, BrokerageConcurrentMessageHandler messageHandler,
+        IOrderProvider orderProvider, TimeSpan? pollInterval, TimeSpan? notificationTimeout);
+    // two shorter overloads chain to it: (read, handler, provider) and (read, handler, provider, pollInterval)
 }
 ```
 
@@ -559,11 +571,11 @@ The watch registry, the compare with the last state seen and the seeding of orde
 
 The mode is the class. Both run the same diff — it lives in the base — and a subclass is only its `Sweep`:
 
-- **`PerOrderIdPollingService`** — `Func<string, BrokerageOrderSnapshot>`: the sweep loops the watched ids and calls the
+- **`SingleOrderPollingService`** — `Func<string, BrokerageOrderSnapshot>`: the sweep loops the watched ids and calls the
   read once per id. Nothing watched, nothing requested. Public.com's replaced service had exactly this
   constructor — `new OrderPollingService(_apiClient.GetOrderById, _messageHandler.HandleNewMessage, interval)` —
   and its adoption passes the same read to `CreateOrderPollingService`.
-- **`AllOrdersPollingService`** — `Func<IEnumerable<BrokerageOrderSnapshot>>`: the sweep calls the read once, and the
+- **`BulkOrdersPollingService`** — `Func<IEnumerable<BrokerageOrderSnapshot>>`: the sweep calls the read once, and the
   read returns everything the broker lists.
 
 Two classes instead of one class with both reads, because a bulk read does not fit a per-id shape: called once
@@ -573,7 +585,7 @@ each class clean: one class with both reads would hold a null field for the unus
 to pick the right read; a subclass holds only its own read.
 
 The watch registry serves both modes. In per-id mode it is also the read list. In all-orders mode it only feeds
-the watch timeout: the service still checks that every watched id shows up in the snapshots sooner or later.
+the notification timeout: the service still checks that every watched id shows up in the snapshots sooner or later.
 
 | Plugin | The sweep reads | Scope | Why |
 | --- | --- | --- | --- |
@@ -655,7 +667,7 @@ the polling service moves to the non-generic class, one plugin at a time.
 `ProcessOrderState` compares the snapshot with the last state it has seen for that brokerage id:
 
 ```
-record the id as seen, for the watch timeout
+record the id as seen, for the notification timeout
 find the Lean orders by brokerage id (IOrderProvider.GetOrdersByBrokerageId — a list,
 because combo legs can share one id and each leg is its own Lean order)
     none found       -> skip and write nothing: not ours, or ours with the id not on the
@@ -752,7 +764,7 @@ diffs. With the snapshot the diff is shared, whole, and the plugins keep only th
 - A snapshot arrives for the id, or the stream records one through `UpdateOrderState` → the order was seen,
   and the id stays watched until the order closes.
 - The order is closed in Lean → `Unwatch`, and its state is dropped.
-- `watchTimeout` of polling passes and nothing ever carried the id → `BrokerageOrderNeverNotified` is raised once, with
+- `notificationTimeout` of polling passes and nothing ever carried the id → `BrokerageOrderNeverNotified` is raised once, with
   the id, the Lean order behind it when one resolves (null for a placement whose id assignment never
   happened), and how long it was watched; the args print all of it through `ToString`, and the id is
   unwatched.
@@ -986,7 +998,7 @@ does **not** own the Lean order state: that is read from `IOrderProvider` on eve
 drifts from what Lean actually knows.
 
 Four kinds of thread touch that state: the poll loop, the handler thread inside `ProcessOrderState`, the order
-threads through `Watch`/`Unwatch`/`UpdateOrderState`, and the watch-timeout check. One internal lock protects the
+threads through `Watch`/`Unwatch`/`UpdateOrderState`, and the notification-timeout check. One internal lock protects the
 registry from all of them. A per-id sweep copies the watched ids under that lock before it reads the broker, so
 `PlaceOrder` can watch a new id while a sweep runs. `ProcessOrderState` must not run twice at the same time, and
 the service does not guard that itself: the message handler already runs it one call at a time, and a plugin
@@ -1000,8 +1012,8 @@ plugin that passes nothing gets the shared defaults, resolved once in the base c
 chain to:
 
 ```csharp
-PollInterval = pollInterval ?? TimeSpan.FromMilliseconds(Config.GetInt("brokerage-order-poll-interval-ms", 3000));
-WatchTimeout = watchTimeout ?? TimeSpan.FromMinutes(1);
+PollInterval = pollInterval ?? TimeSpan.FromMilliseconds(Config.GetInt("brokerage-order-poll-interval-ms", 3 * 1000));
+NotificationTimeout = notificationTimeout ?? TimeSpan.FromMilliseconds(60 * 1000);
 ```
 
 `brokerage-order-poll-interval-ms` is one new generic config entry, so the interval can be tuned once for every
@@ -1014,7 +1026,7 @@ brokerage that uses the default. Core helpers already work this way: the message
 The general shape, for a streaming brokerage with a bulk endpoint. The root `Brokerage` class owns the
 wiring: one protected create call builds the service, forwards its events onto the brokerage events,
 stores it in the protected `OrderPollingService` property and hands it to `Dispose`. The read callback's
-signature picks the mode — a bulk read can only build an `AllOrdersPollingService`:
+signature picks the mode — a bulk read can only build an `BulkOrdersPollingService`:
 
 ```csharp
 // bulk broker: one request per sweep reads the whole account. The service wires itself onto the
@@ -1023,7 +1035,7 @@ signature picks the mode — a bulk read can only build an `AllOrdersPollingServ
 CreateOrderPollingService(
     () => _apiClient.GetAllOrders().Select(ToOrderState),   // read: model -> snapshot
     _messageHandler,
-    _orderProvider, pollInterval: TimeSpan.FromSeconds(3), watchTimeout: TimeSpan.FromMinutes(1));
+    _orderProvider, pollInterval: TimeSpan.FromSeconds(3), notificationTimeout: TimeSpan.FromMinutes(1));
 ```
 
 A per-id broker only changes the read — one call replaces Public.com's construction, its three event
@@ -1040,7 +1052,7 @@ What silence means is one override per plugin: `OnBrokerageOrderNeverNotified` d
 warning built from the brokerage name, and Schwab overrides it to keep the wording its live pilot
 verified.
 
-InteractiveBrokers, the plugin with no answer today, adopts `AllOrdersPollingService` (it has no per-id request) with
+InteractiveBrokers, the plugin with no answer today, adopts `BulkOrdersPollingService` (it has no per-id request) with
 the thinnest possible mapping — id and status from the orders `reqAllOpenOrders` returns, fill fields left null.
 The fill numbers are not out of reach: the captured `IBApi.Order` already carries a `FilledQuantity` field, and the
 paired `orderStatus` callback adds the average fill price, so the mapping can grow later without a new endpoint.
@@ -1350,13 +1362,13 @@ stays possible — the helper is additive. Implemented that way on 2026-08-17: t
 | Risk | What we do about it |
 | --- | --- |
 | A plugin maps a broker status to the wrong Lean status | The mapping is the same one its streaming path already needs, written once per plugin and covered by its own tests. The service only emits transitions, so a wrong mapping surfaces once, not as a flood. |
-| A state without fill numbers cannot produce fill events | By design: null means unknown, and the service never invents a number. The watch still confirms submission, and the watch timeout still fires. |
+| A state without fill numbers cannot produce fill events | By design: null means unknown, and the service never invents a number. The watch still confirms submission, and the notification timeout still fires. |
 | Several fills inside one sweep share one price | Quantities stay exact; the price is the broker's reported price at sweep time. Tradier kept this trade-off through its adoption (`TradierBrokerage.cs:1170-1172`); a shorter poll interval narrows it. |
 | Polling adds requests on brokers with tight rate limits | Watch mode reads only while an order still waits for its first report, and the interval is a constructor argument the plugin picks. |
 | A bulk read is expensive on some plugins — `GetOpenOrders()` rebuilds Lean orders and maps symbols on every call | The action converts straight from the broker's wire model to the snapshot, skipping the Lean `Order` build entirely; and in watch mode a sweep only runs while something is pending. |
 | A plugin wires the handler wrong and gets fill-before-submit | The misuse is gone: the service takes the handler in its constructor and wires both directions itself. A plugin either hands over its handler, or passes null and the poll loop is the only caller of the diff. Schwab and Public have a handler; Tradier adopted with null — its submit event goes out before the watch begins, so the poll cannot outrun it — and IB's rollout step still names adding one. |
 | The stream and the poll both see the same fill in watch mode | The registry works in both directions: the stream writes what it reports (`UpdateOrderState`) and checks before reporting (`TryGetLastOrderState`). Named as the one non-optional wiring rule for polling beside a live stream. |
-| The watch timeout cannot tell "never arrived" from "filled instantly" | It does not try. `BrokerageOrderNeverNotified` hands the question to the brokerage, which has the endpoints to answer it. |
+| The notification timeout cannot tell "never arrived" from "filled instantly" | It does not try. `BrokerageOrderNeverNotified` hands the question to the brokerage, which has the endpoints to answer it. |
 | Polling while the stream is down misses the fills that happened during the gap | Only when the read carries no fill data. A read with fill numbers recovers them — the state has the fields, so this is a property of the broker's endpoint, not of the service. |
 | A plugin starts polling on disconnect and forgets to stop on reconnect | Both paths are one line and sit next to the connection handling the plugin already has. The poll side repeats nothing the registry already holds, so the cost of forgetting is extra requests, not extra events. |
 
@@ -1375,7 +1387,7 @@ stays possible — the helper is additive. Implemented that way on 2026-08-17: t
    prices become per-sweep prices while the quantities stay exact; Public kept its change-of-average price
    recovery inside its mapping, so its part prices stay exact too.
 4. Tradier (done, further than planned here): the step was a watch for submissions with fills staying on its own
-   path. The adoption moved the fill path itself onto `PerOrderIdPollingService` and handles the cross-zero split
+   path. The adoption moved the fill path itself onto `SingleOrderPollingService` and handles the cross-zero split
    as "A cross-zero order, two ids" describes. Two costs are accepted: a sweep is one gated request per watched
    order instead of one bulk request — the one-order-per-symbol rule keeps that count small, and an idle account
    now polls nothing at all — and orders placed outside Lean are ignored, where the old code raised a fatal
