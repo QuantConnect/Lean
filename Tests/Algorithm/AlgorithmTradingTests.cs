@@ -1592,6 +1592,86 @@ namespace QuantConnect.Tests.Algorithm
         }
 
         [Test]
+        public void LiquidateWithKnownTickerResolvesTheSymbol()
+        {
+            var algo = GetAlgorithm(out _, 1, 0);
+
+            // MSFT was registered in the symbol cache when added to the algorithm
+            List<OrderTicket> liquidatedTickets = null;
+            Assert.DoesNotThrow(() => liquidatedTickets = algo.Liquidate("MSFT"));
+
+            // no holdings, so nothing to liquidate
+            Assert.IsEmpty(liquidatedTickets);
+        }
+
+        [Test]
+        public void LiquidateWithUnknownTickerFailsPointingToTheTagParameter()
+        {
+            var algo = GetAlgorithm(out _, 1, 0);
+
+            // the common slip: the tag passed as the first positional argument
+            var exception = Assert.Throws<ArgumentException>(() => algo.Liquidate("EOD close"));
+            Assert.IsTrue(exception.Message.Contains("EOD close", StringComparison.InvariantCulture));
+            Assert.IsTrue(exception.Message.Contains("tag", StringComparison.InvariantCulture));
+        }
+
+        [TestCase(10000, 0, 400)]
+        [TestCase(10000, 100, 300)]
+        [TestCase(-10000, 0, -400)]
+        [TestCase(-10000, 100, -500)]
+        [TestCase(10010, 0, 400, Description = "Rounds the target quantity down to the lot size")]
+        [TestCase(0, 100, -100, Description = "Zero notional closes the position")]
+        public void OrderTargetNotionalComputesTheQuantityFromTheNotionalValue(decimal targetNotional, decimal initialHoldings,
+            decimal expectedQuantity)
+        {
+            var algo = GetAlgorithm(out var msft, 1, 0);
+            msft.Exchange.SetMarketHours(new List<MarketHoursSegment>() { MarketHoursSegment.OpenAllDay() });
+            Update(msft, 25);
+            msft.Holdings.SetHoldings(25, initialHoldings);
+
+            var ticket = algo.OrderTargetNotional(Symbols.MSFT, targetNotional);
+
+            Assert.IsNotNull(ticket);
+            Assert.AreEqual(expectedQuantity, ticket.Quantity);
+        }
+
+        [Test]
+        public void OrderTargetNotionalIncludesTheContractMultiplier()
+        {
+            var algo = GetAlgorithm(out _, 1, 0);
+            var es20h20 = algo.AddFutureContract(
+                QuantConnect.Symbol.CreateFuture(Futures.Indices.SP500EMini, Market.CME, new DateTime(2020, 3, 20)),
+                Resolution.Minute);
+            Update(es20h20, 2000);
+
+            // ES has a contract multiplier of 50: one contract is worth 2000 * 50 = 100k
+            var ticket = algo.OrderTargetNotional(es20h20.Symbol, 500000);
+
+            Assert.IsNotNull(ticket);
+            Assert.AreEqual(5, ticket.Quantity);
+        }
+
+        [Test]
+        public void OrderTargetNotionalReturnsNullWhenHoldingsAlreadyMatchTheTarget()
+        {
+            var algo = GetAlgorithm(out var msft, 1, 0);
+            msft.Exchange.SetMarketHours(new List<MarketHoursSegment>() { MarketHoursSegment.OpenAllDay() });
+            Update(msft, 25);
+            msft.Holdings.SetHoldings(25, 400);
+
+            Assert.IsNull(algo.OrderTargetNotional(Symbols.MSFT, 10000));
+        }
+
+        [Test]
+        public void OrderTargetNotionalFailsWithoutMarketPrice()
+        {
+            var algo = GetAlgorithm(out _, 1, 0);
+
+            var exception = Assert.Throws<InvalidOperationException>(() => algo.OrderTargetNotional(Symbols.MSFT, 10000));
+            Assert.IsTrue(exception.Message.Contains("no market price", StringComparison.InvariantCulture));
+        }
+
+        [Test]
         public void MarketOrdersAreSupportedForFuturesOnExtendedMarketHours()
         {
             var algo = GetAlgorithm(out _, 1, 0);

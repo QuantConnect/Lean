@@ -1898,6 +1898,23 @@ namespace QuantConnect.Algorithm
         }
 
         /// <summary>
+        /// Market order implementation accepting the tag in the third position: Send a market order and wait for it to be filled.
+        /// Absorbs the common 'market_order(symbol, quantity, tag)' call shape from Python, where the tag string
+        /// would otherwise bind to the 'asynchronous' flag and fail overload resolution
+        /// </summary>
+        /// <param name="symbol">Symbol of the MarketType Required.</param>
+        /// <param name="quantity">Number of shares to request.</param>
+        /// <param name="tag">Place a custom order property or tag (e.g. indicator data).</param>
+        /// <param name="orderProperties">The order properties to use. Defaults to <see cref="DefaultOrderProperties"/></param>
+        /// <returns>The order ticket instance.</returns>
+        [DocumentationAttribute(TradingAndOrders)]
+        public OrderTicket MarketOrder(PyObject symbol, decimal quantity, string tag, IOrderProperties orderProperties = null)
+        {
+            return MarketOrder(symbol.ConvertToSymbolEnumerable().Single(), quantity, asynchronous: false, tag: tag,
+                orderProperties: orderProperties);
+        }
+
+        /// <summary>
         /// Liquidate your portfolio holdings
         /// </summary>
         /// <param name="symbols">List of symbols to liquidate in Python</param>

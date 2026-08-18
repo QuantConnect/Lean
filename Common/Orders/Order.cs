@@ -231,6 +231,13 @@ namespace QuantConnect.Orders
         public GroupOrderManager GroupOrderManager { get; set; }
 
         /// <summary>
+        /// The unique id of the group of orders this order belongs to, if this is a combo order, null otherwise.
+        /// Shortcut for <see cref="GroupOrderManager"/>.Id
+        /// </summary>
+        [JsonIgnore]
+        public int? GroupOrderManagerId => GroupOrderManager?.Id;
+
+        /// <summary>
         /// The adjustment mode used on the order fill price
         /// </summary>
         [JsonProperty(PropertyName = "priceAdjustmentMode")]
