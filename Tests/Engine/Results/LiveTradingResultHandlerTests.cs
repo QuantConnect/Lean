@@ -445,6 +445,54 @@ namespace QuantConnect.Tests.Engine.Results
             }
         }
 
+        [Test]
+        public void StoredResultsCarryServerStatistics()
+        {
+            using var api = new Api.Api();
+            using var messaging = new QuantConnect.Messaging.Messaging();
+            var deployId = "TestDeployId";
+            var resultHandler = new TestableStoredResultsHandler();
+            resultHandler.Initialize(new(new LiveNodePacket { DeployId = deployId }, messaging, api, new BacktestingTransactionHandler(), null));
+
+            var algorithm = new AlgorithmStub();
+            algorithm.SetFinishedWarmingUp();
+            resultHandler.SetAlgorithm(algorithm, 100000);
+
+            // the final result is stored on exit
+            resultHandler.Exit();
+
+            // the status file and the minute resolution results are the ones the API reads the statistics from
+            foreach (var name in new[] { $"{deployId}.json", $"{deployId}-{DateTime.UtcNow:yyyy-MM-dd}_minute.json" })
+            {
+                var stored = resultHandler.StoredResults.Where(pair => pair.Key.EndsWith(name, StringComparison.InvariantCulture)).ToList();
+                Assert.IsNotEmpty(stored, $"No result was stored for '{name}'");
+
+                foreach (var result in stored)
+                {
+                    Assert.IsNotNull(result.Value.ServerStatistics, $"'{result.Key}' is missing the server statistics");
+                    Assert.IsTrue(result.Value.ServerStatistics.ContainsKey("Hostname"));
+                }
+            }
+        }
+
+        private class TestableStoredResultsHandler : LiveTradingResultHandler
+        {
+            public List<KeyValuePair<string, Result>> StoredResults { get; } = new();
+
+            public override void SaveResults(string name, Result result)
+            {
+                lock (StoredResults)
+                {
+                    StoredResults.Add(new(name, result));
+                }
+            }
+
+            public override string SaveLogs(string id, List<LogEntry> logs)
+            {
+                return string.Empty;
+            }
+        }
+
         private class TestableLiveTradingResultHandler : LiveTradingResultHandler
         {
             public decimal ExposedStartingPortfolioValue => StartingPortfolioValue;

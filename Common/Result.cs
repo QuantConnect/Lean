@@ -118,6 +118,7 @@ namespace QuantConnect
             State = parameters.State;
             TotalPerformance = parameters.TotalPerformance;
             Analysis = parameters.Analysis;
+            ServerStatistics = parameters.ServerStatistics;
         }
     }
 }
