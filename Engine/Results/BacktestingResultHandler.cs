@@ -232,10 +232,8 @@ namespace QuantConnect.Lean.Engine.Results
                         runtimeStatistics,
                         new Dictionary<string, AlgorithmPerformance>(),
                         // we store the last 100 order events, the final packet will contain the full list
-                        TransactionHandler.OrderEvents.Reverse().Take(100).ToList(), state: GetAlgorithmState()))
-                    {
-                        ServerStatistics = serverStatistics
-                    };
+                        TransactionHandler.OrderEvents.Reverse().Take(100).ToList(), state: GetAlgorithmState(),
+                        serverStatistics: serverStatistics));
 
                     if (RunResultsAnalysis)
                     {
@@ -347,10 +345,8 @@ namespace QuantConnect.Lean.Engine.Results
                             result.Results.TotalPerformance,
                             result.Results.AlgorithmConfiguration,
                             result.Results.State,
-                            result.Results.Analysis))
-                        {
-                            ServerStatistics = result.Results.ServerStatistics
-                        };
+                            result.Results.Analysis,
+                            result.Results.ServerStatistics));
 
                         if (result.Results.Charts.TryGetValue(PortfolioMarginKey, out var marginChart))
                         {
