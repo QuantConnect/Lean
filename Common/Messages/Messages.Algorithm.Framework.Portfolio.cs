@@ -64,6 +64,15 @@ namespace QuantConnect
             }
 
             /// <summary>
+            /// Returns a string message saying an order quantity cannot be computed for the given canonical symbol
+            /// </summary>
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public static string UnableToComputeOrderQuantityForCanonicalSymbol(QuantConnect.Symbol symbol)
+            {
+                return Invariant($"Unable to compute an order quantity for '{symbol}'. {QCAlgorithm.CanonicalSymbolNotTradable(symbol)}");
+            }
+
+            /// <summary>
             /// Parses the given portfolio target into a string message containing basic information about it
             /// </summary>
             [MethodImpl(MethodImplOptions.AggressiveInlining)]

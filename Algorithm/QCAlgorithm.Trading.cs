@@ -34,6 +34,7 @@ namespace QuantConnect.Algorithm
         private bool _isDailyResolutionMarketOrderConversionWarningSent;
         private bool _isMarketOnOpenOrderRestrictedForFuturesWarningSent;
         private bool _isGtdTfiForMooAndMocOrdersValidationWarningSent;
+        private bool _isFutureOrderPriceFarFromMarketPriceWarningSent;
         private bool _isOptionsOrderOnStockSplitWarningSent;
         private bool _liquidateSymbolNotFoundWarningSent;
 
@@ -1079,8 +1080,12 @@ namespace QuantConnect.Algorithm
 
             if (!security.IsTradable)
             {
+                // Canonical symbols (e.g. the continuous futures contract) are never tradable:
+                // point the user to the mapped contract instead of just rejecting the order
                 return OrderResponse.Error(request, OrderResponseErrorCode.NonTradableSecurity,
-                    $"The security with symbol '{request.Symbol}' is marked as non-tradable."
+                    security.Symbol.IsCanonical()
+                        ? Messages.QCAlgorithm.CanonicalSymbolNotTradable(security.Symbol)
+                        : $"The security with symbol '{request.Symbol}' is marked as non-tradable."
                 );
             }
 
@@ -1111,6 +1116,38 @@ namespace QuantConnect.Algorithm
             if (price == 0)
             {
                 return OrderResponse.Error(request, OrderResponseErrorCode.SecurityPriceZero, request.Symbol.GetZeroPriceMessage());
+            }
+
+            // Futures continuous contract prices are adjusted unless DataNormalizationMode.Raw is used, so stop/limit prices
+            // computed from them can sit far away from the raw prices the mapped contract actually trades at, producing orders
+            // that fill immediately or never. Warn once when an order price deviates >10% from the contract's market price.
+            if (!_isFutureOrderPriceFarFromMarketPriceWarningSent && security.Type == SecurityType.Future)
+            {
+                var maxDeviation = 0m;
+                foreach (var orderPrice in new[] { request.StopPrice, request.LimitPrice, request.TriggerPrice })
+                {
+                    if (orderPrice != 0)
+                    {
+                        maxDeviation = Math.Max(maxDeviation, Math.Abs(orderPrice - price) / price);
+                    }
+                }
+
+                if (maxDeviation > 0.1m)
+                {
+                    var normalizationMode = SubscriptionManager.SubscriptionDataConfigService
+                        .GetSubscriptionDataConfigs(request.Symbol.Canonical)
+                        .Select(x => x.DataNormalizationMode)
+                        .FirstOrDefault(x => x != DataNormalizationMode.Raw, DataNormalizationMode.Raw);
+
+                    if (normalizationMode != DataNormalizationMode.Raw)
+                    {
+                        _isFutureOrderPriceFarFromMarketPriceWarningSent = true;
+                        Debug($"Warning: The {request.OrderType} order price(s) for '{request.Symbol.Value}' deviate more than 10% from its market price ({price.SmartRounding()}). " +
+                            $"The continuous contract '{request.Symbol.Canonical}' uses DataNormalizationMode.{normalizationMode}, whose adjusted prices can differ significantly " +
+                            "from the raw prices the mapped contract trades at. If the order price was computed from continuous contract data, use the mapped contract's " +
+                            "price instead (Securities[future.Mapped].Price) or add the future with DataNormalizationMode.Raw.");
+                    }
+                }
             }
 
             // check quote currency existence/conversion rate on all orders
@@ -1268,6 +1305,13 @@ namespace QuantConnect.Algorithm
         /// </summary>
         private Security GetSecurityForOrder(Symbol symbol)
         {
+            if (symbol == null)
+            {
+                // A common source of null symbols is accessing Future.Mapped from Initialize, before the first mapping.
+                // Explain that instead of letting an NRE bubble up. See Messages.QCAlgorithm.OrderSymbolNull
+                throw new ArgumentNullException(nameof(symbol), Messages.QCAlgorithm.OrderSymbolNull());
+            }
+
             var isCanonical = symbol.IsCanonical();
             if (Securities.TryGetValue(symbol, out var security) &&
                 // Let canonical and delisted securities through instead of throwing. An invalid ticket will be returned later on when trying to submit the order.

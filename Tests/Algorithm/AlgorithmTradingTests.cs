@@ -1657,6 +1657,79 @@ namespace QuantConnect.Tests.Algorithm
         }
 
         [Test]
+        public void OrdersOnCanonicalFutureSymbolAreInvalidWithInstructiveMessage()
+        {
+            var algo = GetAlgorithm(out _, 1, 0);
+            var future = algo.AddFuture(Futures.Indices.SP500EMini);
+            Update(future, 100);
+
+            // Future.Canonical is an alias of the canonical symbol
+            Assert.AreEqual(future.Symbol, future.Canonical);
+
+            var ticket = algo.MarketOrder(future.Symbol, 1);
+
+            Assert.AreEqual(OrderStatus.Invalid, ticket.Status);
+            Assert.AreEqual(OrderResponseErrorCode.NonTradableSecurity, ticket.SubmitRequest.Response.ErrorCode);
+            Assert.That(ticket.SubmitRequest.Response.ErrorMessage, Does.Contain("canonical"));
+            Assert.That(ticket.SubmitRequest.Response.ErrorMessage, Does.Contain("mapped").IgnoreCase);
+        }
+
+        [Test]
+        public void CalculateOrderQuantityOnCanonicalFutureSymbolReturnsZeroWithError()
+        {
+            var algo = GetAlgorithm(out _, 1, 0);
+            var future = algo.AddFuture(Futures.Indices.SP500EMini);
+            Update(future, 100);
+
+            var quantity = algo.CalculateOrderQuantity(future.Symbol, 1m);
+
+            Assert.AreEqual(0, quantity);
+            Assert.IsTrue(algo.ErrorMessages.Any(x => x.Contains("canonical")),
+                "Expected an error message explaining the canonical symbol is not tradable");
+
+            // SetHoldings must not submit any order for the canonical symbol
+            var tickets = algo.SetHoldings(future.Symbol, 0.5m);
+            Assert.IsEmpty(tickets);
+        }
+
+        [Test]
+        public void OrderWithNullSymbolThrowsWithMappedContractGuidance()
+        {
+            var algo = GetAlgorithm(out _, 1, 0);
+
+            // e.g. ordering Future.Mapped before the first continuous contract mapping resolved it
+            var exception = Assert.Throws<ArgumentNullException>(() => algo.MarketOrder((Symbol)null, 1));
+
+            Assert.That(exception.Message, Does.Contain("mapped").IgnoreCase);
+        }
+
+        [TestCase(true)]
+        [TestCase(false)]
+        public void WarnsWhenFutureStopOrLimitPriceIsFarFromMarketPriceUnderAdjustedNormalization(bool rawNormalization)
+        {
+            var algo = GetAlgorithm(out _, 1, 0);
+            algo.AddFuture(Futures.Indices.SP500EMini,
+                dataNormalizationMode: rawNormalization ? DataNormalizationMode.Raw : DataNormalizationMode.BackwardsRatio);
+            var es20h20 = algo.AddFutureContract(
+                QuantConnect.Symbol.CreateFuture(Futures.Indices.SP500EMini, Market.CME, new DateTime(2020, 3, 20)));
+            Update(es20h20, 100);
+
+            // stop price 50% away from the contract's market price
+            algo.StopMarketOrder(es20h20.Symbol, -1, 50m);
+
+            var expectedWarnings = rawNormalization ? 0 : 1;
+            Assert.AreEqual(expectedWarnings, algo.DebugMessages.Count(x => x.Contains("DataNormalizationMode")));
+
+            // the warning is only sent once
+            algo.StopMarketOrder(es20h20.Symbol, -1, 45m);
+            Assert.AreEqual(expectedWarnings, algo.DebugMessages.Count(x => x.Contains("DataNormalizationMode")));
+
+            // orders with prices close to the market price don't warn
+            algo.StopMarketOrder(es20h20.Symbol, -1, 95m);
+            Assert.AreEqual(expectedWarnings, algo.DebugMessages.Count(x => x.Contains("DataNormalizationMode")));
+        }
+
+        [Test]
         public void OptionOrdersAreNotAllowedDuringASplit()
         {
             var algo = GetAlgorithm(out _, 1, 0);

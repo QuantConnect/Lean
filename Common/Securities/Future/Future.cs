@@ -175,10 +175,19 @@ namespace QuantConnect.Securities.Future
         /// <summary>
         /// Gets or sets the currently mapped symbol for the security
         /// </summary>
+        /// <remarks>Null until the continuous contract universe performs its first selection, which happens
+        /// on algorithm start, after <c>Initialize</c>. Use it from <c>OnData</c>, <c>OnSecuritiesChanged</c>
+        /// or scheduled events instead of from <c>Initialize</c></remarks>
         public Symbol Mapped
         {
             get; set;
         }
+
+        /// <summary>
+        /// Gets the canonical symbol of the future, that is, the continuous contract symbol returned by
+        /// <c>AddFuture</c>. For the continuous contract security itself this is its own symbol.
+        /// </summary>
+        public Symbol Canonical => Symbol.Canonical;
 
         /// <summary>
         /// Gets or sets the contract filter

@@ -91,6 +91,33 @@ namespace QuantConnect
             }
 
             /// <summary>
+            /// Returns a string message saying the given canonical symbol is not tradable, with guidance
+            /// on what to trade instead
+            /// </summary>
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public static string CanonicalSymbolNotTradable(QuantConnect.Symbol symbol)
+            {
+                var guidance = symbol.SecurityType == SecurityType.Future
+                    ? $"trade the currently mapped contract instead, accessible through the '{FormatCode("Mapped")}' property of the future " +
+                      $"security returned by {AlgorithmPrefix()}.{FormatCode("AddFuture")}(). Note it is not set until after {FormatCode("Initialize")}, " +
+                      "once the continuous contract universe makes its first selection"
+                    : "select a specific contract from the chain instead";
+                return $"The symbol '{symbol}' is a canonical symbol and is not tradable; {guidance}.";
+            }
+
+            /// <summary>
+            /// Returns a string message for order methods receiving a null symbol, explaining the common cause:
+            /// accessing <see cref="Securities.Future.Future.Mapped"/> before the first continuous contract mapping
+            /// </summary>
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public static string OrderSymbolNull()
+            {
+                return $"The order symbol is null. If it comes from the '{FormatCode("Mapped")}' property of a future, note it is not set " +
+                    $"until after {FormatCode("Initialize")}, once the continuous contract universe makes its first selection; " +
+                    $"place orders from {FormatCode("OnData")}, {FormatCode("OnSecuritiesChanged")} or scheduled events instead.";
+            }
+
+            /// <summary>
             /// Returns a string message saying the first argument to AddData must be a custom data class
             /// </summary>
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
