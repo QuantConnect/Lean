@@ -413,6 +413,8 @@ namespace QuantConnect.Lean.Engine.Results
                 result.ProcessingTime = (endTime - StartTime).TotalSeconds;
                 result.DateFinished = DateTime.Now;
                 result.Progress = 1;
+                // set the server statistics before storing the results, so they are included in the summary and final stored result, like in live
+                result.Results.ServerStatistics = GetServerStatistics(endTime);
 
                 StoreInsights();
 
@@ -440,7 +442,6 @@ namespace QuantConnect.Lean.Engine.Results
                 //Place result into storage.
                 StoreResult(result);
 
-                result.Results.ServerStatistics = GetServerStatistics(endTime);
                 //Second, send the truncated packet:
                 MessagingHandler.Send(result);
 
