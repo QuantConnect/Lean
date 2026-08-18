@@ -28,8 +28,9 @@ namespace QuantConnect.Tests.Python
         [TestFixture]
         public class ValidateImplementationOf
         {
-            [TestCase(nameof(MissingMethodOne), "ModelMissingMethodOne", "MethodOne")]
-            [TestCase(nameof(MissingProperty), "ModelMissingProperty", "PropertyOne")]
+            [TestCase(nameof(MissingMethodOne), "ModelMissingMethodOne", "method_one()")]
+            [TestCase(nameof(MissingMethodTwo), "ModelMissingMethodTwo", "method_two(parameter_one, parameter_two)")]
+            [TestCase(nameof(MissingProperty), "ModelMissingProperty", "property_one")]
             public void ThrowsOnMissingMember(string moduleName, string className, string missingMemberName)
             {
                 using (Py.GIL())
@@ -301,6 +302,21 @@ class ModelMissingMethodOne:
         return 'value'
 ";
 
+            private const string MissingMethodTwo =
+                @"
+from clr import AddReference
+AddReference('QuantConnect.Tests')
+
+from QuantConnect.Tests.Python import *
+
+class ModelMissingMethodTwo:
+    def MethodOne():
+        pass
+    @property
+    def PropertyOne(self):
+        return 'value'
+";
+
             private const string MissingProperty =
                 @"
 from clr import AddReference
@@ -319,7 +335,7 @@ class ModelMissingProperty:
             {
                 string PropertyOne { get; set; }
                 void MethodOne();
-                void MethodTwo();
+                void MethodTwo(string parameterOne, int parameterTwo);
             }
 
             public class Model : IModel
@@ -330,7 +346,7 @@ class ModelMissingProperty:
                 {
                 }
 
-                public void MethodTwo()
+                public void MethodTwo(string parameterOne, int parameterTwo)
                 {
                 }
             }

@@ -32,6 +32,13 @@ namespace QuantConnect.Algorithm
         [DocumentationAttribute(AlgorithmFramework)]
         public void SetAlpha(PyObject alpha)
         {
+            // None is accepted as the null model, e.g. to disable a model a template set up
+            if (alpha is null || alpha.IsNone())
+            {
+                SetAlpha(new NullAlphaModel());
+                return;
+            }
+
             Alpha = PythonUtil.CreateInstanceOrWrapper<IAlphaModel>(
                 alpha,
                 py => new AlphaModelPythonWrapper(py)
@@ -60,6 +67,13 @@ namespace QuantConnect.Algorithm
         [DocumentationAttribute(TradingAndOrders)]
         public void SetExecution(PyObject execution)
         {
+            // None is accepted as the null model, e.g. to disable a model a template set up
+            if (execution is null || execution.IsNone())
+            {
+                SetExecution(new NullExecutionModel());
+                return;
+            }
+
             Execution = PythonUtil.CreateInstanceOrWrapper<IExecutionModel>(
                 execution,
                 py => new ExecutionModelPythonWrapper(py)
@@ -74,6 +88,13 @@ namespace QuantConnect.Algorithm
         [DocumentationAttribute(TradingAndOrders)]
         public void SetPortfolioConstruction(PyObject portfolioConstruction)
         {
+            // None is accepted as the null model, e.g. to disable a model a template set up
+            if (portfolioConstruction is null || portfolioConstruction.IsNone())
+            {
+                SetPortfolioConstruction(new NullPortfolioConstructionModel());
+                return;
+            }
+
             PortfolioConstruction = PythonUtil.CreateInstanceOrWrapper<IPortfolioConstructionModel>(
                 portfolioConstruction,
                 py => new PortfolioConstructionModelPythonWrapper(py)
@@ -88,6 +109,13 @@ namespace QuantConnect.Algorithm
         [DocumentationAttribute(Universes)]
         public void SetUniverseSelection(PyObject universeSelection)
         {
+            // None is accepted as the null model, e.g. to disable a model a template set up
+            if (universeSelection is null || universeSelection.IsNone())
+            {
+                SetUniverseSelection(new NullUniverseSelectionModel());
+                return;
+            }
+
             UniverseSelection = PythonUtil.CreateInstanceOrWrapper<IUniverseSelectionModel>(
                 universeSelection,
                 py => new UniverseSelectionModelPythonWrapper(py)
@@ -117,6 +145,15 @@ namespace QuantConnect.Algorithm
         [DocumentationAttribute(TradingAndOrders)]
         public void SetRiskManagement(PyObject riskManagement)
         {
+            // None is accepted as the null model, e.g. to disable a model a template set up.
+            // Without this, set_risk_management(None) failed with
+            // "IRiskManagementModel must be fully implemented. Please implement these missing methods on NoneType: ManageRisk"
+            if (riskManagement is null || riskManagement.IsNone())
+            {
+                SetRiskManagement(new NullRiskManagementModel());
+                return;
+            }
+
             RiskManagement = PythonUtil.CreateInstanceOrWrapper<IRiskManagementModel>(
                 riskManagement,
                 py => new RiskManagementModelPythonWrapper(py)

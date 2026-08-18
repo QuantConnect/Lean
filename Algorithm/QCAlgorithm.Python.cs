@@ -32,6 +32,7 @@ using QuantConnect.Scheduling;
 using QuantConnect.Util;
 using QuantConnect.Interfaces;
 using QuantConnect.Orders;
+using QuantConnect.Orders.Slippage;
 using QuantConnect.Commands;
 using QuantConnect.Api;
 
@@ -1435,6 +1436,23 @@ namespace QuantConnect.Algorithm
                 py => new RiskFreeInterestRateModelPythonWrapper(py)
             );
             SetRiskFreeInterestRateModel(riskFreeInterestRateModel);
+        }
+
+        /// <summary>
+        /// Sets the slippage model for all securities in the algorithm, including securities added afterwards,
+        /// for instance through universe selection
+        /// </summary>
+        /// <remarks>Individual securities can override this model by calling
+        /// <see cref="Security.SetSlippageModel(PyObject)"/> after this method, e.g. from
+        /// <see cref="OnSecuritiesChanged(SecurityChanges)"/> for securities added by universe selection</remarks>
+        /// <param name="slippageModel">The slippage model to use</param>
+        [DocumentationAttribute(Modeling)]
+        public void SetSlippageModel(PyObject slippageModel)
+        {
+            SetSlippageModel(PythonUtil.CreateInstanceOrWrapper<ISlippageModel>(
+                slippageModel,
+                py => new SlippageModelPythonWrapper(py)
+            ));
         }
 
         /// <summary>

@@ -24,7 +24,7 @@ namespace QuantConnect.Orders.Slippage
     /// Represents a slippage model that is calculated by multiplying the price impact constant
     /// by the square of the ratio of the order to the total volume.
     /// </summary>
-    public class VolumeShareSlippageModel : ISlippageModel
+    public class VolumeShareSlippageModel : SlippageModel
     {
         private readonly decimal _priceImpact;
         private readonly decimal _volumeLimit;
@@ -43,7 +43,7 @@ namespace QuantConnect.Orders.Slippage
         /// <summary>
         /// Slippage Model. Return a decimal cash slippage approximation on the order.
         /// </summary>
-        public decimal GetSlippageApproximation(Security asset, Order order)
+        public override decimal GetSlippageApproximation(Security asset, Order order)
         {
             var lastData = asset.GetLastData();
             if (lastData == null) return 0;

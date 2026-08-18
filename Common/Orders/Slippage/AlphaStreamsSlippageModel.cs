@@ -21,7 +21,7 @@ namespace QuantConnect.Orders.Slippage
     /// <summary>
     /// Represents a slippage model that uses a constant percentage of slip
     /// </summary>
-    public class AlphaStreamsSlippageModel : ISlippageModel
+    public class AlphaStreamsSlippageModel : SlippageModel
     {
         private const decimal _slippagePercent = 0.0001m;
 
@@ -33,7 +33,7 @@ namespace QuantConnect.Orders.Slippage
         /// <summary>
         /// Return a decimal cash slippage approximation on the order.
         /// </summary>
-        public decimal GetSlippageApproximation(Security asset, Order order)
+        public override decimal GetSlippageApproximation(Security asset, Order order)
         {
             if (asset.Type != SecurityType.Equity)
             {

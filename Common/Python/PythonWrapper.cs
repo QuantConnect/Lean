@@ -60,7 +60,11 @@ namespace QuantConnect.Python
                                 continue;
                             }
                         }
-                        missingMembers.Add(member.Name);
+                        // Render the expected python signature (snake-cased name and parameter names)
+                        // so the user knows exactly what to implement, e.g. "get_slippage_approximation(asset, order)"
+                        missingMembers.Add(method != null
+                            ? $"{method.Name.ToSnakeCase()}({string.Join(", ", method.GetParameters().Select(parameter => parameter.Name.ToSnakeCase()))})"
+                            : member.Name.ToSnakeCase());
                     }
                 }
 
