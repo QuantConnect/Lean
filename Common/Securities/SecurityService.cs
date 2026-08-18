@@ -117,7 +117,10 @@ namespace QuantConnect.Securities
 
             if (symbol.ID.SecurityType == SecurityType.Crypto && !_symbolPropertiesDatabase.ContainsKey(symbol.ID.Market, symbol, symbol.ID.SecurityType))
             {
-                throw new ArgumentException(Messages.SecurityService.SymbolNotFoundInSymbolPropertiesDatabase(symbol));
+                // fail fast at add time naming the requested ticker/market and the markets that do have the ticker,
+                // so an invalid combination like 'BNBUSD'/coinbase immediately points to the valid markets
+                throw new ArgumentException(Messages.SecurityService.SymbolNotFoundInSymbolPropertiesDatabase(symbol,
+                    _symbolPropertiesDatabase.GetMarketsForSymbol(MarketHoursDatabase.GetDatabaseSymbolKey(symbol), symbol.ID.SecurityType)));
             }
 
             // For Futures Options that don't have a SPDB entry, the futures entry will be used instead.
@@ -155,7 +158,13 @@ namespace QuantConnect.Securities
                 }
                 else if (CurrencyPairUtil.IsValidSecurityType(symbol.SecurityType, false))
                 {
-                    throw new ArgumentException($"Failed to resolve base currency for '{symbol.ID.Symbol}', it might be missing from the Symbol database or market '{symbol.ID.Market}' could be wrong");
+                    var message = $"Failed to resolve base currency for '{symbol.ID.Symbol}', it might be missing from the Symbol database or market '{symbol.ID.Market}' could be wrong.";
+                    var availableMarkets = _symbolPropertiesDatabase.GetMarketsForSymbol(symbol.ID.Symbol, symbol.SecurityType);
+                    if (availableMarkets.Count > 0)
+                    {
+                        message += $" {Messages.MarketHoursDatabase.MarketsWithTickerEntry(symbol.ID.Symbol, symbol.SecurityType, availableMarkets)}";
+                    }
+                    throw new ArgumentException(message);
                 }
             }
 

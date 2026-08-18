@@ -258,6 +258,48 @@ namespace QuantConnect.Tests.Algorithm
             Assert.AreEqual(1, _algo.SubscriptionManager.Subscriptions.Count(x => x.Symbol == spx.Symbol));
         }
 
+        [Test]
+        public void AddCryptoWithWrongMarketFailsFastNamingMarketsThatHaveTheTicker()
+        {
+            // BNBUSD is not a coinbase pair, but it does exist in other markets
+            var exception = Assert.Throws<ArgumentException>(() => _algo.AddCrypto("BNBUSD", market: Market.Coinbase));
+            StringAssert.Contains("Crypto 'BNBUSD' symbol could not be found in the database", exception.Message);
+            StringAssert.Contains($"Markets with a 'BNBUSD' {SecurityType.Crypto} entry:", exception.Message);
+            StringAssert.Contains(Market.Kraken, exception.Message);
+
+            // oanda has no crypto entries at all: the exchange hours failure names the markets that do have the ticker
+            exception = Assert.Throws<ArgumentException>(() => _algo.AddCrypto("BTCUSD", market: Market.Oanda));
+            StringAssert.Contains("Unable to locate exchange hours for Crypto-oanda-BTCUSD", exception.Message);
+            StringAssert.Contains($"Markets with a 'BTCUSD' {SecurityType.Crypto} entry:", exception.Message);
+            StringAssert.Contains(Market.Coinbase, exception.Message);
+        }
+
+        [Test]
+        public void MarketHoursDoesNotRequireASubscription()
+        {
+            // not added to the algorithm: a plain ticker is assumed to be an equity in the default market
+            var hours = _algo.MarketHours("IBM");
+            Assert.AreEqual(TimeZones.NewYork, hours.TimeZone);
+            Assert.IsFalse(_algo.Securities.Keys.Any(symbol => symbol.Value == "IBM"));
+
+            // symbol overload, not added either
+            var cryptoHours = _algo.MarketHours(Symbol.Create("BTCUSD", SecurityType.Crypto, Market.Coinbase));
+            Assert.IsTrue(cryptoHours.IsMarketAlwaysOpen);
+            Assert.IsFalse(_algo.Securities.Keys.Any(symbol => symbol.Value == "BTCUSD"));
+        }
+
+        [Test]
+        public void MarketHoursTickerOverloadResolvesThroughTheSymbolCache()
+        {
+            // once added, the ticker resolves to the added symbol instead of defaulting to equity
+            var crypto = _algo.AddCrypto("BTCUSD", market: Market.Coinbase);
+
+            var hours = _algo.MarketHours("BTCUSD");
+
+            Assert.AreEqual(crypto.Exchange.Hours.TimeZone, hours.TimeZone);
+            Assert.IsTrue(hours.IsMarketAlwaysOpen);
+        }
+
         [TestCase("SPXW", "SPX")]
         [TestCase("RUTW", "RUT")]
         [TestCase("VIXW", "VIX")]

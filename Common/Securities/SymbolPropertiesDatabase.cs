@@ -14,6 +14,7 @@
 */
 
 using QuantConnect.Util;
+using System;
 using System.Collections.Generic;
 using System.Data;
 using System.IO;
@@ -77,6 +78,23 @@ namespace QuantConnect.Securities
 
             market = null;
             return false;
+        }
+
+        /// <summary>
+        /// Gets all markets that have an entry for the provided symbol/security type.
+        /// Useful to suggest valid markets when a lookup fails for a given market.
+        /// </summary>
+        /// <param name="symbol">The particular symbol being traded</param>
+        /// <param name="securityType">The security type of the symbol</param>
+        /// <returns>The markets that have an entry for the given symbol and security type, sorted alphabetically</returns>
+        public List<string> GetMarketsForSymbol(string symbol, SecurityType securityType)
+        {
+            return Entries.Keys
+                .Where(key => key.SecurityType == securityType && string.Equals(key.Symbol, symbol, StringComparison.InvariantCultureIgnoreCase))
+                .Select(key => key.Market)
+                .Distinct()
+                .OrderBy(market => market)
+                .ToList();
         }
 
         /// <summary>

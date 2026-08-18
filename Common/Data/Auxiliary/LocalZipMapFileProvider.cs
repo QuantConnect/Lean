@@ -142,7 +142,10 @@ namespace QuantConnect.Data.Auxiliary
                 return result;
             }
 
-            throw new InvalidOperationException($"LocalZipMapFileProvider couldn't find any map files going all the way back to {endDate.ToShortDateString()} for {market}");
+            // surface the actual cause instead of provider internals: this means there is no mapping data for the market at all
+            throw new InvalidOperationException($"LocalZipMapFileProvider couldn't find any map files going all the way back to {endDate.ToShortDateString()} for {market}. " +
+                $"Map file zips are expected at '{MapFileZipHelper.GetMapFileZipFileName(market, yesterdayNewYork, auxiliaryDataKey.SecurityType)}'. " +
+                $"This usually means there is no {auxiliaryDataKey.SecurityType} data available for the '{market}' market in the data folder.");
         }
     }
 }

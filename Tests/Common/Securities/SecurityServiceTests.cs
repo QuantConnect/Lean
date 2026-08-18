@@ -133,6 +133,20 @@ namespace QuantConnect.Tests.Common.Securities
         }
 
         [Test]
+        public void ThrowOnCreateCryptoNotDescribedInCsvNamingMarketsThatHaveTheTicker()
+        {
+            // BNBUSD is not a coinbase crypto pair, but other markets do have it
+            var symbol = Symbol.Create("BNBUSD", SecurityType.Crypto, Market.Coinbase);
+            var configs = _subscriptionManager.SubscriptionDataConfigService.Add(typeof(QuoteBar), symbol, Resolution.Minute, false, false, false);
+
+            var exception = Assert.Throws<ArgumentException>(() => _securityService.CreateSecurity(symbol, configs, 1.0m, false));
+
+            StringAssert.Contains($"Crypto 'BNBUSD' symbol could not be found in the database for {Market.Coinbase} market", exception.Message);
+            StringAssert.Contains($"Markets with a 'BNBUSD' {SecurityType.Crypto} entry:", exception.Message);
+            StringAssert.Contains(Market.Kraken, exception.Message);
+        }
+
+        [Test]
         public void CanCreate_ConcreteOptions_WithCorrectSubscriptions()
         {
             var optionSymbol = Symbol.CreateOption(Symbols.SPY, Market.USA, OptionStyle.European, OptionRight.Put, 195.50m,

@@ -3010,6 +3010,37 @@ namespace QuantConnect.Algorithm
         }
 
         /// <summary>
+        /// Gets the exchange hours of the market the given symbol trades in, from the market hours database.
+        /// The security is not required to have been added to the algorithm
+        /// </summary>
+        /// <param name="symbol">The symbol to get the exchange hours for</param>
+        /// <returns>The exchange hours of the market the given symbol trades in</returns>
+        [DocumentationAttribute(SecuritiesAndPortfolio)]
+        [DocumentationAttribute(HandlingData)]
+        public SecurityExchangeHours MarketHours(Symbol symbol)
+        {
+            return MarketHoursDatabase.GetExchangeHours(symbol.ID.Market, symbol, symbol.SecurityType);
+        }
+
+        /// <summary>
+        /// Gets the exchange hours of the market the given ticker trades in, from the market hours database.
+        /// The security is not required to have been added to the algorithm
+        /// </summary>
+        /// <param name="ticker">The ticker to get the exchange hours for. If it has not been added to the algorithm,
+        /// it is assumed to be an equity ticker in the default equity market</param>
+        /// <returns>The exchange hours of the market the given ticker trades in</returns>
+        [DocumentationAttribute(SecuritiesAndPortfolio)]
+        [DocumentationAttribute(HandlingData)]
+        public SecurityExchangeHours MarketHours(string ticker)
+        {
+            if (!SymbolCache.TryGetSymbol(ticker, out var symbol))
+            {
+                symbol = QuantConnect.Symbol.Create(ticker, SecurityType.Equity, GetMarket(null, ticker, SecurityType.Equity));
+            }
+            return MarketHours(symbol);
+        }
+
+        /// <summary>
         /// Creates and adds a new <see cref="Security"/> to the algorithm
         /// </summary>
         [DocumentationAttribute(AddingData)]

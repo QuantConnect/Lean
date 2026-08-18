@@ -652,6 +652,24 @@ namespace QuantConnect
             {
                 return $"Suggested market based on the provided ticker 'Market.{market.ToUpperInvariant()}'.";
             }
+
+            /// <summary>
+            /// Returns a string message listing the markets that do have an entry for the given ticker and security type
+            /// </summary>
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public static string MarketsWithTickerEntry(string ticker, SecurityType securityType, IEnumerable<string> markets)
+            {
+                return $"Markets with a '{ticker}' {securityType} entry: {string.Join(", ", markets)}.";
+            }
+
+            /// <summary>
+            /// Returns a string message listing the markets that have entries for the given security type
+            /// </summary>
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public static string MarketsWithSecurityTypeEntries(SecurityType securityType, IEnumerable<string> markets)
+            {
+                return $"Markets with {securityType} entries: {string.Join(", ", markets)}.";
+            }
         }
 
         /// <summary>
@@ -957,11 +975,17 @@ namespace QuantConnect
         {
             /// <summary>
             /// Returns a string message saying the given Symbol could not be found in the Symbol Properties Database
+            /// for the requested market, naming the markets that do have an entry for it if any
             /// </summary>
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public static string SymbolNotFoundInSymbolPropertiesDatabase(QuantConnect.Symbol symbol)
+            public static string SymbolNotFoundInSymbolPropertiesDatabase(QuantConnect.Symbol symbol, IReadOnlyCollection<string> availableMarkets = null)
             {
-                return $"{symbol.SecurityType} '{symbol.Value}' symbol could not be found in the database for {symbol.ID.Market} market";
+                var message = $"{symbol.SecurityType} '{symbol.Value}' symbol could not be found in the database for {symbol.ID.Market} market.";
+                if (availableMarkets?.Count > 0)
+                {
+                    message += $" {MarketHoursDatabase.MarketsWithTickerEntry(symbol.Value, symbol.SecurityType, availableMarkets)}";
+                }
+                return message;
             }
         }
 

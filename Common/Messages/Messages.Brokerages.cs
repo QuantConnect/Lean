@@ -245,7 +245,7 @@ namespace QuantConnect
             /// <summary>
             /// String message saying: The Binance.US brokerage does not currently support Margin trading
             /// </summary>
-            public static string UnsupportedAccountType = "The Binance.US brokerage does not currently support Margin trading.";
+            public static string UnsupportedAccountType = "The Binance.US brokerage does not currently support Margin trading. Only AccountType.Cash is supported.";
         }
 
         /// <summary>
@@ -433,7 +433,7 @@ namespace QuantConnect
             /// <summary>
             /// String message saying: The Coinbase brokerage does not currently support Margin trading
             /// </summary>
-            public static string UnsupportedAccountType = "The Coinbase brokerage does not currently support Margin trading.";
+            public static string UnsupportedAccountType = "The Coinbase brokerage does not currently support Margin trading. Only AccountType.Cash is supported.";
 
             /// <summary>
             /// Returns a string message saying the Stop Market orders are no longer supported since the given end date
