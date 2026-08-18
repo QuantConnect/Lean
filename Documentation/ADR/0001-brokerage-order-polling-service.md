@@ -55,7 +55,7 @@ Seeded start folded into Start - 2026-08-18: `SeedAndStart(seed)` became the `St
 overload, so starting is one method with two shapes: the plain `Start()` resumes the loop, and the overload
 runs the handover first. Behavior unchanged; Schwab's call site renamed with it.
 
-State constructors and wiring traces - 2026-08-18: `BrokerOrderState` gained two constructors - the
+State constructors and wiring traces - 2026-08-18: `BrokerageOrderSnapshot` gained two constructors - the
 always-known facts positionally, and an overload taking the message without the fill numbers - and all
 three adopters build through them. The wiring now traces the created mode class with its intervals, and
 the pre-loading `Start` traces how many open orders it pre-loaded. Schwab moved its mapping into
@@ -71,6 +71,12 @@ the brokerage never notified about the order - with the virtual and the args ren
 resolve the Lean order behind the id (null for a placement whose id was never assigned), carry the watch
 duration, and print themselves through `ToString`, which the default warning uses. The message code string
 stays `"OrderNotAcknowledged"`, so live logs keep their vocabulary.
+
+State renamed to snapshot - 2026-08-19: `BrokerOrderState` became `BrokerageOrderSnapshot` - this
+document's own word for it, with the `Brokerage` prefix the rest of its family already uses. The
+property-fill constructor left with it: every builder goes through the constructors now, and the
+constructors default the time to `DateTime.UtcNow` when none is passed. All three adopters and the
+tests renamed and simplified with it.
 
 ## Purpose
 
@@ -259,7 +265,7 @@ choice, made when it picks the class.
 `Lean/Brokerages/Services/OrderPolling/BrokerageOrderPollingService.cs` — the base class — with
 `PerOrderIdPollingService.cs` and `AllOrdersPollingService.cs` next to it, in namespace
 `QuantConnect.Brokerages.Services.OrderPolling`. The data shapes live one level deeper, in `Models/` with
-the matching namespace suffix: `BrokerOrderState.cs` and `BrokerageOrderNeverNotifiedEventArgs.cs`.
+the matching namespace suffix: `BrokerageOrderSnapshot.cs` and `BrokerageOrderNeverNotifiedEventArgs.cs`.
 
 `Services` is a new folder under `Brokerages`, and it follows the convention the other subfolders there already use:
 `Authentication`, `CrossZero` and `LevelOneOrderBook` each take the matching namespace suffix. Each service
@@ -273,7 +279,7 @@ Tests go to `Tests/Brokerages/Services/OrderPolling/BrokerageOrderPollingService
 ```
 poll thread — one sweep every PollInterval
   service      calls the read: once per watched id, or once for all orders (by class)
-  brokerage    the read asks the broker and converts each order to a BrokerOrderState
+  brokerage    the read asks the broker and converts each order to a BrokerageOrderSnapshot
   service      sends each state to the brokerage's message handler
                (waits in the queue while an order request holds the lock)
   service      counts failed reads: three sweeps in a row -> one Warning
@@ -296,7 +302,7 @@ Both replaced pollers had exactly this flow: Schwab's loop handed each polled or
 `_messageHandler.HandleNewMessage` and the diff ran when the handler dequeued it, and Public wired its
 poller the same way. The service's own loop does the enqueue now.
 
-### The broker order state
+### The brokerage order snapshot
 
 ```csharp
 namespace QuantConnect.Brokerages.Services.OrderPolling.Models;
@@ -306,7 +312,7 @@ namespace QuantConnect.Brokerages.Services.OrderPolling.Models;
 /// and passes it to the service, which compares it with the last snapshot seen for the same order and
 /// reports only what is new.
 /// </summary>
-public class BrokerOrderState
+public class BrokerageOrderSnapshot
 {
     /// <summary>The brokerage order id. Some brokers give every combo leg its own id, some give the
     /// whole combo one id; the snapshot carries whatever the broker uses.</summary>
@@ -321,18 +327,18 @@ public class BrokerOrderState
     /// <summary>The price the broker reports for the fills. Null when the read does not carry it.</summary>
     public decimal? FillPrice { get; set; }
 
-    /// <summary>When the brokerage reported this state, in UTC.</summary>
+    /// <summary>When the brokerage reported this snapshot, in UTC.</summary>
     public DateTime TimeUtc { get; set; }
 
     /// <summary>The broker's own words for a closing status, e.g. the reject reason.</summary>
     public string Message { get; set; }
 
-    /// <summary>The always-known facts positionally - id, status, time - with the fill numbers and the
-    /// message defaulting to null. An empty constructor stays for filling through the properties, and an
-    /// overload takes the message without the fill numbers.</summary>
-    public BrokerOrderState(string brokerageOrderId, OrderStatus status, DateTime timeUtc,
+    /// <summary>The always-known facts positionally - id and status - with the time defaulting to
+    /// <see cref="DateTime.UtcNow"/> and the fill numbers and message to null; an overload takes the
+    /// message without the fill numbers.</summary>
+    public BrokerageOrderSnapshot(string brokerageOrderId, OrderStatus status, DateTime? timeUtc = null,
         decimal? filledQuantity = null, decimal? fillPrice = null, string message = null);
-    public BrokerOrderState(string brokerageOrderId, OrderStatus status, DateTime timeUtc, string message);
+    public BrokerageOrderSnapshot(string brokerageOrderId, OrderStatus status, DateTime? timeUtc, string message);
 }
 ```
 
@@ -457,7 +463,7 @@ public abstract class BrokerageOrderPollingService : IDisposable
 
     /// <summary>One read of the broker, giving the states the sweep saw. The loop calls it every
     /// poll interval, hands each state to the message handler, and counts a throw as one failed sweep.</summary>
-    protected abstract IEnumerable<BrokerOrderState> Sweep();
+    protected abstract IEnumerable<BrokerageOrderSnapshot> Sweep();
 
     /// <summary>A copy of the ids a sweep still has to read: everything tracked whose end was not
     /// reported yet.</summary>
@@ -489,7 +495,7 @@ public abstract class BrokerageOrderPollingService : IDisposable
     /// <summary>Watches a brokerage order id, seeded with what another path already reported, so the
     /// next poll does not repeat it. Used for orders adopted at startup, for a submit reported from
     /// the request path, and to move state onto the new id of a replace.</summary>
-    public void Watch(string brokerageId, BrokerOrderState lastSeen);
+    public void Watch(string brokerageId, BrokerageOrderSnapshot lastSeen);
 
     /// <summary>Watches the new brokerage order id of a replace and drops the replaced id in the same
     /// step, so the first state to carry the new id reports the update submit. The new id starts with
@@ -501,23 +507,23 @@ public abstract class BrokerageOrderPollingService : IDisposable
 
     /// <summary>Records what another path already reported for an order, so the next poll does not
     /// repeat it. Called by the streaming path while the stream lives.</summary>
-    public void UpdateOrderState(string brokerageId, BrokerOrderState orderState);
+    public void UpdateOrderState(string brokerageId, BrokerageOrderSnapshot orderState);
 
     /// <summary>The last state seen for an order, from any path. The streaming path reads it for its
     /// own duplicate check, and a replace reads it to move the state to the new id.</summary>
-    public bool TryGetLastOrderState(string brokerageId, out BrokerOrderState lastSeen);
+    public bool TryGetLastOrderState(string brokerageId, out BrokerageOrderSnapshot lastSeen);
 
     /// <summary>
     /// Compares a snapshot with the last state seen for the same order and raises
     /// <see cref="OrderEvents"/> with what is new. The constructor registers it on the message
     /// handler, so polled orders queue behind an order request that holds the stream lock.
     /// </summary>
-    public void ProcessOrderState(BrokerOrderState orderState);
+    public void ProcessOrderState(BrokerageOrderSnapshot orderState);
 
     /// <summary>The whole handover from a stream to polling, in the only safe order: process what the
     /// stream already delivered, pre-load one watch per open Lean order, then start the loop. A null
     /// callback pre-loads nothing. See "Seed before Start".</summary>
-    public void Start(Func<Order, BrokerOrderState> preLoadOpenOrders);
+    public void Start(Func<Order, BrokerageOrderSnapshot> preLoadOpenOrders);
 
     public void Start();
     public void Stop();
@@ -532,7 +538,7 @@ public abstract class BrokerageOrderPollingService : IDisposable
 /// </summary>
 public class PerOrderIdPollingService : BrokerageOrderPollingService
 {
-    public PerOrderIdPollingService(Func<string, BrokerOrderState> readOrder, BrokerageConcurrentMessageHandler messageHandler,
+    public PerOrderIdPollingService(Func<string, BrokerageOrderSnapshot> readOrder, BrokerageConcurrentMessageHandler messageHandler,
         IOrderProvider orderProvider, TimeSpan? pollInterval = null, TimeSpan? watchTimeout = null);
 }
 
@@ -541,7 +547,7 @@ public class PerOrderIdPollingService : BrokerageOrderPollingService
 /// </summary>
 public class AllOrdersPollingService : BrokerageOrderPollingService
 {
-    public AllOrdersPollingService(Func<IEnumerable<BrokerOrderState>> readAllOrders, BrokerageConcurrentMessageHandler messageHandler,
+    public AllOrdersPollingService(Func<IEnumerable<BrokerageOrderSnapshot>> readAllOrders, BrokerageConcurrentMessageHandler messageHandler,
         IOrderProvider orderProvider, TimeSpan? pollInterval = null, TimeSpan? watchTimeout = null);
 }
 ```
@@ -553,11 +559,11 @@ The watch registry, the compare with the last state seen and the seeding of orde
 
 The mode is the class. Both run the same diff — it lives in the base — and a subclass is only its `Sweep`:
 
-- **`PerOrderIdPollingService`** — `Func<string, BrokerOrderState>`: the sweep loops the watched ids and calls the
+- **`PerOrderIdPollingService`** — `Func<string, BrokerageOrderSnapshot>`: the sweep loops the watched ids and calls the
   read once per id. Nothing watched, nothing requested. Public.com's replaced service had exactly this
   constructor — `new OrderPollingService(_apiClient.GetOrderById, _messageHandler.HandleNewMessage, interval)` —
   and its adoption passes the same read to `CreateOrderPollingService`.
-- **`AllOrdersPollingService`** — `Func<IEnumerable<BrokerOrderState>>`: the sweep calls the read once, and the
+- **`AllOrdersPollingService`** — `Func<IEnumerable<BrokerageOrderSnapshot>>`: the sweep calls the read once, and the
   read returns everything the broker lists.
 
 Two classes instead of one class with both reads, because a bulk read does not fit a per-id shape: called once
@@ -612,7 +618,7 @@ way today.
 differ had no way to push both through one lock. Schwab works around it with a marker interface: its stream model
 and its polled model both implement `IOrderUpdateMessage`, and the handler is typed to that. This works inside one
 plugin that owns both models, and it cannot be the shared answer — every plugin that adopts the service would
-have to add the interface to its own wire models, and the core `BrokerOrderState` cannot implement a per-plugin
+have to add the interface to its own wire models, and the core `BrokerageOrderSnapshot` cannot implement a per-plugin
 interface.
 
 So a second, non-generic `BrokerageConcurrentMessageHandler` ships with the service, in the same file
@@ -623,7 +629,7 @@ register, one per message type, and every source enqueues through one `HandleNew
 ```csharp
 _messageHandler = new BrokerageConcurrentMessageHandler(concurrencyEnabled);
 _messageHandler.Register<AccountContent>(OnAccountContent);   // the stream's own type
-// the polling service registers its own BrokerOrderState listener itself, in its constructor
+// the polling service registers its own BrokerageOrderSnapshot listener itself, in its constructor
 
 // one method for both sources
 _messageHandler.HandleNewMessage(accountContent);
@@ -1025,7 +1031,7 @@ forwards and its dispose line:
 
 ```csharp
 CreateOrderPollingService(ReadOrderState, _messageHandler, _orderProvider, pollInterval: OrderPollingInterval);
-// BrokerOrderState ReadOrderState(string brokerageId): get-order by id, a 404 maps to null.
+// BrokerageOrderSnapshot ReadOrderState(string brokerageId): get-order by id, a 404 maps to null.
 // Public keeps its own key, public-order-poll-interval-ms, default 1000 ms. A plugin that passes no
 // interval gets the shared brokerage-order-poll-interval-ms default, 3000 ms.
 ```
@@ -1213,7 +1219,7 @@ streaming, and every test asserts the same lifecycle on both. What proved worth 
   could only emit `Submitted`, and every brokerage with richer data had to subclass the service and override the
   diff. The snapshot carries the same numbers the plugins already read and today throw away, so the subclass and
   the override are gone.
-- **A core interface the wire model implements** (`OrderResponse : IBrokerOrderState`), so the plugin passes its
+- **A core interface the wire model implements** (`OrderResponse : IBrokerageOrderSnapshot`), so the plugin passes its
   API model straight in with no conversion. Checked against all eight surveyed plugins and rejected on the
   evidence. Two cannot implement it at all: IB's order model is compiled into the vendor `CSharpAPI.dll`, and
   Alpaca's `JsonOrder` is `internal sealed` inside the SDK — both would need a wrapper class, which is the same
@@ -1226,7 +1232,7 @@ streaming, and every test asserts the same lifecycle on both. What proved worth 
   class the plugin fills is one pattern that works for all eight.
 - **A marker interface as the message handler's type** — Schwab's current answer to two message types in one
   handler (`IOrderUpdateMessage`). As the shared answer it fails the same way the core interface does: every
-  plugin edits its wire models, and the core `BrokerOrderState` cannot implement a per-plugin interface.
+  plugin edits its wire models, and the core `BrokerageOrderSnapshot` cannot implement a per-plugin interface.
   Replaced by the non-generic multi-source handler (see "One lock for two message types").
 - **A dual-generic handler**, `BrokerageConcurrentMessageHandler<T, U>` with the stream type and the polled type.
   Rejected: every existing plugin migrates to the new shape even with no polling, a plugin with no stream (IB)
@@ -1278,8 +1284,8 @@ layer — one abstract brokerage class that owns the service and asks the plugin
 public abstract class BaseWebSocketsAndPollingServiceBrokerage : BaseWebsocketsBrokerage
 {
     // owns the service, forwards its events, disposes it with the brokerage
-    protected abstract IEnumerable<BrokerOrderState> ReadOrderStates();   // or a per-id read
-    protected virtual BrokerOrderState ToSeedState(Order order) => null;
+    protected abstract IEnumerable<BrokerageOrderSnapshot> ReadOrderStates();   // or a per-id read
+    protected virtual BrokerageOrderSnapshot ToSeedState(Order order) => null;
 }
 ```
 
