@@ -778,6 +778,155 @@ namespace QuantConnect.Algorithm
         }
 
         /// <summary>
+        /// Send a bracket order: an entry order plus protective stop loss and/or take profit exit orders
+        /// linked with one-cancels-the-other (OCO) semantics guaranteed by the engine
+        /// </summary>
+        /// <param name="symbol">Symbol of the asset to trade</param>
+        /// <param name="quantity">Quantity of the entry order. The exit legs are automatically sized to the filled entry quantity</param>
+        /// <param name="stopLossPrice">Stop price of the protective stop market leg, null for no stop loss</param>
+        /// <param name="takeProfitPrice">Limit price of the take profit leg, null for no take profit</param>
+        /// <param name="entryLimitPrice">Optional limit price for the entry order. If null the entry is a market order</param>
+        /// <param name="tag">String tag for the orders (optional)</param>
+        /// <param name="orderProperties">The order properties to use. Defaults to <see cref="DefaultOrderProperties"/></param>
+        /// <returns>The bracket order ticket holding the linked entry, stop loss and take profit tickets</returns>
+        /// <exception cref="InvalidOperationException">A bracket order is still active for the symbol</exception>
+        [DocumentationAttribute(TradingAndOrders)]
+        public BracketOrderTicket BracketOrder(Symbol symbol, int quantity, decimal? stopLossPrice = null, decimal? takeProfitPrice = null,
+            decimal? entryLimitPrice = null, string tag = "", IOrderProperties orderProperties = null)
+        {
+            return BracketOrder(symbol, (decimal)quantity, stopLossPrice, takeProfitPrice, entryLimitPrice, tag, orderProperties);
+        }
+
+        /// <summary>
+        /// Send a bracket order: an entry order plus protective stop loss and/or take profit exit orders
+        /// linked with one-cancels-the-other (OCO) semantics guaranteed by the engine
+        /// </summary>
+        /// <param name="symbol">Symbol of the asset to trade</param>
+        /// <param name="quantity">Quantity of the entry order. The exit legs are automatically sized to the filled entry quantity</param>
+        /// <param name="stopLossPrice">Stop price of the protective stop market leg, null for no stop loss</param>
+        /// <param name="takeProfitPrice">Limit price of the take profit leg, null for no take profit</param>
+        /// <param name="entryLimitPrice">Optional limit price for the entry order. If null the entry is a market order</param>
+        /// <param name="tag">String tag for the orders (optional)</param>
+        /// <param name="orderProperties">The order properties to use. Defaults to <see cref="DefaultOrderProperties"/></param>
+        /// <returns>The bracket order ticket holding the linked entry, stop loss and take profit tickets</returns>
+        /// <exception cref="InvalidOperationException">A bracket order is still active for the symbol</exception>
+        [DocumentationAttribute(TradingAndOrders)]
+        public BracketOrderTicket BracketOrder(Symbol symbol, double quantity, decimal? stopLossPrice = null, decimal? takeProfitPrice = null,
+            decimal? entryLimitPrice = null, string tag = "", IOrderProperties orderProperties = null)
+        {
+            return BracketOrder(symbol, quantity.SafeDecimalCast(), stopLossPrice, takeProfitPrice, entryLimitPrice, tag, orderProperties);
+        }
+
+        /// <summary>
+        /// Send a bracket order: an entry order plus protective stop loss and/or take profit exit orders
+        /// linked with one-cancels-the-other (OCO) semantics guaranteed by the engine
+        /// </summary>
+        /// <remarks>
+        /// The exit legs are placed by the engine once the entry order fills, sized to the actual filled
+        /// quantity: a stop market order at <paramref name="stopLossPrice"/> and/or a limit order at
+        /// <paramref name="takeProfitPrice"/>. When one leg fills the other is canceled, and when the
+        /// position is closed or flipped by an unrelated order the remaining legs are canceled, all
+        /// without any user code. A new bracket order for the same symbol is refused while one is
+        /// still active, to avoid stranding its protective legs: cancel it first via
+        /// <see cref="BracketOrderTicket.Cancel"/> or let it complete
+        /// </remarks>
+        /// <param name="symbol">Symbol of the asset to trade</param>
+        /// <param name="quantity">Quantity of the entry order. The exit legs are automatically sized to the filled entry quantity</param>
+        /// <param name="stopLossPrice">Stop price of the protective stop market leg, null for no stop loss</param>
+        /// <param name="takeProfitPrice">Limit price of the take profit leg, null for no take profit</param>
+        /// <param name="entryLimitPrice">Optional limit price for the entry order. If null the entry is a market order</param>
+        /// <param name="tag">String tag for the orders (optional)</param>
+        /// <param name="orderProperties">The order properties to use. Defaults to <see cref="DefaultOrderProperties"/></param>
+        /// <returns>The bracket order ticket holding the linked entry, stop loss and take profit tickets</returns>
+        /// <exception cref="InvalidOperationException">A bracket order is still active for the symbol</exception>
+        [DocumentationAttribute(TradingAndOrders)]
+        public BracketOrderTicket BracketOrder(Symbol symbol, decimal quantity, decimal? stopLossPrice = null, decimal? takeProfitPrice = null,
+            decimal? entryLimitPrice = null, string tag = "", IOrderProperties orderProperties = null)
+        {
+            if (!stopLossPrice.HasValue && !takeProfitPrice.HasValue)
+            {
+                throw new ArgumentException("BracketOrder(): must specify at least one of stopLossPrice or takeProfitPrice.");
+            }
+
+            // validate the exit prices are on the correct side of each other and of the entry so a leg
+            // cannot trigger immediately against the entry price. Zero quantity has no direction, it is
+            // rejected by the pre order checks below
+            if (quantity != 0)
+            {
+                var isLong = quantity > 0;
+                if (stopLossPrice.HasValue && takeProfitPrice.HasValue &&
+                    (isLong ? stopLossPrice.Value >= takeProfitPrice.Value : stopLossPrice.Value <= takeProfitPrice.Value))
+                {
+                    throw new ArgumentException($"BracketOrder(): for a {(isLong ? "long" : "short")} entry the stop loss price " +
+                        $"({stopLossPrice.Value}) must be {(isLong ? "below" : "above")} the take profit price ({takeProfitPrice.Value}).");
+                }
+                if (entryLimitPrice.HasValue)
+                {
+                    if (stopLossPrice.HasValue && (isLong ? stopLossPrice.Value >= entryLimitPrice.Value : stopLossPrice.Value <= entryLimitPrice.Value))
+                    {
+                        throw new ArgumentException($"BracketOrder(): for a {(isLong ? "long" : "short")} entry the stop loss price " +
+                            $"({stopLossPrice.Value}) must be {(isLong ? "below" : "above")} the entry limit price ({entryLimitPrice.Value}).");
+                    }
+                    if (takeProfitPrice.HasValue && (isLong ? takeProfitPrice.Value <= entryLimitPrice.Value : takeProfitPrice.Value >= entryLimitPrice.Value))
+                    {
+                        throw new ArgumentException($"BracketOrder(): for a {(isLong ? "long" : "short")} entry the take profit price " +
+                            $"({takeProfitPrice.Value}) must be {(isLong ? "above" : "below")} the entry limit price ({entryLimitPrice.Value}).");
+                    }
+                }
+            }
+
+            // early refusal so the common misuse does not consume an order id. The authoritative,
+            // race-free check lives in SecurityTransactionManager.AddBracketOrder
+            if (Transactions.GetBracketOrderTicket(symbol) != null)
+            {
+                throw new InvalidOperationException(
+                    $"A bracket order is already active for {symbol}. Placing a new one would leave " +
+                    "the previous stop loss/take profit legs unmanaged. Cancel it first, e.g. " +
+                    "'Transactions.GetBracketOrderTicket(symbol).Cancel()', or wait for it to complete.");
+            }
+
+            var security = GetSecurityForOrder(symbol);
+            var properties = orderProperties ?? DefaultOrderProperties?.Clone();
+
+            var entryType = OrderType.Market;
+            var limitPrice = 0m;
+            if (entryLimitPrice.HasValue)
+            {
+                entryType = OrderType.Limit;
+                limitPrice = entryLimitPrice.Value;
+            }
+            else if (security.Type != SecurityType.Future && security.Type != SecurityType.FutureOption && !security.Exchange.ExchangeOpen)
+            {
+                // mirror MarketOrder: when the market is closed the entry is converted to fill at the next open
+                entryType = OrderType.MarketOnOpen;
+                InvalidateGoodTilDateTimeInForce(properties);
+            }
+
+            var request = CreateSubmitOrderRequest(entryType, security, quantity, tag, properties, asynchronous: false, limitPrice: limitPrice);
+            var response = PreOrderChecks(request);
+            if (response.IsError)
+            {
+                return BracketOrderTicket.InvalidEntry(Transactions, request, response, stopLossPrice, takeProfitPrice);
+            }
+
+            if (entryType == OrderType.MarketOnOpen && !_isMarketOnOpenOrderWarningSent)
+            {
+                Debug("Warning: market orders submitted while the market is closed are automatically converted into MarketOnOpen orders to fill at the next market open.");
+                _isMarketOnOpenOrderWarningSent = true;
+            }
+
+            // assign the entry order id up front so the bracket can be registered before the submission:
+            // in live trading the entry can fill while the submit call is in flight and the fill must
+            // already find the bracket to place the exit legs
+            Transactions.SetOrderId(request);
+            var bracket = new BracketOrderTicket(Transactions, request, stopLossPrice, takeProfitPrice);
+            // throws InvalidOperationException if a bracket order is still active for the symbol:
+            // silently overwriting a live bracket strands its protective legs
+            Transactions.AddBracketOrder(bracket);
+            return bracket;
+        }
+
+        /// <summary>
         /// Send an exercise order to the transaction handler
         /// </summary>
         /// <param name="optionSymbol">String symbol for the option position</param>
