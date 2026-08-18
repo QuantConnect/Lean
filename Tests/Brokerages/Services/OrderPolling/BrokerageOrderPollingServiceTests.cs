@@ -21,9 +21,10 @@ using NUnit.Framework;
 using QuantConnect.Orders;
 using System.Collections.Generic;
 using QuantConnect.Brokerages;
-using QuantConnect.Brokerages.Services;
+using QuantConnect.Brokerages.Services.OrderPolling;
+using QuantConnect.Brokerages.Services.OrderPolling.Models;
 
-namespace QuantConnect.Tests.Brokerages.Services
+namespace QuantConnect.Tests.Brokerages.Services.OrderPolling
 {
     [TestFixture]
     public class BrokerageOrderPollingServiceTests
@@ -454,27 +455,28 @@ namespace QuantConnect.Tests.Brokerages.Services
         [Test]
         public void WatchTimeoutFiresOnceAndUnwatchesTheId()
         {
-            using var notAcknowledged = new ManualResetEventSlim(false);
-            var raised = new List<OrderNotAcknowledgedEventArgs>();
+            var order = AddOrder(100m, "77");
+            using var neverNotified = new ManualResetEventSlim(false);
+            var raised = new List<BrokerageOrderNeverNotifiedEventArgs>();
             using var service = new PerOrderIdPollingService(
                 _ => null,   // the broker never knows the id
                 messageHandler: null,
                 _orderProvider,
                 pollInterval: TimeSpan.FromMilliseconds(25),
                 watchTimeout: TimeSpan.FromMilliseconds(75));
-            service.OrderNotAcknowledged += (_, eventArgs) =>
+            service.BrokerageOrderNeverNotified += (_, eventArgs) =>
             {
                 lock (raised)
                 {
                     raised.Add(eventArgs);
                 }
-                notAcknowledged.Set();
+                neverNotified.Set();
             };
 
             service.Watch("77");
             service.Start();
 
-            Assert.IsTrue(notAcknowledged.Wait(TimeSpan.FromSeconds(5)), "the watch timeout never fired");
+            Assert.IsTrue(neverNotified.Wait(TimeSpan.FromSeconds(5)), "the watch timeout never fired");
 
             // let a few more sweeps run: the id was unwatched with the event, so it fires exactly once
             Thread.Sleep(200);
@@ -484,9 +486,24 @@ namespace QuantConnect.Tests.Brokerages.Services
             {
                 Assert.AreEqual(1, raised.Count);
                 Assert.AreEqual("77", raised[0].BrokerageOrderId);
-                Assert.GreaterOrEqual(raised[0].WatchedFor, TimeSpan.FromMilliseconds(75));
+                Assert.AreSame(order, raised[0].Order);
+                Assert.GreaterOrEqual(raised[0].WatchDuration, TimeSpan.FromMilliseconds(75));
             }
             Assert.IsFalse(service.TryGetLastOrderState("77", out _));
+        }
+
+        [Test]
+        public void NeverNotifiedArgsPrintTheOrderAndTheWatchDuration()
+        {
+            var order = AddOrder(100m, "42");
+
+            // the message the default warning embeds: the Lean order's own ToString plus the watch duration
+            var withOrder = new BrokerageOrderNeverNotifiedEventArgs("42", order, TimeSpan.FromSeconds(60));
+            Assert.AreEqual($"{order}, watched for 60 seconds", withOrder.ToString());
+
+            // a placement whose id was never assigned resolves to no Lean order: the id carries the identity
+            var withoutOrder = new BrokerageOrderNeverNotifiedEventArgs("42", order: null, TimeSpan.FromSeconds(60));
+            Assert.AreEqual("brokerage order id '42', watched for 60 seconds", withoutOrder.ToString());
         }
 
         [Test]
@@ -499,7 +516,7 @@ namespace QuantConnect.Tests.Brokerages.Services
                 _orderProvider,
                 pollInterval: TimeSpan.FromMilliseconds(25),
                 watchTimeout: TimeSpan.FromMilliseconds(75));
-            service.OrderNotAcknowledged += (_, _) => Interlocked.Increment(ref fired);
+            service.BrokerageOrderNeverNotified += (_, _) => Interlocked.Increment(ref fired);
 
             // the stream acknowledged the order right after it was watched
             service.Watch("77");

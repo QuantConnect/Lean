@@ -16,7 +16,7 @@
 using System;
 using QuantConnect.Orders;
 
-namespace QuantConnect.Brokerages.Services
+namespace QuantConnect.Brokerages.Services.OrderPolling.Models
 {
     /// <summary>
     /// One order, as the brokerage last saw it. The brokerage converts its own order model into this shape

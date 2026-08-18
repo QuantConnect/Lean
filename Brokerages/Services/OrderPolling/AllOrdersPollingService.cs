@@ -16,8 +16,9 @@
 using System;
 using QuantConnect.Securities;
 using System.Collections.Generic;
+using QuantConnect.Brokerages.Services.OrderPolling.Models;
 
-namespace QuantConnect.Brokerages.Services
+namespace QuantConnect.Brokerages.Services.OrderPolling
 {
     /// <summary>
     /// For a broker with only a bulk endpoint. A sweep calls the read once, whatever is watched, and the
@@ -40,7 +41,7 @@ namespace QuantConnect.Brokerages.Services
         /// <param name="pollInterval">How long the loop sleeps between sweeps. Null falls back to the
         /// <c>brokerage-order-poll-interval-ms</c> configuration entry, default 3000 ms.</param>
         /// <param name="watchTimeout">How long a watched order may stay unreported before
-        /// <see cref="BrokerageOrderPollingService.OrderNotAcknowledged"/> is raised. Null falls back to one minute.</param>
+        /// <see cref="BrokerageOrderPollingService.BrokerageOrderNeverNotified"/> is raised. Null falls back to one minute.</param>
         public AllOrdersPollingService(Func<IEnumerable<BrokerOrderState>> readAllOrders, BrokerageConcurrentMessageHandler messageHandler,
             IOrderProvider orderProvider, TimeSpan? pollInterval = null, TimeSpan? watchTimeout = null)
             : base(messageHandler, orderProvider, pollInterval, watchTimeout)

@@ -29,7 +29,8 @@ using System.Collections.Concurrent;
 using QuantConnect.Api;
 using QuantConnect.Brokerages.Authentication;
 using QuantConnect.Brokerages.CrossZero;
-using QuantConnect.Brokerages.Services;
+using QuantConnect.Brokerages.Services.OrderPolling;
+using QuantConnect.Brokerages.Services.OrderPolling.Models;
 using QuantConnect.Util;
 
 namespace QuantConnect.Brokerages
@@ -367,7 +368,7 @@ namespace QuantConnect.Brokerages
         /// Creates a <see cref="PerOrderIdPollingService"/>, for a broker with a get-order endpoint, and wires it
         /// into this brokerage: polled order events reach <see cref="OnOrderEvents"/>, polling outage warnings
         /// reach <see cref="OnMessage"/>, and an order the broker never reports goes to
-        /// <see cref="OnOrderPollingNotAcknowledged"/>. The created service is kept in <see cref="OrderPollingService"/>.
+        /// <see cref="OnBrokerageOrderNeverNotified"/>. The created service is kept in <see cref="OrderPollingService"/>.
         /// </summary>
         /// <param name="readOrder">Reads the current state of one order by its brokerage id. A null
         /// return means the broker does not know the id.</param>
@@ -377,7 +378,7 @@ namespace QuantConnect.Brokerages
         /// <param name="pollInterval">How long the loop sleeps between sweeps. Null falls back to the
         /// <c>brokerage-order-poll-interval-ms</c> configuration entry, default 3000 ms.</param>
         /// <param name="watchTimeout">How long a watched order may stay unreported before
-        /// <see cref="OnOrderPollingNotAcknowledged"/> is called. Null falls back to one minute.</param>
+        /// <see cref="OnBrokerageOrderNeverNotified"/> is called. Null falls back to one minute.</param>
         /// <returns>The created and wired service.</returns>
         protected PerOrderIdPollingService CreateOrderPollingService(Func<string, BrokerOrderState> readOrder,
             BrokerageConcurrentMessageHandler messageHandler, IOrderProvider orderProvider,
@@ -399,7 +400,7 @@ namespace QuantConnect.Brokerages
         /// <param name="pollInterval">How long the loop sleeps between sweeps. Null falls back to the
         /// <c>brokerage-order-poll-interval-ms</c> configuration entry, default 3000 ms.</param>
         /// <param name="watchTimeout">How long a watched order may stay unreported before
-        /// <see cref="OnOrderPollingNotAcknowledged"/> is called. Null falls back to one minute.</param>
+        /// <see cref="OnBrokerageOrderNeverNotified"/> is called. Null falls back to one minute.</param>
         /// <returns>The created and wired service.</returns>
         protected AllOrdersPollingService CreateOrderPollingService(Func<IEnumerable<BrokerOrderState>> readAllOrders,
             BrokerageConcurrentMessageHandler messageHandler, IOrderProvider orderProvider,
@@ -423,7 +424,7 @@ namespace QuantConnect.Brokerages
 
             service.OrderEvents += (_, orderEvents) => OnOrderEvents(orderEvents);
             service.Message += (_, message) => OnMessage(message);
-            service.OrderNotAcknowledged += (_, notAcknowledged) => OnOrderPollingNotAcknowledged(notAcknowledged);
+            service.BrokerageOrderNeverNotified += (_, neverNotified) => OnBrokerageOrderNeverNotified(neverNotified);
             OrderPollingService = service;
 
             Log.Trace($"Brokerage.WireOrderPollingService(): {Name} created a {service.GetType().Name}: " +
@@ -434,12 +435,12 @@ namespace QuantConnect.Brokerages
         /// Called when the broker never reported a watched order for the whole watch timeout. The default
         /// sends one warning message; override it to decide what the silence means for this broker.
         /// </summary>
-        /// <param name="notAcknowledged">The brokerage order id and how long it was watched.</param>
-        protected virtual void OnOrderPollingNotAcknowledged(OrderNotAcknowledgedEventArgs notAcknowledged)
+        /// <param name="neverNotified">The brokerage order id and how long it was watched.</param>
+        protected virtual void OnBrokerageOrderNeverNotified(BrokerageOrderNeverNotifiedEventArgs neverNotified)
         {
             OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Warning, "OrderNotAcknowledged",
-                $"{Name} never reported order '{notAcknowledged.BrokerageOrderId}' after " +
-                $"{notAcknowledged.WatchedFor.TotalSeconds:F0} seconds of polling. The order may not have been accepted, verify it manually."));
+                $"{Name} was never notified about the order ({neverNotified}). " +
+                $"It may not have been accepted, verify it manually."));
         }
 
         #endregion

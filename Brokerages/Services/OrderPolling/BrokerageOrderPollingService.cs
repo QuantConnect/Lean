@@ -14,9 +14,11 @@
 */
 
 using System;
+using System.Linq;
 using System.Threading;
 using QuantConnect.Util;
 using QuantConnect.Orders;
+using QuantConnect.Brokerages.Services.OrderPolling.Models;
 using QuantConnect.Logging;
 using System.Threading.Tasks;
 using QuantConnect.Securities;
@@ -24,7 +26,7 @@ using QuantConnect.Orders.Fees;
 using System.Collections.Generic;
 using QuantConnect.Configuration;
 
-namespace QuantConnect.Brokerages.Services
+namespace QuantConnect.Brokerages.Services.OrderPolling
 {
     /// <summary>
     /// Reads orders from the brokerage on an interval and turns the returned states into order events.
@@ -104,7 +106,7 @@ namespace QuantConnect.Brokerages.Services
         /// A watched order that nothing reported for <see cref="WatchTimeout"/> of polling. Raised once;
         /// the id is unwatched with it. The brokerage decides what the silence means.
         /// </summary>
-        public event EventHandler<OrderNotAcknowledgedEventArgs> OrderNotAcknowledged;
+        public event EventHandler<BrokerageOrderNeverNotifiedEventArgs> BrokerageOrderNeverNotified;
 
         /// <summary>
         /// Several reads in a row failed, so the run currently has no order updates. Raised once per
@@ -124,7 +126,7 @@ namespace QuantConnect.Brokerages.Services
 
         /// <summary>
         /// How long a watched order may stay completely unreported, in polling time, before
-        /// <see cref="OrderNotAcknowledged"/> is raised for it.
+        /// <see cref="BrokerageOrderNeverNotified"/> is raised for it.
         /// </summary>
         public TimeSpan WatchTimeout { get; }
 
@@ -141,7 +143,7 @@ namespace QuantConnect.Brokerages.Services
         /// <param name="pollInterval">How long the loop sleeps between sweeps. Null falls back to the
         /// <c>brokerage-order-poll-interval-ms</c> configuration entry, default 3000 ms.</param>
         /// <param name="watchTimeout">How long a watched order may stay unreported before
-        /// <see cref="OrderNotAcknowledged"/> is raised. Null falls back to one minute.</param>
+        /// <see cref="BrokerageOrderNeverNotified"/> is raised. Null falls back to one minute.</param>
         protected BrokerageOrderPollingService(BrokerageConcurrentMessageHandler messageHandler, IOrderProvider orderProvider,
             TimeSpan? pollInterval = null, TimeSpan? watchTimeout = null)
         {
@@ -191,7 +193,7 @@ namespace QuantConnect.Brokerages.Services
         /// <summary>
         /// Watches a brokerage order id, with nothing seen for it yet, so the first state to carry the id
         /// acknowledges the order and <see cref="WatchTimeout"/> of silence raises
-        /// <see cref="OrderNotAcknowledged"/>. Idempotent: watching an already-watched id never overwrites
+        /// <see cref="BrokerageOrderNeverNotified"/>. Idempotent: watching an already-watched id never overwrites
         /// its state.
         /// </summary>
         /// <param name="brokerageId">The brokerage order id to watch.</param>
@@ -680,12 +682,12 @@ namespace QuantConnect.Brokerages.Services
 
         /// <summary>
         /// Counts one interval of silence for every watched order the broker never reported, and raises
-        /// <see cref="OrderNotAcknowledged"/> once for each one that reached the watch timeout. Called only
+        /// <see cref="BrokerageOrderNeverNotified"/> once for each one that reached the watch timeout. Called only
         /// after a successful sweep, because only a read that succeeded proves the silence is real.
         /// </summary>
         private void CheckWatchTimeouts()
         {
-            List<OrderNotAcknowledgedEventArgs> expired = null;
+            List<(string BrokerageId, TimeSpan WatchDuration)> expired = null;
             lock (_lock)
             {
                 foreach (var (brokerageId, entry) in _orderStates)
@@ -695,27 +697,30 @@ namespace QuantConnect.Brokerages.Services
                         continue;
                     }
 
-                    entry.UnacknowledgedFor += PollInterval;
-                    if (entry.UnacknowledgedFor >= WatchTimeout)
+                    entry.UnacknowledgedDuration += PollInterval;
+                    if (entry.UnacknowledgedDuration >= WatchTimeout)
                     {
-                        (expired ??= []).Add(new OrderNotAcknowledgedEventArgs(brokerageId, entry.UnacknowledgedFor));
+                        (expired ??= []).Add((brokerageId, entry.UnacknowledgedDuration));
                     }
                 }
 
                 if (expired != null)
                 {
-                    foreach (var eventArgs in expired)
+                    foreach (var (brokerageId, _) in expired)
                     {
-                        _orderStates.Remove(eventArgs.BrokerageOrderId);
+                        _orderStates.Remove(brokerageId);
                     }
                 }
             }
 
             if (expired != null)
             {
-                foreach (var eventArgs in expired)
+                foreach (var (brokerageId, watchDuration) in expired)
                 {
-                    OrderNotAcknowledged?.Invoke(this, eventArgs);
+                    // Resolved outside the registry lock. A placement whose id assignment was itself the
+                    // thing that never happened resolves to no Lean order, so the args carry null then.
+                    var leanOrder = _orderProvider?.GetOrdersByBrokerageId(brokerageId)?.FirstOrDefault();
+                    BrokerageOrderNeverNotified?.Invoke(this, new BrokerageOrderNeverNotifiedEventArgs(brokerageId, leanOrder, watchDuration));
                 }
             }
         }
@@ -767,7 +772,7 @@ namespace QuantConnect.Brokerages.Services
             /// <summary>
             /// How long the order has been watched with nothing reporting it, in polling time.
             /// </summary>
-            public TimeSpan UnacknowledgedFor;
+            public TimeSpan UnacknowledgedDuration;
         }
     }
 }
