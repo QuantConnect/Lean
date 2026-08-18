@@ -44,19 +44,30 @@ namespace QuantConnect.Algorithm.CSharp
                 throw new RegressionTestException("Expected SMA to be warmed up");
             }
 
-            // Test case 2
+            // Test case 2: 'RegisterIndicator' respects the automatic indicator warm-up setting
             var indicator = new CustomIndicator(10);
             RegisterIndicator(_spy, indicator, Resolution.Minute, (Func<IBaseData, decimal>) null);
 
-            if (indicator.IsReady)
+            if (!indicator.IsReady)
+            {
+                throw new RegressionTestException("Expected CustomIndicator to be automatically warmed up when registered");
+            }
+
+            // Test case 3: with the setting disabled 'RegisterIndicator' does not warm up, 'WarmUpIndicator' does
+            Settings.AutomaticIndicatorWarmUp = false;
+            var notWarmedIndicator = new CustomIndicator(10);
+            RegisterIndicator(_spy, notWarmedIndicator, Resolution.Minute, (Func<IBaseData, decimal>) null);
+
+            if (notWarmedIndicator.IsReady)
             {
                 throw new RegressionTestException("Expected CustomIndicator Not to be warmed up");
             }
-            WarmUpIndicator(_spy, indicator);
-            if (!indicator.IsReady)
+            WarmUpIndicator(_spy, notWarmedIndicator);
+            if (!notWarmedIndicator.IsReady)
             {
                 throw new RegressionTestException("Expected CustomIndicator to be warmed up");
             }
+            Settings.AutomaticIndicatorWarmUp = true;
         }
 
         /// <summary>
@@ -70,7 +81,7 @@ namespace QuantConnect.Algorithm.CSharp
                 var subscription = SubscriptionManager.SubscriptionDataConfigService.GetSubscriptionDataConfigs(_spy).First(config => config.TickType == TickType.Trade);
 
                 // we expect 1 consolidator per indicator
-                if (subscription.Consolidators.Count != 2)
+                if (subscription.Consolidators.Count != 3)
                 {
                     throw new RegressionTestException($"Unexpected consolidator count for subscription: {subscription.Consolidators.Count}");
                 }
@@ -113,7 +124,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of the algorithm history
         /// </summary>
-        public int AlgorithmHistoryDataPoints => 40;
+        public int AlgorithmHistoryDataPoints => 60;
 
         /// <summary>
         /// Final status of the algorithm

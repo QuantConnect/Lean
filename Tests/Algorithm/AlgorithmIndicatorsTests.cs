@@ -21,6 +21,7 @@ using NUnit.Framework;
 using Python.Runtime;
 using QuantConnect.Algorithm;
 using QuantConnect.Data;
+using QuantConnect.Data.Consolidators;
 using QuantConnect.Data.Market;
 using QuantConnect.Indicators;
 using QuantConnect.Lean.Engine.DataFeeds;
@@ -800,6 +801,85 @@ def get_indicator(algo, symbol):
             // The indicator should have been updated during the warm-up period
             var lastInput = testModule.GetAttr("LastInputTracker").GetAttr("last_input").GetAndDispose<TradeBar>();
             Assert.IsNotNull(lastInput);
+        }
+
+        [TestCase(true)]
+        [TestCase(false)]
+        public void RegisterIndicatorWithConsolidatorRespectsAutomaticIndicatorWarmUp(bool automaticIndicatorWarmUp)
+        {
+            _algorithm.Settings.AutomaticIndicatorWarmUp = automaticIndicatorWarmUp;
+
+            var indicator = new AverageTrueRange(10);
+            var consolidator = new TradeBarConsolidator(TimeSpan.FromMinutes(30));
+            _algorithm.RegisterIndicator(_equity, indicator, consolidator);
+
+            Assert.AreEqual(automaticIndicatorWarmUp, indicator.IsReady);
+            if (automaticIndicatorWarmUp)
+            {
+                Assert.GreaterOrEqual(indicator.Samples, indicator.WarmUpPeriod);
+            }
+            else
+            {
+                Assert.AreEqual(0, indicator.Samples);
+            }
+        }
+
+        [Test]
+        public void RegisterIndicatorWithConsolidatorAndSelectorAutomaticallyWarmsUpDataPointIndicator()
+        {
+            var indicator = new RelativeStrengthIndex(14);
+            var consolidator = new TradeBarConsolidator(TimeSpan.FromMinutes(30));
+            _algorithm.RegisterIndicator(_equity, indicator, consolidator, Field.Close);
+
+            Assert.IsTrue(indicator.IsReady);
+            Assert.GreaterOrEqual(indicator.Samples, indicator.WarmUpPeriod);
+        }
+
+        [Test]
+        public void RegisterIndicatorWithResolutionAutomaticallyWarmsUpIndicator()
+        {
+            var indicator = new SimpleMovingAverage(10);
+            _algorithm.RegisterIndicator(_equity, indicator, Resolution.Minute, (Func<IBaseData, decimal>)null);
+
+            Assert.IsTrue(indicator.IsReady);
+        }
+
+        [Test]
+        public void RegisterIndicatorWithNonTimeBasedConsolidatorSkipsAutomaticWarmUp()
+        {
+            var indicator = new RelativeStrengthIndex(14);
+            var consolidator = new RenkoConsolidator(10m);
+            Assert.DoesNotThrow(() => _algorithm.RegisterIndicator(_equity, indicator, consolidator, Field.Close));
+
+            // the consolidation period cannot be inferred, so the indicator is registered but not warmed up
+            Assert.IsFalse(indicator.IsReady);
+            Assert.AreEqual(0, indicator.Samples);
+        }
+
+        [Test]
+        public void RegisterIndicatorWithConsolidatorWarmsUpForexIndicatorWithQuoteData()
+        {
+            // forex is quote only: warming up must not request trade data
+            _algorithm.SetDateTime(new DateTime(2014, 5, 9));
+            var eurusd = _algorithm.AddForex("EURUSD", Resolution.Minute, Market.Oanda).Symbol;
+
+            var indicator = new AverageTrueRange(10);
+            var consolidator = new QuoteBarConsolidator(TimeSpan.FromMinutes(30));
+            _algorithm.RegisterIndicator(eurusd, indicator, consolidator);
+
+            Assert.IsTrue(indicator.IsReady);
+        }
+
+        [Test]
+        public void IndicatorHelpersWarmUpForexIndicatorsWithQuoteData()
+        {
+            // forex is quote only: the ATR helper must warm up from quote bars without any manual history replay
+            _algorithm.SetDateTime(new DateTime(2014, 5, 9));
+            var eurusd = _algorithm.AddForex("EURUSD", Resolution.Minute, Market.Oanda).Symbol;
+
+            var indicator = _algorithm.ATR(eurusd, 10, resolution: Resolution.Minute);
+
+            Assert.IsTrue(indicator.IsReady);
         }
 
         // Some specific indicator helper methods tests

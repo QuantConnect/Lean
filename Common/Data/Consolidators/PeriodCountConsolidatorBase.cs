@@ -289,9 +289,9 @@ namespace QuantConnect.Data.Consolidators
         protected bool IsTimeBased => !_maxCount.HasValue;
 
         /// <summary>
-        /// Gets the time period for this consolidator
+        /// Gets the time period for this consolidator, null when in pure count mode
         /// </summary>
-        protected TimeSpan? Period => _period;
+        public override TimeSpan? Period => _period;
 
         /// <summary>
         /// Determines whether or not the specified data should be processed

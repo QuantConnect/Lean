@@ -36,7 +36,8 @@ namespace QuantConnect
         private static bool _defaultIgnoreUnknownAssetHoldings = Config.GetBool("ignore-unknown-asset-holdings", true);
 
         /// <summary>
-        /// Gets whether or not WarmUpIndicator is allowed to warm up indicators
+        /// Gets whether or not indicators are automatically warmed up with historical data when created
+        /// through the indicator helper methods or registered through 'RegisterIndicator'
         /// </summary>
         public bool AutomaticIndicatorWarmUp { get; set; }
 

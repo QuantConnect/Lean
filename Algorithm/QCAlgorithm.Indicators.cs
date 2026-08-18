@@ -57,6 +57,11 @@ namespace QuantConnect.Algorithm
         };
 
         /// <summary>
+        /// True once the warning about registered indicators that cannot be automatically warmed up has been sent
+        /// </summary>
+        private bool _registeredIndicatorNoWarmUpWarningSent;
+
+        /// <summary>
         /// Gets whether or not WarmUpIndicator is allowed to warm up indicators
         /// </summary>
         [Obsolete("Please use Settings.AutomaticIndicatorWarmUp")]
@@ -1178,7 +1183,7 @@ namespace QuantConnect.Algorithm
         {
             var name = Invariant($"{symbol}({fieldName ?? "close"},{resolution})");
             var identity = new Identity(name);
-            RegisterIndicator(symbol, identity, ResolveConsolidator(symbol, resolution), selector);
+            RegisterIndicatorCore(symbol, identity, ResolveConsolidator(symbol, resolution), selector);
             return identity;
         }
 
@@ -1998,7 +2003,7 @@ namespace QuantConnect.Algorithm
         {
             var name = CreateIndicatorName(symbol, $"RDV({period})", resolution);
             var relativeDailyVolume = new RelativeDailyVolume(name, period);
-            RegisterIndicator(symbol, relativeDailyVolume, resolution, selector);
+            RegisterIndicatorCore(symbol, relativeDailyVolume, ResolveConsolidator(symbol, resolution, typeof(TradeBar)), selector);
 
             return relativeDailyVolume;
         }
@@ -3243,6 +3248,35 @@ namespace QuantConnect.Algorithm
         [DocumentationAttribute(Indicators)]
         public void RegisterIndicator(Symbol symbol, IndicatorBase<IndicatorDataPoint> indicator, IDataConsolidator consolidator, Func<IBaseData, decimal> selector = null)
         {
+            RegisterIndicatorCore(symbol, indicator, consolidator, selector);
+
+            if (TryGetRegisteredIndicatorWarmUpPeriod(indicator, consolidator, out var barSpan))
+            {
+                if (barSpan.HasValue)
+                {
+                    // wrap the decimal selector the same way the live consolidator handler does
+                    Func<IBaseData, IndicatorDataPoint> warmUpSelector = null;
+                    if (selector != null)
+                    {
+                        warmUpSelector = x => new IndicatorDataPoint(x.Symbol, x.EndTime, selector(x));
+                    }
+                    WarmUpConsolidatorRegisteredIndicator(symbol, indicator, consolidator, barSpan.Value, warmUpSelector);
+                }
+                else
+                {
+                    // identity consolidator: warm up directly at the subscription resolution
+                    WarmUpIndicator(symbol, indicator, (Resolution?)null, selector);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Registers the consolidator to receive automatic updates as well as configures the indicator to receive updates
+        /// from the consolidator, without triggering the automatic indicator warm-up. Used by the indicator creation
+        /// helpers, which handle warm-up themselves
+        /// </summary>
+        private void RegisterIndicatorCore(Symbol symbol, IndicatorBase<IndicatorDataPoint> indicator, IDataConsolidator consolidator, Func<IBaseData, decimal> selector = null)
+        {
             // default our selector to the Value property on BaseData
             selector = selector ?? (x => x.Value);
 
@@ -3316,6 +3350,31 @@ namespace QuantConnect.Algorithm
         public void RegisterIndicator<T>(Symbol symbol, IndicatorBase<T> indicator, IDataConsolidator consolidator, Func<IBaseData, T> selector = null)
             where T : IBaseData
         {
+            RegisterIndicatorCore(symbol, indicator, consolidator, selector);
+
+            if (TryGetRegisteredIndicatorWarmUpPeriod(indicator, consolidator, out var barSpan))
+            {
+                if (barSpan.HasValue)
+                {
+                    WarmUpConsolidatorRegisteredIndicator(symbol, indicator, consolidator, barSpan.Value, selector);
+                }
+                else
+                {
+                    // identity consolidator: warm up directly at the subscription resolution.
+                    // Same as 'WarmUpIndicator(symbol, indicator, resolution)' but without its 'class' generic constraint
+                    IndicatorHistory(indicator, new[] { symbol }, 0, (Resolution?)null, selector);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Registers the consolidator to receive automatic updates as well as configures the indicator to receive updates
+        /// from the consolidator, without triggering the automatic indicator warm-up. Used by the indicator creation
+        /// helpers, which handle warm-up themselves
+        /// </summary>
+        private void RegisterIndicatorCore<T>(Symbol symbol, IndicatorBase<T> indicator, IDataConsolidator consolidator, Func<IBaseData, T> selector = null)
+            where T : IBaseData
+        {
             // assign default using cast
             var selectorToUse = selector ?? (x => (T)x);
 
@@ -3345,6 +3404,83 @@ namespace QuantConnect.Algorithm
                 var value = selectorToUse(consolidated);
                 indicator.Update(value);
             };
+        }
+
+        /// <summary>
+        /// Determines whether an indicator explicitly registered with a consolidator should be automatically warmed up,
+        /// see <see cref="IAlgorithmSettings.AutomaticIndicatorWarmUp"/>, and gets the consolidator's bar span to warm up with.
+        /// A null <paramref name="barSpan"/> with a true return value means the consolidator is an identity pass-through,
+        /// so the subscription resolution should be used
+        /// </summary>
+        private bool TryGetRegisteredIndicatorWarmUpPeriod(IndicatorBase indicator, IDataConsolidator consolidator, out TimeSpan? barSpan)
+        {
+            barSpan = null;
+            if (!Settings.AutomaticIndicatorWarmUp
+                || indicator is not IIndicatorWarmUpPeriodProvider warmUpPeriodProvider
+                || warmUpPeriodProvider.WarmUpPeriod <= 0)
+            {
+                // indicators which don't define a warm up period are silently skipped, unlike 'WarmUpIndicator',
+                // since the user did not explicitly request this specific indicator to be warmed up
+                return false;
+            }
+
+            var period = (consolidator as ConsolidatorBase)?.Period;
+            if (!period.HasValue)
+            {
+                // non time based consolidators, Renko for instance, don't have a period we can warm up from
+                if (!_registeredIndicatorNoWarmUpWarningSent)
+                {
+                    _registeredIndicatorNoWarmUpWarningSent = true;
+                    Debug($"Warning: automatic indicator warm-up is not supported for consolidators of type" +
+                        $" '{consolidator.GetType().Name}' because their consolidation period is unknown." +
+                        $" '{indicator.Name}' was registered but not warmed up, please warm it up manually if needed.");
+                }
+                return false;
+            }
+
+            if (period.Value != TimeSpan.Zero)
+            {
+                barSpan = period;
+            }
+            return true;
+        }
+
+        /// <summary>
+        /// Warms up an indicator that was registered with a consolidator by replaying historical data through
+        /// a temporary consolidator mirroring the registered one, so the indicator is fed the same bar type and
+        /// span it will receive live. This is what enables 'Settings.AutomaticIndicatorWarmUp' to cover
+        /// consolidator-registered indicators, which otherwise force a manual history replay
+        /// </summary>
+        private void WarmUpConsolidatorRegisteredIndicator<T>(Symbol symbol, IndicatorBase<T> indicator, IDataConsolidator consolidator, TimeSpan barSpan,
+            Func<IBaseData, T> selector)
+            where T : IBaseData
+        {
+            var history = GetIndicatorWarmUpHistory(new[] { symbol }, indicator, barSpan, out _);
+            if (history == Enumerable.Empty<Slice>())
+            {
+                return;
+            }
+
+            // assign default selector
+            selector ??= GetDefaultSelector<T>();
+
+            // mirror the registered consolidator's input type instead of using it directly:
+            // pumping history through the live instance would replay stale bars into other attached handlers
+            var tickType = LeanData.GetCommonTickTypeForCommonDataTypes(consolidator.InputType, symbol.SecurityType);
+            var warmUpConsolidator = CreateConsolidator(barSpan, consolidator.InputType, tickType);
+            warmUpConsolidator.DataConsolidated += (_, consolidated) => indicator.Update(selector(consolidated));
+
+            foreach (var slice in history)
+            {
+                if (slice.TryGet(warmUpConsolidator.InputType, symbol, out var data))
+                {
+                    warmUpConsolidator.Update(data);
+                }
+            }
+
+            // scan to flush the last consolidated bar. The security exists at this point, registering created it if missing
+            warmUpConsolidator.Scan(Securities[symbol].LocalTime);
+            warmUpConsolidator.Dispose();
         }
 
         /// <summary>
@@ -4381,7 +4517,7 @@ namespace QuantConnect.Algorithm
             var dataType = GetDataTypeFromSelector(selector);
             foreach (var symbol in symbols)
             {
-                RegisterIndicator(symbol, indicator, ResolveConsolidator(symbol, resolution, dataType), selector);
+                RegisterIndicatorCore(symbol, indicator, ResolveConsolidator(symbol, resolution, dataType), selector);
             }
 
             if (Settings.AutomaticIndicatorWarmUp)
@@ -4396,7 +4532,7 @@ namespace QuantConnect.Algorithm
         {
             foreach (var symbol in symbols)
             {
-                RegisterIndicator(symbol, indicator, resolution, selector);
+                RegisterIndicatorCore(symbol, indicator, ResolveConsolidator(symbol, resolution, typeof(T)), selector);
             }
 
             if (Settings.AutomaticIndicatorWarmUp)
@@ -4407,12 +4543,12 @@ namespace QuantConnect.Algorithm
 
         private void InitializeOptionIndicator(IndicatorBase<IBaseData> indicator, Resolution? resolution, Symbol symbol, Symbol mirrorOption)
         {
-            RegisterIndicator(symbol, indicator, ResolveConsolidator(symbol, resolution, typeof(QuoteBar)));
-            RegisterIndicator(symbol.Underlying, indicator, ResolveConsolidator(symbol.Underlying, resolution));
+            RegisterIndicatorCore(symbol, indicator, ResolveConsolidator(symbol, resolution, typeof(QuoteBar)));
+            RegisterIndicatorCore(symbol.Underlying, indicator, ResolveConsolidator(symbol.Underlying, resolution));
             var symbols = new List<Symbol> { symbol, symbol.Underlying };
             if (mirrorOption != null)
             {
-                RegisterIndicator(mirrorOption, indicator, ResolveConsolidator(mirrorOption, resolution, typeof(QuoteBar)));
+                RegisterIndicatorCore(mirrorOption, indicator, ResolveConsolidator(mirrorOption, resolution, typeof(QuoteBar)));
                 symbols.Add(mirrorOption);
             }
 

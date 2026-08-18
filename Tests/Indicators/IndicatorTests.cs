@@ -20,6 +20,7 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using NUnit.Framework;
+using Python.Runtime;
 using QuantConnect.Algorithm;
 using QuantConnect.Data.Market;
 using QuantConnect.Indicators;
@@ -339,6 +340,131 @@ namespace QuantConnect.Tests.Indicators
             var date = new DateTime(2020, 1, 1);
             target.Update(new Tick(date, Symbols.SPY, 1, 1));
             Assert.AreEqual(Symbols.SPY, target.Current.Symbol);
+        }
+
+        [Test]
+        public void ScalarUpdateThrowsPrescriptiveErrorForDataPointIndicators()
+        {
+            // common misuse: 'sma.update(bar.close)', the update requires a time
+            var indicator = new SimpleMovingAverage(3);
+            var exception = Assert.Throws<NotSupportedException>(() => indicator.Update(1.23));
+            StringAssert.Contains("Update(DateTime, decimal)", exception.Message);
+            StringAssert.Contains("Update(IndicatorDataPoint)", exception.Message);
+        }
+
+        [Test]
+        public void ScalarUpdateThrowsPrescriptiveErrorForBarIndicators()
+        {
+            // common misuse: 'atr.update(bar.close)', bar indicators require the full bar
+            var indicator = new AverageTrueRange(10);
+            var exception = Assert.Throws<NotSupportedException>(() => indicator.Update(1.23));
+            StringAssert.Contains("Update(TradeBar)", exception.Message);
+            StringAssert.Contains("Update(QuoteBar)", exception.Message);
+        }
+
+        [TestCase("RelativeStrengthIndex(14)", "Update(DateTime, decimal)")]
+        [TestCase("AverageTrueRange(10)", "Update(TradeBar)")]
+        public void ScalarUpdateThrowsPrescriptiveErrorFromPython(string indicator, string expectedSuggestion)
+        {
+            // reproduces the common misuse 'rsi.update(bar.close)': the raw value must bind to the
+            // Update(double) overload instead of failing with a cryptic runtime binding error
+            using (Py.GIL())
+            {
+                var testModule = PyModule.FromString("ScalarUpdateThrowsPrescriptiveErrorFromPython",
+                    @$"
+from AlgorithmImports import *
+
+def run():
+    indicator = {indicator}
+    try:
+        indicator.update(70.5)
+    except Exception as e:
+        return str(e)
+    return None
+");
+                var errorMessage = testModule.GetAttr("run").Invoke().As<string>();
+                Assert.IsNotNull(errorMessage);
+                StringAssert.Contains(expectedSuggestion, errorMessage);
+            }
+        }
+
+        [Test]
+        public void ReadingCurrentBeforeIndicatorIsReadyLogsOncePerIndicator()
+        {
+            var previousHandler = Log.LogHandler;
+            var testHandler = new QueueLogHandler();
+            Log.LogHandler = testHandler;
+            try
+            {
+                var indicator = new SimpleMovingAverage("SMA", 3);
+                indicator.Update(new IndicatorDataPoint(new DateTime(2023, 6, 12, 9, 30, 0), 1m));
+
+                var value = indicator.Current.Value;
+
+                var warnings = testHandler.Logs.Where(entry => entry.Message.Contains("is not ready")).ToList();
+                Assert.AreEqual(1, warnings.Count);
+                StringAssert.Contains("received 1 sample", warnings[0].Message);
+                StringAssert.Contains("requires 3", warnings[0].Message);
+                StringAssert.Contains("SMA", warnings[0].Message);
+
+                // reading again does not log again
+                value = indicator.Current.Value;
+                Assert.AreEqual(1, testHandler.Logs.Count(entry => entry.Message.Contains("is not ready")));
+            }
+            finally
+            {
+                Log.LogHandler = previousHandler;
+            }
+        }
+
+        [Test]
+        public void ReadingCurrentWhenReadyDoesNotLog()
+        {
+            var previousHandler = Log.LogHandler;
+            var testHandler = new QueueLogHandler();
+            Log.LogHandler = testHandler;
+            try
+            {
+                var indicator = new SimpleMovingAverage("SMA", 2);
+                var referenceDate = new DateTime(2023, 6, 12, 9, 30, 0);
+                indicator.Update(new IndicatorDataPoint(referenceDate, 1m));
+                indicator.Update(new IndicatorDataPoint(referenceDate.AddMinutes(1), 2m));
+                Assert.IsTrue(indicator.IsReady);
+
+                var value = indicator.Current.Value;
+
+                Assert.IsFalse(testHandler.Logs.Any(entry => entry.Message.Contains("is not ready")));
+            }
+            finally
+            {
+                Log.LogHandler = previousHandler;
+            }
+        }
+
+        [Test]
+        public void InternalCurrentReadsWhileUpdatingDoNotLog()
+        {
+            var previousHandler = Log.LogHandler;
+            var testHandler = new QueueLogHandler();
+            Log.LogHandler = testHandler;
+            try
+            {
+                // MACD reads its internal EMAs 'Current' values on every update, while they are not ready yet.
+                // Those internal reads must not trigger the not-ready warning
+                var indicator = new MovingAverageConvergenceDivergence(2, 3, 2);
+                var referenceDate = new DateTime(2023, 6, 12, 9, 30, 0);
+                for (var i = 0; i < 2; i++)
+                {
+                    indicator.Update(new IndicatorDataPoint(referenceDate.AddMinutes(i), i));
+                }
+                Assert.IsFalse(indicator.IsReady);
+
+                Assert.IsFalse(testHandler.Logs.Any(entry => entry.Message.Contains("is not ready")));
+            }
+            finally
+            {
+                Log.LogHandler = previousHandler;
+            }
         }
 
         private static void TestComparisonOperators<TValue>()

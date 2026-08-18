@@ -48,6 +48,12 @@ namespace QuantConnect.Data.Consolidators
         public abstract IBaseData WorkingData { get; }
 
         /// <summary>
+        /// Gets the period of time each consolidated bar spans, if this consolidator is time based, null otherwise.
+        /// A zero period means the consolidator emits each input as is, see <see cref="IdentityDataConsolidator{T}"/>
+        /// </summary>
+        public virtual TimeSpan? Period => null;
+
+        /// <summary>
         /// Gets the type consumed by this consolidator
         /// </summary>
         public abstract Type InputType { get; }
