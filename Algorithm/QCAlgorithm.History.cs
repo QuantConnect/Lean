@@ -355,15 +355,15 @@ namespace QuantConnect.Algorithm
         /// <param name="dataNormalizationMode">The price scaling mode to use for the securities history</param>
         /// <param name="contractDepthOffset">The continuous contract desired offset from the current front month.
         /// For example, 0 will use the front month, 1 will use the back month contract</param>
-        /// <returns>An enumerable of slice containing the requested historical data</returns>
+        /// <returns>The historical data, which can also be converted to a pandas DataFrame through its DataFrame property</returns>
         [DocumentationAttribute(HistoricalData)]
-        public IEnumerable<DataDictionary<T>> History<T>(TimeSpan span, Resolution? resolution = null, bool? fillForward = null,
+        public DataHistory<DataDictionary<T>> History<T>(TimeSpan span, Resolution? resolution = null, bool? fillForward = null,
             bool? extendedMarketHours = null, DataMappingMode? dataMappingMode = null, DataNormalizationMode? dataNormalizationMode = null,
             int? contractDepthOffset = null)
             where T : IBaseData
         {
             return History<T>(Securities.Keys, span, resolution, fillForward, extendedMarketHours, dataMappingMode, dataNormalizationMode,
-                contractDepthOffset).Memoize();
+                contractDepthOffset);
         }
 
         /// <summary>
@@ -380,15 +380,15 @@ namespace QuantConnect.Algorithm
         /// <param name="dataNormalizationMode">The price scaling mode to use for the securities history</param>
         /// <param name="contractDepthOffset">The continuous contract desired offset from the current front month.
         /// For example, 0 will use the front month, 1 will use the back month contract</param>
-        /// <returns>An enumerable of slice containing the requested historical data</returns>
+        /// <returns>The historical data, which can also be converted to a pandas DataFrame through its DataFrame property</returns>
         [DocumentationAttribute(HistoricalData)]
-        public IEnumerable<DataDictionary<T>> History<T>(IEnumerable<Symbol> symbols, TimeSpan span, Resolution? resolution = null,
+        public DataHistory<DataDictionary<T>> History<T>(IEnumerable<Symbol> symbols, TimeSpan span, Resolution? resolution = null,
             bool? fillForward = null, bool? extendedMarketHours = null, DataMappingMode? dataMappingMode = null,
             DataNormalizationMode? dataNormalizationMode = null, int? contractDepthOffset = null)
             where T : IBaseData
         {
             return History<T>(symbols, Time - span, Time, resolution, fillForward, extendedMarketHours, dataMappingMode,
-                dataNormalizationMode, contractDepthOffset).Memoize();
+                dataNormalizationMode, contractDepthOffset);
         }
 
         /// <summary>
@@ -406,9 +406,9 @@ namespace QuantConnect.Algorithm
         /// <param name="dataNormalizationMode">The price scaling mode to use for the securities history</param>
         /// <param name="contractDepthOffset">The continuous contract desired offset from the current front month.
         /// For example, 0 will use the front month, 1 will use the back month contract</param>
-        /// <returns>An enumerable of slice containing the requested historical data</returns>
+        /// <returns>The historical data, which can also be converted to a pandas DataFrame through its DataFrame property</returns>
         [DocumentationAttribute(HistoricalData)]
-        public IEnumerable<DataDictionary<T>> History<T>(IEnumerable<Symbol> symbols, int periods, Resolution? resolution = null,
+        public DataHistory<DataDictionary<T>> History<T>(IEnumerable<Symbol> symbols, int periods, Resolution? resolution = null,
             bool? fillForward = null, bool? extendedMarketHours = null, DataMappingMode? dataMappingMode = null,
             DataNormalizationMode? dataNormalizationMode = null, int? contractDepthOffset = null)
             where T : IBaseData
@@ -433,9 +433,9 @@ namespace QuantConnect.Algorithm
         /// <param name="dataNormalizationMode">The price scaling mode to use for the securities history</param>
         /// <param name="contractDepthOffset">The continuous contract desired offset from the current front month.
         /// For example, 0 will use the front month, 1 will use the back month contract</param>
-        /// <returns>An enumerable of slice containing the requested historical data</returns>
+        /// <returns>The historical data, which can also be converted to a pandas DataFrame through its DataFrame property</returns>
         [DocumentationAttribute(HistoricalData)]
-        public IEnumerable<DataDictionary<T>> History<T>(IEnumerable<Symbol> symbols, DateTime start, DateTime end, Resolution? resolution = null,
+        public DataHistory<DataDictionary<T>> History<T>(IEnumerable<Symbol> symbols, DateTime start, DateTime end, Resolution? resolution = null,
             bool? fillForward = null, bool? extendedMarketHours = null, DataMappingMode? dataMappingMode = null,
             DataNormalizationMode? dataNormalizationMode = null, int? contractDepthOffset = null)
             where T : IBaseData
@@ -458,15 +458,15 @@ namespace QuantConnect.Algorithm
         /// <param name="dataNormalizationMode">The price scaling mode to use for the securities history</param>
         /// <param name="contractDepthOffset">The continuous contract desired offset from the current front month.
         /// For example, 0 will use the front month, 1 will use the back month contract</param>
-        /// <returns>An enumerable of slice containing the requested historical data</returns>
+        /// <returns>The historical data, which can also be converted to a pandas DataFrame through its DataFrame property</returns>
         [DocumentationAttribute(HistoricalData)]
-        public IEnumerable<T> History<T>(Symbol symbol, TimeSpan span, Resolution? resolution = null, bool? fillForward = null,
+        public DataHistory<T> History<T>(Symbol symbol, TimeSpan span, Resolution? resolution = null, bool? fillForward = null,
             bool? extendedMarketHours = null, DataMappingMode? dataMappingMode = null, DataNormalizationMode? dataNormalizationMode = null,
             int? contractDepthOffset = null)
             where T : IBaseData
         {
             return History<T>(symbol, Time - span, Time, resolution, fillForward, extendedMarketHours, dataMappingMode,
-                dataNormalizationMode, contractDepthOffset).Memoize();
+                dataNormalizationMode, contractDepthOffset);
         }
 
         /// <summary>
@@ -482,9 +482,9 @@ namespace QuantConnect.Algorithm
         /// <param name="dataNormalizationMode">The price scaling mode to use for the securities history</param>
         /// <param name="contractDepthOffset">The continuous contract desired offset from the current front month.
         /// For example, 0 will use the front month, 1 will use the back month contract</param>
-        /// <returns>An enumerable of slice containing the requested historical data</returns>
+        /// <returns>The historical trade bars, which can also be converted to a pandas DataFrame through the result's DataFrame property</returns>
         [DocumentationAttribute(HistoricalData)]
-        public IEnumerable<TradeBar> History(Symbol symbol, int periods, Resolution? resolution = null, bool? fillForward = null,
+        public DataHistory<TradeBar> History(Symbol symbol, int periods, Resolution? resolution = null, bool? fillForward = null,
             bool? extendedMarketHours = null, DataMappingMode? dataMappingMode = null, DataNormalizationMode? dataNormalizationMode = null,
             int? contractDepthOffset = null)
         {
@@ -514,9 +514,9 @@ namespace QuantConnect.Algorithm
         /// <param name="dataNormalizationMode">The price scaling mode to use for the securities history</param>
         /// <param name="contractDepthOffset">The continuous contract desired offset from the current front month.
         /// For example, 0 will use the front month, 1 will use the back month contract</param>
-        /// <returns>An enumerable of slice containing the requested historical data</returns>
+        /// <returns>The historical data, which can also be converted to a pandas DataFrame through its DataFrame property</returns>
         [DocumentationAttribute(HistoricalData)]
-        public IEnumerable<T> History<T>(Symbol symbol, int periods, Resolution? resolution = null, bool? fillForward = null,
+        public DataHistory<T> History<T>(Symbol symbol, int periods, Resolution? resolution = null, bool? fillForward = null,
             bool? extendedMarketHours = null, DataMappingMode? dataMappingMode = null, DataNormalizationMode? dataNormalizationMode = null,
             int? contractDepthOffset = null)
             where T : IBaseData
@@ -541,9 +541,9 @@ namespace QuantConnect.Algorithm
         /// <param name="dataNormalizationMode">The price scaling mode to use for the securities history</param>
         /// <param name="contractDepthOffset">The continuous contract desired offset from the current front month.
         /// For example, 0 will use the front month, 1 will use the back month contract</param>
-        /// <returns>An enumerable of slice containing the requested historical data</returns>
+        /// <returns>The historical data, which can also be converted to a pandas DataFrame through its DataFrame property</returns>
         [DocumentationAttribute(HistoricalData)]
-        public IEnumerable<T> History<T>(Symbol symbol, DateTime start, DateTime end, Resolution? resolution = null, bool? fillForward = null,
+        public DataHistory<T> History<T>(Symbol symbol, DateTime start, DateTime end, Resolution? resolution = null, bool? fillForward = null,
             bool? extendedMarketHours = null, DataMappingMode? dataMappingMode = null, DataNormalizationMode? dataNormalizationMode = null,
             int? contractDepthOffset = null)
             where T : IBaseData
@@ -565,9 +565,9 @@ namespace QuantConnect.Algorithm
         /// <param name="dataNormalizationMode">The price scaling mode to use for the securities history</param>
         /// <param name="contractDepthOffset">The continuous contract desired offset from the current front month.
         /// For example, 0 will use the front month, 1 will use the back month contract</param>
-        /// <returns>An enumerable of slice containing the requested historical data</returns>
+        /// <returns>The historical trade bars, which can also be converted to a pandas DataFrame through the result's DataFrame property</returns>
         [DocumentationAttribute(HistoricalData)]
-        public IEnumerable<TradeBar> History(Symbol symbol, TimeSpan span, Resolution? resolution = null, bool? fillForward = null,
+        public DataHistory<TradeBar> History(Symbol symbol, TimeSpan span, Resolution? resolution = null, bool? fillForward = null,
             bool? extendedMarketHours = null, DataMappingMode? dataMappingMode = null, DataNormalizationMode? dataNormalizationMode = null,
             int? contractDepthOffset = null)
         {
@@ -588,9 +588,9 @@ namespace QuantConnect.Algorithm
         /// <param name="dataNormalizationMode">The price scaling mode to use for the securities history</param>
         /// <param name="contractDepthOffset">The continuous contract desired offset from the current front month.
         /// For example, 0 will use the front month, 1 will use the back month contract</param>
-        /// <returns>An enumerable of slice containing the requested historical data</returns>
+        /// <returns>The historical trade bars, which can also be converted to a pandas DataFrame through the result's DataFrame property</returns>
         [DocumentationAttribute(HistoricalData)]
-        public IEnumerable<TradeBar> History(Symbol symbol, DateTime start, DateTime end, Resolution? resolution = null, bool? fillForward = null,
+        public DataHistory<TradeBar> History(Symbol symbol, DateTime start, DateTime end, Resolution? resolution = null, bool? fillForward = null,
             bool? extendedMarketHours = null, DataMappingMode? dataMappingMode = null, DataNormalizationMode? dataNormalizationMode = null,
             int? contractDepthOffset = null)
         {
@@ -607,8 +607,11 @@ namespace QuantConnect.Algorithm
                                                     " Please use the generic version with Tick type parameter or provide a list of Symbols to use the Slice history request API.");
             }
 
-            return History(new[] { symbol }, start, end, resolutionToUse, fillForward, extendedMarketHours, dataMappingMode, dataNormalizationMode,
+            // Share the memoized enumerable with the lazy data frame so accessing the
+            // data frame does not re-execute the history request
+            var tradeBars = History(new[] { symbol }, start, end, resolutionToUse, fillForward, extendedMarketHours, dataMappingMode, dataNormalizationMode,
                 contractDepthOffset).Get(symbol).Memoize();
+            return new DataHistory<TradeBar>(tradeBars, GetTypedHistoryDataFrame(tradeBars));
         }
 
         /// <summary>
@@ -937,7 +940,7 @@ namespace QuantConnect.Algorithm
         /// <remarks>
         /// This method will check for Python custom data types in order to call the right Slice.Get dynamic method
         /// </remarks>
-        private IEnumerable<T> GetDataTypedHistory<T>(IEnumerable<HistoryRequest> requests, Symbol symbol)
+        private DataHistory<T> GetDataTypedHistory<T>(IEnumerable<HistoryRequest> requests, Symbol symbol)
             where T : IBaseData
         {
             var type = typeof(T);
@@ -974,7 +977,10 @@ namespace QuantConnect.Algorithm
                 result = slices.Get<T>(symbol);
             }
 
-            return result.Memoize();
+            // Share the memoized enumerable with the lazy data frame so accessing the
+            // data frame does not re-execute the history request
+            var memoizedResult = result.Memoize();
+            return new DataHistory<T>(memoizedResult, GetTypedHistoryDataFrame(memoizedResult));
         }
 
         /// <summary>
@@ -983,7 +989,7 @@ namespace QuantConnect.Algorithm
         /// <remarks>
         /// This method will check for Python custom data types in order to call the right Slice.Get dynamic method
         /// </remarks>
-        protected IEnumerable<DataDictionary<T>> GetDataTypedHistory<T>(IEnumerable<HistoryRequest> requests)
+        protected DataHistory<DataDictionary<T>> GetDataTypedHistory<T>(IEnumerable<HistoryRequest> requests)
             where T : IBaseData
         {
             var historyRequests = requests.Where(x => x != null).ToList();
@@ -1013,7 +1019,11 @@ namespace QuantConnect.Algorithm
                 }
             }
 
-            return result.Memoize();
+            // Share the memoized enumerable with the lazy data frame so accessing the
+            // data frame does not re-execute the history request
+            var memoizedResult = result.Memoize();
+            return new DataHistory<DataDictionary<T>>(memoizedResult,
+                GetTypedHistoryDataFrame(memoizedResult.SelectMany(x => x.Values), typeof(T)));
         }
 
         private IEnumerable<Slice> History(IEnumerable<HistoryRequest> requests, DateTimeZone timeZone)

@@ -393,6 +393,57 @@ def getTradesOnlyHistory(algorithm, symbol, start):
 
         [TestCase(Language.CSharp)]
         [TestCase(Language.Python)]
+        public void TypedHistoryResultsExposeADataFrame(Language language)
+        {
+            var algorithm = GetAlgorithm(new DateTime(2013, 10, 8));
+            var spy = algorithm.AddEquity("SPY", Resolution.Minute).Symbol;
+            algorithm.SetPandasConverter();
+
+            if (language == Language.CSharp)
+            {
+                var singleSymbolHistory = algorithm.History<TradeBar>(spy, 10, Resolution.Minute);
+                var multiSymbolHistory = algorithm.History<TradeBar>(new[] { spy }, 10, Resolution.Minute);
+                Assert.AreEqual(10, singleSymbolHistory.Count);
+                Assert.AreEqual(10, multiSymbolHistory.Count);
+
+                using (Py.GIL())
+                {
+                    dynamic singleSymbolDataFrame = singleSymbolHistory.DataFrame;
+                    dynamic multiSymbolDataFrame = multiSymbolHistory.DataFrame;
+                    Assert.AreEqual(10, (int)singleSymbolDataFrame.shape[0]);
+                    Assert.AreEqual(10, (int)multiSymbolDataFrame.shape[0]);
+                }
+
+                // The results are still enumerable after the data frame is built:
+                // the memoized data is shared with the data frame conversion
+                Assert.AreEqual(10, singleSymbolHistory.Count());
+                Assert.AreEqual(10, multiSymbolHistory.Count());
+            }
+            else
+            {
+                using (Py.GIL())
+                {
+                    var getTypedHistory = PyModule.FromString("testModule",
+                        @"
+from AlgorithmImports import *
+
+def get_typed_history(algorithm, symbol):
+    bars = algorithm.history[TradeBar](symbol, 10, Resolution.MINUTE)
+    data_frame = bars.data_frame
+    # the result is still enumerable after the data frame is built
+    return data_frame.shape[0], len(list(bars)), 'close' in data_frame.columns
+        ").GetAttr("get_typed_history");
+
+                    using var result = getTypedHistory.Invoke(algorithm.ToPython(), spy.ToPython());
+                    Assert.AreEqual(10, result[0].As<int>());
+                    Assert.AreEqual(10, result[1].As<int>());
+                    Assert.IsTrue(result[2].As<bool>());
+                }
+            }
+        }
+
+        [TestCase(Language.CSharp)]
+        [TestCase(Language.Python)]
         public void TickResolutionPeriodBasedHistoryRequestThrowsException(Language language)
         {
             var spy = _algorithm.AddEquity("SPY", Resolution.Tick).Symbol;
