@@ -29,7 +29,7 @@ namespace QuantConnect.Brokerages.Services.OrderPolling
         /// <summary>
         /// Reads every order the broker lists.
         /// </summary>
-        private readonly Func<IEnumerable<BrokerOrderState>> _readAllOrders;
+        private readonly Func<IEnumerable<BrokerageOrderSnapshot>> _readAllOrders;
 
         /// <summary>
         /// Creates a new <see cref="AllOrdersPollingService"/>.
@@ -42,7 +42,7 @@ namespace QuantConnect.Brokerages.Services.OrderPolling
         /// <c>brokerage-order-poll-interval-ms</c> configuration entry, default 3000 ms.</param>
         /// <param name="watchTimeout">How long a watched order may stay unreported before
         /// <see cref="BrokerageOrderPollingService.BrokerageOrderNeverNotified"/> is raised. Null falls back to one minute.</param>
-        public AllOrdersPollingService(Func<IEnumerable<BrokerOrderState>> readAllOrders, BrokerageConcurrentMessageHandler messageHandler,
+        public AllOrdersPollingService(Func<IEnumerable<BrokerageOrderSnapshot>> readAllOrders, BrokerageConcurrentMessageHandler messageHandler,
             IOrderProvider orderProvider, TimeSpan? pollInterval = null, TimeSpan? watchTimeout = null)
             : base(messageHandler, orderProvider, pollInterval, watchTimeout)
         {
@@ -52,7 +52,7 @@ namespace QuantConnect.Brokerages.Services.OrderPolling
         /// <summary>
         /// Calls the read once for the whole sweep.
         /// </summary>
-        protected override IEnumerable<BrokerOrderState> Sweep()
+        protected override IEnumerable<BrokerageOrderSnapshot> Sweep()
         {
             return _readAllOrders();
         }

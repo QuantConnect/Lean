@@ -380,7 +380,7 @@ namespace QuantConnect.Brokerages
         /// <param name="watchTimeout">How long a watched order may stay unreported before
         /// <see cref="OnBrokerageOrderNeverNotified"/> is called. Null falls back to one minute.</param>
         /// <returns>The created and wired service.</returns>
-        protected PerOrderIdPollingService CreateOrderPollingService(Func<string, BrokerOrderState> readOrder,
+        protected PerOrderIdPollingService CreateOrderPollingService(Func<string, BrokerageOrderSnapshot> readOrder,
             BrokerageConcurrentMessageHandler messageHandler, IOrderProvider orderProvider,
             TimeSpan? pollInterval = null, TimeSpan? watchTimeout = null)
         {
@@ -402,7 +402,7 @@ namespace QuantConnect.Brokerages
         /// <param name="watchTimeout">How long a watched order may stay unreported before
         /// <see cref="OnBrokerageOrderNeverNotified"/> is called. Null falls back to one minute.</param>
         /// <returns>The created and wired service.</returns>
-        protected AllOrdersPollingService CreateOrderPollingService(Func<IEnumerable<BrokerOrderState>> readAllOrders,
+        protected AllOrdersPollingService CreateOrderPollingService(Func<IEnumerable<BrokerageOrderSnapshot>> readAllOrders,
             BrokerageConcurrentMessageHandler messageHandler, IOrderProvider orderProvider,
             TimeSpan? pollInterval = null, TimeSpan? watchTimeout = null)
         {

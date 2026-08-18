@@ -39,7 +39,7 @@ namespace QuantConnect.Tests.Brokerages.Services.OrderPolling
             _orderProvider = new OrderProvider();
             _orderEvents = new List<OrderEvent>();
             // the read is unused: these tests drive the diff directly through ProcessOrderState
-            _service = new AllOrdersPollingService(() => Array.Empty<BrokerOrderState>(), messageHandler: null, _orderProvider,
+            _service = new AllOrdersPollingService(() => Array.Empty<BrokerageOrderSnapshot>(), messageHandler: null, _orderProvider,
                 pollInterval: TimeSpan.FromMilliseconds(50), watchTimeout: TimeSpan.FromMilliseconds(120));
             _service.OrderEvents += (_, orderEvents) => _orderEvents.AddRange(orderEvents);
         }
@@ -59,9 +59,9 @@ namespace QuantConnect.Tests.Brokerages.Services.OrderPolling
             return order;
         }
 
-        private static BrokerOrderState State(string brokerageId, OrderStatus status, decimal? filled = null, decimal? price = null, string message = null)
+        private static BrokerageOrderSnapshot State(string brokerageId, OrderStatus status, decimal? filled = null, decimal? price = null, string message = null)
         {
-            return new BrokerOrderState(brokerageId, status, new DateTime(2026, 8, 12, 14, 30, 0, DateTimeKind.Utc),
+            return new BrokerageOrderSnapshot(brokerageId, status, new DateTime(2026, 8, 12, 14, 30, 0, DateTimeKind.Utc),
                 filledQuantity: filled, fillPrice: price, message: message);
         }
 
@@ -536,7 +536,7 @@ namespace QuantConnect.Tests.Brokerages.Services.OrderPolling
             var warnings = new List<BrokerageMessageEvent>();
             using var warned = new AutoResetEvent(false);
             using var service = new AllOrdersPollingService(
-                () => fail ? throw new Exception("read failed") : Array.Empty<BrokerOrderState>(),
+                () => fail ? throw new Exception("read failed") : Array.Empty<BrokerageOrderSnapshot>(),
                 messageHandler: null,
                 _orderProvider,
                 pollInterval: TimeSpan.FromMilliseconds(25));
@@ -676,7 +676,7 @@ namespace QuantConnect.Tests.Brokerages.Services.OrderPolling
             AddOrder(233m, "42", OrderStatus.Submitted);
             var steps = new List<string>();
             using var handler = new BrokerageConcurrentMessageHandler();
-            using var service = new AllOrdersPollingService(() => Array.Empty<BrokerOrderState>(), handler, _orderProvider,
+            using var service = new AllOrdersPollingService(() => Array.Empty<BrokerageOrderSnapshot>(), handler, _orderProvider,
                 pollInterval: TimeSpan.FromMilliseconds(50));
             service.OrderEvents += (_, orderEvents) =>
             {
@@ -752,7 +752,7 @@ namespace QuantConnect.Tests.Brokerages.Services.OrderPolling
 
             _service.Start(preLoadOpenOrders: order => order.BrokerId[0] == "42"
                 ? null
-                : new BrokerOrderState { Status = OrderStatus.Submitted });
+                : new BrokerageOrderSnapshot(brokerageOrderId: null, OrderStatus.Submitted));
 
             Assert.IsTrue(_service.IsPolling);
             Assert.IsFalse(_service.TryGetLastOrderState("42", out _));

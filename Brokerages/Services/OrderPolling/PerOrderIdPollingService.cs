@@ -31,7 +31,7 @@ namespace QuantConnect.Brokerages.Services.OrderPolling
         /// <summary>
         /// Reads the current state of one order by its brokerage id.
         /// </summary>
-        private readonly Func<string, BrokerOrderState> _readOrder;
+        private readonly Func<string, BrokerageOrderSnapshot> _readOrder;
 
         /// <summary>
         /// Creates a new <see cref="PerOrderIdPollingService"/>.
@@ -45,7 +45,7 @@ namespace QuantConnect.Brokerages.Services.OrderPolling
         /// <c>brokerage-order-poll-interval-ms</c> configuration entry, default 3000 ms.</param>
         /// <param name="watchTimeout">How long a watched order may stay unreported before
         /// <see cref="BrokerageOrderPollingService.BrokerageOrderNeverNotified"/> is raised. Null falls back to one minute.</param>
-        public PerOrderIdPollingService(Func<string, BrokerOrderState> readOrder, BrokerageConcurrentMessageHandler messageHandler,
+        public PerOrderIdPollingService(Func<string, BrokerageOrderSnapshot> readOrder, BrokerageConcurrentMessageHandler messageHandler,
             IOrderProvider orderProvider, TimeSpan? pollInterval = null, TimeSpan? watchTimeout = null)
             : base(messageHandler, orderProvider, pollInterval, watchTimeout)
         {
@@ -57,10 +57,10 @@ namespace QuantConnect.Brokerages.Services.OrderPolling
         /// so it cannot starve the other watched orders; the sweep only counts as failed when every read
         /// of the sweep failed.
         /// </summary>
-        protected override IEnumerable<BrokerOrderState> Sweep()
+        protected override IEnumerable<BrokerageOrderSnapshot> Sweep()
         {
             var brokerageIds = GetWatchedBrokerageIds();
-            var orderStates = new List<BrokerOrderState>(brokerageIds.Count);
+            var orderStates = new List<BrokerageOrderSnapshot>(brokerageIds.Count);
             var failedReadCount = 0;
             var lastError = default(Exception);
             foreach (var brokerageId in brokerageIds)

@@ -65,7 +65,7 @@ namespace QuantConnect.Brokerages.Services.OrderPolling
         /// Where each state a sweep returns goes: the message handler, or without one straight into
         /// <see cref="ProcessOrderState"/>.
         /// </summary>
-        private readonly Action<BrokerOrderState> _route;
+        private readonly Action<BrokerageOrderSnapshot> _route;
 
         /// <summary>
         /// Resolves brokerage order ids to Lean orders on every compare, so the service never drifts from
@@ -151,7 +151,7 @@ namespace QuantConnect.Brokerages.Services.OrderPolling
             {
                 _messageHandler = messageHandler;
                 _route = messageHandler.HandleNewMessage;
-                messageHandler.Register<BrokerOrderState>(ProcessOrderState);
+                messageHandler.Register<BrokerageOrderSnapshot>(ProcessOrderState);
             }
             else
             {
@@ -167,7 +167,7 @@ namespace QuantConnect.Brokerages.Services.OrderPolling
         /// <see cref="PollInterval"/>, hands each state to the route, and counts a throw as one failed sweep.
         /// A null state is skipped: in per-id mode it means the broker does not know the id yet.
         /// </summary>
-        protected abstract IEnumerable<BrokerOrderState> Sweep();
+        protected abstract IEnumerable<BrokerageOrderSnapshot> Sweep();
 
         /// <summary>
         /// A copy of the brokerage order ids a sweep still has to read: everything tracked whose end was
@@ -210,7 +210,7 @@ namespace QuantConnect.Brokerages.Services.OrderPolling
         /// </summary>
         /// <param name="brokerageId">The brokerage order id to watch.</param>
         /// <param name="lastSeen">The state another path already reported for the order.</param>
-        public void Watch(string brokerageId, BrokerOrderState lastSeen)
+        public void Watch(string brokerageId, BrokerageOrderSnapshot lastSeen)
         {
             lock (_lock)
             {
@@ -238,7 +238,7 @@ namespace QuantConnect.Brokerages.Services.OrderPolling
         /// The first state to carry the new id reports the order as update submitted, which a stream
         /// would otherwise do. The new id starts with no fill state, because a replacement that counts
         /// its executions from zero must not inherit the old order's numbers; a broker that carries the
-        /// fills across a replace seeds with <see cref="Watch(string, BrokerOrderState)"/> instead.
+        /// fills across a replace seeds with <see cref="Watch(string, BrokerageOrderSnapshot)"/> instead.
         /// </summary>
         /// <param name="brokerageId">The brokerage order id the replacement runs under.</param>
         /// <param name="previousBrokerageId">The replaced brokerage order id, or null when it is unknown.</param>
@@ -279,7 +279,7 @@ namespace QuantConnect.Brokerages.Services.OrderPolling
         /// </summary>
         /// <param name="brokerageId">The brokerage order id the state belongs to.</param>
         /// <param name="orderState">The cumulative state the other path reported.</param>
-        public void UpdateOrderState(string brokerageId, BrokerOrderState orderState)
+        public void UpdateOrderState(string brokerageId, BrokerageOrderSnapshot orderState)
         {
             lock (_lock)
             {
@@ -317,7 +317,7 @@ namespace QuantConnect.Brokerages.Services.OrderPolling
         /// <param name="brokerageId">The brokerage order id to look up.</param>
         /// <param name="lastSeen">When this method returns <c>true</c>, the last state seen; otherwise null.</param>
         /// <returns><c>true</c> when a state was ever recorded for the id; otherwise <c>false</c>.</returns>
-        public bool TryGetLastOrderState(string brokerageId, out BrokerOrderState lastSeen)
+        public bool TryGetLastOrderState(string brokerageId, out BrokerageOrderSnapshot lastSeen)
         {
             lock (_lock)
             {
@@ -338,7 +338,7 @@ namespace QuantConnect.Brokerages.Services.OrderPolling
         /// handler only the poll loop calls it.
         /// </summary>
         /// <param name="orderState">The state a sweep read from the broker.</param>
-        public void ProcessOrderState(BrokerOrderState orderState)
+        public void ProcessOrderState(BrokerageOrderSnapshot orderState)
         {
             if (orderState == null || string.IsNullOrEmpty(orderState.BrokerageOrderId))
             {
@@ -497,7 +497,7 @@ namespace QuantConnect.Brokerages.Services.OrderPolling
 
         /// <summary>
         /// The whole handover from a stream to polling, in the only safe order: process what the stream
-        /// already delivered, pre-load the registry with one <see cref="Watch(string, BrokerOrderState)"/>
+        /// already delivered, pre-load the registry with one <see cref="Watch(string, BrokerageOrderSnapshot)"/>
         /// per open Lean order, then start the loop. Does nothing while polling already runs.
         /// </summary>
         /// <example>
@@ -506,7 +506,7 @@ namespace QuantConnect.Brokerages.Services.OrderPolling
         /// <param name="preLoadOpenOrders">Builds the state another path already reported for one open Lean
         /// order: the brokerage id, the order's status and the cumulative filled quantity. A null return
         /// skips the order, and a null callback pre-loads nothing.</param>
-        public void Start(Func<Order, BrokerOrderState> preLoadOpenOrders)
+        public void Start(Func<Order, BrokerageOrderSnapshot> preLoadOpenOrders)
         {
             if (IsPolling)
             {
@@ -734,7 +734,7 @@ namespace QuantConnect.Brokerages.Services.OrderPolling
             /// The last state seen for the order, from any path. Null when nothing was seen yet, so the
             /// submit is still due.
             /// </summary>
-            public BrokerOrderState LastSeen;
+            public BrokerageOrderSnapshot LastSeen;
 
             /// <summary>
             /// The cumulative filled quantity already reported to Lean, by any path. Never shrinks.
