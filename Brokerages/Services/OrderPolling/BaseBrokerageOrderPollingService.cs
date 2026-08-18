@@ -33,9 +33,9 @@ namespace QuantConnect.Brokerages.Services.OrderPolling
     /// Used when a brokerage has no order stream, when the stream is unavailable, or to resolve an order
     /// the broker never replied about. This base class owns everything both modes share - the loop, the
     /// watch registry, the compare and the events. What one sweep reads is the subclass:
-    /// <see cref="PerOrderIdPollingService"/> or <see cref="AllOrdersPollingService"/>.
+    /// <see cref="SingleOrderPollingService"/> or <see cref="BulkOrdersPollingService"/>.
     /// </summary>
-    public abstract class BrokerageOrderPollingService : IDisposable
+    public abstract class BaseBrokerageOrderPollingService : IDisposable
     {
         /// <summary>
         /// How many sweeps in a row have to fail before the failure is reported through <see cref="Message"/>.
@@ -45,7 +45,7 @@ namespace QuantConnect.Brokerages.Services.OrderPolling
         /// <summary>
         /// Guards the registry and the polling task against the poll loop, the handler thread inside
         /// <see cref="ProcessOrderState"/>, the order threads through <see cref="Watch(string)"/> /
-        /// <see cref="Unwatch"/> / <see cref="UpdateOrderState"/>, and the watch-timeout check.
+        /// <see cref="Unwatch"/> / <see cref="UpdateOrderState"/>, and the notification-timeout check.
         /// </summary>
         private readonly object _lock = new object();
 
@@ -103,7 +103,7 @@ namespace QuantConnect.Brokerages.Services.OrderPolling
         public event EventHandler<List<OrderEvent>> OrderEvents;
 
         /// <summary>
-        /// A watched order that nothing reported for <see cref="WatchTimeout"/> of polling. Raised once;
+        /// A watched order that nothing reported for <see cref="NotificationTimeout"/> of polling. Raised once;
         /// the id is unwatched with it. The brokerage decides what the silence means.
         /// </summary>
         public event EventHandler<BrokerageOrderNeverNotifiedEventArgs> BrokerageOrderNeverNotified;
@@ -128,7 +128,7 @@ namespace QuantConnect.Brokerages.Services.OrderPolling
         /// How long a watched order may stay completely unreported, in polling time, before
         /// <see cref="BrokerageOrderNeverNotified"/> is raised for it.
         /// </summary>
-        public TimeSpan WatchTimeout { get; }
+        public TimeSpan NotificationTimeout { get; }
 
         /// <summary>
         /// Initializes what both modes share: the message handler wiring, the order provider, and the two
@@ -142,10 +142,10 @@ namespace QuantConnect.Brokerages.Services.OrderPolling
         /// <param name="orderProvider">Resolves brokerage order ids to Lean orders.</param>
         /// <param name="pollInterval">How long the loop sleeps between sweeps. Null falls back to the
         /// <c>brokerage-order-poll-interval-ms</c> configuration entry, default 3000 ms.</param>
-        /// <param name="watchTimeout">How long a watched order may stay unreported before
-        /// <see cref="BrokerageOrderNeverNotified"/> is raised. Null falls back to one minute.</param>
-        protected BrokerageOrderPollingService(BrokerageConcurrentMessageHandler messageHandler, IOrderProvider orderProvider,
-            TimeSpan? pollInterval = null, TimeSpan? watchTimeout = null)
+        /// <param name="notificationTimeout">How long a watched order may stay unreported before
+        /// <see cref="BrokerageOrderNeverNotified"/> is raised. Null takes 60000 ms.</param>
+        protected BaseBrokerageOrderPollingService(BrokerageConcurrentMessageHandler messageHandler, IOrderProvider orderProvider,
+            TimeSpan? pollInterval = null, TimeSpan? notificationTimeout = null)
         {
             if (messageHandler != null)
             {
@@ -158,8 +158,8 @@ namespace QuantConnect.Brokerages.Services.OrderPolling
                 _route = ProcessOrderState;
             }
             _orderProvider = orderProvider;
-            PollInterval = pollInterval ?? TimeSpan.FromMilliseconds(Config.GetInt("brokerage-order-poll-interval-ms", 3000));
-            WatchTimeout = watchTimeout ?? TimeSpan.FromMinutes(1);
+            PollInterval = pollInterval ?? TimeSpan.FromMilliseconds(Config.GetInt("brokerage-order-poll-interval-ms", 3 * 1000));
+            NotificationTimeout = notificationTimeout ?? TimeSpan.FromMilliseconds(60 * 1000);
         }
 
         /// <summary>
@@ -192,7 +192,7 @@ namespace QuantConnect.Brokerages.Services.OrderPolling
 
         /// <summary>
         /// Watches a brokerage order id, with nothing seen for it yet, so the first state to carry the id
-        /// acknowledges the order and <see cref="WatchTimeout"/> of silence raises
+        /// acknowledges the order and <see cref="NotificationTimeout"/> of silence raises
         /// <see cref="BrokerageOrderNeverNotified"/>. Idempotent: watching an already-watched id never overwrites
         /// its state.
         /// </summary>
@@ -347,7 +347,7 @@ namespace QuantConnect.Brokerages.Services.OrderPolling
 
             var brokerageId = orderState.BrokerageOrderId;
 
-            // record the id as seen: the broker knows the order, so the watch timeout stops counting
+            // record the id as seen: the broker knows the order, so the notification timeout stops counting
             lock (_lock)
             {
                 if (_orderStates.TryGetValue(brokerageId, out var seenEntry))
@@ -649,7 +649,7 @@ namespace QuantConnect.Brokerages.Services.OrderPolling
                     // the broker nothing, so it must not count against a watched order
                     if (!cancellationToken.IsCancellationRequested)
                     {
-                        CheckWatchTimeouts();
+                        CheckNotificationTimeouts();
                     }
                 }
                 catch (Exception ex)
@@ -682,10 +682,10 @@ namespace QuantConnect.Brokerages.Services.OrderPolling
 
         /// <summary>
         /// Counts one interval of silence for every watched order the broker never reported, and raises
-        /// <see cref="BrokerageOrderNeverNotified"/> once for each one that reached the watch timeout. Called only
+        /// <see cref="BrokerageOrderNeverNotified"/> once for each one that reached the notification timeout. Called only
         /// after a successful sweep, because only a read that succeeded proves the silence is real.
         /// </summary>
-        private void CheckWatchTimeouts()
+        private void CheckNotificationTimeouts()
         {
             List<(string BrokerageId, TimeSpan WatchDuration)> expired = null;
             lock (_lock)
@@ -698,7 +698,7 @@ namespace QuantConnect.Brokerages.Services.OrderPolling
                     }
 
                     entry.UnacknowledgedDuration += PollInterval;
-                    if (entry.UnacknowledgedDuration >= WatchTimeout)
+                    if (entry.UnacknowledgedDuration >= NotificationTimeout)
                     {
                         (expired ??= []).Add((brokerageId, entry.UnacknowledgedDuration));
                     }
@@ -753,7 +753,7 @@ namespace QuantConnect.Brokerages.Services.OrderPolling
             public bool TerminalReported;
 
             /// <summary>
-            /// Set by <see cref="Watch(string)"/>: the watch timeout only applies to explicitly watched orders.
+            /// Set by <see cref="Watch(string)"/>: the notification timeout only applies to explicitly watched orders.
             /// </summary>
             public bool Watched;
 
@@ -765,7 +765,7 @@ namespace QuantConnect.Brokerages.Services.OrderPolling
 
             /// <summary>
             /// Set once anything carried the id: a polled state, a stream write, or a seed. Stops the
-            /// watch timeout.
+            /// notification timeout.
             /// </summary>
             public bool Acknowledged;
 

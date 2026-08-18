@@ -20,7 +20,7 @@ namespace QuantConnect.Brokerages.Services.OrderPolling.Models
 {
     /// <summary>
     /// One order, as the brokerage last saw it. The plugin converts its broker model into this shape;
-    /// <see cref="BrokerageOrderPollingService"/> diffs it against the last snapshot seen and reports
+    /// <see cref="BaseBrokerageOrderPollingService"/> diffs it against the last snapshot seen and reports
     /// only what is new. Null in an optional field means "my read does not know", never "zero".
     /// </summary>
     public class BrokerageOrderSnapshot

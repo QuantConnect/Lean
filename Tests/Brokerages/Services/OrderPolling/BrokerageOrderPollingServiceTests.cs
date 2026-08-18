@@ -30,7 +30,7 @@ namespace QuantConnect.Tests.Brokerages.Services.OrderPolling
     public class BrokerageOrderPollingServiceTests
     {
         private OrderProvider _orderProvider;
-        private AllOrdersPollingService _service;
+        private BulkOrdersPollingService _service;
         private List<OrderEvent> _orderEvents;
 
         [SetUp]
@@ -39,8 +39,8 @@ namespace QuantConnect.Tests.Brokerages.Services.OrderPolling
             _orderProvider = new OrderProvider();
             _orderEvents = new List<OrderEvent>();
             // the read is unused: these tests drive the diff directly through ProcessOrderState
-            _service = new AllOrdersPollingService(() => Array.Empty<BrokerageOrderSnapshot>(), messageHandler: null, _orderProvider,
-                pollInterval: TimeSpan.FromMilliseconds(50), watchTimeout: TimeSpan.FromMilliseconds(120));
+            _service = new BulkOrdersPollingService(() => Array.Empty<BrokerageOrderSnapshot>(), messageHandler: null, _orderProvider,
+                pollInterval: TimeSpan.FromMilliseconds(50), notificationTimeout: TimeSpan.FromMilliseconds(120));
             _service.OrderEvents += (_, orderEvents) => _orderEvents.AddRange(orderEvents);
         }
 
@@ -453,17 +453,17 @@ namespace QuantConnect.Tests.Brokerages.Services.OrderPolling
         }
 
         [Test]
-        public void WatchTimeoutFiresOnceAndUnwatchesTheId()
+        public void NotificationTimeoutFiresOnceAndUnwatchesTheId()
         {
             var order = AddOrder(100m, "77");
             using var neverNotified = new ManualResetEventSlim(false);
             var raised = new List<BrokerageOrderNeverNotifiedEventArgs>();
-            using var service = new PerOrderIdPollingService(
+            using var service = new SingleOrderPollingService(
                 _ => null,   // the broker never knows the id
                 messageHandler: null,
                 _orderProvider,
                 pollInterval: TimeSpan.FromMilliseconds(25),
-                watchTimeout: TimeSpan.FromMilliseconds(75));
+                notificationTimeout: TimeSpan.FromMilliseconds(75));
             service.BrokerageOrderNeverNotified += (_, eventArgs) =>
             {
                 lock (raised)
@@ -476,7 +476,7 @@ namespace QuantConnect.Tests.Brokerages.Services.OrderPolling
             service.Watch("77");
             service.Start();
 
-            Assert.IsTrue(neverNotified.Wait(TimeSpan.FromSeconds(5)), "the watch timeout never fired");
+            Assert.IsTrue(neverNotified.Wait(TimeSpan.FromSeconds(5)), "the notification timeout never fired");
 
             // let a few more sweeps run: the id was unwatched with the event, so it fires exactly once
             Thread.Sleep(200);
@@ -510,12 +510,12 @@ namespace QuantConnect.Tests.Brokerages.Services.OrderPolling
         public void AcknowledgedWatchNeverTimesOut()
         {
             var fired = 0;
-            using var service = new PerOrderIdPollingService(
+            using var service = new SingleOrderPollingService(
                 _ => null,
                 messageHandler: null,
                 _orderProvider,
                 pollInterval: TimeSpan.FromMilliseconds(25),
-                watchTimeout: TimeSpan.FromMilliseconds(75));
+                notificationTimeout: TimeSpan.FromMilliseconds(75));
             service.BrokerageOrderNeverNotified += (_, _) => Interlocked.Increment(ref fired);
 
             // the stream acknowledged the order right after it was watched
@@ -535,7 +535,7 @@ namespace QuantConnect.Tests.Brokerages.Services.OrderPolling
             var fail = true;
             var warnings = new List<BrokerageMessageEvent>();
             using var warned = new AutoResetEvent(false);
-            using var service = new AllOrdersPollingService(
+            using var service = new BulkOrdersPollingService(
                 () => fail ? throw new Exception("read failed") : Array.Empty<BrokerageOrderSnapshot>(),
                 messageHandler: null,
                 _orderProvider,
@@ -581,7 +581,7 @@ namespace QuantConnect.Tests.Brokerages.Services.OrderPolling
             var readIds = new List<string>();
             using var processed = new ManualResetEventSlim(false);
             // no message handler: the loop hands each state straight into the diff
-            using var service = new PerOrderIdPollingService(
+            using var service = new SingleOrderPollingService(
                 brokerageId =>
                 {
                     lock (readIds)
@@ -676,7 +676,7 @@ namespace QuantConnect.Tests.Brokerages.Services.OrderPolling
             AddOrder(233m, "42", OrderStatus.Submitted);
             var steps = new List<string>();
             using var handler = new BrokerageConcurrentMessageHandler();
-            using var service = new AllOrdersPollingService(() => Array.Empty<BrokerageOrderSnapshot>(), handler, _orderProvider,
+            using var service = new BulkOrdersPollingService(() => Array.Empty<BrokerageOrderSnapshot>(), handler, _orderProvider,
                 pollInterval: TimeSpan.FromMilliseconds(50));
             service.OrderEvents += (_, orderEvents) =>
             {
