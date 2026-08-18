@@ -456,6 +456,10 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     // don't let future data past. We let null pass because that's letting the next enumerator know we've ended because we always return true in live
                     synchronizedWarmupEnumerator = new FilterEnumerator<BaseData>(synchronizedWarmupEnumerator, data => data == null || data.EndTime <= warmupRequest.EndTimeLocal);
 
+                    // schedule the warmup enumeration on a worker: it performs blocking IO, history requests, disk and custom data sources,
+                    // this allows the subscriptions to warm up concurrently instead of sequentially driven by the synchronizer thread
+                    synchronizedWarmupEnumerator = SubscriptionUtils.ScheduleEnumerator(warmupRequest.Configuration.Symbol, synchronizedWarmupEnumerator);
+
                     // the order here is important, concat enumerator will keep the last enumerator given and dispose of the rest
                     liveEnumerator = new ConcatEnumerator(true, synchronizedWarmupEnumerator, liveEnumerator);
                 }

@@ -312,6 +312,116 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             }
         }
 
+        [Test]
+        public void ScheduleEnumeratorEmitsDataInOrderAndEnds()
+        {
+            // more than a single work batch so the worker has to run multiple sprints
+            var dataPoints = new List<BaseData>();
+            for (var i = 0; i < 120; i++)
+            {
+                dataPoints.Add(new Tick(DateTime.UtcNow, Symbols.SPY, i, i));
+            }
+            var enumerator = new TestSequenceEnumerator(dataPoints);
+
+            using var result = SubscriptionUtils.ScheduleEnumerator(Symbols.SPY, enumerator);
+
+            var count = 0;
+            while (result.MoveNext())
+            {
+                Assert.IsNotNull(result.Current);
+                Assert.AreEqual(count++, result.Current.Value);
+            }
+            Assert.AreEqual(120, count);
+            Assert.IsFalse(result.MoveNext());
+            AssertDisposed(enumerator);
+        }
+
+        [Test]
+        public void ScheduleEnumeratorEndsOnNullDataPoint()
+        {
+            // in live mode enumerators return true with a null current value when they have no more data
+            var enumerator = new TestSequenceEnumerator(new List<BaseData>
+            {
+                new Tick(DateTime.UtcNow, Symbols.SPY, 1, 2),
+                null,
+                new Tick(DateTime.UtcNow, Symbols.SPY, 3, 4)
+            });
+
+            using var result = SubscriptionUtils.ScheduleEnumerator(Symbols.SPY, enumerator);
+
+            Assert.IsTrue(result.MoveNext());
+            Assert.IsNotNull(result.Current);
+            Assert.IsFalse(result.MoveNext());
+            AssertDisposed(enumerator);
+        }
+
+        [Test]
+        public void ScheduleEnumeratorStopsWhenConsumerIsDisposed()
+        {
+            using var enumerator = new TestDataEnumerator { MoveNextTrueCount = int.MaxValue };
+
+            var result = SubscriptionUtils.ScheduleEnumerator(Symbols.SPY, enumerator);
+
+            Assert.IsTrue(result.MoveNext());
+            result.DisposeSafely();
+            AssertDisposed(enumerator);
+        }
+
+        [Test]
+        public void ScheduleEnumeratorThrowingEnumeratorEndsConsumer()
+        {
+            using var enumerator = new TestDataEnumerator { MoveNextTrueCount = 10, ThrowException = true };
+
+            using var result = SubscriptionUtils.ScheduleEnumerator(Symbols.SPY, enumerator);
+
+            Assert.IsFalse(result.MoveNext());
+            AssertDisposed(enumerator);
+        }
+
+        private static void AssertDisposed(dynamic enumerator)
+        {
+            var count = 0;
+            while (!enumerator.Disposed)
+            {
+                if (count++ > 500)
+                {
+                    Assert.Fail("Timeout waiting for the worker to dispose of the enumerator");
+                }
+                Thread.Sleep(1);
+            }
+        }
+
+        private class TestSequenceEnumerator : IEnumerator<BaseData>
+        {
+            private readonly IEnumerator<BaseData> _enumerator;
+
+            public bool Disposed { get; private set; }
+
+            public TestSequenceEnumerator(List<BaseData> data)
+            {
+                _enumerator = data.GetEnumerator();
+            }
+
+            public void Dispose()
+            {
+                Disposed = true;
+                _enumerator.Dispose();
+            }
+
+            public bool MoveNext()
+            {
+                return _enumerator.MoveNext();
+            }
+
+            public void Reset()
+            {
+            }
+
+            public BaseData Current => _enumerator.Current;
+
+            object IEnumerator.Current => Current;
+        }
+
         private class TestDataEnumerator : IEnumerator<BaseData>
         {
             public bool ThrowException { get; set; }
