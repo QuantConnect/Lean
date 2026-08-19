@@ -1707,10 +1707,10 @@ namespace QuantConnect.Securities.Future
 
                     // This contract is cash settled against TN instead of delivering notes, so it stops
                     // trading earlier than TN does.
-                    // Trading terminates 2 business days before the first delivery day of the contract
-                    // month. The first delivery day is the first business day of that month.
+                    // Trading terminates at 2:00 p.m. CT 2 business days before the first delivery day
+                    // of the contract month. The first delivery day is the first business day of that month.
                     var firstDeliveryDay = FuturesExpiryUtilityFunctions.NthBusinessDay(time, 1, holidays);
-                    return FuturesExpiryUtilityFunctions.AddBusinessDays(firstDeliveryDay, -2, holidays);
+                    return FuturesExpiryUtilityFunctions.AddBusinessDays(firstDeliveryDay, -2, holidays).AddHours(19);
                 })
             },
             // Micro Ultra U.S. Treasury Bond (MWN): https://www.cmegroup.com/markets/interest-rates/us-treasury/micro-ultra-us-treasury-bond.contractSpecs.html
@@ -1728,10 +1728,10 @@ namespace QuantConnect.Securities.Future
 
                     // This contract is cash settled against UB instead of delivering bonds, so it stops
                     // trading earlier than UB does.
-                    // Trading terminates 2 business days before the first delivery day of the contract
-                    // month. The first delivery day is the first business day of that month.
+                    // Trading terminates at 2:00 p.m. CT 2 business days before the first delivery day
+                    // of the contract month. The first delivery day is the first business day of that month.
                     var firstDeliveryDay = FuturesExpiryUtilityFunctions.NthBusinessDay(time, 1, holidays);
-                    return FuturesExpiryUtilityFunctions.AddBusinessDays(firstDeliveryDay, -2, holidays);
+                    return FuturesExpiryUtilityFunctions.AddBusinessDays(firstDeliveryDay, -2, holidays).AddHours(19);
                 })
             },
             // Energy group

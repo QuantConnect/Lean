@@ -309,7 +309,7 @@ cme,RX,future,DJRE Futures,USD,100.0,0.1,1.0
 cme,SDA,future,SP500 S&P 500 Annual Dividend Index future,USD,250.0,0.05,1.0
 cme,TPD,future,TOPIX USD Futures,USD,50.0,0.5,1.0
 cme,TPY,future,TOPIX JPY Futures,JPY,5000.0,0.5,1.0
-comex,1OZ,future,1-Ounce Gold Futures,USD,1,0.25,1
+comex,1OZ,future,1-Ounce Gold Futures,USD,1.0,0.25,1.0
 comex,AUP,future,Aluminum MW U.S. Transaction Premium Platts (25MT) Futures,USD,55116.0,1e-05,1.0
 comex,EDP,future,Aluminium European Premium Duty-Paid (Metal Bulletin) Futures,USD,25.0,0.01,1.0
 comex,GC,future,Gold Futures,USD,100.0,0.1,1.0
