@@ -88,6 +88,18 @@ silence that raises `BrokerageOrderNeverNotified`; the read callbacks became `ge
 `getAllBrokerageOrders`; both mode classes offer three chained constructors instead of optional
 parameters; and the defaults read `3 * 1000` and `60 * 1000` milliseconds in code and docs alike.
 
+Abstract read renamed - 2026-08-19: the subclass hook `Sweep()` became `GetOrderSnapshots()` - the same
+get verb as its read callbacks and `Brokerage.GetOpenOrders`, and it names what one pass returns. "Sweep"
+stays the prose word for one polling pass.
+
+Poll vocabulary and registry names - 2026-08-19: "sweep" left every XML doc and code comment - "poll" is
+the code word now, this document keeps sweep for prose. The registry record moved into its own file,
+`Models/OrderTrackingEntry` with `LastSnapshot` (was a private nested `OrderStateEntry` with `LastSeen`),
+and the private fields follow (`_orderEntries`, `_processSnapshot`, `MaxFailedPollsBeforeWarning`).
+`GetWatchedBrokerageIds` became `GetOpenBrokerageIds` - it never filtered on the watch flag, and what it
+returns is Lean's "open": the end not reported yet - returning `IEnumerable<string>`, copying the entries
+under the registry lock and filtering outside it. `Dispose` now always disposes the cancellation source.
+
 ## Purpose
 
 Three brokerage plugins have already written the same thing, and a fourth one needs it and does not have it:
@@ -471,13 +483,13 @@ public abstract class BaseBrokerageOrderPollingService : IDisposable
     protected BaseBrokerageOrderPollingService(BrokerageConcurrentMessageHandler messageHandler, IOrderProvider orderProvider,
         TimeSpan? pollInterval = null, TimeSpan? notificationTimeout = null);
 
-    /// <summary>One read of the broker, giving the states the sweep saw. The loop calls it every
-    /// poll interval, hands each state to the message handler, and counts a throw as one failed sweep.</summary>
-    protected abstract IEnumerable<BrokerageOrderSnapshot> Sweep();
+    /// <summary>One read of the broker, giving the current order snapshots. The loop calls it every
+    /// poll interval, hands each snapshot to the message handler, and counts a throw as one failed poll.</summary>
+    protected abstract IEnumerable<BrokerageOrderSnapshot> GetOrderSnapshots();
 
-    /// <summary>A copy of the ids a sweep still has to read: everything tracked whose end was not
+    /// <summary>A copy of the ids a poll still has to read: everything tracked whose end was not
     /// reported yet.</summary>
-    protected List<string> GetWatchedBrokerageIds();
+    protected IEnumerable<string> GetOpenBrokerageIds();
 
     /// <summary>The order events one snapshot produced. Raised inside <see cref="ProcessOrderState"/>, never empty.</summary>
     public event EventHandler<List<OrderEvent>> OrderEvents;
@@ -569,7 +581,7 @@ The watch registry, the compare with the last state seen and the seeding of orde
 
 ### The two modes
 
-The mode is the class. Both run the same diff — it lives in the base — and a subclass is only its `Sweep`:
+The mode is the class. Both run the same diff — it lives in the base — and a subclass is only its `GetOrderSnapshots`:
 
 - **`SingleOrderPollingService`** — `Func<string, BrokerageOrderSnapshot>`: the sweep loops the watched ids and calls the
   read once per id. Nothing watched, nothing requested. Public.com's replaced service had exactly this
