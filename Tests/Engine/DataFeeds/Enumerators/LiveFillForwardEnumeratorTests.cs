@@ -550,6 +550,209 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators
             enqueueableEnumerator.Dispose();
         }
 
+        [TestCase(Resolution.Minute)]
+        [TestCase(Resolution.Second)]
+        public void SkipsStaleFillForwardBarsAfterTimeJump(Resolution fillForwardResolution)
+        {
+            var previousBarEndTime = new DateTime(2020, 5, 21, 10, 0, 0);
+            var timeProvider = new ManualTimeProvider(previousBarEndTime, TimeZones.NewYork);
+            using var fillForwardEnumerator = GetLiveFillForwardEnumerator(timeProvider, previousBarEndTime.Date, Resolution.Minute,
+                out var enqueueableEnumerator, dailyStrictEndTimeEnabled: false, fillForwardResolution);
+            var openingBar = new TradeBar(previousBarEndTime.AddMinutes(-1), Symbols.AAPL, 0.01m, 0.01m, 0.01m, 0.01m, 1, Time.OneMinute);
+
+            enqueueableEnumerator.Enqueue(openingBar);
+            Assert.IsTrue(fillForwardEnumerator.MoveNext());
+            Assert.AreEqual(openingBar.EndTime, fillForwardEnumerator.Current.EndTime);
+
+            // the clock jumps 30 minutes ahead at once, like the warmup to live handover does
+            var expectedBarEndTime = previousBarEndTime.AddMinutes(30);
+            timeProvider.SetCurrentTime(expectedBarEndTime.AddMilliseconds(100));
+
+            // a single fill forward bar is emitted, the latest expected one, instead of back filling the whole gap
+            Assert.IsTrue(fillForwardEnumerator.MoveNext());
+            Assert.IsNotNull(fillForwardEnumerator.Current);
+            Assert.IsTrue(fillForwardEnumerator.Current.IsFillForward);
+            Assert.AreEqual(expectedBarEndTime, fillForwardEnumerator.Current.EndTime);
+            Assert.AreEqual(openingBar.Open, ((TradeBar)fillForwardEnumerator.Current).Open);
+
+            // and nothing else to emit until time moves forward again
+            Assert.IsTrue(fillForwardEnumerator.MoveNext());
+            Assert.IsNull(fillForwardEnumerator.Current);
+
+            enqueueableEnumerator.Dispose();
+        }
+
+        [TestCase(Resolution.Minute, Resolution.Minute, false)]
+        [TestCase(Resolution.Minute, Resolution.Second, false)]
+        [TestCase(Resolution.Hour, Resolution.Minute, false)]
+        [TestCase(Resolution.Hour, Resolution.Second, false)]
+        [TestCase(Resolution.Second, Resolution.Second, false)]
+        [TestCase(Resolution.Daily, Resolution.Minute, false)]
+        [TestCase(Resolution.Daily, Resolution.Second, false)]
+        [TestCase(Resolution.Daily, Resolution.Minute, true)]
+        [TestCase(Resolution.Daily, Resolution.Second, true)]
+        public void SkipsStaleFillForwardBarsAfterTimeJumpCrossResolution(Resolution dataResolution, Resolution fillForwardResolution, bool dailyStrictEndTime)
+        {
+            DateTime previousBarTime;
+            DateTime previousBarEndTime;
+            if (dataResolution == Resolution.Daily)
+            {
+                if (dailyStrictEndTime)
+                {
+                    // Wednesday session
+                    previousBarTime = new DateTime(2020, 5, 20, 9, 30, 0);
+                    previousBarEndTime = new DateTime(2020, 5, 20, 16, 0, 0);
+                }
+                else
+                {
+                    previousBarTime = new DateTime(2020, 5, 20);
+                    previousBarEndTime = new DateTime(2020, 5, 21);
+                }
+            }
+            else
+            {
+                previousBarEndTime = new DateTime(2020, 5, 21, 10, 0, 0);
+                previousBarTime = previousBarEndTime - dataResolution.ToTimeSpan();
+            }
+
+            var timeProvider = new ManualTimeProvider(previousBarEndTime, TimeZones.NewYork);
+            using var fillForwardEnumerator = GetLiveFillForwardEnumerator(timeProvider, previousBarEndTime.Date, dataResolution,
+                out var enqueueableEnumerator, dailyStrictEndTime, fillForwardResolution);
+            var openingBar = new TradeBar(previousBarTime, Symbols.AAPL, 0.01m, 0.01m, 0.01m, 0.01m, 1, previousBarEndTime - previousBarTime);
+
+            enqueueableEnumerator.Enqueue(openingBar);
+            Assert.IsTrue(fillForwardEnumerator.MoveNext());
+            Assert.AreEqual(openingBar.EndTime, fillForwardEnumerator.Current.EndTime);
+
+            // the clock jumps ahead at once into Thursday's session, like the warmup to live handover does
+            var expectedBarEndTime = new DateTime(2020, 5, 21, 10, 30, 0);
+            timeProvider.SetCurrentTime(expectedBarEndTime.AddMilliseconds(100));
+
+            // a single fill forward bar is emitted, the latest expected one, instead of back filling the whole gap
+            Assert.IsTrue(fillForwardEnumerator.MoveNext());
+            Assert.IsNotNull(fillForwardEnumerator.Current);
+            Assert.IsTrue(fillForwardEnumerator.Current.IsFillForward);
+            Assert.AreEqual(expectedBarEndTime, fillForwardEnumerator.Current.EndTime);
+            Assert.AreEqual(openingBar.Open, ((TradeBar)fillForwardEnumerator.Current).Open);
+            // emitted bars keep the data resolution as their period, the fill forward resolution is only the emission grid
+            if (dataResolution != Resolution.Daily)
+            {
+                Assert.AreEqual(dataResolution.ToTimeSpan(), fillForwardEnumerator.Current.EndTime - fillForwardEnumerator.Current.Time);
+            }
+
+            // and nothing else to emit until time moves forward again
+            Assert.IsTrue(fillForwardEnumerator.MoveNext());
+            Assert.IsNull(fillForwardEnumerator.Current);
+
+            enqueueableEnumerator.Dispose();
+        }
+
+        [TestCase(true)]
+        [TestCase(false)]
+        public void SkipRoundsDownOnTheDataTimeZoneGrid(bool halfHourOffsetDataTimeZone)
+        {
+            // the emission grid follows the data time zone: with a +5:30 offset data time zone, hour bars
+            // end at half past the hour in exchange (New York) time, with a whole hour offset they end on the hour
+            var dataTimeZone = halfHourOffsetDataTimeZone ? TimeZones.Kolkata : TimeZones.Utc;
+            var previousBarEndTime = halfHourOffsetDataTimeZone
+                ? new DateTime(2020, 5, 21, 10, 30, 0)
+                : new DateTime(2020, 5, 21, 10, 0, 0);
+            var expectedBarEndTime = halfHourOffsetDataTimeZone
+                ? new DateTime(2020, 5, 21, 13, 30, 0)
+                : new DateTime(2020, 5, 21, 13, 0, 0);
+
+            var exchange = new SecurityExchange(SecurityExchangeHours.AlwaysOpen(TimeZones.NewYork));
+            var timeProvider = new ManualTimeProvider(previousBarEndTime, TimeZones.NewYork);
+            var enqueueableEnumerator = new EnqueueableEnumerator<BaseData>();
+            using var fillForwardEnumerator = new LiveFillForwardEnumerator(timeProvider, enqueueableEnumerator, exchange,
+                Ref.Create(Time.OneHour), false, previousBarEndTime.Date, Time.EndOfTime, Resolution.Hour, dataTimeZone, false);
+            var openingBar = new TradeBar(previousBarEndTime.AddHours(-1), Symbols.EURUSD, 0.01m, 0.01m, 0.01m, 0.01m, 1, Time.OneHour);
+
+            enqueueableEnumerator.Enqueue(openingBar);
+            Assert.IsTrue(fillForwardEnumerator.MoveNext());
+            Assert.AreEqual(openingBar.EndTime, fillForwardEnumerator.Current.EndTime);
+
+            // the clock jumps over 3 hours ahead at once
+            timeProvider.SetCurrentTime(new DateTime(2020, 5, 21, 13, 45, 0));
+
+            // a single fill forward bar is emitted, ending on the data time zone hour grid
+            Assert.IsTrue(fillForwardEnumerator.MoveNext());
+            Assert.IsNotNull(fillForwardEnumerator.Current);
+            Assert.IsTrue(fillForwardEnumerator.Current.IsFillForward);
+            Assert.AreEqual(expectedBarEndTime, fillForwardEnumerator.Current.EndTime);
+            Assert.AreEqual(openingBar.Open, ((TradeBar)fillForwardEnumerator.Current).Open);
+
+            // and nothing else to emit until time moves forward again
+            Assert.IsTrue(fillForwardEnumerator.MoveNext());
+            Assert.IsNull(fillForwardEnumerator.Current);
+
+            enqueueableEnumerator.Dispose();
+        }
+
+        [Test]
+        public void SkipClampsToPreviousSessionCloseWhenMarketIsClosed()
+        {
+            // Thursday, mid session
+            var previousBarEndTime = new DateTime(2020, 5, 21, 15, 30, 0);
+            var timeProvider = new ManualTimeProvider(previousBarEndTime, TimeZones.NewYork);
+            using var fillForwardEnumerator = GetLiveFillForwardEnumerator(timeProvider, previousBarEndTime.Date, Resolution.Minute,
+                out var enqueueableEnumerator, dailyStrictEndTimeEnabled: false);
+            var openingBar = new TradeBar(previousBarEndTime.AddMinutes(-1), Symbols.AAPL, 0.01m, 0.01m, 0.01m, 0.01m, 1, Time.OneMinute);
+
+            enqueueableEnumerator.Enqueue(openingBar);
+            Assert.IsTrue(fillForwardEnumerator.MoveNext());
+            Assert.AreEqual(openingBar.EndTime, fillForwardEnumerator.Current.EndTime);
+
+            // the clock jumps to Saturday noon: the latest expected bar is Friday's last, never a future bar of the next session
+            timeProvider.SetCurrentTime(new DateTime(2020, 5, 23, 12, 0, 0));
+
+            Assert.IsTrue(fillForwardEnumerator.MoveNext());
+            Assert.IsNotNull(fillForwardEnumerator.Current);
+            Assert.IsTrue(fillForwardEnumerator.Current.IsFillForward);
+            Assert.AreEqual(new DateTime(2020, 5, 22, 16, 0, 0), fillForwardEnumerator.Current.EndTime);
+            Assert.AreEqual(openingBar.Open, ((TradeBar)fillForwardEnumerator.Current).Open);
+
+            // next expected bar is the following session open, in the future, nothing to emit
+            Assert.IsTrue(fillForwardEnumerator.MoveNext());
+            Assert.IsNull(fillForwardEnumerator.Current);
+
+            enqueueableEnumerator.Dispose();
+        }
+
+        [Test]
+        public void SkipDoesNotJumpPastNextRealDataPoint()
+        {
+            var previousBarEndTime = new DateTime(2020, 5, 21, 10, 0, 0);
+            var timeProvider = new ManualTimeProvider(previousBarEndTime, TimeZones.NewYork);
+            using var fillForwardEnumerator = GetLiveFillForwardEnumerator(timeProvider, previousBarEndTime.Date, Resolution.Minute,
+                out var enqueueableEnumerator, dailyStrictEndTimeEnabled: false);
+            var openingBar = new TradeBar(previousBarEndTime.AddMinutes(-1), Symbols.AAPL, 0.01m, 0.01m, 0.01m, 0.01m, 1, Time.OneMinute);
+            var nextBar = new TradeBar(previousBarEndTime.AddMinutes(4), Symbols.AAPL, 1m, 2m, 1m, 2m, 100, Time.OneMinute);
+
+            enqueueableEnumerator.Enqueue(openingBar);
+            Assert.IsTrue(fillForwardEnumerator.MoveNext());
+            Assert.AreEqual(openingBar.EndTime, fillForwardEnumerator.Current.EndTime);
+
+            // real data is available behind a stale gap, the clock jumped 30 minutes
+            enqueueableEnumerator.Enqueue(nextBar);
+            timeProvider.SetCurrentTime(previousBarEndTime.AddMinutes(30));
+
+            // fill forward bars never reach past the next real point, which is emitted intact right after
+            var fillForwardCount = 0;
+            while (fillForwardEnumerator.MoveNext() && fillForwardEnumerator.Current != null && fillForwardEnumerator.Current.IsFillForward)
+            {
+                Assert.LessOrEqual(fillForwardEnumerator.Current.EndTime, nextBar.Time.AddMinutes(1));
+                fillForwardCount++;
+                Assert.LessOrEqual(fillForwardCount, 4);
+            }
+            Assert.IsNotNull(fillForwardEnumerator.Current);
+            Assert.IsFalse(fillForwardEnumerator.Current.IsFillForward);
+            Assert.AreEqual(nextBar.EndTime, fillForwardEnumerator.Current.EndTime);
+            Assert.AreEqual(nextBar.Open, ((TradeBar)fillForwardEnumerator.Current).Open);
+
+            enqueueableEnumerator.Dispose();
+        }
+
         private static LiveFillForwardEnumerator GetLiveFillForwardEnumerator(ITimeProvider timeProvider, DateTime startTime, Resolution resolution,
             out EnqueueableEnumerator<BaseData> enqueueableEnumerator, bool dailyStrictEndTimeEnabled, Resolution? ffResolution = null)
         {
