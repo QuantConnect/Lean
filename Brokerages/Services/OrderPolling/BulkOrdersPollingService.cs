@@ -21,15 +21,15 @@ using QuantConnect.Brokerages.Services.OrderPolling.Models;
 namespace QuantConnect.Brokerages.Services.OrderPolling
 {
     /// <summary>
-    /// For a broker with only a bulk endpoint. A poll calls the read once, whatever is watched, and the
+    /// For a broker with only a bulk endpoint. A poll calls the read once, whatever is subscribed, and the
     /// read returns everything the broker lists.
     /// </summary>
     /// <remarks>
     /// Use it when the broker cannot be asked about one order id, or when one request already returns the
-    /// whole account cheaply. The poll runs even with nothing watched, so it can be the order path of a
+    /// whole account cheaply. The poll runs even with nothing subscribed, so it can be the order path of a
     /// whole run.
     /// <code>
-    /// CreateOrderPollingService(() => _api.GetAllOrders().Select(ToOrderSnapshot), _messageHandler, _orderProvider);
+    /// InitializeOrderPollingService(() => _api.GetAllOrders().Select(ToOrderSnapshot), _messageHandler, _orderProvider);
     /// </code>
     /// </remarks>
     public class BulkOrdersPollingService : BaseBrokerageOrderPollingService
@@ -78,7 +78,7 @@ namespace QuantConnect.Brokerages.Services.OrderPolling
         /// <param name="orderProvider">Resolves brokerage order ids to Lean orders.</param>
         /// <param name="pollInterval">The sleep between polls. Null takes <c>brokerage-order-poll-interval-ms</c>, default 3000 ms.</param>
         /// <param name="notificationTimeout">The silence that raises
-        /// <see cref="BaseBrokerageOrderPollingService.BrokerageOrderNeverNotified"/> for a watched order. Null takes 60000 ms.</param>
+        /// <see cref="BaseBrokerageOrderPollingService.BrokerageOrderNeverNotified"/> for a subscribed order. Null takes 60000 ms.</param>
         public BulkOrdersPollingService(
             Func<IEnumerable<BrokerageOrderSnapshot>> getAllBrokerageOrders,
             BrokerageConcurrentMessageHandler messageHandler,

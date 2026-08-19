@@ -19,9 +19,9 @@ using QuantConnect.Orders;
 namespace QuantConnect.Brokerages.Services.OrderPolling.Models
 {
     /// <summary>
-    /// Raised when no read saw a watched brokerage order id for the whole notification timeout. A question, not
-    /// a verdict: the order may never have reached the broker, or closed before the first poll. The
-    /// brokerage decides what to do next.
+    /// Raised when no read saw a subscribed brokerage order id for the whole notification timeout.
+    /// The order may never have reached the broker, or closed before the first poll. The brokerage
+    /// decides what to do next.
     /// </summary>
     public class BrokerageOrderNeverNotifiedEventArgs : EventArgs
     {
@@ -36,30 +36,30 @@ namespace QuantConnect.Brokerages.Services.OrderPolling.Models
         public Order Order { get; }
 
         /// <summary>
-        /// How long the id was watched, in polling time.
+        /// How long the id was subscribed, in polling time.
         /// </summary>
-        public TimeSpan WatchDuration { get; }
+        public TimeSpan SubscribedDuration { get; }
 
         /// <summary>
         /// Creates a new <see cref="BrokerageOrderNeverNotifiedEventArgs"/>.
         /// </summary>
         /// <param name="brokerageOrderId">The brokerage order id no read ever saw.</param>
         /// <param name="order">The Lean order behind the id, or null when nothing resolves.</param>
-        /// <param name="watchDuration">How long the id was watched, in polling time.</param>
-        public BrokerageOrderNeverNotifiedEventArgs(string brokerageOrderId, Order order, TimeSpan watchDuration)
+        /// <param name="subscribedDuration">How long the id was subscribed, in polling time.</param>
+        public BrokerageOrderNeverNotifiedEventArgs(string brokerageOrderId, Order order, TimeSpan subscribedDuration)
         {
             BrokerageOrderId = brokerageOrderId;
             Order = order;
-            WatchDuration = watchDuration;
+            SubscribedDuration = subscribedDuration;
         }
 
         /// <summary>
-        /// The order and the watch duration, ready for a log line or a warning.
+        /// The order and the subscribed duration, ready for a log line or a warning.
         /// </summary>
         public override string ToString()
         {
             var order = Order?.ToString() ?? $"brokerage order id '{BrokerageOrderId}'";
-            return $"{order}, watched for {WatchDuration.TotalSeconds:F0} seconds";
+            return $"{order}, subscribed for {SubscribedDuration.TotalSeconds:F0} seconds";
         }
     }
 }

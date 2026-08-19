@@ -96,13 +96,13 @@ namespace QuantConnect.Tests.Brokerages.Services.OrderPolling
         }
 
         [Test]
-        public void ReplacementWatchReportsUpdateSubmittedOnce()
+        public void ReplacementSubscriptionReportsUpdateSubmittedOnce()
         {
             // a replace moved the order onto a new brokerage id, and the plugin marked the new id
             var order = AddOrder(100m, "42", OrderStatus.Submitted);
             order.BrokerId.Clear();
             order.BrokerId.Add("43");
-            _service.WatchReplacement("43", "42");
+            _service.SubscribeReplacement("43", "42");
 
             _service.ProcessOrderState(State("43", OrderStatus.Submitted));
 
@@ -116,7 +116,7 @@ namespace QuantConnect.Tests.Brokerages.Services.OrderPolling
         }
 
         [Test]
-        public void ReplacementWatchDropsThePreviousIdAndCountsFillsFromZero()
+        public void ReplacementSubscriptionDropsThePreviousIdAndCountsFillsFromZero()
         {
             // the old id already reported a fill, then the replace re-keys the order. The replacement
             // counts its executions from zero, so its first fill must not be shrunk by the old total.
@@ -126,7 +126,7 @@ namespace QuantConnect.Tests.Brokerages.Services.OrderPolling
 
             order.BrokerId.Clear();
             order.BrokerId.Add("43");
-            _service.WatchReplacement("43", "42");
+            _service.SubscribeReplacement("43", "42");
             _orderEvents.Clear();
 
             // the first state of the new id can already carry a fill: the update submit still goes first
@@ -322,8 +322,8 @@ namespace QuantConnect.Tests.Brokerages.Services.OrderPolling
         {
             AddOrder(100m, "42", OrderStatus.Submitted);
 
-            // another path already reported the cancel; the watch moves the state, e.g. across a replace
-            _service.Watch("42", State("42", OrderStatus.Canceled, message: "canceled by the broker"));
+            // another path already reported the cancel; the subscription moves the state, e.g. across a replace
+            _service.Subscribe("42", State("42", OrderStatus.Canceled, message: "canceled by the broker"));
 
             _service.ProcessOrderState(State("42", OrderStatus.Canceled, message: "canceled by the broker"));
             Assert.IsEmpty(_orderEvents);
@@ -384,12 +384,12 @@ namespace QuantConnect.Tests.Brokerages.Services.OrderPolling
         }
 
         [Test]
-        public void SeededWatchDoesNotRepeatWhatWasAlreadyReported()
+        public void SeededSubscriptionDoesNotRepeatWhatWasAlreadyReported()
         {
             AddOrder(200m, "42", OrderStatus.PartiallyFilled);
 
             // another path already reported the submit and 100 shares
-            _service.Watch("42", State("42", OrderStatus.PartiallyFilled, filled: 100m, price: 310m));
+            _service.Subscribe("42", State("42", OrderStatus.PartiallyFilled, filled: 100m, price: 310m));
 
             _service.ProcessOrderState(State("42", OrderStatus.PartiallyFilled, filled: 100m, price: 310m));
             Assert.IsEmpty(_orderEvents);
@@ -431,20 +431,20 @@ namespace QuantConnect.Tests.Brokerages.Services.OrderPolling
         }
 
         [Test]
-        public void WatchNeverOverwritesExistingState()
+        public void SubscribeNeverOverwritesExistingState()
         {
             AddOrder(200m, "42", OrderStatus.PartiallyFilled);
             _service.UpdateOrderState("42", State("42", OrderStatus.PartiallyFilled, filled: 100m, price: 310m));
 
-            // a later plain watch keeps the recorded state
-            _service.Watch("42");
+            // a later plain subscribe keeps the recorded state
+            _service.Subscribe("42");
 
             Assert.IsTrue(_service.TryGetLastOrderState("42", out var lastSeen));
             Assert.AreEqual(100m, lastSeen.FilledQuantity);
 
-            // and a later seeded watch ignores its seed too: the recorded state wins, so the next poll
+            // and a later seeded subscribe ignores its seed too: the recorded state wins, so the next poll
             // cannot re-report fills the stream already delivered
-            _service.Watch("42", State("42", OrderStatus.Submitted, filled: 0m));
+            _service.Subscribe("42", State("42", OrderStatus.Submitted, filled: 0m));
 
             Assert.IsTrue(_service.TryGetLastOrderState("42", out lastSeen));
             Assert.AreEqual(100m, lastSeen.FilledQuantity);
@@ -453,7 +453,7 @@ namespace QuantConnect.Tests.Brokerages.Services.OrderPolling
         }
 
         [Test]
-        public void NotificationTimeoutFiresOnceAndUnwatchesTheId()
+        public void NotificationTimeoutFiresOnceAndUnsubscribesTheId()
         {
             var order = AddOrder(100m, "77");
             using var neverNotified = new ManualResetEventSlim(false);
@@ -473,12 +473,12 @@ namespace QuantConnect.Tests.Brokerages.Services.OrderPolling
                 neverNotified.Set();
             };
 
-            service.Watch("77");
+            service.Subscribe("77");
             service.Start();
 
             Assert.IsTrue(neverNotified.Wait(TimeSpan.FromSeconds(5)), "the notification timeout never fired");
 
-            // let a few more sweeps run: the id was unwatched with the event, so it fires exactly once
+            // let a few more sweeps run: the id was unsubscribed with the event, so it fires exactly once
             Thread.Sleep(200);
             service.Stop();
 
@@ -487,27 +487,27 @@ namespace QuantConnect.Tests.Brokerages.Services.OrderPolling
                 Assert.AreEqual(1, raised.Count);
                 Assert.AreEqual("77", raised[0].BrokerageOrderId);
                 Assert.AreSame(order, raised[0].Order);
-                Assert.GreaterOrEqual(raised[0].WatchDuration, TimeSpan.FromMilliseconds(75));
+                Assert.GreaterOrEqual(raised[0].SubscribedDuration, TimeSpan.FromMilliseconds(75));
             }
             Assert.IsFalse(service.TryGetLastOrderState("77", out _));
         }
 
         [Test]
-        public void NeverNotifiedArgsPrintTheOrderAndTheWatchDuration()
+        public void NeverNotifiedArgsPrintTheOrderAndTheSubscribedDuration()
         {
             var order = AddOrder(100m, "42");
 
-            // the message the default warning embeds: the Lean order's own ToString plus the watch duration
+            // the message the default warning embeds: the Lean order's own ToString plus the subscribed duration
             var withOrder = new BrokerageOrderNeverNotifiedEventArgs("42", order, TimeSpan.FromSeconds(60));
-            Assert.AreEqual($"{order}, watched for 60 seconds", withOrder.ToString());
+            Assert.AreEqual($"{order}, subscribed for 60 seconds", withOrder.ToString());
 
             // a placement whose id was never assigned resolves to no Lean order: the id carries the identity
             var withoutOrder = new BrokerageOrderNeverNotifiedEventArgs("42", order: null, TimeSpan.FromSeconds(60));
-            Assert.AreEqual("brokerage order id '42', watched for 60 seconds", withoutOrder.ToString());
+            Assert.AreEqual("brokerage order id '42', subscribed for 60 seconds", withoutOrder.ToString());
         }
 
         [Test]
-        public void AcknowledgedWatchNeverTimesOut()
+        public void AcknowledgedSubscriptionNeverTimesOut()
         {
             var fired = 0;
             using var service = new SingleOrderPollingService(
@@ -518,8 +518,8 @@ namespace QuantConnect.Tests.Brokerages.Services.OrderPolling
                 notificationTimeout: TimeSpan.FromMilliseconds(75));
             service.BrokerageOrderNeverNotified += (_, _) => Interlocked.Increment(ref fired);
 
-            // the stream acknowledged the order right after it was watched
-            service.Watch("77");
+            // the stream acknowledged the order right after it was subscribed
+            service.Subscribe("77");
             service.UpdateOrderState("77", State("77", OrderStatus.Submitted));
             service.Start();
 
@@ -575,7 +575,7 @@ namespace QuantConnect.Tests.Brokerages.Services.OrderPolling
         }
 
         [Test]
-        public void PerOrderIdSweepReadsOnlyWatchedIdsAndProcessesTheStates()
+        public void PerOrderIdSweepReadsOnlySubscribedIdsAndProcessesTheStates()
         {
             AddOrder(100m, "42");
             var readIds = new List<string>();
@@ -603,7 +603,7 @@ namespace QuantConnect.Tests.Brokerages.Services.OrderPolling
                 processed.Set();
             };
 
-            // nothing watched: sweeps read nothing
+            // nothing subscribed: sweeps read nothing
             service.Start();
             Thread.Sleep(100);
             lock (readIds)
@@ -611,8 +611,8 @@ namespace QuantConnect.Tests.Brokerages.Services.OrderPolling
                 Assert.IsEmpty(readIds);
             }
 
-            service.Watch("42");
-            Assert.IsTrue(processed.Wait(TimeSpan.FromSeconds(5)), "the watched id never produced an event");
+            service.Subscribe("42");
+            Assert.IsTrue(processed.Wait(TimeSpan.FromSeconds(5)), "the subscribed id never produced an event");
             service.Stop();
 
             lock (readIds)

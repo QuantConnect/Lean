@@ -353,7 +353,7 @@ namespace QuantConnect.Brokerages
 
         /// <summary>
         /// The order polling service one of the create overloads built and wired, null until then. The brokerage
-        /// calls Watch, WatchReplacement, Start - plain or with its pre-load callback - and Stop on it at
+        /// calls Subscribe, SubscribeReplacement, Start - plain or with its pre-load callback - and Stop on it at
         /// its own lifecycle points;
         /// <see cref="Dispose"/> disposes it.
         /// </summary>
@@ -377,10 +377,10 @@ namespace QuantConnect.Brokerages
         /// <param name="orderProvider">Resolves brokerage order ids to Lean orders.</param>
         /// <param name="pollInterval">How long the loop sleeps between polls. Null falls back to the
         /// <c>brokerage-order-poll-interval-ms</c> configuration entry, default 3000 ms.</param>
-        /// <param name="notificationTimeout">How long a watched order may stay unreported before
+        /// <param name="notificationTimeout">How long a subscribed order may stay unreported before
         /// <see cref="OnBrokerageOrderNeverNotified"/> is called. Null takes 60000 ms.</param>
         /// <returns>The created and wired service.</returns>
-        protected SingleOrderPollingService CreateOrderPollingService(Func<string, BrokerageOrderSnapshot> getBrokerageOrderById,
+        protected SingleOrderPollingService InitializeOrderPollingService(Func<string, BrokerageOrderSnapshot> getBrokerageOrderById,
             BrokerageConcurrentMessageHandler messageHandler, IOrderProvider orderProvider,
             TimeSpan? pollInterval = null, TimeSpan? notificationTimeout = null)
         {
@@ -399,10 +399,10 @@ namespace QuantConnect.Brokerages
         /// <param name="orderProvider">Resolves brokerage order ids to Lean orders.</param>
         /// <param name="pollInterval">How long the loop sleeps between polls. Null falls back to the
         /// <c>brokerage-order-poll-interval-ms</c> configuration entry, default 3000 ms.</param>
-        /// <param name="notificationTimeout">How long a watched order may stay unreported before
+        /// <param name="notificationTimeout">How long a subscribed order may stay unreported before
         /// <see cref="OnBrokerageOrderNeverNotified"/> is called. Null takes 60000 ms.</param>
         /// <returns>The created and wired service.</returns>
-        protected BulkOrdersPollingService CreateOrderPollingService(Func<IEnumerable<BrokerageOrderSnapshot>> getAllBrokerageOrders,
+        protected BulkOrdersPollingService InitializeOrderPollingService(Func<IEnumerable<BrokerageOrderSnapshot>> getAllBrokerageOrders,
             BrokerageConcurrentMessageHandler messageHandler, IOrderProvider orderProvider,
             TimeSpan? pollInterval = null, TimeSpan? notificationTimeout = null)
         {
@@ -432,10 +432,10 @@ namespace QuantConnect.Brokerages
         }
 
         /// <summary>
-        /// Called when the broker never reported a watched order for the whole notification timeout. The default
+        /// Called when the broker never reported a subscribed order for the whole notification timeout. The default
         /// sends one warning message; override it to decide what the silence means for this broker.
         /// </summary>
-        /// <param name="neverNotified">The brokerage order id and how long it was watched.</param>
+        /// <param name="neverNotified">The brokerage order id and how long it was subscribed.</param>
         protected virtual void OnBrokerageOrderNeverNotified(BrokerageOrderNeverNotifiedEventArgs neverNotified)
         {
             OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Warning, "OrderNotAcknowledged",
