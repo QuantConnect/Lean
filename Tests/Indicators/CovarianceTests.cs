@@ -287,5 +287,17 @@ namespace QuantConnect.Tests.Indicators
                 Assert.AreEqual(Symbols.AAPL, indicator.Current.Symbol);
             }
         }
+
+        [Test]
+        public void PeriodBelowMinimumThrows()
+        {
+            // A two point window leaves no spread to measure: the correlation of two
+            // points is 1 or -1 whatever the data says, so three is the smallest period
+            // that carries information
+            var period = 2;
+
+            var exception = Assert.Throws<ArgumentException>(() => new Covariance(Symbols.SPY, Symbols.AAPL, period));
+            Assert.That(exception.Message, Is.EqualTo($"Period parameter for Covariance indicator must be greater than 2 but was {period}."));
+        }
     }
 }
