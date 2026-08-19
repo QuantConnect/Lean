@@ -20,7 +20,7 @@ namespace QuantConnect.Brokerages.Services.OrderPolling.Models
 {
     /// <summary>
     /// Raised when no read saw a watched brokerage order id for the whole notification timeout. A question, not
-    /// a verdict: the order may never have reached the broker, or closed before the first sweep. The
+    /// a verdict: the order may never have reached the broker, or closed before the first poll. The
     /// brokerage decides what to do next.
     /// </summary>
     public class BrokerageOrderNeverNotifiedEventArgs : EventArgs

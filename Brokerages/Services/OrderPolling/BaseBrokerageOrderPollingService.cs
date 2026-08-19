@@ -13,46 +13,46 @@
  * limitations under the License.
 */
 
+using QuantConnect.Brokerages.Services.OrderPolling.Models;
+using QuantConnect.Configuration;
+using QuantConnect.Logging;
+using QuantConnect.Orders;
+using QuantConnect.Orders.Fees;
+using QuantConnect.Securities;
+using QuantConnect.Util;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
-using QuantConnect.Util;
-using QuantConnect.Orders;
-using QuantConnect.Brokerages.Services.OrderPolling.Models;
-using QuantConnect.Logging;
 using System.Threading.Tasks;
-using QuantConnect.Securities;
-using QuantConnect.Orders.Fees;
-using System.Collections.Generic;
-using QuantConnect.Configuration;
 
 namespace QuantConnect.Brokerages.Services.OrderPolling
 {
     /// <summary>
-    /// Reads orders from the brokerage on an interval and turns the returned states into order events.
-    /// Used when a brokerage has no order stream, when the stream is unavailable, or to resolve an order
-    /// the broker never replied about. This base class owns everything both modes share - the loop, the
-    /// watch registry, the compare and the events. What one sweep reads is the subclass:
+    /// Reads orders from the brokerage on an interval and turns what it reads into order events.
+    /// Use it when a brokerage has no order stream, when the stream goes down, or to check an order
+    /// the broker never replied about. This base class holds what both modes share: the loop, the
+    /// watch registry, the compare and the events. The subclass decides what one poll reads:
     /// <see cref="SingleOrderPollingService"/> or <see cref="BulkOrdersPollingService"/>.
     /// </summary>
     public abstract class BaseBrokerageOrderPollingService : IDisposable
     {
         /// <summary>
-        /// How many sweeps in a row have to fail before the failure is reported through <see cref="Message"/>.
+        /// How many polls must fail one after another to raise the <see cref="Message"/> warning.
         /// </summary>
-        private const int ConsecutiveFailuresBeforeReport = 3;
+        private const int MaxFailedPollsBeforeWarning = 3;
 
         /// <summary>
         /// Guards the registry and the polling task against the poll loop, the handler thread inside
         /// <see cref="ProcessOrderState"/>, the order threads through <see cref="Watch(string)"/> /
         /// <see cref="Unwatch"/> / <see cref="UpdateOrderState"/>, and the notification-timeout check.
         /// </summary>
-        private readonly object _lock = new object();
+        private readonly Lock _lock = new();
 
         /// <summary>
         /// The registry: per brokerage order id, the last state seen and what was already reported for it.
         /// </summary>
-        private readonly Dictionary<string, OrderStateEntry> _orderStates = new();
+        private readonly Dictionary<string, OrderTrackingEntry> _orderEntries = [];
 
         /// <summary>
         /// The brokerage's message handler, when it has one. The constructor wires it both ways: polled
@@ -62,10 +62,10 @@ namespace QuantConnect.Brokerages.Services.OrderPolling
         private readonly BrokerageConcurrentMessageHandler _messageHandler;
 
         /// <summary>
-        /// Where each state a sweep returns goes: the message handler, or without one straight into
+        /// Where each state a poll returns goes: the message handler, or without one straight into
         /// <see cref="ProcessOrderState"/>.
         /// </summary>
-        private readonly Action<BrokerageOrderSnapshot> _route;
+        private readonly Action<BrokerageOrderSnapshot> _processSnapshot;
 
         /// <summary>
         /// Resolves brokerage order ids to Lean orders on every compare, so the service never drifts from
@@ -120,7 +120,7 @@ namespace QuantConnect.Brokerages.Services.OrderPolling
         public bool IsPolling => _isPolling;
 
         /// <summary>
-        /// How long the loop sleeps between sweeps.
+        /// How long the loop sleeps between polls.
         /// </summary>
         public TimeSpan PollInterval { get; }
 
@@ -140,7 +140,7 @@ namespace QuantConnect.Brokerages.Services.OrderPolling
         /// state straight into <see cref="ProcessOrderState"/> - only the poll loop calls it then, so the
         /// calls are still one at a time.</param>
         /// <param name="orderProvider">Resolves brokerage order ids to Lean orders.</param>
-        /// <param name="pollInterval">How long the loop sleeps between sweeps. Null falls back to the
+        /// <param name="pollInterval">How long the loop sleeps between polls. Null falls back to the
         /// <c>brokerage-order-poll-interval-ms</c> configuration entry, default 3000 ms.</param>
         /// <param name="notificationTimeout">How long a watched order may stay unreported before
         /// <see cref="BrokerageOrderNeverNotified"/> is raised. Null takes 60000 ms.</param>
@@ -150,12 +150,12 @@ namespace QuantConnect.Brokerages.Services.OrderPolling
             if (messageHandler != null)
             {
                 _messageHandler = messageHandler;
-                _route = messageHandler.HandleNewMessage;
+                _processSnapshot = messageHandler.HandleNewMessage;
                 messageHandler.Register<BrokerageOrderSnapshot>(ProcessOrderState);
             }
             else
             {
-                _route = ProcessOrderState;
+                _processSnapshot = ProcessOrderState;
             }
             _orderProvider = orderProvider;
             PollInterval = pollInterval ?? TimeSpan.FromMilliseconds(Config.GetInt("brokerage-order-poll-interval-ms", 3 * 1000));
@@ -163,30 +163,31 @@ namespace QuantConnect.Brokerages.Services.OrderPolling
         }
 
         /// <summary>
-        /// One read of the broker, giving the states the sweep saw. The loop calls it every
-        /// <see cref="PollInterval"/>, hands each state to the route, and counts a throw as one failed sweep.
-        /// A null state is skipped: in per-id mode it means the broker does not know the id yet.
+        /// One read of the broker, giving the current order snapshots. The loop calls it every
+        /// <see cref="PollInterval"/>, hands each snapshot on for processing, and counts a throw as one failed poll.
+        /// A null snapshot is skipped: in per-id mode it means the broker does not know the id yet.
         /// </summary>
-        protected abstract IEnumerable<BrokerageOrderSnapshot> Sweep();
+        protected abstract IEnumerable<BrokerageOrderSnapshot> GetOrderSnapshots();
 
         /// <summary>
-        /// A copy of the brokerage order ids a sweep still has to read: everything tracked whose end was
-        /// not reported yet. Taken under the registry lock, so an order placed mid-sweep is picked up by
-        /// the next one.
+        /// The brokerage order ids a poll still has to read: everything tracked whose end was not
+        /// reported yet. The entries are copied under the registry lock and filtered outside it, so
+        /// the order paths never wait on the filter.
         /// </summary>
-        protected List<string> GetWatchedBrokerageIds()
+        protected IEnumerable<string> GetOpenBrokerageIds()
         {
+            KeyValuePair<string, OrderTrackingEntry>[] entries;
             lock (_lock)
             {
-                var brokerageIds = new List<string>(_orderStates.Count);
-                foreach (var (brokerageId, entry) in _orderStates)
+                entries = [.. _orderEntries];
+            }
+
+            foreach (var (brokerageId, entry) in entries)
+            {
+                if (!entry.TerminalReported)
                 {
-                    if (!entry.TerminalReported)
-                    {
-                        brokerageIds.Add(brokerageId);
-                    }
+                    yield return brokerageId;
                 }
-                return brokerageIds;
             }
         }
 
@@ -214,12 +215,12 @@ namespace QuantConnect.Brokerages.Services.OrderPolling
         {
             lock (_lock)
             {
-                if (!_orderStates.TryGetValue(brokerageId, out var entry))
+                if (!_orderEntries.TryGetValue(brokerageId, out var entry))
                 {
-                    entry = new OrderStateEntry();
+                    entry = new OrderTrackingEntry();
                     if (lastSeen != null)
                     {
-                        entry.LastSeen = lastSeen;
+                        entry.LastSnapshot = lastSeen;
                         entry.ReportedFilledQuantity = lastSeen.FilledQuantity ?? 0m;
                         // seeded means another path already heard from the broker about this order,
                         // and a seed carrying the order's end means the end was already reported
@@ -227,7 +228,7 @@ namespace QuantConnect.Brokerages.Services.OrderPolling
                         entry.SubmitReported = lastSeen.Status != OrderStatus.New;
                         entry.TerminalReported = lastSeen.Status == OrderStatus.Canceled || lastSeen.Status == OrderStatus.Invalid;
                     }
-                    _orderStates[brokerageId] = entry;
+                    _orderEntries[brokerageId] = entry;
                 }
                 entry.Watched = true;
             }
@@ -248,13 +249,13 @@ namespace QuantConnect.Brokerages.Services.OrderPolling
             {
                 if (previousBrokerageId != null)
                 {
-                    _orderStates.Remove(previousBrokerageId);
+                    _orderEntries.Remove(previousBrokerageId);
                 }
 
-                if (!_orderStates.TryGetValue(brokerageId, out var entry))
+                if (!_orderEntries.TryGetValue(brokerageId, out var entry))
                 {
-                    entry = new OrderStateEntry();
-                    _orderStates[brokerageId] = entry;
+                    entry = new OrderTrackingEntry();
+                    _orderEntries[brokerageId] = entry;
                 }
                 entry.Watched = true;
                 entry.IsReplacement = true;
@@ -269,7 +270,7 @@ namespace QuantConnect.Brokerages.Services.OrderPolling
         {
             lock (_lock)
             {
-                _orderStates.Remove(brokerageId);
+                _orderEntries.Remove(brokerageId);
             }
         }
 
@@ -283,13 +284,13 @@ namespace QuantConnect.Brokerages.Services.OrderPolling
         {
             lock (_lock)
             {
-                if (!_orderStates.TryGetValue(brokerageId, out var entry))
+                if (!_orderEntries.TryGetValue(brokerageId, out var entry))
                 {
-                    entry = new OrderStateEntry();
-                    _orderStates[brokerageId] = entry;
+                    entry = new OrderTrackingEntry();
+                    _orderEntries[brokerageId] = entry;
                 }
 
-                entry.LastSeen = orderState;
+                entry.LastSnapshot = orderState;
                 entry.Acknowledged = true;
                 // the already-reported quantity never shrinks
                 var filledQuantity = orderState.FilledQuantity ?? 0m;
@@ -298,7 +299,7 @@ namespace QuantConnect.Brokerages.Services.OrderPolling
                     entry.ReportedFilledQuantity = filledQuantity;
                 }
                 // a state written by the other path means its submit is out, and a terminal state means
-                // the end was already reported - a later sweep must not repeat either
+                // the end was already reported - a later poll must not repeat either
                 if (orderState.Status != OrderStatus.New)
                 {
                     entry.SubmitReported = true;
@@ -322,9 +323,9 @@ namespace QuantConnect.Brokerages.Services.OrderPolling
             lock (_lock)
             {
                 lastSeen = null;
-                if (_orderStates.TryGetValue(brokerageId, out var entry))
+                if (_orderEntries.TryGetValue(brokerageId, out var entry))
                 {
-                    lastSeen = entry.LastSeen;
+                    lastSeen = entry.LastSnapshot;
                 }
                 return lastSeen != null;
             }
@@ -337,7 +338,7 @@ namespace QuantConnect.Brokerages.Services.OrderPolling
         /// safe to run twice at the same time - the handler runs it one call at a time, and without a
         /// handler only the poll loop calls it.
         /// </summary>
-        /// <param name="orderState">The state a sweep read from the broker.</param>
+        /// <param name="orderState">The state a poll read from the broker.</param>
         public void ProcessOrderState(BrokerageOrderSnapshot orderState)
         {
             if (orderState == null || string.IsNullOrEmpty(orderState.BrokerageOrderId))
@@ -350,7 +351,7 @@ namespace QuantConnect.Brokerages.Services.OrderPolling
             // record the id as seen: the broker knows the order, so the notification timeout stops counting
             lock (_lock)
             {
-                if (_orderStates.TryGetValue(brokerageId, out var seenEntry))
+                if (_orderEntries.TryGetValue(brokerageId, out var seenEntry))
                 {
                     seenEntry.Acknowledged = true;
                 }
@@ -360,7 +361,7 @@ namespace QuantConnect.Brokerages.Services.OrderPolling
             var leanOrders = _orderProvider?.GetOrdersByBrokerageId(brokerageId);
             if (leanOrders == null || leanOrders.Count == 0)
             {
-                // not ours, or ours with the id not on the Lean order yet - the next sweep sees it again
+                // not ours, or ours with the id not on the Lean order yet - the next poll sees it again
                 return;
             }
 
@@ -379,10 +380,10 @@ namespace QuantConnect.Brokerages.Services.OrderPolling
             // through UpdateOrderState can never interleave with the diff's read-then-write bookkeeping
             lock (_lock)
             {
-                if (!_orderStates.TryGetValue(brokerageId, out var entry))
+                if (!_orderEntries.TryGetValue(brokerageId, out var entry))
                 {
-                    entry = new OrderStateEntry();
-                    _orderStates[brokerageId] = entry;
+                    entry = new OrderTrackingEntry();
+                    _orderEntries[brokerageId] = entry;
                 }
                 entry.Acknowledged = true;
 
@@ -392,7 +393,7 @@ namespace QuantConnect.Brokerages.Services.OrderPolling
                 // where the Lean order is already past New: there the state proves the replacement is live,
                 // so the update submit goes out instead.
                 if (!entry.SubmitReported
-                    && (entry.LastSeen == null || entry.LastSeen.Status == OrderStatus.New)
+                    && (entry.LastSnapshot == null || entry.LastSnapshot.Status == OrderStatus.New)
                     && orderState.Status != OrderStatus.Invalid)
                 {
                     foreach (var leanOrder in leanOrders)
@@ -470,7 +471,7 @@ namespace QuantConnect.Brokerages.Services.OrderPolling
 
                 // the end of the order last, once. The id leaves the read list, but its state stays until a
                 // compare sees the Lean order closed - forgetting it here would re-report every fill if the
-                // next sweep lands before Lean applies this event.
+                // next poll lands before Lean applies this event.
                 if ((orderState.Status == OrderStatus.Canceled || orderState.Status == OrderStatus.Invalid) && !entry.TerminalReported)
                 {
                     foreach (var leanOrder in leanOrders)
@@ -486,7 +487,7 @@ namespace QuantConnect.Brokerages.Services.OrderPolling
                     entry.TerminalReported = true;
                 }
 
-                entry.LastSeen = orderState;
+                entry.LastSnapshot = orderState;
             }
 
             if (orderEvents.Count > 0)
@@ -501,7 +502,7 @@ namespace QuantConnect.Brokerages.Services.OrderPolling
         /// per open Lean order, then start the loop. Does nothing while polling already runs.
         /// </summary>
         /// <example>
-        /// The stream reported 100 of 233 shares, the pre-load carries 100, so the first sweep reports only the other 133.
+        /// The stream reported 100 of 233 shares, the pre-load carries 100, so the first poll reports only the other 133.
         /// </example>
         /// <param name="preLoadOpenOrders">Builds the state another path already reported for one open Lean
         /// order: the brokerage id, the order's status and the cumulative filled quantity. A null return
@@ -564,12 +565,12 @@ namespace QuantConnect.Brokerages.Services.OrderPolling
         }
 
         /// <summary>
-        /// Stops the polling loop but keeps the service usable, so a later <see cref="Start"/> resumes
+        /// Stops the polling loop but keeps the service usable, so a later <see cref="Start()"/> resumes
         /// polling. The registry survives a stop, so nothing already reported repeats after a restart.
         /// </summary>
         public void Stop()
         {
-            Task pollingTask;
+            Task pollingTask;       
             CancellationTokenSource cancellationTokenSource;
             lock (_lock)
             {
@@ -600,6 +601,7 @@ namespace QuantConnect.Brokerages.Services.OrderPolling
         /// </summary>
         public void Dispose()
         {
+            CancellationTokenSource cancellationTokenSource;
             lock (_lock)
             {
                 if (_disposed)
@@ -607,13 +609,15 @@ namespace QuantConnect.Brokerages.Services.OrderPolling
                     return;
                 }
                 _disposed = true;
+                cancellationTokenSource = _cancellationTokenSource;
             }
 
             Stop();
+            cancellationTokenSource?.Dispose();
         }
 
         /// <summary>
-        /// Re-reads the broker on each sweep and routes every state, until cancelled.
+        /// Re-reads the broker on each poll and routes every state, until cancelled.
         /// </summary>
         /// <param name="cancellationToken">Cancelled to stop the loop.</param>
         private async Task PollLoop(CancellationToken cancellationToken)
@@ -628,7 +632,7 @@ namespace QuantConnect.Brokerages.Services.OrderPolling
             {
                 try
                 {
-                    foreach (var orderState in Sweep())
+                    foreach (var orderState in GetOrderSnapshots())
                     {
                         if (cancellationToken.IsCancellationRequested)
                         {
@@ -638,14 +642,14 @@ namespace QuantConnect.Brokerages.Services.OrderPolling
                         // a per-id read returns null when the broker does not know the id yet
                         if (orderState != null)
                         {
-                            _route(orderState);
+                            _processSnapshot(orderState);
                         }
                     }
 
                     consecutiveFailureCount = 0;
                     isPollingFailureReported = false;
 
-                    // silence only means something after a read that succeeded: a failed sweep asked
+                    // silence only means something after a read that succeeded: a failed poll asked
                     // the broker nothing, so it must not count against a watched order
                     if (!cancellationToken.IsCancellationRequested)
                     {
@@ -654,12 +658,12 @@ namespace QuantConnect.Brokerages.Services.OrderPolling
                 }
                 catch (Exception ex)
                 {
-                    // A transient read failure must not kill the loop: log and try again next sweep.
+                    // A transient read failure must not kill the loop: log and try again next poll.
                     Log.Error($"{GetType().Name}.{nameof(PollLoop)}(): failed to poll orders: {ex.Message}");
 
                     // A failure that keeps coming back is not transient any more, and the run may have no
                     // order updates at all while it lasts, so say so once instead of only a log line.
-                    if (++consecutiveFailureCount >= ConsecutiveFailuresBeforeReport && !isPollingFailureReported)
+                    if (++consecutiveFailureCount >= MaxFailedPollsBeforeWarning && !isPollingFailureReported)
                     {
                         isPollingFailureReported = true;
                         Message?.Invoke(this, new BrokerageMessageEvent(BrokerageMessageType.Warning, "OrderPollingFailed",
@@ -683,14 +687,14 @@ namespace QuantConnect.Brokerages.Services.OrderPolling
         /// <summary>
         /// Counts one interval of silence for every watched order the broker never reported, and raises
         /// <see cref="BrokerageOrderNeverNotified"/> once for each one that reached the notification timeout. Called only
-        /// after a successful sweep, because only a read that succeeded proves the silence is real.
+        /// after a successful poll, because only a read that succeeded proves the silence is real.
         /// </summary>
         private void CheckNotificationTimeouts()
         {
             List<(string BrokerageId, TimeSpan WatchDuration)> expired = null;
             lock (_lock)
             {
-                foreach (var (brokerageId, entry) in _orderStates)
+                foreach (var (brokerageId, entry) in _orderEntries)
                 {
                     if (!entry.Watched || entry.Acknowledged)
                     {
@@ -708,7 +712,7 @@ namespace QuantConnect.Brokerages.Services.OrderPolling
                 {
                     foreach (var (brokerageId, _) in expired)
                     {
-                        _orderStates.Remove(brokerageId);
+                        _orderEntries.Remove(brokerageId);
                     }
                 }
             }
@@ -723,56 +727,6 @@ namespace QuantConnect.Brokerages.Services.OrderPolling
                     BrokerageOrderNeverNotified?.Invoke(this, new BrokerageOrderNeverNotifiedEventArgs(brokerageId, leanOrder, watchDuration));
                 }
             }
-        }
-
-        /// <summary>
-        /// What the registry keeps per brokerage order id.
-        /// </summary>
-        private class OrderStateEntry
-        {
-            /// <summary>
-            /// The last state seen for the order, from any path. Null when nothing was seen yet, so the
-            /// submit is still due.
-            /// </summary>
-            public BrokerageOrderSnapshot LastSeen;
-
-            /// <summary>
-            /// The cumulative filled quantity already reported to Lean, by any path. Never shrinks.
-            /// </summary>
-            public decimal ReportedFilledQuantity;
-
-            /// <summary>
-            /// Set once the submit was reported for the order, by any path, so it goes out exactly once.
-            /// </summary>
-            public bool SubmitReported;
-
-            /// <summary>
-            /// Set once the order's end was reported, so the id leaves the read list and a later state
-            /// for it reports nothing new.
-            /// </summary>
-            public bool TerminalReported;
-
-            /// <summary>
-            /// Set by <see cref="Watch(string)"/>: the notification timeout only applies to explicitly watched orders.
-            /// </summary>
-            public bool Watched;
-
-            /// <summary>
-            /// Set by <see cref="WatchReplacement"/>: the id is the new id of a replace, so the first
-            /// state to carry it reports the update submit instead of a plain submit.
-            /// </summary>
-            public bool IsReplacement;
-
-            /// <summary>
-            /// Set once anything carried the id: a polled state, a stream write, or a seed. Stops the
-            /// notification timeout.
-            /// </summary>
-            public bool Acknowledged;
-
-            /// <summary>
-            /// How long the order has been watched with nothing reporting it, in polling time.
-            /// </summary>
-            public TimeSpan UnacknowledgedDuration;
         }
     }
 }

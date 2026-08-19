@@ -375,7 +375,7 @@ namespace QuantConnect.Brokerages
         /// <param name="messageHandler">The brokerage's message handler; the service registers itself and
         /// enqueues every polled state through it. Null processes each state directly.</param>
         /// <param name="orderProvider">Resolves brokerage order ids to Lean orders.</param>
-        /// <param name="pollInterval">How long the loop sleeps between sweeps. Null falls back to the
+        /// <param name="pollInterval">How long the loop sleeps between polls. Null falls back to the
         /// <c>brokerage-order-poll-interval-ms</c> configuration entry, default 3000 ms.</param>
         /// <param name="notificationTimeout">How long a watched order may stay unreported before
         /// <see cref="OnBrokerageOrderNeverNotified"/> is called. Null takes 60000 ms.</param>
@@ -397,7 +397,7 @@ namespace QuantConnect.Brokerages
         /// <param name="messageHandler">The brokerage's message handler; the service registers itself and
         /// enqueues every polled state through it. Null processes each state directly.</param>
         /// <param name="orderProvider">Resolves brokerage order ids to Lean orders.</param>
-        /// <param name="pollInterval">How long the loop sleeps between sweeps. Null falls back to the
+        /// <param name="pollInterval">How long the loop sleeps between polls. Null falls back to the
         /// <c>brokerage-order-poll-interval-ms</c> configuration entry, default 3000 ms.</param>
         /// <param name="notificationTimeout">How long a watched order may stay unreported before
         /// <see cref="OnBrokerageOrderNeverNotified"/> is called. Null takes 60000 ms.</param>

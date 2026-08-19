@@ -22,12 +22,12 @@ using QuantConnect.Brokerages.Services.OrderPolling.Models;
 namespace QuantConnect.Brokerages.Services.OrderPolling
 {
     /// <summary>
-    /// For a broker with a get-order endpoint. A sweep calls the read once per watched brokerage id -
+    /// For a broker with a get-order endpoint. A poll calls the read once per watched brokerage id -
     /// no request when nothing is watched. A null return means the broker does not know the id, so the
     /// notification timeout keeps counting.
     /// </summary>
     /// <remarks>
-    /// Use it when the broker can be asked about one order id. The sweep reads only the watched orders,
+    /// Use it when the broker can be asked about one order id. The poll reads only the watched orders,
     /// so an idle account sends no requests and rate limits stay untouched.
     /// <code>
     /// CreateOrderPollingService(id => ToOrderSnapshot(_api.GetOrderById(id)), _messageHandler, _orderProvider);
@@ -61,7 +61,7 @@ namespace QuantConnect.Brokerages.Services.OrderPolling
         /// <param name="getBrokerageOrderById">Reads one order by its brokerage id. A null return means the broker does not know the id.</param>
         /// <param name="messageHandler">Serializes the snapshots with the brokerage's other messages. Null processes them directly.</param>
         /// <param name="orderProvider">Resolves brokerage order ids to Lean orders.</param>
-        /// <param name="pollInterval">The sleep between sweeps. Null takes <c>brokerage-order-poll-interval-ms</c>, default 3000 ms.</param>
+        /// <param name="pollInterval">The sleep between polls. Null takes <c>brokerage-order-poll-interval-ms</c>, default 3000 ms.</param>
         public SingleOrderPollingService(
             Func<string, BrokerageOrderSnapshot> getBrokerageOrderById,
             BrokerageConcurrentMessageHandler messageHandler,
@@ -77,7 +77,7 @@ namespace QuantConnect.Brokerages.Services.OrderPolling
         /// <param name="getBrokerageOrderById">Reads one order by its brokerage id. A null return means the broker does not know the id.</param>
         /// <param name="messageHandler">Serializes the snapshots with the brokerage's other messages. Null processes them directly.</param>
         /// <param name="orderProvider">Resolves brokerage order ids to Lean orders.</param>
-        /// <param name="pollInterval">The sleep between sweeps. Null takes <c>brokerage-order-poll-interval-ms</c>, default 3000 ms.</param>
+        /// <param name="pollInterval">The sleep between polls. Null takes <c>brokerage-order-poll-interval-ms</c>, default 3000 ms.</param>
         /// <param name="notificationTimeout">The silence that raises
         /// <see cref="BaseBrokerageOrderPollingService.BrokerageOrderNeverNotified"/> for a watched order. Null takes 60000 ms.</param>
         public SingleOrderPollingService(
@@ -93,17 +93,17 @@ namespace QuantConnect.Brokerages.Services.OrderPolling
 
         /// <summary>
         /// Calls the read once per watched brokerage id. One id whose read throws is logged and skipped,
-        /// so it cannot starve the other watched orders; the sweep only counts as failed when every read
-        /// of the sweep failed.
+        /// so it cannot starve the other watched orders; the poll only counts as failed when every read failed.
         /// </summary>
-        protected override IEnumerable<BrokerageOrderSnapshot> Sweep()
+        protected override IEnumerable<BrokerageOrderSnapshot> GetOrderSnapshots()
         {
-            var brokerageIds = GetWatchedBrokerageIds();
-            var orderStates = new List<BrokerageOrderSnapshot>(brokerageIds.Count);
+            var orderStates = new List<BrokerageOrderSnapshot>();
+            var readCount = 0;
             var failedReadCount = 0;
             var lastError = default(Exception);
-            foreach (var brokerageId in brokerageIds)
+            foreach (var brokerageId in GetOpenBrokerageIds())
             {
+                readCount++;
                 try
                 {
                     orderStates.Add(_getBrokerageOrderById(brokerageId));
@@ -112,11 +112,11 @@ namespace QuantConnect.Brokerages.Services.OrderPolling
                 {
                     failedReadCount++;
                     lastError = ex;
-                    Log.Error($"{nameof(SingleOrderPollingService)}.{nameof(Sweep)}(): failed to read order '{brokerageId}': {ex.Message}");
+                    Log.Error($"{nameof(SingleOrderPollingService)}.{nameof(GetOrderSnapshots)}(): failed to read order '{brokerageId}': {ex.Message}");
                 }
             }
 
-            if (failedReadCount > 0 && failedReadCount == brokerageIds.Count)
+            if (failedReadCount > 0 && failedReadCount == readCount)
             {
                 throw lastError;
             }
