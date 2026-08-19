@@ -472,6 +472,10 @@ namespace QuantConnect.Orders
                     order = new ComboMarketOrder(symbol, quantity, time, groupOrderManager, tag, properties);
                     break;
 
+                case OrderType.PeggedToMidpoint:
+                    order = new PeggedToMidpointOrder(symbol, quantity, limitPrice, triggerPrice, time, tag, properties);
+                    break;
+
                 default:
                     throw new ArgumentOutOfRangeException();
             }
