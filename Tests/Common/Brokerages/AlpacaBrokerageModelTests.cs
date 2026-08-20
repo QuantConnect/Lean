@@ -78,10 +78,71 @@ namespace QuantConnect.Tests.Common.Brokerages
 
         [TestCase(ComboType.Combo, true)]
         [TestCase(ComboType.OneCancelsTheOther, true)]
+        // an execution type this model has not opted in to must still be refused, so a blanket "true" fails here
+        [TestCase((ComboType)99, false)]
         public void SupportsGroupExecution(ComboType comboType, bool expected)
         {
             var brokerageModel = new AlpacaBrokerageModel();
             Assert.That(brokerageModel.SupportsGroupExecution(comboType), Is.EqualTo(expected));
+        }
+
+        [Test]
+        public void CanSubmitValidOneCancelsTheOtherGroup()
+        {
+            var groupOrderManager = new GroupOrderManager(1, legCount: 2, quantity: -100) { ComboType = ComboType.OneCancelsTheOther };
+            var security = TestsHelpers.GetSecurity(symbol: Symbols.AAPL.Value, securityType: SecurityType.Equity, market: Market.USA);
+            var order = new LimitOrder(Symbols.AAPL, -100, 220m, DateTime.UtcNow) { GroupOrderManager = groupOrderManager };
+
+            Assert.IsTrue(new AlpacaBrokerageModel().CanSubmitOrder(security, order, out var message));
+            Assert.IsNull(message);
+        }
+
+        private static IEnumerable<TestCaseData> InvalidOneCancelsTheOtherLegTestCases
+        {
+            get
+            {
+                // Alpaca's group is always exactly a take profit plus a stop loss
+                yield return new TestCaseData(3, SecurityType.Equity, OrderType.Limit, -100m, TimeInForce.GoodTilCanceled)
+                    .SetName("RejectsMoreThanTwoLegs");
+
+                // US equities only: crypto and options do not support the OCO order class
+                yield return new TestCaseData(2, SecurityType.Crypto, OrderType.Limit, -100m, TimeInForce.GoodTilCanceled)
+                    .SetName("RejectsNonEquitySecurityType");
+
+                // only a Limit take profit and a StopMarket stop loss are mapped
+                yield return new TestCaseData(2, SecurityType.Equity, OrderType.StopLimit, -100m, TimeInForce.GoodTilCanceled)
+                    .SetName("RejectsUnsupportedLegOrderType");
+
+                // the group's direction comes from its first leg, so a leg facing the other way is a mixed-side group
+                yield return new TestCaseData(2, SecurityType.Equity, OrderType.Limit, 100m, TimeInForce.GoodTilCanceled)
+                    .SetName("RejectsLegOnTheOppositeSide");
+
+                // Alpaca only accepts a day or good til canceled time in force for these groups
+                yield return new TestCaseData(2, SecurityType.Equity, OrderType.Limit, -100m, TimeInForce.GoodTilDate(DateTime.UtcNow.AddDays(7)))
+                    .SetName("RejectsUnsupportedTimeInForce");
+            }
+        }
+
+        [TestCaseSource(nameof(InvalidOneCancelsTheOtherLegTestCases))]
+        public void CannotSubmitInvalidOneCancelsTheOtherLeg(int legCount, SecurityType securityType, OrderType orderType,
+            decimal legQuantity, TimeInForce timeInForce)
+        {
+            // the group quantity stays negative, so a positive leg quantity is a leg on the opposite side
+            var groupOrderManager = new GroupOrderManager(1, legCount, quantity: -100) { ComboType = ComboType.OneCancelsTheOther };
+            var symbol = securityType == SecurityType.Crypto ? Symbols.BTCUSD : Symbols.AAPL;
+            var security = TestsHelpers.GetSecurity(symbol: symbol.Value, securityType: securityType,
+                market: securityType == SecurityType.Crypto ? Market.Coinbase : Market.USA);
+            var orderProperties = new OrderProperties { TimeInForce = timeInForce };
+
+            Order order = orderType switch
+            {
+                OrderType.StopLimit => new StopLimitOrder(symbol, legQuantity, 190m, 189m, DateTime.UtcNow, properties: orderProperties),
+                _ => new LimitOrder(symbol, legQuantity, 220m, DateTime.UtcNow, properties: orderProperties)
+            };
+            order.GroupOrderManager = groupOrderManager;
+
+            Assert.IsFalse(new AlpacaBrokerageModel().CanSubmitOrder(security, order, out var message));
+            Assert.IsNotNull(message);
         }
     }
 }

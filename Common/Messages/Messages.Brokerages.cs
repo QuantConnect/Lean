@@ -182,6 +182,56 @@ namespace QuantConnect
                 return Invariant($"The {brokerageModel.GetType().Name} does not support {orderType} orders with {timeInForce} TIF outside regular hours. ") +
                     Invariant($"Only {OrderType.Limit} orders with {TimeInForce.Day} TIF are supported outside regular trading hours.");
             }
+
+            /// <summary>
+            /// Returns a message indicating that a one-cancels-the-other group has the wrong number of legs
+            /// </summary>
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public static string UnsupportedOneCancelsTheOtherLegCount(IBrokerageModel brokerageModel, int legCount)
+            {
+                return Invariant($"The {brokerageModel.GetType().Name} only supports one-cancels-the-other order groups with exactly 2 legs, ") +
+                    Invariant($"a take profit and a stop loss, but the group has {legCount}.");
+            }
+
+            /// <summary>
+            /// Returns a message indicating that one-cancels-the-other groups are not supported for the given security type
+            /// </summary>
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public static string UnsupportedOneCancelsTheOtherSecurityType(IBrokerageModel brokerageModel, SecurityType securityType)
+            {
+                return Invariant($"The {brokerageModel.GetType().Name} only supports one-cancels-the-other order groups on {SecurityType.Equity}, ") +
+                    Invariant($"but received {securityType}.");
+            }
+
+            /// <summary>
+            /// Returns a message indicating that a one-cancels-the-other leg uses an order type the group does not allow
+            /// </summary>
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public static string UnsupportedOneCancelsTheOtherOrderType(IBrokerageModel brokerageModel, OrderType orderType)
+            {
+                return Invariant($"The {brokerageModel.GetType().Name} only supports a {OrderType.Limit} take profit leg and a ") +
+                    Invariant($"{OrderType.StopMarket} stop loss leg in a one-cancels-the-other order group, but received {orderType}.");
+            }
+
+            /// <summary>
+            /// Returns a message indicating that the legs of a one-cancels-the-other group are not on the same side
+            /// </summary>
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public static string UnsupportedOneCancelsTheOtherDirection(IBrokerageModel brokerageModel, OrderDirection legDirection, OrderDirection groupDirection)
+            {
+                return Invariant($"The {brokerageModel.GetType().Name} requires every leg of a one-cancels-the-other order group to be on the ") +
+                    Invariant($"same side, but a {legDirection} leg was placed in a {groupDirection} group.");
+            }
+
+            /// <summary>
+            /// Returns a message indicating that a one-cancels-the-other group uses an unsupported time in force
+            /// </summary>
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public static string UnsupportedOneCancelsTheOtherTimeInForce(IBrokerageModel brokerageModel, TimeInForce timeInForce)
+            {
+                return Invariant($"The {brokerageModel.GetType().Name} only supports one-cancels-the-other order groups with a ") +
+                    Invariant($"{TimeInForce.Day} or {TimeInForce.GoodTilCanceled} time in force, but received {timeInForce.GetType().Name}.");
+            }
         }
 
         /// <summary>
