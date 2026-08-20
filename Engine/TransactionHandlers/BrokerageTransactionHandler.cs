@@ -1011,8 +1011,7 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
                 return response;
             }
 
-            // If the order is not part of a combo update, validate sufficient buying power.
-            // OCO (and other non-combo) groups allow per-leg updates, so they are still validated
+            // only a combo skips the buying power check. every other group can update one leg, so check it
             if (order.GroupOrderManager == null || order.GroupOrderManager.ExecutionType != GroupExecutionType.Combo)
             {
                 var updatedOrder = order.Clone();

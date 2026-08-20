@@ -941,8 +941,6 @@ namespace QuantConnect.Securities
         /// <returns>True if the algorithm has enough buying power available</returns>
         public HasSufficientBuyingPowerForOrderResult HasSufficientBuyingPowerForOrder(List<Order> orders)
         {
-            // a single order is never a group, even when it carries a group manager: it reaches here from the
-            // per-leg update path, which must keep using the position group path below like it always did
             if (orders.Count > 1 && orders[0].GroupOrderManager is { ExecutionType: not GroupExecutionType.Combo } groupOrderManager)
             {
                 switch (groupOrderManager.ExecutionType)
@@ -974,16 +972,12 @@ namespace QuantConnect.Securities
         {
             if (orders.All(order => order.Symbol == orders[0].Symbol))
             {
-                // same symbol: comparing notional value is meaningful, so we only need to afford the
-                // most expensive leg
                 var mostExpensiveLeg = orders.OrderByDescending(order => Math.Abs(order.GetValue(Securities[order.Symbol]))).First();
                 var mostExpensiveLegSecurity = Securities[mostExpensiveLeg.Symbol];
                 return mostExpensiveLegSecurity.BuyingPowerModel.HasSufficientBuyingPowerForOrder(this, mostExpensiveLegSecurity, mostExpensiveLeg);
             }
 
-            // different symbols/security types have no common notional metric to compare (an option's
-            // premium is not its margin requirement), so conservatively require every leg to individually
-            // pass its own buying power check
+            // legs on different symbols have no shared price to compare, so ask every leg to pass on its own
             return HasSufficientBuyingPowerForEachOrder(orders);
         }
 

@@ -423,8 +423,6 @@ namespace QuantConnect.Securities
                 }
             }
 
-            // resolved once instead of per candidate order: only a leg of a one-cancels-the-other group has
-            // siblings to exclude, so for every other order this stays null and the check below is a no-op
             var oneCancelsTheOtherGroupId = order.GroupOrderManager?.ExecutionType == GroupExecutionType.OneCancelsTheOther
                 ? order.GroupOrderManager.Id
                 : (int?)null;
