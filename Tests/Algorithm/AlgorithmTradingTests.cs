@@ -1592,7 +1592,7 @@ namespace QuantConnect.Tests.Algorithm
         }
 
         [Test]
-        public void LiquidateCancelsOpenOneCancelsTheOtherGroupOnlyOnce()
+        public void LiquidateCancelsEveryOpenOneCancelsTheOtherLeg()
         {
             Security msft;
             var algo = GetAlgorithm(out msft, 1, 0);
@@ -1620,10 +1620,10 @@ namespace QuantConnect.Tests.Algorithm
             List<OrderTicket> liquidatedTickets = null;
             Assert.DoesNotThrow(() => liquidatedTickets = algo.Liquidate());
 
-            // only one of the 2 open legs should have actually received a cancel request: canceling one
-            // leg of a group cancels every leg, so Liquidate() must skip the sibling instead of canceling it too
+            // every leg gets its own cancel request. Canceling one leg already cancels its siblings, so the
+            // later requests find nothing left to cancel and answer with an error instead of throwing
             var canceledLegsCount = ocoTickets.Count(ticket => ticket.CancelRequest != null);
-            Assert.AreEqual(1, canceledLegsCount);
+            Assert.AreEqual(ocoTickets.Count, canceledLegsCount);
 
             // both symbols still got their closing market order
             Assert.IsTrue(liquidatedTickets.Any(x => x.Symbol == Symbols.MSFT));

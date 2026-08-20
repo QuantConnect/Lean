@@ -1487,7 +1487,6 @@ namespace QuantConnect.Algorithm
 
                 // cancel all open orders
                 var marketOrdersQuantity = 0m;
-                var canceledGroupIds = new HashSet<int>();
                 foreach (var order in orders)
                 {
                     if (order.Type == OrderType.Market)
@@ -1500,8 +1499,7 @@ namespace QuantConnect.Algorithm
                             marketOrdersQuantity += ticket.QuantityRemaining;
                         }
                     }
-                    // canceling one leg of a group cancels every leg, so only issue one cancel per group
-                    else if (order.GroupOrderManager == null || canceledGroupIds.Add(order.GroupOrderManager.Id))
+                    else
                     {
                         Transactions.CancelOrder(order.Id, tag);
                     }
