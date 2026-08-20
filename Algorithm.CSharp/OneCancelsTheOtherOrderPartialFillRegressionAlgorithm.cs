@@ -87,6 +87,7 @@ namespace QuantConnect.Algorithm.CSharp
 
         public override void OnOrderEvent(OrderEvent orderEvent)
         {
+            Log(orderEvent.ToString());
             // OneCancelsTheOtherOrder returns the limit leg first and the stop market leg second
             if (_tickets == null || (orderEvent.OrderId != _tickets[0].OrderId && orderEvent.OrderId != _tickets[1].OrderId))
             {
