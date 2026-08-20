@@ -176,8 +176,6 @@ namespace QuantConnect.Brokerages
         /// </summary>
         /// <returns>Shortable provider</returns>
         IShortableProvider GetShortableProvider(Security security);
-
-        /// <summary>
     }
 
     /// <summary>

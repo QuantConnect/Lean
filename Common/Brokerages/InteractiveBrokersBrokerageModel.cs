@@ -264,7 +264,6 @@ namespace QuantConnect.Brokerages
         }
 
         /// <summary>
-        /// <summary>
         /// Returns true if the specified order is within IB's order size limits
         /// </summary>
         private bool IsForexWithinOrderSizeLimits(string currencyPair, decimal quantity, out BrokerageMessageEvent message)

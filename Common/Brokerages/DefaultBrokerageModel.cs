@@ -361,7 +361,6 @@ namespace QuantConnect.Brokerages
         }
 
         /// <summary>
-        /// <summary>
         /// Gets a new margin interest rate model for the security
         /// </summary>
         /// <param name="security">The security to get a margin interest rate model for</param>
