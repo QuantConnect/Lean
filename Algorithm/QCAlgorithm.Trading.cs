@@ -950,11 +950,6 @@ namespace QuantConnect.Algorithm
         public List<OrderTicket> OneCancelsTheOtherOrder(Symbol symbol, decimal quantity, decimal limitPrice, decimal stopPrice,
             bool asynchronous = false, string tag = "", IOrderProperties orderProperties = null)
         {
-            if (quantity == 0)
-            {
-                throw new ArgumentException("OneCancelsTheOtherOrder does not support zero quantity orders");
-            }
-
             var orders = new List<Order>
             {
                 new LimitOrder(symbol, quantity, limitPrice, UtcTime),

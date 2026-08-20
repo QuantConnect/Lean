@@ -1873,12 +1873,16 @@ namespace QuantConnect.Tests.Algorithm
         }
 
         [Test]
-        public void OneCancelsTheOtherOrderWithZeroQuantityThrowsArgumentException()
+        public void OneCancelsTheOtherOrderWithZeroQuantityReturnsSingleInvalidTicket()
         {
             var algo = GetAlgorithm(out var msft, 1, 0);
             Update(msft, 25);
 
-            Assert.Throws<ArgumentException>(() => algo.OneCancelsTheOtherOrder(Symbols.MSFT, 0m, limitPrice: 30m, stopPrice: 20m));
+            var tickets = algo.OneCancelsTheOtherOrder(Symbols.MSFT, 0m, limitPrice: 30m, stopPrice: 20m);
+
+            Assert.AreEqual(1, tickets.Count);
+            Assert.AreEqual(OrderStatus.Invalid, tickets[0].Status);
+            Assert.AreEqual(OrderResponseErrorCode.OrderQuantityZero, tickets[0].SubmitRequest.Response.ErrorCode);
         }
 
         [Test]
