@@ -13,7 +13,6 @@
  * limitations under the License.
 */
 
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using QuantConnect.Data;
@@ -51,8 +50,8 @@ namespace QuantConnect.Algorithm.CSharp
                 // both legs sit far from the market: limit sell +30% and stop sell -30% should never be
                 // reachable in this test window, so only the explicit cancel below can close the group
                 _tickets = OneCancelsTheOtherOrder(_spy, -100,
-                    limitPrice: Math.Round(Securities[_spy].Price * 1.30m, 2),
-                    stopPrice: Math.Round(Securities[_spy].Price * 0.70m, 2));
+                    limitPrice: Securities[_spy].Price * 1.30m,
+                    stopPrice: Securities[_spy].Price * 0.70m);
             }
             else if (!_canceled && Time.Day > 5)
             {

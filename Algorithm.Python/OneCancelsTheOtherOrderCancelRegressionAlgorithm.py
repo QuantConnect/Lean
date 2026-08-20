@@ -37,8 +37,8 @@ class OneCancelsTheOtherOrderCancelRegressionAlgorithm(QCAlgorithm):
             # both legs sit far from the market: limit sell +30% and stop sell -30% should never be
             # reachable in this test window, so only the explicit cancel below can close the group
             self._tickets = self.one_cancels_the_other_order(self._spy, -100,
-                limit_price=round(self.securities[self._spy].price * 1.30, 2),
-                stop_price=round(self.securities[self._spy].price * 0.70, 2))
+                limit_price=self.securities[self._spy].price * 1.30,
+                stop_price=self.securities[self._spy].price * 0.70)
 
         elif not self._canceled and self.time.day > 5:
             # cancel only one leg: the whole OCO group must cancel with it

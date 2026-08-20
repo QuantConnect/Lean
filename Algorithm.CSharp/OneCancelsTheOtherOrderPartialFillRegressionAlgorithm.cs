@@ -81,8 +81,8 @@ namespace QuantConnect.Algorithm.CSharp
             // both trigger prices sit 30% away from the market and are never reached in this window, so every leg
             // fill in this algorithm comes from the custom fill model and never from the price of a bar
             _tickets = OneCancelsTheOtherOrder(_spy, -GroupQuantity,
-                limitPrice: Math.Round(Securities[_spy].Price * 1.30m, 2),
-                stopPrice: Math.Round(Securities[_spy].Price * 0.70m, 2));
+                limitPrice: Securities[_spy].Price * 1.30m,
+                stopPrice: Securities[_spy].Price * 0.70m);
         }
 
         public override void OnOrderEvent(OrderEvent orderEvent)
