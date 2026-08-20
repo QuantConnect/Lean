@@ -195,15 +195,6 @@ namespace QuantConnect.Brokerages
         }
 
         /// <summary>
-        /// True when this brokerage can place order groups with the given execution type
-        /// </summary>
-        /// <param name="groupExecutionType">The execution type of the order group</param>
-        /// <returns>True if the brokerage supports the given order group execution type</returns>
-        public override bool SupportsGroupExecution(GroupExecutionType groupExecutionType)
-        {
-            return groupExecutionType == GroupExecutionType.OneCancelsTheOther || base.SupportsGroupExecution(groupExecutionType);
-        }
-
         /// <summary>
         /// Returns the allowed Market-on-Open submission window for Alpaca.
         /// </summary>

@@ -809,85 +809,6 @@ namespace QuantConnect.Tests.Engine.BrokerageTransactionHandlerTests
             Assert.AreEqual(expectedGroupOrderLimitPrice, groupOrderManager.LimitPrice);
         }
 
-        // real (non-backtesting) brokerage, brokerage model does not support OCO groups -> whole group is invalidated
-        [TestCase(false, false, true)]
-        // real (non-backtesting) brokerage, brokerage model supports OCO groups -> group is submitted normally
-        [TestCase(false, true, false)]
-        // backtesting/paper brokerage (PaperBrokerage is a BacktestingBrokerage), model does not support OCO groups ->
-        // the gate is not checked because the engine simulates the group itself, group is submitted normally
-        [TestCase(true, false, false)]
-        public void OneCancelsTheOtherGroupSubmissionRespectsLiveModeGate(bool useBacktestingBrokerage, bool supportsGroupExecution, bool expectInvalidated)
-        {
-            // the gate is keyed off whether the underlying brokerage is a BacktestingBrokerage (true for backtesting
-            // AND paper trading, since PaperBrokerage extends it), not off IAlgorithm.LiveMode: paper trading runs
-            // with LiveMode == true but must still be exempt from the gate
-            _algorithm.SetLiveMode(true);
-            _algorithm.SetBrokerageModel(new TestGroupExecutionBrokerageModel(supportsGroupExecution));
-
-            _transactionHandler = new TestBrokerageTransactionHandler();
-            // NoSubmitTestBrokerage stands in for a real (non-backtesting) brokerage here: unlike
-            // BacktestingBrokerage.PlaceOrder, it does not fire a Submitted OrderEvent on its own, so when the
-            // gate lets the group through we can only assert on the order response, not on reaching OrderStatus.Submitted
-            using Brokerage brokerage = useBacktestingBrokerage ? new BacktestingBrokerage(_algorithm) : new NoSubmitTestBrokerage(_algorithm);
-            _transactionHandler.Initialize(_algorithm, brokerage, new BacktestingResultHandler());
-
-            var security = _algorithm.Securities[_symbol];
-            var price = 1.12m;
-            security.SetMarketPrice(new Tick(DateTime.Now, security.Symbol, price, price, price));
-
-            var dateTime = DateTime.UtcNow;
-            var groupOrderManager = new GroupOrderManager(1, 2, 1000) { ExecutionType = GroupExecutionType.OneCancelsTheOther };
-
-            // a breakout style OCO pair: buy limit below market, buy stop above market
-            var orderRequest1 = new SubmitOrderRequest(OrderType.Limit, security.Type, security.Symbol, 1000, 0, 1.05m, dateTime, "",
-                groupOrderManager: groupOrderManager);
-            var orderRequest2 = new SubmitOrderRequest(OrderType.StopMarket, security.Type, security.Symbol, 1000, 1.20m, 0, dateTime, "",
-                groupOrderManager: groupOrderManager);
-
-            orderRequest1.SetOrderId(1);
-            orderRequest2.SetOrderId(2);
-            groupOrderManager.OrderIds.Add(1);
-            groupOrderManager.OrderIds.Add(2);
-
-            var orderProcessorMock = new Mock<IOrderProcessor>();
-            orderProcessorMock.Setup(m => m.GetOrderTicket(1)).Returns(new OrderTicket(_algorithm.Transactions, orderRequest1));
-            orderProcessorMock.Setup(m => m.GetOrderTicket(2)).Returns(new OrderTicket(_algorithm.Transactions, orderRequest2));
-            _algorithm.Transactions.SetOrderProcessor(orderProcessorMock.Object);
-
-            var orderTicket1 = _transactionHandler.Process(orderRequest1);
-            Assert.AreEqual(OrderStatus.New, orderTicket1.Status);
-            _transactionHandler.HandleOrderRequest(orderRequest1);
-
-            // still buffered: the group isn't complete yet, so the gate hasn't run for either leg
-            Assert.AreEqual(OrderStatus.New, orderTicket1.Status);
-
-            var orderTicket2 = _transactionHandler.Process(orderRequest2);
-            _transactionHandler.HandleOrderRequest(orderRequest2);
-
-            if (expectInvalidated)
-            {
-                // both legs are decided together: the whole group is invalidated
-                Assert.AreEqual(OrderStatus.Invalid, orderTicket1.Status);
-                Assert.AreEqual(OrderStatus.Invalid, orderTicket2.Status);
-                Assert.IsTrue(orderRequest2.Response.IsError);
-                Assert.AreEqual(OrderResponseErrorCode.BrokerageModelRefusedToSubmitOrder, orderRequest2.Response.ErrorCode);
-            }
-            else
-            {
-                // the group was not rejected by the gate: the request succeeded and reached the brokerage.
-                // only BacktestingBrokerage.PlaceOrder actually fires the Submitted event on its own, so we only
-                // assert the precise status for that case; for a real brokerage we assert it did not get invalidated
-                Assert.IsTrue(orderRequest2.Response.IsSuccess);
-                Assert.AreNotEqual(OrderStatus.Invalid, orderTicket1.Status);
-                Assert.AreNotEqual(OrderStatus.Invalid, orderTicket2.Status);
-                if (useBacktestingBrokerage)
-                {
-                    Assert.AreEqual(OrderStatus.Submitted, orderTicket1.Status);
-                    Assert.AreEqual(OrderStatus.Submitted, orderTicket2.Status);
-                }
-            }
-        }
-
         [Test]
         public void OrderCancellationTransitionsThroughCancelPendingStatus()
         {
@@ -3212,21 +3133,6 @@ namespace QuantConnect.Tests.Engine.BrokerageTransactionHandlerTests
             {
                 message = new BrokerageMessageEvent(0, 0, "");
                 return false;
-            }
-        }
-
-        internal class TestGroupExecutionBrokerageModel : DefaultBrokerageModel
-        {
-            private readonly bool _supportsOneCancelsTheOther;
-
-            public TestGroupExecutionBrokerageModel(bool supportsOneCancelsTheOther)
-            {
-                _supportsOneCancelsTheOther = supportsOneCancelsTheOther;
-            }
-
-            public override bool SupportsGroupExecution(GroupExecutionType groupExecutionType)
-            {
-                return groupExecutionType == GroupExecutionType.OneCancelsTheOther ? _supportsOneCancelsTheOther : base.SupportsGroupExecution(groupExecutionType);
             }
         }
 

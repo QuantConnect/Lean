@@ -76,16 +76,6 @@ namespace QuantConnect.Tests.Common.Brokerages
             Assert.That(canSubmit, Is.EqualTo(shouldSubmit));
         }
 
-        [TestCase(GroupExecutionType.Combo, true)]
-        [TestCase(GroupExecutionType.OneCancelsTheOther, true)]
-        // an execution type this model has not opted in to must still be refused, so a blanket "true" fails here
-        [TestCase((GroupExecutionType)99, false)]
-        public void SupportsGroupExecution(GroupExecutionType groupExecutionType, bool expected)
-        {
-            var brokerageModel = new AlpacaBrokerageModel();
-            Assert.That(brokerageModel.SupportsGroupExecution(groupExecutionType), Is.EqualTo(expected));
-        }
-
         [Test]
         public void CanSubmitValidOneCancelsTheOtherGroup()
         {

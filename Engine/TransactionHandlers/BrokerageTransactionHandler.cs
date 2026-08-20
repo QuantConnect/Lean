@@ -921,21 +921,6 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
                 return validationResult;
             }
 
-            // in live trading, verify the brokerage actually supports this order group's execution type.
-            // Backtesting and paper trading are not gated here (note PaperBrokerage is a BacktestingBrokerage)
-            // because the engine simulates the group behavior itself (see BacktestingBrokerage)
-            if (!_brokerageIsBacktesting && order.GroupOrderManager != null &&
-                !_algorithm.BrokerageModel.SupportsGroupExecution(order.GroupOrderManager.ExecutionType))
-            {
-                var errorMessage = $"BrokerageModel declared unable to support the order group execution type " +
-                    $"{order.GroupOrderManager.ExecutionType} for orders: [{string.Join(",", orders.Select(o => o.Id))}]";
-                var response = OrderResponse.Error(request, OrderResponseErrorCode.BrokerageModelRefusedToSubmitOrder, errorMessage);
-
-                InvalidateOrders(orders, response.ErrorMessage);
-                _algorithm.Error(response.ErrorMessage);
-                return response;
-            }
-
             // verify that our current brokerage can actually take the order
             foreach (var kvp in securities)
             {

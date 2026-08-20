@@ -202,14 +202,6 @@ namespace QuantConnect.Tests.Common.Brokerages
             }
         }
 
-
-        [TestCase(GroupExecutionType.Combo, true)]
-        [TestCase(GroupExecutionType.OneCancelsTheOther, false)]
-        public void SupportsGroupExecutionOnlySupportsCombo(GroupExecutionType groupExecutionType, bool expected)
-        {
-            Assert.AreEqual(expected, _defaultBrokerageModel.SupportsGroupExecution(groupExecutionType));
-        }
-
         private static Order GetMarketOnOpenOrder()
         {
             var order = new Mock<Order>();
