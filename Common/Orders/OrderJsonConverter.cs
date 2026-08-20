@@ -86,9 +86,6 @@ namespace QuantConnect.Orders
             var orderType = (OrderType)(jObject["Type"]?.Value<int>() ?? jObject["type"].Value<int>());
             var order = CreateOrder(orderType, jObject);
 
-            // restore the group manager for any leg that doesn't carry one yet (plain Limit/StopMarket OCO legs).
-            // this must run before the Id is set below, since the Id setter registers the order into the
-            // group's OrderIds only when the manager is already there.
             var groupOrderManagerToken = jObject["GroupOrderManager"] ?? jObject["groupOrderManager"];
             if (order.GroupOrderManager == null && groupOrderManagerToken != null && groupOrderManagerToken.Type != JTokenType.Null)
             {

@@ -202,6 +202,7 @@ namespace QuantConnect.Tests.Common.Brokerages
             }
         }
 
+
         private static Order GetMarketOnOpenOrder()
         {
             var order = new Mock<Order>();

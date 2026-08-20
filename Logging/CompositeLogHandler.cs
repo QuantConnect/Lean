@@ -14,7 +14,6 @@
 */
 
 using System;
-using System.Linq;
 
 namespace QuantConnect.Logging
 {
@@ -23,8 +22,7 @@ namespace QuantConnect.Logging
     /// </summary>
     public class CompositeLogHandler : ILogHandler
     {
-        private readonly object _locker = new object();
-        private ILogHandler[] _handlers;
+        private readonly ILogHandler[] _handlers;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="CompositeLogHandler"/> that pipes log messages to the console and log.txt
@@ -46,31 +44,6 @@ namespace QuantConnect.Logging
             }
 
             _handlers = handlers;
-        }
-
-        /// <summary>
-        /// Adds the given handler to the composition if a handler of the same type is not already present
-        /// </summary>
-        /// <param name="handler">The handler to add</param>
-        /// <returns>True if the handler was added, false if a handler of the same type already exists</returns>
-        public bool TryAddHandler(ILogHandler handler)
-        {
-            ArgumentNullException.ThrowIfNull(handler);
-
-            lock (_locker)
-            {
-                if (_handlers.Any(existing => existing.GetType() == handler.GetType()))
-                {
-                    return false;
-                }
-
-                // copy on write so concurrent log calls keep iterating a stable array
-                var handlers = new ILogHandler[_handlers.Length + 1];
-                _handlers.CopyTo(handlers, 0);
-                handlers[_handlers.Length] = handler;
-                _handlers = handlers;
-                return true;
-            }
         }
 
         /// <summary>
