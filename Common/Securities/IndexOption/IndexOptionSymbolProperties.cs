@@ -72,11 +72,17 @@ namespace QuantConnect.Securities.IndexOption
         /// <summary>
         /// Minimum price variation, subject to variability due to contract price
         /// </summary>
-        /// <remarks>https://www.cboe.com/tradable_products/vix/vix_options/specifications/
+        /// <remarks>https://www.cboe.com/tradable_products/sp_500/mini_spx_options/specifications
+        /// https://www.cboe.com/tradable_products/vix/vix_options/specifications/
         /// https://www.cboe.com/tradable_products/sp_500/spx_options/specifications/
         /// https://www.nasdaq.com/docs/2022/08/24/1926-Q22_NDX%20Fact%20Sheet_NAM_v3.pdf</remarks>
         public static decimal MinimumPriceVariationForPrice(Symbol symbol, decimal? referencePrice)
         {
+            if (symbol?.ID.Symbol == "XSP")
+            {
+                return 0.01m;
+            }
+
             if(symbol == null || !referencePrice.HasValue)
             {
                 return 0.05m;
