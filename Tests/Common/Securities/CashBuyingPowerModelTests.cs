@@ -295,7 +295,7 @@ namespace QuantConnect.Tests.Common.Securities
             _btcusd.SetMarketPrice(new Tick { Value = 15000m });
             _algorithm.SetFinishedWarmingUp();
 
-            var groupOrderManager = new GroupOrderManager(1, 2, -1m) { ComboType = ComboType.OneCancelsTheOther };
+            var groupOrderManager = new GroupOrderManager(1, 2, -1m) { ExecutionType = GroupExecutionType.OneCancelsTheOther };
 
             // take-profit leg: sell the full 1 BTC position, already resting as an open order
             var takeProfitRequest = new SubmitOrderRequest(OrderType.Limit, _btcusd.Type, _btcusd.Symbol, -1m, 0, 20000m,

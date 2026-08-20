@@ -943,16 +943,16 @@ namespace QuantConnect.Securities
         {
             // a single order is never a group, even when it carries a group manager: it reaches here from the
             // per-leg update path, which must keep using the position group path below like it always did
-            if (orders.Count > 1 && orders[0].GroupOrderManager is { ComboType: not ComboType.Combo } groupOrderManager)
+            if (orders.Count > 1 && orders[0].GroupOrderManager is { ExecutionType: not GroupExecutionType.Combo } groupOrderManager)
             {
-                switch (groupOrderManager.ComboType)
+                switch (groupOrderManager.ExecutionType)
                 {
-                    case ComboType.OneCancelsTheOther:
+                    case GroupExecutionType.OneCancelsTheOther:
                         return HasSufficientBuyingPowerForOneCancelsTheOtherGroup(orders);
 
                     default:
                         throw new NotSupportedException(
-                            $"SecurityPortfolioManager.HasSufficientBuyingPowerForOrder(): unsupported order group execution type: {groupOrderManager.ComboType}");
+                            $"SecurityPortfolioManager.HasSufficientBuyingPowerForOrder(): unsupported order group execution type: {groupOrderManager.ExecutionType}");
                 }
             }
 

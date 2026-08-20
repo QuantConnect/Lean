@@ -76,20 +76,20 @@ namespace QuantConnect.Tests.Common.Brokerages
             Assert.That(canSubmit, Is.EqualTo(shouldSubmit));
         }
 
-        [TestCase(ComboType.Combo, true)]
-        [TestCase(ComboType.OneCancelsTheOther, true)]
+        [TestCase(GroupExecutionType.Combo, true)]
+        [TestCase(GroupExecutionType.OneCancelsTheOther, true)]
         // an execution type this model has not opted in to must still be refused, so a blanket "true" fails here
-        [TestCase((ComboType)99, false)]
-        public void SupportsGroupExecution(ComboType comboType, bool expected)
+        [TestCase((GroupExecutionType)99, false)]
+        public void SupportsGroupExecution(GroupExecutionType groupExecutionType, bool expected)
         {
             var brokerageModel = new AlpacaBrokerageModel();
-            Assert.That(brokerageModel.SupportsGroupExecution(comboType), Is.EqualTo(expected));
+            Assert.That(brokerageModel.SupportsGroupExecution(groupExecutionType), Is.EqualTo(expected));
         }
 
         [Test]
         public void CanSubmitValidOneCancelsTheOtherGroup()
         {
-            var groupOrderManager = new GroupOrderManager(1, legCount: 2, quantity: -100) { ComboType = ComboType.OneCancelsTheOther };
+            var groupOrderManager = new GroupOrderManager(1, legCount: 2, quantity: -100) { ExecutionType = GroupExecutionType.OneCancelsTheOther };
             var security = TestsHelpers.GetSecurity(symbol: Symbols.AAPL.Value, securityType: SecurityType.Equity, market: Market.USA);
             var order = new LimitOrder(Symbols.AAPL, -100, 220m, DateTime.UtcNow) { GroupOrderManager = groupOrderManager };
 
@@ -128,7 +128,7 @@ namespace QuantConnect.Tests.Common.Brokerages
             decimal legQuantity, TimeInForce timeInForce)
         {
             // the group quantity stays negative, so a positive leg quantity is a leg on the opposite side
-            var groupOrderManager = new GroupOrderManager(1, legCount, quantity: -100) { ComboType = ComboType.OneCancelsTheOther };
+            var groupOrderManager = new GroupOrderManager(1, legCount, quantity: -100) { ExecutionType = GroupExecutionType.OneCancelsTheOther };
             var symbol = securityType == SecurityType.Crypto ? Symbols.BTCUSD : Symbols.AAPL;
             var security = TestsHelpers.GetSecurity(symbol: symbol.Value, securityType: securityType,
                 market: securityType == SecurityType.Crypto ? Market.Coinbase : Market.USA);

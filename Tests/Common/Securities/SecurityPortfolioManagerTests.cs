@@ -670,7 +670,7 @@ namespace QuantConnect.Tests.Common.Securities
         public void OneCancelsTheOtherChecksOnlyMostExpensiveLegBuyingPower()
         {
             var (portfolio, orderProcessor) = CreateOneCancelsTheOtherPortfolio(10000m);
-            var groupOrderManager = new GroupOrderManager(1, 2, 50m) { ComboType = ComboType.OneCancelsTheOther };
+            var groupOrderManager = new GroupOrderManager(1, 2, 50m) { ExecutionType = GroupExecutionType.OneCancelsTheOther };
 
             // the "most expensive leg only" shortcut only applies to same-symbol legs, where comparing notional
             // value is meaningful; mixed-symbol/mixed-security-type groups fall back to a conservative per-leg
@@ -691,7 +691,7 @@ namespace QuantConnect.Tests.Common.Securities
         public void OneCancelsTheOtherRejectsWhenMostExpensiveLegAloneIsUnaffordable()
         {
             var (portfolio, orderProcessor) = CreateOneCancelsTheOtherPortfolio(5500m);
-            var groupOrderManager = new GroupOrderManager(1, 2, 50m) { ComboType = ComboType.OneCancelsTheOther };
+            var groupOrderManager = new GroupOrderManager(1, 2, 50m) { ExecutionType = GroupExecutionType.OneCancelsTheOther };
 
             // AAPL leg: 50 shares at 100 = 5,000
             var cheaperLeg = CreateOneCancelsTheOtherLeg(orderProcessor, OrderType.Limit, Symbols.AAPL, 50m, 0m, 100m, 1, groupOrderManager);
@@ -711,7 +711,7 @@ namespace QuantConnect.Tests.Common.Securities
             // symbols/security types (an option's premium is not its margin requirement), so a mixed-symbol OCO
             // group conservatively requires every leg to individually pass, same as an ungrouped order list
             var (portfolio, orderProcessor) = CreateOneCancelsTheOtherPortfolio(5500m);
-            var groupOrderManager = new GroupOrderManager(1, 2, 50m) { ComboType = ComboType.OneCancelsTheOther };
+            var groupOrderManager = new GroupOrderManager(1, 2, 50m) { ExecutionType = GroupExecutionType.OneCancelsTheOther };
 
             // AAPL leg: 50 shares at 100 = 5,000, affordable alone
             var affordableLeg = CreateOneCancelsTheOtherLeg(orderProcessor, OrderType.Limit, Symbols.AAPL, 50m, 0m, 100m, 1, groupOrderManager);
@@ -728,7 +728,7 @@ namespace QuantConnect.Tests.Common.Securities
         public void OneCancelsTheOtherWithSameSymbolLegsSkipsPositionGroupPath()
         {
             var (portfolio, orderProcessor) = CreateOneCancelsTheOtherPortfolio(10000m);
-            var groupOrderManager = new GroupOrderManager(1, 2, 50m) { ComboType = ComboType.OneCancelsTheOther };
+            var groupOrderManager = new GroupOrderManager(1, 2, 50m) { ExecutionType = GroupExecutionType.OneCancelsTheOther };
 
             // two legs on the same symbol would break the position-groups per-symbol dictionary if resolved as a
             // regular combo; the OCO branch must run before the position-group path and never reach it

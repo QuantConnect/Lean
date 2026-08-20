@@ -961,7 +961,7 @@ namespace QuantConnect.Algorithm
                 new StopMarketOrder(symbol, quantity, stopPrice, UtcTime)
             };
 
-            return SubmitGroupOrder(ComboType.OneCancelsTheOther, orders, asynchronous, tag, orderProperties);
+            return SubmitGroupOrder(GroupExecutionType.OneCancelsTheOther, orders, asynchronous, tag, orderProperties);
         }
 
         private List<OrderTicket> GenerateOptionStrategyOrders(OptionStrategy strategy, int strategyQuantity, bool asynchronous, string tag, IOrderProperties orderProperties)
@@ -1052,19 +1052,19 @@ namespace QuantConnect.Algorithm
         /// is the first caller, and the future conditional (OTO) and bracket order types add their own thin
         /// wrapper over this same method
         /// </summary>
-        /// <param name="comboType">How the legs of the group execute relative to each other</param>
+        /// <param name="groupExecutionType">How the legs of the group execute relative to each other</param>
         /// <param name="orders">The order specs that make up the group's legs</param>
         /// <param name="asynchronous">Send the orders asynchronously (false). Otherwise we'll block until every leg is submitted</param>
         /// <param name="tag">String tag applied to every leg</param>
         /// <param name="orderProperties">The order properties to use for every leg. Defaults to <see cref="DefaultOrderProperties"/></param>
         /// <returns>One order ticket per leg, in the same order as <paramref name="orders"/></returns>
-        private List<OrderTicket> SubmitGroupOrder(ComboType comboType, List<Order> orders, bool asynchronous, string tag, IOrderProperties orderProperties)
+        private List<OrderTicket> SubmitGroupOrder(GroupExecutionType groupExecutionType, List<Order> orders, bool asynchronous, string tag, IOrderProperties orderProperties)
         {
             // one clock and one group manager for every leg: a stale user time would corrupt Day-TIF expiry,
             // and the legs must share a single clock so one can't fill a bar early relative to the others
             var groupOrderManager = new GroupOrderManager(Transactions.GetIncrementGroupOrderManagerId(), orders.Count, orders[0].Quantity)
             {
-                ComboType = comboType
+                ExecutionType = groupExecutionType
             };
 
             List<OrderTicket> orderTickets = new(capacity: orders.Count);

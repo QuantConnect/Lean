@@ -385,10 +385,10 @@ namespace QuantConnect.Orders
                 SafeDecimalValue(groupOrderManagerJObject["LimitPrice"] ?? groupOrderManagerJObject["limitPrice"])
             );
 
-            var comboType = groupOrderManagerJObject["ComboType"] ?? groupOrderManagerJObject["comboType"];
-            if (comboType != null && comboType.Type != JTokenType.Null)
+            var groupExecutionType = groupOrderManagerJObject["ExecutionType"] ?? groupOrderManagerJObject["executionType"];
+            if (groupExecutionType != null && groupExecutionType.Type != JTokenType.Null)
             {
-                result.ComboType = (ComboType)comboType.Value<int>();
+                result.ExecutionType = (GroupExecutionType)groupExecutionType.Value<int>();
             }
 
             foreach (var orderId in (groupOrderManagerJObject["OrderIds"]?.Values<int>() ?? groupOrderManagerJObject["orderIds"].Values<int>()))

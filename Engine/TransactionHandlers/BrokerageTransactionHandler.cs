@@ -925,10 +925,10 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
             // Backtesting and paper trading are not gated here (note PaperBrokerage is a BacktestingBrokerage)
             // because the engine simulates the group behavior itself (see BacktestingBrokerage)
             if (!_brokerageIsBacktesting && order.GroupOrderManager != null &&
-                !_algorithm.BrokerageModel.SupportsGroupExecution(order.GroupOrderManager.ComboType))
+                !_algorithm.BrokerageModel.SupportsGroupExecution(order.GroupOrderManager.ExecutionType))
             {
                 var errorMessage = $"BrokerageModel declared unable to support the order group execution type " +
-                    $"{order.GroupOrderManager.ComboType} for orders: [{string.Join(",", orders.Select(o => o.Id))}]";
+                    $"{order.GroupOrderManager.ExecutionType} for orders: [{string.Join(",", orders.Select(o => o.Id))}]";
                 var response = OrderResponse.Error(request, OrderResponseErrorCode.BrokerageModelRefusedToSubmitOrder, errorMessage);
 
                 InvalidateOrders(orders, response.ErrorMessage);
@@ -1028,7 +1028,7 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
 
             // If the order is not part of a combo update, validate sufficient buying power.
             // OCO (and other non-combo) groups allow per-leg updates, so they are still validated
-            if (order.GroupOrderManager == null || order.GroupOrderManager.ComboType != ComboType.Combo)
+            if (order.GroupOrderManager == null || order.GroupOrderManager.ExecutionType != GroupExecutionType.Combo)
             {
                 var updatedOrder = order.Clone();
                 updatedOrder.ApplyUpdateOrderRequest(request);

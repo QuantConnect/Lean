@@ -1867,7 +1867,7 @@ namespace QuantConnect.Tests.Algorithm
 
             var groupOrderManager = tickets[0].SubmitRequest.GroupOrderManager;
             Assert.IsNotNull(groupOrderManager);
-            Assert.AreEqual(ComboType.OneCancelsTheOther, groupOrderManager.ComboType);
+            Assert.AreEqual(GroupExecutionType.OneCancelsTheOther, groupOrderManager.ExecutionType);
             Assert.AreEqual(2, groupOrderManager.Count);
             Assert.AreSame(groupOrderManager, tickets[1].SubmitRequest.GroupOrderManager);
         }

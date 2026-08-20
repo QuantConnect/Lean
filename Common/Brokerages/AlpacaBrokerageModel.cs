@@ -115,7 +115,7 @@ namespace QuantConnect.Brokerages
                 return false;
             }
 
-            if (order.GroupOrderManager?.ComboType == ComboType.OneCancelsTheOther &&
+            if (order.GroupOrderManager?.ExecutionType == GroupExecutionType.OneCancelsTheOther &&
                 !CanSubmitOneCancelsTheOtherLeg(security, order, out message))
             {
                 return false;
@@ -197,11 +197,11 @@ namespace QuantConnect.Brokerages
         /// <summary>
         /// True when this brokerage can place order groups with the given execution type
         /// </summary>
-        /// <param name="comboType">The execution type of the order group</param>
+        /// <param name="groupExecutionType">The execution type of the order group</param>
         /// <returns>True if the brokerage supports the given order group execution type</returns>
-        public override bool SupportsGroupExecution(ComboType comboType)
+        public override bool SupportsGroupExecution(GroupExecutionType groupExecutionType)
         {
-            return comboType == ComboType.OneCancelsTheOther || base.SupportsGroupExecution(comboType);
+            return groupExecutionType == GroupExecutionType.OneCancelsTheOther || base.SupportsGroupExecution(groupExecutionType);
         }
 
         /// <summary>

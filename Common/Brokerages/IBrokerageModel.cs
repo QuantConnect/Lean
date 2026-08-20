@@ -180,11 +180,11 @@ namespace QuantConnect.Brokerages
         /// <summary>
         /// True when this brokerage can place order groups with the given execution type
         /// </summary>
-        /// <param name="comboType">The execution type of the order group</param>
+        /// <param name="groupExecutionType">The execution type of the order group</param>
         /// <returns>True if the brokerage supports the given order group execution type</returns>
         /// <remarks>Declared with a default body so existing brokerage models, including Python ones that do not
-        /// define this method, keep today's behavior: only <see cref="Orders.ComboType.Combo"/> groups pass</remarks>
-        bool SupportsGroupExecution(ComboType comboType) => comboType == ComboType.Combo;
+        /// define this method, keep today's behavior: only <see cref="Orders.GroupExecutionType.Combo"/> groups pass</remarks>
+        bool SupportsGroupExecution(GroupExecutionType groupExecutionType) => groupExecutionType == GroupExecutionType.Combo;
     }
 
     /// <summary>

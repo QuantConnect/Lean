@@ -305,18 +305,18 @@ namespace QuantConnect.Python
         /// <summary>
         /// True when this brokerage can place order groups with the given execution type
         /// </summary>
-        /// <param name="comboType">The execution type of the order group</param>
+        /// <param name="groupExecutionType">The execution type of the order group</param>
         /// <returns>True if the brokerage supports the given order group execution type</returns>
         /// <remarks>Falls back to the default answer when the wrapped Python model does not define this method,
         /// since it was added to <see cref="IBrokerageModel"/> after existing Python models were written</remarks>
-        public bool SupportsGroupExecution(ComboType comboType)
+        public bool SupportsGroupExecution(GroupExecutionType groupExecutionType)
         {
             if (!HasAttr(nameof(SupportsGroupExecution)))
             {
-                return comboType == ComboType.Combo;
+                return groupExecutionType == GroupExecutionType.Combo;
             }
 
-            return InvokeMethod<bool>(nameof(SupportsGroupExecution), comboType);
+            return InvokeMethod<bool>(nameof(SupportsGroupExecution), groupExecutionType);
         }
     }
 }

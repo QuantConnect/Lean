@@ -203,11 +203,11 @@ namespace QuantConnect.Tests.Common.Brokerages
         }
 
 
-        [TestCase(ComboType.Combo, true)]
-        [TestCase(ComboType.OneCancelsTheOther, false)]
-        public void SupportsGroupExecutionOnlySupportsCombo(ComboType comboType, bool expected)
+        [TestCase(GroupExecutionType.Combo, true)]
+        [TestCase(GroupExecutionType.OneCancelsTheOther, false)]
+        public void SupportsGroupExecutionOnlySupportsCombo(GroupExecutionType groupExecutionType, bool expected)
         {
-            Assert.AreEqual(expected, _defaultBrokerageModel.SupportsGroupExecution(comboType));
+            Assert.AreEqual(expected, _defaultBrokerageModel.SupportsGroupExecution(groupExecutionType));
         }
 
         private static Order GetMarketOnOpenOrder()

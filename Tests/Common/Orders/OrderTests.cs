@@ -85,7 +85,7 @@ namespace QuantConnect.Tests.Common.Orders
         public void CreateOrderAttachesGroupOrderManagerBeforeIdIsSet(OrderType orderType)
         {
             var time = new DateTime(2015, 11, 23, 17, 15, 37);
-            var groupOrderManager = new GroupOrderManager(1, 2, 100) { ComboType = ComboType.OneCancelsTheOther };
+            var groupOrderManager = new GroupOrderManager(1, 2, 100) { ExecutionType = GroupExecutionType.OneCancelsTheOther };
             var request = new SubmitOrderRequest(orderType, SecurityType.Equity, Symbols.SPY, 100, 195m, 210.10m, time, "oco",
                 groupOrderManager: groupOrderManager);
             request.SetOrderId(12345);

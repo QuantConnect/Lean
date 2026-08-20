@@ -532,7 +532,7 @@ namespace QuantConnect.Tests.Engine.BrokerageTransactionHandlerTests
             security.Holdings.SetHoldings(price, 100);
 
             var dateTime = DateTime.Now;
-            var groupOrderManager = new GroupOrderManager(1, 2, -100) { ComboType = ComboType.OneCancelsTheOther };
+            var groupOrderManager = new GroupOrderManager(1, 2, -100) { ExecutionType = GroupExecutionType.OneCancelsTheOther };
 
             // take-profit leg: sell the full 100 share position
             var takeProfitRequest = new SubmitOrderRequest(OrderType.Limit, security.Type, security.Symbol, -100, 0, 420m,
@@ -836,7 +836,7 @@ namespace QuantConnect.Tests.Engine.BrokerageTransactionHandlerTests
             security.SetMarketPrice(new Tick(DateTime.Now, security.Symbol, price, price, price));
 
             var dateTime = DateTime.UtcNow;
-            var groupOrderManager = new GroupOrderManager(1, 2, 1000) { ComboType = ComboType.OneCancelsTheOther };
+            var groupOrderManager = new GroupOrderManager(1, 2, 1000) { ExecutionType = GroupExecutionType.OneCancelsTheOther };
 
             // a breakout style OCO pair: buy limit below market, buy stop above market
             var orderRequest1 = new SubmitOrderRequest(OrderType.Limit, security.Type, security.Symbol, 1000, 0, 1.05m, dateTime, "",
@@ -1250,10 +1250,10 @@ namespace QuantConnect.Tests.Engine.BrokerageTransactionHandlerTests
         }
 
         // combo groups keep the pre-existing "manager means combo" skip: no buying power validation on update
-        [TestCase(ComboType.Combo, true)]
+        [TestCase(GroupExecutionType.Combo, true)]
         // OCO legs are validated like a regular order: an update the algorithm cannot afford is rejected
-        [TestCase(ComboType.OneCancelsTheOther, false)]
-        public void HandleUpdateOrderRequestValidatesBuyingPowerOnlyForNonComboGroups(ComboType comboType, bool expectUpdateSucceeds)
+        [TestCase(GroupExecutionType.OneCancelsTheOther, false)]
+        public void HandleUpdateOrderRequestValidatesBuyingPowerOnlyForNonComboGroups(GroupExecutionType groupExecutionType, bool expectUpdateSucceeds)
         {
             _algorithm.SetBrokerageModel(new DefaultBrokerageModel());
 
@@ -1266,7 +1266,7 @@ namespace QuantConnect.Tests.Engine.BrokerageTransactionHandlerTests
             security.SetMarketPrice(new Tick(DateTime.Now, security.Symbol, price, price, price));
 
             var dateTime = DateTime.UtcNow;
-            var groupOrderManager = new GroupOrderManager(1, 2, 1000) { ComboType = comboType };
+            var groupOrderManager = new GroupOrderManager(1, 2, 1000) { ExecutionType = groupExecutionType };
 
             var orderRequest1 = new SubmitOrderRequest(OrderType.Limit, security.Type, security.Symbol, 1000, 0, 1.05m, dateTime, "",
                 groupOrderManager: groupOrderManager);
@@ -3224,9 +3224,9 @@ namespace QuantConnect.Tests.Engine.BrokerageTransactionHandlerTests
                 _supportsOneCancelsTheOther = supportsOneCancelsTheOther;
             }
 
-            public override bool SupportsGroupExecution(ComboType comboType)
+            public override bool SupportsGroupExecution(GroupExecutionType groupExecutionType)
             {
-                return comboType == ComboType.OneCancelsTheOther ? _supportsOneCancelsTheOther : base.SupportsGroupExecution(comboType);
+                return groupExecutionType == GroupExecutionType.OneCancelsTheOther ? _supportsOneCancelsTheOther : base.SupportsGroupExecution(groupExecutionType);
             }
         }
 

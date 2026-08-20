@@ -293,7 +293,7 @@ namespace QuantConnect.Tests.Brokerages.Backtesting
         private (Order Limit, Order Stop) PlaceOcoGroup(decimal limitPrice, decimal stopPrice, decimal quantity = 10m,
             IOrderProperties properties = null)
         {
-            var groupOrderManager = new GroupOrderManager(1, 2, quantity) { ComboType = ComboType.OneCancelsTheOther };
+            var groupOrderManager = new GroupOrderManager(1, 2, quantity) { ExecutionType = GroupExecutionType.OneCancelsTheOther };
 
             var limitRequest = new SubmitOrderRequest(OrderType.Limit, _security.Type, _security.Symbol, quantity, 0, limitPrice,
                 _orderTime, "", properties, groupOrderManager);

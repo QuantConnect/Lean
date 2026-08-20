@@ -858,9 +858,9 @@ namespace QuantConnect.Tests.Common.Orders
         }
 
         [Test]
-        public void DeserializesGroupOrderManagerWithoutComboTypeAsCombo()
+        public void DeserializesGroupOrderManagerWithoutExecutionTypeAsCombo()
         {
-            // old-style JSON, from before the "comboType" field existed: must default to ComboType.Combo, not throw
+            // old-style JSON, from before the "executionType" field existed: must default to GroupExecutionType.Combo, not throw
             const string json = @"{'Type':8,
 'Id':1,
 'ContingentId':0,
@@ -878,13 +878,13 @@ namespace QuantConnect.Tests.Common.Orders
 
             var order = (ComboMarketOrder)DeserializeOrder<ComboMarketOrder>(json);
 
-            Assert.AreEqual(ComboType.Combo, order.GroupOrderManager.ComboType);
+            Assert.AreEqual(GroupExecutionType.Combo, order.GroupOrderManager.ExecutionType);
         }
 
         [Test]
         public void RoundTripsLimitOrderWithOneCancelsTheOtherGroupOrderManagerTwice()
         {
-            var groupOrderManager = new GroupOrderManager(1, 2, 100) { ComboType = ComboType.OneCancelsTheOther };
+            var groupOrderManager = new GroupOrderManager(1, 2, 100) { ExecutionType = GroupExecutionType.OneCancelsTheOther };
             var expected = new LimitOrder(Symbols.SPY, 100, 210.10m, new DateTime(2015, 11, 23, 17, 15, 37), "oco")
             {
                 GroupOrderManager = groupOrderManager,
@@ -898,7 +898,7 @@ namespace QuantConnect.Tests.Common.Orders
         [Test]
         public void RoundTripsStopMarketOrderWithOneCancelsTheOtherGroupOrderManagerTwice()
         {
-            var groupOrderManager = new GroupOrderManager(1, 2, 100) { ComboType = ComboType.OneCancelsTheOther };
+            var groupOrderManager = new GroupOrderManager(1, 2, 100) { ExecutionType = GroupExecutionType.OneCancelsTheOther };
             var expected = new StopMarketOrder(Symbols.SPY, 100, 210.10m, new DateTime(2015, 11, 23, 17, 15, 37), "oco")
             {
                 GroupOrderManager = groupOrderManager,
@@ -960,7 +960,7 @@ namespace QuantConnect.Tests.Common.Orders
 
         /// <summary>
         /// Serializes and deserializes the given order twice in a row and checks that the OCO GroupOrderManager
-        /// (ComboType, Count and OrderIds) survives both round trips. The second round trip specifically catches a
+        /// (GroupExecutionType, Count and OrderIds) survives both round trips. The second round trip specifically catches a
         /// bug where DeserializeGroupOrderManager drops a field that was never explicitly serialized because of
         /// DefaultValueHandling.Ignore.
         /// </summary>
@@ -971,7 +971,7 @@ namespace QuantConnect.Tests.Common.Orders
             var json = JsonConvert.SerializeObject(expected);
             var actual = DeserializeOrder<Order>(json);
 
-            Assert.AreEqual(ComboType.OneCancelsTheOther, actual.GroupOrderManager.ComboType);
+            Assert.AreEqual(GroupExecutionType.OneCancelsTheOther, actual.GroupOrderManager.ExecutionType);
             Assert.AreEqual(expectedGroupOrderManager.Count, actual.GroupOrderManager.Count);
             CollectionAssert.AreEqual(expectedGroupOrderManager.OrderIds, actual.GroupOrderManager.OrderIds);
 
@@ -979,7 +979,7 @@ namespace QuantConnect.Tests.Common.Orders
             var json2 = JsonConvert.SerializeObject(actual);
             var actual2 = DeserializeOrder<Order>(json2);
 
-            Assert.AreEqual(ComboType.OneCancelsTheOther, actual2.GroupOrderManager.ComboType);
+            Assert.AreEqual(GroupExecutionType.OneCancelsTheOther, actual2.GroupOrderManager.ExecutionType);
             Assert.AreEqual(expectedGroupOrderManager.Count, actual2.GroupOrderManager.Count);
             CollectionAssert.AreEqual(expectedGroupOrderManager.OrderIds, actual2.GroupOrderManager.OrderIds);
         }

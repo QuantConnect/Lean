@@ -294,7 +294,7 @@ namespace QuantConnect.Brokerages.Backtesting
                         continue;
                     }
 
-                    if (order.GroupOrderManager != null && order.GroupOrderManager.ComboType != ComboType.Combo)
+                    if (order.GroupOrderManager != null && order.GroupOrderManager.ExecutionType != GroupExecutionType.Combo)
                     {
                         // this group has already been fully evaluated earlier in this same Scan() pass
                         // (through one of its other legs); nothing more to do for it this round
@@ -304,17 +304,17 @@ namespace QuantConnect.Brokerages.Backtesting
                         }
 
                         var groupStillNeedsScan = false;
-                        switch (order.GroupOrderManager.ComboType)
+                        switch (order.GroupOrderManager.ExecutionType)
                         {
-                            case ComboType.OneCancelsTheOther:
+                            case GroupExecutionType.OneCancelsTheOther:
                                 ProcessOneCancelsTheOtherGroup(orders, securities, ref groupStillNeedsScan);
                                 break;
 
                             default:
                                 Log.Error($"BacktestingBrokerage.Scan(): unsupported order group execution type " +
-                                    $"{order.GroupOrderManager.ComboType} for group {order.GroupOrderManager.Id}");
+                                    $"{order.GroupOrderManager.ExecutionType} for group {order.GroupOrderManager.Id}");
                                 RemoveOrders(orders, OrderStatus.Invalid,
-                                    $"Order groups of type {order.GroupOrderManager.ComboType} are not supported.");
+                                    $"Order groups of type {order.GroupOrderManager.ExecutionType} are not supported.");
                                 break;
                         }
 
@@ -694,7 +694,7 @@ namespace QuantConnect.Brokerages.Backtesting
         private void ProcessOneCancelsTheOtherGroup(List<Order> orders, Dictionary<Order, Security> securities, ref bool stillNeedsScan)
         {
             // v1 only supports Limit/StopMarket legs. QCAlgorithm.OneCancelsTheOtherOrder already enforces this at
-            // submit time, but a group's ComboType/GroupOrderManager can also be restored generically from JSON
+            // submit time, but a group's GroupExecutionType/GroupOrderManager can also be restored generically from JSON
             // (state files, live results) without going through that validation, so this is checked again here:
             // TryFillLeg only knows how to evaluate a plain Limit/StopMarket fill (no OptionExercise/assignment
             // handling), so letting an unsupported leg type through would silently mishandle it instead of failing loudly

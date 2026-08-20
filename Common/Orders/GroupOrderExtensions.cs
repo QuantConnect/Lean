@@ -88,7 +88,7 @@ namespace QuantConnect.Orders
             foreach (var ticket in tickets)
             {
                 var groupOrderManager = ticket.SubmitRequest.GroupOrderManager;
-                if (groupOrderManager != null && groupOrderManager.ComboType == ComboType.OneCancelsTheOther)
+                if (groupOrderManager != null && groupOrderManager.ExecutionType == GroupExecutionType.OneCancelsTheOther)
                 {
                     // there is something to reduce, only now do the work
                     return ReduceOneCancelsTheOtherGroups(tickets);
@@ -110,7 +110,7 @@ namespace QuantConnect.Orders
             foreach (var ticket in tickets)
             {
                 var groupOrderManager = ticket.SubmitRequest.GroupOrderManager;
-                if (groupOrderManager == null || groupOrderManager.ComboType != ComboType.OneCancelsTheOther)
+                if (groupOrderManager == null || groupOrderManager.ExecutionType != GroupExecutionType.OneCancelsTheOther)
                 {
                     yield return ticket;
                     continue;

@@ -52,9 +52,9 @@ namespace QuantConnect.Orders
         /// How the orders in this group execute relative to each other
         /// </summary>
         /// <remarks><see cref="DefaultValueHandling.Ignore"/> keeps previously serialized groups unchanged:
-        /// they load as <see cref="Orders.ComboType.Combo"/></remarks>
-        [JsonProperty(PropertyName = "comboType", DefaultValueHandling = DefaultValueHandling.Ignore)]
-        public ComboType ComboType { get; set; }
+        /// they load as <see cref="Orders.GroupExecutionType.Combo"/></remarks>
+        [JsonProperty(PropertyName = "executionType", DefaultValueHandling = DefaultValueHandling.Ignore)]
+        public GroupExecutionType ExecutionType { get; set; }
 
         /// <summary>
         /// The order Ids in this group
@@ -121,21 +121,5 @@ namespace QuantConnect.Orders
             LimitPrice = limitPrice;
             OrderIds = new(capacity: legCount);
         }
-    }
-
-    /// <summary>
-    /// How the orders that share a <see cref="GroupOrderManager"/> execute relative to each other
-    /// </summary>
-    public enum ComboType
-    {
-        /// <summary>
-        /// All legs are placed and filled together as one unit (today's combo behavior) (0)
-        /// </summary>
-        Combo = 0,
-
-        /// <summary>
-        /// One leg fills and every other leg in the group is canceled (1)
-        /// </summary>
-        OneCancelsTheOther = 1
     }
 }
