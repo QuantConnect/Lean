@@ -356,7 +356,9 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     _algorithm.ObjectStore,
                     // we adjust time to the previous tradable date
                     time => Time.GetStartTimeForTradeBars(request.Security.Exchange.Hours, time, Time.OneDay, 1, false, config.DataTimeZone, _algorithm.Settings.DailyPreciseEndTime),
-                    TimeSpan.FromMinutes(10)
+                    TimeSpan.FromMinutes(10),
+                    // when the expected universe file is not available yet, fall back to the backup universe file as a last resort
+                    fallBackToBackupUniverseFiles: true
                 );
                 var enumeratorStack = factory.CreateEnumerator(request, _dataProvider);
 
