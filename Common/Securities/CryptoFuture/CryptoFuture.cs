@@ -60,7 +60,7 @@ namespace QuantConnect.Securities.CryptoFuture
                 cache,
                 new SecurityPortfolioModel(),
                 new ImmediateFillModel(),
-                IsCryptoCoinFuture(quoteCurrency.Symbol) ? new BinanceCoinFuturesFeeModel() : new BinanceFuturesFeeModel(),
+                IsCryptoCoinFuture(symbol.ID.Market, quoteCurrency.Symbol) ? new BinanceCoinFuturesFeeModel() : new BinanceFuturesFeeModel(),
                 NullSlippageModel.Instance,
                 new ImmediateSettlementModel(),
                 Securities.VolatilityModel.Null,
@@ -83,16 +83,26 @@ namespace QuantConnect.Securities.CryptoFuture
         /// <returns>True if the security is a crypto coin future</returns>
         public bool IsCryptoCoinFuture()
         {
-            return IsCryptoCoinFuture(QuoteCurrency.Symbol);
+            return IsCryptoCoinFuture(Symbol.ID.Market, QuoteCurrency.Symbol);
         }
 
         /// <summary>
         /// Checks whether the security is a crypto coin future
         /// </summary>
+        /// <param name="market">The security market</param>
         /// <param name="quoteCurrency">The security quote currency</param>
         /// <returns>True if the security is a crypto coin future</returns>
-        private static bool IsCryptoCoinFuture(string quoteCurrency)
+        private static bool IsCryptoCoinFuture(string market, string quoteCurrency)
         {
+            // Binance coin-margined futures are nominally quoted in USD (e.g. BTCUSD_PERP) but settle in the base
+            // currency, so on Binance any quote currency other than one of its known USD-pegged stablecoins implies
+            // a coin-margined contract. Other venues, notably EU MiCA-compliant exchanges, quote linear (USD-margined)
+            // futures directly in fiat USD, so outside of Binance the quote currency alone can't be used this way.
+            if (market != Market.Binance)
+            {
+                return false;
+            }
+
             return quoteCurrency != "USDT" && quoteCurrency != "BUSD" && quoteCurrency != "USDC";
         }
 
