@@ -19,6 +19,7 @@ using QuantConnect.Orders;
 using QuantConnect.Securities;
 using QuantConnect.Brokerages;
 using System.Collections.Generic;
+using QuantConnect.Securities.Equity;
 
 namespace QuantConnect.Tests.Brokerages
 {
@@ -38,10 +39,94 @@ namespace QuantConnect.Tests.Brokerages
             return TestableBrokerage.GetOrderPositionPublic(direction, holdingsQuantity);
         }
 
+        [TestCase("GOOGL")]
+        [TestCase("GOOG")]
+        [TestCase("SomeOtherTicker")]
+        public void UpdatesOutdatedHoldingsTicker(string ticker)
+        {
+            // GOOGL first ticker is 'GOOG', so it's security identifier holds the outdated ticker
+            var expectedSymbol = Symbol.Create("GOOGL", SecurityType.Equity, Market.USA);
+            var brokerageData = new Dictionary<string, string>
+            {
+                { "live-holdings", $@"[{{""symbol"":{{""id"":""{expectedSymbol.ID}"",""value"":""{ticker}""}},""a"":10,""q"":100}}]" }
+            };
+
+            var holdings = new TestableBrokerage("test").GetAccountHoldingsPublic(brokerageData, null);
+
+            Assert.AreEqual(1, holdings.Count);
+            Assert.AreEqual(expectedSymbol.ID, holdings[0].Symbol.ID);
+            Assert.AreEqual(expectedSymbol.Value, holdings[0].Symbol.Value);
+            Assert.AreEqual(100, holdings[0].Quantity);
+        }
+
+        [Test]
+        public void UpdatesOutdatedOptionHoldingsUnderlyingTicker()
+        {
+            var underlying = Symbol.Create("GOOGL", SecurityType.Equity, Market.USA);
+            var expectedSymbol = Symbol.CreateOption(underlying, Market.USA, OptionStyle.American, OptionRight.Call, 100, new DateTime(2050, 1, 21));
+            // no underlying provided, so it will be created from the security identifier which holds the outdated ticker
+            var brokerageData = new Dictionary<string, string>
+            {
+                { "live-holdings", $@"[{{""symbol"":{{""id"":""{expectedSymbol.ID}"",""value"":""{expectedSymbol.Value}""}},""q"":1}}]" }
+            };
+
+            var holdings = new TestableBrokerage("test").GetAccountHoldingsPublic(brokerageData, null);
+
+            Assert.AreEqual(1, holdings.Count);
+            Assert.AreEqual(expectedSymbol.ID, holdings[0].Symbol.ID);
+            Assert.AreEqual(expectedSymbol.Value, holdings[0].Symbol.Value);
+            Assert.AreEqual(underlying.Value, holdings[0].Symbol.Underlying.Value);
+        }
+
+        [Test]
+        public void DoesNotUpdateTickerForSecuritiesWhichDoNotRequireMapping()
+        {
+            var expectedSymbol = Symbol.Create("EURUSD", SecurityType.Forex, Market.Oanda);
+            var brokerageData = new Dictionary<string, string>
+            {
+                { "live-holdings", $@"[{{""symbol"":{{""id"":""{expectedSymbol.ID}"",""value"":""{expectedSymbol.Value}""}},""q"":1000}}]" }
+            };
+
+            var holdings = new TestableBrokerage("test").GetAccountHoldingsPublic(brokerageData, null);
+
+            Assert.AreEqual(1, holdings.Count);
+            Assert.AreEqual(expectedSymbol, holdings[0].Symbol);
+            Assert.AreEqual(expectedSymbol.Value, holdings[0].Symbol.Value);
+        }
+
+        [Test]
+        public void UpdatesOutdatedSecurityHoldingsTicker()
+        {
+            var expectedSymbol = Symbol.Create("GOOGL", SecurityType.Equity, Market.USA);
+            // the security was created before the rename, so it's ticker is outdated
+            var cashBook = new CashBook();
+            var security = new Equity(new Symbol(expectedSymbol.ID, "GOOG"),
+                SecurityExchangeHours.AlwaysOpen(TimeZones.NewYork),
+                cashBook.Add(Currencies.USD, 0, 1),
+                SymbolProperties.GetDefault(Currencies.USD),
+                cashBook,
+                RegisteredSecurityDataTypesProvider.Null,
+                new SecurityCache());
+            security.SetLocalTimeKeeper(new TimeKeeper(DateTime.UtcNow, TimeZones.NewYork).GetLocalTimeKeeper(TimeZones.NewYork));
+            security.Holdings.SetHoldings(10, 100);
+
+            var holdings = new TestableBrokerage("test").GetAccountHoldingsPublic(null, new[] { security });
+
+            Assert.AreEqual(1, holdings.Count);
+            Assert.AreEqual(expectedSymbol.ID, holdings[0].Symbol.ID);
+            Assert.AreEqual(expectedSymbol.Value, holdings[0].Symbol.Value);
+            Assert.AreEqual(100, holdings[0].Quantity);
+        }
+
         private class TestableBrokerage : Brokerage
         {
             public TestableBrokerage(string name) : base(name)
             {
+            }
+
+            public List<Holding> GetAccountHoldingsPublic(Dictionary<string, string> brokerageData, IEnumerable<Security> securities)
+            {
+                return GetAccountHoldings(brokerageData, securities);
             }
 
             public override bool IsConnected => throw new NotImplementedException();

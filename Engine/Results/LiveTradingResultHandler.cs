@@ -1317,18 +1317,39 @@ namespace QuantConnect.Lean.Engine.Results
         {
             var holdings = new Dictionary<string, Holding>();
 
-            foreach (var security in securities
+            foreach (var holding in securities
                 // If we are invested we send it always, if not, we send non internal, non canonical and tradable securities. When securities are removed they are marked as non tradable.
                 .Where(s => s.Invested || !onlyInvested && (!s.IsInternalFeed() && s.IsTradable && !s.Symbol.IsCanonical()
                     // Continuous futures are different because it's mapped securities are internal and the continuous contract is canonical and non tradable but we want to send them anyways
                     // but we don't want to sent non canonical, non tradable futures, these would be the future chain assets, or continuous mapped contracts that have been removed
                     || s.Symbol.SecurityType == QuantConnect.SecurityType.Future && (s.IsTradable || s.Symbol.IsCanonical() && subscriptionDataConfigService.GetSubscriptionDataConfigs(s.Symbol).Any())))
+                .Select(s => new Holding(s) { Symbol = GetCurrentSymbol(s, subscriptionDataConfigService) })
+                // we order by the ticker we will be sending, which might not be the securities
                 .OrderBy(x => x.Symbol.Value))
             {
-                DictionarySafeAdd(holdings, security.Symbol.ID.ToString(), new Holding(security), "holdings");
+                // the mapping does not change the security identifier
+                DictionarySafeAdd(holdings, holding.Symbol.ID.ToString(), holding, "holdings");
             }
 
             return holdings;
+        }
+
+        /// <summary>
+        /// Helper method to get the security symbol using the ticker it's currently mapped to
+        /// </summary>
+        /// <remarks>A securities symbol ticker is set when it's created and does not get updated if the security is renamed,
+        /// see <see cref="Symbol.Value"/>, but it's subscriptions are, so let's use them as the source of truth.
+        /// Continuous futures are skipped, their mapping is the contract they are currently mapped to, which depends on
+        /// each subscriptions <see cref="SubscriptionDataConfig.ContractDepthOffset"/></remarks>
+        private static Symbol GetCurrentSymbol(Security security, ISubscriptionDataConfigService subscriptionDataConfigService)
+        {
+            var symbol = security.Symbol;
+            if (symbol.SecurityType != QuantConnect.SecurityType.Equity && symbol.SecurityType != QuantConnect.SecurityType.Option)
+            {
+                return symbol;
+            }
+
+            return subscriptionDataConfigService.GetSubscriptionDataConfigs(symbol).FirstOrDefault()?.Symbol ?? symbol;
         }
 
         /// <summary>
