@@ -516,6 +516,60 @@ namespace QuantConnect.Tests.Engine.BrokerageTransactionHandlerTests
             Assert.IsEmpty(processedTicket);
         }
 
+        [Test]
+        public void GetProjectedHoldingsCountsOnlyTheMaxExposureLegOfAnOpenOneCancelsTheOtherGroup()
+        {
+            //Initializes the transaction handler
+            _transactionHandler = new TestBrokerageTransactionHandler();
+            using var brokerage = new BacktestingBrokerage(_algorithm);
+            _transactionHandler.Initialize(_algorithm, brokerage, new BacktestingResultHandler());
+
+            _algorithm.SetBrokerageModel(new DefaultBrokerageModel());
+            var security = _algorithm.AddEquity("SPY");
+            var price = 400m;
+            security.SetMarketPrice(new Tick(DateTime.Now, security.Symbol, price, price, price));
+            // an existing 100 share long position that the group order is meant to exit
+            security.Holdings.SetHoldings(price, 100);
+
+            var dateTime = DateTime.Now;
+            var groupOrderManager = new GroupOrderManager(1, 2, -100) { ExecutionType = GroupExecutionType.OneCancelsTheOther };
+
+            // take-profit leg: sell the full 100 share position
+            var takeProfitRequest = new SubmitOrderRequest(OrderType.Limit, security.Type, security.Symbol, -100, 0, 420m,
+                dateTime, "", groupOrderManager: groupOrderManager);
+            // stop-loss leg: sell the full 100 share position
+            var stopLossRequest = new SubmitOrderRequest(OrderType.StopMarket, security.Type, security.Symbol, -100, 380m, 0,
+                dateTime, "", groupOrderManager: groupOrderManager);
+
+            takeProfitRequest.SetOrderId(1);
+            stopLossRequest.SetOrderId(2);
+            groupOrderManager.OrderIds.Add(1);
+            groupOrderManager.OrderIds.Add(2);
+
+            // Mock the order processor
+            var orderProcessorMock = new Mock<IOrderProcessor>();
+            orderProcessorMock.Setup(m => m.GetOrderTicket(1)).Returns(new OrderTicket(_algorithm.Transactions, takeProfitRequest));
+            orderProcessorMock.Setup(m => m.GetOrderTicket(2)).Returns(new OrderTicket(_algorithm.Transactions, stopLossRequest));
+            _algorithm.Transactions.SetOrderProcessor(orderProcessorMock.Object);
+
+            // Act: both legs of the group are submitted and become open at the same time
+            var takeProfitTicket = _transactionHandler.Process(takeProfitRequest);
+            _transactionHandler.HandleOrderRequest(takeProfitRequest);
+
+            var stopLossTicket = _transactionHandler.Process(stopLossRequest);
+            _transactionHandler.HandleOrderRequest(stopLossRequest);
+
+            Assert.AreEqual(OrderStatus.Submitted, takeProfitTicket.Status);
+            Assert.AreEqual(OrderStatus.Submitted, stopLossTicket.Status);
+
+            var projectedHoldings = _transactionHandler.GetProjectedHoldings(security);
+
+            // both legs are still open, 100 shares each; only the max-exposure leg should count towards the
+            // open orders quantity, not the sum of both (exactly one leg of the group can ever execute)
+            Assert.AreEqual(100, projectedHoldings.HoldingsQuantity);
+            Assert.AreEqual(-100, projectedHoldings.OpenOrdersQuantity);
+        }
+
         [TestCase("NDX", "1.14", "1.15")]
         [TestCase("NDX", "1.16", "1.15")]
         [TestCase("NDX", "4.14", "4.10")]
@@ -1114,6 +1168,69 @@ namespace QuantConnect.Tests.Engine.BrokerageTransactionHandlerTests
             Assert.AreEqual(_algorithm.OrderEvents.Count, 2);
             Assert.IsTrue(_algorithm.OrderEvents[0].Status == OrderStatus.Submitted);
             Assert.IsTrue(_algorithm.OrderEvents[1].Status == OrderStatus.UpdateSubmitted);
+        }
+
+        // combo groups keep the pre-existing "manager means combo" skip: no buying power validation on update
+        [TestCase(GroupExecutionType.Combo, true)]
+        // OCO legs are validated like a regular order: an update the algorithm cannot afford is rejected
+        [TestCase(GroupExecutionType.OneCancelsTheOther, false)]
+        public void HandleUpdateOrderRequestValidatesBuyingPowerOnlyForNonComboGroups(GroupExecutionType groupExecutionType, bool expectUpdateSucceeds)
+        {
+            _algorithm.SetBrokerageModel(new DefaultBrokerageModel());
+
+            _transactionHandler = new TestBrokerageTransactionHandler();
+            using var brokerage = new BacktestingBrokerage(_algorithm);
+            _transactionHandler.Initialize(_algorithm, brokerage, new BacktestingResultHandler());
+
+            var security = _algorithm.Securities[_symbol];
+            var price = 1.12m;
+            security.SetMarketPrice(new Tick(DateTime.Now, security.Symbol, price, price, price));
+
+            var dateTime = DateTime.UtcNow;
+            var groupOrderManager = new GroupOrderManager(1, 2, 1000) { ExecutionType = groupExecutionType };
+
+            var orderRequest1 = new SubmitOrderRequest(OrderType.Limit, security.Type, security.Symbol, 1000, 0, 1.05m, dateTime, "",
+                groupOrderManager: groupOrderManager);
+            var orderRequest2 = new SubmitOrderRequest(OrderType.StopMarket, security.Type, security.Symbol, 1000, 1.20m, 0, dateTime, "",
+                groupOrderManager: groupOrderManager);
+
+            orderRequest1.SetOrderId(1);
+            orderRequest2.SetOrderId(2);
+            groupOrderManager.OrderIds.Add(1);
+            groupOrderManager.OrderIds.Add(2);
+
+            var orderProcessorMock = new Mock<IOrderProcessor>();
+            orderProcessorMock.Setup(m => m.GetOrderTicket(1)).Returns(new OrderTicket(_algorithm.Transactions, orderRequest1));
+            orderProcessorMock.Setup(m => m.GetOrderTicket(2)).Returns(new OrderTicket(_algorithm.Transactions, orderRequest2));
+            _algorithm.Transactions.SetOrderProcessor(orderProcessorMock.Object);
+
+            var orderTicket1 = _transactionHandler.Process(orderRequest1);
+            _transactionHandler.HandleOrderRequest(orderRequest1);
+            var orderTicket2 = _transactionHandler.Process(orderRequest2);
+            _transactionHandler.HandleOrderRequest(orderRequest2);
+
+            Assert.AreEqual(OrderStatus.Submitted, orderTicket1.Status);
+            Assert.AreEqual(OrderStatus.Submitted, orderTicket2.Status);
+
+            // a huge quantity increase on just one leg that the algorithm cannot possibly afford
+            var updateRequest = new UpdateOrderRequest(DateTime.Now, orderTicket1.OrderId, new UpdateOrderFields { Quantity = 1_000_000_000m });
+            _transactionHandler.Process(updateRequest);
+            _transactionHandler.HandleOrderRequest(updateRequest);
+
+            if (expectUpdateSucceeds)
+            {
+                Assert.IsTrue(updateRequest.Response.IsSuccess);
+                Assert.AreEqual(OrderStatus.UpdateSubmitted, orderTicket1.Status);
+            }
+            else
+            {
+                Assert.IsTrue(updateRequest.Response.IsError);
+                Assert.AreEqual(OrderResponseErrorCode.BrokerageFailedToUpdateOrder, updateRequest.Response.ErrorCode);
+                Assert.AreEqual(OrderStatus.Submitted, orderTicket1.Status);
+            }
+
+            // the sibling leg is untouched either way: updates apply per-leg
+            Assert.AreEqual(1000, orderTicket2.Quantity);
         }
 
         [Test]

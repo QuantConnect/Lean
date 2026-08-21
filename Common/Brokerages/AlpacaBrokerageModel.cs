@@ -115,7 +115,69 @@ namespace QuantConnect.Brokerages
                 return false;
             }
 
+            if (order.GroupOrderManager?.ExecutionType == GroupExecutionType.OneCancelsTheOther &&
+                !CanSubmitOneCancelsTheOtherLeg(security, order, out message))
+            {
+                return false;
+            }
+
             return base.CanSubmitOrder(security, order, out message);
+        }
+
+        /// <summary>
+        /// Alpaca's one-cancels-the-other order class is stricter than Lean's generic order group: exactly 2 legs,
+        /// US equities only, both legs on the same side, one limit take profit plus one stop market stop loss, and a
+        /// day or good til canceled time in force
+        /// </summary>
+        /// <param name="security">The security of the leg being checked</param>
+        /// <param name="order">The leg being checked</param>
+        /// <param name="message">The reason the leg cannot be submitted, when this returns false</param>
+        /// <returns>True when this leg is allowed in an Alpaca one-cancels-the-other group</returns>
+        /// <remarks>This runs once per leg, so it only covers the rules a single leg can answer. The two rules that
+        /// need both legs at once, that they share a symbol and that there is exactly one of each order type, stay in
+        /// the brokerage plugin, which sees the whole group after it is buffered</remarks>
+        private bool CanSubmitOneCancelsTheOtherLeg(Security security, Order order, out BrokerageMessageEvent message)
+        {
+            message = null;
+            var groupOrderManager = order.GroupOrderManager;
+
+            if (groupOrderManager.Count != 2)
+            {
+                message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
+                    Messages.AlpacaBrokerageModel.UnsupportedOneCancelsTheOtherLegCount(this, groupOrderManager.Count));
+                return false;
+            }
+
+            if (security.Type != SecurityType.Equity)
+            {
+                message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
+                    Messages.AlpacaBrokerageModel.UnsupportedOneCancelsTheOtherSecurityType(this, security.Type));
+                return false;
+            }
+
+            if (order.Type != OrderType.Limit && order.Type != OrderType.StopMarket)
+            {
+                message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
+                    Messages.AlpacaBrokerageModel.UnsupportedOneCancelsTheOtherOrderType(this, order.Type));
+                return false;
+            }
+
+            // the group takes its direction from the first leg, so a leg facing the other way is a mixed-side group
+            if (order.Direction != groupOrderManager.Direction)
+            {
+                message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
+                    Messages.AlpacaBrokerageModel.UnsupportedOneCancelsTheOtherDirection(this, order.Direction, groupOrderManager.Direction));
+                return false;
+            }
+
+            if (order.TimeInForce is not DayTimeInForce and not GoodTilCanceledTimeInForce)
+            {
+                message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
+                    Messages.AlpacaBrokerageModel.UnsupportedOneCancelsTheOtherTimeInForce(this, order.TimeInForce));
+                return false;
+            }
+
+            return true;
         }
 
         /// <summary>
@@ -132,6 +194,7 @@ namespace QuantConnect.Brokerages
             return true;
         }
 
+        /// <summary>
         /// <summary>
         /// Returns the allowed Market-on-Open submission window for Alpaca.
         /// </summary>

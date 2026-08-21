@@ -820,7 +820,7 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
 
             lock (_lockHandleOrderEvent)
             {
-                var openOrderQuantity = openOrderTickets.Aggregate(0m, (d, t) => d + t.QuantityRemaining);
+                var openOrderQuantity = openOrderTickets.GetEffectiveOpenQuantityTickets().Aggregate(0m, (d, t) => d + t.QuantityRemaining);
                 return new ProjectedHoldings(security.Holdings.Quantity, openOrderQuantity);
             }
         }
@@ -1011,8 +1011,8 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
                 return response;
             }
 
-            // If the order is not part of a ComboLegLimit update, validate sufficient buying power
-            if (order.GroupOrderManager == null)
+            // only a combo skips the buying power check. every other group can update one leg, so check it
+            if (order.GroupOrderManager == null || order.GroupOrderManager.ExecutionType != GroupExecutionType.Combo)
             {
                 var updatedOrder = order.Clone();
                 updatedOrder.ApplyUpdateOrderRequest(request);

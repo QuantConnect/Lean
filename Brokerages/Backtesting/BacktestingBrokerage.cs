@@ -204,6 +204,12 @@ namespace QuantConnect.Brokerages.Backtesting
             var result = true;
             foreach (var orderInGroup in orders)
             {
+                if (orderInGroup.Status.IsClosed())
+                {
+                    // already resolved (e.g. filled as the winner of a one-cancels-the-other group): leave it untouched
+                    continue;
+                }
+
                 lock (_needsScanLock)
                 {
                     if (!_pending.TryRemove(orderInGroup.Id, out var _))
@@ -243,6 +249,9 @@ namespace QuantConnect.Brokerages.Backtesting
                 }
 
                 var stillNeedsScan = false;
+                // _pending holds one entry per leg, so the same group shows up more than once in this pass. this set
+                // remembers the handled groups, so a partial fill is not counted twice. built only when a group appears
+                HashSet<int> processedGroupIds = null;
 
                 // process each pending order to produce fills/fire events
                 foreach (var kvp in _pending.OrderBySafe(x => x.Key))
@@ -281,6 +290,32 @@ namespace QuantConnect.Brokerages.Backtesting
                         Log.Error($"BacktestingBrokerage.Scan(): Unable to process orders: [{string.Join(",", orders.Select(o => o.Id))}] The security no longer exists. UtcTime: {Algorithm.UtcTime}");
                         // invalidate the order in the algorithm before removing
                         RemoveOrders(orders, OrderStatus.Invalid);
+                        continue;
+                    }
+
+                    if (order.GroupOrderManager != null && order.GroupOrderManager.ExecutionType != GroupExecutionType.Combo)
+                    {
+                        // this group has already been fully evaluated earlier in this same Scan() pass
+                        // (through one of its other legs); nothing more to do for it this round
+                        if (!(processedGroupIds ??= []).Add(order.GroupOrderManager.Id))
+                        {
+                            continue;
+                        }
+
+                        switch (order.GroupOrderManager.ExecutionType)
+                        {
+                            case GroupExecutionType.OneCancelsTheOther:
+                                stillNeedsScan |= ProcessOneCancelsTheOtherGroup(orders, securities);
+                                break;
+
+                            default:
+                                Log.Error($"BacktestingBrokerage.Scan(): unsupported order group execution type " +
+                                    $"{order.GroupOrderManager.ExecutionType} for group {order.GroupOrderManager.Id}");
+                                RemoveOrders(orders, OrderStatus.Invalid,
+                                    $"Order groups of type {order.GroupOrderManager.ExecutionType} are not supported.");
+                                break;
+                        }
+
                         continue;
                     }
 
@@ -587,6 +622,11 @@ namespace QuantConnect.Brokerages.Backtesting
             for (var i = 0; i < orders.Count; i++)
             {
                 var order = orders[i];
+                if (order.Status.IsClosed())
+                {
+                    // already resolved (e.g. filled as the winner of a one-cancels-the-other group): leave it untouched
+                    continue;
+                }
                 orderEvents.Add(new OrderEvent(order, Algorithm.UtcTime, OrderFee.Zero, message) { Status = orderStatus });
                 _pending.TryRemove(order.Id, out var _);
             }
@@ -640,6 +680,196 @@ namespace QuantConnect.Brokerages.Backtesting
             }
 
             return result;
+        }
+
+        /// <summary>
+        /// Processes a one-cancels-the-other group: evaluates the open legs in a fixed, deterministic order
+        /// (stop-type legs first, then limit legs, then by Id) and, as soon as one leg fully fills, cancels
+        /// every other leg in the same event batch. This is reused as-is by the future conditional (OTO) and
+        /// bracket order types for their own OCO-shaped exit pair
+        /// </summary>
+        /// <param name="orders">Every leg of the group</param>
+        /// <param name="securities">The security of each leg</param>
+        /// <returns>True when the group is still open and has to be evaluated again on a later scan</returns>
+        private bool ProcessOneCancelsTheOtherGroup(List<Order> orders, Dictionary<Order, Security> securities)
+        {
+            if (orders.Any(o => o.Type != OrderType.Limit && o.Type != OrderType.StopMarket))
+            {
+                Log.Error($"BacktestingBrokerage.ProcessOneCancelsTheOtherGroup(): unsupported order type(s) in group " +
+                    $"{orders[0].GroupOrderManager.Id}: [{string.Join(",", orders.Select(o => o.Type))}]");
+                RemoveOrders(orders, OrderStatus.Invalid, "One-cancels-the-other groups only support Limit and StopMarket orders.");
+                return false;
+            }
+
+            if (!TryOrderPreChecks(securities, out var groupNeedsScan))
+            {
+                return groupNeedsScan;
+            }
+
+            HasSufficientBuyingPowerForOrderResult hasSufficientBuyingPowerResult;
+            try
+            {
+                hasSufficientBuyingPowerResult = Algorithm.Portfolio.HasSufficientBuyingPowerForOrder(orders);
+            }
+            catch (Exception err)
+            {
+                RemoveOrders(orders, OrderStatus.Invalid, err.Message);
+
+                Log.Error(err);
+                Algorithm.Error($"Order Error: ids: [{string.Join(",", orders.Select(o => o.Id))}], Error executing margin models: {err.Message}");
+                return false;
+            }
+
+            if (!hasSufficientBuyingPowerResult.IsSufficient)
+            {
+                if (orders.Any(o => o.Status == OrderStatus.CancelPending))
+                {
+                    // the pending CancelOrderRequest will be handled during the next transaction handler run
+                    return true;
+                }
+
+                var message = securities.GetErrorMessage(hasSufficientBuyingPowerResult);
+                RemoveOrders(orders, OrderStatus.Invalid, message);
+                Algorithm.Error(message);
+                return false;
+            }
+
+            // a bar does not say which price came first, so when it covers both legs we take the stop: the worse
+            // outcome for the algorithm. Same Id order every run, so the same backtest gives the same answer
+            var openLegs = orders.Where(o => !o.Status.IsClosed())
+                .OrderBy(o => o.Type == OrderType.StopMarket ? 0 : 1)
+                .ThenBy(o => o.Id);
+
+            var legEvents = new List<OrderEvent>();
+            foreach (var leg in openLegs)
+            {
+                var fills = TryFillLeg(leg, securities[leg], securities);
+                if (fills.Count == 0)
+                {
+                    continue;
+                }
+
+                legEvents.AddRange(fills);
+
+                // the group has one quantity to trade. this leg used part of it, so take that part off the other
+                // legs and stop here: no second leg may fill in the same pass. events with no quantity change nothing
+                var executedQuantity = fills.Sum(fill => fill.FillQuantity);
+                if (executedQuantity != 0)
+                {
+                    ReduceOpenSiblings(orders, leg, executedQuantity, legEvents);
+                    break;
+                }
+            }
+
+            if (legEvents.Count == 0)
+            {
+                return true;
+            }
+
+            OnOrderEvents(legEvents);
+
+            if (!orders.All(o => o.Status.IsClosed()))
+            {
+                return true;
+            }
+
+            foreach (var o in orders)
+            {
+                _pending.TryRemove(o.Id, out _);
+            }
+
+            return false;
+        }
+
+        /// <summary>
+        /// Evaluates the fill for a single leg using its security's fill model, honoring its time in force and
+        /// computing its fee. Knows nothing about the group the leg might belong to, so it is reused unchanged
+        /// by every group processor
+        /// </summary>
+        private List<OrderEvent> TryFillLeg(Order order, Security security, Dictionary<Order, Security> securities)
+        {
+            var legEvents = new List<OrderEvent>();
+            try
+            {
+                var context = new FillModelParameters(
+                    security,
+                    order,
+                    Algorithm.SubscriptionManager.SubscriptionDataConfigService,
+                    Algorithm.Settings.StalePriceTimeSpan,
+                    securities,
+                    OnOrderUpdated);
+
+                var fill = security.FillModel.Fill(context);
+                if (!fill.All(x => order.TimeInForce.IsFillValid(security, order, x)))
+                {
+                    return legEvents;
+                }
+
+                foreach (var fillEvent in fill.Where(x => x.OrderId == order.Id))
+                {
+                    if (fillEvent.Status == OrderStatus.Filled && fillEvent.OrderFee.Value.Amount == 0m)
+                    {
+                        fillEvent.OrderFee = security.FeeModel.GetOrderFee(new OrderFeeParameters(security, order));
+                    }
+
+                    if (order.Status != fillEvent.Status || fillEvent.FillQuantity != 0)
+                    {
+                        order.Status = fillEvent.Status;
+                        legEvents.Add(fillEvent);
+                    }
+                }
+            }
+            catch (Exception err)
+            {
+                Log.Error(err);
+                Algorithm.Error($"Order Error: id: {order.Id}, Transaction model failed to fill for order type: {order.Type} with error: {err.Message}");
+            }
+
+            return legEvents;
+        }
+
+        /// <summary>
+        /// Makes the other legs smaller after one leg trades. Say the group is for 100 shares and one leg sells 30.
+        /// Every other leg drops from 100 to 70, so the group can never sell more than the 100 it was given, and the
+        /// 70 that are left keep both exits. A leg that drops to 0 is canceled, which is how a full fill on one leg
+        /// cancels the rest. The events go into the same batch as the fill. The bracket order type reuses this
+        /// </summary>
+        /// <param name="orders">Every leg of the group</param>
+        /// <param name="executingLeg">The leg that just executed</param>
+        /// <param name="executedQuantity">The signed quantity that leg just executed</param>
+        /// <param name="events">The event batch of this pass, appended to in place</param>
+        /// <remarks>The new size is written straight onto the order: the brokerage and the transaction handler share
+        /// the same <see cref="Order"/> instance, so <see cref="OrderTicket.Quantity"/> shows it right away.
+        /// <see cref="GroupOrderManager.Quantity"/> keeps the size the group was submitted with, which is what it
+        /// means and nothing on this path reads it</remarks>
+        private void ReduceOpenSiblings(List<Order> orders, Order executingLeg, decimal executedQuantity, List<OrderEvent> events)
+        {
+            // this leg is Filled, so it used the whole group quantity. the other legs are left with nothing to trade
+            var groupIsComplete = executingLeg.Status == OrderStatus.Filled;
+            var absoluteExecutedQuantity = Math.Abs(executedQuantity);
+
+            foreach (var sibling in orders)
+            {
+                if (sibling.Id == executingLeg.Id || sibling.Status.IsClosed())
+                {
+                    continue;
+                }
+
+                var absoluteQuantity = sibling.AbsoluteQuantity - absoluteExecutedQuantity;
+                if (groupIsComplete || absoluteQuantity <= 0)
+                {
+                    // cancel it instead of setting its quantity to 0: an order of zero has no side and never fills
+                    sibling.Status = OrderStatus.Canceled;
+                    events.Add(new OrderEvent(sibling, Algorithm.UtcTime, OrderFee.Zero, "OCO") { Status = OrderStatus.Canceled });
+                    continue;
+                }
+
+                // set the quantity before building the event so it carries the new size
+                sibling.Quantity = Math.Sign(sibling.Quantity) * absoluteQuantity;
+                events.Add(new OrderEvent(sibling, Algorithm.UtcTime, OrderFee.Zero,
+                    $"OCO: reduced by {absoluteExecutedQuantity} executed by leg {executingLeg.Id}")
+                { Status = OrderStatus.UpdateSubmitted });
+            }
         }
 
         private Order TryGetOrder(int orderId)

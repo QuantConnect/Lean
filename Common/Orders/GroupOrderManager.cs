@@ -49,6 +49,14 @@ namespace QuantConnect.Orders
         public decimal LimitPrice { get; set; }
 
         /// <summary>
+        /// How the orders in this group execute relative to each other
+        /// </summary>
+        /// <remarks><see cref="DefaultValueHandling.Ignore"/> keeps previously serialized groups unchanged:
+        /// they load as <see cref="Orders.GroupExecutionType.Combo"/></remarks>
+        [JsonProperty(PropertyName = "executionType", DefaultValueHandling = DefaultValueHandling.Ignore)]
+        public GroupExecutionType ExecutionType { get; set; }
+
+        /// <summary>
         /// The order Ids in this group
         /// </summary>
         /// <remarks>In live trading we process orders in a dedicated thread so we need to be thread safe</remarks>

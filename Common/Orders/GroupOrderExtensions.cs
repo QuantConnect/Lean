@@ -73,6 +73,79 @@ namespace QuantConnect.Orders
         }
 
         /// <summary>
+        /// Reduces a sequence of open order tickets down to the ones whose remaining quantity should count
+        /// towards a per-symbol open-order quantity aggregation (for example projected holdings or a shortable
+        /// check). Tickets that are not part of a group count individually; for a one-cancels-the-other group,
+        /// only the leg with the largest absolute remaining quantity counts, since exactly one leg of the
+        /// group can ever execute
+        /// </summary>
+        /// <param name="tickets">The open order tickets to reduce. It is enumerated twice when a group is
+        /// present, so it must be a re-enumerable sequence</param>
+        /// <returns>The tickets whose remaining quantity should count towards the aggregation. When no
+        /// one-cancels-the-other group is present this is <paramref name="tickets"/> itself</returns>
+        public static IEnumerable<OrderTicket> GetEffectiveOpenQuantityTickets(this IEnumerable<OrderTicket> tickets)
+        {
+            foreach (var ticket in tickets)
+            {
+                var groupOrderManager = ticket.SubmitRequest.GroupOrderManager;
+                if (groupOrderManager != null && groupOrderManager.ExecutionType == GroupExecutionType.OneCancelsTheOther)
+                {
+                    // there is something to reduce, only now do the work
+                    return ReduceOneCancelsTheOtherGroups(tickets);
+                }
+            }
+
+            // nothing to reduce: hand back the very same sequence, so callers that have no group order
+            // allocate nothing and aggregate exactly what they would have aggregated without this call
+            return tickets;
+        }
+
+        /// <summary>
+        /// Keeps, for every one-cancels-the-other group, only the leg with the largest absolute remaining
+        /// quantity, since exactly one leg of the group can ever execute. Every other ticket is kept as is
+        /// </summary>
+        private static IEnumerable<OrderTicket> ReduceOneCancelsTheOtherGroups(IEnumerable<OrderTicket> tickets)
+        {
+            Dictionary<int, OrderTicket> largestLegPerGroup = null;
+            foreach (var ticket in tickets)
+            {
+                var groupOrderManager = ticket.SubmitRequest.GroupOrderManager;
+                if (groupOrderManager == null || groupOrderManager.ExecutionType != GroupExecutionType.OneCancelsTheOther)
+                {
+                    yield return ticket;
+                    continue;
+                }
+
+                largestLegPerGroup ??= new Dictionary<int, OrderTicket>();
+                if (!largestLegPerGroup.TryGetValue(groupOrderManager.Id, out var largestLeg) ||
+                    IsLargerExposure(ticket, largestLeg))
+                {
+                    largestLegPerGroup[groupOrderManager.Id] = ticket;
+                }
+            }
+
+            if (largestLegPerGroup != null)
+            {
+                foreach (var largestLeg in largestLegPerGroup.Values)
+                {
+                    yield return largestLeg;
+                }
+            }
+        }
+
+        /// <summary>
+        /// True when the candidate leg has more open exposure than the current one. Ties break on the lower
+        /// order id, so the result does not depend on the order the tickets happen to be enumerated in
+        /// </summary>
+        private static bool IsLargerExposure(OrderTicket candidate, OrderTicket current)
+        {
+            var candidateQuantity = Math.Abs(candidate.QuantityRemaining);
+            var currentQuantity = Math.Abs(current.QuantityRemaining);
+            return candidateQuantity > currentQuantity ||
+                (candidateQuantity == currentQuantity && candidate.OrderId < current.OrderId);
+        }
+
+        /// <summary>
         /// Gets the securities corresponding to each order in the group
         /// </summary>
         /// <param name="orders">List of orders to map</param>

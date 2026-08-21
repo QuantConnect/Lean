@@ -476,6 +476,10 @@ namespace QuantConnect.Orders
                     throw new ArgumentOutOfRangeException();
             }
             order.Status = OrderStatus.New;
+            if (order.GroupOrderManager == null && groupOrderManager != null)
+            {
+                order.GroupOrderManager = groupOrderManager;
+            }
             order.Id = orderId;
             return order;
         }

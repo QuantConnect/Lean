@@ -86,6 +86,12 @@ namespace QuantConnect.Orders
             var orderType = (OrderType)(jObject["Type"]?.Value<int>() ?? jObject["type"].Value<int>());
             var order = CreateOrder(orderType, jObject);
 
+            var groupOrderManagerToken = jObject["GroupOrderManager"] ?? jObject["groupOrderManager"];
+            if (order.GroupOrderManager == null && groupOrderManagerToken != null && groupOrderManagerToken.Type != JTokenType.Null)
+            {
+                order.GroupOrderManager = DeserializeGroupOrderManager(jObject);
+            }
+
             // populate common order properties
             order.Id = jObject["Id"]?.Value<int>() ?? jObject["id"].Value<int>();
 
@@ -375,6 +381,12 @@ namespace QuantConnect.Orders
                 SafeDecimalValue(groupOrderManagerJObject["Quantity"] ?? groupOrderManagerJObject["quantity"]),
                 SafeDecimalValue(groupOrderManagerJObject["LimitPrice"] ?? groupOrderManagerJObject["limitPrice"])
             );
+
+            var groupExecutionType = groupOrderManagerJObject["ExecutionType"] ?? groupOrderManagerJObject["executionType"];
+            if (groupExecutionType != null && groupExecutionType.Type != JTokenType.Null)
+            {
+                result.ExecutionType = (GroupExecutionType)groupExecutionType.Value<int>();
+            }
 
             foreach (var orderId in (groupOrderManagerJObject["OrderIds"]?.Values<int>() ?? groupOrderManagerJObject["orderIds"].Values<int>()))
             {

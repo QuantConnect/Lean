@@ -941,11 +941,51 @@ namespace QuantConnect.Securities
         /// <returns>True if the algorithm has enough buying power available</returns>
         public HasSufficientBuyingPowerForOrderResult HasSufficientBuyingPowerForOrder(List<Order> orders)
         {
+            if (orders.Count > 1 && orders[0].GroupOrderManager is { ExecutionType: not GroupExecutionType.Combo } groupOrderManager)
+            {
+                switch (groupOrderManager.ExecutionType)
+                {
+                    case GroupExecutionType.OneCancelsTheOther:
+                        return HasSufficientBuyingPowerForOneCancelsTheOtherGroup(orders);
+
+                    default:
+                        throw new NotSupportedException(
+                            $"SecurityPortfolioManager.HasSufficientBuyingPowerForOrder(): unsupported order group execution type: {groupOrderManager.ExecutionType}");
+                }
+            }
+
             if (Positions.TryCreatePositionGroup(orders, out var group))
             {
                 return group.BuyingPowerModel.HasSufficientBuyingPowerForOrder(new HasSufficientPositionGroupBuyingPowerForOrderParameters(this, group, orders));
             }
 
+            return HasSufficientBuyingPowerForEachOrder(orders);
+        }
+
+        /// <summary>
+        /// Checks the buying power of a one-cancels-the-other group. Exactly one leg of the group can ever
+        /// execute, so only that one leg has to be affordable. This runs before the position group path on
+        /// purpose: two option legs on different contracts could otherwise form a valid strategy there and get
+        /// margined as if both execute, which is wrong for a one-winner group
+        /// </summary>
+        private HasSufficientBuyingPowerForOrderResult HasSufficientBuyingPowerForOneCancelsTheOtherGroup(List<Order> orders)
+        {
+            if (orders.All(order => order.Symbol == orders[0].Symbol))
+            {
+                var mostExpensiveLeg = orders.OrderByDescending(order => Math.Abs(order.GetValue(Securities[order.Symbol]))).First();
+                var mostExpensiveLegSecurity = Securities[mostExpensiveLeg.Symbol];
+                return mostExpensiveLegSecurity.BuyingPowerModel.HasSufficientBuyingPowerForOrder(this, mostExpensiveLegSecurity, mostExpensiveLeg);
+            }
+
+            // legs on different symbols have no shared price to compare, so ask every leg to pass on its own
+            return HasSufficientBuyingPowerForEachOrder(orders);
+        }
+
+        /// <summary>
+        /// Checks that every one of the given orders individually has sufficient buying power
+        /// </summary>
+        private HasSufficientBuyingPowerForOrderResult HasSufficientBuyingPowerForEachOrder(List<Order> orders)
+        {
             for (var i = 0; i < orders.Count; i++)
             {
                 var order = orders[i];
