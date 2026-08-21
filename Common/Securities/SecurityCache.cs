@@ -333,7 +333,7 @@ namespace QuantConnect.Securities
         /// <param name="data">The data point being stored</param>
         protected void UpdateOpenInterest(BaseData data)
         {
-            if (data is BaseChainUniverseData chainUniverseData && chainUniverseData.EndTime >= _lastOpenInterestUpdate)
+            if (data is BaseChainUniverseData chainUniverseData && chainUniverseData.EndTime > _lastOpenInterestUpdate)
             {
                 OpenInterest = (long)chainUniverseData.OpenInterest;
                 _lastOpenInterestUpdate = chainUniverseData.EndTime;

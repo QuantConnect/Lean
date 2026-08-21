@@ -472,6 +472,22 @@ namespace QuantConnect.Tests.Common.Securities
         }
 
         [TestCaseSource(nameof(ChainUniverseOpenInterestCacheTypes))]
+        public void StoreData_ChainUniverseData_DoesNotOverrideOpenInterestTickWithSameEndTime(Type cacheType)
+        {
+            var cache = (SecurityCache)Activator.CreateInstance(cacheType);
+            var universeData = CreateChainUniverseData(cache, new DateTime(2016, 02, 18), 1234);
+
+            // Daily open interest data is stamped at midnight, matching the end time of the previous date's chain universe data
+            var openInterestTick = new OpenInterest(universeData.EndTime, universeData.Symbol, 5000);
+            cache.AddData(openInterestTick);
+            Assert.AreEqual(5000, cache.OpenInterest);
+
+            cache.StoreData(new[] { universeData }, universeData.GetType());
+
+            Assert.AreEqual(5000, cache.OpenInterest);
+        }
+
+        [TestCaseSource(nameof(ChainUniverseOpenInterestCacheTypes))]
         public void StoreData_ChainUniverseData_OverridesOlderOpenInterestTick(Type cacheType)
         {
             var cache = (SecurityCache)Activator.CreateInstance(cacheType);
