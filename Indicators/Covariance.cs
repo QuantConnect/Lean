@@ -52,7 +52,7 @@ namespace QuantConnect.Indicators
             : base(name, targetSymbol, referenceSymbol, 2)
         {
             // Assert the period is greater than two, otherwise the covariance can not be computed
-            if (period < 2)
+            if (period < 3)
             {
                 throw new ArgumentException($"Period parameter for Covariance indicator must be greater than 2 but was {period}.");
             }
