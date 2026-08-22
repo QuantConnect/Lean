@@ -278,11 +278,13 @@ class BadCustomIndicator(PythonIndicator):
         }
 
         //Test 1: Using a C# Consolidator; Should convert consolidator into IDataConsolidator and fail because of the InputType
-        [TestCase("consolidator", false, "Type mismatch found between consolidator and symbol. Symbol: SPY does not support input type: QuoteBar. Supported types: TradeBar.")]
+        [TestCase("consolidator", false, "Type mismatch found between consolidator and symbol. Symbol: SPY does not support input type: QuoteBar. Supported types: TradeBar. " +
+            "Alternatively, consider using QCAlgorithm.Consolidate() ('self.consolidate()' in Python), which selects the correct consolidator type automatically.")]
         //Test 2: Using a Python Consolidator; Should wrap consolidator and fail because of the InputType
-        [TestCase("CustomConsolidator", true, "Type mismatch found between consolidator and symbol. Symbol: SPY does not support input type: QuoteBar. Supported types: TradeBar.")]
-        //Test 3: Using an invalid consolidator; Should try to convert into C#, Python Consolidator and timedelta and fail as the type is invalid
-        [TestCase("InvalidConsolidator", true, "Invalid third argument, should be either a valid consolidator or timedelta object. The following exception was thrown: ")]
+        [TestCase("CustomConsolidator", true, "Type mismatch found between consolidator and symbol. Symbol: SPY does not support input type: QuoteBar. Supported types: TradeBar. " +
+            "Alternatively, consider using QCAlgorithm.Consolidate() ('self.consolidate()' in Python), which selects the correct consolidator type automatically.")]
+        //Test 3: Using an invalid consolidator; Should try to convert into C#, Python Consolidator, timedelta and calendar and fail as the type is invalid
+        [TestCase("InvalidConsolidator", true, "Invalid third argument, should be either a valid consolidator, timedelta or calendar (e.g. Calendar.WEEKLY) object. The following exception was thrown: ")]
         public void AllPythonRegisterIndicatorBadCases(string consolidatorName, bool needsInvoke, string expectedMessage)
         {
             //This test covers all three bad cases of registering a indicator through Python

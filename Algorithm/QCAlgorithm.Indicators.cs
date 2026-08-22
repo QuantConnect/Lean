@@ -3160,6 +3160,14 @@ namespace QuantConnect.Algorithm
         /// <returns>The SubscriptionDataConfig for the specified symbol</returns>
         private SubscriptionDataConfig GetSubscription(Symbol symbol, TickType? tickType = null)
         {
+            if (symbol == null)
+            {
+                // fail with a clear message instead of a null reference below, commonly a Future.Mapped
+                // or similar property that is still null when the consolidator/indicator is registered
+                throw new ArgumentNullException(nameof(symbol), "Cannot resolve a subscription because the given symbol is null. " +
+                    "If the symbol comes from a property like Future.Mapped, note it can be null until the security receives data.");
+            }
+
             if (!TryGetSubscription(symbol, tickType, out var subscription))
             {
                 // The symbol was not manually subscribed to. Mirror the behavior of order submission
@@ -3229,6 +3237,21 @@ namespace QuantConnect.Algorithm
         public void RegisterIndicator(Symbol symbol, IndicatorBase<IndicatorDataPoint> indicator, TimeSpan? resolution = null, Func<IBaseData, decimal> selector = null)
         {
             RegisterIndicator(symbol, indicator, ResolveConsolidator(symbol, resolution), selector ?? (x => x.Value));
+        }
+
+        /// <summary>
+        /// Creates and registers a new consolidator to receive automatic updates on the given calendar as well as configures
+        /// the indicator to receive updates from the consolidator.
+        /// </summary>
+        /// <param name="symbol">The symbol to register against</param>
+        /// <param name="indicator">The indicator to receive data from the consolidator</param>
+        /// <param name="calendar">The consolidation calendar, for example <see cref="Calendar.Weekly"/></param>
+        /// <param name="selector">Selects a value from the BaseData to send into the indicator, if null defaults to the Value property of BaseData (x => x.Value)</param>
+        [DocumentationAttribute(ConsolidatingData)]
+        [DocumentationAttribute(Indicators)]
+        public void RegisterIndicator(Symbol symbol, IndicatorBase<IndicatorDataPoint> indicator, Func<DateTime, CalendarInfo> calendar, Func<IBaseData, decimal> selector = null)
+        {
+            RegisterIndicator(symbol, indicator, ResolveConsolidator(symbol, calendar), selector ?? (x => x.Value));
         }
 
         /// <summary>
@@ -3304,6 +3327,22 @@ namespace QuantConnect.Algorithm
         }
 
         /// <summary>
+        /// Creates and registers a new consolidator to receive automatic updates on the given calendar as well as configures
+        /// the indicator to receive updates from the consolidator.
+        /// </summary>
+        /// <param name="symbol">The symbol to register against</param>
+        /// <param name="indicator">The indicator to receive data from the consolidator</param>
+        /// <param name="calendar">The consolidation calendar, for example <see cref="Calendar.Weekly"/></param>
+        /// <param name="selector">Selects a value from the BaseData send into the indicator, if null defaults to a cast (x => (T)x)</param>
+        [DocumentationAttribute(ConsolidatingData)]
+        [DocumentationAttribute(Indicators)]
+        public void RegisterIndicator<T>(Symbol symbol, IndicatorBase<T> indicator, Func<DateTime, CalendarInfo> calendar, Func<IBaseData, T> selector = null)
+            where T : IBaseData
+        {
+            RegisterIndicator(symbol, indicator, ResolveConsolidator(symbol, calendar, typeof(T)), selector);
+        }
+
+        /// <summary>
         /// Registers the consolidator to receive automatic updates as well as configures the indicator to receive updates
         /// from the consolidator.
         /// </summary>
@@ -3330,6 +3369,12 @@ namespace QuantConnect.Algorithm
                     // if no selector was provided and the indicator input is of 'IndicatorDataPoint', common case, a selector with a direct cast will fail
                     // so we use a smarter selector as in other API methods
                     selectorToUse = consolidated => (T)(object)new IndicatorDataPoint(consolidated.Symbol, consolidated.EndTime, consolidated.Value);
+                }
+                else if (type == typeof(TradeBar) && consolidator.OutputType == typeof(QuoteBar) && selector == null)
+                {
+                    // trade bar indicator registered against a quote-only feed (forex, cfd): collapse each quote bar
+                    // into a mid-point trade bar with zero volume instead of failing
+                    selectorToUse = consolidated => (T)(object)((QuoteBar)consolidated).Collapse();
                 }
                 else
                 {
@@ -3692,6 +3737,21 @@ namespace QuantConnect.Algorithm
         {
             var tickType = dataType != null ? LeanData.GetCommonTickTypeForCommonDataTypes(dataType, symbol.SecurityType) : (TickType?)null;
             return CreateConsolidator(symbol, null, tickType, timeSpan, null, null);
+        }
+
+        /// <summary>
+        /// Gets the default consolidator for the specified symbol and consolidation calendar
+        /// </summary>
+        /// <param name="symbol">The symbol whose data is to be consolidated</param>
+        /// <param name="calendar">The consolidation calendar, for example <see cref="Calendar.Weekly"/></param>
+        /// <param name="dataType">The data type for this consolidator, if null, uses TradeBar over QuoteBar if present</param>
+        /// <returns>The new default consolidator</returns>
+        [DocumentationAttribute(ConsolidatingData)]
+        [DocumentationAttribute(Indicators)]
+        public IDataConsolidator ResolveConsolidator(Symbol symbol, Func<DateTime, CalendarInfo> calendar, Type dataType = null)
+        {
+            var tickType = dataType != null ? LeanData.GetCommonTickTypeForCommonDataTypes(dataType, symbol.SecurityType) : (TickType?)null;
+            return CreateConsolidator(symbol, calendar, tickType, null, null, null);
         }
 
         /// <summary>
