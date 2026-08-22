@@ -672,6 +672,51 @@ namespace QuantConnect.Tests.Common.Scheduling
         }
 
         [Test]
+        public void AtSpecificTimeWithStringTimeZone()
+        {
+            var rules = GetTimeRules(TimeZones.Utc);
+            var date = new DateTime(2021, 1, 4);
+            // London is on GMT (UTC+0) in January
+            var expected = new DateTime(2021, 1, 4, 8, 30, 0);
+
+            Assert.AreEqual(expected, rules.At(8, 30, "Europe/London").CreateUtcEventTimes(new[] { date }).Single());
+            Assert.AreEqual(expected.AddSeconds(15), rules.At(8, 30, 15, "Europe/London").CreateUtcEventTimes(new[] { date }).Single());
+            Assert.AreEqual(expected, rules.At(new TimeSpan(8, 30, 0), "Europe/London").CreateUtcEventTimes(new[] { date }).Single());
+
+            // matches the DateTimeZone overload
+            Assert.AreEqual(rules.At(8, 30, TimeZones.London).CreateUtcEventTimes(new[] { date }).Single(),
+                rules.At(8, 30, "Europe/London").CreateUtcEventTimes(new[] { date }).Single());
+        }
+
+        [Test]
+        public void AtWithInvalidStringTimeZoneThrows()
+        {
+            var rules = GetTimeRules(TimeZones.Utc);
+            var exception = Assert.Throws<ArgumentException>(() => rules.At(8, 30, "Europe/NotATimeZone"));
+            Assert.That(exception.Message, Does.Contain("Europe/NotATimeZone"));
+        }
+
+        [Test]
+        public void TimeRulePropertiesAreCallableTolerantInPython()
+        {
+            var rules = GetTimeRules(TimeZones.Utc);
+            using (Py.GIL())
+            {
+                using var module = PyModule.FromString("testModule", @"
+def call_rule(rule):
+    return rule()
+");
+                dynamic callRule = module.GetAttr("call_rule");
+                foreach (var rule in new[] { rules.Now, rules.Midnight, rules.Noon })
+                {
+                    // calling the rule as if it were a method returns the rule itself
+                    var result = (callRule(rule) as PyObject).GetAndDispose<ITimeRule>();
+                    Assert.AreEqual(rule.Name, result.Name);
+                }
+            }
+        }
+
+        [Test]
         public void SetFuncTimeRuleInPythonWorksAsExpected()
         {
             using (Py.GIL())

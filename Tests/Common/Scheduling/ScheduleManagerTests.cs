@@ -18,6 +18,7 @@ using System;
 using System.Collections.Generic;
 using System.Threading;
 using NUnit.Framework;
+using Python.Runtime;
 using QuantConnect.Algorithm;
 using QuantConnect.Lean.Engine;
 using QuantConnect.Lean.Engine.DataFeeds;
@@ -62,6 +63,101 @@ namespace QuantConnect.Tests.Common.Scheduling
             handler.Exit();
             Assert.AreEqual(timeSteps, count1);
             Assert.AreEqual(timeSteps, count2);
+        }
+
+        [Test]
+        public void OnWithoutTimeRuleDefaultsToMidnight()
+        {
+            var algorithm = new QCAlgorithm();
+
+            var handler = new BacktestingRealTimeHandler();
+            var timeLimitManager = new AlgorithmTimeLimitManager(TokenBucket.Null, TimeSpan.MaxValue);
+            handler.Setup(algorithm, new AlgorithmNodePacket(PacketType.BacktestNode), null, null, timeLimitManager);
+
+            algorithm.Schedule.SetEventSchedule(handler);
+
+            var time = new DateTime(2018, 1, 1);
+            algorithm.SetDateTime(time);
+
+            var eventTimes = new List<DateTime>();
+            var scheduledEvent = algorithm.Schedule.On(algorithm.Schedule.DateRules.EveryDay(), (name, triggerTime) =>
+            {
+                eventTimes.Add(triggerTime);
+            });
+
+            Assert.AreEqual("EveryDay: Midnight", scheduledEvent.Name);
+
+            for (var i = 0; i < 48; i++)
+            {
+                handler.SetTime(time);
+                time = time.AddHours(1);
+            }
+
+            handler.Exit();
+
+            // the default algorithm time zone is New York, so midnight local is 5am UTC
+            CollectionAssert.AreEqual(new[]
+            {
+                new DateTime(2018, 1, 1, 5, 0, 0),
+                new DateTime(2018, 1, 2, 5, 0, 0)
+            }, eventTimes);
+        }
+
+        [Test]
+        public void OnWithoutTimeRuleWithPythonCallbackDefaultsToMidnight()
+        {
+            var algorithm = new QCAlgorithm();
+
+            var handler = new BacktestingRealTimeHandler();
+            var timeLimitManager = new AlgorithmTimeLimitManager(TokenBucket.Null, TimeSpan.MaxValue);
+            handler.Setup(algorithm, new AlgorithmNodePacket(PacketType.BacktestNode), null, null, timeLimitManager);
+
+            algorithm.Schedule.SetEventSchedule(handler);
+
+            var time = new DateTime(2018, 1, 1);
+            algorithm.SetDateTime(time);
+
+            using (Py.GIL())
+            {
+                using var module = PyModule.FromString("testModule", @"
+count = 0
+def callback():
+    global count
+    count += 1
+");
+                using var callback = module.GetAttr("callback");
+                var scheduledEvent = algorithm.Schedule.On(algorithm.Schedule.DateRules.EveryDay(), callback);
+                Assert.AreEqual("EveryDay: Midnight", scheduledEvent.Name);
+
+                for (var i = 0; i < 48; i++)
+                {
+                    handler.SetTime(time);
+                    time = time.AddHours(1);
+                }
+
+                handler.Exit();
+
+                Assert.AreEqual(2, module.GetAttr("count").GetAndDispose<int>());
+            }
+        }
+
+        [Test]
+        public void OnWithTimeRuleButMissingCallbackThrows()
+        {
+            var algorithm = new QCAlgorithm();
+
+            using (Py.GIL())
+            {
+                // a time rule passed where the callback belongs must not be silently scheduled as the callback
+                using var timeRule = algorithm.Schedule.TimeRules.Midnight.ToPython();
+                var exception = Assert.Throws<ArgumentException>(
+                    () => algorithm.Schedule.On(algorithm.Schedule.DateRules.EveryDay(), timeRule));
+                Assert.That(exception.Message, Does.Contain("missing callback"));
+
+                using var notCallable = "hello".ToPython();
+                Assert.Throws<ArgumentException>(
+                    () => algorithm.Schedule.On(algorithm.Schedule.DateRules.EveryDay(), notCallable));
+            }
         }
 
         [Test]

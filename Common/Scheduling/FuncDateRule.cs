@@ -70,5 +70,18 @@ namespace QuantConnect.Scheduling
         {
             return _getDatesFunction(start, end);
         }
+
+        /// <summary>
+        /// Returns this same rule instance. Makes rule instances tolerant to being called in Python:
+        /// convenience properties like <see cref="DateRules.Today"/> are indistinguishable from sibling
+        /// methods like <see cref="DateRules.EveryDay()"/> there, so algorithms frequently write
+        /// 'self.date_rules.today()', which used to fail with "'FuncDateRule' object is not callable"
+        /// </summary>
+        /// <remarks>Python.NET wires any public '__call__' method to the Python call operator</remarks>
+        /// <returns>This same date rule instance</returns>
+        public IDateRule __call__()
+        {
+            return this;
+        }
     }
 }

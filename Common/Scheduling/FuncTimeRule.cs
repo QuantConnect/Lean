@@ -70,5 +70,18 @@ namespace QuantConnect.Scheduling
         {
             return _createUtcEventTimesFunction(dates);
         }
+
+        /// <summary>
+        /// Returns this same rule instance. Makes rule instances tolerant to being called in Python:
+        /// convenience properties like <see cref="TimeRules.Midnight"/> are indistinguishable from sibling
+        /// methods like <see cref="TimeRules.At(int, int, int)"/> there, so algorithms frequently write
+        /// 'self.time_rules.midnight()', which used to fail with "'FuncTimeRule' object is not callable"
+        /// </summary>
+        /// <remarks>Python.NET wires any public '__call__' method to the Python call operator</remarks>
+        /// <returns>This same time rule instance</returns>
+        public ITimeRule __call__()
+        {
+            return this;
+        }
     }
 }

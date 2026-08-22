@@ -112,6 +112,24 @@ namespace QuantConnect.Scheduling
         }
 
         /// <summary>
+        /// Specifies an event should fire every <paramref name="interval"/> days, anchored at the start of the schedule.
+        /// In Python, accepts a timedelta, e.g. 'self.date_rules.every(timedelta(days=5))'
+        /// </summary>
+        /// <param name="interval">The interval between event dates; must be a whole number of days of at least 1</param>
+        /// <returns>A date rule that fires every N days</returns>
+        public IDateRule Every(TimeSpan interval)
+        {
+            var days = (int)interval.TotalDays;
+            if (days < 1 || interval != TimeSpan.FromDays(days))
+            {
+                throw new ArgumentException("DateRules.Every(): interval must be a whole number of days of at least 1." +
+                    $" For intraday schedules use TimeRules.Every() instead. Value provided: {interval}");
+            }
+            return new FuncDateRule($"Every {days.ToStringInvariant()} days",
+                (start, end) => Time.EachDay(start, end).Where((date, index) => index % days == 0));
+        }
+
+        /// <summary>
         /// Specifies an event should fire every day
         /// </summary>
         /// <returns>A date rule that fires every day</returns>

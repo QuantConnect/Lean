@@ -124,6 +124,56 @@ namespace QuantConnect.Scheduling
         }
 
         /// <summary>
+        /// Schedules the callback to run on the dates given by the date rule, at midnight in the algorithm's
+        /// time zone (<see cref="TimeRules.Midnight"/>), mirroring universe selection schedules that
+        /// only take a date rule
+        /// </summary>
+        /// <param name="dateRule">Specifies what dates the event should run</param>
+        /// <param name="callback">The callback to be invoked</param>
+        public ScheduledEvent On(IDateRule dateRule, Action callback)
+        {
+            return On(dateRule, TimeRules.Midnight, callback);
+        }
+
+        /// <summary>
+        /// Schedules the callback to run on the dates given by the date rule, at midnight in the algorithm's
+        /// time zone (<see cref="TimeRules.Midnight"/>), mirroring universe selection schedules that
+        /// only take a date rule
+        /// </summary>
+        /// <param name="dateRule">Specifies what dates the event should run</param>
+        /// <param name="callback">The callback to be invoked</param>
+        public ScheduledEvent On(IDateRule dateRule, PyObject callback)
+        {
+            // Guard the missing-callback mistake: On(dateRule, timeRule) would otherwise schedule the time
+            // rule itself as the callback, silently doing nothing now that time rules define __call__
+            if (callback.TryConvert(out ITimeRule _))
+            {
+                throw new ArgumentException("ScheduleManager.On(): missing callback. Use On(dateRule, timeRule, callback), " +
+                    "or On(dateRule, callback) to default the time rule to midnight.");
+            }
+            using (Py.GIL())
+            {
+                if (!callback.IsCallable())
+                {
+                    throw new ArgumentException($"ScheduleManager.On(): the provided callback is not callable: {callback.Repr()}");
+                }
+            }
+            return On(dateRule, TimeRules.Midnight, callback);
+        }
+
+        /// <summary>
+        /// Schedules the callback to run on the dates given by the date rule, at midnight in the algorithm's
+        /// time zone (<see cref="TimeRules.Midnight"/>), mirroring universe selection schedules that
+        /// only take a date rule
+        /// </summary>
+        /// <param name="dateRule">Specifies what dates the event should run</param>
+        /// <param name="callback">The callback to be invoked</param>
+        public ScheduledEvent On(IDateRule dateRule, Action<string, DateTime> callback)
+        {
+            return On(dateRule, TimeRules.Midnight, callback);
+        }
+
+        /// <summary>
         /// Schedules the callback to run using the specified date and time rules
         /// </summary>
         /// <param name="dateRule">Specifies what dates the event should run</param>

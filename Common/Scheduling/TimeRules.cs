@@ -16,6 +16,7 @@
 
 using System;
 using NodaTime;
+using NodaTime.TimeZones;
 using System.Linq;
 using QuantConnect.Interfaces;
 using QuantConnect.Securities;
@@ -119,6 +120,42 @@ namespace QuantConnect.Scheduling
         public ITimeRule At(int hour, int minute, int second, DateTimeZone timeZone)
         {
             return At(new TimeSpan(hour, minute, second), timeZone);
+        }
+
+        /// <summary>
+        /// Specifies an event should fire at the specified time of day in the specified time zone
+        /// </summary>
+        /// <param name="hour">The hour</param>
+        /// <param name="minute">The minute</param>
+        /// <param name="timeZone">The time zone the event time is represented in, as an IANA time zone id, e.g. "Europe/London"</param>
+        /// <returns>A time rule that fires at the specified time in the algorithm's time zone</returns>
+        public ITimeRule At(int hour, int minute, string timeZone)
+        {
+            return At(new TimeSpan(hour, minute, 0), ParseTimeZone(timeZone));
+        }
+
+        /// <summary>
+        /// Specifies an event should fire at the specified time of day in the specified time zone
+        /// </summary>
+        /// <param name="hour">The hour</param>
+        /// <param name="minute">The minute</param>
+        /// <param name="second">The second</param>
+        /// <param name="timeZone">The time zone the event time is represented in, as an IANA time zone id, e.g. "Europe/London"</param>
+        /// <returns>A time rule that fires at the specified time in the algorithm's time zone</returns>
+        public ITimeRule At(int hour, int minute, int second, string timeZone)
+        {
+            return At(new TimeSpan(hour, minute, second), ParseTimeZone(timeZone));
+        }
+
+        /// <summary>
+        /// Specifies an event should fire at the specified time of day in the specified time zone
+        /// </summary>
+        /// <param name="timeOfDay">The time of day in the algorithm's time zone the event should fire</param>
+        /// <param name="timeZone">The time zone the event time is represented in, as an IANA time zone id, e.g. "Europe/London"</param>
+        /// <returns>A time rule that fires at the specified time in the algorithm's time zone</returns>
+        public ITimeRule At(TimeSpan timeOfDay, string timeZone)
+        {
+            return At(timeOfDay, ParseTimeZone(timeZone));
         }
 
         /// <summary>
@@ -385,6 +422,24 @@ namespace QuantConnect.Scheduling
                 select utcEventTime;
 
             return new FuncTimeRule(name, applicator);
+        }
+
+        /// <summary>
+        /// Helper method to resolve an IANA/tzdb time zone id, e.g. "Europe/London", into a <see cref="DateTimeZone"/>
+        /// </summary>
+        /// <param name="timeZone">The IANA time zone id</param>
+        /// <returns>The <see cref="DateTimeZone"/> instance for the given id</returns>
+        private static DateTimeZone ParseTimeZone(string timeZone)
+        {
+            try
+            {
+                return DateTimeZoneProviders.Tzdb[timeZone];
+            }
+            catch (DateTimeZoneNotFoundException)
+            {
+                throw new ArgumentException($"TimeRules.At(): TimeZone with id '{timeZone}' was not found. " +
+                    "For a complete list of time zones please visit: http://en.wikipedia.org/wiki/List_of_tz_database_time_zones");
+            }
         }
 
         /// <summary>
