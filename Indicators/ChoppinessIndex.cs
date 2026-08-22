@@ -46,10 +46,15 @@ namespace QuantConnect.Indicators
         /// Creates a new ChoppinessIndex indicator using the specified period and moving average type
         /// </summary>
         /// <param name="name">The name of this indicator</param>
-        /// <param name="period">The period used for rolling windows for highs and lows</param>
+        /// <param name="period">The period used for rolling windows for highs and lows, must be greater than one</param>
         public ChoppinessIndex(string name, int period)
             : base(name)
         {
+            if (period < 2)
+            {
+                throw new ArgumentException($"Period parameter for ChoppinessIndex indicator must be greater than 1 but was {period}");
+            }
+
             _period = period;
 
             _trueRange = new TrueRange();
@@ -64,7 +69,7 @@ namespace QuantConnect.Indicators
         /// <summary>
         /// Creates a new ChoppinessIndex indicator using the specified period
         /// </summary>
-        /// <param name="period">The period used for rolling windows for highs and lows</param>
+        /// <param name="period">The period used for rolling windows for highs and lows, must be greater than one</param>
         public ChoppinessIndex(int period)
             : this($"CHOP({period})", period)
         {
