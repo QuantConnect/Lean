@@ -283,7 +283,10 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
                 // Generate daily option universe CSVs if generating options data
                 if (_settings.SecurityType == SecurityType.Option)
                 {
-                    OptionUniverseWriter.WriteUniverseFiles(symbolRef, tickHistories);
+                    var optionTickHistories = tickHistories
+                        .Where(kvp => kvp.Key.SecurityType == SecurityType.Option)
+                        .ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
+                    OptionUniverseWriter.WriteUniverseFiles(symbolRef, optionTickHistories);
                 }
             }
 

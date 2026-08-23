@@ -41,24 +41,24 @@ internal static class OptionUniverseWriter
     );
 
     /// <summary>
-    /// Processes generated tick histories and writes daily universe selection CSVs for the option.
+    /// Processes generated option tick histories and writes daily universe selection CSVs.
     /// </summary>
     /// <param name="underlyingSymbol">The underlying asset symbol.</param>
-    /// <param name="tickHistories">The historical ticks generated for each option contract.</param>
-    public static void WriteUniverseFiles(Symbol underlyingSymbol, Dictionary<Symbol, List<Tick>> tickHistories)
+    /// <param name="optionTickHistories">The historical ticks generated for each option contract.</param>
+    public static void WriteUniverseFiles(Symbol underlyingSymbol, Dictionary<Symbol, List<Tick>> optionTickHistories)
     {
-        var dailyData = AggregateDailyOptionRows(tickHistories);
+        var dailyData = AggregateDailyOptionRows(optionTickHistories);
         WriteAllDailyUniverseFiles(underlyingSymbol, dailyData);
     }
 
     private static Dictionary<DateTime, List<OptionRow>> AggregateDailyOptionRows(
-        Dictionary<Symbol, List<Tick>> tickHistories)
+        Dictionary<Symbol, List<Tick>> optionTickHistories)
     {
         var dailyContractData = new Dictionary<DateTime, List<OptionRow>>();
 
-        foreach (var (contract, ticks) in tickHistories)
+        foreach (var (contract, ticks) in optionTickHistories)
         {
-            if (contract.SecurityType != SecurityType.Option || ticks.Count == 0)
+            if (ticks.Count == 0)
             {
                 continue;
             }
