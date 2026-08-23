@@ -79,13 +79,22 @@ internal class OptionUniverseWriterTests
         var underlying = Symbol.Create("TSLA", SecurityType.Equity, Market.USA);
         var option = Symbol.CreateOption(underlying, Market.USA, OptionStyle.American, OptionRight.Call, 200m, new DateTime(2026, 2, 13));
 
+        var equityTicks = new List<Tick>
+        {
+            new(new DateTime(2026, 2, 5, 9, 30, 0), underlying, 200m, 200m) { Quantity = 100 }
+        };
+
         var ticks = new List<Tick>
         {
             new(new DateTime(2026, 2, 5, 9, 30, 0), option, 1.50m, 1.50m) { Quantity = 10 },
             new(new DateTime(2026, 2, 5, 16, 0, 0), option, 1.75m, 1.75m) { Quantity = 20 }
         };
 
-        return (underlying, new Dictionary<Symbol, List<Tick>> { { option, ticks } });
+        return (underlying, new Dictionary<Symbol, List<Tick>>
+        {
+            { underlying, equityTicks },
+            { option, ticks }
+        });
     }
 
     private string[] ReadGeneratedUniverseFile(string ticker, string date)

@@ -58,7 +58,7 @@ internal static class OptionUniverseWriter
 
         foreach (var (contract, ticks) in tickHistories)
         {
-            if (ticks.Count == 0)
+            if (contract.SecurityType != SecurityType.Option || ticks.Count == 0)
             {
                 continue;
             }
