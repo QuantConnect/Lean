@@ -137,6 +137,41 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             }
         }
 
+        [Test]
+        public void LargeUniverseSelectionWarningSkipsSmallSelections()
+        {
+            Config.Set("universe-selection-size-warning-thresholds", "{\"Minute\": 10, \"Daily\": 100}");
+            try
+            {
+                var algorithm = new AlgorithmStub(new MockDataFeed());
+                algorithm.SetStartDate(2014, 6, 6);
+                var option = algorithm.AddOption("AAPL");
+                algorithm.AddUniverse(fundamentals => Enumerable.Empty<Symbol>());
+                // OnEndOfTimeStep will add all pending universe additions
+                algorithm.OnEndOfTimeStep();
+                var optionUniverse = algorithm.UniverseManager.Values.OfType<OptionChainUniverse>().Single();
+                var equityUniverse = algorithm.UniverseManager.Values.Single(x => x is FundamentalUniverseFactory);
+                optionUniverse.UniverseSettings = new UniverseSettings(optionUniverse.UniverseSettings) { Resolution = Resolution.Minute };
+                equityUniverse.UniverseSettings = new UniverseSettings(equityUniverse.UniverseSettings) { Resolution = Resolution.Daily };
+
+                // the option universe alone exceeds the shared budget, but the selection being checked
+                // is too small (under a tenth of its threshold) to run the check
+                optionUniverse.Selected = CreateOptionSelection(option.Symbol.Underlying, 20);
+                equityUniverse.Selected = CreateEquitySelection(5);
+                algorithm.DataManager.UniverseSelection.WarnOnLargeUniverseSelection(equityUniverse);
+                Assert.AreEqual(0, UniverseSizeWarningCount(algorithm));
+
+                // a significant selection runs the check and warns
+                equityUniverse.Selected = CreateEquitySelection(10);
+                algorithm.DataManager.UniverseSelection.WarnOnLargeUniverseSelection(equityUniverse);
+                Assert.AreEqual(1, UniverseSizeWarningCount(algorithm));
+            }
+            finally
+            {
+                Config.Reset();
+            }
+        }
+
         private static int UniverseSizeWarningCount(AlgorithmStub algorithm)
         {
             return algorithm.DebugMessages.Count(x => x.Contains("universe selections"));

@@ -44,6 +44,9 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         private bool _anyDoesNotHaveFundamentalDataWarningLogged;
         private readonly SecurityChangesConstructor _securityChangesConstructor;
         private bool _universeSelectionSizeWarningSent;
+        // a selection must be at least 1/N of its resolution threshold before the large selection check runs
+        private const int MinimumSignificantSelectionRatio = 10;
+        private static readonly int SelectionSizeWarningResolutionCount = Enum.GetValues<Resolution>().Length;
         // the cost of a selected symbol grows with the resolution its subscriptions are added at,
         // so the warning threshold is defined per resolution instead of as a single flat count
         private readonly Dictionary<Resolution, int> _universeSelectionSizeWarningThresholds = Config.GetValue(
@@ -501,36 +504,32 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         {
             try
             {
-                if (_universeSelectionSizeWarningSent)
+                if (_universeSelectionSizeWarningSent || universe.Selected == null)
+                {
+                    return;
+                }
+
+                // skip small selections: only a selection that is itself a meaningful share of its
+                // threshold can tip the shared budget, so don't aggregate across all universes for every one
+                if (!TryGetSizeWarningThreshold(universe, out _, out var universeThreshold)
+                    || GetSelectionSize(universe) * MinimumSignificantSelectionRatio < universeThreshold)
                 {
                     return;
                 }
 
                 var load = 0d;
                 var universeCount = 0;
-                var selectedByResolution = new SortedDictionary<Resolution, int>();
-
-                void Accumulate(Universe target)
-                {
-                    if (target.Selected == null || !TryGetSizeWarningThreshold(target, out var resolution, out var threshold))
-                    {
-                        return;
-                    }
-                    var selectionSize = GetSelectionSize(target);
-                    load += selectionSize / (double)threshold;
-                    universeCount++;
-                    selectedByResolution.TryGetValue(resolution, out var resolutionCount);
-                    selectedByResolution[resolution] = resolutionCount + selectionSize;
-                }
+                // per resolution symbol counts, indexed by the resolution enum value
+                Span<int> selectedByResolution = stackalloc int[SelectionSizeWarningResolutionCount];
 
                 foreach (var kvp in _algorithm.UniverseManager)
                 {
-                    Accumulate(kvp.Value);
+                    Accumulate(kvp.Value, ref load, ref universeCount, selectedByResolution);
                 }
                 if (universeCount == 0)
                 {
                     // not registered in the universe manager, count the given universe only
-                    Accumulate(universe);
+                    Accumulate(universe, ref load, ref universeCount, selectedByResolution);
                 }
 
                 if (load < 1)
@@ -539,11 +538,18 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 }
 
                 _universeSelectionSizeWarningSent = true;
-                var counts = string.Join(" and ", selectedByResolution.Select(pair => $"~{pair.Value} symbols at {pair.Key} resolution"));
+                var counts = new List<string>();
+                for (var i = 0; i < selectedByResolution.Length; i++)
+                {
+                    if (selectedByResolution[i] > 0)
+                    {
+                        counts.Add($"~{selectedByResolution[i]} symbols at {(Resolution)i} resolution");
+                    }
+                }
                 var suggestion = universe is OptionChainUniverse
                     ? "Narrow the filter (SetFilter/set_filter) or add specific contracts (AddOptionContract/add_option_contract)."
                     : "Select fewer symbols or use a coarser universe resolution (UniverseSettings.Resolution/universe_settings.resolution).";
-                _algorithm.Debug($"Warning: universe selections have reached {counts} across {universeCount} universe(s)," +
+                _algorithm.Debug($"Warning: universe selections have reached {string.Join(" and ", counts)} across {universeCount} universe(s)," +
                     $" latest: {GetSelectionSize(universe)} from {GetUniverseName(universe)}. Each selected symbol adds data" +
                     $" subscriptions, increasing time and memory usage. {suggestion}");
             }
@@ -553,6 +559,21 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 _universeSelectionSizeWarningSent = true;
                 Log.Error(exception);
             }
+        }
+
+        /// <summary>
+        /// Adds a universe's selection to the shared budget load and per resolution symbol counts
+        /// </summary>
+        private void Accumulate(Universe universe, ref double load, ref int universeCount, Span<int> selectedByResolution)
+        {
+            if (universe.Selected == null || !TryGetSizeWarningThreshold(universe, out var resolution, out var threshold))
+            {
+                return;
+            }
+            var selectionSize = GetSelectionSize(universe);
+            load += selectionSize / (double)threshold;
+            universeCount++;
+            selectedByResolution[(int)resolution] += selectionSize;
         }
 
         /// <summary>
