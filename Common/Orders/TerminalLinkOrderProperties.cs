@@ -27,7 +27,7 @@ namespace QuantConnect.Orders
     {
         /// <summary>
         /// Custom EMSX fields to send with the order. The key is the EMSX element name
-        /// and the value is the element value, e.g. AdditionalProperties["EMSX_CFD_FLAG"] = "1"
+        /// and the value is the element value, e.g. AdditionalProperties["EMSX_CFD_FLAG"] = "Y"
         /// </summary>
         /// <remarks>Starts empty. Python cannot assign a plain dict to it, since pythonnet has no
         /// conversion for it; add the entries one by one, bulk load them from a dict with update(),
@@ -106,8 +106,8 @@ namespace QuantConnect.Orders
         /// </summary>
         public bool IsCfdTrade
         {
-            get { return AdditionalProperties != null && AdditionalProperties.TryGetValue("EMSX_CFD_FLAG", out var flag) && flag == "1"; }
-            set { SetTag("EMSX_CFD_FLAG", value ? "1" : null); }
+            get { return AdditionalProperties != null && AdditionalProperties.TryGetValue("EMSX_CFD_FLAG", out var flag) && flag == "Y"; }
+            set { SetTag("EMSX_CFD_FLAG", value ? "Y" : null); }
         }
 
         /// <summary>
