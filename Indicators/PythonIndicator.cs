@@ -26,9 +26,12 @@ namespace QuantConnect.Indicators
     public class PythonIndicator : IndicatorBase<IBaseData>, IIndicatorWarmUpPeriodProvider
     {
         private static string _isReadyName = nameof(IsReady).ToSnakeCase();
+        private static string _resetName = nameof(Reset).ToSnakeCase();
         private PyObject _instance;
         private bool _isReady;
         private bool _pythonIsReadyProperty;
+        private PyObject _pythonResetMethod;
+        private bool _isResetting;
         private BasePythonWrapper<IIndicator> _indicatorWrapper;
 
         /// <summary>
@@ -94,6 +97,16 @@ namespace QuantConnect.Indicators
                 }
             }
 
+            using (Py.GIL())
+            {
+                // Null when the attribute is absent, is a plain value rather than a method, or resolves
+                // to the CSharp implementation. Resolving here keeps Reset off the per-call GIL round trip.
+                // SetIndicator runs again on every GetIndicatorAsManagedObject call, so release first.
+                _pythonResetMethod?.Dispose();
+                _pythonResetMethod = indicator.GetPythonMethodWithChecks(_resetName) as PyObject
+                    ?? indicator.GetPythonMethodWithChecks(nameof(Reset)) as PyObject;
+            }
+
             WarmUpPeriod = GetIndicatorWarmUpPeriod();
         }
 
@@ -127,6 +140,35 @@ namespace QuantConnect.Indicators
         /// Required period, in data points, for the indicator to be ready and fully initialized
         /// </summary>
         public int WarmUpPeriod { get; protected set; }
+
+        /// <summary>
+        /// Resets this indicator to its initial state
+        /// </summary>
+        public override void Reset()
+        {
+            // For an inheriting class the wrapped instance is this same object, so a python reset()
+            // calling super().reset() arrives back here through the CLR binding. Invoke the python
+            // side once per reset and let the re-entrant call fall through to the base.
+            var reentrant = _isResetting;
+            try
+            {
+                if (_pythonResetMethod != null && !reentrant)
+                {
+                    _isResetting = true;
+                    using (Py.GIL())
+                    {
+                        _pythonResetMethod.Invoke().Dispose();
+                    }
+                }
+            }
+            finally
+            {
+                // A python reset() that raises must still leave the CSharp side reset.
+                _isResetting = reentrant;
+                _isReady = false;
+                base.Reset();
+            }
+        }
 
         /// <summary>
         /// Computes the next value of this indicator from the given state
