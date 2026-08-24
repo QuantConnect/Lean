@@ -42,7 +42,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
         private readonly TimeSpan _minimumIntervalCheck;
         private readonly ITimeProvider _timeProvider;
         private readonly Func<DateTime, DateTime> _dateAdjustment;
-        private readonly bool _fallBackToBackupUniverseFiles;
+        private readonly BackupUniverseFileDataProvider _backupUniverseFileDataProvider;
         private readonly IObjectStore _objectStore;
 
         /// <summary>
@@ -62,8 +62,11 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
             _timeProvider = timeProvider;
             _dateAdjustment = dateAdjustment;
             _minimumIntervalCheck = minimumIntervalCheck ?? TimeSpan.FromMinutes(30);
-            _fallBackToBackupUniverseFiles = fallBackToBackupUniverseFiles;
             _objectStore = objectStore;
+            if (fallBackToBackupUniverseFiles)
+            {
+                _backupUniverseFileDataProvider = new BackupUniverseFileDataProvider();
+            }
         }
 
         /// <summary>
@@ -95,7 +98,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
                 }
 
                 lastSourceRefreshTime = utcNow;
-                var localDate = _dateAdjustment?.Invoke(utcNow.ConvertFromUtc(config.ExchangeTimeZone).Date) ?? utcNow.ConvertFromUtc(config.ExchangeTimeZone).Date;
+                var localTime = utcNow.ConvertFromUtc(config.ExchangeTimeZone);
+                var localDate = _dateAdjustment?.Invoke(localTime.Date) ?? localTime.Date;
                 var source = sourceFactory.GetSource(config, localDate, true);
                 if (source == null)
                 {
@@ -104,12 +108,13 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
                 }
 
                 var sourceDataProvider = dataProvider;
-                if (_fallBackToBackupUniverseFiles
+                if (_backupUniverseFileDataProvider != null
                     && source.TransportMedium == SubscriptionTransportMedium.LocalFile
-                    && IsUniverseFileBackupFallbackActive(exchangeHours, utcNow))
+                    && IsUniverseFileBackupFallbackActive(exchangeHours, localTime))
                 {
                     // if the expected universe file is not available, the backup universe file, if any, will be read as a last resort
-                    sourceDataProvider = new BackupUniverseFileDataProvider(dataProvider);
+                    _backupUniverseFileDataProvider.SetDataProvider(dataProvider);
+                    sourceDataProvider = _backupUniverseFileDataProvider;
                 }
 
                 // fetch the new source and enumerate the data source reader
@@ -232,9 +237,10 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
         /// (within <see cref="UniverseFileBackupFallbackWindow"/> of the next market open), when the expected universe file should already be available.
         /// It is evaluated at the same cadence as the enumerator refreshes
         /// </summary>
-        private static bool IsUniverseFileBackupFallbackActive(SecurityExchangeHours exchangeHours, DateTime utcNow)
+        /// <param name="exchangeHours">The exchange hours of the security</param>
+        /// <param name="localTime">The current time in the exchange time zone</param>
+        private static bool IsUniverseFileBackupFallbackActive(SecurityExchangeHours exchangeHours, DateTime localTime)
         {
-            var localTime = utcNow.ConvertFromUtc(exchangeHours.TimeZone);
             return exchangeHours.IsOpen(localTime, extendedMarketHours: false)
                 // if the market is closed, GetNextMarketOpen returns the next day open
                 || exchangeHours.GetNextMarketOpen(localTime, extendedMarketHours: false) - localTime <= UniverseFileBackupFallbackWindow;
@@ -262,15 +268,21 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
         /// </summary>
         private sealed class BackupUniverseFileDataProvider : IDataProvider
         {
-            private readonly IDataProvider _dataProvider;
+            private IDataProvider _dataProvider;
 
+            /// <summary>
+            /// Event raised each time data fetch is finished (successfully or not)
+            /// </summary>
             public event EventHandler<DataProviderNewDataRequestEventArgs> NewDataRequest
             {
-                add => _dataProvider.NewDataRequest += value;
-                remove => _dataProvider.NewDataRequest -= value;
+                add => _dataProvider?.NewDataRequest += value;
+                remove => _dataProvider?.NewDataRequest -= value;
             }
 
-            public BackupUniverseFileDataProvider(IDataProvider dataProvider)
+            /// <summary>
+            /// Sets the data provider to wrap, forwarding its <see cref="IDataProvider.NewDataRequest"/> events
+            /// </summary>
+            public void SetDataProvider(IDataProvider dataProvider)
             {
                 _dataProvider = dataProvider;
             }
