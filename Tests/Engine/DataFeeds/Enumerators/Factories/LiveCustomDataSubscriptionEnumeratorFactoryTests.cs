@@ -16,6 +16,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using Moq;
 using NUnit.Framework;
@@ -549,6 +550,129 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators.Factories
             enumerator.DisposeSafely();
         }
 
+        [Test]
+        public void FallsBackToBackupUniverseFileWhenExpectedSourceIsNotAvailable()
+        {
+            // 10 am, the market is open, so the backup fallback is active
+            var referenceLocal = new DateTime(2017, 10, 12, 10, 0, 0);
+            var referenceUtc = referenceLocal.ConvertToUtc(TimeZones.NewYork);
+
+            var timeProvider = new ManualTimeProvider(referenceUtc);
+
+            var expectedSourceAvailable = false;
+            var dataProvider = new Mock<IDataProvider>();
+            dataProvider.Setup(dp => dp.Fetch("local.file.source")).Returns(() => expectedSourceAvailable ? new MemoryStream() : null);
+            dataProvider.Setup(dp => dp.Fetch("local.file.source.backup")).Returns(() => new MemoryStream());
+
+            var dataSourceReader = new Mock<ISubscriptionDataSourceReader>();
+            var factory = new TestableLiveCustomDataSubscriptionEnumeratorFactory(timeProvider, dataSourceReader.Object,
+                fallBackToBackupUniverseFiles: true);
+            SetUpDataSourceReader(dataSourceReader, factory, () => new LocalFileData { EndTime = timeProvider.GetUtcNow().ConvertFromUtc(TimeZones.NewYork).AddSeconds(1) });
+
+            var config = new SubscriptionDataConfig(typeof(LocalFileData), Symbols.SPY, Resolution.Daily, TimeZones.NewYork, TimeZones.NewYork, false, false, false);
+            var request = GetSubscriptionRequest(config, referenceUtc.AddSeconds(-1), referenceUtc.AddDays(1));
+
+            using var enumerator = factory.CreateEnumerator(request, dataProvider.Object);
+
+            // the expected source is not available, so the backup file is the one that gets read, in a single read of the source
+            Assert.IsTrue(enumerator.MoveNext());
+            Assert.IsNotNull(enumerator.Current);
+            VerifyGetSourceInvocationCount(dataSourceReader, 1, "local.file.source", SubscriptionTransportMedium.LocalFile, FileFormat.Csv);
+            dataProvider.Verify(dp => dp.Fetch("local.file.source"), Times.Once);
+            dataProvider.Verify(dp => dp.Fetch("local.file.source.backup"), Times.Once);
+
+            // the fallback is rate limited like the source refreshes
+            Assert.IsTrue(enumerator.MoveNext());
+            Assert.IsNull(enumerator.Current);
+            dataProvider.Verify(dp => dp.Fetch(It.IsAny<string>()), Times.Exactly(2));
+
+            // the expected source is preferred on the next refresh once it becomes available, without touching the backup file
+            expectedSourceAvailable = true;
+            timeProvider.Advance(TimeSpan.FromMinutes(30));
+            Assert.IsTrue(enumerator.MoveNext());
+            Assert.IsNotNull(enumerator.Current);
+            VerifyGetSourceInvocationCount(dataSourceReader, 2, "local.file.source", SubscriptionTransportMedium.LocalFile, FileFormat.Csv);
+            dataProvider.Verify(dp => dp.Fetch("local.file.source"), Times.Exactly(2));
+            dataProvider.Verify(dp => dp.Fetch("local.file.source.backup"), Times.Once);
+        }
+
+        [Test]
+        public void DoesNotFallBackToBackupUniverseFileFarFromMarketOpen()
+        {
+            // midnight, more than the fallback window away from the next market open, so the backup file is never tried
+            var referenceLocal = new DateTime(2017, 10, 12);
+            var referenceUtc = referenceLocal.ConvertToUtc(TimeZones.NewYork);
+
+            var timeProvider = new ManualTimeProvider(referenceUtc);
+
+            // the expected source is not available
+            var dataProvider = new Mock<IDataProvider>();
+
+            var dataSourceReader = new Mock<ISubscriptionDataSourceReader>();
+            var factory = new TestableLiveCustomDataSubscriptionEnumeratorFactory(timeProvider, dataSourceReader.Object,
+                fallBackToBackupUniverseFiles: true);
+            SetUpDataSourceReader(dataSourceReader, factory, () => new LocalFileData { EndTime = timeProvider.GetUtcNow().ConvertFromUtc(TimeZones.NewYork).AddSeconds(1) });
+
+            var config = new SubscriptionDataConfig(typeof(LocalFileData), Symbols.SPY, Resolution.Daily, TimeZones.NewYork, TimeZones.NewYork, false, false, false);
+            var request = GetSubscriptionRequest(config, referenceUtc.AddSeconds(-1), referenceUtc.AddDays(1));
+
+            using var enumerator = factory.CreateEnumerator(request, dataProvider.Object);
+
+            Assert.IsTrue(enumerator.MoveNext());
+            Assert.IsNull(enumerator.Current);
+
+            // only the expected source is tried
+            VerifyGetSourceInvocationCount(dataSourceReader, 1, "local.file.source", SubscriptionTransportMedium.LocalFile, FileFormat.Csv);
+            dataProvider.Verify(dp => dp.Fetch("local.file.source"), Times.Once);
+            dataProvider.Verify(dp => dp.Fetch("local.file.source.backup"), Times.Never);
+        }
+
+        [Test]
+        public void DoesNotFallBackToBackupUniverseFileWhenNotConfigured()
+        {
+            // 10 am, the market is open, but the factory is not configured to fall back to backup universe files
+            var referenceLocal = new DateTime(2017, 10, 12, 10, 0, 0);
+            var referenceUtc = referenceLocal.ConvertToUtc(TimeZones.NewYork);
+
+            var timeProvider = new ManualTimeProvider(referenceUtc);
+
+            // the expected source is not available
+            var dataProvider = new Mock<IDataProvider>();
+
+            var dataSourceReader = new Mock<ISubscriptionDataSourceReader>();
+            var factory = new TestableLiveCustomDataSubscriptionEnumeratorFactory(timeProvider, dataSourceReader.Object);
+            SetUpDataSourceReader(dataSourceReader, factory, () => new LocalFileData { EndTime = timeProvider.GetUtcNow().ConvertFromUtc(TimeZones.NewYork).AddSeconds(1) });
+
+            var config = new SubscriptionDataConfig(typeof(LocalFileData), Symbols.SPY, Resolution.Daily, TimeZones.NewYork, TimeZones.NewYork, false, false, false);
+            var request = GetSubscriptionRequest(config, referenceUtc.AddSeconds(-1), referenceUtc.AddDays(1));
+
+            using var enumerator = factory.CreateEnumerator(request, dataProvider.Object);
+
+            Assert.IsTrue(enumerator.MoveNext());
+            Assert.IsNull(enumerator.Current);
+
+            // only the expected source is tried
+            VerifyGetSourceInvocationCount(dataSourceReader, 1, "local.file.source", SubscriptionTransportMedium.LocalFile, FileFormat.Csv);
+            dataProvider.Verify(dp => dp.Fetch("local.file.source"), Times.Once);
+            dataProvider.Verify(dp => dp.Fetch("local.file.source.backup"), Times.Never);
+        }
+
+        /// <summary>
+        /// Sets up the mocked data source reader to fetch the source through the data cache provider the factory gave it,
+        /// like the real readers do, yielding a data point only when the source could be fetched
+        /// </summary>
+        private static void SetUpDataSourceReader(Mock<ISubscriptionDataSourceReader> dataSourceReader,
+            TestableLiveCustomDataSubscriptionEnumeratorFactory factory, Func<BaseData> dataFactory)
+        {
+            dataSourceReader.Setup(dsr => dsr.Read(It.IsAny<SubscriptionDataSource>()))
+                .Returns((SubscriptionDataSource source) =>
+                {
+                    using var stream = factory.DataCacheProvider.Fetch(source.Source);
+                    return stream == null ? Enumerable.Empty<BaseData>() : new[] { dataFactory() };
+                })
+                .Verifiable();
+        }
+
         private static void VerifyGetSourceInvocationCount(Mock<ISubscriptionDataSourceReader> dataSourceReader, int count, string source, SubscriptionTransportMedium medium, FileFormat fileFormat)
         {
             dataSourceReader.Verify(dsr => dsr.Read(It.Is<SubscriptionDataSource>(sds =>
@@ -630,8 +754,14 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators.Factories
         {
             private readonly ISubscriptionDataSourceReader _dataSourceReader;
 
-            public TestableLiveCustomDataSubscriptionEnumeratorFactory(ITimeProvider timeProvider, ISubscriptionDataSourceReader dataSourceReader, TimeSpan? minimumIntervalCheck = null)
-                : base(timeProvider, null, minimumIntervalCheck: minimumIntervalCheck)
+            /// <summary>
+            /// The data cache provider the last data source reader was created with
+            /// </summary>
+            public IDataCacheProvider DataCacheProvider { get; private set; }
+
+            public TestableLiveCustomDataSubscriptionEnumeratorFactory(ITimeProvider timeProvider, ISubscriptionDataSourceReader dataSourceReader,
+                TimeSpan? minimumIntervalCheck = null, bool fallBackToBackupUniverseFiles = false)
+                : base(timeProvider, null, minimumIntervalCheck: minimumIntervalCheck, fallBackToBackupUniverseFiles: fallBackToBackupUniverseFiles)
             {
                 _dataSourceReader = dataSourceReader;
             }
@@ -643,6 +773,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Enumerators.Factories
                 BaseData baseData,
                 IDataProvider dataProvider)
             {
+                DataCacheProvider = dataCacheProvider;
                 return _dataSourceReader;
             }
         }
