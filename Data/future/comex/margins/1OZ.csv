@@ -1,0 +1,4 @@
+# we don't have historical information for this symbol
+# CME COMEX outright maintenance margin, 10/2026 front month; initial = 110% of maintenance
+date,initial,maintenance
+19900101,242,220
