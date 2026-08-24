@@ -128,7 +128,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 equityUniverse.Selected = CreateEquitySelection(30);
                 algorithm.DataManager.UniverseSelection.WarnOnLargeUniverseSelection(equityUniverse);
                 Assert.AreEqual(1, UniverseSizeWarningCount(algorithm));
-                Assert.AreEqual(1, algorithm.DebugMessages.Count(x => x.Contains("~8 symbols at Minute resolution") &&
+                Assert.AreEqual(1, algorithm.DebugMessages.Count(x => x.Contains("~9 symbols at Minute resolution") &&
                     x.Contains("~30 symbols at Daily resolution")));
             }
             finally

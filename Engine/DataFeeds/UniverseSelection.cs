@@ -54,10 +54,10 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             new Dictionary<Resolution, int>
             {
                 { Resolution.Tick, 100 },
-                { Resolution.Second, 250 },
-                { Resolution.Minute, 500 },
-                { Resolution.Hour, 1000 },
-                { Resolution.Daily, 2000 },
+                { Resolution.Second, 500 },
+                { Resolution.Minute, 1000 },
+                { Resolution.Hour, 2000 },
+                { Resolution.Daily, 4000 },
             });
 
         /// <summary>
@@ -512,7 +512,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 // skip small selections: only a selection that is itself a meaningful share of its
                 // threshold can tip the shared budget, so don't aggregate across all universes for every one
                 if (!TryGetSizeWarningThreshold(universe, out _, out var universeThreshold)
-                    || GetSelectionSize(universe) * MinimumSignificantSelectionRatio < universeThreshold)
+                    || universe.Selected.Count * MinimumSignificantSelectionRatio < universeThreshold)
                 {
                     return;
                 }
@@ -550,7 +550,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     ? "Narrow the filter (SetFilter/set_filter) or add specific contracts (AddOptionContract/add_option_contract)."
                     : "Select fewer symbols or use a coarser universe resolution (UniverseSettings.Resolution/universe_settings.resolution).";
                 _algorithm.Debug($"Warning: universe selections have reached {string.Join(" and ", counts)} across {universeCount} universe(s)," +
-                    $" latest: {GetSelectionSize(universe)} from {GetUniverseName(universe)}. Each selected symbol adds data" +
+                    $" latest: {universe.Selected.Count} from {universe.Configuration.Symbol.Value}. Each selected symbol adds data" +
                     $" subscriptions, increasing time and memory usage. {suggestion}");
             }
             catch (Exception exception)
@@ -570,7 +570,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             {
                 return;
             }
-            var selectionSize = GetSelectionSize(universe);
+            var selectionSize = universe.Selected.Count;
             load += selectionSize / (double)threshold;
             universeCount++;
             selectedByResolution[(int)resolution] += selectionSize;
@@ -578,40 +578,12 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
         /// <summary>
         /// Gets the selection size warning threshold for the resolution the universe's members subscribe at.
-        /// False when the resolution is unavailable or warnings are disabled for it
+        /// False when warnings are disabled for it
         /// </summary>
         private bool TryGetSizeWarningThreshold(Universe universe, out Resolution resolution, out int threshold)
         {
-            threshold = 0;
-            resolution = default;
-            var settings = universe.UniverseSettings;
-            if (settings == null)
-            {
-                return false;
-            }
-            resolution = settings.Resolution;
+            resolution = universe.UniverseSettings.Resolution;
             return _universeSelectionSizeWarningThresholds.TryGetValue(resolution, out threshold) && threshold > 0;
-        }
-
-        /// <summary>
-        /// Number of symbols a universe selected. Option universe selections have the underlying
-        /// symbol prepended, which is not a contract
-        /// </summary>
-        private static int GetSelectionSize(Universe universe)
-        {
-            return universe is OptionChainUniverse
-                ? Math.Max(0, universe.Selected.Count - 1)
-                : universe.Selected.Count;
-        }
-
-        /// <summary>
-        /// User-recognizable name for the universe emitting the warning
-        /// </summary>
-        private static string GetUniverseName(Universe universe)
-        {
-            return universe is OptionChainUniverse optionUniverse
-                ? optionUniverse.Option.Symbol.Underlying.Value
-                : universe.Configuration.Symbol.Value;
         }
 
         private void RemoveSecurityFromUniverse(
