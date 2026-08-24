@@ -577,7 +577,7 @@ namespace QuantConnect.Tests.ToolBox
         [Test]
         public void ReadsZipWithDuplicatedEntries()
         {
-            // legacy zips written with DotNetZip for unicode symbols contain the same (mangled) entry name multiple times,
+            // legacy zips written with DotNetZip for unicode symbols can contain the same (mangled) entry name multiple times,
             // DotNetZip's reader renames duplicates through a process wide counter which overflows after 25 calls
             var symbol = Symbol.Create("币安人生usdc", SecurityType.Crypto, Market.Binance);
             var directory = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
@@ -591,11 +591,7 @@ namespace QuantConnect.Tests.ToolBox
                     {
                         var entry = archive.CreateEntry("????usdc.csv");
                         using var writer = new StreamWriter(entry.Open());
-                        // the last entry is the most recent one and holds the complete data
-                        for (var j = 0; j <= i; j++)
-                        {
-                            writer.WriteLine($"2024010{j % 9 + 1} 00:00,1,2,0.5,1.5,100");
-                        }
+                        writer.WriteLine($"2024010{i % 9 + 1} 00:00,1,2,0.5,1.5,100");
                     }
                 }
 
