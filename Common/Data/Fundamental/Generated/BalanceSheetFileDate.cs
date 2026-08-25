@@ -1,4 +1,4 @@
-/*
+﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2023 QuantConnect Corporation.
  *
@@ -37,7 +37,8 @@ namespace QuantConnect.Data.Fundamental
         /// Gets/sets the OneMonth period value for the field
         /// </summary>
         [JsonProperty("1M")]
-        public DateTime OneMonth => FundamentalService.Get<DateTime>(TimeProvider.GetUtcNow(), SecurityIdentifier, FundamentalProperty.FinancialStatements_BalanceSheet_BSFileDate_OneMonth);
+        [Obsolete("BSFileDate.OneMonth is no longer provided by Morningstar since the 2026 feed migration; use BSFileDate.ThreeMonths (also available: TwelveMonths).")]
+        public DateTime OneMonth => throw new NotSupportedException("BSFileDate.OneMonth is no longer provided by Morningstar since the 2026 feed migration; use BSFileDate.ThreeMonths (also available: TwelveMonths).");
 
         /// <summary>
         /// Gets/sets the SixMonths period value for the field

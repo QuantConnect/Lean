@@ -1,4 +1,4 @@
-/*
+﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2023 QuantConnect Corporation.
  *
@@ -43,7 +43,8 @@ namespace QuantConnect.Data.Fundamental
         /// Gets/sets the ThreeMonths period value for the field
         /// </summary>
         [JsonProperty("3M")]
-        public double ThreeMonths => FundamentalService.Get<double>(TimeProvider.GetUtcNow(), SecurityIdentifier, FundamentalProperty.EarningRatios_EquityPerShareGrowth_ThreeMonths);
+        [Obsolete("EquityPerShareGrowth.ThreeMonths is no longer provided by Morningstar since the 2026 feed migration; use EquityPerShareGrowth.OneYear (also available: ThreeYears, FiveYears).")]
+        public double ThreeMonths => throw new NotSupportedException("EquityPerShareGrowth.ThreeMonths is no longer provided by Morningstar since the 2026 feed migration; use EquityPerShareGrowth.OneYear (also available: ThreeYears, FiveYears).");
 
         /// <summary>
         /// Gets/sets the ThreeYears period value for the field
@@ -85,7 +86,7 @@ namespace QuantConnect.Data.Fundamental
         public override IReadOnlyDictionary<string, double> GetPeriodValues()
         {
             var result = new Dictionary<string, double>();
-            foreach (var kvp in new[] { new Tuple<string, double>("1Y",OneYear), new Tuple<string, double>("3M",ThreeMonths), new Tuple<string, double>("3Y",ThreeYears), new Tuple<string, double>("5Y",FiveYears) })
+            foreach (var kvp in new[] { new Tuple<string, double>("1Y",OneYear), new Tuple<string, double>("3Y",ThreeYears), new Tuple<string, double>("5Y",FiveYears) })
             {
                 if(!BaseFundamentalDataProvider.IsNone(typeof(double), kvp.Item2))
                 {
