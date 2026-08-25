@@ -1,4 +1,4 @@
-/*
+﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2023 QuantConnect Corporation.
  *
@@ -37,7 +37,8 @@ namespace QuantConnect.Data.Fundamental
         /// Gets/sets the ThreeMonths period value for the field
         /// </summary>
         [JsonProperty("3M")]
-        public double ThreeMonths => FundamentalService.Get<double>(TimeProvider.GetUtcNow(), SecurityIdentifier, FundamentalProperty.FinancialStatements_BalanceSheet_TreasuryBillsandOtherEligibleBills_ThreeMonths);
+        [Obsolete("TreasuryBillsandOtherEligibleBills is no longer provided by Morningstar since the 2026 feed migration; no direct replacement is provided.")]
+        public double ThreeMonths => throw new NotSupportedException("TreasuryBillsandOtherEligibleBills is no longer provided by Morningstar since the 2026 feed migration; no direct replacement is provided.");
 
         /// <summary>
         /// Gets/sets the TwelveMonths period value for the field
@@ -48,23 +49,12 @@ namespace QuantConnect.Data.Fundamental
         /// <summary>
         /// Returns true if the field contains a value for the default period
         /// </summary>
-        public override bool HasValue => !BaseFundamentalDataProvider.IsNone(typeof(double), FundamentalService.Get<double>(TimeProvider.GetUtcNow(), SecurityIdentifier, FundamentalProperty.FinancialStatements_BalanceSheet_TreasuryBillsandOtherEligibleBills_TwelveMonths));
+        public override bool HasValue => false;
 
         /// <summary>
         /// Returns the default value for the field
         /// </summary>
-        public override double Value
-        {
-            get
-            {
-                var defaultValue = FundamentalService.Get<double>(TimeProvider.GetUtcNow(), SecurityIdentifier, FundamentalProperty.FinancialStatements_BalanceSheet_TreasuryBillsandOtherEligibleBills_TwelveMonths);
-                if (!BaseFundamentalDataProvider.IsNone(typeof(double), defaultValue))
-                {
-                    return defaultValue;
-                }
-                return base.Value;
-            }
-        }
+        public override double Value => throw new NotSupportedException("TreasuryBillsandOtherEligibleBills is no longer provided by Morningstar since the 2026 feed migration; no direct replacement is provided.");
 
         /// <summary>
         /// Gets a dictionary of period names and values for the field
@@ -73,7 +63,7 @@ namespace QuantConnect.Data.Fundamental
         public override IReadOnlyDictionary<string, double> GetPeriodValues()
         {
             var result = new Dictionary<string, double>();
-            foreach (var kvp in new[] { new Tuple<string, double>("3M",ThreeMonths), new Tuple<string, double>("12M",TwelveMonths) })
+            foreach (var kvp in new[] { new Tuple<string, double>("12M",TwelveMonths) })
             {
                 if(!BaseFundamentalDataProvider.IsNone(typeof(double), kvp.Item2))
                 {

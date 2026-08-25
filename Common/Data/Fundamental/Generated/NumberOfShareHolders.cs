@@ -1,4 +1,4 @@
-/*
+﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2023 QuantConnect Corporation.
  *
@@ -37,58 +37,53 @@ namespace QuantConnect.Data.Fundamental
         /// Gets/sets the OneMonth period value for the field
         /// </summary>
         [JsonProperty("1M")]
-        public long OneMonth => FundamentalService.Get<long>(TimeProvider.GetUtcNow(), SecurityIdentifier, FundamentalProperty.FinancialStatements_NumberOfShareHolders_OneMonth);
+        [Obsolete("NumberOfShareHolders is no longer provided by Morningstar since the 2026 feed migration; no direct replacement is provided.")]
+        public long OneMonth => throw new NotSupportedException("NumberOfShareHolders is no longer provided by Morningstar since the 2026 feed migration; no direct replacement is provided.");
 
         /// <summary>
         /// Gets/sets the TwoMonths period value for the field
         /// </summary>
         [JsonProperty("2M")]
-        public long TwoMonths => FundamentalService.Get<long>(TimeProvider.GetUtcNow(), SecurityIdentifier, FundamentalProperty.FinancialStatements_NumberOfShareHolders_TwoMonths);
+        [Obsolete("NumberOfShareHolders is no longer provided by Morningstar since the 2026 feed migration; no direct replacement is provided.")]
+        public long TwoMonths => throw new NotSupportedException("NumberOfShareHolders is no longer provided by Morningstar since the 2026 feed migration; no direct replacement is provided.");
 
         /// <summary>
         /// Gets/sets the ThreeMonths period value for the field
         /// </summary>
         [JsonProperty("3M")]
-        public long ThreeMonths => FundamentalService.Get<long>(TimeProvider.GetUtcNow(), SecurityIdentifier, FundamentalProperty.FinancialStatements_NumberOfShareHolders_ThreeMonths);
+        [Obsolete("NumberOfShareHolders is no longer provided by Morningstar since the 2026 feed migration; no direct replacement is provided.")]
+        public long ThreeMonths => throw new NotSupportedException("NumberOfShareHolders is no longer provided by Morningstar since the 2026 feed migration; no direct replacement is provided.");
 
         /// <summary>
         /// Gets/sets the SixMonths period value for the field
         /// </summary>
         [JsonProperty("6M")]
-        public long SixMonths => FundamentalService.Get<long>(TimeProvider.GetUtcNow(), SecurityIdentifier, FundamentalProperty.FinancialStatements_NumberOfShareHolders_SixMonths);
+        [Obsolete("NumberOfShareHolders is no longer provided by Morningstar since the 2026 feed migration; no direct replacement is provided.")]
+        public long SixMonths => throw new NotSupportedException("NumberOfShareHolders is no longer provided by Morningstar since the 2026 feed migration; no direct replacement is provided.");
 
         /// <summary>
         /// Gets/sets the NineMonths period value for the field
         /// </summary>
         [JsonProperty("9M")]
-        public long NineMonths => FundamentalService.Get<long>(TimeProvider.GetUtcNow(), SecurityIdentifier, FundamentalProperty.FinancialStatements_NumberOfShareHolders_NineMonths);
+        [Obsolete("NumberOfShareHolders is no longer provided by Morningstar since the 2026 feed migration; no direct replacement is provided.")]
+        public long NineMonths => throw new NotSupportedException("NumberOfShareHolders is no longer provided by Morningstar since the 2026 feed migration; no direct replacement is provided.");
 
         /// <summary>
         /// Gets/sets the TwelveMonths period value for the field
         /// </summary>
         [JsonProperty("12M")]
-        public long TwelveMonths => FundamentalService.Get<long>(TimeProvider.GetUtcNow(), SecurityIdentifier, FundamentalProperty.FinancialStatements_NumberOfShareHolders_TwelveMonths);
+        [Obsolete("NumberOfShareHolders is no longer provided by Morningstar since the 2026 feed migration; no direct replacement is provided.")]
+        public long TwelveMonths => throw new NotSupportedException("NumberOfShareHolders is no longer provided by Morningstar since the 2026 feed migration; no direct replacement is provided.");
 
         /// <summary>
         /// Returns true if the field contains a value for the default period
         /// </summary>
-        public override bool HasValue => !BaseFundamentalDataProvider.IsNone(typeof(long), FundamentalService.Get<long>(TimeProvider.GetUtcNow(), SecurityIdentifier, FundamentalProperty.FinancialStatements_NumberOfShareHolders_TwelveMonths));
+        public override bool HasValue => false;
 
         /// <summary>
         /// Returns the default value for the field
         /// </summary>
-        public override long Value
-        {
-            get
-            {
-                var defaultValue = FundamentalService.Get<long>(TimeProvider.GetUtcNow(), SecurityIdentifier, FundamentalProperty.FinancialStatements_NumberOfShareHolders_TwelveMonths);
-                if (!BaseFundamentalDataProvider.IsNone(typeof(long), defaultValue))
-                {
-                    return defaultValue;
-                }
-                return base.Value;
-            }
-        }
+        public override long Value => throw new NotSupportedException("NumberOfShareHolders is no longer provided by Morningstar since the 2026 feed migration; no direct replacement is provided.");
 
         /// <summary>
         /// Gets a dictionary of period names and values for the field

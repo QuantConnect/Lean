@@ -1,4 +1,4 @@
-/*
+﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2023 QuantConnect Corporation.
  *
@@ -37,58 +37,53 @@ namespace QuantConnect.Data.Fundamental
         /// Gets/sets the OneMonth period value for the field
         /// </summary>
         [JsonProperty("1M")]
-        public string OneMonth => FundamentalService.Get<string>(TimeProvider.GetUtcNow(), SecurityIdentifier, FundamentalProperty.FinancialStatements_InventoryValuationMethod_OneMonth);
+        [Obsolete("InventoryValuationMethod is no longer provided by Morningstar since the 2026 feed migration; no direct replacement is provided.")]
+        public string OneMonth => throw new NotSupportedException("InventoryValuationMethod is no longer provided by Morningstar since the 2026 feed migration; no direct replacement is provided.");
 
         /// <summary>
         /// Gets/sets the TwoMonths period value for the field
         /// </summary>
         [JsonProperty("2M")]
-        public string TwoMonths => FundamentalService.Get<string>(TimeProvider.GetUtcNow(), SecurityIdentifier, FundamentalProperty.FinancialStatements_InventoryValuationMethod_TwoMonths);
+        [Obsolete("InventoryValuationMethod is no longer provided by Morningstar since the 2026 feed migration; no direct replacement is provided.")]
+        public string TwoMonths => throw new NotSupportedException("InventoryValuationMethod is no longer provided by Morningstar since the 2026 feed migration; no direct replacement is provided.");
 
         /// <summary>
         /// Gets/sets the ThreeMonths period value for the field
         /// </summary>
         [JsonProperty("3M")]
-        public string ThreeMonths => FundamentalService.Get<string>(TimeProvider.GetUtcNow(), SecurityIdentifier, FundamentalProperty.FinancialStatements_InventoryValuationMethod_ThreeMonths);
+        [Obsolete("InventoryValuationMethod is no longer provided by Morningstar since the 2026 feed migration; no direct replacement is provided.")]
+        public string ThreeMonths => throw new NotSupportedException("InventoryValuationMethod is no longer provided by Morningstar since the 2026 feed migration; no direct replacement is provided.");
 
         /// <summary>
         /// Gets/sets the SixMonths period value for the field
         /// </summary>
         [JsonProperty("6M")]
-        public string SixMonths => FundamentalService.Get<string>(TimeProvider.GetUtcNow(), SecurityIdentifier, FundamentalProperty.FinancialStatements_InventoryValuationMethod_SixMonths);
+        [Obsolete("InventoryValuationMethod is no longer provided by Morningstar since the 2026 feed migration; no direct replacement is provided.")]
+        public string SixMonths => throw new NotSupportedException("InventoryValuationMethod is no longer provided by Morningstar since the 2026 feed migration; no direct replacement is provided.");
 
         /// <summary>
         /// Gets/sets the NineMonths period value for the field
         /// </summary>
         [JsonProperty("9M")]
-        public string NineMonths => FundamentalService.Get<string>(TimeProvider.GetUtcNow(), SecurityIdentifier, FundamentalProperty.FinancialStatements_InventoryValuationMethod_NineMonths);
+        [Obsolete("InventoryValuationMethod is no longer provided by Morningstar since the 2026 feed migration; no direct replacement is provided.")]
+        public string NineMonths => throw new NotSupportedException("InventoryValuationMethod is no longer provided by Morningstar since the 2026 feed migration; no direct replacement is provided.");
 
         /// <summary>
         /// Gets/sets the TwelveMonths period value for the field
         /// </summary>
         [JsonProperty("12M")]
-        public string TwelveMonths => FundamentalService.Get<string>(TimeProvider.GetUtcNow(), SecurityIdentifier, FundamentalProperty.FinancialStatements_InventoryValuationMethod_TwelveMonths);
+        [Obsolete("InventoryValuationMethod is no longer provided by Morningstar since the 2026 feed migration; no direct replacement is provided.")]
+        public string TwelveMonths => throw new NotSupportedException("InventoryValuationMethod is no longer provided by Morningstar since the 2026 feed migration; no direct replacement is provided.");
 
         /// <summary>
         /// Returns true if the field contains a value for the default period
         /// </summary>
-        public override bool HasValue => !BaseFundamentalDataProvider.IsNone(typeof(string), FundamentalService.Get<string>(TimeProvider.GetUtcNow(), SecurityIdentifier, FundamentalProperty.FinancialStatements_InventoryValuationMethod_TwelveMonths));
+        public override bool HasValue => false;
 
         /// <summary>
         /// Returns the default value for the field
         /// </summary>
-        public override string Value
-        {
-            get
-            {
-                var defaultValue = FundamentalService.Get<string>(TimeProvider.GetUtcNow(), SecurityIdentifier, FundamentalProperty.FinancialStatements_InventoryValuationMethod_TwelveMonths);
-                if (!BaseFundamentalDataProvider.IsNone(typeof(string), defaultValue))
-                {
-                    return defaultValue;
-                }
-                return base.Value;
-            }
-        }
+        public override string Value => throw new NotSupportedException("InventoryValuationMethod is no longer provided by Morningstar since the 2026 feed migration; no direct replacement is provided.");
 
         /// <summary>
         /// Gets a dictionary of period names and values for the field

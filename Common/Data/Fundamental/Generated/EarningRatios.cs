@@ -1,4 +1,4 @@
-/*
+﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2023 QuantConnect Corporation.
  *
@@ -75,6 +75,7 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 13019
         /// </remarks>
         [JsonProperty("13019")]
+        [Obsolete("RegressionGrowthofDividends5Years is no longer provided by Morningstar since the 2026 feed migration; no direct replacement is provided.")]
         public RegressionGrowthofDividends5Years RegressionGrowthofDividends5Years => _regressionGrowthofDividends5Years ??= new(_timeProvider, _securityIdentifier);
         private RegressionGrowthofDividends5Years _regressionGrowthofDividends5Years;
 
@@ -105,6 +106,7 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 13022
         /// </remarks>
         [JsonProperty("13022")]
+        [Obsolete("NormalizedDilutedEPSGrowth is no longer provided by Morningstar since the 2026 feed migration; no direct replacement is provided.")]
         public NormalizedDilutedEPSGrowth NormalizedDilutedEPSGrowth => _normalizedDilutedEPSGrowth ??= new(_timeProvider, _securityIdentifier);
         private NormalizedDilutedEPSGrowth _normalizedDilutedEPSGrowth;
 

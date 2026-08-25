@@ -1,4 +1,4 @@
-/*
+﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2023 QuantConnect Corporation.
  *
@@ -413,7 +413,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 14042
         /// </remarks>
         [JsonProperty("14042")]
-        public string ForwardCalculationStyle => FundamentalService.Get<string>(_timeProvider.GetUtcNow(), _securityIdentifier, FundamentalProperty.ValuationRatios_ForwardCalculationStyle);
+        [Obsolete("ForwardCalculationStyle is no longer provided by Morningstar since the 2026 feed migration; no direct replacement is provided.")]
+        public string ForwardCalculationStyle => throw new NotSupportedException("ForwardCalculationStyle is no longer provided by Morningstar since the 2026 feed migration; no direct replacement is provided.");
 
         /// <summary>
         /// Used to collect the forward dividend for companies where our formula will not produce the correct value.
@@ -431,7 +432,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 14044
         /// </remarks>
         [JsonProperty("14044")]
-        public string TrailingCalculationStyle => FundamentalService.Get<string>(_timeProvider.GetUtcNow(), _securityIdentifier, FundamentalProperty.ValuationRatios_TrailingCalculationStyle);
+        [Obsolete("TrailingCalculationStyle is no longer provided by Morningstar since the 2026 feed migration; no direct replacement is provided.")]
+        public string TrailingCalculationStyle => throw new NotSupportedException("TrailingCalculationStyle is no longer provided by Morningstar since the 2026 feed migration; no direct replacement is provided.");
 
         /// <summary>
         /// Used to collect the trailing dividend for companies where our formula will not produce the correct value.
