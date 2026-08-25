@@ -1,4 +1,4 @@
-/*
+﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2023 QuantConnect Corporation.
  *
@@ -45,6 +45,7 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 26000
         /// </remarks>
         [JsonProperty("26000")]
+        [Obsolete("Amortization is no longer provided by Morningstar since the 2026 feed migration; no direct replacement is provided.")]
         public AmortizationCashFlowStatement Amortization => _amortization ??= new(_timeProvider, _securityIdentifier);
         private AmortizationCashFlowStatement _amortization;
 
@@ -195,6 +196,7 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 26024
         /// </remarks>
         [JsonProperty("26024")]
+        [Obsolete("ChangeInTaxPayable is no longer provided by Morningstar since the 2026 feed migration; no direct replacement is provided.")]
         public ChangeInTaxPayableCashFlowStatement ChangeInTaxPayable => _changeInTaxPayable ??= new(_timeProvider, _securityIdentifier);
         private ChangeInTaxPayableCashFlowStatement _changeInTaxPayable;
 
@@ -215,6 +217,7 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 26026
         /// </remarks>
         [JsonProperty("26026")]
+        [Obsolete("ChangeInAccruedInvestmentIncome is no longer provided by Morningstar since the 2026 feed migration; no direct replacement is provided.")]
         public ChangeInAccruedInvestmentIncomeCashFlowStatement ChangeInAccruedInvestmentIncome => _changeInAccruedInvestmentIncome ??= new(_timeProvider, _securityIdentifier);
         private ChangeInAccruedInvestmentIncomeCashFlowStatement _changeInAccruedInvestmentIncome;
 
@@ -265,6 +268,7 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 26032
         /// </remarks>
         [JsonProperty("26032")]
+        [Obsolete("ChangeInIncomeTaxPayable is no longer provided by Morningstar since the 2026 feed migration; no direct replacement is provided.")]
         public ChangeInIncomeTaxPayableCashFlowStatement ChangeInIncomeTaxPayable => _changeInIncomeTaxPayable ??= new(_timeProvider, _securityIdentifier);
         private ChangeInIncomeTaxPayableCashFlowStatement _changeInIncomeTaxPayable;
 
@@ -275,6 +279,7 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 26033
         /// </remarks>
         [JsonProperty("26033")]
+        [Obsolete("ChangeInInterestPayable is no longer provided by Morningstar since the 2026 feed migration; no direct replacement is provided.")]
         public ChangeInInterestPayableCashFlowStatement ChangeInInterestPayable => _changeInInterestPayable ??= new(_timeProvider, _securityIdentifier);
         private ChangeInInterestPayableCashFlowStatement _changeInInterestPayable;
 
@@ -295,6 +300,7 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 26035
         /// </remarks>
         [JsonProperty("26035")]
+        [Obsolete("ChangeInLoans is no longer provided by Morningstar since the 2026 feed migration; no direct replacement is provided.")]
         public ChangeInLoansCashFlowStatement ChangeInLoans => _changeInLoans ??= new(_timeProvider, _securityIdentifier);
         private ChangeInLoansCashFlowStatement _changeInLoans;
 
@@ -355,6 +361,7 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 26047
         /// </remarks>
         [JsonProperty("26047")]
+        [Obsolete("ChangeInReinsuranceRecoverableOnPaidAndUnpaidLosses is no longer provided by Morningstar since the 2026 feed migration; no direct replacement is provided.")]
         public ChangeInReinsuranceRecoverableOnPaidAndUnpaidLossesCashFlowStatement ChangeInReinsuranceRecoverableOnPaidAndUnpaidLosses => _changeInReinsuranceRecoverableOnPaidAndUnpaidLosses ??= new(_timeProvider, _securityIdentifier);
         private ChangeInReinsuranceRecoverableOnPaidAndUnpaidLossesCashFlowStatement _changeInReinsuranceRecoverableOnPaidAndUnpaidLosses;
 
@@ -415,6 +422,7 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 26058
         /// </remarks>
         [JsonProperty("26058")]
+        [Obsolete("Depletion is no longer provided by Morningstar since the 2026 feed migration; no direct replacement is provided.")]
         public DepletionCashFlowStatement Depletion => _depletion ??= new(_timeProvider, _securityIdentifier);
         private DepletionCashFlowStatement _depletion;
 
@@ -425,6 +433,7 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 26059
         /// </remarks>
         [JsonProperty("26059")]
+        [Obsolete("Depreciation is no longer provided by Morningstar since the 2026 feed migration; no direct replacement is provided.")]
         public DepreciationCashFlowStatement Depreciation => _depreciation ??= new(_timeProvider, _securityIdentifier);
         private DepreciationCashFlowStatement _depreciation;
 
@@ -435,6 +444,7 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 26060
         /// </remarks>
         [JsonProperty("26060")]
+        [Obsolete("DepreciationAndAmortization is no longer provided by Morningstar since the 2026 feed migration; no direct replacement is provided.")]
         public DepreciationAndAmortizationCashFlowStatement DepreciationAndAmortization => _depreciationAndAmortization ??= new(_timeProvider, _securityIdentifier);
         private DepreciationAndAmortizationCashFlowStatement _depreciationAndAmortization;
 
@@ -535,6 +545,7 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 26078
         /// </remarks>
         [JsonProperty("26078")]
+        [Obsolete("NetForeignCurrencyExchangeGainLoss is no longer provided by Morningstar since the 2026 feed migration; no direct replacement is provided.")]
         public NetForeignCurrencyExchangeGainLossCashFlowStatement NetForeignCurrencyExchangeGainLoss => _netForeignCurrencyExchangeGainLoss ??= new(_timeProvider, _securityIdentifier);
         private NetForeignCurrencyExchangeGainLossCashFlowStatement _netForeignCurrencyExchangeGainLoss;
 
@@ -605,6 +616,7 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 26095
         /// </remarks>
         [JsonProperty("26095")]
+        [Obsolete("ProceedsFromLoans is no longer provided by Morningstar since the 2026 feed migration; no direct replacement is provided.")]
         public ProceedsFromLoansCashFlowStatement ProceedsFromLoans => _proceedsFromLoans ??= new(_timeProvider, _securityIdentifier);
         private ProceedsFromLoansCashFlowStatement _proceedsFromLoans;
 
@@ -835,6 +847,7 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 26143
         /// </remarks>
         [JsonProperty("26143")]
+        [Obsolete("AssetImpairmentCharge is no longer provided by Morningstar since the 2026 feed migration; no direct replacement is provided.")]
         public AssetImpairmentChargeCashFlowStatement AssetImpairmentCharge => _assetImpairmentCharge ??= new(_timeProvider, _securityIdentifier);
         private AssetImpairmentChargeCashFlowStatement _assetImpairmentCharge;
 
@@ -885,6 +898,7 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 26148
         /// </remarks>
         [JsonProperty("26148")]
+        [Obsolete("ChangeInOtherWorkingCapital is no longer provided by Morningstar since the 2026 feed migration; no direct replacement is provided.")]
         public ChangeInOtherWorkingCapitalCashFlowStatement ChangeInOtherWorkingCapital => _changeInOtherWorkingCapital ??= new(_timeProvider, _securityIdentifier);
         private ChangeInOtherWorkingCapitalCashFlowStatement _changeInOtherWorkingCapital;
 
@@ -985,6 +999,7 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 26163
         /// </remarks>
         [JsonProperty("26163")]
+        [Obsolete("OperatingGainsLosses is no longer provided by Morningstar since the 2026 feed migration; no direct replacement is provided.")]
         public OperatingGainsLossesCashFlowStatement OperatingGainsLosses => _operatingGainsLosses ??= new(_timeProvider, _securityIdentifier);
         private OperatingGainsLossesCashFlowStatement _operatingGainsLosses;
 
@@ -1015,6 +1030,7 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 26166
         /// </remarks>
         [JsonProperty("26166")]
+        [Obsolete("OtherNonCashItems is no longer provided by Morningstar since the 2026 feed migration; no direct replacement is provided.")]
         public OtherNonCashItemsCashFlowStatement OtherNonCashItems => _otherNonCashItems ??= new(_timeProvider, _securityIdentifier);
         private OtherNonCashItemsCashFlowStatement _otherNonCashItems;
 
@@ -1065,6 +1081,7 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 26171
         /// </remarks>
         [JsonProperty("26171")]
+        [Obsolete("RealizedGainLossOnSaleOfLoansAndLease is no longer provided by Morningstar since the 2026 feed migration; no direct replacement is provided.")]
         public RealizedGainLossOnSaleOfLoansAndLeaseCashFlowStatement RealizedGainLossOnSaleOfLoansAndLease => _realizedGainLossOnSaleOfLoansAndLease ??= new(_timeProvider, _securityIdentifier);
         private RealizedGainLossOnSaleOfLoansAndLeaseCashFlowStatement _realizedGainLossOnSaleOfLoansAndLease;
 
@@ -1085,6 +1102,7 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 26173
         /// </remarks>
         [JsonProperty("26173")]
+        [Obsolete("UnrealizedGainLossOnInvestmentSecurities is no longer provided by Morningstar since the 2026 feed migration; no direct replacement is provided.")]
         public UnrealizedGainLossOnInvestmentSecuritiesCashFlowStatement UnrealizedGainLossOnInvestmentSecurities => _unrealizedGainLossOnInvestmentSecurities ??= new(_timeProvider, _securityIdentifier);
         private UnrealizedGainLossOnInvestmentSecuritiesCashFlowStatement _unrealizedGainLossOnInvestmentSecurities;
 
@@ -1105,6 +1123,7 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 26175
         /// </remarks>
         [JsonProperty("26175")]
+        [Obsolete("AmortizationOfIntangibles is no longer provided by Morningstar since the 2026 feed migration; no direct replacement is provided.")]
         public AmortizationOfIntangiblesCashFlowStatement AmortizationOfIntangibles => _amortizationOfIntangibles ??= new(_timeProvider, _securityIdentifier);
         private AmortizationOfIntangiblesCashFlowStatement _amortizationOfIntangibles;
 
@@ -1225,6 +1244,7 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 26196
         /// </remarks>
         [JsonProperty("26196")]
+        [Obsolete("PurchaseOfSubsidiaries is no longer provided by Morningstar since the 2026 feed migration; no direct replacement is provided.")]
         public PurchaseOfSubsidiariesCashFlowStatement PurchaseOfSubsidiaries => _purchaseOfSubsidiaries ??= new(_timeProvider, _securityIdentifier);
         private PurchaseOfSubsidiariesCashFlowStatement _purchaseOfSubsidiaries;
 
@@ -1235,6 +1255,7 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 26197
         /// </remarks>
         [JsonProperty("26197")]
+        [Obsolete("PurchaseOfJointVentureAssociate is no longer provided by Morningstar since the 2026 feed migration; no direct replacement is provided.")]
         public PurchaseOfJointVentureAssociateCashFlowStatement PurchaseOfJointVentureAssociate => _purchaseOfJointVentureAssociate ??= new(_timeProvider, _securityIdentifier);
         private PurchaseOfJointVentureAssociateCashFlowStatement _purchaseOfJointVentureAssociate;
 
@@ -1245,6 +1266,7 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 26198
         /// </remarks>
         [JsonProperty("26198")]
+        [Obsolete("SaleOfSubsidiaries is no longer provided by Morningstar since the 2026 feed migration; no direct replacement is provided.")]
         public SaleOfSubsidiariesCashFlowStatement SaleOfSubsidiaries => _saleOfSubsidiaries ??= new(_timeProvider, _securityIdentifier);
         private SaleOfSubsidiariesCashFlowStatement _saleOfSubsidiaries;
 
@@ -1255,6 +1277,7 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 26199
         /// </remarks>
         [JsonProperty("26199")]
+        [Obsolete("SaleOfJointVentureAssociate is no longer provided by Morningstar since the 2026 feed migration; no direct replacement is provided.")]
         public SaleOfJointVentureAssociateCashFlowStatement SaleOfJointVentureAssociate => _saleOfJointVentureAssociate ??= new(_timeProvider, _securityIdentifier);
         private SaleOfJointVentureAssociateCashFlowStatement _saleOfJointVentureAssociate;
 
@@ -1295,6 +1318,7 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 26203
         /// </remarks>
         [JsonProperty("26203")]
+        [Obsolete("ShareOfAssociates is no longer provided by Morningstar since the 2026 feed migration; no direct replacement is provided.")]
         public ShareOfAssociatesCashFlowStatement ShareOfAssociates => _shareOfAssociates ??= new(_timeProvider, _securityIdentifier);
         private ShareOfAssociatesCashFlowStatement _shareOfAssociates;
 
@@ -1305,6 +1329,7 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 26204
         /// </remarks>
         [JsonProperty("26204")]
+        [Obsolete("ProfitOnDisposals is no longer provided by Morningstar since the 2026 feed migration; no direct replacement is provided.")]
         public ProfitOnDisposalsCashFlowStatement ProfitOnDisposals => _profitOnDisposals ??= new(_timeProvider, _securityIdentifier);
         private ProfitOnDisposalsCashFlowStatement _profitOnDisposals;
 
@@ -1315,6 +1340,7 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 26205
         /// </remarks>
         [JsonProperty("26205")]
+        [Obsolete("ReorganizationOtherCosts is no longer provided by Morningstar since the 2026 feed migration; no direct replacement is provided.")]
         public ReorganizationOtherCostsCashFlowStatement ReorganizationOtherCosts => _reorganizationOtherCosts ??= new(_timeProvider, _securityIdentifier);
         private ReorganizationOtherCostsCashFlowStatement _reorganizationOtherCosts;
 
@@ -1375,6 +1401,7 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 26222
         /// </remarks>
         [JsonProperty("26222")]
+        [Obsolete("OtherCashReceiptsfromOperatingActivities is no longer provided by Morningstar since the 2026 feed migration; no direct replacement is provided.")]
         public OtherCashReceiptsfromOperatingActivitiesCashFlowStatement OtherCashReceiptsfromOperatingActivities => _otherCashReceiptsfromOperatingActivities ??= new(_timeProvider, _securityIdentifier);
         private OtherCashReceiptsfromOperatingActivitiesCashFlowStatement _otherCashReceiptsfromOperatingActivities;
 
@@ -1395,6 +1422,7 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 26224
         /// </remarks>
         [JsonProperty("26224")]
+        [Obsolete("PaymentstoSuppliersforGoodsandServices is no longer provided by Morningstar since the 2026 feed migration; no direct replacement is provided.")]
         public PaymentstoSuppliersforGoodsandServicesCashFlowStatement PaymentstoSuppliersforGoodsandServices => _paymentstoSuppliersforGoodsandServices ??= new(_timeProvider, _securityIdentifier);
         private PaymentstoSuppliersforGoodsandServicesCashFlowStatement _paymentstoSuppliersforGoodsandServices;
 
@@ -1415,6 +1443,7 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 26228
         /// </remarks>
         [JsonProperty("26228")]
+        [Obsolete("OtherCashPaymentsfromOperatingActivities is no longer provided by Morningstar since the 2026 feed migration; no direct replacement is provided.")]
         public OtherCashPaymentsfromOperatingActivitiesCashFlowStatement OtherCashPaymentsfromOperatingActivities => _otherCashPaymentsfromOperatingActivities ??= new(_timeProvider, _securityIdentifier);
         private OtherCashPaymentsfromOperatingActivitiesCashFlowStatement _otherCashPaymentsfromOperatingActivities;
 
@@ -1425,6 +1454,7 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 26229
         /// </remarks>
         [JsonProperty("26229")]
+        [Obsolete("DividendsPaidDirect is no longer provided by Morningstar since the 2026 feed migration; no direct replacement is provided.")]
         public DividendsPaidDirectCashFlowStatement DividendsPaidDirect => _dividendsPaidDirect ??= new(_timeProvider, _securityIdentifier);
         private DividendsPaidDirectCashFlowStatement _dividendsPaidDirect;
 
@@ -1435,6 +1465,7 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 26230
         /// </remarks>
         [JsonProperty("26230")]
+        [Obsolete("DividendsReceivedDirect is no longer provided by Morningstar since the 2026 feed migration; no direct replacement is provided.")]
         public DividendsReceivedDirectCashFlowStatement DividendsReceivedDirect => _dividendsReceivedDirect ??= new(_timeProvider, _securityIdentifier);
         private DividendsReceivedDirectCashFlowStatement _dividendsReceivedDirect;
 
@@ -1445,6 +1476,7 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 26231
         /// </remarks>
         [JsonProperty("26231")]
+        [Obsolete("InterestPaidDirect is no longer provided by Morningstar since the 2026 feed migration; no direct replacement is provided.")]
         public InterestPaidDirectCashFlowStatement InterestPaidDirect => _interestPaidDirect ??= new(_timeProvider, _securityIdentifier);
         private InterestPaidDirectCashFlowStatement _interestPaidDirect;
 
@@ -1455,6 +1487,7 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 26232
         /// </remarks>
         [JsonProperty("26232")]
+        [Obsolete("InterestReceivedDirect is no longer provided by Morningstar since the 2026 feed migration; no direct replacement is provided.")]
         public InterestReceivedDirectCashFlowStatement InterestReceivedDirect => _interestReceivedDirect ??= new(_timeProvider, _securityIdentifier);
         private InterestReceivedDirectCashFlowStatement _interestReceivedDirect;
 
@@ -1465,6 +1498,7 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 26233
         /// </remarks>
         [JsonProperty("26233")]
+        [Obsolete("TaxesRefundPaidDirect is no longer provided by Morningstar since the 2026 feed migration; no direct replacement is provided.")]
         public TaxesRefundPaidDirectCashFlowStatement TaxesRefundPaidDirect => _taxesRefundPaidDirect ??= new(_timeProvider, _securityIdentifier);
         private TaxesRefundPaidDirectCashFlowStatement _taxesRefundPaidDirect;
 
@@ -1485,6 +1519,7 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 26235
         /// </remarks>
         [JsonProperty("26235")]
+        [Obsolete("ImpairmentLossReversalRecognizedinProfitorLoss is no longer provided by Morningstar since the 2026 feed migration; no direct replacement is provided.")]
         public ImpairmentLossReversalRecognizedinProfitorLossCashFlowStatement ImpairmentLossReversalRecognizedinProfitorLoss => _impairmentLossReversalRecognizedinProfitorLoss ??= new(_timeProvider, _securityIdentifier);
         private ImpairmentLossReversalRecognizedinProfitorLossCashFlowStatement _impairmentLossReversalRecognizedinProfitorLoss;
 
@@ -1585,6 +1620,7 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 26255
         /// </remarks>
         [JsonProperty("26255")]
+        [Obsolete("ChangeinAccruedIncome is no longer provided by Morningstar since the 2026 feed migration; no direct replacement is provided.")]
         public ChangeinAccruedIncomeCashFlowStatement ChangeinAccruedIncome => _changeinAccruedIncome ??= new(_timeProvider, _securityIdentifier);
         private ChangeinAccruedIncomeCashFlowStatement _changeinAccruedIncome;
 
@@ -1675,6 +1711,7 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 26267
         /// </remarks>
         [JsonProperty("26267")]
+        [Obsolete("ChangeinInsuranceContractLiabilities is no longer provided by Morningstar since the 2026 feed migration; no direct replacement is provided.")]
         public ChangeinInsuranceContractLiabilitiesCashFlowStatement ChangeinInsuranceContractLiabilities => _changeinInsuranceContractLiabilities ??= new(_timeProvider, _securityIdentifier);
         private ChangeinInsuranceContractLiabilitiesCashFlowStatement _changeinInsuranceContractLiabilities;
 
@@ -1695,6 +1732,7 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 26270
         /// </remarks>
         [JsonProperty("26270")]
+        [Obsolete("ReceiptsfromCustomers is no longer provided by Morningstar since the 2026 feed migration; no direct replacement is provided.")]
         public ReceiptsfromCustomersCashFlowStatement ReceiptsfromCustomers => _receiptsfromCustomers ??= new(_timeProvider, _securityIdentifier);
         private ReceiptsfromCustomersCashFlowStatement _receiptsfromCustomers;
 
@@ -1705,6 +1743,7 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 26271
         /// </remarks>
         [JsonProperty("26271")]
+        [Obsolete("ReceiptsfromGovernmentGrants is no longer provided by Morningstar since the 2026 feed migration; no direct replacement is provided.")]
         public ReceiptsfromGovernmentGrantsCashFlowStatement ReceiptsfromGovernmentGrants => _receiptsfromGovernmentGrants ??= new(_timeProvider, _securityIdentifier);
         private ReceiptsfromGovernmentGrantsCashFlowStatement _receiptsfromGovernmentGrants;
 
@@ -1765,6 +1804,7 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 26278
         /// </remarks>
         [JsonProperty("26278")]
+        [Obsolete("CashReceiptsfromSecuritiesRelatedActivities is no longer provided by Morningstar since the 2026 feed migration; no direct replacement is provided.")]
         public CashReceiptsfromSecuritiesRelatedActivitiesCashFlowStatement CashReceiptsfromSecuritiesRelatedActivities => _cashReceiptsfromSecuritiesRelatedActivities ??= new(_timeProvider, _securityIdentifier);
         private CashReceiptsfromSecuritiesRelatedActivitiesCashFlowStatement _cashReceiptsfromSecuritiesRelatedActivities;
 
@@ -1805,6 +1845,7 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 26284
         /// </remarks>
         [JsonProperty("26284")]
+        [Obsolete("InterestandCommissionPaid is no longer provided by Morningstar since the 2026 feed migration; no direct replacement is provided.")]
         public InterestandCommissionPaidCashFlowStatement InterestandCommissionPaid => _interestandCommissionPaid ??= new(_timeProvider, _securityIdentifier);
         private InterestandCommissionPaidCashFlowStatement _interestandCommissionPaid;
 
@@ -1825,6 +1866,7 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 26286
         /// </remarks>
         [JsonProperty("26286")]
+        [Obsolete("CashReceivedfromInsuranceActivities is no longer provided by Morningstar since the 2026 feed migration; no direct replacement is provided.")]
         public CashReceivedfromInsuranceActivitiesCashFlowStatement CashReceivedfromInsuranceActivities => _cashReceivedfromInsuranceActivities ??= new(_timeProvider, _securityIdentifier);
         private CashReceivedfromInsuranceActivitiesCashFlowStatement _cashReceivedfromInsuranceActivities;
 

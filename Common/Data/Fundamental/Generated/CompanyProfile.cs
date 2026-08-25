@@ -1,4 +1,4 @@
-/*
+﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2023 QuantConnect Corporation.
  *
@@ -125,7 +125,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 2110
         /// </remarks>
         [JsonProperty("2110")]
-        public string HeadquarterFax => FundamentalService.Get<string>(_timeProvider.GetUtcNow(), _securityIdentifier, FundamentalProperty.CompanyProfile_HeadquarterFax);
+        [Obsolete("HeadquarterFax is no longer provided by Morningstar since the 2026 feed migration; no direct replacement is provided.")]
+        public string HeadquarterFax => throw new NotSupportedException("HeadquarterFax is no longer provided by Morningstar since the 2026 feed migration; no direct replacement is provided.");
 
         /// <summary>
         /// The headquarters' website address as given in the latest report
@@ -251,7 +252,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 2125
         /// </remarks>
         [JsonProperty("2125")]
-        public string RegisteredFax => FundamentalService.Get<string>(_timeProvider.GetUtcNow(), _securityIdentifier, FundamentalProperty.CompanyProfile_RegisteredFax);
+        [Obsolete("RegisteredFax is no longer provided by Morningstar since the 2026 feed migration; no direct replacement is provided.")]
+        public string RegisteredFax => throw new NotSupportedException("RegisteredFax is no longer provided by Morningstar since the 2026 feed migration; no direct replacement is provided.");
 
         /// <summary>
         /// Flag to denote whether head and registered offices are the same
@@ -260,7 +262,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 2126
         /// </remarks>
         [JsonProperty("2126")]
-        public bool IsHeadOfficeSameWithRegisteredOfficeFlag => FundamentalService.Get<bool>(_timeProvider.GetUtcNow(), _securityIdentifier, FundamentalProperty.CompanyProfile_IsHeadOfficeSameWithRegisteredOfficeFlag);
+        [Obsolete("IsHeadOfficeSameWithRegisteredOfficeFlag is no longer provided by Morningstar since the 2026 feed migration; no direct replacement is provided.")]
+        public bool IsHeadOfficeSameWithRegisteredOfficeFlag => throw new NotSupportedException("IsHeadOfficeSameWithRegisteredOfficeFlag is no longer provided by Morningstar since the 2026 feed migration; no direct replacement is provided.");
 
         /// <summary>
         /// The latest total shares outstanding reported by the company; most common source of this information is from the cover of the 10K, 10Q, or 20F filing. This figure is an aggregated shares outstanding number for a company. It can be used to calculate the most accurate market cap, based on each individual share's trading price and the total aggregated shares outstanding figure.
