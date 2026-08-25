@@ -29,11 +29,12 @@ namespace QuantConnect.Tests.Indicators
     /// the ones with a test class deriving from <see cref="CommonIndicatorTests{T}"/>.
     /// </summary>
     /// <remarks>
-    /// A field left set by the first pass changes the second, which is what a reset defect
-    /// looks like from the outside. Several periods, because a field assigned on an early
-    /// return during warm-up is overwritten on the first update at any larger period.
-    /// A type that cannot be constructed or fed is reported with its reason by
-    /// <see cref="Assert.Ignore(string)"/>.
+    /// A field left set by the first pass changes the second. Several periods, because a
+    /// field assigned on an early return during warm-up is overwritten at any larger one.
+    /// A two symbol indicator gets a bar per symbol stamped alike, since
+    /// <see cref="MultiSymbolIndicator{T}"/> fills its windows only on a shared time.
+    /// A type that cannot be constructed or fed is reported by
+    /// <see cref="Assert.Ignore(string)"/>, with a count of how many warmed up.
     /// </remarks>
     [TestFixture]
     public class IndicatorResetContractTests
@@ -44,11 +45,9 @@ namespace QuantConnect.Tests.Indicators
 
         private static readonly DateTime StartDate = new DateTime(2020, 1, 1);
 
-        private static readonly Symbol Target =
-            new Symbol(SecurityIdentifier.GenerateEquity("SPY", Market.USA, mapSymbol: false), "SPY");
+        private static readonly Symbol Target = Symbols.SPY;
 
-        private static readonly Symbol Reference =
-            new Symbol(SecurityIdentifier.GenerateEquity("IBM", Market.USA, mapSymbol: false), "IBM");
+        private static readonly Symbol Reference = Symbols.IBM;
 
         private static IEnumerable<TestCaseData> Cases()
         {
@@ -61,8 +60,7 @@ namespace QuantConnect.Tests.Indicators
             {
                 foreach (var period in Periods)
                 {
-                    // {m} is the test method, without which the two contracts name their
-                    // cases identically.
+                    // {m} is the test method; without it the two contracts collide.
                     yield return new TestCaseData(indicator, period)
                         .SetName($"{{m}}({indicator.Name}, period {period.ToString(CultureInfo.InvariantCulture)})");
                 }
@@ -73,7 +71,7 @@ namespace QuantConnect.Tests.Indicators
         [TestCaseSource(nameof(Cases))]
         public void ProducesTheSameValuesAfterReset(Type type, int period)
         {
-            var indicator = Construct(type, period, out var rejected);
+            var indicator = Construct(type, period, out var rejected, out var symbols);
             if (indicator == null)
             {
                 Assert.Ignore(Skip(type, period, rejected));
@@ -83,7 +81,7 @@ namespace QuantConnect.Tests.Indicators
             var count = SampleCount(indicator, period);
 
             var before = new List<Sample>();
-            var reason = Feed(indicator, type, count, before);
+            var reason = Feed(indicator, type, count, symbols, before);
             if (reason != null)
             {
                 Assert.Ignore(Skip(type, period, reason));
@@ -93,14 +91,15 @@ namespace QuantConnect.Tests.Indicators
                 Assert.Ignore(Skip(type, period, "accepted the replay without recording a sample"));
             }
 
+            Record(indicator.IsReady);
             indicator.Reset();
 
             var after = new List<Sample>();
-            var second = Feed(indicator, type, count, after);
+            var second = Feed(indicator, type, count, symbols, after);
 
-            // The series was accepted once already, so failing it now is itself a defect.
             Assert.IsNull(second, $"{Where(type, period)} accepted the series, then failed it after Reset: {second}");
             Assert.AreEqual(before.Count, after.Count, $"{Where(type, period)} produced fewer values after Reset");
+
 
             for (var i = 0; i < before.Count; i++)
             {
@@ -116,7 +115,7 @@ namespace QuantConnect.Tests.Indicators
         [TestCaseSource(nameof(Cases))]
         public void ResetsToDefaultState(Type type, int period)
         {
-            var indicator = Construct(type, period, out var rejected);
+            var indicator = Construct(type, period, out var rejected, out var symbols);
             if (indicator == null)
             {
                 Assert.Ignore(Skip(type, period, rejected));
@@ -125,7 +124,7 @@ namespace QuantConnect.Tests.Indicators
             RegisterTrackedSymbols(indicator, type);
             var count = SampleCount(indicator, period);
 
-            var reason = Feed(indicator, type, count, new List<Sample>());
+            var reason = Feed(indicator, type, count, symbols, new List<Sample>());
             if (reason != null)
             {
                 Assert.Ignore(Skip(type, period, reason));
@@ -147,7 +146,6 @@ namespace QuantConnect.Tests.Indicators
             }
             catch (TargetInvocationException exception)
             {
-                // The helper asserts without a message.
                 Assert.Fail($"{Where(type, period)} is not in its default state after Reset. "
                     + exception.InnerException?.Message);
             }
@@ -161,10 +159,8 @@ namespace QuantConnect.Tests.Indicators
 
         private static Symbol OptionOn(Symbol underlying)
         {
-            return new Symbol(
-                SecurityIdentifier.GenerateOption(
-                    new DateTime(2020, 6, 19), underlying.ID, Market.USA, 300m, OptionRight.Call, OptionStyle.American),
-                underlying.Value);
+            return Symbols.CreateOptionSymbol(
+                underlying.Value, OptionRight.Call, 300m, new DateTime(2020, 6, 19));
         }
 
         private static string Where(Type type, int period)
@@ -183,7 +179,42 @@ namespace QuantConnect.Tests.Indicators
             return 100m + (0.37m * index) + (index % 5 == 0 ? 1.9m : 0m);
         }
 
-        // 21 of 188 never became ready inside 40 bars at a period of 14.
+        // Correlated with the target without repeating it, so a covariance over the
+        // pair is neither zero nor degenerate.
+        private static decimal ReferencePrice(int index)
+        {
+            return 50m + (0.19m * index) + (index % 7 == 0 ? 1.1m : 0m);
+        }
+
+        private static int _cases;
+
+        private static int _ready;
+
+        // A case replayed without warming up asserts nothing, and reads as a pass.
+        private static void Record(bool ready)
+        {
+            _cases++;
+            if (ready)
+            {
+                _ready++;
+            }
+        }
+
+        [OneTimeSetUp]
+        public void ResetCounts()
+        {
+            _cases = 0;
+            _ready = 0;
+        }
+
+        [OneTimeTearDown]
+        public void ReportReadiness()
+        {
+            TestContext.Progress.WriteLine(
+                $"reset contract: {_ready.ToString(CultureInfo.InvariantCulture)} of "
+                + $"{_cases.ToString(CultureInfo.InvariantCulture)} replayed cases were ready when Reset was called");
+        }
+
         private static int SampleCount(IIndicator indicator, int period)
         {
             var warmUp = (indicator as IIndicatorWarmUpPeriodProvider)?.WarmUpPeriod ?? period;
@@ -202,17 +233,20 @@ namespace QuantConnect.Tests.Indicators
             return null;
         }
 
-        // Returns null and the reason the last candidate refused.
-        private static IIndicator Construct(Type type, int period, out string rejected)
+        // Returns null and the reason the last candidate refused. `symbols` is how many
+        // the winning constructor took, which decides how Feed drives it.
+        private static IIndicator Construct(Type type, int period, out string rejected, out int symbols)
         {
             rejected = "has no constructor this fixture can fill";
+            symbols = 0;
             foreach (var constructor in type.GetConstructors().OrderBy(x => x.GetParameters().Length))
             {
-                var arguments = Arguments(type, period, constructor.GetParameters());
+                var arguments = Arguments(type, period, constructor.GetParameters(), out var taken);
                 if (arguments == null)
                 {
                     continue;
                 }
+                symbols = taken;
                 try
                 {
                     return (IIndicator)constructor.Invoke(arguments);
@@ -227,11 +261,12 @@ namespace QuantConnect.Tests.Indicators
             return null;
         }
 
-        private static object[] Arguments(Type type, int period, ParameterInfo[] parameters)
+        private static object[] Arguments(Type type, int period, ParameterInfo[] parameters, out int taken)
         {
             var arguments = new object[parameters.Length];
             var integers = 0;
             var symbols = 0;
+            taken = 0;
             for (var i = 0; i < parameters.Length; i++)
             {
                 var parameter = parameters[i];
@@ -239,9 +274,8 @@ namespace QuantConnect.Tests.Indicators
 
                 if (parameterType == typeof(Symbol) && !parameter.HasDefaultValue)
                 {
-                    // The option indicators read option.Underlying. Alpha rejects a target
-                    // equal to its reference. Counted among the symbols, because
-                    // Covariance(string, int, Symbol, Symbol) puts neither first.
+                    // Option indicators read option.Underlying, and Alpha rejects a target
+                    // equal to its reference. Covariance puts neither symbol first.
                     arguments[i] = IsOption(parameter)
                         ? OptionOn(Target)
                         : symbols == 0 ? Target : Reference;
@@ -275,7 +309,7 @@ namespace QuantConnect.Tests.Indicators
                 }
                 else if (InputType(parameterType) != null && !parameterType.IsAbstract && !parameterType.IsGenericTypeDefinition)
                 {
-                    arguments[i] = Construct(parameterType, period, out _);
+                    arguments[i] = Construct(parameterType, period, out _, out _);
                     if (arguments[i] == null)
                     {
                         return null;
@@ -286,6 +320,7 @@ namespace QuantConnect.Tests.Indicators
                     return null;
                 }
             }
+            taken = symbols;
             return arguments;
         }
 
@@ -311,36 +346,41 @@ namespace QuantConnect.Tests.Indicators
         }
 
         // Returns the reason the indicator could not be driven, or null when it was.
-        private static string Feed(IIndicator indicator, Type type, int count, List<Sample> samples)
+        // Two symbol indicators need a bar per symbol on the same timestamp, or their
+        // windows never fill.
+        private static string Feed(IIndicator indicator, Type type, int count, int symbols, List<Sample> samples)
         {
             var input = InputType(type);
+            var stream = symbols > 1 ? new[] { Target, Reference } : new[] { Target };
             for (var i = 0; i < count; i++)
             {
                 var time = StartDate.AddDays(i);
-                var price = Price(i);
-
-                try
+                foreach (var symbol in stream)
                 {
-                    if (input == typeof(IndicatorDataPoint))
+                    var price = symbol == Reference ? ReferencePrice(i) : Price(i);
+                    try
                     {
-                        indicator.Update(new IndicatorDataPoint(Target, time, price));
+                        if (input == typeof(IndicatorDataPoint))
+                        {
+                            indicator.Update(new IndicatorDataPoint(symbol, time, price));
+                        }
+                        else if (input.IsAssignableFrom(typeof(TradeBar)))
+                        {
+                            // A TradeBar satisfies IBaseDataBar, BaseData and IBaseData alike
+                            indicator.Update(new TradeBar(time, symbol, price, price + 1m, price - 1m, price + 0.5m, 1000 + i));
+                        }
+                        else
+                        {
+                            return $"takes {input.Name}, which this fixture does not feed";
+                        }
                     }
-                    else if (input.IsAssignableFrom(typeof(TradeBar)))
+                    catch (Exception exception)
                     {
-                        // A TradeBar satisfies IBaseDataBar, BaseData and IBaseData alike
-                        indicator.Update(new TradeBar(time, Target, price, price + 1m, price - 1m, price + 0.5m, 1000 + i));
+                        // An indicator that cannot survive the series says nothing about reset,
+                        // so the exception is reported rather than failed.
+                        return $"threw on sample {i.ToString(CultureInfo.InvariantCulture)}: "
+                            + exception.GetBaseException().Message;
                     }
-                    else
-                    {
-                        return $"takes {input.Name}, which this fixture does not feed";
-                    }
-                }
-                catch (Exception exception)
-                {
-                    // An indicator that cannot survive the series says nothing about reset,
-                    // so the exception is reported rather than failed.
-                    return $"threw on sample {i.ToString(CultureInfo.InvariantCulture)}: "
-                        + exception.GetBaseException().Message;
                 }
 
                 samples.Add(new Sample(indicator.Current.Value, indicator.IsReady));
