@@ -44,7 +44,8 @@ namespace QuantConnect.Data.Fundamental
         /// Gets/sets the TwelveMonths period value for the field
         /// </summary>
         [JsonProperty("12M")]
-        public double TwelveMonths => FundamentalService.Get<double>(TimeProvider.GetUtcNow(), SecurityIdentifier, FundamentalProperty.FinancialStatements_BalanceSheet_TreasuryBillsandOtherEligibleBills_TwelveMonths);
+        [Obsolete("TreasuryBillsandOtherEligibleBills is no longer provided by Morningstar in any period since the 2026 feed migration; no direct replacement is provided.")]
+        public double TwelveMonths => throw new NotSupportedException("TreasuryBillsandOtherEligibleBills is no longer provided by Morningstar in any period since the 2026 feed migration; no direct replacement is provided.");
 
         /// <summary>
         /// Returns true if the field contains a value for the default period
@@ -63,7 +64,7 @@ namespace QuantConnect.Data.Fundamental
         public override IReadOnlyDictionary<string, double> GetPeriodValues()
         {
             var result = new Dictionary<string, double>();
-            foreach (var kvp in new[] { new Tuple<string, double>("12M",TwelveMonths) })
+            foreach (var kvp in System.Array.Empty<Tuple<string, double>>())
             {
                 if(!BaseFundamentalDataProvider.IsNone(typeof(double), kvp.Item2))
                 {

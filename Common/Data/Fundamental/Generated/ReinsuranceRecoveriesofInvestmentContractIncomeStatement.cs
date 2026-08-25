@@ -37,7 +37,8 @@ namespace QuantConnect.Data.Fundamental
         /// Gets/sets the ThreeMonths period value for the field
         /// </summary>
         [JsonProperty("3M")]
-        public double ThreeMonths => FundamentalService.Get<double>(TimeProvider.GetUtcNow(), SecurityIdentifier, FundamentalProperty.FinancialStatements_IncomeStatement_ReinsuranceRecoveriesofInvestmentContract_ThreeMonths);
+        [Obsolete("ReinsuranceRecoveriesofInvestmentContract is no longer provided by Morningstar in any period since the 2026 feed migration; no direct replacement is provided.")]
+        public double ThreeMonths => throw new NotSupportedException("ReinsuranceRecoveriesofInvestmentContract is no longer provided by Morningstar in any period since the 2026 feed migration; no direct replacement is provided.");
 
         /// <summary>
         /// Gets/sets the SixMonths period value for the field
@@ -50,13 +51,15 @@ namespace QuantConnect.Data.Fundamental
         /// Gets/sets the NineMonths period value for the field
         /// </summary>
         [JsonProperty("9M")]
-        public double NineMonths => FundamentalService.Get<double>(TimeProvider.GetUtcNow(), SecurityIdentifier, FundamentalProperty.FinancialStatements_IncomeStatement_ReinsuranceRecoveriesofInvestmentContract_NineMonths);
+        [Obsolete("ReinsuranceRecoveriesofInvestmentContract is no longer provided by Morningstar in any period since the 2026 feed migration; no direct replacement is provided.")]
+        public double NineMonths => throw new NotSupportedException("ReinsuranceRecoveriesofInvestmentContract is no longer provided by Morningstar in any period since the 2026 feed migration; no direct replacement is provided.");
 
         /// <summary>
         /// Gets/sets the TwelveMonths period value for the field
         /// </summary>
         [JsonProperty("12M")]
-        public double TwelveMonths => FundamentalService.Get<double>(TimeProvider.GetUtcNow(), SecurityIdentifier, FundamentalProperty.FinancialStatements_IncomeStatement_ReinsuranceRecoveriesofInvestmentContract_TwelveMonths);
+        [Obsolete("ReinsuranceRecoveriesofInvestmentContract is no longer provided by Morningstar in any period since the 2026 feed migration; no direct replacement is provided.")]
+        public double TwelveMonths => throw new NotSupportedException("ReinsuranceRecoveriesofInvestmentContract is no longer provided by Morningstar in any period since the 2026 feed migration; no direct replacement is provided.");
 
         /// <summary>
         /// Returns true if the field contains a value for the default period
@@ -75,7 +78,7 @@ namespace QuantConnect.Data.Fundamental
         public override IReadOnlyDictionary<string, double> GetPeriodValues()
         {
             var result = new Dictionary<string, double>();
-            foreach (var kvp in new[] { new Tuple<string, double>("3M",ThreeMonths), new Tuple<string, double>("9M",NineMonths), new Tuple<string, double>("12M",TwelveMonths) })
+            foreach (var kvp in System.Array.Empty<Tuple<string, double>>())
             {
                 if(!BaseFundamentalDataProvider.IsNone(typeof(double), kvp.Item2))
                 {
