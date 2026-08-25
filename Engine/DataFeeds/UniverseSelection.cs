@@ -526,11 +526,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 {
                     Accumulate(kvp.Value, ref load, ref universeCount, selectedByResolution);
                 }
-                if (universeCount == 0)
-                {
-                    // not registered in the universe manager, count the given universe only
-                    Accumulate(universe, ref load, ref universeCount, selectedByResolution);
-                }
 
                 if (load < 1)
                 {
