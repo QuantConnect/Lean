@@ -37,7 +37,8 @@ namespace QuantConnect.Data.Fundamental
         /// Gets/sets the OneMonth period value for the field
         /// </summary>
         [JsonProperty("1M")]
-        public double OneMonth => FundamentalService.Get<double>(TimeProvider.GetUtcNow(), SecurityIdentifier, FundamentalProperty.FinancialStatements_BalanceSheet_TreasuryStock_OneMonth);
+        [Obsolete("TreasuryStock is no longer provided by Morningstar in any period since the 2026 feed migration; no direct replacement is provided.")]
+        public double OneMonth => throw new NotSupportedException("TreasuryStock is no longer provided by Morningstar in any period since the 2026 feed migration; no direct replacement is provided.");
 
         /// <summary>
         /// Gets/sets the TwoMonths period value for the field
@@ -91,7 +92,7 @@ namespace QuantConnect.Data.Fundamental
         public override IReadOnlyDictionary<string, double> GetPeriodValues()
         {
             var result = new Dictionary<string, double>();
-            foreach (var kvp in new[] { new Tuple<string, double>("1M",OneMonth) })
+            foreach (var kvp in System.Array.Empty<Tuple<string, double>>())
             {
                 if(!BaseFundamentalDataProvider.IsNone(typeof(double), kvp.Item2))
                 {
