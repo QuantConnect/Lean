@@ -43,15 +43,15 @@ namespace QuantConnect.Data.Fundamental
         /// Gets/sets the ThreeMonths period value for the field
         /// </summary>
         [JsonProperty("3M")]
-        [Obsolete("PaymentTurnover.ThreeMonths is no longer provided by Morningstar since the 2026 feed migration; use PaymentTurnover.OneYear.")]
-        public double ThreeMonths => throw new NotSupportedException("PaymentTurnover.ThreeMonths is no longer provided by Morningstar since the 2026 feed migration; use PaymentTurnover.OneYear.");
+        [Obsolete("PaymentTurnover.ThreeMonths was retired by Morningstar in 2026; use PaymentTurnover.OneYear.")]
+        public double ThreeMonths => throw new NotSupportedException("PaymentTurnover.ThreeMonths was retired by Morningstar in 2026; use PaymentTurnover.OneYear.");
 
         /// <summary>
         /// Gets/sets the SixMonths period value for the field
         /// </summary>
         [JsonProperty("6M")]
-        [Obsolete("PaymentTurnover.SixMonths is no longer provided by Morningstar since the 2026 feed migration; use PaymentTurnover.OneYear.")]
-        public double SixMonths => throw new NotSupportedException("PaymentTurnover.SixMonths is no longer provided by Morningstar since the 2026 feed migration; use PaymentTurnover.OneYear.");
+        [Obsolete("PaymentTurnover.SixMonths was retired by Morningstar in 2026; use PaymentTurnover.OneYear.")]
+        public double SixMonths => throw new NotSupportedException("PaymentTurnover.SixMonths was retired by Morningstar in 2026; use PaymentTurnover.OneYear.");
 
         /// <summary>
         /// Returns true if the field contains a value for the default period

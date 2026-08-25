@@ -55,22 +55,22 @@ namespace QuantConnect.Data.Fundamental
         /// Gets/sets the ThreeMonths period value for the field
         /// </summary>
         [JsonProperty("3M")]
-        [Obsolete("FinancialLeverage.ThreeMonths is no longer provided by Morningstar since the 2026 feed migration; use FinancialLeverage.OneYear.")]
-        public double ThreeMonths => throw new NotSupportedException("FinancialLeverage.ThreeMonths is no longer provided by Morningstar since the 2026 feed migration; use FinancialLeverage.OneYear.");
+        [Obsolete("FinancialLeverage.ThreeMonths was retired by Morningstar in 2026; use FinancialLeverage.OneYear.")]
+        public double ThreeMonths => throw new NotSupportedException("FinancialLeverage.ThreeMonths was retired by Morningstar in 2026; use FinancialLeverage.OneYear.");
 
         /// <summary>
         /// Gets/sets the SixMonths period value for the field
         /// </summary>
         [JsonProperty("6M")]
-        [Obsolete("FinancialLeverage.SixMonths is no longer provided by Morningstar since the 2026 feed migration; use FinancialLeverage.OneYear.")]
-        public double SixMonths => throw new NotSupportedException("FinancialLeverage.SixMonths is no longer provided by Morningstar since the 2026 feed migration; use FinancialLeverage.OneYear.");
+        [Obsolete("FinancialLeverage.SixMonths was retired by Morningstar in 2026; use FinancialLeverage.OneYear.")]
+        public double SixMonths => throw new NotSupportedException("FinancialLeverage.SixMonths was retired by Morningstar in 2026; use FinancialLeverage.OneYear.");
 
         /// <summary>
         /// Gets/sets the NineMonths period value for the field
         /// </summary>
         [JsonProperty("9M")]
-        [Obsolete("FinancialLeverage.NineMonths is no longer provided by Morningstar since the 2026 feed migration; use FinancialLeverage.OneYear.")]
-        public double NineMonths => throw new NotSupportedException("FinancialLeverage.NineMonths is no longer provided by Morningstar since the 2026 feed migration; use FinancialLeverage.OneYear.");
+        [Obsolete("FinancialLeverage.NineMonths was retired by Morningstar in 2026; use FinancialLeverage.OneYear.")]
+        public double NineMonths => throw new NotSupportedException("FinancialLeverage.NineMonths was retired by Morningstar in 2026; use FinancialLeverage.OneYear.");
 
         /// <summary>
         /// Returns true if the field contains a value for the default period

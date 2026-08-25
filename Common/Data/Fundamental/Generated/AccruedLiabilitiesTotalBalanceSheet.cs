@@ -37,8 +37,8 @@ namespace QuantConnect.Data.Fundamental
         /// Gets/sets the TwoMonths period value for the field
         /// </summary>
         [JsonProperty("2M")]
-        [Obsolete("AccruedLiabilitiesTotal.TwoMonths is no longer provided by Morningstar since the 2026 feed migration; use AccruedLiabilitiesTotal.ThreeMonths (also available: TwelveMonths).")]
-        public double TwoMonths => throw new NotSupportedException("AccruedLiabilitiesTotal.TwoMonths is no longer provided by Morningstar since the 2026 feed migration; use AccruedLiabilitiesTotal.ThreeMonths (also available: TwelveMonths).");
+        [Obsolete("AccruedLiabilitiesTotal.TwoMonths was retired by Morningstar in 2026; use AccruedLiabilitiesTotal.ThreeMonths (also available: TwelveMonths).")]
+        public double TwoMonths => throw new NotSupportedException("AccruedLiabilitiesTotal.TwoMonths was retired by Morningstar in 2026; use AccruedLiabilitiesTotal.ThreeMonths (also available: TwelveMonths).");
 
         /// <summary>
         /// Gets/sets the ThreeMonths period value for the field

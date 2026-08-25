@@ -37,15 +37,15 @@ namespace QuantConnect.Data.Fundamental
         /// Gets/sets the OneMonth period value for the field
         /// </summary>
         [JsonProperty("1M")]
-        [Obsolete("WorkingCapital.OneMonth is no longer provided by Morningstar since the 2026 feed migration; use WorkingCapital.ThreeMonths (also available: SixMonths, TwelveMonths).")]
-        public double OneMonth => throw new NotSupportedException("WorkingCapital.OneMonth is no longer provided by Morningstar since the 2026 feed migration; use WorkingCapital.ThreeMonths (also available: SixMonths, TwelveMonths).");
+        [Obsolete("WorkingCapital.OneMonth was retired by Morningstar in 2026; use WorkingCapital.ThreeMonths (also available: SixMonths, TwelveMonths).")]
+        public double OneMonth => throw new NotSupportedException("WorkingCapital.OneMonth was retired by Morningstar in 2026; use WorkingCapital.ThreeMonths (also available: SixMonths, TwelveMonths).");
 
         /// <summary>
         /// Gets/sets the TwoMonths period value for the field
         /// </summary>
         [JsonProperty("2M")]
-        [Obsolete("WorkingCapital.TwoMonths is no longer provided by Morningstar since the 2026 feed migration; use WorkingCapital.ThreeMonths (also available: SixMonths, TwelveMonths).")]
-        public double TwoMonths => throw new NotSupportedException("WorkingCapital.TwoMonths is no longer provided by Morningstar since the 2026 feed migration; use WorkingCapital.ThreeMonths (also available: SixMonths, TwelveMonths).");
+        [Obsolete("WorkingCapital.TwoMonths was retired by Morningstar in 2026; use WorkingCapital.ThreeMonths (also available: SixMonths, TwelveMonths).")]
+        public double TwoMonths => throw new NotSupportedException("WorkingCapital.TwoMonths was retired by Morningstar in 2026; use WorkingCapital.ThreeMonths (also available: SixMonths, TwelveMonths).");
 
         /// <summary>
         /// Gets/sets the ThreeMonths period value for the field
@@ -63,8 +63,8 @@ namespace QuantConnect.Data.Fundamental
         /// Gets/sets the NineMonths period value for the field
         /// </summary>
         [JsonProperty("9M")]
-        [Obsolete("WorkingCapital.NineMonths is no longer provided by Morningstar since the 2026 feed migration; use WorkingCapital.ThreeMonths (also available: SixMonths, TwelveMonths).")]
-        public double NineMonths => throw new NotSupportedException("WorkingCapital.NineMonths is no longer provided by Morningstar since the 2026 feed migration; use WorkingCapital.ThreeMonths (also available: SixMonths, TwelveMonths).");
+        [Obsolete("WorkingCapital.NineMonths was retired by Morningstar in 2026; use WorkingCapital.ThreeMonths (also available: SixMonths, TwelveMonths).")]
+        public double NineMonths => throw new NotSupportedException("WorkingCapital.NineMonths was retired by Morningstar in 2026; use WorkingCapital.ThreeMonths (also available: SixMonths, TwelveMonths).");
 
         /// <summary>
         /// Gets/sets the TwelveMonths period value for the field

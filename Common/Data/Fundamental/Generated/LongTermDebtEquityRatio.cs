@@ -67,8 +67,8 @@ namespace QuantConnect.Data.Fundamental
         /// Gets/sets the NineMonths period value for the field
         /// </summary>
         [JsonProperty("9M")]
-        [Obsolete("LongTermDebtEquityRatio.NineMonths is no longer provided by Morningstar since the 2026 feed migration; use LongTermDebtEquityRatio.ThreeMonths (also available: SixMonths, OneYear).")]
-        public double NineMonths => throw new NotSupportedException("LongTermDebtEquityRatio.NineMonths is no longer provided by Morningstar since the 2026 feed migration; use LongTermDebtEquityRatio.ThreeMonths (also available: SixMonths, OneYear).");
+        [Obsolete("LongTermDebtEquityRatio.NineMonths was retired by Morningstar in 2026; use LongTermDebtEquityRatio.ThreeMonths (also available: SixMonths, OneYear).")]
+        public double NineMonths => throw new NotSupportedException("LongTermDebtEquityRatio.NineMonths was retired by Morningstar in 2026; use LongTermDebtEquityRatio.ThreeMonths (also available: SixMonths, OneYear).");
 
         /// <summary>
         /// Returns true if the field contains a value for the default period

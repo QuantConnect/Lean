@@ -43,8 +43,8 @@ namespace QuantConnect.Data.Fundamental
         /// Gets/sets the TwoMonths period value for the field
         /// </summary>
         [JsonProperty("2M")]
-        [Obsolete("DeferredCosts.TwoMonths is no longer provided by Morningstar since the 2026 feed migration; use DeferredCosts.ThreeMonths (also available: SixMonths, TwelveMonths).")]
-        public double TwoMonths => throw new NotSupportedException("DeferredCosts.TwoMonths is no longer provided by Morningstar since the 2026 feed migration; use DeferredCosts.ThreeMonths (also available: SixMonths, TwelveMonths).");
+        [Obsolete("DeferredCosts.TwoMonths was retired by Morningstar in 2026; use DeferredCosts.ThreeMonths (also available: SixMonths, TwelveMonths).")]
+        public double TwoMonths => throw new NotSupportedException("DeferredCosts.TwoMonths was retired by Morningstar in 2026; use DeferredCosts.ThreeMonths (also available: SixMonths, TwelveMonths).");
 
         /// <summary>
         /// Gets/sets the ThreeMonths period value for the field
@@ -62,8 +62,8 @@ namespace QuantConnect.Data.Fundamental
         /// Gets/sets the NineMonths period value for the field
         /// </summary>
         [JsonProperty("9M")]
-        [Obsolete("DeferredCosts.NineMonths is no longer provided by Morningstar since the 2026 feed migration; use DeferredCosts.ThreeMonths (also available: SixMonths, TwelveMonths).")]
-        public double NineMonths => throw new NotSupportedException("DeferredCosts.NineMonths is no longer provided by Morningstar since the 2026 feed migration; use DeferredCosts.ThreeMonths (also available: SixMonths, TwelveMonths).");
+        [Obsolete("DeferredCosts.NineMonths was retired by Morningstar in 2026; use DeferredCosts.ThreeMonths (also available: SixMonths, TwelveMonths).")]
+        public double NineMonths => throw new NotSupportedException("DeferredCosts.NineMonths was retired by Morningstar in 2026; use DeferredCosts.ThreeMonths (also available: SixMonths, TwelveMonths).");
 
         /// <summary>
         /// Gets/sets the TwelveMonths period value for the field

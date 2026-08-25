@@ -37,8 +37,8 @@ namespace QuantConnect.Data.Fundamental
         /// Gets/sets the TwoMonths period value for the field
         /// </summary>
         [JsonProperty("2M")]
-        [Obsolete("CashCashEquivalentsAndFederalFundsSold.TwoMonths is no longer provided by Morningstar since the 2026 feed migration; use CashCashEquivalentsAndFederalFundsSold.ThreeMonths (also available: SixMonths, TwelveMonths).")]
-        public double TwoMonths => throw new NotSupportedException("CashCashEquivalentsAndFederalFundsSold.TwoMonths is no longer provided by Morningstar since the 2026 feed migration; use CashCashEquivalentsAndFederalFundsSold.ThreeMonths (also available: SixMonths, TwelveMonths).");
+        [Obsolete("CashCashEquivalentsAndFederalFundsSold.TwoMonths was retired by Morningstar in 2026; use CashCashEquivalentsAndFederalFundsSold.ThreeMonths (also available: SixMonths, TwelveMonths).")]
+        public double TwoMonths => throw new NotSupportedException("CashCashEquivalentsAndFederalFundsSold.TwoMonths was retired by Morningstar in 2026; use CashCashEquivalentsAndFederalFundsSold.ThreeMonths (also available: SixMonths, TwelveMonths).");
 
         /// <summary>
         /// Gets/sets the ThreeMonths period value for the field
@@ -56,8 +56,8 @@ namespace QuantConnect.Data.Fundamental
         /// Gets/sets the NineMonths period value for the field
         /// </summary>
         [JsonProperty("9M")]
-        [Obsolete("CashCashEquivalentsAndFederalFundsSold.NineMonths is no longer provided by Morningstar since the 2026 feed migration; use CashCashEquivalentsAndFederalFundsSold.ThreeMonths (also available: SixMonths, TwelveMonths).")]
-        public double NineMonths => throw new NotSupportedException("CashCashEquivalentsAndFederalFundsSold.NineMonths is no longer provided by Morningstar since the 2026 feed migration; use CashCashEquivalentsAndFederalFundsSold.ThreeMonths (also available: SixMonths, TwelveMonths).");
+        [Obsolete("CashCashEquivalentsAndFederalFundsSold.NineMonths was retired by Morningstar in 2026; use CashCashEquivalentsAndFederalFundsSold.ThreeMonths (also available: SixMonths, TwelveMonths).")]
+        public double NineMonths => throw new NotSupportedException("CashCashEquivalentsAndFederalFundsSold.NineMonths was retired by Morningstar in 2026; use CashCashEquivalentsAndFederalFundsSold.ThreeMonths (also available: SixMonths, TwelveMonths).");
 
         /// <summary>
         /// Gets/sets the TwelveMonths period value for the field

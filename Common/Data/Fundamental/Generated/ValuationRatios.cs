@@ -413,8 +413,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 14042
         /// </remarks>
         [JsonProperty("14042")]
-        [Obsolete("ForwardCalculationStyle is no longer provided by Morningstar since the 2026 feed migration; no direct replacement is provided.")]
-        public string ForwardCalculationStyle => throw new NotSupportedException("ForwardCalculationStyle is no longer provided by Morningstar since the 2026 feed migration; no direct replacement is provided.");
+        [Obsolete("ForwardCalculationStyle was retired by Morningstar in 2026 for all periods; no replacement is available.")]
+        public string ForwardCalculationStyle => throw new NotSupportedException("ForwardCalculationStyle was retired by Morningstar in 2026 for all periods; no replacement is available.");
 
         /// <summary>
         /// Used to collect the forward dividend for companies where our formula will not produce the correct value.
@@ -432,8 +432,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 14044
         /// </remarks>
         [JsonProperty("14044")]
-        [Obsolete("TrailingCalculationStyle is no longer provided by Morningstar since the 2026 feed migration; no direct replacement is provided.")]
-        public string TrailingCalculationStyle => throw new NotSupportedException("TrailingCalculationStyle is no longer provided by Morningstar since the 2026 feed migration; no direct replacement is provided.");
+        [Obsolete("TrailingCalculationStyle was retired by Morningstar in 2026 for all periods; no replacement is available.")]
+        public string TrailingCalculationStyle => throw new NotSupportedException("TrailingCalculationStyle was retired by Morningstar in 2026 for all periods; no replacement is available.");
 
         /// <summary>
         /// Used to collect the trailing dividend for companies where our formula will not produce the correct value.

@@ -37,29 +37,29 @@ namespace QuantConnect.Data.Fundamental
         /// Gets/sets the ThreeMonths period value for the field
         /// </summary>
         [JsonProperty("3M")]
-        [Obsolete("NetIncomeFromTaxLossCarryforward is no longer provided by Morningstar since the 2026 feed migration; no direct replacement is provided.")]
-        public double ThreeMonths => throw new NotSupportedException("NetIncomeFromTaxLossCarryforward is no longer provided by Morningstar since the 2026 feed migration; no direct replacement is provided.");
+        [Obsolete("NetIncomeFromTaxLossCarryforward was retired by Morningstar in 2026 for all periods; no replacement is available.")]
+        public double ThreeMonths => throw new NotSupportedException("NetIncomeFromTaxLossCarryforward was retired by Morningstar in 2026 for all periods; no replacement is available.");
 
         /// <summary>
         /// Gets/sets the SixMonths period value for the field
         /// </summary>
         [JsonProperty("6M")]
-        [Obsolete("NetIncomeFromTaxLossCarryforward is no longer provided by Morningstar since the 2026 feed migration; no direct replacement is provided.")]
-        public double SixMonths => throw new NotSupportedException("NetIncomeFromTaxLossCarryforward is no longer provided by Morningstar since the 2026 feed migration; no direct replacement is provided.");
+        [Obsolete("NetIncomeFromTaxLossCarryforward was retired by Morningstar in 2026 for all periods; no replacement is available.")]
+        public double SixMonths => throw new NotSupportedException("NetIncomeFromTaxLossCarryforward was retired by Morningstar in 2026 for all periods; no replacement is available.");
 
         /// <summary>
         /// Gets/sets the NineMonths period value for the field
         /// </summary>
         [JsonProperty("9M")]
-        [Obsolete("NetIncomeFromTaxLossCarryforward is no longer provided by Morningstar since the 2026 feed migration; no direct replacement is provided.")]
-        public double NineMonths => throw new NotSupportedException("NetIncomeFromTaxLossCarryforward is no longer provided by Morningstar since the 2026 feed migration; no direct replacement is provided.");
+        [Obsolete("NetIncomeFromTaxLossCarryforward was retired by Morningstar in 2026 for all periods; no replacement is available.")]
+        public double NineMonths => throw new NotSupportedException("NetIncomeFromTaxLossCarryforward was retired by Morningstar in 2026 for all periods; no replacement is available.");
 
         /// <summary>
         /// Gets/sets the TwelveMonths period value for the field
         /// </summary>
         [JsonProperty("12M")]
-        [Obsolete("NetIncomeFromTaxLossCarryforward is no longer provided by Morningstar since the 2026 feed migration; no direct replacement is provided.")]
-        public double TwelveMonths => throw new NotSupportedException("NetIncomeFromTaxLossCarryforward is no longer provided by Morningstar since the 2026 feed migration; no direct replacement is provided.");
+        [Obsolete("NetIncomeFromTaxLossCarryforward was retired by Morningstar in 2026 for all periods; no replacement is available.")]
+        public double TwelveMonths => throw new NotSupportedException("NetIncomeFromTaxLossCarryforward was retired by Morningstar in 2026 for all periods; no replacement is available.");
 
         /// <summary>
         /// Returns true if the field contains a value for the default period
@@ -69,7 +69,7 @@ namespace QuantConnect.Data.Fundamental
         /// <summary>
         /// Returns the default value for the field
         /// </summary>
-        public override double Value => throw new NotSupportedException("NetIncomeFromTaxLossCarryforward is no longer provided by Morningstar since the 2026 feed migration; no direct replacement is provided.");
+        public override double Value => throw new NotSupportedException("NetIncomeFromTaxLossCarryforward was retired by Morningstar in 2026 for all periods; no replacement is available.");
 
         /// <summary>
         /// Gets a dictionary of period names and values for the field

@@ -43,8 +43,8 @@ namespace QuantConnect.Data.Fundamental
         /// Gets/sets the TwoMonths period value for the field
         /// </summary>
         [JsonProperty("2M")]
-        [Obsolete("CurrentCapitalLeaseObligation.TwoMonths is no longer provided by Morningstar since the 2026 feed migration; use CurrentCapitalLeaseObligation.ThreeMonths (also available: SixMonths, TwelveMonths).")]
-        public double TwoMonths => throw new NotSupportedException("CurrentCapitalLeaseObligation.TwoMonths is no longer provided by Morningstar since the 2026 feed migration; use CurrentCapitalLeaseObligation.ThreeMonths (also available: SixMonths, TwelveMonths).");
+        [Obsolete("CurrentCapitalLeaseObligation.TwoMonths was retired by Morningstar in 2026; use CurrentCapitalLeaseObligation.ThreeMonths (also available: SixMonths, TwelveMonths).")]
+        public double TwoMonths => throw new NotSupportedException("CurrentCapitalLeaseObligation.TwoMonths was retired by Morningstar in 2026; use CurrentCapitalLeaseObligation.ThreeMonths (also available: SixMonths, TwelveMonths).");
 
         /// <summary>
         /// Gets/sets the ThreeMonths period value for the field
@@ -62,8 +62,8 @@ namespace QuantConnect.Data.Fundamental
         /// Gets/sets the NineMonths period value for the field
         /// </summary>
         [JsonProperty("9M")]
-        [Obsolete("CurrentCapitalLeaseObligation.NineMonths is no longer provided by Morningstar since the 2026 feed migration; use CurrentCapitalLeaseObligation.ThreeMonths (also available: SixMonths, TwelveMonths).")]
-        public double NineMonths => throw new NotSupportedException("CurrentCapitalLeaseObligation.NineMonths is no longer provided by Morningstar since the 2026 feed migration; use CurrentCapitalLeaseObligation.ThreeMonths (also available: SixMonths, TwelveMonths).");
+        [Obsolete("CurrentCapitalLeaseObligation.NineMonths was retired by Morningstar in 2026; use CurrentCapitalLeaseObligation.ThreeMonths (also available: SixMonths, TwelveMonths).")]
+        public double NineMonths => throw new NotSupportedException("CurrentCapitalLeaseObligation.NineMonths was retired by Morningstar in 2026; use CurrentCapitalLeaseObligation.ThreeMonths (also available: SixMonths, TwelveMonths).");
 
         /// <summary>
         /// Gets/sets the TwelveMonths period value for the field

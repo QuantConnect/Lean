@@ -43,15 +43,15 @@ namespace QuantConnect.Data.Fundamental
         /// Gets/sets the ThreeMonths period value for the field
         /// </summary>
         [JsonProperty("3M")]
-        [Obsolete("DaysInSales.ThreeMonths is no longer provided by Morningstar since the 2026 feed migration; use DaysInSales.OneYear.")]
-        public double ThreeMonths => throw new NotSupportedException("DaysInSales.ThreeMonths is no longer provided by Morningstar since the 2026 feed migration; use DaysInSales.OneYear.");
+        [Obsolete("DaysInSales.ThreeMonths was retired by Morningstar in 2026; use DaysInSales.OneYear.")]
+        public double ThreeMonths => throw new NotSupportedException("DaysInSales.ThreeMonths was retired by Morningstar in 2026; use DaysInSales.OneYear.");
 
         /// <summary>
         /// Gets/sets the SixMonths period value for the field
         /// </summary>
         [JsonProperty("6M")]
-        [Obsolete("DaysInSales.SixMonths is no longer provided by Morningstar since the 2026 feed migration; use DaysInSales.OneYear.")]
-        public double SixMonths => throw new NotSupportedException("DaysInSales.SixMonths is no longer provided by Morningstar since the 2026 feed migration; use DaysInSales.OneYear.");
+        [Obsolete("DaysInSales.SixMonths was retired by Morningstar in 2026; use DaysInSales.OneYear.")]
+        public double SixMonths => throw new NotSupportedException("DaysInSales.SixMonths was retired by Morningstar in 2026; use DaysInSales.OneYear.");
 
         /// <summary>
         /// Returns true if the field contains a value for the default period

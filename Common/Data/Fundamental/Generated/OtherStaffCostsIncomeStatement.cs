@@ -37,8 +37,8 @@ namespace QuantConnect.Data.Fundamental
         /// Gets/sets the TwelveMonths period value for the field
         /// </summary>
         [JsonProperty("12M")]
-        [Obsolete("OtherStaffCosts is no longer provided by Morningstar since the 2026 feed migration; no direct replacement is provided.")]
-        public double TwelveMonths => throw new NotSupportedException("OtherStaffCosts is no longer provided by Morningstar since the 2026 feed migration; no direct replacement is provided.");
+        [Obsolete("OtherStaffCosts was retired by Morningstar in 2026 for all periods; no replacement is available.")]
+        public double TwelveMonths => throw new NotSupportedException("OtherStaffCosts was retired by Morningstar in 2026 for all periods; no replacement is available.");
 
         /// <summary>
         /// Returns true if the field contains a value for the default period
@@ -48,7 +48,7 @@ namespace QuantConnect.Data.Fundamental
         /// <summary>
         /// Returns the default value for the field
         /// </summary>
-        public override double Value => throw new NotSupportedException("OtherStaffCosts is no longer provided by Morningstar since the 2026 feed migration; no direct replacement is provided.");
+        public override double Value => throw new NotSupportedException("OtherStaffCosts was retired by Morningstar in 2026 for all periods; no replacement is available.");
 
         /// <summary>
         /// Gets a dictionary of period names and values for the field

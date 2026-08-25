@@ -37,15 +37,15 @@ namespace QuantConnect.Data.Fundamental
         /// Gets/sets the OneMonth period value for the field
         /// </summary>
         [JsonProperty("1M")]
-        [Obsolete("CashCashEquivalentsAndMarketableSecurities.OneMonth is no longer provided by Morningstar since the 2026 feed migration; use CashCashEquivalentsAndMarketableSecurities.ThreeMonths (also available: SixMonths, TwelveMonths).")]
-        public double OneMonth => throw new NotSupportedException("CashCashEquivalentsAndMarketableSecurities.OneMonth is no longer provided by Morningstar since the 2026 feed migration; use CashCashEquivalentsAndMarketableSecurities.ThreeMonths (also available: SixMonths, TwelveMonths).");
+        [Obsolete("CashCashEquivalentsAndMarketableSecurities.OneMonth was retired by Morningstar in 2026; use CashCashEquivalentsAndMarketableSecurities.ThreeMonths (also available: SixMonths, TwelveMonths).")]
+        public double OneMonth => throw new NotSupportedException("CashCashEquivalentsAndMarketableSecurities.OneMonth was retired by Morningstar in 2026; use CashCashEquivalentsAndMarketableSecurities.ThreeMonths (also available: SixMonths, TwelveMonths).");
 
         /// <summary>
         /// Gets/sets the TwoMonths period value for the field
         /// </summary>
         [JsonProperty("2M")]
-        [Obsolete("CashCashEquivalentsAndMarketableSecurities.TwoMonths is no longer provided by Morningstar since the 2026 feed migration; use CashCashEquivalentsAndMarketableSecurities.ThreeMonths (also available: SixMonths, TwelveMonths).")]
-        public double TwoMonths => throw new NotSupportedException("CashCashEquivalentsAndMarketableSecurities.TwoMonths is no longer provided by Morningstar since the 2026 feed migration; use CashCashEquivalentsAndMarketableSecurities.ThreeMonths (also available: SixMonths, TwelveMonths).");
+        [Obsolete("CashCashEquivalentsAndMarketableSecurities.TwoMonths was retired by Morningstar in 2026; use CashCashEquivalentsAndMarketableSecurities.ThreeMonths (also available: SixMonths, TwelveMonths).")]
+        public double TwoMonths => throw new NotSupportedException("CashCashEquivalentsAndMarketableSecurities.TwoMonths was retired by Morningstar in 2026; use CashCashEquivalentsAndMarketableSecurities.ThreeMonths (also available: SixMonths, TwelveMonths).");
 
         /// <summary>
         /// Gets/sets the ThreeMonths period value for the field
@@ -63,8 +63,8 @@ namespace QuantConnect.Data.Fundamental
         /// Gets/sets the NineMonths period value for the field
         /// </summary>
         [JsonProperty("9M")]
-        [Obsolete("CashCashEquivalentsAndMarketableSecurities.NineMonths is no longer provided by Morningstar since the 2026 feed migration; use CashCashEquivalentsAndMarketableSecurities.ThreeMonths (also available: SixMonths, TwelveMonths).")]
-        public double NineMonths => throw new NotSupportedException("CashCashEquivalentsAndMarketableSecurities.NineMonths is no longer provided by Morningstar since the 2026 feed migration; use CashCashEquivalentsAndMarketableSecurities.ThreeMonths (also available: SixMonths, TwelveMonths).");
+        [Obsolete("CashCashEquivalentsAndMarketableSecurities.NineMonths was retired by Morningstar in 2026; use CashCashEquivalentsAndMarketableSecurities.ThreeMonths (also available: SixMonths, TwelveMonths).")]
+        public double NineMonths => throw new NotSupportedException("CashCashEquivalentsAndMarketableSecurities.NineMonths was retired by Morningstar in 2026; use CashCashEquivalentsAndMarketableSecurities.ThreeMonths (also available: SixMonths, TwelveMonths).");
 
         /// <summary>
         /// Gets/sets the TwelveMonths period value for the field

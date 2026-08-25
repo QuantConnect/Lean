@@ -535,7 +535,7 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 12028
         /// </remarks>
         [JsonProperty("12028")]
-        [Obsolete("RegressionGrowthOperatingRevenue5Years is no longer provided by Morningstar since the 2026 feed migration; no direct replacement is provided.")]
+        [Obsolete("RegressionGrowthOperatingRevenue5Years was retired by Morningstar in 2026 for all periods; no replacement is available.")]
         public RegressionGrowthOperatingRevenue5Years RegressionGrowthOperatingRevenue5Years => _regressionGrowthOperatingRevenue5Years ??= new(_timeProvider, _securityIdentifier);
         private RegressionGrowthOperatingRevenue5Years _regressionGrowthOperatingRevenue5Years;
 

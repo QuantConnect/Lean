@@ -37,15 +37,15 @@ namespace QuantConnect.Data.Fundamental
         /// Gets/sets the OneMonth period value for the field
         /// </summary>
         [JsonProperty("1M")]
-        [Obsolete("NonCurrentDeferredRevenue.OneMonth is no longer provided by Morningstar since the 2026 feed migration; use NonCurrentDeferredRevenue.ThreeMonths (also available: SixMonths, TwelveMonths).")]
-        public double OneMonth => throw new NotSupportedException("NonCurrentDeferredRevenue.OneMonth is no longer provided by Morningstar since the 2026 feed migration; use NonCurrentDeferredRevenue.ThreeMonths (also available: SixMonths, TwelveMonths).");
+        [Obsolete("NonCurrentDeferredRevenue.OneMonth was retired by Morningstar in 2026; use NonCurrentDeferredRevenue.ThreeMonths (also available: SixMonths, TwelveMonths).")]
+        public double OneMonth => throw new NotSupportedException("NonCurrentDeferredRevenue.OneMonth was retired by Morningstar in 2026; use NonCurrentDeferredRevenue.ThreeMonths (also available: SixMonths, TwelveMonths).");
 
         /// <summary>
         /// Gets/sets the TwoMonths period value for the field
         /// </summary>
         [JsonProperty("2M")]
-        [Obsolete("NonCurrentDeferredRevenue.TwoMonths is no longer provided by Morningstar since the 2026 feed migration; use NonCurrentDeferredRevenue.ThreeMonths (also available: SixMonths, TwelveMonths).")]
-        public double TwoMonths => throw new NotSupportedException("NonCurrentDeferredRevenue.TwoMonths is no longer provided by Morningstar since the 2026 feed migration; use NonCurrentDeferredRevenue.ThreeMonths (also available: SixMonths, TwelveMonths).");
+        [Obsolete("NonCurrentDeferredRevenue.TwoMonths was retired by Morningstar in 2026; use NonCurrentDeferredRevenue.ThreeMonths (also available: SixMonths, TwelveMonths).")]
+        public double TwoMonths => throw new NotSupportedException("NonCurrentDeferredRevenue.TwoMonths was retired by Morningstar in 2026; use NonCurrentDeferredRevenue.ThreeMonths (also available: SixMonths, TwelveMonths).");
 
         /// <summary>
         /// Gets/sets the ThreeMonths period value for the field
@@ -63,8 +63,8 @@ namespace QuantConnect.Data.Fundamental
         /// Gets/sets the NineMonths period value for the field
         /// </summary>
         [JsonProperty("9M")]
-        [Obsolete("NonCurrentDeferredRevenue.NineMonths is no longer provided by Morningstar since the 2026 feed migration; use NonCurrentDeferredRevenue.ThreeMonths (also available: SixMonths, TwelveMonths).")]
-        public double NineMonths => throw new NotSupportedException("NonCurrentDeferredRevenue.NineMonths is no longer provided by Morningstar since the 2026 feed migration; use NonCurrentDeferredRevenue.ThreeMonths (also available: SixMonths, TwelveMonths).");
+        [Obsolete("NonCurrentDeferredRevenue.NineMonths was retired by Morningstar in 2026; use NonCurrentDeferredRevenue.ThreeMonths (also available: SixMonths, TwelveMonths).")]
+        public double NineMonths => throw new NotSupportedException("NonCurrentDeferredRevenue.NineMonths was retired by Morningstar in 2026; use NonCurrentDeferredRevenue.ThreeMonths (also available: SixMonths, TwelveMonths).");
 
         /// <summary>
         /// Gets/sets the TwelveMonths period value for the field
