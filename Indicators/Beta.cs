@@ -58,10 +58,10 @@ namespace QuantConnect.Indicators
         public Beta(string name, Symbol targetSymbol, Symbol referenceSymbol, int period)
             : base(name, targetSymbol, referenceSymbol, 2)
         {
-            // Assert the period is greater than two, otherwise the beta can not be computed
-            if (period < 3)
+            // Assert the period is greater than one, otherwise the beta can not be computed
+            if (period < 2)
             {
-                throw new ArgumentException($"Period parameter for Beta indicator must be greater than 2 but was {period}.");
+                throw new ArgumentException($"Period parameter for Beta indicator must be greater than 1 but was {period}.");
             }
 
             _targetReturns = new RollingWindow<double>(period);
