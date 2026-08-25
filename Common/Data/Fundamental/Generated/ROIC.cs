@@ -43,15 +43,15 @@ namespace QuantConnect.Data.Fundamental
         /// Gets/sets the ThreeMonths period value for the field
         /// </summary>
         [JsonProperty("3M")]
-        [Obsolete("ROIC.ThreeMonths is no longer provided by Morningstar since the 2026 feed migration; use ROIC.OneYear.")]
-        public double ThreeMonths => throw new NotSupportedException("ROIC.ThreeMonths is no longer provided by Morningstar since the 2026 feed migration; use ROIC.OneYear.");
+        [Obsolete("ROIC.ThreeMonths was retired by Morningstar in 2026; use ROIC.OneYear.")]
+        public double ThreeMonths => throw new NotSupportedException("ROIC.ThreeMonths was retired by Morningstar in 2026; use ROIC.OneYear.");
 
         /// <summary>
         /// Gets/sets the SixMonths period value for the field
         /// </summary>
         [JsonProperty("6M")]
-        [Obsolete("ROIC.SixMonths is no longer provided by Morningstar since the 2026 feed migration; use ROIC.OneYear.")]
-        public double SixMonths => throw new NotSupportedException("ROIC.SixMonths is no longer provided by Morningstar since the 2026 feed migration; use ROIC.OneYear.");
+        [Obsolete("ROIC.SixMonths was retired by Morningstar in 2026; use ROIC.OneYear.")]
+        public double SixMonths => throw new NotSupportedException("ROIC.SixMonths was retired by Morningstar in 2026; use ROIC.OneYear.");
 
         /// <summary>
         /// Returns true if the field contains a value for the default period

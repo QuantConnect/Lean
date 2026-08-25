@@ -37,15 +37,15 @@ namespace QuantConnect.Data.Fundamental
         /// Gets/sets the OneMonth period value for the field
         /// </summary>
         [JsonProperty("1M")]
-        [Obsolete("TotalDebt.OneMonth is no longer provided by Morningstar since the 2026 feed migration; use TotalDebt.ThreeMonths (also available: SixMonths, TwelveMonths).")]
-        public double OneMonth => throw new NotSupportedException("TotalDebt.OneMonth is no longer provided by Morningstar since the 2026 feed migration; use TotalDebt.ThreeMonths (also available: SixMonths, TwelveMonths).");
+        [Obsolete("TotalDebt.OneMonth was retired by Morningstar in 2026; use TotalDebt.ThreeMonths (also available: SixMonths, TwelveMonths).")]
+        public double OneMonth => throw new NotSupportedException("TotalDebt.OneMonth was retired by Morningstar in 2026; use TotalDebt.ThreeMonths (also available: SixMonths, TwelveMonths).");
 
         /// <summary>
         /// Gets/sets the TwoMonths period value for the field
         /// </summary>
         [JsonProperty("2M")]
-        [Obsolete("TotalDebt.TwoMonths is no longer provided by Morningstar since the 2026 feed migration; use TotalDebt.ThreeMonths (also available: SixMonths, TwelveMonths).")]
-        public double TwoMonths => throw new NotSupportedException("TotalDebt.TwoMonths is no longer provided by Morningstar since the 2026 feed migration; use TotalDebt.ThreeMonths (also available: SixMonths, TwelveMonths).");
+        [Obsolete("TotalDebt.TwoMonths was retired by Morningstar in 2026; use TotalDebt.ThreeMonths (also available: SixMonths, TwelveMonths).")]
+        public double TwoMonths => throw new NotSupportedException("TotalDebt.TwoMonths was retired by Morningstar in 2026; use TotalDebt.ThreeMonths (also available: SixMonths, TwelveMonths).");
 
         /// <summary>
         /// Gets/sets the ThreeMonths period value for the field
@@ -63,8 +63,8 @@ namespace QuantConnect.Data.Fundamental
         /// Gets/sets the NineMonths period value for the field
         /// </summary>
         [JsonProperty("9M")]
-        [Obsolete("TotalDebt.NineMonths is no longer provided by Morningstar since the 2026 feed migration; use TotalDebt.ThreeMonths (also available: SixMonths, TwelveMonths).")]
-        public double NineMonths => throw new NotSupportedException("TotalDebt.NineMonths is no longer provided by Morningstar since the 2026 feed migration; use TotalDebt.ThreeMonths (also available: SixMonths, TwelveMonths).");
+        [Obsolete("TotalDebt.NineMonths was retired by Morningstar in 2026; use TotalDebt.ThreeMonths (also available: SixMonths, TwelveMonths).")]
+        public double NineMonths => throw new NotSupportedException("TotalDebt.NineMonths was retired by Morningstar in 2026; use TotalDebt.ThreeMonths (also available: SixMonths, TwelveMonths).");
 
         /// <summary>
         /// Gets/sets the TwelveMonths period value for the field

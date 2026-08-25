@@ -37,15 +37,15 @@ namespace QuantConnect.Data.Fundamental
         /// Gets/sets the OneMonth period value for the field
         /// </summary>
         [JsonProperty("1M")]
-        [Obsolete("TangibleBookValue.OneMonth is no longer provided by Morningstar since the 2026 feed migration; use TangibleBookValue.ThreeMonths (also available: SixMonths, TwelveMonths).")]
-        public double OneMonth => throw new NotSupportedException("TangibleBookValue.OneMonth is no longer provided by Morningstar since the 2026 feed migration; use TangibleBookValue.ThreeMonths (also available: SixMonths, TwelveMonths).");
+        [Obsolete("TangibleBookValue.OneMonth was retired by Morningstar in 2026; use TangibleBookValue.ThreeMonths (also available: SixMonths, TwelveMonths).")]
+        public double OneMonth => throw new NotSupportedException("TangibleBookValue.OneMonth was retired by Morningstar in 2026; use TangibleBookValue.ThreeMonths (also available: SixMonths, TwelveMonths).");
 
         /// <summary>
         /// Gets/sets the TwoMonths period value for the field
         /// </summary>
         [JsonProperty("2M")]
-        [Obsolete("TangibleBookValue.TwoMonths is no longer provided by Morningstar since the 2026 feed migration; use TangibleBookValue.ThreeMonths (also available: SixMonths, TwelveMonths).")]
-        public double TwoMonths => throw new NotSupportedException("TangibleBookValue.TwoMonths is no longer provided by Morningstar since the 2026 feed migration; use TangibleBookValue.ThreeMonths (also available: SixMonths, TwelveMonths).");
+        [Obsolete("TangibleBookValue.TwoMonths was retired by Morningstar in 2026; use TangibleBookValue.ThreeMonths (also available: SixMonths, TwelveMonths).")]
+        public double TwoMonths => throw new NotSupportedException("TangibleBookValue.TwoMonths was retired by Morningstar in 2026; use TangibleBookValue.ThreeMonths (also available: SixMonths, TwelveMonths).");
 
         /// <summary>
         /// Gets/sets the ThreeMonths period value for the field
@@ -63,8 +63,8 @@ namespace QuantConnect.Data.Fundamental
         /// Gets/sets the NineMonths period value for the field
         /// </summary>
         [JsonProperty("9M")]
-        [Obsolete("TangibleBookValue.NineMonths is no longer provided by Morningstar since the 2026 feed migration; use TangibleBookValue.ThreeMonths (also available: SixMonths, TwelveMonths).")]
-        public double NineMonths => throw new NotSupportedException("TangibleBookValue.NineMonths is no longer provided by Morningstar since the 2026 feed migration; use TangibleBookValue.ThreeMonths (also available: SixMonths, TwelveMonths).");
+        [Obsolete("TangibleBookValue.NineMonths was retired by Morningstar in 2026; use TangibleBookValue.ThreeMonths (also available: SixMonths, TwelveMonths).")]
+        public double NineMonths => throw new NotSupportedException("TangibleBookValue.NineMonths was retired by Morningstar in 2026; use TangibleBookValue.ThreeMonths (also available: SixMonths, TwelveMonths).");
 
         /// <summary>
         /// Gets/sets the TwelveMonths period value for the field

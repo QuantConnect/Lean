@@ -43,36 +43,36 @@ namespace QuantConnect.Data.Fundamental
         /// Gets/sets the OneMonth period value for the field
         /// </summary>
         [JsonProperty("1M")]
-        [Obsolete("SalesPerEmployee.OneMonth is no longer provided by Morningstar since the 2026 feed migration; use SalesPerEmployee.OneYear.")]
-        public double OneMonth => throw new NotSupportedException("SalesPerEmployee.OneMonth is no longer provided by Morningstar since the 2026 feed migration; use SalesPerEmployee.OneYear.");
+        [Obsolete("SalesPerEmployee.OneMonth was retired by Morningstar in 2026; use SalesPerEmployee.OneYear.")]
+        public double OneMonth => throw new NotSupportedException("SalesPerEmployee.OneMonth was retired by Morningstar in 2026; use SalesPerEmployee.OneYear.");
 
         /// <summary>
         /// Gets/sets the TwoMonths period value for the field
         /// </summary>
         [JsonProperty("2M")]
-        [Obsolete("SalesPerEmployee.TwoMonths is no longer provided by Morningstar since the 2026 feed migration; use SalesPerEmployee.OneYear.")]
-        public double TwoMonths => throw new NotSupportedException("SalesPerEmployee.TwoMonths is no longer provided by Morningstar since the 2026 feed migration; use SalesPerEmployee.OneYear.");
+        [Obsolete("SalesPerEmployee.TwoMonths was retired by Morningstar in 2026; use SalesPerEmployee.OneYear.")]
+        public double TwoMonths => throw new NotSupportedException("SalesPerEmployee.TwoMonths was retired by Morningstar in 2026; use SalesPerEmployee.OneYear.");
 
         /// <summary>
         /// Gets/sets the ThreeMonths period value for the field
         /// </summary>
         [JsonProperty("3M")]
-        [Obsolete("SalesPerEmployee.ThreeMonths is no longer provided by Morningstar since the 2026 feed migration; use SalesPerEmployee.OneYear.")]
-        public double ThreeMonths => throw new NotSupportedException("SalesPerEmployee.ThreeMonths is no longer provided by Morningstar since the 2026 feed migration; use SalesPerEmployee.OneYear.");
+        [Obsolete("SalesPerEmployee.ThreeMonths was retired by Morningstar in 2026; use SalesPerEmployee.OneYear.")]
+        public double ThreeMonths => throw new NotSupportedException("SalesPerEmployee.ThreeMonths was retired by Morningstar in 2026; use SalesPerEmployee.OneYear.");
 
         /// <summary>
         /// Gets/sets the SixMonths period value for the field
         /// </summary>
         [JsonProperty("6M")]
-        [Obsolete("SalesPerEmployee.SixMonths is no longer provided by Morningstar since the 2026 feed migration; use SalesPerEmployee.OneYear.")]
-        public double SixMonths => throw new NotSupportedException("SalesPerEmployee.SixMonths is no longer provided by Morningstar since the 2026 feed migration; use SalesPerEmployee.OneYear.");
+        [Obsolete("SalesPerEmployee.SixMonths was retired by Morningstar in 2026; use SalesPerEmployee.OneYear.")]
+        public double SixMonths => throw new NotSupportedException("SalesPerEmployee.SixMonths was retired by Morningstar in 2026; use SalesPerEmployee.OneYear.");
 
         /// <summary>
         /// Gets/sets the NineMonths period value for the field
         /// </summary>
         [JsonProperty("9M")]
-        [Obsolete("SalesPerEmployee.NineMonths is no longer provided by Morningstar since the 2026 feed migration; use SalesPerEmployee.OneYear.")]
-        public double NineMonths => throw new NotSupportedException("SalesPerEmployee.NineMonths is no longer provided by Morningstar since the 2026 feed migration; use SalesPerEmployee.OneYear.");
+        [Obsolete("SalesPerEmployee.NineMonths was retired by Morningstar in 2026; use SalesPerEmployee.OneYear.")]
+        public double NineMonths => throw new NotSupportedException("SalesPerEmployee.NineMonths was retired by Morningstar in 2026; use SalesPerEmployee.OneYear.");
 
         /// <summary>
         /// Returns true if the field contains a value for the default period

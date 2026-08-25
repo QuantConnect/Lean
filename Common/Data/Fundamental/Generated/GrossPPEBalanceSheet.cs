@@ -37,15 +37,15 @@ namespace QuantConnect.Data.Fundamental
         /// Gets/sets the OneMonth period value for the field
         /// </summary>
         [JsonProperty("1M")]
-        [Obsolete("GrossPPE.OneMonth is no longer provided by Morningstar since the 2026 feed migration; use GrossPPE.ThreeMonths (also available: SixMonths, TwelveMonths).")]
-        public double OneMonth => throw new NotSupportedException("GrossPPE.OneMonth is no longer provided by Morningstar since the 2026 feed migration; use GrossPPE.ThreeMonths (also available: SixMonths, TwelveMonths).");
+        [Obsolete("GrossPPE.OneMonth was retired by Morningstar in 2026; use GrossPPE.ThreeMonths (also available: SixMonths, TwelveMonths).")]
+        public double OneMonth => throw new NotSupportedException("GrossPPE.OneMonth was retired by Morningstar in 2026; use GrossPPE.ThreeMonths (also available: SixMonths, TwelveMonths).");
 
         /// <summary>
         /// Gets/sets the TwoMonths period value for the field
         /// </summary>
         [JsonProperty("2M")]
-        [Obsolete("GrossPPE.TwoMonths is no longer provided by Morningstar since the 2026 feed migration; use GrossPPE.ThreeMonths (also available: SixMonths, TwelveMonths).")]
-        public double TwoMonths => throw new NotSupportedException("GrossPPE.TwoMonths is no longer provided by Morningstar since the 2026 feed migration; use GrossPPE.ThreeMonths (also available: SixMonths, TwelveMonths).");
+        [Obsolete("GrossPPE.TwoMonths was retired by Morningstar in 2026; use GrossPPE.ThreeMonths (also available: SixMonths, TwelveMonths).")]
+        public double TwoMonths => throw new NotSupportedException("GrossPPE.TwoMonths was retired by Morningstar in 2026; use GrossPPE.ThreeMonths (also available: SixMonths, TwelveMonths).");
 
         /// <summary>
         /// Gets/sets the ThreeMonths period value for the field
@@ -63,8 +63,8 @@ namespace QuantConnect.Data.Fundamental
         /// Gets/sets the NineMonths period value for the field
         /// </summary>
         [JsonProperty("9M")]
-        [Obsolete("GrossPPE.NineMonths is no longer provided by Morningstar since the 2026 feed migration; use GrossPPE.ThreeMonths (also available: SixMonths, TwelveMonths).")]
-        public double NineMonths => throw new NotSupportedException("GrossPPE.NineMonths is no longer provided by Morningstar since the 2026 feed migration; use GrossPPE.ThreeMonths (also available: SixMonths, TwelveMonths).");
+        [Obsolete("GrossPPE.NineMonths was retired by Morningstar in 2026; use GrossPPE.ThreeMonths (also available: SixMonths, TwelveMonths).")]
+        public double NineMonths => throw new NotSupportedException("GrossPPE.NineMonths was retired by Morningstar in 2026; use GrossPPE.ThreeMonths (also available: SixMonths, TwelveMonths).");
 
         /// <summary>
         /// Gets/sets the TwelveMonths period value for the field

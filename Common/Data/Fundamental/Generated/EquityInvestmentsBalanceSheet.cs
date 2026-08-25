@@ -37,22 +37,22 @@ namespace QuantConnect.Data.Fundamental
         /// Gets/sets the ThreeMonths period value for the field
         /// </summary>
         [JsonProperty("3M")]
-        [Obsolete("EquityInvestments is no longer provided by Morningstar since the 2026 feed migration; no direct replacement is provided.")]
-        public double ThreeMonths => throw new NotSupportedException("EquityInvestments is no longer provided by Morningstar since the 2026 feed migration; no direct replacement is provided.");
+        [Obsolete("EquityInvestments was retired by Morningstar in 2026 for all periods; no replacement is available.")]
+        public double ThreeMonths => throw new NotSupportedException("EquityInvestments was retired by Morningstar in 2026 for all periods; no replacement is available.");
 
         /// <summary>
         /// Gets/sets the NineMonths period value for the field
         /// </summary>
         [JsonProperty("9M")]
-        [Obsolete("EquityInvestments is no longer provided by Morningstar in any period since the 2026 feed migration; no direct replacement is provided.")]
-        public double NineMonths => throw new NotSupportedException("EquityInvestments is no longer provided by Morningstar in any period since the 2026 feed migration; no direct replacement is provided.");
+        [Obsolete("EquityInvestments was retired by Morningstar in 2026 for all periods; no replacement is available.")]
+        public double NineMonths => throw new NotSupportedException("EquityInvestments was retired by Morningstar in 2026 for all periods; no replacement is available.");
 
         /// <summary>
         /// Gets/sets the TwelveMonths period value for the field
         /// </summary>
         [JsonProperty("12M")]
-        [Obsolete("EquityInvestments is no longer provided by Morningstar since the 2026 feed migration; no direct replacement is provided.")]
-        public double TwelveMonths => throw new NotSupportedException("EquityInvestments is no longer provided by Morningstar since the 2026 feed migration; no direct replacement is provided.");
+        [Obsolete("EquityInvestments was retired by Morningstar in 2026 for all periods; no replacement is available.")]
+        public double TwelveMonths => throw new NotSupportedException("EquityInvestments was retired by Morningstar in 2026 for all periods; no replacement is available.");
 
         /// <summary>
         /// Returns true if the field contains a value for the default period
@@ -62,7 +62,7 @@ namespace QuantConnect.Data.Fundamental
         /// <summary>
         /// Returns the default value for the field
         /// </summary>
-        public override double Value => throw new NotSupportedException("EquityInvestments is no longer provided by Morningstar since the 2026 feed migration; no direct replacement is provided.");
+        public override double Value => throw new NotSupportedException("EquityInvestments was retired by Morningstar in 2026 for all periods; no replacement is available.");
 
         /// <summary>
         /// Gets a dictionary of period names and values for the field

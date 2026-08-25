@@ -37,15 +37,15 @@ namespace QuantConnect.Data.Fundamental
         /// Gets/sets the OneMonth period value for the field
         /// </summary>
         [JsonProperty("1M")]
-        [Obsolete("GainsLossesNotAffectingRetainedEarnings.OneMonth is no longer provided by Morningstar since the 2026 feed migration; use GainsLossesNotAffectingRetainedEarnings.ThreeMonths (also available: SixMonths, TwelveMonths).")]
-        public double OneMonth => throw new NotSupportedException("GainsLossesNotAffectingRetainedEarnings.OneMonth is no longer provided by Morningstar since the 2026 feed migration; use GainsLossesNotAffectingRetainedEarnings.ThreeMonths (also available: SixMonths, TwelveMonths).");
+        [Obsolete("GainsLossesNotAffectingRetainedEarnings.OneMonth was retired by Morningstar in 2026; use GainsLossesNotAffectingRetainedEarnings.ThreeMonths (also available: SixMonths, TwelveMonths).")]
+        public double OneMonth => throw new NotSupportedException("GainsLossesNotAffectingRetainedEarnings.OneMonth was retired by Morningstar in 2026; use GainsLossesNotAffectingRetainedEarnings.ThreeMonths (also available: SixMonths, TwelveMonths).");
 
         /// <summary>
         /// Gets/sets the TwoMonths period value for the field
         /// </summary>
         [JsonProperty("2M")]
-        [Obsolete("GainsLossesNotAffectingRetainedEarnings.TwoMonths is no longer provided by Morningstar since the 2026 feed migration; use GainsLossesNotAffectingRetainedEarnings.ThreeMonths (also available: SixMonths, TwelveMonths).")]
-        public double TwoMonths => throw new NotSupportedException("GainsLossesNotAffectingRetainedEarnings.TwoMonths is no longer provided by Morningstar since the 2026 feed migration; use GainsLossesNotAffectingRetainedEarnings.ThreeMonths (also available: SixMonths, TwelveMonths).");
+        [Obsolete("GainsLossesNotAffectingRetainedEarnings.TwoMonths was retired by Morningstar in 2026; use GainsLossesNotAffectingRetainedEarnings.ThreeMonths (also available: SixMonths, TwelveMonths).")]
+        public double TwoMonths => throw new NotSupportedException("GainsLossesNotAffectingRetainedEarnings.TwoMonths was retired by Morningstar in 2026; use GainsLossesNotAffectingRetainedEarnings.ThreeMonths (also available: SixMonths, TwelveMonths).");
 
         /// <summary>
         /// Gets/sets the ThreeMonths period value for the field
@@ -63,8 +63,8 @@ namespace QuantConnect.Data.Fundamental
         /// Gets/sets the NineMonths period value for the field
         /// </summary>
         [JsonProperty("9M")]
-        [Obsolete("GainsLossesNotAffectingRetainedEarnings.NineMonths is no longer provided by Morningstar since the 2026 feed migration; use GainsLossesNotAffectingRetainedEarnings.ThreeMonths (also available: SixMonths, TwelveMonths).")]
-        public double NineMonths => throw new NotSupportedException("GainsLossesNotAffectingRetainedEarnings.NineMonths is no longer provided by Morningstar since the 2026 feed migration; use GainsLossesNotAffectingRetainedEarnings.ThreeMonths (also available: SixMonths, TwelveMonths).");
+        [Obsolete("GainsLossesNotAffectingRetainedEarnings.NineMonths was retired by Morningstar in 2026; use GainsLossesNotAffectingRetainedEarnings.ThreeMonths (also available: SixMonths, TwelveMonths).")]
+        public double NineMonths => throw new NotSupportedException("GainsLossesNotAffectingRetainedEarnings.NineMonths was retired by Morningstar in 2026; use GainsLossesNotAffectingRetainedEarnings.ThreeMonths (also available: SixMonths, TwelveMonths).");
 
         /// <summary>
         /// Gets/sets the TwelveMonths period value for the field

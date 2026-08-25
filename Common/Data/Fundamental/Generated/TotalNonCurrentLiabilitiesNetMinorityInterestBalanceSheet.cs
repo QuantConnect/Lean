@@ -37,15 +37,15 @@ namespace QuantConnect.Data.Fundamental
         /// Gets/sets the OneMonth period value for the field
         /// </summary>
         [JsonProperty("1M")]
-        [Obsolete("TotalNonCurrentLiabilitiesNetMinorityInterest.OneMonth is no longer provided by Morningstar since the 2026 feed migration; use TotalNonCurrentLiabilitiesNetMinorityInterest.ThreeMonths (also available: SixMonths, TwelveMonths).")]
-        public double OneMonth => throw new NotSupportedException("TotalNonCurrentLiabilitiesNetMinorityInterest.OneMonth is no longer provided by Morningstar since the 2026 feed migration; use TotalNonCurrentLiabilitiesNetMinorityInterest.ThreeMonths (also available: SixMonths, TwelveMonths).");
+        [Obsolete("TotalNonCurrentLiabilitiesNetMinorityInterest.OneMonth was retired by Morningstar in 2026; use TotalNonCurrentLiabilitiesNetMinorityInterest.ThreeMonths (also available: SixMonths, TwelveMonths).")]
+        public double OneMonth => throw new NotSupportedException("TotalNonCurrentLiabilitiesNetMinorityInterest.OneMonth was retired by Morningstar in 2026; use TotalNonCurrentLiabilitiesNetMinorityInterest.ThreeMonths (also available: SixMonths, TwelveMonths).");
 
         /// <summary>
         /// Gets/sets the TwoMonths period value for the field
         /// </summary>
         [JsonProperty("2M")]
-        [Obsolete("TotalNonCurrentLiabilitiesNetMinorityInterest.TwoMonths is no longer provided by Morningstar since the 2026 feed migration; use TotalNonCurrentLiabilitiesNetMinorityInterest.ThreeMonths (also available: SixMonths, TwelveMonths).")]
-        public double TwoMonths => throw new NotSupportedException("TotalNonCurrentLiabilitiesNetMinorityInterest.TwoMonths is no longer provided by Morningstar since the 2026 feed migration; use TotalNonCurrentLiabilitiesNetMinorityInterest.ThreeMonths (also available: SixMonths, TwelveMonths).");
+        [Obsolete("TotalNonCurrentLiabilitiesNetMinorityInterest.TwoMonths was retired by Morningstar in 2026; use TotalNonCurrentLiabilitiesNetMinorityInterest.ThreeMonths (also available: SixMonths, TwelveMonths).")]
+        public double TwoMonths => throw new NotSupportedException("TotalNonCurrentLiabilitiesNetMinorityInterest.TwoMonths was retired by Morningstar in 2026; use TotalNonCurrentLiabilitiesNetMinorityInterest.ThreeMonths (also available: SixMonths, TwelveMonths).");
 
         /// <summary>
         /// Gets/sets the ThreeMonths period value for the field
@@ -63,8 +63,8 @@ namespace QuantConnect.Data.Fundamental
         /// Gets/sets the NineMonths period value for the field
         /// </summary>
         [JsonProperty("9M")]
-        [Obsolete("TotalNonCurrentLiabilitiesNetMinorityInterest.NineMonths is no longer provided by Morningstar since the 2026 feed migration; use TotalNonCurrentLiabilitiesNetMinorityInterest.ThreeMonths (also available: SixMonths, TwelveMonths).")]
-        public double NineMonths => throw new NotSupportedException("TotalNonCurrentLiabilitiesNetMinorityInterest.NineMonths is no longer provided by Morningstar since the 2026 feed migration; use TotalNonCurrentLiabilitiesNetMinorityInterest.ThreeMonths (also available: SixMonths, TwelveMonths).");
+        [Obsolete("TotalNonCurrentLiabilitiesNetMinorityInterest.NineMonths was retired by Morningstar in 2026; use TotalNonCurrentLiabilitiesNetMinorityInterest.ThreeMonths (also available: SixMonths, TwelveMonths).")]
+        public double NineMonths => throw new NotSupportedException("TotalNonCurrentLiabilitiesNetMinorityInterest.NineMonths was retired by Morningstar in 2026; use TotalNonCurrentLiabilitiesNetMinorityInterest.ThreeMonths (also available: SixMonths, TwelveMonths).");
 
         /// <summary>
         /// Gets/sets the TwelveMonths period value for the field

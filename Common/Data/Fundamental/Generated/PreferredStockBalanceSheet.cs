@@ -37,15 +37,15 @@ namespace QuantConnect.Data.Fundamental
         /// Gets/sets the OneMonth period value for the field
         /// </summary>
         [JsonProperty("1M")]
-        [Obsolete("PreferredStock.OneMonth is no longer provided by Morningstar since the 2026 feed migration; use PreferredStock.ThreeMonths (also available: SixMonths, TwelveMonths).")]
-        public double OneMonth => throw new NotSupportedException("PreferredStock.OneMonth is no longer provided by Morningstar since the 2026 feed migration; use PreferredStock.ThreeMonths (also available: SixMonths, TwelveMonths).");
+        [Obsolete("PreferredStock.OneMonth was retired by Morningstar in 2026; use PreferredStock.ThreeMonths (also available: SixMonths, TwelveMonths).")]
+        public double OneMonth => throw new NotSupportedException("PreferredStock.OneMonth was retired by Morningstar in 2026; use PreferredStock.ThreeMonths (also available: SixMonths, TwelveMonths).");
 
         /// <summary>
         /// Gets/sets the TwoMonths period value for the field
         /// </summary>
         [JsonProperty("2M")]
-        [Obsolete("PreferredStock.TwoMonths is no longer provided by Morningstar since the 2026 feed migration; use PreferredStock.ThreeMonths (also available: SixMonths, TwelveMonths).")]
-        public double TwoMonths => throw new NotSupportedException("PreferredStock.TwoMonths is no longer provided by Morningstar since the 2026 feed migration; use PreferredStock.ThreeMonths (also available: SixMonths, TwelveMonths).");
+        [Obsolete("PreferredStock.TwoMonths was retired by Morningstar in 2026; use PreferredStock.ThreeMonths (also available: SixMonths, TwelveMonths).")]
+        public double TwoMonths => throw new NotSupportedException("PreferredStock.TwoMonths was retired by Morningstar in 2026; use PreferredStock.ThreeMonths (also available: SixMonths, TwelveMonths).");
 
         /// <summary>
         /// Gets/sets the ThreeMonths period value for the field
@@ -63,8 +63,8 @@ namespace QuantConnect.Data.Fundamental
         /// Gets/sets the NineMonths period value for the field
         /// </summary>
         [JsonProperty("9M")]
-        [Obsolete("PreferredStock.NineMonths is no longer provided by Morningstar since the 2026 feed migration; use PreferredStock.ThreeMonths (also available: SixMonths, TwelveMonths).")]
-        public double NineMonths => throw new NotSupportedException("PreferredStock.NineMonths is no longer provided by Morningstar since the 2026 feed migration; use PreferredStock.ThreeMonths (also available: SixMonths, TwelveMonths).");
+        [Obsolete("PreferredStock.NineMonths was retired by Morningstar in 2026; use PreferredStock.ThreeMonths (also available: SixMonths, TwelveMonths).")]
+        public double NineMonths => throw new NotSupportedException("PreferredStock.NineMonths was retired by Morningstar in 2026; use PreferredStock.ThreeMonths (also available: SixMonths, TwelveMonths).");
 
         /// <summary>
         /// Gets/sets the TwelveMonths period value for the field

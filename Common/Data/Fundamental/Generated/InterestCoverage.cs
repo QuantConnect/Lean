@@ -43,36 +43,36 @@ namespace QuantConnect.Data.Fundamental
         /// Gets/sets the OneMonth period value for the field
         /// </summary>
         [JsonProperty("1M")]
-        [Obsolete("InterestCoverage.OneMonth is no longer provided by Morningstar since the 2026 feed migration; use InterestCoverage.OneYear.")]
-        public double OneMonth => throw new NotSupportedException("InterestCoverage.OneMonth is no longer provided by Morningstar since the 2026 feed migration; use InterestCoverage.OneYear.");
+        [Obsolete("InterestCoverage.OneMonth was retired by Morningstar in 2026; use InterestCoverage.OneYear.")]
+        public double OneMonth => throw new NotSupportedException("InterestCoverage.OneMonth was retired by Morningstar in 2026; use InterestCoverage.OneYear.");
 
         /// <summary>
         /// Gets/sets the TwoMonths period value for the field
         /// </summary>
         [JsonProperty("2M")]
-        [Obsolete("InterestCoverage.TwoMonths is no longer provided by Morningstar since the 2026 feed migration; use InterestCoverage.OneYear.")]
-        public double TwoMonths => throw new NotSupportedException("InterestCoverage.TwoMonths is no longer provided by Morningstar since the 2026 feed migration; use InterestCoverage.OneYear.");
+        [Obsolete("InterestCoverage.TwoMonths was retired by Morningstar in 2026; use InterestCoverage.OneYear.")]
+        public double TwoMonths => throw new NotSupportedException("InterestCoverage.TwoMonths was retired by Morningstar in 2026; use InterestCoverage.OneYear.");
 
         /// <summary>
         /// Gets/sets the ThreeMonths period value for the field
         /// </summary>
         [JsonProperty("3M")]
-        [Obsolete("InterestCoverage.ThreeMonths is no longer provided by Morningstar since the 2026 feed migration; use InterestCoverage.OneYear.")]
-        public double ThreeMonths => throw new NotSupportedException("InterestCoverage.ThreeMonths is no longer provided by Morningstar since the 2026 feed migration; use InterestCoverage.OneYear.");
+        [Obsolete("InterestCoverage.ThreeMonths was retired by Morningstar in 2026; use InterestCoverage.OneYear.")]
+        public double ThreeMonths => throw new NotSupportedException("InterestCoverage.ThreeMonths was retired by Morningstar in 2026; use InterestCoverage.OneYear.");
 
         /// <summary>
         /// Gets/sets the SixMonths period value for the field
         /// </summary>
         [JsonProperty("6M")]
-        [Obsolete("InterestCoverage.SixMonths is no longer provided by Morningstar since the 2026 feed migration; use InterestCoverage.OneYear.")]
-        public double SixMonths => throw new NotSupportedException("InterestCoverage.SixMonths is no longer provided by Morningstar since the 2026 feed migration; use InterestCoverage.OneYear.");
+        [Obsolete("InterestCoverage.SixMonths was retired by Morningstar in 2026; use InterestCoverage.OneYear.")]
+        public double SixMonths => throw new NotSupportedException("InterestCoverage.SixMonths was retired by Morningstar in 2026; use InterestCoverage.OneYear.");
 
         /// <summary>
         /// Gets/sets the NineMonths period value for the field
         /// </summary>
         [JsonProperty("9M")]
-        [Obsolete("InterestCoverage.NineMonths is no longer provided by Morningstar since the 2026 feed migration; use InterestCoverage.OneYear.")]
-        public double NineMonths => throw new NotSupportedException("InterestCoverage.NineMonths is no longer provided by Morningstar since the 2026 feed migration; use InterestCoverage.OneYear.");
+        [Obsolete("InterestCoverage.NineMonths was retired by Morningstar in 2026; use InterestCoverage.OneYear.")]
+        public double NineMonths => throw new NotSupportedException("InterestCoverage.NineMonths was retired by Morningstar in 2026; use InterestCoverage.OneYear.");
 
         /// <summary>
         /// Returns true if the field contains a value for the default period

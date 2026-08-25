@@ -43,8 +43,8 @@ namespace QuantConnect.Data.Fundamental
         /// Gets/sets the TwoMonths period value for the field
         /// </summary>
         [JsonProperty("2M")]
-        [Obsolete("CapitalLeaseObligations.TwoMonths is no longer provided by Morningstar since the 2026 feed migration; use CapitalLeaseObligations.ThreeMonths (also available: SixMonths, TwelveMonths).")]
-        public double TwoMonths => throw new NotSupportedException("CapitalLeaseObligations.TwoMonths is no longer provided by Morningstar since the 2026 feed migration; use CapitalLeaseObligations.ThreeMonths (also available: SixMonths, TwelveMonths).");
+        [Obsolete("CapitalLeaseObligations.TwoMonths was retired by Morningstar in 2026; use CapitalLeaseObligations.ThreeMonths (also available: SixMonths, TwelveMonths).")]
+        public double TwoMonths => throw new NotSupportedException("CapitalLeaseObligations.TwoMonths was retired by Morningstar in 2026; use CapitalLeaseObligations.ThreeMonths (also available: SixMonths, TwelveMonths).");
 
         /// <summary>
         /// Gets/sets the ThreeMonths period value for the field
@@ -62,8 +62,8 @@ namespace QuantConnect.Data.Fundamental
         /// Gets/sets the NineMonths period value for the field
         /// </summary>
         [JsonProperty("9M")]
-        [Obsolete("CapitalLeaseObligations.NineMonths is no longer provided by Morningstar since the 2026 feed migration; use CapitalLeaseObligations.ThreeMonths (also available: SixMonths, TwelveMonths).")]
-        public double NineMonths => throw new NotSupportedException("CapitalLeaseObligations.NineMonths is no longer provided by Morningstar since the 2026 feed migration; use CapitalLeaseObligations.ThreeMonths (also available: SixMonths, TwelveMonths).");
+        [Obsolete("CapitalLeaseObligations.NineMonths was retired by Morningstar in 2026; use CapitalLeaseObligations.ThreeMonths (also available: SixMonths, TwelveMonths).")]
+        public double NineMonths => throw new NotSupportedException("CapitalLeaseObligations.NineMonths was retired by Morningstar in 2026; use CapitalLeaseObligations.ThreeMonths (also available: SixMonths, TwelveMonths).");
 
         /// <summary>
         /// Gets/sets the TwelveMonths period value for the field

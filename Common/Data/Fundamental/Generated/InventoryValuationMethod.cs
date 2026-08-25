@@ -37,43 +37,43 @@ namespace QuantConnect.Data.Fundamental
         /// Gets/sets the OneMonth period value for the field
         /// </summary>
         [JsonProperty("1M")]
-        [Obsolete("InventoryValuationMethod is no longer provided by Morningstar since the 2026 feed migration; no direct replacement is provided.")]
-        public string OneMonth => throw new NotSupportedException("InventoryValuationMethod is no longer provided by Morningstar since the 2026 feed migration; no direct replacement is provided.");
+        [Obsolete("InventoryValuationMethod was retired by Morningstar in 2026 for all periods; no replacement is available.")]
+        public string OneMonth => throw new NotSupportedException("InventoryValuationMethod was retired by Morningstar in 2026 for all periods; no replacement is available.");
 
         /// <summary>
         /// Gets/sets the TwoMonths period value for the field
         /// </summary>
         [JsonProperty("2M")]
-        [Obsolete("InventoryValuationMethod is no longer provided by Morningstar since the 2026 feed migration; no direct replacement is provided.")]
-        public string TwoMonths => throw new NotSupportedException("InventoryValuationMethod is no longer provided by Morningstar since the 2026 feed migration; no direct replacement is provided.");
+        [Obsolete("InventoryValuationMethod was retired by Morningstar in 2026 for all periods; no replacement is available.")]
+        public string TwoMonths => throw new NotSupportedException("InventoryValuationMethod was retired by Morningstar in 2026 for all periods; no replacement is available.");
 
         /// <summary>
         /// Gets/sets the ThreeMonths period value for the field
         /// </summary>
         [JsonProperty("3M")]
-        [Obsolete("InventoryValuationMethod is no longer provided by Morningstar since the 2026 feed migration; no direct replacement is provided.")]
-        public string ThreeMonths => throw new NotSupportedException("InventoryValuationMethod is no longer provided by Morningstar since the 2026 feed migration; no direct replacement is provided.");
+        [Obsolete("InventoryValuationMethod was retired by Morningstar in 2026 for all periods; no replacement is available.")]
+        public string ThreeMonths => throw new NotSupportedException("InventoryValuationMethod was retired by Morningstar in 2026 for all periods; no replacement is available.");
 
         /// <summary>
         /// Gets/sets the SixMonths period value for the field
         /// </summary>
         [JsonProperty("6M")]
-        [Obsolete("InventoryValuationMethod is no longer provided by Morningstar since the 2026 feed migration; no direct replacement is provided.")]
-        public string SixMonths => throw new NotSupportedException("InventoryValuationMethod is no longer provided by Morningstar since the 2026 feed migration; no direct replacement is provided.");
+        [Obsolete("InventoryValuationMethod was retired by Morningstar in 2026 for all periods; no replacement is available.")]
+        public string SixMonths => throw new NotSupportedException("InventoryValuationMethod was retired by Morningstar in 2026 for all periods; no replacement is available.");
 
         /// <summary>
         /// Gets/sets the NineMonths period value for the field
         /// </summary>
         [JsonProperty("9M")]
-        [Obsolete("InventoryValuationMethod is no longer provided by Morningstar since the 2026 feed migration; no direct replacement is provided.")]
-        public string NineMonths => throw new NotSupportedException("InventoryValuationMethod is no longer provided by Morningstar since the 2026 feed migration; no direct replacement is provided.");
+        [Obsolete("InventoryValuationMethod was retired by Morningstar in 2026 for all periods; no replacement is available.")]
+        public string NineMonths => throw new NotSupportedException("InventoryValuationMethod was retired by Morningstar in 2026 for all periods; no replacement is available.");
 
         /// <summary>
         /// Gets/sets the TwelveMonths period value for the field
         /// </summary>
         [JsonProperty("12M")]
-        [Obsolete("InventoryValuationMethod is no longer provided by Morningstar since the 2026 feed migration; no direct replacement is provided.")]
-        public string TwelveMonths => throw new NotSupportedException("InventoryValuationMethod is no longer provided by Morningstar since the 2026 feed migration; no direct replacement is provided.");
+        [Obsolete("InventoryValuationMethod was retired by Morningstar in 2026 for all periods; no replacement is available.")]
+        public string TwelveMonths => throw new NotSupportedException("InventoryValuationMethod was retired by Morningstar in 2026 for all periods; no replacement is available.");
 
         /// <summary>
         /// Returns true if the field contains a value for the default period
@@ -83,7 +83,7 @@ namespace QuantConnect.Data.Fundamental
         /// <summary>
         /// Returns the default value for the field
         /// </summary>
-        public override string Value => throw new NotSupportedException("InventoryValuationMethod is no longer provided by Morningstar since the 2026 feed migration; no direct replacement is provided.");
+        public override string Value => throw new NotSupportedException("InventoryValuationMethod was retired by Morningstar in 2026 for all periods; no replacement is available.");
 
         /// <summary>
         /// Gets a dictionary of period names and values for the field

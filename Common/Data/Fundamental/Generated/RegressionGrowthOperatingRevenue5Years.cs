@@ -37,8 +37,8 @@ namespace QuantConnect.Data.Fundamental
         /// Gets/sets the FiveYears period value for the field
         /// </summary>
         [JsonProperty("5Y")]
-        [Obsolete("RegressionGrowthOperatingRevenue5Years is no longer provided by Morningstar since the 2026 feed migration; no direct replacement is provided.")]
-        public double FiveYears => throw new NotSupportedException("RegressionGrowthOperatingRevenue5Years is no longer provided by Morningstar since the 2026 feed migration; no direct replacement is provided.");
+        [Obsolete("RegressionGrowthOperatingRevenue5Years was retired by Morningstar in 2026 for all periods; no replacement is available.")]
+        public double FiveYears => throw new NotSupportedException("RegressionGrowthOperatingRevenue5Years was retired by Morningstar in 2026 for all periods; no replacement is available.");
 
         /// <summary>
         /// Returns true if the field contains a value for the default period
@@ -48,7 +48,7 @@ namespace QuantConnect.Data.Fundamental
         /// <summary>
         /// Returns the default value for the field
         /// </summary>
-        public override double Value => throw new NotSupportedException("RegressionGrowthOperatingRevenue5Years is no longer provided by Morningstar since the 2026 feed migration; no direct replacement is provided.");
+        public override double Value => throw new NotSupportedException("RegressionGrowthOperatingRevenue5Years was retired by Morningstar in 2026 for all periods; no replacement is available.");
 
         /// <summary>
         /// Gets a dictionary of period names and values for the field
