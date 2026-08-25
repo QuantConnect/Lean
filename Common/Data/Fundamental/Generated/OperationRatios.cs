@@ -1,4 +1,4 @@
-/*
+﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2023 QuantConnect Corporation.
  *
@@ -535,6 +535,7 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 12028
         /// </remarks>
         [JsonProperty("12028")]
+        [Obsolete("RegressionGrowthOperatingRevenue5Years is no longer provided by Morningstar since the 2026 feed migration; no direct replacement is provided.")]
         public RegressionGrowthOperatingRevenue5Years RegressionGrowthOperatingRevenue5Years => _regressionGrowthOperatingRevenue5Years ??= new(_timeProvider, _securityIdentifier);
         private RegressionGrowthOperatingRevenue5Years _regressionGrowthOperatingRevenue5Years;
 

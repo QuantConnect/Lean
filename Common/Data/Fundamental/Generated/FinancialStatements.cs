@@ -75,6 +75,7 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 28000
         /// </remarks>
         [JsonProperty("28000")]
+        [Obsolete("PeriodAuditor is no longer provided by Morningstar since the 2026 feed migration; no direct replacement is provided.")]
         public PeriodAuditor PeriodAuditor => _periodAuditor ??= new(_timeProvider, _securityIdentifier);
         private PeriodAuditor _periodAuditor;
 
@@ -95,6 +96,7 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 28002
         /// </remarks>
         [JsonProperty("28002")]
+        [Obsolete("InventoryValuationMethod is no longer provided by Morningstar since the 2026 feed migration; no direct replacement is provided.")]
         public InventoryValuationMethod InventoryValuationMethod => _inventoryValuationMethod ??= new(_timeProvider, _securityIdentifier);
         private InventoryValuationMethod _inventoryValuationMethod;
 
@@ -105,6 +107,7 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 28003
         /// </remarks>
         [JsonProperty("28003")]
+        [Obsolete("NumberOfShareHolders is no longer provided by Morningstar since the 2026 feed migration; no direct replacement is provided.")]
         public NumberOfShareHolders NumberOfShareHolders => _numberOfShareHolders ??= new(_timeProvider, _securityIdentifier);
         private NumberOfShareHolders _numberOfShareHolders;
 

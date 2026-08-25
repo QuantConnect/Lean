@@ -1,4 +1,4 @@
-/*
+﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2023 QuantConnect Corporation.
  *
@@ -43,7 +43,8 @@ namespace QuantConnect.Data.Fundamental
         /// Gets/sets the TwoMonths period value for the field
         /// </summary>
         [JsonProperty("2M")]
-        public double TwoMonths => FundamentalService.Get<double>(TimeProvider.GetUtcNow(), SecurityIdentifier, FundamentalProperty.FinancialStatements_BalanceSheet_CurrentCapitalLeaseObligation_TwoMonths);
+        [Obsolete("CurrentCapitalLeaseObligation.TwoMonths is no longer provided by Morningstar since the 2026 feed migration; use CurrentCapitalLeaseObligation.ThreeMonths (also available: SixMonths, TwelveMonths).")]
+        public double TwoMonths => throw new NotSupportedException("CurrentCapitalLeaseObligation.TwoMonths is no longer provided by Morningstar since the 2026 feed migration; use CurrentCapitalLeaseObligation.ThreeMonths (also available: SixMonths, TwelveMonths).");
 
         /// <summary>
         /// Gets/sets the ThreeMonths period value for the field
@@ -61,7 +62,8 @@ namespace QuantConnect.Data.Fundamental
         /// Gets/sets the NineMonths period value for the field
         /// </summary>
         [JsonProperty("9M")]
-        public double NineMonths => FundamentalService.Get<double>(TimeProvider.GetUtcNow(), SecurityIdentifier, FundamentalProperty.FinancialStatements_BalanceSheet_CurrentCapitalLeaseObligation_NineMonths);
+        [Obsolete("CurrentCapitalLeaseObligation.NineMonths is no longer provided by Morningstar since the 2026 feed migration; use CurrentCapitalLeaseObligation.ThreeMonths (also available: SixMonths, TwelveMonths).")]
+        public double NineMonths => throw new NotSupportedException("CurrentCapitalLeaseObligation.NineMonths is no longer provided by Morningstar since the 2026 feed migration; use CurrentCapitalLeaseObligation.ThreeMonths (also available: SixMonths, TwelveMonths).");
 
         /// <summary>
         /// Gets/sets the TwelveMonths period value for the field
@@ -97,7 +99,7 @@ namespace QuantConnect.Data.Fundamental
         public override IReadOnlyDictionary<string, double> GetPeriodValues()
         {
             var result = new Dictionary<string, double>();
-            foreach (var kvp in new[] { new Tuple<string, double>("1M",OneMonth), new Tuple<string, double>("2M",TwoMonths), new Tuple<string, double>("3M",ThreeMonths), new Tuple<string, double>("6M",SixMonths), new Tuple<string, double>("9M",NineMonths), new Tuple<string, double>("12M",TwelveMonths) })
+            foreach (var kvp in new[] { new Tuple<string, double>("1M",OneMonth), new Tuple<string, double>("3M",ThreeMonths), new Tuple<string, double>("6M",SixMonths), new Tuple<string, double>("12M",TwelveMonths) })
             {
                 if(!BaseFundamentalDataProvider.IsNone(typeof(double), kvp.Item2))
                 {

@@ -1,4 +1,4 @@
-/*
+﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2023 QuantConnect Corporation.
  *
@@ -37,13 +37,15 @@ namespace QuantConnect.Data.Fundamental
         /// Gets/sets the OneMonth period value for the field
         /// </summary>
         [JsonProperty("1M")]
-        public DateTime OneMonth => FundamentalService.Get<DateTime>(TimeProvider.GetUtcNow(), SecurityIdentifier, FundamentalProperty.FinancialStatements_FileDate_OneMonth);
+        [Obsolete("FileDate.OneMonth is no longer provided by Morningstar since the 2026 feed migration; use FileDate.ThreeMonths (also available: SixMonths, TwelveMonths).")]
+        public DateTime OneMonth => throw new NotSupportedException("FileDate.OneMonth is no longer provided by Morningstar since the 2026 feed migration; use FileDate.ThreeMonths (also available: SixMonths, TwelveMonths).");
 
         /// <summary>
         /// Gets/sets the TwoMonths period value for the field
         /// </summary>
         [JsonProperty("2M")]
-        public DateTime TwoMonths => FundamentalService.Get<DateTime>(TimeProvider.GetUtcNow(), SecurityIdentifier, FundamentalProperty.FinancialStatements_FileDate_TwoMonths);
+        [Obsolete("FileDate.TwoMonths is no longer provided by Morningstar since the 2026 feed migration; use FileDate.ThreeMonths (also available: SixMonths, TwelveMonths).")]
+        public DateTime TwoMonths => throw new NotSupportedException("FileDate.TwoMonths is no longer provided by Morningstar since the 2026 feed migration; use FileDate.ThreeMonths (also available: SixMonths, TwelveMonths).");
 
         /// <summary>
         /// Gets/sets the ThreeMonths period value for the field
@@ -61,7 +63,8 @@ namespace QuantConnect.Data.Fundamental
         /// Gets/sets the NineMonths period value for the field
         /// </summary>
         [JsonProperty("9M")]
-        public DateTime NineMonths => FundamentalService.Get<DateTime>(TimeProvider.GetUtcNow(), SecurityIdentifier, FundamentalProperty.FinancialStatements_FileDate_NineMonths);
+        [Obsolete("FileDate.NineMonths is no longer provided by Morningstar since the 2026 feed migration; use FileDate.ThreeMonths (also available: SixMonths, TwelveMonths).")]
+        public DateTime NineMonths => throw new NotSupportedException("FileDate.NineMonths is no longer provided by Morningstar since the 2026 feed migration; use FileDate.ThreeMonths (also available: SixMonths, TwelveMonths).");
 
         /// <summary>
         /// Gets/sets the TwelveMonths period value for the field

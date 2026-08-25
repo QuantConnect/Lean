@@ -1,4 +1,4 @@
-/*
+﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2023 QuantConnect Corporation.
  *
@@ -37,58 +37,53 @@ namespace QuantConnect.Data.Fundamental
         /// Gets/sets the OneMonth period value for the field
         /// </summary>
         [JsonProperty("1M")]
-        public double OneMonth => FundamentalService.Get<double>(TimeProvider.GetUtcNow(), SecurityIdentifier, FundamentalProperty.FinancialStatements_CashFlowStatement_AmortizationOfIntangibles_OneMonth);
+        [Obsolete("AmortizationOfIntangibles is no longer provided by Morningstar since the 2026 feed migration; no direct replacement is provided.")]
+        public double OneMonth => throw new NotSupportedException("AmortizationOfIntangibles is no longer provided by Morningstar since the 2026 feed migration; no direct replacement is provided.");
 
         /// <summary>
         /// Gets/sets the TwoMonths period value for the field
         /// </summary>
         [JsonProperty("2M")]
-        public double TwoMonths => FundamentalService.Get<double>(TimeProvider.GetUtcNow(), SecurityIdentifier, FundamentalProperty.FinancialStatements_CashFlowStatement_AmortizationOfIntangibles_TwoMonths);
+        [Obsolete("AmortizationOfIntangibles is no longer provided by Morningstar since the 2026 feed migration; no direct replacement is provided.")]
+        public double TwoMonths => throw new NotSupportedException("AmortizationOfIntangibles is no longer provided by Morningstar since the 2026 feed migration; no direct replacement is provided.");
 
         /// <summary>
         /// Gets/sets the ThreeMonths period value for the field
         /// </summary>
         [JsonProperty("3M")]
-        public double ThreeMonths => FundamentalService.Get<double>(TimeProvider.GetUtcNow(), SecurityIdentifier, FundamentalProperty.FinancialStatements_CashFlowStatement_AmortizationOfIntangibles_ThreeMonths);
+        [Obsolete("AmortizationOfIntangibles is no longer provided by Morningstar since the 2026 feed migration; no direct replacement is provided.")]
+        public double ThreeMonths => throw new NotSupportedException("AmortizationOfIntangibles is no longer provided by Morningstar since the 2026 feed migration; no direct replacement is provided.");
 
         /// <summary>
         /// Gets/sets the SixMonths period value for the field
         /// </summary>
         [JsonProperty("6M")]
-        public double SixMonths => FundamentalService.Get<double>(TimeProvider.GetUtcNow(), SecurityIdentifier, FundamentalProperty.FinancialStatements_CashFlowStatement_AmortizationOfIntangibles_SixMonths);
+        [Obsolete("AmortizationOfIntangibles is no longer provided by Morningstar since the 2026 feed migration; no direct replacement is provided.")]
+        public double SixMonths => throw new NotSupportedException("AmortizationOfIntangibles is no longer provided by Morningstar since the 2026 feed migration; no direct replacement is provided.");
 
         /// <summary>
         /// Gets/sets the NineMonths period value for the field
         /// </summary>
         [JsonProperty("9M")]
-        public double NineMonths => FundamentalService.Get<double>(TimeProvider.GetUtcNow(), SecurityIdentifier, FundamentalProperty.FinancialStatements_CashFlowStatement_AmortizationOfIntangibles_NineMonths);
+        [Obsolete("AmortizationOfIntangibles is no longer provided by Morningstar since the 2026 feed migration; no direct replacement is provided.")]
+        public double NineMonths => throw new NotSupportedException("AmortizationOfIntangibles is no longer provided by Morningstar since the 2026 feed migration; no direct replacement is provided.");
 
         /// <summary>
         /// Gets/sets the TwelveMonths period value for the field
         /// </summary>
         [JsonProperty("12M")]
-        public double TwelveMonths => FundamentalService.Get<double>(TimeProvider.GetUtcNow(), SecurityIdentifier, FundamentalProperty.FinancialStatements_CashFlowStatement_AmortizationOfIntangibles_TwelveMonths);
+        [Obsolete("AmortizationOfIntangibles is no longer provided by Morningstar since the 2026 feed migration; no direct replacement is provided.")]
+        public double TwelveMonths => throw new NotSupportedException("AmortizationOfIntangibles is no longer provided by Morningstar since the 2026 feed migration; no direct replacement is provided.");
 
         /// <summary>
         /// Returns true if the field contains a value for the default period
         /// </summary>
-        public override bool HasValue => !BaseFundamentalDataProvider.IsNone(typeof(double), FundamentalService.Get<double>(TimeProvider.GetUtcNow(), SecurityIdentifier, FundamentalProperty.FinancialStatements_CashFlowStatement_AmortizationOfIntangibles_TwelveMonths));
+        public override bool HasValue => false;
 
         /// <summary>
         /// Returns the default value for the field
         /// </summary>
-        public override double Value
-        {
-            get
-            {
-                var defaultValue = FundamentalService.Get<double>(TimeProvider.GetUtcNow(), SecurityIdentifier, FundamentalProperty.FinancialStatements_CashFlowStatement_AmortizationOfIntangibles_TwelveMonths);
-                if (!BaseFundamentalDataProvider.IsNone(typeof(double), defaultValue))
-                {
-                    return defaultValue;
-                }
-                return base.Value;
-            }
-        }
+        public override double Value => throw new NotSupportedException("AmortizationOfIntangibles is no longer provided by Morningstar since the 2026 feed migration; no direct replacement is provided.");
 
         /// <summary>
         /// Gets a dictionary of period names and values for the field
@@ -97,7 +92,7 @@ namespace QuantConnect.Data.Fundamental
         public override IReadOnlyDictionary<string, double> GetPeriodValues()
         {
             var result = new Dictionary<string, double>();
-            foreach (var kvp in new[] { new Tuple<string, double>("1M",OneMonth), new Tuple<string, double>("2M",TwoMonths), new Tuple<string, double>("3M",ThreeMonths), new Tuple<string, double>("6M",SixMonths), new Tuple<string, double>("9M",NineMonths), new Tuple<string, double>("12M",TwelveMonths) })
+            foreach (var kvp in System.Array.Empty<Tuple<string, double>>())
             {
                 if(!BaseFundamentalDataProvider.IsNone(typeof(double), kvp.Item2))
                 {
