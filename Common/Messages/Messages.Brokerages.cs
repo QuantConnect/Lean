@@ -581,6 +581,24 @@ namespace QuantConnect
         }
 
         /// <summary>
+        /// Provides user-facing messages for the <see cref="Brokerages.TerminalLinkBrokerageModel"/> class and its consumers or related classes
+        /// </summary>
+        public static class TerminalLinkBrokerageModel
+        {
+            /// <summary>
+            /// Returns a message saying an Index order was rejected because the security was not marked as tradable
+            /// and the ticket was not booked as a CFD trade
+            /// </summary>
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public static string UntradableIndexSecurity(Securities.Security security)
+            {
+                return Invariant($@"The TerminalLinkBrokerageModel treats the {security.Type} security type as data-only. To route {
+                    security.Symbol.Value} through EMSX, set Securities[{security.Symbol.Value
+                    }].IsTradable to true, or set TerminalLinkOrderProperties.IsCfdTrade to true to book the ticket as a CFD/swap.");
+            }
+        }
+
+        /// <summary>
         /// Provides user-facing messages for the <see cref="Brokerages.WolverineBrokerageModel"/> class and its consumers or related classes
         /// </summary>
         public static class WolverineBrokerageModel

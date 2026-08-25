@@ -57,7 +57,19 @@ namespace QuantConnect.Brokerages
         /// <param name="message">If this function returns false, a brokerage message detailing why the order may not be submitted</param>
         public override bool CanSubmitOrder(Security security, Order order, out BrokerageMessageEvent message)
         {
-            if (!_supportedSecurityTypes.Contains(security.Type))
+            if (security.Type == SecurityType.Index)
+            {
+                // Index securities are data-only on EMSX by default. They are routable when the algorithm opts in by
+                // marking the security tradable, or when the ticket is booked as a CFD/swap: a custom basket whose
+                // market data is delivered as an index is routed by typing the index ticker into the EMSX security field.
+                if (!security.IsTradable && order.Properties is not TerminalLinkOrderProperties { IsCfdTrade: true })
+                {
+                    message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
+                        Messages.TerminalLinkBrokerageModel.UntradableIndexSecurity(security));
+                    return false;
+                }
+            }
+            else if (!_supportedSecurityTypes.Contains(security.Type))
             {
                 message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
                     Messages.DefaultBrokerageModel.UnsupportedSecurityType(this, security));

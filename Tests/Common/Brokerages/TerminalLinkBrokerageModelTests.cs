@@ -41,17 +41,71 @@ namespace QuantConnect.Tests.Common.Brokerages
             Assert.IsNull(message);
         }
 
-        // Index is data-only on TerminalLink; Forex/Crypto/Cfd and FutureOption
-        // are not supported for trading.
+        // Forex/Crypto/Cfd and FutureOption are not supported for trading.
         [TestCase("EURUSD", SecurityType.Forex)]
         [TestCase("BTCUSD", SecurityType.Crypto)]
         [TestCase("DE10YBEUR", SecurityType.Cfd)]
-        [TestCase("SPX", SecurityType.Index)]
         public void CannotSubmitOrder_ForUnsupportedSecurityTypes(string ticker, SecurityType securityType)
         {
             var algo = new AlgorithmStub();
             var security = algo.AddSecurity(securityType, ticker);
             var order = new MarketOrder(security.Symbol, 1, new DateTime(2024, 1, 2));
+
+            Assert.IsFalse(_brokerageModel.CanSubmitOrder(security, order, out var message));
+            Assert.AreEqual(BrokerageMessageType.Warning, message.Type);
+            Assert.AreEqual("NotSupported", message.Code);
+        }
+
+        // A custom basket whose market data arrives as an index is booked on EMSX as a CFD/swap,
+        // so the CFD flag makes an Index order routable even if the security was left data-only.
+        [Test]
+        public void CanSubmitOrder_ForIndex_WhenBookedAsCfdTrade()
+        {
+            var algo = new AlgorithmStub();
+            var security = algo.AddSecurity(SecurityType.Index, "SPX");
+            var properties = new TerminalLinkOrderProperties { IsCfdTrade = true };
+            var order = new MarketOrder(security.Symbol, 1, new DateTime(2024, 1, 2), properties: properties);
+
+            Assert.IsFalse(security.IsTradable);
+            Assert.IsTrue(_brokerageModel.CanSubmitOrder(security, order, out var message), message?.Message);
+            Assert.IsNull(message);
+        }
+
+        // Marking the index tradable is the other way in, and it does not require TerminalLink order properties.
+        [Test]
+        public void CanSubmitOrder_ForIndex_WhenMarkedTradable()
+        {
+            var algo = new AlgorithmStub();
+            var security = algo.AddSecurity(SecurityType.Index, "SPX");
+            security.IsTradable = true;
+            var order = new MarketOrder(security.Symbol, 1, new DateTime(2024, 1, 2));
+
+            Assert.IsTrue(_brokerageModel.CanSubmitOrder(security, order, out var message), message?.Message);
+            Assert.IsNull(message);
+        }
+
+        [Test]
+        public void CannotSubmitOrder_ForDataOnlyIndex([Values] bool terminalLinkProperties)
+        {
+            var algo = new AlgorithmStub();
+            var security = algo.AddSecurity(SecurityType.Index, "SPX");
+            var properties = terminalLinkProperties ? new TerminalLinkOrderProperties() : new OrderProperties();
+            var order = new MarketOrder(security.Symbol, 1, new DateTime(2024, 1, 2), properties: properties);
+
+            Assert.IsFalse(security.IsTradable);
+            Assert.IsFalse(_brokerageModel.CanSubmitOrder(security, order, out var message));
+            Assert.AreEqual(BrokerageMessageType.Warning, message.Type);
+            Assert.AreEqual("NotSupported", message.Code);
+        }
+
+        // The CFD flag lifts the security type restriction only; the order type restriction still applies.
+        [Test]
+        public void CannotSubmitOrder_ForIndexCfdTrade_WithUnsupportedOrderType()
+        {
+            var algo = new AlgorithmStub();
+            var security = algo.AddSecurity(SecurityType.Index, "SPX");
+            var properties = new TerminalLinkOrderProperties { IsCfdTrade = true };
+            var order = new MarketOnCloseOrder(security.Symbol, 1, new DateTime(2024, 1, 2), properties: properties);
 
             Assert.IsFalse(_brokerageModel.CanSubmitOrder(security, order, out var message));
             Assert.AreEqual(BrokerageMessageType.Warning, message.Type);
