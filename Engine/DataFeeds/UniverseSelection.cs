@@ -17,6 +17,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using QuantConnect.Benchmarks;
+using QuantConnect.Configuration;
 using QuantConnect.Data;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Interfaces;
@@ -42,6 +43,22 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         private bool _initializedSecurityBenchmark;
         private bool _anyDoesNotHaveFundamentalDataWarningLogged;
         private readonly SecurityChangesConstructor _securityChangesConstructor;
+        private bool _universeSelectionSizeWarningSent;
+        // a selection must be at least 1/N of its resolution threshold before the large selection check runs
+        private const int MinimumSignificantSelectionRatio = 10;
+        private static readonly int SelectionSizeWarningResolutionCount = Enum.GetValues<Resolution>().Length;
+        // the cost of a selected symbol grows with the resolution its subscriptions are added at,
+        // so the warning threshold is defined per resolution instead of as a single flat count
+        private readonly Dictionary<Resolution, int> _universeSelectionSizeWarningThresholds = Config.GetValue(
+            "universe-selection-size-warning-thresholds",
+            new Dictionary<Resolution, int>
+            {
+                { Resolution.Tick, 100 },
+                { Resolution.Second, 500 },
+                { Resolution.Minute, 1000 },
+                { Resolution.Hour, 2000 },
+                { Resolution.Daily, 4000 },
+            });
 
         /// <summary>
         /// Initializes a new instance of the <see cref="UniverseSelection"/> class
@@ -183,6 +200,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             {
                 // materialize the enumerable into a set for processing
                 universe.Selected = selectSymbolsResult.ToHashSet();
+
+                WarnOnLargeUniverseSelection(universe);
             }
 
             // first check for no pending removals, even if the universe selection
@@ -471,6 +490,95 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             }
 
             return SecurityChanges.None;
+        }
+
+        /// <summary>
+        /// Warns once per algorithm when universe selections grow past the per-resolution symbol thresholds in
+        /// 'universe-selection-size-warning-thresholds', a recurring cause of out of memory kills and stalls.
+        /// All universes consume a single shared subscription budget: each resolution's threshold defines the
+        /// full budget for symbols subscribed at that resolution, and each universe consumes a fraction of it,
+        /// so load still accumulates across universes of different resolutions.
+        /// Warn only, never fail: the run may still succeed
+        /// </summary>
+        internal void WarnOnLargeUniverseSelection(Universe universe)
+        {
+            try
+            {
+                if (_universeSelectionSizeWarningSent || universe.Selected == null)
+                {
+                    return;
+                }
+
+                // skip small selections: only a selection that is itself a meaningful share of its
+                // threshold can tip the shared budget, so don't aggregate across all universes for every one
+                if (!TryGetSizeWarningThreshold(universe, out _, out var universeThreshold)
+                    || universe.Selected.Count * MinimumSignificantSelectionRatio < universeThreshold)
+                {
+                    return;
+                }
+
+                var load = 0d;
+                var universeCount = 0;
+                // per resolution symbol counts, indexed by the resolution enum value
+                Span<int> selectedByResolution = stackalloc int[SelectionSizeWarningResolutionCount];
+
+                foreach (var kvp in _algorithm.UniverseManager)
+                {
+                    Accumulate(kvp.Value, ref load, ref universeCount, selectedByResolution);
+                }
+
+                if (load < 1)
+                {
+                    return;
+                }
+
+                _universeSelectionSizeWarningSent = true;
+                var counts = new List<string>();
+                for (var i = 0; i < selectedByResolution.Length; i++)
+                {
+                    if (selectedByResolution[i] > 0)
+                    {
+                        counts.Add($"~{selectedByResolution[i]} symbols at {(Resolution)i} resolution");
+                    }
+                }
+                var suggestion = universe is OptionChainUniverse
+                    ? "Narrow the filter (SetFilter/set_filter) or add specific contracts (AddOptionContract/add_option_contract)."
+                    : "Select fewer symbols or use a coarser universe resolution (UniverseSettings.Resolution/universe_settings.resolution).";
+                _algorithm.Debug($"Warning: universe selections have reached {string.Join(" and ", counts)} across {universeCount} universe(s)," +
+                    $" latest: {universe.Selected.Count} from {universe.Configuration.Symbol.Value}. Each selected symbol adds data" +
+                    $" subscriptions, increasing time and memory usage. {suggestion}");
+            }
+            catch (Exception exception)
+            {
+                // diagnostics must never interfere with the algorithm: log, disable and move on
+                _universeSelectionSizeWarningSent = true;
+                Log.Error(exception);
+            }
+        }
+
+        /// <summary>
+        /// Adds a universe's selection to the shared budget load and per resolution symbol counts
+        /// </summary>
+        private void Accumulate(Universe universe, ref double load, ref int universeCount, Span<int> selectedByResolution)
+        {
+            if (universe.Selected == null || !TryGetSizeWarningThreshold(universe, out var resolution, out var threshold))
+            {
+                return;
+            }
+            var selectionSize = universe.Selected.Count;
+            load += selectionSize / (double)threshold;
+            universeCount++;
+            selectedByResolution[(int)resolution] += selectionSize;
+        }
+
+        /// <summary>
+        /// Gets the selection size warning threshold for the resolution the universe's members subscribe at.
+        /// False when warnings are disabled for it
+        /// </summary>
+        private bool TryGetSizeWarningThreshold(Universe universe, out Resolution resolution, out int threshold)
+        {
+            resolution = universe.UniverseSettings.Resolution;
+            return _universeSelectionSizeWarningThresholds.TryGetValue(resolution, out threshold) && threshold > 0;
         }
 
         private void RemoveSecurityFromUniverse(
