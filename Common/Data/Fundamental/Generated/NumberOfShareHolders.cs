@@ -37,43 +37,43 @@ namespace QuantConnect.Data.Fundamental
         /// Gets/sets the OneMonth period value for the field
         /// </summary>
         [JsonProperty("1M")]
-        [Obsolete("NumberOfShareHolders is no longer provided by Morningstar since the 2026 feed migration; no direct replacement is provided.")]
-        public long OneMonth => throw new NotSupportedException("NumberOfShareHolders is no longer provided by Morningstar since the 2026 feed migration; no direct replacement is provided.");
+        [Obsolete("NumberOfShareHolders was retired by Morningstar in 2026 for all periods; no replacement is available.")]
+        public long OneMonth => throw new NotSupportedException("NumberOfShareHolders was retired by Morningstar in 2026 for all periods; no replacement is available.");
 
         /// <summary>
         /// Gets/sets the TwoMonths period value for the field
         /// </summary>
         [JsonProperty("2M")]
-        [Obsolete("NumberOfShareHolders is no longer provided by Morningstar since the 2026 feed migration; no direct replacement is provided.")]
-        public long TwoMonths => throw new NotSupportedException("NumberOfShareHolders is no longer provided by Morningstar since the 2026 feed migration; no direct replacement is provided.");
+        [Obsolete("NumberOfShareHolders was retired by Morningstar in 2026 for all periods; no replacement is available.")]
+        public long TwoMonths => throw new NotSupportedException("NumberOfShareHolders was retired by Morningstar in 2026 for all periods; no replacement is available.");
 
         /// <summary>
         /// Gets/sets the ThreeMonths period value for the field
         /// </summary>
         [JsonProperty("3M")]
-        [Obsolete("NumberOfShareHolders is no longer provided by Morningstar since the 2026 feed migration; no direct replacement is provided.")]
-        public long ThreeMonths => throw new NotSupportedException("NumberOfShareHolders is no longer provided by Morningstar since the 2026 feed migration; no direct replacement is provided.");
+        [Obsolete("NumberOfShareHolders was retired by Morningstar in 2026 for all periods; no replacement is available.")]
+        public long ThreeMonths => throw new NotSupportedException("NumberOfShareHolders was retired by Morningstar in 2026 for all periods; no replacement is available.");
 
         /// <summary>
         /// Gets/sets the SixMonths period value for the field
         /// </summary>
         [JsonProperty("6M")]
-        [Obsolete("NumberOfShareHolders is no longer provided by Morningstar since the 2026 feed migration; no direct replacement is provided.")]
-        public long SixMonths => throw new NotSupportedException("NumberOfShareHolders is no longer provided by Morningstar since the 2026 feed migration; no direct replacement is provided.");
+        [Obsolete("NumberOfShareHolders was retired by Morningstar in 2026 for all periods; no replacement is available.")]
+        public long SixMonths => throw new NotSupportedException("NumberOfShareHolders was retired by Morningstar in 2026 for all periods; no replacement is available.");
 
         /// <summary>
         /// Gets/sets the NineMonths period value for the field
         /// </summary>
         [JsonProperty("9M")]
-        [Obsolete("NumberOfShareHolders is no longer provided by Morningstar since the 2026 feed migration; no direct replacement is provided.")]
-        public long NineMonths => throw new NotSupportedException("NumberOfShareHolders is no longer provided by Morningstar since the 2026 feed migration; no direct replacement is provided.");
+        [Obsolete("NumberOfShareHolders was retired by Morningstar in 2026 for all periods; no replacement is available.")]
+        public long NineMonths => throw new NotSupportedException("NumberOfShareHolders was retired by Morningstar in 2026 for all periods; no replacement is available.");
 
         /// <summary>
         /// Gets/sets the TwelveMonths period value for the field
         /// </summary>
         [JsonProperty("12M")]
-        [Obsolete("NumberOfShareHolders is no longer provided by Morningstar since the 2026 feed migration; no direct replacement is provided.")]
-        public long TwelveMonths => throw new NotSupportedException("NumberOfShareHolders is no longer provided by Morningstar since the 2026 feed migration; no direct replacement is provided.");
+        [Obsolete("NumberOfShareHolders was retired by Morningstar in 2026 for all periods; no replacement is available.")]
+        public long TwelveMonths => throw new NotSupportedException("NumberOfShareHolders was retired by Morningstar in 2026 for all periods; no replacement is available.");
 
         /// <summary>
         /// Returns true if the field contains a value for the default period
@@ -83,7 +83,7 @@ namespace QuantConnect.Data.Fundamental
         /// <summary>
         /// Returns the default value for the field
         /// </summary>
-        public override long Value => throw new NotSupportedException("NumberOfShareHolders is no longer provided by Morningstar since the 2026 feed migration; no direct replacement is provided.");
+        public override long Value => throw new NotSupportedException("NumberOfShareHolders was retired by Morningstar in 2026 for all periods; no replacement is available.");
 
         /// <summary>
         /// Gets a dictionary of period names and values for the field

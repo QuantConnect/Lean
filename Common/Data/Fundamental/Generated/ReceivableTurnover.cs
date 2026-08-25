@@ -43,15 +43,15 @@ namespace QuantConnect.Data.Fundamental
         /// Gets/sets the ThreeMonths period value for the field
         /// </summary>
         [JsonProperty("3M")]
-        [Obsolete("ReceivableTurnover.ThreeMonths is no longer provided by Morningstar since the 2026 feed migration; use ReceivableTurnover.OneYear.")]
-        public double ThreeMonths => throw new NotSupportedException("ReceivableTurnover.ThreeMonths is no longer provided by Morningstar since the 2026 feed migration; use ReceivableTurnover.OneYear.");
+        [Obsolete("ReceivableTurnover.ThreeMonths was retired by Morningstar in 2026; use ReceivableTurnover.OneYear.")]
+        public double ThreeMonths => throw new NotSupportedException("ReceivableTurnover.ThreeMonths was retired by Morningstar in 2026; use ReceivableTurnover.OneYear.");
 
         /// <summary>
         /// Gets/sets the SixMonths period value for the field
         /// </summary>
         [JsonProperty("6M")]
-        [Obsolete("ReceivableTurnover.SixMonths is no longer provided by Morningstar since the 2026 feed migration; use ReceivableTurnover.OneYear.")]
-        public double SixMonths => throw new NotSupportedException("ReceivableTurnover.SixMonths is no longer provided by Morningstar since the 2026 feed migration; use ReceivableTurnover.OneYear.");
+        [Obsolete("ReceivableTurnover.SixMonths was retired by Morningstar in 2026; use ReceivableTurnover.OneYear.")]
+        public double SixMonths => throw new NotSupportedException("ReceivableTurnover.SixMonths was retired by Morningstar in 2026; use ReceivableTurnover.OneYear.");
 
         /// <summary>
         /// Returns true if the field contains a value for the default period

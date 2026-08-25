@@ -37,8 +37,8 @@ namespace QuantConnect.Data.Fundamental
         /// Gets/sets the OneMonth period value for the field
         /// </summary>
         [JsonProperty("1M")]
-        [Obsolete("BSFileDate.OneMonth is no longer provided by Morningstar since the 2026 feed migration; use BSFileDate.ThreeMonths (also available: TwelveMonths).")]
-        public DateTime OneMonth => throw new NotSupportedException("BSFileDate.OneMonth is no longer provided by Morningstar since the 2026 feed migration; use BSFileDate.ThreeMonths (also available: TwelveMonths).");
+        [Obsolete("BSFileDate.OneMonth was retired by Morningstar in 2026; use BSFileDate.ThreeMonths (also available: TwelveMonths).")]
+        public DateTime OneMonth => throw new NotSupportedException("BSFileDate.OneMonth was retired by Morningstar in 2026; use BSFileDate.ThreeMonths (also available: TwelveMonths).");
 
         /// <summary>
         /// Gets/sets the SixMonths period value for the field
