@@ -49,8 +49,8 @@ namespace QuantConnect.Data.Fundamental
         /// Gets/sets the NineMonths period value for the field
         /// </summary>
         [JsonProperty("9M")]
-        [Obsolete("RestrictedCashAndCashEquivalents.NineMonths is no longer provided by Morningstar since the 2026 feed migration; use RestrictedCashAndCashEquivalents.ThreeMonths (also available: SixMonths, TwelveMonths).")]
-        public double NineMonths => throw new NotSupportedException("RestrictedCashAndCashEquivalents.NineMonths is no longer provided by Morningstar since the 2026 feed migration; use RestrictedCashAndCashEquivalents.ThreeMonths (also available: SixMonths, TwelveMonths).");
+        [Obsolete("RestrictedCashAndCashEquivalents.NineMonths was retired by Morningstar in 2026; use RestrictedCashAndCashEquivalents.ThreeMonths (also available: SixMonths, TwelveMonths).")]
+        public double NineMonths => throw new NotSupportedException("RestrictedCashAndCashEquivalents.NineMonths was retired by Morningstar in 2026; use RestrictedCashAndCashEquivalents.ThreeMonths (also available: SixMonths, TwelveMonths).");
 
         /// <summary>
         /// Gets/sets the TwelveMonths period value for the field

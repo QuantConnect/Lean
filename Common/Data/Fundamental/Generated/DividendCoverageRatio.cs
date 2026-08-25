@@ -37,22 +37,22 @@ namespace QuantConnect.Data.Fundamental
         /// Gets/sets the ThreeMonths period value for the field
         /// </summary>
         [JsonProperty("3M")]
-        [Obsolete("DividendCoverageRatio.ThreeMonths is no longer provided by Morningstar since the 2026 feed migration; use DividendCoverageRatio.TwelveMonths.")]
-        public double ThreeMonths => throw new NotSupportedException("DividendCoverageRatio.ThreeMonths is no longer provided by Morningstar since the 2026 feed migration; use DividendCoverageRatio.TwelveMonths.");
+        [Obsolete("DividendCoverageRatio.ThreeMonths was retired by Morningstar in 2026; use DividendCoverageRatio.TwelveMonths.")]
+        public double ThreeMonths => throw new NotSupportedException("DividendCoverageRatio.ThreeMonths was retired by Morningstar in 2026; use DividendCoverageRatio.TwelveMonths.");
 
         /// <summary>
         /// Gets/sets the SixMonths period value for the field
         /// </summary>
         [JsonProperty("6M")]
-        [Obsolete("DividendCoverageRatio.SixMonths is no longer provided by Morningstar since the 2026 feed migration; use DividendCoverageRatio.TwelveMonths.")]
-        public double SixMonths => throw new NotSupportedException("DividendCoverageRatio.SixMonths is no longer provided by Morningstar since the 2026 feed migration; use DividendCoverageRatio.TwelveMonths.");
+        [Obsolete("DividendCoverageRatio.SixMonths was retired by Morningstar in 2026; use DividendCoverageRatio.TwelveMonths.")]
+        public double SixMonths => throw new NotSupportedException("DividendCoverageRatio.SixMonths was retired by Morningstar in 2026; use DividendCoverageRatio.TwelveMonths.");
 
         /// <summary>
         /// Gets/sets the NineMonths period value for the field
         /// </summary>
         [JsonProperty("9M")]
-        [Obsolete("DividendCoverageRatio.NineMonths is no longer provided by Morningstar since the 2026 feed migration; use DividendCoverageRatio.TwelveMonths.")]
-        public double NineMonths => throw new NotSupportedException("DividendCoverageRatio.NineMonths is no longer provided by Morningstar since the 2026 feed migration; use DividendCoverageRatio.TwelveMonths.");
+        [Obsolete("DividendCoverageRatio.NineMonths was retired by Morningstar in 2026; use DividendCoverageRatio.TwelveMonths.")]
+        public double NineMonths => throw new NotSupportedException("DividendCoverageRatio.NineMonths was retired by Morningstar in 2026; use DividendCoverageRatio.TwelveMonths.");
 
         /// <summary>
         /// Gets/sets the TwelveMonths period value for the field

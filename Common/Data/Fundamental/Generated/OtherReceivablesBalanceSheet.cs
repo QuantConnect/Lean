@@ -37,8 +37,8 @@ namespace QuantConnect.Data.Fundamental
         /// Gets/sets the TwoMonths period value for the field
         /// </summary>
         [JsonProperty("2M")]
-        [Obsolete("OtherReceivables.TwoMonths is no longer provided by Morningstar since the 2026 feed migration; use OtherReceivables.ThreeMonths (also available: SixMonths, TwelveMonths).")]
-        public double TwoMonths => throw new NotSupportedException("OtherReceivables.TwoMonths is no longer provided by Morningstar since the 2026 feed migration; use OtherReceivables.ThreeMonths (also available: SixMonths, TwelveMonths).");
+        [Obsolete("OtherReceivables.TwoMonths was retired by Morningstar in 2026; use OtherReceivables.ThreeMonths (also available: SixMonths, TwelveMonths).")]
+        public double TwoMonths => throw new NotSupportedException("OtherReceivables.TwoMonths was retired by Morningstar in 2026; use OtherReceivables.ThreeMonths (also available: SixMonths, TwelveMonths).");
 
         /// <summary>
         /// Gets/sets the ThreeMonths period value for the field
@@ -56,8 +56,8 @@ namespace QuantConnect.Data.Fundamental
         /// Gets/sets the NineMonths period value for the field
         /// </summary>
         [JsonProperty("9M")]
-        [Obsolete("OtherReceivables.NineMonths is no longer provided by Morningstar since the 2026 feed migration; use OtherReceivables.ThreeMonths (also available: SixMonths, TwelveMonths).")]
-        public double NineMonths => throw new NotSupportedException("OtherReceivables.NineMonths is no longer provided by Morningstar since the 2026 feed migration; use OtherReceivables.ThreeMonths (also available: SixMonths, TwelveMonths).");
+        [Obsolete("OtherReceivables.NineMonths was retired by Morningstar in 2026; use OtherReceivables.ThreeMonths (also available: SixMonths, TwelveMonths).")]
+        public double NineMonths => throw new NotSupportedException("OtherReceivables.NineMonths was retired by Morningstar in 2026; use OtherReceivables.ThreeMonths (also available: SixMonths, TwelveMonths).");
 
         /// <summary>
         /// Gets/sets the TwelveMonths period value for the field

@@ -161,8 +161,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 17
         /// </remarks>
         [JsonProperty("17")]
-        [Obsolete("Auditor is no longer provided by Morningstar since the 2026 feed migration; no direct replacement is provided.")]
-        public string Auditor => throw new NotSupportedException("Auditor is no longer provided by Morningstar since the 2026 feed migration; no direct replacement is provided.");
+        [Obsolete("Auditor was retired by Morningstar in 2026 for all periods; no replacement is available.")]
+        public string Auditor => throw new NotSupportedException("Auditor was retired by Morningstar in 2026 for all periods; no replacement is available.");
 
         /// <summary>
         /// The ISO code denoting the language text for Auditor's name and contact information.
@@ -171,8 +171,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 18
         /// </remarks>
         [JsonProperty("18")]
-        [Obsolete("AuditorLanguageCode is no longer provided by Morningstar since the 2026 feed migration; no direct replacement is provided.")]
-        public string AuditorLanguageCode => throw new NotSupportedException("AuditorLanguageCode is no longer provided by Morningstar since the 2026 feed migration; no direct replacement is provided.");
+        [Obsolete("AuditorLanguageCode was retired by Morningstar in 2026 for all periods; no replacement is available.")]
+        public string AuditorLanguageCode => throw new NotSupportedException("AuditorLanguageCode was retired by Morningstar in 2026 for all periods; no replacement is available.");
 
         /// <summary>
         /// The legal (registered) name of the current legal Advisor of the company.
@@ -181,8 +181,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 19
         /// </remarks>
         [JsonProperty("19")]
-        [Obsolete("Advisor is no longer provided by Morningstar since the 2026 feed migration; no direct replacement is provided.")]
-        public string Advisor => throw new NotSupportedException("Advisor is no longer provided by Morningstar since the 2026 feed migration; no direct replacement is provided.");
+        [Obsolete("Advisor was retired by Morningstar in 2026 for all periods; no replacement is available.")]
+        public string Advisor => throw new NotSupportedException("Advisor was retired by Morningstar in 2026 for all periods; no replacement is available.");
 
         /// <summary>
         /// The ISO code denoting the language text for Advisor's name and contact information.
@@ -191,8 +191,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 20
         /// </remarks>
         [JsonProperty("20")]
-        [Obsolete("AdvisorLanguageCode is no longer provided by Morningstar since the 2026 feed migration; no direct replacement is provided.")]
-        public string AdvisorLanguageCode => throw new NotSupportedException("AdvisorLanguageCode is no longer provided by Morningstar since the 2026 feed migration; no direct replacement is provided.");
+        [Obsolete("AdvisorLanguageCode was retired by Morningstar in 2026 for all periods; no replacement is available.")]
+        public string AdvisorLanguageCode => throw new NotSupportedException("AdvisorLanguageCode was retired by Morningstar in 2026 for all periods; no replacement is available.");
 
         /// <summary>
         /// Indicator to denote if the company is a limited partnership, which is a form of business structure comprised of a general partner and limited partners. 1 denotes it is a LP; otherwise 0.
@@ -219,8 +219,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 23
         /// </remarks>
         [JsonProperty("23")]
-        [Obsolete("PrimaryMIC is no longer provided by Morningstar since the 2026 feed migration; no direct replacement is provided.")]
-        public string PrimaryMIC => throw new NotSupportedException("PrimaryMIC is no longer provided by Morningstar since the 2026 feed migration; no direct replacement is provided.");
+        [Obsolete("PrimaryMIC was retired by Morningstar in 2026 for all periods; no replacement is available.")]
+        public string PrimaryMIC => throw new NotSupportedException("PrimaryMIC was retired by Morningstar in 2026 for all periods; no replacement is available.");
 
         /// <summary>
         /// This refers to the financial template used to collect the company's financial statements. There are two report styles representing two different financial template structures. Report style "1" is most commonly used by US and Canadian companies, and Report style "3" is most commonly used by the rest of the universe. Contact your client manager for access to the respective templates.
@@ -229,8 +229,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 24
         /// </remarks>
         [JsonProperty("24")]
-        [Obsolete("ReportStyle is no longer provided by Morningstar since the 2026 feed migration; no direct replacement is provided.")]
-        public int ReportStyle => throw new NotSupportedException("ReportStyle is no longer provided by Morningstar since the 2026 feed migration; no direct replacement is provided.");
+        [Obsolete("ReportStyle was retired by Morningstar in 2026 for all periods; no replacement is available.")]
+        public int ReportStyle => throw new NotSupportedException("ReportStyle was retired by Morningstar in 2026 for all periods; no replacement is available.");
 
         /// <summary>
         /// The year a company was founded.

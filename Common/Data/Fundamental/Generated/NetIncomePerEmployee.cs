@@ -43,8 +43,8 @@ namespace QuantConnect.Data.Fundamental
         /// Gets/sets the ThreeMonths period value for the field
         /// </summary>
         [JsonProperty("3M")]
-        [Obsolete("NetIncomePerEmployee.ThreeMonths is no longer provided by Morningstar since the 2026 feed migration; use NetIncomePerEmployee.OneYear.")]
-        public double ThreeMonths => throw new NotSupportedException("NetIncomePerEmployee.ThreeMonths is no longer provided by Morningstar since the 2026 feed migration; use NetIncomePerEmployee.OneYear.");
+        [Obsolete("NetIncomePerEmployee.ThreeMonths was retired by Morningstar in 2026; use NetIncomePerEmployee.OneYear.")]
+        public double ThreeMonths => throw new NotSupportedException("NetIncomePerEmployee.ThreeMonths was retired by Morningstar in 2026; use NetIncomePerEmployee.OneYear.");
 
         /// <summary>
         /// Returns true if the field contains a value for the default period

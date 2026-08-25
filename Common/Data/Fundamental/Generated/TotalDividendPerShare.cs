@@ -37,15 +37,15 @@ namespace QuantConnect.Data.Fundamental
         /// Gets/sets the OneMonth period value for the field
         /// </summary>
         [JsonProperty("1M")]
-        [Obsolete("TotalDividendPerShare.OneMonth is no longer provided by Morningstar since the 2026 feed migration; use TotalDividendPerShare.ThreeMonths (also available: SixMonths, NineMonths, TwelveMonths).")]
-        public double OneMonth => throw new NotSupportedException("TotalDividendPerShare.OneMonth is no longer provided by Morningstar since the 2026 feed migration; use TotalDividendPerShare.ThreeMonths (also available: SixMonths, NineMonths, TwelveMonths).");
+        [Obsolete("TotalDividendPerShare.OneMonth was retired by Morningstar in 2026; use TotalDividendPerShare.ThreeMonths (also available: SixMonths, NineMonths, TwelveMonths).")]
+        public double OneMonth => throw new NotSupportedException("TotalDividendPerShare.OneMonth was retired by Morningstar in 2026; use TotalDividendPerShare.ThreeMonths (also available: SixMonths, NineMonths, TwelveMonths).");
 
         /// <summary>
         /// Gets/sets the TwoMonths period value for the field
         /// </summary>
         [JsonProperty("2M")]
-        [Obsolete("TotalDividendPerShare.TwoMonths is no longer provided by Morningstar since the 2026 feed migration; use TotalDividendPerShare.ThreeMonths (also available: SixMonths, NineMonths, TwelveMonths).")]
-        public double TwoMonths => throw new NotSupportedException("TotalDividendPerShare.TwoMonths is no longer provided by Morningstar since the 2026 feed migration; use TotalDividendPerShare.ThreeMonths (also available: SixMonths, NineMonths, TwelveMonths).");
+        [Obsolete("TotalDividendPerShare.TwoMonths was retired by Morningstar in 2026; use TotalDividendPerShare.ThreeMonths (also available: SixMonths, NineMonths, TwelveMonths).")]
+        public double TwoMonths => throw new NotSupportedException("TotalDividendPerShare.TwoMonths was retired by Morningstar in 2026; use TotalDividendPerShare.ThreeMonths (also available: SixMonths, NineMonths, TwelveMonths).");
 
         /// <summary>
         /// Gets/sets the ThreeMonths period value for the field

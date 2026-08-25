@@ -43,8 +43,8 @@ namespace QuantConnect.Data.Fundamental
         /// Gets/sets the ThreeMonths period value for the field
         /// </summary>
         [JsonProperty("3M")]
-        [Obsolete("EquityPerShareGrowth.ThreeMonths is no longer provided by Morningstar since the 2026 feed migration; use EquityPerShareGrowth.OneYear (also available: ThreeYears, FiveYears).")]
-        public double ThreeMonths => throw new NotSupportedException("EquityPerShareGrowth.ThreeMonths is no longer provided by Morningstar since the 2026 feed migration; use EquityPerShareGrowth.OneYear (also available: ThreeYears, FiveYears).");
+        [Obsolete("EquityPerShareGrowth.ThreeMonths was retired by Morningstar in 2026; use EquityPerShareGrowth.OneYear (also available: ThreeYears, FiveYears).")]
+        public double ThreeMonths => throw new NotSupportedException("EquityPerShareGrowth.ThreeMonths was retired by Morningstar in 2026; use EquityPerShareGrowth.OneYear (also available: ThreeYears, FiveYears).");
 
         /// <summary>
         /// Gets/sets the ThreeYears period value for the field

@@ -43,15 +43,15 @@ namespace QuantConnect.Data.Fundamental
         /// Gets/sets the ThreeMonths period value for the field
         /// </summary>
         [JsonProperty("3M")]
-        [Obsolete("FixAssetsTuronver.ThreeMonths is no longer provided by Morningstar since the 2026 feed migration; use FixAssetsTuronver.OneYear.")]
-        public double ThreeMonths => throw new NotSupportedException("FixAssetsTuronver.ThreeMonths is no longer provided by Morningstar since the 2026 feed migration; use FixAssetsTuronver.OneYear.");
+        [Obsolete("FixAssetsTuronver.ThreeMonths was retired by Morningstar in 2026; use FixAssetsTuronver.OneYear.")]
+        public double ThreeMonths => throw new NotSupportedException("FixAssetsTuronver.ThreeMonths was retired by Morningstar in 2026; use FixAssetsTuronver.OneYear.");
 
         /// <summary>
         /// Gets/sets the SixMonths period value for the field
         /// </summary>
         [JsonProperty("6M")]
-        [Obsolete("FixAssetsTuronver.SixMonths is no longer provided by Morningstar since the 2026 feed migration; use FixAssetsTuronver.OneYear.")]
-        public double SixMonths => throw new NotSupportedException("FixAssetsTuronver.SixMonths is no longer provided by Morningstar since the 2026 feed migration; use FixAssetsTuronver.OneYear.");
+        [Obsolete("FixAssetsTuronver.SixMonths was retired by Morningstar in 2026; use FixAssetsTuronver.OneYear.")]
+        public double SixMonths => throw new NotSupportedException("FixAssetsTuronver.SixMonths was retired by Morningstar in 2026; use FixAssetsTuronver.OneYear.");
 
         /// <summary>
         /// Returns true if the field contains a value for the default period
