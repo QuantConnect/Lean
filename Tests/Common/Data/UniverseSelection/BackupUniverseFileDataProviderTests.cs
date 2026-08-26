@@ -15,10 +15,12 @@
 
 using System;
 using System.IO;
+using System.Linq;
 using Moq;
 using NUnit.Framework;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Interfaces;
+using QuantConnect.Logging;
 
 namespace QuantConnect.Tests.Common.Data.UniverseSelection
 {
@@ -81,6 +83,35 @@ namespace QuantConnect.Tests.Common.Data.UniverseSelection
 
             Assert.IsNotNull(stream);
             dataProvider.Verify(dp => dp.Fetch(BackupKey), Times.Once);
+        }
+
+        [Test]
+        public void PacesTheFallbackLogging()
+        {
+            var dataProvider = new Mock<IDataProvider>();
+            dataProvider.Setup(dp => dp.Fetch(BackupKey)).Returns(() => new MemoryStream());
+            var backupDataProvider = new BackupUniverseFileDataProvider(dataProvider.Object);
+
+            var previousLogHandler = Log.LogHandler;
+            var logHandler = new QueueLogHandler();
+            Log.LogHandler = logHandler;
+            try
+            {
+                for (var i = 0; i < 100; i++)
+                {
+                    using var stream = backupDataProvider.Fetch(Key);
+                    Assert.IsNotNull(stream);
+                }
+            }
+            finally
+            {
+                Log.LogHandler = previousLogHandler;
+            }
+
+            // every fetch fell back to the backup file, but only the first few of them were logged
+            dataProvider.Verify(dp => dp.Fetch(BackupKey), Times.Exactly(100));
+            var fallbackLogs = logHandler.Logs.Count(log => log.Message.Contains("falling back to backup universe file", StringComparison.InvariantCulture));
+            Assert.AreEqual(30, fallbackLogs);
         }
 
         [Test]

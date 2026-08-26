@@ -26,6 +26,14 @@ namespace QuantConnect.Data.UniverseSelection
     /// </summary>
     public class BackupUniverseFileDataProvider : IDataProvider
     {
+        // the fallback is retried on every universe refresh for as long as the expected file is missing,
+        // so the fallback trace is paced to avoid flooding the logs
+        private const int MaximumLogsPerWindow = 30;
+        private static readonly TimeSpan LogWindow = TimeSpan.FromMinutes(5);
+        private static readonly object LogLock = new();
+        private DateTime _logWindowStartUtc;
+        private int _logCount;
+
         private IDataProvider _dataProvider;
 
         /// <summary>
@@ -71,13 +79,31 @@ namespace QuantConnect.Data.UniverseSelection
 
             var backupKey = key + ".backup";
             stream = _dataProvider.Fetch(backupKey);
-            if (stream != null)
+            if (stream != null && ShouldLog())
             {
                 Log.Trace($"BackupUniverseFileDataProvider.Fetch(): universe file '{key}' is not available, " +
                     $"falling back to backup universe file '{backupKey}'");
             }
 
             return stream;
+        }
+
+        /// <summary>
+        /// Determines whether the fallback should be logged, allowing up to <see cref="MaximumLogsPerWindow"/> logs per <see cref="LogWindow"/>
+        /// </summary>
+        private bool ShouldLog()
+        {
+            lock (LogLock)
+            {
+                var utcNow = DateTime.UtcNow;
+                if (utcNow - _logWindowStartUtc >= LogWindow)
+                {
+                    _logWindowStartUtc = utcNow;
+                    _logCount = 0;
+                }
+
+                return _logCount++ < MaximumLogsPerWindow;
+            }
         }
     }
 }
