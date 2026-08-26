@@ -993,9 +993,7 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
                 isClosedOrderUpdate = true;
             }
 
-            // rounds off the order towards 0 to the nearest multiple of lot size
             security ??= _algorithm.Securities[order.Symbol];
-            order.Quantity = RoundOffOrder(order, security);
 
             // verify that our current brokerage can actually update the order
             BrokerageMessageEvent message;
@@ -1011,10 +1009,39 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
                 return response;
             }
 
-            // If the order is not part of a ComboLegLimit update, validate sufficient buying power
-            if (order.GroupOrderManager == null)
+            // Validate the proposed order without changing the order held by the transaction handler. For combo orders,
+            // the buying power model must see every leg with the proposed group-level update applied.
+            if (order.GroupOrderManager != null)
+            {
+                if (!order.TryGetGroupOrders(GetComboOrderLeg, out var comboOrders))
+                {
+                    var errorMessage = $"Unable to update order with id {request.OrderId} because its combo group is incomplete.";
+                    _algorithm.Error(errorMessage);
+                    return OrderResponse.Error(request, OrderResponseErrorCode.ProcessingError, errorMessage);
+                }
+
+                var updatedOrders = CloneGroupOrders(comboOrders);
+                var updatedOrder = updatedOrders.Single(o => o.Id == order.Id);
+                // Round the candidate rather than the live order so a rejected update has no side effects.
+                updatedOrder.Quantity = RoundOffOrder(updatedOrder, security);
+                updatedOrder.ApplyUpdateOrderRequest(request);
+                if (!updatedOrders.TryGetGroupOrdersSecurities(_algorithm.Portfolio, out var securities))
+                {
+                    var errorMessage = $"Unable to update order with id {request.OrderId} because a combo leg security is missing.";
+                    _algorithm.Error(errorMessage);
+                    return OrderResponse.Error(request, OrderResponseErrorCode.ProcessingError, errorMessage);
+                }
+
+                if (!HasSufficientBuyingPowerForOrders(updatedOrder, request, out var validationResult, updatedOrders, securities))
+                {
+                    return validationResult;
+                }
+            }
+            else
             {
                 var updatedOrder = order.Clone();
+                // Round the candidate rather than the live order so a rejected update has no side effects.
+                updatedOrder.Quantity = RoundOffOrder(updatedOrder, security);
                 updatedOrder.ApplyUpdateOrderRequest(request);
                 if (!HasSufficientBuyingPowerForOrders(updatedOrder, request, out var validationResult))
                 {
@@ -1023,6 +1050,8 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
             }
 
             // modify the values of the order object
+            // rounds off the order towards 0 to the nearest multiple of lot size
+            order.Quantity = RoundOffOrder(order, security);
             order.ApplyUpdateOrderRequest(request);
 
             // rounds the order prices
@@ -1915,6 +1944,38 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
         {
             _completeOrders.TryGetValue(orderId, out var order);
             return order;
+        }
+
+        /// <summary>
+        /// Creates isolated copies of all orders in a combo for a what-if buying power check.
+        /// Combo orders share their group manager, so the manager must be copied as well before applying an update.
+        /// </summary>
+        private static List<Order> CloneGroupOrders(List<Order> orders)
+        {
+            var groupOrderManager = orders[0].GroupOrderManager;
+            var clonedGroupOrderManager = new GroupOrderManager(
+                groupOrderManager.Id,
+                groupOrderManager.Count,
+                groupOrderManager.Quantity,
+                groupOrderManager.LimitPrice);
+
+            lock (groupOrderManager.OrderIds)
+            {
+                foreach (var orderId in groupOrderManager.OrderIds)
+                {
+                    clonedGroupOrderManager.OrderIds.Add(orderId);
+                }
+            }
+
+            var clonedOrders = new List<Order>(orders.Count);
+            foreach (var order in orders)
+            {
+                var clonedOrder = order.Clone();
+                clonedOrder.GroupOrderManager = clonedGroupOrderManager;
+                clonedOrders.Add(clonedOrder);
+            }
+
+            return clonedOrders;
         }
 
         private void InvalidateOrders(List<Order> orders, string message)
