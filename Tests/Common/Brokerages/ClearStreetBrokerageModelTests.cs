@@ -27,7 +27,7 @@ namespace QuantConnect.Tests.Common.Brokerages
     {
         private readonly ClearStreetBrokerageModel _brokerageModel = new();
 
-        // Equity and Option accept every order type Clear Street knows.
+        // Equity, Option and IndexOption accept every order type Clear Street knows.
         [TestCase(SecurityType.Equity, OrderType.Market)]
         [TestCase(SecurityType.Equity, OrderType.Limit)]
         [TestCase(SecurityType.Equity, OrderType.StopMarket)]
@@ -38,6 +38,11 @@ namespace QuantConnect.Tests.Common.Brokerages
         [TestCase(SecurityType.Option, OrderType.StopMarket)]
         [TestCase(SecurityType.Option, OrderType.StopLimit)]
         [TestCase(SecurityType.Option, OrderType.TrailingStop)]
+        [TestCase(SecurityType.IndexOption, OrderType.Market)]
+        [TestCase(SecurityType.IndexOption, OrderType.Limit)]
+        [TestCase(SecurityType.IndexOption, OrderType.StopMarket)]
+        [TestCase(SecurityType.IndexOption, OrderType.StopLimit)]
+        [TestCase(SecurityType.IndexOption, OrderType.TrailingStop)]
         public void CanSubmitOrderValidSecurityAndOrderTypeReturnsTrue(SecurityType securityType, OrderType orderType)
         {
             var security = GetSecurityForType(securityType);
@@ -49,29 +54,11 @@ namespace QuantConnect.Tests.Common.Brokerages
             Assert.That(message, Is.Null);
         }
 
-        // An index can be subscribed to, but Clear Street takes no index order.
-        [TestCase(OrderType.Market)]
-        [TestCase(OrderType.Limit)]
-        [TestCase(OrderType.StopMarket)]
-        [TestCase(OrderType.StopLimit)]
-        [TestCase(OrderType.TrailingStop)]
-        public void CanSubmitOrderIndexReturnsFalse(OrderType orderType)
-        {
-            var security = GetSecurityForType(SecurityType.Index);
-            var order = CreateOrder(orderType, security.Symbol);
-
-            var canSubmit = _brokerageModel.CanSubmitOrder(security, order, out var message);
-
-            Assert.That(canSubmit, Is.False);
-            Assert.That(message, Is.Not.Null);
-            Assert.That(message.Message, Does.Contain(nameof(SecurityType.Index)));
-        }
-
         [TestCase(SecurityType.Forex)]
         [TestCase(SecurityType.Cfd)]
         [TestCase(SecurityType.Future)]
         [TestCase(SecurityType.FutureOption)]
-        [TestCase(SecurityType.IndexOption)]
+        [TestCase(SecurityType.Index)]
         [TestCase(SecurityType.Crypto)]
         public void CanSubmitOrderUnsupportedSecurityTypeReturnsFalse(SecurityType securityType)
         {
@@ -92,6 +79,8 @@ namespace QuantConnect.Tests.Common.Brokerages
         [TestCase(SecurityType.Equity, OrderType.ComboLimit)]
         [TestCase(SecurityType.Option, OrderType.MarketOnClose)]
         [TestCase(SecurityType.Option, OrderType.ComboLimit)]
+        [TestCase(SecurityType.IndexOption, OrderType.MarketOnOpen)]
+        [TestCase(SecurityType.IndexOption, OrderType.ComboMarket)]
         public void CanSubmitOrderUnsupportedOrderTypeReturnsFalse(SecurityType securityType, OrderType orderType)
         {
             var security = GetSecurityForType(securityType);
@@ -106,6 +95,7 @@ namespace QuantConnect.Tests.Common.Brokerages
 
         [TestCase(SecurityType.Equity)]
         [TestCase(SecurityType.Option)]
+        [TestCase(SecurityType.IndexOption)]
         public void CanUpdateOrderReturnsTrue(SecurityType securityType)
         {
             var security = GetSecurityForType(securityType);
@@ -116,20 +106,6 @@ namespace QuantConnect.Tests.Common.Brokerages
 
             Assert.That(canUpdate, Is.True);
             Assert.That(message, Is.Null);
-        }
-
-        [TestCase(SecurityType.Equity)]
-        [TestCase(SecurityType.Option)]
-        [TestCase(SecurityType.Index)]
-        public void DefaultMarketsReturnsUsa(SecurityType securityType)
-        {
-            Assert.That(_brokerageModel.DefaultMarkets[securityType], Is.EqualTo(Market.USA));
-        }
-
-        [Test]
-        public void DefaultMarketsHoldsOnlyTheSecurityTypesClearStreetServes()
-        {
-            Assert.That(_brokerageModel.DefaultMarkets.Count, Is.EqualTo(3));
         }
 
         [Test]

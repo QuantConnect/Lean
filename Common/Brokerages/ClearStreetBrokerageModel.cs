@@ -14,7 +14,6 @@
  *
 */
 
-using QuantConnect.Util;
 using QuantConnect.Orders;
 using QuantConnect.Securities;
 using System.Collections.Generic;
@@ -27,24 +26,14 @@ namespace QuantConnect.Brokerages
     public class ClearStreetBrokerageModel : DefaultBrokerageModel
     {
         /// <summary>
-        /// The default markets for Clear Street.
-        /// </summary>
-        public new static readonly IReadOnlyDictionary<SecurityType, string> DefaultMarketMap = new Dictionary<SecurityType, string>
-        {
-            { SecurityType.Equity, Market.USA },
-            { SecurityType.Option, Market.USA },
-            { SecurityType.Index, Market.USA }
-        }.ToReadOnlyDictionary();
-
-        /// <summary>
         /// The security types Clear Street accepts orders for.
-        /// <see cref="SecurityType.Index"/> is missing on purpose, see <see cref="CanSubmitOrder"/>.
         /// </summary>
         private readonly HashSet<SecurityType> _supportSecurityTypes = new(
             new[]
             {
                 SecurityType.Equity,
-                SecurityType.Option
+                SecurityType.Option,
+                SecurityType.IndexOption
             });
 
         /// <summary>
@@ -59,14 +48,6 @@ namespace QuantConnect.Brokerages
                 OrderType.StopLimit,
                 OrderType.TrailingStop
             });
-
-        /// <summary>
-        /// Gets a map of the default markets to be used for each security type
-        /// </summary>
-        public override IReadOnlyDictionary<SecurityType, string> DefaultMarkets
-        {
-            get { return DefaultMarketMap; }
-        }
 
         /// <summary>
         /// Constructor for Clear Street brokerage model
@@ -88,14 +69,6 @@ namespace QuantConnect.Brokerages
         {
             message = default;
 
-            // Clear Street serves index quotes, but it holds no index position and takes no index order.
-            if (security.Type == SecurityType.Index)
-            {
-                message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
-                    Messages.ClearStreetBrokerageModel.IndexIsNotTradable(security));
-                return false;
-            }
-
             if (!_supportSecurityTypes.Contains(security.Type))
             {
                 message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
@@ -110,8 +83,6 @@ namespace QuantConnect.Brokerages
                 return false;
             }
 
-            // Clear Street works out the open or close effect of an order itself, so an order that
-            // crosses a zero position is sent as one order and is not split here.
             return base.CanSubmitOrder(security, order, out message);
         }
     }

@@ -14,6 +14,8 @@
  *
 */
 
+using QuantConnect.Interfaces;
+
 namespace QuantConnect.Orders
 {
     /// <summary>
@@ -29,5 +31,13 @@ namespace QuantConnect.Orders
         /// Clear Street reads this as the <c>extended_hours</c> field of the order request.
         /// </remarks>
         public bool OutsideRegularTradingHours { get; set; }
+
+        /// <summary>
+        /// Returns a new instance clone of this object
+        /// </summary>
+        public override IOrderProperties Clone()
+        {
+            return (ClearStreetOrderProperties)MemberwiseClone();
+        }
     }
 }

@@ -1,4 +1,4 @@
-/*
+﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -640,21 +640,6 @@ namespace QuantConnect
             public static string ExtendedMarketOrderMustBeLimit(Orders.Order order)
             {
                 return Invariant($"Orders for extended market must be of type '{nameof(OrderType.Limit)}' and with 'DAY' time-in-force, but {order.Type} was specified.");
-            }
-        }
-
-        /// <summary>
-        /// Provides user-facing messages for the <see cref="Brokerages.ClearStreetBrokerageModel"/> class and its consumers or related classes
-        /// </summary>
-        public static class ClearStreetBrokerageModel
-        {
-            /// <summary>
-            /// Returns a message explaining that an index can be subscribed to, but not traded.
-            /// </summary>
-            [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public static string IndexIsNotTradable(Securities.Security security)
-            {
-                return Invariant($"Clear Street sends {security.Type} data, but it takes no {security.Type} orders. {security.Symbol.Value} cannot be traded.");
             }
         }
 
