@@ -131,9 +131,14 @@ namespace QuantConnect.Indicators
                     "currently available fitting methods.");
             }
 
-            if (period < Math.Max(arOrder, maOrder))
+            // ComputeNextValue indexes arrayData and _residuals up to 2 * maOrder, over a
+            // series DifferenceSeries shortens only when diffOrder is positive.
+            var shortest = Math.Max(arOrder, maOrder > 0 ? (2 * maOrder) + 1 : 0)
+                + Math.Max(diffOrder, 0);
+            if (period < shortest)
             {
-                throw new ArgumentException("Period must exceed both arOrder and maOrder");
+                throw new ArgumentException($"Period parameter for ARIMA({arOrder}, {diffOrder}, " +
+                    $"{maOrder}) indicator must be at least {shortest} but was {period}");
             }
 
             _arOrder = arOrder;
