@@ -2454,6 +2454,14 @@ namespace QuantConnect.Algorithm
                 }
             }
 
+            var optionResolution = resolution ?? UniverseSettings.Resolution;
+            var underlyingResolution = underlyingConfigs.GetHighestResolution();
+            if (underlyingResolution > optionResolution)
+            {
+                throw new ArgumentException(Messages.QCAlgorithm.AddOptionContractUnderlyingResolution(
+                    symbol, optionResolution, underlying, underlyingResolution));
+            }
+
             var configs = SubscriptionManager.SubscriptionDataConfigService.Add(symbol, resolution, fillForward, extendedMarketHours,
                 dataNormalizationMode: DataNormalizationMode.Raw);
             var option = (Option)Securities.CreateSecurity(symbol, configs, leverage, underlying: underlyingSecurity);
