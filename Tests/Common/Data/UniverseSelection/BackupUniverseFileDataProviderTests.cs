@@ -89,7 +89,7 @@ namespace QuantConnect.Tests.Common.Data.UniverseSelection
         public void PacesTheFallbackLogging()
         {
             var dataProvider = new Mock<IDataProvider>();
-            dataProvider.Setup(dp => dp.Fetch(BackupKey)).Returns(() => new MemoryStream());
+            dataProvider.Setup(dp => dp.Fetch(It.Is<string>(key => key.EndsWith(".backup")))).Returns(() => new MemoryStream());
             var backupDataProvider = new BackupUniverseFileDataProvider(dataProvider.Object);
 
             var previousLogHandler = Log.LogHandler;
@@ -97,9 +97,10 @@ namespace QuantConnect.Tests.Common.Data.UniverseSelection
             Log.LogHandler = logHandler;
             try
             {
+                // distinct keys so that the Log's own identical consecutive message protection does not kick in
                 for (var i = 0; i < 100; i++)
                 {
-                    using var stream = backupDataProvider.Fetch(Key);
+                    using var stream = backupDataProvider.Fetch($"universes/{i:D8}.csv");
                     Assert.IsNotNull(stream);
                 }
             }
@@ -109,7 +110,7 @@ namespace QuantConnect.Tests.Common.Data.UniverseSelection
             }
 
             // every fetch fell back to the backup file, but only the first few of them were logged
-            dataProvider.Verify(dp => dp.Fetch(BackupKey), Times.Exactly(100));
+            dataProvider.Verify(dp => dp.Fetch(It.Is<string>(key => key.EndsWith(".backup"))), Times.Exactly(100));
             var fallbackLogs = logHandler.Logs.Count(log => log.Message.Contains("falling back to backup universe file", StringComparison.InvariantCulture));
             Assert.AreEqual(30, fallbackLogs);
         }
