@@ -17,7 +17,7 @@ using System;
 using System.IO;
 using System.Collections.Generic;
 using QuantConnect.Data.Fundamental;
-using QuantConnect.Logging;
+using QuantConnect.Interfaces;
 
 namespace QuantConnect.Data.UniverseSelection
 {
@@ -28,6 +28,22 @@ namespace QuantConnect.Data.UniverseSelection
     {
         private DateTime _date;
         private readonly Dictionary<SecurityIdentifier, CoarseFundamental> _coarseFundamental = new();
+
+        /// <summary>
+        /// Initializes the service
+        /// </summary>
+        /// <param name="dataProvider">The data provider instance to use</param>
+        /// <param name="liveMode">True if running in live mode</param>
+        public override void Initialize(IDataProvider dataProvider, bool liveMode)
+        {
+            base.Initialize(dataProvider, liveMode);
+            if (liveMode)
+            {
+                // in live trading, fall back to the backup coarse universe file, if any, as a last resort,
+                // consistent with the universe selection data itself
+                DataProvider = new BackupUniverseFileDataProvider(dataProvider);
+            }
+        }
 
         /// <summary>
         /// Will fetch the requested fundamental information for the requested time and symbol
@@ -50,18 +66,6 @@ namespace QuantConnect.Data.UniverseSelection
 
                 var path = Path.Combine(Globals.DataFolder, "equity", "usa", "fundamental", "coarse", $"{time:yyyyMMdd}.csv");
                 var fileStream = DataProvider.Fetch(path);
-                if (fileStream == null && LiveMode)
-                {
-                    // in live trading, fall back to the backup universe file, if any, as a last resort, consistent with the
-                    // universe selection data itself, see LiveCustomDataSubscriptionEnumeratorFactory.BackupUniverseFileDataProvider
-                    var backupPath = path + ".backup";
-                    fileStream = DataProvider.Fetch(backupPath);
-                    if (fileStream != null)
-                    {
-                        Log.Trace($"CoarseFundamentalDataProvider.Get(): coarse fundamental file '{path}' is not available, " +
-                            $"falling back to backup file '{backupPath}'");
-                    }
-                }
                 if (fileStream == null)
                 {
                     return GetDefault<T>();

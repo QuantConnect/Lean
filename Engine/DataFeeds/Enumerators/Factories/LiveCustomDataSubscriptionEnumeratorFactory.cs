@@ -16,14 +16,12 @@
 
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using Python.Runtime;
 using QuantConnect.Configuration;
 using QuantConnect.Data;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Interfaces;
-using QuantConnect.Logging;
 using QuantConnect.Securities;
 using QuantConnect.Util;
 
@@ -260,51 +258,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
         private static TimeSpan GetMaximumDataAge(TimeSpan increment)
         {
             return TimeSpan.FromTicks(Math.Max(increment.Ticks, TimeSpan.FromSeconds(5).Ticks));
-        }
-
-        /// <summary>
-        /// Data provider wrapper that falls back to the backup universe file ("*.backup"), if any,
-        /// when the expected universe file can't be fetched, as a last resort
-        /// </summary>
-        private sealed class BackupUniverseFileDataProvider : IDataProvider
-        {
-            private IDataProvider _dataProvider;
-
-            /// <summary>
-            /// Event raised each time data fetch is finished (successfully or not)
-            /// </summary>
-            public event EventHandler<DataProviderNewDataRequestEventArgs> NewDataRequest
-            {
-                add => _dataProvider?.NewDataRequest += value;
-                remove => _dataProvider?.NewDataRequest -= value;
-            }
-
-            /// <summary>
-            /// Sets the data provider to wrap, forwarding its <see cref="IDataProvider.NewDataRequest"/> events
-            /// </summary>
-            public void SetDataProvider(IDataProvider dataProvider)
-            {
-                _dataProvider = dataProvider;
-            }
-
-            public Stream Fetch(string key)
-            {
-                var stream = _dataProvider.Fetch(key);
-                if (stream != null)
-                {
-                    return stream;
-                }
-
-                var backupKey = key + ".backup";
-                stream = _dataProvider.Fetch(backupKey);
-                if (stream != null)
-                {
-                    Log.Trace($"LiveCustomDataSubscriptionEnumeratorFactory.BackupUniverseFileDataProvider.Fetch(): universe file '{key}' is not available, " +
-                        $"falling back to backup universe file '{backupKey}'");
-                }
-
-                return stream;
-            }
         }
     }
 }
