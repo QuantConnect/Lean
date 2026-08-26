@@ -17,6 +17,7 @@ using System;
 using System.IO;
 using System.Collections.Generic;
 using QuantConnect.Data.Fundamental;
+using QuantConnect.Logging;
 
 namespace QuantConnect.Data.UniverseSelection
 {
@@ -49,6 +50,18 @@ namespace QuantConnect.Data.UniverseSelection
 
                 var path = Path.Combine(Globals.DataFolder, "equity", "usa", "fundamental", "coarse", $"{time:yyyyMMdd}.csv");
                 var fileStream = DataProvider.Fetch(path);
+                if (fileStream == null && LiveMode)
+                {
+                    // in live trading, fall back to the backup universe file, if any, as a last resort, consistent with the
+                    // universe selection data itself, see LiveCustomDataSubscriptionEnumeratorFactory.BackupUniverseFileDataProvider
+                    var backupPath = path + ".backup";
+                    fileStream = DataProvider.Fetch(backupPath);
+                    if (fileStream != null)
+                    {
+                        Log.Trace($"CoarseFundamentalDataProvider.Get(): coarse fundamental file '{path}' is not available, " +
+                            $"falling back to backup file '{backupPath}'");
+                    }
+                }
                 if (fileStream == null)
                 {
                     return GetDefault<T>();
