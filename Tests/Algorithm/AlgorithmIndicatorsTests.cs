@@ -275,6 +275,62 @@ namespace QuantConnect.Tests.Algorithm
             Assert.AreEqual(new DateTime(2013, 10, 10, 16, 0, 0), lastPoint.Current.EndTime);
         }
 
+        [Test]
+        public void LeastSquaresMovingAverageWithReferenceCalculation()
+        {
+            var period = 10;
+            var referenceSymbol = Symbol.Create("IBM", SecurityType.Equity, Market.USA);
+            var indicator = new LeastSquaresMovingAverageWithReference(_equity, referenceSymbol, period);
+            _algorithm.SetDateTime(new DateTime(2013, 10, 11));
+
+            // Fit the target closes on the reference closes of the last period time steps both symbols
+            // have a price for, using the ordinary least squares closed form
+            var targetCloses = new List<double>();
+            var referenceCloses = new List<double>();
+            foreach (var slice in _algorithm.History(new[] { _equity, referenceSymbol }, TimeSpan.FromDays(50), Resolution.Daily))
+            {
+                if (slice.Bars.ContainsKey(_equity) && slice.Bars.ContainsKey(referenceSymbol))
+                {
+                    targetCloses.Add((double)slice.Bars[_equity].Close);
+                    referenceCloses.Add((double)slice.Bars[referenceSymbol].Close);
+                }
+            }
+            var target = targetCloses.TakeLast(period).ToList();
+            var reference = referenceCloses.TakeLast(period).ToList();
+            var sumX = reference.Sum();
+            var sumY = target.Sum();
+            var expectedSlope = (period * reference.Zip(target, (x, y) => x * y).Sum() - sumX * sumY)
+                / (period * reference.Sum(x => x * x) - sumX * sumX);
+            var expectedIntercept = (sumY - expectedSlope * sumX) / period;
+            var expectedValue = expectedIntercept + expectedSlope * reference[^1];
+
+            var indicatorValues = _algorithm.IndicatorHistory(indicator, new[] { _equity, referenceSymbol }, TimeSpan.FromDays(50), Resolution.Daily);
+
+            Assert.AreEqual(expectedSlope, (double)indicator.Slope.Current.Value, 1e-6);
+            Assert.AreEqual(expectedIntercept, (double)indicator.Intercept.Current.Value, 1e-6);
+            Assert.AreEqual(expectedValue, (double)indicator.Current.Value, 1e-6);
+            Assert.AreEqual(new DateTime(2013, 10, 10, 16, 0, 0), indicator.Current.EndTime);
+
+            // The indicator history is taken on the first of the two updates each time step gets, so
+            // its last row holds the value the indicator had before the last pair of prices was fit
+            var lastPoint = indicatorValues.Last();
+            Assert.AreEqual(new DateTime(2013, 10, 10, 16, 0, 0), lastPoint.Current.EndTime);
+            Assert.AreEqual(indicator.Previous.Value, lastPoint.Current.Value);
+        }
+
+        [Test]
+        public void LeastSquaresMovingAverageWithReferenceIsWarmedUpByTheAlgorithm()
+        {
+            var referenceSymbol = _algorithm.AddEquity("IBM").Symbol;
+
+            var indicator = _algorithm.LSMA(_equity, referenceSymbol, 10, Resolution.Daily);
+
+            Assert.AreEqual("LSMA(10,day)", indicator.Name);
+            Assert.IsTrue(indicator.IsReady);
+            Assert.AreNotEqual(0m, indicator.Current.Value);
+            Assert.AreNotEqual(0m, indicator.Slope.Current.Value);
+        }
+
         [TestCase(Language.Python)]
         [TestCase(Language.CSharp)]
         public void IndicatorsPassingHistory(Language language)
