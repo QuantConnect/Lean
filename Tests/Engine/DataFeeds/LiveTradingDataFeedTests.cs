@@ -287,6 +287,8 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         [TestCase("OptionChain", true)]
         [TestCase("IndexOptionChain", false)]
         [TestCase("IndexOptionChain", true)]
+        [TestCase("FutureChain", false)]
+        [TestCase("FutureChain", true)]
         [TestCase("CoarseFundamental", false)]
         [TestCase("CoarseFundamental", true)]
         [TestCase("EtfConstituents", false)]
@@ -298,6 +300,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             {
                 "OptionChain" => new DateTime(2014, 6, 9, 13, 15, 0),
                 "IndexOptionChain" => new DateTime(2021, 1, 4, 14, 15, 0),
+                "FutureChain" => new DateTime(2014, 6, 9, 13, 15, 0),
                 "CoarseFundamental" => new DateTime(2014, 3, 26, 13, 15, 0),
                 "EtfConstituents" => new DateTime(2020, 12, 1, 14, 15, 0),
                 _ => throw new ArgumentException($"Unexpected universe kind: {universeKind}")
@@ -329,6 +332,16 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                         ? _algorithm.AddOption("AAPL")
                         : _algorithm.AddIndexOption("SPX");
                     option.SetFilter(universe =>
+                    {
+                        selectionHappened++;
+                        selectedCount = universe.Count();
+                        return universe;
+                    });
+                    break;
+
+                case "FutureChain":
+                    var future = _algorithm.AddFuture("ES");
+                    future.SetFilter(universe =>
                     {
                         selectionHappened++;
                         selectedCount = universe.Count();
