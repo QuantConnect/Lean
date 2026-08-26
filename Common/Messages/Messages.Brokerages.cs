@@ -644,6 +644,21 @@ namespace QuantConnect
         }
 
         /// <summary>
+        /// Provides user-facing messages for the <see cref="Brokerages.ClearStreetBrokerageModel"/> class and its consumers or related classes
+        /// </summary>
+        public static class ClearStreetBrokerageModel
+        {
+            /// <summary>
+            /// Returns a message explaining that an index can be subscribed to, but not traded.
+            /// </summary>
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public static string IndexIsNotTradable(Securities.Security security)
+            {
+                return Invariant($"Clear Street sends {security.Type} data, but it takes no {security.Type} orders. {security.Symbol.Value} cannot be traded.");
+            }
+        }
+
+        /// <summary>
         /// Provides user-facing messages for the <see cref="Brokerages.RBIBrokerageModel"/> class and its consumers or related classes
         /// </summary>
         public static class RBIBrokerageModel
