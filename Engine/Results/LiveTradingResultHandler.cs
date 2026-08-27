@@ -809,11 +809,7 @@ namespace QuantConnect.Lean.Engine.Results
             Log.Debug("LiveTradingResultHandler.RuntimeStatistic(): Begin setting statistic");
             lock (RuntimeStatistics)
             {
-                if (!RuntimeStatistics.ContainsKey(key))
-                {
-                    RuntimeStatistics.Add(key, value);
-                }
-                RuntimeStatistics[key] = value;
+                TrySetRuntimeStatistic(key, value);
             }
             Log.Debug("LiveTradingResultHandler.RuntimeStatistic(): End setting statistic");
         }

@@ -783,7 +783,7 @@ namespace QuantConnect.Lean.Engine.Results
         {
             lock (RuntimeStatistics)
             {
-                RuntimeStatistics[key] = value;
+                TrySetRuntimeStatistic(key, value);
             }
         }
 
