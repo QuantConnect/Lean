@@ -446,6 +446,31 @@ namespace QuantConnect.Tests.Engine.Results
         }
 
         [Test]
+        public void RuntimeStatisticRejectionWarnsOnce()
+        {
+            using var messaging = new QuantConnect.Messaging.Messaging();
+            var result = new LiveTradingResultHandler();
+            result.Initialize(new(new LiveNodePacket(), messaging, null, new BacktestingTransactionHandler(), null));
+
+            var algorithm = new AlgorithmStub();
+            algorithm.SetDateTime(new DateTime(2026, 1, 15, 9, 30, 0));
+            result.SetAlgorithm(algorithm, 10);
+            result.Messages.Clear();
+
+            result.RuntimeStatistic("Valid", "ok");
+            result.RuntimeStatistic("Encoded", "TG9yZW0gaXBzdW0gZG9sb3Igc2l0IGFtZXQ=");
+            result.RuntimeStatistic("Encoded", "48656c6c6f20576f726c6421");
+            for (var i = 0; i < BaseResultsHandler.MaxRuntimeStatisticsCount + 10; i++)
+            {
+                result.RuntimeStatistic($"Key {i}", "1");
+            }
+
+            var debugMessages = result.Messages.OfType<DebugPacket>().ToList();
+            Assert.AreEqual(1, debugMessages.Count);
+            Assert.That(debugMessages[0].Message, Does.Contain("Runtime statistic"));
+        }
+
+        [Test]
         public void StoredResultsCarryServerStatistics()
         {
             using var api = new Api.Api();
