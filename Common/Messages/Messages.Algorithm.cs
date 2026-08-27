@@ -101,7 +101,7 @@ namespace QuantConnect
             }
 
             /// <summary>
-            /// Returns a string message saying an option cannot use a finer resolution than its underlying
+            /// Returns a warning message saying an option uses a finer resolution than its underlying
             /// </summary>
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public static string AddOptionContractUnderlyingResolution(global::QuantConnect.Symbol option, Resolution optionResolution,

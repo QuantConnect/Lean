@@ -728,23 +728,21 @@ namespace QuantConnect.Tests.Algorithm
         [TestCase(Resolution.Hour, Resolution.Minute, true)]
         [TestCase(Resolution.Minute, Resolution.Minute, false)]
         [TestCase(Resolution.Second, Resolution.Minute, false)]
-        public void AddOptionContractValidatesUnderlyingResolution(
-            Resolution underlyingResolution, Resolution optionResolution, bool shouldThrow)
+        public void AddOptionContractWarnsForCoarseUnderlyingResolution(
+            Resolution underlyingResolution, Resolution optionResolution, bool shouldWarn)
         {
             var algorithm = Algorithm();
             var underlying = algorithm.AddEquity("SPY", underlyingResolution).Symbol;
             var option = Symbol.CreateOption(underlying, Market.USA, OptionStyle.American, OptionRight.Call,
                 100m, new DateTime(2027, 1, 15));
 
-            if (shouldThrow)
+            Assert.DoesNotThrow(() => algorithm.AddOptionContract(option, optionResolution));
+
+            var warnings = algorithm.DebugMessages.Where(message => message.Contains("finer than its underlying")).ToList();
+            Assert.AreEqual(shouldWarn ? 1 : 0, warnings.Count);
+            if (shouldWarn)
             {
-                var exception = Assert.Throws<ArgumentException>(() => algorithm.AddOptionContract(option, optionResolution));
-                StringAssert.Contains("finer than its underlying", exception.Message);
-                StringAssert.Contains($"Add the underlying at {optionResolution} resolution or finer", exception.Message);
-            }
-            else
-            {
-                Assert.DoesNotThrow(() => algorithm.AddOptionContract(option, optionResolution));
+                StringAssert.Contains($"Add the underlying at {optionResolution} resolution or finer", warnings.Single());
             }
         }
 
@@ -761,15 +759,20 @@ namespace QuantConnect.Tests.Algorithm
         }
 
         [Test]
-        public void AddOptionContractValidatesUnderlyingResolutionFromUniverseSettings()
+        public void AddOptionContractWarnsOnceForCoarseUnderlyingResolution()
         {
             var algorithm = Algorithm();
             algorithm.UniverseSettings.Resolution = Resolution.Minute;
             var underlying = algorithm.AddEquity("SPY", Resolution.Daily).Symbol;
-            var option = Symbol.CreateOption(underlying, Market.USA, OptionStyle.American, OptionRight.Call,
+            var firstOption = Symbol.CreateOption(underlying, Market.USA, OptionStyle.American, OptionRight.Call,
                 100m, new DateTime(2027, 1, 15));
+            var secondOption = Symbol.CreateOption(underlying, Market.USA, OptionStyle.American, OptionRight.Put,
+                105m, new DateTime(2027, 1, 15));
 
-            Assert.Throws<ArgumentException>(() => algorithm.AddOptionContract(option));
+            Assert.DoesNotThrow(() => algorithm.AddOptionContract(firstOption));
+            Assert.DoesNotThrow(() => algorithm.AddOptionContract(secondOption));
+
+            Assert.AreEqual(1, algorithm.DebugMessages.Count(message => message.Contains("finer than its underlying")));
         }
 
         private static SubscriptionDataConfig GetMatchingSubscription(QCAlgorithm algorithm, Symbol symbol, Type type)
