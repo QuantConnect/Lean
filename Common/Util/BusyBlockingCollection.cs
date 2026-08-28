@@ -125,6 +125,16 @@ namespace QuantConnect.Util
         }
 
         /// <summary>
+        /// Attempts to take an item from this collection without blocking
+        /// </summary>
+        /// <param name="item">The item taken, or default when none was available</param>
+        /// <returns>True if an item was taken</returns>
+        public bool TryTake(out T item)
+        {
+            return _collection.TryTake(out item);
+        }
+
+        /// <summary>
         /// Provides a consuming enumerable for items in this collection.
         /// </summary>
         /// <returns>An enumerable that removes and returns items from the collection</returns>

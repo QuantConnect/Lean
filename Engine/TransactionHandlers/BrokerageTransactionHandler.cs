@@ -276,8 +276,9 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
             // backtesting drains a single queue synchronously on the algorithm thread, live deployments use
             // background worker threads: a single one, or growing on demand up to the maximum when concurrent.
             _threadPool = SynchronousProcessing
-                ? OrderRequestProcessingPool.Synchronous(processRequest, onError)
-                : new OrderRequestProcessingPool(ConcurrencyEnabled, MinimumTransactionThreads, MaximumTransactionThreads, processRequest, onError);
+                ? OrderRequestProcessingPool.Synchronous(processRequest, onError, InvalidateDroppedRequest)
+                : new OrderRequestProcessingPool(ConcurrencyEnabled, MinimumTransactionThreads, MaximumTransactionThreads,
+                    processRequest, onError, InvalidateDroppedRequest);
         }
 
         #region Order Request Processing
@@ -1927,6 +1928,22 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
                     orderInGroup.Status = OrderStatus.Invalid;
                 }
                 HandleOrderEvents(new List<OrderEvent> { new OrderEvent(orderInGroup, _algorithm.UtcTime, OrderFee.Zero, message) });
+            }
+        }
+
+        /// <summary>
+        /// Handles a request the processing pool dropped at shutdown without processing it. Invalidates a dropped
+        /// submit's order so it doesn't linger as new in the final results, before they are sent.
+        /// </summary>
+        private void InvalidateDroppedRequest(OrderRequest request)
+        {
+            var message = "The order was never sent to the brokerage: the engine was stopped while the request was queued";
+            request.SetResponse(OrderResponse.Error(request, OrderResponseErrorCode.ProcessingError, message));
+
+            // only a dropped submit leaves an order that was never placed, updates and cancels target one already sent
+            if (request.OrderRequestType == OrderRequestType.Submit && _openOrders.TryGetValue(request.OrderId, out var openOrder))
+            {
+                InvalidateOrders(new List<Order> { openOrder.Order }, message);
             }
         }
 

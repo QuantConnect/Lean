@@ -15,6 +15,8 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
+using System.Linq;
 using System.Threading;
 using QuantConnect.Interfaces;
 using QuantConnect.Logging;
@@ -37,8 +39,16 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
     /// </remarks>
     public class OrderRequestProcessingPool : IDisposable
     {
-        // maximum time to wait for each worker thread to stop when disposing the pool
-        private static readonly TimeSpan ShutdownTimeout = TimeSpan.FromSeconds(60);
+        /// <summary>
+        /// Maximum total time to wait for all the worker threads to stop when disposing the pool. Settable for tests.
+        /// </summary>
+        internal TimeSpan ShutdownTimeout { get; set; } = TimeSpan.FromSeconds(60);
+
+        /// <summary>
+        /// Time granted to each interrupted worker to observe the interrupt when disposing. Settable for tests.
+        /// </summary>
+        internal TimeSpan InterruptTimeout { get; set; } = TimeSpan.FromSeconds(5);
+
         // the shared queue of requests cleared to run. every worker pulls from here so the load stays balanced
         private readonly IBusyCollection<WorkItem> _readyQueue;
         private readonly List<Thread> _threads;
@@ -54,13 +64,15 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
         // true when a single consumer drains the queue (synchronous or a single fixed worker), which already
         // preserves arrival order across all orders so the per-order serialization is skipped entirely
         private readonly bool _singleConsumer;
-        // set under the lock when shutting down so the pool stops growing while the queue drains, before the
-        // cancellation token is cancelled as the final hard stop
-        private bool _shuttingDown;
+        // set under the lock when shutting down so the pool stops growing while the pending requests are dropped,
+        // before the cancellation token is cancelled. volatile, the workers read it lock free while draining
+        private volatile bool _shuttingDown;
         // number of workers currently processing a request, used to decide when the pool is saturated
         private int _busyWorkers;
         private readonly Action<OrderRequest> _processRequest;
         private readonly Action<Exception> _onError;
+        // reports each request dropped at shutdown without being processed, may be null
+        private readonly Action<OrderRequest> _onDropped;
         private readonly CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource();
 
         /// <summary>
@@ -92,12 +104,14 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
         /// <param name="maximumThreads">The maximum number of worker threads the pool can grow to on demand</param>
         /// <param name="processRequest">Handles a single order request</param>
         /// <param name="onError">Invoked when processing fails unexpectedly</param>
+        /// <param name="onDropped">Invoked for each request dropped at shutdown without being processed</param>
         public OrderRequestProcessingPool(bool concurrencyEnabled, int minimumThreads, int maximumThreads,
-            Action<OrderRequest> processRequest, Action<Exception> onError)
+            Action<OrderRequest> processRequest, Action<Exception> onError, Action<OrderRequest> onDropped = null)
         {
             _synchronous = false;
             _processRequest = processRequest;
             _onError = onError;
+            _onDropped = onDropped;
             // concurrency grows the pool minimum..maximum on demand, otherwise a single fixed thread is used
             _maximumThreads = concurrencyEnabled ? Math.Max(1, maximumThreads) : 1;
             _singleConsumer = _maximumThreads == 1;
@@ -115,11 +129,13 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
         /// <summary>
         /// Private constructor for the synchronous pool, a single non blocking queue and no worker threads.
         /// </summary>
-        private OrderRequestProcessingPool(Action<OrderRequest> processRequest, Action<Exception> onError)
+        private OrderRequestProcessingPool(Action<OrderRequest> processRequest, Action<Exception> onError,
+            Action<OrderRequest> onDropped)
         {
             _synchronous = true;
             _processRequest = processRequest;
             _onError = onError;
+            _onDropped = onDropped;
             _maximumThreads = 1;
             _singleConsumer = true;
 
@@ -134,9 +150,11 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
         /// </summary>
         /// <param name="processRequest">Handles a single order request</param>
         /// <param name="onError">Invoked when processing fails unexpectedly</param>
-        public static OrderRequestProcessingPool Synchronous(Action<OrderRequest> processRequest, Action<Exception> onError)
+        /// <param name="onDropped">Invoked for each request dropped at shutdown without being processed</param>
+        public static OrderRequestProcessingPool Synchronous(Action<OrderRequest> processRequest, Action<Exception> onError,
+            Action<OrderRequest> onDropped = null)
         {
-            return new OrderRequestProcessingPool(processRequest, onError);
+            return new OrderRequestProcessingPool(processRequest, onError, onDropped);
         }
 
         /// <summary>
@@ -239,7 +257,8 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
         }
 
         /// <summary>
-        /// Stops every worker thread and waits for them to terminate, then releases the pool resources.
+        /// Stops the pool: stops every worker thread against a shared deadline, interrupting those that won't finish,
+        /// then drops the requests that never started processing, reporting each one, and releases the resources.
         /// </summary>
         public void Dispose()
         {
@@ -254,18 +273,22 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
                 _shuttingDown = true;
             }
 
-            // let the workers drain whatever is queued and parked: once adding is complete their consuming
-            // enumerables finish naturally when the queue empties, so join before cancelling anything. Only
-            // escalate to StopSafely, which cancels the shared token and drops pending requests, on timeout
+            // stop accepting work and cancel right away so the workers exit their consuming enumerable instead
+            // of draining a backlog that shouldn't be sent to the brokerage while shutting down
             _readyQueue.CompleteAdding();
+            _cancellationTokenSource.Cancel();
+
+            // join every worker against a single shared deadline instead of a full timeout per thread
+            var stopwatch = Stopwatch.StartNew();
+            List<Thread> stuckThreads = null;
             foreach (var thread in _threads)
             {
                 try
                 {
-                    if (thread != null && !thread.Join(ShutdownTimeout))
+                    var remaining = ShutdownTimeout - stopwatch.Elapsed;
+                    if (thread != null && !thread.Join(remaining > TimeSpan.Zero ? remaining : TimeSpan.Zero))
                     {
-                        Log.Error($"OrderRequestProcessingPool.Dispose(): Exceeded timeout: {(int)ShutdownTimeout.TotalSeconds} seconds waiting for '{thread.Name}' to finish processing");
-                        thread.StopSafely(ShutdownTimeout, _cancellationTokenSource);
+                        (stuckThreads ??= new()).Add(thread);
                     }
                 }
                 catch (ThreadStateException)
@@ -274,9 +297,73 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
                 }
             }
 
+            if (stuckThreads != null)
+            {
+                // a worker pinned in a blocking call, even a native wait, can only be freed by interrupting it
+                Log.Error($"OrderRequestProcessingPool.Dispose(): workers did not stop within {(int)ShutdownTimeout.TotalSeconds} seconds, interrupting: {string.Join(", ", stuckThreads.Select(thread => thread.Name))}");
+                foreach (var thread in stuckThreads)
+                {
+                    thread.Interrupt();
+                }
+                foreach (var thread in stuckThreads)
+                {
+                    if (!thread.Join(InterruptTimeout))
+                    {
+                        Log.Error($"OrderRequestProcessingPool.Dispose(): '{thread.Name}' is still running after being interrupted");
+                    }
+                }
+            }
+
+            // with the workers stopped, drop everything that never started processing, queued or parked, reporting
+            // each request so the caller can invalidate its order before the final results go out
+            DropPendingRequests();
+
             IsActive = false;
             _readyQueue.DisposeSafely();
             _cancellationTokenSource.DisposeSafely();
+        }
+
+        /// <summary>
+        /// Drops every request that never started processing, from the ready queue and the parked queues, reporting
+        /// each one through the drop callback. Runs once the workers have stopped: a request a worker grabbed before
+        /// the cancellation belongs to that worker, whatever is still here was never taken.
+        /// </summary>
+        private void DropPendingRequests()
+        {
+            var dropped = new List<OrderRequest>();
+            while (_readyQueue.TryTake(out var item))
+            {
+                dropped.Add(item.Request);
+            }
+
+            lock (_lock)
+            {
+                // drain the parked queues but keep the entries, so a worker finishing its current request still
+                // finds its order's key and cleans it up itself
+                foreach (var parked in _inFlight.Values)
+                {
+                    while (parked != null && parked.Count > 0)
+                    {
+                        dropped.Add(parked.Dequeue());
+                    }
+                }
+            }
+
+            if (_onDropped == null)
+            {
+                return;
+            }
+            foreach (var request in dropped)
+            {
+                try
+                {
+                    _onDropped(request);
+                }
+                catch (Exception err)
+                {
+                    Log.Error(err);
+                }
+            }
         }
 
         /// <summary>
@@ -339,6 +426,15 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
                 {
                     process(item);
                 }
+            }
+            catch (OperationCanceledException) when (_shuttingDown)
+            {
+                // the shutdown cancelled the shared token, exit quietly
+            }
+            catch (ThreadInterruptedException) when (_shuttingDown)
+            {
+                // interrupted by Dispose after the shutdown deadline, exit quietly
+                Log.Trace($"OrderRequestProcessingPool.Drain(): '{Thread.CurrentThread.Name}' interrupted while shutting down");
             }
             catch (Exception err)
             {

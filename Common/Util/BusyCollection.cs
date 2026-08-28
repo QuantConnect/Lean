@@ -128,5 +128,15 @@ namespace QuantConnect.Util
         {
             _completedAdding = true;
         }
+
+        /// <summary>
+        /// Attempts to take an item from this collection without blocking
+        /// </summary>
+        /// <param name="item">The item taken, or default when none was available</param>
+        /// <returns>True if an item was taken</returns>
+        public bool TryTake(out T item)
+        {
+            return _collection.TryDequeue(out item);
+        }
     }
 }
