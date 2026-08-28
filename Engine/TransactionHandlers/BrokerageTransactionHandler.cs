@@ -1,4 +1,4 @@
-/*
+﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -1392,15 +1392,15 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
                         {
                             // a slow handler holds the order event lock, and for Python the GIL, stalling the
                             // other transaction threads and the order status processing.
-                            var stopwatch = Stopwatch.StartNew();
+                            var start = Stopwatch.GetTimestamp();
                             _algorithm.OnOrderEvent(orderEvent);
-                            stopwatch.Stop();
-                            if (stopwatch.Elapsed > SlowOnOrderEventThreshold)
+                            var elapsed = Stopwatch.GetElapsedTime(start);
+                            if (elapsed > SlowOnOrderEventThreshold)
                             {
                                 _slowOnOrderEventWarningSent = true;
-                                Log.Trace($"BrokerageTransactionHandler.HandleOrderEvents(): the OnOrderEvent handler took {stopwatch.Elapsed.TotalSeconds:0.##}s: " +
+                                Log.Trace($"BrokerageTransactionHandler.HandleOrderEvents(): the OnOrderEvent handler took {elapsed.TotalSeconds:0.##}s: " +
                                     "while it runs, order status updates and the other transaction threads are blocked. Warning the user once");
-                                _algorithm.Debug($"Warning: The OnOrderEvent handler took {stopwatch.Elapsed.TotalSeconds:0.##} seconds to run, which can delay order processing. Keep the handler fast.");
+                                _algorithm.Debug($"Warning: The OnOrderEvent handler took {elapsed.TotalSeconds:0.##} seconds to run, which can delay order processing. Keep the handler fast.");
                             }
                         }
                     }
