@@ -1439,6 +1439,34 @@ namespace QuantConnect.Tests.Engine.BrokerageTransactionHandlerTests
             Assert.AreEqual(orderEventsCount, _algorithm.OrderEvents.Count);
         }
 
+        // A slow OnOrderEvent handler blocks the order event lock, and for Python the GIL, so the user is
+        // warned once and the measurement stops afterwards.
+        [Test]
+        public void SlowOnOrderEventHandlerWarnsOnlyOnce()
+        {
+            _transactionHandler = new TestBrokerageTransactionHandler();
+            using var brokerage = new NoSubmitTestBrokerage(_algorithm);
+            _transactionHandler.Initialize(_algorithm, brokerage, new BacktestingResultHandler());
+            // any handler run exceeds a zero threshold
+            _transactionHandler.SlowOnOrderEventThreshold = TimeSpan.Zero;
+
+            var security = _algorithm.Securities[_symbol];
+            var price = 1.12m;
+            security.SetMarketPrice(new Tick(DateTime.Now, security.Symbol, price, price, price));
+            var orderRequest = new SubmitOrderRequest(OrderType.Limit, security.Type, security.Symbol, 1000, 0, 1.11m, DateTime.Now, "");
+            _algorithm.Transactions.SetOrderProcessor(_transactionHandler);
+            _transactionHandler.Process(orderRequest);
+            _transactionHandler.PumpPendingRequests();
+
+            var order = _algorithm.Transactions.GetOpenOrders().Single();
+            brokerage.PublishOrderEvent(new OrderEvent(order, _algorithm.UtcTime, OrderFee.Zero) { Status = OrderStatus.Submitted });
+            Assert.AreEqual(1, _algorithm.DebugMessages.Count(message => message.Contains("OnOrderEvent")));
+
+            // the warning was sent, later slow handler runs are neither measured nor reported again
+            brokerage.PublishOrderEvent(new OrderEvent(order, _algorithm.UtcTime, OrderFee.Zero) { Status = OrderStatus.PartiallyFilled, FillQuantity = 1, FillPrice = price });
+            Assert.AreEqual(1, _algorithm.DebugMessages.Count(message => message.Contains("OnOrderEvent")));
+        }
+
         [Test]
         public void CancelOrderRequestShouldFailForFilledOrder()
         {

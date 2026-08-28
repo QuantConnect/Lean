@@ -16,6 +16,7 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading;
@@ -78,6 +79,13 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
         private OrderRequestProcessingPool _threadPool;
         // set once the handler starts exiting, so requests still queued are invalidated instead of processed
         private volatile bool _droppingQueuedRequests;
+
+        /// <summary>
+        /// An OnOrderEvent handler slower than this gets the user warned, once. Settable for tests.
+        /// </summary>
+        internal TimeSpan SlowOnOrderEventThreshold { get; set; } = TimeSpan.FromSeconds(5);
+        // once the warning is sent the handler is no longer measured. Only written under the order event lock
+        private bool _slowOnOrderEventWarningSent;
 
         private readonly ConcurrentQueue<OrderEvent> _orderEvents = new ConcurrentQueue<OrderEvent>();
 
@@ -1376,7 +1384,25 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
                     try
                     {
                         //Trigger our order event handler
-                        _algorithm.OnOrderEvent(orderEvent);
+                        if (_slowOnOrderEventWarningSent)
+                        {
+                            _algorithm.OnOrderEvent(orderEvent);
+                        }
+                        else
+                        {
+                            // a slow handler holds the order event lock, and for Python the GIL, stalling the
+                            // other transaction threads and the order status processing.
+                            var stopwatch = Stopwatch.StartNew();
+                            _algorithm.OnOrderEvent(orderEvent);
+                            stopwatch.Stop();
+                            if (stopwatch.Elapsed > SlowOnOrderEventThreshold)
+                            {
+                                _slowOnOrderEventWarningSent = true;
+                                Log.Trace($"BrokerageTransactionHandler.HandleOrderEvents(): the OnOrderEvent handler took {stopwatch.Elapsed.TotalSeconds:0.##}s: " +
+                                    "while it runs, order status updates and the other transaction threads are blocked. Warning the user once");
+                                _algorithm.Debug($"Warning: The OnOrderEvent handler took {stopwatch.Elapsed.TotalSeconds:0.##} seconds to run, which can delay order processing. Keep the handler fast.");
+                            }
+                        }
                     }
                     catch (Exception err)
                     {
