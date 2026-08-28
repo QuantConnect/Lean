@@ -1,4 +1,4 @@
-/*
+﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -308,6 +308,7 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
             IsActive = false;
             _readyQueue.DisposeSafely();
             _cancellationTokenSource.DisposeSafely();
+            Log.Trace("OrderRequestProcessingPool.Dispose(): completed");
         }
 
         /// <summary>
@@ -332,22 +333,36 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
                 {
                     // registered by a concurrent Dispatch but not started yet, nothing to drain on it
                 }
+                catch (ThreadInterruptedException)
+                {
+                    // the disposing thread itself was interrupted while joining, keep shutting down
+                    Log.Error($"OrderRequestProcessingPool.Dispose(): interrupted while joining '{thread.Name}'");
+                }
             }
 
             if (stuckThreads != null)
             {
                 // a worker pinned in a blocking call, even a native wait, can only be freed by interrupting it
                 Log.Error($"OrderRequestProcessingPool.Dispose(): workers did not stop within {(int)ShutdownTimeout.TotalSeconds} seconds, interrupting: {string.Join(", ", stuckThreads.Select(thread => thread.Name))}");
-                foreach (var thread in stuckThreads)
+                try
                 {
-                    thread.Interrupt();
-                }
-                foreach (var thread in stuckThreads)
-                {
-                    if (!thread.Join(InterruptTimeout))
+                    foreach (var thread in stuckThreads)
                     {
-                        Log.Error($"OrderRequestProcessingPool.Dispose(): '{thread.Name}' is still running after being interrupted");
+                        thread.Interrupt();
                     }
+                    foreach (var thread in stuckThreads)
+                    {
+                        if (!thread.Join(InterruptTimeout))
+                        {
+                            Log.Error($"OrderRequestProcessingPool.Dispose(): '{thread.Name}' is still running after being interrupted");
+                        }
+                    }
+                }
+                catch (ThreadInterruptedException)
+                {
+                    // the disposing thread itself was interrupted while joining, keep shutting down.
+                    // the stuck list only holds started threads, so no other exception is expected here
+                    Log.Error("OrderRequestProcessingPool.Dispose(): interrupted while joining the stuck workers");
                 }
             }
         }
