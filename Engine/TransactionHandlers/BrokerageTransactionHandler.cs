@@ -83,7 +83,7 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
         /// <summary>
         /// An OnOrderEvent handler slower than this gets the user warned, once. Settable for tests.
         /// </summary>
-        internal TimeSpan SlowOnOrderEventThreshold { get; set; } = TimeSpan.FromSeconds(5);
+        internal TimeSpan SlowOnOrderEventThreshold { get; set; } = TimeSpan.FromSeconds(10);
         // once the warning is sent the handler is no longer measured. Only written under the order event lock
         private bool _slowOnOrderEventWarningSent;
 
