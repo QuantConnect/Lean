@@ -76,6 +76,8 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
         /// requests in order while growing the pool on demand as the threads get saturated.
         /// </summary>
         private OrderRequestProcessingPool _threadPool;
+        // set once the handler starts exiting, so requests still queued are invalidated instead of processed
+        private volatile bool _droppingQueuedRequests;
 
         private readonly ConcurrentQueue<OrderEvent> _orderEvents = new ConcurrentQueue<OrderEvent>();
 
@@ -268,6 +270,12 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
         {
             Action<OrderRequest> processRequest = request =>
             {
+                // at exit the pool still drains its queue through here, fail the request instead of processing it
+                if (_droppingQueuedRequests)
+                {
+                    InvalidateDroppedRequest(request);
+                    return;
+                }
                 HandleOrderRequest(request);
                 ProcessAsynchronousEvents();
             };
@@ -276,9 +284,8 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
             // backtesting drains a single queue synchronously on the algorithm thread, live deployments use
             // background worker threads: a single one, or growing on demand up to the maximum when concurrent.
             _threadPool = SynchronousProcessing
-                ? OrderRequestProcessingPool.Synchronous(processRequest, onError, InvalidateDroppedRequest)
-                : new OrderRequestProcessingPool(ConcurrencyEnabled, MinimumTransactionThreads, MaximumTransactionThreads,
-                    processRequest, onError, InvalidateDroppedRequest);
+                ? OrderRequestProcessingPool.Synchronous(processRequest, onError)
+                : new OrderRequestProcessingPool(ConcurrencyEnabled, MinimumTransactionThreads, MaximumTransactionThreads, processRequest, onError);
         }
 
         #region Order Request Processing
@@ -803,6 +810,8 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
         /// </summary>
         public void Exit()
         {
+            // from here on the requests still queued get invalidated as they drain instead of sent to the brokerage
+            _droppingQueuedRequests = true;
             // Dispose drains the queued requests (CompleteAdding) and waits for the threads before stopping
             _threadPool.DisposeSafely();
         }
@@ -1932,7 +1941,7 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
         }
 
         /// <summary>
-        /// Handles a request the processing pool dropped at shutdown without processing it. Invalidates a dropped
+        /// Fails a request still queued while the handler exits, instead of processing it. Invalidates a dropped
         /// submit's order so it doesn't linger as new in the final results, before they are sent.
         /// </summary>
         private void InvalidateDroppedRequest(OrderRequest request)

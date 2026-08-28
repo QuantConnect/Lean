@@ -72,12 +72,5 @@ namespace QuantConnect.Interfaces
         /// <param name="cancellationToken">A cancellation token to observer</param>
         /// <returns>An enumerable that removes and returns items from the collection</returns>
         IEnumerable<T> GetConsumingEnumerable(CancellationToken cancellationToken);
-
-        /// <summary>
-        /// Attempts to take an item from this collection without blocking
-        /// </summary>
-        /// <param name="item">The item taken, or default when none was available</param>
-        /// <returns>True if an item was taken</returns>
-        bool TryTake(out T item);
     }
 }
