@@ -344,25 +344,25 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
             {
                 // a worker pinned in a blocking call, even a native wait, can only be freed by interrupting it
                 Log.Error($"OrderRequestProcessingPool.Dispose(): workers did not stop within {(int)ShutdownTimeout.TotalSeconds} seconds, interrupting: {string.Join(", ", stuckThreads.Select(thread => thread.Name))}");
-                try
+                // interrupting a started thread cannot throw, only the joins below can
+                foreach (var thread in stuckThreads)
                 {
-                    foreach (var thread in stuckThreads)
-                    {
-                        thread.Interrupt();
-                    }
-                    foreach (var thread in stuckThreads)
+                    thread.Interrupt();
+                }
+                foreach (var thread in stuckThreads)
+                {
+                    try
                     {
                         if (!thread.Join(InterruptTimeout))
                         {
                             Log.Error($"OrderRequestProcessingPool.Dispose(): '{thread.Name}' is still running after being interrupted");
                         }
                     }
-                }
-                catch (ThreadInterruptedException)
-                {
-                    // the disposing thread itself was interrupted while joining, keep shutting down.
-                    // the stuck list only holds started threads, so no other exception is expected here
-                    Log.Error("OrderRequestProcessingPool.Dispose(): interrupted while joining the stuck workers");
+                    catch (ThreadInterruptedException)
+                    {
+                        // the disposing thread itself was interrupted while joining, keep going with the rest
+                        Log.Error($"OrderRequestProcessingPool.Dispose(): interrupted while joining '{thread.Name}'");
+                    }
                 }
             }
         }
