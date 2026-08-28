@@ -1,4 +1,4 @@
-/*
+﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -1397,6 +1397,46 @@ namespace QuantConnect.Tests.Engine.BrokerageTransactionHandlerTests
             Assert.IsTrue(response2.IsProcessed);
             Assert.IsFalse(response2.IsError);
             Assert.AreEqual(orderTicket.Status, OrderStatus.CancelPending);
+        }
+
+        [Test]
+        public void ExitInvalidatesRequestsStillQueued()
+        {
+            _transactionHandler = new TestBrokerageTransactionHandler();
+            using var brokerage = new NoSubmitTestBrokerage(_algorithm);
+            _transactionHandler.Initialize(_algorithm, brokerage, new BacktestingResultHandler());
+
+            var security = _algorithm.Securities[_symbol];
+            var price = 1.12m;
+            security.SetMarketPrice(new Tick(DateTime.Now, security.Symbol, price, price, price));
+            var orderRequest = new SubmitOrderRequest(OrderType.Limit, security.Type, security.Symbol, 1000, 0, 1.11m, DateTime.Now, "");
+
+            _algorithm.Transactions.SetOrderProcessor(_transactionHandler);
+
+            // submit a limit order and drain the queue like the engine would, then move it to submitted
+            var orderTicket = _transactionHandler.Process(orderRequest);
+            _transactionHandler.PumpPendingRequests();
+            Assert.IsTrue(orderRequest.Response.IsSuccess);
+            var submitted = new OrderEvent(_algorithm.Transactions.GetOpenOrders().Single(), _algorithm.UtcTime, OrderFee.Zero)
+            { Status = OrderStatus.Submitted };
+            brokerage.PublishOrderEvent(submitted);
+            Assert.AreEqual(OrderStatus.Submitted, orderTicket.Status);
+
+            // queue a cancel without draining, like one issued in OnEndOfAlgorithm after the last pump
+            var cancelResponse = orderTicket.Cancel();
+            Assert.IsFalse(cancelResponse.IsError);
+            var cancelRequest = orderTicket.CancelRequest;
+            Assert.AreEqual(OrderRequestStatus.Processing, cancelRequest.Status);
+            var orderEventsCount = _algorithm.OrderEvents.Count;
+
+            // at exit the queued cancel is invalidated instead of silently discarded or sent to the brokerage
+            _transactionHandler.Exit();
+            Assert.IsTrue(cancelRequest.Response.IsError);
+            Assert.AreEqual(OrderResponseErrorCode.ProcessingError, cancelRequest.Response.ErrorCode);
+            StringAssert.Contains("never sent to the brokerage", cancelRequest.Response.ErrorMessage);
+            // the cancel never reached the brokerage and only a submit drop emits an order event
+            Assert.AreNotEqual(OrderStatus.Canceled, orderTicket.Status);
+            Assert.AreEqual(orderEventsCount, _algorithm.OrderEvents.Count);
         }
 
         [Test]
@@ -3122,6 +3162,12 @@ namespace QuantConnect.Tests.Engine.BrokerageTransactionHandlerTests
 
             // no worker thread: these tests drive HandleOrderRequest manually
             protected override bool SynchronousProcessing => true;
+
+            // drains the queued requests like the engine would, so tests can leave the queue truly empty or not
+            public void PumpPendingRequests()
+            {
+                ProcessPendingRequests();
+            }
 
             public override void Initialize(IAlgorithm algorithm, IBrokerage brokerage, IResultHandler resultHandler)
             {
