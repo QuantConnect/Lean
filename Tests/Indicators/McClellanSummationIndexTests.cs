@@ -57,11 +57,12 @@ namespace QuantConnect.Tests.Indicators
                 indicator.Update(new TradeBar() { Symbol = Symbols.AAPL, Close = i, Volume = 1, Time = reference.AddMinutes(i) });
                 indicator.Update(new TradeBar() { Symbol = Symbols.MSFT, Close = i, Volume = 1, Time = reference.AddMinutes(i) });
                 indicator.Update(new TradeBar() { Symbol = Symbols.GOOG, Close = i, Volume = 1, Time = reference.AddMinutes(i) });
+
+                Assert.AreEqual(i == indicator.WarmUpPeriod, indicator.IsReady);
             }
 
             Assert.AreEqual(60m, indicator.Current.Value);
             Assert.AreEqual(indicator.WarmUpPeriod * 3, indicator.Samples);
-            Assert.IsTrue(indicator.IsReady);
         }
 
         [Test]

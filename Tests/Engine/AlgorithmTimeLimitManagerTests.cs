@@ -16,11 +16,14 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using NUnit.Framework;
 using QuantConnect.Algorithm.CSharp;
 using QuantConnect.Configuration;
 using QuantConnect.Lean.Engine;
+using QuantConnect.Logging;
 using QuantConnect.Util.RateLimit;
 
 namespace QuantConnect.Tests.Engine
@@ -55,6 +58,82 @@ namespace QuantConnect.Tests.Engine
                 parameter.Statistics,
                 parameter.Language,
                 parameter.ExpectedFinalStatus);
+        }
+
+        [Test]
+        public void WarnsOnceOnLongTimeStepWithoutFailing()
+        {
+            var previousLogHandler = Log.LogHandler;
+            try
+            {
+                var logHandler = new QueueLogHandler();
+                Log.LogHandler = logHandler;
+
+                var userWarnings = new List<string>();
+                var timeManager = new AlgorithmTimeLimitManager(TokenBucket.Null, TimeSpan.FromMinutes(20),
+                    timeLoopWarningThreshold: TimeSpan.FromMilliseconds(5));
+                timeManager.UserWarningHandler = userWarnings.Add;
+                timeManager.StartNewTimeStep();
+                // the first call initializes the current time step start time
+                Assert.IsTrue(timeManager.IsWithinLimit().IsWithinCustomLimits);
+                Thread.Sleep(50);
+
+                // the time step is over the warning threshold: it warns but does not fail
+                var result = timeManager.IsWithinLimit();
+                Assert.IsTrue(result.IsWithinCustomLimits, result.ErrorMessage);
+                Assert.AreEqual(1, WarningCount(logHandler));
+                Assert.AreEqual(1, userWarnings.Count(x => x.Contains("time step has been executing")));
+
+                // only warns once per time step
+                Thread.Sleep(20);
+                Assert.IsTrue(timeManager.IsWithinLimit().IsWithinCustomLimits);
+                Assert.AreEqual(1, WarningCount(logHandler));
+                Assert.AreEqual(1, userWarnings.Count);
+
+                // a new slow time step warns again
+                timeManager.StartNewTimeStep();
+                Assert.IsTrue(timeManager.IsWithinLimit().IsWithinCustomLimits);
+                Thread.Sleep(50);
+                Assert.IsTrue(timeManager.IsWithinLimit().IsWithinCustomLimits);
+                Assert.AreEqual(2, WarningCount(logHandler));
+                Assert.AreEqual(2, userWarnings.Count);
+            }
+            finally
+            {
+                Log.LogHandler = previousLogHandler;
+            }
+        }
+
+        [Test]
+        public void DoesNotWarnOnFastTimeStep()
+        {
+            var previousLogHandler = Log.LogHandler;
+            try
+            {
+                var logHandler = new QueueLogHandler();
+                Log.LogHandler = logHandler;
+
+                // default three minute warning threshold
+                var userWarnings = new List<string>();
+                var timeManager = new AlgorithmTimeLimitManager(TokenBucket.Null, TimeSpan.FromMinutes(20));
+                timeManager.UserWarningHandler = userWarnings.Add;
+                timeManager.StartNewTimeStep();
+                Assert.IsTrue(timeManager.IsWithinLimit().IsWithinCustomLimits);
+                Thread.Sleep(20);
+                Assert.IsTrue(timeManager.IsWithinLimit().IsWithinCustomLimits);
+
+                Assert.AreEqual(0, WarningCount(logHandler));
+                Assert.AreEqual(0, userWarnings.Count);
+            }
+            finally
+            {
+                Log.LogHandler = previousLogHandler;
+            }
+        }
+
+        private static int WarningCount(QueueLogHandler logHandler)
+        {
+            return logHandler.Logs.Count(entry => entry.Message.Contains("time step has been executing"));
         }
 
         [Test]

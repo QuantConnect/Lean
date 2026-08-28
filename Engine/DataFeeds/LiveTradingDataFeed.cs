@@ -356,7 +356,9 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     _algorithm.ObjectStore,
                     // we adjust time to the previous tradable date
                     time => Time.GetStartTimeForTradeBars(request.Security.Exchange.Hours, time, Time.OneDay, 1, false, config.DataTimeZone, _algorithm.Settings.DailyPreciseEndTime),
-                    TimeSpan.FromMinutes(10)
+                    TimeSpan.FromMinutes(10),
+                    // when the expected universe file is not available yet, fall back to the backup universe file as a last resort
+                    fallBackToBackupUniverseFiles: true
                 );
                 var enumeratorStack = factory.CreateEnumerator(request, _dataProvider);
 
@@ -455,6 +457,10 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 
                     // don't let future data past. We let null pass because that's letting the next enumerator know we've ended because we always return true in live
                     synchronizedWarmupEnumerator = new FilterEnumerator<BaseData>(synchronizedWarmupEnumerator, data => data == null || data.EndTime <= warmupRequest.EndTimeLocal);
+
+                    // schedule the warmup enumeration on a worker: it performs blocking IO, history requests, disk and custom data sources,
+                    // this allows the subscriptions to warm up concurrently instead of sequentially driven by the synchronizer thread
+                    synchronizedWarmupEnumerator = SubscriptionUtils.ScheduleEnumerator(warmupRequest.Configuration.Symbol, synchronizedWarmupEnumerator);
 
                     // the order here is important, concat enumerator will keep the last enumerator given and dispose of the rest
                     liveEnumerator = new ConcatEnumerator(true, synchronizedWarmupEnumerator, liveEnumerator);

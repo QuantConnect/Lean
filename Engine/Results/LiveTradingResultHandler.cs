@@ -809,11 +809,7 @@ namespace QuantConnect.Lean.Engine.Results
             Log.Debug("LiveTradingResultHandler.RuntimeStatistic(): Begin setting statistic");
             lock (RuntimeStatistics)
             {
-                if (!RuntimeStatistics.ContainsKey(key))
-                {
-                    RuntimeStatistics.Add(key, value);
-                }
-                RuntimeStatistics[key] = value;
+                TrySetRuntimeStatistic(key, value);
             }
             Log.Debug("LiveTradingResultHandler.RuntimeStatistic(): End setting statistic");
         }
@@ -828,6 +824,7 @@ namespace QuantConnect.Lean.Engine.Results
             {
                 var endTime = DateTime.UtcNow;
                 var endState = GetAlgorithmState(endTime);
+                var serverStatistics = GetServerStatistics(endTime);
                 LiveResultPacket result;
                 // could happen if algorithm failed to init
                 if (Algorithm != null)
@@ -848,17 +845,17 @@ namespace QuantConnect.Lean.Engine.Results
                     var statisticsResults = GenerateStatisticsResults(charts, profitLoss);
                     var runtime = GetAlgorithmRuntimeStatistics(statisticsResults.Summary);
 
-                    StoreStatusFile(runtime, holdings, charts, endState, profitLoss, statistics: statisticsResults);
+                    StoreStatusFile(runtime, holdings, charts, endState, profitLoss, serverStatistics, statisticsResults);
 
                     //Create a packet:
                     result = new LiveResultPacket(_job,
                         new LiveResult(new LiveResultParameters(charts, orders, profitLoss, new Dictionary<string, Holding>(),
-                            Algorithm.Portfolio.CashBook, statisticsResults.Summary, runtime, GetOrderEventsToStore(),
+                            Algorithm.Portfolio.CashBook, statisticsResults.Summary, runtime, GetOrderEventsToStore(), serverStatistics: serverStatistics,
                             algorithmConfiguration: AlgorithmConfiguration.Create(Algorithm, null), state: endState, totalPerformance: statisticsResults.TotalPerformance)));
                 }
                 else
                 {
-                    StoreStatusFile(new(), new(), new(), endState, new());
+                    StoreStatusFile(new(), new(), new(), endState, new(), serverStatistics);
 
                     result = LiveResultPacket.CreateEmpty(_job);
                     result.Results.State = endState;

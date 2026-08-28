@@ -91,6 +91,11 @@ namespace QuantConnect.Indicators.CandlestickPatterns
         }
 
         /// <summary>
+        /// Required period, in data points, for the indicator to be ready and fully initialized.
+        /// </summary>
+        public override int WarmUpPeriod => Period + 1;
+
+        /// <summary>
         /// Computes the next value of this indicator from the given state
         /// </summary>
         /// <param name="window">The window of data held in this indicator</param>

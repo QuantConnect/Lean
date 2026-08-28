@@ -950,6 +950,127 @@ namespace QuantConnect.Lean.Engine.Results
             ISeriesPoint value,
             string unit = "$");
 
+        private bool _runtimeStatisticRejectedWarningSent;
+
+        /// <summary>
+        /// Maximum number of runtime statistics
+        /// </summary>
+        public const int MaxRuntimeStatisticsCount = 50;
+
+        /// <summary>
+        /// Maximum length of a runtime statistic key and value
+        /// </summary>
+        public const int MaxRuntimeStatisticLength = 200;
+
+        /// <summary>
+        /// Stores a runtime statistic, enforcing the configured count, length and format limits.
+        /// Callers must hold the <see cref="RuntimeStatistics"/> lock.
+        /// </summary>
+        /// <param name="key">Runtime headline statistic name</param>
+        /// <param name="value">Runtime headline statistic value</param>
+        /// <returns>True if the statistic was stored</returns>
+        protected bool TrySetRuntimeStatistic(string key, string value)
+        {
+            if (string.IsNullOrEmpty(key))
+            {
+                return false;
+            }
+            value ??= string.Empty;
+
+            if (key.Length > MaxRuntimeStatisticLength)
+            {
+                key = key.Substring(0, MaxRuntimeStatisticLength);
+            }
+            if (value.Length > MaxRuntimeStatisticLength)
+            {
+                value = value.Substring(0, MaxRuntimeStatisticLength);
+            }
+
+            if (IsEncodedRuntimeStatistic(key) || IsEncodedRuntimeStatistic(value))
+            {
+                SendRuntimeStatisticRejectedWarning($"Runtime statistic '{key}' was ignored: encoded values are not supported, statistics must be human readable text.");
+                return false;
+            }
+
+            if (!RuntimeStatistics.ContainsKey(key) && RuntimeStatistics.Count >= MaxRuntimeStatisticsCount)
+            {
+                SendRuntimeStatisticRejectedWarning($"Runtime statistic '{key}' was ignored: exceeded maximum runtime statistics count, new statistics will be ignored. Limit is currently set at {MaxRuntimeStatisticsCount}.");
+                return false;
+            }
+
+            RuntimeStatistics[key] = value;
+            return true;
+        }
+
+        /// <summary>
+        /// Sends a one time debug message to the algorithm when a runtime statistic is rejected
+        /// </summary>
+        private void SendRuntimeStatisticRejectedWarning(string message)
+        {
+            if (_runtimeStatisticRejectedWarningSent)
+            {
+                return;
+            }
+            _runtimeStatisticRejectedWarningSent = true;
+
+            if (this is IResultHandler resultHandler)
+            {
+                resultHandler.DebugMessage(message);
+            }
+            else
+            {
+                Log.Trace($"BaseResultsHandler.TrySetRuntimeStatistic(): {message}");
+            }
+        }
+
+        /// <summary>
+        /// Determines whether the given text looks like an encoded blob (base64 or hexadecimal) rather than a human readable statistic
+        /// </summary>
+        private static bool IsEncodedRuntimeStatistic(string text)
+        {
+            const int minimumLength = 16;
+            if (text.Length < minimumLength)
+            {
+                return false;
+            }
+
+            var isHex = true;
+            var hasUpper = false;
+            var hasLower = false;
+            var hasDigit = false;
+            var hasLetter = false;
+            foreach (var c in text)
+            {
+                if (char.IsUpper(c))
+                {
+                    hasUpper = true;
+                    hasLetter = true;
+                }
+                else if (char.IsLower(c))
+                {
+                    hasLower = true;
+                    hasLetter = true;
+                }
+                else if (char.IsDigit(c))
+                {
+                    hasDigit = true;
+                }
+                else if (c != '+' && c != '/' && c != '=' && c != '-' && c != '_')
+                {
+                    // whitespace, punctuation, currency symbols, etc. => human readable
+                    return false;
+                }
+
+                if (isHex && !Uri.IsHexDigit(c))
+                {
+                    isHex = false;
+                }
+            }
+
+            // a plain number is fine, hex needs at least one letter; base64 mixes cases and digits
+            return (isHex && hasLetter) || (hasUpper && hasLower && hasDigit);
+        }
+
         /// <summary>
         /// Gets the algorithm runtime statistics
         /// </summary>

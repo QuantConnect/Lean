@@ -159,7 +159,7 @@ namespace QuantConnect.Tests.Brokerages
             foreach (var orderEvent in orderEvents)
             {
                 var order = _orderProvider.GetOrderById(orderEvent.OrderId);
-                order.Status = orderEvent.Status;
+                OrderProvider.HandleOrderEvent(orderEvent);
 
                 Log.Trace("");
                 Log.Trace($"ORDER STATUS CHANGED: {orderEvent}, Type: {order.Type}");
