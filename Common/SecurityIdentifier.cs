@@ -336,7 +336,7 @@ namespace QuantConnect
             {
                 throw new ArgumentException(Messages.SecurityIdentifier.PropertiesDoNotMatchAnySecurityType, nameof(properties));
             }
-            _hashCode = Math.Abs(unchecked (symbol.GetHashCode() * 397) ^ properties.GetHashCode());
+            _hashCode = unchecked (symbol.GetHashCode() * 397) ^ properties.GetHashCode();
             _hashCodeSet = true;
         }
 
@@ -1060,7 +1060,7 @@ namespace QuantConnect
         {
             if (!_hashCodeSet)
             {
-                _hashCode = Math.Abs(unchecked(_symbol.GetHashCode() * 397) ^ _properties.GetHashCode());
+                _hashCode = unchecked(_symbol.GetHashCode() * 397) ^ _properties.GetHashCode();
                 _hashCodeSet = true;
             }
             return _hashCode;
