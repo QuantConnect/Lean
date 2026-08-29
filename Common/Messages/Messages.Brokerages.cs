@@ -459,6 +459,18 @@ namespace QuantConnect
             {
                 return Invariant($@"The {brokerageModel.GetType().Name} does not support {order.Type} combining future options and futures legs.");
             }
+
+            /// <summary>
+            /// Returns a string message saying the given brokerage model does not support cryptocurrencies,
+            /// which Interactive Brokers does not route over FIX
+            /// </summary>
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public static string UnsupportedCryptoSecurityType(Brokerages.InteractiveBrokersFixModel brokerageModel,
+                Securities.Security security)
+            {
+                return Invariant($@"The {brokerageModel.GetType().Name} does not support {SecurityType.Crypto
+                    }, Interactive Brokers does not route {security.Symbol.Value} over FIX. Use the Interactive Brokers brokerage instead.");
+            }
         }
 
         /// <summary>
@@ -485,6 +497,71 @@ namespace QuantConnect
             public static string UnsupportedFourLegComboLegLimitOrders(Brokerages.InteractiveBrokersBrokerageModel brokerageModel)
             {
                 return Invariant($"The {brokerageModel.GetType().Name} does not support four-leg ComboLegLimit orders. Use ComboLimit orders for four-leg combinations or more.");
+            }
+
+            /// <summary>
+            /// Returns a string message saying the given brokerage model does not support the given order type for cryptocurrencies
+            /// </summary>
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public static string UnsupportedCryptoOrderType(Brokerages.InteractiveBrokersBrokerageModel brokerageModel,
+                Orders.Order order, IEnumerable<OrderType> supportedOrderTypes)
+            {
+                return Invariant($@"The {brokerageModel.GetType().Name} does not support {order.Type
+                    } orders for {SecurityType.Crypto}. Only {string.Join(", ", supportedOrderTypes)} orders are supported.");
+            }
+
+            /// <summary>
+            /// Returns a string message saying the given brokerage model does not support the given cryptocurrency pair
+            /// </summary>
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public static string UnsupportedCryptoPair(Brokerages.InteractiveBrokersBrokerageModel brokerageModel,
+                Securities.Security security)
+            {
+                return Invariant($@"The {brokerageModel.GetType().Name} does not support {security.Symbol.Value
+                    }, Interactive Brokers does not list it. The pairs it lists are the {SecurityType.Crypto
+                    } entries of the {QuantConnect.Market.InteractiveBrokers} market in the symbol properties database.");
+            }
+
+            /// <summary>
+            /// Returns a string message saying the given brokerage model does not support short selling cryptocurrencies
+            /// </summary>
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public static string UnsupportedCryptoShortSale(Brokerages.InteractiveBrokersBrokerageModel brokerageModel,
+                Securities.Security security)
+            {
+                return Invariant($@"The {brokerageModel.GetType().Name} does not support short sales of {
+                    SecurityType.Crypto}, {security.Symbol.Value} holdings are {security.Holdings.Quantity}.");
+            }
+
+            /// <summary>
+            /// Returns a string message saying the given cryptocurrency limit order is priced too far from the market
+            /// </summary>
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public static string InvalidCryptoLimitPrice(Orders.LimitOrder order, decimal reference, decimal tolerance)
+            {
+                return Invariant($@"Interactive Brokers cancels {SecurityType.Crypto} buy limit orders priced further than {
+                    tolerance} from the best ask: the limit price of {order.LimitPrice} for {order.Symbol.Value
+                    } is away from {reference}.");
+            }
+
+            /// <summary>
+            /// Returns a string message saying the given cryptocurrency buy market order cannot be sized without a price
+            /// </summary>
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public static string CryptoBuyMarketOrderWithoutPrice(Securities.Security security)
+            {
+                return Invariant($@"Interactive Brokers sizes {SecurityType.Crypto} buy market orders by the cash amount to spend, so {
+                    security.Symbol.Value} needs a known price to convert the quantity. Use a limit order or wait for data.");
+            }
+
+            /// <summary>
+            /// Returns a string message saying Interactive Brokers is not routing cryptocurrency orders at this time
+            /// </summary>
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public static string CryptoVenueClosed(Securities.Security security, DateTime nextOpen)
+            {
+                return Invariant($@"Interactive Brokers routes {SecurityType.Crypto} orders from Sunday 03:00 to Friday 16:00 New York time only, a {
+                    security.Symbol.Value} order placed now would be held until it reopens on {nextOpen:yyyy-MM-dd HH:mm} New York time.");
             }
 
             /// <summary>
