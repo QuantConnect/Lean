@@ -196,6 +196,200 @@ namespace QuantConnect.Tests.Common.Brokerages
             Assert.IsTrue(result);
         }
 
+        // where the backtest data lives
+        [Test]
+        public void CryptoDefaultsToTheCoinbaseMarket()
+        {
+            Assert.AreEqual(Market.Coinbase, InteractiveBrokersBrokerageModel.DefaultMarketMap[SecurityType.Crypto]);
+
+            var security = GetInteractiveBrokersCrypto();
+            Assert.AreEqual(Market.Coinbase, security.Symbol.ID.Market);
+        }
+
+        // the interactivebrokers entries are the registry of what IB lists
+        [Test]
+        public void KeepsTheBrokerageTickSizeOnTheInteractiveBrokersEntry()
+        {
+            var symbol = Symbol.Create("BTCUSD", SecurityType.Crypto, Market.InteractiveBrokers);
+            var properties = SymbolPropertiesDatabase.FromDataFolder()
+                .GetSymbolProperties(symbol.ID.Market, symbol, symbol.SecurityType, Currencies.USD);
+
+            // measured from IB's contract details, the crypto market says 0.01
+            Assert.AreEqual(0.25m, properties.MinimumPriceVariation);
+        }
+
+        // IB only accepts market and limit orders for cryptocurrencies
+        [TestCase(OrderType.Market, true)]
+        [TestCase(OrderType.Limit, true)]
+        [TestCase(OrderType.StopMarket, false)]
+        [TestCase(OrderType.StopLimit, false)]
+        [TestCase(OrderType.TrailingStop, false)]
+        [TestCase(OrderType.LimitIfTouched, false)]
+        public void CanSubmitOnlyMarketAndLimitCryptoOrders(OrderType orderType, bool shouldSubmit)
+        {
+            var security = GetInteractiveBrokersCrypto();
+            var now = new DateTime(2024, 1, 3);
+            // a buy market order needs a price, a buy limit has to sit at the market
+            security.SetMarketPrice(new Tick(now, security.Symbol, 100m, 100m));
+
+            Order order = orderType switch
+            {
+                OrderType.Market => new MarketOrder(security.Symbol, 1, now),
+                OrderType.Limit => new LimitOrder(security.Symbol, 1, 100m, now),
+                OrderType.StopMarket => new StopMarketOrder(security.Symbol, 1, 100m, now),
+                OrderType.StopLimit => new StopLimitOrder(security.Symbol, 1, 100m, 100m, now),
+                OrderType.TrailingStop => new TrailingStopOrder(security.Symbol, 1, 100m, 1m, false, now),
+                OrderType.LimitIfTouched => new LimitIfTouchedOrder(security.Symbol, 1, 100m, 100m, now),
+                _ => throw new ArgumentOutOfRangeException(nameof(orderType), orderType, "Unexpected crypto order type")
+            };
+
+            var canSubmit = _interactiveBrokersBrokerageModel.CanSubmitOrder(security, order, out var message);
+            Assert.AreEqual(shouldSubmit, canSubmit);
+
+            if (shouldSubmit)
+            {
+                Assert.IsNull(message);
+            }
+            else
+            {
+                Assert.AreEqual(BrokerageMessageType.Warning, message.Type);
+                Assert.AreEqual("NotSupported", message.Code);
+                StringAssert.Contains($"does not support {orderType} orders for {SecurityType.Crypto}", message.Message);
+            }
+        }
+
+        [TestCase("BTCUSD")]
+        [TestCase("ETHUSD")]
+        [TestCase("SOLUSD")]
+        public void CreatesListedCryptoPairs(string ticker)
+        {
+            var security = GetInteractiveBrokersCrypto(ticker);
+
+            Assert.AreEqual(Market.Coinbase, security.Symbol.ID.Market);
+            Assert.AreEqual(Currencies.USD, security.QuoteCurrency.Symbol);
+        }
+
+        // creatable, so it can be backtested, rejected at order time
+        [TestCase("BTCEUR")]     // IB quotes crypto against US dollars only
+        [TestCase("ETHBTC")]     // no crypto quoted pairs either
+        [TestCase("ZRXUSD")]     // a coinbase pair IB does not list
+        public void CannotSubmitOrdersForUnlistedCryptoPairs(string ticker)
+        {
+            var security = GetInteractiveBrokersCrypto(ticker);
+            var order = new MarketOrder(security.Symbol, 1, new DateTime(2024, 1, 3));
+
+            Assert.IsFalse(_interactiveBrokersBrokerageModel.CanSubmitOrder(security, order, out var message));
+            Assert.AreEqual("NotSupported", message.Code);
+            StringAssert.Contains($"does not support {ticker}", message.Message);
+        }
+
+        [TestCase(2024, 1, 4, 15, true)]    // Thursday
+        [TestCase(2024, 1, 5, 20, true)]    // Friday 15:00 New York
+        [TestCase(2024, 1, 5, 22, false)]   // Friday 17:00 New York
+        [TestCase(2024, 1, 6, 15, false)]   // Saturday
+        [TestCase(2024, 1, 7, 7, false)]    // Sunday 02:00 New York
+        [TestCase(2024, 1, 7, 9, true)]     // Sunday 04:00 New York
+        public void CanSubmitCryptoOrdersOnlyWhileTheVenueIsOpen(int year, int month, int day, int utcHour, bool shouldSubmit)
+        {
+            var algorithm = new AlgorithmStub();
+            algorithm.SetBrokerageModel(BrokerageName.InteractiveBrokersBrokerage);
+            var security = algorithm.AddCrypto("BTCUSD");
+            algorithm.SetDateTime(new DateTime(year, month, day, utcHour, 0, 0, DateTimeKind.Utc));
+            security.SetMarketPrice(new Tick(algorithm.UtcTime, security.Symbol, 100m, 100m));
+
+            var order = new LimitOrder(security.Symbol, 1, 100m, algorithm.UtcTime);
+
+            var canSubmit = _interactiveBrokersBrokerageModel.CanSubmitOrder(security, order, out var message);
+            Assert.AreEqual(shouldSubmit, canSubmit, message?.Message);
+
+            if (!shouldSubmit)
+            {
+                Assert.AreEqual("NotSupported", message.Code);
+                StringAssert.Contains("Sunday 03:00 to Friday 16:00", message.Message);
+            }
+        }
+
+        [Test]
+        public void CannotSubmitCryptoBuyMarketOrdersWithoutAPrice()
+        {
+            var security = GetInteractiveBrokersCrypto();
+            var order = new MarketOrder(security.Symbol, 1, new DateTime(2024, 1, 3));
+
+            Assert.IsFalse(_interactiveBrokersBrokerageModel.CanSubmitOrder(security, order, out var message));
+            Assert.AreEqual("NotSupported", message.Code);
+            StringAssert.Contains("needs a known price", message.Message);
+
+            security.SetMarketPrice(new Tick(new DateTime(2024, 1, 3), security.Symbol, 100m, 100m));
+            Assert.IsTrue(_interactiveBrokersBrokerageModel.CanSubmitOrder(security, order, out message));
+            Assert.IsNull(message);
+        }
+
+        [TestCase(1, true)]
+        [TestCase(0.00000001, true)]
+        [TestCase(0.000000001, false)] // below the pair's minimum order size
+        public void CanSubmitCryptoOrdersAboveTheMinimumOrderSize(decimal quantity, bool shouldSubmit)
+        {
+            var security = GetInteractiveBrokersCrypto();
+            Assert.AreEqual(0.00000001m, security.SymbolProperties.MinimumOrderSize,
+                "unexpected database value, the test needs updating");
+
+            var order = new LimitOrder(security.Symbol, quantity, 100m, new DateTime(2024, 1, 3));
+
+            var canSubmit = _interactiveBrokersBrokerageModel.CanSubmitOrder(security, order, out var message);
+            Assert.AreEqual(shouldSubmit, canSubmit);
+
+            if (shouldSubmit)
+            {
+                Assert.IsNull(message);
+            }
+            else
+            {
+                Assert.AreEqual(BrokerageMessageType.Warning, message.Type);
+                Assert.AreEqual("NotSupported", message.Code);
+            }
+        }
+
+        // IB cancels a crypto BUY limit priced further than 10 dollars or 0.25% from the best ask.
+        // Sells are not restricted, a sell limit far above the market rests as usual.
+        [TestCase(OrderDirection.Buy, 100000, true)]   // at the ask
+        [TestCase(OrderDirection.Buy, 99991, true)]    // within the 250 dollar band
+        [TestCase(OrderDirection.Buy, 20000, false)]   // resting far below
+        [TestCase(OrderDirection.Sell, 99800, true)]
+        [TestCase(OrderDirection.Sell, 500000, true)]  // resting far above, accepted by IB
+        public void CanSubmitCryptoLimitOrdersOnlyAtTheMarket(OrderDirection direction, decimal limitPrice, bool shouldSubmit)
+        {
+            var security = GetInteractiveBrokersCrypto();
+            security.SetMarketPrice(new Tick(new DateTime(2024, 1, 3), security.Symbol, 99900m, 100000m));
+            // sells would otherwise be rejected as short sales
+            security.Holdings.SetHoldings(99900m, 10m);
+
+            var quantity = direction == OrderDirection.Buy ? 1m : -1m;
+            var order = new LimitOrder(security.Symbol, quantity, limitPrice, new DateTime(2024, 1, 3));
+
+            var canSubmit = _interactiveBrokersBrokerageModel.CanSubmitOrder(security, order, out var message);
+            Assert.AreEqual(shouldSubmit, canSubmit, message?.Message);
+
+            if (!shouldSubmit)
+            {
+                StringAssert.Contains("further than", message.Message);
+            }
+        }
+
+        [TestCase(AccountType.Cash)]
+        [TestCase(AccountType.Margin)]
+        public void GetsUnleveragedCrypto(AccountType accountType)
+        {
+            var brokerageModel = new InteractiveBrokersBrokerageModel(accountType);
+            Assert.AreEqual(1m, brokerageModel.GetLeverage(GetInteractiveBrokersCrypto()));
+        }
+
+        private static Security GetInteractiveBrokersCrypto(string ticker = "BTCUSD")
+        {
+            var algorithm = new AlgorithmStub();
+            algorithm.SetBrokerageModel(BrokerageName.InteractiveBrokersBrokerage);
+            return algorithm.AddCrypto(ticker);
+        }
+
         [TestCase(AccountType.Cash, 1)]
         [TestCase(AccountType.Margin, 10)]
         public void GetsCorrectLeverageForCfds(AccountType accounType, decimal expectedLeverage)
