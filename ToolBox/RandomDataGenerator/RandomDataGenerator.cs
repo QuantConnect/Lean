@@ -279,6 +279,15 @@ namespace QuantConnect.ToolBox.RandomDataGenerator
                         currentCount++;
                     }
                 }
+
+                // Generate daily option universe CSVs if generating options data
+                if (_settings.SecurityType == SecurityType.Option)
+                {
+                    var optionTickHistories = tickHistories
+                        .Where(kvp => kvp.Key.SecurityType == SecurityType.Option)
+                        .ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
+                    OptionUniverseWriter.WriteUniverseFiles(symbolRef, optionTickHistories);
+                }
             }
 
             Log.Trace("RandomDataGenerator.Run(): Random data generation has completed.");
