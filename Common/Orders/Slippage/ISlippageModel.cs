@@ -26,5 +26,18 @@ namespace QuantConnect.Orders.Slippage
         /// Slippage Model. Return a decimal cash slippage approximation on the order.
         /// </summary>
         decimal GetSlippageApproximation(Security asset, Order order);
+
+        /// <summary>
+        /// Slippage Model. Return a decimal cash slippage approximation on the order
+        /// using the provided reference price.
+        /// </summary>
+        /// <param name="asset">The security matching the order</param>
+        /// <param name="order">The order to compute slippage for</param>
+        /// <param name="referencePrice">The price used as the reference for the slippage calculation</param>
+        /// <returns>The slippage approximation</returns>
+        decimal GetSlippageApproximation(Security asset, Order order, decimal referencePrice)
+        {
+            return GetSlippageApproximation(asset, order);
+        }
     }
 }

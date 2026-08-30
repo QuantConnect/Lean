@@ -161,5 +161,22 @@ namespace QuantConnect.Tests.Common.Orders.Slippage
             var actual = model.GetSlippageApproximation(_forex, _forexBuyOrder);
             Assert.AreEqual(expected, actual);
         }
+        [Test]
+        public void SlippageModelReferencePriceOverloadIsBackwardsCompatible()
+        {
+            ISlippageModel model = new LegacySlippageModel();
+
+            var actual = model.GetSlippageApproximation(_equity, _equityBuyOrder, 123m);
+
+            Assert.AreEqual(42m, actual);
+        }
+
+        private sealed class LegacySlippageModel : ISlippageModel
+        {
+            public decimal GetSlippageApproximation(Security asset, Order order)
+            {
+                return 42m;
+            }
+        }
     }
 }
