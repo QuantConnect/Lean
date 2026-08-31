@@ -1,4 +1,4 @@
-/*
+﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -27,7 +27,7 @@ namespace QuantConnect.Tests.Common.Brokerages
     {
         private readonly ClearStreetBrokerageModel _brokerageModel = new();
 
-        // Equity, Option and IndexOption accept every order type Clear Street knows.
+        // Equity takes every order type Clear Street knows, an option takes only market and limit.
         [TestCase(SecurityType.Equity, OrderType.Market)]
         [TestCase(SecurityType.Equity, OrderType.Limit)]
         [TestCase(SecurityType.Equity, OrderType.StopMarket)]
@@ -35,14 +35,8 @@ namespace QuantConnect.Tests.Common.Brokerages
         [TestCase(SecurityType.Equity, OrderType.TrailingStop)]
         [TestCase(SecurityType.Option, OrderType.Market)]
         [TestCase(SecurityType.Option, OrderType.Limit)]
-        [TestCase(SecurityType.Option, OrderType.StopMarket)]
-        [TestCase(SecurityType.Option, OrderType.StopLimit)]
-        [TestCase(SecurityType.Option, OrderType.TrailingStop)]
         [TestCase(SecurityType.IndexOption, OrderType.Market)]
         [TestCase(SecurityType.IndexOption, OrderType.Limit)]
-        [TestCase(SecurityType.IndexOption, OrderType.StopMarket)]
-        [TestCase(SecurityType.IndexOption, OrderType.StopLimit)]
-        [TestCase(SecurityType.IndexOption, OrderType.TrailingStop)]
         public void CanSubmitOrderValidSecurityAndOrderTypeReturnsTrue(SecurityType securityType, OrderType orderType)
         {
             var security = GetSecurityForType(securityType);
@@ -81,6 +75,14 @@ namespace QuantConnect.Tests.Common.Brokerages
         [TestCase(SecurityType.Option, OrderType.ComboLimit)]
         [TestCase(SecurityType.IndexOption, OrderType.MarketOnOpen)]
         [TestCase(SecurityType.IndexOption, OrderType.ComboMarket)]
+        // Clear Street answers "order_type Stop is not allowed for security_type Option" on a stop
+        // order of an option, so the model has to stop them before they are sent.
+        [TestCase(SecurityType.Option, OrderType.StopMarket)]
+        [TestCase(SecurityType.Option, OrderType.StopLimit)]
+        [TestCase(SecurityType.Option, OrderType.TrailingStop)]
+        [TestCase(SecurityType.IndexOption, OrderType.StopMarket)]
+        [TestCase(SecurityType.IndexOption, OrderType.StopLimit)]
+        [TestCase(SecurityType.IndexOption, OrderType.TrailingStop)]
         public void CanSubmitOrderUnsupportedOrderTypeReturnsFalse(SecurityType securityType, OrderType orderType)
         {
             var security = GetSecurityForType(securityType);

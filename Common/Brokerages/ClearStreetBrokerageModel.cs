@@ -1,4 +1,4 @@
-/*
+﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -50,6 +50,17 @@ namespace QuantConnect.Brokerages
             });
 
         /// <summary>
+        /// The order types Clear Street accepts on an option. A stop order of any kind is rejected
+        /// with "order_type Stop is not allowed for security_type Option".
+        /// </summary>
+        private readonly HashSet<OrderType> _supportOptionOrderTypes = new(
+            new[]
+            {
+                OrderType.Market,
+                OrderType.Limit
+            });
+
+        /// <summary>
         /// Constructor for Clear Street brokerage model
         /// </summary>
         /// <param name="accountType">Cash or Margin</param>
@@ -76,10 +87,12 @@ namespace QuantConnect.Brokerages
                 return false;
             }
 
-            if (!_supportOrderTypes.Contains(order.Type))
+            var supportOrderTypes = security.Type.IsOption() ? _supportOptionOrderTypes : _supportOrderTypes;
+
+            if (!supportOrderTypes.Contains(order.Type))
             {
                 message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
-                    Messages.DefaultBrokerageModel.UnsupportedOrderType(this, order, _supportOrderTypes));
+                    Messages.DefaultBrokerageModel.UnsupportedOrderType(this, order, supportOrderTypes));
                 return false;
             }
 
