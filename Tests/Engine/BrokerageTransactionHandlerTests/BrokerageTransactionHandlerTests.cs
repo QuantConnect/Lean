@@ -1441,8 +1441,8 @@ namespace QuantConnect.Tests.Engine.BrokerageTransactionHandlerTests
             _transactionHandler = new TestBrokerageTransactionHandler();
             using var brokerage = new NoSubmitTestBrokerage(_algorithm);
             _transactionHandler.Initialize(_algorithm, brokerage, new BacktestingResultHandler());
-            // any handler run exceeds a zero threshold
-            _transactionHandler.SlowOnOrderEventThreshold = TimeSpan.Zero;
+            // any handler run exceeds a negative threshold, even one under the millisecond tick resolution
+            _transactionHandler.SlowOnOrderEventThreshold = TimeSpan.FromTicks(-1);
 
             var security = _algorithm.Securities[_symbol];
             var price = 1.12m;

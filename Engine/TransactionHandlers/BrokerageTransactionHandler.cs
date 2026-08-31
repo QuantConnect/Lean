@@ -16,7 +16,6 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading;
@@ -1389,9 +1388,9 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
                         {
                             // a slow handler holds the order event lock, and for Python the GIL, stalling the
                             // other transaction threads and the order status processing.
-                            var start = Stopwatch.GetTimestamp();
+                            var start = Environment.TickCount64;
                             _algorithm.OnOrderEvent(orderEvent);
-                            var elapsed = Stopwatch.GetElapsedTime(start);
+                            var elapsed = TimeSpan.FromMilliseconds(Environment.TickCount64 - start);
                             if (elapsed > SlowOnOrderEventThreshold)
                             {
                                 _slowOnOrderEventWarningSent = true;
