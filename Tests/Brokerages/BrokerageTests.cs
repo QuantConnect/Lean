@@ -768,7 +768,7 @@ namespace QuantConnect.Tests.Brokerages
                 OrderProvider.Add(order);
                 if (!Brokerage.PlaceOrder(order) && !allowFailedSubmission)
                 {
-                    Assert.Fail("Brokerage failed to place the order: " + orders);
+                    Assert.Fail($"Brokerage failed to place the order: {order}");
                 }
             }
 
