@@ -183,6 +183,125 @@ namespace QuantConnect.Tests.Python
             }
         }
 
+        [Test]
+        public void FlattensBaseDataCollectionOfDynamicDataWithHeterogeneousProperties()
+        {
+            var converter = new PandasConverter();
+            var date = new DateTime(2020, 1, 2);
+
+            // Mimics universe data types like FactorsUniverse, where each constituent is a DynamicData
+            // instance carrying its own set of dynamic properties
+            var ibmData = new CustomData { Symbol = Symbols.IBM, Time = date, Value = 1m };
+            ibmData.SetProperty("factor_a", 10m);
+            ibmData.SetProperty("factor_b", 20m);
+
+            var spyData = new CustomData { Symbol = Symbols.SPY, Time = date, Value = 2m };
+            spyData.SetProperty("factor_a", 30m);
+
+            var unlinkedData = new CustomData
+            {
+                Symbol = Symbol.Create("UNLINKED", SecurityType.Base, Market.USA),
+                Time = date,
+                Value = 3m
+            };
+            unlinkedData.SetProperty("factor_c", 40m);
+
+            var data = new[]
+            {
+                new EnumerableData
+                {
+                    Data = new List<BaseData> { ibmData, spyData, unlinkedData },
+                    Symbol = Symbol.Create("universe", SecurityType.Base, Market.USA),
+                    Time = date
+                }
+            };
+
+            dynamic dataFrame = converter.GetDataFrame(data, flatten: true);
+
+            using (Py.GIL())
+            {
+                Assert.IsFalse(dataFrame.empty.AsManagedObject(typeof(bool)));
+
+                var indexNames = dataFrame.index.names.AsManagedObject(typeof(string[]));
+                CollectionAssert.AreEqual(new[] { "time", "symbol" }, indexNames);
+
+                var count = dataFrame.__len__().AsManagedObject(typeof(int));
+                Assert.AreEqual(3, count);
+
+                var columnNames = new List<string>();
+                foreach (var column in dataFrame.columns)
+                {
+                    columnNames.Add(column.__str__().AsManagedObject(typeof(string)));
+                }
+                CollectionAssert.IsSubsetOf(new[] { "value", "factor_a", "factor_b", "factor_c" }, columnNames);
+
+                var symbols = dataFrame.index.get_level_values(1);
+                Assert.Multiple(() =>
+                {
+                    for (var i = 0; i < 3; i++)
+                    {
+                        Assert.AreEqual(data[0].Data[i].Symbol, symbols[i].AsManagedObject(typeof(Symbol)));
+                    }
+
+                    CollectionAssert.AreEqual(new[] { 1d, 2d, 3d }, dataFrame["value"].AsManagedObject(typeof(double[])));
+
+                    // Constituents without a value for a given dynamic property get a missing value in that column
+                    var factorA = (double[])dataFrame["factor_a"].AsManagedObject(typeof(double[]));
+                    Assert.AreEqual(10d, factorA[0]);
+                    Assert.AreEqual(30d, factorA[1]);
+                    Assert.IsTrue(double.IsNaN(factorA[2]));
+
+                    var factorB = (double[])dataFrame["factor_b"].AsManagedObject(typeof(double[]));
+                    Assert.AreEqual(20d, factorB[0]);
+                    Assert.IsTrue(double.IsNaN(factorB[1]));
+                    Assert.IsTrue(double.IsNaN(factorB[2]));
+
+                    var factorC = (double[])dataFrame["factor_c"].AsManagedObject(typeof(double[]));
+                    Assert.IsTrue(double.IsNaN(factorC[0]));
+                    Assert.IsTrue(double.IsNaN(factorC[1]));
+                    Assert.AreEqual(40d, factorC[2]);
+                });
+            }
+        }
+
+        [Test]
+        public void HandlesDynamicDataWithPropertiesAddedInLaterDataPoints()
+        {
+            var converter = new PandasConverter();
+
+            // Mimics data types like Factors, where a dynamic property can be missing in the
+            // first data points and appear later in the series
+            var firstDataPoint = new CustomData { Symbol = Symbols.IBM, Time = new DateTime(2020, 1, 2), Value = 1m };
+            firstDataPoint.SetProperty("factor_a", 10m);
+
+            var secondDataPoint = new CustomData { Symbol = Symbols.IBM, Time = new DateTime(2020, 1, 3), Value = 2m };
+            secondDataPoint.SetProperty("factor_a", 20m);
+            secondDataPoint.SetProperty("factor_b", 30m);
+
+            var data = new List<CustomData> { firstDataPoint, secondDataPoint };
+
+            dynamic dataFrame = converter.GetDataFrame(data);
+
+            using (Py.GIL())
+            {
+                Assert.IsFalse(dataFrame.empty.AsManagedObject(typeof(bool)));
+
+                var count = dataFrame.__len__().AsManagedObject(typeof(int));
+                Assert.AreEqual(2, count);
+
+                Assert.Multiple(() =>
+                {
+                    CollectionAssert.AreEqual(new[] { 1d, 2d }, dataFrame["value"].AsManagedObject(typeof(double[])));
+                    CollectionAssert.AreEqual(new[] { 10d, 20d }, dataFrame["factor_a"].AsManagedObject(typeof(double[])));
+
+                    // The data point without a value for the property gets a missing value in that column
+                    var factorB = (double[])dataFrame["factor_b"].AsManagedObject(typeof(double[]));
+                    Assert.IsTrue(double.IsNaN(factorB[0]));
+                    Assert.AreEqual(30d, factorB[1]);
+                });
+            }
+        }
+
         private static void AssertFlattenBaseDataCollectionDataFrameTimes(EnumerableData[] data, dynamic dataFrame)
         {
             // For base data collections, the end time of each data point is added as a column

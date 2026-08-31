@@ -194,7 +194,13 @@ namespace QuantConnect.Python
                     // if this is a PythonData instance we add in '__typename' which we don't want into the data frame
                     && !x.Key.StartsWith("__", StringComparison.InvariantCulture)))
                 {
-                    AddToSeries(kvp.Key, endTime, kvp.Value, overrideValues);
+                    // Dynamic data instances might not all have the same properties,
+                    // so add series for new properties as they appear
+                    if (!_series.TryGetValue(kvp.Key, out var serie))
+                    {
+                        _series[kvp.Key] = serie = new Serie(withTimeIndex: !_timeAsColumn);
+                    }
+                    serie.Add(endTime, kvp.Value, overrideValues);
                 }
             }
         }
@@ -395,6 +401,7 @@ namespace QuantConnect.Python
 
             var valuesPerSeries = new Dictionary<string, PyList>();
             var seriesToSkip = new Dictionary<string, bool>();
+            var dataPointCount = 0;
             foreach (var pandasData in pandasDatas)
             {
                 foreach (var kvp in pandasData._series)
@@ -415,8 +422,15 @@ namespace QuantConnect.Python
 
                     if (!valuesPerSeries.TryGetValue(kvp.Key, out PyList value))
                     {
-                        // Adds pandas.Series value keyed by the column name
+                        // Adds pandas.Series value keyed by the column name.
+                        // Back fill with missing values for the previous data points that don't have this series,
+                        // like dynamic data instances that don't all have the same properties,
+                        // so that every column has one value per symbol in the index
                         value = valuesPerSeries[kvp.Key] = new PyList();
+                        for (var i = 0; i < dataPointCount; i++)
+                        {
+                            value.Append(PyObject.None);
+                        }
                     }
 
                     if (kvp.Value.Values.Count > 0)
@@ -428,6 +442,17 @@ namespace QuantConnect.Python
                     else
                     {
                         value.Append(PyObject.None);
+                    }
+                }
+
+                dataPointCount++;
+
+                // Fill with missing values the series this data point doesn't have
+                foreach (var kvp in valuesPerSeries)
+                {
+                    if (!pandasData._series.ContainsKey(kvp.Key))
+                    {
+                        kvp.Value.Append(PyObject.None);
                     }
                 }
             }
