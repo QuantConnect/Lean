@@ -335,10 +335,18 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
             {
                 // a worker pinned in a blocking call, even a native wait, can only be freed by interrupting it
                 Log.Error($"OrderRequestProcessingPool.Dispose(): workers did not stop within {(int)ShutdownTimeout.TotalSeconds} seconds, interrupting: {string.Join(", ", stuckThreads.Select(thread => thread.Name))}");
-                // interrupting a started thread cannot throw, only the joins below can
+                // interrupting a started thread is not documented to throw on modern .NET, but guard it
+                // anyway so one worker can never abort the shutdown or skip interrupting the rest
                 foreach (var thread in stuckThreads)
                 {
-                    thread.Interrupt();
+                    try
+                    {
+                        thread.Interrupt();
+                    }
+                    catch (Exception exception)
+                    {
+                        Log.Error(exception, $"OrderRequestProcessingPool.Dispose(): failed to interrupt '{thread.Name}'");
+                    }
                 }
                 foreach (var thread in stuckThreads)
                 {
