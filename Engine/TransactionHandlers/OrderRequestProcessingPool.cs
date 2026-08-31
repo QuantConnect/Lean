@@ -459,9 +459,8 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
 
                     lock (_lock)
                     {
-                        // the key may already be gone: a worker interrupted at shutdown abandons its keys, so
-                        // treat a missing key as the order being done
-                        if (_inFlight.TryGetValue(item.Key, out var parked) && parked != null && parked.Count > 0)
+                        var parked = _inFlight[item.Key];
+                        if (parked != null && parked.Count > 0)
                         {
                             request = parked.Dequeue();
                         }
