@@ -26,39 +26,17 @@ namespace QuantConnect.Brokerages
     public class ClearStreetBrokerageModel : DefaultBrokerageModel
     {
         /// <summary>
-        /// The security types Clear Street accepts orders for.
+        /// A dictionary that maps each supported <see cref="SecurityType"/> to an array of <see cref="OrderType"/> supported by Clear Street brokerage.
         /// </summary>
-        private readonly HashSet<SecurityType> _supportSecurityTypes = new(
-            new[]
-            {
-                SecurityType.Equity,
-                SecurityType.Option,
-                SecurityType.IndexOption
-            });
-
-        /// <summary>
-        /// The order types supported by the <see cref="CanSubmitOrder"/> operation in Clear Street.
-        /// </summary>
-        private readonly HashSet<OrderType> _supportOrderTypes = new(
-            new[]
-            {
-                OrderType.Market,
-                OrderType.Limit,
-                OrderType.StopMarket,
-                OrderType.StopLimit,
-                OrderType.TrailingStop
-            });
-
-        /// <summary>
-        /// The order types Clear Street accepts on an option. A stop order of any kind is rejected
-        /// with "order_type Stop is not allowed for security_type Option".
-        /// </summary>
-        private readonly HashSet<OrderType> _supportOptionOrderTypes = new(
-            new[]
-            {
-                OrderType.Market,
-                OrderType.Limit
-            });
+        private readonly Dictionary<SecurityType, HashSet<OrderType>> _supportOrderTypeBySecurityType = new()
+        {
+            { SecurityType.Equity, new HashSet<OrderType> { OrderType.Market, OrderType.Limit, OrderType.StopMarket, OrderType.StopLimit,
+                OrderType.TrailingStop } },
+            // Market and limit order types, a stop order of an option is answered with
+            // "order_type Stop is not allowed for security_type Option"
+            { SecurityType.Option, new HashSet<OrderType> { OrderType.Market, OrderType.Limit } },
+            { SecurityType.IndexOption, new HashSet<OrderType> { OrderType.Market, OrderType.Limit } }
+        };
 
         /// <summary>
         /// Constructor for Clear Street brokerage model
@@ -78,16 +56,12 @@ namespace QuantConnect.Brokerages
         /// <returns>True if the brokerage could process the order, false otherwise</returns>
         public override bool CanSubmitOrder(Security security, Order order, out BrokerageMessageEvent message)
         {
-            message = default;
-
-            if (!_supportSecurityTypes.Contains(security.Type))
+            if (!_supportOrderTypeBySecurityType.TryGetValue(security.Type, out var supportOrderTypes))
             {
                 message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
                     Messages.DefaultBrokerageModel.UnsupportedSecurityType(this, security));
                 return false;
             }
-
-            var supportOrderTypes = security.Type.IsOption() ? _supportOptionOrderTypes : _supportOrderTypes;
 
             if (!supportOrderTypes.Contains(order.Type))
             {
