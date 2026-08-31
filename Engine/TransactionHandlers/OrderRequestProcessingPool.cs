@@ -67,6 +67,14 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
         // set under the lock when shutting down so the pool stops growing while the backlog is drained.
         // volatile, the workers read it lock free while draining
         private volatile bool _shuttingDown;
+        // set once the workers had their shared deadline to drain normally. volatile, read lock free
+        private volatile bool _shutdownDeadlineReached;
+
+        /// <summary>
+        /// True once disposing has given the workers their shared deadline to drain normally: the requests
+        /// drained after this point should be dropped by the request handler instead of processed
+        /// </summary>
+        public bool ShutdownDeadlineReached => _shutdownDeadlineReached;
         // number of workers currently processing a request, used to decide when the pool is saturated
         private int _busyWorkers;
         private readonly Action<OrderRequest> _processRequest;
@@ -249,10 +257,11 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
         }
 
         /// <summary>
-        /// Stops the pool. The requests still in the ready queue are drained through the normal processing loop, by
-        /// the surviving workers or by a last resort drainer thread, so the caller's request handler decides their
-        /// fate. Parked follow up requests are left with their owning worker and are dropped with it. Workers that
-        /// won't stop within the shared deadline are interrupted.
+        /// Stops the pool. The requests still in the ready queue are drained through the normal processing loop:
+        /// the surviving workers process them normally until the shared deadline, after which a last resort
+        /// drainer thread drains the rest, dropped by the request handler through
+        /// <see cref="ShutdownDeadlineReached"/>. Parked follow up requests are left with their owning worker
+        /// and are dropped with it. Workers that won't stop within the deadline are interrupted.
         /// </summary>
         public void Dispose()
         {
@@ -279,6 +288,8 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
             else
             {
                 JoinWorkers();
+                // the workers had their chance to drain normally, whatever is left is dropped by the handler
+                _shutdownDeadlineReached = true;
 
                 // if every worker got stuck the backlog was never drained, hand it to a fresh background thread and
                 // wait a bounded time, so Dispose stays bounded even when processing a request itself blocks

@@ -77,8 +77,6 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
         /// requests in order while growing the pool on demand as the threads get saturated.
         /// </summary>
         private OrderRequestProcessingPool _threadPool;
-        // set once the handler starts exiting, so requests still queued are invalidated instead of processed
-        private volatile bool _droppingQueuedRequests;
 
         /// <summary>
         /// An OnOrderEvent handler slower than this gets the user warned, once. Settable for tests.
@@ -278,8 +276,8 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
         {
             Action<OrderRequest> processRequest = request =>
             {
-                // at exit the pool still drains its queue through here, fail the request instead of processing it
-                if (_droppingQueuedRequests)
+                // past the pool's shutdown deadline the requests still queued are invalidated instead of processed
+                if (_threadPool.ShutdownDeadlineReached)
                 {
                     InvalidateDroppedRequest(request);
                     return;
@@ -818,9 +816,8 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
         /// </summary>
         public void Exit()
         {
-            // from here on the requests still queued get invalidated as they drain instead of sent to the brokerage
-            _droppingQueuedRequests = true;
-            // Dispose drains the queued requests (CompleteAdding) and waits for the threads before stopping
+            // Dispose drains the queued requests (CompleteAdding) and waits for the threads before stopping;
+            // past its deadline the requests still queued are invalidated instead of processed
             _threadPool.DisposeSafely();
         }
 
@@ -1967,8 +1964,8 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
         }
 
         /// <summary>
-        /// Fails a request still queued while the handler exits, instead of processing it. Invalidates a dropped
-        /// submit's order so it doesn't linger as new in the final results, before they are sent.
+        /// Fails a request still queued past the pool's shutdown deadline, instead of processing it. Invalidates
+        /// a dropped submit's order so it doesn't linger as new in the final results, before they are sent.
         /// </summary>
         private void InvalidateDroppedRequest(OrderRequest request)
         {

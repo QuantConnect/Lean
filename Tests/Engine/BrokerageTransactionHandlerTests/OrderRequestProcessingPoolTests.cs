@@ -1,4 +1,4 @@
-/*
+﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -97,6 +97,56 @@ namespace QuantConnect.Tests.Engine.BrokerageTransactionHandlerTests
                 stuckGate.Set();
                 slowGate.Set();
                 pool.DisposeSafely();
+            }
+        }
+
+        // Disposing lets the workers drain normally first: only past the shared deadline are the drained
+        // requests flagged to be dropped by the request handler.
+        [Test]
+        public void FlagsTheShutdownDeadlineOnlyAfterJoiningTheWorkers()
+        {
+            using var gate = new ManualResetEventSlim(false);
+            var processed = new ConcurrentQueue<(OrderRequest Request, bool PastDeadline)>();
+            Exception processingError = null;
+            OrderRequestProcessingPool pool = null;
+            pool = new OrderRequestProcessingPool(concurrencyEnabled: true, minimumThreads: 1, maximumThreads: 1,
+                request =>
+                {
+                    processed.Enqueue((request, pool.ShutdownDeadlineReached));
+                    if (request.Tag == "poison")
+                    {
+                        gate.Wait();
+                    }
+                },
+                exception => processingError = exception);
+            pool.ShutdownTimeout = TimeSpan.FromMilliseconds(500);
+
+            try
+            {
+                var symbol = Symbols.SPY;
+                var reference = new DateTime(2025, 07, 03, 10, 0, 0);
+                var poison = new SubmitOrderRequest(OrderType.Market, symbol.SecurityType, symbol, 1, 0, 0, reference, "poison");
+                poison.SetOrderId(1);
+                pool.Dispatch(poison, Order.CreateOrder(poison));
+                Assert.IsTrue(SpinWait.SpinUntil(() => processed.Count >= 1, 10000), "the worker never got stuck");
+                var queued = new SubmitOrderRequest(OrderType.Market, symbol.SecurityType, symbol, 1, 0, 0, reference, "");
+                queued.SetOrderId(2);
+                pool.Dispatch(queued, Order.CreateOrder(queued));
+
+                Assert.IsFalse(pool.ShutdownDeadlineReached);
+                pool.Dispose();
+                Assert.IsTrue(pool.ShutdownDeadlineReached);
+
+                // the pinned worker took its request before the deadline, the drainer took the rest after it
+                foreach (var pair in processed)
+                {
+                    Assert.AreEqual(pair.Request == queued, pair.PastDeadline);
+                }
+                Assert.IsNull(processingError, $"the pool reported an error: {processingError}");
+            }
+            finally
+            {
+                gate.Set();
             }
         }
 

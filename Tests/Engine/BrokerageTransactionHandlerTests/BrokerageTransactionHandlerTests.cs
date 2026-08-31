@@ -1400,7 +1400,7 @@ namespace QuantConnect.Tests.Engine.BrokerageTransactionHandlerTests
         }
 
         [Test]
-        public void ExitInvalidatesRequestsStillQueued()
+        public void ExitProcessesRequestsStillQueued()
         {
             _transactionHandler = new TestBrokerageTransactionHandler();
             using var brokerage = new NoSubmitTestBrokerage(_algorithm);
@@ -1422,21 +1422,15 @@ namespace QuantConnect.Tests.Engine.BrokerageTransactionHandlerTests
             brokerage.PublishOrderEvent(submitted);
             Assert.AreEqual(OrderStatus.Submitted, orderTicket.Status);
 
-            // queue a cancel without draining, like one issued in OnEndOfAlgorithm after the last pump
-            var cancelResponse = orderTicket.Cancel();
-            Assert.IsFalse(cancelResponse.IsError);
-            var cancelRequest = orderTicket.CancelRequest;
-            Assert.AreEqual(OrderRequestStatus.Processing, cancelRequest.Status);
-            var orderEventsCount = _algorithm.OrderEvents.Count;
+            // queue an update without draining, like one issued in OnEndOfAlgorithm after the last pump
+            var updateRequest = new UpdateOrderRequest(DateTime.UtcNow, orderTicket.OrderId, new UpdateOrderFields { Quantity = 2000 });
+            _transactionHandler.Process(updateRequest);
+            Assert.AreEqual(OrderRequestStatus.Processing, updateRequest.Status);
 
-            // at exit the queued cancel is invalidated instead of silently discarded or sent to the brokerage
+            // the synchronous drain at exit has no deadline: the queued request is still processed normally
             _transactionHandler.Exit();
-            Assert.IsTrue(cancelRequest.Response.IsError);
-            Assert.AreEqual(OrderResponseErrorCode.ProcessingError, cancelRequest.Response.ErrorCode);
-            StringAssert.Contains("never sent to the brokerage", cancelRequest.Response.ErrorMessage);
-            // the cancel never reached the brokerage and only a submit drop emits an order event
-            Assert.AreNotEqual(OrderStatus.Canceled, orderTicket.Status);
-            Assert.AreEqual(orderEventsCount, _algorithm.OrderEvents.Count);
+            Assert.IsTrue(updateRequest.Response.IsSuccess);
+            Assert.AreEqual(2000, orderTicket.Quantity);
         }
 
         // A slow OnOrderEvent handler blocks the order event lock, and for Python the GIL, so the user is
