@@ -1400,7 +1400,7 @@ namespace QuantConnect.Tests.Engine.BrokerageTransactionHandlerTests
         }
 
         [Test]
-        public void ExitProcessesRequestsStillQueued()
+        public void ExitLeavesQueuedRequestsUntouchedInSynchronousMode()
         {
             _transactionHandler = new TestBrokerageTransactionHandler();
             using var brokerage = new NoSubmitTestBrokerage(_algorithm);
@@ -1427,10 +1427,10 @@ namespace QuantConnect.Tests.Engine.BrokerageTransactionHandlerTests
             _transactionHandler.Process(updateRequest);
             Assert.AreEqual(OrderRequestStatus.Processing, updateRequest.Status);
 
-            // the synchronous drain at exit has no deadline: the queued request is still processed normally
+            // the synchronous dispose leaves the queued request untouched, as it always has in backtesting
             _transactionHandler.Exit();
-            Assert.IsTrue(updateRequest.Response.IsSuccess);
-            Assert.AreEqual(2000, orderTicket.Quantity);
+            Assert.AreEqual(OrderRequestStatus.Processing, updateRequest.Status);
+            Assert.AreEqual(1000, orderTicket.Quantity);
         }
 
         // A slow OnOrderEvent handler blocks the order event lock, and for Python the GIL, so the user is

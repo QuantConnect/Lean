@@ -249,7 +249,7 @@ namespace QuantConnect.Tests.Engine.BrokerageTransactionHandlerTests
         }
 
         [Test]
-        public void SynchronousPoolDisposeProcessesPendingRequests()
+        public void SynchronousPoolDisposeLeavesPendingRequestsUnprocessed()
         {
             var processed = new ConcurrentQueue<OrderRequest>();
             Exception processingError = null;
@@ -266,12 +266,12 @@ namespace QuantConnect.Tests.Engine.BrokerageTransactionHandlerTests
             pool.ProcessPending();
             CollectionAssert.AreEqual(new OrderRequest[] { submit }, processed);
 
-            // queued after the last drain: Dispose pumps it through the processing loop on the caller thread
+            // queued after the last drain: the synchronous dispose leaves it untouched, as it always has
             var update = new UpdateOrderRequest(reference, order.Id, new UpdateOrderFields());
             pool.Dispatch(update, order);
             pool.Dispose();
 
-            CollectionAssert.AreEqual(new OrderRequest[] { submit, update }, processed);
+            CollectionAssert.AreEqual(new OrderRequest[] { submit }, processed);
             Assert.IsNull(processingError, $"the pool reported an error: {processingError}");
             Assert.IsFalse(pool.IsActive);
         }

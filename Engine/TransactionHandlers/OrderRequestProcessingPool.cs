@@ -280,12 +280,8 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
             // through the normal loop, and their consuming enumerable ends on its own once the queue empties
             _readyQueue.CompleteAdding();
 
-            if (_synchronous)
-            {
-                // backtesting only, no workers and no bounded time concern: drain the backlog on the caller thread
-                ProcessPending();
-            }
-            else
+            // the synchronous pool has no workers and keeps its historical dispose behavior untouched
+            if (!_synchronous)
             {
                 JoinWorkers();
                 // the workers had their chance to drain normally, whatever is left is dropped by the handler
