@@ -319,6 +319,14 @@ namespace QuantConnect.Orders
                     };
                     break;
 
+                case OrderType.PeggedToMidpoint:
+                    order = new PeggedToMidpointOrder
+                    {
+                        LimitPrice = jObject["limitPrice"]?.Value<decimal>() ?? jObject["LimitPrice"]?.Value<decimal>() ?? default(decimal),
+                        LimitPriceOffset = jObject["limitPriceOffset"]?.Value<decimal>() ?? jObject["LimitPriceOffset"]?.Value<decimal>() ?? default(decimal)
+                    };
+                    break;
+
                 default:
                     throw new ArgumentOutOfRangeException();
             }
