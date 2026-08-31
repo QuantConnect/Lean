@@ -249,9 +249,10 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
         }
 
         /// <summary>
-        /// Stops the pool. The requests still queued or parked are drained through the normal processing loop, by
+        /// Stops the pool. The requests still in the ready queue are drained through the normal processing loop, by
         /// the surviving workers or by a last resort drainer thread, so the caller's request handler decides their
-        /// fate. Workers that won't stop within the shared deadline are interrupted.
+        /// fate. Parked follow up requests are left with their owning worker and are dropped with it. Workers that
+        /// won't stop within the shared deadline are interrupted.
         /// </summary>
         public void Dispose()
         {
@@ -264,16 +265,6 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
                 }
                 // stop growing so the threads list is frozen and safe to iterate without taking a snapshot
                 _shuttingDown = true;
-
-                // move the parked requests back onto the shared queue, keeping their key, so whoever drains the
-                // backlog picks them up. the entries stay so a worker finishing its request still finds its key
-                foreach (var (key, parked) in _inFlight)
-                {
-                    while (parked != null && parked.Count > 0)
-                    {
-                        _readyQueue.Add(new WorkItem(parked.Dequeue(), key));
-                    }
-                }
             }
 
             // stop accepting work without cancelling the token: the workers still alive keep chewing the backlog
@@ -460,8 +451,8 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
 
                     lock (_lock)
                     {
-                        // the key may already be gone: at shutdown parked requests go back to the shared queue with
-                        // their key, so another thread can finish the order and clean up first. missing means done
+                        // the key may already be gone: a worker interrupted at shutdown abandons its keys, so
+                        // treat a missing key as the order being done
                         if (_inFlight.TryGetValue(item.Key, out var parked) && parked != null && parked.Count > 0)
                         {
                             request = parked.Dequeue();

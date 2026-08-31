@@ -29,73 +29,73 @@ namespace QuantConnect.Tests.Engine.BrokerageTransactionHandlerTests
     public class OrderRequestProcessingPoolTests
     {
         [Test]
-        public void DisposeDrainsQueuedAndParkedRequestsThroughTheProcessingLoop()
+        public void DisposeDrainsQueuedRequestsOnceAndDropsParkedRequests()
         {
-            using var gate = new ManualResetEventSlim(false);
-            var dispatched = new ConcurrentQueue<OrderRequest>();
+            using var stuckGate = new ManualResetEventSlim(false);
+            using var slowGate = new ManualResetEventSlim(false);
             var processed = new ConcurrentQueue<OrderRequest>();
             Exception processingError = null;
-            var pool = new OrderRequestProcessingPool(concurrencyEnabled: true, minimumThreads: 1, maximumThreads: 2,
+            var pool = new OrderRequestProcessingPool(concurrencyEnabled: true, minimumThreads: 2, maximumThreads: 2,
                 request =>
                 {
                     processed.Enqueue(request);
-                    gate.Wait();
+                    if (request.Tag == "stuck")
+                    {
+                        // pinned until interrupted, so its parked follow ups never get their turn
+                        stuckGate.Wait();
+                    }
+                    else if (request.Tag == "slow")
+                    {
+                        slowGate.Wait();
+                    }
                 },
                 exception => processingError = exception);
             // shrink the shutdown budget so a regression doesn't wait out the production timeout
-            pool.ShutdownTimeout = TimeSpan.FromSeconds(5);
+            pool.ShutdownTimeout = TimeSpan.FromSeconds(2);
 
             try
             {
                 var symbol = Symbols.SPY;
                 var reference = new DateTime(2025, 07, 03, 10, 0, 0);
-
-                // the order we track, its submit claims a worker and blocks on the gate
-                var submit = new SubmitOrderRequest(OrderType.Market, symbol.SecurityType, symbol, 1, 0, 0, reference, "");
-                submit.SetOrderId(1);
-                var order = Order.CreateOrder(submit);
-                dispatched.Enqueue(submit);
-                pool.Dispatch(submit, order);
-
-                // keep feeding unrelated orders until both workers are blocked inside the handler
-                var fillerId = 1000;
-                var saturated = SpinWait.SpinUntil(() =>
+                SubmitOrderRequest CreateSubmit(int orderId, string tag)
                 {
-                    var filler = new SubmitOrderRequest(OrderType.Market, symbol.SecurityType, symbol, 1, 0, 0, reference, "");
-                    filler.SetOrderId(++fillerId);
-                    dispatched.Enqueue(filler);
-                    pool.Dispatch(filler, Order.CreateOrder(filler));
-                    return processed.Count >= 2;
-                }, 10000);
-                Assert.IsTrue(saturated, "the workers never got busy");
+                    var request = new SubmitOrderRequest(OrderType.Market, symbol.SecurityType, symbol, 1, 0, 0, reference, tag);
+                    request.SetOrderId(orderId);
+                    return request;
+                }
+
+                // one worker gets pinned on the tracked order, the other blocks until released mid-Dispose
+                var stuckSubmit = CreateSubmit(1, "stuck");
+                var stuckOrder = Order.CreateOrder(stuckSubmit);
+                pool.Dispatch(stuckSubmit, stuckOrder);
+                var slowSubmit = CreateSubmit(2, "slow");
+                pool.Dispatch(slowSubmit, Order.CreateOrder(slowSubmit));
+                Assert.IsTrue(SpinWait.SpinUntil(() => processed.Count >= 2, 10000), "the workers never got busy");
 
                 // left behind when Dispose starts: the submit waits in the ready queue, the update and cancel parked
-                var queuedSubmit = new SubmitOrderRequest(OrderType.Market, symbol.SecurityType, symbol, 1, 0, 0, reference, "");
-                queuedSubmit.SetOrderId(2);
-                dispatched.Enqueue(queuedSubmit);
+                var queuedSubmit = CreateSubmit(3, "");
                 pool.Dispatch(queuedSubmit, Order.CreateOrder(queuedSubmit));
-                var update = new UpdateOrderRequest(reference, order.Id, new UpdateOrderFields());
-                var cancel = new CancelOrderRequest(reference, order.Id, "");
-                dispatched.Enqueue(update);
-                dispatched.Enqueue(cancel);
-                pool.Dispatch(update, order);
-                pool.Dispatch(cancel, order);
+                var update = new UpdateOrderRequest(reference, stuckOrder.Id, new UpdateOrderFields());
+                var cancel = new CancelOrderRequest(reference, stuckOrder.Id, "");
+                pool.Dispatch(update, stuckOrder);
+                pool.Dispatch(cancel, stuckOrder);
 
-                // free the workers shortly after Dispose has re-queued the parked backlog, so they chew it all
-                var release = new Thread(() => { Thread.Sleep(300); gate.Set(); }) { IsBackground = true };
+                // free the slow worker shortly into Dispose so it drains the ready queue; the stuck one stays pinned
+                var release = new Thread(() => { Thread.Sleep(300); slowGate.Set(); }) { IsBackground = true };
                 release.Start();
                 var stopwatch = Stopwatch.StartNew();
                 pool.Dispose();
                 stopwatch.Stop();
 
-                // every dispatched request reached the handler exactly once, none lost and none duplicated
-                CollectionAssert.AreEquivalent(dispatched, processed);
+                // the ready queue requests reached the handler exactly once, the parked ones were dropped untouched
+                CollectionAssert.AreEquivalent(new OrderRequest[] { stuckSubmit, slowSubmit, queuedSubmit }, processed);
                 Assert.Less(stopwatch.Elapsed, TimeSpan.FromSeconds(10), "Dispose did not return within the shutdown budget");
                 Assert.IsNull(processingError, $"the pool reported an error: {processingError}");
             }
             finally
             {
-                gate.Set();
+                stuckGate.Set();
+                slowGate.Set();
                 pool.DisposeSafely();
             }
         }
@@ -147,7 +147,8 @@ namespace QuantConnect.Tests.Engine.BrokerageTransactionHandlerTests
                 pool.Dispatch(otherPoison, Order.CreateOrder(otherPoison));
                 Assert.IsTrue(SpinWait.SpinUntil(() => processed.Count >= 2, 10000), "the workers never got stuck");
 
-                // stranded until the drainer takes over: two queued submits and an update parked behind a poison
+                // stranded until the drainer takes over: two queued submits. the update parked behind a poison
+                // stays with its stuck worker and is dropped
                 var queued1 = CreateSubmit(3, "");
                 pool.Dispatch(queued1, Order.CreateOrder(queued1));
                 var queued2 = CreateSubmit(4, "");
@@ -160,12 +161,13 @@ namespace QuantConnect.Tests.Engine.BrokerageTransactionHandlerTests
                 stopwatch.Stop();
 
                 Assert.AreEqual(2, interruptedWorkers, "the stuck workers were not interrupted");
-                foreach (var request in new OrderRequest[] { queued1, queued2, update })
+                foreach (var request in new OrderRequest[] { queued1, queued2 })
                 {
                     var passes = processed.Where(pair => pair.Request == request).ToList();
                     Assert.AreEqual(1, passes.Count, $"the stranded request was processed {passes.Count} times");
                     Assert.AreEqual("Transaction Thread Drainer", passes[0].Thread, "the backlog was not drained on a new thread");
                 }
+                Assert.IsFalse(processed.Any(pair => pair.Request == update), "the parked update should have been dropped");
                 Assert.Less(stopwatch.Elapsed, TimeSpan.FromSeconds(10), "Dispose did not return within the shutdown budget");
                 Assert.IsNull(processingError, $"the pool reported an error: {processingError}");
             }
