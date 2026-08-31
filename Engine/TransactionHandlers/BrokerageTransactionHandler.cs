@@ -1,4 +1,4 @@
-/*
+﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -76,6 +76,13 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
         /// requests in order while growing the pool on demand as the threads get saturated.
         /// </summary>
         private OrderRequestProcessingPool _threadPool;
+
+        /// <summary>
+        /// An OnOrderEvent handler slower than this gets the user warned, once. Settable for tests.
+        /// </summary>
+        internal TimeSpan SlowOnOrderEventThreshold { get; set; } = TimeSpan.FromSeconds(10);
+        // once the warning is sent the handler is no longer measured. Only written under the order event lock
+        private bool _slowOnOrderEventWarningSent;
 
         private readonly ConcurrentQueue<OrderEvent> _orderEvents = new ConcurrentQueue<OrderEvent>();
 
@@ -268,6 +275,12 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
         {
             Action<OrderRequest> processRequest = request =>
             {
+                // past the pool's shutdown deadline the requests still queued are invalidated instead of processed
+                if (_threadPool.ShutdownDeadlineReached)
+                {
+                    InvalidateDroppedRequest(request);
+                    return;
+                }
                 HandleOrderRequest(request);
                 ProcessAsynchronousEvents();
             };
@@ -802,7 +815,8 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
         /// </summary>
         public void Exit()
         {
-            // Dispose drains the queued requests (CompleteAdding) and waits for the threads before stopping
+            // Dispose drains the queued requests (CompleteAdding) and waits for the threads before stopping;
+            // past its deadline the requests still queued are invalidated instead of processed
             _threadPool.DisposeSafely();
         }
 
@@ -1366,7 +1380,25 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
                     try
                     {
                         //Trigger our order event handler
-                        _algorithm.OnOrderEvent(orderEvent);
+                        if (_slowOnOrderEventWarningSent)
+                        {
+                            _algorithm.OnOrderEvent(orderEvent);
+                        }
+                        else
+                        {
+                            // a slow handler holds the order event lock, and for Python the GIL, stalling the
+                            // other transaction threads and the order status processing.
+                            var start = Environment.TickCount64;
+                            _algorithm.OnOrderEvent(orderEvent);
+                            var elapsed = TimeSpan.FromMilliseconds(Environment.TickCount64 - start);
+                            if (elapsed > SlowOnOrderEventThreshold)
+                            {
+                                _slowOnOrderEventWarningSent = true;
+                                Log.Trace($"BrokerageTransactionHandler.HandleOrderEvents(): the OnOrderEvent handler took {elapsed.TotalSeconds:0.##}s: " +
+                                    "while it runs, order status updates and the other transaction threads are blocked. Warning the user once");
+                                _algorithm.Debug($"Warning: The OnOrderEvent handler took {elapsed.TotalSeconds:0.##} seconds to run, which can delay order processing. Keep the handler fast.");
+                            }
+                        }
                     }
                     catch (Exception err)
                     {
@@ -1927,6 +1959,22 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
                     orderInGroup.Status = OrderStatus.Invalid;
                 }
                 HandleOrderEvents(new List<OrderEvent> { new OrderEvent(orderInGroup, _algorithm.UtcTime, OrderFee.Zero, message) });
+            }
+        }
+
+        /// <summary>
+        /// Fails a request still queued past the pool's shutdown deadline, instead of processing it. Invalidates
+        /// a dropped submit's order so it doesn't linger as new in the final results, before they are sent.
+        /// </summary>
+        private void InvalidateDroppedRequest(OrderRequest request)
+        {
+            var message = "The order was never sent to the brokerage: the engine was stopped while the request was queued";
+            request.SetResponse(OrderResponse.Error(request, OrderResponseErrorCode.ProcessingError, message));
+
+            // only a dropped submit leaves an order that was never placed, updates and cancels target one already sent
+            if (request.OrderRequestType == OrderRequestType.Submit && _openOrders.TryGetValue(request.OrderId, out var openOrder))
+            {
+                InvalidateOrders(new List<Order> { openOrder.Order }, message);
             }
         }
 

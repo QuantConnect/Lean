@@ -1,4 +1,4 @@
-/*
+﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -15,6 +15,8 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
+using System.Linq;
 using System.Threading;
 using QuantConnect.Interfaces;
 using QuantConnect.Logging;
@@ -37,8 +39,16 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
     /// </remarks>
     public class OrderRequestProcessingPool : IDisposable
     {
-        // maximum time to wait for each worker thread to stop when disposing the pool
-        private static readonly TimeSpan ShutdownTimeout = TimeSpan.FromSeconds(60);
+        /// <summary>
+        /// Maximum total time to wait for all the worker threads to stop when disposing the pool. Settable for tests.
+        /// </summary>
+        internal TimeSpan ShutdownTimeout { get; set; } = TimeSpan.FromSeconds(60);
+
+        /// <summary>
+        /// Time granted to each interrupted worker to observe the interrupt when disposing. Settable for tests.
+        /// </summary>
+        internal TimeSpan InterruptTimeout { get; set; } = TimeSpan.FromSeconds(5);
+
         // the shared queue of requests cleared to run. every worker pulls from here so the load stays balanced
         private readonly IBusyCollection<WorkItem> _readyQueue;
         private readonly List<Thread> _threads;
@@ -54,9 +64,17 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
         // true when a single consumer drains the queue (synchronous or a single fixed worker), which already
         // preserves arrival order across all orders so the per-order serialization is skipped entirely
         private readonly bool _singleConsumer;
-        // set under the lock when shutting down so the pool stops growing while the queue drains, before the
-        // cancellation token is cancelled as the final hard stop
-        private bool _shuttingDown;
+        // set under the lock when shutting down so the pool stops growing while the backlog is drained.
+        // volatile, the workers read it lock free while draining
+        private volatile bool _shuttingDown;
+        // set once the workers had their shared deadline to drain normally. volatile, read lock free
+        private volatile bool _shutdownDeadlineReached;
+
+        /// <summary>
+        /// True once disposing has given the workers their shared deadline to drain normally: the requests
+        /// drained after this point should be dropped by the request handler instead of processed
+        /// </summary>
+        public bool ShutdownDeadlineReached => _shutdownDeadlineReached;
         // number of workers currently processing a request, used to decide when the pool is saturated
         private int _busyWorkers;
         private readonly Action<OrderRequest> _processRequest;
@@ -239,7 +257,11 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
         }
 
         /// <summary>
-        /// Stops every worker thread and waits for them to terminate, then releases the pool resources.
+        /// Stops the pool. The requests still in the ready queue are drained through the normal processing loop:
+        /// the surviving workers process them normally until the shared deadline, after which a last resort
+        /// drainer thread drains the rest, dropped by the request handler through
+        /// <see cref="ShutdownDeadlineReached"/>. Parked follow up requests are left with their owning worker
+        /// and are dropped with it. Workers that won't stop within the deadline are interrupted.
         /// </summary>
         public void Dispose()
         {
@@ -254,29 +276,101 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
                 _shuttingDown = true;
             }
 
-            // let the workers drain whatever is queued and parked: once adding is complete their consuming
-            // enumerables finish naturally when the queue empties, so join before cancelling anything. Only
-            // escalate to StopSafely, which cancels the shared token and drops pending requests, on timeout
+            // stop accepting work without cancelling the token: the workers still alive keep chewing the backlog
+            // through the normal loop, and their consuming enumerable ends on its own once the queue empties
             _readyQueue.CompleteAdding();
+
+            // the synchronous pool has no workers and keeps its historical dispose behavior untouched
+            if (!_synchronous)
+            {
+                JoinWorkers();
+                // the workers had their chance to drain normally, whatever is left is dropped by the handler
+                _shutdownDeadlineReached = true;
+
+                // if every worker got stuck the backlog was never drained, hand it to a fresh background thread and
+                // wait a bounded time, so Dispose stays bounded even when processing a request itself blocks
+                if (_readyQueue.Count > 0)
+                {
+                    var drainer = new Thread(Run) { IsBackground = true, Name = "Transaction Thread Drainer" };
+                    drainer.Start();
+                    if (!drainer.Join(ShutdownTimeout))
+                    {
+                        Log.Error($"OrderRequestProcessingPool.Dispose(): the drainer thread did not finish within {(int)ShutdownTimeout.TotalSeconds} seconds, abandoning it");
+                    }
+                }
+            }
+
+            // release anything still lingering on the shared token before it is disposed
+            _cancellationTokenSource.Cancel();
+
+            IsActive = false;
+            _readyQueue.DisposeSafely();
+            _cancellationTokenSource.DisposeSafely();
+            Log.Trace("OrderRequestProcessingPool.Dispose(): completed");
+        }
+
+        /// <summary>
+        /// Joins every worker thread against a single shared deadline instead of a full timeout per thread,
+        /// interrupting, and briefly re-joining, the ones that won't stop in time.
+        /// </summary>
+        private void JoinWorkers()
+        {
+            var stopwatch = Stopwatch.StartNew();
+            List<Thread> stuckThreads = null;
             foreach (var thread in _threads)
             {
                 try
                 {
-                    if (thread != null && !thread.Join(ShutdownTimeout))
+                    var remaining = ShutdownTimeout - stopwatch.Elapsed;
+                    if (thread != null && !thread.Join(remaining > TimeSpan.Zero ? remaining : TimeSpan.Zero))
                     {
-                        Log.Error($"OrderRequestProcessingPool.Dispose(): Exceeded timeout: {(int)ShutdownTimeout.TotalSeconds} seconds waiting for '{thread.Name}' to finish processing");
-                        thread.StopSafely(ShutdownTimeout, _cancellationTokenSource);
+                        (stuckThreads ??= new()).Add(thread);
                     }
                 }
                 catch (ThreadStateException)
                 {
                     // registered by a concurrent Dispatch but not started yet, nothing to drain on it
                 }
+                catch (ThreadInterruptedException)
+                {
+                    // the disposing thread itself was interrupted while joining, keep shutting down
+                    Log.Error($"OrderRequestProcessingPool.Dispose(): interrupted while joining '{thread.Name}'");
+                }
             }
 
-            IsActive = false;
-            _readyQueue.DisposeSafely();
-            _cancellationTokenSource.DisposeSafely();
+            if (stuckThreads != null)
+            {
+                // a worker pinned in a blocking call, even a native wait, can only be freed by interrupting it
+                Log.Error($"OrderRequestProcessingPool.Dispose(): workers did not stop within {(int)ShutdownTimeout.TotalSeconds} seconds, interrupting: {string.Join(", ", stuckThreads.Select(thread => thread.Name))}");
+                // interrupting a started thread is not documented to throw on modern .NET, but guard it
+                // anyway so one worker can never abort the shutdown or skip interrupting the rest
+                foreach (var thread in stuckThreads)
+                {
+                    try
+                    {
+                        thread.Interrupt();
+                    }
+                    catch (Exception exception)
+                    {
+                        Log.Error(exception, $"OrderRequestProcessingPool.Dispose(): failed to interrupt '{thread.Name}'");
+                    }
+                }
+                foreach (var thread in stuckThreads)
+                {
+                    try
+                    {
+                        if (!thread.Join(InterruptTimeout))
+                        {
+                            Log.Error($"OrderRequestProcessingPool.Dispose(): '{thread.Name}' is still running after being interrupted");
+                        }
+                    }
+                    catch (ThreadInterruptedException)
+                    {
+                        // the disposing thread itself was interrupted while joining, keep going with the rest
+                        Log.Error($"OrderRequestProcessingPool.Dispose(): interrupted while joining '{thread.Name}'");
+                    }
+                }
+            }
         }
 
         /// <summary>
@@ -339,6 +433,15 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
                 {
                     process(item);
                 }
+            }
+            catch (OperationCanceledException) when (_shuttingDown)
+            {
+                // the shutdown cancelled the shared token, exit quietly
+            }
+            catch (ThreadInterruptedException) when (_shuttingDown)
+            {
+                // interrupted by Dispose after the shutdown deadline, exit quietly
+                Log.Trace($"OrderRequestProcessingPool.Drain(): '{Thread.CurrentThread.Name}' interrupted while shutting down");
             }
             catch (Exception err)
             {

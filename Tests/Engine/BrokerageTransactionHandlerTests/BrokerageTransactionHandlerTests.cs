@@ -1,4 +1,4 @@
-/*
+﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -1397,6 +1397,68 @@ namespace QuantConnect.Tests.Engine.BrokerageTransactionHandlerTests
             Assert.IsTrue(response2.IsProcessed);
             Assert.IsFalse(response2.IsError);
             Assert.AreEqual(orderTicket.Status, OrderStatus.CancelPending);
+        }
+
+        [Test]
+        public void ExitLeavesQueuedRequestsUntouchedInSynchronousMode()
+        {
+            _transactionHandler = new TestBrokerageTransactionHandler();
+            using var brokerage = new NoSubmitTestBrokerage(_algorithm);
+            _transactionHandler.Initialize(_algorithm, brokerage, new BacktestingResultHandler());
+
+            var security = _algorithm.Securities[_symbol];
+            var price = 1.12m;
+            security.SetMarketPrice(new Tick(DateTime.Now, security.Symbol, price, price, price));
+            var orderRequest = new SubmitOrderRequest(OrderType.Limit, security.Type, security.Symbol, 1000, 0, 1.11m, DateTime.Now, "");
+
+            _algorithm.Transactions.SetOrderProcessor(_transactionHandler);
+
+            // submit a limit order and drain the queue like the engine would, then move it to submitted
+            var orderTicket = _transactionHandler.Process(orderRequest);
+            _transactionHandler.PumpPendingRequests();
+            Assert.IsTrue(orderRequest.Response.IsSuccess);
+            var submitted = new OrderEvent(_algorithm.Transactions.GetOpenOrders().Single(), _algorithm.UtcTime, OrderFee.Zero)
+            { Status = OrderStatus.Submitted };
+            brokerage.PublishOrderEvent(submitted);
+            Assert.AreEqual(OrderStatus.Submitted, orderTicket.Status);
+
+            // queue an update without draining, like one issued in OnEndOfAlgorithm after the last pump
+            var updateRequest = new UpdateOrderRequest(DateTime.UtcNow, orderTicket.OrderId, new UpdateOrderFields { Quantity = 2000 });
+            _transactionHandler.Process(updateRequest);
+            Assert.AreEqual(OrderRequestStatus.Processing, updateRequest.Status);
+
+            // the synchronous dispose leaves the queued request untouched, as it always has in backtesting
+            _transactionHandler.Exit();
+            Assert.AreEqual(OrderRequestStatus.Processing, updateRequest.Status);
+            Assert.AreEqual(1000, orderTicket.Quantity);
+        }
+
+        // A slow OnOrderEvent handler blocks the order event lock, and for Python the GIL, so the user is
+        // warned once and the measurement stops afterwards.
+        [Test]
+        public void SlowOnOrderEventHandlerWarnsOnlyOnce()
+        {
+            _transactionHandler = new TestBrokerageTransactionHandler();
+            using var brokerage = new NoSubmitTestBrokerage(_algorithm);
+            _transactionHandler.Initialize(_algorithm, brokerage, new BacktestingResultHandler());
+            // any handler run exceeds a negative threshold, even one under the millisecond tick resolution
+            _transactionHandler.SlowOnOrderEventThreshold = TimeSpan.FromTicks(-1);
+
+            var security = _algorithm.Securities[_symbol];
+            var price = 1.12m;
+            security.SetMarketPrice(new Tick(DateTime.Now, security.Symbol, price, price, price));
+            var orderRequest = new SubmitOrderRequest(OrderType.Limit, security.Type, security.Symbol, 1000, 0, 1.11m, DateTime.Now, "");
+            _algorithm.Transactions.SetOrderProcessor(_transactionHandler);
+            _transactionHandler.Process(orderRequest);
+            _transactionHandler.PumpPendingRequests();
+
+            var order = _algorithm.Transactions.GetOpenOrders().Single();
+            brokerage.PublishOrderEvent(new OrderEvent(order, _algorithm.UtcTime, OrderFee.Zero) { Status = OrderStatus.Submitted });
+            Assert.AreEqual(1, _algorithm.DebugMessages.Count(message => message.Contains("OnOrderEvent")));
+
+            // the warning was sent, later slow handler runs are neither measured nor reported again
+            brokerage.PublishOrderEvent(new OrderEvent(order, _algorithm.UtcTime, OrderFee.Zero) { Status = OrderStatus.PartiallyFilled, FillQuantity = 1, FillPrice = price });
+            Assert.AreEqual(1, _algorithm.DebugMessages.Count(message => message.Contains("OnOrderEvent")));
         }
 
         [Test]
@@ -3122,6 +3184,12 @@ namespace QuantConnect.Tests.Engine.BrokerageTransactionHandlerTests
 
             // no worker thread: these tests drive HandleOrderRequest manually
             protected override bool SynchronousProcessing => true;
+
+            // drains the queued requests like the engine would, so tests can leave the queue truly empty or not
+            public void PumpPendingRequests()
+            {
+                ProcessPendingRequests();
+            }
 
             public override void Initialize(IAlgorithm algorithm, IBrokerage brokerage, IResultHandler resultHandler)
             {
