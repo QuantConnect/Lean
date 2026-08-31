@@ -4503,6 +4503,48 @@ namespace QuantConnect
         }
 
         /// <summary>
+        /// Helper method to get the given symbol using the ticker it's currently mapped to
+        /// </summary>
+        /// <remarks>A symbols ticker is set when it's created and does not get updated if the security is renamed, see <see cref="Symbol.Value"/>,
+        /// this is specially useful for symbols which have been deserialized, since they keep the ticker they were serialized with.
+        /// The <see cref="SecurityIdentifier"/> is the source of truth and never changes</remarks>
+        /// <param name="symbol">The symbol to get the current ticker for</param>
+        /// <returns>The given symbol using the ticker it's currently mapped to, the given symbol if it does not require mapping
+        /// or if the mapping could not be resolved</returns>
+        public static Symbol MapToCurrentTicker(this Symbol symbol)
+        {
+            // covers null and empty symbols
+            if (symbol == null || !symbol.RequiresMapping())
+            {
+                return symbol;
+            }
+
+            try
+            {
+                if (symbol.ID.HasUnderlying && !symbol.HasUnderlying)
+                {
+                    // the deserialized symbol might be missing its underlying, which is required to resolve the mapping
+                    symbol = new Symbol(symbol.ID, symbol.Value);
+                }
+
+                var currentTicker = SecurityIdentifier.Ticker(symbol, DateTime.Today);
+                // for options it's the underlying ticker which gets mapped
+                if (currentTicker != (symbol.HasUnderlying ? symbol.Underlying.Value : symbol.Value))
+                {
+                    Log.Trace($"Extensions.MapToCurrentTicker(): mapping {symbol.Value} to {currentTicker}");
+                    return symbol.UpdateMappedSymbol(currentTicker);
+                }
+            }
+            catch (Exception exception)
+            {
+                // we don't want to fail because of a ticker, the security identifier is what matters
+                Log.Error(exception, $"Failed to map ticker for {symbol.ID}");
+            }
+
+            return symbol;
+        }
+
+        /// <summary>
         /// Checks whether the fill event for closing a trade is a winning trade
         /// </summary>
         /// <param name="fill">The fill event</param>

@@ -106,6 +106,46 @@ namespace QuantConnect.Tests.Engine.Results
             Assert.AreEqual(10, holding2.Quantity);
         }
 
+        [Test]
+        public void GetHoldingsUsesCurrentTicker()
+        {
+            var algorithm = new AlgorithmStub();
+            var equity = algorithm.AddEquity("SPY");
+            equity.Holdings.SetHoldings(1, 10);
+
+            // the security gets renamed, it's subscriptions get updated but the security symbol does not
+            foreach (var config in algorithm.SubscriptionManager.SubscriptionDataConfigService.GetSubscriptionDataConfigs(equity.Symbol))
+            {
+                config.MappedSymbol = "NEWSPY";
+            }
+            Assert.AreEqual("SPY", equity.Symbol.Value);
+
+            var result = LiveTradingResultHandler.GetHoldings(algorithm.Securities.Values, algorithm.SubscriptionManager.SubscriptionDataConfigService);
+
+            Assert.IsTrue(result.TryGetValue(equity.Symbol.ID.ToString(), out var holding));
+            Assert.AreEqual(equity.Symbol.ID, holding.Symbol.ID);
+            Assert.AreEqual("NEWSPY", holding.Symbol.Value);
+            Assert.AreEqual(10, holding.Quantity);
+        }
+
+        [Test]
+        public void GetHoldingsAreOrderedByCurrentTicker()
+        {
+            var algorithm = new AlgorithmStub();
+            var aapl = algorithm.AddEquity("AAPL");
+            var spy = algorithm.AddEquity("SPY");
+
+            foreach (var config in algorithm.SubscriptionManager.SubscriptionDataConfigService.GetSubscriptionDataConfigs(aapl.Symbol))
+            {
+                config.MappedSymbol = "ZZZ";
+            }
+
+            var result = LiveTradingResultHandler.GetHoldings(algorithm.Securities.Values, algorithm.SubscriptionManager.SubscriptionDataConfigService);
+
+            // AAPL is now ZZZ so it goes last
+            CollectionAssert.AreEqual(new[] { spy.Symbol.ID.ToString(), aapl.Symbol.ID.ToString() }, result.Keys);
+        }
+
         [TestCase(true)]
         [TestCase(false)]
         public void GetHoldingsNoPosition(bool invested)

@@ -372,13 +372,21 @@ namespace QuantConnect.Brokerages
                 {
                     return new List<Holding>();
                 }
+
+                foreach (var holding in result)
+                {
+                    // the provided ticker might be outdated, the security identifier is the source of truth
+                    holding.Symbol = holding.Symbol.MapToCurrentTicker();
+                }
+
                 Log.Trace($"Brokerage.GetAccountHoldings(): sourcing holdings from provided brokerage data, found {result.Count} entries");
                 return result;
             }
 
             return securities?.Where(security => security.Holdings.AbsoluteQuantity > 0)
-                .OrderBy(security => security.Symbol)
-                .Select(security => new Holding(security)).ToList() ?? new List<Holding>();
+                // the security ticker might be outdated too, it's set when it's created and does not get updated on renames
+                .Select(security => new Holding(security) { Symbol = security.Symbol.MapToCurrentTicker() })
+                .OrderBy(security => security.Symbol).ToList() ?? [];
         }
 
         /// <summary>
