@@ -32,8 +32,6 @@ namespace QuantConnect.Brokerages
         {
             { SecurityType.Equity, new HashSet<OrderType> { OrderType.Market, OrderType.Limit, OrderType.StopMarket, OrderType.StopLimit,
                 OrderType.TrailingStop } },
-            // Market and limit order types, a stop order of an option is answered with
-            // "order_type Stop is not allowed for security_type Option"
             { SecurityType.Option, new HashSet<OrderType> { OrderType.Market, OrderType.Limit } },
             { SecurityType.IndexOption, new HashSet<OrderType> { OrderType.Market, OrderType.Limit } }
         };
