@@ -194,13 +194,7 @@ namespace QuantConnect.Python
                     // if this is a PythonData instance we add in '__typename' which we don't want into the data frame
                     && !x.Key.StartsWith("__", StringComparison.InvariantCulture)))
                 {
-                    // Dynamic data instances might not all have the same properties,
-                    // so add series for new properties as they appear
-                    if (!_series.TryGetValue(kvp.Key, out var serie))
-                    {
-                        _series[kvp.Key] = serie = new Serie(withTimeIndex: !_timeAsColumn);
-                    }
-                    serie.Add(endTime, kvp.Value, overrideValues);
+                    AddToSeries(kvp.Key, endTime, kvp.Value, overrideValues);
                 }
             }
         }
@@ -685,7 +679,9 @@ namespace QuantConnect.Python
         {
             if (!_series.TryGetValue(key, out var serie))
             {
-                throw new ArgumentException($"PandasData.AddToSeries(): {Messages.PandasData.KeyNotFoundInSeries(key)}");
+                // Dynamic data instances might not all have the same properties,
+                // so add series for new properties as they appear
+                _series[key] = serie = new Serie(withTimeIndex: !_timeAsColumn);
             }
 
             serie.Add(time, input, overrideValues);
