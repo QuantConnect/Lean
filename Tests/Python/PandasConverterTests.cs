@@ -331,6 +331,53 @@ namespace QuantConnect.Tests.Python
         }
 
         [Test]
+        public void HandlesDynamicDataWithPropertyMissingInAMiddleDataPoint()
+        {
+            var converter = new PandasConverter();
+
+            // factor_a has a value at all 4 times, factor_b is missing at the 3rd one
+            var factorAValues = new[] { 10d, 20d, 30d, 40d };
+            var factorBValues = new double?[] { 100d, 200d, null, 400d };
+
+            var data = new List<CustomData>();
+            for (var i = 0; i < factorAValues.Length; i++)
+            {
+                var dataPoint = new CustomData { Symbol = Symbols.IBM, Time = new DateTime(2020, 1, 2).AddDays(i), Value = i + 1 };
+                dataPoint.SetProperty("factor_a", (decimal)factorAValues[i]);
+                if (factorBValues[i].HasValue)
+                {
+                    dataPoint.SetProperty("factor_b", (decimal)factorBValues[i].Value);
+                }
+                data.Add(dataPoint);
+            }
+
+            dynamic dataFrame = converter.GetDataFrame(data);
+
+            using (Py.GIL())
+            {
+                var count = dataFrame.__len__().AsManagedObject(typeof(int));
+                Assert.AreEqual(4, count);
+
+                Assert.Multiple(() =>
+                {
+                    var times = new DateTime[count];
+                    for (var i = 0; i < count; i++)
+                    {
+                        times[i] = (DateTime)dataFrame.index.get_level_values(1)[i].AsManagedObject(typeof(DateTime));
+                    }
+                    CollectionAssert.AreEqual(data.Select(x => x.EndTime), times);
+
+                    CollectionAssert.AreEqual(new[] { 1d, 2d, 3d, 4d }, dataFrame["value"].AsManagedObject(typeof(double[])));
+                    CollectionAssert.AreEqual(factorAValues, dataFrame["factor_a"].AsManagedObject(typeof(double[])));
+
+                    // the data point without the property gets a missing value in its row
+                    var factorB = (double[])dataFrame["factor_b"].AsManagedObject(typeof(double[]));
+                    CollectionAssert.AreEqual(new[] { 100d, 200d, double.NaN, 400d }, factorB);
+                });
+            }
+        }
+
+        [Test]
         public void FlattensSingleSymbolBaseDataCollectionOfDynamicDataWithHeterogeneousProperties([Values] bool propertyOnlyInLastDataPoint)
         {
             var converter = new PandasConverter();
