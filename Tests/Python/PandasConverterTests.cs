@@ -302,6 +302,86 @@ namespace QuantConnect.Tests.Python
             }
         }
 
+        [Test]
+        public void HandlesDynamicDataWithHeterogeneousPropertiesAtTheSameTime([Values] bool propertyOnlyInLastDataPoint)
+        {
+            var converter = new PandasConverter();
+            var time = new DateTime(2020, 1, 2);
+            var data = CreateDynamicDataWithHeterogeneousProperties(time, time, propertyOnlyInLastDataPoint);
+
+            dynamic dataFrame = converter.GetDataFrame(data);
+
+            using (Py.GIL())
+            {
+                var count = dataFrame.__len__().AsManagedObject(typeof(int));
+                Assert.AreEqual(2, count);
+
+                Assert.Multiple(() =>
+                {
+                    CollectionAssert.AreEqual(new[] { 1d, 2d }, dataFrame["value"].AsManagedObject(typeof(double[])));
+                    CollectionAssert.AreEqual(new[] { 10d, 20d }, dataFrame["factor_a"].AsManagedObject(typeof(double[])));
+
+                    // The data point without the property must not get the value of the one that has it,
+                    // even though both share the same index
+                    var factorB = (double[])dataFrame["factor_b"].AsManagedObject(typeof(double[]));
+                    var expectedFactorB = propertyOnlyInLastDataPoint ? new[] { double.NaN, 30d } : new[] { 30d, double.NaN };
+                    CollectionAssert.AreEqual(expectedFactorB, factorB);
+                });
+            }
+        }
+
+        [Test]
+        public void FlattensSingleSymbolBaseDataCollectionOfDynamicDataWithHeterogeneousProperties([Values] bool propertyOnlyInLastDataPoint)
+        {
+            var converter = new PandasConverter();
+            var data = new[]
+            {
+                new EnumerableData
+                {
+                    Data = CreateDynamicDataWithHeterogeneousProperties(new DateTime(2020, 1, 2), new DateTime(2020, 1, 3), propertyOnlyInLastDataPoint)
+                        .Cast<BaseData>().ToList(),
+                    Symbol = Symbols.IBM,
+                    Time = new DateTime(2020, 1, 1)
+                }
+            };
+
+            dynamic dataFrame = converter.GetDataFrame(data, flatten: true);
+
+            using (Py.GIL())
+            {
+                var count = dataFrame.__len__().AsManagedObject(typeof(int));
+                Assert.AreEqual(2, count);
+                AssertFlattenBaseDataCollectionDataFrameTimes(data, dataFrame);
+
+                Assert.Multiple(() =>
+                {
+                    CollectionAssert.AreEqual(new[] { 1d, 2d }, dataFrame["value"].AsManagedObject(typeof(double[])));
+                    CollectionAssert.AreEqual(new[] { 10d, 20d }, dataFrame["factor_a"].AsManagedObject(typeof(double[])));
+
+                    var factorB = (double[])dataFrame["factor_b"].AsManagedObject(typeof(double[]));
+                    var expectedFactorB = propertyOnlyInLastDataPoint ? new[] { double.NaN, 30d } : new[] { 30d, double.NaN };
+                    CollectionAssert.AreEqual(expectedFactorB, factorB);
+                });
+            }
+        }
+
+        /// <summary>
+        /// Two data points for the same symbol where only one of them has the "factor_b" property
+        /// </summary>
+        private static List<CustomData> CreateDynamicDataWithHeterogeneousProperties(DateTime firstTime, DateTime secondTime,
+            bool propertyOnlyInLastDataPoint)
+        {
+            var firstDataPoint = new CustomData { Symbol = Symbols.IBM, Time = firstTime, Value = 1m };
+            firstDataPoint.SetProperty("factor_a", 10m);
+
+            var secondDataPoint = new CustomData { Symbol = Symbols.IBM, Time = secondTime, Value = 2m };
+            secondDataPoint.SetProperty("factor_a", 20m);
+
+            (propertyOnlyInLastDataPoint ? secondDataPoint : firstDataPoint).SetProperty("factor_b", 30m);
+
+            return new List<CustomData> { firstDataPoint, secondDataPoint };
+        }
+
         private static void AssertFlattenBaseDataCollectionDataFrameTimes(EnumerableData[] data, dynamic dataFrame)
         {
             // For base data collections, the end time of each data point is added as a column

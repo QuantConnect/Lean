@@ -73,6 +73,9 @@ namespace QuantConnect.Python
         private readonly bool _isBaseData;
         private readonly bool _timeAsColumn;
         private readonly Dictionary<string, Serie> _series;
+        // time of each row added, used to fill the series missing a row so all have one value per row
+        private readonly List<DateTime> _rowTimes = new();
+        private int _touchedSeriesCount;
 
         private readonly Dictionary<Type, List<DataTypeMember>> _members = new();
 
@@ -170,16 +173,20 @@ namespace QuantConnect.Python
                 return;
             }
 
+            var endTime = _isBaseData ? ((IBaseData)data).EndTime : default;
+
+            // same as Serie.Add, overriding the values at the last row time doesn't add a new row
+            if (!overrideValues || _timeAsColumn || _rowTimes.Count == 0 || _rowTimes[^1] != endTime)
+            {
+                _rowTimes.Add(endTime);
+            }
+            _touchedSeriesCount = 0;
+
             var typeMembers = GetInstanceDataTypeMembers(data);
 
-            var endTime = default(DateTime);
-            if (_isBaseData)
+            if (_isBaseData && _timeAsColumn)
             {
-                endTime = ((IBaseData)data).EndTime;
-                if (_timeAsColumn)
-                {
-                    AddToSeries("time", endTime, endTime, overrideValues);
-                }
+                AddToSeries("time", endTime, endTime, overrideValues);
             }
 
             AddMembersData(data, typeMembers, endTime, overrideValues);
@@ -196,6 +203,36 @@ namespace QuantConnect.Python
                 {
                     AddToSeries(kvp.Key, endTime, kvp.Value, overrideValues);
                 }
+            }
+
+            // fill the series this data point didn't touch, only scanning when there is any
+            if (_touchedSeriesCount != _series.Count)
+            {
+                foreach (var serie in _series.Values)
+                {
+                    FillMissingRows(serie, _rowTimes.Count);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Creates a series filled with missing values for the given number of rows
+        /// </summary>
+        private Serie CreateSerie(int rowCount)
+        {
+            var serie = new Serie(withTimeIndex: !_timeAsColumn);
+            FillMissingRows(serie, rowCount);
+            return serie;
+        }
+
+        /// <summary>
+        /// Appends missing values to the series until it has the given number of rows
+        /// </summary>
+        private void FillMissingRows(Serie serie, int rowCount)
+        {
+            for (var i = serie.Values.Count; i < rowCount; i++)
+            {
+                serie.Add(_rowTimes[i], null, overrideValues: false);
             }
         }
 
@@ -358,6 +395,7 @@ namespace QuantConnect.Python
                 pyDict.SetItem(pyKey, series);
             }
             _series.Clear();
+            _rowTimes.Clear();
             foreach (var kvp in indexCache)
             {
                 kvp.Value.Dispose();
@@ -393,6 +431,7 @@ namespace QuantConnect.Python
             using var namesDic = Py.kw("name", _level1Names[0]);
             using var index = _indexFactory.Invoke(new[] { list }, namesDic);
 
+            using var none = PyObject.None;
             var valuesPerSeries = new Dictionary<string, PyList>();
             var seriesToSkip = new Dictionary<string, bool>();
             var dataPointCount = 0;
@@ -417,14 +456,11 @@ namespace QuantConnect.Python
 
                     if (!valuesPerSeries.TryGetValue(kvp.Key, out PyList value))
                     {
-                        // Adds pandas.Series value keyed by the column name.
-                        // Back fill with missing values for the previous data points that don't have this series,
-                        // like dynamic data instances that don't all have the same properties,
-                        // so that every column has one value per symbol in the index
+                        // new column: back fill the previous symbols with missing values so it lines up with the index
                         value = valuesPerSeries[kvp.Key] = new PyList();
                         for (var i = 0; i < dataPointCount; i++)
                         {
-                            value.Append(PyObject.None);
+                            value.Append(none);
                         }
                     }
 
@@ -436,7 +472,7 @@ namespace QuantConnect.Python
                     }
                     else
                     {
-                        value.Append(PyObject.None);
+                        value.Append(none);
                     }
 
                     contributedSeriesCount++;
@@ -444,16 +480,14 @@ namespace QuantConnect.Python
 
                 dataPointCount++;
 
-                // Fill with missing values the series this data point doesn't have.
-                // Only scan for them when this data point didn't contribute to every known series,
-                // so data points with homogeneous series, the common case, don't pay for the scan
+                // fill the columns this symbol doesn't have, only scanning when there is any
                 if (contributedSeriesCount != valuesPerSeries.Count)
                 {
                     foreach (var kvp in valuesPerSeries)
                     {
                         if (!pandasData._series.ContainsKey(kvp.Key))
                         {
-                            kvp.Value.Append(PyObject.None);
+                            kvp.Value.Append(none);
                         }
                     }
                 }
@@ -518,7 +552,11 @@ namespace QuantConnect.Python
 
                 foreach (var columnName in columnNames)
                 {
-                    _series.TryAdd(columnName, new Serie(withTimeIndex: !_timeAsColumn));
+                    if (!_series.ContainsKey(columnName))
+                    {
+                        // the current row is added right after, so only the previous ones are filled
+                        _series[columnName] = CreateSerie(_rowTimes.Count - 1);
+                    }
                 }
             }
 
@@ -687,12 +725,13 @@ namespace QuantConnect.Python
         {
             if (!_series.TryGetValue(key, out var serie))
             {
-                // Dynamic data instances might not all have the same properties,
-                // so add series for new properties as they appear
-                _series[key] = serie = new Serie(withTimeIndex: !_timeAsColumn);
+                // new dynamic data property: fill the previous rows and append the current one, never overriding a filled row
+                _series[key] = serie = CreateSerie(_rowTimes.Count - 1);
+                overrideValues = false;
             }
 
             serie.Add(time, input, overrideValues);
+            _touchedSeriesCount++;
         }
 
         private class Serie
