@@ -496,17 +496,16 @@ namespace QuantConnect.Python
             using var pyDict = new PyDict();
             foreach (var kvp in valuesPerSeries)
             {
+                using var value = kvp.Value;
                 if (seriesToSkip.TryGetValue(kvp.Key, out var skip) && skip)
                 {
                     continue;
                 }
 
-                using var series = _seriesFactory.Invoke(kvp.Value, index);
+                using var series = _seriesFactory.Invoke(value, index);
                 using var pyStrKey = kvp.Key.ToPython();
                 using var pyKey = _pandasColumn.Invoke(pyStrKey);
                 pyDict.SetItem(pyKey, series);
-
-                kvp.Value.Dispose();
             }
             var result = _dataFrameFactory.Invoke(pyDict);
 
