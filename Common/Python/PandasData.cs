@@ -215,16 +215,6 @@ namespace QuantConnect.Python
         }
 
         /// <summary>
-        /// Creates a series filled with missing values for the given number of rows
-        /// </summary>
-        private Serie CreateSerie(int rowCount)
-        {
-            var serie = new Serie(withTimeIndex: !_timeAsColumn);
-            serie.FillMissingRows(_rowTimes, rowCount);
-            return serie;
-        }
-
-        /// <summary>
         /// Returns the number of series touched
         /// </summary>
         private int AddMemberToSeries(object instance, DateTime endTime, DataTypeMember member, bool overrideValues)
@@ -547,7 +537,7 @@ namespace QuantConnect.Python
                     if (!_series.ContainsKey(columnName))
                     {
                         // the current row is added right after, so only the previous ones are filled
-                        _series[columnName] = CreateSerie(_rowTimes.Count - 1);
+                        _series[columnName] = Serie.Create(!_timeAsColumn, _rowTimes, _rowTimes.Count - 1);
                     }
                 }
             }
@@ -720,7 +710,7 @@ namespace QuantConnect.Python
             if (!_series.TryGetValue(key, out var serie))
             {
                 // new dynamic data property: fill the previous rows and append the current one, never overriding a filled row
-                _series[key] = serie = CreateSerie(_rowTimes.Count - 1);
+                _series[key] = serie = Serie.Create(!_timeAsColumn, _rowTimes, _rowTimes.Count - 1);
                 overrideValues = false;
             }
 
@@ -745,6 +735,16 @@ namespace QuantConnect.Python
                 {
                     Times = new();
                 }
+            }
+
+            /// <summary>
+            /// Creates a series filled with missing values for the given number of rows
+            /// </summary>
+            public static Serie Create(bool withTimeIndex, List<DateTime> rowTimes, int rowCount)
+            {
+                var serie = new Serie(withTimeIndex);
+                serie.FillMissingRows(rowTimes, rowCount);
+                return serie;
             }
 
             /// <summary>
