@@ -398,6 +398,7 @@ namespace QuantConnect.Python
             var dataPointCount = 0;
             foreach (var pandasData in pandasDatas)
             {
+                var contributedSeriesCount = 0;
                 foreach (var kvp in pandasData._series)
                 {
                     if (skipTimesColumn && kvp.Key == "time")
@@ -437,16 +438,23 @@ namespace QuantConnect.Python
                     {
                         value.Append(PyObject.None);
                     }
+
+                    contributedSeriesCount++;
                 }
 
                 dataPointCount++;
 
-                // Fill with missing values the series this data point doesn't have
-                foreach (var kvp in valuesPerSeries)
+                // Fill with missing values the series this data point doesn't have.
+                // Only scan for them when this data point didn't contribute to every known series,
+                // so data points with homogeneous series, the common case, don't pay for the scan
+                if (contributedSeriesCount != valuesPerSeries.Count)
                 {
-                    if (!pandasData._series.ContainsKey(kvp.Key))
+                    foreach (var kvp in valuesPerSeries)
                     {
-                        kvp.Value.Append(PyObject.None);
+                        if (!pandasData._series.ContainsKey(kvp.Key))
+                        {
+                            kvp.Value.Append(PyObject.None);
+                        }
                     }
                 }
             }
