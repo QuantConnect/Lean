@@ -755,6 +755,10 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
                             throw new Exception("The maximum number of attempts for brokerage cash sync has been reached.");
                         }
                     }
+                    else
+                    {
+                        _failedCashSyncAttempts = 0;
+                    }
                 }
             }
 
