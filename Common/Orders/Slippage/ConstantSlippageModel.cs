@@ -43,5 +43,18 @@ namespace QuantConnect.Orders.Slippage
 
             return lastData.Value*_slippagePercent;
         }
+
+        /// <summary>
+        /// Slippage Model. Return a decimal cash slippage approximation on the order
+        /// using the provided reference price.
+        /// </summary>
+        /// <param name="asset">The security matching the order</param>
+        /// <param name="order">The order to compute slippage for</param>
+        /// <param name="referencePrice">The price used as the reference for the slippage calculation</param>
+        /// <returns>The slippage approximation</returns>
+        public decimal GetSlippageApproximation(Security asset, Order order, decimal referencePrice)
+        {
+            return referencePrice * _slippagePercent;
+        }
     }
 }

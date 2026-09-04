@@ -22,6 +22,7 @@ using QuantConnect.Data.Market;
 using QuantConnect.Indicators;
 using QuantConnect.Orders;
 using QuantConnect.Orders.Fills;
+using QuantConnect.Orders.Slippage;
 using QuantConnect.Securities;
 using QuantConnect.Securities.Forex;
 using QuantConnect.Tests.Common.Data;
@@ -444,6 +445,69 @@ namespace QuantConnect.Tests.Common.Orders.Fills
             fill = model.MarketOnOpenFill(equity, order);
             Assert.AreEqual(order.Quantity, fill.FillQuantity);
             Assert.AreEqual(expected, fill.FillPrice);
+        }
+
+        [TestCase(-100, 103.896)]
+        [TestCase(100, 104.104)]
+        public void PerformsMarketOnOpenUsingOpenPriceForConstantSlippageWithDailySubscription(int quantity, decimal expected)
+        {
+            const decimal open = 104m;
+            const decimal baselineClose = 105m;
+            const decimal mutatedClose = 103.5m;
+            const decimal slippagePercent = 0.001m;
+
+            var reference = new DateTime(2015, 06, 05, 12, 0, 0);
+            var config = CreateTradeBarConfig(Symbols.SPY, Resolution.Daily);
+
+            var baselineEquity = CreateEquity(config);
+            var mutatedEquity = CreateEquity(config);
+
+            baselineEquity.SetSlippageModel(new ConstantSlippageModel(slippagePercent));
+            mutatedEquity.SetSlippageModel(new ConstantSlippageModel(slippagePercent));
+
+            var time = baselineEquity.Exchange.Hours.GetNextMarketOpen(reference, false);
+            TimeKeeper.SetUtcDateTime(time.ConvertToUtc(TimeZones.NewYork));
+
+            TradeBar GetTradeBar(decimal close) => new TradeBar(
+                time.RoundDown(Time.OneDay),
+                Symbols.SPY,
+                open,
+                106m,
+                100m,
+                close,
+                100,
+                Time.OneDay);
+
+            baselineEquity.SetMarketPrice(GetTradeBar(baselineClose));
+            mutatedEquity.SetMarketPrice(GetTradeBar(mutatedClose));
+
+            var baselineOrder = new MarketOnOpenOrder(Symbols.SPY, quantity, reference);
+            var mutatedOrder = new MarketOnOpenOrder(Symbols.SPY, quantity, reference);
+
+            var configProvider = new MockSubscriptionDataConfigProvider(config);
+
+            var baselineFill = ((EquityFillModel)baselineEquity.FillModel)
+                .Fill(new FillModelParameters(
+                    baselineEquity,
+                    baselineOrder,
+                    configProvider,
+                    Time.OneHour,
+                    null))
+                .Single();
+
+            var mutatedFill = ((EquityFillModel)mutatedEquity.FillModel)
+                .Fill(new FillModelParameters(
+                    mutatedEquity,
+                    mutatedOrder,
+                    configProvider,
+                    Time.OneHour,
+                    null))
+                .Single();
+
+            Assert.AreEqual(quantity, baselineFill.FillQuantity);
+            Assert.AreEqual(quantity, mutatedFill.FillQuantity);
+            Assert.AreEqual(expected, baselineFill.FillPrice);
+            Assert.AreEqual(baselineFill.FillPrice, mutatedFill.FillPrice);
         }
 
         [TestCase(-100)]
