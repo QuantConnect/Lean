@@ -1,4 +1,4 @@
-/*
+﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2023 QuantConnect Corporation.
  *
@@ -161,7 +161,9 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 17
         /// </remarks>
         [JsonProperty("17")]
-        public string Auditor => FundamentalService.Get<string>(_timeProvider.GetUtcNow(), _securityIdentifier, FundamentalProperty.CompanyReference_Auditor);
+        [Obsolete("Auditor was retired by Morningstar in 2026; no replacement is available.")]
+        [JsonIgnore]
+        public string Auditor => throw new NotSupportedException("Auditor was retired by Morningstar in 2026; no replacement is available.");
 
         /// <summary>
         /// The ISO code denoting the language text for Auditor's name and contact information.
@@ -170,7 +172,9 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 18
         /// </remarks>
         [JsonProperty("18")]
-        public string AuditorLanguageCode => FundamentalService.Get<string>(_timeProvider.GetUtcNow(), _securityIdentifier, FundamentalProperty.CompanyReference_AuditorLanguageCode);
+        [Obsolete("AuditorLanguageCode was retired by Morningstar in 2026; no replacement is available.")]
+        [JsonIgnore]
+        public string AuditorLanguageCode => throw new NotSupportedException("AuditorLanguageCode was retired by Morningstar in 2026; no replacement is available.");
 
         /// <summary>
         /// The legal (registered) name of the current legal Advisor of the company.
@@ -179,7 +183,9 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 19
         /// </remarks>
         [JsonProperty("19")]
-        public string Advisor => FundamentalService.Get<string>(_timeProvider.GetUtcNow(), _securityIdentifier, FundamentalProperty.CompanyReference_Advisor);
+        [Obsolete("Advisor was retired by Morningstar in 2026; no replacement is available.")]
+        [JsonIgnore]
+        public string Advisor => throw new NotSupportedException("Advisor was retired by Morningstar in 2026; no replacement is available.");
 
         /// <summary>
         /// The ISO code denoting the language text for Advisor's name and contact information.
@@ -188,7 +194,9 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 20
         /// </remarks>
         [JsonProperty("20")]
-        public string AdvisorLanguageCode => FundamentalService.Get<string>(_timeProvider.GetUtcNow(), _securityIdentifier, FundamentalProperty.CompanyReference_AdvisorLanguageCode);
+        [Obsolete("AdvisorLanguageCode was retired by Morningstar in 2026; no replacement is available.")]
+        [JsonIgnore]
+        public string AdvisorLanguageCode => throw new NotSupportedException("AdvisorLanguageCode was retired by Morningstar in 2026; no replacement is available.");
 
         /// <summary>
         /// Indicator to denote if the company is a limited partnership, which is a form of business structure comprised of a general partner and limited partners. 1 denotes it is a LP; otherwise 0.
@@ -215,7 +223,9 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 23
         /// </remarks>
         [JsonProperty("23")]
-        public string PrimaryMIC => FundamentalService.Get<string>(_timeProvider.GetUtcNow(), _securityIdentifier, FundamentalProperty.CompanyReference_PrimaryMIC);
+        [Obsolete("PrimaryMIC was retired by Morningstar in 2026; no replacement is available.")]
+        [JsonIgnore]
+        public string PrimaryMIC => throw new NotSupportedException("PrimaryMIC was retired by Morningstar in 2026; no replacement is available.");
 
         /// <summary>
         /// This refers to the financial template used to collect the company's financial statements. There are two report styles representing two different financial template structures. Report style "1" is most commonly used by US and Canadian companies, and Report style "3" is most commonly used by the rest of the universe. Contact your client manager for access to the respective templates.
@@ -224,7 +234,9 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 24
         /// </remarks>
         [JsonProperty("24")]
-        public int ReportStyle => FundamentalService.Get<int>(_timeProvider.GetUtcNow(), _securityIdentifier, FundamentalProperty.CompanyReference_ReportStyle);
+        [Obsolete("ReportStyle was retired by Morningstar in 2026; no replacement is available.")]
+        [JsonIgnore]
+        public int ReportStyle => throw new NotSupportedException("ReportStyle was retired by Morningstar in 2026; no replacement is available.");
 
         /// <summary>
         /// The year a company was founded.
@@ -252,6 +264,61 @@ namespace QuantConnect.Data.Fundamental
         /// </remarks>
         [JsonProperty("27")]
         public DateTime ExpectedFiscalYearEnd => FundamentalService.Get<DateTime>(_timeProvider.GetUtcNow(), _securityIdentifier, FundamentalProperty.CompanyReference_ExpectedFiscalYearEnd);
+
+        /// <summary>
+        /// Indicator to denote if the company is a special purpose acquisition company (SPAC).
+        /// </summary>
+        /// <remarks>
+        /// Morningstar DataId: 28
+        /// </remarks>
+        [JsonProperty("28")]
+        public bool IsSPAC => FundamentalService.Get<bool>(_timeProvider.GetUtcNow(), _securityIdentifier, FundamentalProperty.CompanyReference_IsSPAC);
+
+        /// <summary>
+        /// Indicator to denote if the company is a master limited partnership (MLP).
+        /// </summary>
+        /// <remarks>
+        /// Morningstar DataId: 29
+        /// </remarks>
+        [JsonProperty("29")]
+        public bool IsMLP => FundamentalService.Get<bool>(_timeProvider.GetUtcNow(), _securityIdentifier, FundamentalProperty.CompanyReference_IsMLP);
+
+        /// <summary>
+        /// Indicator to denote if the company is a business development company (BDC).
+        /// </summary>
+        /// <remarks>
+        /// Morningstar DataId: 30
+        /// </remarks>
+        [JsonProperty("30")]
+        public bool IsBDC => FundamentalService.Get<bool>(_timeProvider.GetUtcNow(), _securityIdentifier, FundamentalProperty.CompanyReference_IsBDC);
+
+        /// <summary>
+        /// The Legal Entity Identifier (LEI), a twenty character code identifying the company as a
+        /// party to financial transactions.
+        /// </summary>
+        /// <remarks>
+        /// Morningstar DataId: 31
+        /// </remarks>
+        [JsonProperty("31")]
+        public string LEI => FundamentalService.Get<string>(_timeProvider.GetUtcNow(), _securityIdentifier, FundamentalProperty.CompanyReference_LEI);
+
+        /// <summary>
+        /// Whether the company is a shell company
+        /// </summary>
+        /// <remarks>
+        /// Morningstar DataId: 45003
+        /// </remarks>
+        [JsonProperty("45003")]
+        public bool IsShellCompany => FundamentalService.Get<bool>(_timeProvider.GetUtcNow(), _securityIdentifier, FundamentalProperty.CompanyReference_IsShellCompany);
+
+        /// <summary>
+        /// The state or country the company is incorporated in
+        /// </summary>
+        /// <remarks>
+        /// Morningstar DataId: 45004
+        /// </remarks>
+        [JsonProperty("45004")]
+        public string StateOrCountryOfIncorporation => FundamentalService.Get<string>(_timeProvider.GetUtcNow(), _securityIdentifier, FundamentalProperty.CompanyReference_StateOrCountryOfIncorporation);
 
         /// <summary>
         /// Creates a new instance for the given time and security

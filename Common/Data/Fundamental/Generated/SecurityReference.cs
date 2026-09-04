@@ -56,6 +56,17 @@ namespace QuantConnect.Data.Fundamental
         public string CurrencyId => FundamentalService.Get<string>(_timeProvider.GetUtcNow(), _securityIdentifier, FundamentalProperty.SecurityReference_CurrencyId);
 
         /// <summary>
+        /// The International Securities Identification Number of the share. Those issued by CUSIP
+        /// Global Services are licensed separately and are not included, so this is populated for
+        /// non US issuers.
+        /// </summary>
+        /// <remarks>
+        /// Morningstar DataId: 1007
+        /// </remarks>
+        [JsonProperty("1007")]
+        public string ISIN => FundamentalService.Get<string>(_timeProvider.GetUtcNow(), _securityIdentifier, FundamentalProperty.SecurityReference_ISIN);
+
+        /// <summary>
         /// The initial day that the share begins trading on a public exchange.
         /// </summary>
         /// <remarks>
@@ -243,6 +254,15 @@ namespace QuantConnect.Data.Fundamental
         /// </remarks>
         [JsonProperty("1029")]
         public string MarketDataID => FundamentalService.Get<string>(_timeProvider.GetUtcNow(), _securityIdentifier, FundamentalProperty.SecurityReference_MarketDataID);
+
+        /// <summary>
+        /// Whether the security is in its initial public offering period
+        /// </summary>
+        /// <remarks>
+        /// Morningstar DataId: 45008
+        /// </remarks>
+        [JsonProperty("45008")]
+        public bool IsIPO => FundamentalService.Get<bool>(_timeProvider.GetUtcNow(), _securityIdentifier, FundamentalProperty.SecurityReference_IsIPO);
 
         /// <summary>
         /// Creates a new instance for the given time and security

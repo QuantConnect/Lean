@@ -1,4 +1,4 @@
-/*
+﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2023 QuantConnect Corporation.
  *
@@ -37,58 +37,59 @@ namespace QuantConnect.Data.Fundamental
         /// Gets/sets the OneMonth period value for the field
         /// </summary>
         [JsonProperty("1M")]
-        public string OneMonth => FundamentalService.Get<string>(TimeProvider.GetUtcNow(), SecurityIdentifier, FundamentalProperty.FinancialStatements_PeriodAuditor_OneMonth);
+        [Obsolete("PeriodAuditor was retired by Morningstar in 2026 for all periods; no replacement is available.")]
+        [JsonIgnore]
+        public string OneMonth => throw new NotSupportedException("PeriodAuditor was retired by Morningstar in 2026 for all periods; no replacement is available.");
 
         /// <summary>
         /// Gets/sets the TwoMonths period value for the field
         /// </summary>
         [JsonProperty("2M")]
-        public string TwoMonths => FundamentalService.Get<string>(TimeProvider.GetUtcNow(), SecurityIdentifier, FundamentalProperty.FinancialStatements_PeriodAuditor_TwoMonths);
+        [Obsolete("PeriodAuditor was retired by Morningstar in 2026 for all periods; no replacement is available.")]
+        [JsonIgnore]
+        public string TwoMonths => throw new NotSupportedException("PeriodAuditor was retired by Morningstar in 2026 for all periods; no replacement is available.");
 
         /// <summary>
         /// Gets/sets the ThreeMonths period value for the field
         /// </summary>
         [JsonProperty("3M")]
-        public string ThreeMonths => FundamentalService.Get<string>(TimeProvider.GetUtcNow(), SecurityIdentifier, FundamentalProperty.FinancialStatements_PeriodAuditor_ThreeMonths);
+        [Obsolete("PeriodAuditor was retired by Morningstar in 2026 for all periods; no replacement is available.")]
+        [JsonIgnore]
+        public string ThreeMonths => throw new NotSupportedException("PeriodAuditor was retired by Morningstar in 2026 for all periods; no replacement is available.");
 
         /// <summary>
         /// Gets/sets the SixMonths period value for the field
         /// </summary>
         [JsonProperty("6M")]
-        public string SixMonths => FundamentalService.Get<string>(TimeProvider.GetUtcNow(), SecurityIdentifier, FundamentalProperty.FinancialStatements_PeriodAuditor_SixMonths);
+        [Obsolete("PeriodAuditor was retired by Morningstar in 2026 for all periods; no replacement is available.")]
+        [JsonIgnore]
+        public string SixMonths => throw new NotSupportedException("PeriodAuditor was retired by Morningstar in 2026 for all periods; no replacement is available.");
 
         /// <summary>
         /// Gets/sets the NineMonths period value for the field
         /// </summary>
         [JsonProperty("9M")]
-        public string NineMonths => FundamentalService.Get<string>(TimeProvider.GetUtcNow(), SecurityIdentifier, FundamentalProperty.FinancialStatements_PeriodAuditor_NineMonths);
+        [Obsolete("PeriodAuditor was retired by Morningstar in 2026 for all periods; no replacement is available.")]
+        [JsonIgnore]
+        public string NineMonths => throw new NotSupportedException("PeriodAuditor was retired by Morningstar in 2026 for all periods; no replacement is available.");
 
         /// <summary>
         /// Gets/sets the TwelveMonths period value for the field
         /// </summary>
         [JsonProperty("12M")]
-        public string TwelveMonths => FundamentalService.Get<string>(TimeProvider.GetUtcNow(), SecurityIdentifier, FundamentalProperty.FinancialStatements_PeriodAuditor_TwelveMonths);
+        [Obsolete("PeriodAuditor was retired by Morningstar in 2026 for all periods; no replacement is available.")]
+        [JsonIgnore]
+        public string TwelveMonths => throw new NotSupportedException("PeriodAuditor was retired by Morningstar in 2026 for all periods; no replacement is available.");
 
         /// <summary>
         /// Returns true if the field contains a value for the default period
         /// </summary>
-        public override bool HasValue => !BaseFundamentalDataProvider.IsNone(typeof(string), FundamentalService.Get<string>(TimeProvider.GetUtcNow(), SecurityIdentifier, FundamentalProperty.FinancialStatements_PeriodAuditor_TwelveMonths));
+        public override bool HasValue => false;
 
         /// <summary>
         /// Returns the default value for the field
         /// </summary>
-        public override string Value
-        {
-            get
-            {
-                var defaultValue = FundamentalService.Get<string>(TimeProvider.GetUtcNow(), SecurityIdentifier, FundamentalProperty.FinancialStatements_PeriodAuditor_TwelveMonths);
-                if (!BaseFundamentalDataProvider.IsNone(typeof(string), defaultValue))
-                {
-                    return defaultValue;
-                }
-                return base.Value;
-            }
-        }
+        public override string Value => throw new NotSupportedException("PeriodAuditor was retired by Morningstar in 2026 for all periods; no replacement is available.");
 
         /// <summary>
         /// Gets a dictionary of period names and values for the field
@@ -97,7 +98,7 @@ namespace QuantConnect.Data.Fundamental
         public override IReadOnlyDictionary<string, string> GetPeriodValues()
         {
             var result = new Dictionary<string, string>();
-            foreach (var kvp in new[] { new Tuple<string, string>("1M", OneMonth), new Tuple<string, string>("2M", TwoMonths), new Tuple<string, string>("3M", ThreeMonths), new Tuple<string, string>("6M", SixMonths), new Tuple<string, string>("9M", NineMonths), new Tuple<string, string>("12M", TwelveMonths) })
+            foreach (var kvp in System.Array.Empty<Tuple<string, string>>())
             {
                 if (!BaseFundamentalDataProvider.IsNone(typeof(string), kvp.Item2))
                 {

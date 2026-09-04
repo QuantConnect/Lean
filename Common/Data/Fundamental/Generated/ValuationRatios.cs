@@ -1,4 +1,4 @@
-/*
+﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2023 QuantConnect Corporation.
  *
@@ -413,7 +413,9 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 14042
         /// </remarks>
         [JsonProperty("14042")]
-        public string ForwardCalculationStyle => FundamentalService.Get<string>(_timeProvider.GetUtcNow(), _securityIdentifier, FundamentalProperty.ValuationRatios_ForwardCalculationStyle);
+        [Obsolete("ForwardCalculationStyle was retired by Morningstar in 2026; no replacement is available.")]
+        [JsonIgnore]
+        public string ForwardCalculationStyle => throw new NotSupportedException("ForwardCalculationStyle was retired by Morningstar in 2026; no replacement is available.");
 
         /// <summary>
         /// Used to collect the forward dividend for companies where our formula will not produce the correct value.
@@ -431,7 +433,9 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 14044
         /// </remarks>
         [JsonProperty("14044")]
-        public string TrailingCalculationStyle => FundamentalService.Get<string>(_timeProvider.GetUtcNow(), _securityIdentifier, FundamentalProperty.ValuationRatios_TrailingCalculationStyle);
+        [Obsolete("TrailingCalculationStyle was retired by Morningstar in 2026; no replacement is available.")]
+        [JsonIgnore]
+        public string TrailingCalculationStyle => throw new NotSupportedException("TrailingCalculationStyle was retired by Morningstar in 2026; no replacement is available.");
 
         /// <summary>
         /// Used to collect the trailing dividend for companies where our formula will not produce the correct value.
@@ -1143,6 +1147,204 @@ namespace QuantConnect.Data.Fundamental
         /// </remarks>
         [JsonProperty("14123")]
         public double NormalizedPEGRatio => FundamentalService.Get<double>(_timeProvider.GetUtcNow(), _securityIdentifier, FundamentalProperty.ValuationRatios_NormalizedPEGRatio);
+
+        /// <summary>
+        /// Normalized earnings divided by price
+        /// </summary>
+        /// <remarks>
+        /// Morningstar DataId: 45009
+        /// </remarks>
+        [JsonProperty("45009")]
+        public double NormalizedEarningsYield => FundamentalService.Get<double>(_timeProvider.GetUtcNow(), _securityIdentifier, FundamentalProperty.ValuationRatios_NormalizedEarningsYield);
+
+        /// <summary>
+        /// Diluted enterprise value divided by total assets
+        /// </summary>
+        /// <remarks>
+        /// Morningstar DataId: 45010
+        /// </remarks>
+        [JsonProperty("45010")]
+        public double DilutedEVToAssets => FundamentalService.Get<double>(_timeProvider.GetUtcNow(), _securityIdentifier, FundamentalProperty.ValuationRatios_DilutedEVToAssets);
+
+        /// <summary>
+        /// Diluted enterprise value divided by revenue
+        /// </summary>
+        /// <remarks>
+        /// Morningstar DataId: 45011
+        /// </remarks>
+        [JsonProperty("45011")]
+        public double DilutedEVToRevenue => FundamentalService.Get<double>(_timeProvider.GetUtcNow(), _securityIdentifier, FundamentalProperty.ValuationRatios_DilutedEVToRevenue);
+
+        /// <summary>
+        /// Diluted enterprise value divided by EBITDA
+        /// </summary>
+        /// <remarks>
+        /// Morningstar DataId: 45012
+        /// </remarks>
+        [JsonProperty("45012")]
+        public double DilutedEVToEBITDA => FundamentalService.Get<double>(_timeProvider.GetUtcNow(), _securityIdentifier, FundamentalProperty.ValuationRatios_DilutedEVToEBITDA);
+
+        /// <summary>
+        /// Diluted enterprise value divided by EBIT
+        /// </summary>
+        /// <remarks>
+        /// Morningstar DataId: 45013
+        /// </remarks>
+        [JsonProperty("45013")]
+        public double DilutedEVToEBIT => FundamentalService.Get<double>(_timeProvider.GetUtcNow(), _securityIdentifier, FundamentalProperty.ValuationRatios_DilutedEVToEBIT);
+
+        /// <summary>
+        /// Diluted enterprise value divided by free cash flow
+        /// </summary>
+        /// <remarks>
+        /// Morningstar DataId: 45014
+        /// </remarks>
+        [JsonProperty("45014")]
+        public double DilutedEVToFCF => FundamentalService.Get<double>(_timeProvider.GetUtcNow(), _securityIdentifier, FundamentalProperty.ValuationRatios_DilutedEVToFCF);
+
+        /// <summary>
+        /// Diluted enterprise value divided by normalized EBITDA
+        /// </summary>
+        /// <remarks>
+        /// Morningstar DataId: 45015
+        /// </remarks>
+        [JsonProperty("45015")]
+        public double DilutedEVToNormalizedEBITDA => FundamentalService.Get<double>(_timeProvider.GetUtcNow(), _securityIdentifier, FundamentalProperty.ValuationRatios_DilutedEVToNormalizedEBITDA);
+
+        /// <summary>
+        /// Diluted enterprise value divided by normalized EBIT
+        /// </summary>
+        /// <remarks>
+        /// Morningstar DataId: 45016
+        /// </remarks>
+        [JsonProperty("45016")]
+        public double DilutedEVToNormalizedEBIT => FundamentalService.Get<double>(_timeProvider.GetUtcNow(), _securityIdentifier, FundamentalProperty.ValuationRatios_DilutedEVToNormalizedEBIT);
+
+        /// <summary>
+        /// Enterprise value divided by normalized EBITDA
+        /// </summary>
+        /// <remarks>
+        /// Morningstar DataId: 45017
+        /// </remarks>
+        [JsonProperty("45017")]
+        public double NormalizedEVToEBITDA => FundamentalService.Get<double>(_timeProvider.GetUtcNow(), _securityIdentifier, FundamentalProperty.ValuationRatios_NormalizedEVToEBITDA);
+
+        /// <summary>
+        /// Enterprise value divided by normalized EBIT
+        /// </summary>
+        /// <remarks>
+        /// Morningstar DataId: 45018
+        /// </remarks>
+        [JsonProperty("45018")]
+        public double NormalizedEVToEBIT => FundamentalService.Get<double>(_timeProvider.GetUtcNow(), _securityIdentifier, FundamentalProperty.ValuationRatios_NormalizedEVToEBIT);
+
+        /// <summary>
+        /// Total debt divided by enterprise value
+        /// </summary>
+        /// <remarks>
+        /// Morningstar DataId: 45019
+        /// </remarks>
+        [JsonProperty("45019")]
+        public double TotalDebtToEV => FundamentalService.Get<double>(_timeProvider.GetUtcNow(), _securityIdentifier, FundamentalProperty.ValuationRatios_TotalDebtToEV);
+
+        /// <summary>
+        /// Five year average of enterprise value to EBITDA
+        /// </summary>
+        /// <remarks>
+        /// Morningstar DataId: 45020
+        /// </remarks>
+        [JsonProperty("45020")]
+        public double EVToEBITDA5YrAvg => FundamentalService.Get<double>(_timeProvider.GetUtcNow(), _securityIdentifier, FundamentalProperty.ValuationRatios_EVToEBITDA5YrAvg);
+
+        /// <summary>
+        /// Five year average of enterprise value to EBIT
+        /// </summary>
+        /// <remarks>
+        /// Morningstar DataId: 45021
+        /// </remarks>
+        [JsonProperty("45021")]
+        public double EVToEBIT5YrAvg => FundamentalService.Get<double>(_timeProvider.GetUtcNow(), _securityIdentifier, FundamentalProperty.ValuationRatios_EVToEBIT5YrAvg);
+
+        /// <summary>
+        /// Five year average of the price to book ratio
+        /// </summary>
+        /// <remarks>
+        /// Morningstar DataId: 45022
+        /// </remarks>
+        [JsonProperty("45022")]
+        public double PBRatio5YrAvg => FundamentalService.Get<double>(_timeProvider.GetUtcNow(), _securityIdentifier, FundamentalProperty.ValuationRatios_PBRatio5YrAvg);
+
+        /// <summary>
+        /// Five year average of the price to sales ratio
+        /// </summary>
+        /// <remarks>
+        /// Morningstar DataId: 45023
+        /// </remarks>
+        [JsonProperty("45023")]
+        public double PSRatio5YrAvg => FundamentalService.Get<double>(_timeProvider.GetUtcNow(), _securityIdentifier, FundamentalProperty.ValuationRatios_PSRatio5YrAvg);
+
+        /// <summary>
+        /// One year average of the price to free cash flow ratio
+        /// </summary>
+        /// <remarks>
+        /// Morningstar DataId: 45024
+        /// </remarks>
+        [JsonProperty("45024")]
+        public double FCFRatio1YrAvg => FundamentalService.Get<double>(_timeProvider.GetUtcNow(), _securityIdentifier, FundamentalProperty.ValuationRatios_FCFRatio1YrAvg);
+
+        /// <summary>
+        /// Five year average of the price to free cash flow ratio
+        /// </summary>
+        /// <remarks>
+        /// Morningstar DataId: 45025
+        /// </remarks>
+        [JsonProperty("45025")]
+        public double FCFRatio5YrAvg => FundamentalService.Get<double>(_timeProvider.GetUtcNow(), _securityIdentifier, FundamentalProperty.ValuationRatios_FCFRatio5YrAvg);
+
+        /// <summary>
+        /// Ten year average of the price to free cash flow ratio
+        /// </summary>
+        /// <remarks>
+        /// Morningstar DataId: 45026
+        /// </remarks>
+        [JsonProperty("45026")]
+        public double FCFRatio10YrAvg => FundamentalService.Get<double>(_timeProvider.GetUtcNow(), _securityIdentifier, FundamentalProperty.ValuationRatios_FCFRatio10YrAvg);
+
+        /// <summary>
+        /// Five year average of the price to cash flow ratio
+        /// </summary>
+        /// <remarks>
+        /// Morningstar DataId: 45027
+        /// </remarks>
+        [JsonProperty("45027")]
+        public double PCashRatio5YrAvg => FundamentalService.Get<double>(_timeProvider.GetUtcNow(), _securityIdentifier, FundamentalProperty.ValuationRatios_PCashRatio5YrAvg);
+
+        /// <summary>
+        /// Five year average of the earning yield
+        /// </summary>
+        /// <remarks>
+        /// Morningstar DataId: 45028
+        /// </remarks>
+        [JsonProperty("45028")]
+        public double EarningYield5YrAvg => FundamentalService.Get<double>(_timeProvider.GetUtcNow(), _securityIdentifier, FundamentalProperty.ValuationRatios_EarningYield5YrAvg);
+
+        /// <summary>
+        /// Five year average of the buy back yield
+        /// </summary>
+        /// <remarks>
+        /// Morningstar DataId: 45029
+        /// </remarks>
+        [JsonProperty("45029")]
+        public double BuyBackYield5YrAvg => FundamentalService.Get<double>(_timeProvider.GetUtcNow(), _securityIdentifier, FundamentalProperty.ValuationRatios_BuyBackYield5YrAvg);
+
+        /// <summary>
+        /// Five year average of the total yield
+        /// </summary>
+        /// <remarks>
+        /// Morningstar DataId: 45030
+        /// </remarks>
+        [JsonProperty("45030")]
+        public double TotalYield5YrAvg => FundamentalService.Get<double>(_timeProvider.GetUtcNow(), _securityIdentifier, FundamentalProperty.ValuationRatios_TotalYield5YrAvg);
 
         /// <summary>
         /// Creates a new instance for the given time and security

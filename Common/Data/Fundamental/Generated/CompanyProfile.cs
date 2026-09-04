@@ -1,4 +1,4 @@
-/*
+﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2023 QuantConnect Corporation.
  *
@@ -125,7 +125,9 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 2110
         /// </remarks>
         [JsonProperty("2110")]
-        public string HeadquarterFax => FundamentalService.Get<string>(_timeProvider.GetUtcNow(), _securityIdentifier, FundamentalProperty.CompanyProfile_HeadquarterFax);
+        [Obsolete("HeadquarterFax was retired by Morningstar in 2026; no replacement is available.")]
+        [JsonIgnore]
+        public string HeadquarterFax => throw new NotSupportedException("HeadquarterFax was retired by Morningstar in 2026; no replacement is available.");
 
         /// <summary>
         /// The headquarters' website address as given in the latest report
@@ -251,7 +253,9 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 2125
         /// </remarks>
         [JsonProperty("2125")]
-        public string RegisteredFax => FundamentalService.Get<string>(_timeProvider.GetUtcNow(), _securityIdentifier, FundamentalProperty.CompanyProfile_RegisteredFax);
+        [Obsolete("RegisteredFax was retired by Morningstar in 2026; no replacement is available.")]
+        [JsonIgnore]
+        public string RegisteredFax => throw new NotSupportedException("RegisteredFax was retired by Morningstar in 2026; no replacement is available.");
 
         /// <summary>
         /// Flag to denote whether head and registered offices are the same
@@ -260,7 +264,9 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 2126
         /// </remarks>
         [JsonProperty("2126")]
-        public bool IsHeadOfficeSameWithRegisteredOfficeFlag => FundamentalService.Get<bool>(_timeProvider.GetUtcNow(), _securityIdentifier, FundamentalProperty.CompanyProfile_IsHeadOfficeSameWithRegisteredOfficeFlag);
+        [Obsolete("IsHeadOfficeSameWithRegisteredOfficeFlag was retired by Morningstar in 2026; no replacement is available.")]
+        [JsonIgnore]
+        public bool IsHeadOfficeSameWithRegisteredOfficeFlag => throw new NotSupportedException("IsHeadOfficeSameWithRegisteredOfficeFlag was retired by Morningstar in 2026; no replacement is available.");
 
         /// <summary>
         /// The latest total shares outstanding reported by the company; most common source of this information is from the cover of the 10K, 10Q, or 20F filing. This figure is an aggregated shares outstanding number for a company. It can be used to calculate the most accurate market cap, based on each individual share's trading price and the total aggregated shares outstanding figure.
@@ -315,6 +321,63 @@ namespace QuantConnect.Data.Fundamental
         /// </remarks>
         [JsonProperty("40010")]
         public string ReasonofSharesChange => FundamentalService.Get<string>(_timeProvider.GetUtcNow(), _securityIdentifier, FundamentalProperty.CompanyProfile_ReasonofSharesChange);
+
+        /// <summary>
+        /// The market capitalisation of the company on a fully diluted basis, that is including the
+        /// shares that would exist if all convertible instruments were converted and all options and
+        /// warrants exercised.
+        /// </summary>
+        /// <remarks>
+        /// Morningstar DataId: 40011
+        /// </remarks>
+        [JsonProperty("40011")]
+        public double DilutedMarketCap => FundamentalService.Get<double>(_timeProvider.GetUtcNow(), _securityIdentifier, FundamentalProperty.CompanyProfile_DilutedMarketCap);
+
+        /// <summary>
+        /// A description of the company's business, its history and its operations, in English.
+        /// </summary>
+        /// <remarks>
+        /// Morningstar DataId: 2002
+        /// </remarks>
+        [JsonProperty("2002")]
+        public string LongDescription => FundamentalService.Get<string>(_timeProvider.GetUtcNow(), _securityIdentifier, FundamentalProperty.CompanyProfile_LongDescription);
+
+        /// <summary>
+        /// The number of shares available for public trading, that is the shares outstanding less
+        /// those held closely, by insiders or by the company itself.
+        /// </summary>
+        /// <remarks>
+        /// Morningstar DataId: 42006
+        /// </remarks>
+        [JsonProperty("42006")]
+        public double Float => FundamentalService.Get<double>(_timeProvider.GetUtcNow(), _securityIdentifier, FundamentalProperty.CompanyProfile_Float);
+
+        /// <summary>
+        /// The number of full time employees
+        /// </summary>
+        /// <remarks>
+        /// Morningstar DataId: 45005
+        /// </remarks>
+        [JsonProperty("45005")]
+        public int FullTimeEmployeeNumber => FundamentalService.Get<int>(_timeProvider.GetUtcNow(), _securityIdentifier, FundamentalProperty.CompanyProfile_FullTimeEmployeeNumber);
+
+        /// <summary>
+        /// The number of part time employees
+        /// </summary>
+        /// <remarks>
+        /// Morningstar DataId: 45006
+        /// </remarks>
+        [JsonProperty("45006")]
+        public int PartTimeEmployeeNumber => FundamentalService.Get<int>(_timeProvider.GetUtcNow(), _securityIdentifier, FundamentalProperty.CompanyProfile_PartTimeEmployeeNumber);
+
+        /// <summary>
+        /// Shares the company holds in treasury
+        /// </summary>
+        /// <remarks>
+        /// Morningstar DataId: 45007
+        /// </remarks>
+        [JsonProperty("45007")]
+        public long TreasuryShares => FundamentalService.Get<long>(_timeProvider.GetUtcNow(), _securityIdentifier, FundamentalProperty.CompanyProfile_TreasuryShares);
 
         /// <summary>
         /// Creates a new instance for the given time and security

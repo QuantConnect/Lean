@@ -1,4 +1,4 @@
-/*
+﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2023 QuantConnect Corporation.
  *
@@ -37,58 +37,59 @@ namespace QuantConnect.Data.Fundamental
         /// Gets/sets the OneMonth period value for the field
         /// </summary>
         [JsonProperty("1M")]
-        public long OneMonth => FundamentalService.Get<long>(TimeProvider.GetUtcNow(), SecurityIdentifier, FundamentalProperty.FinancialStatements_NumberOfShareHolders_OneMonth);
+        [Obsolete("NumberOfShareHolders was retired by Morningstar in 2026 for all periods; no replacement is available.")]
+        [JsonIgnore]
+        public long OneMonth => throw new NotSupportedException("NumberOfShareHolders was retired by Morningstar in 2026 for all periods; no replacement is available.");
 
         /// <summary>
         /// Gets/sets the TwoMonths period value for the field
         /// </summary>
         [JsonProperty("2M")]
-        public long TwoMonths => FundamentalService.Get<long>(TimeProvider.GetUtcNow(), SecurityIdentifier, FundamentalProperty.FinancialStatements_NumberOfShareHolders_TwoMonths);
+        [Obsolete("NumberOfShareHolders was retired by Morningstar in 2026 for all periods; no replacement is available.")]
+        [JsonIgnore]
+        public long TwoMonths => throw new NotSupportedException("NumberOfShareHolders was retired by Morningstar in 2026 for all periods; no replacement is available.");
 
         /// <summary>
         /// Gets/sets the ThreeMonths period value for the field
         /// </summary>
         [JsonProperty("3M")]
-        public long ThreeMonths => FundamentalService.Get<long>(TimeProvider.GetUtcNow(), SecurityIdentifier, FundamentalProperty.FinancialStatements_NumberOfShareHolders_ThreeMonths);
+        [Obsolete("NumberOfShareHolders was retired by Morningstar in 2026 for all periods; no replacement is available.")]
+        [JsonIgnore]
+        public long ThreeMonths => throw new NotSupportedException("NumberOfShareHolders was retired by Morningstar in 2026 for all periods; no replacement is available.");
 
         /// <summary>
         /// Gets/sets the SixMonths period value for the field
         /// </summary>
         [JsonProperty("6M")]
-        public long SixMonths => FundamentalService.Get<long>(TimeProvider.GetUtcNow(), SecurityIdentifier, FundamentalProperty.FinancialStatements_NumberOfShareHolders_SixMonths);
+        [Obsolete("NumberOfShareHolders was retired by Morningstar in 2026 for all periods; no replacement is available.")]
+        [JsonIgnore]
+        public long SixMonths => throw new NotSupportedException("NumberOfShareHolders was retired by Morningstar in 2026 for all periods; no replacement is available.");
 
         /// <summary>
         /// Gets/sets the NineMonths period value for the field
         /// </summary>
         [JsonProperty("9M")]
-        public long NineMonths => FundamentalService.Get<long>(TimeProvider.GetUtcNow(), SecurityIdentifier, FundamentalProperty.FinancialStatements_NumberOfShareHolders_NineMonths);
+        [Obsolete("NumberOfShareHolders was retired by Morningstar in 2026 for all periods; no replacement is available.")]
+        [JsonIgnore]
+        public long NineMonths => throw new NotSupportedException("NumberOfShareHolders was retired by Morningstar in 2026 for all periods; no replacement is available.");
 
         /// <summary>
         /// Gets/sets the TwelveMonths period value for the field
         /// </summary>
         [JsonProperty("12M")]
-        public long TwelveMonths => FundamentalService.Get<long>(TimeProvider.GetUtcNow(), SecurityIdentifier, FundamentalProperty.FinancialStatements_NumberOfShareHolders_TwelveMonths);
+        [Obsolete("NumberOfShareHolders was retired by Morningstar in 2026 for all periods; no replacement is available.")]
+        [JsonIgnore]
+        public long TwelveMonths => throw new NotSupportedException("NumberOfShareHolders was retired by Morningstar in 2026 for all periods; no replacement is available.");
 
         /// <summary>
         /// Returns true if the field contains a value for the default period
         /// </summary>
-        public override bool HasValue => !BaseFundamentalDataProvider.IsNone(typeof(long), FundamentalService.Get<long>(TimeProvider.GetUtcNow(), SecurityIdentifier, FundamentalProperty.FinancialStatements_NumberOfShareHolders_TwelveMonths));
+        public override bool HasValue => false;
 
         /// <summary>
         /// Returns the default value for the field
         /// </summary>
-        public override long Value
-        {
-            get
-            {
-                var defaultValue = FundamentalService.Get<long>(TimeProvider.GetUtcNow(), SecurityIdentifier, FundamentalProperty.FinancialStatements_NumberOfShareHolders_TwelveMonths);
-                if (!BaseFundamentalDataProvider.IsNone(typeof(long), defaultValue))
-                {
-                    return defaultValue;
-                }
-                return base.Value;
-            }
-        }
+        public override long Value => throw new NotSupportedException("NumberOfShareHolders was retired by Morningstar in 2026 for all periods; no replacement is available.");
 
         /// <summary>
         /// Gets a dictionary of period names and values for the field
@@ -97,7 +98,7 @@ namespace QuantConnect.Data.Fundamental
         public override IReadOnlyDictionary<string, long> GetPeriodValues()
         {
             var result = new Dictionary<string, long>();
-            foreach (var kvp in new[] { new Tuple<string, long>("1M", OneMonth), new Tuple<string, long>("2M", TwoMonths), new Tuple<string, long>("3M", ThreeMonths), new Tuple<string, long>("6M", SixMonths), new Tuple<string, long>("9M", NineMonths), new Tuple<string, long>("12M", TwelveMonths) })
+            foreach (var kvp in System.Array.Empty<Tuple<string, long>>())
             {
                 if (!BaseFundamentalDataProvider.IsNone(typeof(long), kvp.Item2))
                 {
