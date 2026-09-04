@@ -38,6 +38,7 @@ namespace QuantConnect.Data.Fundamental
         /// </summary>
         [JsonProperty("2M")]
         [Obsolete("InvestmentinFinancialAssets.TwoMonths was retired by Morningstar in 2026; use InvestmentinFinancialAssets.ThreeMonths (also available: TwelveMonths).")]
+        [JsonIgnore]
         public double TwoMonths => throw new NotSupportedException("InvestmentinFinancialAssets.TwoMonths was retired by Morningstar in 2026; use InvestmentinFinancialAssets.ThreeMonths (also available: TwelveMonths).");
 
         /// <summary>

@@ -38,6 +38,7 @@ namespace QuantConnect.Data.Fundamental
         /// </summary>
         [JsonProperty("1M")]
         [Obsolete("NumberOfShareHolders was retired by Morningstar in 2026 for all periods; no replacement is available.")]
+        [JsonIgnore]
         public long OneMonth => throw new NotSupportedException("NumberOfShareHolders was retired by Morningstar in 2026 for all periods; no replacement is available.");
 
         /// <summary>
@@ -45,6 +46,7 @@ namespace QuantConnect.Data.Fundamental
         /// </summary>
         [JsonProperty("2M")]
         [Obsolete("NumberOfShareHolders was retired by Morningstar in 2026 for all periods; no replacement is available.")]
+        [JsonIgnore]
         public long TwoMonths => throw new NotSupportedException("NumberOfShareHolders was retired by Morningstar in 2026 for all periods; no replacement is available.");
 
         /// <summary>
@@ -52,6 +54,7 @@ namespace QuantConnect.Data.Fundamental
         /// </summary>
         [JsonProperty("3M")]
         [Obsolete("NumberOfShareHolders was retired by Morningstar in 2026 for all periods; no replacement is available.")]
+        [JsonIgnore]
         public long ThreeMonths => throw new NotSupportedException("NumberOfShareHolders was retired by Morningstar in 2026 for all periods; no replacement is available.");
 
         /// <summary>
@@ -59,6 +62,7 @@ namespace QuantConnect.Data.Fundamental
         /// </summary>
         [JsonProperty("6M")]
         [Obsolete("NumberOfShareHolders was retired by Morningstar in 2026 for all periods; no replacement is available.")]
+        [JsonIgnore]
         public long SixMonths => throw new NotSupportedException("NumberOfShareHolders was retired by Morningstar in 2026 for all periods; no replacement is available.");
 
         /// <summary>
@@ -66,6 +70,7 @@ namespace QuantConnect.Data.Fundamental
         /// </summary>
         [JsonProperty("9M")]
         [Obsolete("NumberOfShareHolders was retired by Morningstar in 2026 for all periods; no replacement is available.")]
+        [JsonIgnore]
         public long NineMonths => throw new NotSupportedException("NumberOfShareHolders was retired by Morningstar in 2026 for all periods; no replacement is available.");
 
         /// <summary>
@@ -73,6 +78,7 @@ namespace QuantConnect.Data.Fundamental
         /// </summary>
         [JsonProperty("12M")]
         [Obsolete("NumberOfShareHolders was retired by Morningstar in 2026 for all periods; no replacement is available.")]
+        [JsonIgnore]
         public long TwelveMonths => throw new NotSupportedException("NumberOfShareHolders was retired by Morningstar in 2026 for all periods; no replacement is available.");
 
         /// <summary>
@@ -92,7 +98,7 @@ namespace QuantConnect.Data.Fundamental
         public override IReadOnlyDictionary<string, long> GetPeriodValues()
         {
             var result = new Dictionary<string, long>();
-            foreach (var kvp in new[] { new Tuple<string, long>("1M", OneMonth), new Tuple<string, long>("2M", TwoMonths), new Tuple<string, long>("3M", ThreeMonths), new Tuple<string, long>("6M", SixMonths), new Tuple<string, long>("9M", NineMonths), new Tuple<string, long>("12M", TwelveMonths) })
+            foreach (var kvp in System.Array.Empty<Tuple<string, long>>())
             {
                 if (!BaseFundamentalDataProvider.IsNone(typeof(long), kvp.Item2))
                 {

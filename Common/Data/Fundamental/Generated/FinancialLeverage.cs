@@ -56,6 +56,7 @@ namespace QuantConnect.Data.Fundamental
         /// </summary>
         [JsonProperty("3M")]
         [Obsolete("FinancialLeverage.ThreeMonths was retired by Morningstar in 2026; use FinancialLeverage.OneYear.")]
+        [JsonIgnore]
         public double ThreeMonths => throw new NotSupportedException("FinancialLeverage.ThreeMonths was retired by Morningstar in 2026; use FinancialLeverage.OneYear.");
 
         /// <summary>
@@ -63,6 +64,7 @@ namespace QuantConnect.Data.Fundamental
         /// </summary>
         [JsonProperty("6M")]
         [Obsolete("FinancialLeverage.SixMonths was retired by Morningstar in 2026; use FinancialLeverage.OneYear.")]
+        [JsonIgnore]
         public double SixMonths => throw new NotSupportedException("FinancialLeverage.SixMonths was retired by Morningstar in 2026; use FinancialLeverage.OneYear.");
 
         /// <summary>
@@ -70,6 +72,7 @@ namespace QuantConnect.Data.Fundamental
         /// </summary>
         [JsonProperty("9M")]
         [Obsolete("FinancialLeverage.NineMonths was retired by Morningstar in 2026; use FinancialLeverage.OneYear.")]
+        [JsonIgnore]
         public double NineMonths => throw new NotSupportedException("FinancialLeverage.NineMonths was retired by Morningstar in 2026; use FinancialLeverage.OneYear.");
 
         /// <summary>

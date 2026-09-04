@@ -76,6 +76,7 @@ namespace QuantConnect.Data.Fundamental
         /// </remarks>
         [JsonProperty("13019")]
         [Obsolete("RegressionGrowthofDividends5Years was retired by Morningstar in 2026 for all periods; no replacement is available.")]
+        [JsonIgnore]
         public RegressionGrowthofDividends5Years RegressionGrowthofDividends5Years => _regressionGrowthofDividends5Years ??= new(_timeProvider, _securityIdentifier);
         private RegressionGrowthofDividends5Years _regressionGrowthofDividends5Years;
 
@@ -107,6 +108,7 @@ namespace QuantConnect.Data.Fundamental
         /// </remarks>
         [JsonProperty("13022")]
         [Obsolete("NormalizedDilutedEPSGrowth was retired by Morningstar in 2026 for all periods; no replacement is available.")]
+        [JsonIgnore]
         public NormalizedDilutedEPSGrowth NormalizedDilutedEPSGrowth => _normalizedDilutedEPSGrowth ??= new(_timeProvider, _securityIdentifier);
         private NormalizedDilutedEPSGrowth _normalizedDilutedEPSGrowth;
 

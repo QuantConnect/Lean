@@ -44,6 +44,7 @@ namespace QuantConnect.Data.Fundamental
         /// </summary>
         [JsonProperty("1M")]
         [Obsolete("SalesPerEmployee.OneMonth was retired by Morningstar in 2026; use SalesPerEmployee.OneYear.")]
+        [JsonIgnore]
         public double OneMonth => throw new NotSupportedException("SalesPerEmployee.OneMonth was retired by Morningstar in 2026; use SalesPerEmployee.OneYear.");
 
         /// <summary>
@@ -51,6 +52,7 @@ namespace QuantConnect.Data.Fundamental
         /// </summary>
         [JsonProperty("2M")]
         [Obsolete("SalesPerEmployee.TwoMonths was retired by Morningstar in 2026; use SalesPerEmployee.OneYear.")]
+        [JsonIgnore]
         public double TwoMonths => throw new NotSupportedException("SalesPerEmployee.TwoMonths was retired by Morningstar in 2026; use SalesPerEmployee.OneYear.");
 
         /// <summary>
@@ -58,6 +60,7 @@ namespace QuantConnect.Data.Fundamental
         /// </summary>
         [JsonProperty("3M")]
         [Obsolete("SalesPerEmployee.ThreeMonths was retired by Morningstar in 2026; use SalesPerEmployee.OneYear.")]
+        [JsonIgnore]
         public double ThreeMonths => throw new NotSupportedException("SalesPerEmployee.ThreeMonths was retired by Morningstar in 2026; use SalesPerEmployee.OneYear.");
 
         /// <summary>
@@ -65,6 +68,7 @@ namespace QuantConnect.Data.Fundamental
         /// </summary>
         [JsonProperty("6M")]
         [Obsolete("SalesPerEmployee.SixMonths was retired by Morningstar in 2026; use SalesPerEmployee.OneYear.")]
+        [JsonIgnore]
         public double SixMonths => throw new NotSupportedException("SalesPerEmployee.SixMonths was retired by Morningstar in 2026; use SalesPerEmployee.OneYear.");
 
         /// <summary>
@@ -72,6 +76,7 @@ namespace QuantConnect.Data.Fundamental
         /// </summary>
         [JsonProperty("9M")]
         [Obsolete("SalesPerEmployee.NineMonths was retired by Morningstar in 2026; use SalesPerEmployee.OneYear.")]
+        [JsonIgnore]
         public double NineMonths => throw new NotSupportedException("SalesPerEmployee.NineMonths was retired by Morningstar in 2026; use SalesPerEmployee.OneYear.");
 
         /// <summary>

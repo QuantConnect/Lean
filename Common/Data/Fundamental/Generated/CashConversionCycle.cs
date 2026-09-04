@@ -44,6 +44,7 @@ namespace QuantConnect.Data.Fundamental
         /// </summary>
         [JsonProperty("3M")]
         [Obsolete("CashConversionCycle.ThreeMonths was retired by Morningstar in 2026; use CashConversionCycle.OneYear.")]
+        [JsonIgnore]
         public double ThreeMonths => throw new NotSupportedException("CashConversionCycle.ThreeMonths was retired by Morningstar in 2026; use CashConversionCycle.OneYear.");
 
         /// <summary>
@@ -51,6 +52,7 @@ namespace QuantConnect.Data.Fundamental
         /// </summary>
         [JsonProperty("6M")]
         [Obsolete("CashConversionCycle.SixMonths was retired by Morningstar in 2026; use CashConversionCycle.OneYear.")]
+        [JsonIgnore]
         public double SixMonths => throw new NotSupportedException("CashConversionCycle.SixMonths was retired by Morningstar in 2026; use CashConversionCycle.OneYear.");
 
         /// <summary>

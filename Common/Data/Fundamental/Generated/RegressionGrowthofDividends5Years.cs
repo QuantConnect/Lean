@@ -38,6 +38,7 @@ namespace QuantConnect.Data.Fundamental
         /// </summary>
         [JsonProperty("5Y")]
         [Obsolete("RegressionGrowthofDividends5Years was retired by Morningstar in 2026 for all periods; no replacement is available.")]
+        [JsonIgnore]
         public double FiveYears => throw new NotSupportedException("RegressionGrowthofDividends5Years was retired by Morningstar in 2026 for all periods; no replacement is available.");
 
         /// <summary>

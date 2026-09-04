@@ -44,6 +44,7 @@ namespace QuantConnect.Data.Fundamental
         /// </summary>
         [JsonProperty("3M")]
         [Obsolete("WorkingCapitalTurnoverRatio.ThreeMonths was retired by Morningstar in 2026; use WorkingCapitalTurnoverRatio.OneYear.")]
+        [JsonIgnore]
         public double ThreeMonths => throw new NotSupportedException("WorkingCapitalTurnoverRatio.ThreeMonths was retired by Morningstar in 2026; use WorkingCapitalTurnoverRatio.OneYear.");
 
         /// <summary>
