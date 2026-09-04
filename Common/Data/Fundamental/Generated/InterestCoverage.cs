@@ -44,6 +44,7 @@ namespace QuantConnect.Data.Fundamental
         /// </summary>
         [JsonProperty("1M")]
         [Obsolete("InterestCoverage.OneMonth was retired by Morningstar in 2026; use InterestCoverage.OneYear.")]
+        [JsonIgnore]
         public double OneMonth => throw new NotSupportedException("InterestCoverage.OneMonth was retired by Morningstar in 2026; use InterestCoverage.OneYear.");
 
         /// <summary>
@@ -51,6 +52,7 @@ namespace QuantConnect.Data.Fundamental
         /// </summary>
         [JsonProperty("2M")]
         [Obsolete("InterestCoverage.TwoMonths was retired by Morningstar in 2026; use InterestCoverage.OneYear.")]
+        [JsonIgnore]
         public double TwoMonths => throw new NotSupportedException("InterestCoverage.TwoMonths was retired by Morningstar in 2026; use InterestCoverage.OneYear.");
 
         /// <summary>
@@ -58,6 +60,7 @@ namespace QuantConnect.Data.Fundamental
         /// </summary>
         [JsonProperty("3M")]
         [Obsolete("InterestCoverage.ThreeMonths was retired by Morningstar in 2026; use InterestCoverage.OneYear.")]
+        [JsonIgnore]
         public double ThreeMonths => throw new NotSupportedException("InterestCoverage.ThreeMonths was retired by Morningstar in 2026; use InterestCoverage.OneYear.");
 
         /// <summary>
@@ -65,6 +68,7 @@ namespace QuantConnect.Data.Fundamental
         /// </summary>
         [JsonProperty("6M")]
         [Obsolete("InterestCoverage.SixMonths was retired by Morningstar in 2026; use InterestCoverage.OneYear.")]
+        [JsonIgnore]
         public double SixMonths => throw new NotSupportedException("InterestCoverage.SixMonths was retired by Morningstar in 2026; use InterestCoverage.OneYear.");
 
         /// <summary>
@@ -72,6 +76,7 @@ namespace QuantConnect.Data.Fundamental
         /// </summary>
         [JsonProperty("9M")]
         [Obsolete("InterestCoverage.NineMonths was retired by Morningstar in 2026; use InterestCoverage.OneYear.")]
+        [JsonIgnore]
         public double NineMonths => throw new NotSupportedException("InterestCoverage.NineMonths was retired by Morningstar in 2026; use InterestCoverage.OneYear.");
 
         /// <summary>
