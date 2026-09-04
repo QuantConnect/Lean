@@ -38,6 +38,7 @@ namespace QuantConnect.Data.Fundamental
         /// </summary>
         [JsonProperty("1M")]
         [Obsolete("DividendPerShare.OneMonth was retired by Morningstar in 2026; use DividendPerShare.ThreeMonths (also available: SixMonths, NineMonths, TwelveMonths).")]
+        [JsonIgnore]
         public double OneMonth => throw new NotSupportedException("DividendPerShare.OneMonth was retired by Morningstar in 2026; use DividendPerShare.ThreeMonths (also available: SixMonths, NineMonths, TwelveMonths).");
 
         /// <summary>
@@ -45,6 +46,7 @@ namespace QuantConnect.Data.Fundamental
         /// </summary>
         [JsonProperty("2M")]
         [Obsolete("DividendPerShare.TwoMonths was retired by Morningstar in 2026; use DividendPerShare.ThreeMonths (also available: SixMonths, NineMonths, TwelveMonths).")]
+        [JsonIgnore]
         public double TwoMonths => throw new NotSupportedException("DividendPerShare.TwoMonths was retired by Morningstar in 2026; use DividendPerShare.ThreeMonths (also available: SixMonths, NineMonths, TwelveMonths).");
 
         /// <summary>

@@ -38,6 +38,7 @@ namespace QuantConnect.Data.Fundamental
         /// </summary>
         [JsonProperty("1M")]
         [Obsolete("TangibleBookValue.OneMonth was retired by Morningstar in 2026; use TangibleBookValue.ThreeMonths (also available: SixMonths, TwelveMonths).")]
+        [JsonIgnore]
         public double OneMonth => throw new NotSupportedException("TangibleBookValue.OneMonth was retired by Morningstar in 2026; use TangibleBookValue.ThreeMonths (also available: SixMonths, TwelveMonths).");
 
         /// <summary>
@@ -45,6 +46,7 @@ namespace QuantConnect.Data.Fundamental
         /// </summary>
         [JsonProperty("2M")]
         [Obsolete("TangibleBookValue.TwoMonths was retired by Morningstar in 2026; use TangibleBookValue.ThreeMonths (also available: SixMonths, TwelveMonths).")]
+        [JsonIgnore]
         public double TwoMonths => throw new NotSupportedException("TangibleBookValue.TwoMonths was retired by Morningstar in 2026; use TangibleBookValue.ThreeMonths (also available: SixMonths, TwelveMonths).");
 
         /// <summary>
@@ -64,6 +66,7 @@ namespace QuantConnect.Data.Fundamental
         /// </summary>
         [JsonProperty("9M")]
         [Obsolete("TangibleBookValue.NineMonths was retired by Morningstar in 2026; use TangibleBookValue.ThreeMonths (also available: SixMonths, TwelveMonths).")]
+        [JsonIgnore]
         public double NineMonths => throw new NotSupportedException("TangibleBookValue.NineMonths was retired by Morningstar in 2026; use TangibleBookValue.ThreeMonths (also available: SixMonths, TwelveMonths).");
 
         /// <summary>

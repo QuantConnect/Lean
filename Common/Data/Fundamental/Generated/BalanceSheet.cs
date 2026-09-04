@@ -86,6 +86,7 @@ namespace QuantConnect.Data.Fundamental
         /// </remarks>
         [JsonProperty("23007")]
         [Obsolete("AccruedInvestmentIncome was retired by Morningstar in 2026 for all periods; no replacement is available.")]
+        [JsonIgnore]
         public AccruedInvestmentIncomeBalanceSheet AccruedInvestmentIncome => _accruedInvestmentIncome ??= new(_timeProvider, _securityIdentifier);
         private AccruedInvestmentIncomeBalanceSheet _accruedInvestmentIncome;
 
@@ -117,6 +118,7 @@ namespace QuantConnect.Data.Fundamental
         /// </remarks>
         [JsonProperty("23012")]
         [Obsolete("AdditionalPaidInCapital was retired by Morningstar in 2026 for all periods; no replacement is available.")]
+        [JsonIgnore]
         public AdditionalPaidInCapitalBalanceSheet AdditionalPaidInCapital => _additionalPaidInCapital ??= new(_timeProvider, _securityIdentifier);
         private AdditionalPaidInCapitalBalanceSheet _additionalPaidInCapital;
 
@@ -138,6 +140,7 @@ namespace QuantConnect.Data.Fundamental
         /// </remarks>
         [JsonProperty("23020")]
         [Obsolete("AvailableForSaleSecurities was retired by Morningstar in 2026 for all periods; no replacement is available.")]
+        [JsonIgnore]
         public AvailableForSaleSecuritiesBalanceSheet AvailableForSaleSecurities => _availableForSaleSecurities ??= new(_timeProvider, _securityIdentifier);
         private AvailableForSaleSecuritiesBalanceSheet _availableForSaleSecurities;
 
@@ -189,6 +192,7 @@ namespace QuantConnect.Data.Fundamental
         /// </remarks>
         [JsonProperty("23031")]
         [Obsolete("CashAndDueFromBanks was retired by Morningstar in 2026 for all periods; no replacement is available.")]
+        [JsonIgnore]
         public CashAndDueFromBanksBalanceSheet CashAndDueFromBanks => _cashAndDueFromBanks ??= new(_timeProvider, _securityIdentifier);
         private CashAndDueFromBanksBalanceSheet _cashAndDueFromBanks;
 
@@ -220,6 +224,7 @@ namespace QuantConnect.Data.Fundamental
         /// </remarks>
         [JsonProperty("23038")]
         [Obsolete("CommonStock was retired by Morningstar in 2026 for all periods; no replacement is available.")]
+        [JsonIgnore]
         public CommonStockBalanceSheet CommonStock => _commonStock ??= new(_timeProvider, _securityIdentifier);
         private CommonStockBalanceSheet _commonStock;
 
@@ -371,6 +376,7 @@ namespace QuantConnect.Data.Fundamental
         /// </remarks>
         [JsonProperty("23065")]
         [Obsolete("CurrentDeferredTaxesLiabilities was retired by Morningstar in 2026 for all periods; no replacement is available.")]
+        [JsonIgnore]
         public CurrentDeferredTaxesLiabilitiesBalanceSheet CurrentDeferredTaxesLiabilities => _currentDeferredTaxesLiabilities ??= new(_timeProvider, _securityIdentifier);
         private CurrentDeferredTaxesLiabilitiesBalanceSheet _currentDeferredTaxesLiabilities;
 
@@ -392,6 +398,7 @@ namespace QuantConnect.Data.Fundamental
         /// </remarks>
         [JsonProperty("23067")]
         [Obsolete("NonCurrentDeferredTaxesLiabilities was retired by Morningstar in 2026 for all periods; no replacement is available.")]
+        [JsonIgnore]
         public NonCurrentDeferredTaxesLiabilitiesBalanceSheet NonCurrentDeferredTaxesLiabilities => _nonCurrentDeferredTaxesLiabilities ??= new(_timeProvider, _securityIdentifier);
         private NonCurrentDeferredTaxesLiabilitiesBalanceSheet _nonCurrentDeferredTaxesLiabilities;
 
@@ -403,6 +410,7 @@ namespace QuantConnect.Data.Fundamental
         /// </remarks>
         [JsonProperty("23076")]
         [Obsolete("EquityInvestments was retired by Morningstar in 2026 for all periods; no replacement is available.")]
+        [JsonIgnore]
         public EquityInvestmentsBalanceSheet EquityInvestments => _equityInvestments ??= new(_timeProvider, _securityIdentifier);
         private EquityInvestmentsBalanceSheet _equityInvestments;
 
@@ -414,6 +422,7 @@ namespace QuantConnect.Data.Fundamental
         /// </remarks>
         [JsonProperty("23079")]
         [Obsolete("FederalFundsPurchasedAndSecuritiesSoldUnderAgreementToRepurchase was retired by Morningstar in 2026 for all periods; no replacement is available.")]
+        [JsonIgnore]
         public FederalFundsPurchasedAndSecuritiesSoldUnderAgreementToRepurchaseBalanceSheet FederalFundsPurchasedAndSecuritiesSoldUnderAgreementToRepurchase => _federalFundsPurchasedAndSecuritiesSoldUnderAgreementToRepurchase ??= new(_timeProvider, _securityIdentifier);
         private FederalFundsPurchasedAndSecuritiesSoldUnderAgreementToRepurchaseBalanceSheet _federalFundsPurchasedAndSecuritiesSoldUnderAgreementToRepurchase;
 
@@ -445,6 +454,7 @@ namespace QuantConnect.Data.Fundamental
         /// </remarks>
         [JsonProperty("23095")]
         [Obsolete("FuturePolicyBenefits was retired by Morningstar in 2026 for all periods; no replacement is available.")]
+        [JsonIgnore]
         public FuturePolicyBenefitsBalanceSheet FuturePolicyBenefits => _futurePolicyBenefits ??= new(_timeProvider, _securityIdentifier);
         private FuturePolicyBenefitsBalanceSheet _futurePolicyBenefits;
 
@@ -466,6 +476,7 @@ namespace QuantConnect.Data.Fundamental
         /// </remarks>
         [JsonProperty("23097")]
         [Obsolete("Goodwill was retired by Morningstar in 2026 for all periods; no replacement is available.")]
+        [JsonIgnore]
         public GoodwillBalanceSheet Goodwill => _goodwill ??= new(_timeProvider, _securityIdentifier);
         private GoodwillBalanceSheet _goodwill;
 
@@ -507,6 +518,7 @@ namespace QuantConnect.Data.Fundamental
         /// </remarks>
         [JsonProperty("23102")]
         [Obsolete("HeldToMaturitySecurities was retired by Morningstar in 2026 for all periods; no replacement is available.")]
+        [JsonIgnore]
         public HeldToMaturitySecuritiesBalanceSheet HeldToMaturitySecurities => _heldToMaturitySecurities ??= new(_timeProvider, _securityIdentifier);
         private HeldToMaturitySecuritiesBalanceSheet _heldToMaturitySecurities;
 
@@ -528,6 +540,7 @@ namespace QuantConnect.Data.Fundamental
         /// </remarks>
         [JsonProperty("23105")]
         [Obsolete("InterestBearingDepositsLiabilities was retired by Morningstar in 2026 for all periods; no replacement is available.")]
+        [JsonIgnore]
         public InterestBearingDepositsLiabilitiesBalanceSheet InterestBearingDepositsLiabilities => _interestBearingDepositsLiabilities ??= new(_timeProvider, _securityIdentifier);
         private InterestBearingDepositsLiabilitiesBalanceSheet _interestBearingDepositsLiabilities;
 
@@ -539,6 +552,7 @@ namespace QuantConnect.Data.Fundamental
         /// </remarks>
         [JsonProperty("23106")]
         [Obsolete("InterestPayable was retired by Morningstar in 2026 for all periods; no replacement is available.")]
+        [JsonIgnore]
         public InterestPayableBalanceSheet InterestPayable => _interestPayable ??= new(_timeProvider, _securityIdentifier);
         private InterestPayableBalanceSheet _interestPayable;
 
@@ -640,6 +654,7 @@ namespace QuantConnect.Data.Fundamental
         /// </remarks>
         [JsonProperty("23133")]
         [Obsolete("MoneyMarketInvestments was retired by Morningstar in 2026 for all periods; no replacement is available.")]
+        [JsonIgnore]
         public MoneyMarketInvestmentsBalanceSheet MoneyMarketInvestments => _moneyMarketInvestments ??= new(_timeProvider, _securityIdentifier);
         private MoneyMarketInvestmentsBalanceSheet _moneyMarketInvestments;
 
@@ -671,6 +686,7 @@ namespace QuantConnect.Data.Fundamental
         /// </remarks>
         [JsonProperty("23142")]
         [Obsolete("NonInterestBearingDeposits was retired by Morningstar in 2026 for all periods; no replacement is available.")]
+        [JsonIgnore]
         public NonInterestBearingDepositsBalanceSheet NonInterestBearingDeposits => _nonInterestBearingDeposits ??= new(_timeProvider, _securityIdentifier);
         private NonInterestBearingDepositsBalanceSheet _nonInterestBearingDeposits;
 
@@ -682,6 +698,7 @@ namespace QuantConnect.Data.Fundamental
         /// </remarks>
         [JsonProperty("23143")]
         [Obsolete("CurrentNotesPayable was retired by Morningstar in 2026 for all periods; no replacement is available.")]
+        [JsonIgnore]
         public CurrentNotesPayableBalanceSheet CurrentNotesPayable => _currentNotesPayable ??= new(_timeProvider, _securityIdentifier);
         private CurrentNotesPayableBalanceSheet _currentNotesPayable;
 
@@ -703,6 +720,7 @@ namespace QuantConnect.Data.Fundamental
         /// </remarks>
         [JsonProperty("23146")]
         [Obsolete("NonCurrentNoteReceivables was retired by Morningstar in 2026 for all periods; no replacement is available.")]
+        [JsonIgnore]
         public NonCurrentNoteReceivablesBalanceSheet NonCurrentNoteReceivables => _nonCurrentNoteReceivables ??= new(_timeProvider, _securityIdentifier);
         private NonCurrentNoteReceivablesBalanceSheet _nonCurrentNoteReceivables;
 
@@ -774,6 +792,7 @@ namespace QuantConnect.Data.Fundamental
         /// </remarks>
         [JsonProperty("23171")]
         [Obsolete("PolicyholderFunds was retired by Morningstar in 2026 for all periods; no replacement is available.")]
+        [JsonIgnore]
         public PolicyholderFundsBalanceSheet PolicyholderFunds => _policyholderFunds ??= new(_timeProvider, _securityIdentifier);
         private PolicyholderFundsBalanceSheet _policyholderFunds;
 
@@ -915,6 +934,7 @@ namespace QuantConnect.Data.Fundamental
         /// </remarks>
         [JsonProperty("23213")]
         [Obsolete("ShortTermInvestmentsHeldToMaturity was retired by Morningstar in 2026 for all periods; no replacement is available.")]
+        [JsonIgnore]
         public ShortTermInvestmentsHeldToMaturityBalanceSheet ShortTermInvestmentsHeldToMaturity => _shortTermInvestmentsHeldToMaturity ??= new(_timeProvider, _securityIdentifier);
         private ShortTermInvestmentsHeldToMaturityBalanceSheet _shortTermInvestmentsHeldToMaturity;
 
@@ -926,6 +946,7 @@ namespace QuantConnect.Data.Fundamental
         /// </remarks>
         [JsonProperty("23214")]
         [Obsolete("ShortTermInvestmentsTrading was retired by Morningstar in 2026 for all periods; no replacement is available.")]
+        [JsonIgnore]
         public ShortTermInvestmentsTradingBalanceSheet ShortTermInvestmentsTrading => _shortTermInvestmentsTrading ??= new(_timeProvider, _securityIdentifier);
         private ShortTermInvestmentsTradingBalanceSheet _shortTermInvestmentsTrading;
 
@@ -947,6 +968,7 @@ namespace QuantConnect.Data.Fundamental
         /// </remarks>
         [JsonProperty("23217")]
         [Obsolete("TotalTaxPayable was retired by Morningstar in 2026 for all periods; no replacement is available.")]
+        [JsonIgnore]
         public TotalTaxPayableBalanceSheet TotalTaxPayable => _totalTaxPayable ??= new(_timeProvider, _securityIdentifier);
         private TotalTaxPayableBalanceSheet _totalTaxPayable;
 
@@ -978,6 +1000,7 @@ namespace QuantConnect.Data.Fundamental
         /// </remarks>
         [JsonProperty("23224")]
         [Obsolete("TotalInvestments was retired by Morningstar in 2026 for all periods; no replacement is available.")]
+        [JsonIgnore]
         public TotalInvestmentsBalanceSheet TotalInvestments => _totalInvestments ??= new(_timeProvider, _securityIdentifier);
         private TotalInvestmentsBalanceSheet _totalInvestments;
 
@@ -1009,6 +1032,7 @@ namespace QuantConnect.Data.Fundamental
         /// </remarks>
         [JsonProperty("23229")]
         [Obsolete("TradingAssets was retired by Morningstar in 2026 for all periods; no replacement is available.")]
+        [JsonIgnore]
         public TradingAssetsBalanceSheet TradingAssets => _tradingAssets ??= new(_timeProvider, _securityIdentifier);
         private TradingAssetsBalanceSheet _tradingAssets;
 
@@ -1030,6 +1054,7 @@ namespace QuantConnect.Data.Fundamental
         /// </remarks>
         [JsonProperty("23231")]
         [Obsolete("TradingSecurities was retired by Morningstar in 2026 for all periods; no replacement is available.")]
+        [JsonIgnore]
         public TradingSecuritiesBalanceSheet TradingSecurities => _tradingSecurities ??= new(_timeProvider, _securityIdentifier);
         private TradingSecuritiesBalanceSheet _tradingSecurities;
 
@@ -1041,6 +1066,7 @@ namespace QuantConnect.Data.Fundamental
         /// </remarks>
         [JsonProperty("23232")]
         [Obsolete("TreasuryStock was retired by Morningstar in 2026 for all periods; no replacement is available.")]
+        [JsonIgnore]
         public TreasuryStockBalanceSheet TreasuryStock => _treasuryStock ??= new(_timeProvider, _securityIdentifier);
         private TreasuryStockBalanceSheet _treasuryStock;
 
@@ -1072,6 +1098,7 @@ namespace QuantConnect.Data.Fundamental
         /// </remarks>
         [JsonProperty("23237")]
         [Obsolete("UnpaidLossAndLossReserve was retired by Morningstar in 2026 for all periods; no replacement is available.")]
+        [JsonIgnore]
         public UnpaidLossAndLossReserveBalanceSheet UnpaidLossAndLossReserve => _unpaidLossAndLossReserve ??= new(_timeProvider, _securityIdentifier);
         private UnpaidLossAndLossReserveBalanceSheet _unpaidLossAndLossReserve;
 
@@ -1163,6 +1190,7 @@ namespace QuantConnect.Data.Fundamental
         /// </remarks>
         [JsonProperty("23263")]
         [Obsolete("NonCurrentAccountsReceivable was retired by Morningstar in 2026 for all periods; no replacement is available.")]
+        [JsonIgnore]
         public NonCurrentAccountsReceivableBalanceSheet NonCurrentAccountsReceivable => _nonCurrentAccountsReceivable ??= new(_timeProvider, _securityIdentifier);
         private NonCurrentAccountsReceivableBalanceSheet _nonCurrentAccountsReceivable;
 
@@ -1174,6 +1202,7 @@ namespace QuantConnect.Data.Fundamental
         /// </remarks>
         [JsonProperty("23264")]
         [Obsolete("AccruedInterestReceivable was retired by Morningstar in 2026 for all periods; no replacement is available.")]
+        [JsonIgnore]
         public AccruedInterestReceivableBalanceSheet AccruedInterestReceivable => _accruedInterestReceivable ??= new(_timeProvider, _securityIdentifier);
         private AccruedInterestReceivableBalanceSheet _accruedInterestReceivable;
 
@@ -1185,6 +1214,7 @@ namespace QuantConnect.Data.Fundamental
         /// </remarks>
         [JsonProperty("23265")]
         [Obsolete("AdvanceFromFederalHomeLoanBanks was retired by Morningstar in 2026 for all periods; no replacement is available.")]
+        [JsonIgnore]
         public AdvanceFromFederalHomeLoanBanksBalanceSheet AdvanceFromFederalHomeLoanBanks => _advanceFromFederalHomeLoanBanks ??= new(_timeProvider, _securityIdentifier);
         private AdvanceFromFederalHomeLoanBanksBalanceSheet _advanceFromFederalHomeLoanBanks;
 
@@ -1236,6 +1266,7 @@ namespace QuantConnect.Data.Fundamental
         /// </remarks>
         [JsonProperty("23271")]
         [Obsolete("BankIndebtedness was retired by Morningstar in 2026 for all periods; no replacement is available.")]
+        [JsonIgnore]
         public BankIndebtednessBalanceSheet BankIndebtedness => _bankIndebtedness ??= new(_timeProvider, _securityIdentifier);
         private BankIndebtednessBalanceSheet _bankIndebtedness;
 
@@ -1247,6 +1278,7 @@ namespace QuantConnect.Data.Fundamental
         /// </remarks>
         [JsonProperty("23273")]
         [Obsolete("BankOwnedLifeInsurance was retired by Morningstar in 2026 for all periods; no replacement is available.")]
+        [JsonIgnore]
         public BankOwnedLifeInsuranceBalanceSheet BankOwnedLifeInsurance => _bankOwnedLifeInsurance ??= new(_timeProvider, _securityIdentifier);
         private BankOwnedLifeInsuranceBalanceSheet _bankOwnedLifeInsurance;
 
@@ -1258,6 +1290,7 @@ namespace QuantConnect.Data.Fundamental
         /// </remarks>
         [JsonProperty("23274")]
         [Obsolete("SecurityBorrowed was retired by Morningstar in 2026 for all periods; no replacement is available.")]
+        [JsonIgnore]
         public SecurityBorrowedBalanceSheet SecurityBorrowed => _securityBorrowed ??= new(_timeProvider, _securityIdentifier);
         private SecurityBorrowedBalanceSheet _securityBorrowed;
 
@@ -1269,6 +1302,7 @@ namespace QuantConnect.Data.Fundamental
         /// </remarks>
         [JsonProperty("23275")]
         [Obsolete("BuildingsAndImprovements was retired by Morningstar in 2026 for all periods; no replacement is available.")]
+        [JsonIgnore]
         public BuildingsAndImprovementsBalanceSheet BuildingsAndImprovements => _buildingsAndImprovements ??= new(_timeProvider, _securityIdentifier);
         private BuildingsAndImprovementsBalanceSheet _buildingsAndImprovements;
 
@@ -1280,6 +1314,7 @@ namespace QuantConnect.Data.Fundamental
         /// </remarks>
         [JsonProperty("23278")]
         [Obsolete("CommercialLoan was retired by Morningstar in 2026 for all periods; no replacement is available.")]
+        [JsonIgnore]
         public CommercialLoanBalanceSheet CommercialLoan => _commercialLoan ??= new(_timeProvider, _securityIdentifier);
         private CommercialLoanBalanceSheet _commercialLoan;
 
@@ -1291,6 +1326,7 @@ namespace QuantConnect.Data.Fundamental
         /// </remarks>
         [JsonProperty("23279")]
         [Obsolete("CommercialPaper was retired by Morningstar in 2026 for all periods; no replacement is available.")]
+        [JsonIgnore]
         public CommercialPaperBalanceSheet CommercialPaper => _commercialPaper ??= new(_timeProvider, _securityIdentifier);
         private CommercialPaperBalanceSheet _commercialPaper;
 
@@ -1302,6 +1338,7 @@ namespace QuantConnect.Data.Fundamental
         /// </remarks>
         [JsonProperty("23280")]
         [Obsolete("CommonStockEquity was retired by Morningstar in 2026 for all periods; no replacement is available.")]
+        [JsonIgnore]
         public CommonStockEquityBalanceSheet CommonStockEquity => _commonStockEquity ??= new(_timeProvider, _securityIdentifier);
         private CommonStockEquityBalanceSheet _commonStockEquity;
 
@@ -1313,6 +1350,7 @@ namespace QuantConnect.Data.Fundamental
         /// </remarks>
         [JsonProperty("23282")]
         [Obsolete("ConstructionInProgress was retired by Morningstar in 2026 for all periods; no replacement is available.")]
+        [JsonIgnore]
         public ConstructionInProgressBalanceSheet ConstructionInProgress => _constructionInProgress ??= new(_timeProvider, _securityIdentifier);
         private ConstructionInProgressBalanceSheet _constructionInProgress;
 
@@ -1324,6 +1362,7 @@ namespace QuantConnect.Data.Fundamental
         /// </remarks>
         [JsonProperty("23283")]
         [Obsolete("ConsumerLoan was retired by Morningstar in 2026 for all periods; no replacement is available.")]
+        [JsonIgnore]
         public ConsumerLoanBalanceSheet ConsumerLoan => _consumerLoan ??= new(_timeProvider, _securityIdentifier);
         private ConsumerLoanBalanceSheet _consumerLoan;
 
@@ -1335,6 +1374,7 @@ namespace QuantConnect.Data.Fundamental
         /// </remarks>
         [JsonProperty("23284")]
         [Obsolete("MinimumPensionLiabilities was retired by Morningstar in 2026 for all periods; no replacement is available.")]
+        [JsonIgnore]
         public MinimumPensionLiabilitiesBalanceSheet MinimumPensionLiabilities => _minimumPensionLiabilities ??= new(_timeProvider, _securityIdentifier);
         private MinimumPensionLiabilitiesBalanceSheet _minimumPensionLiabilities;
 
@@ -1376,6 +1416,7 @@ namespace QuantConnect.Data.Fundamental
         /// </remarks>
         [JsonProperty("23290")]
         [Obsolete("DerivativeAssets was retired by Morningstar in 2026 for all periods; no replacement is available.")]
+        [JsonIgnore]
         public DerivativeAssetsBalanceSheet DerivativeAssets => _derivativeAssets ??= new(_timeProvider, _securityIdentifier);
         private DerivativeAssetsBalanceSheet _derivativeAssets;
 
@@ -1387,6 +1428,7 @@ namespace QuantConnect.Data.Fundamental
         /// </remarks>
         [JsonProperty("23291")]
         [Obsolete("DividendsPayable was retired by Morningstar in 2026 for all periods; no replacement is available.")]
+        [JsonIgnore]
         public DividendsPayableBalanceSheet DividendsPayable => _dividendsPayable ??= new(_timeProvider, _securityIdentifier);
         private DividendsPayableBalanceSheet _dividendsPayable;
 
@@ -1398,6 +1440,7 @@ namespace QuantConnect.Data.Fundamental
         /// </remarks>
         [JsonProperty("23293")]
         [Obsolete("EmployeeBenefits was retired by Morningstar in 2026 for all periods; no replacement is available.")]
+        [JsonIgnore]
         public EmployeeBenefitsBalanceSheet EmployeeBenefits => _employeeBenefits ??= new(_timeProvider, _securityIdentifier);
         private EmployeeBenefitsBalanceSheet _employeeBenefits;
 
@@ -1459,6 +1502,7 @@ namespace QuantConnect.Data.Fundamental
         /// </remarks>
         [JsonProperty("23300")]
         [Obsolete("FinishedGoods was retired by Morningstar in 2026 for all periods; no replacement is available.")]
+        [JsonIgnore]
         public FinishedGoodsBalanceSheet FinishedGoods => _finishedGoods ??= new(_timeProvider, _securityIdentifier);
         private FinishedGoodsBalanceSheet _finishedGoods;
 
@@ -1470,6 +1514,7 @@ namespace QuantConnect.Data.Fundamental
         /// </remarks>
         [JsonProperty("23301")]
         [Obsolete("FlightFleetVehicleAndRelatedEquipments was retired by Morningstar in 2026 for all periods; no replacement is available.")]
+        [JsonIgnore]
         public FlightFleetVehicleAndRelatedEquipmentsBalanceSheet FlightFleetVehicleAndRelatedEquipments => _flightFleetVehicleAndRelatedEquipments ??= new(_timeProvider, _securityIdentifier);
         private FlightFleetVehicleAndRelatedEquipmentsBalanceSheet _flightFleetVehicleAndRelatedEquipments;
 
@@ -1491,6 +1536,7 @@ namespace QuantConnect.Data.Fundamental
         /// </remarks>
         [JsonProperty("23304")]
         [Obsolete("ForeignCurrencyTranslationAdjustments was retired by Morningstar in 2026 for all periods; no replacement is available.")]
+        [JsonIgnore]
         public ForeignCurrencyTranslationAdjustmentsBalanceSheet ForeignCurrencyTranslationAdjustments => _foreignCurrencyTranslationAdjustments ??= new(_timeProvider, _securityIdentifier);
         private ForeignCurrencyTranslationAdjustmentsBalanceSheet _foreignCurrencyTranslationAdjustments;
 
@@ -1502,6 +1548,7 @@ namespace QuantConnect.Data.Fundamental
         /// </remarks>
         [JsonProperty("23307")]
         [Obsolete("InventoriesAdjustmentsAllowances was retired by Morningstar in 2026 for all periods; no replacement is available.")]
+        [JsonIgnore]
         public InventoriesAdjustmentsAllowancesBalanceSheet InventoriesAdjustmentsAllowances => _inventoriesAdjustmentsAllowances ??= new(_timeProvider, _securityIdentifier);
         private InventoriesAdjustmentsAllowancesBalanceSheet _inventoriesAdjustmentsAllowances;
 
@@ -1523,6 +1570,7 @@ namespace QuantConnect.Data.Fundamental
         /// </remarks>
         [JsonProperty("23312")]
         [Obsolete("LandAndImprovements was retired by Morningstar in 2026 for all periods; no replacement is available.")]
+        [JsonIgnore]
         public LandAndImprovementsBalanceSheet LandAndImprovements => _landAndImprovements ??= new(_timeProvider, _securityIdentifier);
         private LandAndImprovementsBalanceSheet _landAndImprovements;
 
@@ -1534,6 +1582,7 @@ namespace QuantConnect.Data.Fundamental
         /// </remarks>
         [JsonProperty("23313")]
         [Obsolete("Leases was retired by Morningstar in 2026 for all periods; no replacement is available.")]
+        [JsonIgnore]
         public LeasesBalanceSheet Leases => _leases ??= new(_timeProvider, _securityIdentifier);
         private LeasesBalanceSheet _leases;
 
@@ -1555,6 +1604,7 @@ namespace QuantConnect.Data.Fundamental
         /// </remarks>
         [JsonProperty("23316")]
         [Obsolete("LineOfCredit was retired by Morningstar in 2026 for all periods; no replacement is available.")]
+        [JsonIgnore]
         public LineOfCreditBalanceSheet LineOfCredit => _lineOfCredit ??= new(_timeProvider, _securityIdentifier);
         private LineOfCreditBalanceSheet _lineOfCredit;
 
@@ -1576,6 +1626,7 @@ namespace QuantConnect.Data.Fundamental
         /// </remarks>
         [JsonProperty("23318")]
         [Obsolete("LoansReceivable was retired by Morningstar in 2026 for all periods; no replacement is available.")]
+        [JsonIgnore]
         public LoansReceivableBalanceSheet LoansReceivable => _loansReceivable ??= new(_timeProvider, _securityIdentifier);
         private LoansReceivableBalanceSheet _loansReceivable;
 
@@ -1587,6 +1638,7 @@ namespace QuantConnect.Data.Fundamental
         /// </remarks>
         [JsonProperty("23319")]
         [Obsolete("MachineryFurnitureEquipment was retired by Morningstar in 2026 for all periods; no replacement is available.")]
+        [JsonIgnore]
         public MachineryFurnitureEquipmentBalanceSheet MachineryFurnitureEquipment => _machineryFurnitureEquipment ??= new(_timeProvider, _securityIdentifier);
         private MachineryFurnitureEquipmentBalanceSheet _machineryFurnitureEquipment;
 
@@ -1598,6 +1650,7 @@ namespace QuantConnect.Data.Fundamental
         /// </remarks>
         [JsonProperty("23320")]
         [Obsolete("MaterialsAndSupplies was retired by Morningstar in 2026 for all periods; no replacement is available.")]
+        [JsonIgnore]
         public MaterialsAndSuppliesBalanceSheet MaterialsAndSupplies => _materialsAndSupplies ??= new(_timeProvider, _securityIdentifier);
         private MaterialsAndSuppliesBalanceSheet _materialsAndSupplies;
 
@@ -1609,6 +1662,7 @@ namespace QuantConnect.Data.Fundamental
         /// </remarks>
         [JsonProperty("23321")]
         [Obsolete("MineralProperties was retired by Morningstar in 2026 for all periods; no replacement is available.")]
+        [JsonIgnore]
         public MineralPropertiesBalanceSheet MineralProperties => _mineralProperties ??= new(_timeProvider, _securityIdentifier);
         private MineralPropertiesBalanceSheet _mineralProperties;
 
@@ -1620,6 +1674,7 @@ namespace QuantConnect.Data.Fundamental
         /// </remarks>
         [JsonProperty("23322")]
         [Obsolete("MortgageLoan was retired by Morningstar in 2026 for all periods; no replacement is available.")]
+        [JsonIgnore]
         public MortgageLoanBalanceSheet MortgageLoan => _mortgageLoan ??= new(_timeProvider, _securityIdentifier);
         private MortgageLoanBalanceSheet _mortgageLoan;
 
@@ -1631,6 +1686,7 @@ namespace QuantConnect.Data.Fundamental
         /// </remarks>
         [JsonProperty("23323")]
         [Obsolete("MortgageAndConsumerloans was retired by Morningstar in 2026 for all periods; no replacement is available.")]
+        [JsonIgnore]
         public MortgageAndConsumerloansBalanceSheet MortgageAndConsumerloans => _mortgageAndConsumerloans ??= new(_timeProvider, _securityIdentifier);
         private MortgageAndConsumerloansBalanceSheet _mortgageAndConsumerloans;
 
@@ -1682,6 +1738,7 @@ namespace QuantConnect.Data.Fundamental
         /// </remarks>
         [JsonProperty("23332")]
         [Obsolete("OtherCurrentBorrowings was retired by Morningstar in 2026 for all periods; no replacement is available.")]
+        [JsonIgnore]
         public OtherCurrentBorrowingsBalanceSheet OtherCurrentBorrowings => _otherCurrentBorrowings ??= new(_timeProvider, _securityIdentifier);
         private OtherCurrentBorrowingsBalanceSheet _otherCurrentBorrowings;
 
@@ -1693,6 +1750,7 @@ namespace QuantConnect.Data.Fundamental
         /// </remarks>
         [JsonProperty("23335")]
         [Obsolete("OtherEquityAdjustments was retired by Morningstar in 2026 for all periods; no replacement is available.")]
+        [JsonIgnore]
         public OtherEquityAdjustmentsBalanceSheet OtherEquityAdjustments => _otherEquityAdjustments ??= new(_timeProvider, _securityIdentifier);
         private OtherEquityAdjustmentsBalanceSheet _otherEquityAdjustments;
 
@@ -1704,6 +1762,7 @@ namespace QuantConnect.Data.Fundamental
         /// </remarks>
         [JsonProperty("23337")]
         [Obsolete("OtherInventories was retired by Morningstar in 2026 for all periods; no replacement is available.")]
+        [JsonIgnore]
         public OtherInventoriesBalanceSheet OtherInventories => _otherInventories ??= new(_timeProvider, _securityIdentifier);
         private OtherInventoriesBalanceSheet _otherInventories;
 
@@ -1775,6 +1834,7 @@ namespace QuantConnect.Data.Fundamental
         /// </remarks>
         [JsonProperty("23345")]
         [Obsolete("PolicyLoans was retired by Morningstar in 2026 for all periods; no replacement is available.")]
+        [JsonIgnore]
         public PolicyLoansBalanceSheet PolicyLoans => _policyLoans ??= new(_timeProvider, _securityIdentifier);
         private PolicyLoansBalanceSheet _policyLoans;
 
@@ -1826,6 +1886,7 @@ namespace QuantConnect.Data.Fundamental
         /// </remarks>
         [JsonProperty("23355")]
         [Obsolete("RawMaterials was retired by Morningstar in 2026 for all periods; no replacement is available.")]
+        [JsonIgnore]
         public RawMaterialsBalanceSheet RawMaterials => _rawMaterials ??= new(_timeProvider, _securityIdentifier);
         private RawMaterialsBalanceSheet _rawMaterials;
 
@@ -1837,6 +1898,7 @@ namespace QuantConnect.Data.Fundamental
         /// </remarks>
         [JsonProperty("23358")]
         [Obsolete("ReceivablesAdjustmentsAllowances was retired by Morningstar in 2026 for all periods; no replacement is available.")]
+        [JsonIgnore]
         public ReceivablesAdjustmentsAllowancesBalanceSheet ReceivablesAdjustmentsAllowances => _receivablesAdjustmentsAllowances ??= new(_timeProvider, _securityIdentifier);
         private ReceivablesAdjustmentsAllowancesBalanceSheet _receivablesAdjustmentsAllowances;
 
@@ -1928,6 +1990,7 @@ namespace QuantConnect.Data.Fundamental
         /// </remarks>
         [JsonProperty("23372")]
         [Obsolete("TaxesReceivable was retired by Morningstar in 2026 for all periods; no replacement is available.")]
+        [JsonIgnore]
         public TaxesReceivableBalanceSheet TaxesReceivable => _taxesReceivable ??= new(_timeProvider, _securityIdentifier);
         private TaxesReceivableBalanceSheet _taxesReceivable;
 
@@ -1939,6 +2002,7 @@ namespace QuantConnect.Data.Fundamental
         /// </remarks>
         [JsonProperty("23374")]
         [Obsolete("TotalCapitalization was retired by Morningstar in 2026 for all periods; no replacement is available.")]
+        [JsonIgnore]
         public TotalCapitalizationBalanceSheet TotalCapitalization => _totalCapitalization ??= new(_timeProvider, _securityIdentifier);
         private TotalCapitalizationBalanceSheet _totalCapitalization;
 
@@ -1980,6 +2044,7 @@ namespace QuantConnect.Data.Fundamental
         /// </remarks>
         [JsonProperty("23378")]
         [Obsolete("WorkInProcess was retired by Morningstar in 2026 for all periods; no replacement is available.")]
+        [JsonIgnore]
         public WorkInProcessBalanceSheet WorkInProcess => _workInProcess ??= new(_timeProvider, _securityIdentifier);
         private WorkInProcessBalanceSheet _workInProcess;
 
@@ -2021,6 +2086,7 @@ namespace QuantConnect.Data.Fundamental
         /// </remarks>
         [JsonProperty("23382")]
         [Obsolete("OtherPayable was retired by Morningstar in 2026 for all periods; no replacement is available.")]
+        [JsonIgnore]
         public OtherPayableBalanceSheet OtherPayable => _otherPayable ??= new(_timeProvider, _securityIdentifier);
         private OtherPayableBalanceSheet _otherPayable;
 
@@ -2102,6 +2168,7 @@ namespace QuantConnect.Data.Fundamental
         /// </remarks>
         [JsonProperty("23391")]
         [Obsolete("NetUtilityPlant was retired by Morningstar in 2026 for all periods; no replacement is available.")]
+        [JsonIgnore]
         public NetUtilityPlantBalanceSheet NetUtilityPlant => _netUtilityPlant ??= new(_timeProvider, _securityIdentifier);
         private NetUtilityPlantBalanceSheet _netUtilityPlant;
 
@@ -2143,6 +2210,7 @@ namespace QuantConnect.Data.Fundamental
         /// </remarks>
         [JsonProperty("23395")]
         [Obsolete("TreasurySharesNumber was retired by Morningstar in 2026 for all periods; no replacement is available.")]
+        [JsonIgnore]
         public TreasurySharesNumberBalanceSheet TreasurySharesNumber => _treasurySharesNumber ??= new(_timeProvider, _securityIdentifier);
         private TreasurySharesNumberBalanceSheet _treasurySharesNumber;
 
@@ -2174,6 +2242,7 @@ namespace QuantConnect.Data.Fundamental
         /// </remarks>
         [JsonProperty("23401")]
         [Obsolete("SecuritiesLoaned was retired by Morningstar in 2026 for all periods; no replacement is available.")]
+        [JsonIgnore]
         public SecuritiesLoanedBalanceSheet SecuritiesLoaned => _securitiesLoaned ??= new(_timeProvider, _securityIdentifier);
         private SecuritiesLoanedBalanceSheet _securitiesLoaned;
 
@@ -2195,6 +2264,7 @@ namespace QuantConnect.Data.Fundamental
         /// </remarks>
         [JsonProperty("23404")]
         [Obsolete("DuefromRelatedPartiesCurrent was retired by Morningstar in 2026 for all periods; no replacement is available.")]
+        [JsonIgnore]
         public DuefromRelatedPartiesCurrentBalanceSheet DuefromRelatedPartiesCurrent => _duefromRelatedPartiesCurrent ??= new(_timeProvider, _securityIdentifier);
         private DuefromRelatedPartiesCurrentBalanceSheet _duefromRelatedPartiesCurrent;
 
@@ -2216,6 +2286,7 @@ namespace QuantConnect.Data.Fundamental
         /// </remarks>
         [JsonProperty("23406")]
         [Obsolete("DuetoRelatedParties was retired by Morningstar in 2026 for all periods; no replacement is available.")]
+        [JsonIgnore]
         public DuetoRelatedPartiesBalanceSheet DuetoRelatedParties => _duetoRelatedParties ??= new(_timeProvider, _securityIdentifier);
         private DuetoRelatedPartiesBalanceSheet _duetoRelatedParties;
 
@@ -2227,6 +2298,7 @@ namespace QuantConnect.Data.Fundamental
         /// </remarks>
         [JsonProperty("23407")]
         [Obsolete("DuetoRelatedPartiesCurrent was retired by Morningstar in 2026 for all periods; no replacement is available.")]
+        [JsonIgnore]
         public DuetoRelatedPartiesCurrentBalanceSheet DuetoRelatedPartiesCurrent => _duetoRelatedPartiesCurrent ??= new(_timeProvider, _securityIdentifier);
         private DuetoRelatedPartiesCurrentBalanceSheet _duetoRelatedPartiesCurrent;
 
@@ -2238,6 +2310,7 @@ namespace QuantConnect.Data.Fundamental
         /// </remarks>
         [JsonProperty("23408")]
         [Obsolete("DuetoRelatedPartiesNonCurrent was retired by Morningstar in 2026 for all periods; no replacement is available.")]
+        [JsonIgnore]
         public DuetoRelatedPartiesNonCurrentBalanceSheet DuetoRelatedPartiesNonCurrent => _duetoRelatedPartiesNonCurrent ??= new(_timeProvider, _securityIdentifier);
         private DuetoRelatedPartiesNonCurrentBalanceSheet _duetoRelatedPartiesNonCurrent;
 
@@ -2299,6 +2372,7 @@ namespace QuantConnect.Data.Fundamental
         /// </remarks>
         [JsonProperty("23415")]
         [Obsolete("FinanceLeaseReceivables was retired by Morningstar in 2026 for all periods; no replacement is available.")]
+        [JsonIgnore]
         public FinanceLeaseReceivablesBalanceSheet FinanceLeaseReceivables => _financeLeaseReceivables ??= new(_timeProvider, _securityIdentifier);
         private FinanceLeaseReceivablesBalanceSheet _financeLeaseReceivables;
 
@@ -2310,6 +2384,7 @@ namespace QuantConnect.Data.Fundamental
         /// </remarks>
         [JsonProperty("23418")]
         [Obsolete("ConvertibleLoansCurrent was retired by Morningstar in 2026 for all periods; no replacement is available.")]
+        [JsonIgnore]
         public ConvertibleLoansCurrentBalanceSheet ConvertibleLoansCurrent => _convertibleLoansCurrent ??= new(_timeProvider, _securityIdentifier);
         private ConvertibleLoansCurrentBalanceSheet _convertibleLoansCurrent;
 
@@ -2321,6 +2396,7 @@ namespace QuantConnect.Data.Fundamental
         /// </remarks>
         [JsonProperty("23419")]
         [Obsolete("BankLoansCurrent was retired by Morningstar in 2026 for all periods; no replacement is available.")]
+        [JsonIgnore]
         public BankLoansCurrentBalanceSheet BankLoansCurrent => _bankLoansCurrent ??= new(_timeProvider, _securityIdentifier);
         private BankLoansCurrentBalanceSheet _bankLoansCurrent;
 
@@ -2342,6 +2418,7 @@ namespace QuantConnect.Data.Fundamental
         /// </remarks>
         [JsonProperty("23422")]
         [Obsolete("AccruedandDeferredIncome was retired by Morningstar in 2026 for all periods; no replacement is available.")]
+        [JsonIgnore]
         public AccruedandDeferredIncomeBalanceSheet AccruedandDeferredIncome => _accruedandDeferredIncome ??= new(_timeProvider, _securityIdentifier);
         private AccruedandDeferredIncomeBalanceSheet _accruedandDeferredIncome;
 
@@ -2353,6 +2430,7 @@ namespace QuantConnect.Data.Fundamental
         /// </remarks>
         [JsonProperty("23426")]
         [Obsolete("BankLoansNonCurrent was retired by Morningstar in 2026 for all periods; no replacement is available.")]
+        [JsonIgnore]
         public BankLoansNonCurrentBalanceSheet BankLoansNonCurrent => _bankLoansNonCurrent ??= new(_timeProvider, _securityIdentifier);
         private BankLoansNonCurrentBalanceSheet _bankLoansNonCurrent;
 
@@ -2364,6 +2442,7 @@ namespace QuantConnect.Data.Fundamental
         /// </remarks>
         [JsonProperty("23427")]
         [Obsolete("OtherLoansNonCurrent was retired by Morningstar in 2026 for all periods; no replacement is available.")]
+        [JsonIgnore]
         public OtherLoansNonCurrentBalanceSheet OtherLoansNonCurrent => _otherLoansNonCurrent ??= new(_timeProvider, _securityIdentifier);
         private OtherLoansNonCurrentBalanceSheet _otherLoansNonCurrent;
 
@@ -2375,6 +2454,7 @@ namespace QuantConnect.Data.Fundamental
         /// </remarks>
         [JsonProperty("23430")]
         [Obsolete("OtherReserves was retired by Morningstar in 2026 for all periods; no replacement is available.")]
+        [JsonIgnore]
         public OtherReservesBalanceSheet OtherReserves => _otherReserves ??= new(_timeProvider, _securityIdentifier);
         private OtherReservesBalanceSheet _otherReserves;
 
@@ -2386,6 +2466,7 @@ namespace QuantConnect.Data.Fundamental
         /// </remarks>
         [JsonProperty("23432")]
         [Obsolete("LoansandAdvancestoBank was retired by Morningstar in 2026 for all periods; no replacement is available.")]
+        [JsonIgnore]
         public LoansandAdvancestoBankBalanceSheet LoansandAdvancestoBank => _loansandAdvancestoBank ??= new(_timeProvider, _securityIdentifier);
         private LoansandAdvancestoBankBalanceSheet _loansandAdvancestoBank;
 
@@ -2397,6 +2478,7 @@ namespace QuantConnect.Data.Fundamental
         /// </remarks>
         [JsonProperty("23433")]
         [Obsolete("LoansandAdvancestoCustomer was retired by Morningstar in 2026 for all periods; no replacement is available.")]
+        [JsonIgnore]
         public LoansandAdvancestoCustomerBalanceSheet LoansandAdvancestoCustomer => _loansandAdvancestoCustomer ??= new(_timeProvider, _securityIdentifier);
         private LoansandAdvancestoCustomerBalanceSheet _loansandAdvancestoCustomer;
 
@@ -2408,6 +2490,7 @@ namespace QuantConnect.Data.Fundamental
         /// </remarks>
         [JsonProperty("23434")]
         [Obsolete("TreasuryBillsandOtherEligibleBills was retired by Morningstar in 2026 for all periods; no replacement is available.")]
+        [JsonIgnore]
         public TreasuryBillsandOtherEligibleBillsBalanceSheet TreasuryBillsandOtherEligibleBills => _treasuryBillsandOtherEligibleBills ??= new(_timeProvider, _securityIdentifier);
         private TreasuryBillsandOtherEligibleBillsBalanceSheet _treasuryBillsandOtherEligibleBills;
 
@@ -2419,6 +2502,7 @@ namespace QuantConnect.Data.Fundamental
         /// </remarks>
         [JsonProperty("23435")]
         [Obsolete("EquitySharesInvestments was retired by Morningstar in 2026 for all periods; no replacement is available.")]
+        [JsonIgnore]
         public EquitySharesInvestmentsBalanceSheet EquitySharesInvestments => _equitySharesInvestments ??= new(_timeProvider, _securityIdentifier);
         private EquitySharesInvestmentsBalanceSheet _equitySharesInvestments;
 
@@ -2430,6 +2514,7 @@ namespace QuantConnect.Data.Fundamental
         /// </remarks>
         [JsonProperty("23436")]
         [Obsolete("DepositsbyBank was retired by Morningstar in 2026 for all periods; no replacement is available.")]
+        [JsonIgnore]
         public DepositsbyBankBalanceSheet DepositsbyBank => _depositsbyBank ??= new(_timeProvider, _securityIdentifier);
         private DepositsbyBankBalanceSheet _depositsbyBank;
 
@@ -2441,6 +2526,7 @@ namespace QuantConnect.Data.Fundamental
         /// </remarks>
         [JsonProperty("23437")]
         [Obsolete("CustomerAccounts was retired by Morningstar in 2026 for all periods; no replacement is available.")]
+        [JsonIgnore]
         public CustomerAccountsBalanceSheet CustomerAccounts => _customerAccounts ??= new(_timeProvider, _securityIdentifier);
         private CustomerAccountsBalanceSheet _customerAccounts;
 
@@ -2472,6 +2558,7 @@ namespace QuantConnect.Data.Fundamental
         /// </remarks>
         [JsonProperty("23440")]
         [Obsolete("DebtSecuritiesinIssue was retired by Morningstar in 2026 for all periods; no replacement is available.")]
+        [JsonIgnore]
         public DebtSecuritiesinIssueBalanceSheet DebtSecuritiesinIssue => _debtSecuritiesinIssue ??= new(_timeProvider, _securityIdentifier);
         private DebtSecuritiesinIssueBalanceSheet _debtSecuritiesinIssue;
 
@@ -2513,6 +2600,7 @@ namespace QuantConnect.Data.Fundamental
         /// </remarks>
         [JsonProperty("23445")]
         [Obsolete("ClaimsOutstanding was retired by Morningstar in 2026 for all periods; no replacement is available.")]
+        [JsonIgnore]
         public ClaimsOutstandingBalanceSheet ClaimsOutstanding => _claimsOutstanding ??= new(_timeProvider, _securityIdentifier);
         private ClaimsOutstandingBalanceSheet _claimsOutstanding;
 
@@ -2544,6 +2632,7 @@ namespace QuantConnect.Data.Fundamental
         /// </remarks>
         [JsonProperty("23455")]
         [Obsolete("DebtSecurities was retired by Morningstar in 2026 for all periods; no replacement is available.")]
+        [JsonIgnore]
         public DebtSecuritiesBalanceSheet DebtSecurities => _debtSecurities ??= new(_timeProvider, _securityIdentifier);
         private DebtSecuritiesBalanceSheet _debtSecurities;
 
@@ -2585,6 +2674,7 @@ namespace QuantConnect.Data.Fundamental
         /// </remarks>
         [JsonProperty("23459")]
         [Obsolete("FinanceLeaseReceivablesCurrent was retired by Morningstar in 2026 for all periods; no replacement is available.")]
+        [JsonIgnore]
         public FinanceLeaseReceivablesCurrentBalanceSheet FinanceLeaseReceivablesCurrent => _financeLeaseReceivablesCurrent ??= new(_timeProvider, _securityIdentifier);
         private FinanceLeaseReceivablesCurrentBalanceSheet _financeLeaseReceivablesCurrent;
 
@@ -2596,6 +2686,7 @@ namespace QuantConnect.Data.Fundamental
         /// </remarks>
         [JsonProperty("23460")]
         [Obsolete("FinanceLeaseReceivablesNonCurrent was retired by Morningstar in 2026 for all periods; no replacement is available.")]
+        [JsonIgnore]
         public FinanceLeaseReceivablesNonCurrentBalanceSheet FinanceLeaseReceivablesNonCurrent => _financeLeaseReceivablesNonCurrent ??= new(_timeProvider, _securityIdentifier);
         private FinanceLeaseReceivablesNonCurrentBalanceSheet _financeLeaseReceivablesNonCurrent;
 
@@ -2627,6 +2718,7 @@ namespace QuantConnect.Data.Fundamental
         /// </remarks>
         [JsonProperty("23466")]
         [Obsolete("FinancialAssetsDesignatedasFairValueThroughProfitorLossTotal was retired by Morningstar in 2026 for all periods; no replacement is available.")]
+        [JsonIgnore]
         public FinancialAssetsDesignatedasFairValueThroughProfitorLossTotalBalanceSheet FinancialAssetsDesignatedasFairValueThroughProfitorLossTotal => _financialAssetsDesignatedasFairValueThroughProfitorLossTotal ??= new(_timeProvider, _securityIdentifier);
         private FinancialAssetsDesignatedasFairValueThroughProfitorLossTotalBalanceSheet _financialAssetsDesignatedasFairValueThroughProfitorLossTotal;
 
@@ -2668,6 +2760,7 @@ namespace QuantConnect.Data.Fundamental
         /// </remarks>
         [JsonProperty("23471")]
         [Obsolete("NonInterestBearingBorrowingsNonCurrent was retired by Morningstar in 2026 for all periods; no replacement is available.")]
+        [JsonIgnore]
         public NonInterestBearingBorrowingsNonCurrentBalanceSheet NonInterestBearingBorrowingsNonCurrent => _nonInterestBearingBorrowingsNonCurrent ??= new(_timeProvider, _securityIdentifier);
         private NonInterestBearingBorrowingsNonCurrentBalanceSheet _nonInterestBearingBorrowingsNonCurrent;
 
@@ -2699,6 +2792,7 @@ namespace QuantConnect.Data.Fundamental
         /// </remarks>
         [JsonProperty("23475")]
         [Obsolete("PensionandOtherPostRetirementBenefitPlansCurrent was retired by Morningstar in 2026 for all periods; no replacement is available.")]
+        [JsonIgnore]
         public PensionandOtherPostRetirementBenefitPlansCurrentBalanceSheet PensionandOtherPostRetirementBenefitPlansCurrent => _pensionandOtherPostRetirementBenefitPlansCurrent ??= new(_timeProvider, _securityIdentifier);
         private PensionandOtherPostRetirementBenefitPlansCurrentBalanceSheet _pensionandOtherPostRetirementBenefitPlansCurrent;
 
@@ -2710,6 +2804,7 @@ namespace QuantConnect.Data.Fundamental
         /// </remarks>
         [JsonProperty("23478")]
         [Obsolete("OtherLoanAssets was retired by Morningstar in 2026 for all periods; no replacement is available.")]
+        [JsonIgnore]
         public OtherLoanAssetsBalanceSheet OtherLoanAssets => _otherLoanAssets ??= new(_timeProvider, _securityIdentifier);
         private OtherLoanAssetsBalanceSheet _otherLoanAssets;
 
@@ -2731,6 +2826,7 @@ namespace QuantConnect.Data.Fundamental
         /// </remarks>
         [JsonProperty("23481")]
         [Obsolete("TaxAssetsTotal was retired by Morningstar in 2026 for all periods; no replacement is available.")]
+        [JsonIgnore]
         public TaxAssetsTotalBalanceSheet TaxAssetsTotal => _taxAssetsTotal ??= new(_timeProvider, _securityIdentifier);
         private TaxAssetsTotalBalanceSheet _taxAssetsTotal;
 
@@ -2752,6 +2848,7 @@ namespace QuantConnect.Data.Fundamental
         /// </remarks>
         [JsonProperty("23484")]
         [Obsolete("DepositCertificates was retired by Morningstar in 2026 for all periods; no replacement is available.")]
+        [JsonIgnore]
         public DepositCertificatesBalanceSheet DepositCertificates => _depositCertificates ??= new(_timeProvider, _securityIdentifier);
         private DepositCertificatesBalanceSheet _depositCertificates;
 
@@ -2843,6 +2940,7 @@ namespace QuantConnect.Data.Fundamental
         /// </remarks>
         [JsonProperty("23502")]
         [Obsolete("DepositsMadeunderAssumedReinsuranceContract was retired by Morningstar in 2026 for all periods; no replacement is available.")]
+        [JsonIgnore]
         public DepositsMadeunderAssumedReinsuranceContractBalanceSheet DepositsMadeunderAssumedReinsuranceContract => _depositsMadeunderAssumedReinsuranceContract ??= new(_timeProvider, _securityIdentifier);
         private DepositsMadeunderAssumedReinsuranceContractBalanceSheet _depositsMadeunderAssumedReinsuranceContract;
 
@@ -2874,6 +2972,7 @@ namespace QuantConnect.Data.Fundamental
         /// </remarks>
         [JsonProperty("23508")]
         [Obsolete("DepositsReceivedunderCededInsuranceContract was retired by Morningstar in 2026 for all periods; no replacement is available.")]
+        [JsonIgnore]
         public DepositsReceivedunderCededInsuranceContractBalanceSheet DepositsReceivedunderCededInsuranceContract => _depositsReceivedunderCededInsuranceContract ??= new(_timeProvider, _securityIdentifier);
         private DepositsReceivedunderCededInsuranceContractBalanceSheet _depositsReceivedunderCededInsuranceContract;
 
@@ -2895,6 +2994,7 @@ namespace QuantConnect.Data.Fundamental
         /// </remarks>
         [JsonProperty("23515")]
         [Obsolete("PensionAndOtherPostretirementBenefitPlansTotal was retired by Morningstar in 2026 for all periods; no replacement is available.")]
+        [JsonIgnore]
         public PensionAndOtherPostretirementBenefitPlansTotalBalanceSheet PensionAndOtherPostretirementBenefitPlansTotal => _pensionAndOtherPostretirementBenefitPlansTotal ??= new(_timeProvider, _securityIdentifier);
         private PensionAndOtherPostretirementBenefitPlansTotalBalanceSheet _pensionAndOtherPostretirementBenefitPlansTotal;
 
@@ -2926,6 +3026,7 @@ namespace QuantConnect.Data.Fundamental
         /// </remarks>
         [JsonProperty("23519")]
         [Obsolete("ConvertibleLoansTotal was retired by Morningstar in 2026 for all periods; no replacement is available.")]
+        [JsonIgnore]
         public ConvertibleLoansTotalBalanceSheet ConvertibleLoansTotal => _convertibleLoansTotal ??= new(_timeProvider, _securityIdentifier);
         private ConvertibleLoansTotalBalanceSheet _convertibleLoansTotal;
 
@@ -2937,6 +3038,7 @@ namespace QuantConnect.Data.Fundamental
         /// </remarks>
         [JsonProperty("23520")]
         [Obsolete("BankLoansTotal was retired by Morningstar in 2026 for all periods; no replacement is available.")]
+        [JsonIgnore]
         public BankLoansTotalBalanceSheet BankLoansTotal => _bankLoansTotal ??= new(_timeProvider, _securityIdentifier);
         private BankLoansTotalBalanceSheet _bankLoansTotal;
 
@@ -2978,6 +3080,7 @@ namespace QuantConnect.Data.Fundamental
         /// </remarks>
         [JsonProperty("23529")]
         [Obsolete("ComTreShaNum was retired by Morningstar in 2026 for all periods; no replacement is available.")]
+        [JsonIgnore]
         public ComTreShaNumBalanceSheet ComTreShaNum => _comTreShaNum ??= new(_timeProvider, _securityIdentifier);
         private ComTreShaNumBalanceSheet _comTreShaNum;
 
@@ -2989,6 +3092,7 @@ namespace QuantConnect.Data.Fundamental
         /// </remarks>
         [JsonProperty("23530")]
         [Obsolete("PreTreShaNum was retired by Morningstar in 2026 for all periods; no replacement is available.")]
+        [JsonIgnore]
         public PreTreShaNumBalanceSheet PreTreShaNum => _preTreShaNum ??= new(_timeProvider, _securityIdentifier);
         private PreTreShaNumBalanceSheet _preTreShaNum;
 
@@ -3010,6 +3114,7 @@ namespace QuantConnect.Data.Fundamental
         /// </remarks>
         [JsonProperty("23532")]
         [Obsolete("ShareIssued was retired by Morningstar in 2026 for all periods; no replacement is available.")]
+        [JsonIgnore]
         public ShareIssuedBalanceSheet ShareIssued => _shareIssued ??= new(_timeProvider, _securityIdentifier);
         private ShareIssuedBalanceSheet _shareIssued;
 
@@ -3061,6 +3166,7 @@ namespace QuantConnect.Data.Fundamental
         /// </remarks>
         [JsonProperty("23537")]
         [Obsolete("ConvertibleLoansNonCurrent was retired by Morningstar in 2026 for all periods; no replacement is available.")]
+        [JsonIgnore]
         public ConvertibleLoansNonCurrentBalanceSheet ConvertibleLoansNonCurrent => _convertibleLoansNonCurrent ??= new(_timeProvider, _securityIdentifier);
         private ConvertibleLoansNonCurrentBalanceSheet _convertibleLoansNonCurrent;
 
@@ -3102,6 +3208,7 @@ namespace QuantConnect.Data.Fundamental
         /// </remarks>
         [JsonProperty("23543")]
         [Obsolete("DueFromRelatedParties was retired by Morningstar in 2026 for all periods; no replacement is available.")]
+        [JsonIgnore]
         public DueFromRelatedPartiesBalanceSheet DueFromRelatedParties => _dueFromRelatedParties ??= new(_timeProvider, _securityIdentifier);
         private DueFromRelatedPartiesBalanceSheet _dueFromRelatedParties;
 
@@ -3113,6 +3220,7 @@ namespace QuantConnect.Data.Fundamental
         /// </remarks>
         [JsonProperty("23546")]
         [Obsolete("UnallocatedSurplus was retired by Morningstar in 2026 for all periods; no replacement is available.")]
+        [JsonIgnore]
         public UnallocatedSurplusBalanceSheet UnallocatedSurplus => _unallocatedSurplus ??= new(_timeProvider, _securityIdentifier);
         private UnallocatedSurplusBalanceSheet _unallocatedSurplus;
 
@@ -3154,6 +3262,7 @@ namespace QuantConnect.Data.Fundamental
         /// </remarks>
         [JsonProperty("23550")]
         [Obsolete("DebtDueBeyond was retired by Morningstar in 2026 for all periods; no replacement is available.")]
+        [JsonIgnore]
         public DebtDueBeyondBalanceSheet DebtDueBeyond => _debtDueBeyond ??= new(_timeProvider, _securityIdentifier);
         private DebtDueBeyondBalanceSheet _debtDueBeyond;
 
@@ -3165,6 +3274,7 @@ namespace QuantConnect.Data.Fundamental
         /// </remarks>
         [JsonProperty("23551")]
         [Obsolete("TotalDebtInMaturitySchedule was retired by Morningstar in 2026 for all periods; no replacement is available.")]
+        [JsonIgnore]
         public TotalDebtInMaturityScheduleBalanceSheet TotalDebtInMaturitySchedule => _totalDebtInMaturitySchedule ??= new(_timeProvider, _securityIdentifier);
         private TotalDebtInMaturityScheduleBalanceSheet _totalDebtInMaturitySchedule;
 
@@ -3176,6 +3286,7 @@ namespace QuantConnect.Data.Fundamental
         /// </remarks>
         [JsonProperty("23552")]
         [Obsolete("FixedAssetsRevaluationReserve was retired by Morningstar in 2026 for all periods; no replacement is available.")]
+        [JsonIgnore]
         public FixedAssetsRevaluationReserveBalanceSheet FixedAssetsRevaluationReserve => _fixedAssetsRevaluationReserve ??= new(_timeProvider, _securityIdentifier);
         private FixedAssetsRevaluationReserveBalanceSheet _fixedAssetsRevaluationReserve;
 

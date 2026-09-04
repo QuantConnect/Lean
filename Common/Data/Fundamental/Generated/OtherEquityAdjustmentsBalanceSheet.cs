@@ -38,6 +38,7 @@ namespace QuantConnect.Data.Fundamental
         /// </summary>
         [JsonProperty("2M")]
         [Obsolete("OtherEquityAdjustments was retired by Morningstar in 2026 for all periods; no replacement is available.")]
+        [JsonIgnore]
         public double TwoMonths => throw new NotSupportedException("OtherEquityAdjustments was retired by Morningstar in 2026 for all periods; no replacement is available.");
 
         /// <summary>
@@ -45,6 +46,7 @@ namespace QuantConnect.Data.Fundamental
         /// </summary>
         [JsonProperty("3M")]
         [Obsolete("OtherEquityAdjustments was retired by Morningstar in 2026 for all periods; no replacement is available.")]
+        [JsonIgnore]
         public double ThreeMonths => throw new NotSupportedException("OtherEquityAdjustments was retired by Morningstar in 2026 for all periods; no replacement is available.");
 
         /// <summary>
@@ -52,6 +54,7 @@ namespace QuantConnect.Data.Fundamental
         /// </summary>
         [JsonProperty("6M")]
         [Obsolete("OtherEquityAdjustments was retired by Morningstar in 2026 for all periods; no replacement is available.")]
+        [JsonIgnore]
         public double SixMonths => throw new NotSupportedException("OtherEquityAdjustments was retired by Morningstar in 2026 for all periods; no replacement is available.");
 
         /// <summary>
@@ -59,6 +62,7 @@ namespace QuantConnect.Data.Fundamental
         /// </summary>
         [JsonProperty("12M")]
         [Obsolete("OtherEquityAdjustments was retired by Morningstar in 2026 for all periods; no replacement is available.")]
+        [JsonIgnore]
         public double TwelveMonths => throw new NotSupportedException("OtherEquityAdjustments was retired by Morningstar in 2026 for all periods; no replacement is available.");
 
         /// <summary>
