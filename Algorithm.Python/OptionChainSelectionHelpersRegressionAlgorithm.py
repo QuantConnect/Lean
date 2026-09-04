@@ -75,17 +75,17 @@ class OptionChainSelectionHelpersRegressionAlgorithm(QCAlgorithm):
                 f"strike_prices helpers mismatch: {strikes.closest_to(spot)}/{strikes.first_above(spot)}/{strikes.first_below(spot)}")
 
         # Strike distance in price units, like the universe strategy filters: 5 above the spot is the 752.50 call
-        otm_call = chain.select(right=OptionRight.CALL, target_dte=7, strike=StrikeTarget.from_atm(5))
+        otm_call = chain.select_by_strike_distance(5, OptionRight.CALL, target_dte=7)
         if otm_call is None or otm_call.strike != 752.5:
-            raise AssertionError(f"select(StrikeTarget.from_atm) expected the 752.50 call but got {otm_call}")
+            raise AssertionError(f"select_by_strike_distance() expected the 752.50 call but got {otm_call}")
 
         # Delta targeting: the put with |delta| closest to 0.35, using the universe pre-calculated greeks
-        delta_put = chain.select(right=OptionRight.PUT, target_dte=7, strike=StrikeTarget.delta(0.35))
+        delta_put = chain.select_by_delta(0.35, OptionRight.PUT, target_dte=7)
         ceremony_delta_put = min(
             (x for x in chain if x.right == OptionRight.PUT and x.expiry == contract.expiry and x.greeks.delta != 0),
             key=lambda x: abs(abs(float(x.greeks.delta)) - 0.35))
         if delta_put is None or delta_put.symbol != ceremony_delta_put.symbol:
-            raise AssertionError(f"select(StrikeTarget.delta) mismatch: {delta_put} != {ceremony_delta_put.symbol.value}")
+            raise AssertionError(f"select_by_delta() mismatch: {delta_put} != {ceremony_delta_put.symbol.value}")
 
         # The helpers are None-safe: no match returns None instead of raising like min() would
         if (chain.select(right=OptionRight.CALL, min_dte=2000) is not None

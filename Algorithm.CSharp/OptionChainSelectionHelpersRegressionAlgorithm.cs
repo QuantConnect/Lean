@@ -18,7 +18,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using QuantConnect.Data;
-using QuantConnect.Data.Market;
 using QuantConnect.Interfaces;
 
 namespace QuantConnect.Algorithm.CSharp
@@ -114,21 +113,21 @@ namespace QuantConnect.Algorithm.CSharp
             }
 
             // Strike distance in price units, like the universe strategy filters: 5 above the spot is the 752.50 call
-            var otmCall = chain.Select(right: OptionRight.Call, targetDte: 7, strike: StrikeTarget.FromAtm(5));
+            var otmCall = chain.SelectByStrikeDistance(5, OptionRight.Call, targetDte: 7);
             if (otmCall == null || otmCall.Strike != 752.5m)
             {
-                throw new RegressionTestException($"Select(StrikeTarget.FromAtm) expected the 752.50 call but got {otmCall?.Symbol.Value}");
+                throw new RegressionTestException($"SelectByStrikeDistance() expected the 752.50 call but got {otmCall?.Symbol.Value}");
             }
 
             // Delta targeting: the put with |delta| closest to 0.35, using the universe pre-calculated greeks
-            var deltaPut = chain.Select(right: OptionRight.Put, targetDte: 7, strike: StrikeTarget.Delta(0.35m));
+            var deltaPut = chain.SelectByDelta(0.35m, OptionRight.Put, targetDte: 7);
             var ceremonyDeltaPut = chain
                 .Where(x => x.Right == OptionRight.Put && x.Expiry == contract.Expiry && x.Greeks.Delta != 0)
                 .OrderBy(x => Math.Abs(Math.Abs(x.Greeks.Delta) - 0.35m))
                 .First();
             if (deltaPut == null || !deltaPut.Symbol.Equals(ceremonyDeltaPut.Symbol))
             {
-                throw new RegressionTestException($"Select(StrikeTarget.Delta) mismatch: {deltaPut?.Symbol.Value} != {ceremonyDeltaPut.Symbol.Value}");
+                throw new RegressionTestException($"SelectByDelta() mismatch: {deltaPut?.Symbol.Value} != {ceremonyDeltaPut.Symbol.Value}");
             }
 
             // The helpers are null-safe: no match returns null instead of throwing like min()/First() would
