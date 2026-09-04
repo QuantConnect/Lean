@@ -14,6 +14,7 @@
 */
 
 using System;
+using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -28,6 +29,13 @@ namespace QuantConnect.Tests.Common.Securities
     [TestFixture]
     public class MarketHoursDatabaseTests
     {
+        /// <summary>
+        /// Entries written before this year still carry early closes and late opens on days the
+        /// exchange never trades, so <see cref="EarlyClosesAndLateOpensFallOnTradingDays"/> only
+        /// sweeps the years built under that rule.
+        /// </summary>
+        private const int FirstAuditedCalendarYear = 2026;
+
         [SetUp]
         public void Setup()
         {
@@ -214,6 +222,46 @@ namespace QuantConnect.Tests.Common.Securities
                 var holidays = futureEntry.ExchangeHours.Holidays;
                 Assert.IsFalse(holidays.Contains(earlyCloseDate));
             }
+        }
+
+        /// <summary>
+        /// An early close or a late open only says something about a day the exchange trades. Both get
+        /// carried from one year to the next, and carrying them by calendar date rather than by trading
+        /// day strands them on full holidays and on weekends as soon as a holiday shifts weekday.
+        /// </summary>
+        [Test]
+        public void EarlyClosesAndLateOpensFallOnTradingDays()
+        {
+            var provider = MarketHoursDatabase.FromDataFolder();
+            var failures = new List<string>();
+
+            foreach (var (key, entry) in provider.ExchangeHoursListing)
+            {
+                var exchangeHours = entry.ExchangeHours;
+                var dateSets = new[]
+                {
+                    ("early close", exchangeHours.EarlyCloses.Keys.AsEnumerable()),
+                    ("late open", exchangeHours.LateOpens.Keys.AsEnumerable())
+                };
+
+                foreach (var (name, dates) in dateSets)
+                {
+                    foreach (var date in dates.Where(date => date.Year >= FirstAuditedCalendarYear))
+                    {
+                        if (exchangeHours.Holidays.Contains(date))
+                        {
+                            failures.Add($"{key}: {name} on {date:d} is also a holiday");
+                        }
+                        else if (exchangeHours.MarketHours.TryGetValue(date.DayOfWeek, out var localMarketHours)
+                            && localMarketHours.IsClosedAllDay)
+                        {
+                            failures.Add($"{key}: {name} on {date:d} is a {date.DayOfWeek}, which never trades");
+                        }
+                    }
+                }
+            }
+
+            Assert.IsEmpty(failures, string.Join(Environment.NewLine, failures));
         }
 
         [TestCase("BIO", Market.CME, true)]
