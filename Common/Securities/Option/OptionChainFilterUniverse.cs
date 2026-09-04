@@ -52,6 +52,22 @@ namespace QuantConnect.Securities
         }
 
         /// <summary>
+        /// Gets the number of days until the given contract stops trading, counted from the chain date
+        /// </summary>
+        internal int GetDaysToExpiry(OptionContract contract)
+        {
+            return (GetLastTradingDate(contract.ID.Date) - AdjustExpirationReferenceDate(LocalTime.Date)).Days;
+        }
+
+        /// <summary>
+        /// Gets the last trading date for the given expiration date
+        /// </summary>
+        internal DateTime ToLastTradingDate(DateTime expiry)
+        {
+            return GetLastTradingDate(expiry);
+        }
+
+        /// <summary>
         /// Not supported: the chain filters only ever select contracts that are already in the chain
         /// </summary>
         protected override OptionContract CreateDataInstance(Symbol symbol)
