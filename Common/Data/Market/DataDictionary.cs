@@ -85,7 +85,7 @@ namespace QuantConnect.Data.Market
             }
             set
             {
-                _items = null;
+                ClearCache();
                 base[symbol] = value;
             }
         }

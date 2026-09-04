@@ -27,30 +27,38 @@ namespace QuantConnect.Data.Market
     /// </summary>
     public partial class OptionChain
     {
+        // Cached views, valid for the contract count they were built at
+        private int _viewsContractsCount = -1;
+        private IReadOnlyList<OptionContract> _calls;
+        private IReadOnlyList<OptionContract> _puts;
+        private StrikeList _strikePrices;
+        private IReadOnlyList<DateTime> _expiries;
+
         /// <summary>
         /// Gets all call contracts in the chain, sorted by expiration and strike
         /// </summary>
         [PandasIgnore]
-        public List<OptionContract> Calls => GetContracts(OptionRight.Call);
+        public IReadOnlyList<OptionContract> Calls => GetView(ref _calls, () => GetContracts(OptionRight.Call));
 
         /// <summary>
         /// Gets all put contracts in the chain, sorted by expiration and strike
         /// </summary>
         [PandasIgnore]
-        public List<OptionContract> Puts => GetContracts(OptionRight.Put);
+        public IReadOnlyList<OptionContract> Puts => GetView(ref _puts, () => GetContracts(OptionRight.Put));
 
         /// <summary>
         /// Gets the distinct strike prices in the chain, sorted in ascending order, with helpers to find the strike
         /// closest to, right above or right below a price. See <see cref="StrikeList"/>
         /// </summary>
         [PandasIgnore]
-        public StrikeList StrikePrices => new(Contracts.Values.Select(contract => contract.Strike));
+        public StrikeList StrikePrices => GetView(ref _strikePrices, () => new StrikeList(Contracts.Values.Select(contract => contract.Strike)));
 
         /// <summary>
         /// Gets the distinct expiration dates in the chain, sorted in ascending order
         /// </summary>
         [PandasIgnore]
-        public List<DateTime> Expiries => Contracts.Values.Select(contract => contract.Expiry).Distinct().OrderBy(expiry => expiry).ToList();
+        public IReadOnlyList<DateTime> Expiries => GetView(ref _expiries,
+            () => Contracts.Values.Select(contract => contract.Expiry).Distinct().OrderBy(expiry => expiry).ToList());
 
         #region Selection helpers
 
@@ -185,6 +193,25 @@ namespace QuantConnect.Data.Market
         public OptionContract AtTheMoney(OptionRight? right = null)
         {
             return Select(right);
+        }
+
+        /// <summary>
+        /// Gets a cached view of the contracts, recomputed when contracts have been added to the chain since it was built
+        /// </summary>
+        private T GetView<T>(ref T view, Func<T> compute)
+            where T : class
+        {
+            // Slice chains are filled in as data arrives, so a new contract count invalidates every view.
+            // Contracts are only ever added, never replaced, and the views derive from the contract symbols
+            if (_viewsContractsCount != Contracts.Count)
+            {
+                _calls = null;
+                _puts = null;
+                _strikePrices = null;
+                _expiries = null;
+                _viewsContractsCount = Contracts.Count;
+            }
+            return view ??= compute();
         }
 
         private List<OptionContract> GetContracts(OptionRight right)

@@ -100,6 +100,32 @@ namespace QuantConnect.Tests.Common.Data.Market
         }
 
         [Test]
+        public void ViewsAreCachedUntilContractsAreAdded()
+        {
+            var chain = CreateDefaultChain();
+            var calls = chain.Calls;
+            var puts = chain.Puts;
+            var strikes = chain.StrikePrices;
+            var expiries = chain.Expiries;
+
+            Assert.AreSame(calls, chain.Calls);
+            Assert.AreSame(puts, chain.Puts);
+            Assert.AreSame(strikes, chain.StrikePrices);
+            Assert.AreSame(expiries, chain.Expiries);
+
+            // Slice chains get their contracts one by one as data arrives: the views follow
+            var added = CreateChain(new[] { (new DateTime(2016, 5, 20), 120m, OptionRight.Call, 0.05m) }).Single();
+            chain.Contracts[added.Symbol] = added;
+
+            Assert.AreNotSame(calls, chain.Calls);
+            Assert.AreEqual(calls.Count + 1, chain.Calls.Count);
+            Assert.AreSame(added, chain.Calls.Last());
+            Assert.AreEqual(puts.Count, chain.Puts.Count);
+            Assert.AreEqual(120m, chain.StrikePrices.Last());
+            Assert.AreEqual(new DateTime(2016, 5, 20), chain.Expiries.Last());
+        }
+
+        [Test]
         public void StrikePricesAreDistinctAndSorted()
         {
             var chain = CreateDefaultChain();
