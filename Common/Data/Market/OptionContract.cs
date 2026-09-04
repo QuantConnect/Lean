@@ -107,8 +107,8 @@ namespace QuantConnect.Data.Market
         public decimal UnderlyingLastPrice => _optionData.UnderlyingLastPrice;
 
         /// <summary>
-        /// Gets the number of calendar days until the contract stops trading, counted from the contract's current time.
-        /// Expirations on a non trading day, like the Saturday expirations of equity options before February 2015, count on the previous trading day
+        /// Calendar days from this contract's time until its last trading date, the previous trading day
+        /// for expirations on a Saturday or holiday
         /// </summary>
         [PandasIgnore]
         public override int DaysToExpiry => ((_lastTradingDate ??= OptionSymbol.GetLastDayOfTrading(Symbol)) - Time.Date).Days;

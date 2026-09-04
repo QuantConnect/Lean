@@ -35,26 +35,25 @@ namespace QuantConnect.Data.Market
         private IReadOnlyList<DateTime> _expiries;
 
         /// <summary>
-        /// Gets all call contracts in the chain, sorted by expiration and strike
+        /// The call contracts, sorted by expiration then strike
         /// </summary>
         [PandasIgnore]
         public IReadOnlyList<OptionContract> Calls => GetView(ref _calls, () => GetContracts(OptionRight.Call));
 
         /// <summary>
-        /// Gets all put contracts in the chain, sorted by expiration and strike
+        /// The put contracts, sorted by expiration then strike
         /// </summary>
         [PandasIgnore]
         public IReadOnlyList<OptionContract> Puts => GetView(ref _puts, () => GetContracts(OptionRight.Put));
 
         /// <summary>
-        /// Gets the distinct strike prices in the chain, sorted in ascending order, with helpers to find the strike
-        /// closest to, right above or right below a price. See <see cref="StrikeList"/>
+        /// The distinct strikes, ascending, with helpers to find the closest, next above or next below a price
         /// </summary>
         [PandasIgnore]
         public StrikeList StrikePrices => GetView(ref _strikePrices, () => new StrikeList(Contracts.Values.Select(contract => contract.Strike)));
 
         /// <summary>
-        /// Gets the distinct expiration dates in the chain, sorted in ascending order
+        /// The distinct expiration dates, ascending
         /// </summary>
         [PandasIgnore]
         public IReadOnlyList<DateTime> Expiries => GetView(ref _expiries,
@@ -63,34 +62,20 @@ namespace QuantConnect.Data.Market
         #region Selection helpers
 
         /// <summary>
-        /// Selects the single contract that best matches the given criteria, e.g.
-        /// <c>chain.select(right=OptionRight.PUT, target_dte=30, moneyness=-0.15)</c> or <c>chain.select(OptionRight.CALL, 45, target_delta=0.3)</c>.
-        /// Null-safe: returns null (None in Python) instead of throwing when nothing matches.
-        /// Unlike the universe strategy filters, e.g. <see cref="BaseOptionFilterUniverse{TUniverse, TData}.NakedCall"/>, which take a minimum
-        /// days to expiration and pick the first expiration at or after it, this takes a target and picks the expiration closest to it
+        /// Selects the single contract closest to the criteria, e.g.
+        /// <c>chain.select(OptionRight.PUT, target_dte=30, strike=StrikeTarget.moneyness(-0.15))</c>.
+        /// Returns null (None in Python) when nothing matches. Unlike the universe strategy filters,
+        /// which take a minimum days to expiration, this takes a target and picks the closest expiration
         /// </summary>
-        /// <param name="right">If set, only contracts of this right are considered</param>
-        /// <param name="targetDte">If set, only the expiration closest to this many days from the chain date is considered. See <see cref="ClosestExpiry"/></param>
-        /// <param name="minDte">If set, expirations closer than this many days are excluded</param>
-        /// <param name="maxDte">If set, expirations further than this many days are excluded</param>
-        /// <param name="moneyness">Signed distance of the strike from the underlying price as a fraction of it, regardless of right:
-        /// negative values target strikes below the underlying price, positive values above, e.g. -0.15 targets the strike closest to 85% of the underlying price.
-        /// Mutually exclusive with <paramref name="strikeFromAtm"/> and <paramref name="targetDelta"/></param>
-        /// <param name="strikeFromAtm">Signed distance of the strike from the underlying price, in price units, like the universe strategy filters take.
-        /// Mutually exclusive with <paramref name="moneyness"/> and <paramref name="targetDelta"/></param>
-        /// <param name="targetDelta">If set, the contract whose absolute delta is closest to the absolute value of this target is selected,
-        /// so a 30 delta put can be requested as either 0.3 or -0.3. Contracts without greeks are ignored.
-        /// Mutually exclusive with <paramref name="moneyness"/> and <paramref name="strikeFromAtm"/></param>
-        /// <returns>The best matching contract, or null if none matches. Without strike criteria the at-the-money contract is returned</returns>
+        /// <param name="right">Only consider contracts of this right, any right when null</param>
+        /// <param name="targetDte">Only consider the expiration closest to this many days out, see <see cref="ClosestExpiry"/></param>
+        /// <param name="minDte">Exclude expirations closer than this many days</param>
+        /// <param name="maxDte">Exclude expirations further than this many days</param>
+        /// <param name="strike">The strike criterion, at the money when null. See <see cref="StrikeTarget"/></param>
+        /// <returns>The best matching contract, or null</returns>
         public OptionContract Select(OptionRight? right = null, int? targetDte = null, int? minDte = null, int? maxDte = null,
-            decimal? moneyness = null, decimal? strikeFromAtm = null, decimal? targetDelta = null)
+            StrikeTarget strike = null)
         {
-            var strikeCriteria = (moneyness.HasValue ? 1 : 0) + (strikeFromAtm.HasValue ? 1 : 0) + (targetDelta.HasValue ? 1 : 0);
-            if (strikeCriteria > 1)
-            {
-                throw new ArgumentException("OptionChain.Select(): moneyness, strikeFromAtm and targetDelta are mutually exclusive, please set only one of them.");
-            }
-
             var universe = new OptionChainFilterUniverse(this);
             IEnumerable<OptionContract> candidates = Contracts.Values;
             if (right.HasValue)
@@ -108,70 +93,43 @@ namespace QuantConnect.Data.Market
                 candidates = candidates.Where(contract => contract.Expiry == expiry.Value).ToList();
             }
 
-            if (targetDelta.HasValue)
-            {
-                var target = Math.Abs(targetDelta.Value);
-                // Contracts without greeks report a zero delta: they are excluded so a chain without greeks returns null
-                return candidates
-                    .Where(contract => contract.Greeks.Delta != 0)
-                    .OrderBy(contract => Math.Abs(Math.Abs(contract.Greeks.Delta) - target))
-                    .ThenBy(contract => contract.Expiry)
-                    .ThenBy(contract => contract.Strike)
-                    .ThenBy(contract => contract.Right)
-                    .FirstOrDefault();
-            }
-
-            var underlyingPrice = universe.Underlying?.Price;
-            if (!underlyingPrice.HasValue)
-            {
-                return null;
-            }
-            var targetStrike = strikeFromAtm.HasValue
-                ? underlyingPrice.Value + strikeFromAtm.Value
-                : underlyingPrice.Value * (1 + (moneyness ?? 0));
-            return GetClosestByStrike(candidates, targetStrike);
+            return (strike ?? StrikeTarget.AtTheMoney).Select(candidates, universe.Underlying?.Price);
         }
 
         /// <summary>
-        /// Selects the single contract that best matches the given criteria. Synonym of <see cref="Select"/>
+        /// Synonym of <see cref="Select"/>
         /// </summary>
-        /// <param name="right">If set, only contracts of this right are considered</param>
-        /// <param name="targetDte">If set, only the expiration closest to this many days from the chain date is considered</param>
-        /// <param name="minDte">If set, expirations closer than this many days are excluded</param>
-        /// <param name="maxDte">If set, expirations further than this many days are excluded</param>
-        /// <param name="moneyness">Signed distance of the strike from the underlying price as a fraction of it</param>
-        /// <param name="strikeFromAtm">Signed distance of the strike from the underlying price, in price units</param>
-        /// <param name="targetDelta">If set, the contract whose absolute delta is closest to the absolute value of this target is selected</param>
-        /// <returns>The best matching contract, or null if none matches</returns>
+        /// <param name="right">Only consider contracts of this right, any right when null</param>
+        /// <param name="targetDte">Only consider the expiration closest to this many days out</param>
+        /// <param name="minDte">Exclude expirations closer than this many days</param>
+        /// <param name="maxDte">Exclude expirations further than this many days</param>
+        /// <param name="strike">The strike criterion, at the money when null</param>
+        /// <returns>The best matching contract, or null</returns>
         public OptionContract Pick(OptionRight? right = null, int? targetDte = null, int? minDte = null, int? maxDte = null,
-            decimal? moneyness = null, decimal? strikeFromAtm = null, decimal? targetDelta = null)
+            StrikeTarget strike = null)
         {
-            return Select(right, targetDte, minDte, maxDte, moneyness, strikeFromAtm, targetDelta);
+            return Select(right, targetDte, minDte, maxDte, strike);
         }
 
         /// <summary>
-        /// Gets the expiration date in the chain closest to the target number of days from the chain date.
-        /// Days to expiration are counted to the contract's last trading date, so Saturday expirations of equity options
-        /// before February 2015 count on the preceding Friday.
-        /// Null-safe: returns null (None in Python) when the chain is empty or no expiration falls within the requested window
+        /// Gets the expiration closest to the target days out. Days are counted to the last trading date,
+        /// so Saturday expirations count on their Friday. Returns null (None in Python) when none falls in the window
         /// </summary>
-        /// <param name="targetDte">The target days to expiration. When two expirations are equidistant the earlier one is returned.
-        /// Defaults to minDte if set, else 0, i.e. the nearest expiration</param>
-        /// <param name="minDte">If set, expirations closer than this many days are excluded</param>
-        /// <param name="maxDte">If set, expirations further than this many days are excluded</param>
-        /// <returns>The best matching expiration date as stored in the chain's contracts, or null if none matches</returns>
+        /// <param name="targetDte">The target days to expiration, ties go to the earlier expiration. Defaults to minDte, else 0</param>
+        /// <param name="minDte">Exclude expirations closer than this many days</param>
+        /// <param name="maxDte">Exclude expirations further than this many days</param>
+        /// <returns>The expiration date as stored in the contracts, or null</returns>
         public DateTime? ClosestExpiry(int? targetDte = null, int? minDte = null, int? maxDte = null)
         {
             return GetClosestExpiry(new OptionChainFilterUniverse(this), Contracts.Values, targetDte, minDte, maxDte);
         }
 
         /// <summary>
-        /// Gets a new chain containing only the contracts with the given expiration date, e.g. <c>chain.at(expiry).puts</c>.
-        /// Matching is done on the last trading date, so a chain of Saturday expiring contracts (equity options before February 2015)
-        /// is also matched by the preceding Friday
+        /// Gets a new chain with the contracts of the given expiration, matched on the last trading date,
+        /// so Saturday expirations are also matched by their Friday. Time of day is ignored
         /// </summary>
-        /// <param name="expiry">The expiration date, time of day is ignored</param>
-        /// <returns>A new chain with only the matching contracts, empty if none matches</returns>
+        /// <param name="expiry">The expiration date</param>
+        /// <returns>A new chain, empty when nothing matches</returns>
         public OptionChain At(DateTime expiry)
         {
             var universe = new OptionChainFilterUniverse(this);
@@ -184,12 +142,11 @@ namespace QuantConnect.Data.Market
         }
 
         /// <summary>
-        /// Gets the contract whose strike is closest to the current underlying price, of the given right if any.
-        /// When two strikes are equidistant the lower one is returned, and among equal strikes the nearest expiration.
-        /// Null-safe: returns null (None in Python) when the chain has no matching contracts or the underlying price is unavailable
+        /// Gets the contract with the strike closest to the underlying price. Ties go to the lower strike,
+        /// then the nearest expiration. Returns null (None in Python) when there is none
         /// </summary>
-        /// <param name="right">If set, only contracts of this right are considered</param>
-        /// <returns>The at-the-money contract, or null if there is none</returns>
+        /// <param name="right">Only consider contracts of this right, any right when null</param>
+        /// <returns>The at-the-money contract, or null</returns>
         public OptionContract AtTheMoney(OptionRight? right = null)
         {
             return Select(right);
@@ -245,17 +202,6 @@ namespace QuantConnect.Data.Market
                 }
             }
             return result;
-        }
-
-        private static OptionContract GetClosestByStrike(IEnumerable<OptionContract> contracts, decimal targetStrike)
-        {
-            // Scaled strikes are in underlying price units, see SymbolProperties.StrikeMultiplier
-            return contracts
-                .OrderBy(contract => Math.Abs(contract.ScaledStrike - targetStrike))
-                .ThenBy(contract => contract.Strike)
-                .ThenBy(contract => contract.Expiry)
-                .ThenBy(contract => contract.Right)
-                .FirstOrDefault();
         }
 
         #endregion

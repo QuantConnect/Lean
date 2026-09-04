@@ -20,27 +20,24 @@ using System.Linq;
 namespace QuantConnect.Data.Market
 {
     /// <summary>
-    /// The distinct strike prices of a chain of contracts, sorted in ascending order,
-    /// with helpers to find the strike closest to, immediately above or immediately below a given price.
-    /// All helpers are null-safe: they return null (None in Python) instead of throwing when no strike matches
+    /// The distinct strikes of a chain, ascending, with helpers that return null (None in Python) when no strike matches
     /// </summary>
     public class StrikeList : List<decimal>
     {
         /// <summary>
-        /// Initializes a new instance of the <see cref="StrikeList"/> class with the distinct
-        /// values of the given strikes, sorted in ascending order
+        /// Creates the list from the given strikes, in any order, duplicates allowed
         /// </summary>
-        /// <param name="strikes">The strike prices, in any order, duplicates allowed</param>
+        /// <param name="strikes">The strike prices</param>
         public StrikeList(IEnumerable<decimal> strikes)
             : base(strikes.Distinct().OrderBy(strike => strike))
         {
         }
 
         /// <summary>
-        /// Gets the strike closest to the given price. When two strikes are equidistant, the lower one is returned
+        /// The strike closest to the price, the lower one on ties
         /// </summary>
         /// <param name="price">The reference price, e.g. the underlying price</param>
-        /// <returns>The closest strike, or null if there are no strikes</returns>
+        /// <returns>The closest strike, or null when the list is empty</returns>
         public decimal? ClosestTo(decimal price)
         {
             decimal? closest = null;
@@ -56,10 +53,10 @@ namespace QuantConnect.Data.Market
         }
 
         /// <summary>
-        /// Gets the lowest strike strictly greater than the given price
+        /// The lowest strike above the price
         /// </summary>
         /// <param name="price">The reference price, e.g. the underlying price</param>
-        /// <returns>The first strike above the price, or null if there is none</returns>
+        /// <returns>The first strike above the price, or null when there is none</returns>
         public decimal? FirstAbove(decimal price)
         {
             foreach (var strike in this)
@@ -73,10 +70,10 @@ namespace QuantConnect.Data.Market
         }
 
         /// <summary>
-        /// Gets the highest strike strictly less than the given price
+        /// The highest strike below the price
         /// </summary>
         /// <param name="price">The reference price, e.g. the underlying price</param>
-        /// <returns>The first strike below the price, or null if there is none</returns>
+        /// <returns>The first strike below the price, or null when there is none</returns>
         public decimal? FirstBelow(decimal price)
         {
             for (var i = Count - 1; i >= 0; i--)

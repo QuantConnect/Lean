@@ -346,7 +346,7 @@ namespace QuantConnect.Tests.Common.Data.Market
             var chain = CreateDefaultChain();
 
             Assert.AreEqual(chain.Select(right: OptionRight.Put, targetDte: 8).Symbol, chain.Pick(right: OptionRight.Put, targetDte: 8).Symbol);
-            Assert.AreEqual(chain.Select(right: OptionRight.Call, targetDelta: 0.2m).Symbol, chain.Pick(right: OptionRight.Call, targetDelta: 0.2m).Symbol);
+            Assert.AreEqual(chain.Select(right: OptionRight.Call, strike: StrikeTarget.Delta(0.2m)).Symbol, chain.Pick(right: OptionRight.Call, strike: StrikeTarget.Delta(0.2m)).Symbol);
             Assert.IsNull(chain.Pick(minDte: 40, maxDte: 60));
         }
 
@@ -356,7 +356,7 @@ namespace QuantConnect.Tests.Common.Data.Market
         public void SelectByMoneyness(double moneyness, double expectedStrike)
         {
             var chain = CreateDefaultChain();
-            var contract = chain.Select(right: OptionRight.Put, targetDte: 8, moneyness: (decimal)moneyness);
+            var contract = chain.Select(right: OptionRight.Put, targetDte: 8, strike: StrikeTarget.Moneyness((decimal)moneyness));
 
             Assert.IsNotNull(contract);
             Assert.AreEqual(OptionRight.Put, contract.Right);
@@ -371,7 +371,7 @@ namespace QuantConnect.Tests.Common.Data.Market
         public void SelectByStrikeFromAtm(double strikeFromAtm, double expectedStrike)
         {
             var chain = CreateDefaultChain();
-            var contract = chain.Select(right: OptionRight.Put, targetDte: 8, strikeFromAtm: (decimal)strikeFromAtm);
+            var contract = chain.Select(right: OptionRight.Put, targetDte: 8, strike: StrikeTarget.FromAtm((decimal)strikeFromAtm));
 
             Assert.IsNotNull(contract);
             Assert.AreEqual(OptionRight.Put, contract.Right);
@@ -386,7 +386,7 @@ namespace QuantConnect.Tests.Common.Data.Market
             var chain = CreateDefaultChain();
 
             // A "15 delta put" can be requested with either sign: put deltas are negative
-            var contract = chain.Select(right: OptionRight.Put, targetDte: 8, targetDelta: (decimal)targetDelta);
+            var contract = chain.Select(right: OptionRight.Put, targetDte: 8, strike: StrikeTarget.Delta((decimal)targetDelta));
 
             Assert.IsNotNull(contract);
             Assert.AreEqual(OptionRight.Put, contract.Right);
@@ -404,7 +404,7 @@ namespace QuantConnect.Tests.Common.Data.Market
                 (Expiry1, 100m, OptionRight.Call, 0.5m)
             });
 
-            var contract = chain.Select(right: OptionRight.Call, targetDelta: 0.05m);
+            var contract = chain.Select(right: OptionRight.Call, strike: StrikeTarget.Delta(0.05m));
             Assert.AreEqual(100m, contract.Strike);
 
             // A chain without any greeks data returns null instead of an arbitrary contract
@@ -413,7 +413,7 @@ namespace QuantConnect.Tests.Common.Data.Market
                 (Expiry1, 95m, OptionRight.Call, 0m),
                 (Expiry1, 100m, OptionRight.Call, 0m)
             });
-            Assert.IsNull(noGreeks.Select(right: OptionRight.Call, targetDelta: 0.05m));
+            Assert.IsNull(noGreeks.Select(right: OptionRight.Call, strike: StrikeTarget.Delta(0.05m)));
         }
 
         [Test]
@@ -458,26 +458,38 @@ namespace QuantConnect.Tests.Common.Data.Market
         [Test]
         public void SelectIsNullSafe()
         {
-            Assert.IsNull(CreateEmptyChain().Select(right: OptionRight.Put, targetDte: 30, moneyness: -0.15m));
+            Assert.IsNull(CreateEmptyChain().Select(right: OptionRight.Put, targetDte: 30, strike: StrikeTarget.Moneyness(-0.15m)));
             // Underlying price unavailable: moneyness cannot be computed
             var noUnderlying = CreateChain(new[] { (Expiry1, 100m, OptionRight.Call, 0.5m) }, underlyingPrice: null);
-            Assert.IsNull(noUnderlying.Select(right: OptionRight.Call, moneyness: -0.15m));
+            Assert.IsNull(noUnderlying.Select(right: OptionRight.Call, strike: StrikeTarget.Moneyness(-0.15m)));
         }
 
         [Test]
-        public void SelectThrowsWhenMoreThanOneStrikeCriteriaIsSet()
+        public void StrikeTargetsSelectFromAnyContractList()
         {
-            var chain = CreateDefaultChain();
-            Assert.Throws<ArgumentException>(() => chain.Select(moneyness: -0.15m, targetDelta: 0.3m));
-            Assert.Throws<ArgumentException>(() => chain.Select(moneyness: -0.15m, strikeFromAtm: -5m));
-            Assert.Throws<ArgumentException>(() => chain.Select(strikeFromAtm: -5m, targetDelta: 0.3m));
+            var contracts = CreateDefaultChain().At(Expiry2).ToList();
+
+            Assert.AreEqual(100m, StrikeTarget.AtTheMoney.Select(contracts, 101m).Strike);
+            Assert.AreEqual(110m, StrikeTarget.Moneyness(0.08m).Select(contracts, 100m).Strike);
+            Assert.AreEqual(90m, StrikeTarget.FromAtm(-8m).Select(contracts, 100m).Strike);
+            // delta needs no underlying price and is sign insensitive
+            Assert.AreEqual(90m, StrikeTarget.Delta(-0.1m).Select(contracts, null).Strike);
+            Assert.AreEqual(OptionRight.Put, StrikeTarget.Delta(-0.1m).Select(contracts, null).Right);
+            // strike based targets need the underlying price
+            Assert.IsNull(StrikeTarget.Moneyness(0.08m).Select(contracts, null));
+            Assert.IsNull(StrikeTarget.AtTheMoney.Select(Enumerable.Empty<OptionContract>(), 100m));
+
+            Assert.AreEqual("AtTheMoney", StrikeTarget.AtTheMoney.ToString());
+            Assert.AreEqual("Moneyness(-0.15)", StrikeTarget.Moneyness(-0.15m).ToString());
+            Assert.AreEqual("FromAtm(-5)", StrikeTarget.FromAtm(-5m).ToString());
+            Assert.AreEqual("Delta(0.3)", StrikeTarget.Delta(-0.3m).ToString());
         }
 
         [Test]
         public void SelectionHelpersAreAvailableFromPython()
         {
             var chain = CreateDefaultChain();
-            var expected = chain.Select(right: OptionRight.Put, targetDte: 8, moneyness: -0.1m);
+            var expected = chain.Select(right: OptionRight.Put, targetDte: 8, strike: StrikeTarget.Moneyness(-0.1m));
 
             using (Py.GIL())
             {
@@ -485,10 +497,10 @@ namespace QuantConnect.Tests.Common.Data.Market
 from AlgorithmImports import *
 
 def select(chain):
-    return chain.select(right=OptionRight.PUT, target_dte=8, moneyness=-0.1)
+    return chain.select(right=OptionRight.PUT, target_dte=8, strike=StrikeTarget.moneyness(-0.1))
 
 def pick(chain):
-    return chain.pick(OptionRight.PUT, 8, strike_from_atm=-10)
+    return chain.pick(OptionRight.PUT, 8, strike=StrikeTarget.from_atm(-10))
 
 def helpers(chain):
     at_expiry = chain.at(chain.closest_expiry(target_dte=8))
