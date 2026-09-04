@@ -38,6 +38,7 @@ namespace QuantConnect.Data.Fundamental
         /// </summary>
         [JsonProperty("1M")]
         [Obsolete("PeriodAuditor was retired by Morningstar in 2026 for all periods; no replacement is available.")]
+        [JsonIgnore]
         public string OneMonth => throw new NotSupportedException("PeriodAuditor was retired by Morningstar in 2026 for all periods; no replacement is available.");
 
         /// <summary>
@@ -45,6 +46,7 @@ namespace QuantConnect.Data.Fundamental
         /// </summary>
         [JsonProperty("2M")]
         [Obsolete("PeriodAuditor was retired by Morningstar in 2026 for all periods; no replacement is available.")]
+        [JsonIgnore]
         public string TwoMonths => throw new NotSupportedException("PeriodAuditor was retired by Morningstar in 2026 for all periods; no replacement is available.");
 
         /// <summary>
@@ -52,6 +54,7 @@ namespace QuantConnect.Data.Fundamental
         /// </summary>
         [JsonProperty("3M")]
         [Obsolete("PeriodAuditor was retired by Morningstar in 2026 for all periods; no replacement is available.")]
+        [JsonIgnore]
         public string ThreeMonths => throw new NotSupportedException("PeriodAuditor was retired by Morningstar in 2026 for all periods; no replacement is available.");
 
         /// <summary>
@@ -59,6 +62,7 @@ namespace QuantConnect.Data.Fundamental
         /// </summary>
         [JsonProperty("6M")]
         [Obsolete("PeriodAuditor was retired by Morningstar in 2026 for all periods; no replacement is available.")]
+        [JsonIgnore]
         public string SixMonths => throw new NotSupportedException("PeriodAuditor was retired by Morningstar in 2026 for all periods; no replacement is available.");
 
         /// <summary>
@@ -66,6 +70,7 @@ namespace QuantConnect.Data.Fundamental
         /// </summary>
         [JsonProperty("9M")]
         [Obsolete("PeriodAuditor was retired by Morningstar in 2026 for all periods; no replacement is available.")]
+        [JsonIgnore]
         public string NineMonths => throw new NotSupportedException("PeriodAuditor was retired by Morningstar in 2026 for all periods; no replacement is available.");
 
         /// <summary>
@@ -73,6 +78,7 @@ namespace QuantConnect.Data.Fundamental
         /// </summary>
         [JsonProperty("12M")]
         [Obsolete("PeriodAuditor was retired by Morningstar in 2026 for all periods; no replacement is available.")]
+        [JsonIgnore]
         public string TwelveMonths => throw new NotSupportedException("PeriodAuditor was retired by Morningstar in 2026 for all periods; no replacement is available.");
 
         /// <summary>
@@ -92,7 +98,7 @@ namespace QuantConnect.Data.Fundamental
         public override IReadOnlyDictionary<string, string> GetPeriodValues()
         {
             var result = new Dictionary<string, string>();
-            foreach (var kvp in new[] { new Tuple<string, string>("1M", OneMonth), new Tuple<string, string>("2M", TwoMonths), new Tuple<string, string>("3M", ThreeMonths), new Tuple<string, string>("6M", SixMonths), new Tuple<string, string>("9M", NineMonths), new Tuple<string, string>("12M", TwelveMonths) })
+            foreach (var kvp in System.Array.Empty<Tuple<string, string>>())
             {
                 if (!BaseFundamentalDataProvider.IsNone(typeof(string), kvp.Item2))
                 {

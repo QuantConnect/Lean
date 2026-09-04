@@ -38,6 +38,7 @@ namespace QuantConnect.Data.Fundamental
         /// </summary>
         [JsonProperty("3M")]
         [Obsolete("DividendCoverageRatio.ThreeMonths was retired by Morningstar in 2026; use DividendCoverageRatio.TwelveMonths.")]
+        [JsonIgnore]
         public double ThreeMonths => throw new NotSupportedException("DividendCoverageRatio.ThreeMonths was retired by Morningstar in 2026; use DividendCoverageRatio.TwelveMonths.");
 
         /// <summary>
@@ -45,6 +46,7 @@ namespace QuantConnect.Data.Fundamental
         /// </summary>
         [JsonProperty("6M")]
         [Obsolete("DividendCoverageRatio.SixMonths was retired by Morningstar in 2026; use DividendCoverageRatio.TwelveMonths.")]
+        [JsonIgnore]
         public double SixMonths => throw new NotSupportedException("DividendCoverageRatio.SixMonths was retired by Morningstar in 2026; use DividendCoverageRatio.TwelveMonths.");
 
         /// <summary>
@@ -52,6 +54,7 @@ namespace QuantConnect.Data.Fundamental
         /// </summary>
         [JsonProperty("9M")]
         [Obsolete("DividendCoverageRatio.NineMonths was retired by Morningstar in 2026; use DividendCoverageRatio.TwelveMonths.")]
+        [JsonIgnore]
         public double NineMonths => throw new NotSupportedException("DividendCoverageRatio.NineMonths was retired by Morningstar in 2026; use DividendCoverageRatio.TwelveMonths.");
 
         /// <summary>

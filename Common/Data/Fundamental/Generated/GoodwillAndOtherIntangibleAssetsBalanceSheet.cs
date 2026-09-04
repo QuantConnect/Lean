@@ -38,6 +38,7 @@ namespace QuantConnect.Data.Fundamental
         /// </summary>
         [JsonProperty("1M")]
         [Obsolete("GoodwillAndOtherIntangibleAssets.OneMonth was retired by Morningstar in 2026; use GoodwillAndOtherIntangibleAssets.ThreeMonths (also available: SixMonths, TwelveMonths).")]
+        [JsonIgnore]
         public double OneMonth => throw new NotSupportedException("GoodwillAndOtherIntangibleAssets.OneMonth was retired by Morningstar in 2026; use GoodwillAndOtherIntangibleAssets.ThreeMonths (also available: SixMonths, TwelveMonths).");
 
         /// <summary>
@@ -45,6 +46,7 @@ namespace QuantConnect.Data.Fundamental
         /// </summary>
         [JsonProperty("2M")]
         [Obsolete("GoodwillAndOtherIntangibleAssets.TwoMonths was retired by Morningstar in 2026; use GoodwillAndOtherIntangibleAssets.ThreeMonths (also available: SixMonths, TwelveMonths).")]
+        [JsonIgnore]
         public double TwoMonths => throw new NotSupportedException("GoodwillAndOtherIntangibleAssets.TwoMonths was retired by Morningstar in 2026; use GoodwillAndOtherIntangibleAssets.ThreeMonths (also available: SixMonths, TwelveMonths).");
 
         /// <summary>
@@ -64,6 +66,7 @@ namespace QuantConnect.Data.Fundamental
         /// </summary>
         [JsonProperty("9M")]
         [Obsolete("GoodwillAndOtherIntangibleAssets.NineMonths was retired by Morningstar in 2026; use GoodwillAndOtherIntangibleAssets.ThreeMonths (also available: SixMonths, TwelveMonths).")]
+        [JsonIgnore]
         public double NineMonths => throw new NotSupportedException("GoodwillAndOtherIntangibleAssets.NineMonths was retired by Morningstar in 2026; use GoodwillAndOtherIntangibleAssets.ThreeMonths (also available: SixMonths, TwelveMonths).");
 
         /// <summary>

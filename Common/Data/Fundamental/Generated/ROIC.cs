@@ -44,6 +44,7 @@ namespace QuantConnect.Data.Fundamental
         /// </summary>
         [JsonProperty("3M")]
         [Obsolete("ROIC.ThreeMonths was retired by Morningstar in 2026; use ROIC.OneYear.")]
+        [JsonIgnore]
         public double ThreeMonths => throw new NotSupportedException("ROIC.ThreeMonths was retired by Morningstar in 2026; use ROIC.OneYear.");
 
         /// <summary>
@@ -51,6 +52,7 @@ namespace QuantConnect.Data.Fundamental
         /// </summary>
         [JsonProperty("6M")]
         [Obsolete("ROIC.SixMonths was retired by Morningstar in 2026; use ROIC.OneYear.")]
+        [JsonIgnore]
         public double SixMonths => throw new NotSupportedException("ROIC.SixMonths was retired by Morningstar in 2026; use ROIC.OneYear.");
 
         /// <summary>

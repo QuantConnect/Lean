@@ -38,6 +38,7 @@ namespace QuantConnect.Data.Fundamental
         /// </summary>
         [JsonProperty("1M")]
         [Obsolete("TotalLiabilitiesNetMinorityInterest.OneMonth was retired by Morningstar in 2026; use TotalLiabilitiesNetMinorityInterest.ThreeMonths (also available: SixMonths, TwelveMonths).")]
+        [JsonIgnore]
         public double OneMonth => throw new NotSupportedException("TotalLiabilitiesNetMinorityInterest.OneMonth was retired by Morningstar in 2026; use TotalLiabilitiesNetMinorityInterest.ThreeMonths (also available: SixMonths, TwelveMonths).");
 
         /// <summary>
@@ -45,6 +46,7 @@ namespace QuantConnect.Data.Fundamental
         /// </summary>
         [JsonProperty("2M")]
         [Obsolete("TotalLiabilitiesNetMinorityInterest.TwoMonths was retired by Morningstar in 2026; use TotalLiabilitiesNetMinorityInterest.ThreeMonths (also available: SixMonths, TwelveMonths).")]
+        [JsonIgnore]
         public double TwoMonths => throw new NotSupportedException("TotalLiabilitiesNetMinorityInterest.TwoMonths was retired by Morningstar in 2026; use TotalLiabilitiesNetMinorityInterest.ThreeMonths (also available: SixMonths, TwelveMonths).");
 
         /// <summary>
@@ -64,6 +66,7 @@ namespace QuantConnect.Data.Fundamental
         /// </summary>
         [JsonProperty("9M")]
         [Obsolete("TotalLiabilitiesNetMinorityInterest.NineMonths was retired by Morningstar in 2026; use TotalLiabilitiesNetMinorityInterest.ThreeMonths (also available: SixMonths, TwelveMonths).")]
+        [JsonIgnore]
         public double NineMonths => throw new NotSupportedException("TotalLiabilitiesNetMinorityInterest.NineMonths was retired by Morningstar in 2026; use TotalLiabilitiesNetMinorityInterest.ThreeMonths (also available: SixMonths, TwelveMonths).");
 
         /// <summary>

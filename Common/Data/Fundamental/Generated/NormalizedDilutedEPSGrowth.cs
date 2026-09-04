@@ -38,6 +38,7 @@ namespace QuantConnect.Data.Fundamental
         /// </summary>
         [JsonProperty("1Y")]
         [Obsolete("NormalizedDilutedEPSGrowth was retired by Morningstar in 2026 for all periods; no replacement is available.")]
+        [JsonIgnore]
         public double OneYear => throw new NotSupportedException("NormalizedDilutedEPSGrowth was retired by Morningstar in 2026 for all periods; no replacement is available.");
 
         /// <summary>
@@ -45,6 +46,7 @@ namespace QuantConnect.Data.Fundamental
         /// </summary>
         [JsonProperty("3M")]
         [Obsolete("NormalizedDilutedEPSGrowth was retired by Morningstar in 2026 for all periods; no replacement is available.")]
+        [JsonIgnore]
         public double ThreeMonths => throw new NotSupportedException("NormalizedDilutedEPSGrowth was retired by Morningstar in 2026 for all periods; no replacement is available.");
 
         /// <summary>
@@ -52,6 +54,7 @@ namespace QuantConnect.Data.Fundamental
         /// </summary>
         [JsonProperty("3Y")]
         [Obsolete("NormalizedDilutedEPSGrowth was retired by Morningstar in 2026 for all periods; no replacement is available.")]
+        [JsonIgnore]
         public double ThreeYears => throw new NotSupportedException("NormalizedDilutedEPSGrowth was retired by Morningstar in 2026 for all periods; no replacement is available.");
 
         /// <summary>
@@ -59,6 +62,7 @@ namespace QuantConnect.Data.Fundamental
         /// </summary>
         [JsonProperty("5Y")]
         [Obsolete("NormalizedDilutedEPSGrowth was retired by Morningstar in 2026 for all periods; no replacement is available.")]
+        [JsonIgnore]
         public double FiveYears => throw new NotSupportedException("NormalizedDilutedEPSGrowth was retired by Morningstar in 2026 for all periods; no replacement is available.");
 
         /// <summary>

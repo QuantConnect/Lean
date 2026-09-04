@@ -106,6 +106,7 @@ namespace QuantConnect.Data.Fundamental
         /// </remarks>
         [JsonProperty("29002")]
         [Obsolete("BasicExtraordinary was retired by Morningstar in 2026 for all periods; no replacement is available.")]
+        [JsonIgnore]
         public BasicExtraordinary BasicExtraordinary => _basicExtraordinary ??= new(_timeProvider, _securityIdentifier);
         private BasicExtraordinary _basicExtraordinary;
 
@@ -117,6 +118,7 @@ namespace QuantConnect.Data.Fundamental
         /// </remarks>
         [JsonProperty("29003")]
         [Obsolete("BasicAccountingChange was retired by Morningstar in 2026 for all periods; no replacement is available.")]
+        [JsonIgnore]
         public BasicAccountingChange BasicAccountingChange => _basicAccountingChange ??= new(_timeProvider, _securityIdentifier);
         private BasicAccountingChange _basicAccountingChange;
 
@@ -158,6 +160,7 @@ namespace QuantConnect.Data.Fundamental
         /// </remarks>
         [JsonProperty("29007")]
         [Obsolete("DilutedExtraordinary was retired by Morningstar in 2026 for all periods; no replacement is available.")]
+        [JsonIgnore]
         public DilutedExtraordinary DilutedExtraordinary => _dilutedExtraordinary ??= new(_timeProvider, _securityIdentifier);
         private DilutedExtraordinary _dilutedExtraordinary;
 
@@ -169,6 +172,7 @@ namespace QuantConnect.Data.Fundamental
         /// </remarks>
         [JsonProperty("29008")]
         [Obsolete("DilutedAccountingChange was retired by Morningstar in 2026 for all periods; no replacement is available.")]
+        [JsonIgnore]
         public DilutedAccountingChange DilutedAccountingChange => _dilutedAccountingChange ??= new(_timeProvider, _securityIdentifier);
         private DilutedAccountingChange _dilutedAccountingChange;
 
@@ -220,6 +224,7 @@ namespace QuantConnect.Data.Fundamental
         /// </remarks>
         [JsonProperty("29013")]
         [Obsolete("BasicEPSOtherGainsLosses was retired by Morningstar in 2026 for all periods; no replacement is available.")]
+        [JsonIgnore]
         public BasicEPSOtherGainsLosses BasicEPSOtherGainsLosses => _basicEPSOtherGainsLosses ??= new(_timeProvider, _securityIdentifier);
         private BasicEPSOtherGainsLosses _basicEPSOtherGainsLosses;
 
@@ -241,6 +246,7 @@ namespace QuantConnect.Data.Fundamental
         /// </remarks>
         [JsonProperty("29015")]
         [Obsolete("TaxLossCarryforwardBasicEPS was retired by Morningstar in 2026 for all periods; no replacement is available.")]
+        [JsonIgnore]
         public TaxLossCarryforwardBasicEPS TaxLossCarryforwardBasicEPS => _taxLossCarryforwardBasicEPS ??= new(_timeProvider, _securityIdentifier);
         private TaxLossCarryforwardBasicEPS _taxLossCarryforwardBasicEPS;
 
@@ -252,6 +258,7 @@ namespace QuantConnect.Data.Fundamental
         /// </remarks>
         [JsonProperty("29016")]
         [Obsolete("DilutedEPSOtherGainsLosses was retired by Morningstar in 2026 for all periods; no replacement is available.")]
+        [JsonIgnore]
         public DilutedEPSOtherGainsLosses DilutedEPSOtherGainsLosses => _dilutedEPSOtherGainsLosses ??= new(_timeProvider, _securityIdentifier);
         private DilutedEPSOtherGainsLosses _dilutedEPSOtherGainsLosses;
 
@@ -273,6 +280,7 @@ namespace QuantConnect.Data.Fundamental
         /// </remarks>
         [JsonProperty("29018")]
         [Obsolete("TaxLossCarryforwardDilutedEPS was retired by Morningstar in 2026 for all periods; no replacement is available.")]
+        [JsonIgnore]
         public TaxLossCarryforwardDilutedEPS TaxLossCarryforwardDilutedEPS => _taxLossCarryforwardDilutedEPS ??= new(_timeProvider, _securityIdentifier);
         private TaxLossCarryforwardDilutedEPS _taxLossCarryforwardDilutedEPS;
 

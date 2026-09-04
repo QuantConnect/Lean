@@ -38,6 +38,7 @@ namespace QuantConnect.Data.Fundamental
         /// </summary>
         [JsonProperty("1M")]
         [Obsolete("FileDate.OneMonth was retired by Morningstar in 2026; use FileDate.ThreeMonths (also available: SixMonths, TwelveMonths).")]
+        [JsonIgnore]
         public DateTime OneMonth => throw new NotSupportedException("FileDate.OneMonth was retired by Morningstar in 2026; use FileDate.ThreeMonths (also available: SixMonths, TwelveMonths).");
 
         /// <summary>
@@ -45,6 +46,7 @@ namespace QuantConnect.Data.Fundamental
         /// </summary>
         [JsonProperty("2M")]
         [Obsolete("FileDate.TwoMonths was retired by Morningstar in 2026; use FileDate.ThreeMonths (also available: SixMonths, TwelveMonths).")]
+        [JsonIgnore]
         public DateTime TwoMonths => throw new NotSupportedException("FileDate.TwoMonths was retired by Morningstar in 2026; use FileDate.ThreeMonths (also available: SixMonths, TwelveMonths).");
 
         /// <summary>
@@ -64,6 +66,7 @@ namespace QuantConnect.Data.Fundamental
         /// </summary>
         [JsonProperty("9M")]
         [Obsolete("FileDate.NineMonths was retired by Morningstar in 2026; use FileDate.ThreeMonths (also available: SixMonths, TwelveMonths).")]
+        [JsonIgnore]
         public DateTime NineMonths => throw new NotSupportedException("FileDate.NineMonths was retired by Morningstar in 2026; use FileDate.ThreeMonths (also available: SixMonths, TwelveMonths).");
 
         /// <summary>
@@ -100,7 +103,7 @@ namespace QuantConnect.Data.Fundamental
         public override IReadOnlyDictionary<string, DateTime> GetPeriodValues()
         {
             var result = new Dictionary<string, DateTime>();
-            foreach (var kvp in new[] { new Tuple<string, DateTime>("1M", OneMonth), new Tuple<string, DateTime>("2M", TwoMonths), new Tuple<string, DateTime>("3M", ThreeMonths), new Tuple<string, DateTime>("6M", SixMonths), new Tuple<string, DateTime>("9M", NineMonths), new Tuple<string, DateTime>("12M", TwelveMonths) })
+            foreach (var kvp in new[] { new Tuple<string, DateTime>("3M", ThreeMonths), new Tuple<string, DateTime>("6M", SixMonths), new Tuple<string, DateTime>("12M", TwelveMonths) })
             {
                 if (!BaseFundamentalDataProvider.IsNone(typeof(DateTime), kvp.Item2))
                 {
