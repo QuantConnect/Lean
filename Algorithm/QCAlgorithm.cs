@@ -107,6 +107,7 @@ namespace QuantConnect.Algorithm
         private bool _tagsLimitReachedLogSent;
         private bool _tagsCollectionTruncatedLogSent;
         private bool _hasShownDailyConsolidationWarning;
+        private bool _optionContractUnderlyingResolutionWarningSent;
         private bool _indexOptionTickerAsUnderlyingWarningSent;
         private DateTime _start;
         private DateTime _startDate;   //Default start and end dates.
@@ -2452,6 +2453,15 @@ namespace QuantConnect.Algorithm
                         );
                     }
                 }
+            }
+
+            var optionResolution = resolution ?? UniverseSettings.Resolution;
+            var underlyingResolution = underlyingConfigs.GetHighestResolution();
+            if (underlyingResolution > optionResolution && !_optionContractUnderlyingResolutionWarningSent)
+            {
+                Debug($"Warning: {Messages.QCAlgorithm.AddOptionContractUnderlyingResolution(
+                    symbol, optionResolution, underlying, underlyingResolution)}");
+                _optionContractUnderlyingResolutionWarningSent = true;
             }
 
             var configs = SubscriptionManager.SubscriptionDataConfigService.Add(symbol, resolution, fillForward, extendedMarketHours,

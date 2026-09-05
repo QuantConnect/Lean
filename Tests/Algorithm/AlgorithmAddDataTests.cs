@@ -724,6 +724,57 @@ namespace QuantConnect.Tests.Algorithm
             Assert.IsTrue(exception.Message.Contains("is delisted"), $"Unexpected exception message: {exception.Message}");
         }
 
+        [TestCase(Resolution.Daily, Resolution.Minute, true)]
+        [TestCase(Resolution.Hour, Resolution.Minute, true)]
+        [TestCase(Resolution.Minute, Resolution.Minute, false)]
+        [TestCase(Resolution.Second, Resolution.Minute, false)]
+        public void AddOptionContractWarnsForCoarseUnderlyingResolution(
+            Resolution underlyingResolution, Resolution optionResolution, bool shouldWarn)
+        {
+            var algorithm = Algorithm();
+            var underlying = algorithm.AddEquity("SPY", underlyingResolution).Symbol;
+            var option = Symbol.CreateOption(underlying, Market.USA, OptionStyle.American, OptionRight.Call,
+                100m, new DateTime(2027, 1, 15));
+
+            Assert.DoesNotThrow(() => algorithm.AddOptionContract(option, optionResolution));
+
+            var warnings = algorithm.DebugMessages.Where(message => message.Contains("finer than its underlying")).ToList();
+            Assert.AreEqual(shouldWarn ? 1 : 0, warnings.Count);
+            if (shouldWarn)
+            {
+                StringAssert.Contains($"Add the underlying at {optionResolution} resolution or finer", warnings.Single());
+            }
+        }
+
+        [Test]
+        public void AddOptionContractUsesHighestAvailableUnderlyingResolution()
+        {
+            var algorithm = Algorithm();
+            var underlying = algorithm.AddEquity("SPY", Resolution.Daily).Symbol;
+            algorithm.AddEquity("SPY", Resolution.Minute);
+            var option = Symbol.CreateOption(underlying, Market.USA, OptionStyle.American, OptionRight.Call,
+                100m, new DateTime(2027, 1, 15));
+
+            Assert.DoesNotThrow(() => algorithm.AddOptionContract(option, Resolution.Minute));
+        }
+
+        [Test]
+        public void AddOptionContractWarnsOnceForCoarseUnderlyingResolution()
+        {
+            var algorithm = Algorithm();
+            algorithm.UniverseSettings.Resolution = Resolution.Minute;
+            var underlying = algorithm.AddEquity("SPY", Resolution.Daily).Symbol;
+            var firstOption = Symbol.CreateOption(underlying, Market.USA, OptionStyle.American, OptionRight.Call,
+                100m, new DateTime(2027, 1, 15));
+            var secondOption = Symbol.CreateOption(underlying, Market.USA, OptionStyle.American, OptionRight.Put,
+                105m, new DateTime(2027, 1, 15));
+
+            Assert.DoesNotThrow(() => algorithm.AddOptionContract(firstOption));
+            Assert.DoesNotThrow(() => algorithm.AddOptionContract(secondOption));
+
+            Assert.AreEqual(1, algorithm.DebugMessages.Count(message => message.Contains("finer than its underlying")));
+        }
+
         private static SubscriptionDataConfig GetMatchingSubscription(QCAlgorithm algorithm, Symbol symbol, Type type)
         {
             // find a subscription matchin the requested type with a higher resolution than requested
