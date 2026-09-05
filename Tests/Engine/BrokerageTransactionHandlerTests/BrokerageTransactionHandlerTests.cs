@@ -1117,6 +1117,96 @@ namespace QuantConnect.Tests.Engine.BrokerageTransactionHandlerTests
         }
 
         [Test]
+        public void ComboOrderUpdateShouldRejectInsufficientBuyingPowerWithoutMutatingTheGroup()
+        {
+            _transactionHandler = new TestBrokerageTransactionHandler();
+            using var brokerage = new NoSubmitTestBrokerage(_algorithm);
+            _transactionHandler.Initialize(_algorithm, brokerage, new BacktestingResultHandler());
+
+            var security1 = (Security)_algorithm.AddEquity("SPY");
+            var security2 = (Security)_algorithm.AddEquity("AAPL");
+            security1.SetMarketPrice(new Tick(DateTime.UtcNow, security1.Symbol, 100, 100));
+            security2.SetMarketPrice(new Tick(DateTime.UtcNow, security2.Symbol, 100, 100));
+
+            var firstBuyingPowerModel = new Mock<IBuyingPowerModel>();
+            firstBuyingPowerModel
+                .Setup(model => model.HasSufficientBuyingPowerForOrder(It.IsAny<HasSufficientBuyingPowerForOrderParameters>()))
+                .Returns(new HasSufficientBuyingPowerForOrderResult(true));
+            security1.SetBuyingPowerModel(firstBuyingPowerModel.Object);
+
+            var secondBuyingPowerModel = new Mock<IBuyingPowerModel>();
+            secondBuyingPowerModel
+                .Setup(model => model.HasSufficientBuyingPowerForOrder(It.IsAny<HasSufficientBuyingPowerForOrderParameters>()))
+                .Returns((HasSufficientBuyingPowerForOrderParameters parameters) =>
+                    new HasSufficientBuyingPowerForOrderResult(parameters.Order.Quantity <= 1, "insufficient combo buying power"));
+            security2.SetBuyingPowerModel(secondBuyingPowerModel.Object);
+
+            var groupOrderManager = new GroupOrderManager(1, 2, 1);
+            var firstOrder = new ComboMarketOrder(security1.Symbol, 1, DateTime.UtcNow, groupOrderManager);
+            var secondOrder = new ComboMarketOrder(security2.Symbol, 1, DateTime.UtcNow, groupOrderManager);
+            _transactionHandler.AddOpenOrder(firstOrder, _algorithm);
+            _transactionHandler.AddOpenOrder(secondOrder, _algorithm);
+
+            var updateRequest = new UpdateOrderRequest(DateTime.UtcNow, firstOrder.Id, new UpdateOrderFields { Quantity = 2 });
+            _transactionHandler.Process(updateRequest);
+            _transactionHandler.HandleOrderRequest(updateRequest);
+
+            Assert.IsTrue(updateRequest.Response.IsError);
+            Assert.AreEqual(OrderResponseErrorCode.BrokerageFailedToUpdateOrder, updateRequest.Response.ErrorCode);
+            Assert.AreEqual(1, groupOrderManager.Quantity);
+            Assert.AreEqual(1, firstOrder.Quantity);
+            Assert.AreEqual(1, secondOrder.Quantity);
+            secondBuyingPowerModel.Verify(model => model.HasSufficientBuyingPowerForOrder(
+                It.Is<HasSufficientBuyingPowerForOrderParameters>(parameters => parameters.Order.Quantity == 2)), Times.Once);
+            Assert.IsEmpty(brokerage.UpdatedOrders);
+        }
+
+        [Test]
+        public void ComboOrderUpdateShouldValidateTheCompleteGroupAndUpdateBrokerage()
+        {
+            _transactionHandler = new TestBrokerageTransactionHandler();
+            using var brokerage = new NoSubmitTestBrokerage(_algorithm);
+            _transactionHandler.Initialize(_algorithm, brokerage, new BacktestingResultHandler());
+
+            var security1 = (Security)_algorithm.AddEquity("SPY");
+            var security2 = (Security)_algorithm.AddEquity("AAPL");
+            security1.SetMarketPrice(new Tick(DateTime.UtcNow, security1.Symbol, 100, 100));
+            security2.SetMarketPrice(new Tick(DateTime.UtcNow, security2.Symbol, 100, 100));
+
+            var firstBuyingPowerModel = new Mock<IBuyingPowerModel>();
+            firstBuyingPowerModel
+                .Setup(model => model.HasSufficientBuyingPowerForOrder(It.IsAny<HasSufficientBuyingPowerForOrderParameters>()))
+                .Returns(new HasSufficientBuyingPowerForOrderResult(true));
+            security1.SetBuyingPowerModel(firstBuyingPowerModel.Object);
+
+            var secondBuyingPowerModel = new Mock<IBuyingPowerModel>();
+            secondBuyingPowerModel
+                .Setup(model => model.HasSufficientBuyingPowerForOrder(It.IsAny<HasSufficientBuyingPowerForOrderParameters>()))
+                .Returns(new HasSufficientBuyingPowerForOrderResult(true));
+            security2.SetBuyingPowerModel(secondBuyingPowerModel.Object);
+
+            var groupOrderManager = new GroupOrderManager(1, 2, 1);
+            var firstOrder = new ComboMarketOrder(security1.Symbol, 1, DateTime.UtcNow, groupOrderManager);
+            var secondOrder = new ComboMarketOrder(security2.Symbol, 1, DateTime.UtcNow, groupOrderManager);
+            _transactionHandler.AddOpenOrder(firstOrder, _algorithm);
+            _transactionHandler.AddOpenOrder(secondOrder, _algorithm);
+
+            var updateRequest = new UpdateOrderRequest(DateTime.UtcNow, firstOrder.Id, new UpdateOrderFields { Quantity = 2 });
+            _transactionHandler.Process(updateRequest);
+            _transactionHandler.HandleOrderRequest(updateRequest);
+
+            Assert.IsTrue(updateRequest.Response.IsSuccess);
+            Assert.AreEqual(2, groupOrderManager.Quantity);
+            Assert.AreEqual(2, firstOrder.Quantity);
+            Assert.AreEqual(2, secondOrder.Quantity);
+            secondBuyingPowerModel.Verify(model => model.HasSufficientBuyingPowerForOrder(
+                It.Is<HasSufficientBuyingPowerForOrderParameters>(parameters => parameters.Order.Quantity == 2)), Times.Once);
+            Assert.That(brokerage.UpdatedOrders, Has.Count.EqualTo(1));
+            Assert.AreEqual(firstOrder.Id, brokerage.UpdatedOrders[0].Id);
+            Assert.AreEqual(2, brokerage.UpdatedOrders[0].Quantity);
+        }
+
+        [Test]
         public void UpdatePartiallyFilledOrderRequestShouldWork()
         {
             // Initializes the transaction handler
@@ -3101,6 +3191,8 @@ namespace QuantConnect.Tests.Engine.BrokerageTransactionHandlerTests
         {
             private BacktestingBrokerage _underlyingBrokerage;
 
+            public List<Order> UpdatedOrders { get; } = new();
+
             public override bool IsConnected => _underlyingBrokerage.IsConnected;
 
             public NoSubmitTestBrokerage(IAlgorithm algorithm) : base("NoSubmitTestBrokerage")
@@ -3113,6 +3205,7 @@ namespace QuantConnect.Tests.Engine.BrokerageTransactionHandlerTests
             }
             public override bool UpdateOrder(Order order)
             {
+                UpdatedOrders.Add(order);
                 return true;
             }
             public void PublishOrderEvent(OrderEvent orderEvent)
