@@ -133,6 +133,161 @@ namespace QuantConnect.Tests.Common.Orders.Fills
         }
 
         [Test]
+        public void StopLimitBuyFillsOnLimitPenetrationAfterEarlierTrigger()
+        {
+            var model = new EquityFillModel();
+            var order = new StopLimitOrder(Symbols.SPY, 100, 100m, 100.25m, Noon);
+            var config = CreateTradeBarConfig(Symbols.SPY);
+            var security = new Security(
+                SecurityExchangeHoursTests.CreateUsEquitySecurityExchangeHours(),
+                config,
+                new Cash(Currencies.USD, 0, 1m),
+                SymbolProperties.GetDefault(Currencies.USD),
+                ErrorCurrencyConverter.Instance,
+                RegisteredSecurityDataTypesProvider.Null,
+                new SecurityCache()
+            );
+
+            security.SetLocalTimeKeeper(TimeKeeper.GetLocalTimeKeeper(TimeZones.NewYork));
+
+            // Trigger bar: stop crossed, but close remains above the buy limit.
+            security.SetMarketPrice(new TradeBar(
+                Noon, Symbols.SPY, 100.50m, 101.50m, 100.40m, 101.00m, 100));
+
+            var fill = model.Fill(new FillModelParameters(
+                security,
+                order,
+                new MockSubscriptionDataConfigProvider(config),
+                Time.OneHour,
+                null)).Single();
+
+            Assert.AreEqual(OrderStatus.None, fill.Status);
+            Assert.IsTrue(order.StopTriggered);
+
+            // Later bar: the resting limit is penetrated although the close remains above it.
+            security.SetMarketPrice(new TradeBar(
+                Noon.AddMinutes(1), Symbols.SPY, 100.60m, 100.80m, 99.80m, 100.60m, 100));
+
+            fill = model.Fill(new FillModelParameters(
+                security,
+                order,
+                new MockSubscriptionDataConfigProvider(config),
+                Time.OneHour,
+                null)).Single();
+
+            Assert.AreEqual(OrderStatus.Filled, fill.Status);
+            Assert.AreEqual(order.LimitPrice, fill.FillPrice);
+            Assert.AreEqual(order.Quantity, fill.FillQuantity);
+        }
+        [Test]
+        public void StopLimitBuyFillsAtOpenAfterEarlierTrigger()
+        {
+            var model = new EquityFillModel();
+            var order = new StopLimitOrder(Symbols.SPY, 100, 100m, 100.25m, Noon);
+            var config = CreateTradeBarConfig(Symbols.SPY);
+            var security = new Security(
+                SecurityExchangeHoursTests.CreateUsEquitySecurityExchangeHours(),
+                config,
+                new Cash(Currencies.USD, 0, 1m),
+                SymbolProperties.GetDefault(Currencies.USD),
+                ErrorCurrencyConverter.Instance,
+                RegisteredSecurityDataTypesProvider.Null,
+                new SecurityCache()
+            );
+            security.SetLocalTimeKeeper(TimeKeeper.GetLocalTimeKeeper(TimeZones.NewYork));
+
+            security.SetMarketPrice(new TradeBar(
+                Noon, Symbols.SPY, 100.50m, 101.50m, 100.40m, 101.00m, 100));
+
+            var fill = model.Fill(new FillModelParameters(
+                security, order, new MockSubscriptionDataConfigProvider(config),
+                Time.OneHour, null)).Single();
+
+            Assert.AreEqual(OrderStatus.None, fill.Status);
+            Assert.IsTrue(order.StopTriggered);
+
+            security.SetMarketPrice(new TradeBar(
+                Noon.AddMinutes(1), Symbols.SPY, 99.80m, 100.80m, 99.50m, 100.60m, 100));
+
+            fill = model.Fill(new FillModelParameters(
+                security, order, new MockSubscriptionDataConfigProvider(config),
+                Time.OneHour, null)).Single();
+
+            Assert.AreEqual(OrderStatus.Filled, fill.Status);
+            Assert.AreEqual(99.80m, fill.FillPrice);
+            Assert.IsTrue(fill.Message.Contains("favorable gap", StringComparison.InvariantCultureIgnoreCase));
+        }
+
+        [Test]
+        public void StopLimitBuyDoesNotUseLowOnTriggerBar()
+        {
+            var model = new EquityFillModel();
+            var order = new StopLimitOrder(Symbols.SPY, 100, 100m, 100.25m, Noon);
+            var config = CreateTradeBarConfig(Symbols.SPY);
+            var security = new Security(
+                SecurityExchangeHoursTests.CreateUsEquitySecurityExchangeHours(),
+                config,
+                new Cash(Currencies.USD, 0, 1m),
+                SymbolProperties.GetDefault(Currencies.USD),
+                ErrorCurrencyConverter.Instance,
+                RegisteredSecurityDataTypesProvider.Null,
+                new SecurityCache()
+            );
+            security.SetLocalTimeKeeper(TimeKeeper.GetLocalTimeKeeper(TimeZones.NewYork));
+
+            // The bar crosses both stop and limit, but closes above the limit.
+            // We cannot know whether the low occurred before the stop trigger.
+            security.SetMarketPrice(new TradeBar(
+                Noon, Symbols.SPY, 100.50m, 101.50m, 99.80m, 101.00m, 100));
+
+            var fill = model.Fill(new FillModelParameters(
+                security, order, new MockSubscriptionDataConfigProvider(config),
+                Time.OneHour, null)).Single();
+
+            Assert.IsTrue(order.StopTriggered);
+            Assert.AreEqual(OrderStatus.None, fill.Status);
+            Assert.AreEqual(0, fill.FillQuantity);
+        }
+
+        [Test]
+        public void StopLimitSellFillsOnLimitPenetrationAfterEarlierTrigger()
+        {
+            var model = new EquityFillModel();
+            var order = new StopLimitOrder(Symbols.SPY, -100, 100m, 99.75m, Noon);
+            var config = CreateTradeBarConfig(Symbols.SPY);
+            var security = new Security(
+                SecurityExchangeHoursTests.CreateUsEquitySecurityExchangeHours(),
+                config,
+                new Cash(Currencies.USD, 0, 1m),
+                SymbolProperties.GetDefault(Currencies.USD),
+                ErrorCurrencyConverter.Instance,
+                RegisteredSecurityDataTypesProvider.Null,
+                new SecurityCache()
+            );
+            security.SetLocalTimeKeeper(TimeKeeper.GetLocalTimeKeeper(TimeZones.NewYork));
+
+            security.SetMarketPrice(new TradeBar(
+                Noon, Symbols.SPY, 100.20m, 100.30m, 98.50m, 99.50m, 100));
+
+            var fill = model.Fill(new FillModelParameters(
+                security, order, new MockSubscriptionDataConfigProvider(config),
+                Time.OneHour, null)).Single();
+
+            Assert.AreEqual(OrderStatus.None, fill.Status);
+            Assert.IsTrue(order.StopTriggered);
+
+            security.SetMarketPrice(new TradeBar(
+                Noon.AddMinutes(1), Symbols.SPY, 99.60m, 100.10m, 99.40m, 99.60m, 100));
+
+            fill = model.Fill(new FillModelParameters(
+                security, order, new MockSubscriptionDataConfigProvider(config),
+                Time.OneHour, null)).Single();
+
+            Assert.AreEqual(OrderStatus.Filled, fill.Status);
+            Assert.AreEqual(order.LimitPrice, fill.FillPrice);
+            Assert.AreEqual(order.Quantity, fill.FillQuantity);
+        }
+        [Test]
         public void PerformsStopLimitFillBuy()
         {
             var model = new EquityFillModel();
@@ -174,13 +329,14 @@ namespace QuantConnect.Tests.Common.Orders.Fills
             Assert.AreEqual(0, fill.FillPrice);
             Assert.AreEqual(OrderStatus.None, fill.Status);
 
-            security.SetMarketPrice(new IndicatorDataPoint(Symbols.SPY, Noon, 101.66m));
+            security.SetMarketPrice(new TradeBar(
+                Noon, Symbols.SPY, 102m, 102m, 101.66m, 101.66m, 100));
 
             fill = model.StopLimitFill(security, order);
 
             // this fills worst case scenario, so it's at the limit price
             Assert.AreEqual(order.Quantity, fill.FillQuantity);
-            Assert.AreEqual(security.High, fill.FillPrice);
+            Assert.AreEqual(order.LimitPrice, fill.FillPrice);
             Assert.AreEqual(OrderStatus.Filled, fill.Status);
         }
 
@@ -226,13 +382,14 @@ namespace QuantConnect.Tests.Common.Orders.Fills
             Assert.AreEqual(0, fill.FillPrice);
             Assert.AreEqual(OrderStatus.None, fill.Status);
 
-            security.SetMarketPrice(new IndicatorDataPoint(Symbols.SPY, Noon, 101.66m));
+            security.SetMarketPrice(new TradeBar(
+                Noon, Symbols.SPY, 101m, 101.66m, 101m, 101.66m, 100));
 
             fill = model.StopLimitFill(security, order);
 
             // this fills worst case scenario, so it's at the limit price
             Assert.AreEqual(order.Quantity, fill.FillQuantity);
-            Assert.AreEqual(security.Low, fill.FillPrice);
+            Assert.AreEqual(order.LimitPrice, fill.FillPrice);
             Assert.AreEqual(OrderStatus.Filled, fill.Status);
         }
 

@@ -506,25 +506,40 @@ namespace QuantConnect.Orders.Fills
             if (pricesEndTime <= order.Time) return fill;
 
             //Check if the Stop Order was filled: opposite to a limit order
+            var triggeredOnEarlierBar = order.StopTriggered;
             switch (order.Direction)
             {
                 case OrderDirection.Buy:
                     //-> 1.2 Buy Stop: If Price Above Setpoint, Buy:
-                    if (prices.High > order.StopPrice || order.StopTriggered)
+                    if (prices.High > order.StopPrice || triggeredOnEarlierBar)
                     {
-                        if (!order.StopTriggered)
+                        if (!triggeredOnEarlierBar)
                         {
                             order.StopTriggered = true;
                             Parameters.OnOrderUpdated(order);
                         }
 
-                        // Fill the limit order, using closing price of bar:
-                        // Note > Can't use minimum price, because no way to be sure minimum wasn't before the stop triggered.
-                        if (prices.Current < order.LimitPrice)
+                        if (triggeredOnEarlierBar)
                         {
+                            // The entire bar is post-trigger, so the limit leg behaves as a resting limit order.
+                            if (prices.Low < order.LimitPrice)
+                            {
+                                fill.Status = OrderStatus.Filled;
+                                fill.FillPrice = order.LimitPrice;
+                                fill.FillQuantity = order.Quantity;
+
+                                if (prices.Open < order.LimitPrice)
+                                {
+                                    fill.FillPrice = prices.Open;
+                                    fill.Message = Messages.FillModel.FilledWithOpenDueToFavorableGap(asset, prices);
+                                }
+                            }
+                        }
+                        else if (prices.Current < order.LimitPrice)
+                        {
+                            // On the trigger bar, preserve the conservative close-based test.
                             fill.Status = OrderStatus.Filled;
                             fill.FillPrice = Math.Min(prices.High, order.LimitPrice);
-                            // assume the order completely filled
                             fill.FillQuantity = order.Quantity;
                         }
                     }
@@ -532,27 +547,40 @@ namespace QuantConnect.Orders.Fills
 
                 case OrderDirection.Sell:
                     //-> 1.1 Sell Stop: If Price below setpoint, Sell:
-                    if (prices.Low < order.StopPrice || order.StopTriggered)
+                    if (prices.Low < order.StopPrice || triggeredOnEarlierBar)
                     {
-                        if (!order.StopTriggered)
+                        if (!triggeredOnEarlierBar)
                         {
                             order.StopTriggered = true;
                             Parameters.OnOrderUpdated(order);
                         }
 
-                        // Fill the limit order, using minimum price of the bar
-                        // Note > Can't use minimum price, because no way to be sure minimum wasn't before the stop triggered.
-                        if (prices.Current > order.LimitPrice)
+                        if (triggeredOnEarlierBar)
                         {
+                            // The entire bar is post-trigger, so the limit leg behaves as a resting limit order.
+                            if (prices.High > order.LimitPrice)
+                            {
+                                fill.Status = OrderStatus.Filled;
+                                fill.FillPrice = order.LimitPrice;
+                                fill.FillQuantity = order.Quantity;
+
+                                if (prices.Open > order.LimitPrice)
+                                {
+                                    fill.FillPrice = prices.Open;
+                                    fill.Message = Messages.FillModel.FilledWithOpenDueToFavorableGap(asset, prices);
+                                }
+                            }
+                        }
+                        else if (prices.Current > order.LimitPrice)
+                        {
+                            // On the trigger bar, preserve the conservative close-based test.
                             fill.Status = OrderStatus.Filled;
                             fill.FillPrice = Math.Max(prices.Low, order.LimitPrice);
-                            // assume the order completely filled
                             fill.FillQuantity = order.Quantity;
                         }
                     }
                     break;
             }
-
             return fill;
         }
 

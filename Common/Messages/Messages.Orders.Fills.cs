@@ -57,6 +57,14 @@ namespace QuantConnect
             }
 
             /// <summary>
+            /// Returns a string message saying that the order was filled using the open price due to a favorable gap
+            /// </summary>
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public static string FilledWithOpenDueToFavorableGap(Securities.Security security, Prices prices)
+            {
+                return Invariant($@"Due to a favorable gap at {prices.EndTime.ToStringInvariant()} {security.Exchange.TimeZone}, order filled using the open price ({prices.Open})");
+            }
+            /// <summary>
             /// Returns a string message containing the given subscribedTypes
             /// </summary>
             [MethodImpl(MethodImplOptions.AggressiveInlining)]

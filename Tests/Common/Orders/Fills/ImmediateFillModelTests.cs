@@ -229,6 +229,123 @@ namespace QuantConnect.Tests.Common.Orders.Fills
 
         [TestCase(true)]
         [TestCase(false)]
+        public void StopLimitBuyFillsOnLimitPenetrationAfterEarlierTrigger(bool isInternal)
+        {
+            var model = new ImmediateFillModel();
+            var order = new StopLimitOrder(Symbols.SPY, 100, 100m, 100.25m, Noon);
+            var config = CreateTradeBarConfig(Symbols.SPY, isInternal);
+            var security = GetSecurity(config);
+            security.SetLocalTimeKeeper(TimeKeeper.GetLocalTimeKeeper(TimeZones.NewYork));
+
+            security.SetMarketPrice(new TradeBar(
+                Noon, Symbols.SPY, 100.50m, 101.50m, 100.40m, 101.00m, 100));
+
+            var fill = model.Fill(new FillModelParameters(
+                security, order, new MockSubscriptionDataConfigProvider(config),
+                Time.OneHour, null)).Single();
+
+            Assert.AreEqual(OrderStatus.None, fill.Status);
+            Assert.IsTrue(order.StopTriggered);
+
+            security.SetMarketPrice(new TradeBar(
+                Noon.AddMinutes(1), Symbols.SPY, 100.60m, 100.80m, 99.80m, 100.60m, 100));
+
+            fill = model.Fill(new FillModelParameters(
+                security, order, new MockSubscriptionDataConfigProvider(config),
+                Time.OneHour, null)).Single();
+
+            Assert.AreEqual(OrderStatus.Filled, fill.Status);
+            Assert.AreEqual(order.LimitPrice, fill.FillPrice);
+            Assert.AreEqual(order.Quantity, fill.FillQuantity);
+        }
+
+        [TestCase(true)]
+        [TestCase(false)]
+        public void StopLimitBuyFillsAtOpenAfterEarlierTrigger(bool isInternal)
+        {
+            var model = new ImmediateFillModel();
+            var order = new StopLimitOrder(Symbols.SPY, 100, 100m, 100.25m, Noon);
+            var config = CreateTradeBarConfig(Symbols.SPY, isInternal);
+            var security = GetSecurity(config);
+            security.SetLocalTimeKeeper(TimeKeeper.GetLocalTimeKeeper(TimeZones.NewYork));
+
+            security.SetMarketPrice(new TradeBar(
+                Noon, Symbols.SPY, 100.50m, 101.50m, 100.40m, 101.00m, 100));
+
+            var fill = model.Fill(new FillModelParameters(
+                security, order, new MockSubscriptionDataConfigProvider(config),
+                Time.OneHour, null)).Single();
+
+            Assert.AreEqual(OrderStatus.None, fill.Status);
+            Assert.IsTrue(order.StopTriggered);
+
+            security.SetMarketPrice(new TradeBar(
+                Noon.AddMinutes(1), Symbols.SPY, 99.80m, 100.80m, 99.50m, 100.60m, 100));
+
+            fill = model.Fill(new FillModelParameters(
+                security, order, new MockSubscriptionDataConfigProvider(config),
+                Time.OneHour, null)).Single();
+
+            Assert.AreEqual(OrderStatus.Filled, fill.Status);
+            Assert.AreEqual(99.80m, fill.FillPrice);
+            Assert.IsTrue(fill.Message.Contains("favorable gap", StringComparison.InvariantCultureIgnoreCase));
+        }
+
+        [TestCase(true)]
+        [TestCase(false)]
+        public void StopLimitBuyDoesNotUseLowOnTriggerBar(bool isInternal)
+        {
+            var model = new ImmediateFillModel();
+            var order = new StopLimitOrder(Symbols.SPY, 100, 100m, 100.25m, Noon);
+            var config = CreateTradeBarConfig(Symbols.SPY, isInternal);
+            var security = GetSecurity(config);
+            security.SetLocalTimeKeeper(TimeKeeper.GetLocalTimeKeeper(TimeZones.NewYork));
+
+            security.SetMarketPrice(new TradeBar(
+                Noon, Symbols.SPY, 100.50m, 101.50m, 99.80m, 101.00m, 100));
+
+            var fill = model.Fill(new FillModelParameters(
+                security, order, new MockSubscriptionDataConfigProvider(config),
+                Time.OneHour, null)).Single();
+
+            Assert.IsTrue(order.StopTriggered);
+            Assert.AreEqual(OrderStatus.None, fill.Status);
+            Assert.AreEqual(0, fill.FillQuantity);
+        }
+
+        [TestCase(true)]
+        [TestCase(false)]
+        public void StopLimitSellFillsOnLimitPenetrationAfterEarlierTrigger(bool isInternal)
+        {
+            var model = new ImmediateFillModel();
+            var order = new StopLimitOrder(Symbols.SPY, -100, 100m, 99.75m, Noon);
+            var config = CreateTradeBarConfig(Symbols.SPY, isInternal);
+            var security = GetSecurity(config);
+            security.SetLocalTimeKeeper(TimeKeeper.GetLocalTimeKeeper(TimeZones.NewYork));
+
+            security.SetMarketPrice(new TradeBar(
+                Noon, Symbols.SPY, 100.20m, 100.30m, 98.50m, 99.50m, 100));
+
+            var fill = model.Fill(new FillModelParameters(
+                security, order, new MockSubscriptionDataConfigProvider(config),
+                Time.OneHour, null)).Single();
+
+            Assert.AreEqual(OrderStatus.None, fill.Status);
+            Assert.IsTrue(order.StopTriggered);
+
+            security.SetMarketPrice(new TradeBar(
+                Noon.AddMinutes(1), Symbols.SPY, 99.60m, 100.10m, 99.40m, 99.60m, 100));
+
+            fill = model.Fill(new FillModelParameters(
+                security, order, new MockSubscriptionDataConfigProvider(config),
+                Time.OneHour, null)).Single();
+
+            Assert.AreEqual(OrderStatus.Filled, fill.Status);
+            Assert.AreEqual(order.LimitPrice, fill.FillPrice);
+            Assert.AreEqual(order.Quantity, fill.FillQuantity);
+        }
+        [TestCase(true)]
+        [TestCase(false)]
         public void PerformsStopLimitFillBuy(bool isInternal)
         {
             var model = new ImmediateFillModel();
