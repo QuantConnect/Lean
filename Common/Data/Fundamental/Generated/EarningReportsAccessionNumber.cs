@@ -31,7 +31,7 @@ namespace QuantConnect.Data.Fundamental
         /// <summary>
         /// The default period
         /// </summary>
-        protected override string DefaultPeriod => "OneMonth";
+        protected override string DefaultPeriod => "ThreeMonths";
 
         /// <summary>
         /// Gets/sets the OneMonth period value for the field
@@ -72,7 +72,7 @@ namespace QuantConnect.Data.Fundamental
         /// <summary>
         /// Returns true if the field contains a value for the default period
         /// </summary>
-        public override bool HasValue => !BaseFundamentalDataProvider.IsNone(typeof(string), FundamentalService.Get<string>(TimeProvider.GetUtcNow(), SecurityIdentifier, FundamentalProperty.EarningReports_AccessionNumber_OneMonth));
+        public override bool HasValue => !BaseFundamentalDataProvider.IsNone(typeof(string), FundamentalService.Get<string>(TimeProvider.GetUtcNow(), SecurityIdentifier, FundamentalProperty.EarningReports_AccessionNumber_ThreeMonths));
 
         /// <summary>
         /// Returns the default value for the field
@@ -81,7 +81,7 @@ namespace QuantConnect.Data.Fundamental
         {
             get
             {
-                var defaultValue = FundamentalService.Get<string>(TimeProvider.GetUtcNow(), SecurityIdentifier, FundamentalProperty.EarningReports_AccessionNumber_OneMonth);
+                var defaultValue = FundamentalService.Get<string>(TimeProvider.GetUtcNow(), SecurityIdentifier, FundamentalProperty.EarningReports_AccessionNumber_ThreeMonths);
                 if (!BaseFundamentalDataProvider.IsNone(typeof(string), defaultValue))
                 {
                     return defaultValue;
