@@ -14,6 +14,7 @@
 */
 
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
@@ -45,7 +46,7 @@ namespace QuantConnect.Securities
         /// </summary>
         /// <param name="chain">The option chain to filter</param>
         public OptionChainFilterUniverse(OptionChain chain)
-            : base(chain.Contracts.Values.ToList(), GetUnderlying(chain), chain.ExchangeTime, GetStrikeMultiplier(chain))
+            : base(GetContracts(chain), GetUnderlying(chain), chain.ExchangeTime, GetStrikeMultiplier(chain))
         {
             _symbol = chain.Symbol;
         }
@@ -56,6 +57,12 @@ namespace QuantConnect.Securities
         protected override OptionContract CreateDataInstance(Symbol symbol)
         {
             throw new InvalidOperationException($"OptionChainFilterUniverse.CreateDataInstance(): {symbol} is not part of the chain");
+        }
+
+        private static IReadOnlyList<OptionContract> GetContracts(OptionChain chain)
+        {
+            // The dictionary caches its values as a list that is replaced, never mutated, so it is safe to share
+            return chain.Contracts.Values as IReadOnlyList<OptionContract> ?? chain.Contracts.Values.ToList();
         }
 
         private static BaseData GetUnderlying(OptionChain chain)

@@ -191,11 +191,12 @@ namespace QuantConnect.Data.Market
             TradeBars = other.TradeBars;
             Contracts = other.Contracts;
             FilteredContracts = other.FilteredContracts;
+            _auxiliaryData = other._auxiliaryData;
         }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="BaseChain{T, TContractsCollection}"/> class as a copy of the specified chain
-        /// containing only the given subset of its contracts. The underlying, ticks, trade bars and quote bars are shared with the source chain
+        /// containing only the given subset of its contracts. The underlying, ticks, trade bars, quote bars and auxiliary data are shared with the source chain
         /// </summary>
         /// <param name="other">The chain to copy</param>
         /// <param name="contracts">The contracts to keep</param>

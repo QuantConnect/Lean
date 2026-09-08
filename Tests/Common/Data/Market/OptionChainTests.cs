@@ -18,6 +18,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using NUnit.Framework;
 using Python.Runtime;
@@ -125,6 +126,37 @@ namespace QuantConnect.Tests.Common.Data.Market
 
             Assert.AreEqual(expectEmpty, expected.Count == 0);
             CollectionAssert.AreEquivalent(expected, actual);
+        }
+
+        [Test]
+        public void ChainExposesEveryUniverseFilter()
+        {
+            // Contracts() takes explicit symbols or a selector, which only makes sense for the universe selection
+            var universeFilters = typeof(OptionFilterUniverse)
+                .GetMethods(BindingFlags.Public | BindingFlags.Instance)
+                .Where(x => x.ReturnType == typeof(OptionFilterUniverse) && x.Name != "Contracts" && !x.IsDefined(typeof(ObsoleteAttribute)))
+                .ToList();
+
+            Assert.IsNotEmpty(universeFilters);
+            foreach (var universeFilter in universeFilters)
+            {
+                var parameters = universeFilter.GetParameters().Select(x => x.ParameterType).ToArray();
+                var chainFilter = typeof(IOptionContractFilters<OptionChain>).GetMethod(universeFilter.Name, parameters);
+                Assert.IsNotNull(chainFilter, $"{universeFilter.Name}({string.Join(", ", parameters.Select(x => x.Name))}) is not an option chain filter");
+            }
+        }
+
+        [Test]
+        public void FilteredChainSharesTheAuxiliaryData()
+        {
+            var chain = CreateChain();
+            var symbol = chain.First().Symbol;
+            chain.AddData(new TestAuxData { Symbol = symbol, Time = Date, Value = 1 });
+
+            var filtered = chain.PutsOnly();
+
+            Assert.IsNotNull(chain.GetAux<TestAuxData>(symbol));
+            Assert.AreSame(chain.GetAux<TestAuxData>(symbol), filtered.GetAux<TestAuxData>(symbol));
         }
 
         [Test]
@@ -263,27 +295,64 @@ def where_chain(chain):
             }
         }
 
-        [Test]
-        public void StrategyFiltersReturnAnEmptyChainWithoutUnderlyingPrice()
+        private static IEnumerable<TestCaseData> StrategyFilterCases()
+        {
+            yield return Case("NakedCall", u => u.NakedCall(10, 0), c => c.NakedCall(10, 0));
+            yield return Case("CallSpread", u => u.CallSpread(10, 5, -5), c => c.CallSpread(10, 5, -5));
+            yield return Case("CallCalendarSpread", u => u.CallCalendarSpread(0, 10, 40), c => c.CallCalendarSpread(0, 10, 40));
+            yield return Case("Strangle", u => u.Strangle(10, 5, -5), c => c.Strangle(10, 5, -5));
+            yield return Case("Straddle", u => u.Straddle(10), c => c.Straddle(10));
+            yield return Case("ProtectiveCollar", u => u.ProtectiveCollar(10, 5, -5), c => c.ProtectiveCollar(10, 5, -5));
+            yield return Case("Conversion", u => u.Conversion(10, 5), c => c.Conversion(10, 5));
+            yield return Case("CallButterfly", u => u.CallButterfly(10, 5), c => c.CallButterfly(10, 5));
+            yield return Case("IronButterfly", u => u.IronButterfly(10, 5), c => c.IronButterfly(10, 5));
+            yield return Case("IronCondor", u => u.IronCondor(10, 5, 10), c => c.IronCondor(10, 5, 10));
+            yield return Case("BoxSpread", u => u.BoxSpread(10, 5), c => c.BoxSpread(10, 5));
+            yield return Case("JellyRoll", u => u.JellyRoll(0, 10, 40), c => c.JellyRoll(0, 10, 40));
+            yield return Case("CallLadder", u => u.CallLadder(10, 5, 0, -5), c => c.CallLadder(10, 5, 0, -5));
+        }
+
+        [TestCaseSource(nameof(StrategyFilterCases))]
+        public void StrategyFiltersSelectNothingWithoutUnderlyingPrice(Func<OptionFilterUniverse, OptionFilterUniverse> universeFilter,
+            Func<OptionChain, OptionChain> chainFilter, bool _)
         {
             var contracts = _data.Select(x => new OptionUniverse(x) { Underlying = null }).ToList();
             var chain = new OptionChain(Canonical, Date, contracts, _symbolProperties);
+            var universe = new OptionFilterUniverse(_option);
+            universe.Refresh(contracts, null, Date);
 
             Assert.AreEqual(0, chain.Underlying.Price);
-            Assert.AreEqual(0, chain.Straddle(10).Count);
-            Assert.AreEqual(0, chain.IronCondor(10, 5, 10).Count);
-            Assert.AreEqual(0, chain.NakedCall(10, 0).Count);
+            Assert.AreEqual(0, universeFilter(universe).Count);
+            Assert.AreEqual(0, chainFilter(chain).Count);
         }
 
         [Test]
         public void StrategyFiltersValidateArgumentsLikeTheUniverseFilters()
         {
-            var chain = CreateChain();
+            var contracts = _data.Select(x => new OptionUniverse(x) { Underlying = null }).ToList();
+            var chains = new[] { CreateChain(), new OptionChain(Canonical, Date, contracts, _symbolProperties) };
 
-            Assert.Throws<ArgumentException>(() => chain.Strangle(10, -5, 5));
-            Assert.Throws<ArgumentException>(() => chain.CallSpread(10, 5, 10));
-            Assert.Throws<ArgumentException>(() => chain.IronCondor(10, 10, 5));
-            Assert.Throws<ArgumentException>(() => chain.CallCalendarSpread(0, 40, 10));
+            foreach (var chain in chains)
+            {
+                Assert.Throws<ArgumentException>(() => chain.Strangle(10, -5, 5));
+                Assert.Throws<ArgumentException>(() => chain.CallSpread(10, 5, 10));
+                Assert.Throws<ArgumentException>(() => chain.IronCondor(10, 10, 5));
+                Assert.Throws<ArgumentException>(() => chain.CallCalendarSpread(0, 40, 10));
+            }
+        }
+
+        [Test]
+        public void TypeFiltersApplyToTheChainContractsInAnyOrder()
+        {
+            var chain = CreateChain();
+            var expected = CreateUniverse().StandardsOnly().FrontMonth().ToList().Select(x => x.Symbol.Value).ToList();
+
+            // The front month, 2016-03-04, is a weekly and 2016-03-18 the first standard expiry
+            Assert.AreEqual(2 * Strikes.Length, expected.Count);
+            CollectionAssert.AreEquivalent(expected, chain.StandardsOnly().FrontMonth().Select(x => x.Symbol.Value));
+            Assert.AreEqual(0, chain.FrontMonth().StandardsOnly().Count);
+            Assert.IsTrue(chain.FrontMonth().WeeklysOnly().All(x => x.Expiry == Expiries[0]));
+            Assert.Throws<InvalidOperationException>(() => CreateUniverse().FrontMonth().StandardsOnly());
         }
 
         [Test]
@@ -314,6 +383,10 @@ def naked_put(chain):
                 using var nakedPut = module.GetAttr("naked_put").Invoke(pyChain);
                 CollectionAssert.AreEqual(expectedNakedPut, nakedPut.As<OptionChain>().Select(x => x.Symbol.Value).ToList());
             }
+        }
+
+        private class TestAuxData : BaseData
+        {
         }
 
         private static TestCaseData Case(string name, Func<OptionFilterUniverse, OptionFilterUniverse> universeFilter,

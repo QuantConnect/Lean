@@ -20,7 +20,7 @@ namespace QuantConnect.Securities
     /// <summary>
     /// The option contract filters shared by the option universe selection (<see cref="OptionFilterUniverse"/>)
     /// and the option chain (<see cref="Data.Market.OptionChain"/>), so both offer the same filters with the same semantics.
-    /// Every filter added here must be implemented by both; <c>OptionChainTests.ChainExposesEveryUniverseFilter</c> verifies it
+    /// <c>OptionChainTests.ChainExposesEveryUniverseFilter</c> checks that every universe filter is declared here
     /// </summary>
     /// <typeparam name="TSelf">The implementing type, returned by every filter for chaining</typeparam>
     public interface IOptionContractFilters<TSelf>

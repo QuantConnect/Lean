@@ -87,7 +87,8 @@ namespace QuantConnect.Data.Market
         }
 
         /// <summary>
-        /// Selects the standard contracts, excluding weeklys. Same as <see cref="ContractSecurityFilterUniverse{T, TData}.StandardsOnly"/>
+        /// Selects the standard contracts in the chain, excluding weeklys. Unlike <see cref="ContractSecurityFilterUniverse{T, TData}.StandardsOnly"/>,
+        /// it applies to the contracts already selected, so it can be combined with the expiry filters in any order
         /// </summary>
         /// <returns>A new chain with the filter applied</returns>
         public OptionChain StandardsOnly()
@@ -96,7 +97,8 @@ namespace QuantConnect.Data.Market
         }
 
         /// <summary>
-        /// Selects the non standard weekly contracts. Same as <see cref="ContractSecurityFilterUniverse{T, TData}.WeeklysOnly"/>
+        /// Selects the non standard weekly contracts in the chain. Unlike <see cref="ContractSecurityFilterUniverse{T, TData}.WeeklysOnly"/>,
+        /// it applies to the contracts already selected, so it can be combined with the expiry filters in any order
         /// </summary>
         /// <returns>A new chain with the filter applied</returns>
         public OptionChain WeeklysOnly()
@@ -308,7 +310,7 @@ namespace QuantConnect.Data.Market
         /// <returns>A new chain with the selected contracts, empty if there is no match</returns>
         public OptionChain NakedCall(int minDaysTillExpiry = 30, decimal strikeFromAtm = 0)
         {
-            return Filter(universe => universe.NakedCall(minDaysTillExpiry, strikeFromAtm), requiresUnderlyingPrice: true);
+            return Filter(universe => universe.NakedCall(minDaysTillExpiry, strikeFromAtm));
         }
 
         /// <summary>
@@ -319,7 +321,7 @@ namespace QuantConnect.Data.Market
         /// <returns>A new chain with the selected contracts, empty if there is no match</returns>
         public OptionChain NakedPut(int minDaysTillExpiry = 30, decimal strikeFromAtm = 0)
         {
-            return Filter(universe => universe.NakedPut(minDaysTillExpiry, strikeFromAtm), requiresUnderlyingPrice: true);
+            return Filter(universe => universe.NakedPut(minDaysTillExpiry, strikeFromAtm));
         }
 
         /// <summary>
@@ -331,7 +333,7 @@ namespace QuantConnect.Data.Market
         /// <returns>A new chain with the selected contracts, empty if there is no match</returns>
         public OptionChain CallSpread(int minDaysTillExpiry = 30, decimal higherStrikeFromAtm = 5, decimal? lowerStrikeFromAtm = null)
         {
-            return Filter(universe => universe.CallSpread(minDaysTillExpiry, higherStrikeFromAtm, lowerStrikeFromAtm), requiresUnderlyingPrice: true);
+            return Filter(universe => universe.CallSpread(minDaysTillExpiry, higherStrikeFromAtm, lowerStrikeFromAtm));
         }
 
         /// <summary>
@@ -343,7 +345,7 @@ namespace QuantConnect.Data.Market
         /// <returns>A new chain with the selected contracts, empty if there is no match</returns>
         public OptionChain PutSpread(int minDaysTillExpiry = 30, decimal higherStrikeFromAtm = 5, decimal? lowerStrikeFromAtm = null)
         {
-            return Filter(universe => universe.PutSpread(minDaysTillExpiry, higherStrikeFromAtm, lowerStrikeFromAtm), requiresUnderlyingPrice: true);
+            return Filter(universe => universe.PutSpread(minDaysTillExpiry, higherStrikeFromAtm, lowerStrikeFromAtm));
         }
 
         /// <summary>
@@ -355,7 +357,7 @@ namespace QuantConnect.Data.Market
         /// <returns>A new chain with the selected contracts, empty if there is no match</returns>
         public OptionChain CallCalendarSpread(decimal strikeFromAtm = 0, int minNearDaysTillExpiry = 30, int minFarDaysTillExpiry = 60)
         {
-            return Filter(universe => universe.CallCalendarSpread(strikeFromAtm, minNearDaysTillExpiry, minFarDaysTillExpiry), requiresUnderlyingPrice: true);
+            return Filter(universe => universe.CallCalendarSpread(strikeFromAtm, minNearDaysTillExpiry, minFarDaysTillExpiry));
         }
 
         /// <summary>
@@ -367,7 +369,7 @@ namespace QuantConnect.Data.Market
         /// <returns>A new chain with the selected contracts, empty if there is no match</returns>
         public OptionChain PutCalendarSpread(decimal strikeFromAtm = 0, int minNearDaysTillExpiry = 30, int minFarDaysTillExpiry = 60)
         {
-            return Filter(universe => universe.PutCalendarSpread(strikeFromAtm, minNearDaysTillExpiry, minFarDaysTillExpiry), requiresUnderlyingPrice: true);
+            return Filter(universe => universe.PutCalendarSpread(strikeFromAtm, minNearDaysTillExpiry, minFarDaysTillExpiry));
         }
 
         /// <summary>
@@ -379,7 +381,7 @@ namespace QuantConnect.Data.Market
         /// <returns>A new chain with the selected contracts, empty if there is no match</returns>
         public OptionChain Strangle(int minDaysTillExpiry = 30, decimal callStrikeFromAtm = 5, decimal putStrikeFromAtm = -5)
         {
-            return Filter(universe => universe.Strangle(minDaysTillExpiry, callStrikeFromAtm, putStrikeFromAtm), requiresUnderlyingPrice: true);
+            return Filter(universe => universe.Strangle(minDaysTillExpiry, callStrikeFromAtm, putStrikeFromAtm));
         }
 
         /// <summary>
@@ -389,7 +391,7 @@ namespace QuantConnect.Data.Market
         /// <returns>A new chain with the selected contracts, empty if there is no match</returns>
         public OptionChain Straddle(int minDaysTillExpiry = 30)
         {
-            return Filter(universe => universe.Straddle(minDaysTillExpiry), requiresUnderlyingPrice: true);
+            return Filter(universe => universe.Straddle(minDaysTillExpiry));
         }
 
         /// <summary>
@@ -401,7 +403,7 @@ namespace QuantConnect.Data.Market
         /// <returns>A new chain with the selected contracts, empty if there is no match</returns>
         public OptionChain ProtectiveCollar(int minDaysTillExpiry = 30, decimal callStrikeFromAtm = 5, decimal putStrikeFromAtm = -5)
         {
-            return Filter(universe => universe.ProtectiveCollar(minDaysTillExpiry, callStrikeFromAtm, putStrikeFromAtm), requiresUnderlyingPrice: true);
+            return Filter(universe => universe.ProtectiveCollar(minDaysTillExpiry, callStrikeFromAtm, putStrikeFromAtm));
         }
 
         /// <summary>
@@ -412,7 +414,7 @@ namespace QuantConnect.Data.Market
         /// <returns>A new chain with the selected contracts, empty if there is no match</returns>
         public OptionChain Conversion(int minDaysTillExpiry = 30, decimal strikeFromAtm = 5)
         {
-            return Filter(universe => universe.Conversion(minDaysTillExpiry, strikeFromAtm), requiresUnderlyingPrice: true);
+            return Filter(universe => universe.Conversion(minDaysTillExpiry, strikeFromAtm));
         }
 
         /// <summary>
@@ -423,7 +425,7 @@ namespace QuantConnect.Data.Market
         /// <returns>A new chain with the selected contracts, empty if there is no match</returns>
         public OptionChain CallButterfly(int minDaysTillExpiry = 30, decimal strikeSpread = 5)
         {
-            return Filter(universe => universe.CallButterfly(minDaysTillExpiry, strikeSpread), requiresUnderlyingPrice: true);
+            return Filter(universe => universe.CallButterfly(minDaysTillExpiry, strikeSpread));
         }
 
         /// <summary>
@@ -434,7 +436,7 @@ namespace QuantConnect.Data.Market
         /// <returns>A new chain with the selected contracts, empty if there is no match</returns>
         public OptionChain PutButterfly(int minDaysTillExpiry = 30, decimal strikeSpread = 5)
         {
-            return Filter(universe => universe.PutButterfly(minDaysTillExpiry, strikeSpread), requiresUnderlyingPrice: true);
+            return Filter(universe => universe.PutButterfly(minDaysTillExpiry, strikeSpread));
         }
 
         /// <summary>
@@ -445,7 +447,7 @@ namespace QuantConnect.Data.Market
         /// <returns>A new chain with the selected contracts, empty if there is no match</returns>
         public OptionChain IronButterfly(int minDaysTillExpiry = 30, decimal strikeSpread = 5)
         {
-            return Filter(universe => universe.IronButterfly(minDaysTillExpiry, strikeSpread), requiresUnderlyingPrice: true);
+            return Filter(universe => universe.IronButterfly(minDaysTillExpiry, strikeSpread));
         }
 
         /// <summary>
@@ -457,7 +459,7 @@ namespace QuantConnect.Data.Market
         /// <returns>A new chain with the selected contracts, empty if there is no match</returns>
         public OptionChain IronCondor(int minDaysTillExpiry = 30, decimal nearStrikeSpread = 5, decimal farStrikeSpread = 10)
         {
-            return Filter(universe => universe.IronCondor(minDaysTillExpiry, nearStrikeSpread, farStrikeSpread), requiresUnderlyingPrice: true);
+            return Filter(universe => universe.IronCondor(minDaysTillExpiry, nearStrikeSpread, farStrikeSpread));
         }
 
         /// <summary>
@@ -468,7 +470,7 @@ namespace QuantConnect.Data.Market
         /// <returns>A new chain with the selected contracts, empty if there is no match</returns>
         public OptionChain BoxSpread(int minDaysTillExpiry = 30, decimal strikeSpread = 5)
         {
-            return Filter(universe => universe.BoxSpread(minDaysTillExpiry, strikeSpread), requiresUnderlyingPrice: true);
+            return Filter(universe => universe.BoxSpread(minDaysTillExpiry, strikeSpread));
         }
 
         /// <summary>
@@ -480,7 +482,7 @@ namespace QuantConnect.Data.Market
         /// <returns>A new chain with the selected contracts, empty if there is no match</returns>
         public OptionChain JellyRoll(decimal strikeFromAtm = 0, int minNearDaysTillExpiry = 30, int minFarDaysTillExpiry = 60)
         {
-            return Filter(universe => universe.JellyRoll(strikeFromAtm, minNearDaysTillExpiry, minFarDaysTillExpiry), requiresUnderlyingPrice: true);
+            return Filter(universe => universe.JellyRoll(strikeFromAtm, minNearDaysTillExpiry, minFarDaysTillExpiry));
         }
 
         /// <summary>
@@ -493,7 +495,7 @@ namespace QuantConnect.Data.Market
         /// <returns>A new chain with the selected contracts, empty if there is no match</returns>
         public OptionChain CallLadder(int minDaysTillExpiry, decimal higherStrikeFromAtm, decimal middleStrikeFromAtm, decimal lowerStrikeFromAtm)
         {
-            return Filter(universe => universe.CallLadder(minDaysTillExpiry, higherStrikeFromAtm, middleStrikeFromAtm, lowerStrikeFromAtm), requiresUnderlyingPrice: true);
+            return Filter(universe => universe.CallLadder(minDaysTillExpiry, higherStrikeFromAtm, middleStrikeFromAtm, lowerStrikeFromAtm));
         }
 
         /// <summary>
@@ -506,21 +508,16 @@ namespace QuantConnect.Data.Market
         /// <returns>A new chain with the selected contracts, empty if there is no match</returns>
         public OptionChain PutLadder(int minDaysTillExpiry, decimal higherStrikeFromAtm, decimal middleStrikeFromAtm, decimal lowerStrikeFromAtm)
         {
-            return Filter(universe => universe.PutLadder(minDaysTillExpiry, higherStrikeFromAtm, middleStrikeFromAtm, lowerStrikeFromAtm), requiresUnderlyingPrice: true);
+            return Filter(universe => universe.PutLadder(minDaysTillExpiry, higherStrikeFromAtm, middleStrikeFromAtm, lowerStrikeFromAtm));
         }
 
         /// <summary>
         /// Applies the given universe filter to the contracts of this chain and returns the result as a new chain
         /// </summary>
         /// <param name="filter">The universe filter to apply</param>
-        /// <param name="requiresUnderlyingPrice">True for filters selecting strikes relative to the underlying price, which select nothing without it</param>
-        private OptionChain Filter(Func<OptionChainFilterUniverse, OptionChainFilterUniverse> filter, bool requiresUnderlyingPrice = false)
+        private OptionChain Filter(Func<OptionChainFilterUniverse, OptionChainFilterUniverse> filter)
         {
             var universe = new OptionChainFilterUniverse(this);
-            if (requiresUnderlyingPrice && universe.Underlying == null)
-            {
-                return new OptionChain(this, Enumerable.Empty<OptionContract>());
-            }
             // the type filters (standards/weeklys) are only applied on demand, like the universe selection does after the user filter
             return new OptionChain(this, filter(universe).ApplyTypesFilter());
         }
