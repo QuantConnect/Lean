@@ -118,6 +118,14 @@ namespace QuantConnect.Tests.Common.Data.Fundamental
                         return industryTemplateCode;
                     }
                     return string.Empty;
+                case "EarningReports_AccessionNumber_ThreeMonths":
+                case "FinancialStatements_AccessionNumber_ThreeMonths":
+                    if (securityIdentifier.Symbol == "AAPL")
+                    {
+                        return "0001193125-13-416534";
+                    }
+                    // null and not string.Empty, an empty string would count as a real value
+                    return null;
                 case "EarningRatios_EquityPerShareGrowth_OneYear":
                     if(_equityPerShareGrowthOneYear.TryGetValue(securityIdentifier.ToString(), out var ePSG))
                     {

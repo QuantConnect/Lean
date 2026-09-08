@@ -40,6 +40,26 @@ namespace QuantConnect.Tests.Common.Data.Fundamental
         }
 
         [Test]
+        public void AccessionNumberDefaultsToThreeMonths()
+        {
+            var fine = new QuantConnect.Data.Fundamental.Fundamental(new DateTime(2014, 04, 01), Symbols.AAPL);
+
+            Assert.IsTrue(fine.EarningReports.AccessionNumber.HasValue);
+            Assert.AreEqual("0001193125-13-416534", fine.EarningReports.AccessionNumber.Value);
+            Assert.AreEqual("0001193125-13-416534", fine.EarningReports.AccessionNumber.GetPeriodValue(""));
+            Assert.IsTrue(fine.FinancialStatements.AccessionNumber.HasValue);
+        }
+
+        [Test]
+        public void AccessionNumberHasNoValueWhenItIsMissing()
+        {
+            var fine = new QuantConnect.Data.Fundamental.Fundamental(new DateTime(2014, 04, 01), Symbols.SPY);
+
+            Assert.IsFalse(fine.EarningReports.AccessionNumber.HasValue);
+            Assert.IsFalse(fine.FinancialStatements.AccessionNumber.HasValue);
+        }
+
+        [Test]
         public void ZeroMarketCapForDefaultObject()
         {
             var fine = new QuantConnect.Data.Fundamental.Fundamental();
