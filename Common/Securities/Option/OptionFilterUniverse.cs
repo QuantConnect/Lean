@@ -20,6 +20,7 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 using Python.Runtime;
 using QuantConnect.Data;
+using QuantConnect.Data.Market;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Securities.FutureOption;
 using QuantConnect.Securities.IndexOption;
@@ -35,7 +36,7 @@ namespace QuantConnect.Securities
     /// <typeparam name="TData">The option contract data type</typeparam>
     public abstract class BaseOptionFilterUniverse<TUniverse, TData> : ContractSecurityFilterUniverse<TUniverse, TData>, IOptionContractFilters<TUniverse>
         where TUniverse : BaseOptionFilterUniverse<TUniverse, TData>
-        where TData : IOptionContractData
+        where TData : ISymbolProvider
     {
         // Fields used in relative strikes filter
         private List<decimal> _uniqueStrikes;
@@ -57,6 +58,21 @@ namespace QuantConnect.Securities
         /// The option security type
         /// </summary>
         protected abstract SecurityType SecurityType { get; }
+
+        /// <summary>
+        /// Gets the greeks of the given contract
+        /// </summary>
+        protected abstract Greeks GetGreeks(TData contract);
+
+        /// <summary>
+        /// Gets the implied volatility of the given contract
+        /// </summary>
+        protected abstract decimal GetImpliedVolatility(TData contract);
+
+        /// <summary>
+        /// Gets the open interest of the given contract
+        /// </summary>
+        protected abstract decimal GetOpenInterest(TData contract);
 
         /// <summary>
         /// The underlying price data
@@ -237,7 +253,7 @@ namespace QuantConnect.Securities
             Data = Data
                 .Where(data =>
                     {
-                        var price = data.ID.StrikePrice;
+                        var price = data.Symbol.ID.StrikePrice;
                         return price >= minPrice && price <= maxPrice;
                     }
                 ).ToList();
@@ -493,9 +509,9 @@ namespace QuantConnect.Securities
 
             var filtered = CallPutSpread(minDaysTillExpiry, callStrikeFromAtm, putStrikeFromAtm);
 
-            var call = filtered.SingleOrDefault(x => x.ID.OptionRight == OptionRight.Call);
-            var put = filtered.SingleOrDefault(x => x.ID.OptionRight == OptionRight.Put);
-            if (call == null || put == null || call.ID.StrikePrice <= put.ID.StrikePrice)
+            var call = filtered.SingleOrDefault(x => x.Symbol.ID.OptionRight == OptionRight.Call);
+            var put = filtered.SingleOrDefault(x => x.Symbol.ID.OptionRight == OptionRight.Put);
+            if (call == null || put == null || call.Symbol.ID.StrikePrice <= put.Symbol.ID.StrikePrice)
             {
                 return Empty();
             }
@@ -604,8 +620,8 @@ namespace QuantConnect.Securities
 
             // Select the contracts
             var filtered = Contracts(data => data.Where(x =>
-                x.ID.Date == contracts[0].ID.Date && x.ID.OptionRight == right &&
-                (x.ID.StrikePrice == atmStrike || x.ID.StrikePrice == lowerStrike || x.ID.StrikePrice == upperStrike)));
+                x.Symbol.ID.Date == contracts[0].ID.Date && x.Symbol.ID.OptionRight == right &&
+                (x.Symbol.ID.StrikePrice == atmStrike || x.Symbol.ID.StrikePrice == lowerStrike || x.Symbol.ID.StrikePrice == upperStrike)));
             if (filtered.Count() != 3)
             {
                 return Empty();
@@ -652,10 +668,10 @@ namespace QuantConnect.Securities
             }
 
             var filtered = Contracts(data => data.Where(x =>
-                x.ID.Date == contracts[0].ID.Date && (
-                x.ID.StrikePrice == atmStrike ||
-                (x.ID.OptionRight == OptionRight.Call && x.ID.StrikePrice == otmCallStrike) ||
-                (x.ID.OptionRight == OptionRight.Put && x.ID.StrikePrice == otmPutStrike)
+                x.Symbol.ID.Date == contracts[0].ID.Date && (
+                x.Symbol.ID.StrikePrice == atmStrike ||
+                (x.Symbol.ID.OptionRight == OptionRight.Call && x.Symbol.ID.StrikePrice == otmCallStrike) ||
+                (x.Symbol.ID.OptionRight == OptionRight.Put && x.Symbol.ID.StrikePrice == otmPutStrike)
             )));
             if (filtered.Count() != 4)
             {
@@ -714,11 +730,11 @@ namespace QuantConnect.Securities
 
             // Select the contracts
             var filtered = Contracts(data => data.Where(x =>
-                x.ID.Date == contracts[0].ID.Date && (
-                (x.ID.OptionRight == OptionRight.Call && x.ID.StrikePrice == nearCallStrike) ||
-                (x.ID.OptionRight == OptionRight.Put && x.ID.StrikePrice == nearPutStrike) ||
-                (x.ID.OptionRight == OptionRight.Call && x.ID.StrikePrice == farCallStrike) ||
-                (x.ID.OptionRight == OptionRight.Put && x.ID.StrikePrice == farPutStrike)
+                x.Symbol.ID.Date == contracts[0].ID.Date && (
+                (x.Symbol.ID.OptionRight == OptionRight.Call && x.Symbol.ID.StrikePrice == nearCallStrike) ||
+                (x.Symbol.ID.OptionRight == OptionRight.Put && x.Symbol.ID.StrikePrice == nearPutStrike) ||
+                (x.Symbol.ID.OptionRight == OptionRight.Call && x.Symbol.ID.StrikePrice == farCallStrike) ||
+                (x.Symbol.ID.OptionRight == OptionRight.Put && x.Symbol.ID.StrikePrice == farPutStrike)
             )));
             if (filtered.Count() != 4)
             {
@@ -760,8 +776,8 @@ namespace QuantConnect.Securities
 
             // Select the contracts
             var filtered = Contracts(data => data.Where(x =>
-                (x.ID.StrikePrice == higherStrike || x.ID.StrikePrice == lowerStrike) &&
-                x.ID.Date == contracts[0].ID.Date));
+                (x.Symbol.ID.StrikePrice == higherStrike || x.Symbol.ID.StrikePrice == lowerStrike) &&
+                x.Symbol.ID.Date == contracts[0].ID.Date));
             if (filtered.Count() != 4)
             {
                 return Empty();
@@ -816,7 +832,7 @@ namespace QuantConnect.Securities
             }
             var farExpiry = farExpiryContract.ID.Date;
 
-            var filtered = Contracts(data => data.Where(x => x.ID.StrikePrice == strike && (x.ID.Date == nearExpiry || x.ID.Date == farExpiry)));
+            var filtered = Contracts(data => data.Where(x => x.Symbol.ID.StrikePrice == strike && (x.Symbol.ID.Date == nearExpiry || x.Symbol.ID.Date == farExpiry)));
             if (filtered.Count() != 4)
             {
                 return Empty();
@@ -861,7 +877,7 @@ namespace QuantConnect.Securities
         public TUniverse Delta(decimal min, decimal max)
         {
             ValidateSecurityTypeForSupportedFilters(nameof(Delta));
-            return Contracts(data => data.Where(contractData => contractData.Greeks.Delta >= min && contractData.Greeks.Delta <= max));
+            return InRange(contract => GetGreeks(contract).Delta, min, max);
         }
 
         /// <summary>
@@ -885,7 +901,7 @@ namespace QuantConnect.Securities
         public TUniverse Gamma(decimal min, decimal max)
         {
             ValidateSecurityTypeForSupportedFilters(nameof(Gamma));
-            return Contracts(data => data.Where(contractData => contractData.Greeks.Gamma >= min && contractData.Greeks.Gamma <= max));
+            return InRange(contract => GetGreeks(contract).Gamma, min, max);
         }
 
         /// <summary>
@@ -909,7 +925,7 @@ namespace QuantConnect.Securities
         public TUniverse Theta(decimal min, decimal max)
         {
             ValidateSecurityTypeForSupportedFilters(nameof(Theta));
-            return Contracts(data => data.Where(contractData => contractData.Greeks.Theta >= min && contractData.Greeks.Theta <= max));
+            return InRange(contract => GetGreeks(contract).Theta, min, max);
         }
 
         /// <summary>
@@ -933,7 +949,7 @@ namespace QuantConnect.Securities
         public TUniverse Vega(decimal min, decimal max)
         {
             ValidateSecurityTypeForSupportedFilters(nameof(Vega));
-            return Contracts(data => data.Where(contractData => contractData.Greeks.Vega >= min && contractData.Greeks.Vega <= max));
+            return InRange(contract => GetGreeks(contract).Vega, min, max);
         }
 
         /// <summary>
@@ -957,7 +973,7 @@ namespace QuantConnect.Securities
         public TUniverse Rho(decimal min, decimal max)
         {
             ValidateSecurityTypeForSupportedFilters(nameof(Rho));
-            return Contracts(data => data.Where(contractData => contractData.Greeks.Rho >= min && contractData.Greeks.Rho <= max));
+            return InRange(contract => GetGreeks(contract).Rho, min, max);
         }
 
         /// <summary>
@@ -981,7 +997,7 @@ namespace QuantConnect.Securities
         public TUniverse ImpliedVolatility(decimal min, decimal max)
         {
             ValidateSecurityTypeForSupportedFilters(nameof(ImpliedVolatility));
-            return Contracts(data => data.Where(contractData => contractData.ImpliedVolatility >= min && contractData.ImpliedVolatility <= max));
+            return InRange(GetImpliedVolatility, min, max);
         }
 
         /// <summary>
@@ -1005,7 +1021,7 @@ namespace QuantConnect.Securities
         public TUniverse OpenInterest(long min, long max)
         {
             ValidateSecurityTypeForSupportedFilters(nameof(OpenInterest));
-            return Contracts(data => data.Where(contractData => contractData.OpenInterest >= min && contractData.OpenInterest <= max));
+            return InRange(GetOpenInterest, min, max);
         }
 
         /// <summary>
@@ -1069,6 +1085,18 @@ namespace QuantConnect.Securities
                 .FirstOrDefault()
                 // let's order the symbols too, to guarantee determinism
                 ?.OrderBy(x => x.ID) ?? Enumerable.Empty<Symbol>();
+        }
+
+        /// <summary>
+        /// Selects the contracts whose value, given by the selector, is within the given range. The selector runs once per contract
+        /// </summary>
+        private TUniverse InRange(Func<TData, decimal> selector, decimal min, decimal max)
+        {
+            return Contracts(data => data.Where(contract =>
+            {
+                var value = selector(contract);
+                return value >= min && value <= max;
+            }));
         }
 
         /// <summary>
@@ -1157,6 +1185,21 @@ namespace QuantConnect.Securities
                 Time = LocalTime
             };
         }
+
+        /// <summary>
+        /// Gets the greeks of the given contract
+        /// </summary>
+        protected override Greeks GetGreeks(OptionUniverse contract) => contract.Greeks;
+
+        /// <summary>
+        /// Gets the implied volatility of the given contract
+        /// </summary>
+        protected override decimal GetImpliedVolatility(OptionUniverse contract) => contract.ImpliedVolatility;
+
+        /// <summary>
+        /// Gets the open interest of the given contract
+        /// </summary>
+        protected override decimal GetOpenInterest(OptionUniverse contract) => contract.OpenInterest;
 
         /// <summary>
         /// Implicitly convert the universe to a list of symbols

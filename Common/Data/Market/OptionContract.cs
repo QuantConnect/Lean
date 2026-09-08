@@ -24,7 +24,7 @@ namespace QuantConnect.Data.Market
     /// <summary>
     /// Defines a single option contract at a specific expiration and strike price
     /// </summary>
-    public class OptionContract : BaseContract, IOptionContractData
+    public class OptionContract : BaseContract
     {
         private IOptionData _optionData = OptionPriceModelResultData.Null;
         private readonly SymbolProperties _symbolProperties;

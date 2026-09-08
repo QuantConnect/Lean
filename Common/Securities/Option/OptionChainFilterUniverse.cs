@@ -59,6 +59,21 @@ namespace QuantConnect.Securities
             throw new InvalidOperationException($"OptionChainFilterUniverse.CreateDataInstance(): {symbol} is not part of the chain");
         }
 
+        /// <summary>
+        /// Gets the greeks of the given contract
+        /// </summary>
+        protected override Greeks GetGreeks(OptionContract contract) => contract.Greeks;
+
+        /// <summary>
+        /// Gets the implied volatility of the given contract
+        /// </summary>
+        protected override decimal GetImpliedVolatility(OptionContract contract) => contract.ImpliedVolatility;
+
+        /// <summary>
+        /// Gets the open interest of the given contract
+        /// </summary>
+        protected override decimal GetOpenInterest(OptionContract contract) => contract.OpenInterest;
+
         private static IReadOnlyList<OptionContract> GetContracts(OptionChain chain)
         {
             // The dictionary caches its values as a list that is replaced, never mutated, so it is safe to share
