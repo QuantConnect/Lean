@@ -1707,6 +1707,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 26262
         /// </remarks>
         [JsonProperty("26262")]
+        [Obsolete("ChangeinReinsuranceReceivables was retired by Morningstar in 2026 for all periods; no replacement is available.")]
+        [JsonIgnore]
         public ChangeinReinsuranceReceivablesCashFlowStatement ChangeinReinsuranceReceivables => _changeinReinsuranceReceivables ??= new(_timeProvider, _securityIdentifier);
         private ChangeinReinsuranceReceivablesCashFlowStatement _changeinReinsuranceReceivables;
 
@@ -1737,6 +1739,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 26266
         /// </remarks>
         [JsonProperty("26266")]
+        [Obsolete("ChangeinInvestmentContractLiabilities was retired by Morningstar in 2026 for all periods; no replacement is available.")]
+        [JsonIgnore]
         public ChangeinInvestmentContractLiabilitiesCashFlowStatement ChangeinInvestmentContractLiabilities => _changeinInvestmentContractLiabilities ??= new(_timeProvider, _securityIdentifier);
         private ChangeinInvestmentContractLiabilitiesCashFlowStatement _changeinInvestmentContractLiabilities;
 
@@ -1793,6 +1797,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 26272
         /// </remarks>
         [JsonProperty("26272")]
+        [Obsolete("MinorityInterest was retired by Morningstar in 2026 for all periods; no replacement is available.")]
+        [JsonIgnore]
         public MinorityInterestCashFlowStatement MinorityInterest => _minorityInterest ??= new(_timeProvider, _securityIdentifier);
         private MinorityInterestCashFlowStatement _minorityInterest;
 
@@ -1865,6 +1871,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 26282
         /// </remarks>
         [JsonProperty("26282")]
+        [Obsolete("CashPaymentsforDepositsbyBanksandCustomers was retired by Morningstar in 2026 for all periods; no replacement is available.")]
+        [JsonIgnore]
         public CashPaymentsforDepositsbyBanksandCustomersCashFlowStatement CashPaymentsforDepositsbyBanksandCustomers => _cashPaymentsforDepositsbyBanksandCustomers ??= new(_timeProvider, _securityIdentifier);
         private CashPaymentsforDepositsbyBanksandCustomersCashFlowStatement _cashPaymentsforDepositsbyBanksandCustomers;
 
@@ -1875,6 +1883,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 26283
         /// </remarks>
         [JsonProperty("26283")]
+        [Obsolete("CashPaymentsforLoans was retired by Morningstar in 2026 for all periods; no replacement is available.")]
+        [JsonIgnore]
         public CashPaymentsforLoansCashFlowStatement CashPaymentsforLoans => _cashPaymentsforLoans ??= new(_timeProvider, _securityIdentifier);
         private CashPaymentsforLoansCashFlowStatement _cashPaymentsforLoans;
 
