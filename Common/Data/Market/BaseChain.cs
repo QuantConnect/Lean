@@ -35,7 +35,6 @@ namespace QuantConnect.Data.Market
         private Dictionary<Type, Dictionary<Symbol, List<BaseData>>> _auxiliaryData;
         private readonly Lazy<PyObject> _dataframe;
         private readonly bool _flatten;
-        private DateTime? _exchangeTime;
 
         private Dictionary<Type, Dictionary<Symbol, List<BaseData>>> AuxiliaryData
         {
@@ -58,17 +57,6 @@ namespace QuantConnect.Data.Market
         public BaseData Underlying
         {
             get; internal set;
-        }
-
-        /// <summary>
-        /// Gets the chain time in the exchange time zone, the reference date for the contract filters.
-        /// Defaults to <see cref="BaseData.Time"/>, which the engine stamps in the algorithm time zone
-        /// </summary>
-        [PandasIgnore]
-        public DateTime ExchangeTime
-        {
-            get => _exchangeTime ?? Time;
-            internal set => _exchangeTime = value;
         }
 
         /// <summary>
@@ -183,7 +171,6 @@ namespace QuantConnect.Data.Market
         {
             Symbol = other.Symbol;
             Time = other.Time;
-            _exchangeTime = other._exchangeTime;
             Value = other.Value;
             Underlying = other.Underlying;
             Ticks = other.Ticks;
@@ -201,10 +188,20 @@ namespace QuantConnect.Data.Market
         /// <param name="other">The chain to copy</param>
         /// <param name="contracts">The contracts to keep</param>
         protected BaseChain(BaseChain<T, TContractsCollection> other, IEnumerable<T> contracts)
-            : this(other)
+            : this(other.DataType, other._flatten)
         {
+            Symbol = other.Symbol;
+            Time = other.Time;
+            Value = other.Value;
+            Underlying = other.Underlying;
+            Ticks = other.Ticks;
+            QuoteBars = other.QuoteBars;
+            TradeBars = other.TradeBars;
+            FilteredContracts = other.FilteredContracts;
             Contracts = new();
+#pragma warning disable 0618 // DataDictionary.Time is deprecated, ignore until removed entirely
             Contracts.Time = other.Contracts.Time;
+#pragma warning restore 0618
             foreach (var contract in contracts)
             {
                 Contracts[contract.Symbol] = contract;
