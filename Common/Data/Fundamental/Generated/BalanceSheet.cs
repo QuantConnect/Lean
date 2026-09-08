@@ -2859,6 +2859,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 23487
         /// </remarks>
         [JsonProperty("23487")]
+        [Obsolete("NonInterestBearingBorrowingsTotal was retired by Morningstar in 2026 for all periods; no replacement is available.")]
+        [JsonIgnore]
         public NonInterestBearingBorrowingsTotalBalanceSheet NonInterestBearingBorrowingsTotal => _nonInterestBearingBorrowingsTotal ??= new(_timeProvider, _securityIdentifier);
         private NonInterestBearingBorrowingsTotalBalanceSheet _nonInterestBearingBorrowingsTotal;
 
