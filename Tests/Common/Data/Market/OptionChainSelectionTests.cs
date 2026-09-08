@@ -256,29 +256,7 @@ namespace QuantConnect.Tests.Common.Data.Market
         }
 
         [Test]
-        public void AtMatchesSaturdayExpiryByLastTradingDate()
-        {
-            // Equity options before February 2015 have Saturday expiration dates: asking for the
-            // last trading date (Friday) must still match the chain
-            var saturdayExpiry = new DateTime(2012, 2, 18);
-            var chainTime = new DateTime(2012, 2, 13, 10, 0, 0);
-            var chain = CreateChain(new[]
-            {
-                (saturdayExpiry, 95m, OptionRight.Call, 0.7m),
-                (saturdayExpiry, 100m, OptionRight.Call, 0.5m)
-            }, time: chainTime);
-
-            Assert.AreEqual(2, chain.At(new DateTime(2012, 2, 17)).Count);
-            Assert.AreEqual(2, chain.At(saturdayExpiry).Count);
-
-            // Days to expiration are counted to the Friday last trading date: Monday the 13th -> 4 days
-            Assert.AreEqual(saturdayExpiry, chain.ClosestExpiry(targetDte: 4, minDte: 4, maxDte: 4));
-            Assert.IsNull(chain.ClosestExpiry(minDte: 5));
-            Assert.IsTrue(chain.All(x => x.DaysToExpiry == 4));
-        }
-
-        [Test]
-        public void DaysToExpiryCountsCalendarDaysToTheLastTradingDate()
+        public void DaysToExpiryCountsCalendarDays()
         {
             var chain = CreateDefaultChain();
             CollectionAssert.AreEquivalent(new[] { 1, 8, 15, 36 }, chain.Select(x => x.DaysToExpiry).Distinct());

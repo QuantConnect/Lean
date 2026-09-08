@@ -15,7 +15,6 @@
 
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Interfaces;
-using QuantConnect.Python;
 using QuantConnect.Securities;
 using QuantConnect.Securities.Option;
 using System;
@@ -29,7 +28,6 @@ namespace QuantConnect.Data.Market
     {
         private IOptionData _optionData = OptionPriceModelResultData.Null;
         private readonly SymbolProperties _symbolProperties;
-        private DateTime? _lastTradingDate;
 
         /// <summary>
         /// Gets the strike price
@@ -105,13 +103,6 @@ namespace QuantConnect.Data.Market
         /// Gets the last price the underlying security traded at
         /// </summary>
         public decimal UnderlyingLastPrice => _optionData.UnderlyingLastPrice;
-
-        /// <summary>
-        /// Calendar days from this contract's time until its last trading date, the previous trading day
-        /// for expirations on a Saturday or holiday
-        /// </summary>
-        [PandasIgnore]
-        public override int DaysToExpiry => ((_lastTradingDate ??= OptionSymbol.GetLastDayOfTrading(Symbol)) - Time.Date).Days;
 
         /// <summary>
         /// The option symbol properties

@@ -135,8 +135,7 @@ namespace QuantConnect.Data.Market
         }
 
         /// <summary>
-        /// Gets the expiration closest to the target days out. Days are counted to the last trading date,
-        /// so Saturday expirations count on their Friday. Returns null (None in Python) when none falls in the window
+        /// Gets the expiration closest to the target days out. Returns null (None in Python) when none falls in the window
         /// </summary>
         /// <param name="targetDte">The target days to expiration, ties go to the earlier expiration. Defaults to minDte, else 0</param>
         /// <param name="minDte">Exclude expirations closer than this many days</param>
@@ -148,18 +147,16 @@ namespace QuantConnect.Data.Market
         }
 
         /// <summary>
-        /// Gets a new chain with the contracts of the given expiration, matched on the last trading date,
-        /// so Saturday expirations are also matched by their Friday. Time of day is ignored
+        /// Gets a new chain with the contracts of the given expiration. Time of day is ignored
         /// </summary>
         /// <param name="expiry">The expiration date</param>
         /// <returns>A new chain, empty when nothing matches</returns>
         public OptionChain At(DateTime expiry)
         {
-            var universe = new OptionChainFilterUniverse(this);
-            var expiryDate = universe.ToLastTradingDate(expiry);
+            var expiryDate = expiry.Date;
             return Filter(u =>
             {
-                u.Data = u.Data.Where(contract => universe.ToLastTradingDate(contract.Expiry) == expiryDate).ToList();
+                u.Data = u.Data.Where(contract => contract.Expiry.Date == expiryDate).ToList();
                 return u;
             });
         }
