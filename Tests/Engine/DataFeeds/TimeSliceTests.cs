@@ -178,6 +178,37 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             }
         }
 
+        [TestCase(SecurityType.Option)]
+        [TestCase(SecurityType.Future)]
+        public void ChainExchangeTimeIsInTheExchangeTimeZone(SecurityType securityType)
+        {
+            var symbol = securityType == SecurityType.Option ? Symbols.SPY_C_192_Feb19_2016 : Symbols.Fut_SPY_Mar19_2016;
+            var config = new SubscriptionDataConfig(typeof(TradeBar), symbol, Resolution.Minute, TimeZones.NewYork, TimeZones.NewYork, true, true, false);
+            var security = GetSecurity(config);
+            // 15:00 in New York on 2016-02-18 is already 05:00 on 2016-02-19 in Tokyo
+            var utcTime = new DateTime(2016, 2, 18, 20, 0, 0);
+            var time = utcTime.ConvertFromUtc(TimeZones.NewYork);
+
+            var packets = new List<DataFeedPacket>();
+            if (security is Option option)
+            {
+                var underlying = option.Underlying;
+                packets.Add(new DataFeedPacket(underlying, underlying.SubscriptionDataConfig,
+                    new List<BaseData> { new TradeBar(time, underlying.Symbol, 100, 100, 110, 106, 100) }));
+            }
+            packets.Add(new DataFeedPacket(security, config, new List<BaseData> { new TradeBar(time, symbol, 100, 100, 110, 106, 100) }));
+
+            var slice = new TimeSliceFactory(TimeZones.Tokyo).Create(utcTime, packets,
+                SecurityChangesTests.CreateNonInternal(Enumerable.Empty<Security>(), Enumerable.Empty<Security>()),
+                new Dictionary<Universe, BaseDataCollection>()).Slice;
+            var (chainTime, exchangeTime) = securityType == SecurityType.Option
+                ? (slice.OptionChains.Values.Single().Time, slice.OptionChains.Values.Single().ExchangeTime)
+                : (slice.FutureChains.Values.Single().Time, slice.FutureChains.Values.Single().ExchangeTime);
+
+            Assert.AreEqual(new DateTime(2016, 2, 19, 5, 0, 0), chainTime);
+            Assert.AreEqual(new DateTime(2016, 2, 18, 15, 0, 0), exchangeTime);
+        }
+
         [Test]
         public void SuspiciousTicksAreNotAddedToConsolidatorUpdateData()
         {
@@ -266,16 +297,16 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             if (config.Symbol.SecurityType == SecurityType.Option)
             {
                 var option = new Option(
-                    SecurityExchangeHours.AlwaysOpen(TimeZones.Utc),
+                    SecurityExchangeHours.AlwaysOpen(config.ExchangeTimeZone),
                     config,
                     new Cash(Currencies.USD, 0, 1m),
                     new OptionSymbolProperties(SymbolProperties.GetDefault(Currencies.USD)),
                     ErrorCurrencyConverter.Instance,
                     RegisteredSecurityDataTypesProvider.Null);
                 var underlyingConfig = new SubscriptionDataConfig(typeof(TradeBar), config.Symbol.Underlying, Resolution.Second,
-                    TimeZones.Utc, TimeZones.Utc, true, true, false);
+                    config.ExchangeTimeZone, config.ExchangeTimeZone, true, true, false);
                 var equity = new Equity(
-                    SecurityExchangeHours.AlwaysOpen(TimeZones.Utc),
+                    SecurityExchangeHours.AlwaysOpen(config.ExchangeTimeZone),
                     underlyingConfig,
                     new Cash(Currencies.USD, 0, 1m),
                     SymbolProperties.GetDefault(Currencies.USD),
@@ -289,7 +320,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             if (config.Symbol.SecurityType == SecurityType.Future)
             {
                 return new Future(
-                    SecurityExchangeHours.AlwaysOpen(TimeZones.Utc),
+                    SecurityExchangeHours.AlwaysOpen(config.ExchangeTimeZone),
                     config,
                     new Cash(Currencies.USD, 0, 1m),
                     SymbolProperties.GetDefault(Currencies.USD),
@@ -298,7 +329,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             }
 
             return new Security(
-                SecurityExchangeHours.AlwaysOpen(TimeZones.Utc),
+                SecurityExchangeHours.AlwaysOpen(config.ExchangeTimeZone),
                 config,
                 new Cash(Currencies.USD, 0, 1m),
                 SymbolProperties.GetDefault(Currencies.USD),

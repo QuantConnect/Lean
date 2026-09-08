@@ -45,7 +45,7 @@ namespace QuantConnect.Securities
         /// </summary>
         /// <param name="chain">The option chain to filter</param>
         public OptionChainFilterUniverse(OptionChain chain)
-            : base(chain.Contracts.Values.ToList(), GetUnderlying(chain), chain.Time, GetStrikeMultiplier(chain))
+            : base(chain.Contracts.Values.ToList(), GetUnderlying(chain), chain.ExchangeTime, GetStrikeMultiplier(chain))
         {
             _symbol = chain.Symbol;
         }

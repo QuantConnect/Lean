@@ -166,6 +166,28 @@ namespace QuantConnect.Tests.Common.Data.Market
         }
 
         [Test]
+        public void FiltersUseTheExchangeTimeAsTheReferenceDate()
+        {
+            // The engine stamps slice chains in the algorithm time zone, which can already be the day after the exchange date
+            var exchangeDate = new DateTime(2016, 3, 4);
+            var (data, underlying) = CreateUniverseData(exchangeDate, UnderlyingPrice, new[] { exchangeDate, Expiries[1] }, Strikes);
+            var chain = new OptionChain(Canonical, exchangeDate, data, _symbolProperties) { Time = exchangeDate.AddDays(1) };
+            var universe = CreateUniverse(data, underlying, exchangeDate).Expiration(0, 0).ToList();
+
+            Assert.AreEqual(2 * Strikes.Length, universe.Count);
+            Assert.AreEqual(0, chain.Expiration(0, 0).Count);
+
+            chain.ExchangeTime = exchangeDate;
+            var filtered = chain.Expiration(0, 0);
+
+            CollectionAssert.AreEquivalent(universe.Select(x => x.Symbol.Value), filtered.Select(x => x.Symbol.Value));
+            Assert.AreEqual(chain.Time, filtered.Time);
+            Assert.AreEqual(exchangeDate, filtered.ExchangeTime);
+            CollectionAssert.AreEquivalent(universe.Where(x => x.ID.OptionRight == OptionRight.Call).Select(x => x.Symbol.Value),
+                chain.CallsOnly().Expiration(0, 0).Select(x => x.Symbol.Value));
+        }
+
+        [Test]
         public void StrikesFilterIsSkippedWithoutUnderlyingPrice()
         {
             var contracts = _data.Select(x => new OptionUniverse(x) { Underlying = null }).ToList();
