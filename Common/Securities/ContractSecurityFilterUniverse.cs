@@ -153,13 +153,6 @@ namespace QuantConnect.Securities
                 return (T)this;
             }
 
-            // Every contract passes by default, so skip the pass and only pin the ordering rule for StandardsOnly()
-            if (Type == DefaultExpirationType)
-            {
-                _alreadyAppliedTypeFilters = true;
-                return (T)this;
-            }
-
             // memoization map for ApplyTypesFilter()
             var memoizedMap = new Dictionary<DateTime, bool>();
 
