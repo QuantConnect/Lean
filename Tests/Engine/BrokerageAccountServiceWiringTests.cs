@@ -373,6 +373,7 @@ namespace QuantConnect.Tests.Engine
             Assert.IsNotNull(serviceMethod);
             serviceMethod.Invoke(null, new object[] { algorithm, brokerage.Object });
             algorithm.SetLocked();
+            algorithm.SetFinishedWarmingUp();
             return algorithm;
         }
 

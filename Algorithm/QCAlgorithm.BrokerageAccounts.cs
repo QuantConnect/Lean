@@ -150,7 +150,7 @@ namespace QuantConnect.Algorithm
         /// algorithm based the requested change.
         /// </summary>
         /// <remarks>
-        /// Account-group mutations are available only after algorithm initialization completes.
+        /// Account-group mutations are available only after algorithm initialization completes and warm-up finishes.
         /// A request issued during or after <see cref="OnEndOfAlgorithm"/> may be accepted but is not
         /// guaranteed to reach the broker or publish a result. Algorithms must not request configuration
         /// mutations during teardown.
@@ -195,7 +195,8 @@ namespace QuantConnect.Algorithm
                 ValidateBrokerageIdentifier(targetGroupName, nameof(targetGroupName));
             }
 
-            if (Volatile.Read(ref _brokerageAccountMutationServicesState) !=
+            if (IsWarmingUp ||
+                Volatile.Read(ref _brokerageAccountMutationServicesState) !=
                 BrokerageAccountMutationServicesEnabled)
             {
                 return false;
@@ -230,7 +231,7 @@ namespace QuantConnect.Algorithm
         /// the algorithm based the requested values.
         /// </summary>
         /// <remarks>
-        /// Account-group mutations are available only after algorithm initialization completes.
+        /// Account-group mutations are available only after algorithm initialization completes and warm-up finishes.
         /// Account-identifier case handling is brokerage-defined. A provider may reject identifiers that differ only
         /// by case as duplicates.
         /// A request issued during or after <see cref="OnEndOfAlgorithm"/> may be accepted but is not
@@ -278,7 +279,8 @@ namespace QuantConnect.Algorithm
                 }
             }
 
-            if (Volatile.Read(ref _brokerageAccountMutationServicesState) !=
+            if (IsWarmingUp ||
+                Volatile.Read(ref _brokerageAccountMutationServicesState) !=
                 BrokerageAccountMutationServicesEnabled)
             {
                 return false;
@@ -312,7 +314,7 @@ namespace QuantConnect.Algorithm
         /// the algorithm based the requested values.
         /// </summary>
         /// <remarks>
-        /// Account-group mutations are available only after algorithm initialization completes.
+        /// Account-group mutations are available only after algorithm initialization completes and warm-up finishes.
         /// Account-identifier case handling is brokerage-defined. A provider may reject identifiers that differ only
         /// by case as duplicates.
         /// A request issued during or after <see cref="OnEndOfAlgorithm"/> may be accepted but is not

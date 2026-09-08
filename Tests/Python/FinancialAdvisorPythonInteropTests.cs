@@ -136,6 +136,7 @@ namespace QuantConnect.Tests.Python
             consumer.SetBrokerageAccountGroupManager(manager.Object);
             algorithm.Initialize();
             algorithm.BaseAlgorithm.SetLocked();
+            algorithm.BaseAlgorithm.SetFinishedWarmingUp();
 
             Assert.IsFalse(algorithm.BaseAlgorithm
                 .RequestBrokerageAccountGroupAssignment(
@@ -342,6 +343,7 @@ namespace QuantConnect.Tests.Python
                 Assert.IsNull(requestedAllocations);
 
                 algorithm.BaseAlgorithm.SetLocked();
+                algorithm.BaseAlgorithm.SetFinishedWarmingUp();
                 algorithm.BaseAlgorithm
                     .SetBrokerageAccountMutationServicesReady(true);
                 algorithm.OnData(

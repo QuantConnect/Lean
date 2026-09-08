@@ -46,7 +46,7 @@ namespace QuantConnect.Algorithm
         /// dictionary using the version tokens from the supplied observed snapshot.
         /// </summary>
         /// <remarks>
-        /// Account-group mutations are available only after algorithm initialization completes.
+        /// Account-group mutations are available only after algorithm initialization completes and warm-up finishes.
         /// Account-identifier case handling is brokerage-defined. A provider may reject identifiers that differ only
         /// by case as duplicates.
         /// A request issued during or after <see cref="OnEndOfAlgorithm"/> may be accepted but is not

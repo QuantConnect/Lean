@@ -19,6 +19,7 @@ using NUnit.Framework;
 using QuantConnect.Algorithm;
 using QuantConnect.Brokerages;
 using QuantConnect.Interfaces;
+using QuantConnect.Tests.Engine.DataFeeds;
 
 namespace QuantConnect.Tests.Algorithm
 {
@@ -136,6 +137,58 @@ namespace QuantConnect.Tests.Algorithm
             Assert.IsFalse(algorithm.GroupAllocationUpdateAccepted);
             Assert.IsFalse(provider.GroupAssignmentRequested);
             Assert.IsFalse(provider.GroupAllocationUpdateRequested);
+        }
+
+        [Test]
+        public void MutationsDoNotReachManagersDuringWarmup()
+        {
+            var provider = new TestProvider(BrokerageAccountSnapshotStatus.Ready);
+            var algorithm = new AlgorithmStub();
+            InstallBrokerageAccountServices(
+                algorithm,
+                provider,
+                provider,
+                provider,
+                mutationsReady: false);
+            algorithm.SetLiveMode(true);
+            algorithm.SetLocked();
+            algorithm.SetBrokerageAccountMutationServicesReady(true);
+            var snapshot = provider.GetAccountSnapshot();
+
+            Assert.Multiple(() =>
+            {
+                Assert.IsTrue(algorithm.LiveMode);
+                Assert.IsTrue(algorithm.IsWarmingUp);
+                Assert.IsFalse(algorithm.RequestBrokerageAccountGroupAssignment(
+                    "Account",
+                    "Group",
+                    null,
+                    snapshot));
+                Assert.IsFalse(algorithm.RequestBrokerageAccountGroupAllocationUpdate(
+                    "Group",
+                    new Dictionary<string, decimal> { ["Account"] = 1m },
+                    snapshot));
+                Assert.IsFalse(provider.GroupAssignmentRequested);
+                Assert.IsFalse(provider.GroupAllocationUpdateRequested);
+            });
+
+            algorithm.SetFinishedWarmingUp();
+
+            Assert.Multiple(() =>
+            {
+                Assert.IsFalse(algorithm.IsWarmingUp);
+                Assert.IsTrue(algorithm.RequestBrokerageAccountGroupAssignment(
+                    "Account",
+                    "Group",
+                    null,
+                    snapshot));
+                Assert.IsTrue(algorithm.RequestBrokerageAccountGroupAllocationUpdate(
+                    "Group",
+                    new Dictionary<string, decimal> { ["Account"] = 1m },
+                    snapshot));
+                Assert.IsTrue(provider.GroupAssignmentRequested);
+                Assert.IsTrue(provider.GroupAllocationUpdateRequested);
+            });
         }
 
         [Test]
@@ -441,6 +494,7 @@ namespace QuantConnect.Tests.Algorithm
             consumer.SetBrokerageAccountGroupAllocationManager(allocationManager);
             if (mutationsReady)
             {
+                algorithm.SetFinishedWarmingUp();
                 algorithm.SetBrokerageAccountMutationServicesReady(true);
             }
         }
