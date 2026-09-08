@@ -188,20 +188,10 @@ namespace QuantConnect.Data.Market
         /// <param name="other">The chain to copy</param>
         /// <param name="contracts">The contracts to keep</param>
         protected BaseChain(BaseChain<T, TContractsCollection> other, IEnumerable<T> contracts)
-            : this(other.DataType, other._flatten)
+            : this(other)
         {
-            Symbol = other.Symbol;
-            Time = other.Time;
-            Value = other.Value;
-            Underlying = other.Underlying;
-            Ticks = other.Ticks;
-            QuoteBars = other.QuoteBars;
-            TradeBars = other.TradeBars;
-            FilteredContracts = other.FilteredContracts;
             Contracts = new();
-#pragma warning disable 0618 // DataDictionary.Time is deprecated, ignore until removed entirely
             Contracts.Time = other.Contracts.Time;
-#pragma warning restore 0618
             foreach (var contract in contracts)
             {
                 Contracts[contract.Symbol] = contract;
