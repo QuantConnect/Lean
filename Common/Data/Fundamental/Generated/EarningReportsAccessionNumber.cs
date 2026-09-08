@@ -64,6 +64,12 @@ namespace QuantConnect.Data.Fundamental
         public string NineMonths => FundamentalService.Get<string>(TimeProvider.GetUtcNow(), SecurityIdentifier, FundamentalProperty.EarningReports_AccessionNumber_NineMonths);
 
         /// <summary>
+        /// Gets/sets the TwelveMonths period value for the field
+        /// </summary>
+        [JsonProperty("12M")]
+        public string TwelveMonths => FundamentalService.Get<string>(TimeProvider.GetUtcNow(), SecurityIdentifier, FundamentalProperty.EarningReports_AccessionNumber_TwelveMonths);
+
+        /// <summary>
         /// Returns true if the field contains a value for the default period
         /// </summary>
         public override bool HasValue => !BaseFundamentalDataProvider.IsNone(typeof(string), FundamentalService.Get<string>(TimeProvider.GetUtcNow(), SecurityIdentifier, FundamentalProperty.EarningReports_AccessionNumber_OneMonth));
@@ -91,7 +97,7 @@ namespace QuantConnect.Data.Fundamental
         public override IReadOnlyDictionary<string, string> GetPeriodValues()
         {
             var result = new Dictionary<string, string>();
-            foreach (var kvp in new[] { new Tuple<string, string>("1M", OneMonth), new Tuple<string, string>("2M", TwoMonths), new Tuple<string, string>("3M", ThreeMonths), new Tuple<string, string>("6M", SixMonths), new Tuple<string, string>("9M", NineMonths) })
+            foreach (var kvp in new[] { new Tuple<string, string>("1M", OneMonth), new Tuple<string, string>("2M", TwoMonths), new Tuple<string, string>("3M", ThreeMonths), new Tuple<string, string>("6M", SixMonths), new Tuple<string, string>("9M", NineMonths), new Tuple<string, string>("12M", TwelveMonths) })
             {
                 if (!BaseFundamentalDataProvider.IsNone(typeof(string), kvp.Item2))
                 {
