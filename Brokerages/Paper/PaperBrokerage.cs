@@ -79,14 +79,17 @@ namespace QuantConnect.Brokerages.Paper
 
                 // apply each dividend directly to the quote cash holdings of the security
                 // this assumes dividends are paid out in a security's quote cash (reasonable assumption)
-                foreach (var dividend in Algorithm.CurrentSlice.Dividends.Values)
+                if (!Algorithm.IsWarmingUp)
                 {
-                    Security security;
-                    if (Algorithm.Securities.TryGetValue(dividend.Symbol, out security))
+                    foreach (var dividend in Algorithm.CurrentSlice.Dividends.Values)
                     {
-                        // compute the total distribution and apply as security's quote currency
-                        var distribution = security.Holdings.Quantity * dividend.Distribution;
-                        security.QuoteCurrency.AddAmount(distribution);
+                        Security security;
+                        if (Algorithm.Securities.TryGetValue(dividend.Symbol, out security))
+                        {
+                            // compute the total distribution and apply as security's quote currency
+                            var distribution = security.Holdings.Quantity * dividend.Distribution;
+                            security.QuoteCurrency.AddAmount(distribution);
+                        }
                     }
                 }
             }

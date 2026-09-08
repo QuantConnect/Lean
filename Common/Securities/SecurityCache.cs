@@ -38,6 +38,7 @@ namespace QuantConnect.Securities
         // this is used to prefer quote bar data over the tradebar data
         private DateTime _lastQuoteBarUpdate;
         private DateTime _lastOHLCUpdate;
+        private DateTime _lastOpenInterestUpdate;
         private BaseData _lastData;
 
         private readonly object _locker = new();
@@ -198,6 +199,7 @@ namespace QuantConnect.Securities
                     StoreDataPoint(data);
                 }
                 OpenInterest = (long)tick.Value;
+                _lastOpenInterestUpdate = tick.EndTime;
 
                 // Update the session with the latest open interest
                 Session?.Update(data);
@@ -325,12 +327,16 @@ namespace QuantConnect.Securities
         /// Helper method to update the open interest cache property from a chain universe data point,
         /// which carries the contracts daily open interest
         /// </summary>
+        /// <remarks>The chain universe data is skipped if a more recent open interest value was already received,
+        /// for example in live trading, where the open interest ticks of the day arrive before the previous
+        /// tradable date's chain universe file is fed into the algorithm</remarks>
         /// <param name="data">The data point being stored</param>
         protected void UpdateOpenInterest(BaseData data)
         {
-            if (data is BaseChainUniverseData chainUniverseData)
+            if (data is BaseChainUniverseData chainUniverseData && chainUniverseData.EndTime > _lastOpenInterestUpdate)
             {
                 OpenInterest = (long)chainUniverseData.OpenInterest;
+                _lastOpenInterestUpdate = chainUniverseData.EndTime;
             }
         }
 
@@ -455,6 +461,7 @@ namespace QuantConnect.Securities
 
             _lastOHLCUpdate = default;
             _lastQuoteBarUpdate = default;
+            _lastOpenInterestUpdate = default;
             Session?.Reset();
             UnsubscribeToTimeUpdatedEvent();
         }

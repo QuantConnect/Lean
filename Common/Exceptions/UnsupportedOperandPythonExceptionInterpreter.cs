@@ -52,6 +52,10 @@ namespace QuantConnect.Exceptions
 
             var types = pe.Message.Split(':')[1].Trim();
             var message = Messages.UnsupportedOperandPythonExceptionInterpreter.InvalidObjectTypesForOperation(types);
+            if (types.Contains("'datetime.datetime'") && types.Contains("'datetime.date'"))
+            {
+                message += Messages.UnsupportedOperandPythonExceptionInterpreter.DatetimeDateOperationHint;
+            }
             message += PythonUtil.PythonExceptionStackParser(pe.StackTrace);
 
             return new Exception(message, pe);

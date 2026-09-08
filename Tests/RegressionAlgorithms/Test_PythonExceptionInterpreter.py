@@ -20,6 +20,20 @@ class Test_PythonExceptionInterpreter(QCAlgorithm):
     def key_error(self):
         x = dict()['SPY']
 
+    def key_error_object_key(self):
+        # KeyError whose message is "<QuantConnect.Symbol object at 0x...>": the key must be read from args
+        symbol = Symbol.create('SPY', SecurityType.EQUITY, Market.USA)
+        x = dict()[symbol]
+
+    def attribute_error_quote_bar_volume(self):
+        x = QuoteBar().volume
+
+    def attribute_error_trade_bar_ask_price(self):
+        x = TradeBar().ask_price
+
+    def attribute_error_generic(self):
+        x = QuoteBar().not_an_attribute
+
     def no_method_match(self):
         self.set_cash('SPY')
 
@@ -31,6 +45,15 @@ class Test_PythonExceptionInterpreter(QCAlgorithm):
 
     def unsupported_operand(self):
         x = None + "Pepe Grillo"
+
+    def unsupported_operand_datetime_date(self):
+        x = datetime(2020, 1, 2) - date(2020, 1, 1)
+
+    def unsupported_operand_date_datetime(self):
+        x = date(2020, 1, 1) - datetime(2020, 1, 2)
+
+    def datetime_date_comparison(self):
+        x = datetime(2020, 1, 2) < date(2020, 1, 1)
 
     def module_not_found(self):
         from MissingClrNamespace.Distributions import Normal

@@ -73,6 +73,20 @@ namespace QuantConnect
         }
 
         /// <summary>
+        /// Returns a language-aware, one-line suggestion of the safe access idioms for a keyed collection.
+        /// Appended to key-not-found messages so the failure always carries the guard idiom that prevents it,
+        /// instead of just naming the missing key
+        /// </summary>
+        private static string SafeKeyAccessSuggestion(string collection, string key = "symbol")
+        {
+            return _algorithmLanguage == Language.Python
+                ? $"To prevent the exception, use {collection}.get({key}), which returns None when the {key} is not found, " +
+                    $"or guard the access with 'if {key} in {collection}:'."
+                : $"To prevent the exception, use {collection}.TryGetValue({key}, out var value) or check " +
+                    $"{collection}.ContainsKey({key}) before accessing {collection}[{key}].";
+        }
+
+        /// <summary>
         /// Provides user-facing messages for the <see cref="AlphaRuntimeStatistics"/> class and its consumers or related classes
         /// </summary>
         public static class AlphaRuntimeStatistics
@@ -243,15 +257,25 @@ namespace QuantConnect
             }
 
             /// <summary>
-            /// Returns a string message saying that the given symbol wasn't found in the give instance object. It also shows
-            /// a recommendation for solving this problem
+            /// Returns a string message saying that the given key wasn't found in the given instance object, likely because
+            /// there was no data at that moment in time. It also suggests the safe access idioms that prevent the exception.
+            /// This is the single template for the Slice/DataDictionary-family key-not-found errors
             /// </summary>
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public static string KeyNotFoundDueToNoData<TKey, TValue>(ExtendedDictionary<TKey, TValue> instance, TKey key)
             {
-                return $"'{key}' wasn't found in the {instance.GetType().Name} object, likely because there was no-data at this moment in " +
-                    "time and it wasn't possible to fillforward historical data. Please check the data exists before accessing it with " +
-                    $"data.ContainsKey(\"{key}\"). The collection is read-only, cannot set default.";
+                return $"'{key}' wasn't found in the {instance.GetType().GetBetterTypeName()} object, likely because there was no-data at this moment " +
+                    $"in time and it wasn't possible to fillforward historical data. {SafeKeyAccessSuggestion("data")}";
+            }
+
+            /// <summary>
+            /// Returns the <see cref="KeyNotFoundDueToNoData{TKey, TValue}"/> message plus a note explaining that
+            /// setdefault could not insert the default because the collection is read-only
+            /// </summary>
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public static string SetDefaultKeyNotFoundDueToNoData<TKey, TValue>(ExtendedDictionary<TKey, TValue> instance, TKey key)
+            {
+                return $"{KeyNotFoundDueToNoData(instance, key)} The collection is read-only, cannot set default.";
             }
 
             /// <summary>

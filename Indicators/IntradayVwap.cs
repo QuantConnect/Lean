@@ -72,6 +72,17 @@ namespace QuantConnect.Indicators
         }
 
         /// <summary>
+        /// Resets this indicator to its initial state
+        /// </summary>
+        public override void Reset()
+        {
+            _lastDate = default;
+            _sumOfVolume = 0m;
+            _sumOfPriceTimesVolume = 0m;
+            base.Reset();
+        }
+
+        /// <summary>
         /// Determines the volume and price to be used for the current input in the VWAP computation
         /// </summary>
         protected bool TryGetVolumeAndAveragePrice(BaseData input, out decimal volume, out decimal averagePrice)

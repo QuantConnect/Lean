@@ -17,6 +17,7 @@ using System;
 using System.IO;
 using System.Collections.Generic;
 using QuantConnect.Data.Fundamental;
+using QuantConnect.Interfaces;
 
 namespace QuantConnect.Data.UniverseSelection
 {
@@ -27,6 +28,22 @@ namespace QuantConnect.Data.UniverseSelection
     {
         private DateTime _date;
         private readonly Dictionary<SecurityIdentifier, CoarseFundamental> _coarseFundamental = new();
+
+        /// <summary>
+        /// Initializes the service
+        /// </summary>
+        /// <param name="dataProvider">The data provider instance to use</param>
+        /// <param name="liveMode">True if running in live mode</param>
+        public override void Initialize(IDataProvider dataProvider, bool liveMode)
+        {
+            base.Initialize(dataProvider, liveMode);
+            if (liveMode)
+            {
+                // in live trading, fall back to the backup coarse universe file, if any, as a last resort,
+                // consistent with the universe selection data itself
+                DataProvider = new BackupUniverseFileDataProvider(dataProvider);
+            }
+        }
 
         /// <summary>
         /// Will fetch the requested fundamental information for the requested time and symbol

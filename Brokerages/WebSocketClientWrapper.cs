@@ -215,13 +215,12 @@ namespace QuantConnect.Brokerages
         {
             var receiveBuffer = new byte[ReceiveBufferSize];
 
+            const int maximumWaitTimeOnError = 120 * 1000;
+            const int minimumWaitTimeOnError = 2 * 1000;
+            var waitTimeOnError = minimumWaitTimeOnError;
             while (_cts is { IsCancellationRequested: false })
             {
                 Log.Trace($"WebSocketClientWrapper.HandleConnection({_url}): Connecting...");
-
-                const int maximumWaitTimeOnError = 120 * 1000;
-                const int minimumWaitTimeOnError = 2 * 1000;
-                var waitTimeOnError = minimumWaitTimeOnError;
                 using (var connectionCts = CancellationTokenSource.CreateLinkedTokenSource(_cts.Token))
                 {
                     try
@@ -241,21 +240,20 @@ namespace QuantConnect.Brokerages
                         while ((_client.State == WebSocketState.Open || _client.State == WebSocketState.CloseSent) &&
                             !connectionCts.IsCancellationRequested)
                         {
+                            // reset wait time
+                            waitTimeOnError = minimumWaitTimeOnError;
                             var messageData = ReceiveMessage(_client, connectionCts.Token, receiveBuffer);
 
                             if (messageData == null)
                             {
                                 break;
                             }
-
-                            // reset wait time
-                            waitTimeOnError = minimumWaitTimeOnError;
                             OnMessage(new WebSocketMessage(this, messageData));
                         }
                     }
                     catch (OperationCanceledException) { }
                     catch (ObjectDisposedException) { }
-                    catch (WebSocketException ex)
+                    catch (Exception ex)
                     {
                         if (!connectionCts.IsCancellationRequested)
                         {
@@ -263,14 +261,7 @@ namespace QuantConnect.Brokerages
                             connectionCts.Token.WaitHandle.WaitOne(waitTimeOnError);
 
                             // increase wait time until a maximum value. This is useful during brokerage down times
-                            waitTimeOnError += Math.Min(maximumWaitTimeOnError, waitTimeOnError);
-                        }
-                    }
-                    catch (Exception ex)
-                    {
-                        if (!connectionCts.IsCancellationRequested)
-                        {
-                            OnError(new WebSocketError(ex.Message, ex));
+                            waitTimeOnError = Math.Min(maximumWaitTimeOnError, waitTimeOnError * 2);
                         }
                     }
 

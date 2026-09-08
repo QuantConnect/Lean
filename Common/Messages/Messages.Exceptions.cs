@@ -73,20 +73,48 @@ namespace QuantConnect
         }
 
         /// <summary>
+        /// Provides user-facing messages for the <see cref="Exceptions.AttributeErrorPythonExceptionInterpreter"/> class and its consumers or related classes
+        /// </summary>
+        public static class AttributeErrorPythonExceptionInterpreter
+        {
+            /// <summary>
+            /// Returns a hint explaining that the accessed attribute belongs to TradeBar, not QuoteBar, and how to get it
+            /// </summary>
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public static string QuoteBarHasNoTradeData(string attribute)
+            {
+                return $"QuoteBar holds quote data (bid/ask bars and sizes) and has no '{attribute}': trade data like volume comes with " +
+                    "TradeBar. Use data.bars.get(symbol) for the TradeBar, and note that data[symbol] returns a QuoteBar when only " +
+                    "quote data exists at that moment (common for forex, futures and crypto).";
+            }
+
+            /// <summary>
+            /// Returns a hint explaining that the accessed attribute belongs to QuoteBar, not TradeBar, and how to get it
+            /// </summary>
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public static string TradeBarHasNoQuoteData(string attribute)
+            {
+                return $"TradeBar holds trade data (open/high/low/close/volume) and has no '{attribute}': bid/ask quotes come with " +
+                    "QuoteBar. Use data.quote_bars.get(symbol) for the QuoteBar.";
+            }
+        }
+
+        /// <summary>
         /// Provides user-facing messages for the <see cref="Exceptions.KeyErrorPythonExceptionInterpreter"/> class and its consumers or related classes
         /// </summary>
         public static class KeyErrorPythonExceptionInterpreter
         {
             /// <summary>
-            /// Returns a string message saying the given key does not exists in the collection and the exception that is thrown
-            /// in this case. It also advises the user on how to prevent this exception
+            /// Returns a string message naming the key that was not found in the collection (when it could be extracted
+            /// from the KeyError) and advising the user on how to prevent this exception
             /// </summary>
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public static string KeyNotFoundInCollection(string key)
             {
-                return "Trying to retrieve an element from a collection using a key that does not exist " +
-                    $@"in that collection throws a KeyError exception. To prevent the exception, ensure that the {
-                        key} key exist in the collection and/or that collection is not empty.";
+                var keyDescription = string.IsNullOrWhiteSpace(key) ? "The requested key" : $"The key '{key}'";
+                return $"{keyDescription} was not found in the collection, which raises a KeyError exception. " +
+                    "To prevent the exception, use collection.get(key), which returns None when the key is not found, " +
+                    "or guard the access with 'if key in collection:'.";
             }
         }
 
@@ -203,6 +231,30 @@ namespace QuantConnect
                 return $@"Trying to perform a summation, subtraction, multiplication or division between {
                     types} objects throws a TypeError exception. To prevent the exception, ensure that both values share the same type.";
             }
+
+            /// <summary>
+            /// Hint appended when the invalid operands are a datetime.datetime and a datetime.date
+            /// </summary>
+            public static string DatetimeDateOperationHint =
+                " To operate between them, use the date part of the datetime value, e.g.: (expiry.date() - today).days or self.time.date().";
+        }
+
+        /// <summary>
+        /// Provides user-facing messages for the <see cref="Exceptions.DatetimeDateComparisonPythonExceptionInterpreter"/> class and its consumers or related classes
+        /// </summary>
+        public static class DatetimeDateComparisonPythonExceptionInterpreter
+        {
+            /// <summary>
+            /// Expected substring of the TypeError raised when comparing a datetime.datetime with a datetime.date
+            /// </summary>
+            public static string CantCompareExpectedSubstring = "can't compare datetime.datetime to datetime.date";
+
+            /// <summary>
+            /// User-facing message for datetime.datetime vs datetime.date comparisons
+            /// </summary>
+            public static string InvalidDatetimeDateComparison =
+                "Trying to compare 'datetime.datetime' and 'datetime.date' objects throws a TypeError exception. " +
+                "To prevent the exception, compare using the date part of the datetime value, e.g.: self.time.date() <= some_date.";
         }
     }
 }

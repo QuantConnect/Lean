@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -35,12 +35,20 @@ namespace QuantConnect.Lean.Engine
 
         private volatile ReferenceWrapper<DateTime> _currentTimeStepTime;
         private readonly TimeSpan _timeLoopMaximum;
+        private readonly TimeSpan _timeLoopWarningThreshold;
+        private volatile bool _timeStepWarningSent;
 
         /// <summary>
         /// Gets the additional time bucket which is responsible for tracking additional time requested
         /// for processing via long-running scheduled events. In LEAN, we use the <see cref="LeakyBucket"/>
         /// </summary>
         public ITokenBucket AdditionalTimeBucket { get; }
+
+        /// <summary>
+        /// Optional handler used to also surface the slow time step warning to the user,
+        /// e.g. through the result handler's debug messages. Engine logs alone don't reach the user's logs
+        /// </summary>
+        public Action<string> UserWarningHandler { get; set; }
 
         /// <summary>
         /// Initializes a new instance of <see cref="AlgorithmTimeLimitManager"/> to manage the
@@ -52,9 +60,12 @@ namespace QuantConnect.Lean.Engine
         /// <param name="timeLoopMaximum">Specifies the maximum amount of time the algorithm is permitted to
         /// spend in a single time loop. This value can be overriden if certain actions are taken by the
         /// algorithm, such as invoking the training methods.</param>
-        public AlgorithmTimeLimitManager(ITokenBucket additionalTimeBucket, TimeSpan timeLoopMaximum)
+        /// <param name="timeLoopWarningThreshold">Elapsed time of a single time loop after which a warning is logged,
+        /// once per time step. Defaults to three minutes; a non positive value disables the warning</param>
+        public AlgorithmTimeLimitManager(ITokenBucket additionalTimeBucket, TimeSpan timeLoopMaximum, TimeSpan? timeLoopWarningThreshold = null)
         {
             _timeLoopMaximum = timeLoopMaximum;
+            _timeLoopWarningThreshold = timeLoopWarningThreshold ?? TimeSpan.FromMinutes(3);
             AdditionalTimeBucket = additionalTimeBucket;
             _currentTimeStepTime = new ReferenceWrapper<DateTime>(DateTime.MinValue);
         }
@@ -80,6 +91,7 @@ namespace QuantConnect.Lean.Engine
             // accessing DateTime.UtcNow from the algorithm manager thread to the isolator thread
             _currentTimeStepTime = new ReferenceWrapper<DateTime>(DateTime.MinValue);
             Interlocked.Exchange(ref _additionalMinutes, 0L);
+            _timeStepWarningSent = false;
         }
 
         /// <summary>
@@ -99,6 +111,22 @@ namespace QuantConnect.Lean.Engine
         {
             TimeSpan currentTimeStepElapsed;
             var message = IsOutOfTime(out currentTimeStepElapsed) ? GetErrorMessage(currentTimeStepElapsed) : string.Empty;
+
+            // warn early about an abnormally long time step: an isolator kill minutes later is opaque,
+            // the elapsed-time warning is actionable now
+            if (message.Length == 0 && !_stopped && !_timeStepWarningSent
+                && _timeLoopWarningThreshold > TimeSpan.Zero && currentTimeStepElapsed > _timeLoopWarningThreshold)
+            {
+                _timeStepWarningSent = true;
+                var warning = $"the current time step has been executing for {currentTimeStepElapsed.TotalMinutes.ToStringInvariant("0.0")} minutes" +
+                    $" and the algorithm will be stopped if it exceeds {_timeLoopMaximum.TotalMinutes.ToStringInvariant()} minutes." +
+                    " Common causes: a slow scheduled event (named in 'TimeMonitor' logs), large history() requests," +
+                    " heavy on_data work or an infinite loop.";
+                // override flood protection: the same text repeats for each slow time step and each occurrence matters
+                Log.Error($"AlgorithmTimeLimitManager.IsWithinLimit(): {warning}", overrideMessageFloodProtection: true);
+                UserWarningHandler?.Invoke($"Warning: {warning}");
+            }
+
             return new IsolatorLimitResult(currentTimeStepElapsed, message);
         }
 

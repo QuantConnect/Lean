@@ -62,6 +62,11 @@ namespace QuantConnect.Packets
         public IDictionary<string, string> State { get; set; }
 
         /// <summary>
+        /// Server status information, including CPU/RAM usage, ect...
+        /// </summary>
+        public IDictionary<string, string> ServerStatistics { get; set; }
+
+        /// <summary>
         /// The algorithm's configuration required for report generation
         /// </summary>
         public AlgorithmConfiguration AlgorithmConfiguration { get; set; }
@@ -88,7 +93,8 @@ namespace QuantConnect.Packets
             AlgorithmPerformance totalPerformance = null,
             AlgorithmConfiguration algorithmConfiguration = null,
             IDictionary<string, string> state = null,
-            IReadOnlyList<Analysis> analysisResult = null)
+            IReadOnlyList<Analysis> analysisResult = null,
+            IDictionary<string, string> serverStatistics = null)
         {
             Charts = charts;
             Orders = orders;
@@ -100,6 +106,7 @@ namespace QuantConnect.Packets
             State = state;
             TotalPerformance = totalPerformance;
             Analysis = analysisResult;
+            ServerStatistics = serverStatistics;
         }
     }
 }

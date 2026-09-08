@@ -194,6 +194,9 @@ namespace QuantConnect.Tests.Common
         [TestCase(Futures.Energy.NaturalGasHenryHubPenultimateFinancial, 2017, 11, 20, "HP20Z17", true)] // Prior month
         [TestCase(Futures.Energy.WTIHoustonArgusVsWTITradeMonth, 2017, 11, 20, "HTT20Z17", true)] // Prior month
         [TestCase(Futures.Energy.WTIHoustonCrudeOil, 2017, 11, 20, "HCL20Z17", true)] // Prior month
+        [TestCase(Futures.Financials.MicroUltraTenYearUSTreasuryNote, 2025, 2, 27, "MTN27H25", true)] // Prior month
+        [TestCase(Futures.Financials.MicroUltraUSTreasuryBond, 2025, 2, 27, "MWN27H25", true)] // Prior month
+        [TestCase(Futures.Metals.OneOunceGold, 2026, 1, 28, "1OZ28G26", true)] // Prior month
         [TestCase(Futures.Softs.Sugar11, 2017, 11, 20, "SB20Z17", true)] // Prior month
         [TestCase(Futures.Softs.Sugar11CME, 2017, 11, 20, "YO20Z17", true)] // Prior month
         public void GenerateFutureTickerExpiringInPreviousMonth(string underlying, int year, int month, int day, string ticker, bool doubleDigitsYear)

@@ -125,8 +125,25 @@ namespace QuantConnect.Api
 
             liveAlgoResults.Charts = chartDictionary;
             liveAlgoResults.Files = projectFiles;
+            liveAlgoResults.RuntimeStatistics = DeserializeStatistics(jObject, "runtimeStatistics", "RuntimeStatistics");
+            liveAlgoResults.ServerStatistics = DeserializeStatistics(jObject, "serverStatistics", "ServerStatistics");
 
             return liveAlgoResults;
+        }
+
+        /// <summary>
+        /// Deserializes a statistics dictionary, if the given json holds one. Older deployments were
+        /// run before some of them were reported, so they are all optional
+        /// </summary>
+        private static IDictionary<string, string> DeserializeStatistics(JObject jObject, string name, string alternativeName)
+        {
+            var statistics = jObject[name] ?? jObject[alternativeName];
+            if (statistics == null || statistics.Type != JTokenType.Object)
+            {
+                return null;
+            }
+
+            return statistics.ToObject<Dictionary<string, string>>();
         }
     }
 }

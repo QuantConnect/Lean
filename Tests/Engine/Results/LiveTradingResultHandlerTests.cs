@@ -445,6 +445,79 @@ namespace QuantConnect.Tests.Engine.Results
             }
         }
 
+        [Test]
+        public void RuntimeStatisticRejectionWarnsOnce()
+        {
+            using var messaging = new QuantConnect.Messaging.Messaging();
+            var result = new LiveTradingResultHandler();
+            result.Initialize(new(new LiveNodePacket(), messaging, null, new BacktestingTransactionHandler(), null));
+
+            var algorithm = new AlgorithmStub();
+            algorithm.SetDateTime(new DateTime(2026, 1, 15, 9, 30, 0));
+            result.SetAlgorithm(algorithm, 10);
+            result.Messages.Clear();
+
+            result.RuntimeStatistic("Valid", "ok");
+            result.RuntimeStatistic("Encoded", "TG9yZW0gaXBzdW0gZG9sb3Igc2l0IGFtZXQ=");
+            result.RuntimeStatistic("Encoded", "48656c6c6f20576f726c6421");
+            for (var i = 0; i < BaseResultsHandler.MaxRuntimeStatisticsCount + 10; i++)
+            {
+                result.RuntimeStatistic($"Key {i}", "1");
+            }
+
+            var debugMessages = result.Messages.OfType<DebugPacket>().ToList();
+            Assert.AreEqual(1, debugMessages.Count);
+            Assert.That(debugMessages[0].Message, Does.Contain("Runtime statistic"));
+        }
+
+        [Test]
+        public void StoredResultsCarryServerStatistics()
+        {
+            using var api = new Api.Api();
+            using var messaging = new QuantConnect.Messaging.Messaging();
+            var deployId = "TestDeployId";
+            var resultHandler = new TestableStoredResultsHandler();
+            resultHandler.Initialize(new(new LiveNodePacket { DeployId = deployId }, messaging, api, new BacktestingTransactionHandler(), null));
+
+            var algorithm = new AlgorithmStub();
+            algorithm.SetFinishedWarmingUp();
+            resultHandler.SetAlgorithm(algorithm, 100000);
+
+            // the final result is stored on exit
+            resultHandler.Exit();
+
+            // the status file and the minute resolution results are the ones the API reads the statistics from
+            foreach (var name in new[] { $"{deployId}.json", $"{deployId}-{DateTime.UtcNow:yyyy-MM-dd}_minute.json" })
+            {
+                var stored = resultHandler.StoredResults.Where(pair => pair.Key.EndsWith(name, StringComparison.InvariantCulture)).ToList();
+                Assert.IsNotEmpty(stored, $"No result was stored for '{name}'");
+
+                foreach (var result in stored)
+                {
+                    Assert.IsNotNull(result.Value.ServerStatistics, $"'{result.Key}' is missing the server statistics");
+                    Assert.IsTrue(result.Value.ServerStatistics.ContainsKey("Hostname"));
+                }
+            }
+        }
+
+        private class TestableStoredResultsHandler : LiveTradingResultHandler
+        {
+            public List<KeyValuePair<string, Result>> StoredResults { get; } = new();
+
+            public override void SaveResults(string name, Result result)
+            {
+                lock (StoredResults)
+                {
+                    StoredResults.Add(new(name, result));
+                }
+            }
+
+            public override string SaveLogs(string id, List<LogEntry> logs)
+            {
+                return string.Empty;
+            }
+        }
+
         private class TestableLiveTradingResultHandler : LiveTradingResultHandler
         {
             public decimal ExposedStartingPortfolioValue => StartingPortfolioValue;

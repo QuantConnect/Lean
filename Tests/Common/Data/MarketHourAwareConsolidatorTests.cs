@@ -448,6 +448,8 @@ namespace QuantConnect.Tests.Common.Data
                 new TradeBar(){ Time = time.AddMinutes(8), Period = Time.OneMinute, Symbol = Symbols.SPY, High = 25 },
                 new TradeBar(){ Time = time.AddMinutes(9), Period = Time.OneMinute, Symbol = Symbols.SPY, High = 30 },
                 new TradeBar(){ Time = time.AddMinutes(10), Period = Time.OneMinute, Symbol = Symbols.SPY, High = 26 },
+                new TradeBar(){ Time = time.AddHours(1), Period = Time.OneMinute, Symbol = Symbols.SPY, High = 31 },
+                new TradeBar(){ Time = time.AddHours(2), Period = Time.OneMinute, Symbol = Symbols.SPY, High = 27 },
             };
         }
 

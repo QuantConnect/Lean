@@ -16,6 +16,7 @@
 using System;
 using System.Threading;
 using QuantConnect.Util;
+using QuantConnect.Logging;
 using System.Collections.Generic;
 
 namespace QuantConnect.Scheduling
@@ -34,6 +35,12 @@ namespace QuantConnect.Scheduling
         /// <remarks>This field is protected because it's used in a test class 
         /// in `IsolatorLimitResultProviderTests.cs</remarks>
         protected List<TimeConsumer> TimeConsumers { get; init; }
+
+        /// <summary>
+        /// Optional handler used to also surface long-running work warnings to the user,
+        /// e.g. through the result handler's debug messages. Engine logs alone don't reach the user's logs
+        /// </summary>
+        public Action<string> UserWarningHandler { get; set; }
 
         /// <summary>
         /// Returns the number of time consumers currently being monitored
@@ -106,6 +113,22 @@ namespace QuantConnect.Scheduling
                 catch
                 {
                     // pass
+                }
+
+                consumer.AdditionalMinutesRequested++;
+                if (consumer.Name != null)
+                {
+                    // name the long-running work: the first minute crossing is the actionable heads-up, later ones are informational
+                    var message = $"'{consumer.Name}' has been executing for over {consumer.AdditionalMinutesRequested} minute(s)";
+                    if (consumer.AdditionalMinutesRequested == 1)
+                    {
+                        Log.Error($"TimeMonitor.ProcessConsumer(): {message}. It will be stopped once the algorithm time loop limit is exhausted");
+                        UserWarningHandler?.Invoke($"Warning: {message}. It will be stopped once the algorithm time loop limit is exhausted");
+                    }
+                    else
+                    {
+                        Log.Trace($"TimeMonitor.ProcessConsumer(): {message}");
+                    }
                 }
             }
         }

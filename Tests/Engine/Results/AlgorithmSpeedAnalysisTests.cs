@@ -286,6 +286,62 @@ namespace QuantConnect.Tests.Engine.Results
         }
 
         [Test]
+        public void SlowFindingsSuggestEnablingPerformanceTracking()
+        {
+            // Both slow and degrading: the slow execution and the degradation findings carry the suggestion
+            var tracker = new AlgorithmSpeedTracker();
+            var dataPoints = 0L;
+            for (var i = 0; i < 12; i++)
+            {
+                tracker.AddSample(new(TimeSpan.FromSeconds(30 * i), dataPoints, 0, 0, 0));
+                dataPoints += i < 6 ? 3_000_000 : 300_000;
+            }
+
+            var findings = new AlgorithmSpeedAnalysis().Run(tracker);
+
+            Assert.AreEqual(2, findings.Count);
+            foreach (var finding in findings)
+            {
+                Assert.IsTrue(finding.Solutions.Any(solution =>
+                    solution.Contains(nameof(AlgorithmSettings.PerformanceSamplePeriod), StringComparison.Ordinal)));
+            }
+
+            // The completion log fallback carries it too
+            var fallbackFinding = new AlgorithmSpeedAnalysis().Run(null, new[] { SlowCompletionLogLine }).Single();
+            Assert.IsTrue(fallbackFinding.Solutions.Any(solution =>
+                solution.Contains(nameof(AlgorithmSettings.PerformanceSamplePeriod), StringComparison.Ordinal)));
+        }
+
+        [Test]
+        public void PerformanceTrackingSuggestionFollowsTheAlgorithmLanguage()
+        {
+            var tracker = AlgorithmSpeedTrackerTests.BuildUniformTracker(samples: 7, stepSeconds: 30,
+                dataPointsPerStep: 300_000, historyDataPointsPerStep: 0, daysPerStep: 1, totalDays: 10);
+
+            var finding = new AlgorithmSpeedAnalysis().Run(tracker, language: Language.Python).Single();
+
+            var solution = finding.Solutions.Single(solution => solution.Contains("performance_sample_period", StringComparison.Ordinal));
+            StringAssert.Contains("self.settings.performance_sample_period", solution);
+        }
+
+        [Test]
+        public void NoPerformanceTrackingSuggestionWhenAlreadyEnabled()
+        {
+            var tracker = AlgorithmSpeedTrackerTests.BuildUniformTracker(samples: 7, stepSeconds: 30,
+                dataPointsPerStep: 300_000, historyDataPointsPerStep: 0, daysPerStep: 1, totalDays: 10);
+
+            var finding = new AlgorithmSpeedAnalysis().Run(tracker, performanceTrackingEnabled: true).Single();
+
+            Assert.IsFalse(finding.Solutions.Any(solution =>
+                solution.Contains(nameof(AlgorithmSettings.PerformanceSamplePeriod), StringComparison.Ordinal)));
+
+            var fallbackFinding = new AlgorithmSpeedAnalysis()
+                .Run(null, new[] { SlowCompletionLogLine }, performanceTrackingEnabled: true).Single();
+            Assert.IsFalse(fallbackFinding.Solutions.Any(solution =>
+                solution.Contains(nameof(AlgorithmSettings.PerformanceSamplePeriod), StringComparison.Ordinal)));
+        }
+
+        [Test]
         public void NoHistoryLoadFindingBelowTheMinimumHistoryDataPointCount()
         {
             // 60% history share, but only a few hundred history data points in the window

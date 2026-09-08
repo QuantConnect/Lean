@@ -18,6 +18,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Moq;
 using NUnit.Framework;
+using QuantConnect.Configuration;
 using QuantConnect.Data;
 using QuantConnect.Data.Fundamental;
 using QuantConnect.Data.UniverseSelection;
@@ -33,6 +34,168 @@ namespace QuantConnect.Tests.Engine.DataFeeds
     [TestFixture]
     public class UniverseSelectionTests
     {
+        [Test]
+        public void WarnsOnLargeOptionUniverseSelection()
+        {
+            // option universe subscriptions are added at minute resolution
+            Config.Set("universe-selection-size-warning-thresholds", "{\"Minute\": 10}");
+            try
+            {
+                var algorithm = new AlgorithmStub(new MockDataFeed());
+                algorithm.SetStartDate(2014, 6, 6);
+                var option = algorithm.AddOption("AAPL");
+                // OnEndOfTimeStep will add all pending universe additions
+                algorithm.OnEndOfTimeStep();
+                var universe = algorithm.UniverseManager.Values.OfType<OptionChainUniverse>().Single();
+
+                // below the threshold: no warning
+                universe.Selected = CreateOptionSelection(option.Symbol.Underlying, 5);
+                algorithm.DataManager.UniverseSelection.WarnOnLargeUniverseSelection(universe);
+                Assert.AreEqual(0, UniverseSizeWarningCount(algorithm));
+
+                // above the threshold: warns
+                universe.Selected = CreateOptionSelection(option.Symbol.Underlying, 15);
+                algorithm.DataManager.UniverseSelection.WarnOnLargeUniverseSelection(universe);
+                Assert.AreEqual(1, UniverseSizeWarningCount(algorithm));
+                Assert.AreEqual(1, algorithm.DebugMessages.Count(x => x.Contains("SetFilter")));
+
+                // only warns once per algorithm
+                algorithm.DataManager.UniverseSelection.WarnOnLargeUniverseSelection(universe);
+                Assert.AreEqual(1, UniverseSizeWarningCount(algorithm));
+            }
+            finally
+            {
+                Config.Reset();
+            }
+        }
+
+        [Test]
+        public void LargeUniverseSelectionWarningIsResolutionAware()
+        {
+            Config.Set("universe-selection-size-warning-thresholds", "{\"Minute\": 10, \"Daily\": 50}");
+            try
+            {
+                var algorithm = new AlgorithmStub(new MockDataFeed());
+                algorithm.SetEndDate(new DateTime(2024, 12, 13));
+                algorithm.SetStartDate(algorithm.EndDate.Subtract(TimeSpan.FromDays(10)));
+                algorithm.UniverseSettings.Resolution = Resolution.Daily;
+                algorithm.AddUniverse(coarse => Enumerable.Empty<Symbol>());
+                // OnEndOfTimeStep will add all pending universe additions
+                algorithm.OnEndOfTimeStep();
+                var universe = algorithm.UniverseManager.Values.First();
+
+                // over the minute threshold but under this universe's daily threshold: no warning
+                universe.Selected = CreateEquitySelection(20);
+                algorithm.DataManager.UniverseSelection.WarnOnLargeUniverseSelection(universe);
+                Assert.AreEqual(0, UniverseSizeWarningCount(algorithm));
+
+                // over the daily threshold: warns with the generic suggestion
+                universe.Selected = CreateEquitySelection(60);
+                algorithm.DataManager.UniverseSelection.WarnOnLargeUniverseSelection(universe);
+                Assert.AreEqual(1, UniverseSizeWarningCount(algorithm));
+                Assert.AreEqual(1, algorithm.DebugMessages.Count(x => x.Contains("Daily") && x.Contains("UniverseSettings.Resolution")));
+            }
+            finally
+            {
+                Config.Reset();
+            }
+        }
+
+        [Test]
+        public void LargeUniverseSelectionWarningAggregatesAcrossResolutions()
+        {
+            Config.Set("universe-selection-size-warning-thresholds", "{\"Minute\": 10, \"Daily\": 50}");
+            try
+            {
+                var algorithm = new AlgorithmStub(new MockDataFeed());
+                algorithm.SetStartDate(2014, 6, 6);
+                var option = algorithm.AddOption("AAPL");
+                algorithm.AddUniverse(fundamentals => Enumerable.Empty<Symbol>());
+                // OnEndOfTimeStep will add all pending universe additions
+                algorithm.OnEndOfTimeStep();
+                var optionUniverse = algorithm.UniverseManager.Values.OfType<OptionChainUniverse>().Single();
+                var equityUniverse = algorithm.UniverseManager.Values.Single(x => x is FundamentalUniverseFactory);
+                optionUniverse.UniverseSettings = new UniverseSettings(optionUniverse.UniverseSettings) { Resolution = Resolution.Minute };
+                equityUniverse.UniverseSettings = new UniverseSettings(equityUniverse.UniverseSettings) { Resolution = Resolution.Daily };
+
+                // 8/10 minute contracts: under budget
+                optionUniverse.Selected = CreateOptionSelection(option.Symbol.Underlying, 8);
+                algorithm.DataManager.UniverseSelection.WarnOnLargeUniverseSelection(optionUniverse);
+                Assert.AreEqual(0, UniverseSizeWarningCount(algorithm));
+
+                // 8/10 minute contracts + 30/50 daily symbols = 1.4 of the shared budget: warns,
+                // even though each universe is under its own resolution threshold
+                equityUniverse.Selected = CreateEquitySelection(30);
+                algorithm.DataManager.UniverseSelection.WarnOnLargeUniverseSelection(equityUniverse);
+                Assert.AreEqual(1, UniverseSizeWarningCount(algorithm));
+                Assert.AreEqual(1, algorithm.DebugMessages.Count(x => x.Contains("~9 symbols at Minute resolution") &&
+                    x.Contains("~30 symbols at Daily resolution")));
+            }
+            finally
+            {
+                Config.Reset();
+            }
+        }
+
+        [Test]
+        public void LargeUniverseSelectionWarningSkipsSmallSelections()
+        {
+            Config.Set("universe-selection-size-warning-thresholds", "{\"Minute\": 10, \"Daily\": 100}");
+            try
+            {
+                var algorithm = new AlgorithmStub(new MockDataFeed());
+                algorithm.SetStartDate(2014, 6, 6);
+                var option = algorithm.AddOption("AAPL");
+                algorithm.AddUniverse(fundamentals => Enumerable.Empty<Symbol>());
+                // OnEndOfTimeStep will add all pending universe additions
+                algorithm.OnEndOfTimeStep();
+                var optionUniverse = algorithm.UniverseManager.Values.OfType<OptionChainUniverse>().Single();
+                var equityUniverse = algorithm.UniverseManager.Values.Single(x => x is FundamentalUniverseFactory);
+                optionUniverse.UniverseSettings = new UniverseSettings(optionUniverse.UniverseSettings) { Resolution = Resolution.Minute };
+                equityUniverse.UniverseSettings = new UniverseSettings(equityUniverse.UniverseSettings) { Resolution = Resolution.Daily };
+
+                // the option universe alone exceeds the shared budget, but the selection being checked
+                // is too small (under a tenth of its threshold) to run the check
+                optionUniverse.Selected = CreateOptionSelection(option.Symbol.Underlying, 20);
+                equityUniverse.Selected = CreateEquitySelection(5);
+                algorithm.DataManager.UniverseSelection.WarnOnLargeUniverseSelection(equityUniverse);
+                Assert.AreEqual(0, UniverseSizeWarningCount(algorithm));
+
+                // a significant selection runs the check and warns
+                equityUniverse.Selected = CreateEquitySelection(10);
+                algorithm.DataManager.UniverseSelection.WarnOnLargeUniverseSelection(equityUniverse);
+                Assert.AreEqual(1, UniverseSizeWarningCount(algorithm));
+            }
+            finally
+            {
+                Config.Reset();
+            }
+        }
+
+        private static int UniverseSizeWarningCount(AlgorithmStub algorithm)
+        {
+            return algorithm.DebugMessages.Count(x => x.Contains("universe selections"));
+        }
+
+        private static HashSet<Symbol> CreateEquitySelection(int count)
+        {
+            return Enumerable.Range(0, count)
+                .Select(i => Symbol.Create($"SYM{i}", SecurityType.Equity, Market.USA))
+                .ToHashSet();
+        }
+
+        private static HashSet<Symbol> CreateOptionSelection(Symbol underlying, int contractCount)
+        {
+            // option universe selections have the underlying symbol prepended
+            var selected = new HashSet<Symbol> { underlying };
+            var expiry = new DateTime(2014, 7, 19);
+            for (var i = 0; i < contractCount; i++)
+            {
+                selected.Add(Symbol.CreateOption(underlying, Market.USA, OptionStyle.American, OptionRight.Call, 100 + i, expiry));
+            }
+            return selected;
+        }
+
         [Test]
         public void CreatedEquityIsNotAddedToSymbolCache()
         {

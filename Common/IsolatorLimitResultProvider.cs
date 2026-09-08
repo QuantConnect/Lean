@@ -45,7 +45,7 @@ namespace QuantConnect
             }
 
             var timeProvider = RealTimeProvider.Instance;
-            isolatorLimitProvider.Consume(timeProvider, () => scheduledEvent.Scan(scanTimeUtc), timeMonitor);
+            isolatorLimitProvider.Consume(timeProvider, () => scheduledEvent.Scan(scanTimeUtc), timeMonitor, scheduledEvent.Name);
         }
 
         /// <summary>
@@ -63,13 +63,15 @@ namespace QuantConnect
             this IIsolatorLimitResultProvider isolatorLimitProvider,
             ITimeProvider timeProvider,
             Action code,
-            TimeMonitor timeMonitor
+            TimeMonitor timeMonitor,
+            string name = null
             )
         {
             var consumer = new TimeConsumer
             {
                 IsolatorLimitProvider = isolatorLimitProvider,
-                TimeProvider = timeProvider
+                TimeProvider = timeProvider,
+                Name = name
             };
             timeMonitor.Add(consumer);
             code();

@@ -13,6 +13,7 @@
  * limitations under the License.
 */
 
+using System;
 using NUnit.Framework;
 using QuantConnect.Data.Market;
 using QuantConnect.Indicators;
@@ -32,5 +33,14 @@ namespace QuantConnect.Tests.Indicators
         protected override string TestFileName => "spy_with_chop.csv";
 
         protected override string TestColumnName => "CHOP14";
+
+        [Test]
+        public void PeriodBelowMinimumThrows()
+        {
+            var period = 1;
+
+            var exception = Assert.Throws<ArgumentException>(() => new ChoppinessIndex(period));
+            Assert.That(exception.Message, Is.EqualTo($"Period parameter for ChoppinessIndex indicator must be greater than 1 but was {period}"));
+        }
     }
 }
