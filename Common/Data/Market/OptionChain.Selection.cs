@@ -144,7 +144,7 @@ namespace QuantConnect.Data.Market
         /// <returns>The expiration date as stored in the contracts, or null</returns>
         public DateTime? ClosestExpiry(int? targetDte = null, int? minDte = null, int? maxDte = null)
         {
-            return GetClosestExpiry(new OptionChainFilterUniverse(this), Contracts.Values, targetDte, minDte, maxDte);
+            return GetClosestExpiry(new OptionChainFilterUniverse(this), Expiries, targetDte, minDte, maxDte);
         }
 
         /// <summary>
@@ -210,7 +210,8 @@ namespace QuantConnect.Data.Market
 
             if (targetDte.HasValue || minDte.HasValue || maxDte.HasValue)
             {
-                var expiry = GetClosestExpiry(universe, candidates, targetDte, minDte, maxDte);
+                var expiries = candidates.Select(contract => contract.Expiry).Distinct().OrderBy(expiry => expiry).ToList();
+                var expiry = GetClosestExpiry(universe, expiries, targetDte, minDte, maxDte);
                 if (!expiry.HasValue)
                 {
                     return Enumerable.Empty<OptionContract>();
@@ -242,28 +243,56 @@ namespace QuantConnect.Data.Market
                 .ToList();
         }
 
-        private static DateTime? GetClosestExpiry(OptionChainFilterUniverse universe, IEnumerable<OptionContract> contracts,
+        /// <summary>
+        /// Gets the expiration closest to the target days out among sorted distinct expirations, null when none is in the window
+        /// </summary>
+        private static DateTime? GetClosestExpiry(OptionChainFilterUniverse universe, IReadOnlyList<DateTime> expiries,
             int? targetDte, int? minDte, int? maxDte)
         {
-            var target = targetDte ?? minDte ?? 0;
-            DateTime? result = null;
-            var resultDistance = int.MaxValue;
-            foreach (var contract in contracts.DistinctBy(contract => contract.Expiry))
+            // Days to expiration grow with the expiration date, so the window and the target can be searched instead of scanned
+            var low = minDte.HasValue ? FirstIndex(expiries, universe, 0, expiries.Count, dte => dte >= minDte.Value) : 0;
+            var high = maxDte.HasValue ? FirstIndex(expiries, universe, low, expiries.Count, dte => dte > maxDte.Value) : expiries.Count;
+            if (low >= high)
             {
-                var dte = universe.GetDaysToExpiry(contract);
-                // Lifted comparisons are false when the bound is null, i.e. unset bounds don't exclude anything
-                if (dte < minDte || dte > maxDte)
+                return null;
+            }
+
+            var target = targetDte ?? minDte ?? 0;
+            // the first expiration at or beyond the target and the one before it are the only candidates, ties go to the earlier one
+            var index = FirstIndex(expiries, universe, low, high, dte => dte >= target);
+            if (index == high)
+            {
+                return expiries[high - 1];
+            }
+            if (index == low)
+            {
+                return expiries[low];
+            }
+
+            var before = expiries[index - 1];
+            var after = expiries[index];
+            return universe.GetDaysToExpiry(after) - target < target - universe.GetDaysToExpiry(before) ? after : before;
+        }
+
+        /// <summary>
+        /// Gets the first index in [low, high) whose days to expiration satisfy the predicate, high when none does.
+        /// The predicate must be false then true along the sorted expirations
+        /// </summary>
+        private static int FirstIndex(IReadOnlyList<DateTime> expiries, OptionChainFilterUniverse universe, int low, int high, Func<int, bool> predicate)
+        {
+            while (low < high)
+            {
+                var middle = low + (high - low) / 2;
+                if (predicate(universe.GetDaysToExpiry(expiries[middle])))
                 {
-                    continue;
+                    high = middle;
                 }
-                var distance = Math.Abs(dte - target);
-                if (distance < resultDistance || (distance == resultDistance && contract.Expiry < result.Value))
+                else
                 {
-                    result = contract.Expiry;
-                    resultDistance = distance;
+                    low = middle + 1;
                 }
             }
-            return result;
+            return low;
         }
 
         #endregion

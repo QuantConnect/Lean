@@ -143,6 +143,9 @@ namespace QuantConnect.Tests.Common.Data.Market
         [TestCase(97, 95)]
         // Equidistant from 95 and 100: the lower strike wins
         [TestCase(97.5, 95)]
+        [TestCase(99, 100)]
+        [TestCase(100, 100)]
+        [TestCase(0, 85)]
         [TestCase(120, 110)]
         public void StrikePricesClosestTo(double price, double expected)
         {
@@ -166,6 +169,16 @@ namespace QuantConnect.Tests.Common.Data.Market
         }
 
         [Test]
+        public void StrikePricesAreReadOnly()
+        {
+            var strikes = (IList<decimal>)CreateDefaultChain().StrikePrices;
+
+            Assert.IsTrue(strikes.IsReadOnly);
+            Assert.Throws<NotSupportedException>(() => strikes.Add(1m));
+            Assert.Throws<NotSupportedException>(() => strikes.Clear());
+        }
+
+        [Test]
         public void StrikePricesHelpersAreNullSafeOnEmptyChain()
         {
             var strikes = CreateEmptyChain().StrikePrices;
@@ -178,6 +191,9 @@ namespace QuantConnect.Tests.Common.Data.Market
         [TestCase(0, null, null, "20160226")]
         [TestCase(10, null, null, "20160304")]
         [TestCase(12, null, null, "20160311")]
+        [TestCase(14, null, null, "20160311")]
+        [TestCase(5, 8, 15, "20160304")]
+        [TestCase(40, 8, 15, "20160311")]
         [TestCase(100, null, null, "20160401")]
         // min/max window excludes the otherwise closest expiry
         [TestCase(0, 5, null, "20160304")]

@@ -13,24 +13,32 @@
  * limitations under the License.
 */
 
-using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Linq;
 
 namespace QuantConnect.Data.Market
 {
     /// <summary>
-    /// The distinct strikes of a chain, ascending, with helpers that return null (None in Python) when no strike matches
+    /// The distinct strikes of a chain, ascending and read only, with helpers that return null (None in Python) when no strike matches
     /// </summary>
-    public class StrikeList : List<decimal>
+    public class StrikeList : ReadOnlyCollection<decimal>
     {
+        private readonly List<decimal> _strikes;
+
         /// <summary>
         /// Creates the list from the given strikes, in any order, duplicates allowed
         /// </summary>
         /// <param name="strikes">The strike prices</param>
         public StrikeList(IEnumerable<decimal> strikes)
-            : base(strikes.Distinct().OrderBy(strike => strike))
+            : this(strikes.Distinct().OrderBy(strike => strike).ToList())
         {
+        }
+
+        private StrikeList(List<decimal> strikes)
+            : base(strikes)
+        {
+            _strikes = strikes;
         }
 
         /// <summary>
@@ -40,16 +48,31 @@ namespace QuantConnect.Data.Market
         /// <returns>The closest strike, or null when the list is empty</returns>
         public decimal? ClosestTo(decimal price)
         {
-            decimal? closest = null;
-            foreach (var strike in this)
+            if (_strikes.Count == 0)
             {
-                // ascending order plus strict comparison keeps the lower strike on ties
-                if (closest == null || Math.Abs(strike - price) < Math.Abs(closest.Value - price))
-                {
-                    closest = strike;
-                }
+                return null;
             }
-            return closest;
+
+            var index = _strikes.BinarySearch(price);
+            if (index >= 0)
+            {
+                return _strikes[index];
+            }
+
+            // the complement is the first strike above the price, so the candidates are it and the one before
+            index = ~index;
+            if (index == 0)
+            {
+                return _strikes[0];
+            }
+            if (index == _strikes.Count)
+            {
+                return _strikes[index - 1];
+            }
+
+            var below = _strikes[index - 1];
+            var above = _strikes[index];
+            return above - price < price - below ? above : below;
         }
 
         /// <summary>
@@ -59,14 +82,9 @@ namespace QuantConnect.Data.Market
         /// <returns>The first strike above the price, or null when there is none</returns>
         public decimal? FirstAbove(decimal price)
         {
-            foreach (var strike in this)
-            {
-                if (strike > price)
-                {
-                    return strike;
-                }
-            }
-            return null;
+            var index = _strikes.BinarySearch(price);
+            index = index >= 0 ? index + 1 : ~index;
+            return index < _strikes.Count ? _strikes[index] : null;
         }
 
         /// <summary>
@@ -76,14 +94,9 @@ namespace QuantConnect.Data.Market
         /// <returns>The first strike below the price, or null when there is none</returns>
         public decimal? FirstBelow(decimal price)
         {
-            for (var i = Count - 1; i >= 0; i--)
-            {
-                if (this[i] < price)
-                {
-                    return this[i];
-                }
-            }
-            return null;
+            var index = _strikes.BinarySearch(price);
+            index = (index >= 0 ? index : ~index) - 1;
+            return index >= 0 ? _strikes[index] : null;
         }
     }
 }
