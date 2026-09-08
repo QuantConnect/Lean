@@ -185,9 +185,9 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             var symbol = securityType == SecurityType.Option ? Symbols.SPY_C_192_Feb19_2016 : Symbols.Fut_SPY_Mar19_2016;
             var config = new SubscriptionDataConfig(typeof(TradeBar), symbol, Resolution.Minute, TimeZones.NewYork, TimeZones.NewYork, true, true, false);
             var security = GetSecurity(config);
-            // 15:00 in New York on 2016-02-18 is already 05:00 on 2016-02-19 in Tokyo
+            // 15:00 in New York on 2016-02-18 is already 05:00 on 2016-02-19 in Tokyo; the bars end at the slice time
             var utcTime = new DateTime(2016, 2, 18, 20, 0, 0);
-            var time = utcTime.ConvertFromUtc(TimeZones.NewYork);
+            var time = utcTime.ConvertFromUtc(TimeZones.NewYork).AddMinutes(-1);
 
             var packets = new List<DataFeedPacket>();
             if (security is Option option)

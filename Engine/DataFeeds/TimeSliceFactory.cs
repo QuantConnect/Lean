@@ -282,7 +282,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                                 {
                                     optionChains[baseData.Symbol] = (OptionChain)baseData;
                                 }
-                                else if (!HandleOptionData(utcDateTime, algorithmTime, baseData, optionChains, packet.Security, packet.Configuration, sliceFuture, optionUnderlyingUpdates))
+                                else if (!HandleOptionData(algorithmTime, baseData, optionChains, packet.Security, sliceFuture, optionUnderlyingUpdates))
                                 {
                                     continue;
                                 }
@@ -304,7 +304,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                                 {
                                     futuresChains[baseData.Symbol] = (FuturesChain)baseData;
                                 }
-                                else if (!HandleFuturesData(utcDateTime, algorithmTime, baseData, futuresChains, packet.Security, packet.Configuration))
+                                else if (!HandleFuturesData(algorithmTime, baseData, futuresChains, packet.Security, packet.Configuration))
                                 {
                                     continue;
                                 }
@@ -419,8 +419,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
 #pragma warning restore 0618
         }
 
-        private bool HandleOptionData(DateTime utcDateTime, DateTime algorithmTime, BaseData baseData, OptionChains optionChains, ISecurityPrice security,
-            SubscriptionDataConfig configuration, Lazy<Slice> sliceFuture, IReadOnlyDictionary<Symbol, BaseData> optionUnderlyingUpdates)
+        private bool HandleOptionData(DateTime algorithmTime, BaseData baseData, OptionChains optionChains, ISecurityPrice security, Lazy<Slice> sliceFuture, IReadOnlyDictionary<Symbol, BaseData> optionUnderlyingUpdates)
         {
             var symbol = baseData.Symbol;
 
@@ -428,7 +427,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             var canonical = symbol.Canonical;
             if (!optionChains.TryGetValue(canonical, out chain))
             {
-                chain = new OptionChain(canonical, algorithmTime) { ExchangeTime = utcDateTime.ConvertFromUtc(configuration.ExchangeTimeZone) };
+                // the data is already in the exchange time zone, unlike the algorithm time the chain is stamped with
+                chain = new OptionChain(canonical, algorithmTime) { ExchangeTime = baseData.EndTime };
                 optionChains[canonical] = chain;
             }
 
@@ -491,8 +491,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         }
 
 
-        private bool HandleFuturesData(DateTime utcDateTime, DateTime algorithmTime, BaseData baseData, FuturesChains futuresChains, ISecurityPrice security,
-            SubscriptionDataConfig configuration)
+        private bool HandleFuturesData(DateTime algorithmTime, BaseData baseData, FuturesChains futuresChains, ISecurityPrice security, SubscriptionDataConfig configuration)
         {
             var symbol = baseData.Symbol;
 
@@ -506,7 +505,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     return false;
                 }
 
-                chain = new FuturesChain(canonical, algorithmTime) { ExchangeTime = utcDateTime.ConvertFromUtc(configuration.ExchangeTimeZone) };
+                chain = new FuturesChain(canonical, algorithmTime) { ExchangeTime = baseData.EndTime };
                 futuresChains[canonical] = chain;
             }
 

@@ -61,14 +61,13 @@ namespace QuantConnect.Data.Market
         }
 
         /// <summary>
-        /// Gets the chain time in the exchange time zone, the reference date for the contract filters.
-        /// Defaults to <see cref="BaseData.Time"/>, which the engine stamps in the algorithm time zone
+        /// The chain time in the exchange time zone, the reference date for the contract filters. Slice chains carry
+        /// their data's end time, chains built from universe data default to <see cref="BaseData.Time"/>
         /// </summary>
-        [PandasIgnore]
-        public DateTime ExchangeTime
+        internal DateTime ExchangeTime
         {
             get => _exchangeTime ?? Time;
-            internal set => _exchangeTime = value;
+            set => _exchangeTime = value;
         }
 
         /// <summary>
