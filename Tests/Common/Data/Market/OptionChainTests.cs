@@ -15,7 +15,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -229,42 +228,6 @@ namespace QuantConnect.Tests.Common.Data.Market
             Assert.AreEqual(chain.Count, chain.Strikes(0, 0).Count);
         }
 
-        // Before February 2015 equity options expired on Saturdays, the day after their last trading date.
-        // Days to expiration are counted on the last trading date, so 2012-02-18 is 0 days out on Friday 2012-02-17,
-        // and the Saturday after Good Friday 2012-04-06 is 0 days out on Thursday 2012-04-05
-        [TestCase("2012-02-17", 0, 0, "2012-02-18")]
-        [TestCase("2012-02-17", 1, 40, "2012-03-17")]
-        [TestCase("2012-04-05", 0, 0, "2012-04-07")]
-        [TestCase("2012-04-05", 1, 60, "2012-05-19")]
-        public void ExpirationFilterCountsSaturdayExpiriesOnTheirLastTradingDate(string date, int minDays, int maxDays, string expectedExpiry)
-        {
-            var (data, underlying) = CreateSaturdayExpiriesData(date);
-            var expected = DateTime.ParseExact(expectedExpiry, "yyyy-MM-dd", CultureInfo.InvariantCulture);
-
-            var universe = CreateUniverse(data, underlying, underlying.Time).Expiration(minDays, maxDays).ToList();
-            var chain = new OptionChain(Canonical, underlying.Time, data, _symbolProperties).Expiration(minDays, maxDays).ToList();
-
-            Assert.AreEqual(2 * Strikes.Length, universe.Count);
-            Assert.IsTrue(universe.All(x => x.ID.Date == expected));
-            CollectionAssert.AreEquivalent(universe.Select(x => x.Symbol.Value), chain.Select(x => x.Symbol.Value));
-        }
-
-        [TestCase("2012-02-17", 0, "2012-02-18")]
-        [TestCase("2012-02-17", 1, "2012-03-17")]
-        [TestCase("2012-04-05", 0, "2012-04-07")]
-        [TestCase("2012-04-05", 1, "2012-05-19")]
-        public void StrategyFiltersCountSaturdayExpiriesOnTheirLastTradingDate(string date, int minDaysTillExpiry, string expectedExpiry)
-        {
-            var (data, underlying) = CreateSaturdayExpiriesData(date);
-            var expected = DateTime.ParseExact(expectedExpiry, "yyyy-MM-dd", CultureInfo.InvariantCulture);
-
-            var selected = CreateUniverse(data, underlying, underlying.Time).NakedCall(minDaysTillExpiry, 0).ToList();
-
-            Assert.AreEqual(1, selected.Count);
-            Assert.AreEqual(expected, selected[0].ID.Date);
-            Assert.AreEqual(100m, selected[0].ID.StrikePrice);
-        }
-
         [Test]
         public void FiltersAreAvailableFromPython()
         {
@@ -407,12 +370,6 @@ def naked_put(chain):
         private OptionChain CreateChain()
         {
             return new OptionChain(Canonical, Date, _data, _symbolProperties);
-        }
-
-        private (List<OptionUniverse>, BaseData) CreateSaturdayExpiriesData(string date)
-        {
-            var expiries = new[] { new DateTime(2012, 2, 18), new DateTime(2012, 3, 17), new DateTime(2012, 4, 7), new DateTime(2012, 5, 19) };
-            return CreateUniverseData(DateTime.ParseExact(date, "yyyy-MM-dd", CultureInfo.InvariantCulture), 100m, expiries, Strikes);
         }
 
         private static Option CreateOption()

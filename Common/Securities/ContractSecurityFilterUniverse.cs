@@ -295,16 +295,6 @@ namespace QuantConnect.Securities
         }
 
         /// <summary>
-        /// Gets the date the given contract stops trading, used by the expiration filters. Defaults to the contract expiration date
-        /// </summary>
-        /// <param name="contract">The contract</param>
-        /// <returns>The contract's last trading date</returns>
-        protected virtual DateTime GetLastTradingDate(TData contract)
-        {
-            return contract.ID.Date.Date;
-        }
-
-        /// <summary>
         /// Applies filter selecting options contracts based on a range of expiration dates relative to the current day
         /// </summary>
         /// <param name="minExpiry">The minimum time until expiry to include, for example, TimeSpan.FromDays(10)
@@ -327,11 +317,7 @@ namespace QuantConnect.Securities
             var maxExpiryToDate = referenceDate + maxExpiry;
 
             Data = Data
-                .Where(contract =>
-                {
-                    var expiry = GetLastTradingDate(contract);
-                    return expiry >= minExpiryToDate && expiry <= maxExpiryToDate;
-                })
+                .Where(symbol => symbol.ID.Date.Date >= minExpiryToDate && symbol.ID.Date.Date <= maxExpiryToDate)
                 .ToList();
 
             return (T)this;
