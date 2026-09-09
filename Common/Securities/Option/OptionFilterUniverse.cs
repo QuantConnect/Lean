@@ -20,6 +20,7 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 using Python.Runtime;
 using QuantConnect.Data;
+using QuantConnect.Data.Market;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Securities.FutureOption;
 using QuantConnect.Securities.IndexOption;
@@ -28,12 +29,15 @@ using QuantConnect.Securities.Option;
 namespace QuantConnect.Securities
 {
     /// <summary>
-    /// Represents options symbols universe used in filtering.
+    /// Base option contracts filter, shared by the option universe selection filter (<see cref="OptionFilterUniverse"/>)
+    /// and the option chain filters (<see cref="Data.Market.OptionChain"/>) so both offer the same filters with the same semantics
     /// </summary>
-    public class OptionFilterUniverse : ContractSecurityFilterUniverse<OptionFilterUniverse, OptionUniverse>
+    /// <typeparam name="TUniverse">The concrete filter universe type</typeparam>
+    /// <typeparam name="TData">The option contract data type</typeparam>
+    public abstract class BaseOptionFilterUniverse<TUniverse, TData> : ContractSecurityFilterUniverse<TUniverse, TData>, IOptionContractFilters<TUniverse>
+        where TUniverse : BaseOptionFilterUniverse<TUniverse, TData>
+        where TData : ISymbolProvider
     {
-        private Option.Option _option;
-
         // Fields used in relative strikes filter
         private List<decimal> _uniqueStrikes;
         private bool _refreshUniqueStrikes;
@@ -44,6 +48,31 @@ namespace QuantConnect.Securities
         /// The underlying price data
         /// </summary>
         protected BaseData UnderlyingInternal { get; set; }
+
+        /// <summary>
+        /// The option exchange hours, used to resolve trading dates. Can be null, in which case no date adjustment is made
+        /// </summary>
+        protected abstract SecurityExchangeHours ExchangeHours { get; }
+
+        /// <summary>
+        /// The option security type
+        /// </summary>
+        protected abstract SecurityType SecurityType { get; }
+
+        /// <summary>
+        /// Gets the greeks of the given contract
+        /// </summary>
+        protected abstract Greeks GetGreeks(TData contract);
+
+        /// <summary>
+        /// Gets the implied volatility of the given contract
+        /// </summary>
+        protected abstract decimal GetImpliedVolatility(TData contract);
+
+        /// <summary>
+        /// Gets the open interest of the given contract
+        /// </summary>
+        protected abstract decimal GetOpenInterest(TData contract);
 
         /// <summary>
         /// The underlying price data
@@ -57,27 +86,29 @@ namespace QuantConnect.Securities
         }
 
         /// <summary>
-        /// Constructs OptionFilterUniverse
+        /// Constructs BaseOptionFilterUniverse
         /// By default, the filter includes both standard and weekly contracts.
         /// </summary>
-        /// <param name="option">The canonical option chain security</param>
-        public OptionFilterUniverse(Option.Option option)
+        /// <param name="underlyingScaleFactor">The option strike multiplier, see <see cref="SymbolProperties.StrikeMultiplier"/></param>
+        protected BaseOptionFilterUniverse(decimal underlyingScaleFactor)
         {
-            _option = option;
-            _underlyingScaleFactor = option.SymbolProperties.StrikeMultiplier;
+            _underlyingScaleFactor = underlyingScaleFactor;
         }
 
         /// <summary>
-        /// Constructs OptionFilterUniverse
+        /// Constructs BaseOptionFilterUniverse
         /// </summary>
-        /// <remarks>Used for testing only</remarks>
-        public OptionFilterUniverse(Option.Option option, IReadOnlyList<OptionUniverse> allData, BaseData underlying, decimal underlyingScaleFactor = 1)
-            : base(allData, underlying.EndTime)
+        /// <param name="allData">All data for the option contracts</param>
+        /// <param name="underlying">The current underlying last data point</param>
+        /// <param name="localTime">The current local time</param>
+        /// <param name="underlyingScaleFactor">The option strike multiplier, see <see cref="SymbolProperties.StrikeMultiplier"/></param>
+        protected BaseOptionFilterUniverse(IReadOnlyList<TData> allData, BaseData underlying, DateTime localTime, decimal underlyingScaleFactor = 1)
+            : base(allData, localTime)
         {
-            _option = option;
             UnderlyingInternal = underlying;
             _refreshUniqueStrikes = true;
             _underlyingScaleFactor = underlyingScaleFactor;
+            _lastExchangeDate = localTime.Date;
         }
 
         /// <summary>
@@ -86,7 +117,7 @@ namespace QuantConnect.Securities
         /// <param name="allContractsData">All data for the option contracts</param>
         /// <param name="underlying">The current underlying last data point</param>
         /// <param name="localTime">The current local time</param>
-        public void Refresh(IReadOnlyList<OptionUniverse> allContractsData, BaseData underlying, DateTime localTime)
+        public void Refresh(IReadOnlyList<TData> allContractsData, BaseData underlying, DateTime localTime)
         {
             base.Refresh(allContractsData, localTime);
 
@@ -113,19 +144,6 @@ namespace QuantConnect.Securities
         }
 
         /// <summary>
-        /// Creates a new instance of the data type for the given symbol
-        /// </summary>
-        /// <returns>A data instance for the given symbol</returns>
-        protected override OptionUniverse CreateDataInstance(Symbol symbol)
-        {
-            return new OptionUniverse()
-            {
-                Symbol = symbol,
-                Time = LocalTime
-            };
-        }
-
-        /// <summary>
         /// Adjusts the date to the next trading day if the current date is not a trading day, so that expiration filter is properly applied.
         /// e.g. Selection for Mondays happen on Friday midnight (Saturday start), so if the minimum time to expiration is, say 0,
         /// contracts expiring on Monday would be filtered out if the date is not properly adjusted to the next trading day (Monday).
@@ -135,9 +153,9 @@ namespace QuantConnect.Securities
         protected override DateTime AdjustExpirationReferenceDate(DateTime referenceDate)
         {
             // Check whether the reference time is a tradable date:
-            if (!_option.Exchange.Hours.IsDateOpen(referenceDate))
+            if (ExchangeHours != null && !ExchangeHours.IsDateOpen(referenceDate))
             {
-                referenceDate = _option.Exchange.Hours.GetNextTradingDay(referenceDate);
+                referenceDate = ExchangeHours.GetNextTradingDay(referenceDate);
             }
 
             return referenceDate;
@@ -149,11 +167,11 @@ namespace QuantConnect.Securities
         /// <param name="minStrike">The minimum strike relative to the underlying price, for example, -1 would filter out contracts further than 1 strike below market price</param>
         /// <param name="maxStrike">The maximum strike relative to the underlying price, for example, +1 would filter out contracts further than 1 strike above market price</param>
         /// <returns>Universe with filter applied</returns>
-        public OptionFilterUniverse Strikes(int minStrike, int maxStrike)
+        public TUniverse Strikes(int minStrike, int maxStrike)
         {
             if (UnderlyingInternal == null)
             {
-                return this;
+                return (TUniverse)this;
             }
 
             if (_refreshUniqueStrikes || _uniqueStrikes == null)
@@ -235,19 +253,19 @@ namespace QuantConnect.Securities
             Data = Data
                 .Where(data =>
                     {
-                        var price = data.ID.StrikePrice;
+                        var price = data.Symbol.ID.StrikePrice;
                         return price >= minPrice && price <= maxPrice;
                     }
                 ).ToList();
 
-            return this;
+            return (TUniverse)this;
         }
 
         /// <summary>
         /// Sets universe of call options (if any) as a selection
         /// </summary>
         /// <returns>Universe with filter applied</returns>
-        public OptionFilterUniverse CallsOnly()
+        public TUniverse CallsOnly()
         {
             return Contracts(contracts => contracts.Where(x => x.Symbol.ID.OptionRight == OptionRight.Call));
         }
@@ -256,7 +274,7 @@ namespace QuantConnect.Securities
         /// Sets universe of put options (if any) as a selection
         /// </summary>
         /// <returns>Universe with filter applied</returns>
-        public OptionFilterUniverse PutsOnly()
+        public TUniverse PutsOnly()
         {
             return Contracts(contracts => contracts.Where(x => x.Symbol.ID.OptionRight == OptionRight.Put));
         }
@@ -268,7 +286,7 @@ namespace QuantConnect.Securities
         /// <param name="strikeFromAtm">The desire strike price distance from the current underlying price</param>
         /// <remarks>Applicable to Naked Call, Covered Call, and Protective Call Option Strategy</remarks>
         /// <returns>Universe with filter applied</returns>
-        public OptionFilterUniverse NakedCall(int minDaysTillExpiry = 30, decimal strikeFromAtm = 0)
+        public TUniverse NakedCall(int minDaysTillExpiry = 30, decimal strikeFromAtm = 0)
         {
             return SingleContract(OptionRight.Call, minDaysTillExpiry, strikeFromAtm);
         }
@@ -280,13 +298,18 @@ namespace QuantConnect.Securities
         /// <param name="strikeFromAtm">The desire strike price distance from the current underlying price</param>
         /// <remarks>Applicable to Naked Put, Covered Put, and Protective Put Option Strategy</remarks>
         /// <returns>Universe with filter applied</returns>
-        public OptionFilterUniverse NakedPut(int minDaysTillExpiry = 30, decimal strikeFromAtm = 0)
+        public TUniverse NakedPut(int minDaysTillExpiry = 30, decimal strikeFromAtm = 0)
         {
             return SingleContract(OptionRight.Put, minDaysTillExpiry, strikeFromAtm);
         }
 
-        private OptionFilterUniverse SingleContract(OptionRight right, int minDaysTillExpiry = 30, decimal strikeFromAtm = 0)
+        private TUniverse SingleContract(OptionRight right, int minDaysTillExpiry = 30, decimal strikeFromAtm = 0)
         {
+            if (UnderlyingInternal == null)
+            {
+                return Empty();
+            }
+
             // Select the expiry as the nearest to set days later
             var contractsForExpiry = GetContractsForExpiry(AllSymbols, minDaysTillExpiry);
             var contracts = contractsForExpiry.Where(x => x.ID.OptionRight == right).ToList();
@@ -310,7 +333,7 @@ namespace QuantConnect.Securities
         /// <param name="lowerStrikeFromAtm">The desire strike price distance from the current underlying price of the lower strike price</param>
         /// <remarks>Applicable to Bear Call Spread and Bull Call Spread Option Strategy</remarks>
         /// <returns>Universe with filter applied</returns>
-        public OptionFilterUniverse CallSpread(int minDaysTillExpiry = 30, decimal higherStrikeFromAtm = 5, decimal? lowerStrikeFromAtm = null)
+        public TUniverse CallSpread(int minDaysTillExpiry = 30, decimal higherStrikeFromAtm = 5, decimal? lowerStrikeFromAtm = null)
         {
             return Spread(OptionRight.Call, minDaysTillExpiry, higherStrikeFromAtm, lowerStrikeFromAtm);
         }
@@ -323,12 +346,12 @@ namespace QuantConnect.Securities
         /// <param name="lowerStrikeFromAtm">The desire strike price distance from the current underlying price of the lower strike price</param>
         /// <remarks>Applicable to Bear Put Spread and Bull Put Spread Option Strategy</remarks>
         /// <returns>Universe with filter applied</returns>
-        public OptionFilterUniverse PutSpread(int minDaysTillExpiry = 30, decimal higherStrikeFromAtm = 5, decimal? lowerStrikeFromAtm = null)
+        public TUniverse PutSpread(int minDaysTillExpiry = 30, decimal higherStrikeFromAtm = 5, decimal? lowerStrikeFromAtm = null)
         {
             return Spread(OptionRight.Put, minDaysTillExpiry, higherStrikeFromAtm, lowerStrikeFromAtm);
         }
 
-        private OptionFilterUniverse Spread(OptionRight right, int minDaysTillExpiry, decimal higherStrikeFromAtm, decimal? lowerStrikeFromAtm = null)
+        private TUniverse Spread(OptionRight right, int minDaysTillExpiry, decimal higherStrikeFromAtm, decimal? lowerStrikeFromAtm = null)
         {
             if (!lowerStrikeFromAtm.HasValue)
             {
@@ -339,6 +362,11 @@ namespace QuantConnect.Securities
             {
                 throw new ArgumentException("Spread(): strike price arguments must be in descending order, "
                     + $"{nameof(higherStrikeFromAtm)}, {nameof(lowerStrikeFromAtm)}");
+            }
+
+            if (UnderlyingInternal == null)
+            {
+                return Empty();
             }
 
             // Select the expiry as the nearest to set days later
@@ -372,7 +400,7 @@ namespace QuantConnect.Securities
         /// <param name="minFarDaysTillExpiry">The mininum days till expiry of the further conrtact from the current time, closest expiry will be selected</param>
         /// <remarks>Applicable to Long and Short Call Calendar Spread Option Strategy</remarks>
         /// <returns>Universe with filter applied</returns>
-        public OptionFilterUniverse CallCalendarSpread(decimal strikeFromAtm = 0, int minNearDaysTillExpiry = 30, int minFarDaysTillExpiry = 60)
+        public TUniverse CallCalendarSpread(decimal strikeFromAtm = 0, int minNearDaysTillExpiry = 30, int minFarDaysTillExpiry = 60)
         {
             return CalendarSpread(OptionRight.Call, strikeFromAtm, minNearDaysTillExpiry, minFarDaysTillExpiry);
         }
@@ -385,12 +413,12 @@ namespace QuantConnect.Securities
         /// <param name="minFarDaysTillExpiry">The mininum days till expiry of the further conrtact from the current time, closest expiry will be selected</param>
         /// <remarks>Applicable to Long and Short Put Calendar Spread Option Strategy</remarks>
         /// <returns>Universe with filter applied</returns>
-        public OptionFilterUniverse PutCalendarSpread(decimal strikeFromAtm = 0, int minNearDaysTillExpiry = 30, int minFarDaysTillExpiry = 60)
+        public TUniverse PutCalendarSpread(decimal strikeFromAtm = 0, int minNearDaysTillExpiry = 30, int minFarDaysTillExpiry = 60)
         {
             return CalendarSpread(OptionRight.Put, strikeFromAtm, minNearDaysTillExpiry, minFarDaysTillExpiry);
         }
 
-        private OptionFilterUniverse CalendarSpread(OptionRight right, decimal strikeFromAtm, int minNearDaysTillExpiry, int minFarDaysTillExpiry)
+        private TUniverse CalendarSpread(OptionRight right, decimal strikeFromAtm, int minNearDaysTillExpiry, int minFarDaysTillExpiry)
         {
             if (minFarDaysTillExpiry <= minNearDaysTillExpiry)
             {
@@ -401,6 +429,11 @@ namespace QuantConnect.Securities
             if (minNearDaysTillExpiry < 0)
             {
                 throw new ArgumentException("CalendarSpread(): near expiry argument must be positive.");
+            }
+
+            if (UnderlyingInternal == null)
+            {
+                return Empty();
             }
 
             // Select the set strike
@@ -432,7 +465,7 @@ namespace QuantConnect.Securities
         /// <param name="putStrikeFromAtm">The desire strike price distance from the current underlying price of the OTM put. It must be negative.</param>
         /// <remarks>Applicable to Long and Short Strangle Option Strategy</remarks>
         /// <returns>Universe with filter applied</returns>
-        public OptionFilterUniverse Strangle(int minDaysTillExpiry = 30, decimal callStrikeFromAtm = 5, decimal putStrikeFromAtm = -5)
+        public TUniverse Strangle(int minDaysTillExpiry = 30, decimal callStrikeFromAtm = 5, decimal putStrikeFromAtm = -5)
         {
             if (callStrikeFromAtm <= 0)
             {
@@ -453,7 +486,7 @@ namespace QuantConnect.Securities
         /// <param name="minDaysTillExpiry">The minimum days till expiry from the current time, closest expiry will be selected</param>
         /// <remarks>Applicable to Long and Short Straddle Option Strategy</remarks>
         /// <returns>Universe with filter applied</returns>
-        public OptionFilterUniverse Straddle(int minDaysTillExpiry = 30)
+        public TUniverse Straddle(int minDaysTillExpiry = 30)
         {
             return CallPutSpread(minDaysTillExpiry, 0, 0);
         }
@@ -466,7 +499,7 @@ namespace QuantConnect.Securities
         /// <param name="putStrikeFromAtm">The desire strike price distance from the current underlying price of the put.</param>
         /// <remarks>Applicable to Protective Collar Option Strategy</remarks>
         /// <returns>Universe with filter applied</returns>
-        public OptionFilterUniverse ProtectiveCollar(int minDaysTillExpiry = 30, decimal callStrikeFromAtm = 5, decimal putStrikeFromAtm = -5)
+        public TUniverse ProtectiveCollar(int minDaysTillExpiry = 30, decimal callStrikeFromAtm = 5, decimal putStrikeFromAtm = -5)
         {
             if (callStrikeFromAtm <= putStrikeFromAtm)
             {
@@ -476,9 +509,9 @@ namespace QuantConnect.Securities
 
             var filtered = CallPutSpread(minDaysTillExpiry, callStrikeFromAtm, putStrikeFromAtm);
 
-            var callStrike = filtered.Single(x => x.ID.OptionRight == OptionRight.Call).ID.StrikePrice;
-            var putStrike = filtered.Single(x => x.ID.OptionRight == OptionRight.Put).ID.StrikePrice;
-            if (callStrike <= putStrike)
+            var call = filtered.SingleOrDefault(x => x.Symbol.ID.OptionRight == OptionRight.Call);
+            var put = filtered.SingleOrDefault(x => x.Symbol.ID.OptionRight == OptionRight.Put);
+            if (call == null || put == null || call.Symbol.ID.StrikePrice <= put.Symbol.ID.StrikePrice)
             {
                 return Empty();
             }
@@ -493,13 +526,18 @@ namespace QuantConnect.Securities
         /// <param name="strikeFromAtm">The desire strike price distance from the current underlying price</param>
         /// <remarks>Applicable to Conversion and Reverse Conversion Option Strategy</remarks>
         /// <returns>Universe with filter applied</returns>
-        public OptionFilterUniverse Conversion(int minDaysTillExpiry = 30, decimal strikeFromAtm = 5)
+        public TUniverse Conversion(int minDaysTillExpiry = 30, decimal strikeFromAtm = 5)
         {
             return CallPutSpread(minDaysTillExpiry, strikeFromAtm, strikeFromAtm);
         }
 
-        private OptionFilterUniverse CallPutSpread(int minDaysTillExpiry, decimal callStrikeFromAtm, decimal putStrikeFromAtm, bool otm = false)
+        private TUniverse CallPutSpread(int minDaysTillExpiry, decimal callStrikeFromAtm, decimal putStrikeFromAtm, bool otm = false)
         {
+            if (UnderlyingInternal == null)
+            {
+                return Empty();
+            }
+
             // Select the expiry as the nearest to set days later
             var contracts = GetContractsForExpiry(AllSymbols, minDaysTillExpiry).ToList();
 
@@ -534,7 +572,7 @@ namespace QuantConnect.Securities
         /// <param name="strikeSpread">The desire strike price distance of the ITM call and the OTM call from the current underlying price</param>
         /// <remarks>Applicable to Long and Short Call Butterfly Option Strategy</remarks>
         /// <returns>Universe with filter applied</returns>
-        public OptionFilterUniverse CallButterfly(int minDaysTillExpiry = 30, decimal strikeSpread = 5)
+        public TUniverse CallButterfly(int minDaysTillExpiry = 30, decimal strikeSpread = 5)
         {
             return Butterfly(OptionRight.Call, minDaysTillExpiry, strikeSpread);
         }
@@ -546,16 +584,21 @@ namespace QuantConnect.Securities
         /// <param name="strikeSpread">The desire strike price distance of the ITM put and the OTM put from the current underlying price</param>
         /// <remarks>Applicable to Long and Short Put Butterfly Option Strategy</remarks>
         /// <returns>Universe with filter applied</returns>
-        public OptionFilterUniverse PutButterfly(int minDaysTillExpiry = 30, decimal strikeSpread = 5)
+        public TUniverse PutButterfly(int minDaysTillExpiry = 30, decimal strikeSpread = 5)
         {
             return Butterfly(OptionRight.Put, minDaysTillExpiry, strikeSpread);
         }
 
-        private OptionFilterUniverse Butterfly(OptionRight right, int minDaysTillExpiry, decimal strikeSpread)
+        private TUniverse Butterfly(OptionRight right, int minDaysTillExpiry, decimal strikeSpread)
         {
             if (strikeSpread <= 0)
             {
                 throw new ArgumentException("ProtectiveCollar(): strikeSpread arguments must be positive");
+            }
+
+            if (UnderlyingInternal == null)
+            {
+                return Empty();
             }
 
             // Select the expiry as the nearest to set days later
@@ -576,9 +619,9 @@ namespace QuantConnect.Securities
             }
 
             // Select the contracts
-            var filtered = this.Where(x =>
-                x.ID.Date == contracts[0].ID.Date && x.ID.OptionRight == right &&
-                (x.ID.StrikePrice == atmStrike || x.ID.StrikePrice == lowerStrike || x.ID.StrikePrice == upperStrike));
+            var filtered = Contracts(data => data.Where(x =>
+                x.Symbol.ID.Date == contracts[0].ID.Date && x.Symbol.ID.OptionRight == right &&
+                (x.Symbol.ID.StrikePrice == atmStrike || x.Symbol.ID.StrikePrice == lowerStrike || x.Symbol.ID.StrikePrice == upperStrike)));
             if (filtered.Count() != 3)
             {
                 return Empty();
@@ -593,11 +636,16 @@ namespace QuantConnect.Securities
         /// <param name="strikeSpread">The desire strike price distance of the OTM call and the OTM put from the current underlying price</param>
         /// <remarks>Applicable to Long and Short Iron Butterfly Option Strategy</remarks>
         /// <returns>Universe with filter applied</returns>
-        public OptionFilterUniverse IronButterfly(int minDaysTillExpiry = 30, decimal strikeSpread = 5)
+        public TUniverse IronButterfly(int minDaysTillExpiry = 30, decimal strikeSpread = 5)
         {
             if (strikeSpread <= 0)
             {
                 throw new ArgumentException("IronButterfly(): strikeSpread arguments must be positive");
+            }
+
+            if (UnderlyingInternal == null)
+            {
+                return Empty();
             }
 
             // Select the expiry as the nearest to set days later
@@ -619,12 +667,12 @@ namespace QuantConnect.Securities
                 otmPutStrike = atmStrike * 2 - otmCallStrike;
             }
 
-            var filtered = this.Where(x =>
-                x.ID.Date == contracts[0].ID.Date && (
-                x.ID.StrikePrice == atmStrike ||
-                (x.ID.OptionRight == OptionRight.Call && x.ID.StrikePrice == otmCallStrike) ||
-                (x.ID.OptionRight == OptionRight.Put && x.ID.StrikePrice == otmPutStrike)
-            ));
+            var filtered = Contracts(data => data.Where(x =>
+                x.Symbol.ID.Date == contracts[0].ID.Date && (
+                x.Symbol.ID.StrikePrice == atmStrike ||
+                (x.Symbol.ID.OptionRight == OptionRight.Call && x.Symbol.ID.StrikePrice == otmCallStrike) ||
+                (x.Symbol.ID.OptionRight == OptionRight.Put && x.Symbol.ID.StrikePrice == otmPutStrike)
+            )));
             if (filtered.Count() != 4)
             {
                 return Empty();
@@ -641,7 +689,7 @@ namespace QuantConnect.Securities
         /// <param name="farStrikeSpread">The desire strike price distance of the further-to-expiry call and the further-to-expiry put from the current underlying price</param>
         /// <remarks>Applicable to Long and Short Iron Condor Option Strategy</remarks>
         /// <returns>Universe with filter applied</returns>
-        public OptionFilterUniverse IronCondor(int minDaysTillExpiry = 30, decimal nearStrikeSpread = 5, decimal farStrikeSpread = 10)
+        public TUniverse IronCondor(int minDaysTillExpiry = 30, decimal nearStrikeSpread = 5, decimal farStrikeSpread = 10)
         {
             if (nearStrikeSpread <= 0 || farStrikeSpread <= 0)
             {
@@ -653,6 +701,11 @@ namespace QuantConnect.Securities
             {
                 throw new ArgumentException("IronCondor(): strike arguments must be in ascending orders, "
                     + $"{nameof(nearStrikeSpread)}, {nameof(farStrikeSpread)}");
+            }
+
+            if (UnderlyingInternal == null)
+            {
+                return Empty();
             }
 
             // Select the expiry as the nearest to set days later
@@ -676,13 +729,13 @@ namespace QuantConnect.Securities
             }
 
             // Select the contracts
-            var filtered = this.Where(x =>
-                x.ID.Date == contracts[0].ID.Date && (
-                (x.ID.OptionRight == OptionRight.Call && x.ID.StrikePrice == nearCallStrike) ||
-                (x.ID.OptionRight == OptionRight.Put && x.ID.StrikePrice == nearPutStrike) ||
-                (x.ID.OptionRight == OptionRight.Call && x.ID.StrikePrice == farCallStrike) ||
-                (x.ID.OptionRight == OptionRight.Put && x.ID.StrikePrice == farPutStrike)
-            ));
+            var filtered = Contracts(data => data.Where(x =>
+                x.Symbol.ID.Date == contracts[0].ID.Date && (
+                (x.Symbol.ID.OptionRight == OptionRight.Call && x.Symbol.ID.StrikePrice == nearCallStrike) ||
+                (x.Symbol.ID.OptionRight == OptionRight.Put && x.Symbol.ID.StrikePrice == nearPutStrike) ||
+                (x.Symbol.ID.OptionRight == OptionRight.Call && x.Symbol.ID.StrikePrice == farCallStrike) ||
+                (x.Symbol.ID.OptionRight == OptionRight.Put && x.Symbol.ID.StrikePrice == farPutStrike)
+            )));
             if (filtered.Count() != 4)
             {
                 return Empty();
@@ -698,11 +751,16 @@ namespace QuantConnect.Securities
         /// <param name="strikeSpread">The desire strike price distance of the OTM call and the OTM put from the current underlying price</param>
         /// <remarks>Applicable to Long and Short Box Spread Option Strategy</remarks>
         /// <returns>Universe with filter applied</returns>
-        public OptionFilterUniverse BoxSpread(int minDaysTillExpiry = 30, decimal strikeSpread = 5)
+        public TUniverse BoxSpread(int minDaysTillExpiry = 30, decimal strikeSpread = 5)
         {
             if (strikeSpread <= 0)
             {
                 throw new ArgumentException($"BoxSpread(): strike arguments must be positive, {nameof(strikeSpread)}");
+            }
+
+            if (UnderlyingInternal == null)
+            {
+                return Empty();
             }
 
             // Select the expiry as the nearest to set days later
@@ -717,9 +775,9 @@ namespace QuantConnect.Securities
             var lowerStrike = GetStrike(contracts.Where(x => x.ID.StrikePrice < higherStrike && x.ID.StrikePrice < Underlying.Price), -strikeSpread);
 
             // Select the contracts
-            var filtered = this.Where(x =>
-                (x.ID.StrikePrice == higherStrike || x.ID.StrikePrice == lowerStrike) &&
-                x.ID.Date == contracts[0].ID.Date);
+            var filtered = Contracts(data => data.Where(x =>
+                (x.Symbol.ID.StrikePrice == higherStrike || x.Symbol.ID.StrikePrice == lowerStrike) &&
+                x.Symbol.ID.Date == contracts[0].ID.Date));
             if (filtered.Count() != 4)
             {
                 return Empty();
@@ -735,7 +793,7 @@ namespace QuantConnect.Securities
         /// <param name="minFarDaysTillExpiry">The mininum days till expiry of the further conrtact from the current time, closest expiry will be selected</param>
         /// <remarks>Applicable to Long and Short Jelly Roll Option Strategy</remarks>
         /// <returns>Universe with filter applied</returns>
-        public OptionFilterUniverse JellyRoll(decimal strikeFromAtm = 0, int minNearDaysTillExpiry = 30, int minFarDaysTillExpiry = 60)
+        public TUniverse JellyRoll(decimal strikeFromAtm = 0, int minNearDaysTillExpiry = 30, int minFarDaysTillExpiry = 60)
         {
             if (minFarDaysTillExpiry <= minNearDaysTillExpiry)
             {
@@ -746,6 +804,11 @@ namespace QuantConnect.Securities
             if (minNearDaysTillExpiry < 0)
             {
                 throw new ArgumentException("JellyRoll(): near expiry argument must be positive.");
+            }
+
+            if (UnderlyingInternal == null)
+            {
+                return Empty();
             }
 
             // Select the set strike
@@ -769,7 +832,7 @@ namespace QuantConnect.Securities
             }
             var farExpiry = farExpiryContract.ID.Date;
 
-            var filtered = this.Where(x => x.ID.StrikePrice == strike && (x.ID.Date == nearExpiry || x.ID.Date == farExpiry));
+            var filtered = Contracts(data => data.Where(x => x.Symbol.ID.StrikePrice == strike && (x.Symbol.ID.Date == nearExpiry || x.Symbol.ID.Date == farExpiry)));
             if (filtered.Count() != 4)
             {
                 return Empty();
@@ -786,7 +849,7 @@ namespace QuantConnect.Securities
         /// <param name="lowerStrikeFromAtm">The desire strike price distance from the current underlying price of the lower strike price</param>
         /// <remarks>Applicable to Bear Call Ladder and Bull Call Ladder Option Strategy</remarks>
         /// <returns>Universe with filter applied</returns>
-        public OptionFilterUniverse CallLadder(int minDaysTillExpiry, decimal higherStrikeFromAtm, decimal middleStrikeFromAtm, decimal lowerStrikeFromAtm)
+        public TUniverse CallLadder(int minDaysTillExpiry, decimal higherStrikeFromAtm, decimal middleStrikeFromAtm, decimal lowerStrikeFromAtm)
         {
             return Ladder(OptionRight.Call, minDaysTillExpiry, higherStrikeFromAtm, middleStrikeFromAtm, lowerStrikeFromAtm);
         }
@@ -800,7 +863,7 @@ namespace QuantConnect.Securities
         /// <param name="lowerStrikeFromAtm">The desire strike price distance from the current underlying price of the lower strike price</param>
         /// <remarks>Applicable to Bear Put Ladder and Bull Put Ladder Option Strategy</remarks>
         /// <returns>Universe with filter applied</returns>
-        public OptionFilterUniverse PutLadder(int minDaysTillExpiry, decimal higherStrikeFromAtm, decimal middleStrikeFromAtm, decimal lowerStrikeFromAtm)
+        public TUniverse PutLadder(int minDaysTillExpiry, decimal higherStrikeFromAtm, decimal middleStrikeFromAtm, decimal lowerStrikeFromAtm)
         {
             return Ladder(OptionRight.Put, minDaysTillExpiry, higherStrikeFromAtm, middleStrikeFromAtm, lowerStrikeFromAtm);
         }
@@ -811,10 +874,10 @@ namespace QuantConnect.Securities
         /// <param name="min">The minimum Delta value</param>
         /// <param name="max">The maximum Delta value</param>
         /// <returns>Universe with filter applied</returns>
-        public OptionFilterUniverse Delta(decimal min, decimal max)
+        public TUniverse Delta(decimal min, decimal max)
         {
             ValidateSecurityTypeForSupportedFilters(nameof(Delta));
-            return this.Where(contractData => contractData.Greeks.Delta >= min && contractData.Greeks.Delta <= max);
+            return InRange(contract => GetGreeks(contract).Delta, min, max);
         }
 
         /// <summary>
@@ -824,7 +887,7 @@ namespace QuantConnect.Securities
         /// <param name="min">The minimum Delta value</param>
         /// <param name="max">The maximum Delta value</param>
         /// <returns>Universe with filter applied</returns>
-        public OptionFilterUniverse D(decimal min, decimal max)
+        public TUniverse D(decimal min, decimal max)
         {
             return Delta(min, max);
         }
@@ -835,10 +898,10 @@ namespace QuantConnect.Securities
         /// <param name="min">The minimum Gamma value</param>
         /// <param name="max">The maximum Gamma value</param>
         /// <returns>Universe with filter applied</returns>
-        public OptionFilterUniverse Gamma(decimal min, decimal max)
+        public TUniverse Gamma(decimal min, decimal max)
         {
             ValidateSecurityTypeForSupportedFilters(nameof(Gamma));
-            return this.Where(contractData => contractData.Greeks.Gamma >= min && contractData.Greeks.Gamma <= max);
+            return InRange(contract => GetGreeks(contract).Gamma, min, max);
         }
 
         /// <summary>
@@ -848,7 +911,7 @@ namespace QuantConnect.Securities
         /// <param name="min">The minimum Gamma value</param>
         /// <param name="max">The maximum Gamma value</param>
         /// <returns>Universe with filter applied</returns>
-        public OptionFilterUniverse G(decimal min, decimal max)
+        public TUniverse G(decimal min, decimal max)
         {
             return Gamma(min, max);
         }
@@ -859,10 +922,10 @@ namespace QuantConnect.Securities
         /// <param name="min">The minimum Theta value</param>
         /// <param name="max">The maximum Theta value</param>
         /// <returns>Universe with filter applied</returns>
-        public OptionFilterUniverse Theta(decimal min, decimal max)
+        public TUniverse Theta(decimal min, decimal max)
         {
             ValidateSecurityTypeForSupportedFilters(nameof(Theta));
-            return this.Where(contractData => contractData.Greeks.Theta >= min && contractData.Greeks.Theta <= max);
+            return InRange(contract => GetGreeks(contract).Theta, min, max);
         }
 
         /// <summary>
@@ -872,7 +935,7 @@ namespace QuantConnect.Securities
         /// <param name="min">The minimum Theta value</param>
         /// <param name="max">The maximum Theta value</param>
         /// <returns>Universe with filter applied</returns>
-        public OptionFilterUniverse T(decimal min, decimal max)
+        public TUniverse T(decimal min, decimal max)
         {
             return Theta(min, max);
         }
@@ -883,10 +946,10 @@ namespace QuantConnect.Securities
         /// <param name="min">The minimum Vega value</param>
         /// <param name="max">The maximum Vega value</param>
         /// <returns>Universe with filter applied</returns>
-        public OptionFilterUniverse Vega(decimal min, decimal max)
+        public TUniverse Vega(decimal min, decimal max)
         {
             ValidateSecurityTypeForSupportedFilters(nameof(Vega));
-            return this.Where(contractData => contractData.Greeks.Vega >= min && contractData.Greeks.Vega <= max);
+            return InRange(contract => GetGreeks(contract).Vega, min, max);
         }
 
         /// <summary>
@@ -896,7 +959,7 @@ namespace QuantConnect.Securities
         /// <param name="min">The minimum Vega value</param>
         /// <param name="max">The maximum Vega value</param>
         /// <returns>Universe with filter applied</returns>
-        public OptionFilterUniverse V(decimal min, decimal max)
+        public TUniverse V(decimal min, decimal max)
         {
             return Vega(min, max);
         }
@@ -907,10 +970,10 @@ namespace QuantConnect.Securities
         /// <param name="min">The minimum Rho value</param>
         /// <param name="max">The maximum Rho value</param>
         /// <returns>Universe with filter applied</returns>
-        public OptionFilterUniverse Rho(decimal min, decimal max)
+        public TUniverse Rho(decimal min, decimal max)
         {
             ValidateSecurityTypeForSupportedFilters(nameof(Rho));
-            return this.Where(contractData => contractData.Greeks.Rho >= min && contractData.Greeks.Rho <= max);
+            return InRange(contract => GetGreeks(contract).Rho, min, max);
         }
 
         /// <summary>
@@ -920,7 +983,7 @@ namespace QuantConnect.Securities
         /// <param name="min">The minimum Rho value</param>
         /// <param name="max">The maximum Rho value</param>
         /// <returns>Universe with filter applied</returns>
-        public OptionFilterUniverse R(decimal min, decimal max)
+        public TUniverse R(decimal min, decimal max)
         {
             return Rho(min, max);
         }
@@ -931,10 +994,10 @@ namespace QuantConnect.Securities
         /// <param name="min">The minimum implied volatility value</param>
         /// <param name="max">The maximum implied volatility value</param>
         /// <returns>Universe with filter applied</returns>
-        public OptionFilterUniverse ImpliedVolatility(decimal min, decimal max)
+        public TUniverse ImpliedVolatility(decimal min, decimal max)
         {
             ValidateSecurityTypeForSupportedFilters(nameof(ImpliedVolatility));
-            return this.Where(contractData => contractData.ImpliedVolatility >= min && contractData.ImpliedVolatility <= max);
+            return InRange(GetImpliedVolatility, min, max);
         }
 
         /// <summary>
@@ -944,7 +1007,7 @@ namespace QuantConnect.Securities
         /// <param name="min">The minimum implied volatility value</param>
         /// <param name="max">The maximum implied volatility value</param>
         /// <returns>Universe with filter applied</returns>
-        public OptionFilterUniverse IV(decimal min, decimal max)
+        public TUniverse IV(decimal min, decimal max)
         {
             return ImpliedVolatility(min, max);
         }
@@ -955,10 +1018,10 @@ namespace QuantConnect.Securities
         /// <param name="min">The minimum open interest value</param>
         /// <param name="max">The maximum open interest value</param>
         /// <returns>Universe with filter applied</returns>
-        public OptionFilterUniverse OpenInterest(long min, long max)
+        public TUniverse OpenInterest(long min, long max)
         {
             ValidateSecurityTypeForSupportedFilters(nameof(OpenInterest));
-            return this.Where(contractData => contractData.OpenInterest >= min && contractData.OpenInterest <= max);
+            return InRange(GetOpenInterest, min, max);
         }
 
         /// <summary>
@@ -968,30 +1031,22 @@ namespace QuantConnect.Securities
         /// <param name="min">The minimum open interest value</param>
         /// <param name="max">The maximum open interest value</param>
         /// <returns>Universe with filter applied</returns>
-        public OptionFilterUniverse OI(long min, long max)
+        public TUniverse OI(long min, long max)
         {
             return OpenInterest(min, max);
         }
 
-        /// <summary>
-        /// Implicitly convert the universe to a list of symbols
-        /// </summary>
-        /// <param name="universe"></param>
-#pragma warning disable CA1002 // Do not expose generic lists
-#pragma warning disable CA2225 // Operator overloads have named alternates
-        public static implicit operator List<Symbol>(OptionFilterUniverse universe)
-        {
-            return universe.AllSymbols.ToList();
-        }
-#pragma warning restore CA2225 // Operator overloads have named alternates
-#pragma warning restore CA1002 // Do not expose generic lists
-
-        private OptionFilterUniverse Ladder(OptionRight right, int minDaysTillExpiry, decimal higherStrikeFromAtm, decimal middleStrikeFromAtm, decimal lowerStrikeFromAtm)
+        private TUniverse Ladder(OptionRight right, int minDaysTillExpiry, decimal higherStrikeFromAtm, decimal middleStrikeFromAtm, decimal lowerStrikeFromAtm)
         {
             if (higherStrikeFromAtm <= lowerStrikeFromAtm || higherStrikeFromAtm <= middleStrikeFromAtm || middleStrikeFromAtm <= lowerStrikeFromAtm)
             {
                 throw new ArgumentException("Ladder(): strike price arguments must be in descending order, "
                     + $"{nameof(higherStrikeFromAtm)}, {nameof(middleStrikeFromAtm)}, {nameof(lowerStrikeFromAtm)}");
+            }
+
+            if (UnderlyingInternal == null)
+            {
+                return Empty();
             }
 
             // Select the expiry as the nearest to set days later
@@ -1012,7 +1067,7 @@ namespace QuantConnect.Securities
                 return Empty();
             }
 
-            return this.WhereContains(new List<Symbol> { lowerStrikeContract, middleStrikeContract, higherStrikeContract });
+            return Contracts(data => data.Where(x => x.Symbol == lowerStrikeContract || x.Symbol == middleStrikeContract || x.Symbol == higherStrikeContract));
         }
 
         /// <summary>
@@ -1033,21 +1088,33 @@ namespace QuantConnect.Securities
         }
 
         /// <summary>
+        /// Selects the contracts whose value, given by the selector, is within the given range. The selector runs once per contract
+        /// </summary>
+        private TUniverse InRange(Func<TData, decimal> selector, decimal min, decimal max)
+        {
+            return Contracts(data => data.Where(contract =>
+            {
+                var value = selector(contract);
+                return value >= min && value <= max;
+            }));
+        }
+
+        /// <summary>
         /// Helper method that will select no contract
         /// </summary>
-        private OptionFilterUniverse Empty()
+        private TUniverse Empty()
         {
-            Data = Enumerable.Empty<OptionUniverse>().ToList();
-            return this;
+            Data = Enumerable.Empty<TData>().ToList();
+            return (TUniverse)this;
         }
 
         /// <summary>
         /// Helper method that will select the given contract list
         /// </summary>
-        private OptionFilterUniverse SymbolList(List<Symbol> contracts)
+        private TUniverse SymbolList(List<Symbol> contracts)
         {
             AllSymbols = contracts;
-            return this;
+            return (TUniverse)this;
         }
 
         private decimal GetStrike(IEnumerable<Symbol> symbols, decimal strikeFromAtm)
@@ -1061,11 +1128,91 @@ namespace QuantConnect.Securities
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private void ValidateSecurityTypeForSupportedFilters(string filterName)
         {
-            if (_option.Symbol.SecurityType == SecurityType.FutureOption)
+            if (SecurityType == SecurityType.FutureOption)
             {
                 throw new InvalidOperationException($"{filterName} filter is not supported for future options.");
             }
         }
+    }
+
+    /// <summary>
+    /// Represents options symbols universe used in filtering.
+    /// </summary>
+    public class OptionFilterUniverse : BaseOptionFilterUniverse<OptionFilterUniverse, OptionUniverse>
+    {
+        private readonly Option.Option _option;
+
+        /// <summary>
+        /// The option exchange hours
+        /// </summary>
+        protected override SecurityExchangeHours ExchangeHours => _option?.Exchange.Hours;
+
+        /// <summary>
+        /// The option security type
+        /// </summary>
+        protected override SecurityType SecurityType => _option.Symbol.SecurityType;
+
+        /// <summary>
+        /// Constructs OptionFilterUniverse
+        /// By default, the filter includes both standard and weekly contracts.
+        /// </summary>
+        /// <param name="option">The canonical option chain security</param>
+        public OptionFilterUniverse(Option.Option option)
+            : base(option.SymbolProperties.StrikeMultiplier)
+        {
+            _option = option;
+        }
+
+        /// <summary>
+        /// Constructs OptionFilterUniverse
+        /// </summary>
+        /// <remarks>Used for testing only</remarks>
+        public OptionFilterUniverse(Option.Option option, IReadOnlyList<OptionUniverse> allData, BaseData underlying, decimal underlyingScaleFactor = 1)
+            : base(allData, underlying, underlying.EndTime, underlyingScaleFactor)
+        {
+            _option = option;
+        }
+
+        /// <summary>
+        /// Creates a new instance of the data type for the given symbol
+        /// </summary>
+        /// <returns>A data instance for the given symbol</returns>
+        protected override OptionUniverse CreateDataInstance(Symbol symbol)
+        {
+            return new OptionUniverse()
+            {
+                Symbol = symbol,
+                Time = LocalTime
+            };
+        }
+
+        /// <summary>
+        /// Gets the greeks of the given contract
+        /// </summary>
+        protected override Greeks GetGreeks(OptionUniverse contract) => contract.Greeks;
+
+        /// <summary>
+        /// Gets the implied volatility of the given contract
+        /// </summary>
+        protected override decimal GetImpliedVolatility(OptionUniverse contract) => contract.ImpliedVolatility;
+
+        /// <summary>
+        /// Gets the open interest of the given contract
+        /// </summary>
+        protected override decimal GetOpenInterest(OptionUniverse contract) => contract.OpenInterest;
+
+        /// <summary>
+        /// Implicitly convert the universe to a list of symbols
+        /// </summary>
+        /// <param name="universe"></param>
+#pragma warning disable CA1002 // Do not expose generic lists
+#pragma warning disable CA2225 // Operator overloads have named alternates
+        public static implicit operator List<Symbol>(OptionFilterUniverse universe)
+        {
+            return universe.AllSymbols.ToList();
+        }
+#pragma warning restore CA2225 // Operator overloads have named alternates
+#pragma warning restore CA1002 // Do not expose generic lists
     }
 
     /// <summary>
@@ -1081,8 +1228,7 @@ namespace QuantConnect.Securities
         /// <returns>Universe with filter applied</returns>
         public static OptionFilterUniverse Where(this OptionFilterUniverse universe, Func<OptionUniverse, bool> predicate)
         {
-            universe.Data = universe.Data.Where(predicate).ToList();
-            return universe;
+            return universe.Contracts(data => data.Where(predicate));
         }
 
         /// <summary>
@@ -1093,8 +1239,7 @@ namespace QuantConnect.Securities
         /// <returns>Universe with filter applied</returns>
         public static OptionFilterUniverse Where(this OptionFilterUniverse universe, PyObject predicate)
         {
-            universe.Data = universe.Data.Where(predicate.SafeAs<Func<OptionUniverse, bool>>()).ToList();
-            return universe;
+            return universe.Where(predicate.SafeAs<Func<OptionUniverse, bool>>());
         }
 
         /// <summary>
@@ -1105,8 +1250,7 @@ namespace QuantConnect.Securities
         /// <returns>Universe with filter applied</returns>
         public static OptionFilterUniverse Select(this OptionFilterUniverse universe, Func<OptionUniverse, Symbol> mapFunc)
         {
-            universe.AllSymbols = universe.Data.Select(mapFunc).ToList();
-            return universe;
+            return universe.Contracts(data => data.Select(mapFunc));
         }
 
         /// <summary>
@@ -1128,8 +1272,7 @@ namespace QuantConnect.Securities
         /// <returns>Universe with filter applied</returns>
         public static OptionFilterUniverse SelectMany(this OptionFilterUniverse universe, Func<OptionUniverse, IEnumerable<Symbol>> mapFunc)
         {
-            universe.AllSymbols = universe.Data.SelectMany(mapFunc).ToList();
-            return universe;
+            return universe.Contracts(data => data.SelectMany(mapFunc));
         }
 
         /// <summary>
@@ -1151,8 +1294,7 @@ namespace QuantConnect.Securities
         /// <returns>Universe with filter applied</returns>
         public static OptionFilterUniverse WhereContains(this OptionFilterUniverse universe, List<Symbol> filterList)
         {
-            universe.Data = universe.Data.Where(x => filterList.Contains(x)).ToList();
-            return universe;
+            return universe.Where(x => filterList.Contains(x.Symbol));
         }
 
         /// <summary>

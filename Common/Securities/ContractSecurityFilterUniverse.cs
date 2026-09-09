@@ -19,6 +19,7 @@ using System.Linq;
 using Python.Runtime;
 using System.Collections;
 using System.Collections.Generic;
+using QuantConnect.Data;
 
 namespace QuantConnect.Securities
 {
@@ -28,7 +29,7 @@ namespace QuantConnect.Securities
     /// </summary>
     public abstract class ContractSecurityFilterUniverse<T, TData> : IDerivativeSecurityFilterUniverse<TData>
         where T : ContractSecurityFilterUniverse<T, TData>
-        where TData : IChainUniverseData
+        where TData : ISymbolProvider
     {
         private bool _alreadyAppliedTypeFilters;
 
@@ -153,12 +154,19 @@ namespace QuantConnect.Securities
                 return (T)this;
             }
 
+            // Every contract passes by default, so skip the pass and only pin the ordering rule for StandardsOnly()
+            if (Type == DefaultExpirationType)
+            {
+                _alreadyAppliedTypeFilters = true;
+                return (T)this;
+            }
+
             // memoization map for ApplyTypesFilter()
             var memoizedMap = new Dictionary<DateTime, bool>();
 
             Func<TData, bool> memoizedIsStandardType = data =>
             {
-                var dt = data.ID.Date;
+                var dt = data.Symbol.ID.Date;
 
                 bool result;
                 if (memoizedMap.TryGetValue(dt, out result))
@@ -252,9 +260,9 @@ namespace QuantConnect.Securities
         public virtual T FrontMonth()
         {
             ApplyTypesFilter();
-            var ordered = Data.OrderBy(x => x.ID.Date).ToList();
+            var ordered = Data.OrderBy(x => x.Symbol.ID.Date).ToList();
             if (ordered.Count == 0) return (T)this;
-            var frontMonth = ordered.TakeWhile(x => ordered[0].ID.Date == x.ID.Date);
+            var frontMonth = ordered.TakeWhile(x => ordered[0].Symbol.ID.Date == x.Symbol.ID.Date);
 
             Data = frontMonth.ToList();
             return (T)this;
@@ -267,9 +275,9 @@ namespace QuantConnect.Securities
         public virtual T BackMonths()
         {
             ApplyTypesFilter();
-            var ordered = Data.OrderBy(x => x.ID.Date).ToList();
+            var ordered = Data.OrderBy(x => x.Symbol.ID.Date).ToList();
             if (ordered.Count == 0) return (T)this;
-            var backMonths = ordered.SkipWhile(x => ordered[0].ID.Date == x.ID.Date);
+            var backMonths = ordered.SkipWhile(x => ordered[0].Symbol.ID.Date == x.Symbol.ID.Date);
 
             Data = backMonths.ToList();
             return (T)this;
@@ -317,7 +325,7 @@ namespace QuantConnect.Securities
             var maxExpiryToDate = referenceDate + maxExpiry;
 
             Data = Data
-                .Where(symbol => symbol.ID.Date.Date >= minExpiryToDate && symbol.ID.Date.Date <= maxExpiryToDate)
+                .Where(data => data.Symbol.ID.Date.Date >= minExpiryToDate && data.Symbol.ID.Date.Date <= maxExpiryToDate)
                 .ToList();
 
             return (T)this;

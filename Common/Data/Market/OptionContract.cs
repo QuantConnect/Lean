@@ -105,6 +105,11 @@ namespace QuantConnect.Data.Market
         public decimal UnderlyingLastPrice => _optionData.UnderlyingLastPrice;
 
         /// <summary>
+        /// The option symbol properties
+        /// </summary>
+        internal SymbolProperties SymbolProperties => _symbolProperties;
+
+        /// <summary>
         /// Initializes a new instance of the <see cref="OptionContract"/> class
         /// </summary>
         /// <param name="security">The option contract security</param>
