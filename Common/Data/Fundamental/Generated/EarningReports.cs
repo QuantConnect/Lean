@@ -345,6 +345,96 @@ namespace QuantConnect.Data.Fundamental
         private DividendCoverageRatio _dividendCoverageRatio;
 
         /// <summary>
+        /// This data point represents earnings per share adjusted for irregular and/or non-recurring items based on CPMS (Computerized Portfolio Management Services) methodology standards. This is an analyst-screened datapoint.
+        /// </summary>
+        /// <remarks>
+        /// Morningstar DataId: EQWS8
+        /// </remarks>
+        [JsonProperty("EQWS8")]
+        public NormalizedEPS NormalizedEPS => _normalizedEPS ??= new(_timeProvider, _securityIdentifier);
+        private NormalizedEPS _normalizedEPS;
+
+        /// <summary>
+        /// The per share value of Capital Expenditure: This is derived using Capital Expenditure divided by the company's average shares outstanding over the accounting period. Capital Expenditure: This data point represents the calculated variant of Capital Expenditure; which includes all cash outflows made by a company to acquire or maintain fixed assets and intangibles. This is calculated by summing up outflows for Property; Plant &amp; Equipment; Intangibles; Exploration and Mine development costs and Reported Capital Expenditures.
+        /// </summary>
+        /// <remarks>
+        /// Morningstar DataId: EQPLV
+        /// </remarks>
+        [JsonProperty("EQPLV")]
+        public CapitalExpenditurePerShare CapitalExpenditurePerShare => _capitalExpenditurePerShare ??= new(_timeProvider, _securityIdentifier);
+        private CapitalExpenditurePerShare _capitalExpenditurePerShare;
+
+        /// <summary>
+        /// The per share value of earnings before interest and tax (EBIT). EBIT: This data point represents the earnings the company generated before paying the interest and tax expenses. This can be used to measure a company's profitability. This is calculated by using the summation of Pretax Income and Net Interest Income/Expenses.
+        /// </summary>
+        /// <remarks>
+        /// Morningstar DataId: EQ70P
+        /// </remarks>
+        [JsonProperty("EQ70P")]
+        public EBITPerShare EBITPerShare => _eBITPerShare ??= new(_timeProvider, _securityIdentifier);
+        private EBITPerShare _eBITPerShare;
+
+        /// <summary>
+        /// The per share value of normalized earnings before interest and tax (EBIT). Normalized EBIT: This represents earnings before interest and taxes adjusted for items that are irregular or unusual in nature; and/or are non-recurring. This can be used to measure a company's profitability. This is calculated by using Earnings before Interest and Tax plus/minus any tax affected unusual items.
+        /// </summary>
+        /// <remarks>
+        /// Morningstar DataId: EQOFD
+        /// </remarks>
+        [JsonProperty("EQOFD")]
+        public NormalizedEBITPerShare NormalizedEBITPerShare => _normalizedEBITPerShare ??= new(_timeProvider, _securityIdentifier);
+        private NormalizedEBITPerShare _normalizedEBITPerShare;
+
+        /// <summary>
+        /// The per share value of earnings before interest; tax; depreciation; amortization and rent expenses (EBITDAR). EBITDAR: This data point represents the earnings the company generated before interest; tax; depreciation; amortization and rent expenses. This can be used to measure a company's profitability. This is calculated using EBITDA + Rent Expenses + Rent and Landing Fees.
+        /// </summary>
+        /// <remarks>
+        /// Morningstar DataId: EQ2P3
+        /// </remarks>
+        [JsonProperty("EQ2P3")]
+        public EBITDARPerShare EBITDARPerShare => _eBITDARPerShare ??= new(_timeProvider, _securityIdentifier);
+        private EBITDARPerShare _eBITDARPerShare;
+
+        /// <summary>
+        /// The per share value of normalized earnings before interest; tax; depreciation and amortization expenses (EBITDA). Normalized EBITDA: This data point represents the earnings the company generated before interest; tax; depreciation and amortization expenses adjusted for items that are irregular or unusual in nature; and/or are non-recurring. This can be used to fairly measure a company's profitability. This is calculated using Earnings Before Interest; Tax; Depreciation and Amortization plus/minus any unusual Items.
+        /// </summary>
+        /// <remarks>
+        /// Morningstar DataId: EQ402
+        /// </remarks>
+        [JsonProperty("EQ402")]
+        public NormalizedEBITDAPerShare NormalizedEBITDAPerShare => _normalizedEBITDAPerShare ??= new(_timeProvider, _securityIdentifier);
+        private NormalizedEBITDAPerShare _normalizedEBITDAPerShare;
+
+        /// <summary>
+        /// The per share value of earnings before interest; tax; depreciation and amortization expenses (EBITDA). EBITDA: This data point represents the earnings the company generated before interest; tax; depreciation and amortization expenses. This can be used to measure a company's profitability. This is calculated using EBIT + Depreciation; Amortization and Depletion.
+        /// </summary>
+        /// <remarks>
+        /// Morningstar DataId: EQ61Z
+        /// </remarks>
+        [JsonProperty("EQ61Z")]
+        public EBITDAPerShare EBITDAPerShare => _eBITDAPerShare ??= new(_timeProvider, _securityIdentifier);
+        private EBITDAPerShare _eBITDAPerShare;
+
+        /// <summary>
+        /// The per share value of normalized earnings before interest; tax; depreciation; amortization and rent expenses (EBITDAR). Normalized EBITDAR: This data point represents the earnings the company generated before interest; tax; depreciation; amortization and rent expenses adjusted for items that are irregular or unusual in nature; and/or are non-recurring. This can be used to measure a company's profitability. This is calculated using Earnings Before Interest; Tax; Depreciation; Amortization and Rent expenses plus/minus any unusual Items.
+        /// </summary>
+        /// <remarks>
+        /// Morningstar DataId: EQCK4
+        /// </remarks>
+        [JsonProperty("EQCK4")]
+        public NormalizedEBITDARPerShare NormalizedEBITDARPerShare => _normalizedEBITDARPerShare ??= new(_timeProvider, _securityIdentifier);
+        private NormalizedEBITDARPerShare _normalizedEBITDARPerShare;
+
+        /// <summary>
+        /// The per share value of Total Unusual Items: This is derived using Total Unusual Items (After-Tax) divided by the company's average shares outstanding over the accounting period. Total Unusual Items (After-Tax): This data point represents the subtotal of irregular and non-recurring items (after-tax) based on CPMS (Computerized Portfolio Management Services) methodology standards.
+        /// </summary>
+        /// <remarks>
+        /// Morningstar DataId: EQFNQ
+        /// </remarks>
+        [JsonProperty("EQFNQ")]
+        public TotalUnusualItemsPerShare TotalUnusualItemsPerShare => _totalUnusualItemsPerShare ??= new(_timeProvider, _securityIdentifier);
+        private TotalUnusualItemsPerShare _totalUnusualItemsPerShare;
+
+        /// <summary>
         /// Creates a new instance for the given time and security
         /// </summary>
         public EarningReports(ITimeProvider timeProvider, SecurityIdentifier securityIdentifier)

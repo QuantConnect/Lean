@@ -123,6 +123,33 @@ namespace QuantConnect.Data.Fundamental
         private NormalizedBasicEPSGrowth _normalizedBasicEPSGrowth;
 
         /// <summary>
+        /// The growth of Sales Per Share against the same period a window earlier. Sales Per Share is calculated using Total Revenue divided by the company's average shares outstanding over the accounting period.
+        /// </summary>
+        /// <remarks>
+        /// Morningstar DataIds: EQ7OI (OneYear), EQYLR (TwoYears), EQFAY (ThreeYears), EQDHI (FiveYears), EQ8CH (TenYears)
+        /// </remarks>
+        public SalesPerShareGrowth SalesPerShareGrowth => _salesPerShareGrowth ??= new(_timeProvider, _securityIdentifier);
+        private SalesPerShareGrowth _salesPerShareGrowth;
+
+        /// <summary>
+        /// The growth of Earnings Per Share (Calc) against the same period a window earlier. Earnings Per Share (Calc) is calculated by taking Net Income from Continuing Operations; or Net Income and dividing it by Weighted Average Shares.
+        /// </summary>
+        /// <remarks>
+        /// Morningstar DataIds: EQHWS (OneYear), EQHYC (TwoYears), EQ5TK (ThreeYears), EQT9N (FiveYears), EQFC1 (TenYears)
+        /// </remarks>
+        public EarningsPerShareGrowth EarningsPerShareGrowth => _earningsPerShareGrowth ??= new(_timeProvider, _securityIdentifier);
+        private EarningsPerShareGrowth _earningsPerShareGrowth;
+
+        /// <summary>
+        /// The growth of Cash Flow Per Share against the same period a window earlier. Cash Flow Per Share is calculated using Cash Flow From Operating Activities Used For Calculations divided by the company's average shares outstanding over the accounting period.
+        /// </summary>
+        /// <remarks>
+        /// Morningstar DataIds: EQAY0 (OneYear), EQTHY (TwoYears), EQNZA (ThreeYears)
+        /// </remarks>
+        public CashFlowPerShareGrowth CashFlowPerShareGrowth => _cashFlowPerShareGrowth ??= new(_timeProvider, _securityIdentifier);
+        private CashFlowPerShareGrowth _cashFlowPerShareGrowth;
+
+        /// <summary>
         /// Creates a new instance for the given time and security
         /// </summary>
         public EarningRatios(ITimeProvider timeProvider, SecurityIdentifier securityIdentifier)

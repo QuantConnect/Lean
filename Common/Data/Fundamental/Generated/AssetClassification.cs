@@ -1,4 +1,4 @@
-/*
+﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2023 QuantConnect Corporation.
  *
@@ -185,18 +185,18 @@ namespace QuantConnect.Data.Fundamental
         /// Structural credit risk: standard deviations between current asset value and the default point
         /// </summary>
         /// <remarks>
-        /// Morningstar DataId: 45001
+        /// Morningstar DataId: EQIPC
         /// </remarks>
-        [JsonProperty("45001")]
+        [JsonProperty("EQIPC")]
         public double DistanceToDefault => FundamentalService.Get<double>(_timeProvider.GetUtcNow(), _securityIdentifier, FundamentalProperty.AssetClassification_DistanceToDefault);
 
         /// <summary>
         /// The probability the company defaults within one year, derived from distance to default
         /// </summary>
         /// <remarks>
-        /// Morningstar DataId: 45002
+        /// Morningstar DataId: EQRXR
         /// </remarks>
-        [JsonProperty("45002")]
+        [JsonProperty("EQRXR")]
         public double ProbabilityOfDefault => FundamentalService.Get<double>(_timeProvider.GetUtcNow(), _securityIdentifier, FundamentalProperty.AssetClassification_ProbabilityOfDefault);
 
         /// <summary>
