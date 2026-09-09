@@ -2096,6 +2096,376 @@ namespace QuantConnect.Data.Fundamental
         private readonly SecurityIdentifier _securityIdentifier;
 
         /// <summary>
+        /// This data point represents the loss due to impairment; write-off; or write-down of capital assets (property plant and equipment and intangibles) reported in the income statement or cash flow statement and selected for a company's irregular income/expenses and total unusal items calculation.
+        /// </summary>
+        /// <remarks>
+        /// Morningstar DataId: EQ6KS
+        /// </remarks>
+        [JsonProperty("EQ6KS")]
+        public ImpairmentWriteOffWriteDownOfCapitalAssetsAdjustmentIncomeStatement ImpairmentWriteOffWriteDownOfCapitalAssetsAdjustment => _impairmentWriteOffWriteDownOfCapitalAssetsAdjustmentIncomeStatement ??= new(_timeProvider, _securityIdentifier);
+        private ImpairmentWriteOffWriteDownOfCapitalAssetsAdjustmentIncomeStatement _impairmentWriteOffWriteDownOfCapitalAssetsAdjustmentIncomeStatement;
+
+        /// <summary>
+        /// This data point represents the net gain or loss sustained through legal proceedings after settling controversies or disputes in a court of law. This is reported in the income statement or cash flow statement and selected for a company's irregular income/expenses and total unusal items calculation.
+        /// </summary>
+        /// <remarks>
+        /// Morningstar DataId: EQFPZ
+        /// </remarks>
+        [JsonProperty("EQFPZ")]
+        public LitigationIncomeExpenseAdjustmentIncomeStatement LitigationIncomeExpenseAdjustment => _litigationIncomeExpenseAdjustmentIncomeStatement ??= new(_timeProvider, _securityIdentifier);
+        private LitigationIncomeExpenseAdjustmentIncomeStatement _litigationIncomeExpenseAdjustmentIncomeStatement;
+
+        /// <summary>
+        /// This data point represents the goodwill impairment/write-off value reported in the income statement or cash flow statement and selected for a company's irregular income/expenses and total unusal items calculation.
+        /// </summary>
+        /// <remarks>
+        /// Morningstar DataId: EQI2C
+        /// </remarks>
+        [JsonProperty("EQI2C")]
+        public GoodwillImpairmentWriteOffAdjustmentIncomeStatement GoodwillImpairmentWriteOffAdjustment => _goodwillImpairmentWriteOffAdjustmentIncomeStatement ??= new(_timeProvider, _securityIdentifier);
+        private GoodwillImpairmentWriteOffAdjustmentIncomeStatement _goodwillImpairmentWriteOffAdjustmentIncomeStatement;
+
+        /// <summary>
+        /// This data point represents the costs incurred from negotiating with bankers; creditors; vendors; and tax authorities while restructuring the company's debt in order to restore liquidity and continue its operations. This is reported in the income statement or cash flow statement and selected for a company's irregular income/expenses and total unusal items calculation.
+        /// </summary>
+        /// <remarks>
+        /// Morningstar DataId: EQN1N
+        /// </remarks>
+        [JsonProperty("EQN1N")]
+        public DebtRestructuringAdjustmentIncomeStatement DebtRestructuringAdjustment => _debtRestructuringAdjustmentIncomeStatement ??= new(_timeProvider, _securityIdentifier);
+        private DebtRestructuringAdjustmentIncomeStatement _debtRestructuringAdjustmentIncomeStatement;
+
+        /// <summary>
+        /// This data point represents the gain or loss resulting from the debt issuer recalling the debt before the scheduled maturity date; and/or substantially modifying the existing terms of the debt. This is reported in the income statement or cash flow statement and selected for a company's irregular income/expenses and total unusal items calculation.
+        /// </summary>
+        /// <remarks>
+        /// Morningstar DataId: EQNS2
+        /// </remarks>
+        [JsonProperty("EQNS2")]
+        public GainLossOnExtinguishmentOfDebtAdjustmentIncomeStatement GainLossOnExtinguishmentOfDebtAdjustment => _gainLossOnExtinguishmentOfDebtAdjustmentIncomeStatement ??= new(_timeProvider, _securityIdentifier);
+        private GainLossOnExtinguishmentOfDebtAdjustmentIncomeStatement _gainLossOnExtinguishmentOfDebtAdjustmentIncomeStatement;
+
+        /// <summary>
+        /// This data point represents net gain or loss from disposal or sale of businesses reported in the income statement or cash flow statement and selected for a company's irregular income/expenses and total unusal items calculation.
+        /// </summary>
+        /// <remarks>
+        /// Morningstar DataId: EQNZW
+        /// </remarks>
+        [JsonProperty("EQNZW")]
+        public DisposalOfBusinessesAdjustmentIncomeStatement DisposalOfBusinessesAdjustment => _disposalOfBusinessesAdjustmentIncomeStatement ??= new(_timeProvider, _securityIdentifier);
+        private DisposalOfBusinessesAdjustmentIncomeStatement _disposalOfBusinessesAdjustmentIncomeStatement;
+
+        /// <summary>
+        /// This data point represents the costs incurred during merger and acquisition transactions reported in the income statement or cash flow statement and selected for a company's irregular income/expenses and total unusal items calculation.
+        /// </summary>
+        /// <remarks>
+        /// Morningstar DataId: EQRBW
+        /// </remarks>
+        [JsonProperty("EQRBW")]
+        public MergerAndAcquisitionIncomeExpenseAdjustmentIncomeStatement MergerAndAcquisitionIncomeExpenseAdjustment => _mergerAndAcquisitionIncomeExpenseAdjustmentIncomeStatement ??= new(_timeProvider, _securityIdentifier);
+        private MergerAndAcquisitionIncomeExpenseAdjustmentIncomeStatement _mergerAndAcquisitionIncomeExpenseAdjustmentIncomeStatement;
+
+        /// <summary>
+        /// This data point represents net income or loss from disposal of discontinued operations reported in the income statement or cash flow statement and selected for a company's irregular income/expenses and total unusal items calculation.
+        /// </summary>
+        /// <remarks>
+        /// Morningstar DataId: EQRC3
+        /// </remarks>
+        [JsonProperty("EQRC3")]
+        public DiscontinuedOperationsAdjustmentIncomeStatement DiscontinuedOperationsAdjustment => _discontinuedOperationsAdjustmentIncomeStatement ??= new(_timeProvider, _securityIdentifier);
+        private DiscontinuedOperationsAdjustmentIncomeStatement _discontinuedOperationsAdjustmentIncomeStatement;
+
+        /// <summary>
+        /// This data point represents the calculated variant of irregular income/expense. This is calculated by summing up all Irregular Income/Expense reported by the company.
+        /// </summary>
+        /// <remarks>
+        /// Morningstar DataId: EQSX4
+        /// </remarks>
+        [JsonProperty("EQSX4")]
+        public IrregularIncomeExpenseIncomeStatement IrregularIncomeExpense => _irregularIncomeExpenseIncomeStatement ??= new(_timeProvider, _securityIdentifier);
+        private IrregularIncomeExpenseIncomeStatement _irregularIncomeExpenseIncomeStatement;
+
+        /// <summary>
+        /// This data point represents income or expenses from any other non-recurring activities reported in the income statement or cash flow statement and selected for a company's irregular income/expenses and total unusal items calculation.
+        /// </summary>
+        /// <remarks>
+        /// Morningstar DataId: EQUOO
+        /// </remarks>
+        [JsonProperty("EQUOO")]
+        public OtherIrregularIncomeExpensesAdjustmentIncomeStatement OtherIrregularIncomeExpensesAdjustment => _otherIrregularIncomeExpensesAdjustmentIncomeStatement ??= new(_timeProvider, _securityIdentifier);
+        private OtherIrregularIncomeExpensesAdjustmentIncomeStatement _otherIrregularIncomeExpensesAdjustmentIncomeStatement;
+
+        /// <summary>
+        /// This data point represents the loss due to write-off/ write-down of other assets reported in the income statement or cash flow statement and selected for a company's irregular income/expenses and total unusal items calculation.
+        /// </summary>
+        /// <remarks>
+        /// Morningstar DataId: EQWUG
+        /// </remarks>
+        [JsonProperty("EQWUG")]
+        public WriteOffWriteDownOfOtherAssetsAdjustmentIncomeStatement WriteOffWriteDownOfOtherAssetsAdjustment => _writeOffWriteDownOfOtherAssetsAdjustmentIncomeStatement ??= new(_timeProvider, _securityIdentifier);
+        private WriteOffWriteDownOfOtherAssetsAdjustmentIncomeStatement _writeOffWriteDownOfOtherAssetsAdjustmentIncomeStatement;
+
+        /// <summary>
+        /// This data point represents net gain or loss due to disposal or sale of assets reported in the income statement or cash flow statement and selected for a company's irregular income/expenses and total unusal items calculation.
+        /// </summary>
+        /// <remarks>
+        /// Morningstar DataId: EQXPR
+        /// </remarks>
+        [JsonProperty("EQXPR")]
+        public AssetDisposalsAdjustmentIncomeStatement AssetDisposalsAdjustment => _assetDisposalsAdjustmentIncomeStatement ??= new(_timeProvider, _securityIdentifier);
+        private AssetDisposalsAdjustmentIncomeStatement _assetDisposalsAdjustmentIncomeStatement;
+
+        /// <summary>
+        /// This data point represents costs incurred in the event of a restructuring and/or reorganization with the aim to improve the business operations and/or financial situation of the firm; examples include laying off employees; severance pay; closing manufacturing plants; shifting production to a new location; writing-off assets; and more. This is reported in the income statement or cash flow statement and selected for a company's irregular income/expenses and total unusal items calculation.
+        /// </summary>
+        /// <remarks>
+        /// Morningstar DataId: EQZHQ
+        /// </remarks>
+        [JsonProperty("EQZHQ")]
+        public RestructuringAndReorganizationExpenseAdjustmentIncomeStatement RestructuringAndReorganizationExpenseAdjustment => _restructuringAndReorganizationExpenseAdjustmentIncomeStatement ??= new(_timeProvider, _securityIdentifier);
+        private RestructuringAndReorganizationExpenseAdjustmentIncomeStatement _restructuringAndReorganizationExpenseAdjustmentIncomeStatement;
+
+        /// <summary>
+        /// This calculation represents the company's after-tax earnings for the period. The calculation differs from Net Income; because it excludes Earnings from Equity Interests. This is calculated using Pretax Income minus Provision for Income Tax.
+        /// </summary>
+        /// <remarks>
+        /// Morningstar DataId: EQFD2
+        /// </remarks>
+        [JsonProperty("EQFD2")]
+        public IncomeAfterTaxesIncomeStatement IncomeAfterTaxes => _incomeAfterTaxesIncomeStatement ??= new(_timeProvider, _securityIdentifier);
+        private IncomeAfterTaxesIncomeStatement _incomeAfterTaxesIncomeStatement;
+
+        /// <summary>
+        /// This data point represents the calculated variant of interest expense. This is calculated by taking the Reported Interest Expense Net of capitalized interest if available; or Interest Expense net of Interest Income.
+        /// </summary>
+        /// <remarks>
+        /// Morningstar DataId: EQ8Z3
+        /// </remarks>
+        [JsonProperty("EQ8Z3")]
+        public InterestExpenseCalculatedIncomeStatement InterestExpenseCalculated => _interestExpenseCalculatedIncomeStatement ??= new(_timeProvider, _securityIdentifier);
+        private InterestExpenseCalculatedIncomeStatement _interestExpenseCalculatedIncomeStatement;
+
+        /// <summary>
+        /// This calculation represents the tax affected operating earnings the company generated for the period. This can be used to measure a company's profitability. This is calculated using Net Income from Continuing Operations plus tax affected Net Interest Income/Expense minus tax affected Dividend and Investment Income.
+        /// </summary>
+        /// <remarks>
+        /// Morningstar DataId: EQD7B
+        /// </remarks>
+        [JsonProperty("EQD7B")]
+        public NetOperatingProfitAfterTaxIncomeStatement NetOperatingProfitAfterTax => _netOperatingProfitAfterTaxIncomeStatement ??= new(_timeProvider, _securityIdentifier);
+        private NetOperatingProfitAfterTaxIncomeStatement _netOperatingProfitAfterTaxIncomeStatement;
+
+        /// <summary>
+        /// This represents earnings before interest and taxes adjusted for items that are irregular or unusual in nature; and/or are non-recurring. This can be used to measure a company's profitability. This is calculated by using Earnings before Interest and Tax plus/minus any tax affected unusual items.
+        /// </summary>
+        /// <remarks>
+        /// Morningstar DataId: EQ8A8
+        /// </remarks>
+        [JsonProperty("EQ8A8")]
+        public NormalizedEBITIncomeStatement NormalizedEBIT => _normalizedEBITIncomeStatement ??= new(_timeProvider, _securityIdentifier);
+        private NormalizedEBITIncomeStatement _normalizedEBITIncomeStatement;
+
+        /// <summary>
+        /// This data point represents the earnings the company generated before interest; tax; depreciation; amortization and rent expenses. This can be used to measure a company's profitability. This is calculated using EBITDA + Rent Expenses + Rent and Landing Fees.
+        /// </summary>
+        /// <remarks>
+        /// Morningstar DataId: EQES8
+        /// </remarks>
+        [JsonProperty("EQES8")]
+        public EBITDARIncomeStatement EBITDAR => _eBITDARIncomeStatement ??= new(_timeProvider, _securityIdentifier);
+        private EBITDARIncomeStatement _eBITDARIncomeStatement;
+
+        /// <summary>
+        /// This data point represents the earnings the company generated before interest; tax; depreciation; amortization and rent expenses adjusted for items that are irregular or unusual in nature; and/or are non-recurring. This can be used to measure a company's profitability. This is calculated using Earnings Before Interest; Tax; Depreciation; Amortization and Rent expenses plus/minus any unusual Items.
+        /// </summary>
+        /// <remarks>
+        /// Morningstar DataId: EQP4U
+        /// </remarks>
+        [JsonProperty("EQP4U")]
+        public NormalizedEBITDARIncomeStatement NormalizedEBITDAR => _normalizedEBITDARIncomeStatement ??= new(_timeProvider, _securityIdentifier);
+        private NormalizedEBITDARIncomeStatement _normalizedEBITDARIncomeStatement;
+
+        /// <summary>
+        /// This data point represents net amount of foreign exchange gains and losses due to translation to the functional/reporting currency reported in the income statement or cash flow statement and selected for a company's total unusal items calculation.
+        /// </summary>
+        /// <remarks>
+        /// Morningstar DataId: EQ10K
+        /// </remarks>
+        [JsonProperty("EQ10K")]
+        public ForeignCurrencyExchangeUnrealizedGainsLossesIncomeStatement ForeignCurrencyExchangeUnrealizedGainsLosses => _foreignCurrencyExchangeUnrealizedGainsLossesIncomeStatement ??= new(_timeProvider, _securityIdentifier);
+        private ForeignCurrencyExchangeUnrealizedGainsLossesIncomeStatement _foreignCurrencyExchangeUnrealizedGainsLossesIncomeStatement;
+
+        /// <summary>
+        /// This data point represents net unrealized gain or loss due to changes in the fair value of financial assets reported in the income statement or cash flow statement and selected for a company's total unusal items calculation.
+        /// </summary>
+        /// <remarks>
+        /// Morningstar DataId: EQ2XY
+        /// </remarks>
+        [JsonProperty("EQ2XY")]
+        public FinancialAssetsUnrealizedGainsLossesIncomeStatement FinancialAssetsUnrealizedGainsLosses => _financialAssetsUnrealizedGainsLossesIncomeStatement ??= new(_timeProvider, _securityIdentifier);
+        private FinancialAssetsUnrealizedGainsLossesIncomeStatement _financialAssetsUnrealizedGainsLossesIncomeStatement;
+
+        /// <summary>
+        /// This data point represents net gain or loss on disposal or sale of investments; including financial instruments and other investments reported in the income statement or cash flow statement and selected for a company's total unusal items calculation.
+        /// </summary>
+        /// <remarks>
+        /// Morningstar DataId: EQRHB
+        /// </remarks>
+        [JsonProperty("EQRHB")]
+        public FinancialInstrumentsAndInvestmentsGainsLossesIncomeStatement FinancialInstrumentsAndInvestmentsGainsLosses => _financialInstrumentsAndInvestmentsGainsLossesIncomeStatement ??= new(_timeProvider, _securityIdentifier);
+        private FinancialInstrumentsAndInvestmentsGainsLossesIncomeStatement _financialInstrumentsAndInvestmentsGainsLossesIncomeStatement;
+
+        /// <summary>
+        /// This data point represents net gain or loss due to changes in the fair value of derivative financial and hedging instruments reported in the income statement or cash flow statement and selected for a company's total unusal items calculation.
+        /// </summary>
+        /// <remarks>
+        /// Morningstar DataId: EQZBQ
+        /// </remarks>
+        [JsonProperty("EQZBQ")]
+        public DerivativesUnrealizedGainsLossesIncomeStatement DerivativesUnrealizedGainsLosses => _derivativesUnrealizedGainsLossesIncomeStatement ??= new(_timeProvider, _securityIdentifier);
+        private DerivativesUnrealizedGainsLossesIncomeStatement _derivativesUnrealizedGainsLossesIncomeStatement;
+
+        /// <summary>
+        /// This data point represents the cost and expenses associated with a company's operating business. This can be used to measure the funds the company has devoted to generating revenue. This is calculated using Cost of Revenue + Operating Income/Expenses - Income from Grants Received; Operating - Other Income; Operating.
+        /// </summary>
+        /// <remarks>
+        /// Morningstar DataId: EQXH7
+        /// </remarks>
+        [JsonProperty("EQXH7")]
+        public CostOfRevenueAndOperatingExpenseIncomeStatement CostOfRevenueAndOperatingExpense => _costOfRevenueAndOperatingExpenseIncomeStatement ??= new(_timeProvider, _securityIdentifier);
+        private CostOfRevenueAndOperatingExpenseIncomeStatement _costOfRevenueAndOperatingExpenseIncomeStatement;
+
+        /// <summary>
+        /// Aggregate value of all income and expenses not associated with normal business operations and recognized by the company in the non-operating section of the Income Statement.
+        /// </summary>
+        /// <remarks>
+        /// Morningstar DataId: EQAW7
+        /// </remarks>
+        [JsonProperty("EQAW7")]
+        public NonOperatingIncomeExpensesTotalIncomeStatement NonOperatingIncomeExpensesTotal => _nonOperatingIncomeExpensesTotalIncomeStatement ??= new(_timeProvider, _securityIdentifier);
+        private NonOperatingIncomeExpensesTotalIncomeStatement _nonOperatingIncomeExpensesTotalIncomeStatement;
+
+        /// <summary>
+        /// This data point represents the calculated variant of net Interest income/expense. This is calculated by using the most complete version of either reported Net Interest Income/Expense or Net Interest Income/Expense from supplemental information.
+        /// </summary>
+        /// <remarks>
+        /// Morningstar DataId: EQWF5
+        /// </remarks>
+        [JsonProperty("EQWF5")]
+        public NetInterestIncomeExpenseIncomeStatement NetInterestIncomeExpense => _netInterestIncomeExpenseIncomeStatement ??= new(_timeProvider, _securityIdentifier);
+        private NetInterestIncomeExpenseIncomeStatement _netInterestIncomeExpenseIncomeStatement;
+
+        /// <summary>
+        /// Difference between total interest and other finance income and total interest and other finance expense reported in the non-operating section of the Income Statement.
+        /// </summary>
+        /// <remarks>
+        /// Morningstar DataId: EQLTG
+        /// </remarks>
+        [JsonProperty("EQLTG")]
+        public TotalNetFinanceIncomeExpenseIncomeStatement TotalNetFinanceIncomeExpense => _totalNetFinanceIncomeExpenseIncomeStatement ??= new(_timeProvider, _securityIdentifier);
+        private TotalNetFinanceIncomeExpenseIncomeStatement _totalNetFinanceIncomeExpenseIncomeStatement;
+
+        /// <summary>
+        /// This calculation represents the summation of a company's interest; dividend and investment income. This can be used to measure a company's investing and financing performance. This is calculated using Interest Income + Dividend and Investment Income.
+        /// </summary>
+        /// <remarks>
+        /// Morningstar DataId: EQLK4
+        /// </remarks>
+        [JsonProperty("EQLK4")]
+        public InterestAndDividendIncomeIncomeStatement InterestAndDividendIncome => _interestAndDividendIncomeIncomeStatement ??= new(_timeProvider, _securityIdentifier);
+        private InterestAndDividendIncomeIncomeStatement _interestAndDividendIncomeIncomeStatement;
+
+        /// <summary>
+        /// This data point represents a company's implied cost of debt. This is calculated using interest expense reported in the income statement divided by a company's total debt from its balance sheet.
+        /// </summary>
+        /// <remarks>
+        /// Morningstar DataId: EQJVB
+        /// </remarks>
+        [JsonProperty("EQJVB")]
+        public InterestRateIncomeStatement InterestRate => _interestRateIncomeStatement ??= new(_timeProvider, _securityIdentifier);
+        private InterestRateIncomeStatement _interestRateIncomeStatement;
+
+        /// <summary>
+        /// Expenses that the company incurs that are not directly tied to a specific function such as manufacturing; production; or sales.
+        /// </summary>
+        /// <remarks>
+        /// Morningstar DataId: EQSI9
+        /// </remarks>
+        [JsonProperty("EQSI9")]
+        public GeneralAndAdministrativeExpensesIncomeStatement GeneralAndAdministrativeExpenses => _generalAndAdministrativeExpensesIncomeStatement ??= new(_timeProvider, _securityIdentifier);
+        private GeneralAndAdministrativeExpensesIncomeStatement _generalAndAdministrativeExpensesIncomeStatement;
+
+        /// <summary>
+        /// This data point represents the earnings the company generated before interest; tax and amortization expenses. This can be used to measure a company's profitability. This is calculated using Earnings Before Interest; Tax; Depreciation and Amortization minus Depreciation.
+        /// </summary>
+        /// <remarks>
+        /// Morningstar DataId: EQ09K
+        /// </remarks>
+        [JsonProperty("EQ09K")]
+        public EBITAIncomeStatement EBITA => _eBITAIncomeStatement ??= new(_timeProvider, _securityIdentifier);
+        private EBITAIncomeStatement _eBITAIncomeStatement;
+
+        /// <summary>
+        /// This data point represents the subtotal of irregular and non-recurring items (before-tax) based on CPMS (Computerized Portfolio Management Services) methodology standards.
+        /// </summary>
+        /// <remarks>
+        /// Morningstar DataId: EQ0XL
+        /// </remarks>
+        [JsonProperty("EQ0XL")]
+        public TotalUnusualItemsBeforeTaxIncomeStatement TotalUnusualItemsBeforeTax => _totalUnusualItemsBeforeTaxIncomeStatement ??= new(_timeProvider, _securityIdentifier);
+        private TotalUnusualItemsBeforeTaxIncomeStatement _totalUnusualItemsBeforeTaxIncomeStatement;
+
+        /// <summary>
+        /// This data point represents the subtotal of irregular and non-recurring items (after-tax) based on CPMS (Computerized Portfolio Management Services) methodology standards.
+        /// </summary>
+        /// <remarks>
+        /// Morningstar DataId: EQ8Y6
+        /// </remarks>
+        [JsonProperty("EQ8Y6")]
+        public TotalUnusualItemsAfterTaxIncomeStatement TotalUnusualItemsAfterTax => _totalUnusualItemsAfterTaxIncomeStatement ??= new(_timeProvider, _securityIdentifier);
+        private TotalUnusualItemsAfterTaxIncomeStatement _totalUnusualItemsAfterTaxIncomeStatement;
+
+        /// <summary>
+        /// Net realized gain or loss from investment assets such as bonds; stocks; mutual funds; loans; investments in affiliated companies; foreign exchange and other investments reported in the non-operating section of the Income Statement.
+        /// </summary>
+        /// <remarks>
+        /// Morningstar DataId: EQYSV
+        /// </remarks>
+        [JsonProperty("EQYSV")]
+        public NetInvestmentIncomeValueIncomeStatement NetInvestmentIncomeValue => _netInvestmentIncomeValueIncomeStatement ??= new(_timeProvider, _securityIdentifier);
+        private NetInvestmentIncomeValueIncomeStatement _netInvestmentIncomeValueIncomeStatement;
+
+        /// <summary>
+        /// Income or expenses from any other activity associated with normal operations that are not categorized above. Includes: amortization of deferred revenues/sales commissions/charges/ etc. as these are related to deferred or accrued operating income/expense
+        /// </summary>
+        /// <remarks>
+        /// Morningstar DataId: EQJNM
+        /// </remarks>
+        [JsonProperty("EQJNM")]
+        public OtherIncomeExpenseOperatingIncomeStatement OtherIncomeExpenseOperating => _otherIncomeExpenseOperatingIncomeStatement ??= new(_timeProvider, _securityIdentifier);
+        private OtherIncomeExpenseOperatingIncomeStatement _otherIncomeExpenseOperatingIncomeStatement;
+
+        /// <summary>
+        /// Revenue derived based on requirements from NASDAQ. For companies using the bank industry template; it is calculated using Net Interest Income; adding back interest expense to derive interest income revenue for the bank; and adding non-interest income to derive unadjusted revenue. For companies using the normal; insurance and investment templates; unadjusted revenue is the same as the company's total revenue.
+        /// </summary>
+        /// <remarks>
+        /// Morningstar DataId: EQYSH
+        /// </remarks>
+        [JsonProperty("EQYSH")]
+        public UnadjustedRevenueIncomeStatement UnadjustedRevenue => _unadjustedRevenueIncomeStatement ??= new(_timeProvider, _securityIdentifier);
+        private UnadjustedRevenueIncomeStatement _unadjustedRevenueIncomeStatement;
+
+        /// <summary>
+        /// This data point represents the summation of realized investment gains on the company's assets. This is calculated using Gain/Loss on Disposal/Sale of Business + Gain/Loss on Disposal/Sale of Fixed Assets. For banking companies; this also includes Realized Gain/Loss on Sale of Loans and Lease.
+        /// </summary>
+        /// <remarks>
+        /// Morningstar DataId: EQUEX
+        /// </remarks>
+        [JsonProperty("EQUEX")]
+        public RealizedInvestmentGainsIncomeStatement RealizedInvestmentGains => _realizedInvestmentGainsIncomeStatement ??= new(_timeProvider, _securityIdentifier);
+        private RealizedInvestmentGainsIncomeStatement _realizedInvestmentGainsIncomeStatement;
+
+        /// <summary>
         /// Creates a new instance for the given time and security
         /// </summary>
         public IncomeStatement(ITimeProvider timeProvider, SecurityIdentifier securityIdentifier)
