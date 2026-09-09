@@ -306,18 +306,18 @@ namespace QuantConnect.Data.Fundamental
         /// Whether the company is a shell company
         /// </summary>
         /// <remarks>
-        /// Morningstar DataId: 45003
+        /// Morningstar DataId: EQT0N
         /// </remarks>
-        [JsonProperty("45003")]
+        [JsonProperty("EQT0N")]
         public bool IsShellCompany => FundamentalService.Get<bool>(_timeProvider.GetUtcNow(), _securityIdentifier, FundamentalProperty.CompanyReference_IsShellCompany);
 
         /// <summary>
         /// The state or country the company is incorporated in
         /// </summary>
         /// <remarks>
-        /// Morningstar DataId: 45004
+        /// Morningstar DataId: EQ7O1
         /// </remarks>
-        [JsonProperty("45004")]
+        [JsonProperty("EQ7O1")]
         public string StateOrCountryOfIncorporation => FundamentalService.Get<string>(_timeProvider.GetUtcNow(), _securityIdentifier, FundamentalProperty.CompanyReference_StateOrCountryOfIncorporation);
 
         /// <summary>

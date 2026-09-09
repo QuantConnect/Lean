@@ -356,27 +356,27 @@ namespace QuantConnect.Data.Fundamental
         /// The number of full time employees
         /// </summary>
         /// <remarks>
-        /// Morningstar DataId: 45005
+        /// Morningstar DataId: EQREB
         /// </remarks>
-        [JsonProperty("45005")]
+        [JsonProperty("EQREB")]
         public int FullTimeEmployeeNumber => FundamentalService.Get<int>(_timeProvider.GetUtcNow(), _securityIdentifier, FundamentalProperty.CompanyProfile_FullTimeEmployeeNumber);
 
         /// <summary>
         /// The number of part time employees
         /// </summary>
         /// <remarks>
-        /// Morningstar DataId: 45006
+        /// Morningstar DataId: EQ853
         /// </remarks>
-        [JsonProperty("45006")]
+        [JsonProperty("EQ853")]
         public int PartTimeEmployeeNumber => FundamentalService.Get<int>(_timeProvider.GetUtcNow(), _securityIdentifier, FundamentalProperty.CompanyProfile_PartTimeEmployeeNumber);
 
         /// <summary>
         /// Shares the company holds in treasury
         /// </summary>
         /// <remarks>
-        /// Morningstar DataId: 45007
+        /// Morningstar DataId: EQZW6
         /// </remarks>
-        [JsonProperty("45007")]
+        [JsonProperty("EQZW6")]
         public long TreasuryShares => FundamentalService.Get<long>(_timeProvider.GetUtcNow(), _securityIdentifier, FundamentalProperty.CompanyProfile_TreasuryShares);
 
         /// <summary>

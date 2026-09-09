@@ -731,6 +731,400 @@ namespace QuantConnect.Data.Fundamental
         private LossRatio _lossRatio;
 
         /// <summary>
+        /// This ratio represents the value of a company's total debt relative to its invested capital. This can be used to measure the company's financial leverage. This is calculated using Total Debt divided by Invested Capital.
+        /// </summary>
+        /// <remarks>
+        /// Morningstar DataId: EQAX3
+        /// </remarks>
+        [JsonProperty("EQAX3")]
+        public TotalDebtToInvestedCapitalRatio TotalDebtToInvestedCapitalRatio => _totalDebtToInvestedCapitalRatio ??= new(_timeProvider, _securityIdentifier);
+        private TotalDebtToInvestedCapitalRatio _totalDebtToInvestedCapitalRatio;
+
+        /// <summary>
+        /// This ratio represents the value of a company's normalized income relative to its total assets. This can be used to measure the company's ability to utilize its assets efficiently to generate earnings from its normal operations. This is calculated using Normalized Income (TTM) divided by Average Total Assets.
+        /// </summary>
+        /// <remarks>
+        /// Morningstar DataId: EQPRN
+        /// </remarks>
+        [JsonProperty("EQPRN")]
+        public NormalizedReturnOnAsset NormalizedReturnOnAsset => _normalizedReturnOnAsset ??= new(_timeProvider, _securityIdentifier);
+        private NormalizedReturnOnAsset _normalizedReturnOnAsset;
+
+        /// <summary>
+        /// This ratio represents the value of company's total assets relative to its total equity. This can be used to measure a company's financial leverage and is often referred to as the Financial Leverage Ratio. This is calculated using Total Assets divided by Total Equity.
+        /// </summary>
+        /// <remarks>
+        /// Morningstar DataId: EQ3K3
+        /// </remarks>
+        [JsonProperty("EQ3K3")]
+        public EquityMultiplierRatio EquityMultiplierRatio => _equityMultiplierRatio ??= new(_timeProvider, _securityIdentifier);
+        private EquityMultiplierRatio _equityMultiplierRatio;
+
+        /// <summary>
+        /// This ratio represents the value of a company's cash flow from operating activities relative to its total debt. This can be used to measure a company's ability to use its cash to pay off debt. This is calculated using Cash Flow from Operating Activities (TTM) divided by Average Total Debt.
+        /// </summary>
+        /// <remarks>
+        /// Morningstar DataId: EQMXX
+        /// </remarks>
+        [JsonProperty("EQMXX")]
+        public CashFlowToDebtRatio CashFlowToDebtRatio => _cashFlowToDebtRatio ??= new(_timeProvider, _securityIdentifier);
+        private CashFlowToDebtRatio _cashFlowToDebtRatio;
+
+        /// <summary>
+        /// This ratio represents the value of a company's normalized income relative to its total equity. This can be used to measure the company's ability to utilize its equity efficiently to generate earnings from its normal operations. This is calculated using Normalized Income (TTM) divided by Average Total Equity.
+        /// </summary>
+        /// <remarks>
+        /// Morningstar DataId: EQ5P1
+        /// </remarks>
+        [JsonProperty("EQ5P1")]
+        public NormalizedReturnOnEquity NormalizedReturnOnEquity => _normalizedReturnOnEquity ??= new(_timeProvider, _securityIdentifier);
+        private NormalizedReturnOnEquity _normalizedReturnOnEquity;
+
+        /// <summary>
+        /// This ratio represents the value of a company's total revenue relative to the value of its net operating assets. This can be used to measure a company's ability to use its assets efficiently to generate revenue. This is calculated using Total Revenue (TTM) divided by Average Net Operating Assets.
+        /// </summary>
+        /// <remarks>
+        /// Morningstar DataId: EQ234
+        /// </remarks>
+        [JsonProperty("EQ234")]
+        public NetOperatingAssetsTurnover NetOperatingAssetsTurnover => _netOperatingAssetsTurnover ??= new(_timeProvider, _securityIdentifier);
+        private NetOperatingAssetsTurnover _netOperatingAssetsTurnover;
+
+        /// <summary>
+        /// This ratio represents the value of a company's net income relative to its net operating assets. This can be used to determine how much profit a company generates on its asset base. This is calculated using Net Income from Continuing Operations (TTM) divided by Average Net Operating Assets.
+        /// </summary>
+        /// <remarks>
+        /// Morningstar DataId: EQLPK
+        /// </remarks>
+        [JsonProperty("EQLPK")]
+        public ReturnOnNetOperatingAssets ReturnOnNetOperatingAssets => _returnOnNetOperatingAssets ??= new(_timeProvider, _securityIdentifier);
+        private ReturnOnNetOperatingAssets _returnOnNetOperatingAssets;
+
+        /// <summary>
+        /// This ratio represents the value of a company's long term debt relative to its total assets. This can be used to measure a company's financial leverage. This is calculated using Long Term Debt and Capital Lease Obligations divided by Total Assets.
+        /// </summary>
+        /// <remarks>
+        /// Morningstar DataId: EQ6UN
+        /// </remarks>
+        [JsonProperty("EQ6UN")]
+        public LongTermDebtToAssetsRatio LongTermDebtToAssetsRatio => _longTermDebtToAssetsRatio ??= new(_timeProvider, _securityIdentifier);
+        private LongTermDebtToAssetsRatio _longTermDebtToAssetsRatio;
+
+        /// <summary>
+        /// This ratio represents the value of a company's interest expense relative to the sum of it's Total Debt and Total Equity. This can be used to measure cost of borrowing in proportion to all capital invested in the company. This is calculated using Interest expenses divided by Invested Capital.
+        /// </summary>
+        /// <remarks>
+        /// Morningstar DataId: EQYEI
+        /// </remarks>
+        [JsonProperty("EQYEI")]
+        public InterestAsAPercentOfInvestedCapitalRatio InterestAsAPercentOfInvestedCapitalRatio => _interestAsAPercentOfInvestedCapitalRatio ??= new(_timeProvider, _securityIdentifier);
+        private InterestAsAPercentOfInvestedCapitalRatio _interestAsAPercentOfInvestedCapitalRatio;
+
+        /// <summary>
+        /// This ratio represents the value of a company's book value relative to its revenue. This can be used to determine a company's fair value when comparing this ratio among different companies within the same sector. This is calculated using Book Value divided by Revenue (TTM).
+        /// </summary>
+        /// <remarks>
+        /// Morningstar DataId: EQXQT
+        /// </remarks>
+        [JsonProperty("EQXQT")]
+        public BookValueToRevenueRatio BookValueToRevenueRatio => _bookValueToRevenueRatio ??= new(_timeProvider, _securityIdentifier);
+        private BookValueToRevenueRatio _bookValueToRevenueRatio;
+
+        /// <summary>
+        /// This ratio represents the value of a company's total revenue relative to its cash and cash equivalents. This can be used to measure a company's ability to use its cash efficiently to generate revenue. This is calculated using Total Revenue (TTM) divided by Average Cash and Cash Equivalents.
+        /// </summary>
+        /// <remarks>
+        /// Morningstar DataId: EQEEC
+        /// </remarks>
+        [JsonProperty("EQEEC")]
+        public CashTurnoverRatio CashTurnoverRatio => _cashTurnoverRatio ??= new(_timeProvider, _securityIdentifier);
+        private CashTurnoverRatio _cashTurnoverRatio;
+
+        /// <summary>
+        /// This ratio represents the value of a company's earnings before interest and tax (EBIT) relative to its Capital Employed. This can be used to measure how much profit a company generates on its capital base. This is calculated using Earnings Before Interest and Tax (EBIT) (TTM); divided by Average Total Assets minus Average Current Liabilities
+        /// </summary>
+        /// <remarks>
+        /// Morningstar DataId: EQQNB
+        /// </remarks>
+        [JsonProperty("EQQNB")]
+        public ReturnOnCapitalEmployed ReturnOnCapitalEmployed => _returnOnCapitalEmployed ??= new(_timeProvider, _securityIdentifier);
+        private ReturnOnCapitalEmployed _returnOnCapitalEmployed;
+
+        /// <summary>
+        /// This ratio represents the value of a company's total revenue relative to its average equity. This can be used to measure a company's ability to use the equity efficiently to generate revenue. This is calculated using Total Revenue (TTM) divided by Average Equity.
+        /// </summary>
+        /// <remarks>
+        /// Morningstar DataId: EQ4ET
+        /// </remarks>
+        [JsonProperty("EQ4ET")]
+        public EquityTurnoverRatio EquityTurnoverRatio => _equityTurnoverRatio ??= new(_timeProvider, _securityIdentifier);
+        private EquityTurnoverRatio _equityTurnoverRatio;
+
+        /// <summary>
+        /// This ratio represents the value of a company's selling; general and administrative expenses relative to its total revenue. This can be used to measure a company's profitability. This is calculated using SG&amp;A Expenses divided by Total Revenue.
+        /// </summary>
+        /// <remarks>
+        /// Morningstar DataId: EQ9NH
+        /// </remarks>
+        [JsonProperty("EQ9NH")]
+        public SellingGeneralAdministrativeExpenseMargin SellingGeneralAdministrativeExpenseMargin => _sellingGeneralAdministrativeExpenseMargin ??= new(_timeProvider, _securityIdentifier);
+        private SellingGeneralAdministrativeExpenseMargin _sellingGeneralAdministrativeExpenseMargin;
+
+        /// <summary>
+        /// This ratio represents the value of a company's free cash flow relative to its interest expense. This can be used to measure a company's ability to use its free cash flow to pay off its interest expense. This is calculated using Free Cash Flow divided by Interest Expense.
+        /// </summary>
+        /// <remarks>
+        /// Morningstar DataId: EQ6NC
+        /// </remarks>
+        [JsonProperty("EQ6NC")]
+        public FreeCashFlowInterestCoverage FreeCashFlowInterestCoverage => _freeCashFlowInterestCoverage ??= new(_timeProvider, _securityIdentifier);
+        private FreeCashFlowInterestCoverage _freeCashFlowInterestCoverage;
+
+        /// <summary>
+        /// This ratio represents the value of a company's EBITDA Net Capital Expenditure relative to its interest expense. This can be used to measure a company's ability to use EBITDA after deducting capital expenditures to pay off its interest expense. This ratio is useful for companies with high capital expenditures; including manufacturing and mining firms. This is calculated using EBITDA minus Capital Expenditure; divided by Interest Expense.
+        /// </summary>
+        /// <remarks>
+        /// Morningstar DataId: EQ0GH
+        /// </remarks>
+        [JsonProperty("EQ0GH")]
+        public EBITDANetCapitalExpenditureToInterestExpensesRatio EBITDANetCapitalExpenditureToInterestExpensesRatio => _eBITDANetCapitalExpenditureToInterestExpensesRatio ??= new(_timeProvider, _securityIdentifier);
+        private EBITDANetCapitalExpenditureToInterestExpensesRatio _eBITDANetCapitalExpenditureToInterestExpensesRatio;
+
+        /// <summary>
+        /// This ratio represents the value of a company's EBITDA relative to its interest expense. This can be used to measure a company's ability to use EBITDA to pay off its interest expense. This is calculated using EBITDA divided by Interest Expense.
+        /// </summary>
+        /// <remarks>
+        /// Morningstar DataId: EQRZO
+        /// </remarks>
+        [JsonProperty("EQRZO")]
+        public EBITDAInterestCoverage EBITDAInterestCoverage => _eBITDAInterestCoverage ??= new(_timeProvider, _securityIdentifier);
+        private EBITDAInterestCoverage _eBITDAInterestCoverage;
+
+        /// <summary>
+        /// This ratio represents the value of a company's excess cash relative to its total revenue. This can be used to measure a company's profitability. This is calculated using (Cash Flow from Operating Activities Used for Calculations - Total Operating Profit/Loss) / Total Revenue
+        /// </summary>
+        /// <remarks>
+        /// Morningstar DataId: EQLA1
+        /// </remarks>
+        [JsonProperty("EQLA1")]
+        public ExcessCashMargin ExcessCashMargin => _excessCashMargin ??= new(_timeProvider, _securityIdentifier);
+        private ExcessCashMargin _excessCashMargin;
+
+        /// <summary>
+        /// This ratio represents the value of a company's normalized EBIT relative to its total revenue. This can be used to fairly measure a company's profitability. This is calculated using Normalized EBIT divided by Total Revenue.
+        /// </summary>
+        /// <remarks>
+        /// Morningstar DataId: EQQ8C
+        /// </remarks>
+        [JsonProperty("EQQ8C")]
+        public NormalizedEBITMargin NormalizedEBITMargin => _normalizedEBITMargin ??= new(_timeProvider, _securityIdentifier);
+        private NormalizedEBITMargin _normalizedEBITMargin;
+
+        /// <summary>
+        /// This ratio represents the value of a company's normalized EBITDA relative to its total revenue. This can be used to fairly measure a company's profitability. This is calculated using Normalized EBITDA divided by Total Revenue.
+        /// </summary>
+        /// <remarks>
+        /// Morningstar DataId: EQ7J1
+        /// </remarks>
+        [JsonProperty("EQ7J1")]
+        public NormalizedEBITDAMargin NormalizedEBITDAMargin => _normalizedEBITDAMargin ??= new(_timeProvider, _securityIdentifier);
+        private NormalizedEBITDAMargin _normalizedEBITDAMargin;
+
+        /// <summary>
+        /// This ratio represents the value of a company's EBITDAR relative to its total revenue. This can be used to measure a company's profitability. This is calculated using EBITDAR divided by Total Revenue.
+        /// </summary>
+        /// <remarks>
+        /// Morningstar DataId: EQICJ
+        /// </remarks>
+        [JsonProperty("EQICJ")]
+        public EBITDARMargin EBITDARMargin => _eBITDARMargin ??= new(_timeProvider, _securityIdentifier);
+        private EBITDARMargin _eBITDARMargin;
+
+        /// <summary>
+        /// This ratio represents the value of a company's normalized EBITDAR relative to its total revenue. This can be used to fairly measure a company's profitability. This is calculated using Normalized EBITDAR divided by Total Revenue.
+        /// </summary>
+        /// <remarks>
+        /// Morningstar DataId: EQXF5
+        /// </remarks>
+        [JsonProperty("EQXF5")]
+        public NormalizedEBITDARMargin NormalizedEBITDARMargin => _normalizedEBITDARMargin ??= new(_timeProvider, _securityIdentifier);
+        private NormalizedEBITDARMargin _normalizedEBITDARMargin;
+
+        /// <summary>
+        /// This calculation represents the amount of normalized income generated by each employee. This can be used to measure a company's productivity. This is calculated using Normalized Income (TTM) divided by Number of Full Time Employees.
+        /// </summary>
+        /// <remarks>
+        /// Morningstar DataId: EQIOP
+        /// </remarks>
+        [JsonProperty("EQIOP")]
+        public NormalizedIncomePerFullTimeEmployee NormalizedIncomePerFullTimeEmployee => _normalizedIncomePerFullTimeEmployee ??= new(_timeProvider, _securityIdentifier);
+        private NormalizedIncomePerFullTimeEmployee _normalizedIncomePerFullTimeEmployee;
+
+        /// <summary>
+        /// This calculation represents the amount of cash flow from operating activities generated by each employee. This can be used to measure a company's productivity. This is calculated using Cash Flow From Operating Activities (TTM) divided by Number of Full Time Employees.
+        /// </summary>
+        /// <remarks>
+        /// Morningstar DataId: EQ36W
+        /// </remarks>
+        [JsonProperty("EQ36W")]
+        public CashFlowFromOperatingActivitiesPerFullTimeEmployee CashFlowFromOperatingActivitiesPerFullTimeEmployee => _cashFlowFromOperatingActivitiesPerFullTimeEmployee ??= new(_timeProvider, _securityIdentifier);
+        private CashFlowFromOperatingActivitiesPerFullTimeEmployee _cashFlowFromOperatingActivitiesPerFullTimeEmployee;
+
+        /// <summary>
+        /// This ratio represents the value of a company's book value relative to its net income. This can be used to determine a company's fair value when comparing this ratio among different companies within the same sector. This is calculated using Book Value divided by Net Income (TTM).
+        /// </summary>
+        /// <remarks>
+        /// Morningstar DataId: EQB1D
+        /// </remarks>
+        [JsonProperty("EQB1D")]
+        public BookValueToNetIncomeRatio BookValueToNetIncomeRatio => _bookValueToNetIncomeRatio ??= new(_timeProvider, _securityIdentifier);
+        private BookValueToNetIncomeRatio _bookValueToNetIncomeRatio;
+
+        /// <summary>
+        /// This ratio represents the value of the net change of a company's EBIT relative to its net change of revenue. This can be used to evaluate the sensitivity of EBIT to a given change in total revenue. This is calculated using the percentage change of EBIT divided by the percentage change of Total Revenue.
+        /// </summary>
+        /// <remarks>
+        /// Morningstar DataId: EQRGJ
+        /// </remarks>
+        [JsonProperty("EQRGJ")]
+        public DegreeOfOperatingLeverage DegreeOfOperatingLeverage => _degreeOfOperatingLeverage ??= new(_timeProvider, _securityIdentifier);
+        private DegreeOfOperatingLeverage _degreeOfOperatingLeverage;
+
+        /// <summary>
+        /// This ratio represents the value of a company's free cash flow relative to its total assets. This can be used to measure a company's ability to transfer each dollar worth of assets into cash. This is calculated using the Free Cash Flow (TTM) divided by Average Total Assets.
+        /// </summary>
+        /// <remarks>
+        /// Morningstar DataId: EQV5G
+        /// </remarks>
+        [JsonProperty("EQV5G")]
+        public FreeCashFlowToAssetsRatio FreeCashFlowToAssetsRatio => _freeCashFlowToAssetsRatio ??= new(_timeProvider, _securityIdentifier);
+        private FreeCashFlowToAssetsRatio _freeCashFlowToAssetsRatio;
+
+        /// <summary>
+        /// This ratio represents the value of a company's free cash flow relative to its total debt. This can be used to measure a company's ability to use its free cash to pay off its debt. This is calculated using the Free Cash Flow (TTM) divided by Average Total Debt.
+        /// </summary>
+        /// <remarks>
+        /// Morningstar DataId: EQ1ZM
+        /// </remarks>
+        [JsonProperty("EQ1ZM")]
+        public FreeCashFlowToDebtRatio FreeCashFlowToDebtRatio => _freeCashFlowToDebtRatio ??= new(_timeProvider, _securityIdentifier);
+        private FreeCashFlowToDebtRatio _freeCashFlowToDebtRatio;
+
+        /// <summary>
+        /// This ratio represents the value of a company's total debt relative to its EBITDA. This can be used to measure the company's ability to pay off its debt. This is calculated using Average Total Debt divided by EBITDA (TTM).
+        /// </summary>
+        /// <remarks>
+        /// Morningstar DataId: EQLF3
+        /// </remarks>
+        [JsonProperty("EQLF3")]
+        public TotalDebtToEBITDARatio TotalDebtToEBITDARatio => _totalDebtToEBITDARatio ??= new(_timeProvider, _securityIdentifier);
+        private TotalDebtToEBITDARatio _totalDebtToEBITDARatio;
+
+        /// <summary>
+        /// This ratio represents the value of a company's net debt relative to its EBITDA. This can be used to measure the company's ability to pay off its debt. This is calculated using Average Net Debt divided by EBITDA (TTM).
+        /// </summary>
+        /// <remarks>
+        /// Morningstar DataId: EQO82
+        /// </remarks>
+        [JsonProperty("EQO82")]
+        public NetDebtToEBITDARatio NetDebtToEBITDARatio => _netDebtToEBITDARatio ??= new(_timeProvider, _securityIdentifier);
+        private NetDebtToEBITDARatio _netDebtToEBITDARatio;
+
+        /// <summary>
+        /// This ratio represents the value of a company's free cash flow relative to its total equity. This can be used to measure the amount of cash available for distribution for each dollar worth of equity. This is calculated using the Free Cash Flow (TTM) divided by Average Total Equity.
+        /// </summary>
+        /// <remarks>
+        /// Morningstar DataId: EQ1JN
+        /// </remarks>
+        [JsonProperty("EQ1JN")]
+        public FreeCashFlowToEquityRatio FreeCashFlowToEquityRatio => _freeCashFlowToEquityRatio ??= new(_timeProvider, _securityIdentifier);
+        private FreeCashFlowToEquityRatio _freeCashFlowToEquityRatio;
+
+        /// <summary>
+        /// This ratio represents the value of a company's EBITA relative to its total revenue. This can be used to measure a company's profitability. This is calculated using EBITA divided by Total Revenue.
+        /// </summary>
+        /// <remarks>
+        /// Morningstar DataId: EQUEQ
+        /// </remarks>
+        [JsonProperty("EQUEQ")]
+        public EBITAMargin EBITAMargin => _eBITAMargin ??= new(_timeProvider, _securityIdentifier);
+        private EBITAMargin _eBITAMargin;
+
+        /// <summary>
+        /// This ratio represents the value of a company's book value relative to its EBITDA. This can be used to determine a company's fair value when comparing this ratio among different companies within the same sector. This is calculated using Book Value divided by EBITDA (TTM).
+        /// </summary>
+        /// <remarks>
+        /// Morningstar DataId: EQPKA
+        /// </remarks>
+        [JsonProperty("EQPKA")]
+        public BookValueToEBITDARatio BookValueToEBITDARatio => _bookValueToEBITDARatio ??= new(_timeProvider, _securityIdentifier);
+        private BookValueToEBITDARatio _bookValueToEBITDARatio;
+
+        /// <summary>
+        /// This ratio represents the value of a company's book value relative to its EBIT. This can be used to determine a company's fair value when comparing this ratio among different companies within the same sector. This is calculated using Book Value divided by EBIT (TTM).
+        /// </summary>
+        /// <remarks>
+        /// Morningstar DataId: EQWE1
+        /// </remarks>
+        [JsonProperty("EQWE1")]
+        public BookValueToEBITRatio BookValueToEBITRatio => _bookValueToEBITRatio ??= new(_timeProvider, _securityIdentifier);
+        private BookValueToEBITRatio _bookValueToEBITRatio;
+
+        /// <summary>
+        /// The growth of Net Income after Minority Interest against the same period a window earlier. Net Income after Minority Interest represents net income or loss of the company after non-controlling interests attribution.
+        /// </summary>
+        /// <remarks>
+        /// Morningstar DataIds: EQ9PP (ThreeMonths), EQDD0 (SixMonths), EQDRK (NineMonths), EQEI0 (OneYear), EQ4FJ (ThreeYears), EQGS7 (FiveYears)
+        /// </remarks>
+        public NetIncomeAfterMinorityInterestGrowth NetIncomeAfterMinorityInterestGrowth => _netIncomeAfterMinorityInterestGrowth ??= new(_timeProvider, _securityIdentifier);
+        private NetIncomeAfterMinorityInterestGrowth _netIncomeAfterMinorityInterestGrowth;
+
+        /// <summary>
+        /// The growth of Normalized Income against the same period a window earlier. Normalized Income is calculated using Net Income from Continuing Operations plus/minus any tax affected unusual Items and Goodwill Impairments/Write Offs.
+        /// </summary>
+        /// <remarks>
+        /// Morningstar DataIds: EQN8U (OneYear), EQJL7 (ThreeYears), EQRHZ (FiveYears)
+        /// </remarks>
+        public NormalizedIncomeGrowth NormalizedIncomeGrowth => _normalizedIncomeGrowth ??= new(_timeProvider, _securityIdentifier);
+        private NormalizedIncomeGrowth _normalizedIncomeGrowth;
+
+        /// <summary>
+        /// The growth of Net Income Selection against the same period a window earlier. Net Income Selection is calculated by using Net Income from Continuing Operations; minus Non-Controlling/Minority Interests and Preferred/Other Stock Distribution.
+        /// </summary>
+        /// <remarks>
+        /// Morningstar DataIds: EQCTM (OneYear), EQL4L (ThreeYears), EQAJ0 (FiveYears)
+        /// </remarks>
+        public NetIncomeSelectionGrowth NetIncomeSelectionGrowth => _netIncomeSelectionGrowth ??= new(_timeProvider, _securityIdentifier);
+        private NetIncomeSelectionGrowth _netIncomeSelectionGrowth;
+
+        /// <summary>
+        /// The growth of EBIT against the same period a window earlier. EBIT is calculated by using the summation of Pretax Income and Net Interest Income/Expenses.
+        /// </summary>
+        /// <remarks>
+        /// Morningstar DataIds: EQYZA (OneYear)
+        /// </remarks>
+        public EBITGrowth EBITGrowth => _eBITGrowth ??= new(_timeProvider, _securityIdentifier);
+        private EBITGrowth _eBITGrowth;
+
+        /// <summary>
+        /// The growth of Total Operating Profit/Loss against the same period a window earlier. Total Operating Profit/Loss represents profit or loss realized by calculating the difference between sales and total operating expenses.
+        /// </summary>
+        /// <remarks>
+        /// Morningstar DataIds: EQQWH (SixMonths), EQZD1 (OneYear)
+        /// </remarks>
+        public TotalOperatingProfitLossGrowth TotalOperatingProfitLossGrowth => _totalOperatingProfitLossGrowth ??= new(_timeProvider, _securityIdentifier);
+        private TotalOperatingProfitLossGrowth _totalOperatingProfitLossGrowth;
+
+        /// <summary>
+        /// The growth of Cash Flow from Operations calculated as [(Value from current period / Value from the same period 5 years ago)^(1/5) - 1]. Cash Flow from Operations is calculated using Net Cash Flow from Operating Activities - Changes in Net Working Capital.
+        /// </summary>
+        /// <remarks>
+        /// Morningstar DataIds: EQG0U (FiveYears)
+        /// </remarks>
+        public CashFlowFromOperationsGrowth CashFlowFromOperationsGrowth => _cashFlowFromOperationsGrowth ??= new(_timeProvider, _securityIdentifier);
+        private CashFlowFromOperationsGrowth _cashFlowFromOperationsGrowth;
+
+        /// <summary>
         /// Creates a new instance for the given time and security
         /// </summary>
         public OperationRatios(ITimeProvider timeProvider, SecurityIdentifier securityIdentifier)

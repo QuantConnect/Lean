@@ -3346,6 +3346,156 @@ namespace QuantConnect.Data.Fundamental
         private readonly SecurityIdentifier _securityIdentifier;
 
         /// <summary>
+        /// This data point represents the sum of Preferred Stock; Preferred Units and Preferred Securities Outside Stockholder's Equity as listed on the company's balance sheet.
+        /// </summary>
+        /// <remarks>
+        /// Morningstar DataId: EQ30C
+        /// </remarks>
+        [JsonProperty("EQ30C")]
+        public TotalPreferredBalanceSheet TotalPreferred => _totalPreferredBalanceSheet ??= new(_timeProvider, _securityIdentifier);
+        private TotalPreferredBalanceSheet _totalPreferredBalanceSheet;
+
+        /// <summary>
+        /// This data point represents the sum of Total Liabilities and Total Equity as listed on the company's balance sheet.
+        /// </summary>
+        /// <remarks>
+        /// Morningstar DataId: EQ661
+        /// </remarks>
+        [JsonProperty("EQ661")]
+        public TotalLiabilitiesAndEquityBalanceSheet TotalLiabilitiesAndEquity => _totalLiabilitiesAndEquityBalanceSheet ??= new(_timeProvider, _securityIdentifier);
+        private TotalLiabilitiesAndEquityBalanceSheet _totalLiabilitiesAndEquityBalanceSheet;
+
+        /// <summary>
+        /// This calculation represents the difference between the company's operating assets and operating liabilities; and can be used to measure a company's efficiency and short term financial health. This is calculated using Total Assets - Total Liabilities + (Total Debt - Cash).
+        /// </summary>
+        /// <remarks>
+        /// Morningstar DataId: EQQ62
+        /// </remarks>
+        [JsonProperty("EQQ62")]
+        public NetOperatingAssetsBalanceSheet NetOperatingAssets => _netOperatingAssetsBalanceSheet ??= new(_timeProvider, _securityIdentifier);
+        private NetOperatingAssetsBalanceSheet _netOperatingAssetsBalanceSheet;
+
+        /// <summary>
+        /// This data point represents the summation of all current and long term portions of capital lease obligations that are listed on a company's balance sheet
+        /// </summary>
+        /// <remarks>
+        /// Morningstar DataId: EQV03
+        /// </remarks>
+        [JsonProperty("EQV03")]
+        public CapitalLeaseObligationsCalculatedBalanceSheet CapitalLeaseObligationsCalculated => _capitalLeaseObligationsCalculatedBalanceSheet ??= new(_timeProvider, _securityIdentifier);
+        private CapitalLeaseObligationsCalculatedBalanceSheet _capitalLeaseObligationsCalculatedBalanceSheet;
+
+        /// <summary>
+        /// This data point represents the value of a company's total assets net of intangible items such as goodwill; patents; etc. This can be used to measure the portion of a company's total assets that are tangible. This is calculated using Total Assets minus Net Intangible Assets.
+        /// </summary>
+        /// <remarks>
+        /// Morningstar DataId: EQUZ5
+        /// </remarks>
+        [JsonProperty("EQUZ5")]
+        public NetTangibleAssetsCalculatedBalanceSheet NetTangibleAssetsCalculated => _netTangibleAssetsCalculatedBalanceSheet ??= new(_timeProvider, _securityIdentifier);
+        private NetTangibleAssetsCalculatedBalanceSheet _netTangibleAssetsCalculatedBalanceSheet;
+
+        /// <summary>
+        /// Sum of all paid-in capital; including common stock and preferred stock.
+        /// </summary>
+        /// <remarks>
+        /// Morningstar DataId: EQZVT
+        /// </remarks>
+        [JsonProperty("EQZVT")]
+        public PaidInCapitalBalanceSheet PaidInCapital => _paidInCapitalBalanceSheet ??= new(_timeProvider, _securityIdentifier);
+        private PaidInCapitalBalanceSheet _paidInCapitalBalanceSheet;
+
+        /// <summary>
+        /// Amount representing as premium/discount from the issue of the entity's stock.
+        /// </summary>
+        /// <remarks>
+        /// Morningstar DataId: EQMRM
+        /// </remarks>
+        [JsonProperty("EQMRM")]
+        public AdditionalPaidInCapitalSharePremiumBalanceSheet AdditionalPaidInCapitalSharePremium => _additionalPaidInCapitalSharePremiumBalanceSheet ??= new(_timeProvider, _securityIdentifier);
+        private AdditionalPaidInCapitalSharePremiumBalanceSheet _additionalPaidInCapitalSharePremiumBalanceSheet;
+
+        /// <summary>
+        /// Cumulative amount of wear and tear or obsolescence charged against the tangible assets of the company.
+        /// </summary>
+        /// <remarks>
+        /// Morningstar DataId: EQOCG
+        /// </remarks>
+        [JsonProperty("EQOCG")]
+        public AccumulatedDepreciationValueBalanceSheet AccumulatedDepreciationValue => _accumulatedDepreciationValueBalanceSheet ??= new(_timeProvider, _securityIdentifier);
+        private AccumulatedDepreciationValueBalanceSheet _accumulatedDepreciationValueBalanceSheet;
+
+        /// <summary>
+        /// Carrying value of the portion of all long-term debt that is scheduled to be repaid within one year or a normal operating cycle (whichever is longer) and all capital lease obligations.
+        /// </summary>
+        /// <remarks>
+        /// Morningstar DataId: EQHFD
+        /// </remarks>
+        [JsonProperty("EQHFD")]
+        public CurrentPortionOfLongTermDebtAndCapitalLeaseBalanceSheet CurrentPortionOfLongTermDebtAndCapitalLease => _currentPortionOfLongTermDebtAndCapitalLeaseBalanceSheet ??= new(_timeProvider, _securityIdentifier);
+        private CurrentPortionOfLongTermDebtAndCapitalLeaseBalanceSheet _currentPortionOfLongTermDebtAndCapitalLeaseBalanceSheet;
+
+        /// <summary>
+        /// Total gross book value of the company's goodwill and other intangible assets.
+        /// </summary>
+        /// <remarks>
+        /// Morningstar DataId: EQG6I
+        /// </remarks>
+        [JsonProperty("EQG6I")]
+        public GrossGoodwillAndOtherIntangibleAssetsBalanceSheet GrossGoodwillAndOtherIntangibleAssets => _grossGoodwillAndOtherIntangibleAssetsBalanceSheet ??= new(_timeProvider, _securityIdentifier);
+        private GrossGoodwillAndOtherIntangibleAssetsBalanceSheet _grossGoodwillAndOtherIntangibleAssetsBalanceSheet;
+
+        /// <summary>
+        /// Amount due within one year or a normal operating cycle (whichever is longer); and not categorized in the above. Includes: rent receivable
+        /// </summary>
+        /// <remarks>
+        /// Morningstar DataId: EQ6E9
+        /// </remarks>
+        [JsonProperty("EQ6E9")]
+        public OtherReceivablesCurrentBalanceSheet OtherReceivablesCurrent => _otherReceivablesCurrentBalanceSheet ??= new(_timeProvider, _securityIdentifier);
+        private OtherReceivablesCurrentBalanceSheet _otherReceivablesCurrentBalanceSheet;
+
+        /// <summary>
+        /// Cost of tangible assets held by the company under a lease arrangement that cannot be delineated under its respective category in the above. Includes: Net book value if accumulated depreciation is not reported
+        /// </summary>
+        /// <remarks>
+        /// Morningstar DataId: EQ1XV
+        /// </remarks>
+        [JsonProperty("EQ1XV")]
+        public LeasedPropertyPlantAndEquipmentBalanceSheet LeasedPropertyPlantAndEquipment => _leasedPropertyPlantAndEquipmentBalanceSheet ??= new(_timeProvider, _securityIdentifier);
+        private LeasedPropertyPlantAndEquipmentBalanceSheet _leasedPropertyPlantAndEquipmentBalanceSheet;
+
+        /// <summary>
+        /// Carrying value of the portion of all long-term debt that is scheduled to be repaid within one year or a normal operating cycle (whichever is longer).
+        /// </summary>
+        /// <remarks>
+        /// Morningstar DataId: EQMXH
+        /// </remarks>
+        [JsonProperty("EQMXH")]
+        public CurrentPortionOfLongTermDebtBalanceSheet CurrentPortionOfLongTermDebt => _currentPortionOfLongTermDebtBalanceSheet ??= new(_timeProvider, _securityIdentifier);
+        private CurrentPortionOfLongTermDebtBalanceSheet _currentPortionOfLongTermDebtBalanceSheet;
+
+        /// <summary>
+        /// Other intangibles not categorized in the above. Includes: Net book value if accumulated amortization is not reported; Club membership
+        /// </summary>
+        /// <remarks>
+        /// Morningstar DataId: EQ01L
+        /// </remarks>
+        [JsonProperty("EQ01L")]
+        public OtherIntangibleAssetsValueBalanceSheet OtherIntangibleAssetsValue => _otherIntangibleAssetsValueBalanceSheet ??= new(_timeProvider, _securityIdentifier);
+        private OtherIntangibleAssetsValueBalanceSheet _otherIntangibleAssetsValueBalanceSheet;
+
+        /// <summary>
+        /// Cost of the furniture; fixtures and office equipment owned by the company for its business operations. Includes: Computer hardware and software
+        /// </summary>
+        /// <remarks>
+        /// Morningstar DataId: EQ8LK
+        /// </remarks>
+        [JsonProperty("EQ8LK")]
+        public FurnitureFixturesAndOfficeEquipmentBalanceSheet FurnitureFixturesAndOfficeEquipment => _furnitureFixturesAndOfficeEquipmentBalanceSheet ??= new(_timeProvider, _securityIdentifier);
+        private FurnitureFixturesAndOfficeEquipmentBalanceSheet _furnitureFixturesAndOfficeEquipmentBalanceSheet;
+
+        /// <summary>
         /// Creates a new instance for the given time and security
         /// </summary>
         public BalanceSheet(ITimeProvider timeProvider, SecurityIdentifier securityIdentifier)

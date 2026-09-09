@@ -1,4 +1,4 @@
-/*
+﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2023 QuantConnect Corporation.
  *
@@ -259,9 +259,9 @@ namespace QuantConnect.Data.Fundamental
         /// Whether the security is in its initial public offering period
         /// </summary>
         /// <remarks>
-        /// Morningstar DataId: 45008
+        /// Morningstar DataId: EQVLW
         /// </remarks>
-        [JsonProperty("45008")]
+        [JsonProperty("EQVLW")]
         public bool IsIPO => FundamentalService.Get<bool>(_timeProvider.GetUtcNow(), _securityIdentifier, FundamentalProperty.SecurityReference_IsIPO);
 
         /// <summary>
