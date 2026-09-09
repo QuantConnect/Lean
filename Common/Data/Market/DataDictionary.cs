@@ -147,11 +147,6 @@ namespace QuantConnect.Data.Market
         }
 
         /// <summary>
-        /// The values in dictionary order, for readers that do not need them sorted by symbol
-        /// </summary>
-        internal ICollection<T> UnsortedValues => Dictionary.Values;
-
-        /// <summary>
         /// Gets a collection containing the keys in the dictionary
         /// </summary>
         protected override IEnumerable<Symbol> GetKeys => Keys;

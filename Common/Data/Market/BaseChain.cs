@@ -34,8 +34,6 @@ namespace QuantConnect.Data.Market
     {
         private Dictionary<Type, Dictionary<Symbol, List<BaseData>>> _auxiliaryData;
         private readonly Lazy<PyObject> _dataframe;
-        private TContractsCollection _contracts;
-        private Func<IEnumerable<T>> _pendingContracts;
         private readonly bool _flatten;
         private DateTime? _exchangeTime;
 
@@ -104,30 +102,8 @@ namespace QuantConnect.Data.Market
         /// </summary>
         public TContractsCollection Contracts
         {
-            get
-            {
-                if (_pendingContracts != null)
-                {
-                    // a chain built by a filter selects its contracts on first read
-                    var pending = _pendingContracts;
-                    _pendingContracts = null;
-                    foreach (var contract in pending())
-                    {
-                        _contracts[contract.Symbol] = contract;
-                    }
-                }
-                return _contracts;
-            }
-            private set
-            {
-                _contracts = value;
-            }
+            get; private set;
         }
-
-        /// <summary>
-        /// Whether the contracts have been selected, false while a chain built by a filter has not been read
-        /// </summary>
-        protected internal bool IsMaterialized => _pendingContracts == null;
 
         /// <summary>
         /// Gets the set of symbols that passed the <see cref="Option.ContractFilter"/>
@@ -199,27 +175,9 @@ namespace QuantConnect.Data.Market
         }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="BaseChain{T, TContractsCollection}"/> class as a copy of the specified chain,
-        /// sharing its contracts
+        /// Initializes a new instance of the <see cref="BaseChain{T, TContractsCollection}"/> class as a copy of the specified chain
         /// </summary>
         protected BaseChain(BaseChain<T, TContractsCollection> other)
-            : this(other, other.Contracts)
-        {
-        }
-
-        /// <summary>
-        /// Initializes a new instance of the <see cref="BaseChain{T, TContractsCollection}"/> class as a copy of the specified chain
-        /// whose contracts are selected on first read. The underlying, ticks, trade bars, quote bars and auxiliary data are shared with the source chain
-        /// </summary>
-        /// <param name="other">The chain to copy</param>
-        /// <param name="contracts">Selects the contracts to keep, called once when the chain is first read</param>
-        protected BaseChain(BaseChain<T, TContractsCollection> other, Func<IEnumerable<T>> contracts)
-            : this(other, new TContractsCollection { Time = other._contracts.Time })
-        {
-            _pendingContracts = contracts;
-        }
-
-        private BaseChain(BaseChain<T, TContractsCollection> other, TContractsCollection contracts)
             : this(other.DataType, other._flatten)
         {
             Symbol = other.Symbol;
@@ -230,9 +188,26 @@ namespace QuantConnect.Data.Market
             Ticks = other.Ticks;
             QuoteBars = other.QuoteBars;
             TradeBars = other.TradeBars;
-            _contracts = contracts;
+            Contracts = other.Contracts;
             FilteredContracts = other.FilteredContracts;
             _auxiliaryData = other._auxiliaryData;
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="BaseChain{T, TContractsCollection}"/> class as a copy of the specified chain
+        /// containing only the given subset of its contracts. The underlying, ticks, trade bars, quote bars and auxiliary data are shared with the source chain
+        /// </summary>
+        /// <param name="other">The chain to copy</param>
+        /// <param name="contracts">The contracts to keep</param>
+        protected BaseChain(BaseChain<T, TContractsCollection> other, IEnumerable<T> contracts)
+            : this(other)
+        {
+            Contracts = new();
+            Contracts.Time = other.Contracts.Time;
+            foreach (var contract in contracts)
+            {
+                Contracts[contract.Symbol] = contract;
+            }
         }
 
         /// <summary>

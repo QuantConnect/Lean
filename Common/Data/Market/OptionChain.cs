@@ -29,9 +29,6 @@ namespace QuantConnect.Data.Market
     /// </summary>
     public partial class OptionChain : BaseChain<OptionContract, OptionContracts>, IOptionContractFilters<OptionChain>
     {
-        // The filter universe selecting this chain's contracts, run on first read; null for chains not built by a filter
-        private readonly Lazy<OptionChainFilterUniverse> _pendingUniverse;
-
         /// <summary>
         /// Initializes a new instance of the <see cref="OptionChain"/> class
         /// </summary>
@@ -79,12 +76,11 @@ namespace QuantConnect.Data.Market
 
         /// <summary>
         /// Initializes a new instance of the <see cref="OptionChain"/> class as a copy of the specified chain
-        /// containing only the contracts the given filter universe selects, run on first read
+        /// containing only the given subset of its contracts
         /// </summary>
-        private OptionChain(OptionChain other, Lazy<OptionChainFilterUniverse> universe)
-            : base(other, () => universe.Value.Data)
+        private OptionChain(OptionChain other, IEnumerable<OptionContract> contracts)
+            : base(other, contracts)
         {
-            _pendingUniverse = universe;
         }
 
         /// <summary>
