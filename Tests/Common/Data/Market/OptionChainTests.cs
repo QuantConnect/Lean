@@ -151,21 +151,22 @@ namespace QuantConnect.Tests.Common.Data.Market
             var chain = CreateChain();
             var puts = chain.PutsOnly();
             var near = puts.Expiration(0, 30);
-            var far = puts.Expiration(31, 60);
+            var far = puts.Expiration(31, 120);
             Assert.IsTrue(chain.IsMaterialized);
             Assert.IsFalse(puts.IsMaterialized);
             Assert.IsFalse(near.IsMaterialized);
             Assert.IsFalse(far.IsMaterialized);
 
             // reading a chain runs its filters, without reading the chains it was built from
-            var expectedNear = CreateUniverse().PutsOnly().Expiration(0, 30).Select(x => x.Symbol.Value).ToList();
+            var expectedNear = CreateUniverse().PutsOnly().Expiration(0, 30).ToList().Select(x => x.Symbol.Value).ToList();
             CollectionAssert.AreEquivalent(expectedNear, near.Select(x => x.Symbol.Value));
             Assert.IsTrue(near.IsMaterialized);
             Assert.IsFalse(puts.IsMaterialized);
             Assert.IsFalse(far.IsMaterialized);
 
-            var expectedFar = CreateUniverse().PutsOnly().Expiration(31, 60).Select(x => x.Symbol.Value).ToList();
+            var expectedFar = CreateUniverse().PutsOnly().Expiration(31, 120).ToList().Select(x => x.Symbol.Value).ToList();
             CollectionAssert.AreEquivalent(expectedFar, far.Select(x => x.Symbol.Value));
+            Assert.AreEqual(CreateUniverse().PutsOnly().Count(), puts.Count);
             Assert.AreEqual(expectedNear.Count + expectedFar.Count, puts.Count);
             Assert.IsTrue(puts.IsMaterialized);
         }
@@ -173,7 +174,7 @@ namespace QuantConnect.Tests.Common.Data.Market
         [Test]
         public void UnreadChainIsReadThroughEveryMember()
         {
-            var expected = CreateUniverse().CallsOnly().Select(x => x.Symbol).ToList();
+            var expected = CreateUniverse().CallsOnly().ToList().Select(x => x.Symbol).ToList();
             var chains = new[] { CreateChain(), CreateChain(), CreateChain(), CreateChain(), CreateChain() };
 
             Assert.AreEqual(expected.Count, chains[0].CallsOnly().Count);
