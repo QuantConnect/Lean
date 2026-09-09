@@ -37,59 +37,64 @@ namespace QuantConnect.Data.Fundamental
         /// Gets/sets the OneMonth period value for the field
         /// </summary>
         [JsonProperty("1M")]
-        [Obsolete("TotalTaxPayable was retired by Morningstar in 2026 for all periods; no replacement is available.")]
+        [Obsolete("TotalTaxPayable.OneMonth was retired by Morningstar in 2026; use TotalTaxPayable.ThreeMonths (also available: SixMonths, TwelveMonths).")]
         [JsonIgnore]
-        public double OneMonth => throw new NotSupportedException("TotalTaxPayable was retired by Morningstar in 2026 for all periods; no replacement is available.");
+        public double OneMonth => throw new NotSupportedException("TotalTaxPayable.OneMonth was retired by Morningstar in 2026; use TotalTaxPayable.ThreeMonths (also available: SixMonths, TwelveMonths).");
 
         /// <summary>
         /// Gets/sets the TwoMonths period value for the field
         /// </summary>
         [JsonProperty("2M")]
-        [Obsolete("TotalTaxPayable was retired by Morningstar in 2026 for all periods; no replacement is available.")]
+        [Obsolete("TotalTaxPayable.TwoMonths was retired by Morningstar in 2026; use TotalTaxPayable.ThreeMonths (also available: SixMonths, TwelveMonths).")]
         [JsonIgnore]
-        public double TwoMonths => throw new NotSupportedException("TotalTaxPayable was retired by Morningstar in 2026 for all periods; no replacement is available.");
+        public double TwoMonths => throw new NotSupportedException("TotalTaxPayable.TwoMonths was retired by Morningstar in 2026; use TotalTaxPayable.ThreeMonths (also available: SixMonths, TwelveMonths).");
 
         /// <summary>
         /// Gets/sets the ThreeMonths period value for the field
         /// </summary>
         [JsonProperty("3M")]
-        [Obsolete("TotalTaxPayable was retired by Morningstar in 2026 for all periods; no replacement is available.")]
-        [JsonIgnore]
-        public double ThreeMonths => throw new NotSupportedException("TotalTaxPayable was retired by Morningstar in 2026 for all periods; no replacement is available.");
+        public double ThreeMonths => FundamentalService.Get<double>(TimeProvider.GetUtcNow(), SecurityIdentifier, FundamentalProperty.FinancialStatements_BalanceSheet_TotalTaxPayable_ThreeMonths);
 
         /// <summary>
         /// Gets/sets the SixMonths period value for the field
         /// </summary>
         [JsonProperty("6M")]
-        [Obsolete("TotalTaxPayable was retired by Morningstar in 2026 for all periods; no replacement is available.")]
-        [JsonIgnore]
-        public double SixMonths => throw new NotSupportedException("TotalTaxPayable was retired by Morningstar in 2026 for all periods; no replacement is available.");
+        public double SixMonths => FundamentalService.Get<double>(TimeProvider.GetUtcNow(), SecurityIdentifier, FundamentalProperty.FinancialStatements_BalanceSheet_TotalTaxPayable_SixMonths);
 
         /// <summary>
         /// Gets/sets the NineMonths period value for the field
         /// </summary>
         [JsonProperty("9M")]
-        [Obsolete("TotalTaxPayable was retired by Morningstar in 2026 for all periods; no replacement is available.")]
+        [Obsolete("TotalTaxPayable.NineMonths was retired by Morningstar in 2026; use TotalTaxPayable.ThreeMonths (also available: SixMonths, TwelveMonths).")]
         [JsonIgnore]
-        public double NineMonths => throw new NotSupportedException("TotalTaxPayable was retired by Morningstar in 2026 for all periods; no replacement is available.");
+        public double NineMonths => throw new NotSupportedException("TotalTaxPayable.NineMonths was retired by Morningstar in 2026; use TotalTaxPayable.ThreeMonths (also available: SixMonths, TwelveMonths).");
 
         /// <summary>
         /// Gets/sets the TwelveMonths period value for the field
         /// </summary>
         [JsonProperty("12M")]
-        [Obsolete("TotalTaxPayable was retired by Morningstar in 2026 for all periods; no replacement is available.")]
-        [JsonIgnore]
-        public double TwelveMonths => throw new NotSupportedException("TotalTaxPayable was retired by Morningstar in 2026 for all periods; no replacement is available.");
+        public double TwelveMonths => FundamentalService.Get<double>(TimeProvider.GetUtcNow(), SecurityIdentifier, FundamentalProperty.FinancialStatements_BalanceSheet_TotalTaxPayable_TwelveMonths);
 
         /// <summary>
         /// Returns true if the field contains a value for the default period
         /// </summary>
-        public override bool HasValue => false;
+        public override bool HasValue => !BaseFundamentalDataProvider.IsNone(typeof(double), FundamentalService.Get<double>(TimeProvider.GetUtcNow(), SecurityIdentifier, FundamentalProperty.FinancialStatements_BalanceSheet_TotalTaxPayable_TwelveMonths));
 
         /// <summary>
         /// Returns the default value for the field
         /// </summary>
-        public override double Value => throw new NotSupportedException("TotalTaxPayable was retired by Morningstar in 2026 for all periods; no replacement is available.");
+        public override double Value
+        {
+            get
+            {
+                var defaultValue = FundamentalService.Get<double>(TimeProvider.GetUtcNow(), SecurityIdentifier, FundamentalProperty.FinancialStatements_BalanceSheet_TotalTaxPayable_TwelveMonths);
+                if (!BaseFundamentalDataProvider.IsNone(typeof(double), defaultValue))
+                {
+                    return defaultValue;
+                }
+                return base.Value;
+            }
+        }
 
         /// <summary>
         /// Gets a dictionary of period names and values for the field
@@ -98,7 +103,7 @@ namespace QuantConnect.Data.Fundamental
         public override IReadOnlyDictionary<string, double> GetPeriodValues()
         {
             var result = new Dictionary<string, double>();
-            foreach (var kvp in System.Array.Empty<Tuple<string, double>>())
+            foreach (var kvp in new[] { new Tuple<string, double>("3M",ThreeMonths), new Tuple<string, double>("6M",SixMonths), new Tuple<string, double>("12M",TwelveMonths) })
             {
                 if(!BaseFundamentalDataProvider.IsNone(typeof(double), kvp.Item2))
                 {
