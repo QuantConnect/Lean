@@ -2236,16 +2236,6 @@ namespace QuantConnect.Data.Fundamental
         private IncomeLossBeforeNonCashAdjustmentCashFlowStatement _incomeLossBeforeNonCashAdjustmentCashFlowStatement;
 
         /// <summary>
-        /// Other non-cash inflow or outflow recorded during the accounting period and not categorized above.
-        /// </summary>
-        /// <remarks>
-        /// Morningstar DataId: EQ1FM
-        /// </remarks>
-        [JsonProperty("EQ1FM")]
-        public OtherNonCashItemsValueCashFlowStatement OtherNonCashItemsValue => _otherNonCashItemsValueCashFlowStatement ??= new(_timeProvider, _securityIdentifier);
-        private OtherNonCashItemsValueCashFlowStatement _otherNonCashItemsValueCashFlowStatement;
-
-        /// <summary>
         /// Sum of all non-cash income or losses recognized during the accounting period from activities that are not regular or normal in nature.
         /// </summary>
         /// <remarks>
