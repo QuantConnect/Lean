@@ -146,6 +146,68 @@ namespace QuantConnect.Tests.Common.Data.Market
         }
 
         [Test]
+        public void FiltersRunOnFirstRead()
+        {
+            var chain = CreateChain();
+            var puts = chain.PutsOnly();
+            var near = puts.Expiration(0, 30);
+            var far = puts.Expiration(31, 60);
+            Assert.IsTrue(chain.IsMaterialized);
+            Assert.IsFalse(puts.IsMaterialized);
+            Assert.IsFalse(near.IsMaterialized);
+            Assert.IsFalse(far.IsMaterialized);
+
+            // reading a chain runs its filters, without reading the chains it was built from
+            var expectedNear = CreateUniverse().PutsOnly().Expiration(0, 30).Select(x => x.Symbol.Value).ToList();
+            CollectionAssert.AreEquivalent(expectedNear, near.Select(x => x.Symbol.Value));
+            Assert.IsTrue(near.IsMaterialized);
+            Assert.IsFalse(puts.IsMaterialized);
+            Assert.IsFalse(far.IsMaterialized);
+
+            var expectedFar = CreateUniverse().PutsOnly().Expiration(31, 60).Select(x => x.Symbol.Value).ToList();
+            CollectionAssert.AreEquivalent(expectedFar, far.Select(x => x.Symbol.Value));
+            Assert.AreEqual(expectedNear.Count + expectedFar.Count, puts.Count);
+            Assert.IsTrue(puts.IsMaterialized);
+        }
+
+        [Test]
+        public void UnreadChainIsReadThroughEveryMember()
+        {
+            var expected = CreateUniverse().CallsOnly().Select(x => x.Symbol).ToList();
+            var chains = new[] { CreateChain(), CreateChain(), CreateChain(), CreateChain(), CreateChain() };
+
+            Assert.AreEqual(expected.Count, chains[0].CallsOnly().Count);
+            Assert.IsTrue(chains[1].CallsOnly().ContainsKey(expected[0]));
+            Assert.AreEqual(expected[0], chains[2].CallsOnly().Contracts[expected[0]].Symbol);
+            Assert.AreEqual(expected.Count, ((OptionChain)chains[3].CallsOnly().Clone()).Count);
+            using (Py.GIL())
+            {
+                Assert.AreEqual(expected.Count, chains[4].CallsOnly().DataFrame.GetAttr("shape")[0].As<int>());
+            }
+        }
+
+        [Test]
+        public void FiltersOnAFilteredChainSeeItsCurrentContracts()
+        {
+            var chain = CreateChain();
+            var puts = chain.PutsOnly();
+            var call = chain.CallsOnly().First();
+            var put = puts.First();
+
+            // added, removed and replaced contracts are all picked up by the next filter
+            puts.Contracts[call.Symbol] = call;
+            Assert.AreEqual(1, puts.CallsOnly().Count);
+            Assert.AreEqual(puts.Count, puts.Expiration(0, 1000).Count);
+
+            puts.Contracts.Remove(put.Symbol);
+            Assert.IsFalse(puts.PutsOnly().ContainsKey(put.Symbol));
+
+            var replacement = OptionContract.Create(_data.Single(x => x.Symbol == put.Symbol), _symbolProperties);
+            puts.Contracts[put.Symbol] = replacement;
+            Assert.AreSame(replacement, puts.PutsOnly().Single(x => x.Symbol == put.Symbol));
+        }
+
+        [Test]
         public void FilteredChainSharesTheAuxiliaryData()
         {
             var chain = CreateChain();
@@ -247,6 +309,9 @@ def filter_chain(chain):
 
 def where_chain(chain):
     return chain.where(lambda contract: contract.right == OptionRight.PUT and contract.strike > 100)
+
+def where_then_filter(chain):
+    return where_chain(chain).expiration(0, 30)
 ");
                 using var pyChain = chain.ToPython();
 
@@ -255,6 +320,9 @@ def where_chain(chain):
 
                 using var where = module.GetAttr("where_chain").Invoke(pyChain);
                 CollectionAssert.AreEqual(expectedWhere, where.As<OptionChain>().Select(x => x.Symbol).ToList());
+
+                using var whereThenFilter = module.GetAttr("where_then_filter").Invoke(pyChain);
+                CollectionAssert.AreEqual(expectedWhere.Where(x => x.ID.Date <= Date.AddDays(30)), whereThenFilter.As<OptionChain>().Select(x => x.Symbol).ToList());
             }
         }
 
@@ -346,6 +414,40 @@ def naked_put(chain):
                 using var nakedPut = module.GetAttr("naked_put").Invoke(pyChain);
                 CollectionAssert.AreEqual(expectedNakedPut, nakedPut.As<OptionChain>().Select(x => x.Symbol.Value).ToList());
             }
+        }
+
+        [Test, Explicit("Benchmark: reports the cost of chained filters on an index-sized chain")]
+        public void ChainedFiltersBenchmark()
+        {
+            var expiries = Enumerable.Range(1, 30).Select(i => Date.AddDays(7 * i)).ToArray();
+            var strikes = Enumerable.Range(0, 150).Select(i => 60m + i).ToArray();
+            var (data, _) = CreateUniverseData(Date, UnderlyingPrice, expiries, strikes);
+            var chain = new OptionChain(Canonical, Date, data, _symbolProperties);
+            const int iterations = 1000;
+
+            void Report(string name, Func<OptionChain, OptionChain> filter)
+            {
+                var result = filter(chain);
+                var best = double.MaxValue;
+                for (var round = 0; round < 3; round++)
+                {
+                    GC.Collect();
+                    var stopwatch = System.Diagnostics.Stopwatch.StartNew();
+                    for (var i = 0; i < iterations; i++)
+                    {
+                        result = filter(chain);
+                        _ = result.Count;
+                    }
+                    best = Math.Min(best, stopwatch.Elapsed.TotalMilliseconds / iterations);
+                }
+                TestContext.Progress.WriteLine($"{name}: {best:F3} ms per call, {result.Count} contracts");
+            }
+
+            TestContext.Progress.WriteLine($"{chain.Count} contracts");
+            Report("PutsOnly", c => c.PutsOnly());
+            Report("PutsOnly.Expiration", c => c.PutsOnly().Expiration(20, 40));
+            Report("PutsOnly.Expiration.Strikes", c => c.PutsOnly().Expiration(20, 40).Strikes(-3, 0));
+            Report("Expiration.Strikes.Delta.OI", c => c.Expiration(20, 60).Strikes(-10, 10).Delta(-0.6m, 0.6m).OpenInterest(0, 1000000));
         }
 
         private class TestAuxData : BaseData
