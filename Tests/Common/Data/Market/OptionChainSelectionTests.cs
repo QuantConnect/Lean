@@ -80,36 +80,12 @@ namespace QuantConnect.Tests.Common.Data.Market
         }
 
         [Test]
-        public void CallsAndPutsAreFilteredAndSorted()
-        {
-            var chain = CreateDefaultChain();
-
-            var calls = chain.Calls;
-            Assert.AreEqual(6, calls.Count);
-            Assert.IsTrue(calls.All(x => x.Right == OptionRight.Call));
-            CollectionAssert.AreEqual(
-                calls.OrderBy(x => x.Expiry).ThenBy(x => x.Strike).Select(x => x.Symbol),
-                calls.Select(x => x.Symbol));
-
-            var puts = chain.Puts;
-            Assert.AreEqual(10, puts.Count);
-            Assert.IsTrue(puts.All(x => x.Right == OptionRight.Put));
-            CollectionAssert.AreEqual(
-                puts.OrderBy(x => x.Expiry).ThenBy(x => x.Strike).Select(x => x.Symbol),
-                puts.Select(x => x.Symbol));
-        }
-
-        [Test]
         public void ViewsAreCachedUntilContractsAreAdded()
         {
             var chain = CreateDefaultChain();
-            var calls = chain.Calls;
-            var puts = chain.Puts;
             var strikes = chain.StrikePrices;
             var expiries = chain.Expiries;
 
-            Assert.AreSame(calls, chain.Calls);
-            Assert.AreSame(puts, chain.Puts);
             Assert.AreSame(strikes, chain.StrikePrices);
             Assert.AreSame(expiries, chain.Expiries);
 
@@ -117,10 +93,8 @@ namespace QuantConnect.Tests.Common.Data.Market
             var added = CreateChain(new[] { (new DateTime(2016, 5, 20), 120m, OptionRight.Call, 0.05m) }).Single();
             chain.Contracts[added.Symbol] = added;
 
-            Assert.AreNotSame(calls, chain.Calls);
-            Assert.AreEqual(calls.Count + 1, chain.Calls.Count);
-            Assert.AreSame(added, chain.Calls.Last());
-            Assert.AreEqual(puts.Count, chain.Puts.Count);
+            Assert.AreNotSame(strikes, chain.StrikePrices);
+            Assert.AreEqual(strikes.Count + 1, chain.StrikePrices.Count);
             Assert.AreEqual(120m, chain.StrikePrices.Last());
             Assert.AreEqual(new DateTime(2016, 5, 20), chain.Expiries.Last());
         }
@@ -239,11 +213,11 @@ namespace QuantConnect.Tests.Common.Data.Market
             Assert.IsTrue(filtered.All(x => x.Expiry == Expiry2));
             // The filtered chain keeps the underlying data and composes with the other helpers
             Assert.AreEqual(100m, filtered.Underlying.Price);
-            Assert.AreEqual(3, filtered.Calls.Count);
-            Assert.AreEqual(3, filtered.Puts.Count);
             Assert.AreEqual(3, filtered.CallsOnly().Count);
+            Assert.AreEqual(3, filtered.PutsOnly().Count);
             CollectionAssert.AreEqual(new[] { 90m, 100m, 110m }, filtered.StrikePrices);
-            Assert.AreEqual(100m, filtered.AtTheMoney(OptionRight.Call).Strike);
+            Assert.AreEqual(100m, filtered.Select(OptionRight.Call).Strike);
+            Assert.AreEqual(2, filtered.AtTheMoney().Count);
         }
 
         [Test]
@@ -268,7 +242,7 @@ namespace QuantConnect.Tests.Common.Data.Market
         [TestCase(103, 105)]
         // Equidistant between 95 and 100: lower strike wins
         [TestCase(97.5, 95)]
-        public void AtTheMoneySelectsClosestStrike(double underlyingPrice, double expectedStrike)
+        public void SelectAndAtTheMoneyPickTheClosestStrike(double underlyingPrice, double expectedStrike)
         {
             var chain = CreateChain(new[]
             {
@@ -277,17 +251,19 @@ namespace QuantConnect.Tests.Common.Data.Market
                 (Expiry1, 105m, OptionRight.Call, 0.2m)
             }, (decimal)underlyingPrice);
 
-            var contract = chain.AtTheMoney(OptionRight.Call);
+            var contract = chain.Select(OptionRight.Call);
             Assert.IsNotNull(contract);
             Assert.AreEqual((decimal)expectedStrike, contract.Strike);
             Assert.AreEqual(OptionRight.Call, contract.Right);
+            // the filter keeps every contract at that strike
+            Assert.AreSame(contract, chain.AtTheMoney().Single());
         }
 
         [Test]
-        public void AtTheMoneyWithoutRightPrefersTheNearestExpiryThenCalls()
+        public void SelectWithoutRightPrefersTheNearestExpiryThenCalls()
         {
             var chain = CreateDefaultChain();
-            var contract = chain.AtTheMoney();
+            var contract = chain.Select();
 
             Assert.AreEqual(100m, contract.Strike);
             Assert.AreEqual(Expiry1, contract.Expiry);
@@ -295,25 +271,21 @@ namespace QuantConnect.Tests.Common.Data.Market
         }
 
         [Test]
-        public void AtTheMoneyIsNullSafe()
+        public void AtTheMoneyIsEmptyWithoutContractsOrUnderlyingPrice()
         {
-            Assert.IsNull(CreateEmptyChain().AtTheMoney(OptionRight.Call));
-            // No contracts of the requested right
-            var callsOnly = CreateChain(new[] { (Expiry1, 100m, OptionRight.Call, 0.5m) });
-            Assert.IsNull(callsOnly.AtTheMoney(OptionRight.Put));
-            // Unknown underlying price
+            Assert.AreEqual(0, CreateEmptyChain().AtTheMoney().Count);
             var noUnderlying = CreateChain(new[] { (Expiry1, 100m, OptionRight.Call, 0.5m) }, underlyingPrice: null);
-            Assert.IsNull(noUnderlying.AtTheMoney(OptionRight.Call));
+            Assert.AreEqual(0, noUnderlying.AtTheMoney().Count);
         }
 
         [Test]
-        public void AtTheMoneyUsesTheContractsUnderlyingPrice()
+        public void SelectUsesTheContractsUnderlyingPrice()
         {
             // Chains built from universe data carry the underlying price on each contract
             var chain = CreateChain(new[] { (Expiry1, 100m, OptionRight.Call, 0.5m) }, underlyingPrice: 100.5m);
 
             Assert.AreEqual(100.5m, chain.Underlying.Price);
-            Assert.AreEqual(100m, chain.AtTheMoney(OptionRight.Call).Strike);
+            Assert.AreEqual(100m, chain.Select(OptionRight.Call).Strike);
         }
 
         [Test]
@@ -492,8 +464,8 @@ def pick(chain):
 
 def helpers(chain):
     at_expiry = chain.at(chain.closest_expiry(target_dte=8))
-    return (at_expiry.strike_prices.first_above(100), at_expiry.expiries[0], len(at_expiry.puts),
-        at_expiry.at_the_money(OptionRight.CALL).days_to_expiry, chain.select(min_dte=40) is None)
+    return (at_expiry.strike_prices.first_above(100), at_expiry.expiries[0], at_expiry.puts_only().count,
+        at_expiry.at_the_money().select(OptionRight.CALL).days_to_expiry, chain.select(min_dte=40) is None)
 ");
                 using var pyChain = chain.ToPython();
 

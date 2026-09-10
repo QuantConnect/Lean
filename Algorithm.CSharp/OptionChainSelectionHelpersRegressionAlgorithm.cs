@@ -26,7 +26,7 @@ namespace QuantConnect.Algorithm.CSharp
     /// Regression algorithm demonstrating the option chain selection helpers:
     /// <see cref="Data.Market.OptionChain.Select"/> (and its synonym <see cref="Data.Market.OptionChain.Pick"/>),
     /// <see cref="Data.Market.OptionChain.ClosestExpiry"/>, <see cref="Data.Market.OptionChain.At"/>,
-    /// <see cref="Data.Market.OptionChain.AtTheMoney"/>, <see cref="Data.Market.OptionChain.StrikePrices"/> and
+    /// <see cref="Data.Market.OptionChain.Select"/>, <see cref="Data.Market.OptionChain.StrikePrices"/> and
     /// <see cref="Data.Market.OptionChain.Expiries"/>, which replace the usual hand-rolled contract selection with a single call
     /// </summary>
     public class OptionChainSelectionHelpersRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
@@ -88,20 +88,20 @@ namespace QuantConnect.Algorithm.CSharp
                 throw new RegressionTestException($"Unexpected expiries: {string.Join(", ", chain.Expiries)}");
             }
 
-            // Single-expiry view: composes with Calls/Puts, StrikePrices, AtTheMoney and the universe filters
+            // Single-expiry view: composes with StrikePrices, Select and the universe filters
             var atExpiry = chain.At(contract.Expiry);
             if (atExpiry.Count == 0 || atExpiry.Any(x => x.Expiry != contract.Expiry))
             {
                 throw new RegressionTestException("At() returned contracts of other expiries");
             }
-            if (atExpiry.Calls.Count == 0 || atExpiry.Puts.Count == 0 || atExpiry.Calls.Count != atExpiry.CallsOnly().Count)
+            if (atExpiry.CallsOnly().Count == 0 || atExpiry.PutsOnly().Count == 0)
             {
-                throw new RegressionTestException("At().Calls/.Puts should not be empty and agree with CallsOnly()");
+                throw new RegressionTestException("At().CallsOnly()/.PutsOnly() should not be empty");
             }
-            var atmPut = atExpiry.AtTheMoney(OptionRight.Put);
+            var atmPut = atExpiry.Select(OptionRight.Put);
             if (atmPut == null || atmPut.Strike != 747.5m || atmPut.Right != OptionRight.Put)
             {
-                throw new RegressionTestException($"AtTheMoney(Put) expected the 747.50 put but got {atmPut?.Symbol.Value}");
+                throw new RegressionTestException($"Select(Put) expected the 747.50 put but got {atmPut?.Symbol.Value}");
             }
 
             // Strike prices helpers: strictly above/below and closest to the underlying price

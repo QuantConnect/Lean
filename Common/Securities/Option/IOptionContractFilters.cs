@@ -41,6 +41,51 @@ namespace QuantConnect.Securities
         TSelf Expiration(int minExpiryDays, int maxExpiryDays);
 
         /// <summary>
+        /// Selects the contracts expiring on the given date, ignoring the time of day
+        /// </summary>
+        TSelf Expiration(DateTime expiry);
+
+        /// <summary>
+        /// Selects the contracts with the given strike price
+        /// </summary>
+        TSelf Strikes(decimal strike);
+
+        /// <summary>
+        /// Selects the contracts expiring today
+        /// </summary>
+        TSelf ZeroDte();
+
+        /// <summary>
+        /// Selects the out of the money contracts: calls above and puts below the underlying price
+        /// </summary>
+        TSelf OutOfTheMoney();
+
+        /// <summary>
+        /// Selects the out of the money contracts. Alias for <see cref="OutOfTheMoney"/>
+        /// </summary>
+        TSelf OTM();
+
+        /// <summary>
+        /// Selects the in the money contracts: calls below and puts above the underlying price
+        /// </summary>
+        TSelf InTheMoney();
+
+        /// <summary>
+        /// Selects the in the money contracts. Alias for <see cref="InTheMoney"/>
+        /// </summary>
+        TSelf ITM();
+
+        /// <summary>
+        /// Selects the contracts at the strike closest to the underlying price, the lower strike on ties
+        /// </summary>
+        TSelf AtTheMoney();
+
+        /// <summary>
+        /// Selects the contracts at the strike closest to the underlying price. Alias for <see cref="AtTheMoney"/>
+        /// </summary>
+        TSelf ATM();
+
+        /// <summary>
         /// Selects the call contracts
         /// </summary>
         TSelf CallsOnly();

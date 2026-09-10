@@ -25,6 +25,7 @@ using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Securities.FutureOption;
 using QuantConnect.Securities.IndexOption;
 using QuantConnect.Securities.Option;
+using QuantConnect.Util;
 
 namespace QuantConnect.Securities
 {
@@ -277,6 +278,95 @@ namespace QuantConnect.Securities
         public TUniverse PutsOnly()
         {
             return Contracts(contracts => contracts.Where(x => x.Symbol.ID.OptionRight == OptionRight.Put));
+        }
+
+        /// <summary>
+        /// Applies filter selecting the contracts with the given strike price
+        /// </summary>
+        /// <param name="strike">The strike price</param>
+        /// <returns>Universe with filter applied</returns>
+        public TUniverse Strikes(decimal strike)
+        {
+            return Contracts(contracts => contracts.Where(x => x.Symbol.ID.StrikePrice == strike));
+        }
+
+        /// <summary>
+        /// Applies filter selecting the contracts expiring today
+        /// </summary>
+        /// <returns>Universe with filter applied</returns>
+        public TUniverse ZeroDte()
+        {
+            return Expiration(0, 0);
+        }
+
+        /// <summary>
+        /// Applies filter selecting the out of the money contracts: calls with strikes above the underlying price
+        /// and puts with strikes below it. Selects nothing when the underlying price is unknown
+        /// </summary>
+        /// <returns>Universe with filter applied</returns>
+        public TUniverse OutOfTheMoney()
+        {
+            if (!TryGetUnderlyingPrice(out var price))
+            {
+                return Empty();
+            }
+            return Contracts(contracts => contracts.Where(x => OptionPayoff.IsOutOfTheMoney(price, x.Symbol.ID.StrikePrice, x.Symbol.ID.OptionRight)));
+        }
+
+        /// <summary>
+        /// Applies filter selecting the out of the money contracts. Alias for <see cref="OutOfTheMoney"/>
+        /// </summary>
+        /// <returns>Universe with filter applied</returns>
+        public TUniverse OTM()
+        {
+            return OutOfTheMoney();
+        }
+
+        /// <summary>
+        /// Applies filter selecting the in the money contracts: calls with strikes below the underlying price
+        /// and puts with strikes above it. Selects nothing when the underlying price is unknown
+        /// </summary>
+        /// <returns>Universe with filter applied</returns>
+        public TUniverse InTheMoney()
+        {
+            if (!TryGetUnderlyingPrice(out var price))
+            {
+                return Empty();
+            }
+            return Contracts(contracts => contracts.Where(x => OptionPayoff.IsInTheMoney(price, x.Symbol.ID.StrikePrice, x.Symbol.ID.OptionRight)));
+        }
+
+        /// <summary>
+        /// Applies filter selecting the in the money contracts. Alias for <see cref="InTheMoney"/>
+        /// </summary>
+        /// <returns>Universe with filter applied</returns>
+        public TUniverse ITM()
+        {
+            return InTheMoney();
+        }
+
+        /// <summary>
+        /// Applies filter selecting the contracts at the strike closest to the underlying price, the lower strike on ties.
+        /// Selects nothing when the underlying price is unknown. Unlike <see cref="Strikes(int, int)"/> with (0, 0),
+        /// which selects the first strike at or above the price
+        /// </summary>
+        /// <returns>Universe with filter applied</returns>
+        public TUniverse AtTheMoney()
+        {
+            if (!TryGetUnderlyingPrice(out var price))
+            {
+                return Empty();
+            }
+            return Strikes(GetClosestStrike(AllSymbols, price));
+        }
+
+        /// <summary>
+        /// Applies filter selecting the contracts at the strike closest to the underlying price. Alias for <see cref="AtTheMoney"/>
+        /// </summary>
+        /// <returns>Universe with filter applied</returns>
+        public TUniverse ATM()
+        {
+            return AtTheMoney();
         }
 
         /// <summary>
@@ -1100,6 +1190,16 @@ namespace QuantConnect.Securities
         }
 
         /// <summary>
+        /// Gets the underlying price in strike units, false when the underlying is unknown
+        /// </summary>
+        private bool TryGetUnderlyingPrice(out decimal price)
+        {
+            // some option strikes are a fraction of the underlying, see SymbolProperties.StrikeMultiplier
+            price = UnderlyingInternal == null ? 0 : UnderlyingInternal.Price / _underlyingScaleFactor;
+            return UnderlyingInternal != null;
+        }
+
+        /// <summary>
         /// Helper method that will select no contract
         /// </summary>
         private TUniverse Empty()
@@ -1119,8 +1219,17 @@ namespace QuantConnect.Securities
 
         private decimal GetStrike(IEnumerable<Symbol> symbols, decimal strikeFromAtm)
         {
-            return symbols.OrderBy(x => Math.Abs(Underlying.Price + strikeFromAtm - x.ID.StrikePrice))
-                .Select(x => x.ID.StrikePrice)
+            return GetClosestStrike(symbols, Underlying.Price + strikeFromAtm);
+        }
+
+        /// <summary>
+        /// Gets the strike closest to the target price, the lower one on ties, or decimal.MaxValue when there are no symbols
+        /// </summary>
+        private static decimal GetClosestStrike(IEnumerable<Symbol> symbols, decimal targetPrice)
+        {
+            return symbols.Select(x => x.ID.StrikePrice)
+                .OrderBy(strike => Math.Abs(targetPrice - strike))
+                .ThenBy(strike => strike)
                 .DefaultIfEmpty(decimal.MaxValue)
                 .First();
         }

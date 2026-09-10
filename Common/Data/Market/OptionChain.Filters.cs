@@ -69,6 +69,36 @@ namespace QuantConnect.Data.Market
         }
 
         /// <summary>
+        /// Selects the contracts expiring on the given date. Time of day is ignored.
+        /// Same as <see cref="ContractSecurityFilterUniverse{T, TData}.Expiration(DateTime)"/>
+        /// </summary>
+        /// <param name="expiry">The expiration date</param>
+        /// <returns>A new chain with the filter applied</returns>
+        public OptionChain Expiration(DateTime expiry)
+        {
+            return Filter(universe => universe.Expiration(expiry));
+        }
+
+        /// <summary>
+        /// Selects the contracts with the given strike price. Same as <see cref="BaseOptionFilterUniverse{TUniverse, TData}.Strikes(decimal)"/>
+        /// </summary>
+        /// <param name="strike">The strike price</param>
+        /// <returns>A new chain with the filter applied</returns>
+        public OptionChain Strikes(decimal strike)
+        {
+            return Filter(universe => universe.Strikes(strike));
+        }
+
+        /// <summary>
+        /// Selects the contracts expiring today. Same as <see cref="BaseOptionFilterUniverse{TUniverse, TData}.ZeroDte"/>
+        /// </summary>
+        /// <returns>A new chain with the filter applied</returns>
+        public OptionChain ZeroDte()
+        {
+            return Filter(universe => universe.ZeroDte());
+        }
+
+        /// <summary>
         /// Selects the call contracts. Same as <see cref="BaseOptionFilterUniverse{TUniverse, TData}.CallsOnly"/>
         /// </summary>
         /// <returns>A new chain with the filter applied</returns>
@@ -84,6 +114,63 @@ namespace QuantConnect.Data.Market
         public OptionChain PutsOnly()
         {
             return Filter(universe => universe.PutsOnly());
+        }
+
+        /// <summary>
+        /// Selects the out of the money contracts: calls with strikes above the underlying price and puts with strikes below it.
+        /// Same as <see cref="BaseOptionFilterUniverse{TUniverse, TData}.OutOfTheMoney"/>
+        /// </summary>
+        /// <returns>A new chain with the filter applied, empty when the underlying price is unknown</returns>
+        public OptionChain OutOfTheMoney()
+        {
+            return Filter(universe => universe.OutOfTheMoney());
+        }
+
+        /// <summary>
+        /// Selects the out of the money contracts. Alias for <see cref="OutOfTheMoney"/>
+        /// </summary>
+        /// <returns>A new chain with the filter applied</returns>
+        public OptionChain OTM()
+        {
+            return OutOfTheMoney();
+        }
+
+        /// <summary>
+        /// Selects the in the money contracts: calls with strikes below the underlying price and puts with strikes above it.
+        /// Same as <see cref="BaseOptionFilterUniverse{TUniverse, TData}.InTheMoney"/>
+        /// </summary>
+        /// <returns>A new chain with the filter applied, empty when the underlying price is unknown</returns>
+        public OptionChain InTheMoney()
+        {
+            return Filter(universe => universe.InTheMoney());
+        }
+
+        /// <summary>
+        /// Selects the in the money contracts. Alias for <see cref="InTheMoney"/>
+        /// </summary>
+        /// <returns>A new chain with the filter applied</returns>
+        public OptionChain ITM()
+        {
+            return InTheMoney();
+        }
+
+        /// <summary>
+        /// Selects the contracts at the strike closest to the underlying price, the lower strike on ties.
+        /// Same as <see cref="BaseOptionFilterUniverse{TUniverse, TData}.AtTheMoney"/>
+        /// </summary>
+        /// <returns>A new chain with the filter applied, empty when the underlying price is unknown</returns>
+        public OptionChain AtTheMoney()
+        {
+            return Filter(universe => universe.AtTheMoney());
+        }
+
+        /// <summary>
+        /// Selects the contracts at the strike closest to the underlying price. Alias for <see cref="AtTheMoney"/>
+        /// </summary>
+        /// <returns>A new chain with the filter applied</returns>
+        public OptionChain ATM()
+        {
+            return AtTheMoney();
         }
 
         /// <summary>

@@ -61,6 +61,23 @@ class OptionChainFiltersRegressionAlgorithm(QCAlgorithm):
         if deltas.count == 0 or deltas.count != expected_deltas or any(not 0.5 <= x.greeks.delta <= 0.6 for x in deltas):
             raise AssertionError("Delta filter mismatch")
 
+        # Moneyness filters split the strikes around the underlying price, ATM is the closest strike
+        price = chain.underlying.price
+        otm = chain.otm()
+        itm = chain.itm()
+        if (otm.count == 0 or itm.count == 0 or otm.count + itm.count + chain.strikes(price).count != chain.count
+                or any((x.strike <= price if x.right == OptionRight.CALL else x.strike >= price) for x in otm)
+                or any((x.strike >= price if x.right == OptionRight.CALL else x.strike <= price) for x in itm)):
+            raise AssertionError("Out/in the money filters mismatch")
+        atm = chain.atm()
+        if atm.count == 0 or any(x.strike != 747.5 for x in atm) or atm.count != chain.strikes(747.5).count:
+            raise AssertionError("Expected atm() to select every contract at the 747.50 strike")
+
+        # Exact expiration and strike, and today's expiration
+        if (chain.expiration(datetime(2015, 12, 24)).count != chain.front_month().count
+                or chain.zero_dte().count != chain.expiration(0, 0).count):
+            raise AssertionError("expiration(date) and zero_dte() should match the front month")
+
         # where() takes a predicate, like the universe filter does
         high_open_interest = chain.where(lambda x: x.open_interest > 1000)
         if high_open_interest.count == 0 or high_open_interest.count != sum(1 for x in chain if x.open_interest > 1000):

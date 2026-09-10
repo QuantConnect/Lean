@@ -88,6 +88,29 @@ namespace QuantConnect.Algorithm.CSharp
             {
                 throw new RegressionTestException("Delta filter mismatch");
             }
+
+            // Moneyness filters split the strikes around the underlying price, ATM is the closest strike
+            var price = chain.Underlying.Price;
+            var otm = chain.OutOfTheMoney();
+            var itm = chain.InTheMoney();
+            if (otm.Count == 0 || itm.Count == 0 || otm.Count + itm.Count + chain.Strikes(price).Count != chain.Count
+                || otm.Any(x => x.Right == OptionRight.Call ? x.Strike <= price : x.Strike >= price)
+                || itm.Any(x => x.Right == OptionRight.Call ? x.Strike >= price : x.Strike <= price))
+            {
+                throw new RegressionTestException("Out/in the money filters mismatch");
+            }
+            var atm = chain.AtTheMoney();
+            if (atm.Count == 0 || atm.Any(x => x.Strike != 747.5m) || atm.Count != chain.Strikes(747.5m).Count)
+            {
+                throw new RegressionTestException("Expected AtTheMoney() to select every contract at the 747.50 strike");
+            }
+
+            // Exact expiration and strike, and today's expiration
+            if (chain.Expiration(new DateTime(2015, 12, 24)).Count != chain.FrontMonth().Count
+                || chain.ZeroDte().Count != chain.Expiration(0, 0).Count)
+            {
+                throw new RegressionTestException("Expiration(date) and ZeroDte() should match the front month");
+            }
         }
 
         public override void OnData(Slice slice)

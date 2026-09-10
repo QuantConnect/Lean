@@ -15,7 +15,7 @@ from AlgorithmImports import *
 
 ### <summary>
 ### Regression algorithm demonstrating the option chain selection helpers: select() (and its synonym pick()),
-### closest_expiry(), at(), at_the_money(), strike_prices and expiries, which replace the usual hand-rolled
+### closest_expiry(), at(), strike_prices and expiries, which replace the usual hand-rolled
 ### sorted-comprehension contract selection with a single call.
 ### </summary>
 class OptionChainSelectionHelpersRegressionAlgorithm(QCAlgorithm):
@@ -58,15 +58,15 @@ class OptionChainSelectionHelpersRegressionAlgorithm(QCAlgorithm):
         if chain.expiries[0] != self.time or chain.expiries[-1] != max(chain.expiries):
             raise AssertionError(f"Unexpected expiries: {chain.expiries}")
 
-        # Single-expiry view: composes with calls/puts, strike_prices, at_the_money and the universe filters
+        # Single-expiry view: composes with strike_prices, select and the universe filters
         at_expiry = chain.at(contract.expiry)
         if at_expiry.count == 0 or any(x.expiry != contract.expiry for x in at_expiry):
             raise AssertionError("at() returned contracts of other expiries")
-        if len(at_expiry.calls) == 0 or len(at_expiry.puts) == 0 or len(at_expiry.calls) != at_expiry.calls_only().count:
-            raise AssertionError("at().calls/.puts should not be empty and agree with calls_only()")
-        atm_put = at_expiry.at_the_money(OptionRight.PUT)
+        if at_expiry.calls_only().count == 0 or at_expiry.puts_only().count == 0:
+            raise AssertionError("at().calls_only()/.puts_only() should not be empty")
+        atm_put = at_expiry.select(OptionRight.PUT)
         if atm_put is None or atm_put.strike != 747.5 or atm_put.right != OptionRight.PUT:
-            raise AssertionError(f"at_the_money(PUT) expected the 747.50 put but got {atm_put}")
+            raise AssertionError(f"select(PUT) expected the 747.50 put but got {atm_put}")
 
         # Strike prices helpers: strictly above/below and closest to the underlying price
         strikes = at_expiry.strike_prices

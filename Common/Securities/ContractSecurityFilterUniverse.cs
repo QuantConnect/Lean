@@ -345,6 +345,18 @@ namespace QuantConnect.Securities
         }
 
         /// <summary>
+        /// Applies filter selecting the contracts expiring on the given date. Time of day is ignored
+        /// </summary>
+        /// <param name="expiry">The expiration date</param>
+        /// <returns>Universe with filter applied</returns>
+        public T Expiration(DateTime expiry)
+        {
+            var expiryDate = expiry.Date;
+            Data = Data.Where(data => data.Symbol.ID.Date.Date == expiryDate).ToList();
+            return (T)this;
+        }
+
+        /// <summary>
         /// Explicitly sets the selected contract symbols for this universe.
         /// This overrides and and all other methods of selecting symbols assuming it is called last.
         /// </summary>

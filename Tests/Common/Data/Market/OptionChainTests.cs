@@ -62,8 +62,20 @@ namespace QuantConnect.Tests.Common.Data.Market
             yield return Case("Expiration(TimeSpan)", u => u.Expiration(TimeSpan.FromDays(30), TimeSpan.FromDays(200)),
                 c => c.Expiration(TimeSpan.FromDays(30), TimeSpan.FromDays(200)));
             yield return Case("Expiration(500, 600)", u => u.Expiration(500, 600), c => c.Expiration(500, 600), empty: true);
+            yield return Case("Expiration(date)", u => u.Expiration(Expiries[1]), c => c.Expiration(Expiries[1]));
+            yield return Case("Expiration(date, time of day)", u => u.Expiration(Expiries[1].AddHours(10)), c => c.Expiration(Expiries[1].AddHours(10)));
+            yield return Case("Expiration(unlisted date)", u => u.Expiration(Date), c => c.Expiration(Date), empty: true);
+            yield return Case("Strikes(100)", u => u.Strikes(100m), c => c.Strikes(100m));
+            yield return Case("Strikes(101)", u => u.Strikes(101m), c => c.Strikes(101m), empty: true);
+            yield return Case("ZeroDte", u => u.ZeroDte(), c => c.ZeroDte(), empty: true);
             yield return Case("CallsOnly", u => u.CallsOnly(), c => c.CallsOnly());
             yield return Case("PutsOnly", u => u.PutsOnly(), c => c.PutsOnly());
+            yield return Case("OutOfTheMoney", u => u.OutOfTheMoney(), c => c.OutOfTheMoney());
+            yield return Case("OTM.CallsOnly", u => u.OTM().CallsOnly(), c => c.OTM().CallsOnly());
+            yield return Case("InTheMoney", u => u.InTheMoney(), c => c.InTheMoney());
+            yield return Case("ITM.PutsOnly.Expiration(0, 10)", u => u.ITM().PutsOnly().Expiration(0, 10), c => c.ITM().PutsOnly().Expiration(0, 10));
+            yield return Case("AtTheMoney", u => u.AtTheMoney(), c => c.AtTheMoney());
+            yield return Case("Expiration(0, 10).ATM", u => u.Expiration(0, 10).ATM(), c => c.Expiration(0, 10).ATM());
             yield return Case("StandardsOnly", u => u.StandardsOnly(), c => c.StandardsOnly());
             yield return Case("WeeklysOnly", u => u.WeeklysOnly(), c => c.WeeklysOnly());
             yield return Case("FrontMonth", u => u.FrontMonth(), c => c.FrontMonth());
@@ -301,6 +313,49 @@ def where_chain(chain):
                 Assert.Throws<ArgumentException>(() => chain.CallSpread(10, 5, 10));
                 Assert.Throws<ArgumentException>(() => chain.IronCondor(10, 10, 5));
                 Assert.Throws<ArgumentException>(() => chain.CallCalendarSpread(0, 40, 10));
+            }
+        }
+
+        [TestCase(101, 100)]
+        [TestCase(100, 100)]
+        [TestCase(103.75, 102.5)]
+        // Equidistant between 100 and 102.5: the lower strike wins, unlike Strikes(0, 0)
+        [TestCase(101.25, 100)]
+        public void MoneynessFiltersSplitTheStrikesAroundTheUnderlyingPrice(double underlyingPrice, double atmStrike)
+        {
+            var price = (decimal)underlyingPrice;
+            var (data, _) = CreateUniverseData(Date, price, Expiries, Strikes);
+            var chain = new OptionChain(Canonical, Date, data, _symbolProperties);
+            Assert.AreEqual(price, chain.Underlying.Price);
+
+            var otm = chain.OutOfTheMoney();
+            var itm = chain.InTheMoney();
+            var atm = chain.AtTheMoney();
+            Assert.IsNotEmpty(otm);
+            Assert.IsNotEmpty(itm);
+            Assert.IsTrue(otm.All(x => x.Right == OptionRight.Call ? x.Strike > price : x.Strike < price));
+            Assert.IsTrue(itm.All(x => x.Right == OptionRight.Call ? x.Strike < price : x.Strike > price));
+            // a strike equal to the price is neither out nor in the money
+            Assert.AreEqual(chain.Count, otm.Count + itm.Count + chain.Strikes(price).Count);
+            Assert.AreEqual(2 * Expiries.Length, atm.Count);
+            Assert.IsTrue(atm.All(x => x.Strike == (decimal)atmStrike));
+        }
+
+        [Test]
+        public void MoneynessFiltersSelectNothingWithoutUnderlyingPrice()
+        {
+            var contracts = _data.Select(x => new OptionUniverse(x) { Underlying = null }).ToList();
+            var chain = new OptionChain(Canonical, Date, contracts, _symbolProperties);
+            Assert.AreEqual(0, chain.Underlying.Price);
+
+            Assert.AreEqual(0, chain.OutOfTheMoney().Count);
+            Assert.AreEqual(0, chain.InTheMoney().Count);
+            Assert.AreEqual(0, chain.AtTheMoney().Count);
+            foreach (var filter in new Func<OptionFilterUniverse, OptionFilterUniverse>[] { u => u.OutOfTheMoney(), u => u.InTheMoney(), u => u.AtTheMoney() })
+            {
+                var universe = new OptionFilterUniverse(_option);
+                universe.Refresh(contracts, null, Date);
+                Assert.AreEqual(0, filter(universe).Count);
             }
         }
 

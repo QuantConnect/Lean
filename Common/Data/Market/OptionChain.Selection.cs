@@ -22,29 +22,15 @@ using QuantConnect.Securities;
 namespace QuantConnect.Data.Market
 {
     /// <summary>
-    /// The option chain selection helpers: views of the contracts and single contract pickers,
+    /// The option chain selection helpers: views of the strikes and expiries and single contract pickers,
     /// null-safe (None in Python) instead of raising when nothing matches
     /// </summary>
     public partial class OptionChain
     {
         // Cached views, valid for the contract count they were built at
         private int _viewsContractsCount = -1;
-        private IReadOnlyList<OptionContract> _calls;
-        private IReadOnlyList<OptionContract> _puts;
         private StrikeList _strikePrices;
         private IReadOnlyList<DateTime> _expiries;
-
-        /// <summary>
-        /// The call contracts, sorted by expiration then strike
-        /// </summary>
-        [PandasIgnore]
-        public IReadOnlyList<OptionContract> Calls => GetView(ref _calls, () => GetContracts(OptionRight.Call));
-
-        /// <summary>
-        /// The put contracts, sorted by expiration then strike
-        /// </summary>
-        [PandasIgnore]
-        public IReadOnlyList<OptionContract> Puts => GetView(ref _puts, () => GetContracts(OptionRight.Put));
 
         /// <summary>
         /// The distinct strikes, ascending, with helpers to find the closest, next above or next below a price
@@ -147,29 +133,14 @@ namespace QuantConnect.Data.Market
         }
 
         /// <summary>
-        /// Gets a new chain with the contracts of the given expiration. Time of day is ignored
+        /// Gets a new chain with the contracts of the given expiration. Time of day is ignored.
+        /// Same as <see cref="Expiration(DateTime)"/>
         /// </summary>
         /// <param name="expiry">The expiration date</param>
         /// <returns>A new chain, empty when nothing matches</returns>
         public OptionChain At(DateTime expiry)
         {
-            var expiryDate = expiry.Date;
-            return Filter(u =>
-            {
-                u.Data = u.Data.Where(contract => contract.Expiry.Date == expiryDate).ToList();
-                return u;
-            });
-        }
-
-        /// <summary>
-        /// Gets the contract with the strike closest to the underlying price. Ties go to the lower strike,
-        /// then the nearest expiration. Returns null (None in Python) when there is none
-        /// </summary>
-        /// <param name="right">Only consider contracts of this right, any right when null</param>
-        /// <returns>The at-the-money contract, or null</returns>
-        public OptionContract AtTheMoney(OptionRight? right = null)
-        {
-            return Select(right);
+            return Expiration(expiry);
         }
 
         /// <summary>
@@ -182,8 +153,6 @@ namespace QuantConnect.Data.Market
             // Contracts are only ever added, never replaced, and the views derive from the contract symbols
             if (_viewsContractsCount != Contracts.Count)
             {
-                _calls = null;
-                _puts = null;
                 _strikePrices = null;
                 _expiries = null;
                 _viewsContractsCount = Contracts.Count;
@@ -229,15 +198,6 @@ namespace QuantConnect.Data.Market
                 .ThenBy(contract => contract.Expiry)
                 .ThenBy(contract => contract.Right)
                 .FirstOrDefault();
-        }
-
-        private List<OptionContract> GetContracts(OptionRight right)
-        {
-            return Contracts.Values
-                .Where(contract => contract.Right == right)
-                .OrderBy(contract => contract.Expiry)
-                .ThenBy(contract => contract.Strike)
-                .ToList();
         }
 
         /// <summary>
