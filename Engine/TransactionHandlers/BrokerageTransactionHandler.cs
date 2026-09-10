@@ -1442,8 +1442,16 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
 
                 case OrderType.StopLimit:
                     var stopLimitOrder = (StopLimitOrder)order;
+                    if (e.StopTriggeredTime.HasValue || !e.StopTriggered)
+                    {
+                        stopLimitOrder.StopTriggeredTime = e.StopTriggeredTime;
+                    }
+                    else if (!stopLimitOrder.StopTriggered)
+                    {
+                        // the brokerage doesn't provide the trigger time, use the current time
+                        stopLimitOrder.StopTriggeredTime = _algorithm.UtcTime;
+                    }
                     stopLimitOrder.StopTriggered = e.StopTriggered;
-                    stopLimitOrder.StopTriggeredTime = e.StopTriggeredTime;
                     break;
             }
         }

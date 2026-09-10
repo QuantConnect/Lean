@@ -3024,8 +3024,9 @@ namespace QuantConnect.Tests.Engine.BrokerageTransactionHandlerTests
             }
         }
 
-        [Test]
-        public void BrokerageTransactionHandlerAppliesStopLimitOrderUpdates()
+        [TestCase(true)]
+        [TestCase(false)]
+        public void BrokerageTransactionHandlerAppliesStopLimitOrderUpdates(bool providesStopTriggeredTime)
         {
             var referenceDateTime = new DateTime(2024, 01, 25, 10, 0, 0);
 
@@ -3046,11 +3047,13 @@ namespace QuantConnect.Tests.Engine.BrokerageTransactionHandlerTests
             _transactionHandler.AddOpenOrder(stopLimitOrder, algorithm);
             algorithm.Status = AlgorithmStatus.Running;
 
-            brokerage.CreateOrderUpdatedEvent(new OrderUpdateEvent { OrderId = 1, StopTriggered = true, StopTriggeredTime = referenceDateTime });
+            var stopTriggeredTime = providesStopTriggeredTime ? referenceDateTime : (DateTime?)null;
+            brokerage.CreateOrderUpdatedEvent(new OrderUpdateEvent { OrderId = 1, StopTriggered = true, StopTriggeredTime = stopTriggeredTime });
 
             var updatedStopLimitOrder = (StopLimitOrder)_transactionHandler.GetOrdersByBrokerageId(1).Single();
             Assert.IsTrue(updatedStopLimitOrder.StopTriggered);
-            Assert.AreEqual(referenceDateTime, updatedStopLimitOrder.StopTriggeredTime);
+            // brokerages that don't provide the trigger time get the current algorithm time
+            Assert.AreEqual(providesStopTriggeredTime ? referenceDateTime : algorithm.UtcTime, updatedStopLimitOrder.StopTriggeredTime);
         }
 
         internal class TestIncrementalOrderIdAlgorithm : OrderTicketDemoAlgorithm
