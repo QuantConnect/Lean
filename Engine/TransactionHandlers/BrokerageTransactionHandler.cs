@@ -1441,7 +1441,9 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
                     break;
 
                 case OrderType.StopLimit:
-                    ((StopLimitOrder)order).StopTriggered = e.StopTriggered;
+                    var stopLimitOrder = (StopLimitOrder)order;
+                    stopLimitOrder.StopTriggered = e.StopTriggered;
+                    stopLimitOrder.StopTriggeredTime = e.StopTriggeredTime;
                     break;
             }
         }

@@ -270,7 +270,9 @@ namespace QuantConnect.Orders
                     order = new StopLimitOrder
                     {
                         LimitPrice = SafeDecimalValueOrDefault(jObject["LimitPrice"] ?? jObject["limitPrice"]),
-                        StopPrice = SafeDecimalValueOrDefault(jObject["stopPrice"] ?? jObject["StopPrice"])
+                        StopPrice = SafeDecimalValueOrDefault(jObject["stopPrice"] ?? jObject["StopPrice"]),
+                        StopTriggered = jObject["StopTriggered"]?.Value<bool>() ?? jObject["stopTriggered"]?.Value<bool>() ?? default(bool),
+                        StopTriggeredTime = jObject["StopTriggeredTime"]?.Value<DateTime?>() ?? jObject["stopTriggeredTime"]?.Value<DateTime?>()
                     };
                     break;
 

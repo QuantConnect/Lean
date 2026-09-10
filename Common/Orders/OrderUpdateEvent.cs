@@ -13,6 +13,8 @@
  * limitations under the License.
 */
 
+using System;
+
 namespace QuantConnect.Orders
 {
     /// <summary>
@@ -35,5 +37,10 @@ namespace QuantConnect.Orders
         /// Flag indicating whether stop has been triggered for a <see cref="StopLimitOrder"/>
         /// </summary>
         public bool StopTriggered { get; set; }
+
+        /// <summary>
+        /// Time in UTC at which the stop was triggered for a <see cref="StopLimitOrder"/>, if any
+        /// </summary>
+        public DateTime? StopTriggeredTime { get; set; }
     }
 }

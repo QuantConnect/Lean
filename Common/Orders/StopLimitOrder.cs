@@ -38,6 +38,12 @@ namespace QuantConnect.Orders
         public bool StopTriggered { get; internal set; }
 
         /// <summary>
+        /// Time in UTC at which the stop was triggered, the end time of the data that triggered it, if any
+        /// </summary>
+        [JsonProperty(PropertyName = "stopTriggeredTime", NullValueHandling = NullValueHandling.Ignore)]
+        public DateTime? StopTriggeredTime { get; internal set; }
+
+        /// <summary>
         /// Limit price for the stop limit order
         /// </summary>
         [JsonProperty(PropertyName = "limitPrice")]
@@ -140,7 +146,7 @@ namespace QuantConnect.Orders
         /// <returns>A copy of this order</returns>
         public override Order Clone()
         {
-            var order = new StopLimitOrder { StopPrice = StopPrice, LimitPrice = LimitPrice, StopTriggered = StopTriggered };
+            var order = new StopLimitOrder { StopPrice = StopPrice, LimitPrice = LimitPrice, StopTriggered = StopTriggered, StopTriggeredTime = StopTriggeredTime };
             CopyTo(order);
             return order;
         }
