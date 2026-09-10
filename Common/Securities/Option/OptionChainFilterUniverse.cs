@@ -52,14 +52,6 @@ namespace QuantConnect.Securities
         }
 
         /// <summary>
-        /// Gets the number of days until the given expiration, counted from the chain date
-        /// </summary>
-        internal int GetDaysToExpiry(DateTime expiry)
-        {
-            return (expiry.Date - AdjustExpirationReferenceDate(LocalTime.Date)).Days;
-        }
-
-        /// <summary>
         /// Not supported: the chain filters only ever select contracts that are already in the chain
         /// </summary>
         protected override OptionContract CreateDataInstance(Symbol symbol)

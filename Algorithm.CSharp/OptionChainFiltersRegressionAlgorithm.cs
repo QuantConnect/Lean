@@ -93,23 +93,37 @@ namespace QuantConnect.Algorithm.CSharp
             var price = chain.Underlying.Price;
             var otm = chain.OutOfTheMoney();
             var itm = chain.InTheMoney();
-            if (otm.Count == 0 || itm.Count == 0 || otm.Count + itm.Count + chain.Strikes(price).Count != chain.Count
+            if (otm.Count == 0 || itm.Count == 0 || otm.Count + itm.Count + chain.Strikes([price]).Count != chain.Count
                 || otm.Any(x => x.Right == OptionRight.Call ? x.Strike <= price : x.Strike >= price)
                 || itm.Any(x => x.Right == OptionRight.Call ? x.Strike >= price : x.Strike <= price))
             {
                 throw new RegressionTestException("Out/in the money filters mismatch");
             }
             var atm = chain.AtTheMoney();
-            if (atm.Count == 0 || atm.Any(x => x.Strike != 747.5m) || atm.Count != chain.Strikes(747.5m).Count)
+            if (atm.Count == 0 || atm.Any(x => x.Strike != 747.5m) || atm.Count != chain.Strikes([747.5m]).Count)
             {
                 throw new RegressionTestException("Expected AtTheMoney() to select every contract at the 747.50 strike");
             }
 
-            // Exact expiration and strike, and today's expiration
-            if (chain.Expiration(new DateTime(2015, 12, 24)).Count != chain.FrontMonth().Count
-                || chain.ZeroDte().Count != chain.Expiration(0, 0).Count)
+            // Strike sets and bounds are absolute, unlike the relative Strikes(min, max)
+            var strikes = chain.Strikes([745m, 750m]);
+            if (strikes.Count == 0 || strikes.Any(x => x.Strike != 745m && x.Strike != 750m)
+                || chain.StrikesAbove(750m).StrikesBelow(755m).Any(x => x.Strike != 752.5m)
+                || chain.StrikesAbove(price).Count + chain.StrikesBelow(price).Count + chain.Strikes([price]).Count != chain.Count)
             {
-                throw new RegressionTestException("Expiration(date) and ZeroDte() should match the front month");
+                throw new RegressionTestException("Strike set or bound filters mismatch");
+            }
+
+            // Expiration sets and bounds, today's expiration and the farthest one
+            var frontMonth = new DateTime(2015, 12, 24);
+            var farthest = chain.FarthestExpiration();
+            if (chain.Expiration([frontMonth]).Count != chain.FrontMonth().Count
+                || chain.ZeroDte().Count != chain.Expiration(0, 0).Count
+                || chain.ExpiringAfter(frontMonth).Count + chain.FrontMonth().Count != chain.Count
+                || chain.ExpiringBefore(frontMonth).Count != 0
+                || farthest.Count == 0 || farthest.Any(x => x.Expiry != chain.Max(c => c.Expiry)))
+            {
+                throw new RegressionTestException("Expiration set, bound, ZeroDte() or FarthestExpiration() filters mismatch");
             }
         }
 

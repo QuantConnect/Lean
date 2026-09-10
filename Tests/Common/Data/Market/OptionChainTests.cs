@@ -62,11 +62,22 @@ namespace QuantConnect.Tests.Common.Data.Market
             yield return Case("Expiration(TimeSpan)", u => u.Expiration(TimeSpan.FromDays(30), TimeSpan.FromDays(200)),
                 c => c.Expiration(TimeSpan.FromDays(30), TimeSpan.FromDays(200)));
             yield return Case("Expiration(500, 600)", u => u.Expiration(500, 600), c => c.Expiration(500, 600), empty: true);
-            yield return Case("Expiration(date)", u => u.Expiration(Expiries[1]), c => c.Expiration(Expiries[1]));
-            yield return Case("Expiration(date, time of day)", u => u.Expiration(Expiries[1].AddHours(10)), c => c.Expiration(Expiries[1].AddHours(10)));
-            yield return Case("Expiration(unlisted date)", u => u.Expiration(Date), c => c.Expiration(Date), empty: true);
-            yield return Case("Strikes(100)", u => u.Strikes(100m), c => c.Strikes(100m));
-            yield return Case("Strikes(101)", u => u.Strikes(101m), c => c.Strikes(101m), empty: true);
+            yield return Case("Expiration(dates)", u => u.Expiration([Expiries[1], Expiries[3]]), c => c.Expiration([Expiries[1], Expiries[3]]));
+            yield return Case("Expiration(date, time of day)", u => u.Expiration([Expiries[1].AddHours(10)]), c => c.Expiration([Expiries[1].AddHours(10)]));
+            yield return Case("Expiration(unlisted dates)", u => u.Expiration([Date, Date.AddDays(1)]), c => c.Expiration([Date, Date.AddDays(1)]), empty: true);
+            yield return Case("Expiration(no dates)", u => u.Expiration([]), c => c.Expiration([]), empty: true);
+            yield return Case("ExpiringAfter", u => u.ExpiringAfter(Expiries[1]), c => c.ExpiringAfter(Expiries[1]));
+            yield return Case("ExpiringBefore", u => u.ExpiringBefore(Expiries[1].AddHours(10)), c => c.ExpiringBefore(Expiries[1].AddHours(10)));
+            yield return Case("ExpiringAfter.ExpiringBefore", u => u.ExpiringAfter(Expiries[0]).ExpiringBefore(Expiries[3]), c => c.ExpiringAfter(Expiries[0]).ExpiringBefore(Expiries[3]));
+            yield return Case("ExpiringAfter(last)", u => u.ExpiringAfter(Expiries[3]), c => c.ExpiringAfter(Expiries[3]), empty: true);
+            yield return Case("FarthestExpiration", u => u.FarthestExpiration(), c => c.FarthestExpiration());
+            yield return Case("StandardsOnly.FarthestExpiration", u => u.StandardsOnly().FarthestExpiration(), c => c.StandardsOnly().FarthestExpiration());
+            yield return Case("Strikes(100, 105)", u => u.Strikes([100m, 105m]), c => c.Strikes([100m, 105m]));
+            yield return Case("Strikes(101)", u => u.Strikes([101m]), c => c.Strikes([101m]), empty: true);
+            yield return Case("StrikesAbove", u => u.StrikesAbove(100m), c => c.StrikesAbove(100m));
+            yield return Case("StrikesBelow", u => u.StrikesBelow(100m), c => c.StrikesBelow(100m));
+            yield return Case("StrikesAbove.StrikesBelow", u => u.StrikesAbove(95m).StrikesBelow(105m), c => c.StrikesAbove(95m).StrikesBelow(105m));
+            yield return Case("StrikesAbove(max)", u => u.StrikesAbove(110m), c => c.StrikesAbove(110m), empty: true);
             yield return Case("ZeroDte", u => u.ZeroDte(), c => c.ZeroDte(), empty: true);
             yield return Case("CallsOnly", u => u.CallsOnly(), c => c.CallsOnly());
             yield return Case("PutsOnly", u => u.PutsOnly(), c => c.PutsOnly());
@@ -259,6 +270,12 @@ def filter_chain(chain):
 
 def where_chain(chain):
     return chain.where(lambda contract: contract.right == OptionRight.PUT and contract.strike > 100)
+
+def sets(chain):
+    return chain.strikes([100, 105]).expiration([datetime(2016, 3, 18), datetime(2016, 6, 17)])
+
+def bounds(chain):
+    return chain.strikes_above(95).strikes_below(105).expiring_after(datetime(2016, 3, 4)).expiring_before(datetime(2016, 6, 17)).farthest_expiration()
 ");
                 using var pyChain = chain.ToPython();
 
@@ -267,6 +284,19 @@ def where_chain(chain):
 
                 using var where = module.GetAttr("where_chain").Invoke(pyChain);
                 CollectionAssert.AreEqual(expectedWhere, where.As<OptionChain>().Select(x => x.Symbol).ToList());
+
+                // strike and date lists convert to the C# collections
+                var expectedSets = chain.Strikes([100m, 105m]).Expiration([Expiries[1], Expiries[3]]).Select(x => x.Symbol).ToList();
+                Assert.AreEqual(8, expectedSets.Count);
+                using var sets = module.GetAttr("sets").Invoke(pyChain);
+                CollectionAssert.AreEqual(expectedSets, sets.As<OptionChain>().Select(x => x.Symbol).ToList());
+
+                var expectedBounds = chain.StrikesAbove(95m).StrikesBelow(105m).ExpiringAfter(Expiries[0]).ExpiringBefore(Expiries[3]).FarthestExpiration()
+                    .Select(x => x.Symbol).ToList();
+                Assert.AreEqual(6, expectedBounds.Count);
+                Assert.IsTrue(expectedBounds.All(x => x.ID.Date == Expiries[2]));
+                using var bounds = module.GetAttr("bounds").Invoke(pyChain);
+                CollectionAssert.AreEqual(expectedBounds, bounds.As<OptionChain>().Select(x => x.Symbol).ToList());
             }
         }
 
@@ -336,9 +366,22 @@ def where_chain(chain):
             Assert.IsTrue(otm.All(x => x.Right == OptionRight.Call ? x.Strike > price : x.Strike < price));
             Assert.IsTrue(itm.All(x => x.Right == OptionRight.Call ? x.Strike < price : x.Strike > price));
             // a strike equal to the price is neither out nor in the money
-            Assert.AreEqual(chain.Count, otm.Count + itm.Count + chain.Strikes(price).Count);
+            Assert.AreEqual(chain.Count, otm.Count + itm.Count + chain.Strikes([price]).Count);
             Assert.AreEqual(2 * Expiries.Length, atm.Count);
             Assert.IsTrue(atm.All(x => x.Strike == (decimal)atmStrike));
+        }
+
+        [Test]
+        public void ContractsCountTheDaysToTheirExpiration()
+        {
+            var chain = CreateChain();
+            // universe rows are stamped at the end of their day, so the contracts count from the next date
+            var reference = chain.First().Time.Date;
+            Assert.AreEqual(Date.AddDays(1), reference);
+            var expected = Expiries.Select(expiry => (expiry - reference).Days).ToList();
+            CollectionAssert.AreEquivalent(expected, chain.Select(x => x.DaysToExpiry).Distinct());
+            Assert.AreEqual(expected[0], chain.FrontMonth().First().DaysToExpiry);
+            Assert.AreEqual(expected[3], chain.FarthestExpiration().First().DaysToExpiry);
         }
 
         [Test]
@@ -351,7 +394,8 @@ def where_chain(chain):
             Assert.AreEqual(0, chain.OutOfTheMoney().Count);
             Assert.AreEqual(0, chain.InTheMoney().Count);
             Assert.AreEqual(0, chain.AtTheMoney().Count);
-            foreach (var filter in new Func<OptionFilterUniverse, OptionFilterUniverse>[] { u => u.OutOfTheMoney(), u => u.InTheMoney(), u => u.AtTheMoney() })
+            Func<OptionFilterUniverse, OptionFilterUniverse>[] filters = [u => u.OutOfTheMoney(), u => u.InTheMoney(), u => u.AtTheMoney()];
+            foreach (var filter in filters)
             {
                 var universe = new OptionFilterUniverse(_option);
                 universe.Refresh(contracts, null, Date);

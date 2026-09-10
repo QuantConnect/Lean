@@ -14,6 +14,7 @@
 */
 
 using System;
+using System.Collections.Generic;
 
 namespace QuantConnect.Securities
 {
@@ -41,14 +42,34 @@ namespace QuantConnect.Securities
         TSelf Expiration(int minExpiryDays, int maxExpiryDays);
 
         /// <summary>
-        /// Selects the contracts expiring on the given date, ignoring the time of day
+        /// Selects the contracts expiring on any of the given dates, ignoring the time of day
         /// </summary>
-        TSelf Expiration(DateTime expiry);
+        TSelf Expiration(IEnumerable<DateTime> expiries);
 
         /// <summary>
-        /// Selects the contracts with the given strike price
+        /// Selects the contracts expiring after the given date, excluding it
         /// </summary>
-        TSelf Strikes(decimal strike);
+        TSelf ExpiringAfter(DateTime date);
+
+        /// <summary>
+        /// Selects the contracts expiring before the given date, excluding it
+        /// </summary>
+        TSelf ExpiringBefore(DateTime date);
+
+        /// <summary>
+        /// Selects the contracts with any of the given strike prices
+        /// </summary>
+        TSelf Strikes(IEnumerable<decimal> strikes);
+
+        /// <summary>
+        /// Selects the contracts with strikes above the given price, excluding it
+        /// </summary>
+        TSelf StrikesAbove(decimal price);
+
+        /// <summary>
+        /// Selects the contracts with strikes below the given price, excluding it
+        /// </summary>
+        TSelf StrikesBelow(decimal price);
 
         /// <summary>
         /// Selects the contracts expiring today
@@ -109,6 +130,11 @@ namespace QuantConnect.Securities
         /// Selects the contracts of the nearest expiration
         /// </summary>
         TSelf FrontMonth();
+
+        /// <summary>
+        /// Selects the contracts of the farthest expiration
+        /// </summary>
+        TSelf FarthestExpiration();
 
         /// <summary>
         /// Selects the contracts of all expirations but the nearest one

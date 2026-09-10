@@ -65,18 +65,31 @@ class OptionChainFiltersRegressionAlgorithm(QCAlgorithm):
         price = chain.underlying.price
         otm = chain.otm()
         itm = chain.itm()
-        if (otm.count == 0 or itm.count == 0 or otm.count + itm.count + chain.strikes(price).count != chain.count
+        if (otm.count == 0 or itm.count == 0 or otm.count + itm.count + chain.strikes([price]).count != chain.count
                 or any((x.strike <= price if x.right == OptionRight.CALL else x.strike >= price) for x in otm)
                 or any((x.strike >= price if x.right == OptionRight.CALL else x.strike <= price) for x in itm)):
             raise AssertionError("Out/in the money filters mismatch")
         atm = chain.atm()
-        if atm.count == 0 or any(x.strike != 747.5 for x in atm) or atm.count != chain.strikes(747.5).count:
+        if atm.count == 0 or any(x.strike != 747.5 for x in atm) or atm.count != chain.strikes([747.5]).count:
             raise AssertionError("Expected atm() to select every contract at the 747.50 strike")
 
-        # Exact expiration and strike, and today's expiration
-        if (chain.expiration(datetime(2015, 12, 24)).count != chain.front_month().count
-                or chain.zero_dte().count != chain.expiration(0, 0).count):
-            raise AssertionError("expiration(date) and zero_dte() should match the front month")
+        # Strike sets and bounds are absolute, unlike the relative strikes(min, max)
+        strikes = chain.strikes([745, 750])
+        if (strikes.count == 0 or any(x.strike != 745 and x.strike != 750 for x in strikes)
+                or any(x.strike != 752.5 for x in chain.strikes_above(750).strikes_below(755))
+                or chain.strikes_above(price).count + chain.strikes_below(price).count + chain.strikes([price]).count != chain.count):
+            raise AssertionError("Strike set or bound filters mismatch")
+
+        # Expiration sets and bounds, today's expiration and the farthest one
+        front_month = datetime(2015, 12, 24)
+        farthest = chain.farthest_expiration()
+        max_expiry = max(x.expiry for x in chain)
+        if (chain.expiration([front_month]).count != chain.front_month().count
+                or chain.zero_dte().count != chain.expiration(0, 0).count
+                or chain.expiring_after(front_month).count + chain.front_month().count != chain.count
+                or chain.expiring_before(front_month).count != 0
+                or farthest.count == 0 or any(x.expiry != max_expiry for x in farthest)):
+            raise AssertionError("Expiration set, bound, zero_dte() or farthest_expiration() filters mismatch")
 
         # where() takes a predicate, like the universe filter does
         high_open_interest = chain.where(lambda x: x.open_interest > 1000)

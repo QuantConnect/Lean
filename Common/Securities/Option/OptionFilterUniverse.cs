@@ -281,13 +281,34 @@ namespace QuantConnect.Securities
         }
 
         /// <summary>
-        /// Applies filter selecting the contracts with the given strike price
+        /// Applies filter selecting the contracts with any of the given strike prices
         /// </summary>
-        /// <param name="strike">The strike price</param>
+        /// <param name="strikes">The strike prices</param>
         /// <returns>Universe with filter applied</returns>
-        public TUniverse Strikes(decimal strike)
+        public TUniverse Strikes(IEnumerable<decimal> strikes)
         {
-            return Contracts(contracts => contracts.Where(x => x.Symbol.ID.StrikePrice == strike));
+            var strikeSet = strikes.ToHashSet();
+            return Contracts(contracts => contracts.Where(x => strikeSet.Contains(x.Symbol.ID.StrikePrice)));
+        }
+
+        /// <summary>
+        /// Applies filter selecting the contracts with strikes above the given price, excluding it
+        /// </summary>
+        /// <param name="price">The price the strikes must be above</param>
+        /// <returns>Universe with filter applied</returns>
+        public TUniverse StrikesAbove(decimal price)
+        {
+            return Contracts(contracts => contracts.Where(x => x.Symbol.ID.StrikePrice > price));
+        }
+
+        /// <summary>
+        /// Applies filter selecting the contracts with strikes below the given price, excluding it
+        /// </summary>
+        /// <param name="price">The price the strikes must be below</param>
+        /// <returns>Universe with filter applied</returns>
+        public TUniverse StrikesBelow(decimal price)
+        {
+            return Contracts(contracts => contracts.Where(x => x.Symbol.ID.StrikePrice < price));
         }
 
         /// <summary>
@@ -357,7 +378,7 @@ namespace QuantConnect.Securities
             {
                 return Empty();
             }
-            return Strikes(GetClosestStrike(AllSymbols, price));
+            return Strikes([GetClosestStrike(AllSymbols, price)]);
         }
 
         /// <summary>

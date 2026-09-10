@@ -14,6 +14,7 @@
 */
 
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using Python.Runtime;
 using QuantConnect.Securities;
@@ -69,24 +70,69 @@ namespace QuantConnect.Data.Market
         }
 
         /// <summary>
-        /// Selects the contracts expiring on the given date. Time of day is ignored.
-        /// Same as <see cref="ContractSecurityFilterUniverse{T, TData}.Expiration(DateTime)"/>
+        /// Selects the contracts expiring on any of the given dates. Time of day is ignored.
+        /// Same as <see cref="ContractSecurityFilterUniverse{T, TData}.Expiration(IEnumerable{DateTime})"/>
         /// </summary>
-        /// <param name="expiry">The expiration date</param>
+        /// <param name="expiries">The expiration dates</param>
         /// <returns>A new chain with the filter applied</returns>
-        public OptionChain Expiration(DateTime expiry)
+        public OptionChain Expiration(IEnumerable<DateTime> expiries)
         {
-            return Filter(universe => universe.Expiration(expiry));
+            return Filter(universe => universe.Expiration(expiries));
         }
 
         /// <summary>
-        /// Selects the contracts with the given strike price. Same as <see cref="BaseOptionFilterUniverse{TUniverse, TData}.Strikes(decimal)"/>
+        /// Selects the contracts expiring after the given date, excluding it. Time of day is ignored.
+        /// Same as <see cref="ContractSecurityFilterUniverse{T, TData}.ExpiringAfter"/>
         /// </summary>
-        /// <param name="strike">The strike price</param>
+        /// <param name="date">The date the expirations must be after</param>
         /// <returns>A new chain with the filter applied</returns>
-        public OptionChain Strikes(decimal strike)
+        public OptionChain ExpiringAfter(DateTime date)
         {
-            return Filter(universe => universe.Strikes(strike));
+            return Filter(universe => universe.ExpiringAfter(date));
+        }
+
+        /// <summary>
+        /// Selects the contracts expiring before the given date, excluding it. Time of day is ignored.
+        /// Same as <see cref="ContractSecurityFilterUniverse{T, TData}.ExpiringBefore"/>
+        /// </summary>
+        /// <param name="date">The date the expirations must be before</param>
+        /// <returns>A new chain with the filter applied</returns>
+        public OptionChain ExpiringBefore(DateTime date)
+        {
+            return Filter(universe => universe.ExpiringBefore(date));
+        }
+
+        /// <summary>
+        /// Selects the contracts with any of the given strike prices.
+        /// Same as <see cref="BaseOptionFilterUniverse{TUniverse, TData}.Strikes(IEnumerable{decimal})"/>
+        /// </summary>
+        /// <param name="strikes">The strike prices</param>
+        /// <returns>A new chain with the filter applied</returns>
+        public OptionChain Strikes(IEnumerable<decimal> strikes)
+        {
+            return Filter(universe => universe.Strikes(strikes));
+        }
+
+        /// <summary>
+        /// Selects the contracts with strikes above the given price, excluding it.
+        /// Same as <see cref="BaseOptionFilterUniverse{TUniverse, TData}.StrikesAbove"/>
+        /// </summary>
+        /// <param name="price">The price the strikes must be above</param>
+        /// <returns>A new chain with the filter applied</returns>
+        public OptionChain StrikesAbove(decimal price)
+        {
+            return Filter(universe => universe.StrikesAbove(price));
+        }
+
+        /// <summary>
+        /// Selects the contracts with strikes below the given price, excluding it.
+        /// Same as <see cref="BaseOptionFilterUniverse{TUniverse, TData}.StrikesBelow"/>
+        /// </summary>
+        /// <param name="price">The price the strikes must be below</param>
+        /// <returns>A new chain with the filter applied</returns>
+        public OptionChain StrikesBelow(decimal price)
+        {
+            return Filter(universe => universe.StrikesBelow(price));
         }
 
         /// <summary>
@@ -200,6 +246,15 @@ namespace QuantConnect.Data.Market
         public OptionChain FrontMonth()
         {
             return Filter(universe => universe.FrontMonth());
+        }
+
+        /// <summary>
+        /// Selects the contracts of the farthest expiration. Same as <see cref="ContractSecurityFilterUniverse{T, TData}.FarthestExpiration"/>
+        /// </summary>
+        /// <returns>A new chain with the filter applied</returns>
+        public OptionChain FarthestExpiration()
+        {
+            return Filter(universe => universe.FarthestExpiration());
         }
 
         /// <summary>
