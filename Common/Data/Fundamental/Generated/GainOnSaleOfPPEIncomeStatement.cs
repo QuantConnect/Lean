@@ -37,15 +37,17 @@ namespace QuantConnect.Data.Fundamental
         /// Gets/sets the OneMonth period value for the field
         /// </summary>
         [JsonProperty("1M")]
-        [Obsolete("GainOnSaleOfPPE.OneMonth was retired by Morningstar in 2026; use GainOnSaleOfPPE.ThreeMonths (also available: SixMonths, NineMonths, TwelveMonths).")]
+        [Obsolete("GainOnSaleOfPPE.OneMonth was retired by Morningstar in 2026; use GainOnSaleOfPPE.SixMonths (also available: TwelveMonths).")]
         [JsonIgnore]
-        public double OneMonth => throw new NotSupportedException("GainOnSaleOfPPE.OneMonth was retired by Morningstar in 2026; use GainOnSaleOfPPE.ThreeMonths (also available: SixMonths, NineMonths, TwelveMonths).");
+        public double OneMonth => throw new NotSupportedException("GainOnSaleOfPPE.OneMonth was retired by Morningstar in 2026; use GainOnSaleOfPPE.SixMonths (also available: TwelveMonths).");
 
         /// <summary>
         /// Gets/sets the ThreeMonths period value for the field
         /// </summary>
         [JsonProperty("3M")]
-        public double ThreeMonths => FundamentalService.Get<double>(TimeProvider.GetUtcNow(), SecurityIdentifier, FundamentalProperty.FinancialStatements_IncomeStatement_GainOnSaleOfPPE_ThreeMonths);
+        [Obsolete("GainOnSaleOfPPE.ThreeMonths was retired by Morningstar in 2026; use GainOnSaleOfPPE.SixMonths (also available: TwelveMonths).")]
+        [JsonIgnore]
+        public double ThreeMonths => throw new NotSupportedException("GainOnSaleOfPPE.ThreeMonths was retired by Morningstar in 2026; use GainOnSaleOfPPE.SixMonths (also available: TwelveMonths).");
 
         /// <summary>
         /// Gets/sets the SixMonths period value for the field
@@ -57,7 +59,9 @@ namespace QuantConnect.Data.Fundamental
         /// Gets/sets the NineMonths period value for the field
         /// </summary>
         [JsonProperty("9M")]
-        public double NineMonths => FundamentalService.Get<double>(TimeProvider.GetUtcNow(), SecurityIdentifier, FundamentalProperty.FinancialStatements_IncomeStatement_GainOnSaleOfPPE_NineMonths);
+        [Obsolete("GainOnSaleOfPPE.NineMonths was retired by Morningstar in 2026; use GainOnSaleOfPPE.SixMonths (also available: TwelveMonths).")]
+        [JsonIgnore]
+        public double NineMonths => throw new NotSupportedException("GainOnSaleOfPPE.NineMonths was retired by Morningstar in 2026; use GainOnSaleOfPPE.SixMonths (also available: TwelveMonths).");
 
         /// <summary>
         /// Gets/sets the TwelveMonths period value for the field
@@ -93,7 +97,7 @@ namespace QuantConnect.Data.Fundamental
         public override IReadOnlyDictionary<string, double> GetPeriodValues()
         {
             var result = new Dictionary<string, double>();
-            foreach (var kvp in new[] { new Tuple<string, double>("3M",ThreeMonths), new Tuple<string, double>("6M",SixMonths), new Tuple<string, double>("9M",NineMonths), new Tuple<string, double>("12M",TwelveMonths) })
+            foreach (var kvp in new[] { new Tuple<string, double>("6M",SixMonths), new Tuple<string, double>("12M",TwelveMonths) })
             {
                 if(!BaseFundamentalDataProvider.IsNone(typeof(double), kvp.Item2))
                 {
