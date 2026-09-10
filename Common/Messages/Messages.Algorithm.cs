@@ -104,12 +104,10 @@ namespace QuantConnect
             /// Returns a warning message saying an option uses a finer resolution than its underlying
             /// </summary>
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public static string AddOptionContractUnderlyingResolution(global::QuantConnect.Symbol option, Resolution optionResolution,
-                global::QuantConnect.Symbol underlying, Resolution underlyingResolution)
+            public static string OptionUnderlyingResolutionIsCoarser(global::QuantConnect.Symbol option, Resolution optionResolution, Resolution underlyingResolution)
             {
-                return $"{AlgorithmPrefix()}.{FormatCode("AddOptionContract")}(): option contract {option} uses {optionResolution} resolution, " +
-                    $"which is finer than its underlying {underlying} subscription at {underlyingResolution} resolution. " +
-                    $"Add the underlying at {optionResolution} resolution or finer before adding the option contract so its implied volatility and Greeks use a current underlying price.";
+                return $"Option {option} uses {optionResolution} resolution but its underlying {option.Underlying} uses {underlyingResolution}, " +
+                    $"so Greeks and implied volatility will use stale prices. Add the underlying at {optionResolution} resolution or finer.";
             }
         }
 
