@@ -58,4 +58,7 @@ class VolumeShareSlippageModel:
 
             slippage_percent = volume_share * volume_share * self.price_impact
 
-        return slippage_percent * last_data.Value;
+        # Market on open orders fill at the bar open, which is the price we have to reference, not the bar close
+        reference_price = last_data.open if order.type == OrderType.MARKET_ON_OPEN else last_data.value
+
+        return slippage_percent * reference_price
