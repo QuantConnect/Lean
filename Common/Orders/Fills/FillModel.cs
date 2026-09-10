@@ -505,6 +505,12 @@ namespace QuantConnect.Orders.Fills
             // do not fill on stale data
             if (pricesEndTime <= order.Time) return fill;
 
+            // the whole bar is after the stop triggered, so the limit leg fills like a resting limit order
+            if (IsEntirelyAfterStopTriggered(asset, order, prices))
+            {
+                return InternalLimitFill(asset, order, order.LimitPrice, order.Quantity);
+            }
+
             //Check if the Stop Order was filled: opposite to a limit order
             switch (order.Direction)
             {
@@ -515,6 +521,7 @@ namespace QuantConnect.Orders.Fills
                         if (!order.StopTriggered)
                         {
                             order.StopTriggered = true;
+                            order.StopTriggeredTime = pricesEndTime;
                             Parameters.OnOrderUpdated(order);
                         }
 
@@ -537,6 +544,7 @@ namespace QuantConnect.Orders.Fills
                         if (!order.StopTriggered)
                         {
                             order.StopTriggered = true;
+                            order.StopTriggeredTime = pricesEndTime;
                             Parameters.OnOrderUpdated(order);
                         }
 
@@ -554,6 +562,25 @@ namespace QuantConnect.Orders.Fills
             }
 
             return fill;
+        }
+
+        /// <summary>
+        /// Determines whether the given prices are entirely after the stop of the given order was triggered,
+        /// in which case the order can be filled as a resting limit order
+        /// </summary>
+        /// <param name="asset">Security asset we're filling</param>
+        /// <param name="order">Order packet to model</param>
+        /// <param name="prices">The prices to check</param>
+        /// <remarks>Data at the exact trigger time, like ticks sharing the trigger tick time stamp, is not considered to be after it</remarks>
+        protected static bool IsEntirelyAfterStopTriggered(Security asset, StopLimitOrder order, Prices prices)
+        {
+            if (!order.StopTriggeredTime.HasValue)
+            {
+                return false;
+            }
+            var stopTriggeredTime = order.StopTriggeredTime.Value;
+            return prices.Time.ConvertToUtc(asset.Exchange.TimeZone) >= stopTriggeredTime
+                && prices.EndTime.ConvertToUtc(asset.Exchange.TimeZone) > stopTriggeredTime;
         }
 
         /// <summary>
