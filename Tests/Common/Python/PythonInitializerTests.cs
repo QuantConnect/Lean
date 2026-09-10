@@ -29,6 +29,7 @@ namespace QuantConnect.Tests.Common.Python
     public class PythonInitializerTests
     {
         private const string ShutdownChildProcess = "LEAN_PYTHON_SHUTDOWN_CHILD_PROCESS";
+        private const string ShutdownChildProcessCompleted = "LEAN_PYTHON_SHUTDOWN_COMPLETED";
 
         [Test]
         public void AlgorithmLocationIsAlwaysBeforeOtherPaths()
@@ -67,6 +68,7 @@ namespace QuantConnect.Tests.Common.Python
 
                 GC.Collect();
                 GC.WaitForPendingFinalizers();
+                TestContext.Progress.WriteLine(ShutdownChildProcessCompleted);
                 return;
             }
 
@@ -97,6 +99,7 @@ namespace QuantConnect.Tests.Common.Python
 
             var output = standardOutput.GetAwaiter().GetResult() + standardError.GetAwaiter().GetResult();
             Assert.AreEqual(0, process.ExitCode, output);
+            StringAssert.Contains(ShutdownChildProcessCompleted, output);
             StringAssert.DoesNotContain("GIL must always be released", output);
             StringAssert.DoesNotContain("Py.GILState.Finalize", output);
         }
