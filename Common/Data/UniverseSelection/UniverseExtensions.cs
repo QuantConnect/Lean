@@ -206,7 +206,8 @@ namespace QuantConnect.Data.UniverseSelection
 
                 using var writer = new StreamWriter(universeDownloadParameters.GetUniverseFileName(processingDate));
 
-                writer.WriteLine($"#{OptionUniverse.CsvHeader}");
+                var securityType = universeDownloadParameters.Symbol.SecurityType;
+                writer.WriteLine($"#{(securityType == SecurityType.Future ? FutureUniverse.CsvHeader : OptionUniverse.CsvHeader(securityType))}");
 
                 // Write option data, sorted by contract type (Call/Put), strike price, expiration date, and then by full ID
                 foreach (var universeData in universeDataBySymbol

@@ -118,8 +118,7 @@ namespace QuantConnect.Data
 
             // skip the first header line, also skip #'s as these are comment lines
             var interestRateProvider = new Dictionary<DateTime, decimal>();
-            var lines = dataProvider != null ? dataProvider.ReadLines(file) : File.ReadLines(file);
-            foreach (var line in lines.Skip(1)
+            foreach (var line in dataProvider.ReadLines(file).Skip(1)
                          .Where(x => !string.IsNullOrWhiteSpace(x)))
             {
                 if (TryParse(line, out var date, out var interestRate))
