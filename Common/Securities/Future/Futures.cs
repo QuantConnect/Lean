@@ -1357,6 +1357,18 @@ namespace QuantConnect.Securities
             /// </summary>
             /// <returns>The symbol</returns>
             public const string MicroY5TreasuryBond = "5YY";
+
+            /// <summary>
+            /// Micro Ultra 10-Year U.S. Treasury Note Futures
+            /// </summary>
+            /// <returns>The symbol</returns>
+            public const string MicroUltraTenYearUSTreasuryNote = "MTN";
+
+            /// <summary>
+            /// Micro Ultra U.S. Treasury Bond Futures
+            /// </summary>
+            /// <returns>The symbol</returns>
+            public const string MicroUltraUSTreasuryBond = "MWN";
         }
 
         /// <summary>
@@ -1794,6 +1806,11 @@ namespace QuantConnect.Securities
             /// Silver 5000 Oz Futures
             /// </summary>
             public const string Silver5000Oz = "ZI";
+
+            /// <summary>
+            /// 1-Ounce Gold Futures
+            /// </summary>
+            public const string OneOunceGold = "1OZ";
         }
 
         /// <summary>

@@ -38,6 +38,7 @@ using QuantConnect.Data.Fundamental;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Tests.Common.Data.Fundamental;
 using QuantConnect.Logging;
+using QuantConnect.Configuration;
 
 namespace QuantConnect.Tests.Algorithm
 {
@@ -4285,6 +4286,100 @@ def get_history(algorithm, symbol):
                     new TestCaseData(language, Symbols.ES_Future_Chain, Resolution.Minute, futureStart, futureStart.AddDays(2), 900),
                 };
             }).ToArray();
+        }
+
+        [Test]
+        public void WarnsOnLargeHistoryRequest()
+        {
+            Config.Set("history-request-cells-warning-threshold", "1000");
+            try
+            {
+                var algorithm = CreateAlgorithmForHistoryWarningTests();
+                var symbol = algorithm.AddEquity("SPY", Resolution.Daily).Symbol;
+
+                // ~365 daily bars x 5 columns > 1000 cells
+                algorithm.History(new[] { symbol }, 365, Resolution.Daily);
+
+                Assert.AreEqual(1, algorithm.DebugMessages.Count(x => x.Contains("large history request")));
+
+                // the warning is only sent once per algorithm
+                algorithm.History(new[] { symbol }, 365, Resolution.Daily);
+                Assert.AreEqual(1, algorithm.DebugMessages.Count(x => x.Contains("large history request")));
+            }
+            finally
+            {
+                Config.Reset();
+            }
+        }
+
+        [Test]
+        public void WarnsOnLargeTickHistoryRequest()
+        {
+            Config.Set("history-request-cells-warning-threshold", "1000000");
+            try
+            {
+                var algorithm = CreateAlgorithmForHistoryWarningTests();
+                var symbol = algorithm.AddEquity("SPY", Resolution.Tick).Symbol;
+
+                // one market day estimated at 10 ticks per second: 234,000 bars x 5 columns > 1,000,000 cells.
+                // At 1 tick per second the estimate would stay under the threshold and miss the warning
+                algorithm.History(new[] { symbol }, TimeSpan.FromDays(1), Resolution.Tick);
+
+                Assert.AreEqual(1, algorithm.DebugMessages.Count(x => x.Contains("large history request")));
+            }
+            finally
+            {
+                Config.Reset();
+            }
+        }
+
+        [Test]
+        public void DoesNotWarnOnSmallHistoryRequest()
+        {
+            // default threshold
+            var algorithm = CreateAlgorithmForHistoryWarningTests();
+            var symbol = algorithm.AddEquity("SPY", Resolution.Daily).Symbol;
+
+            algorithm.History(new[] { symbol }, 30, Resolution.Daily);
+
+            Assert.AreEqual(0, algorithm.DebugMessages.Count(x => x.Contains("large history request")));
+        }
+
+        [Test]
+        public void WarnsOnRepeatedOverlappingHistoryRequests()
+        {
+            // the "large call" floor tracked for overlap detection is threshold / 50 = 2000 cells
+            Config.Set("history-request-cells-warning-threshold", "100000");
+            try
+            {
+                var algorithm = CreateAlgorithmForHistoryWarningTests();
+                var symbol = algorithm.AddEquity("SPY", Resolution.Daily).Symbol;
+
+                for (var i = 0; i < 40; i++)
+                {
+                    // ~800 daily bars x 5 columns = ~4000 cells: over the large-call floor, under the size warning threshold
+                    algorithm.History(new[] { symbol }, 800, Resolution.Daily);
+                }
+
+                Assert.AreEqual(0, algorithm.DebugMessages.Count(x => x.Contains("large history request")));
+                Assert.AreEqual(1, algorithm.DebugMessages.Count(x => x.Contains("overlapping")));
+            }
+            finally
+            {
+                Config.Reset();
+            }
+        }
+
+        private static QCAlgorithm CreateAlgorithmForHistoryWarningTests()
+        {
+            // the warning thresholds are read from the config when the algorithm is created,
+            // so we create a dedicated instance instead of using the fixture's algorithm
+            var algorithm = new QCAlgorithm();
+            algorithm.SubscriptionManager.SetDataManager(new DataManagerStub(algorithm));
+            algorithm.HistoryProvider = new TestHistoryProvider();
+            algorithm.SetStartDate(2013, 10, 07);
+            algorithm.Settings.SeedInitialPrices = false;
+            return algorithm;
         }
 
         private QCAlgorithm GetAlgorithm(DateTime dateTime)

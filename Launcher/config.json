@@ -289,6 +289,12 @@
   // Users can have multiple different accounts
   "public-account-number": "",
 
+  // Clear Street configuration
+  "clearstreet-api-url": "https://api.clearstreet.com",
+  "clearstreet-access-token": "",
+  // Users can have more than one account
+  "clearstreet-account-id": "",
+
   // Exante trading configuration
   // client-id, application-id, shared-key are required to access Exante REST API
   // Exante generates them at https://exante.eu/clientsarea/dashboard/ after adding an application
@@ -775,6 +781,22 @@
 
       // real brokerage implementations require the BrokerageTransactionHandler
       "live-mode-brokerage": "BloombergFixBrokerage",
+      "data-queue-handler": [ "QuantConnect.Lean.Engine.DataFeeds.Queues.LiveDataQueue" ],
+      "history-provider": [ "SubscriptionDataReaderHistoryProvider" ],
+      "setup-handler": "QuantConnect.Lean.Engine.Setup.BrokerageSetupHandler",
+      "result-handler": "QuantConnect.Lean.Engine.Results.LiveTradingResultHandler",
+      "data-feed-handler": "QuantConnect.Lean.Engine.DataFeeds.LiveTradingDataFeed",
+      "real-time-handler": "QuantConnect.Lean.Engine.RealTime.LiveTradingRealTimeHandler",
+      "transaction-handler": "QuantConnect.Lean.Engine.TransactionHandlers.BrokerageTransactionHandler"
+    },
+
+    // defines the 'live-clearstreet' environment
+    "live-clearstreet": {
+      "live-mode": true,
+
+      // real brokerage implementations require the BrokerageTransactionHandler
+      "live-mode-brokerage": "ClearStreetBrokerage",
+      // Clear Street serves no market data and no history, so Lean uses its own data feed
       "data-queue-handler": [ "QuantConnect.Lean.Engine.DataFeeds.Queues.LiveDataQueue" ],
       "history-provider": [ "SubscriptionDataReaderHistoryProvider" ],
       "setup-handler": "QuantConnect.Lean.Engine.Setup.BrokerageSetupHandler",

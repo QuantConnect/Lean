@@ -38,11 +38,6 @@ namespace QuantConnect.Packets
         public CashBook CashBook { get; set; }
 
         /// <summary>
-        /// Server status information, including CPU/RAM usage, ect...
-        /// </summary>
-        public IDictionary<string, string> ServerStatistics { get; set; }
-
-        /// <summary>
         /// Creates a new instance
         /// </summary>
         public LiveResultParameters(IDictionary<string, Chart> charts,
@@ -58,11 +53,11 @@ namespace QuantConnect.Packets
             AlgorithmConfiguration algorithmConfiguration = null,
             IDictionary<string, string> state = null,
             IReadOnlyList<Analysis> analysisResult = null)
-            : base(charts, orders, profitLoss, statistics, runtimeStatistics, orderEvents, totalPerformance, algorithmConfiguration, state, analysisResult)
+            : base(charts, orders, profitLoss, statistics, runtimeStatistics, orderEvents, totalPerformance, algorithmConfiguration, state, analysisResult,
+                serverStatistics ?? OS.GetServerStatistics())
         {
             Holdings = holdings;
             CashBook = cashBook;
-            ServerStatistics = serverStatistics ?? OS.GetServerStatistics();
         }
     }
 }

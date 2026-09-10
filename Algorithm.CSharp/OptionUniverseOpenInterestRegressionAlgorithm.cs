@@ -86,11 +86,11 @@ namespace QuantConnect.Algorithm.CSharp
                 return;
             }
 
-            // If a more recent open interest tick was received from the data feed, the cache will reflect it instead
+            // If an open interest tick as recent as the chain universe data was received from the data feed, the cache will reflect it instead
             if (checkOpenInterestTick)
             {
                 var lastOpenInterestTick = security.Cache.GetData<OpenInterest>();
-                if (lastOpenInterestTick != null && lastOpenInterestTick.EndTime > chainUniverseData.EndTime)
+                if (lastOpenInterestTick != null && lastOpenInterestTick.EndTime >= chainUniverseData.EndTime)
                 {
                     return;
                 }

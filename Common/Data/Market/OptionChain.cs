@@ -22,9 +22,12 @@ namespace QuantConnect.Data.Market
 {
     /// <summary>
     /// Represents an entire chain of option contracts for a single underlying security.
-    /// This type is <see cref="IEnumerable{OptionContract}"/>
+    /// This type is <see cref="IEnumerable{OptionContract}"/>.
+    /// The chain can be narrowed down with the same filters available for option universe selection
+    /// (see <see cref="IOptionContractFilters{TSelf}"/> and <see cref="OptionFilterUniverse"/>), e.g. <c>chain.calls_only().expiration(0, 30).strikes(-2, 2)</c>.
+    /// Each filter returns a new chain, leaving this one untouched.
     /// </summary>
-    public class OptionChain : BaseChain<OptionContract, OptionContracts>
+    public partial class OptionChain : BaseChain<OptionContract, OptionContracts>, IOptionContractFilters<OptionChain>
     {
         /// <summary>
         /// Initializes a new instance of the <see cref="OptionChain"/> class
@@ -49,9 +52,15 @@ namespace QuantConnect.Data.Market
             bool flatten = true)
             : this(canonicalOptionSymbol, time, flatten)
         {
+            var underlyingSet = false;
             foreach (var contractData in contracts)
             {
-                Underlying ??= contractData.Underlying;
+                // The base constructor pre-sets an empty underlying, so it is replaced by the first actual underlying data found
+                if (!underlyingSet && contractData.Underlying != null)
+                {
+                    Underlying = contractData.Underlying;
+                    underlyingSet = true;
+                }
                 if (contractData.Symbol.ID.Date.Date < time.Date) continue;
                 Contracts[contractData.Symbol] = OptionContract.Create(contractData, symbolProperties);
             }
@@ -62,6 +71,15 @@ namespace QuantConnect.Data.Market
         /// </summary>
         private OptionChain(OptionChain other)
             : base(other)
+        {
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="OptionChain"/> class as a copy of the specified chain
+        /// containing only the given subset of its contracts
+        /// </summary>
+        private OptionChain(OptionChain other, IEnumerable<OptionContract> contracts)
+            : base(other, contracts)
         {
         }
 

@@ -50,7 +50,9 @@ namespace QuantConnect.Indicators
         /// <summary>
         /// Required period, in data points, for the indicator to be ready and fully initialized.
         /// </summary>
-        public int WarmUpPeriod => EMASlow.WarmUpPeriod + ADDifference.WarmUpPeriod;
+        /// <remarks>The two periods share a bar: EMASlow is fed by ADDifference and only
+        /// once it is ready, so ADDifference's last warm-up bar is EMASlow's first input.</remarks>
+        public int WarmUpPeriod => EMASlow.WarmUpPeriod + ADDifference.WarmUpPeriod - 1;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="McClellanOscillator"/> class

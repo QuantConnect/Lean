@@ -31,6 +31,7 @@ namespace QuantConnect.Tests.Common.Brokerages
         [TestCase("SPY", SecurityType.Option)]
         [TestCase("SPX", SecurityType.IndexOption)]
         [TestCase("ES", SecurityType.Future)]
+        [TestCase("SPX", SecurityType.Index)]
         public void CanSubmitOrder_ForSupportedSecurityTypes(string ticker, SecurityType securityType)
         {
             var algo = new AlgorithmStub();
@@ -41,12 +42,10 @@ namespace QuantConnect.Tests.Common.Brokerages
             Assert.IsNull(message);
         }
 
-        // Index is data-only on TerminalLink; Forex/Crypto/Cfd and FutureOption
-        // are not supported for trading.
+        // Forex/Crypto/Cfd and FutureOption are not tradable on TerminalLink
         [TestCase("EURUSD", SecurityType.Forex)]
         [TestCase("BTCUSD", SecurityType.Crypto)]
         [TestCase("DE10YBEUR", SecurityType.Cfd)]
-        [TestCase("SPX", SecurityType.Index)]
         public void CannotSubmitOrder_ForUnsupportedSecurityTypes(string ticker, SecurityType securityType)
         {
             var algo = new AlgorithmStub();
@@ -56,6 +55,19 @@ namespace QuantConnect.Tests.Common.Brokerages
             Assert.IsFalse(_brokerageModel.CanSubmitOrder(security, order, out var message));
             Assert.AreEqual(BrokerageMessageType.Warning, message.Type);
             Assert.AreEqual("NotSupported", message.Code);
+        }
+
+        // A custom basket that quotes as an index is booked on EMSX as a CFD/swap
+        [Test]
+        public void CanSubmitOrder_ForIndex_BookedAsCfdTrade()
+        {
+            var algo = new AlgorithmStub();
+            var security = algo.AddSecurity(SecurityType.Index, "SPX");
+            var properties = new TerminalLinkOrderProperties { IsCfdTrade = true };
+            var order = new MarketOrder(security.Symbol, 1, new DateTime(2024, 1, 2), properties: properties);
+
+            Assert.IsTrue(_brokerageModel.CanSubmitOrder(security, order, out var message), message?.Message);
+            Assert.IsNull(message);
         }
 
         [TestCase(OrderType.Market)]

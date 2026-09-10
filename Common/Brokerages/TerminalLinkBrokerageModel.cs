@@ -30,6 +30,7 @@ namespace QuantConnect.Brokerages
             SecurityType.Option,
             SecurityType.IndexOption,
             SecurityType.Future,
+            SecurityType.Index,
         };
 
         private readonly HashSet<OrderType> _supportedOrderTypes = new()

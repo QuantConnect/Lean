@@ -45,6 +45,11 @@ namespace QuantConnect.Brokerages
         private bool _syncedLiveBrokerageCashToday = true;
         private long _lastSyncTimeTicks = DateTime.UtcNow.Ticks;
 
+        private const int Connected = 1;
+        private const int Disconnected = 0;
+        // written by brokerage threads and read by the transaction handler, always through Interlocked/Volatile
+        private int _connectionState = Connected;
+
         /// <summary>
         /// Event that fires each time the brokerage order id changes
         /// </summary>
@@ -311,6 +316,22 @@ namespace QuantConnect.Brokerages
         {
             try
             {
+                // only let through actual state changes, else a retrying brokerage restarts Lean's recovery window on each attempt
+                if (e.Type == BrokerageMessageType.Disconnect)
+                {
+                    if (Interlocked.Exchange(ref _connectionState, Disconnected) == Disconnected)
+                    {
+                        return;
+                    }
+                }
+                else if (e.Type == BrokerageMessageType.Reconnect)
+                {
+                    if (Interlocked.Exchange(ref _connectionState, Connected) == Connected)
+                    {
+                        return;
+                    }
+                }
+
                 if (e.Type == BrokerageMessageType.Error)
                 {
                     Log.Error("Brokerage.OnMessage(): " + e);
@@ -329,8 +350,8 @@ namespace QuantConnect.Brokerages
         }
 
         /// <summary>
-        /// Creates a <see cref="LeanOAuthTokenHandler"/> and automatically wires it so that
-        /// authentication failures trigger a brokerage error message, causing Lean to shut down gracefully.
+        /// Creates a <see cref="LeanOAuthTokenHandler"/> and automatically wires it so that authentication failures
+        /// report the brokerage as disconnected, and the next successful authentication as reconnected.
         /// </summary>
         /// <param name="apiClient">The API client used to communicate with the Lean platform.</param>
         /// <param name="request">The request model used to generate the access token.</param>
@@ -343,8 +364,26 @@ namespace QuantConnect.Brokerages
             where T : LeanTokenCredentials
         {
             var handler = new LeanOAuthTokenHandler<T>(apiClient, request, tokenLifetime);
-            handler.AuthenticationFailed += (_, ex) => OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Error, "OAuthenticationFailed", ex.Message));
+            handler.AuthenticationFailed += (_, ex) => OnAuthenticationFailed(ex);
+            handler.AuthenticationSucceeded += (_, _) => OnAuthenticationSucceeded();
             return handler;
+        }
+
+        /// <summary>
+        /// Notifies that authentication has succeeded.
+        /// </summary>
+        protected virtual void OnAuthenticationSucceeded()
+        {
+            OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Reconnect, "OAuthenticationSucceeded", "Authentication succeeded."));
+        }
+
+        /// <summary>
+        /// Notifies that authentication has failed.
+        /// </summary>
+        /// <param name="exception">The exception that caused the authentication failure.</param>
+        protected virtual void OnAuthenticationFailed(Exception exception)
+        {
+            OnMessage(new BrokerageMessageEvent(BrokerageMessageType.Disconnect, "OAuthenticationFailed", exception.Message));
         }
 
         /// <summary>
@@ -486,7 +525,8 @@ namespace QuantConnect.Brokerages
                 _syncedLiveBrokerageCashToday = false;
             }
 
-            return !_syncedLiveBrokerageCashToday && currentTimeNewYork.TimeOfDay >= LiveBrokerageCashSyncTime;
+            return !_syncedLiveBrokerageCashToday && currentTimeNewYork.TimeOfDay >= LiveBrokerageCashSyncTime
+                && Volatile.Read(ref _connectionState) == Connected;
         }
 
         /// <summary>

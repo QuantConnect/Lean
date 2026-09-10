@@ -207,6 +207,10 @@ namespace QuantConnect.Tests.Engine.Results
 
             public void CallSetAlgorithmState(string error, string stack) => SetAlgorithmState(error, stack);
 
+            public bool CallTrySetRuntimeStatistic(string key, string value) => TrySetRuntimeStatistic(key, value);
+
+            public Dictionary<string, string> GetRuntimeStatistics => RuntimeStatistics;
+
             protected override void Run()
             {
                 throw new NotImplementedException();
@@ -230,6 +234,56 @@ namespace QuantConnect.Tests.Engine.Results
             protected override void AddToLogStore(string message)
             {
             }
+        }
+
+        [TestCase("Some readable value $1,234.56", true)]
+        [TestCase("Long Only Strategy", true)]
+        [TestCase("123456789012345678901234567890", true)]
+        [TestCase("BUY", true)]
+        [TestCase("TG9yZW0gaXBzdW0gZG9sb3Igc2l0IGFtZXQ=", false)]
+        [TestCase("aGVsbG8gd29ybGQ=", false)]
+        [TestCase("48656c6c6f20576f726c6421", false)]
+        [TestCase("DEADBEEFDEADBEEF", false)]
+        [TestCase("Stop Loss Hit 3 Times Today", true)]
+        [TestCase("Avg Fill Price 123.45 USD", true)]
+        [TestCase("SPY,QQQ,IWM,TLT,GLD,USO", true)]
+        public void RuntimeStatisticRejectsEncodedValues(string value, bool expected)
+        {
+            var handler = new BaseResultsHandlerTestable(AlgorithmId);
+
+            Assert.AreEqual(expected, handler.CallTrySetRuntimeStatistic("Key", value));
+            Assert.AreEqual(expected, handler.CallTrySetRuntimeStatistic(value, "value"));
+        }
+
+        [Test]
+        public void RuntimeStatisticTruncatesLongKeysAndValues()
+        {
+            var handler = new BaseResultsHandlerTestable(AlgorithmId);
+            var longText = string.Join(" ", Enumerable.Repeat("word", 100));
+            Assert.Greater(longText.Length, BaseResultsHandler.MaxRuntimeStatisticLength);
+
+            Assert.IsTrue(handler.CallTrySetRuntimeStatistic(longText, longText));
+
+            var pair = handler.GetRuntimeStatistics.Single();
+            Assert.AreEqual(BaseResultsHandler.MaxRuntimeStatisticLength, pair.Key.Length);
+            Assert.AreEqual(BaseResultsHandler.MaxRuntimeStatisticLength, pair.Value.Length);
+        }
+
+        [Test]
+        public void RuntimeStatisticCapsCount()
+        {
+            var handler = new BaseResultsHandlerTestable(AlgorithmId);
+            for (var i = 0; i < BaseResultsHandler.MaxRuntimeStatisticsCount; i++)
+            {
+                Assert.IsTrue(handler.CallTrySetRuntimeStatistic($"Key {i}", $"{i}"));
+            }
+
+            Assert.IsFalse(handler.CallTrySetRuntimeStatistic("One too many", "1"));
+            Assert.AreEqual(BaseResultsHandler.MaxRuntimeStatisticsCount, handler.GetRuntimeStatistics.Count);
+
+            // updating an existing key is still allowed
+            Assert.IsTrue(handler.CallTrySetRuntimeStatistic("Key 0", "updated"));
+            Assert.AreEqual("updated", handler.GetRuntimeStatistics["Key 0"]);
         }
 
         [Test]

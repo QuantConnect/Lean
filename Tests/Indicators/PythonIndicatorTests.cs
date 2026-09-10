@@ -69,6 +69,10 @@ class CustomSimpleMovingAverage(PythonIndicator):
         count = len(self.queue)
         self.{(SnakeCase ? "value" : "Value")} = np.sum(self.queue) / count
         return count == self.queue.maxlen
+
+    def {(SnakeCase ? "reset" : "Reset")}(self):
+        self.queue.clear()
+        self.{(SnakeCase ? "value" : "Value")} = 0
 "
                 );
                 var indicator = module.GetAttr("CustomSimpleMovingAverage")
@@ -163,6 +167,30 @@ class CustomSimpleMovingAverage(PythonIndicator):
             Assert.IsFalse(sma.IsReady);
             sma.Update(DateTime.UtcNow, 1m);
             Assert.IsTrue(sma.IsReady);
+        }
+
+        [Test]
+        public void ResetClearsTheStateHeldInPython()
+        {
+            var indicator = CreateIndicator();
+            var reference = new DateTime(2024, 1, 1);
+
+            // Enough points to reach IsReady, otherwise asserting it is false after the reset
+            // passes on an indicator that was never ready.
+            for (var i = 0; i < 20; i++)
+            {
+                indicator.Update(new IndicatorDataPoint(reference.AddDays(i), 100m + i));
+            }
+            Assert.IsTrue(indicator.IsReady);
+
+            indicator.Reset();
+
+            Assert.AreEqual(0, indicator.Samples);
+            Assert.IsFalse(indicator.IsReady);
+
+            indicator.Update(new IndicatorDataPoint(reference, 100m));
+
+            Assert.AreEqual(100m, indicator.Current.Value);
         }
 
         [Test]

@@ -277,7 +277,7 @@ namespace QuantConnect.Tests.Brokerages
             new TestCaseData("GBPUSD", SecurityType.Crypto, Market.Binance),
             new TestCaseData("USDJPY", SecurityType.Crypto, Market.Binance),
             new TestCaseData("BTCETH", SecurityType.Crypto, Market.Binance),
-            new TestCaseData("BTCUSD", SecurityType.Crypto, Market.Binance)
+            new TestCaseData("USDCBTC", SecurityType.Crypto, Market.Binance)
         };
 
         private static TestCaseData[] UnknownSecurityType => new[]

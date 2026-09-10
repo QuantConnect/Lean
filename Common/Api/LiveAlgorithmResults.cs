@@ -93,6 +93,12 @@ namespace QuantConnect.Api
         public IDictionary<string, string> RuntimeStatistics { get; set; }
 
         /// <summary>
+        /// Server status information, including CPU/RAM usage, ect...
+        /// </summary>
+        [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
+        public IDictionary<string, string> ServerStatistics { get; set; }
+
+        /// <summary>
         /// Charts updates for the live algorithm since the last result packet
         /// </summary>
         [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]

@@ -35,6 +35,7 @@ namespace QuantConnect.Data.Market
         private Dictionary<Type, Dictionary<Symbol, List<BaseData>>> _auxiliaryData;
         private readonly Lazy<PyObject> _dataframe;
         private readonly bool _flatten;
+        private DateTime? _exchangeTime;
 
         private Dictionary<Type, Dictionary<Symbol, List<BaseData>>> AuxiliaryData
         {
@@ -57,6 +58,16 @@ namespace QuantConnect.Data.Market
         public BaseData Underlying
         {
             get; internal set;
+        }
+
+        /// <summary>
+        /// The chain time in the exchange time zone, the reference date for the contract filters. Slice chains carry
+        /// their data's end time, chains built from universe data default to <see cref="BaseData.Time"/>
+        /// </summary>
+        internal DateTime ExchangeTime
+        {
+            get => _exchangeTime ?? Time;
+            set => _exchangeTime = value;
         }
 
         /// <summary>
@@ -171,6 +182,7 @@ namespace QuantConnect.Data.Market
         {
             Symbol = other.Symbol;
             Time = other.Time;
+            _exchangeTime = other._exchangeTime;
             Value = other.Value;
             Underlying = other.Underlying;
             Ticks = other.Ticks;
@@ -178,6 +190,24 @@ namespace QuantConnect.Data.Market
             TradeBars = other.TradeBars;
             Contracts = other.Contracts;
             FilteredContracts = other.FilteredContracts;
+            _auxiliaryData = other._auxiliaryData;
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="BaseChain{T, TContractsCollection}"/> class as a copy of the specified chain
+        /// containing only the given subset of its contracts. The underlying, ticks, trade bars, quote bars and auxiliary data are shared with the source chain
+        /// </summary>
+        /// <param name="other">The chain to copy</param>
+        /// <param name="contracts">The contracts to keep</param>
+        protected BaseChain(BaseChain<T, TContractsCollection> other, IEnumerable<T> contracts)
+            : this(other)
+        {
+            Contracts = new();
+            Contracts.Time = other.Contracts.Time;
+            foreach (var contract in contracts)
+            {
+                Contracts[contract.Symbol] = contract;
+            }
         }
 
         /// <summary>
