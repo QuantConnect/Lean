@@ -43,7 +43,9 @@ namespace QuantConnect.Data.Fundamental
         /// Gets/sets the SixMonths period value for the field
         /// </summary>
         [JsonProperty("6M")]
-        public double SixMonths => FundamentalService.Get<double>(TimeProvider.GetUtcNow(), SecurityIdentifier, FundamentalProperty.FinancialStatements_BalanceSheet_GeneralPartnershipCapital_SixMonths);
+        [Obsolete("GeneralPartnershipCapital.SixMonths was retired by Morningstar in 2026; use GeneralPartnershipCapital.ThreeMonths (also available: TwelveMonths).")]
+        [JsonIgnore]
+        public double SixMonths => throw new NotSupportedException("GeneralPartnershipCapital.SixMonths was retired by Morningstar in 2026; use GeneralPartnershipCapital.ThreeMonths (also available: TwelveMonths).");
 
         /// <summary>
         /// Gets/sets the TwelveMonths period value for the field
@@ -79,7 +81,7 @@ namespace QuantConnect.Data.Fundamental
         public override IReadOnlyDictionary<string, double> GetPeriodValues()
         {
             var result = new Dictionary<string, double>();
-            foreach (var kvp in new[] { new Tuple<string, double>("3M",ThreeMonths), new Tuple<string, double>("6M",SixMonths), new Tuple<string, double>("12M",TwelveMonths) })
+            foreach (var kvp in new[] { new Tuple<string, double>("3M",ThreeMonths), new Tuple<string, double>("12M",TwelveMonths) })
             {
                 if(!BaseFundamentalDataProvider.IsNone(typeof(double), kvp.Item2))
                 {

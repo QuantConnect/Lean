@@ -37,9 +37,7 @@ namespace QuantConnect.Data.Fundamental
         /// Gets/sets the OneMonth period value for the field
         /// </summary>
         [JsonProperty("1M")]
-        [Obsolete("CashPaymentsforDepositsbyBanksandCustomers.OneMonth was retired by Morningstar in 2026; use CashPaymentsforDepositsbyBanksandCustomers.ThreeMonths (also available: SixMonths, NineMonths, TwelveMonths).")]
-        [JsonIgnore]
-        public double OneMonth => throw new NotSupportedException("CashPaymentsforDepositsbyBanksandCustomers.OneMonth was retired by Morningstar in 2026; use CashPaymentsforDepositsbyBanksandCustomers.ThreeMonths (also available: SixMonths, NineMonths, TwelveMonths).");
+        public double OneMonth => FundamentalService.Get<double>(TimeProvider.GetUtcNow(), SecurityIdentifier, FundamentalProperty.FinancialStatements_CashFlowStatement_CashPaymentsforDepositsbyBanksandCustomers_OneMonth);
 
         /// <summary>
         /// Gets/sets the ThreeMonths period value for the field
@@ -93,7 +91,7 @@ namespace QuantConnect.Data.Fundamental
         public override IReadOnlyDictionary<string, double> GetPeriodValues()
         {
             var result = new Dictionary<string, double>();
-            foreach (var kvp in new[] { new Tuple<string, double>("3M",ThreeMonths), new Tuple<string, double>("6M",SixMonths), new Tuple<string, double>("9M",NineMonths), new Tuple<string, double>("12M",TwelveMonths) })
+            foreach (var kvp in new[] { new Tuple<string, double>("1M",OneMonth), new Tuple<string, double>("3M",ThreeMonths), new Tuple<string, double>("6M",SixMonths), new Tuple<string, double>("9M",NineMonths), new Tuple<string, double>("12M",TwelveMonths) })
             {
                 if(!BaseFundamentalDataProvider.IsNone(typeof(double), kvp.Item2))
                 {
