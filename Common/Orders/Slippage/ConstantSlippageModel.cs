@@ -14,6 +14,7 @@
 */
 
 using QuantConnect.Data;
+using QuantConnect.Data.Market;
 using QuantConnect.Securities;
 
 namespace QuantConnect.Orders.Slippage
@@ -41,19 +42,9 @@ namespace QuantConnect.Orders.Slippage
             var lastData = asset.GetLastData();
             if (lastData == null) return 0;
 
-            return lastData.Value*_slippagePercent;
-        }
+            // Market on open orders fill at the bar open, which is the price we have to reference, not the bar close
+            var referencePrice = order.Type == OrderType.MarketOnOpen && lastData is IBar bar ? bar.Open : lastData.Value;
 
-        /// <summary>
-        /// Slippage Model. Return a decimal cash slippage approximation on the order
-        /// using the provided reference price.
-        /// </summary>
-        /// <param name="asset">The security matching the order</param>
-        /// <param name="order">The order to compute slippage for</param>
-        /// <param name="referencePrice">The price used as the reference for the slippage calculation</param>
-        /// <returns>The slippage approximation</returns>
-        public decimal GetSlippageApproximation(Security asset, Order order, decimal referencePrice)
-        {
             return referencePrice * _slippagePercent;
         }
     }

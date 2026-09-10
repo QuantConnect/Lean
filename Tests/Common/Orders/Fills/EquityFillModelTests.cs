@@ -447,9 +447,14 @@ namespace QuantConnect.Tests.Common.Orders.Fills
             Assert.AreEqual(expected, fill.FillPrice);
         }
 
-        [TestCase(-100, 103.896)]
-        [TestCase(100, 104.104)]
-        public void PerformsMarketOnOpenUsingOpenPriceForConstantSlippageWithDailySubscription(int quantity, decimal expected)
+        // The slippage is referenced to the bar open, so the fill price does not depend on the bar close
+        [TestCase(-100, 103.896, Resolution.Daily)]
+        [TestCase(100, 104.104, Resolution.Daily)]
+        [TestCase(-100, 103.896, Resolution.Hour)]
+        [TestCase(100, 104.104, Resolution.Hour)]
+        [TestCase(-100, 103.896, Resolution.Minute)]
+        [TestCase(100, 104.104, Resolution.Minute)]
+        public void PerformsMarketOnOpenUsingOpenPriceForConstantSlippage(int quantity, decimal expected, Resolution resolution)
         {
             const decimal open = 104m;
             const decimal baselineClose = 105m;
@@ -457,7 +462,7 @@ namespace QuantConnect.Tests.Common.Orders.Fills
             const decimal slippagePercent = 0.001m;
 
             var reference = new DateTime(2015, 06, 05, 12, 0, 0);
-            var config = CreateTradeBarConfig(Symbols.SPY, Resolution.Daily);
+            var config = CreateTradeBarConfig(Symbols.SPY, resolution);
 
             var baselineEquity = CreateEquity(config);
             var mutatedEquity = CreateEquity(config);
@@ -468,15 +473,16 @@ namespace QuantConnect.Tests.Common.Orders.Fills
             var time = baselineEquity.Exchange.Hours.GetNextMarketOpen(reference, false);
             TimeKeeper.SetUtcDateTime(time.ConvertToUtc(TimeZones.NewYork));
 
+            var period = resolution.ToTimeSpan();
             TradeBar GetTradeBar(decimal close) => new TradeBar(
-                time.RoundDown(Time.OneDay),
+                time.RoundDown(period),
                 Symbols.SPY,
                 open,
                 106m,
                 100m,
                 close,
                 100,
-                Time.OneDay);
+                period);
 
             baselineEquity.SetMarketPrice(GetTradeBar(baselineClose));
             mutatedEquity.SetMarketPrice(GetTradeBar(mutatedClose));

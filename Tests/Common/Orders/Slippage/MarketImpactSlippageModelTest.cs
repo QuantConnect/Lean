@@ -162,6 +162,23 @@ namespace QuantConnect.Tests.Common.Orders.Slippage
             Assert.AreEqual(expected, (double)slippage, 0.005d);
         }
 
+        // Market on open orders fill at the bar open, so the slippage is referenced to it instead of the close
+        [TestCase(10000)]
+        [TestCase(-10000)]
+        public void MarketOnOpenOrdersReferenceTheOpenPrice(decimal orderQuantity)
+        {
+            var asset = _securities[0];
+            asset.SetMarketPrice(new TradeBar(_algorithm.Time, asset.Symbol, 90m, 110m, 80m, 100m, 1));
+            var time = new DateTime(2015, 6, 10, 14, 00, 0);
+
+            // fresh models so both use the same noise sequence
+            var marketSlippage = new MarketImpactSlippageModel(_algorithm).GetSlippageApproximation(asset, new MarketOrder(asset.Symbol, orderQuantity, time));
+            var marketOnOpenSlippage = new MarketImpactSlippageModel(_algorithm).GetSlippageApproximation(asset, new MarketOnOpenOrder(asset.Symbol, orderQuantity, time));
+
+            Assert.AreEqual(0.5075d, (double)marketSlippage, 0.005d);
+            Assert.AreEqual((double)marketSlippage * 0.9d, (double)marketOnOpenSlippage, 0.0001d);
+        }
+
         // Test on buy & sell orders
         [TestCase(1)]
         [TestCase(-1)]

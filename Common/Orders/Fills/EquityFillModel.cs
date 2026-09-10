@@ -563,6 +563,9 @@ namespace QuantConnect.Orders.Fills
             fill.FillQuantity = order.Quantity;
             fill.Status = OrderStatus.Filled;
 
+            //Calculate the model slippage: e.g. 0.01c
+            var slip = asset.SlippageModel.GetSlippageApproximation(asset, order);
+
             var bestEffortMessage = "";
 
             // If there is no trade information, get the bid or ask, then apply the slippage
@@ -575,7 +578,7 @@ namespace QuantConnect.Orders.Fills
                         fill.Message += bestEffortMessage;
                     }
 
-                    fill.FillPrice += asset.SlippageModel.GetSlippageApproximation(asset, order, fill.FillPrice);
+                    fill.FillPrice += slip;
                     break;
                 case OrderDirection.Sell:
                     if (fill.FillPrice == 0)
@@ -584,7 +587,7 @@ namespace QuantConnect.Orders.Fills
                         fill.Message += bestEffortMessage;
                     }
 
-                    fill.FillPrice -= asset.SlippageModel.GetSlippageApproximation(asset, order, fill.FillPrice);
+                    fill.FillPrice -= slip;
                     break;
             }
 

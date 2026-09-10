@@ -14,13 +14,17 @@
 */
 
 using NUnit.Framework;
+using Python.Runtime;
+using QuantConnect.Data;
 using QuantConnect.Data.Market;
 using QuantConnect.Orders;
 using QuantConnect.Orders.Slippage;
+using QuantConnect.Python;
 using QuantConnect.Securities;
 using QuantConnect.Securities.Equity;
 using QuantConnect.Securities.Forex;
 using System;
+using System.IO;
 
 namespace QuantConnect.Tests.Common.Orders.Slippage
 {
@@ -161,22 +165,104 @@ namespace QuantConnect.Tests.Common.Orders.Slippage
             var actual = model.GetSlippageApproximation(_forex, _forexBuyOrder);
             Assert.AreEqual(expected, actual);
         }
-        [Test]
-        public void SlippageModelReferencePriceOverloadIsBackwardsCompatible()
+
+        // Market on open orders fill at the bar open, so the slippage is referenced to it instead of the close.
+        // Any other order type keeps using the last price. Ticks have no open so the price is used
+        [TestCase(MarketDataType.TradeBar, OrderType.Market, 100)]
+        [TestCase(MarketDataType.TradeBar, OrderType.MarketOnOpen, 90)]
+        [TestCase(MarketDataType.TradeBar, OrderType.MarketOnClose, 100)]
+        [TestCase(MarketDataType.TradeBar, OrderType.Limit, 100)]
+        [TestCase(MarketDataType.QuoteBar, OrderType.Market, 100)]
+        [TestCase(MarketDataType.QuoteBar, OrderType.MarketOnOpen, 90)]
+        [TestCase(MarketDataType.Tick, OrderType.Market, 100)]
+        [TestCase(MarketDataType.Tick, OrderType.MarketOnOpen, 100)]
+        public void SlippageModelsReferenceTheOpenPriceForMarketOnOpenOrders(MarketDataType dataType, OrderType orderType, decimal expectedReferencePrice)
         {
-            ISlippageModel model = new LegacySlippageModel();
+            var security = CreateSecurityWithData(dataType);
+            var order = CreateOrder(orderType, security.Symbol);
 
-            var actual = model.GetSlippageApproximation(_equity, _equityBuyOrder, 123m);
+            Assert.AreEqual(expectedReferencePrice * 0.5m, new ConstantSlippageModel(0.5m).GetSlippageApproximation(security, order));
 
-            Assert.AreEqual(42m, actual);
+            if (security.Type == SecurityType.Equity)
+            {
+                Assert.AreEqual(expectedReferencePrice * 0.0001m, new AlphaStreamsSlippageModel().GetSlippageApproximation(security, order));
+            }
+
+            var volumeShareModel = new VolumeShareSlippageModel();
+            if (dataType == MarketDataType.Tick)
+            {
+                Assert.Throws<InvalidOperationException>(() => volumeShareModel.GetSlippageApproximation(security, order));
+            }
+            else
+            {
+                // order quantity is 1 and the bar volume is 100, below the volume limit
+                var volumeShare = 1m / 100m;
+                Assert.AreEqual(expectedReferencePrice * volumeShare * volumeShare * 0.1m, volumeShareModel.GetSlippageApproximation(security, order));
+            }
         }
 
-        private sealed class LegacySlippageModel : ISlippageModel
+        [TestCase(MarketDataType.TradeBar, OrderType.Market, 100)]
+        [TestCase(MarketDataType.TradeBar, OrderType.MarketOnOpen, 90)]
+        [TestCase(MarketDataType.QuoteBar, OrderType.Market, 100)]
+        [TestCase(MarketDataType.QuoteBar, OrderType.MarketOnOpen, 90)]
+        public void PythonVolumeShareSlippageModelReferencesTheOpenPriceForMarketOnOpenOrders(MarketDataType dataType, OrderType orderType, decimal expectedReferencePrice)
         {
-            public decimal GetSlippageApproximation(Security asset, Order order)
+            var security = CreateSecurityWithData(dataType);
+            var order = CreateOrder(orderType, security.Symbol);
+
+            ISlippageModel model;
+            using (Py.GIL())
             {
-                return 42m;
+                var module = PyModule.FromString("VolumeShareSlippageModelTest",
+                    File.ReadAllText("../../../Common/Orders/Slippage/VolumeShareSlippageModel.py"));
+                model = new SlippageModelPythonWrapper(module.GetAttr("VolumeShareSlippageModel").Invoke());
             }
+
+            // order quantity is 1 and the bar volume is 100, below the volume limit
+            var volumeShare = 1m / 100m;
+            var expected = expectedReferencePrice * volumeShare * volumeShare * 0.1m;
+            Assert.AreEqual((double)expected, (double)model.GetSlippageApproximation(security, order), 1e-12);
+        }
+
+        private static Order CreateOrder(OrderType orderType, Symbol symbol)
+        {
+            var time = new DateTime(2015, 6, 10, 9, 0, 0);
+            return orderType switch
+            {
+                OrderType.Market => new MarketOrder(symbol, 1, time),
+                OrderType.MarketOnOpen => new MarketOnOpenOrder(symbol, 1, time),
+                OrderType.MarketOnClose => new MarketOnCloseOrder(symbol, 1, time),
+                OrderType.Limit => new LimitOrder(symbol, 1, 100, time),
+                _ => throw new ArgumentOutOfRangeException(nameof(orderType))
+            };
+        }
+
+        /// <summary>
+        /// Sets data whose open is 90 and close is 100 as the last data of a security and returns it.
+        /// Quote bars are not the default data type for equities, so forex is used for them
+        /// </summary>
+        private Security CreateSecurityWithData(MarketDataType dataType)
+        {
+            var time = new DateTime(2015, 6, 10, 9, 30, 0);
+            BaseData data;
+            switch (dataType)
+            {
+                case MarketDataType.TradeBar:
+                    data = new TradeBar(time, Symbols.SPY, 90m, 110m, 80m, 100m, 100);
+                    break;
+                case MarketDataType.QuoteBar:
+                    data = new QuoteBar(time, Symbols.EURUSD, new Bar(89m, 109m, 79m, 99m), 100, new Bar(91m, 111m, 81m, 101m), 100);
+                    break;
+                case MarketDataType.Tick:
+                    data = new Tick(time, Symbols.SPY, 100m, 100m) { TickType = TickType.Trade, Quantity = 100 };
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(dataType));
+            }
+
+            Security security = data.Symbol == Symbols.SPY ? _equity : _forex;
+            security.SetMarketPrice(data);
+            return security;
         }
     }
 }
