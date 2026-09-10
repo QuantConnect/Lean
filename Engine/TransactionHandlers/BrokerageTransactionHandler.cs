@@ -1,4 +1,4 @@
-﻿/*
+/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
  *
@@ -1442,11 +1442,11 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
 
                 case OrderType.StopLimit:
                     var stopLimitOrder = (StopLimitOrder)order;
-                    if (e.StopTriggeredTime.HasValue || !e.StopTriggered)
+                    if (e.StopTriggeredTime.HasValue)
                     {
                         stopLimitOrder.StopTriggeredTime = e.StopTriggeredTime;
                     }
-                    else if (!stopLimitOrder.StopTriggered)
+                    else if (e.StopTriggered && (!stopLimitOrder.StopTriggered || !stopLimitOrder.StopTriggeredTime.HasValue))
                     {
                         // the brokerage doesn't provide the trigger time, use the current time
                         stopLimitOrder.StopTriggeredTime = _algorithm.UtcTime;
