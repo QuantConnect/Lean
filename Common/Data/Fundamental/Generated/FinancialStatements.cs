@@ -306,36 +306,6 @@ namespace QuantConnect.Data.Fundamental
         private AdjustedDilutedNetAssetValue _adjustedDilutedNetAssetValue;
 
         /// <summary>
-        /// EPRA net disposal value, the shareholder value if assets were sold
-        /// </summary>
-        /// <remarks>
-        /// Morningstar DataId: EQX1U
-        /// </remarks>
-        [JsonProperty("EQX1U")]
-        public EPRANetDisposalValue EPRANetDisposalValue => _ePRANetDisposalValue ??= new(_timeProvider, _securityIdentifier);
-        private EPRANetDisposalValue _ePRANetDisposalValue;
-
-        /// <summary>
-        /// EPRA net reinstatement value, the value required to rebuild the entity
-        /// </summary>
-        /// <remarks>
-        /// Morningstar DataId: EQYKY
-        /// </remarks>
-        [JsonProperty("EQYKY")]
-        public EPRANetReinstatementValue EPRANetReinstatementValue => _ePRANetReinstatementValue ??= new(_timeProvider, _securityIdentifier);
-        private EPRANetReinstatementValue _ePRANetReinstatementValue;
-
-        /// <summary>
-        /// EPRA net tangible assets, assuming the entity buys and sells assets over time
-        /// </summary>
-        /// <remarks>
-        /// Morningstar DataId: EQH47
-        /// </remarks>
-        [JsonProperty("EQH47")]
-        public EPRANetTangibleAssets EPRANetTangibleAssets => _ePRANetTangibleAssets ??= new(_timeProvider, _securityIdentifier);
-        private EPRANetTangibleAssets _ePRANetTangibleAssets;
-
-        /// <summary>
         /// Adjusted funds from operations as reported, on a basic share basis
         /// </summary>
         /// <remarks>
@@ -384,36 +354,6 @@ namespace QuantConnect.Data.Fundamental
         [JsonProperty("EQBAB")]
         public AdjustedDilutedNetAssetValuePerShare AdjustedDilutedNetAssetValuePerShare => _adjustedDilutedNetAssetValuePerShare ??= new(_timeProvider, _securityIdentifier);
         private AdjustedDilutedNetAssetValuePerShare _adjustedDilutedNetAssetValuePerShare;
-
-        /// <summary>
-        /// EPRA net disposal value per share
-        /// </summary>
-        /// <remarks>
-        /// Morningstar DataId: EQD44
-        /// </remarks>
-        [JsonProperty("EQD44")]
-        public EPRANetDisposalValuePerShare EPRANetDisposalValuePerShare => _ePRANetDisposalValuePerShare ??= new(_timeProvider, _securityIdentifier);
-        private EPRANetDisposalValuePerShare _ePRANetDisposalValuePerShare;
-
-        /// <summary>
-        /// EPRA net reinstatement value per share
-        /// </summary>
-        /// <remarks>
-        /// Morningstar DataId: EQ6CG
-        /// </remarks>
-        [JsonProperty("EQ6CG")]
-        public EPRANetReinstatementValuePerShare EPRANetReinstatementValuePerShare => _ePRANetReinstatementValuePerShare ??= new(_timeProvider, _securityIdentifier);
-        private EPRANetReinstatementValuePerShare _ePRANetReinstatementValuePerShare;
-
-        /// <summary>
-        /// EPRA net tangible assets per share
-        /// </summary>
-        /// <remarks>
-        /// Morningstar DataId: EQO4O
-        /// </remarks>
-        [JsonProperty("EQO4O")]
-        public EPRANetTangibleAssetsPerShare EPRANetTangibleAssetsPerShare => _ePRANetTangibleAssetsPerShare ??= new(_timeProvider, _securityIdentifier);
-        private EPRANetTangibleAssetsPerShare _ePRANetTangibleAssetsPerShare;
 
         /// <summary>
         /// Adjusted funds from operations per basic share, as reported
