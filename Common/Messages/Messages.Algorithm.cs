@@ -99,6 +99,16 @@ namespace QuantConnect
                 return $"{AlgorithmPrefix()}.{FormatCode("AddData")}(): the first argument must be a custom data type (a Python class deriving from {FormatCode("PythonData")} or a CLR {FormatCode("BaseData")} type), but received {repr}. " +
                     $"To subscribe to built-in asset classes use, for example, {FormatCode("AddEquity")} or {FormatCode("AddCrypto")}.";
             }
+
+            /// <summary>
+            /// Returns a warning message saying an option uses a finer resolution than its underlying
+            /// </summary>
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public static string OptionUnderlyingResolutionIsCoarser(global::QuantConnect.Symbol option, Resolution optionResolution, Resolution underlyingResolution)
+            {
+                return $"Option {option} uses {optionResolution} resolution but its underlying {option.Underlying} uses {underlyingResolution}, " +
+                    $"so Greeks and implied volatility will use stale prices. Add the underlying at {optionResolution} resolution or finer.";
+            }
         }
 
         /// <summary>

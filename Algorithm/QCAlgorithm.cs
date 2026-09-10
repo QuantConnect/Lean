@@ -107,6 +107,7 @@ namespace QuantConnect.Algorithm
         private bool _tagsLimitReachedLogSent;
         private bool _tagsCollectionTruncatedLogSent;
         private bool _hasShownDailyConsolidationWarning;
+        private bool _optionUnderlyingResolutionWarningSent;
         private bool _indexOptionTickerAsUnderlyingWarningSent;
         private DateTime _start;
         private DateTime _startDate;   //Default start and end dates.
@@ -2198,6 +2199,9 @@ namespace QuantConnect.Algorithm
                 canonicalSymbol = QuantConnect.Symbol.CreateCanonicalOption(underlying, targetOption, market, alias);
             }
 
+            WarnIfUnderlyingResolutionIsCoarser(canonicalSymbol,
+                SubscriptionManager.SubscriptionDataConfigService.GetSubscriptionDataConfigs(underlying), resolution);
+
             return (Option)AddSecurity(canonicalSymbol, resolution, fillForward, leverage);
         }
 
@@ -2399,6 +2403,26 @@ namespace QuantConnect.Algorithm
         }
 
         /// <summary>
+        /// Warns once if the option resolution is finer than the existing underlying subscription,
+        /// since the option pricing models would then use a stale underlying price
+        /// </summary>
+        private void WarnIfUnderlyingResolutionIsCoarser(Symbol option, List<SubscriptionDataConfig> underlyingConfigs, Resolution? optionResolution)
+        {
+            if (_optionUnderlyingResolutionWarningSent || underlyingConfigs.Count == 0)
+            {
+                return;
+            }
+
+            var resolution = optionResolution ?? UniverseSettings.Resolution;
+            var underlyingResolution = underlyingConfigs.GetHighestResolution();
+            if (underlyingResolution > resolution)
+            {
+                Debug($"Warning: {Messages.QCAlgorithm.OptionUnderlyingResolutionIsCoarser(option, resolution, underlyingResolution)}");
+                _optionUnderlyingResolutionWarningSent = true;
+            }
+        }
+
+        /// <summary>
         /// Creates and adds a new single <see cref="Option"/> contract to the algorithm
         /// </summary>
         /// <param name="symbol">The option contract symbol</param>
@@ -2453,6 +2477,8 @@ namespace QuantConnect.Algorithm
                     }
                 }
             }
+
+            WarnIfUnderlyingResolutionIsCoarser(symbol, underlyingConfigs, resolution);
 
             var configs = SubscriptionManager.SubscriptionDataConfigService.Add(symbol, resolution, fillForward, extendedMarketHours,
                 dataNormalizationMode: DataNormalizationMode.Raw);
