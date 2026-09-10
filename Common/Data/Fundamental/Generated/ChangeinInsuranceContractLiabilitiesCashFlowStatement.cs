@@ -37,25 +37,19 @@ namespace QuantConnect.Data.Fundamental
         /// Gets/sets the ThreeMonths period value for the field
         /// </summary>
         [JsonProperty("3M")]
-        [Obsolete("ChangeinInsuranceContractLiabilities.ThreeMonths was retired by Morningstar in 2026; use ChangeinInsuranceContractLiabilities.TwelveMonths.")]
-        [JsonIgnore]
-        public double ThreeMonths => throw new NotSupportedException("ChangeinInsuranceContractLiabilities.ThreeMonths was retired by Morningstar in 2026; use ChangeinInsuranceContractLiabilities.TwelveMonths.");
+        public double ThreeMonths => FundamentalService.Get<double>(TimeProvider.GetUtcNow(), SecurityIdentifier, FundamentalProperty.FinancialStatements_CashFlowStatement_ChangeinInsuranceContractLiabilities_ThreeMonths);
 
         /// <summary>
         /// Gets/sets the SixMonths period value for the field
         /// </summary>
         [JsonProperty("6M")]
-        [Obsolete("ChangeinInsuranceContractLiabilities.SixMonths was retired by Morningstar in 2026; use ChangeinInsuranceContractLiabilities.TwelveMonths.")]
-        [JsonIgnore]
-        public double SixMonths => throw new NotSupportedException("ChangeinInsuranceContractLiabilities.SixMonths was retired by Morningstar in 2026; use ChangeinInsuranceContractLiabilities.TwelveMonths.");
+        public double SixMonths => FundamentalService.Get<double>(TimeProvider.GetUtcNow(), SecurityIdentifier, FundamentalProperty.FinancialStatements_CashFlowStatement_ChangeinInsuranceContractLiabilities_SixMonths);
 
         /// <summary>
         /// Gets/sets the NineMonths period value for the field
         /// </summary>
         [JsonProperty("9M")]
-        [Obsolete("ChangeinInsuranceContractLiabilities.NineMonths was retired by Morningstar in 2026; use ChangeinInsuranceContractLiabilities.TwelveMonths.")]
-        [JsonIgnore]
-        public double NineMonths => throw new NotSupportedException("ChangeinInsuranceContractLiabilities.NineMonths was retired by Morningstar in 2026; use ChangeinInsuranceContractLiabilities.TwelveMonths.");
+        public double NineMonths => FundamentalService.Get<double>(TimeProvider.GetUtcNow(), SecurityIdentifier, FundamentalProperty.FinancialStatements_CashFlowStatement_ChangeinInsuranceContractLiabilities_NineMonths);
 
         /// <summary>
         /// Gets/sets the TwelveMonths period value for the field
@@ -91,7 +85,7 @@ namespace QuantConnect.Data.Fundamental
         public override IReadOnlyDictionary<string, double> GetPeriodValues()
         {
             var result = new Dictionary<string, double>();
-            foreach (var kvp in new[] { new Tuple<string, double>("12M",TwelveMonths) })
+            foreach (var kvp in new[] { new Tuple<string, double>("3M",ThreeMonths), new Tuple<string, double>("6M",SixMonths), new Tuple<string, double>("9M",NineMonths), new Tuple<string, double>("12M",TwelveMonths) })
             {
                 if(!BaseFundamentalDataProvider.IsNone(typeof(double), kvp.Item2))
                 {

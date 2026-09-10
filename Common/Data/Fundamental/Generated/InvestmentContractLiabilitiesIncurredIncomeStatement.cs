@@ -37,9 +37,7 @@ namespace QuantConnect.Data.Fundamental
         /// Gets/sets the ThreeMonths period value for the field
         /// </summary>
         [JsonProperty("3M")]
-        [Obsolete("InvestmentContractLiabilitiesIncurred.ThreeMonths was retired by Morningstar in 2026; use InvestmentContractLiabilitiesIncurred.SixMonths (also available: TwelveMonths).")]
-        [JsonIgnore]
-        public double ThreeMonths => throw new NotSupportedException("InvestmentContractLiabilitiesIncurred.ThreeMonths was retired by Morningstar in 2026; use InvestmentContractLiabilitiesIncurred.SixMonths (also available: TwelveMonths).");
+        public double ThreeMonths => FundamentalService.Get<double>(TimeProvider.GetUtcNow(), SecurityIdentifier, FundamentalProperty.FinancialStatements_IncomeStatement_InvestmentContractLiabilitiesIncurred_ThreeMonths);
 
         /// <summary>
         /// Gets/sets the SixMonths period value for the field
@@ -51,9 +49,7 @@ namespace QuantConnect.Data.Fundamental
         /// Gets/sets the NineMonths period value for the field
         /// </summary>
         [JsonProperty("9M")]
-        [Obsolete("InvestmentContractLiabilitiesIncurred.NineMonths was retired by Morningstar in 2026; use InvestmentContractLiabilitiesIncurred.SixMonths (also available: TwelveMonths).")]
-        [JsonIgnore]
-        public double NineMonths => throw new NotSupportedException("InvestmentContractLiabilitiesIncurred.NineMonths was retired by Morningstar in 2026; use InvestmentContractLiabilitiesIncurred.SixMonths (also available: TwelveMonths).");
+        public double NineMonths => FundamentalService.Get<double>(TimeProvider.GetUtcNow(), SecurityIdentifier, FundamentalProperty.FinancialStatements_IncomeStatement_InvestmentContractLiabilitiesIncurred_NineMonths);
 
         /// <summary>
         /// Gets/sets the TwelveMonths period value for the field
@@ -89,7 +85,7 @@ namespace QuantConnect.Data.Fundamental
         public override IReadOnlyDictionary<string, double> GetPeriodValues()
         {
             var result = new Dictionary<string, double>();
-            foreach (var kvp in new[] { new Tuple<string, double>("6M",SixMonths), new Tuple<string, double>("12M",TwelveMonths) })
+            foreach (var kvp in new[] { new Tuple<string, double>("3M",ThreeMonths), new Tuple<string, double>("6M",SixMonths), new Tuple<string, double>("9M",NineMonths), new Tuple<string, double>("12M",TwelveMonths) })
             {
                 if(!BaseFundamentalDataProvider.IsNone(typeof(double), kvp.Item2))
                 {
