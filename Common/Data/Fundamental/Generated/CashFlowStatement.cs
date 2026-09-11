@@ -39,6 +39,16 @@ namespace QuantConnect.Data.Fundamental
         private CashFlowFileDate _cFFileDate;
 
         /// <summary>
+        /// Period ending date of the cash flow statement as its own feed delivers it. PeriodEndingDate on FinancialStatements moves only once every statement has reached a period; this one moves as soon as the cash flow statement has.
+        /// </summary>
+        /// <remarks>
+        /// Morningstar DataId: EQ5AB
+        /// </remarks>
+        [JsonProperty("EQ5AB")]
+        public CashFlowStatementPeriodEndingDate CFPeriodEndingDate => _cfPeriodEndingDate ??= new(_timeProvider, _securityIdentifier);
+        private CashFlowStatementPeriodEndingDate _cfPeriodEndingDate;
+
+        /// <summary>
         /// The systematic and rational apportionment of the acquisition cost of intangible operational assets to future periods in which the benefits contribute to revenue. This field is to include Amortization and any variation where Amortization is the first account listed in the line item, excluding Amortization of Intangibles.
         /// </summary>
         /// <remarks>
