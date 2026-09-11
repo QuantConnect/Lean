@@ -269,6 +269,34 @@ namespace QuantConnect.Securities
         }
 
         /// <summary>
+        /// Returns the contracts of the farthest expiration
+        /// </summary>
+        /// <returns>Universe with filter applied</returns>
+        public virtual T FarthestExpiration()
+        {
+            ApplyTypesFilter();
+            // one pass: a later expiration restarts the selection, the same one extends it
+            var farthestDate = DateTime.MinValue;
+            var farthest = new List<TData>();
+            foreach (var data in Data)
+            {
+                var date = data.Symbol.ID.Date;
+                if (date > farthestDate)
+                {
+                    farthestDate = date;
+                    farthest.Clear();
+                }
+                if (date == farthestDate)
+                {
+                    farthest.Add(data);
+                }
+            }
+
+            Data = farthest;
+            return (T)this;
+        }
+
+        /// <summary>
         /// Returns a list of back month contracts
         /// </summary>
         /// <returns>Universe with filter applied</returns>
@@ -342,6 +370,42 @@ namespace QuantConnect.Securities
         public T Expiration(int minExpiryDays, int maxExpiryDays)
         {
             return Expiration(TimeSpan.FromDays(minExpiryDays), TimeSpan.FromDays(maxExpiryDays));
+        }
+
+        /// <summary>
+        /// Applies filter selecting the contracts expiring on any of the given dates. Time of day is ignored
+        /// </summary>
+        /// <param name="expiries">The expiration dates</param>
+        /// <returns>Universe with filter applied</returns>
+        public T Expiration(IEnumerable<DateTime> expiries)
+        {
+            var expiryDates = expiries.Select(expiry => expiry.Date).ToHashSet();
+            Data = Data.Where(data => expiryDates.Contains(data.Symbol.ID.Date.Date)).ToList();
+            return (T)this;
+        }
+
+        /// <summary>
+        /// Applies filter selecting the contracts expiring after the given date, excluding it. Time of day is ignored
+        /// </summary>
+        /// <param name="date">The date the expirations must be after</param>
+        /// <returns>Universe with filter applied</returns>
+        public T ExpiringAfter(DateTime date)
+        {
+            var expiryDate = date.Date;
+            Data = Data.Where(data => data.Symbol.ID.Date.Date > expiryDate).ToList();
+            return (T)this;
+        }
+
+        /// <summary>
+        /// Applies filter selecting the contracts expiring before the given date, excluding it. Time of day is ignored
+        /// </summary>
+        /// <param name="date">The date the expirations must be before</param>
+        /// <returns>Universe with filter applied</returns>
+        public T ExpiringBefore(DateTime date)
+        {
+            var expiryDate = date.Date;
+            Data = Data.Where(data => data.Symbol.ID.Date.Date < expiryDate).ToList();
+            return (T)this;
         }
 
         /// <summary>

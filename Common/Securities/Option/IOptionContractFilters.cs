@@ -14,6 +14,7 @@
 */
 
 using System;
+using System.Collections.Generic;
 
 namespace QuantConnect.Securities
 {
@@ -41,6 +42,73 @@ namespace QuantConnect.Securities
         TSelf Expiration(int minExpiryDays, int maxExpiryDays);
 
         /// <summary>
+        /// Selects the contracts expiring on any of the given dates, ignoring the time of day
+        /// </summary>
+        TSelf Expiration(IEnumerable<DateTime> expiries);
+
+        /// <summary>
+        /// Selects the contracts expiring after the given date, excluding it
+        /// </summary>
+        TSelf ExpiringAfter(DateTime date);
+
+        /// <summary>
+        /// Selects the contracts expiring before the given date, excluding it
+        /// </summary>
+        TSelf ExpiringBefore(DateTime date);
+
+        /// <summary>
+        /// Selects the contracts with any of the given strike prices
+        /// </summary>
+        TSelf Strikes(IEnumerable<decimal> strikes);
+
+        /// <summary>
+        /// Selects the contracts with strikes above the given price, excluding it
+        /// </summary>
+        TSelf StrikesAbove(decimal price);
+
+        /// <summary>
+        /// Selects the contracts with strikes below the given price, excluding it
+        /// </summary>
+        TSelf StrikesBelow(decimal price);
+
+        /// <summary>
+        /// Selects the contracts expiring today
+        /// </summary>
+        TSelf ZeroDte();
+
+        /// <summary>
+        /// Selects the out of the money contracts: calls above and puts below the underlying price
+        /// </summary>
+        TSelf OutOfTheMoney();
+
+        /// <summary>
+        /// Selects the out of the money contracts. Alias for <see cref="OutOfTheMoney"/>
+        /// </summary>
+        TSelf OTM();
+
+        /// <summary>
+        /// Selects the in the money contracts: calls below and puts above the underlying price
+        /// </summary>
+        TSelf InTheMoney();
+
+        /// <summary>
+        /// Selects the in the money contracts. Alias for <see cref="InTheMoney"/>
+        /// </summary>
+        TSelf ITM();
+
+        /// <summary>
+        /// Selects the contracts with strikes within the given distance of the underlying price, in units of it, zero only a strike
+        /// equal to the price; null, the default, the strikes on either side of the price, each within the percentage of it
+        /// given by <see cref="OptionFilterUniverse.DefaultAtTheMoneyStrikeDistance"/>
+        /// </summary>
+        TSelf AtTheMoney(decimal? maxStrikeDistance = null);
+
+        /// <summary>
+        /// Selects the contracts at the money. Alias for <see cref="AtTheMoney"/>
+        /// </summary>
+        TSelf ATM(decimal? maxStrikeDistance = null);
+
+        /// <summary>
         /// Selects the call contracts
         /// </summary>
         TSelf CallsOnly();
@@ -64,6 +132,11 @@ namespace QuantConnect.Securities
         /// Selects the contracts of the nearest expiration
         /// </summary>
         TSelf FrontMonth();
+
+        /// <summary>
+        /// Selects the contracts of the farthest expiration
+        /// </summary>
+        TSelf FarthestExpiration();
 
         /// <summary>
         /// Selects the contracts of all expirations but the nearest one

@@ -62,8 +62,33 @@ namespace QuantConnect.Tests.Common.Data.Market
             yield return Case("Expiration(TimeSpan)", u => u.Expiration(TimeSpan.FromDays(30), TimeSpan.FromDays(200)),
                 c => c.Expiration(TimeSpan.FromDays(30), TimeSpan.FromDays(200)));
             yield return Case("Expiration(500, 600)", u => u.Expiration(500, 600), c => c.Expiration(500, 600), empty: true);
+            yield return Case("Expiration(dates)", u => u.Expiration([Expiries[1], Expiries[3]]), c => c.Expiration([Expiries[1], Expiries[3]]));
+            yield return Case("Expiration(date, time of day)", u => u.Expiration([Expiries[1].AddHours(10)]), c => c.Expiration([Expiries[1].AddHours(10)]));
+            yield return Case("Expiration(unlisted dates)", u => u.Expiration([Date, Date.AddDays(1)]), c => c.Expiration([Date, Date.AddDays(1)]), empty: true);
+            yield return Case("Expiration(no dates)", u => u.Expiration([]), c => c.Expiration([]), empty: true);
+            yield return Case("ExpiringAfter", u => u.ExpiringAfter(Expiries[1]), c => c.ExpiringAfter(Expiries[1]));
+            yield return Case("ExpiringBefore", u => u.ExpiringBefore(Expiries[1].AddHours(10)), c => c.ExpiringBefore(Expiries[1].AddHours(10)));
+            yield return Case("ExpiringAfter.ExpiringBefore", u => u.ExpiringAfter(Expiries[0]).ExpiringBefore(Expiries[3]), c => c.ExpiringAfter(Expiries[0]).ExpiringBefore(Expiries[3]));
+            yield return Case("ExpiringAfter(last)", u => u.ExpiringAfter(Expiries[3]), c => c.ExpiringAfter(Expiries[3]), empty: true);
+            yield return Case("FarthestExpiration", u => u.FarthestExpiration(), c => c.FarthestExpiration());
+            yield return Case("StandardsOnly.FarthestExpiration", u => u.StandardsOnly().FarthestExpiration(), c => c.StandardsOnly().FarthestExpiration());
+            yield return Case("Strikes(100, 105)", u => u.Strikes([100m, 105m]), c => c.Strikes([100m, 105m]));
+            yield return Case("Strikes(101)", u => u.Strikes([101m]), c => c.Strikes([101m]), empty: true);
+            yield return Case("StrikesAbove", u => u.StrikesAbove(100m), c => c.StrikesAbove(100m));
+            yield return Case("StrikesBelow", u => u.StrikesBelow(100m), c => c.StrikesBelow(100m));
+            yield return Case("StrikesAbove.StrikesBelow", u => u.StrikesAbove(95m).StrikesBelow(105m), c => c.StrikesAbove(95m).StrikesBelow(105m));
+            yield return Case("StrikesAbove(max)", u => u.StrikesAbove(110m), c => c.StrikesAbove(110m), empty: true);
+            yield return Case("ZeroDte", u => u.ZeroDte(), c => c.ZeroDte(), empty: true);
             yield return Case("CallsOnly", u => u.CallsOnly(), c => c.CallsOnly());
             yield return Case("PutsOnly", u => u.PutsOnly(), c => c.PutsOnly());
+            yield return Case("OutOfTheMoney", u => u.OutOfTheMoney(), c => c.OutOfTheMoney());
+            yield return Case("OTM.CallsOnly", u => u.OTM().CallsOnly(), c => c.OTM().CallsOnly());
+            yield return Case("InTheMoney", u => u.InTheMoney(), c => c.InTheMoney());
+            yield return Case("ITM.PutsOnly.Expiration(0, 10)", u => u.ITM().PutsOnly().Expiration(0, 10), c => c.ITM().PutsOnly().Expiration(0, 10));
+            yield return Case("AtTheMoney", u => u.AtTheMoney(), c => c.AtTheMoney());
+            yield return Case("AtTheMoney(0)", u => u.AtTheMoney(0), c => c.AtTheMoney(0), empty: true);
+            yield return Case("AtTheMoney(1)", u => u.AtTheMoney(1m), c => c.AtTheMoney(1m));
+            yield return Case("Expiration(0, 10).ATM(2.5)", u => u.Expiration(0, 10).ATM(2.5m), c => c.Expiration(0, 10).ATM(2.5m));
             yield return Case("StandardsOnly", u => u.StandardsOnly(), c => c.StandardsOnly());
             yield return Case("WeeklysOnly", u => u.WeeklysOnly(), c => c.WeeklysOnly());
             yield return Case("FrontMonth", u => u.FrontMonth(), c => c.FrontMonth());
@@ -247,6 +272,12 @@ def filter_chain(chain):
 
 def where_chain(chain):
     return chain.where(lambda contract: contract.right == OptionRight.PUT and contract.strike > 100)
+
+def sets(chain):
+    return chain.strikes([100, 105]).expiration([datetime(2016, 3, 18), datetime(2016, 6, 17)])
+
+def bounds(chain):
+    return chain.strikes_above(95).strikes_below(105).expiring_after(datetime(2016, 3, 4)).expiring_before(datetime(2016, 6, 17)).farthest_expiration()
 ");
                 using var pyChain = chain.ToPython();
 
@@ -255,6 +286,19 @@ def where_chain(chain):
 
                 using var where = module.GetAttr("where_chain").Invoke(pyChain);
                 CollectionAssert.AreEqual(expectedWhere, where.As<OptionChain>().Select(x => x.Symbol).ToList());
+
+                // strike and date lists convert to the C# collections
+                var expectedSets = chain.Strikes([100m, 105m]).Expiration([Expiries[1], Expiries[3]]).Select(x => x.Symbol).ToList();
+                Assert.AreEqual(8, expectedSets.Count);
+                using var sets = module.GetAttr("sets").Invoke(pyChain);
+                CollectionAssert.AreEqual(expectedSets, sets.As<OptionChain>().Select(x => x.Symbol).ToList());
+
+                var expectedBounds = chain.StrikesAbove(95m).StrikesBelow(105m).ExpiringAfter(Expiries[0]).ExpiringBefore(Expiries[3]).FarthestExpiration()
+                    .Select(x => x.Symbol).ToList();
+                Assert.AreEqual(6, expectedBounds.Count);
+                Assert.IsTrue(expectedBounds.All(x => x.ID.Date == Expiries[2]));
+                using var bounds = module.GetAttr("bounds").Invoke(pyChain);
+                CollectionAssert.AreEqual(expectedBounds, bounds.As<OptionChain>().Select(x => x.Symbol).ToList());
             }
         }
 
@@ -301,6 +345,150 @@ def where_chain(chain):
                 Assert.Throws<ArgumentException>(() => chain.CallSpread(10, 5, 10));
                 Assert.Throws<ArgumentException>(() => chain.IronCondor(10, 10, 5));
                 Assert.Throws<ArgumentException>(() => chain.CallCalendarSpread(0, 40, 10));
+            }
+        }
+
+        // By default the strikes on either side of the price that are within 2% of it: one when the price is a strike, one when the
+        // other side is too far (97.5 from 95.5), none when both are (105 and 110 from 107.5) or the price is outside the strikes
+        [TestCase(100, null, new[] { 100.0 })]
+        [TestCase(101, null, new[] { 100.0, 102.5 })]
+        [TestCase(103.75, null, new[] { 102.5, 105.0 })]
+        [TestCase(95.5, null, new[] { 95.0 })]
+        [TestCase(107.5, null, new double[0])]
+        [TestCase(110, null, new[] { 110.0 })]
+        [TestCase(120, null, new double[0])]
+        [TestCase(80, null, new double[0])]
+        // A zero distance requires a strike equal to the price
+        [TestCase(100, 0, new[] { 100.0 })]
+        [TestCase(101, 0, new double[0])]
+        // Otherwise every strike within the distance
+        [TestCase(101, 1, new[] { 100.0 })]
+        [TestCase(101, 0.5, new double[0])]
+        [TestCase(103.75, 1.25, new[] { 102.5, 105.0 })]
+        [TestCase(101.25, 1.25, new[] { 100.0, 102.5 })]
+        [TestCase(101.25, 1, new double[0])]
+        [TestCase(101, 5, new[] { 97.5, 100.0, 102.5, 105.0 })]
+        public void MoneynessFiltersSplitTheStrikesAroundTheUnderlyingPrice(double underlyingPrice, double? maxStrikeDistance, double[] atmStrikes)
+        {
+            var price = (decimal)underlyingPrice;
+            var (data, _) = CreateUniverseData(Date, price, Expiries, Strikes);
+            var chain = new OptionChain(Canonical, Date, data, _symbolProperties);
+            Assert.AreEqual(price, chain.Underlying.Price);
+
+            var otm = chain.OutOfTheMoney();
+            var itm = chain.InTheMoney();
+            Assert.IsNotEmpty(otm);
+            Assert.IsNotEmpty(itm);
+            Assert.IsTrue(otm.All(x => x.Right == OptionRight.Call ? x.Strike > price : x.Strike < price));
+            Assert.IsTrue(itm.All(x => x.Right == OptionRight.Call ? x.Strike < price : x.Strike > price));
+            // a strike equal to the price is neither out nor in the money
+            Assert.AreEqual(chain.Count, otm.Count + itm.Count + chain.Strikes([price]).Count);
+
+            var atm = chain.AtTheMoney((decimal?)maxStrikeDistance);
+            Assert.AreEqual(atmStrikes.Length * 2 * Expiries.Length, atm.Count);
+            CollectionAssert.AreEquivalent(atmStrikes.Select(x => (decimal)x), atm.Select(x => x.Strike).Distinct());
+            Assert.Throws<ArgumentException>(() => chain.AtTheMoney(-1m));
+            Assert.Throws<ArgumentException>(() => CreateUniverse().AtTheMoney(-1m));
+        }
+
+        [Test]
+        public void FiltersWorkOnFutureOptionChains()
+        {
+            // March 2020 ES options on the March 2020 future, the universe rows carry the future price
+            var future = Symbol.CreateFuture("ES", QuantConnect.Market.CME, new DateTime(2020, 3, 20));
+            var canonical = Symbol.CreateCanonicalOption(future);
+            var date = new DateTime(2020, 1, 3);
+            var contracts = new List<(Symbol, decimal, decimal, Greeks)>();
+            foreach (var strike in new[] { 3200m, 3210m, 3220m, 3230m, 3240m })
+            {
+                foreach (var right in new[] { OptionRight.Call, OptionRight.Put })
+                {
+                    var symbol = Symbol.CreateOption(future, QuantConnect.Market.CME, OptionStyle.American, right, strike, future.ID.Date);
+                    contracts.Add((symbol, 100, 0.15m, new Greeks(0.5m, 0.01m, 5, -0.5m, 1, 0)));
+                }
+            }
+            var (data, underlying) = CreateUniverseData(canonical, date, 3223.75m, contracts);
+            var symbolProperties = SymbolPropertiesDatabase.FromDataFolder().GetSymbolProperties(QuantConnect.Market.CME, canonical, SecurityType.FutureOption, Currencies.USD);
+            var chain = new OptionChain(canonical, date, data, symbolProperties);
+            Assert.AreEqual(SecurityType.FutureOption, chain.Symbol.SecurityType);
+            Assert.AreEqual(10, chain.Count);
+            Assert.AreEqual(3223.75m, chain.Underlying.Price);
+
+            // moneyness against the future price
+            CollectionAssert.AreEquivalent(new[] { 3230m, 3240m }, chain.OutOfTheMoney().CallsOnly().Select(x => x.Strike));
+            CollectionAssert.AreEquivalent(new[] { 3200m, 3210m, 3220m }, chain.OutOfTheMoney().PutsOnly().Select(x => x.Strike));
+            Assert.AreEqual(0, chain.AtTheMoney(0).Count);
+            // the strikes on either side of 3223.75, and within 5 points only 3220
+            CollectionAssert.AreEquivalent(new[] { 3220m, 3220m, 3230m, 3230m }, chain.AtTheMoney().Select(x => x.Strike));
+            CollectionAssert.AreEquivalent(new[] { 3220m, 3220m }, chain.AtTheMoney(5m).Select(x => x.Strike));
+
+            // the expiration filters count from the CME date, every ES option is a standard contract
+            Assert.AreEqual(10, chain.Expiration(70, 80).Count);
+            Assert.AreEqual(0, chain.ZeroDte().Count);
+            Assert.AreEqual(10, chain.StandardsOnly().FarthestExpiration().Count);
+            Assert.AreEqual(0, chain.WeeklysOnly().Count);
+            Assert.IsTrue(chain.All(x => x.DaysToExpiry == (future.ID.Date - x.Time.Date).Days));
+
+            // and match the universe filters of a future option over the same rows
+            var universe = new OptionFilterUniverse(CreateOption(canonical), data, underlying);
+            universe.Refresh(data, underlying, date);
+            var expected = universe.Strikes(-1, 1).OutOfTheMoney().ExpiringBefore(new DateTime(2020, 4, 1)).ToList().Select(x => x.Symbol.Value).ToList();
+            Assert.IsNotEmpty(expected);
+            CollectionAssert.AreEquivalent(expected, chain.Strikes(-1, 1).OutOfTheMoney().ExpiringBefore(new DateTime(2020, 4, 1)).Select(x => x.Symbol.Value));
+        }
+
+        [Test]
+        public void ContractsCountTheDaysToTheirExpiration()
+        {
+            var chain = CreateChain();
+            // universe rows are stamped at the end of their day, so the contracts count from the next date
+            var reference = chain.First().Time.Date;
+            Assert.AreEqual(Date.AddDays(1), reference);
+            var expected = Expiries.Select(expiry => (expiry - reference).Days).ToList();
+            CollectionAssert.AreEquivalent(expected, chain.Select(x => x.DaysToExpiry).Distinct());
+            Assert.AreEqual(expected[0], chain.FrontMonth().First().DaysToExpiry);
+            Assert.AreEqual(expected[3], chain.FarthestExpiration().First().DaysToExpiry);
+        }
+
+        [Test]
+        public void DefaultAtTheMoneyStrikeDistanceIsConfigurable()
+        {
+            var chain = CreateChain();
+            var original = OptionFilterUniverse.DefaultAtTheMoneyStrikeDistance;
+            try
+            {
+                // at 101 the strikes on either side are 1 and 1.5 away: within 2%, not within 0.5%, only the lower within 1.2%
+                CollectionAssert.AreEquivalent(new[] { 100m, 102.5m }, chain.AtTheMoney().Select(x => x.Strike).Distinct());
+                OptionFilterUniverse.DefaultAtTheMoneyStrikeDistance = 0.005m;
+                Assert.AreEqual(0, chain.AtTheMoney().Count);
+                Assert.AreEqual(0, CreateUniverse().AtTheMoney().Count);
+                OptionFilterUniverse.DefaultAtTheMoneyStrikeDistance = 0.012m;
+                CollectionAssert.AreEquivalent(new[] { 100m }, chain.AtTheMoney().Select(x => x.Strike).Distinct());
+                CollectionAssert.AreEquivalent(new[] { 100m }, CreateUniverse().AtTheMoney().Select(x => x.Symbol.ID.StrikePrice).Distinct());
+                Assert.Throws<ArgumentException>(() => OptionFilterUniverse.DefaultAtTheMoneyStrikeDistance = -0.01m);
+            }
+            finally
+            {
+                OptionFilterUniverse.DefaultAtTheMoneyStrikeDistance = original;
+            }
+        }
+
+        [Test]
+        public void MoneynessFiltersSelectNothingWithoutUnderlyingPrice()
+        {
+            var contracts = _data.Select(x => new OptionUniverse(x) { Underlying = null }).ToList();
+            var chain = new OptionChain(Canonical, Date, contracts, _symbolProperties);
+            Assert.AreEqual(0, chain.Underlying.Price);
+
+            Assert.AreEqual(0, chain.OutOfTheMoney().Count);
+            Assert.AreEqual(0, chain.InTheMoney().Count);
+            Assert.AreEqual(0, chain.AtTheMoney(100m).Count);
+            Func<OptionFilterUniverse, OptionFilterUniverse>[] filters = [u => u.OutOfTheMoney(), u => u.InTheMoney(), u => u.AtTheMoney(100m)];
+            foreach (var filter in filters)
+            {
+                var universe = new OptionFilterUniverse(_option);
+                universe.Refresh(contracts, null, Date);
+                Assert.AreEqual(0, filter(universe).Count);
             }
         }
 
@@ -372,12 +560,13 @@ def naked_put(chain):
             return new OptionChain(Canonical, Date, _data, _symbolProperties);
         }
 
-        private static Option CreateOption()
+        private static Option CreateOption(Symbol canonical = null)
         {
-            var exchangeHours = MarketHoursDatabase.FromDataFolder().GetExchangeHours(Canonical.ID.Market, Canonical, Canonical.SecurityType);
+            canonical ??= Canonical;
+            var exchangeHours = MarketHoursDatabase.FromDataFolder().GetExchangeHours(canonical.ID.Market, canonical, canonical.SecurityType);
             return new Option(
                 exchangeHours,
-                new SubscriptionDataConfig(typeof(TradeBar), Canonical, Resolution.Minute, TimeZones.NewYork, TimeZones.NewYork, true, false, false),
+                new SubscriptionDataConfig(typeof(TradeBar), canonical, Resolution.Minute, TimeZones.NewYork, TimeZones.NewYork, true, false, false),
                 new Cash(Currencies.USD, 0, 1m),
                 new OptionSymbolProperties(SymbolProperties.GetDefault(Currencies.USD)),
                 ErrorCurrencyConverter.Instance,
@@ -468,10 +657,14 @@ def naked_put(chain):
             {
                 Assert.AreEqual(rows[j].symbol, data[j].Symbol);
                 Assert.AreEqual(rows[j].openInterest, data[j].OpenInterest);
-                Assert.AreEqual(rows[j].impliedVolatility, data[j].ImpliedVolatility);
-                Assert.AreEqual(rows[j].greeks.Delta, data[j].Greeks.Delta);
-                Assert.AreEqual(rows[j].greeks.Theta, data[j].Greeks.Theta);
-                Assert.AreEqual(rows[j].greeks.Rho, data[j].Greeks.Rho);
+                // future option universe files carry no implied volatility or greeks
+                if (canonical.SecurityType != SecurityType.FutureOption)
+                {
+                    Assert.AreEqual(rows[j].impliedVolatility, data[j].ImpliedVolatility);
+                    Assert.AreEqual(rows[j].greeks.Delta, data[j].Greeks.Delta);
+                    Assert.AreEqual(rows[j].greeks.Theta, data[j].Greeks.Theta);
+                    Assert.AreEqual(rows[j].greeks.Rho, data[j].Greeks.Rho);
+                }
             }
             Assert.AreEqual(spot ?? 0, underlying?.Price ?? 0);
 
