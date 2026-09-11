@@ -74,5 +74,83 @@ namespace QuantConnect.Util
         {
             return right == OptionRight.Call ? underlyingPrice - strike : strike - underlyingPrice;
         }
+
+        /// <summary>
+        /// Whether the option is in the money: a call with the strike below the underlying price, a put with the strike above it
+        /// </summary>
+        /// <param name="underlyingPrice">The price of the underlying</param>
+        /// <param name="strike">The strike price of the option</param>
+        /// <param name="right">The option right of the option, call or put</param>
+        /// <returns>True if the option has intrinsic value</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static bool IsInTheMoney(decimal underlyingPrice, decimal strike, OptionRight right)
+        {
+            return GetPayOff(underlyingPrice, strike, right) > 0;
+        }
+
+        /// <summary>
+        /// Whether the option is in the money: a call with the strike below the underlying price, a put with the strike above it
+        /// </summary>
+        /// <param name="underlyingPrice">The price of the underlying</param>
+        /// <param name="strike">The strike price of the option</param>
+        /// <param name="right">The option right of the option, call or put</param>
+        /// <returns>True if the option has intrinsic value</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static bool IsInTheMoney(double underlyingPrice, double strike, OptionRight right)
+        {
+            return GetPayOff(underlyingPrice, strike, right) > 0;
+        }
+
+        /// <summary>
+        /// Whether the option is at the money: the strike equals the underlying price
+        /// </summary>
+        /// <param name="underlyingPrice">The price of the underlying</param>
+        /// <param name="strike">The strike price of the option</param>
+        /// <param name="right">The option right of the option, call or put</param>
+        /// <returns>True if the strike equals the underlying price</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static bool IsAtTheMoney(decimal underlyingPrice, decimal strike, OptionRight right)
+        {
+            return GetPayOff(underlyingPrice, strike, right) == 0;
+        }
+
+        /// <summary>
+        /// Whether the option is at the money: the strike equals the underlying price
+        /// </summary>
+        /// <param name="underlyingPrice">The price of the underlying</param>
+        /// <param name="strike">The strike price of the option</param>
+        /// <param name="right">The option right of the option, call or put</param>
+        /// <returns>True if the strike equals the underlying price</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static bool IsAtTheMoney(double underlyingPrice, double strike, OptionRight right)
+        {
+            return GetPayOff(underlyingPrice, strike, right) == 0;
+        }
+
+        /// <summary>
+        /// Whether the option is out of the money: a call with the strike above the underlying price, a put with the strike below it
+        /// </summary>
+        /// <param name="underlyingPrice">The price of the underlying</param>
+        /// <param name="strike">The strike price of the option</param>
+        /// <param name="right">The option right of the option, call or put</param>
+        /// <returns>True if the option has no intrinsic value and is not at the money</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static bool IsOutOfTheMoney(decimal underlyingPrice, decimal strike, OptionRight right)
+        {
+            return GetPayOff(underlyingPrice, strike, right) < 0;
+        }
+
+        /// <summary>
+        /// Whether the option is out of the money: a call with the strike above the underlying price, a put with the strike below it
+        /// </summary>
+        /// <param name="underlyingPrice">The price of the underlying</param>
+        /// <param name="strike">The strike price of the option</param>
+        /// <param name="right">The option right of the option, call or put</param>
+        /// <returns>True if the option has no intrinsic value and is not at the money</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static bool IsOutOfTheMoney(double underlyingPrice, double strike, OptionRight right)
+        {
+            return GetPayOff(underlyingPrice, strike, right) < 0;
+        }
     }
 }

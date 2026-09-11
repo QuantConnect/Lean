@@ -15,6 +15,7 @@
 */
 
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using NUnit.Framework;
 using Python.Runtime;
@@ -374,6 +375,29 @@ def get_length(universe):
 
             var filtered = filter.Filter(new FutureFilterUniverse(data.ToList(), new DateTime(2016, 02, 26))).ToList();
             Assert.AreEqual(5, filtered.Count);
+        }
+
+        [Test]
+        public void FiltersExpirationSetsBoundsAndFarthestExpiration()
+        {
+            var time = new DateTime(2013, 10, 7);
+            var expiries = new[]
+            {
+                new DateTime(2013, 12, 20), new DateTime(2014, 3, 21), new DateTime(2014, 6, 20), new DateTime(2014, 9, 19), new DateTime(2014, 12, 19)
+            };
+            var data = expiries.Select(expiry => new FutureUniverse { Symbol = Symbol.CreateFuture("ES", Market.CME, expiry) }).ToList();
+            FutureFilterUniverse Universe() => new(data, time);
+            static IEnumerable<DateTime> Expiries(FutureFilterUniverse universe) => universe.Select(x => x.Symbol.ID.Date);
+
+            // sets ignore the time of day, bounds exclude the date itself
+            CollectionAssert.AreEqual(new[] { expiries[1], expiries[3] }, Expiries(Universe().Expiration([expiries[1], expiries[3].AddHours(10)])));
+            Assert.AreEqual(0, Universe().Expiration([]).Count);
+            CollectionAssert.AreEqual(expiries.Skip(1), Expiries(Universe().ExpiringAfter(expiries[0])));
+            CollectionAssert.AreEqual(expiries.Take(2), Expiries(Universe().ExpiringBefore(expiries[2])));
+            CollectionAssert.AreEqual(new[] { expiries[2] }, Expiries(Universe().ExpiringAfter(expiries[1]).ExpiringBefore(expiries[3])));
+            CollectionAssert.AreEqual(new[] { expiries[4] }, Expiries(Universe().FarthestExpiration()));
+            CollectionAssert.AreEqual(new[] { expiries[0] }, Expiries(Universe().FrontMonth()));
+            Assert.AreEqual(0, new FutureFilterUniverse(new List<FutureUniverse>(), time).FarthestExpiration().Count);
         }
 
         [Test]

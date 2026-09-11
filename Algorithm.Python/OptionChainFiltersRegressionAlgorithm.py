@@ -27,7 +27,7 @@ class OptionChainFiltersRegressionAlgorithm(QCAlgorithm):
         option = self.add_option("GOOG")
         self._option = option.symbol
         # The same words select the universe and, below, narrow down the chains
-        option.set_filter(lambda universe: universe.calls_only().expiration(1, 10).strikes(-2, 2))
+        option.set_filter(lambda universe: universe.calls_only().expiration(1, 10).strikes(-2, 2).out_of_the_money())
 
         chain = self.option_chain(self._option)
         if chain.count == 0:
@@ -61,6 +61,40 @@ class OptionChainFiltersRegressionAlgorithm(QCAlgorithm):
         if deltas.count == 0 or deltas.count != expected_deltas or any(not 0.5 <= x.greeks.delta <= 0.6 for x in deltas):
             raise AssertionError("Delta filter mismatch")
 
+        # Moneyness filters split the strikes around the underlying price, ATM is the closest strike
+        price = chain.underlying.price
+        otm = chain.otm()
+        itm = chain.itm()
+        if (otm.count == 0 or itm.count == 0 or otm.count + itm.count + chain.strikes([price]).count != chain.count
+                or any((x.strike <= price if x.right == OptionRight.CALL else x.strike >= price) for x in otm)
+                or any((x.strike >= price if x.right == OptionRight.CALL else x.strike <= price) for x in itm)):
+            raise AssertionError("Out/in the money filters mismatch")
+        # By default the strikes on either side of the 748.54 close, 747.5 and 750, also reached within 2.5 points but not within 1;
+        # a chain whose strikes start more than 2% above the close has no strike at the money
+        atm = chain.atm()
+        if (atm.count == 0 or atm.count != chain.strikes([747.5, 750]).count or any(x.strike != 747.5 and x.strike != 750 for x in atm)
+                or chain.atm(2.5).count != atm.count or chain.atm(1).count != 0 or chain.atm(0).count != 0
+                or chain.strikes_above(price + 20).atm().count != 0):
+            raise AssertionError("Expected atm() to select the 747.5 and 750 strikes, atm(1) none")
+
+        # Strike sets and bounds are absolute, unlike the relative strikes(min, max)
+        strikes = chain.strikes([745, 750])
+        if (strikes.count == 0 or any(x.strike != 745 and x.strike != 750 for x in strikes)
+                or any(x.strike != 752.5 for x in chain.strikes_above(750).strikes_below(755))
+                or chain.strikes_above(price).count + chain.strikes_below(price).count + chain.strikes([price]).count != chain.count):
+            raise AssertionError("Strike set or bound filters mismatch")
+
+        # Expiration sets and bounds, today's expiration and the farthest one
+        front_month = datetime(2015, 12, 24)
+        farthest = chain.farthest_expiration()
+        max_expiry = max(x.expiry for x in chain)
+        if (chain.expiration([front_month]).count != chain.front_month().count
+                or chain.zero_dte().count != chain.expiration(0, 0).count
+                or chain.expiring_after(front_month).count + chain.front_month().count != chain.count
+                or chain.expiring_before(front_month).count != 0
+                or farthest.count == 0 or any(x.expiry != max_expiry for x in farthest)):
+            raise AssertionError("Expiration set, bound, zero_dte() or farthest_expiration() filters mismatch")
+
         # where() takes a predicate, like the universe filter does
         high_open_interest = chain.where(lambda x: x.open_interest > 1000)
         if high_open_interest.count == 0 or high_open_interest.count != sum(1 for x in chain if x.open_interest > 1000):
@@ -75,9 +109,20 @@ class OptionChainFiltersRegressionAlgorithm(QCAlgorithm):
         if not chain:
             return
 
-        # The universe only selected calls expiring 1 to 10 days out, so the chain filters agree with it
-        if chain.calls_only().expiration(1, 10).count != chain.count or chain.puts_only().count != 0:
+        # The universe only selected the out of the money calls expiring 1 to 10 days out, two strikes around the
+        # previous close: 750 and 752.5 on 2015-12-31. The chain filters agree with it
+        if (chain.calls_only().expiration(1, 10).count != chain.count or chain.puts_only().count != 0
+                or chain.strikes([750, 752.5]).count != chain.count or chain.expiration([datetime(2015, 12, 31)]).count != chain.count):
             raise AssertionError("Slice chain filters disagree with the universe filter")
+
+        # On a calls only chain the moneyness filters are the strike bounds around the current price
+        price = chain.underlying.price
+        if (chain.out_of_the_money().count != chain.strikes_above(price).count or chain.in_the_money().count != chain.strikes_below(price).count
+                or chain.out_of_the_money().count + chain.in_the_money().count + chain.strikes([price]).count != chain.count):
+            raise AssertionError("Slice chain moneyness filters mismatch")
+        if (chain.expiring_after(self.time).count != chain.count or chain.expiring_before(self.time).count != 0 or chain.zero_dte().count != 0
+                or chain.farthest_expiration().count != chain.count):
+            raise AssertionError("Slice chain expiration filters mismatch")
 
         # Buy the call at the first strike at or above the underlying price
         contract = next(iter(chain.strikes(0, 0)), None)

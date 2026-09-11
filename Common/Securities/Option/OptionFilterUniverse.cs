@@ -25,6 +25,7 @@ using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Securities.FutureOption;
 using QuantConnect.Securities.IndexOption;
 using QuantConnect.Securities.Option;
+using QuantConnect.Util;
 
 namespace QuantConnect.Securities
 {
@@ -277,6 +278,137 @@ namespace QuantConnect.Securities
         public TUniverse PutsOnly()
         {
             return Contracts(contracts => contracts.Where(x => x.Symbol.ID.OptionRight == OptionRight.Put));
+        }
+
+        /// <summary>
+        /// Applies filter selecting the contracts with any of the given strike prices
+        /// </summary>
+        /// <param name="strikes">The strike prices</param>
+        /// <returns>Universe with filter applied</returns>
+        public TUniverse Strikes(IEnumerable<decimal> strikes)
+        {
+            var strikeSet = strikes.ToHashSet();
+            return Contracts(contracts => contracts.Where(x => strikeSet.Contains(x.Symbol.ID.StrikePrice)));
+        }
+
+        /// <summary>
+        /// Applies filter selecting the contracts with strikes above the given price, excluding it
+        /// </summary>
+        /// <param name="price">The price the strikes must be above</param>
+        /// <returns>Universe with filter applied</returns>
+        public TUniverse StrikesAbove(decimal price)
+        {
+            return Contracts(contracts => contracts.Where(x => x.Symbol.ID.StrikePrice > price));
+        }
+
+        /// <summary>
+        /// Applies filter selecting the contracts with strikes below the given price, excluding it
+        /// </summary>
+        /// <param name="price">The price the strikes must be below</param>
+        /// <returns>Universe with filter applied</returns>
+        public TUniverse StrikesBelow(decimal price)
+        {
+            return Contracts(contracts => contracts.Where(x => x.Symbol.ID.StrikePrice < price));
+        }
+
+        /// <summary>
+        /// Applies filter selecting the contracts expiring today
+        /// </summary>
+        /// <returns>Universe with filter applied</returns>
+        public TUniverse ZeroDte()
+        {
+            return Expiration(0, 0);
+        }
+
+        /// <summary>
+        /// Applies filter selecting the out of the money contracts: calls with strikes above the underlying price
+        /// and puts with strikes below it. Selects nothing when the underlying price is unknown
+        /// </summary>
+        /// <returns>Universe with filter applied</returns>
+        public TUniverse OutOfTheMoney()
+        {
+            if (!TryGetUnderlyingPrice(out var price))
+            {
+                return Empty();
+            }
+            return Contracts(contracts => contracts.Where(x => OptionPayoff.IsOutOfTheMoney(price, x.Symbol.ID.StrikePrice, x.Symbol.ID.OptionRight)));
+        }
+
+        /// <summary>
+        /// Applies filter selecting the out of the money contracts. Alias for <see cref="OutOfTheMoney"/>
+        /// </summary>
+        /// <returns>Universe with filter applied</returns>
+        public TUniverse OTM()
+        {
+            return OutOfTheMoney();
+        }
+
+        /// <summary>
+        /// Applies filter selecting the in the money contracts: calls with strikes below the underlying price
+        /// and puts with strikes above it. Selects nothing when the underlying price is unknown
+        /// </summary>
+        /// <returns>Universe with filter applied</returns>
+        public TUniverse InTheMoney()
+        {
+            if (!TryGetUnderlyingPrice(out var price))
+            {
+                return Empty();
+            }
+            return Contracts(contracts => contracts.Where(x => OptionPayoff.IsInTheMoney(price, x.Symbol.ID.StrikePrice, x.Symbol.ID.OptionRight)));
+        }
+
+        /// <summary>
+        /// Applies filter selecting the in the money contracts. Alias for <see cref="InTheMoney"/>
+        /// </summary>
+        /// <returns>Universe with filter applied</returns>
+        public TUniverse ITM()
+        {
+            return InTheMoney();
+        }
+
+        /// <summary>
+        /// Applies filter selecting the contracts at the money: the ones with strikes within the given distance of the underlying price,
+        /// or by default the ones at the strikes on either side of it. Selects nothing when the underlying price is unknown
+        /// </summary>
+        /// <param name="maxStrikeDistance">The largest distance between a strike and the underlying price for its contracts to be at
+        /// the money, in units of the underlying price. Zero selects only a strike equal to the price. Null, the default, selects the
+        /// strikes on either side of the price, the highest at or below it and the lowest at or above it, each only when it is within
+        /// the percentage of the price given by <see cref="OptionFilterUniverse.DefaultAtTheMoneyStrikeDistance"/></param>
+        /// <returns>Universe with filter applied</returns>
+        public TUniverse AtTheMoney(decimal? maxStrikeDistance = null)
+        {
+            if (maxStrikeDistance < 0)
+            {
+                throw new ArgumentException($"AtTheMoney(): {nameof(maxStrikeDistance)} must not be negative");
+            }
+            if (!TryGetUnderlyingPrice(out var price))
+            {
+                return Empty();
+            }
+            if (!maxStrikeDistance.HasValue)
+            {
+                return Strikes(GetBracketingStrikes(price));
+            }
+            // the price is in strike units, see SymbolProperties.StrikeMultiplier, so the distance is scaled the same way
+            var maxDistance = maxStrikeDistance.Value / _underlyingScaleFactor;
+            if (maxDistance == 0)
+            {
+                return Strikes([price]);
+            }
+            return Contracts(contracts => contracts.Where(x => Math.Abs(x.Symbol.ID.StrikePrice - price) <= maxDistance));
+        }
+
+        /// <summary>
+        /// Applies filter selecting the contracts at the money. Alias for <see cref="AtTheMoney"/>
+        /// </summary>
+        /// <param name="maxStrikeDistance">The largest distance between a strike and the underlying price for its contracts to be at
+        /// the money, in units of the underlying price. Zero selects only a strike equal to the price. Null, the default, selects the
+        /// strikes on either side of the price, the highest at or below it and the lowest at or above it, each only when it is within
+        /// the percentage of the price given by <see cref="OptionFilterUniverse.DefaultAtTheMoneyStrikeDistance"/></param>
+        /// <returns>Universe with filter applied</returns>
+        public TUniverse ATM(decimal? maxStrikeDistance = null)
+        {
+            return AtTheMoney(maxStrikeDistance);
         }
 
         /// <summary>
@@ -1100,6 +1232,16 @@ namespace QuantConnect.Securities
         }
 
         /// <summary>
+        /// Gets the underlying price in strike units, false when the underlying is unknown
+        /// </summary>
+        private bool TryGetUnderlyingPrice(out decimal price)
+        {
+            // some option strikes are a fraction of the underlying, see SymbolProperties.StrikeMultiplier
+            price = UnderlyingInternal == null ? 0 : UnderlyingInternal.Price / _underlyingScaleFactor;
+            return UnderlyingInternal != null;
+        }
+
+        /// <summary>
         /// Helper method that will select no contract
         /// </summary>
         private TUniverse Empty()
@@ -1119,8 +1261,50 @@ namespace QuantConnect.Securities
 
         private decimal GetStrike(IEnumerable<Symbol> symbols, decimal strikeFromAtm)
         {
-            return symbols.OrderBy(x => Math.Abs(Underlying.Price + strikeFromAtm - x.ID.StrikePrice))
-                .Select(x => x.ID.StrikePrice)
+            return GetClosestStrike(symbols, Underlying.Price + strikeFromAtm);
+        }
+
+        /// <summary>
+        /// Gets the highest strike at or below the price and the lowest at or above it, each only when it is within the percentage
+        /// of the price given by <see cref="OptionFilterUniverse.DefaultAtTheMoneyStrikeDistance"/>, one when they coincide
+        /// </summary>
+        private List<decimal> GetBracketingStrikes(decimal price)
+        {
+            decimal? below = null;
+            decimal? above = null;
+            foreach (var strike in AllSymbols.Select(x => x.ID.StrikePrice))
+            {
+                if (strike <= price && (below == null || strike > below))
+                {
+                    below = strike;
+                }
+                if (strike >= price && (above == null || strike < above))
+                {
+                    above = strike;
+                }
+            }
+
+            var maxDistance = price * OptionFilterUniverse.DefaultAtTheMoneyStrikeDistance;
+            var strikes = new List<decimal>(2);
+            if (below != null && price - below <= maxDistance)
+            {
+                strikes.Add(below.Value);
+            }
+            if (above != null && above != below && above - price <= maxDistance)
+            {
+                strikes.Add(above.Value);
+            }
+            return strikes;
+        }
+
+        /// <summary>
+        /// Gets the strike closest to the target price, the lower one on ties, or decimal.MaxValue when there are no symbols
+        /// </summary>
+        private static decimal GetClosestStrike(IEnumerable<Symbol> symbols, decimal targetPrice)
+        {
+            return symbols.Select(x => x.ID.StrikePrice)
+                .OrderBy(strike => Math.Abs(targetPrice - strike))
+                .ThenBy(strike => strike)
                 .DefaultIfEmpty(decimal.MaxValue)
                 .First();
         }
@@ -1140,7 +1324,26 @@ namespace QuantConnect.Securities
     /// </summary>
     public class OptionFilterUniverse : BaseOptionFilterUniverse<OptionFilterUniverse, OptionUniverse>
     {
+        private static decimal _defaultAtTheMoneyStrikeDistance = 0.02m;
+
         private readonly Option.Option _option;
+
+        /// <summary>
+        /// How far from the underlying price, as a percentage of it, a strike on either side can be and still count as at the money
+        /// by default in <see cref="BaseOptionFilterUniverse{TUniverse, TData}.AtTheMoney"/>. 0.02, 2%, unless changed
+        /// </summary>
+        public static decimal DefaultAtTheMoneyStrikeDistance
+        {
+            get => _defaultAtTheMoneyStrikeDistance;
+            set
+            {
+                if (value < 0)
+                {
+                    throw new ArgumentException($"{nameof(DefaultAtTheMoneyStrikeDistance)} must not be negative");
+                }
+                _defaultAtTheMoneyStrikeDistance = value;
+            }
+        }
 
         /// <summary>
         /// The option exchange hours
