@@ -20,6 +20,7 @@ using System.Linq;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
 using QuantConnect.Interfaces;
+using QuantConnect.Securities;
 using QuantConnect.Securities.Option;
 
 namespace QuantConnect.Algorithm.CSharp
@@ -99,12 +100,13 @@ namespace QuantConnect.Algorithm.CSharp
             {
                 throw new RegressionTestException("Out/in the money filters mismatch");
             }
-            // The closest strike to the 748.54 close is 747.5, within the default 1% tolerance but not within 1 point or exactly at the price
+            // By default the strikes within 2% of the 748.54 close; 2.5 points reach 747.5 and 750, 1 point reaches none
             var atm = chain.AtTheMoney();
-            if (atm.Count == 0 || atm.Any(x => x.Strike != 747.5m) || atm.Count != chain.Strikes([747.5m]).Count
-                || chain.AtTheMoney(2.5m).Count != atm.Count || chain.AtTheMoney(1m).Count != 0 || chain.AtTheMoney(0).Count != 0)
+            var maxDistance = price * OptionFilterUniverse.DefaultAtTheMoneyStrikeDistance;
+            if (atm.Count == 0 || atm.Count != chain.Count(x => Math.Abs(x.Strike - price) <= maxDistance) || atm.Any(x => Math.Abs(x.Strike - price) > maxDistance)
+                || chain.AtTheMoney(2.5m).Count != chain.Strikes([747.5m, 750m]).Count || chain.AtTheMoney(1m).Count != 0 || chain.AtTheMoney(0).Count != 0)
             {
-                throw new RegressionTestException("Expected AtTheMoney() to select every contract at the 747.50 strike and AtTheMoney(1) none");
+                throw new RegressionTestException("Expected AtTheMoney() to select the strikes within 2% of the close, AtTheMoney(2.5) 747.5 and 750, AtTheMoney(1) none");
             }
 
             // Strike sets and bounds are absolute, unlike the relative Strikes(min, max)

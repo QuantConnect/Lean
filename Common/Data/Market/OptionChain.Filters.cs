@@ -201,28 +201,28 @@ namespace QuantConnect.Data.Market
         }
 
         /// <summary>
-        /// Selects the contracts at the money: the ones at the strike closest to the underlying price, the lower strike on ties,
-        /// when that strike is within the tolerance. Same as <see cref="BaseOptionFilterUniverse{TUniverse, TData}.AtTheMoney"/>
+        /// Selects the contracts at the money: the ones with strikes within the given distance of the underlying price.
+        /// Same as <see cref="BaseOptionFilterUniverse{TUniverse, TData}.AtTheMoney"/>
         /// </summary>
-        /// <param name="tolerance">The largest distance between the closest strike and the underlying price for the strike to be
-        /// at the money, in units of the underlying price. Zero requires a strike equal to the underlying price. Null, the default,
-        /// allows <see cref="BaseOptionFilterUniverse{TUniverse, TData}.DefaultAtTheMoneyTolerance"/> of the underlying price</param>
+        /// <param name="maxStrikeDistance">The largest distance between a strike and the underlying price for its contracts to be at
+        /// the money, in units of the underlying price. Zero selects only a strike equal to the price. Null, the default, uses
+        /// <see cref="BaseOptionFilterUniverse{TUniverse, TData}.DefaultAtTheMoneyStrikeDistance"/> of the underlying price</param>
         /// <returns>A new chain with the filter applied, empty when the underlying price is unknown</returns>
-        public OptionChain AtTheMoney(decimal? tolerance = null)
+        public OptionChain AtTheMoney(decimal? maxStrikeDistance = null)
         {
-            return Filter(universe => universe.AtTheMoney(tolerance));
+            return Filter(universe => universe.AtTheMoney(maxStrikeDistance));
         }
 
         /// <summary>
         /// Selects the contracts at the money. Alias for <see cref="AtTheMoney"/>
         /// </summary>
-        /// <param name="tolerance">The largest distance between the closest strike and the underlying price for the strike to be
-        /// at the money, in units of the underlying price. Zero requires a strike equal to the underlying price. Null, the default,
-        /// allows <see cref="BaseOptionFilterUniverse{TUniverse, TData}.DefaultAtTheMoneyTolerance"/> of the underlying price</param>
+        /// <param name="maxStrikeDistance">The largest distance between a strike and the underlying price for its contracts to be at
+        /// the money, in units of the underlying price. Zero selects only a strike equal to the price. Null, the default, uses
+        /// <see cref="BaseOptionFilterUniverse{TUniverse, TData}.DefaultAtTheMoneyStrikeDistance"/> of the underlying price</param>
         /// <returns>A new chain with the filter applied</returns>
-        public OptionChain ATM(decimal? tolerance = null)
+        public OptionChain ATM(decimal? maxStrikeDistance = null)
         {
-            return AtTheMoney(tolerance);
+            return AtTheMoney(maxStrikeDistance);
         }
 
         /// <summary>

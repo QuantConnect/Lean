@@ -62,8 +62,8 @@ namespace QuantConnect.Algorithm.CSharp
             }
             AssertContracts(chain.OutOfTheMoney(), "OutOfTheMoney()", (3800m, OptionRight.Call), (4250m, OptionRight.Call), (3200m, OptionRight.Put));
             AssertContracts(chain.InTheMoney(), "InTheMoney()", (3200m, OptionRight.Call), (3700m, OptionRight.Call), (4200m, OptionRight.Put));
-            // The closest strike, 3800, is 33.37 points away: within the default 1% of the index, not within 25 points
-            AssertContracts(chain.AtTheMoney(), "AtTheMoney()", (3800m, OptionRight.Call));
+            // 2% of the index, 75 points, reaches the 3700 and 3800 strikes; 50 points only 3800, 25 points none
+            AssertContracts(chain.AtTheMoney(), "AtTheMoney()", (3700m, OptionRight.Call), (3800m, OptionRight.Call));
             AssertContracts(chain.AtTheMoney(50m), "AtTheMoney(50)", (3800m, OptionRight.Call));
             AssertContracts(chain.AtTheMoney(25m), "AtTheMoney(25)");
             AssertContracts(chain.AtTheMoney(0), "AtTheMoney(0)");

@@ -47,7 +47,10 @@ class FutureOptionChainFiltersRegressionAlgorithm(QCAlgorithm):
         # Only the put is listed at 3310
         self._assert_strikes(chain.strikes_above(3300).strikes_below(3320), "strikes_above(3300).strikes_below(3320)", [3310])
         self._assert_strikes(chain.strikes_above(3300).strikes_below(3320).calls_only(), "strikes_above(3300).strikes_below(3320).calls_only()", [])
-        self._assert_strikes(chain.at_the_money(), "at_the_money()", [3220, 3220])
+        # 2% of the future price, 64 points, reaches the strikes from 3160 to 3280; 5 points only 3220
+        atm = chain.at_the_money()
+        if atm.count == 0 or atm.count != chain.strikes_above(3159).strikes_below(3289).count:
+            raise AssertionError(f"at_the_money(): expected the strikes within 2% of 3223.75 but got {sorted(set(x.strike for x in atm))}")
         self._assert_strikes(chain.at_the_money(5), "at_the_money(5)", [3220, 3220])
         if (chain.at_the_money(0).count != 0 or chain.expiration([self.MARCH_EXPIRY]).count != chain.count or chain.farthest_expiration().count != chain.count
                 or chain.expiring_after(self.MARCH_EXPIRY).count != 0 or chain.zero_dte().count != 0

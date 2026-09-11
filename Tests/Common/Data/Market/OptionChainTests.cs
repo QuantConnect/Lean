@@ -348,22 +348,22 @@ def bounds(chain):
             }
         }
 
-        // By default the closest strike is at the money within 1% of the price: 1 at 101, not 1.25 at 101.25 or 103.75
-        [TestCase(100, null, 100)]
-        [TestCase(101, null, 100)]
-        [TestCase(101.25, null, null)]
-        [TestCase(103.75, null, null)]
-        // A zero tolerance requires a strike equal to the price
-        [TestCase(100, 0, 100)]
-        [TestCase(101, 0, null)]
-        // Otherwise the closest strike within the tolerance
-        [TestCase(101, 1, 100)]
-        [TestCase(101, 0.5, null)]
-        [TestCase(103.75, 1.25, 102.5)]
-        // Equidistant between 100 and 102.5: the lower strike wins, unlike Strikes(0, 0)
-        [TestCase(101.25, 1.25, 100)]
-        [TestCase(101.25, 1, null)]
-        public void MoneynessFiltersSplitTheStrikesAroundTheUnderlyingPrice(double underlyingPrice, double? tolerance, double? atmStrike)
+        // By default every strike within 2% of the price: 2 at 100 reaches only 100, 2.15 at 107.5 reaches neither 105 nor 110
+        [TestCase(100, null, new[] { 100.0 })]
+        [TestCase(101, null, new[] { 100.0, 102.5 })]
+        [TestCase(103.75, null, new[] { 102.5, 105.0 })]
+        [TestCase(107.5, null, new double[0])]
+        // A zero distance requires a strike equal to the price
+        [TestCase(100, 0, new[] { 100.0 })]
+        [TestCase(101, 0, new double[0])]
+        // Otherwise every strike within the distance
+        [TestCase(101, 1, new[] { 100.0 })]
+        [TestCase(101, 0.5, new double[0])]
+        [TestCase(103.75, 1.25, new[] { 102.5, 105.0 })]
+        [TestCase(101.25, 1.25, new[] { 100.0, 102.5 })]
+        [TestCase(101.25, 1, new double[0])]
+        [TestCase(101, 5, new[] { 97.5, 100.0, 102.5, 105.0 })]
+        public void MoneynessFiltersSplitTheStrikesAroundTheUnderlyingPrice(double underlyingPrice, double? maxStrikeDistance, double[] atmStrikes)
         {
             var price = (decimal)underlyingPrice;
             var (data, _) = CreateUniverseData(Date, price, Expiries, Strikes);
@@ -379,9 +379,9 @@ def bounds(chain):
             // a strike equal to the price is neither out nor in the money
             Assert.AreEqual(chain.Count, otm.Count + itm.Count + chain.Strikes([price]).Count);
 
-            var atm = chain.AtTheMoney((decimal?)tolerance);
-            Assert.AreEqual(atmStrike.HasValue ? 2 * Expiries.Length : 0, atm.Count);
-            Assert.IsTrue(atm.All(x => x.Strike == (decimal)atmStrike));
+            var atm = chain.AtTheMoney((decimal?)maxStrikeDistance);
+            Assert.AreEqual(atmStrikes.Length * 2 * Expiries.Length, atm.Count);
+            CollectionAssert.AreEquivalent(atmStrikes.Select(x => (decimal)x), atm.Select(x => x.Strike).Distinct());
             Assert.Throws<ArgumentException>(() => chain.AtTheMoney(-1m));
             Assert.Throws<ArgumentException>(() => CreateUniverse().AtTheMoney(-1m));
         }
@@ -413,7 +413,8 @@ def bounds(chain):
             CollectionAssert.AreEquivalent(new[] { 3230m, 3240m }, chain.OutOfTheMoney().CallsOnly().Select(x => x.Strike));
             CollectionAssert.AreEquivalent(new[] { 3200m, 3210m, 3220m }, chain.OutOfTheMoney().PutsOnly().Select(x => x.Strike));
             Assert.AreEqual(0, chain.AtTheMoney(0).Count);
-            CollectionAssert.AreEquivalent(new[] { 3220m, 3220m }, chain.AtTheMoney().Select(x => x.Strike));
+            // 2% of 3223.75 reaches every strike listed, 5 points only 3220
+            Assert.AreEqual(10, chain.AtTheMoney().Count);
             CollectionAssert.AreEquivalent(new[] { 3220m, 3220m }, chain.AtTheMoney(5m).Select(x => x.Strike));
 
             // the expiration filters count from the CME date, every ES option is a standard contract
