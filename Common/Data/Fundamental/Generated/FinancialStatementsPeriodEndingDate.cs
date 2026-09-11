@@ -24,7 +24,7 @@ using QuantConnect.Data.UniverseSelection;
 namespace QuantConnect.Data.Fundamental
 {
     /// <summary>
-    /// The period ending date of the financial statements, moving once every statement (balance sheet, income statement and cash flow statement) has reached the period, so a change means the statement values are there. A statement delivered more than a period behind the others is taken as skipped. Each statement also carries its own date: BalanceSheet.BSPeriodEndingDate, IncomeStatement.ISPeriodEndingDate and CashFlowStatement.CFPeriodEndingDate.
+    /// The period ending date of the financial statements, dated by the filing the balance sheet, income statement and cash flow statement were reported in. Each statement also carries its own date: BalanceSheet.PeriodEndingDate, IncomeStatement.PeriodEndingDate and CashFlowStatement.PeriodEndingDate.
     /// </summary>
     public class FinancialStatementsPeriodEndingDate : MultiPeriodField<DateTime>
     {

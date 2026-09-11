@@ -45,8 +45,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: EQ5AB
         /// </remarks>
         [JsonProperty("EQ5AB")]
-        public CashFlowStatementPeriodEndingDate CFPeriodEndingDate => _cfPeriodEndingDate ??= new(_timeProvider, _securityIdentifier);
-        private CashFlowStatementPeriodEndingDate _cfPeriodEndingDate;
+        public CashFlowStatementPeriodEndingDate PeriodEndingDate => _cashFlowStatementPeriodEndingDate ??= new(_timeProvider, _securityIdentifier);
+        private CashFlowStatementPeriodEndingDate _cashFlowStatementPeriodEndingDate;
 
         /// <summary>
         /// The systematic and rational apportionment of the acquisition cost of intangible operational assets to future periods in which the benefits contribute to revenue. This field is to include Amortization and any variation where Amortization is the first account listed in the line item, excluding Amortization of Intangibles.
