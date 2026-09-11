@@ -27,7 +27,7 @@ class OptionChainFiltersRegressionAlgorithm(QCAlgorithm):
         option = self.add_option("GOOG")
         self._option = option.symbol
         # The same words select the universe and, below, narrow down the chains
-        option.set_filter(lambda universe: universe.calls_only().expiration(1, 10).strikes(-2, 2))
+        option.set_filter(lambda universe: universe.calls_only().expiration(1, 10).strikes(-2, 2).out_of_the_money())
 
         chain = self.option_chain(self._option)
         if chain.count == 0:
@@ -105,9 +105,20 @@ class OptionChainFiltersRegressionAlgorithm(QCAlgorithm):
         if not chain:
             return
 
-        # The universe only selected calls expiring 1 to 10 days out, so the chain filters agree with it
-        if chain.calls_only().expiration(1, 10).count != chain.count or chain.puts_only().count != 0:
+        # The universe only selected the out of the money calls expiring 1 to 10 days out, two strikes around the
+        # previous close: 750 and 752.5 on 2015-12-31. The chain filters agree with it
+        if (chain.calls_only().expiration(1, 10).count != chain.count or chain.puts_only().count != 0
+                or chain.strikes([750, 752.5]).count != chain.count or chain.expiration([datetime(2015, 12, 31)]).count != chain.count):
             raise AssertionError("Slice chain filters disagree with the universe filter")
+
+        # On a calls only chain the moneyness filters are the strike bounds around the current price
+        price = chain.underlying.price
+        if (chain.out_of_the_money().count != chain.strikes_above(price).count or chain.in_the_money().count != chain.strikes_below(price).count
+                or chain.out_of_the_money().count + chain.in_the_money().count + chain.strikes([price]).count != chain.count):
+            raise AssertionError("Slice chain moneyness filters mismatch")
+        if (chain.expiring_after(self.time).count != chain.count or chain.expiring_before(self.time).count != 0 or chain.zero_dte().count != 0
+                or chain.farthest_expiration().count != chain.count):
+            raise AssertionError("Slice chain expiration filters mismatch")
 
         # Buy the call at the first strike at or above the underlying price
         contract = next(iter(chain.strikes(0, 0)), None)

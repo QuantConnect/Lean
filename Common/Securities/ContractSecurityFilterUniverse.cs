@@ -275,11 +275,24 @@ namespace QuantConnect.Securities
         public virtual T FarthestExpiration()
         {
             ApplyTypesFilter();
-            var ordered = Data.OrderByDescending(x => x.Symbol.ID.Date).ToList();
-            if (ordered.Count == 0) return (T)this;
-            var farthest = ordered.TakeWhile(x => ordered[0].Symbol.ID.Date == x.Symbol.ID.Date);
+            // one pass: a later expiration restarts the selection, the same one extends it
+            var farthestDate = DateTime.MinValue;
+            var farthest = new List<TData>();
+            foreach (var data in Data)
+            {
+                var date = data.Symbol.ID.Date;
+                if (date > farthestDate)
+                {
+                    farthestDate = date;
+                    farthest.Clear();
+                }
+                if (date == farthestDate)
+                {
+                    farthest.Add(data);
+                }
+            }
 
-            Data = farthest.ToList();
+            Data = farthest;
             return (T)this;
         }
 

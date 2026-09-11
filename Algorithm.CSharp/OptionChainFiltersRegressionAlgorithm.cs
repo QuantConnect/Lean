@@ -43,7 +43,7 @@ namespace QuantConnect.Algorithm.CSharp
             var option = AddOption("GOOG");
             _option = option.Symbol;
             // The same words select the universe and, below, narrow down the chains
-            option.SetFilter(universe => universe.CallsOnly().Expiration(1, 10).Strikes(-2, 2));
+            option.SetFilter(universe => universe.CallsOnly().Expiration(1, 10).Strikes(-2, 2).OutOfTheMoney());
 
             var chain = OptionChain(_option);
             if (chain.Count == 0)
@@ -134,10 +134,25 @@ namespace QuantConnect.Algorithm.CSharp
                 return;
             }
 
-            // The universe only selected calls expiring 1 to 10 days out, so the chain filters agree with it
-            if (chain.CallsOnly().Expiration(1, 10).Count != chain.Count || chain.PutsOnly().Count != 0)
+            // The universe only selected the out of the money calls expiring 1 to 10 days out, two strikes around the
+            // previous close: 750 and 752.5 on 2015-12-31. The chain filters agree with it
+            if (chain.CallsOnly().Expiration(1, 10).Count != chain.Count || chain.PutsOnly().Count != 0
+                || chain.Strikes([750m, 752.5m]).Count != chain.Count || chain.Expiration([new DateTime(2015, 12, 31)]).Count != chain.Count)
             {
                 throw new RegressionTestException("Slice chain filters disagree with the universe filter");
+            }
+
+            // On a calls only chain the moneyness filters are the strike bounds around the current price
+            var price = chain.Underlying.Price;
+            if (chain.OutOfTheMoney().Count != chain.StrikesAbove(price).Count || chain.InTheMoney().Count != chain.StrikesBelow(price).Count
+                || chain.OutOfTheMoney().Count + chain.InTheMoney().Count + chain.Strikes([price]).Count != chain.Count)
+            {
+                throw new RegressionTestException("Slice chain moneyness filters mismatch");
+            }
+            if (chain.ExpiringAfter(Time).Count != chain.Count || chain.ExpiringBefore(Time).Count != 0 || chain.ZeroDte().Count != 0
+                || chain.FarthestExpiration().Count != chain.Count)
+            {
+                throw new RegressionTestException("Slice chain expiration filters mismatch");
             }
 
             // Buy the call at the first strike at or above the underlying price
@@ -182,7 +197,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
-        public long DataPoints => 7080;
+        public long DataPoints => 5861;
 
         /// <summary>
         /// Data Points count of the algorithm history
