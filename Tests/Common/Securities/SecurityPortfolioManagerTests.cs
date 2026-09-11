@@ -2439,6 +2439,58 @@ namespace QuantConnect.Tests.Common.Securities
             Assert.AreEqual(initialCash + cashDifference, algorithm.Portfolio.CashBook.TotalValueInAccountCurrency);
         }
 
+        [TestCase(true)]
+        [TestCase(false)]
+        public void SplitPartialSharesCashInLieuIsConvertedToAccountCurrency(bool hasData)
+        {
+            var algorithm = new QCAlgorithm();
+            algorithm.SubscriptionManager.SetDataManager(new DataManagerStub(algorithm));
+            algorithm.SetLiveMode(true);
+            // EUR account holding a USD denominated equity
+            algorithm.SetAccountCurrency(Currencies.EUR, 1000m);
+
+            var spy = algorithm.AddEquity("SPY");
+            var usdCash = algorithm.Portfolio.CashBook[Currencies.USD];
+            usdCash.CurrencyConversion = new TestCurrencyConversion(Currencies.USD, Currencies.EUR, 0.9m);
+            Assert.AreEqual(0.9m, spy.QuoteCurrency.ConversionRate);
+
+            if (hasData)
+            {
+                spy.SetMarketPrice(new TradeBar(new DateTime(2000, 01, 01), Symbols.SPY, 10m, 10m, 10m, 10m, 100m, Time.OneMinute));
+            }
+            spy.Holdings.SetHoldings(10m, 3);
+            var initialCash = algorithm.Portfolio.CashBook.TotalValueInAccountCurrency;
+            Assert.AreEqual(1000m, initialCash);
+
+            // 1 for 2 reverse split: 3 shares -> 1 share plus half a share paid in cash.
+            // The reference price is the pre split price
+            var split = new Split(Symbols.SPY, new DateTime(2000, 01, 01), 10m, 2m, SplitType.SplitOccurred);
+            algorithm.Portfolio.ApplySplit(split,
+                spy,
+                algorithm.LiveMode,
+                algorithm.SubscriptionManager.SubscriptionDataConfigService
+                    .GetSubscriptionDataConfigs(spy.Symbol)
+                    .DataNormalizationMode());
+
+            Assert.AreEqual(1, spy.Holdings.Quantity);
+            Assert.AreEqual(20m, spy.Holdings.AveragePrice);
+
+            // half a share at 20 USD post split is 10 USD, which is 9 EUR
+            var expectedCashInLieu = 0.5m * 20m * 0.9m;
+            Assert.AreEqual(9m, expectedCashInLieu);
+            Assert.AreEqual(initialCash + expectedCashInLieu, algorithm.Portfolio.CashBook[Currencies.EUR].Amount);
+            Assert.AreEqual(0m, usdCash.Amount);
+            Assert.AreEqual(initialCash + expectedCashInLieu, algorithm.Portfolio.CashBook.TotalValueInAccountCurrency);
+
+            if (hasData)
+            {
+                // 1 share at 20 USD is 18 EUR, total portfolio value is unchanged by the split
+                Assert.AreEqual(20m, spy.Price);
+                Assert.AreEqual(18m, spy.Holdings.HoldingsValue);
+                Assert.AreEqual(1027m, algorithm.Portfolio.TotalPortfolioValue);
+            }
+        }
+
         [Test]
         public void HoldingsPriceIsUpdatedOnSplit()
         {

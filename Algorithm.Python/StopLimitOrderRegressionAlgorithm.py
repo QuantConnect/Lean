@@ -57,6 +57,9 @@ class StopLimitOrderRegressionAlgorithm(QCAlgorithm):
             if not order.stop_triggered:
                 raise AssertionError("StopLimitOrder StopTriggered should haven been set if the order filled.")
 
+            if order.stop_triggered_time is None or order.stop_triggered_time > order_event.utc_time:
+                raise AssertionError(f"StopLimitOrder StopTriggeredTime should have been set before the fill. Time: {order.stop_triggered_time}")
+
             if order_event.direction == OrderDirection.BUY:
                 limit_price = self._buy_order_ticket.get(OrderField.LIMIT_PRICE)
                 if order_event.fill_price > limit_price:

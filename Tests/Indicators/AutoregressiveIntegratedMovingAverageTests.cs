@@ -69,6 +69,31 @@ namespace QuantConnect.Tests.Indicators
             Assert.IsTrue(arima.IsReady);
         }
 
+        [TestCase(1, 0, 1, 3)]
+        [TestCase(1, 1, 1, 4)]
+        [TestCase(2, 1, 2, 6)]
+        [TestCase(1, 2, 0, 3)]
+        [TestCase(1, -2, 1, 3)]
+        [TestCase(1, -3, 2, 5)]
+        public void RejectsAPeriodTooShortForItsOrders(int arOrder, int diffOrder, int maOrder, int shortest)
+        {
+            var exception = Assert.Throws<ArgumentException>(() =>
+                new AutoRegressiveIntegratedMovingAverage(arOrder, diffOrder, maOrder, shortest - 1, true));
+            Assert.That(exception.Message, Is.EqualTo(
+                $"Period parameter for ARIMA({arOrder}, {diffOrder}, {maOrder}) indicator " +
+                $"must be at least {shortest} but was {shortest - 1}"));
+
+            var arima = new AutoRegressiveIntegratedMovingAverage(arOrder, diffOrder, maOrder, shortest, true);
+            var reference = new DateTime(2020, 1, 1);
+
+            for (var i = 0; i < shortest + 1; i++)
+            {
+                arima.Update(reference.AddDays(i), 100m + (decimal)Math.Sin(i / 3d) * 5m);
+            }
+
+            Assert.IsTrue(arima.IsReady);
+        }
+
         [Test]
         public void PredictionErrorAgainstExternalData()
         {

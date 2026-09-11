@@ -20,6 +20,7 @@ using NUnit.Framework;
 using QuantConnect.Data;
 using QuantConnect.ToolBox.RandomDataGenerator;
 using QuantConnect.Data.Market;
+using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Lean.Engine.DataFeeds.Enumerators;
 using QuantConnect.Configuration;
 using QuantConnect.Data.Auxiliary;
@@ -213,6 +214,116 @@ namespace QuantConnect.Tests.ToolBox.RandomDataGenerator
 
                 var hourFiles = Directory.GetFiles(hourPath, "*.zip");
                 Assert.Greater(hourFiles.Length, 0);
+            }
+            finally
+            {
+                Config.Set("data-folder", originalDataFolder);
+                Globals.Reset();
+                Directory.Delete(tempFolder, true);
+            }
+        }
+
+        [TestCase(SecurityType.Option, Market.USA, "AAPL", Resolution.Minute)]
+        [TestCase(SecurityType.Future, Market.CME, "ES", Resolution.Minute)]
+        [TestCase(SecurityType.Future, Market.CME, "ES", Resolution.Hour)]
+        [TestCase(SecurityType.Future, Market.CME, "ES", Resolution.Daily)]
+        [TestCase(SecurityType.Future, Market.CME, "ES", Resolution.Tick)]
+        public void RandomDataGeneratorWritesDerivativeUniverseFiles(SecurityType securityType, string market, string ticker, Resolution resolution)
+        {
+            var tempFolder = Path.Combine(Path.GetTempPath(), $"LeanTest_{Guid.NewGuid()}");
+            var originalDataFolder = Config.Get("data-folder");
+            try
+            {
+                Directory.CreateDirectory(tempFolder);
+                Config.Set("data-folder", tempFolder);
+                Globals.Reset();
+
+                var settings = new RandomDataGeneratorSettings
+                {
+                    Start = new DateTime(2020, 1, 6),
+                    End = new DateTime(2020, 1, 10),
+                    SymbolCount = 1,
+                    Market = market,
+                    SecurityType = securityType,
+                    Resolution = resolution,
+                    // keep the minute option case fast, the option price model is expensive
+                    DataDensity = resolution == Resolution.Minute ? DataDensity.Sparse : DataDensity.Dense,
+                    IncludeCoarse = false,
+                    QuoteTradeRatio = 1.0,
+                    RandomSeed = 123456,
+                    RandomSeedSet = true,
+                    ChainSymbolCount = 2,
+                    OptionPriceEngineName = "BaroneAdesiWhaleyApproximationEngine",
+                    Tickers = new List<string>() { ticker }
+                };
+
+                var generator = GetGenerator(settings);
+                Assert.DoesNotThrow(() => generator.Run());
+
+                var canonical = securityType == SecurityType.Future
+                    ? Symbol.Create(ticker, SecurityType.Future, market)
+                    : Symbol.CreateCanonicalOption(Symbol.Create(ticker, SecurityType.Equity, market));
+                var universeFiles = Directory.GetFiles(LeanData.GenerateUniversesDirectory(tempFolder, canonical), "*.csv");
+                Assert.IsNotEmpty(universeFiles);
+
+                var config = new SubscriptionDataConfig(securityType == SecurityType.Future ? typeof(FutureUniverse) : typeof(OptionUniverse),
+                    canonical, Resolution.Daily, TimeZones.NewYork, TimeZones.NewYork, true, true, false);
+                BaseChainUniverseData factory = securityType == SecurityType.Future ? new FutureUniverse() : new OptionUniverse();
+                var expectedHeader = securityType == SecurityType.Future ? FutureUniverse.CsvHeader : OptionUniverse.CsvHeader(securityType);
+                var expectedContractsCount = securityType == SecurityType.Future ? 1 : settings.ChainSymbolCount * 2;
+                var maxContractsCount = 0;
+                var anyOpenInterest = false;
+                var anyContractPrice = false;
+                foreach (var universeFile in universeFiles)
+                {
+                    var date = DateTime.ParseExact(Path.GetFileNameWithoutExtension(universeFile), DateFormat.EightCharacter, null);
+                    Assert.IsTrue(date >= settings.Start && date <= settings.End, universeFile);
+
+                    var lines = File.ReadAllLines(universeFile);
+                    Assert.AreEqual($"#{expectedHeader}", lines[0], universeFile);
+
+                    // make sure Lean can read them back
+                    var rows = new List<BaseChainUniverseData>();
+                    using var reader = new StreamReader(universeFile);
+                    while (!reader.EndOfStream)
+                    {
+                        var data = (BaseChainUniverseData)factory.Reader(config, reader, date, false);
+                        if (data != null)
+                        {
+                            rows.Add(data);
+                        }
+                    }
+                    Assert.AreEqual(lines.Length - 1, rows.Count, universeFile);
+
+                    // options have an underlying data row first, then the contracts
+                    var contracts = rows.Where(x => x.Symbol.SecurityType == securityType).ToList();
+                    Assert.AreEqual(securityType == SecurityType.Future ? 0 : 1, rows.Count - contracts.Count, universeFile);
+                    Assert.IsTrue(securityType == SecurityType.Future || rows[0].Symbol == canonical.Underlying, universeFile);
+                    // options warm up on the first underlying data points, so the first days might have no contracts
+                    Assert.LessOrEqual(contracts.Count, expectedContractsCount, universeFile);
+                    maxContractsCount = Math.Max(maxContractsCount, contracts.Count);
+
+                    foreach (var row in rows)
+                    {
+                        Assert.IsFalse(row.Symbol.IsCanonical(), universeFile);
+                        Assert.AreEqual(canonical.ID.Symbol, row.Symbol.ID.Symbol, universeFile);
+                        if (row.Symbol.SecurityType == securityType)
+                        {
+                            Assert.GreaterOrEqual(row.Symbol.ID.Date, date, universeFile);
+                            // the price model can price a contract at zero and open interest is generated once a day, starting the second day
+                            anyContractPrice |= row.Close > 0 && row.Volume > 0;
+                            anyOpenInterest |= row.OpenInterest > 0;
+                        }
+                        else
+                        {
+                            Assert.Greater(row.Close, 0, universeFile);
+                            Assert.Greater(row.Volume, 0, universeFile);
+                        }
+                    }
+                }
+                Assert.AreEqual(expectedContractsCount, maxContractsCount);
+                Assert.IsTrue(anyContractPrice);
+                Assert.IsTrue(anyOpenInterest);
             }
             finally
             {

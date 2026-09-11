@@ -303,6 +303,12 @@ namespace QuantConnect.Orders.Fills
             // do not fill on stale data
             if (pricesEndTime <= order.Time) return fill;
 
+            // the whole bar is after the stop triggered, so the limit leg fills like a resting limit order
+            if (IsEntirelyAfterStopTriggered(asset, order, prices))
+            {
+                return LimitFill(asset, order, order.LimitPrice);
+            }
+
             //Check if the Stop Order was filled: opposite to a limit order
             switch (order.Direction)
             {
@@ -313,6 +319,7 @@ namespace QuantConnect.Orders.Fills
                         if (!order.StopTriggered)
                         {
                             order.StopTriggered = true;
+                            order.StopTriggeredTime = pricesEndTime;
                             Parameters.OnOrderUpdated(order);
                         }
 
@@ -335,6 +342,7 @@ namespace QuantConnect.Orders.Fills
                         if (!order.StopTriggered)
                         {
                             order.StopTriggered = true;
+                            order.StopTriggeredTime = pricesEndTime;
                             Parameters.OnOrderUpdated(order);
                         }
 
@@ -385,6 +393,18 @@ namespace QuantConnect.Orders.Fills
         /// <seealso cref="MarketFill(Security, MarketOrder)"/></remarks>
         public override OrderEvent LimitFill(Security asset, LimitOrder order)
         {
+            return LimitFill(asset, order, order.LimitPrice);
+        }
+
+        /// <summary>
+        /// Limit fill model implementation for Equity, shared by the limit leg of stop limit orders
+        /// </summary>
+        /// <param name="asset">Security asset we're filling</param>
+        /// <param name="order">Order packet to model</param>
+        /// <param name="limitPrice">The limit price to fill at</param>
+        /// <returns>Order fill information detailing the average price and quantity filled.</returns>
+        private OrderEvent LimitFill(Security asset, Order order, decimal limitPrice)
+        {
             //Initialise;
             var utcTime = asset.LocalTime.ConvertToUtc(asset.Exchange.TimeZone);
             var fill = new OrderEvent(order, utcTime, OrderFee.Zero);
@@ -411,17 +431,17 @@ namespace QuantConnect.Orders.Fills
             switch (order.Direction)
             {
                 case OrderDirection.Buy:
-                    if (tradeBar.Low < order.LimitPrice)
+                    if (tradeBar.Low < limitPrice)
                     {
                         // assume the order completely filled
                         // TODO: Add separate DepthLimited fill partial order quantities based on tick quantity / bar.Volume available.
                         fill.FillQuantity = order.Quantity;
                         fill.Status = OrderStatus.Filled;
 
-                        fill.FillPrice = order.LimitPrice;
+                        fill.FillPrice = limitPrice;
 
                         // Favorable gap case: if the bar opens below the limit price, fill at open price
-                        if (tradeBar.Open < order.LimitPrice)
+                        if (tradeBar.Open < limitPrice)
                         {
                             fill.FillPrice = tradeBar.Open;
                             fill.Message = Messages.EquityFillModel.FilledWithOpenDueToFavorableGap(asset, tradeBar);
@@ -430,17 +450,17 @@ namespace QuantConnect.Orders.Fills
                     }
                     break;
                 case OrderDirection.Sell:
-                    if (tradeBar.High > order.LimitPrice)
+                    if (tradeBar.High > limitPrice)
                     {
                         // Assume the order completely filled
                         // TODO: Add separate DepthLimited fill partial order quantities based on tick quantity / bar.Volume available.
                         fill.FillQuantity = order.Quantity;
                         fill.Status = OrderStatus.Filled;
 
-                        fill.FillPrice = order.LimitPrice;
+                        fill.FillPrice = limitPrice;
 
                         // Favorable gap case: if the bar opens above the limit price, fill at open price
-                        if (tradeBar.Open > order.LimitPrice)
+                        if (tradeBar.Open > limitPrice)
                         {
                             fill.FillPrice = tradeBar.Open;
                             fill.Message = Messages.EquityFillModel.FilledWithOpenDueToFavorableGap(asset, tradeBar);

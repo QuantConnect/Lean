@@ -3013,14 +3013,47 @@ namespace QuantConnect.Tests.Engine.BrokerageTransactionHandlerTests
                         StopTriggered = false
                     };
                     _transactionHandler.AddOpenOrder(stopLimitOrder, algorithm);
-                    brokerage.CreateOrderUpdatedEvent(new OrderUpdateEvent { OrderId = 2, StopTriggered = true });
+                    brokerage.CreateOrderUpdatedEvent(new OrderUpdateEvent { OrderId = 2, StopTriggered = true, StopTriggeredTime = referenceDateTime });
                     var updatedStopLimitOrder = (StopLimitOrder)_transactionHandler
                         .GetOrdersByBrokerageId(1)
                         .First(e => e.Id == 2);
                     // StopTriggered flag should remain false
                     Assert.IsFalse(updatedStopLimitOrder.StopTriggered);
+                    Assert.IsNull(updatedStopLimitOrder.StopTriggeredTime);
                     break;
             }
+        }
+
+        [TestCase(true)]
+        [TestCase(false)]
+        public void BrokerageTransactionHandlerAppliesStopLimitOrderUpdates(bool providesStopTriggeredTime)
+        {
+            var referenceDateTime = new DateTime(2024, 01, 25, 10, 0, 0);
+
+            var algorithm = new TestAlgorithm();
+            algorithm.SubscriptionManager.SetDataManager(new DataManagerStub(algorithm));
+            algorithm.SetBrokerageMessageHandler(new TestBrokerageMessageHandler());
+
+            _transactionHandler = new TestBrokerageTransactionHandler();
+            using var brokerage = new EventEmittingBrokerage(algorithm);
+            _transactionHandler.Initialize(algorithm, brokerage, new BacktestingResultHandler());
+
+            var security = algorithm.AddEquity("SPY");
+            var stopLimitOrder = new StopLimitOrder(security.Symbol, 100, 100, 100, referenceDateTime)
+            {
+                Id = 1,
+                BrokerId = new List<string> { "1" }
+            };
+            _transactionHandler.AddOpenOrder(stopLimitOrder, algorithm);
+            algorithm.Status = AlgorithmStatus.Running;
+
+            var stopTriggeredTime = providesStopTriggeredTime ? referenceDateTime : (DateTime?)null;
+            brokerage.CreateOrderUpdatedEvent(new OrderUpdateEvent { OrderId = 1, StopTriggered = true, StopTriggeredTime = stopTriggeredTime });
+
+            var updatedStopLimitOrder = (StopLimitOrder)_transactionHandler.GetOrdersByBrokerageId(1).Single();
+            Assert.IsTrue(updatedStopLimitOrder.StopTriggered);
+            // brokerages that don't provide the trigger time get the current algorithm time
+            Assert.AreEqual(providesStopTriggeredTime ? referenceDateTime : algorithm.UtcTime, updatedStopLimitOrder.StopTriggeredTime);
         }
 
         internal class TestIncrementalOrderIdAlgorithm : OrderTicketDemoAlgorithm
