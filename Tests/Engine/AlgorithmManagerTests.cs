@@ -40,6 +40,7 @@ using QuantConnect.Scheduling;
 using QuantConnect.Securities;
 using QuantConnect.Statistics;
 using QuantConnect.Util;
+using Common.Util;
 using Log = QuantConnect.Logging.Log;
 
 namespace QuantConnect.Tests.Engine
@@ -234,6 +235,12 @@ namespace QuantConnect.Tests.Engine
             public void SendStatusUpdate(AlgorithmStatus status, string message = "")
             {
             }
+
+            public void AddBrokerageData(string key, string value)
+            {
+            }
+
+            public ReadOnlyExtendedDictionary<string, string> BrokerageData { get; } = new();
 
             public void RuntimeStatistic(string key, string value)
             {

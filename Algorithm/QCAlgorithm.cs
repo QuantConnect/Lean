@@ -152,6 +152,7 @@ namespace QuantConnect.Algorithm
         private TimeSpan? _warmupTimeSpan;
         private int? _warmupBarCount;
         private Dictionary<string, string> _parameters = new Dictionary<string, string>();
+        private bool _brokerageDataSet;
         private SecurityDefinitionSymbolResolver _securityDefinitionSymbolResolver;
 
         private SecurityDefinitionSymbolResolver SecurityDefinitionSymbolResolver
@@ -749,6 +750,13 @@ namespace QuantConnect.Algorithm
         public ObjectStore ObjectStore { get; private set; }
 
         /// <summary>
+        /// Gets a read-only view of the brokerage data shared by the brokerage, data queue handler or any other component,
+        /// for example account information. Usually empty when not running in live mode
+        /// </summary>
+        [DocumentationAttribute(LiveTrading)]
+        public ReadOnlyExtendedDictionary<string, string> BrokerageData { get; private set; } = new();
+
+        /// <summary>
         /// The current statistics for the running algorithm.
         /// </summary>
         [DocumentationAttribute(StatisticsTag)]
@@ -916,6 +924,25 @@ namespace QuantConnect.Algorithm
         public ReadOnlyExtendedDictionary<string, string> GetParameters()
         {
             return _parameters.ToReadOnlyExtendedDictionary();
+        }
+
+        /// <summary>
+        /// Sets the brokerage data read-only view. Can only be set once, it's shared by the engine
+        /// </summary>
+        /// <param name="brokerageData">The brokerage data</param>
+        [DocumentationAttribute(LiveTrading)]
+        public void SetBrokerageData(ReadOnlyExtendedDictionary<string, string> brokerageData)
+        {
+            if (brokerageData == null)
+            {
+                throw new ArgumentNullException(nameof(brokerageData));
+            }
+            if (_brokerageDataSet && !ReferenceEquals(BrokerageData, brokerageData))
+            {
+                throw new InvalidOperationException("QCAlgorithm.SetBrokerageData(): the brokerage data has already been set, it can only be set once");
+            }
+            BrokerageData = brokerageData;
+            _brokerageDataSet = true;
         }
 
         /// <summary>

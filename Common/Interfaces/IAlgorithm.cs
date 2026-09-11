@@ -407,6 +407,12 @@ namespace QuantConnect.Interfaces
         ObjectStore ObjectStore { get; }
 
         /// <summary>
+        /// Gets a read-only view of the brokerage data shared by the brokerage, data queue handler or any other component,
+        /// for example account information. Usually empty when not running in live mode
+        /// </summary>
+        ReadOnlyExtendedDictionary<string, string> BrokerageData { get; }
+
+        /// <summary>
         /// Returns the current Slice object
         /// </summary>
         Slice CurrentSlice { get; }
@@ -473,6 +479,12 @@ namespace QuantConnect.Interfaces
         /// </summary>
         /// <param name="parameters">Dictionary containing the parameter names to values</param>
         void SetParameters(Dictionary<string, string> parameters);
+
+        /// <summary>
+        /// Sets the brokerage data read-only view
+        /// </summary>
+        /// <param name="brokerageData">The brokerage data</param>
+        void SetBrokerageData(ReadOnlyExtendedDictionary<string, string> brokerageData);
 
         /// <summary>
         /// Determines if the Symbol is shortable at the brokerage

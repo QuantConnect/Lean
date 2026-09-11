@@ -23,6 +23,7 @@ using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Interfaces;
 using QuantConnect.Orders;
 using QuantConnect.Packets;
+using Common.Util;
 using QuantConnect.Statistics;
 
 namespace QuantConnect.Lean.Engine.Results
@@ -140,6 +141,20 @@ namespace QuantConnect.Lean.Engine.Results
         /// <param name="key">Runtime headline statistic name</param>
         /// <param name="value">Runtime headline statistic value</param>
         void RuntimeStatistic(string key, string value);
+
+        /// <summary>
+        /// Adds or updates a brokerage data entry. Key value pairs the brokerage, data queue handler or any other component
+        /// wants to share with the user, through the results, and the algorithm, for example account information.
+        /// Sensitive data, like credentials, should never be added
+        /// </summary>
+        /// <param name="key">The brokerage data key</param>
+        /// <param name="value">The brokerage data value</param>
+        void AddBrokerageData(string key, string value);
+
+        /// <summary>
+        /// Read only view of the brokerage data, see <see cref="AddBrokerageData"/>. Shared with the algorithm
+        /// </summary>
+        ReadOnlyExtendedDictionary<string, string> BrokerageData { get; }
 
         /// <summary>
         /// Send a new order event.
