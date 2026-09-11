@@ -45,8 +45,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: EQR0R
         /// </remarks>
         [JsonProperty("EQR0R")]
-        public IncomeStatementPeriodEndingDate ISPeriodEndingDate => _isPeriodEndingDate ??= new(_timeProvider, _securityIdentifier);
-        private IncomeStatementPeriodEndingDate _isPeriodEndingDate;
+        public IncomeStatementPeriodEndingDate PeriodEndingDate => _incomeStatementPeriodEndingDate ??= new(_timeProvider, _securityIdentifier);
+        private IncomeStatementPeriodEndingDate _incomeStatementPeriodEndingDate;
 
         /// <summary>
         /// The non-cash expense recognized on intangible assets over the benefit period of the asset.
