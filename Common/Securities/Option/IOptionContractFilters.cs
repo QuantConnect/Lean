@@ -98,14 +98,15 @@ namespace QuantConnect.Securities
 
         /// <summary>
         /// Selects the contracts at the strike closest to the underlying price, the lower strike on ties, when that strike
-        /// is within the tolerance, in units of the underlying price. Zero requires a strike equal to the price
+        /// is within the tolerance, in units of the underlying price. Zero requires a strike equal to the price, null allows
+        /// <see cref="BaseOptionFilterUniverse{TUniverse, TData}.DefaultAtTheMoneyTolerance"/> of it
         /// </summary>
-        TSelf AtTheMoney(decimal tolerance = 0);
+        TSelf AtTheMoney(decimal? tolerance = null);
 
         /// <summary>
         /// Selects the contracts at the money. Alias for <see cref="AtTheMoney"/>
         /// </summary>
-        TSelf ATM(decimal tolerance = 0);
+        TSelf ATM(decimal? tolerance = null);
 
         /// <summary>
         /// Selects the call contracts

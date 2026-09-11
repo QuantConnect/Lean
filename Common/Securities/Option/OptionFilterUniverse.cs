@@ -39,6 +39,11 @@ namespace QuantConnect.Securities
         where TUniverse : BaseOptionFilterUniverse<TUniverse, TData>
         where TData : ISymbolProvider
     {
+        /// <summary>
+        /// The distance from the underlying price, as a fraction of it, within which the closest strike is at the money by default
+        /// </summary>
+        public const decimal DefaultAtTheMoneyTolerance = 0.01m;
+
         // Fields used in relative strikes filter
         private List<decimal> _uniqueStrikes;
         private bool _refreshUniqueStrikes;
@@ -371,9 +376,10 @@ namespace QuantConnect.Securities
         /// strike on ties, when that strike is within the tolerance. Selects nothing when the underlying price is unknown
         /// </summary>
         /// <param name="tolerance">The largest distance between the closest strike and the underlying price for the strike to be
-        /// at the money, in units of the underlying price. Zero, the default, requires a strike equal to the underlying price</param>
+        /// at the money, in units of the underlying price. Zero requires a strike equal to the underlying price. Null, the default,
+        /// allows <see cref="DefaultAtTheMoneyTolerance"/> of the underlying price</param>
         /// <returns>Universe with filter applied</returns>
-        public TUniverse AtTheMoney(decimal tolerance = 0)
+        public TUniverse AtTheMoney(decimal? tolerance = null)
         {
             if (tolerance < 0)
             {
@@ -383,17 +389,20 @@ namespace QuantConnect.Securities
             {
                 return Empty();
             }
+            // the price is in strike units, see SymbolProperties.StrikeMultiplier, so an explicit tolerance is scaled the same way
+            var maxDistance = tolerance.HasValue ? tolerance.Value / _underlyingScaleFactor : price * DefaultAtTheMoneyTolerance;
             var strike = GetClosestStrike(AllSymbols, price);
-            return Math.Abs(strike - price) <= tolerance ? Strikes([strike]) : Empty();
+            return Math.Abs(strike - price) <= maxDistance ? Strikes([strike]) : Empty();
         }
 
         /// <summary>
         /// Applies filter selecting the contracts at the money. Alias for <see cref="AtTheMoney"/>
         /// </summary>
         /// <param name="tolerance">The largest distance between the closest strike and the underlying price for the strike to be
-        /// at the money, in units of the underlying price. Zero, the default, requires a strike equal to the underlying price</param>
+        /// at the money, in units of the underlying price. Zero requires a strike equal to the underlying price. Null, the default,
+        /// allows <see cref="DefaultAtTheMoneyTolerance"/> of the underlying price</param>
         /// <returns>Universe with filter applied</returns>
-        public TUniverse ATM(decimal tolerance = 0)
+        public TUniverse ATM(decimal? tolerance = null)
         {
             return AtTheMoney(tolerance);
         }

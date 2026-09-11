@@ -62,8 +62,9 @@ namespace QuantConnect.Algorithm.CSharp
             // Only the put is listed at 3310
             AssertStrikes(chain.StrikesAbove(3300m).StrikesBelow(3320m), "StrikesAbove(3300).StrikesBelow(3320)", 3310m);
             AssertStrikes(chain.StrikesAbove(3300m).StrikesBelow(3320m).CallsOnly(), "StrikesAbove(3300).StrikesBelow(3320).CallsOnly()");
+            AssertStrikes(chain.AtTheMoney(), "AtTheMoney()", 3220m, 3220m);
             AssertStrikes(chain.AtTheMoney(5m), "AtTheMoney(5)", 3220m, 3220m);
-            if (chain.AtTheMoney().Count != 0 || chain.Expiration([MarchExpiry]).Count != chain.Count || chain.FarthestExpiration().Count != chain.Count
+            if (chain.AtTheMoney(0).Count != 0 || chain.Expiration([MarchExpiry]).Count != chain.Count || chain.FarthestExpiration().Count != chain.Count
                 || chain.ExpiringAfter(MarchExpiry).Count != 0 || chain.ZeroDte().Count != 0
                 || chain.StandardsOnly().Count != chain.Count || chain.WeeklysOnly().Count != 0)
             {

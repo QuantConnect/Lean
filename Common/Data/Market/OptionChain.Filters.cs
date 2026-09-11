@@ -205,9 +205,10 @@ namespace QuantConnect.Data.Market
         /// when that strike is within the tolerance. Same as <see cref="BaseOptionFilterUniverse{TUniverse, TData}.AtTheMoney"/>
         /// </summary>
         /// <param name="tolerance">The largest distance between the closest strike and the underlying price for the strike to be
-        /// at the money, in units of the underlying price. Zero, the default, requires a strike equal to the underlying price</param>
+        /// at the money, in units of the underlying price. Zero requires a strike equal to the underlying price. Null, the default,
+        /// allows <see cref="BaseOptionFilterUniverse{TUniverse, TData}.DefaultAtTheMoneyTolerance"/> of the underlying price</param>
         /// <returns>A new chain with the filter applied, empty when the underlying price is unknown</returns>
-        public OptionChain AtTheMoney(decimal tolerance = 0)
+        public OptionChain AtTheMoney(decimal? tolerance = null)
         {
             return Filter(universe => universe.AtTheMoney(tolerance));
         }
@@ -216,9 +217,10 @@ namespace QuantConnect.Data.Market
         /// Selects the contracts at the money. Alias for <see cref="AtTheMoney"/>
         /// </summary>
         /// <param name="tolerance">The largest distance between the closest strike and the underlying price for the strike to be
-        /// at the money, in units of the underlying price. Zero, the default, requires a strike equal to the underlying price</param>
+        /// at the money, in units of the underlying price. Zero requires a strike equal to the underlying price. Null, the default,
+        /// allows <see cref="BaseOptionFilterUniverse{TUniverse, TData}.DefaultAtTheMoneyTolerance"/> of the underlying price</param>
         /// <returns>A new chain with the filter applied</returns>
-        public OptionChain ATM(decimal tolerance = 0)
+        public OptionChain ATM(decimal? tolerance = null)
         {
             return AtTheMoney(tolerance);
         }

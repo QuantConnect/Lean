@@ -69,10 +69,11 @@ class OptionChainFiltersRegressionAlgorithm(QCAlgorithm):
                 or any((x.strike <= price if x.right == OptionRight.CALL else x.strike >= price) for x in otm)
                 or any((x.strike >= price if x.right == OptionRight.CALL else x.strike <= price) for x in itm)):
             raise AssertionError("Out/in the money filters mismatch")
-        # No strike equals the 748.54 close, so the at the money contracts need a tolerance: one strike step reaches 747.5
-        atm = chain.atm(2.5)
-        if chain.atm().count != 0 or atm.count == 0 or any(x.strike != 747.5 for x in atm) or atm.count != chain.strikes([747.5]).count:
-            raise AssertionError("Expected atm(2.5) to select every contract at the 747.50 strike and atm() none")
+        # The closest strike to the 748.54 close is 747.5, within the default 1% tolerance but not within 1 point or exactly at the price
+        atm = chain.atm()
+        if (atm.count == 0 or any(x.strike != 747.5 for x in atm) or atm.count != chain.strikes([747.5]).count
+                or chain.atm(2.5).count != atm.count or chain.atm(1).count != 0 or chain.atm(0).count != 0):
+            raise AssertionError("Expected atm() to select every contract at the 747.50 strike and atm(1) none")
 
         # Strike sets and bounds are absolute, unlike the relative strikes(min, max)
         strikes = chain.strikes([745, 750])

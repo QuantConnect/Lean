@@ -47,8 +47,9 @@ class FutureOptionChainFiltersRegressionAlgorithm(QCAlgorithm):
         # Only the put is listed at 3310
         self._assert_strikes(chain.strikes_above(3300).strikes_below(3320), "strikes_above(3300).strikes_below(3320)", [3310])
         self._assert_strikes(chain.strikes_above(3300).strikes_below(3320).calls_only(), "strikes_above(3300).strikes_below(3320).calls_only()", [])
+        self._assert_strikes(chain.at_the_money(), "at_the_money()", [3220, 3220])
         self._assert_strikes(chain.at_the_money(5), "at_the_money(5)", [3220, 3220])
-        if (chain.at_the_money().count != 0 or chain.expiration([self.MARCH_EXPIRY]).count != chain.count or chain.farthest_expiration().count != chain.count
+        if (chain.at_the_money(0).count != 0 or chain.expiration([self.MARCH_EXPIRY]).count != chain.count or chain.farthest_expiration().count != chain.count
                 or chain.expiring_after(self.MARCH_EXPIRY).count != 0 or chain.zero_dte().count != 0
                 or chain.standards_only().count != chain.count or chain.weeklys_only().count != 0):
             raise AssertionError("Expiration or contract type filters mismatch on the March ES option chain")

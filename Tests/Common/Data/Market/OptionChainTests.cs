@@ -85,7 +85,8 @@ namespace QuantConnect.Tests.Common.Data.Market
             yield return Case("OTM.CallsOnly", u => u.OTM().CallsOnly(), c => c.OTM().CallsOnly());
             yield return Case("InTheMoney", u => u.InTheMoney(), c => c.InTheMoney());
             yield return Case("ITM.PutsOnly.Expiration(0, 10)", u => u.ITM().PutsOnly().Expiration(0, 10), c => c.ITM().PutsOnly().Expiration(0, 10));
-            yield return Case("AtTheMoney", u => u.AtTheMoney(), c => c.AtTheMoney(), empty: true);
+            yield return Case("AtTheMoney", u => u.AtTheMoney(), c => c.AtTheMoney());
+            yield return Case("AtTheMoney(0)", u => u.AtTheMoney(0), c => c.AtTheMoney(0), empty: true);
             yield return Case("AtTheMoney(1)", u => u.AtTheMoney(1m), c => c.AtTheMoney(1m));
             yield return Case("Expiration(0, 10).ATM(2.5)", u => u.Expiration(0, 10).ATM(2.5m), c => c.Expiration(0, 10).ATM(2.5m));
             yield return Case("StandardsOnly", u => u.StandardsOnly(), c => c.StandardsOnly());
@@ -347,17 +348,22 @@ def bounds(chain):
             }
         }
 
-        // By default only a strike equal to the price is at the money
+        // By default the closest strike is at the money within 1% of the price: 1 at 101, not 1.25 at 101.25 or 103.75
+        [TestCase(100, null, 100)]
+        [TestCase(101, null, 100)]
+        [TestCase(101.25, null, null)]
+        [TestCase(103.75, null, null)]
+        // A zero tolerance requires a strike equal to the price
         [TestCase(100, 0, 100)]
         [TestCase(101, 0, null)]
-        // Within the tolerance the closest strike is
+        // Otherwise the closest strike within the tolerance
         [TestCase(101, 1, 100)]
         [TestCase(101, 0.5, null)]
         [TestCase(103.75, 1.25, 102.5)]
         // Equidistant between 100 and 102.5: the lower strike wins, unlike Strikes(0, 0)
         [TestCase(101.25, 1.25, 100)]
         [TestCase(101.25, 1, null)]
-        public void MoneynessFiltersSplitTheStrikesAroundTheUnderlyingPrice(double underlyingPrice, double tolerance, double? atmStrike)
+        public void MoneynessFiltersSplitTheStrikesAroundTheUnderlyingPrice(double underlyingPrice, double? tolerance, double? atmStrike)
         {
             var price = (decimal)underlyingPrice;
             var (data, _) = CreateUniverseData(Date, price, Expiries, Strikes);
@@ -373,7 +379,7 @@ def bounds(chain):
             // a strike equal to the price is neither out nor in the money
             Assert.AreEqual(chain.Count, otm.Count + itm.Count + chain.Strikes([price]).Count);
 
-            var atm = chain.AtTheMoney((decimal)tolerance);
+            var atm = chain.AtTheMoney((decimal?)tolerance);
             Assert.AreEqual(atmStrike.HasValue ? 2 * Expiries.Length : 0, atm.Count);
             Assert.IsTrue(atm.All(x => x.Strike == (decimal)atmStrike));
             Assert.Throws<ArgumentException>(() => chain.AtTheMoney(-1m));
@@ -406,7 +412,8 @@ def bounds(chain):
             // moneyness against the future price
             CollectionAssert.AreEquivalent(new[] { 3230m, 3240m }, chain.OutOfTheMoney().CallsOnly().Select(x => x.Strike));
             CollectionAssert.AreEquivalent(new[] { 3200m, 3210m, 3220m }, chain.OutOfTheMoney().PutsOnly().Select(x => x.Strike));
-            Assert.AreEqual(0, chain.AtTheMoney().Count);
+            Assert.AreEqual(0, chain.AtTheMoney(0).Count);
+            CollectionAssert.AreEquivalent(new[] { 3220m, 3220m }, chain.AtTheMoney().Select(x => x.Strike));
             CollectionAssert.AreEquivalent(new[] { 3220m, 3220m }, chain.AtTheMoney(5m).Select(x => x.Strike));
 
             // the expiration filters count from the CME date, every ES option is a standard contract
