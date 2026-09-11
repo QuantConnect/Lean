@@ -45,8 +45,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: EQQ6C
         /// </remarks>
         [JsonProperty("EQQ6C")]
-        public BalanceSheetPeriodEndingDate BSPeriodEndingDate => _bsPeriodEndingDate ??= new(_timeProvider, _securityIdentifier);
-        private BalanceSheetPeriodEndingDate _bsPeriodEndingDate;
+        public BalanceSheetPeriodEndingDate PeriodEndingDate => _balanceSheetPeriodEndingDate ??= new(_timeProvider, _securityIdentifier);
+        private BalanceSheetPeriodEndingDate _balanceSheetPeriodEndingDate;
 
         /// <summary>
         /// Any money that a company owes its suppliers for goods and services purchased on credit and is expected to pay within the next year or operating cycle.
