@@ -22,6 +22,7 @@ using Newtonsoft.Json;
 using QuantConnect.Packets;
 using QuantConnect.Algorithm;
 using QuantConnect.Brokerages;
+using Common.Util;
 using Newtonsoft.Json.Serialization;
 
 namespace QuantConnect.Tests.Common
@@ -105,6 +106,40 @@ namespace QuantConnect.Tests.Common
             Assert.AreEqual(algorithmConfiguration.OutOfSampleMaxEndDate, deserialize.OutOfSampleMaxEndDate);
             Assert.AreEqual(algorithmConfiguration.StartDate, deserialize.StartDate);
             Assert.AreEqual(algorithmConfiguration.Tags, deserialize.Tags);
+        }
+
+        [Test]
+        public void BrokerageDataIsOnlyIncludedWhenSet()
+        {
+            var algorithm = new QCAlgorithm();
+
+            // not set, e.g. backtesting
+            var algorithmConfiguration = AlgorithmConfiguration.Create(algorithm, null);
+            Assert.IsNull(algorithmConfiguration.BrokerageData);
+            var serialized = JsonConvert.SerializeObject(algorithmConfiguration);
+            Assert.IsFalse(serialized.Contains("BrokerageData", StringComparison.InvariantCultureIgnoreCase));
+
+            // set, e.g. live trading
+            var brokerageData = new Dictionary<string, string> { { "some-key", "some value" }, { "some-other-key", "another value" } };
+            algorithm.SetBrokerageData(new ReadOnlyExtendedDictionary<string, string>(brokerageData, copy: false));
+            algorithmConfiguration = AlgorithmConfiguration.Create(algorithm, null);
+            CollectionAssert.AreEquivalent(brokerageData, algorithmConfiguration.BrokerageData);
+
+            // the configuration holds a snapshot, later changes are reflected by the algorithm but not by the existing configuration
+            brokerageData.Remove("some-other-key");
+            brokerageData["some-key"] = "";
+            Assert.AreEqual(2, algorithmConfiguration.BrokerageData.Count);
+            Assert.AreEqual("some value", algorithmConfiguration.BrokerageData["some-key"]);
+            CollectionAssert.AreEquivalent(brokerageData, algorithm.BrokerageData);
+
+            algorithmConfiguration = AlgorithmConfiguration.Create(algorithm, null);
+            CollectionAssert.AreEquivalent(brokerageData, algorithmConfiguration.BrokerageData);
+
+            serialized = JsonConvert.SerializeObject(algorithmConfiguration);
+            Assert.IsTrue(serialized.Contains("\"BrokerageData\":{\"some-key\":\"\"}", StringComparison.InvariantCulture));
+
+            var deserialized = JsonConvert.DeserializeObject<AlgorithmConfiguration>(serialized);
+            CollectionAssert.AreEquivalent(brokerageData, deserialized.BrokerageData);
         }
 
         private static TestCaseData[] AlgorithmConfigurationTestCases => new[]

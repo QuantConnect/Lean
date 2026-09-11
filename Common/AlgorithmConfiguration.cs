@@ -63,6 +63,12 @@ namespace QuantConnect
         public IReadOnlyDictionary<string, string> Parameters { get; set; }
 
         /// <summary>
+        /// The brokerage data used by the live algorithm, if any
+        /// </summary>
+        [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
+        public IReadOnlyDictionary<string, string> BrokerageData { get; set; }
+
+        /// <summary>
         /// Backtest maximum end date
         /// </summary>
         [JsonConverter(typeof(DateTimeJsonConverter), DateFormat.ISOShort, DateFormat.UI)]
@@ -95,9 +101,11 @@ namespace QuantConnect
         /// </summary>
         public AlgorithmConfiguration(string name, ISet<string> tags, string accountCurrency, BrokerageName brokerageName,
             AccountType accountType, IReadOnlyDictionary<string, string> parameters, DateTime startDate, DateTime endDate,
-            DateTime? outOfSampleMaxEndDate, int outOfSampleDays = 0, int tradingDaysPerYear = 0)
+            DateTime? outOfSampleMaxEndDate, int outOfSampleDays = 0, int tradingDaysPerYear = 0,
+            IReadOnlyDictionary<string, string> brokerageData = null)
         {
             Name = name;
+            BrokerageData = brokerageData;
             Tags = tags;
             OutOfSampleMaxEndDate = outOfSampleMaxEndDate;
             TradingDaysPerYear = tradingDaysPerYear;
@@ -139,7 +147,9 @@ namespace QuantConnect
                 backtestNodePacket?.OutOfSampleMaxEndDate,
                 backtestNodePacket?.OutOfSampleDays ?? 0,
                 // use value = 252 like default for backwards compatibility
-                algorithm?.Settings?.TradingDaysPerYear ?? 252);
+                algorithm?.Settings?.TradingDaysPerYear ?? 252,
+                // only included when set, live mode. We take a snapshot since the algorithm's instance can be updated later on
+                algorithm.BrokerageData?.Count > 0 ? new Dictionary<string, string>(algorithm.BrokerageData) : null);
         }
     }
 }

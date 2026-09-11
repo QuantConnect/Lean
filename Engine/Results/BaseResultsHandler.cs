@@ -29,6 +29,7 @@ using QuantConnect.Packets;
 using QuantConnect.Securities.Positions;
 using QuantConnect.Statistics;
 using QuantConnect.Util;
+using Common.Util;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -249,6 +250,16 @@ namespace QuantConnect.Lean.Engine.Results
         protected Dictionary<string, string> State { get; set; }
 
         /// <summary>
+        /// Brokerage data shared with the user and the algorithm, see <see cref="AddBrokerageData"/>
+        /// </summary>
+        private readonly Dictionary<string, string> _brokerageData = new();
+
+        /// <summary>
+        /// Read only view of the brokerage data, see <see cref="AddBrokerageData"/>. Shared with the algorithm
+        /// </summary>
+        public ReadOnlyExtendedDictionary<string, string> BrokerageData { get; }
+
+        /// <summary>
         /// The handler responsible for communicating messages to listeners
         /// </summary>
         protected IMessagingHandler MessagingHandler { get; set; }
@@ -326,6 +337,8 @@ namespace QuantConnect.Lean.Engine.Results
 
             Messages = new ConcurrentQueue<Packet>();
             RuntimeStatistics = new Dictionary<string, string>();
+            // same instance, so any entries added later are visible through the view
+            BrokerageData = new ReadOnlyExtendedDictionary<string, string>(_brokerageData, copy: false);
             StartTime = DateTime.UtcNow;
             CompileId = "";
             AlgorithmId = "";
@@ -541,6 +554,38 @@ namespace QuantConnect.Lean.Engine.Results
             // Wire algorithm name and tags updates
             algorithm.NameUpdated += (sender, name) => AlgorithmNameUpdated(name);
             algorithm.TagsUpdated += (sender, tags) => AlgorithmTagsUpdated(tags);
+        }
+
+        /// <summary>
+        /// Adds or updates a brokerage data entry. Key value pairs the brokerage, data queue handler or any other component
+        /// wants to share with the user, through the results, and the algorithm, for example account information.
+        /// Sensitive data, like credentials, should never be added
+        /// </summary>
+        /// <param name="key">The brokerage data key</param>
+        /// <param name="value">The brokerage data value</param>
+        public virtual void AddBrokerageData(string key, string value)
+        {
+            if (string.IsNullOrEmpty(key))
+            {
+                return;
+            }
+            lock (_brokerageData)
+            {
+                _brokerageData[key] = value ?? string.Empty;
+            }
+        }
+
+        /// <summary>
+        /// Creates the algorithm configuration to include in the results, taking a snapshot of the current brokerage data
+        /// </summary>
+        /// <param name="backtestNodePacket">The associated backtest node packet if any</param>
+        /// <returns>A new <see cref="AlgorithmConfiguration"/> instance</returns>
+        protected AlgorithmConfiguration CreateAlgorithmConfiguration(BacktestNodePacket backtestNodePacket = null)
+        {
+            lock (_brokerageData)
+            {
+                return AlgorithmConfiguration.Create(Algorithm, backtestNodePacket);
+            }
         }
 
         /// <summary>
