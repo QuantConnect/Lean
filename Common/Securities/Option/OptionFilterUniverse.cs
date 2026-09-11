@@ -367,27 +367,35 @@ namespace QuantConnect.Securities
         }
 
         /// <summary>
-        /// Applies filter selecting the contracts at the strike closest to the underlying price, the lower strike on ties.
-        /// Selects nothing when the underlying price is unknown. Unlike <see cref="Strikes(int, int)"/> with (0, 0),
-        /// which selects the first strike at or above the price
+        /// Applies filter selecting the contracts at the money: the ones at the strike closest to the underlying price, the lower
+        /// strike on ties, when that strike is within the tolerance. Selects nothing when the underlying price is unknown
         /// </summary>
+        /// <param name="tolerance">The largest distance between the closest strike and the underlying price for the strike to be
+        /// at the money, in units of the underlying price. Zero, the default, requires a strike equal to the underlying price</param>
         /// <returns>Universe with filter applied</returns>
-        public TUniverse AtTheMoney()
+        public TUniverse AtTheMoney(decimal tolerance = 0)
         {
+            if (tolerance < 0)
+            {
+                throw new ArgumentException($"AtTheMoney(): {nameof(tolerance)} must not be negative");
+            }
             if (!TryGetUnderlyingPrice(out var price))
             {
                 return Empty();
             }
-            return Strikes([GetClosestStrike(AllSymbols, price)]);
+            var strike = GetClosestStrike(AllSymbols, price);
+            return Math.Abs(strike - price) <= tolerance ? Strikes([strike]) : Empty();
         }
 
         /// <summary>
-        /// Applies filter selecting the contracts at the strike closest to the underlying price. Alias for <see cref="AtTheMoney"/>
+        /// Applies filter selecting the contracts at the money. Alias for <see cref="AtTheMoney"/>
         /// </summary>
+        /// <param name="tolerance">The largest distance between the closest strike and the underlying price for the strike to be
+        /// at the money, in units of the underlying price. Zero, the default, requires a strike equal to the underlying price</param>
         /// <returns>Universe with filter applied</returns>
-        public TUniverse ATM()
+        public TUniverse ATM(decimal tolerance = 0)
         {
-            return AtTheMoney();
+            return AtTheMoney(tolerance);
         }
 
         /// <summary>

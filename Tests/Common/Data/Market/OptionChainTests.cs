@@ -85,8 +85,9 @@ namespace QuantConnect.Tests.Common.Data.Market
             yield return Case("OTM.CallsOnly", u => u.OTM().CallsOnly(), c => c.OTM().CallsOnly());
             yield return Case("InTheMoney", u => u.InTheMoney(), c => c.InTheMoney());
             yield return Case("ITM.PutsOnly.Expiration(0, 10)", u => u.ITM().PutsOnly().Expiration(0, 10), c => c.ITM().PutsOnly().Expiration(0, 10));
-            yield return Case("AtTheMoney", u => u.AtTheMoney(), c => c.AtTheMoney());
-            yield return Case("Expiration(0, 10).ATM", u => u.Expiration(0, 10).ATM(), c => c.Expiration(0, 10).ATM());
+            yield return Case("AtTheMoney", u => u.AtTheMoney(), c => c.AtTheMoney(), empty: true);
+            yield return Case("AtTheMoney(1)", u => u.AtTheMoney(1m), c => c.AtTheMoney(1m));
+            yield return Case("Expiration(0, 10).ATM(2.5)", u => u.Expiration(0, 10).ATM(2.5m), c => c.Expiration(0, 10).ATM(2.5m));
             yield return Case("StandardsOnly", u => u.StandardsOnly(), c => c.StandardsOnly());
             yield return Case("WeeklysOnly", u => u.WeeklysOnly(), c => c.WeeklysOnly());
             yield return Case("FrontMonth", u => u.FrontMonth(), c => c.FrontMonth());
@@ -346,12 +347,17 @@ def bounds(chain):
             }
         }
 
-        [TestCase(101, 100)]
-        [TestCase(100, 100)]
-        [TestCase(103.75, 102.5)]
+        // By default only a strike equal to the price is at the money
+        [TestCase(100, 0, 100)]
+        [TestCase(101, 0, null)]
+        // Within the tolerance the closest strike is
+        [TestCase(101, 1, 100)]
+        [TestCase(101, 0.5, null)]
+        [TestCase(103.75, 1.25, 102.5)]
         // Equidistant between 100 and 102.5: the lower strike wins, unlike Strikes(0, 0)
-        [TestCase(101.25, 100)]
-        public void MoneynessFiltersSplitTheStrikesAroundTheUnderlyingPrice(double underlyingPrice, double atmStrike)
+        [TestCase(101.25, 1.25, 100)]
+        [TestCase(101.25, 1, null)]
+        public void MoneynessFiltersSplitTheStrikesAroundTheUnderlyingPrice(double underlyingPrice, double tolerance, double? atmStrike)
         {
             var price = (decimal)underlyingPrice;
             var (data, _) = CreateUniverseData(Date, price, Expiries, Strikes);
@@ -360,15 +366,18 @@ def bounds(chain):
 
             var otm = chain.OutOfTheMoney();
             var itm = chain.InTheMoney();
-            var atm = chain.AtTheMoney();
             Assert.IsNotEmpty(otm);
             Assert.IsNotEmpty(itm);
             Assert.IsTrue(otm.All(x => x.Right == OptionRight.Call ? x.Strike > price : x.Strike < price));
             Assert.IsTrue(itm.All(x => x.Right == OptionRight.Call ? x.Strike < price : x.Strike > price));
             // a strike equal to the price is neither out nor in the money
             Assert.AreEqual(chain.Count, otm.Count + itm.Count + chain.Strikes([price]).Count);
-            Assert.AreEqual(2 * Expiries.Length, atm.Count);
+
+            var atm = chain.AtTheMoney((decimal)tolerance);
+            Assert.AreEqual(atmStrike.HasValue ? 2 * Expiries.Length : 0, atm.Count);
             Assert.IsTrue(atm.All(x => x.Strike == (decimal)atmStrike));
+            Assert.Throws<ArgumentException>(() => chain.AtTheMoney(-1m));
+            Assert.Throws<ArgumentException>(() => CreateUniverse().AtTheMoney(-1m));
         }
 
         [Test]
@@ -393,8 +402,8 @@ def bounds(chain):
 
             Assert.AreEqual(0, chain.OutOfTheMoney().Count);
             Assert.AreEqual(0, chain.InTheMoney().Count);
-            Assert.AreEqual(0, chain.AtTheMoney().Count);
-            Func<OptionFilterUniverse, OptionFilterUniverse>[] filters = [u => u.OutOfTheMoney(), u => u.InTheMoney(), u => u.AtTheMoney()];
+            Assert.AreEqual(0, chain.AtTheMoney(100m).Count);
+            Func<OptionFilterUniverse, OptionFilterUniverse>[] filters = [u => u.OutOfTheMoney(), u => u.InTheMoney(), u => u.AtTheMoney(100m)];
             foreach (var filter in filters)
             {
                 var universe = new OptionFilterUniverse(_option);

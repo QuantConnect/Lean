@@ -62,7 +62,10 @@ namespace QuantConnect.Algorithm.CSharp
             }
             AssertContracts(chain.OutOfTheMoney(), "OutOfTheMoney()", (3800m, OptionRight.Call), (4250m, OptionRight.Call), (3200m, OptionRight.Put));
             AssertContracts(chain.InTheMoney(), "InTheMoney()", (3200m, OptionRight.Call), (3700m, OptionRight.Call), (4200m, OptionRight.Put));
-            AssertContracts(chain.AtTheMoney(), "AtTheMoney()", (3800m, OptionRight.Call));
+            // The closest strike, 3800, is 33.37 points away: at the money only within a tolerance that covers it
+            AssertContracts(chain.AtTheMoney(), "AtTheMoney()");
+            AssertContracts(chain.AtTheMoney(25m), "AtTheMoney(25)");
+            AssertContracts(chain.AtTheMoney(50m), "AtTheMoney(50)", (3800m, OptionRight.Call));
             AssertContracts(chain.StrikesAbove(3700m).StrikesBelow(4250m), "StrikesAbove(3700).StrikesBelow(4250)", (3800m, OptionRight.Call), (4200m, OptionRight.Put));
             AssertContracts(chain.Strikes([3200m, 4250m]), "Strikes([3200, 4250])", (3200m, OptionRight.Call), (4250m, OptionRight.Call), (3200m, OptionRight.Put));
             AssertContracts(chain.OutOfTheMoney().StrikesBelow(4000m), "the SPX universe filter", (3800m, OptionRight.Call), (3200m, OptionRight.Put));

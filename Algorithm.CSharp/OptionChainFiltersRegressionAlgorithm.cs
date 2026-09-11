@@ -99,10 +99,11 @@ namespace QuantConnect.Algorithm.CSharp
             {
                 throw new RegressionTestException("Out/in the money filters mismatch");
             }
-            var atm = chain.AtTheMoney();
-            if (atm.Count == 0 || atm.Any(x => x.Strike != 747.5m) || atm.Count != chain.Strikes([747.5m]).Count)
+            // No strike equals the 748.54 close, so the at the money contracts need a tolerance: one strike step reaches 747.5
+            var atm = chain.AtTheMoney(2.5m);
+            if (chain.AtTheMoney().Count != 0 || atm.Count == 0 || atm.Any(x => x.Strike != 747.5m) || atm.Count != chain.Strikes([747.5m]).Count)
             {
-                throw new RegressionTestException("Expected AtTheMoney() to select every contract at the 747.50 strike");
+                throw new RegressionTestException("Expected AtTheMoney(2.5) to select every contract at the 747.50 strike and AtTheMoney() none");
             }
 
             // Strike sets and bounds are absolute, unlike the relative Strikes(min, max)

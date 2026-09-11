@@ -97,14 +97,15 @@ namespace QuantConnect.Securities
         TSelf ITM();
 
         /// <summary>
-        /// Selects the contracts at the strike closest to the underlying price, the lower strike on ties
+        /// Selects the contracts at the strike closest to the underlying price, the lower strike on ties, when that strike
+        /// is within the tolerance, in units of the underlying price. Zero requires a strike equal to the price
         /// </summary>
-        TSelf AtTheMoney();
+        TSelf AtTheMoney(decimal tolerance = 0);
 
         /// <summary>
-        /// Selects the contracts at the strike closest to the underlying price. Alias for <see cref="AtTheMoney"/>
+        /// Selects the contracts at the money. Alias for <see cref="AtTheMoney"/>
         /// </summary>
-        TSelf ATM();
+        TSelf ATM(decimal tolerance = 0);
 
         /// <summary>
         /// Selects the call contracts
