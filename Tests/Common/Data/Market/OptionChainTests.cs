@@ -381,6 +381,50 @@ def bounds(chain):
         }
 
         [Test]
+        public void FiltersWorkOnFutureOptionChains()
+        {
+            // March 2020 ES options on the March 2020 future, the universe rows carry the future price
+            var future = Symbol.CreateFuture("ES", QuantConnect.Market.CME, new DateTime(2020, 3, 20));
+            var canonical = Symbol.CreateCanonicalOption(future);
+            var date = new DateTime(2020, 1, 3);
+            var contracts = new List<(Symbol, decimal, decimal, Greeks)>();
+            foreach (var strike in new[] { 3200m, 3210m, 3220m, 3230m, 3240m })
+            {
+                foreach (var right in new[] { OptionRight.Call, OptionRight.Put })
+                {
+                    var symbol = Symbol.CreateOption(future, QuantConnect.Market.CME, OptionStyle.American, right, strike, future.ID.Date);
+                    contracts.Add((symbol, 100, 0.15m, new Greeks(0.5m, 0.01m, 5, -0.5m, 1, 0)));
+                }
+            }
+            var (data, underlying) = CreateUniverseData(canonical, date, 3223.75m, contracts);
+            var symbolProperties = SymbolPropertiesDatabase.FromDataFolder().GetSymbolProperties(QuantConnect.Market.CME, canonical, SecurityType.FutureOption, Currencies.USD);
+            var chain = new OptionChain(canonical, date, data, symbolProperties);
+            Assert.AreEqual(SecurityType.FutureOption, chain.Symbol.SecurityType);
+            Assert.AreEqual(10, chain.Count);
+            Assert.AreEqual(3223.75m, chain.Underlying.Price);
+
+            // moneyness against the future price
+            CollectionAssert.AreEquivalent(new[] { 3230m, 3240m }, chain.OutOfTheMoney().CallsOnly().Select(x => x.Strike));
+            CollectionAssert.AreEquivalent(new[] { 3200m, 3210m, 3220m }, chain.OutOfTheMoney().PutsOnly().Select(x => x.Strike));
+            Assert.AreEqual(0, chain.AtTheMoney().Count);
+            CollectionAssert.AreEquivalent(new[] { 3220m, 3220m }, chain.AtTheMoney(5m).Select(x => x.Strike));
+
+            // the expiration filters count from the CME date, every ES option is a standard contract
+            Assert.AreEqual(10, chain.Expiration(70, 80).Count);
+            Assert.AreEqual(0, chain.ZeroDte().Count);
+            Assert.AreEqual(10, chain.StandardsOnly().FarthestExpiration().Count);
+            Assert.AreEqual(0, chain.WeeklysOnly().Count);
+            Assert.IsTrue(chain.All(x => x.DaysToExpiry == (future.ID.Date - x.Time.Date).Days));
+
+            // and match the universe filters of a future option over the same rows
+            var universe = new OptionFilterUniverse(CreateOption(canonical), data, underlying);
+            universe.Refresh(data, underlying, date);
+            var expected = universe.Strikes(-1, 1).OutOfTheMoney().ExpiringBefore(new DateTime(2020, 4, 1)).ToList().Select(x => x.Symbol.Value).ToList();
+            Assert.IsNotEmpty(expected);
+            CollectionAssert.AreEquivalent(expected, chain.Strikes(-1, 1).OutOfTheMoney().ExpiringBefore(new DateTime(2020, 4, 1)).Select(x => x.Symbol.Value));
+        }
+
+        [Test]
         public void ContractsCountTheDaysToTheirExpiration()
         {
             var chain = CreateChain();
@@ -480,12 +524,13 @@ def naked_put(chain):
             return new OptionChain(Canonical, Date, _data, _symbolProperties);
         }
 
-        private static Option CreateOption()
+        private static Option CreateOption(Symbol canonical = null)
         {
-            var exchangeHours = MarketHoursDatabase.FromDataFolder().GetExchangeHours(Canonical.ID.Market, Canonical, Canonical.SecurityType);
+            canonical ??= Canonical;
+            var exchangeHours = MarketHoursDatabase.FromDataFolder().GetExchangeHours(canonical.ID.Market, canonical, canonical.SecurityType);
             return new Option(
                 exchangeHours,
-                new SubscriptionDataConfig(typeof(TradeBar), Canonical, Resolution.Minute, TimeZones.NewYork, TimeZones.NewYork, true, false, false),
+                new SubscriptionDataConfig(typeof(TradeBar), canonical, Resolution.Minute, TimeZones.NewYork, TimeZones.NewYork, true, false, false),
                 new Cash(Currencies.USD, 0, 1m),
                 new OptionSymbolProperties(SymbolProperties.GetDefault(Currencies.USD)),
                 ErrorCurrencyConverter.Instance,
@@ -576,10 +621,14 @@ def naked_put(chain):
             {
                 Assert.AreEqual(rows[j].symbol, data[j].Symbol);
                 Assert.AreEqual(rows[j].openInterest, data[j].OpenInterest);
-                Assert.AreEqual(rows[j].impliedVolatility, data[j].ImpliedVolatility);
-                Assert.AreEqual(rows[j].greeks.Delta, data[j].Greeks.Delta);
-                Assert.AreEqual(rows[j].greeks.Theta, data[j].Greeks.Theta);
-                Assert.AreEqual(rows[j].greeks.Rho, data[j].Greeks.Rho);
+                // future option universe files carry no implied volatility or greeks
+                if (canonical.SecurityType != SecurityType.FutureOption)
+                {
+                    Assert.AreEqual(rows[j].impliedVolatility, data[j].ImpliedVolatility);
+                    Assert.AreEqual(rows[j].greeks.Delta, data[j].Greeks.Delta);
+                    Assert.AreEqual(rows[j].greeks.Theta, data[j].Greeks.Theta);
+                    Assert.AreEqual(rows[j].greeks.Rho, data[j].Greeks.Rho);
+                }
             }
             Assert.AreEqual(spot ?? 0, underlying?.Price ?? 0);
 
