@@ -39,6 +39,16 @@ namespace QuantConnect.Data.Fundamental
         private BalanceSheetFileDate _bSFileDate;
 
         /// <summary>
+        /// Period ending date of the balance sheet as its own feed delivers it. PeriodEndingDate on FinancialStatements moves only once every statement has reached a period; this one moves as soon as the balance sheet has.
+        /// </summary>
+        /// <remarks>
+        /// Morningstar DataId: EQQ6C
+        /// </remarks>
+        [JsonProperty("EQQ6C")]
+        public BalanceSheetPeriodEndingDate BSPeriodEndingDate => _bsPeriodEndingDate ??= new(_timeProvider, _securityIdentifier);
+        private BalanceSheetPeriodEndingDate _bsPeriodEndingDate;
+
+        /// <summary>
         /// Any money that a company owes its suppliers for goods and services purchased on credit and is expected to pay within the next year or operating cycle.
         /// </summary>
         /// <remarks>

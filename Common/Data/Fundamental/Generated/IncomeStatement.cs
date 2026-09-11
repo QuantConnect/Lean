@@ -39,6 +39,16 @@ namespace QuantConnect.Data.Fundamental
         private IncomeStatementFileDate _iSFileDate;
 
         /// <summary>
+        /// Period ending date of the income statement as its own feed delivers it. PeriodEndingDate on FinancialStatements moves only once every statement has reached a period; this one moves as soon as the income statement has.
+        /// </summary>
+        /// <remarks>
+        /// Morningstar DataId: EQR0R
+        /// </remarks>
+        [JsonProperty("EQR0R")]
+        public IncomeStatementPeriodEndingDate ISPeriodEndingDate => _isPeriodEndingDate ??= new(_timeProvider, _securityIdentifier);
+        private IncomeStatementPeriodEndingDate _isPeriodEndingDate;
+
+        /// <summary>
         /// The non-cash expense recognized on intangible assets over the benefit period of the asset.
         /// </summary>
         /// <remarks>
