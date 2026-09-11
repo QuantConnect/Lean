@@ -348,11 +348,16 @@ def bounds(chain):
             }
         }
 
-        // By default every strike within 2% of the price: 2 at 100 reaches only 100, 2.15 at 107.5 reaches neither 105 nor 110
+        // By default the strikes on either side of the price that are within 2% of it: one when the price is a strike, one when the
+        // other side is too far (97.5 from 95.5), none when both are (105 and 110 from 107.5) or the price is outside the strikes
         [TestCase(100, null, new[] { 100.0 })]
         [TestCase(101, null, new[] { 100.0, 102.5 })]
         [TestCase(103.75, null, new[] { 102.5, 105.0 })]
+        [TestCase(95.5, null, new[] { 95.0 })]
         [TestCase(107.5, null, new double[0])]
+        [TestCase(110, null, new[] { 110.0 })]
+        [TestCase(120, null, new double[0])]
+        [TestCase(80, null, new double[0])]
         // A zero distance requires a strike equal to the price
         [TestCase(100, 0, new[] { 100.0 })]
         [TestCase(101, 0, new double[0])]
@@ -413,8 +418,8 @@ def bounds(chain):
             CollectionAssert.AreEquivalent(new[] { 3230m, 3240m }, chain.OutOfTheMoney().CallsOnly().Select(x => x.Strike));
             CollectionAssert.AreEquivalent(new[] { 3200m, 3210m, 3220m }, chain.OutOfTheMoney().PutsOnly().Select(x => x.Strike));
             Assert.AreEqual(0, chain.AtTheMoney(0).Count);
-            // 2% of 3223.75 reaches every strike listed, 5 points only 3220
-            Assert.AreEqual(10, chain.AtTheMoney().Count);
+            // the strikes on either side of 3223.75, and within 5 points only 3220
+            CollectionAssert.AreEquivalent(new[] { 3220m, 3220m, 3230m, 3230m }, chain.AtTheMoney().Select(x => x.Strike));
             CollectionAssert.AreEquivalent(new[] { 3220m, 3220m }, chain.AtTheMoney(5m).Select(x => x.Strike));
 
             // the expiration filters count from the CME date, every ES option is a standard contract
@@ -443,6 +448,29 @@ def bounds(chain):
             CollectionAssert.AreEquivalent(expected, chain.Select(x => x.DaysToExpiry).Distinct());
             Assert.AreEqual(expected[0], chain.FrontMonth().First().DaysToExpiry);
             Assert.AreEqual(expected[3], chain.FarthestExpiration().First().DaysToExpiry);
+        }
+
+        [Test]
+        public void DefaultAtTheMoneyStrikeDistanceIsConfigurable()
+        {
+            var chain = CreateChain();
+            var original = OptionFilterUniverse.DefaultAtTheMoneyStrikeDistance;
+            try
+            {
+                // at 101 the strikes on either side are 1 and 1.5 away: within 2%, not within 0.5%, only the lower within 1.2%
+                CollectionAssert.AreEquivalent(new[] { 100m, 102.5m }, chain.AtTheMoney().Select(x => x.Strike).Distinct());
+                OptionFilterUniverse.DefaultAtTheMoneyStrikeDistance = 0.005m;
+                Assert.AreEqual(0, chain.AtTheMoney().Count);
+                Assert.AreEqual(0, CreateUniverse().AtTheMoney().Count);
+                OptionFilterUniverse.DefaultAtTheMoneyStrikeDistance = 0.012m;
+                CollectionAssert.AreEquivalent(new[] { 100m }, chain.AtTheMoney().Select(x => x.Strike).Distinct());
+                CollectionAssert.AreEquivalent(new[] { 100m }, CreateUniverse().AtTheMoney().Select(x => x.Symbol.ID.StrikePrice).Distinct());
+                Assert.Throws<ArgumentException>(() => OptionFilterUniverse.DefaultAtTheMoneyStrikeDistance = -0.01m);
+            }
+            finally
+            {
+                OptionFilterUniverse.DefaultAtTheMoneyStrikeDistance = original;
+            }
         }
 
         [Test]

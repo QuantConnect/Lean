@@ -47,7 +47,7 @@ class IndexOptionChainFiltersRegressionAlgorithm(QCAlgorithm):
             raise AssertionError(f"Expected the 6 SPX contracts at 3766.63 but got {chain.count} at {chain.underlying.price}")
         self._assert_contracts(chain.out_of_the_money(), "out_of_the_money()", [(3800, OptionRight.CALL), (4250, OptionRight.CALL), (3200, OptionRight.PUT)])
         self._assert_contracts(chain.in_the_money(), "in_the_money()", [(3200, OptionRight.CALL), (3700, OptionRight.CALL), (4200, OptionRight.PUT)])
-        # 2% of the index, 75 points, reaches the 3700 and 3800 strikes; 50 points only 3800, 25 points none
+        # The strikes on either side of 3766.63 are 3700 and 3800, both listed as calls only; 50 points reach 3800, 25 none
         self._assert_contracts(chain.at_the_money(), "at_the_money()", [(3700, OptionRight.CALL), (3800, OptionRight.CALL)])
         self._assert_contracts(chain.at_the_money(50), "at_the_money(50)", [(3800, OptionRight.CALL)])
         self._assert_contracts(chain.at_the_money(25), "at_the_money(25)", [])

@@ -39,12 +39,6 @@ namespace QuantConnect.Securities
         where TUniverse : BaseOptionFilterUniverse<TUniverse, TData>
         where TData : ISymbolProvider
     {
-        /// <summary>
-        /// The largest distance between a strike and the underlying price, as a fraction of the price, for its contracts to be at the
-        /// money by default: it reaches the strikes next to the price on the usual ladders, from $1 strikes on SPY to $5 strikes on IBM or $0.50 on F
-        /// </summary>
-        public const decimal DefaultAtTheMoneyStrikeDistance = 0.02m;
-
         // Fields used in relative strikes filter
         private List<decimal> _uniqueStrikes;
         private bool _refreshUniqueStrikes;
@@ -373,12 +367,13 @@ namespace QuantConnect.Securities
         }
 
         /// <summary>
-        /// Applies filter selecting the contracts at the money: the ones with strikes within the given distance of the underlying price.
-        /// Selects nothing when the underlying price is unknown
+        /// Applies filter selecting the contracts at the money: the ones with strikes within the given distance of the underlying price,
+        /// or by default the ones at the strikes on either side of it. Selects nothing when the underlying price is unknown
         /// </summary>
         /// <param name="maxStrikeDistance">The largest distance between a strike and the underlying price for its contracts to be at
-        /// the money, in units of the underlying price. Zero selects only a strike equal to the price. Null, the default, uses
-        /// <see cref="DefaultAtTheMoneyStrikeDistance"/> of the underlying price</param>
+        /// the money, in units of the underlying price. Zero selects only a strike equal to the price. Null, the default, selects the
+        /// strikes on either side of the price, the highest at or below it and the lowest at or above it, each only when it is within
+        /// the percentage of the price given by <see cref="OptionFilterUniverse.DefaultAtTheMoneyStrikeDistance"/></param>
         /// <returns>Universe with filter applied</returns>
         public TUniverse AtTheMoney(decimal? maxStrikeDistance = null)
         {
@@ -390,8 +385,12 @@ namespace QuantConnect.Securities
             {
                 return Empty();
             }
-            // the price is in strike units, see SymbolProperties.StrikeMultiplier, so an explicit distance is scaled the same way
-            var maxDistance = maxStrikeDistance.HasValue ? maxStrikeDistance.Value / _underlyingScaleFactor : price * DefaultAtTheMoneyStrikeDistance;
+            if (!maxStrikeDistance.HasValue)
+            {
+                return Strikes(GetBracketingStrikes(price));
+            }
+            // the price is in strike units, see SymbolProperties.StrikeMultiplier, so the distance is scaled the same way
+            var maxDistance = maxStrikeDistance.Value / _underlyingScaleFactor;
             if (maxDistance == 0)
             {
                 return Strikes([price]);
@@ -403,8 +402,9 @@ namespace QuantConnect.Securities
         /// Applies filter selecting the contracts at the money. Alias for <see cref="AtTheMoney"/>
         /// </summary>
         /// <param name="maxStrikeDistance">The largest distance between a strike and the underlying price for its contracts to be at
-        /// the money, in units of the underlying price. Zero selects only a strike equal to the price. Null, the default, uses
-        /// <see cref="DefaultAtTheMoneyStrikeDistance"/> of the underlying price</param>
+        /// the money, in units of the underlying price. Zero selects only a strike equal to the price. Null, the default, selects the
+        /// strikes on either side of the price, the highest at or below it and the lowest at or above it, each only when it is within
+        /// the percentage of the price given by <see cref="OptionFilterUniverse.DefaultAtTheMoneyStrikeDistance"/></param>
         /// <returns>Universe with filter applied</returns>
         public TUniverse ATM(decimal? maxStrikeDistance = null)
         {
@@ -1265,6 +1265,39 @@ namespace QuantConnect.Securities
         }
 
         /// <summary>
+        /// Gets the highest strike at or below the price and the lowest at or above it, each only when it is within the percentage
+        /// of the price given by <see cref="OptionFilterUniverse.DefaultAtTheMoneyStrikeDistance"/>, one when they coincide
+        /// </summary>
+        private List<decimal> GetBracketingStrikes(decimal price)
+        {
+            decimal? below = null;
+            decimal? above = null;
+            foreach (var strike in AllSymbols.Select(x => x.ID.StrikePrice))
+            {
+                if (strike <= price && (below == null || strike > below))
+                {
+                    below = strike;
+                }
+                if (strike >= price && (above == null || strike < above))
+                {
+                    above = strike;
+                }
+            }
+
+            var maxDistance = price * OptionFilterUniverse.DefaultAtTheMoneyStrikeDistance;
+            var strikes = new List<decimal>(2);
+            if (below != null && price - below <= maxDistance)
+            {
+                strikes.Add(below.Value);
+            }
+            if (above != null && above != below && above - price <= maxDistance)
+            {
+                strikes.Add(above.Value);
+            }
+            return strikes;
+        }
+
+        /// <summary>
         /// Gets the strike closest to the target price, the lower one on ties, or decimal.MaxValue when there are no symbols
         /// </summary>
         private static decimal GetClosestStrike(IEnumerable<Symbol> symbols, decimal targetPrice)
@@ -1291,7 +1324,26 @@ namespace QuantConnect.Securities
     /// </summary>
     public class OptionFilterUniverse : BaseOptionFilterUniverse<OptionFilterUniverse, OptionUniverse>
     {
+        private static decimal _defaultAtTheMoneyStrikeDistance = 0.02m;
+
         private readonly Option.Option _option;
+
+        /// <summary>
+        /// How far from the underlying price, as a percentage of it, a strike on either side can be and still count as at the money
+        /// by default in <see cref="BaseOptionFilterUniverse{TUniverse, TData}.AtTheMoney"/>. 0.02, 2%, unless changed
+        /// </summary>
+        public static decimal DefaultAtTheMoneyStrikeDistance
+        {
+            get => _defaultAtTheMoneyStrikeDistance;
+            set
+            {
+                if (value < 0)
+                {
+                    throw new ArgumentException($"{nameof(DefaultAtTheMoneyStrikeDistance)} must not be negative");
+                }
+                _defaultAtTheMoneyStrikeDistance = value;
+            }
+        }
 
         /// <summary>
         /// The option exchange hours

@@ -62,12 +62,8 @@ namespace QuantConnect.Algorithm.CSharp
             // Only the put is listed at 3310
             AssertStrikes(chain.StrikesAbove(3300m).StrikesBelow(3320m), "StrikesAbove(3300).StrikesBelow(3320)", 3310m);
             AssertStrikes(chain.StrikesAbove(3300m).StrikesBelow(3320m).CallsOnly(), "StrikesAbove(3300).StrikesBelow(3320).CallsOnly()");
-            // 2% of the future price, 64 points, reaches the strikes from 3160 to 3280; 5 points only 3220
-            var atm = chain.AtTheMoney();
-            if (atm.Count == 0 || atm.Count != chain.StrikesAbove(3159m).StrikesBelow(3289m).Count)
-            {
-                throw new RegressionTestException($"AtTheMoney(): expected the strikes within 2% of 3223.75 but got {string.Join(", ", atm.Select(x => x.Strike).Distinct())}");
-            }
+            // The strikes on either side of 3223.75 are 3220 and 3230; within 5 points only 3220
+            AssertStrikes(chain.AtTheMoney(), "AtTheMoney()", 3220m, 3220m, 3230m, 3230m);
             AssertStrikes(chain.AtTheMoney(5m), "AtTheMoney(5)", 3220m, 3220m);
             if (chain.AtTheMoney(0).Count != 0 || chain.Expiration([MarchExpiry]).Count != chain.Count || chain.FarthestExpiration().Count != chain.Count
                 || chain.ExpiringAfter(MarchExpiry).Count != 0 || chain.ZeroDte().Count != 0

@@ -100,13 +100,14 @@ namespace QuantConnect.Algorithm.CSharp
             {
                 throw new RegressionTestException("Out/in the money filters mismatch");
             }
-            // By default the strikes within 2% of the 748.54 close; 2.5 points reach 747.5 and 750, 1 point reaches none
+            // By default the strikes on either side of the 748.54 close, 747.5 and 750, also reached within 2.5 points but not within 1;
+            // a chain whose strikes start more than 2% above the close has no strike at the money
             var atm = chain.AtTheMoney();
-            var maxDistance = price * OptionFilterUniverse.DefaultAtTheMoneyStrikeDistance;
-            if (atm.Count == 0 || atm.Count != chain.Count(x => Math.Abs(x.Strike - price) <= maxDistance) || atm.Any(x => Math.Abs(x.Strike - price) > maxDistance)
-                || chain.AtTheMoney(2.5m).Count != chain.Strikes([747.5m, 750m]).Count || chain.AtTheMoney(1m).Count != 0 || chain.AtTheMoney(0).Count != 0)
+            if (atm.Count == 0 || atm.Count != chain.Strikes([747.5m, 750m]).Count || atm.Any(x => x.Strike != 747.5m && x.Strike != 750m)
+                || chain.AtTheMoney(2.5m).Count != atm.Count || chain.AtTheMoney(1m).Count != 0 || chain.AtTheMoney(0).Count != 0
+                || chain.StrikesAbove(price + 20).AtTheMoney().Count != 0)
             {
-                throw new RegressionTestException("Expected AtTheMoney() to select the strikes within 2% of the close, AtTheMoney(2.5) 747.5 and 750, AtTheMoney(1) none");
+                throw new RegressionTestException("Expected AtTheMoney() to select the 747.5 and 750 strikes, AtTheMoney(1) none");
             }
 
             // Strike sets and bounds are absolute, unlike the relative Strikes(min, max)

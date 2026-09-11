@@ -69,12 +69,13 @@ class OptionChainFiltersRegressionAlgorithm(QCAlgorithm):
                 or any((x.strike <= price if x.right == OptionRight.CALL else x.strike >= price) for x in otm)
                 or any((x.strike >= price if x.right == OptionRight.CALL else x.strike <= price) for x in itm)):
             raise AssertionError("Out/in the money filters mismatch")
-        # By default the strikes within 2% of the 748.54 close; 2.5 points reach 747.5 and 750, 1 point reaches none
+        # By default the strikes on either side of the 748.54 close, 747.5 and 750, also reached within 2.5 points but not within 1;
+        # a chain whose strikes start more than 2% above the close has no strike at the money
         atm = chain.atm()
-        max_distance = price * 0.02
-        if (atm.count == 0 or atm.count != sum(1 for x in chain if abs(x.strike - price) <= max_distance) or any(abs(x.strike - price) > max_distance for x in atm)
-                or chain.atm(2.5).count != chain.strikes([747.5, 750]).count or chain.atm(1).count != 0 or chain.atm(0).count != 0):
-            raise AssertionError("Expected atm() to select the strikes within 2% of the close, atm(2.5) 747.5 and 750, atm(1) none")
+        if (atm.count == 0 or atm.count != chain.strikes([747.5, 750]).count or any(x.strike != 747.5 and x.strike != 750 for x in atm)
+                or chain.atm(2.5).count != atm.count or chain.atm(1).count != 0 or chain.atm(0).count != 0
+                or chain.strikes_above(price + 20).atm().count != 0):
+            raise AssertionError("Expected atm() to select the 747.5 and 750 strikes, atm(1) none")
 
         # Strike sets and bounds are absolute, unlike the relative strikes(min, max)
         strikes = chain.strikes([745, 750])

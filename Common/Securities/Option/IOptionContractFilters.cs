@@ -98,8 +98,8 @@ namespace QuantConnect.Securities
 
         /// <summary>
         /// Selects the contracts with strikes within the given distance of the underlying price, in units of it, zero only a strike
-        /// equal to the price; null, the default, uses <see cref="BaseOptionFilterUniverse{TUniverse, TData}.DefaultAtTheMoneyStrikeDistance"/>
-        /// of the price
+        /// equal to the price; null, the default, the strikes on either side of the price, each within the percentage of it
+        /// given by <see cref="OptionFilterUniverse.DefaultAtTheMoneyStrikeDistance"/>
         /// </summary>
         TSelf AtTheMoney(decimal? maxStrikeDistance = null);
 
