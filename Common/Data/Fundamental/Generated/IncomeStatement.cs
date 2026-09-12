@@ -2396,16 +2396,6 @@ namespace QuantConnect.Data.Fundamental
         private InterestRateIncomeStatement _interestRateIncomeStatement;
 
         /// <summary>
-        /// Expenses that the company incurs that are not directly tied to a specific function such as manufacturing; production; or sales.
-        /// </summary>
-        /// <remarks>
-        /// Morningstar DataId: EQSI9
-        /// </remarks>
-        [JsonProperty("EQSI9")]
-        public GeneralAndAdministrativeExpensesIncomeStatement GeneralAndAdministrativeExpenses => _generalAndAdministrativeExpensesIncomeStatement ??= new(_timeProvider, _securityIdentifier);
-        private GeneralAndAdministrativeExpensesIncomeStatement _generalAndAdministrativeExpensesIncomeStatement;
-
-        /// <summary>
         /// This data point represents the earnings the company generated before interest; tax and amortization expenses. This can be used to measure a company's profitability. This is calculated using Earnings Before Interest; Tax; Depreciation and Amortization minus Depreciation.
         /// </summary>
         /// <remarks>
