@@ -3386,16 +3386,6 @@ namespace QuantConnect.Data.Fundamental
         private NetOperatingAssetsBalanceSheet _netOperatingAssetsBalanceSheet;
 
         /// <summary>
-        /// This data point represents the summation of all current and long term portions of capital lease obligations that are listed on a company's balance sheet
-        /// </summary>
-        /// <remarks>
-        /// Morningstar DataId: EQV03
-        /// </remarks>
-        [JsonProperty("EQV03")]
-        public CapitalLeaseObligationsCalculatedBalanceSheet CapitalLeaseObligationsCalculated => _capitalLeaseObligationsCalculatedBalanceSheet ??= new(_timeProvider, _securityIdentifier);
-        private CapitalLeaseObligationsCalculatedBalanceSheet _capitalLeaseObligationsCalculatedBalanceSheet;
-
-        /// <summary>
         /// This data point represents the value of a company's total assets net of intangible items such as goodwill; patents; etc. This can be used to measure the portion of a company's total assets that are tangible. This is calculated using Total Assets minus Net Intangible Assets.
         /// </summary>
         /// <remarks>
@@ -3414,16 +3404,6 @@ namespace QuantConnect.Data.Fundamental
         [JsonProperty("EQZVT")]
         public PaidInCapitalBalanceSheet PaidInCapital => _paidInCapitalBalanceSheet ??= new(_timeProvider, _securityIdentifier);
         private PaidInCapitalBalanceSheet _paidInCapitalBalanceSheet;
-
-        /// <summary>
-        /// Amount representing as premium/discount from the issue of the entity's stock.
-        /// </summary>
-        /// <remarks>
-        /// Morningstar DataId: EQMRM
-        /// </remarks>
-        [JsonProperty("EQMRM")]
-        public AdditionalPaidInCapitalSharePremiumBalanceSheet AdditionalPaidInCapitalSharePremium => _additionalPaidInCapitalSharePremiumBalanceSheet ??= new(_timeProvider, _securityIdentifier);
-        private AdditionalPaidInCapitalSharePremiumBalanceSheet _additionalPaidInCapitalSharePremiumBalanceSheet;
 
         /// <summary>
         /// Cumulative amount of wear and tear or obsolescence charged against the tangible assets of the company.
@@ -3474,16 +3454,6 @@ namespace QuantConnect.Data.Fundamental
         [JsonProperty("EQ1XV")]
         public LeasedPropertyPlantAndEquipmentBalanceSheet LeasedPropertyPlantAndEquipment => _leasedPropertyPlantAndEquipmentBalanceSheet ??= new(_timeProvider, _securityIdentifier);
         private LeasedPropertyPlantAndEquipmentBalanceSheet _leasedPropertyPlantAndEquipmentBalanceSheet;
-
-        /// <summary>
-        /// Carrying value of the portion of all long-term debt that is scheduled to be repaid within one year or a normal operating cycle (whichever is longer).
-        /// </summary>
-        /// <remarks>
-        /// Morningstar DataId: EQMXH
-        /// </remarks>
-        [JsonProperty("EQMXH")]
-        public CurrentPortionOfLongTermDebtBalanceSheet CurrentPortionOfLongTermDebt => _currentPortionOfLongTermDebtBalanceSheet ??= new(_timeProvider, _securityIdentifier);
-        private CurrentPortionOfLongTermDebtBalanceSheet _currentPortionOfLongTermDebtBalanceSheet;
 
         /// <summary>
         /// Other intangibles not categorized in the above. Includes: Net book value if accumulated amortization is not reported; Club membership
