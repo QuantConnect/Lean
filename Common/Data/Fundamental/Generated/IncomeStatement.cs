@@ -2106,16 +2106,6 @@ namespace QuantConnect.Data.Fundamental
         private readonly SecurityIdentifier _securityIdentifier;
 
         /// <summary>
-        /// This data point represents the loss due to impairment; write-off; or write-down of capital assets (property plant and equipment and intangibles) reported in the income statement or cash flow statement and selected for a company's irregular income/expenses and total unusal items calculation.
-        /// </summary>
-        /// <remarks>
-        /// Morningstar DataId: EQ6KS
-        /// </remarks>
-        [JsonProperty("EQ6KS")]
-        public ImpairmentWriteOffWriteDownOfCapitalAssetsAdjustmentIncomeStatement ImpairmentWriteOffWriteDownOfCapitalAssetsAdjustment => _impairmentWriteOffWriteDownOfCapitalAssetsAdjustmentIncomeStatement ??= new(_timeProvider, _securityIdentifier);
-        private ImpairmentWriteOffWriteDownOfCapitalAssetsAdjustmentIncomeStatement _impairmentWriteOffWriteDownOfCapitalAssetsAdjustmentIncomeStatement;
-
-        /// <summary>
         /// This data point represents the net gain or loss sustained through legal proceedings after settling controversies or disputes in a court of law. This is reported in the income statement or cash flow statement and selected for a company's irregular income/expenses and total unusal items calculation.
         /// </summary>
         /// <remarks>
@@ -2144,16 +2134,6 @@ namespace QuantConnect.Data.Fundamental
         [JsonProperty("EQN1N")]
         public DebtRestructuringAdjustmentIncomeStatement DebtRestructuringAdjustment => _debtRestructuringAdjustmentIncomeStatement ??= new(_timeProvider, _securityIdentifier);
         private DebtRestructuringAdjustmentIncomeStatement _debtRestructuringAdjustmentIncomeStatement;
-
-        /// <summary>
-        /// This data point represents the gain or loss resulting from the debt issuer recalling the debt before the scheduled maturity date; and/or substantially modifying the existing terms of the debt. This is reported in the income statement or cash flow statement and selected for a company's irregular income/expenses and total unusal items calculation.
-        /// </summary>
-        /// <remarks>
-        /// Morningstar DataId: EQNS2
-        /// </remarks>
-        [JsonProperty("EQNS2")]
-        public GainLossOnExtinguishmentOfDebtAdjustmentIncomeStatement GainLossOnExtinguishmentOfDebtAdjustment => _gainLossOnExtinguishmentOfDebtAdjustmentIncomeStatement ??= new(_timeProvider, _securityIdentifier);
-        private GainLossOnExtinguishmentOfDebtAdjustmentIncomeStatement _gainLossOnExtinguishmentOfDebtAdjustmentIncomeStatement;
 
         /// <summary>
         /// This data point represents net gain or loss from disposal or sale of businesses reported in the income statement or cash flow statement and selected for a company's irregular income/expenses and total unusal items calculation.
@@ -2206,16 +2186,6 @@ namespace QuantConnect.Data.Fundamental
         private OtherIrregularIncomeExpensesAdjustmentIncomeStatement _otherIrregularIncomeExpensesAdjustmentIncomeStatement;
 
         /// <summary>
-        /// This data point represents the loss due to write-off/ write-down of other assets reported in the income statement or cash flow statement and selected for a company's irregular income/expenses and total unusal items calculation.
-        /// </summary>
-        /// <remarks>
-        /// Morningstar DataId: EQWUG
-        /// </remarks>
-        [JsonProperty("EQWUG")]
-        public WriteOffWriteDownOfOtherAssetsAdjustmentIncomeStatement WriteOffWriteDownOfOtherAssetsAdjustment => _writeOffWriteDownOfOtherAssetsAdjustmentIncomeStatement ??= new(_timeProvider, _securityIdentifier);
-        private WriteOffWriteDownOfOtherAssetsAdjustmentIncomeStatement _writeOffWriteDownOfOtherAssetsAdjustmentIncomeStatement;
-
-        /// <summary>
         /// This data point represents net gain or loss due to disposal or sale of assets reported in the income statement or cash flow statement and selected for a company's irregular income/expenses and total unusal items calculation.
         /// </summary>
         /// <remarks>
@@ -2244,16 +2214,6 @@ namespace QuantConnect.Data.Fundamental
         [JsonProperty("EQFD2")]
         public IncomeAfterTaxesIncomeStatement IncomeAfterTaxes => _incomeAfterTaxesIncomeStatement ??= new(_timeProvider, _securityIdentifier);
         private IncomeAfterTaxesIncomeStatement _incomeAfterTaxesIncomeStatement;
-
-        /// <summary>
-        /// This data point represents the calculated variant of interest expense. This is calculated by taking the Reported Interest Expense Net of capitalized interest if available; or Interest Expense net of Interest Income.
-        /// </summary>
-        /// <remarks>
-        /// Morningstar DataId: EQ8Z3
-        /// </remarks>
-        [JsonProperty("EQ8Z3")]
-        public InterestExpenseCalculatedIncomeStatement InterestExpenseCalculated => _interestExpenseCalculatedIncomeStatement ??= new(_timeProvider, _securityIdentifier);
-        private InterestExpenseCalculatedIncomeStatement _interestExpenseCalculatedIncomeStatement;
 
         /// <summary>
         /// This calculation represents the tax affected operating earnings the company generated for the period. This can be used to measure a company's profitability. This is calculated using Net Income from Continuing Operations plus tax affected Net Interest Income/Expense minus tax affected Dividend and Investment Income.
@@ -2336,16 +2296,6 @@ namespace QuantConnect.Data.Fundamental
         private DerivativesUnrealizedGainsLossesIncomeStatement _derivativesUnrealizedGainsLossesIncomeStatement;
 
         /// <summary>
-        /// This data point represents the cost and expenses associated with a company's operating business. This can be used to measure the funds the company has devoted to generating revenue. This is calculated using Cost of Revenue + Operating Income/Expenses - Income from Grants Received; Operating - Other Income; Operating.
-        /// </summary>
-        /// <remarks>
-        /// Morningstar DataId: EQXH7
-        /// </remarks>
-        [JsonProperty("EQXH7")]
-        public CostOfRevenueAndOperatingExpenseIncomeStatement CostOfRevenueAndOperatingExpense => _costOfRevenueAndOperatingExpenseIncomeStatement ??= new(_timeProvider, _securityIdentifier);
-        private CostOfRevenueAndOperatingExpenseIncomeStatement _costOfRevenueAndOperatingExpenseIncomeStatement;
-
-        /// <summary>
         /// Aggregate value of all income and expenses not associated with normal business operations and recognized by the company in the non-operating section of the Income Statement.
         /// </summary>
         /// <remarks>
@@ -2374,16 +2324,6 @@ namespace QuantConnect.Data.Fundamental
         [JsonProperty("EQLTG")]
         public TotalNetFinanceIncomeExpenseIncomeStatement TotalNetFinanceIncomeExpense => _totalNetFinanceIncomeExpenseIncomeStatement ??= new(_timeProvider, _securityIdentifier);
         private TotalNetFinanceIncomeExpenseIncomeStatement _totalNetFinanceIncomeExpenseIncomeStatement;
-
-        /// <summary>
-        /// This calculation represents the summation of a company's interest; dividend and investment income. This can be used to measure a company's investing and financing performance. This is calculated using Interest Income + Dividend and Investment Income.
-        /// </summary>
-        /// <remarks>
-        /// Morningstar DataId: EQLK4
-        /// </remarks>
-        [JsonProperty("EQLK4")]
-        public InterestAndDividendIncomeIncomeStatement InterestAndDividendIncome => _interestAndDividendIncomeIncomeStatement ??= new(_timeProvider, _securityIdentifier);
-        private InterestAndDividendIncomeIncomeStatement _interestAndDividendIncomeIncomeStatement;
 
         /// <summary>
         /// This data point represents a company's implied cost of debt. This is calculated using interest expense reported in the income statement divided by a company's total debt from its balance sheet.
