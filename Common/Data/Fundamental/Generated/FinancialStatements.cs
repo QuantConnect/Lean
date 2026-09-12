@@ -1,4 +1,4 @@
-/*
+﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2023 QuantConnect Corporation.
  *
@@ -29,7 +29,7 @@ namespace QuantConnect.Data.Fundamental
     public class FinancialStatements : FundamentalTimeDependentProperty
     {
         /// <summary>
-        /// The exact date that is given in the financial statements for each quarter's end.
+        /// The period ending date of the financial statements, dated by the filing the balance sheet, income statement and cash flow statement were reported in. Each statement also carries its own date: BalanceSheet.PeriodEndingDate, IncomeStatement.PeriodEndingDate and CashFlowStatement.PeriodEndingDate.
         /// </summary>
         /// <remarks>
         /// Morningstar DataId: 20001
@@ -75,6 +75,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 28000
         /// </remarks>
         [JsonProperty("28000")]
+        [Obsolete("PeriodAuditor was retired by Morningstar in 2026 for all periods; no replacement is available.")]
+        [JsonIgnore]
         public PeriodAuditor PeriodAuditor => _periodAuditor ??= new(_timeProvider, _securityIdentifier);
         private PeriodAuditor _periodAuditor;
 
@@ -95,6 +97,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 28002
         /// </remarks>
         [JsonProperty("28002")]
+        [Obsolete("InventoryValuationMethod was retired by Morningstar in 2026 for all periods; no replacement is available.")]
+        [JsonIgnore]
         public InventoryValuationMethod InventoryValuationMethod => _inventoryValuationMethod ??= new(_timeProvider, _securityIdentifier);
         private InventoryValuationMethod _inventoryValuationMethod;
 
@@ -105,6 +109,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 28003
         /// </remarks>
         [JsonProperty("28003")]
+        [Obsolete("NumberOfShareHolders was retired by Morningstar in 2026 for all periods; no replacement is available.")]
+        [JsonIgnore]
         public NumberOfShareHolders NumberOfShareHolders => _numberOfShareHolders ??= new(_timeProvider, _securityIdentifier);
         private NumberOfShareHolders _numberOfShareHolders;
 
@@ -148,6 +154,246 @@ namespace QuantConnect.Data.Fundamental
 
         public CashFlowStatement CashFlowStatement => _cashFlowStatement ??= new(_timeProvider, _securityIdentifier);
         private CashFlowStatement _cashFlowStatement;
+
+        /// <summary>
+        /// Common equity tier 1 capital divided by risk weighted assets
+        /// </summary>
+        /// <remarks>
+        /// Morningstar DataId: EQFBJ
+        /// </remarks>
+        [JsonProperty("EQFBJ")]
+        public CommonEquityTier1CapitalRatio CommonEquityTier1CapitalRatio => _commonEquityTier1CapitalRatio ??= new(_timeProvider, _securityIdentifier);
+        private CommonEquityTier1CapitalRatio _commonEquityTier1CapitalRatio;
+
+        /// <summary>
+        /// Common equity tier 1 capital, the highest quality regulatory capital
+        /// </summary>
+        /// <remarks>
+        /// Morningstar DataId: EQ3EP
+        /// </remarks>
+        [JsonProperty("EQ3EP")]
+        public CommonEquityTier1Capital CommonEquityTier1Capital => _commonEquityTier1Capital ??= new(_timeProvider, _securityIdentifier);
+        private CommonEquityTier1Capital _commonEquityTier1Capital;
+
+        /// <summary>
+        /// High quality liquid assets divided by projected net cash outflows over thirty days
+        /// </summary>
+        /// <remarks>
+        /// Morningstar DataId: EQ1PN
+        /// </remarks>
+        [JsonProperty("EQ1PN")]
+        public LiquidityCoverageRatio LiquidityCoverageRatio => _liquidityCoverageRatio ??= new(_timeProvider, _securityIdentifier);
+        private LiquidityCoverageRatio _liquidityCoverageRatio;
+
+        /// <summary>
+        /// Net interest income divided by average earning assets
+        /// </summary>
+        /// <remarks>
+        /// Morningstar DataId: EQDG2
+        /// </remarks>
+        [JsonProperty("EQDG2")]
+        public NetInterestMargin NetInterestMargin => _netInterestMargin ??= new(_timeProvider, _securityIdentifier);
+        private NetInterestMargin _netInterestMargin;
+
+        /// <summary>
+        /// The difference between the yield on earning assets and the rate paid on funding
+        /// </summary>
+        /// <remarks>
+        /// Morningstar DataId: EQZVG
+        /// </remarks>
+        [JsonProperty("EQZVG")]
+        public NetInterestSpread NetInterestSpread => _netInterestSpread ??= new(_timeProvider, _securityIdentifier);
+        private NetInterestSpread _netInterestSpread;
+
+        /// <summary>
+        /// Loans on which the borrower is not making interest or principal payments as scheduled
+        /// </summary>
+        /// <remarks>
+        /// Morningstar DataId: EQSVY
+        /// </remarks>
+        [JsonProperty("EQSVY")]
+        public NonPerformingAssetsLoans NonPerformingAssetsLoans => _nonPerformingAssetsLoans ??= new(_timeProvider, _securityIdentifier);
+        private NonPerformingAssetsLoans _nonPerformingAssetsLoans;
+
+        /// <summary>
+        /// Assets weighted by credit risk, the denominator of the regulatory capital ratios
+        /// </summary>
+        /// <remarks>
+        /// Morningstar DataId: EQYE4
+        /// </remarks>
+        [JsonProperty("EQYE4")]
+        public RiskWeightedAsset RiskWeightedAsset => _riskWeightedAsset ??= new(_timeProvider, _securityIdentifier);
+        private RiskWeightedAsset _riskWeightedAsset;
+
+        /// <summary>
+        /// Tier 1 capital divided by risk weighted assets
+        /// </summary>
+        /// <remarks>
+        /// Morningstar DataId: EQ10O
+        /// </remarks>
+        [JsonProperty("EQ10O")]
+        public Tier1CapitalRatio Tier1CapitalRatio => _tier1CapitalRatio ??= new(_timeProvider, _securityIdentifier);
+        private Tier1CapitalRatio _tier1CapitalRatio;
+
+        /// <summary>
+        /// Tier 1 capital: common equity, qualifying preferred equity and retained earnings
+        /// </summary>
+        /// <remarks>
+        /// Morningstar DataId: EQRDJ
+        /// </remarks>
+        [JsonProperty("EQRDJ")]
+        public Tier1Capital Tier1Capital => _tier1Capital ??= new(_timeProvider, _securityIdentifier);
+        private Tier1Capital _tier1Capital;
+
+        /// <summary>
+        /// Tier 1 capital divided by average total consolidated assets
+        /// </summary>
+        /// <remarks>
+        /// Morningstar DataId: EQXCI
+        /// </remarks>
+        [JsonProperty("EQXCI")]
+        public Tier1LeverageRatio Tier1LeverageRatio => _tier1LeverageRatio ??= new(_timeProvider, _securityIdentifier);
+        private Tier1LeverageRatio _tier1LeverageRatio;
+
+        /// <summary>
+        /// Tier 2 capital divided by risk weighted assets
+        /// </summary>
+        /// <remarks>
+        /// Morningstar DataId: EQLHW
+        /// </remarks>
+        [JsonProperty("EQLHW")]
+        public Tier2CapitalRatio Tier2CapitalRatio => _tier2CapitalRatio ??= new(_timeProvider, _securityIdentifier);
+        private Tier2CapitalRatio _tier2CapitalRatio;
+
+        /// <summary>
+        /// Tier 2 capital: subordinated debt, cumulative preferred stock and loan loss allowances
+        /// </summary>
+        /// <remarks>
+        /// Morningstar DataId: EQU9Q
+        /// </remarks>
+        [JsonProperty("EQU9Q")]
+        public Tier2Capital Tier2Capital => _tier2Capital ??= new(_timeProvider, _securityIdentifier);
+        private Tier2Capital _tier2Capital;
+
+        /// <summary>
+        /// The sum of tier 1 and tier 2 capital, in currency rather than as a ratio
+        /// </summary>
+        /// <remarks>
+        /// Morningstar DataId: EQFUM
+        /// </remarks>
+        [JsonProperty("EQFUM")]
+        public TotalCapital TotalCapital => _totalCapital ??= new(_timeProvider, _securityIdentifier);
+        private TotalCapital _totalCapital;
+
+        /// <summary>
+        /// Net asset value adjusted per the reporting standard, on a basic share basis
+        /// </summary>
+        /// <remarks>
+        /// Morningstar DataId: EQLKW
+        /// </remarks>
+        [JsonProperty("EQLKW")]
+        public AdjustedBasicNetAssetValue AdjustedBasicNetAssetValue => _adjustedBasicNetAssetValue ??= new(_timeProvider, _securityIdentifier);
+        private AdjustedBasicNetAssetValue _adjustedBasicNetAssetValue;
+
+        /// <summary>
+        /// Net asset value adjusted per the reporting standard, on a diluted share basis
+        /// </summary>
+        /// <remarks>
+        /// Morningstar DataId: EQDFU
+        /// </remarks>
+        [JsonProperty("EQDFU")]
+        public AdjustedDilutedNetAssetValue AdjustedDilutedNetAssetValue => _adjustedDilutedNetAssetValue ??= new(_timeProvider, _securityIdentifier);
+        private AdjustedDilutedNetAssetValue _adjustedDilutedNetAssetValue;
+
+        /// <summary>
+        /// Adjusted funds from operations as reported, on a basic share basis
+        /// </summary>
+        /// <remarks>
+        /// Morningstar DataId: EQKEU
+        /// </remarks>
+        [JsonProperty("EQKEU")]
+        public ReportedBasicAdjustedFundFromOperations ReportedBasicAdjustedFundFromOperations => _reportedBasicAdjustedFundFromOperations ??= new(_timeProvider, _securityIdentifier);
+        private ReportedBasicAdjustedFundFromOperations _reportedBasicAdjustedFundFromOperations;
+
+        /// <summary>
+        /// Adjusted funds from operations as reported, on a diluted share basis
+        /// </summary>
+        /// <remarks>
+        /// Morningstar DataId: EQX6C
+        /// </remarks>
+        [JsonProperty("EQX6C")]
+        public ReportedDilutedAdjustedFundFromOperations ReportedDilutedAdjustedFundFromOperations => _reportedDilutedAdjustedFundFromOperations ??= new(_timeProvider, _securityIdentifier);
+        private ReportedDilutedAdjustedFundFromOperations _reportedDilutedAdjustedFundFromOperations;
+
+        /// <summary>
+        /// Funds from operations as reported, on a diluted share basis
+        /// </summary>
+        /// <remarks>
+        /// Morningstar DataId: EQ5T6
+        /// </remarks>
+        [JsonProperty("EQ5T6")]
+        public ReportedDilutedFundFromOperations ReportedDilutedFundFromOperations => _reportedDilutedFundFromOperations ??= new(_timeProvider, _securityIdentifier);
+        private ReportedDilutedFundFromOperations _reportedDilutedFundFromOperations;
+
+        /// <summary>
+        /// Adjusted net asset value per basic share
+        /// </summary>
+        /// <remarks>
+        /// Morningstar DataId: EQAWW
+        /// </remarks>
+        [JsonProperty("EQAWW")]
+        public AdjustedBasicNetAssetValuePerShare AdjustedBasicNetAssetValuePerShare => _adjustedBasicNetAssetValuePerShare ??= new(_timeProvider, _securityIdentifier);
+        private AdjustedBasicNetAssetValuePerShare _adjustedBasicNetAssetValuePerShare;
+
+        /// <summary>
+        /// Adjusted net asset value per diluted share
+        /// </summary>
+        /// <remarks>
+        /// Morningstar DataId: EQBAB
+        /// </remarks>
+        [JsonProperty("EQBAB")]
+        public AdjustedDilutedNetAssetValuePerShare AdjustedDilutedNetAssetValuePerShare => _adjustedDilutedNetAssetValuePerShare ??= new(_timeProvider, _securityIdentifier);
+        private AdjustedDilutedNetAssetValuePerShare _adjustedDilutedNetAssetValuePerShare;
+
+        /// <summary>
+        /// Adjusted funds from operations per basic share, as reported
+        /// </summary>
+        /// <remarks>
+        /// Morningstar DataId: EQSPU
+        /// </remarks>
+        [JsonProperty("EQSPU")]
+        public ReportedBasicAdjustedFundFromOperationsPerShare ReportedBasicAdjustedFundFromOperationsPerShare => _reportedBasicAdjustedFundFromOperationsPerShare ??= new(_timeProvider, _securityIdentifier);
+        private ReportedBasicAdjustedFundFromOperationsPerShare _reportedBasicAdjustedFundFromOperationsPerShare;
+
+        /// <summary>
+        /// Funds from operations per basic share, as reported
+        /// </summary>
+        /// <remarks>
+        /// Morningstar DataId: EQMPF
+        /// </remarks>
+        [JsonProperty("EQMPF")]
+        public ReportedBasicFundFromOperationsPerShare ReportedBasicFundFromOperationsPerShare => _reportedBasicFundFromOperationsPerShare ??= new(_timeProvider, _securityIdentifier);
+        private ReportedBasicFundFromOperationsPerShare _reportedBasicFundFromOperationsPerShare;
+
+        /// <summary>
+        /// Adjusted funds from operations per diluted share, as reported
+        /// </summary>
+        /// <remarks>
+        /// Morningstar DataId: EQR84
+        /// </remarks>
+        [JsonProperty("EQR84")]
+        public ReportedDilutedAdjustedFundFromOperationsPerShare ReportedDilutedAdjustedFundFromOperationsPerShare => _reportedDilutedAdjustedFundFromOperationsPerShare ??= new(_timeProvider, _securityIdentifier);
+        private ReportedDilutedAdjustedFundFromOperationsPerShare _reportedDilutedAdjustedFundFromOperationsPerShare;
+
+        /// <summary>
+        /// Funds from operations per diluted share, as reported
+        /// </summary>
+        /// <remarks>
+        /// Morningstar DataId: EQESD
+        /// </remarks>
+        [JsonProperty("EQESD")]
+        public ReportedDilutedFundFromOperationsPerShare ReportedDilutedFundFromOperationsPerShare => _reportedDilutedFundFromOperationsPerShare ??= new(_timeProvider, _securityIdentifier);
+        private ReportedDilutedFundFromOperationsPerShare _reportedDilutedFundFromOperationsPerShare;
 
         /// <summary>
         /// Creates a new instance for the given time and security

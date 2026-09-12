@@ -4,6 +4,7 @@
 */
 
 using System.IO;
+using System.Threading;
 using QuantConnect.Logging;
 using QuantConnect.Interfaces;
 using QuantConnect.Configuration;
@@ -18,6 +19,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
     {
         private readonly DefaultDataProvider _defaultDataProvider;
         private readonly string _processedDataDirectory;
+        private long _processedFetchCount;
 
         /// <summary>
         /// Ignored
@@ -49,7 +51,12 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 result = _defaultDataProvider.Fetch(Path.Combine(_processedDataDirectory, key.Remove(0, Globals.DataFolder.Length).TrimStart('/', '\\')));
                 if (result != null)
                 {
-                    Log.Trace($"ProcessedDataProvider.Fetch({key}): fetched from processed data directory");
+                    // pace the logging: first hits, then every 100th
+                    var count = Interlocked.Increment(ref _processedFetchCount);
+                    if (count <= 100 || count % 100 == 0)
+                    {
+                        Log.Trace($"ProcessedDataProvider.Fetch({key}): fetched from processed data directory. Count: {count}");
+                    }
                 }
             }
 

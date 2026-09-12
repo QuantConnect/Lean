@@ -1,4 +1,4 @@
-/*
+﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2023 QuantConnect Corporation.
  *
@@ -39,12 +39,24 @@ namespace QuantConnect.Data.Fundamental
         private IncomeStatementFileDate _iSFileDate;
 
         /// <summary>
+        /// Period ending date of the income statement as its own feed delivers it. PeriodEndingDate on FinancialStatements moves only once every statement has reached a period; this one moves as soon as the income statement has.
+        /// </summary>
+        /// <remarks>
+        /// Morningstar DataId: EQR0R
+        /// </remarks>
+        [JsonProperty("EQR0R")]
+        public IncomeStatementPeriodEndingDate PeriodEndingDate => _incomeStatementPeriodEndingDate ??= new(_timeProvider, _securityIdentifier);
+        private IncomeStatementPeriodEndingDate _incomeStatementPeriodEndingDate;
+
+        /// <summary>
         /// The non-cash expense recognized on intangible assets over the benefit period of the asset.
         /// </summary>
         /// <remarks>
         /// Morningstar DataId: 20007
         /// </remarks>
         [JsonProperty("20007")]
+        [Obsolete("Amortization was retired by Morningstar in 2026 for all periods; no replacement is available.")]
+        [JsonIgnore]
         public AmortizationIncomeStatement Amortization => _amortization ??= new(_timeProvider, _securityIdentifier);
         private AmortizationIncomeStatement _amortization;
 
@@ -75,6 +87,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 20017
         /// </remarks>
         [JsonProperty("20017")]
+        [Obsolete("Depletion was retired by Morningstar in 2026 for all periods; no replacement is available.")]
+        [JsonIgnore]
         public DepletionIncomeStatement Depletion => _depletion ??= new(_timeProvider, _securityIdentifier);
         private DepletionIncomeStatement _depletion;
 
@@ -85,6 +99,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 20018
         /// </remarks>
         [JsonProperty("20018")]
+        [Obsolete("Depreciation was retired by Morningstar in 2026 for all periods; no replacement is available.")]
+        [JsonIgnore]
         public DepreciationIncomeStatement Depreciation => _depreciation ??= new(_timeProvider, _securityIdentifier);
         private DepreciationIncomeStatement _depreciation;
 
@@ -95,6 +111,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 20019
         /// </remarks>
         [JsonProperty("20019")]
+        [Obsolete("DepreciationAndAmortization was retired by Morningstar in 2026 for all periods; no replacement is available.")]
+        [JsonIgnore]
         public DepreciationAndAmortizationIncomeStatement DepreciationAndAmortization => _depreciationAndAmortization ??= new(_timeProvider, _securityIdentifier);
         private DepreciationAndAmortizationIncomeStatement _depreciationAndAmortization;
 
@@ -375,6 +393,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 20129
         /// </remarks>
         [JsonProperty("20129")]
+        [Obsolete("NetPolicyholderBenefitsAndClaims was retired by Morningstar in 2026 for all periods; no replacement is available.")]
+        [JsonIgnore]
         public NetPolicyholderBenefitsAndClaimsIncomeStatement NetPolicyholderBenefitsAndClaims => _netPolicyholderBenefitsAndClaims ??= new(_timeProvider, _securityIdentifier);
         private NetPolicyholderBenefitsAndClaimsIncomeStatement _netPolicyholderBenefitsAndClaims;
 
@@ -385,6 +405,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 20134
         /// </remarks>
         [JsonProperty("20134")]
+        [Obsolete("PreferredStockDividends was retired by Morningstar in 2026 for all periods; no replacement is available.")]
+        [JsonIgnore]
         public PreferredStockDividendsIncomeStatement PreferredStockDividends => _preferredStockDividends ??= new(_timeProvider, _securityIdentifier);
         private PreferredStockDividendsIncomeStatement _preferredStockDividends;
 
@@ -445,6 +467,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 20158
         /// </remarks>
         [JsonProperty("20158")]
+        [Obsolete("SellingAndMarketingExpense was retired by Morningstar in 2026 for all periods; no replacement is available.")]
+        [JsonIgnore]
         public SellingAndMarketingExpenseIncomeStatement SellingAndMarketingExpense => _sellingAndMarketingExpense ??= new(_timeProvider, _securityIdentifier);
         private SellingAndMarketingExpenseIncomeStatement _sellingAndMarketingExpense;
 
@@ -545,6 +569,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 20204
         /// </remarks>
         [JsonProperty("20204")]
+        [Obsolete("CreditCard was retired by Morningstar in 2026 for all periods; no replacement is available.")]
+        [JsonIgnore]
         public CreditCardIncomeStatement CreditCard => _creditCard ??= new(_timeProvider, _securityIdentifier);
         private CreditCardIncomeStatement _creditCard;
 
@@ -555,6 +581,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 20206
         /// </remarks>
         [JsonProperty("20206")]
+        [Obsolete("DividendIncome was retired by Morningstar in 2026 for all periods; no replacement is available.")]
+        [JsonIgnore]
         public DividendIncomeIncomeStatement DividendIncome => _dividendIncome ??= new(_timeProvider, _securityIdentifier);
         private DividendIncomeIncomeStatement _dividendIncome;
 
@@ -615,6 +643,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 20215
         /// </remarks>
         [JsonProperty("20215")]
+        [Obsolete("Fuel was retired by Morningstar in 2026 for all periods; no replacement is available.")]
+        [JsonIgnore]
         public FuelIncomeStatement Fuel => _fuel ??= new(_timeProvider, _securityIdentifier);
         private FuelIncomeStatement _fuel;
 
@@ -625,6 +655,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 20216
         /// </remarks>
         [JsonProperty("20216")]
+        [Obsolete("FuelAndPurchasePower was retired by Morningstar in 2026 for all periods; no replacement is available.")]
+        [JsonIgnore]
         public FuelAndPurchasePowerIncomeStatement FuelAndPurchasePower => _fuelAndPurchasePower ??= new(_timeProvider, _securityIdentifier);
         private FuelAndPurchasePowerIncomeStatement _fuelAndPurchasePower;
 
@@ -635,6 +667,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 20217
         /// </remarks>
         [JsonProperty("20217")]
+        [Obsolete("GainOnSaleOfBusiness was retired by Morningstar in 2026 for all periods; no replacement is available.")]
+        [JsonIgnore]
         public GainOnSaleOfBusinessIncomeStatement GainOnSaleOfBusiness => _gainOnSaleOfBusiness ??= new(_timeProvider, _securityIdentifier);
         private GainOnSaleOfBusinessIncomeStatement _gainOnSaleOfBusiness;
 
@@ -645,6 +679,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 20218
         /// </remarks>
         [JsonProperty("20218")]
+        [Obsolete("GainOnSaleOfPPE was retired by Morningstar in 2026 for all periods; no replacement is available.")]
+        [JsonIgnore]
         public GainOnSaleOfPPEIncomeStatement GainOnSaleOfPPE => _gainOnSaleOfPPE ??= new(_timeProvider, _securityIdentifier);
         private GainOnSaleOfPPEIncomeStatement _gainOnSaleOfPPE;
 
@@ -655,6 +691,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 20219
         /// </remarks>
         [JsonProperty("20219")]
+        [Obsolete("GainOnSaleOfSecurity was retired by Morningstar in 2026 for all periods; no replacement is available.")]
+        [JsonIgnore]
         public GainOnSaleOfSecurityIncomeStatement GainOnSaleOfSecurity => _gainOnSaleOfSecurity ??= new(_timeProvider, _securityIdentifier);
         private GainOnSaleOfSecurityIncomeStatement _gainOnSaleOfSecurity;
 
@@ -675,6 +713,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 20225
         /// </remarks>
         [JsonProperty("20225")]
+        [Obsolete("ImpairmentOfCapitalAssets was retired by Morningstar in 2026 for all periods; no replacement is available.")]
+        [JsonIgnore]
         public ImpairmentOfCapitalAssetsIncomeStatement ImpairmentOfCapitalAssets => _impairmentOfCapitalAssets ??= new(_timeProvider, _securityIdentifier);
         private ImpairmentOfCapitalAssetsIncomeStatement _impairmentOfCapitalAssets;
 
@@ -705,6 +745,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 20235
         /// </remarks>
         [JsonProperty("20235")]
+        [Obsolete("InterestExpenseForDeposit was retired by Morningstar in 2026 for all periods; no replacement is available.")]
+        [JsonIgnore]
         public InterestExpenseForDepositIncomeStatement InterestExpenseForDeposit => _interestExpenseForDeposit ??= new(_timeProvider, _securityIdentifier);
         private InterestExpenseForDepositIncomeStatement _interestExpenseForDeposit;
 
@@ -715,6 +757,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 20236
         /// </remarks>
         [JsonProperty("20236")]
+        [Obsolete("InterestExpenseForFederalFundsSoldAndSecuritiesPurchaseUnderAgreementsToResell was retired by Morningstar in 2026 for all periods; no replacement is available.")]
+        [JsonIgnore]
         public InterestExpenseForFederalFundsSoldAndSecuritiesPurchaseUnderAgreementsToResellIncomeStatement InterestExpenseForFederalFundsSoldAndSecuritiesPurchaseUnderAgreementsToResell => _interestExpenseForFederalFundsSoldAndSecuritiesPurchaseUnderAgreementsToResell ??= new(_timeProvider, _securityIdentifier);
         private InterestExpenseForFederalFundsSoldAndSecuritiesPurchaseUnderAgreementsToResellIncomeStatement _interestExpenseForFederalFundsSoldAndSecuritiesPurchaseUnderAgreementsToResell;
 
@@ -725,6 +769,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 20238
         /// </remarks>
         [JsonProperty("20238")]
+        [Obsolete("InterestExpenseForLongTermDebtAndCapitalSecurities was retired by Morningstar in 2026 for all periods; no replacement is available.")]
+        [JsonIgnore]
         public InterestExpenseForLongTermDebtAndCapitalSecuritiesIncomeStatement InterestExpenseForLongTermDebtAndCapitalSecurities => _interestExpenseForLongTermDebtAndCapitalSecurities ??= new(_timeProvider, _securityIdentifier);
         private InterestExpenseForLongTermDebtAndCapitalSecuritiesIncomeStatement _interestExpenseForLongTermDebtAndCapitalSecurities;
 
@@ -735,6 +781,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 20239
         /// </remarks>
         [JsonProperty("20239")]
+        [Obsolete("InterestExpenseForShortTermDebt was retired by Morningstar in 2026 for all periods; no replacement is available.")]
+        [JsonIgnore]
         public InterestExpenseForShortTermDebtIncomeStatement InterestExpenseForShortTermDebt => _interestExpenseForShortTermDebt ??= new(_timeProvider, _securityIdentifier);
         private InterestExpenseForShortTermDebtIncomeStatement _interestExpenseForShortTermDebt;
 
@@ -745,6 +793,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 20240
         /// </remarks>
         [JsonProperty("20240")]
+        [Obsolete("InterestIncomeFromDeposits was retired by Morningstar in 2026 for all periods; no replacement is available.")]
+        [JsonIgnore]
         public InterestIncomeFromDepositsIncomeStatement InterestIncomeFromDeposits => _interestIncomeFromDeposits ??= new(_timeProvider, _securityIdentifier);
         private InterestIncomeFromDepositsIncomeStatement _interestIncomeFromDeposits;
 
@@ -755,6 +805,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 20241
         /// </remarks>
         [JsonProperty("20241")]
+        [Obsolete("InterestIncomeFromFederalFundsSoldAndSecuritiesPurchaseUnderAgreementsToResell was retired by Morningstar in 2026 for all periods; no replacement is available.")]
+        [JsonIgnore]
         public InterestIncomeFromFederalFundsSoldAndSecuritiesPurchaseUnderAgreementsToResellIncomeStatement InterestIncomeFromFederalFundsSoldAndSecuritiesPurchaseUnderAgreementsToResell => _interestIncomeFromFederalFundsSoldAndSecuritiesPurchaseUnderAgreementsToResell ??= new(_timeProvider, _securityIdentifier);
         private InterestIncomeFromFederalFundsSoldAndSecuritiesPurchaseUnderAgreementsToResellIncomeStatement _interestIncomeFromFederalFundsSoldAndSecuritiesPurchaseUnderAgreementsToResell;
 
@@ -785,6 +837,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 20245
         /// </remarks>
         [JsonProperty("20245")]
+        [Obsolete("InterestIncomeFromLoansAndLease was retired by Morningstar in 2026 for all periods; no replacement is available.")]
+        [JsonIgnore]
         public InterestIncomeFromLoansAndLeaseIncomeStatement InterestIncomeFromLoansAndLease => _interestIncomeFromLoansAndLease ??= new(_timeProvider, _securityIdentifier);
         private InterestIncomeFromLoansAndLeaseIncomeStatement _interestIncomeFromLoansAndLease;
 
@@ -815,6 +869,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 20252
         /// </remarks>
         [JsonProperty("20252")]
+        [Obsolete("MaintenanceAndRepairs was retired by Morningstar in 2026 for all periods; no replacement is available.")]
+        [JsonIgnore]
         public MaintenanceAndRepairsIncomeStatement MaintenanceAndRepairs => _maintenanceAndRepairs ??= new(_timeProvider, _securityIdentifier);
         private MaintenanceAndRepairsIncomeStatement _maintenanceAndRepairs;
 
@@ -855,6 +911,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 20258
         /// </remarks>
         [JsonProperty("20258")]
+        [Obsolete("NetRealizedGainLossOnInvestments was retired by Morningstar in 2026 for all periods; no replacement is available.")]
+        [JsonIgnore]
         public NetRealizedGainLossOnInvestmentsIncomeStatement NetRealizedGainLossOnInvestments => _netRealizedGainLossOnInvestments ??= new(_timeProvider, _securityIdentifier);
         private NetRealizedGainLossOnInvestmentsIncomeStatement _netRealizedGainLossOnInvestments;
 
@@ -865,6 +923,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 20260
         /// </remarks>
         [JsonProperty("20260")]
+        [Obsolete("OccupancyAndEquipment was retired by Morningstar in 2026 for all periods; no replacement is available.")]
+        [JsonIgnore]
         public OccupancyAndEquipmentIncomeStatement OccupancyAndEquipment => _occupancyAndEquipment ??= new(_timeProvider, _securityIdentifier);
         private OccupancyAndEquipmentIncomeStatement _occupancyAndEquipment;
 
@@ -895,6 +955,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 20265
         /// </remarks>
         [JsonProperty("20265")]
+        [Obsolete("OtherInterestExpense was retired by Morningstar in 2026 for all periods; no replacement is available.")]
+        [JsonIgnore]
         public OtherInterestExpenseIncomeStatement OtherInterestExpense => _otherInterestExpense ??= new(_timeProvider, _securityIdentifier);
         private OtherInterestExpenseIncomeStatement _otherInterestExpense;
 
@@ -905,6 +967,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 20266
         /// </remarks>
         [JsonProperty("20266")]
+        [Obsolete("OtherInterestIncome was retired by Morningstar in 2026 for all periods; no replacement is available.")]
+        [JsonIgnore]
         public OtherInterestIncomeIncomeStatement OtherInterestIncome => _otherInterestIncome ??= new(_timeProvider, _securityIdentifier);
         private OtherInterestIncomeIncomeStatement _otherInterestIncome;
 
@@ -945,6 +1009,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 20273
         /// </remarks>
         [JsonProperty("20273")]
+        [Obsolete("PolicyholderBenefitsCeded was retired by Morningstar in 2026 for all periods; no replacement is available.")]
+        [JsonIgnore]
         public PolicyholderBenefitsCededIncomeStatement PolicyholderBenefitsCeded => _policyholderBenefitsCeded ??= new(_timeProvider, _securityIdentifier);
         private PolicyholderBenefitsCededIncomeStatement _policyholderBenefitsCeded;
 
@@ -955,6 +1021,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 20274
         /// </remarks>
         [JsonProperty("20274")]
+        [Obsolete("PolicyholderBenefitsGross was retired by Morningstar in 2026 for all periods; no replacement is available.")]
+        [JsonIgnore]
         public PolicyholderBenefitsGrossIncomeStatement PolicyholderBenefitsGross => _policyholderBenefitsGross ??= new(_timeProvider, _securityIdentifier);
         private PolicyholderBenefitsGrossIncomeStatement _policyholderBenefitsGross;
 
@@ -965,6 +1033,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 20275
         /// </remarks>
         [JsonProperty("20275")]
+        [Obsolete("PolicyholderDividends was retired by Morningstar in 2026 for all periods; no replacement is available.")]
+        [JsonIgnore]
         public PolicyholderDividendsIncomeStatement PolicyholderDividends => _policyholderDividends ??= new(_timeProvider, _securityIdentifier);
         private PolicyholderDividendsIncomeStatement _policyholderDividends;
 
@@ -975,6 +1045,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 20276
         /// </remarks>
         [JsonProperty("20276")]
+        [Obsolete("PolicyholderInterest was retired by Morningstar in 2026 for all periods; no replacement is available.")]
+        [JsonIgnore]
         public PolicyholderInterestIncomeStatement PolicyholderInterest => _policyholderInterest ??= new(_timeProvider, _securityIdentifier);
         private PolicyholderInterestIncomeStatement _policyholderInterest;
 
@@ -995,6 +1067,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 20283
         /// </remarks>
         [JsonProperty("20283")]
+        [Obsolete("ProvisionForDoubtfulAccounts was retired by Morningstar in 2026 for all periods; no replacement is available.")]
+        [JsonIgnore]
         public ProvisionForDoubtfulAccountsIncomeStatement ProvisionForDoubtfulAccounts => _provisionForDoubtfulAccounts ??= new(_timeProvider, _securityIdentifier);
         private ProvisionForDoubtfulAccountsIncomeStatement _provisionForDoubtfulAccounts;
 
@@ -1005,6 +1079,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 20287
         /// </remarks>
         [JsonProperty("20287")]
+        [Obsolete("RentAndLandingFees was retired by Morningstar in 2026 for all periods; no replacement is available.")]
+        [JsonIgnore]
         public RentAndLandingFeesIncomeStatement RentAndLandingFees => _rentAndLandingFees ??= new(_timeProvider, _securityIdentifier);
         private RentAndLandingFeesIncomeStatement _rentAndLandingFees;
 
@@ -1015,6 +1091,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 20289
         /// </remarks>
         [JsonProperty("20289")]
+        [Obsolete("RestructuringAndMergernAcquisition was retired by Morningstar in 2026 for all periods; no replacement is available.")]
+        [JsonIgnore]
         public RestructuringAndMergernAcquisitionIncomeStatement RestructuringAndMergernAcquisition => _restructuringAndMergernAcquisition ??= new(_timeProvider, _securityIdentifier);
         private RestructuringAndMergernAcquisitionIncomeStatement _restructuringAndMergernAcquisition;
 
@@ -1025,6 +1103,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 20292
         /// </remarks>
         [JsonProperty("20292")]
+        [Obsolete("SalariesAndWages was retired by Morningstar in 2026 for all periods; no replacement is available.")]
+        [JsonIgnore]
         public SalariesAndWagesIncomeStatement SalariesAndWages => _salariesAndWages ??= new(_timeProvider, _securityIdentifier);
         private SalariesAndWagesIncomeStatement _salariesAndWages;
 
@@ -1035,6 +1115,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 20293
         /// </remarks>
         [JsonProperty("20293")]
+        [Obsolete("SecuritiesActivities was retired by Morningstar in 2026 for all periods; no replacement is available.")]
+        [JsonIgnore]
         public SecuritiesActivitiesIncomeStatement SecuritiesActivities => _securitiesActivities ??= new(_timeProvider, _securityIdentifier);
         private SecuritiesActivitiesIncomeStatement _securitiesActivities;
 
@@ -1045,6 +1127,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 20295
         /// </remarks>
         [JsonProperty("20295")]
+        [Obsolete("ServiceChargeOnDepositorAccounts was retired by Morningstar in 2026 for all periods; no replacement is available.")]
+        [JsonIgnore]
         public ServiceChargeOnDepositorAccountsIncomeStatement ServiceChargeOnDepositorAccounts => _serviceChargeOnDepositorAccounts ??= new(_timeProvider, _securityIdentifier);
         private ServiceChargeOnDepositorAccountsIncomeStatement _serviceChargeOnDepositorAccounts;
 
@@ -1065,6 +1149,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 20300
         /// </remarks>
         [JsonProperty("20300")]
+        [Obsolete("TrustFeesbyCommissions was retired by Morningstar in 2026 for all periods; no replacement is available.")]
+        [JsonIgnore]
         public TrustFeesbyCommissionsIncomeStatement TrustFeesbyCommissions => _trustFeesbyCommissions ??= new(_timeProvider, _securityIdentifier);
         private TrustFeesbyCommissionsIncomeStatement _trustFeesbyCommissions;
 
@@ -1085,6 +1171,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 20304
         /// </remarks>
         [JsonProperty("20304")]
+        [Obsolete("WriteOff was retired by Morningstar in 2026 for all periods; no replacement is available.")]
+        [JsonIgnore]
         public WriteOffIncomeStatement WriteOff => _writeOff ??= new(_timeProvider, _securityIdentifier);
         private WriteOffIncomeStatement _writeOff;
 
@@ -1105,6 +1193,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 20308
         /// </remarks>
         [JsonProperty("20308")]
+        [Obsolete("AmortizationOfIntangibles was retired by Morningstar in 2026 for all periods; no replacement is available.")]
+        [JsonIgnore]
         public AmortizationOfIntangiblesIncomeStatement AmortizationOfIntangibles => _amortizationOfIntangibles ??= new(_timeProvider, _securityIdentifier);
         private AmortizationOfIntangiblesIncomeStatement _amortizationOfIntangibles;
 
@@ -1125,6 +1215,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 20311
         /// </remarks>
         [JsonProperty("20311")]
+        [Obsolete("NetIncomeFromTaxLossCarryforward was retired by Morningstar in 2026 for all periods; no replacement is available.")]
+        [JsonIgnore]
         public NetIncomeFromTaxLossCarryforwardIncomeStatement NetIncomeFromTaxLossCarryforward => _netIncomeFromTaxLossCarryforward ??= new(_timeProvider, _securityIdentifier);
         private NetIncomeFromTaxLossCarryforwardIncomeStatement _netIncomeFromTaxLossCarryforward;
 
@@ -1135,6 +1227,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 20312
         /// </remarks>
         [JsonProperty("20312")]
+        [Obsolete("OtherOperatingExpenses was retired by Morningstar in 2026 for all periods; no replacement is available.")]
+        [JsonIgnore]
         public OtherOperatingExpensesIncomeStatement OtherOperatingExpenses => _otherOperatingExpenses ??= new(_timeProvider, _securityIdentifier);
         private OtherOperatingExpensesIncomeStatement _otherOperatingExpenses;
 
@@ -1165,6 +1259,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 20315
         /// </remarks>
         [JsonProperty("20315")]
+        [Obsolete("ReconciledDepreciation was retired by Morningstar in 2026 for all periods; no replacement is available.")]
+        [JsonIgnore]
         public ReconciledDepreciationIncomeStatement ReconciledDepreciation => _reconciledDepreciation ??= new(_timeProvider, _securityIdentifier);
         private ReconciledDepreciationIncomeStatement _reconciledDepreciation;
 
@@ -1195,6 +1291,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 20333
         /// </remarks>
         [JsonProperty("20333")]
+        [Obsolete("GainLossonSaleofAssets was retired by Morningstar in 2026 for all periods; no replacement is available.")]
+        [JsonIgnore]
         public GainLossonSaleofAssetsIncomeStatement GainLossonSaleofAssets => _gainLossonSaleofAssets ??= new(_timeProvider, _securityIdentifier);
         private GainLossonSaleofAssetsIncomeStatement _gainLossonSaleofAssets;
 
@@ -1225,6 +1323,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 20343
         /// </remarks>
         [JsonProperty("20343")]
+        [Obsolete("LossonExtinguishmentofDebt was retired by Morningstar in 2026 for all periods; no replacement is available.")]
+        [JsonIgnore]
         public LossonExtinguishmentofDebtIncomeStatement LossonExtinguishmentofDebt => _lossonExtinguishmentofDebt ??= new(_timeProvider, _securityIdentifier);
         private LossonExtinguishmentofDebtIncomeStatement _lossonExtinguishmentofDebt;
 
@@ -1265,6 +1365,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 20359
         /// </remarks>
         [JsonProperty("20359")]
+        [Obsolete("StaffCosts was retired by Morningstar in 2026 for all periods; no replacement is available.")]
+        [JsonIgnore]
         public StaffCostsIncomeStatement StaffCosts => _staffCosts ??= new(_timeProvider, _securityIdentifier);
         private StaffCostsIncomeStatement _staffCosts;
 
@@ -1295,6 +1397,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 20363
         /// </remarks>
         [JsonProperty("20363")]
+        [Obsolete("OtherOperatingIncomeTotal was retired by Morningstar in 2026 for all periods; no replacement is available.")]
+        [JsonIgnore]
         public OtherOperatingIncomeTotalIncomeStatement OtherOperatingIncomeTotal => _otherOperatingIncomeTotal ??= new(_timeProvider, _securityIdentifier);
         private OtherOperatingIncomeTotalIncomeStatement _otherOperatingIncomeTotal;
 
@@ -1305,6 +1409,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 20367
         /// </remarks>
         [JsonProperty("20367")]
+        [Obsolete("IncomefromAssociatesandOtherParticipatingInterests was retired by Morningstar in 2026 for all periods; no replacement is available.")]
+        [JsonIgnore]
         public IncomefromAssociatesandOtherParticipatingInterestsIncomeStatement IncomefromAssociatesandOtherParticipatingInterests => _incomefromAssociatesandOtherParticipatingInterests ??= new(_timeProvider, _securityIdentifier);
         private IncomefromAssociatesandOtherParticipatingInterestsIncomeStatement _incomefromAssociatesandOtherParticipatingInterests;
 
@@ -1315,6 +1421,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 20368
         /// </remarks>
         [JsonProperty("20368")]
+        [Obsolete("TotalOtherFinanceCost was retired by Morningstar in 2026 for all periods; no replacement is available.")]
+        [JsonIgnore]
         public TotalOtherFinanceCostIncomeStatement TotalOtherFinanceCost => _totalOtherFinanceCost ??= new(_timeProvider, _securityIdentifier);
         private TotalOtherFinanceCostIncomeStatement _totalOtherFinanceCost;
 
@@ -1355,6 +1463,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 20379
         /// </remarks>
         [JsonProperty("20379")]
+        [Obsolete("NetTradingIncome was retired by Morningstar in 2026 for all periods; no replacement is available.")]
+        [JsonIgnore]
         public NetTradingIncomeIncomeStatement NetTradingIncome => _netTradingIncome ??= new(_timeProvider, _securityIdentifier);
         private NetTradingIncomeIncomeStatement _netTradingIncome;
 
@@ -1365,6 +1475,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 20381
         /// </remarks>
         [JsonProperty("20381")]
+        [Obsolete("OtherStaffCosts was retired by Morningstar in 2026 for all periods; no replacement is available.")]
+        [JsonIgnore]
         public OtherStaffCostsIncomeStatement OtherStaffCosts => _otherStaffCosts ??= new(_timeProvider, _securityIdentifier);
         private OtherStaffCostsIncomeStatement _otherStaffCosts;
 
@@ -1395,6 +1507,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 20391
         /// </remarks>
         [JsonProperty("20391")]
+        [Obsolete("GainLossonFinancialInstrumentsDesignatedasCashFlowHedges was retired by Morningstar in 2026 for all periods; no replacement is available.")]
+        [JsonIgnore]
         public GainLossonFinancialInstrumentsDesignatedasCashFlowHedgesIncomeStatement GainLossonFinancialInstrumentsDesignatedasCashFlowHedges => _gainLossonFinancialInstrumentsDesignatedasCashFlowHedges ??= new(_timeProvider, _securityIdentifier);
         private GainLossonFinancialInstrumentsDesignatedasCashFlowHedgesIncomeStatement _gainLossonFinancialInstrumentsDesignatedasCashFlowHedges;
 
@@ -1405,6 +1519,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 20392
         /// </remarks>
         [JsonProperty("20392")]
+        [Obsolete("GainLossonDerecognitionofAvailableForSaleFinancialAssets was retired by Morningstar in 2026 for all periods; no replacement is available.")]
+        [JsonIgnore]
         public GainLossonDerecognitionofAvailableForSaleFinancialAssetsIncomeStatement GainLossonDerecognitionofAvailableForSaleFinancialAssets => _gainLossonDerecognitionofAvailableForSaleFinancialAssets ??= new(_timeProvider, _securityIdentifier);
         private GainLossonDerecognitionofAvailableForSaleFinancialAssetsIncomeStatement _gainLossonDerecognitionofAvailableForSaleFinancialAssets;
 
@@ -1415,6 +1531,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 20394
         /// </remarks>
         [JsonProperty("20394")]
+        [Obsolete("NegativeGoodwillImmediatelyRecognized was retired by Morningstar in 2026 for all periods; no replacement is available.")]
+        [JsonIgnore]
         public NegativeGoodwillImmediatelyRecognizedIncomeStatement NegativeGoodwillImmediatelyRecognized => _negativeGoodwillImmediatelyRecognized ??= new(_timeProvider, _securityIdentifier);
         private NegativeGoodwillImmediatelyRecognizedIncomeStatement _negativeGoodwillImmediatelyRecognized;
 
@@ -1435,6 +1553,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 20396
         /// </remarks>
         [JsonProperty("20396")]
+        [Obsolete("ImpairmentLossesReversalsFinancialInstrumentsNet was retired by Morningstar in 2026 for all periods; no replacement is available.")]
+        [JsonIgnore]
         public ImpairmentLossesReversalsFinancialInstrumentsNetIncomeStatement ImpairmentLossesReversalsFinancialInstrumentsNet => _impairmentLossesReversalsFinancialInstrumentsNet ??= new(_timeProvider, _securityIdentifier);
         private ImpairmentLossesReversalsFinancialInstrumentsNetIncomeStatement _impairmentLossesReversalsFinancialInstrumentsNet;
 
@@ -1455,6 +1575,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 20401
         /// </remarks>
         [JsonProperty("20401")]
+        [Obsolete("ReinsuranceRecoveriesClaimsandBenefits was retired by Morningstar in 2026 for all periods; no replacement is available.")]
+        [JsonIgnore]
         public ReinsuranceRecoveriesClaimsandBenefitsIncomeStatement ReinsuranceRecoveriesClaimsandBenefits => _reinsuranceRecoveriesClaimsandBenefits ??= new(_timeProvider, _securityIdentifier);
         private ReinsuranceRecoveriesClaimsandBenefitsIncomeStatement _reinsuranceRecoveriesClaimsandBenefits;
 
@@ -1465,6 +1587,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 20402
         /// </remarks>
         [JsonProperty("20402")]
+        [Obsolete("ChangeinInsuranceLiabilitiesNetofReinsurance was retired by Morningstar in 2026 for all periods; no replacement is available.")]
+        [JsonIgnore]
         public ChangeinInsuranceLiabilitiesNetofReinsuranceIncomeStatement ChangeinInsuranceLiabilitiesNetofReinsurance => _changeinInsuranceLiabilitiesNetofReinsurance ??= new(_timeProvider, _securityIdentifier);
         private ChangeinInsuranceLiabilitiesNetofReinsuranceIncomeStatement _changeinInsuranceLiabilitiesNetofReinsurance;
 
@@ -1475,6 +1599,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 20405
         /// </remarks>
         [JsonProperty("20405")]
+        [Obsolete("ChangeinInvestmentContract was retired by Morningstar in 2026 for all periods; no replacement is available.")]
+        [JsonIgnore]
         public ChangeinInvestmentContractIncomeStatement ChangeinInvestmentContract => _changeinInvestmentContract ??= new(_timeProvider, _securityIdentifier);
         private ChangeinInvestmentContractIncomeStatement _changeinInvestmentContract;
 
@@ -1575,6 +1701,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 20420
         /// </remarks>
         [JsonProperty("20420")]
+        [Obsolete("NormalizedEBITDA was retired by Morningstar in 2026 for all periods; no replacement is available.")]
+        [JsonIgnore]
         public NormalizedEBITDAIncomeStatement NormalizedEBITDA => _normalizedEBITDA ??= new(_timeProvider, _securityIdentifier);
         private NormalizedEBITDAIncomeStatement _normalizedEBITDA;
 
@@ -1585,6 +1713,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 20422
         /// </remarks>
         [JsonProperty("20422")]
+        [Obsolete("StockBasedCompensation was retired by Morningstar in 2026 for all periods; no replacement is available.")]
+        [JsonIgnore]
         public StockBasedCompensationIncomeStatement StockBasedCompensation => _stockBasedCompensation ??= new(_timeProvider, _securityIdentifier);
         private StockBasedCompensationIncomeStatement _stockBasedCompensation;
 
@@ -1605,6 +1735,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 20425
         /// </remarks>
         [JsonProperty("20425")]
+        [Obsolete("InvestmentContractLiabilitiesIncurred was retired by Morningstar in 2026 for all periods; no replacement is available.")]
+        [JsonIgnore]
         public InvestmentContractLiabilitiesIncurredIncomeStatement InvestmentContractLiabilitiesIncurred => _investmentContractLiabilitiesIncurred ??= new(_timeProvider, _securityIdentifier);
         private InvestmentContractLiabilitiesIncurredIncomeStatement _investmentContractLiabilitiesIncurred;
 
@@ -1615,6 +1747,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 20426
         /// </remarks>
         [JsonProperty("20426")]
+        [Obsolete("ReinsuranceRecoveriesofInvestmentContract was retired by Morningstar in 2026 for all periods; no replacement is available.")]
+        [JsonIgnore]
         public ReinsuranceRecoveriesofInvestmentContractIncomeStatement ReinsuranceRecoveriesofInvestmentContract => _reinsuranceRecoveriesofInvestmentContract ??= new(_timeProvider, _securityIdentifier);
         private ReinsuranceRecoveriesofInvestmentContractIncomeStatement _reinsuranceRecoveriesofInvestmentContract;
 
@@ -1685,6 +1819,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 20435
         /// </remarks>
         [JsonProperty("20435")]
+        [Obsolete("TotalOperatingIncomeAsReported was retired by Morningstar in 2026 for all periods; no replacement is available.")]
+        [JsonIgnore]
         public TotalOperatingIncomeAsReportedIncomeStatement TotalOperatingIncomeAsReported => _totalOperatingIncomeAsReported ??= new(_timeProvider, _securityIdentifier);
         private TotalOperatingIncomeAsReportedIncomeStatement _totalOperatingIncomeAsReported;
 
@@ -1705,6 +1841,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 20437
         /// </remarks>
         [JsonProperty("20437")]
+        [Obsolete("OtherCostofRevenue was retired by Morningstar in 2026 for all periods; no replacement is available.")]
+        [JsonIgnore]
         public OtherCostofRevenueIncomeStatement OtherCostofRevenue => _otherCostofRevenue ??= new(_timeProvider, _securityIdentifier);
         private OtherCostofRevenueIncomeStatement _otherCostofRevenue;
 
@@ -1715,6 +1853,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 20438
         /// </remarks>
         [JsonProperty("20438")]
+        [Obsolete("RentandLandingFeesCostofRevenue was retired by Morningstar in 2026 for all periods; no replacement is available.")]
+        [JsonIgnore]
         public RentandLandingFeesCostofRevenueIncomeStatement RentandLandingFeesCostofRevenue => _rentandLandingFeesCostofRevenue ??= new(_timeProvider, _securityIdentifier);
         private RentandLandingFeesCostofRevenueIncomeStatement _rentandLandingFeesCostofRevenue;
 
@@ -1725,6 +1865,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 20439
         /// </remarks>
         [JsonProperty("20439")]
+        [Obsolete("DDACostofRevenue was retired by Morningstar in 2026 for all periods; no replacement is available.")]
+        [JsonIgnore]
         public DDACostofRevenueIncomeStatement DDACostofRevenue => _dDACostofRevenue ??= new(_timeProvider, _securityIdentifier);
         private DDACostofRevenueIncomeStatement _dDACostofRevenue;
 
@@ -1765,6 +1907,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 20443
         /// </remarks>
         [JsonProperty("20443")]
+        [Obsolete("DepreciationSupplemental was retired by Morningstar in 2026 for all periods; no replacement is available.")]
+        [JsonIgnore]
         public DepreciationSupplementalIncomeStatement DepreciationSupplemental => _depreciationSupplemental ??= new(_timeProvider, _securityIdentifier);
         private DepreciationSupplementalIncomeStatement _depreciationSupplemental;
 
@@ -1775,8 +1919,110 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 20444
         /// </remarks>
         [JsonProperty("20444")]
+        [Obsolete("AmortizationSupplemental was retired by Morningstar in 2026 for all periods; no replacement is available.")]
+        [JsonIgnore]
         public AmortizationSupplementalIncomeStatement AmortizationSupplemental => _amortizationSupplemental ??= new(_timeProvider, _securityIdentifier);
         private AmortizationSupplementalIncomeStatement _amortizationSupplemental;
+
+        /// <summary>
+        /// Gains or losses on the disposal of businesses. It is a supplemental value which would be reported outside consolidated statements.
+        /// </summary>
+        /// <remarks>
+        /// Morningstar DataId: 20452
+        /// </remarks>
+        [JsonProperty("20452")]
+        public DisposalofBusinessesSupplementalIncomeStatement DisposalofBusinessesSupplemental => _disposalofBusinessesSupplemental ??= new(_timeProvider, _securityIdentifier);
+        private DisposalofBusinessesSupplementalIncomeStatement _disposalofBusinessesSupplemental;
+
+        /// <summary>
+        /// Income or expense from operations that have been discontinued. It is a supplemental value which would be reported outside consolidated statements.
+        /// </summary>
+        /// <remarks>
+        /// Morningstar DataId: 20453
+        /// </remarks>
+        [JsonProperty("20453")]
+        public DiscontinuedOperationsSupplementalIncomeStatement DiscontinuedOperationsSupplemental => _discontinuedOperationsSupplemental ??= new(_timeProvider, _securityIdentifier);
+        private DiscontinuedOperationsSupplementalIncomeStatement _discontinuedOperationsSupplemental;
+
+        /// <summary>
+        /// Gains or losses on the disposal of assets. It is a supplemental value which would be reported outside consolidated statements.
+        /// </summary>
+        /// <remarks>
+        /// Morningstar DataId: 20454
+        /// </remarks>
+        [JsonProperty("20454")]
+        public AssetDisposalsSupplementalIncomeStatement AssetDisposalsSupplemental => _assetDisposalsSupplemental ??= new(_timeProvider, _securityIdentifier);
+        private AssetDisposalsSupplementalIncomeStatement _assetDisposalsSupplemental;
+
+        /// <summary>
+        /// Impairment, write off or write down of capital assets. It is a supplemental value which would be reported outside consolidated statements.
+        /// </summary>
+        /// <remarks>
+        /// Morningstar DataId: 20455
+        /// </remarks>
+        [JsonProperty("20455")]
+        public ImpairmentWriteOffWriteDownofCapitalAssetsSupplementalIncomeStatement ImpairmentWriteOffWriteDownofCapitalAssetsSupplemental => _impairmentWriteOffWriteDownofCapitalAssetsSupplemental ??= new(_timeProvider, _securityIdentifier);
+        private ImpairmentWriteOffWriteDownofCapitalAssetsSupplementalIncomeStatement _impairmentWriteOffWriteDownofCapitalAssetsSupplemental;
+
+        /// <summary>
+        /// Impairment or write off of goodwill. It is a supplemental value which would be reported outside consolidated statements.
+        /// </summary>
+        /// <remarks>
+        /// Morningstar DataId: 20456
+        /// </remarks>
+        [JsonProperty("20456")]
+        public GoodwillImpairmentWriteOffSupplementalIncomeStatement GoodwillImpairmentWriteOffSupplemental => _goodwillImpairmentWriteOffSupplemental ??= new(_timeProvider, _securityIdentifier);
+        private GoodwillImpairmentWriteOffSupplementalIncomeStatement _goodwillImpairmentWriteOffSupplemental;
+
+        /// <summary>
+        /// Impairment, write off or write down of assets other than capital assets. It is a supplemental value which would be reported outside consolidated statements.
+        /// </summary>
+        /// <remarks>
+        /// Morningstar DataId: 20457
+        /// </remarks>
+        [JsonProperty("20457")]
+        public ImpairmentWriteOffWriteDownofOtherAssetsSupplementalIncomeStatement ImpairmentWriteOffWriteDownofOtherAssetsSupplemental => _impairmentWriteOffWriteDownofOtherAssetsSupplemental ??= new(_timeProvider, _securityIdentifier);
+        private ImpairmentWriteOffWriteDownofOtherAssetsSupplementalIncomeStatement _impairmentWriteOffWriteDownofOtherAssetsSupplemental;
+
+        /// <summary>
+        /// Gains or losses arising from the extinguishment of debt. It is a supplemental value which would be reported outside consolidated statements.
+        /// </summary>
+        /// <remarks>
+        /// Morningstar DataId: 20458
+        /// </remarks>
+        [JsonProperty("20458")]
+        public GainLossOnExtinguishmentofDebtSupplementalIncomeStatement GainLossOnExtinguishmentofDebtSupplemental => _gainLossOnExtinguishmentofDebtSupplemental ??= new(_timeProvider, _securityIdentifier);
+        private GainLossOnExtinguishmentofDebtSupplementalIncomeStatement _gainLossOnExtinguishmentofDebtSupplemental;
+
+        /// <summary>
+        /// Income or expense arising from the restructuring of debt. It is a supplemental value which would be reported outside consolidated statements.
+        /// </summary>
+        /// <remarks>
+        /// Morningstar DataId: 20459
+        /// </remarks>
+        [JsonProperty("20459")]
+        public DebtRestructuringSupplementalIncomeStatement DebtRestructuringSupplemental => _debtRestructuringSupplemental ??= new(_timeProvider, _securityIdentifier);
+        private DebtRestructuringSupplementalIncomeStatement _debtRestructuringSupplemental;
+
+        /// <summary>
+        /// Income or expense arising from litigation. It is a supplemental value which would be reported outside consolidated statements.
+        /// </summary>
+        /// <remarks>
+        /// Morningstar DataId: 20460
+        /// </remarks>
+        [JsonProperty("20460")]
+        public LitigationIncomeExpenseSupplementalIncomeStatement LitigationIncomeExpenseSupplemental => _litigationIncomeExpenseSupplemental ??= new(_timeProvider, _securityIdentifier);
+        private LitigationIncomeExpenseSupplementalIncomeStatement _litigationIncomeExpenseSupplemental;
+
+        /// <summary>
+        /// Income or expense arising from mergers and acquisitions. It is a supplemental value which would be reported outside consolidated statements.
+        /// </summary>
+        /// <remarks>
+        /// Morningstar DataId: 20461
+        /// </remarks>
+        [JsonProperty("20461")]
+        public MergerAndAcquisitionIncomeExpenseSupplementalIncomeStatement MergerAndAcquisitionIncomeExpenseSupplemental => _mergerAndAcquisitionIncomeExpenseSupplemental ??= new(_timeProvider, _securityIdentifier);
+        private MergerAndAcquisitionIncomeExpenseSupplementalIncomeStatement _mergerAndAcquisitionIncomeExpenseSupplemental;
 
         /// <summary>
         /// Total revenue as reported by the company, may be the same or not the same as Morningstar's standardized definition.
@@ -1805,6 +2051,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 20447
         /// </remarks>
         [JsonProperty("20447")]
+        [Obsolete("NormalizedIncomeAsReported was retired by Morningstar in 2026 for all periods; no replacement is available.")]
+        [JsonIgnore]
         public NormalizedIncomeAsReportedIncomeStatement NormalizedIncomeAsReported => _normalizedIncomeAsReported ??= new(_timeProvider, _securityIdentifier);
         private NormalizedIncomeAsReportedIncomeStatement _normalizedIncomeAsReported;
 
@@ -1815,6 +2063,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 20448
         /// </remarks>
         [JsonProperty("20448")]
+        [Obsolete("NormalizedEBITDAAsReported was retired by Morningstar in 2026 for all periods; no replacement is available.")]
+        [JsonIgnore]
         public NormalizedEBITDAAsReportedIncomeStatement NormalizedEBITDAAsReported => _normalizedEBITDAAsReported ??= new(_timeProvider, _securityIdentifier);
         private NormalizedEBITDAAsReportedIncomeStatement _normalizedEBITDAAsReported;
 
@@ -1825,6 +2075,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 20449
         /// </remarks>
         [JsonProperty("20449")]
+        [Obsolete("NormalizedEBITAsReported was retired by Morningstar in 2026 for all periods; no replacement is available.")]
+        [JsonIgnore]
         public NormalizedEBITAsReportedIncomeStatement NormalizedEBITAsReported => _normalizedEBITAsReported ??= new(_timeProvider, _securityIdentifier);
         private NormalizedEBITAsReportedIncomeStatement _normalizedEBITAsReported;
 
@@ -1835,6 +2087,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 20450
         /// </remarks>
         [JsonProperty("20450")]
+        [Obsolete("NormalizedOperatingProfitAsReported was retired by Morningstar in 2026 for all periods; no replacement is available.")]
+        [JsonIgnore]
         public NormalizedOperatingProfitAsReportedIncomeStatement NormalizedOperatingProfitAsReported => _normalizedOperatingProfitAsReported ??= new(_timeProvider, _securityIdentifier);
         private NormalizedOperatingProfitAsReportedIncomeStatement _normalizedOperatingProfitAsReported;
 
@@ -1850,6 +2104,306 @@ namespace QuantConnect.Data.Fundamental
 
         private readonly ITimeProvider _timeProvider;
         private readonly SecurityIdentifier _securityIdentifier;
+
+        /// <summary>
+        /// This data point represents the net gain or loss sustained through legal proceedings after settling controversies or disputes in a court of law. This is reported in the income statement or cash flow statement and selected for a company's irregular income/expenses and total unusal items calculation.
+        /// </summary>
+        /// <remarks>
+        /// Morningstar DataId: EQFPZ
+        /// </remarks>
+        [JsonProperty("EQFPZ")]
+        public LitigationIncomeExpenseAdjustmentIncomeStatement LitigationIncomeExpenseAdjustment => _litigationIncomeExpenseAdjustmentIncomeStatement ??= new(_timeProvider, _securityIdentifier);
+        private LitigationIncomeExpenseAdjustmentIncomeStatement _litigationIncomeExpenseAdjustmentIncomeStatement;
+
+        /// <summary>
+        /// This data point represents the goodwill impairment/write-off value reported in the income statement or cash flow statement and selected for a company's irregular income/expenses and total unusal items calculation.
+        /// </summary>
+        /// <remarks>
+        /// Morningstar DataId: EQI2C
+        /// </remarks>
+        [JsonProperty("EQI2C")]
+        public GoodwillImpairmentWriteOffAdjustmentIncomeStatement GoodwillImpairmentWriteOffAdjustment => _goodwillImpairmentWriteOffAdjustmentIncomeStatement ??= new(_timeProvider, _securityIdentifier);
+        private GoodwillImpairmentWriteOffAdjustmentIncomeStatement _goodwillImpairmentWriteOffAdjustmentIncomeStatement;
+
+        /// <summary>
+        /// This data point represents the costs incurred from negotiating with bankers; creditors; vendors; and tax authorities while restructuring the company's debt in order to restore liquidity and continue its operations. This is reported in the income statement or cash flow statement and selected for a company's irregular income/expenses and total unusal items calculation.
+        /// </summary>
+        /// <remarks>
+        /// Morningstar DataId: EQN1N
+        /// </remarks>
+        [JsonProperty("EQN1N")]
+        public DebtRestructuringAdjustmentIncomeStatement DebtRestructuringAdjustment => _debtRestructuringAdjustmentIncomeStatement ??= new(_timeProvider, _securityIdentifier);
+        private DebtRestructuringAdjustmentIncomeStatement _debtRestructuringAdjustmentIncomeStatement;
+
+        /// <summary>
+        /// This data point represents net gain or loss from disposal or sale of businesses reported in the income statement or cash flow statement and selected for a company's irregular income/expenses and total unusal items calculation.
+        /// </summary>
+        /// <remarks>
+        /// Morningstar DataId: EQNZW
+        /// </remarks>
+        [JsonProperty("EQNZW")]
+        public DisposalOfBusinessesAdjustmentIncomeStatement DisposalOfBusinessesAdjustment => _disposalOfBusinessesAdjustmentIncomeStatement ??= new(_timeProvider, _securityIdentifier);
+        private DisposalOfBusinessesAdjustmentIncomeStatement _disposalOfBusinessesAdjustmentIncomeStatement;
+
+        /// <summary>
+        /// This data point represents the costs incurred during merger and acquisition transactions reported in the income statement or cash flow statement and selected for a company's irregular income/expenses and total unusal items calculation.
+        /// </summary>
+        /// <remarks>
+        /// Morningstar DataId: EQRBW
+        /// </remarks>
+        [JsonProperty("EQRBW")]
+        public MergerAndAcquisitionIncomeExpenseAdjustmentIncomeStatement MergerAndAcquisitionIncomeExpenseAdjustment => _mergerAndAcquisitionIncomeExpenseAdjustmentIncomeStatement ??= new(_timeProvider, _securityIdentifier);
+        private MergerAndAcquisitionIncomeExpenseAdjustmentIncomeStatement _mergerAndAcquisitionIncomeExpenseAdjustmentIncomeStatement;
+
+        /// <summary>
+        /// This data point represents net income or loss from disposal of discontinued operations reported in the income statement or cash flow statement and selected for a company's irregular income/expenses and total unusal items calculation.
+        /// </summary>
+        /// <remarks>
+        /// Morningstar DataId: EQRC3
+        /// </remarks>
+        [JsonProperty("EQRC3")]
+        public DiscontinuedOperationsAdjustmentIncomeStatement DiscontinuedOperationsAdjustment => _discontinuedOperationsAdjustmentIncomeStatement ??= new(_timeProvider, _securityIdentifier);
+        private DiscontinuedOperationsAdjustmentIncomeStatement _discontinuedOperationsAdjustmentIncomeStatement;
+
+        /// <summary>
+        /// This data point represents the calculated variant of irregular income/expense. This is calculated by summing up all Irregular Income/Expense reported by the company.
+        /// </summary>
+        /// <remarks>
+        /// Morningstar DataId: EQSX4
+        /// </remarks>
+        [JsonProperty("EQSX4")]
+        public IrregularIncomeExpenseIncomeStatement IrregularIncomeExpense => _irregularIncomeExpenseIncomeStatement ??= new(_timeProvider, _securityIdentifier);
+        private IrregularIncomeExpenseIncomeStatement _irregularIncomeExpenseIncomeStatement;
+
+        /// <summary>
+        /// This data point represents income or expenses from any other non-recurring activities reported in the income statement or cash flow statement and selected for a company's irregular income/expenses and total unusal items calculation.
+        /// </summary>
+        /// <remarks>
+        /// Morningstar DataId: EQUOO
+        /// </remarks>
+        [JsonProperty("EQUOO")]
+        public OtherIrregularIncomeExpensesAdjustmentIncomeStatement OtherIrregularIncomeExpensesAdjustment => _otherIrregularIncomeExpensesAdjustmentIncomeStatement ??= new(_timeProvider, _securityIdentifier);
+        private OtherIrregularIncomeExpensesAdjustmentIncomeStatement _otherIrregularIncomeExpensesAdjustmentIncomeStatement;
+
+        /// <summary>
+        /// This data point represents net gain or loss due to disposal or sale of assets reported in the income statement or cash flow statement and selected for a company's irregular income/expenses and total unusal items calculation.
+        /// </summary>
+        /// <remarks>
+        /// Morningstar DataId: EQXPR
+        /// </remarks>
+        [JsonProperty("EQXPR")]
+        public AssetDisposalsAdjustmentIncomeStatement AssetDisposalsAdjustment => _assetDisposalsAdjustmentIncomeStatement ??= new(_timeProvider, _securityIdentifier);
+        private AssetDisposalsAdjustmentIncomeStatement _assetDisposalsAdjustmentIncomeStatement;
+
+        /// <summary>
+        /// This data point represents costs incurred in the event of a restructuring and/or reorganization with the aim to improve the business operations and/or financial situation of the firm; examples include laying off employees; severance pay; closing manufacturing plants; shifting production to a new location; writing-off assets; and more. This is reported in the income statement or cash flow statement and selected for a company's irregular income/expenses and total unusal items calculation.
+        /// </summary>
+        /// <remarks>
+        /// Morningstar DataId: EQZHQ
+        /// </remarks>
+        [JsonProperty("EQZHQ")]
+        public RestructuringAndReorganizationExpenseAdjustmentIncomeStatement RestructuringAndReorganizationExpenseAdjustment => _restructuringAndReorganizationExpenseAdjustmentIncomeStatement ??= new(_timeProvider, _securityIdentifier);
+        private RestructuringAndReorganizationExpenseAdjustmentIncomeStatement _restructuringAndReorganizationExpenseAdjustmentIncomeStatement;
+
+        /// <summary>
+        /// This calculation represents the company's after-tax earnings for the period. The calculation differs from Net Income; because it excludes Earnings from Equity Interests. This is calculated using Pretax Income minus Provision for Income Tax.
+        /// </summary>
+        /// <remarks>
+        /// Morningstar DataId: EQFD2
+        /// </remarks>
+        [JsonProperty("EQFD2")]
+        public IncomeAfterTaxesIncomeStatement IncomeAfterTaxes => _incomeAfterTaxesIncomeStatement ??= new(_timeProvider, _securityIdentifier);
+        private IncomeAfterTaxesIncomeStatement _incomeAfterTaxesIncomeStatement;
+
+        /// <summary>
+        /// This calculation represents the tax affected operating earnings the company generated for the period. This can be used to measure a company's profitability. This is calculated using Net Income from Continuing Operations plus tax affected Net Interest Income/Expense minus tax affected Dividend and Investment Income.
+        /// </summary>
+        /// <remarks>
+        /// Morningstar DataId: EQD7B
+        /// </remarks>
+        [JsonProperty("EQD7B")]
+        public NetOperatingProfitAfterTaxIncomeStatement NetOperatingProfitAfterTax => _netOperatingProfitAfterTaxIncomeStatement ??= new(_timeProvider, _securityIdentifier);
+        private NetOperatingProfitAfterTaxIncomeStatement _netOperatingProfitAfterTaxIncomeStatement;
+
+        /// <summary>
+        /// This represents earnings before interest and taxes adjusted for items that are irregular or unusual in nature; and/or are non-recurring. This can be used to measure a company's profitability. This is calculated by using Earnings before Interest and Tax plus/minus any tax affected unusual items.
+        /// </summary>
+        /// <remarks>
+        /// Morningstar DataId: EQ8A8
+        /// </remarks>
+        [JsonProperty("EQ8A8")]
+        public NormalizedEBITIncomeStatement NormalizedEBIT => _normalizedEBITIncomeStatement ??= new(_timeProvider, _securityIdentifier);
+        private NormalizedEBITIncomeStatement _normalizedEBITIncomeStatement;
+
+        /// <summary>
+        /// This data point represents the earnings the company generated before interest; tax; depreciation; amortization and rent expenses. This can be used to measure a company's profitability. This is calculated using EBITDA + Rent Expenses + Rent and Landing Fees.
+        /// </summary>
+        /// <remarks>
+        /// Morningstar DataId: EQES8
+        /// </remarks>
+        [JsonProperty("EQES8")]
+        public EBITDARIncomeStatement EBITDAR => _eBITDARIncomeStatement ??= new(_timeProvider, _securityIdentifier);
+        private EBITDARIncomeStatement _eBITDARIncomeStatement;
+
+        /// <summary>
+        /// This data point represents the earnings the company generated before interest; tax; depreciation; amortization and rent expenses adjusted for items that are irregular or unusual in nature; and/or are non-recurring. This can be used to measure a company's profitability. This is calculated using Earnings Before Interest; Tax; Depreciation; Amortization and Rent expenses plus/minus any unusual Items.
+        /// </summary>
+        /// <remarks>
+        /// Morningstar DataId: EQP4U
+        /// </remarks>
+        [JsonProperty("EQP4U")]
+        public NormalizedEBITDARIncomeStatement NormalizedEBITDAR => _normalizedEBITDARIncomeStatement ??= new(_timeProvider, _securityIdentifier);
+        private NormalizedEBITDARIncomeStatement _normalizedEBITDARIncomeStatement;
+
+        /// <summary>
+        /// This data point represents net amount of foreign exchange gains and losses due to translation to the functional/reporting currency reported in the income statement or cash flow statement and selected for a company's total unusal items calculation.
+        /// </summary>
+        /// <remarks>
+        /// Morningstar DataId: EQ10K
+        /// </remarks>
+        [JsonProperty("EQ10K")]
+        public ForeignCurrencyExchangeUnrealizedGainsLossesIncomeStatement ForeignCurrencyExchangeUnrealizedGainsLosses => _foreignCurrencyExchangeUnrealizedGainsLossesIncomeStatement ??= new(_timeProvider, _securityIdentifier);
+        private ForeignCurrencyExchangeUnrealizedGainsLossesIncomeStatement _foreignCurrencyExchangeUnrealizedGainsLossesIncomeStatement;
+
+        /// <summary>
+        /// This data point represents net unrealized gain or loss due to changes in the fair value of financial assets reported in the income statement or cash flow statement and selected for a company's total unusal items calculation.
+        /// </summary>
+        /// <remarks>
+        /// Morningstar DataId: EQ2XY
+        /// </remarks>
+        [JsonProperty("EQ2XY")]
+        public FinancialAssetsUnrealizedGainsLossesIncomeStatement FinancialAssetsUnrealizedGainsLosses => _financialAssetsUnrealizedGainsLossesIncomeStatement ??= new(_timeProvider, _securityIdentifier);
+        private FinancialAssetsUnrealizedGainsLossesIncomeStatement _financialAssetsUnrealizedGainsLossesIncomeStatement;
+
+        /// <summary>
+        /// This data point represents net gain or loss on disposal or sale of investments; including financial instruments and other investments reported in the income statement or cash flow statement and selected for a company's total unusal items calculation.
+        /// </summary>
+        /// <remarks>
+        /// Morningstar DataId: EQRHB
+        /// </remarks>
+        [JsonProperty("EQRHB")]
+        public FinancialInstrumentsAndInvestmentsGainsLossesIncomeStatement FinancialInstrumentsAndInvestmentsGainsLosses => _financialInstrumentsAndInvestmentsGainsLossesIncomeStatement ??= new(_timeProvider, _securityIdentifier);
+        private FinancialInstrumentsAndInvestmentsGainsLossesIncomeStatement _financialInstrumentsAndInvestmentsGainsLossesIncomeStatement;
+
+        /// <summary>
+        /// This data point represents net gain or loss due to changes in the fair value of derivative financial and hedging instruments reported in the income statement or cash flow statement and selected for a company's total unusal items calculation.
+        /// </summary>
+        /// <remarks>
+        /// Morningstar DataId: EQZBQ
+        /// </remarks>
+        [JsonProperty("EQZBQ")]
+        public DerivativesUnrealizedGainsLossesIncomeStatement DerivativesUnrealizedGainsLosses => _derivativesUnrealizedGainsLossesIncomeStatement ??= new(_timeProvider, _securityIdentifier);
+        private DerivativesUnrealizedGainsLossesIncomeStatement _derivativesUnrealizedGainsLossesIncomeStatement;
+
+        /// <summary>
+        /// Aggregate value of all income and expenses not associated with normal business operations and recognized by the company in the non-operating section of the Income Statement.
+        /// </summary>
+        /// <remarks>
+        /// Morningstar DataId: EQAW7
+        /// </remarks>
+        [JsonProperty("EQAW7")]
+        public NonOperatingIncomeExpensesTotalIncomeStatement NonOperatingIncomeExpensesTotal => _nonOperatingIncomeExpensesTotalIncomeStatement ??= new(_timeProvider, _securityIdentifier);
+        private NonOperatingIncomeExpensesTotalIncomeStatement _nonOperatingIncomeExpensesTotalIncomeStatement;
+
+        /// <summary>
+        /// This data point represents the calculated variant of net Interest income/expense. This is calculated by using the most complete version of either reported Net Interest Income/Expense or Net Interest Income/Expense from supplemental information.
+        /// </summary>
+        /// <remarks>
+        /// Morningstar DataId: EQWF5
+        /// </remarks>
+        [JsonProperty("EQWF5")]
+        public NetInterestIncomeExpenseIncomeStatement NetInterestIncomeExpense => _netInterestIncomeExpenseIncomeStatement ??= new(_timeProvider, _securityIdentifier);
+        private NetInterestIncomeExpenseIncomeStatement _netInterestIncomeExpenseIncomeStatement;
+
+        /// <summary>
+        /// Difference between total interest and other finance income and total interest and other finance expense reported in the non-operating section of the Income Statement.
+        /// </summary>
+        /// <remarks>
+        /// Morningstar DataId: EQLTG
+        /// </remarks>
+        [JsonProperty("EQLTG")]
+        public TotalNetFinanceIncomeExpenseIncomeStatement TotalNetFinanceIncomeExpense => _totalNetFinanceIncomeExpenseIncomeStatement ??= new(_timeProvider, _securityIdentifier);
+        private TotalNetFinanceIncomeExpenseIncomeStatement _totalNetFinanceIncomeExpenseIncomeStatement;
+
+        /// <summary>
+        /// This data point represents a company's implied cost of debt. This is calculated using interest expense reported in the income statement divided by a company's total debt from its balance sheet.
+        /// </summary>
+        /// <remarks>
+        /// Morningstar DataId: EQJVB
+        /// </remarks>
+        [JsonProperty("EQJVB")]
+        public InterestRateIncomeStatement InterestRate => _interestRateIncomeStatement ??= new(_timeProvider, _securityIdentifier);
+        private InterestRateIncomeStatement _interestRateIncomeStatement;
+
+        /// <summary>
+        /// This data point represents the earnings the company generated before interest; tax and amortization expenses. This can be used to measure a company's profitability. This is calculated using Earnings Before Interest; Tax; Depreciation and Amortization minus Depreciation.
+        /// </summary>
+        /// <remarks>
+        /// Morningstar DataId: EQ09K
+        /// </remarks>
+        [JsonProperty("EQ09K")]
+        public EBITAIncomeStatement EBITA => _eBITAIncomeStatement ??= new(_timeProvider, _securityIdentifier);
+        private EBITAIncomeStatement _eBITAIncomeStatement;
+
+        /// <summary>
+        /// This data point represents the subtotal of irregular and non-recurring items (before-tax) based on CPMS (Computerized Portfolio Management Services) methodology standards.
+        /// </summary>
+        /// <remarks>
+        /// Morningstar DataId: EQ0XL
+        /// </remarks>
+        [JsonProperty("EQ0XL")]
+        public TotalUnusualItemsBeforeTaxIncomeStatement TotalUnusualItemsBeforeTax => _totalUnusualItemsBeforeTaxIncomeStatement ??= new(_timeProvider, _securityIdentifier);
+        private TotalUnusualItemsBeforeTaxIncomeStatement _totalUnusualItemsBeforeTaxIncomeStatement;
+
+        /// <summary>
+        /// This data point represents the subtotal of irregular and non-recurring items (after-tax) based on CPMS (Computerized Portfolio Management Services) methodology standards.
+        /// </summary>
+        /// <remarks>
+        /// Morningstar DataId: EQ8Y6
+        /// </remarks>
+        [JsonProperty("EQ8Y6")]
+        public TotalUnusualItemsAfterTaxIncomeStatement TotalUnusualItemsAfterTax => _totalUnusualItemsAfterTaxIncomeStatement ??= new(_timeProvider, _securityIdentifier);
+        private TotalUnusualItemsAfterTaxIncomeStatement _totalUnusualItemsAfterTaxIncomeStatement;
+
+        /// <summary>
+        /// Net realized gain or loss from investment assets such as bonds; stocks; mutual funds; loans; investments in affiliated companies; foreign exchange and other investments reported in the non-operating section of the Income Statement.
+        /// </summary>
+        /// <remarks>
+        /// Morningstar DataId: EQYSV
+        /// </remarks>
+        [JsonProperty("EQYSV")]
+        public NetInvestmentIncomeValueIncomeStatement NetInvestmentIncomeValue => _netInvestmentIncomeValueIncomeStatement ??= new(_timeProvider, _securityIdentifier);
+        private NetInvestmentIncomeValueIncomeStatement _netInvestmentIncomeValueIncomeStatement;
+
+        /// <summary>
+        /// Income or expenses from any other activity associated with normal operations that are not categorized above. Includes: amortization of deferred revenues/sales commissions/charges/ etc. as these are related to deferred or accrued operating income/expense
+        /// </summary>
+        /// <remarks>
+        /// Morningstar DataId: EQJNM
+        /// </remarks>
+        [JsonProperty("EQJNM")]
+        public OtherIncomeExpenseOperatingIncomeStatement OtherIncomeExpenseOperating => _otherIncomeExpenseOperatingIncomeStatement ??= new(_timeProvider, _securityIdentifier);
+        private OtherIncomeExpenseOperatingIncomeStatement _otherIncomeExpenseOperatingIncomeStatement;
+
+        /// <summary>
+        /// Revenue derived based on requirements from NASDAQ. For companies using the bank industry template; it is calculated using Net Interest Income; adding back interest expense to derive interest income revenue for the bank; and adding non-interest income to derive unadjusted revenue. For companies using the normal; insurance and investment templates; unadjusted revenue is the same as the company's total revenue.
+        /// </summary>
+        /// <remarks>
+        /// Morningstar DataId: EQYSH
+        /// </remarks>
+        [JsonProperty("EQYSH")]
+        public UnadjustedRevenueIncomeStatement UnadjustedRevenue => _unadjustedRevenueIncomeStatement ??= new(_timeProvider, _securityIdentifier);
+        private UnadjustedRevenueIncomeStatement _unadjustedRevenueIncomeStatement;
+
+        /// <summary>
+        /// This data point represents the summation of realized investment gains on the company's assets. This is calculated using Gain/Loss on Disposal/Sale of Business + Gain/Loss on Disposal/Sale of Fixed Assets. For banking companies; this also includes Realized Gain/Loss on Sale of Loans and Lease.
+        /// </summary>
+        /// <remarks>
+        /// Morningstar DataId: EQUEX
+        /// </remarks>
+        [JsonProperty("EQUEX")]
+        public RealizedInvestmentGainsIncomeStatement RealizedInvestmentGains => _realizedInvestmentGainsIncomeStatement ??= new(_timeProvider, _securityIdentifier);
+        private RealizedInvestmentGainsIncomeStatement _realizedInvestmentGainsIncomeStatement;
 
         /// <summary>
         /// Creates a new instance for the given time and security

@@ -1,4 +1,4 @@
-/*
+﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2023 QuantConnect Corporation.
  *
@@ -413,7 +413,9 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 14042
         /// </remarks>
         [JsonProperty("14042")]
-        public string ForwardCalculationStyle => FundamentalService.Get<string>(_timeProvider.GetUtcNow(), _securityIdentifier, FundamentalProperty.ValuationRatios_ForwardCalculationStyle);
+        [Obsolete("ForwardCalculationStyle was retired by Morningstar in 2026; no replacement is available.")]
+        [JsonIgnore]
+        public string ForwardCalculationStyle => throw new NotSupportedException("ForwardCalculationStyle was retired by Morningstar in 2026; no replacement is available.");
 
         /// <summary>
         /// Used to collect the forward dividend for companies where our formula will not produce the correct value.
@@ -431,7 +433,9 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 14044
         /// </remarks>
         [JsonProperty("14044")]
-        public string TrailingCalculationStyle => FundamentalService.Get<string>(_timeProvider.GetUtcNow(), _securityIdentifier, FundamentalProperty.ValuationRatios_TrailingCalculationStyle);
+        [Obsolete("TrailingCalculationStyle was retired by Morningstar in 2026; no replacement is available.")]
+        [JsonIgnore]
+        public string TrailingCalculationStyle => throw new NotSupportedException("TrailingCalculationStyle was retired by Morningstar in 2026; no replacement is available.");
 
         /// <summary>
         /// Used to collect the trailing dividend for companies where our formula will not produce the correct value.
@@ -1143,6 +1147,384 @@ namespace QuantConnect.Data.Fundamental
         /// </remarks>
         [JsonProperty("14123")]
         public double NormalizedPEGRatio => FundamentalService.Get<double>(_timeProvider.GetUtcNow(), _securityIdentifier, FundamentalProperty.ValuationRatios_NormalizedPEGRatio);
+
+        /// <summary>
+        /// Normalized earnings divided by price
+        /// </summary>
+        /// <remarks>
+        /// Morningstar DataId: EQXW6
+        /// </remarks>
+        [JsonProperty("EQXW6")]
+        public double NormalizedEarningsYield => FundamentalService.Get<double>(_timeProvider.GetUtcNow(), _securityIdentifier, FundamentalProperty.ValuationRatios_NormalizedEarningsYield);
+
+        /// <summary>
+        /// Diluted enterprise value divided by total assets
+        /// </summary>
+        /// <remarks>
+        /// Morningstar DataId: EQWA6
+        /// </remarks>
+        [JsonProperty("EQWA6")]
+        public double DilutedEVToAssets => FundamentalService.Get<double>(_timeProvider.GetUtcNow(), _securityIdentifier, FundamentalProperty.ValuationRatios_DilutedEVToAssets);
+
+        /// <summary>
+        /// Diluted enterprise value divided by revenue
+        /// </summary>
+        /// <remarks>
+        /// Morningstar DataId: EQS15
+        /// </remarks>
+        [JsonProperty("EQS15")]
+        public double DilutedEVToRevenue => FundamentalService.Get<double>(_timeProvider.GetUtcNow(), _securityIdentifier, FundamentalProperty.ValuationRatios_DilutedEVToRevenue);
+
+        /// <summary>
+        /// Diluted enterprise value divided by EBITDA
+        /// </summary>
+        /// <remarks>
+        /// Morningstar DataId: EQK4H
+        /// </remarks>
+        [JsonProperty("EQK4H")]
+        public double DilutedEVToEBITDA => FundamentalService.Get<double>(_timeProvider.GetUtcNow(), _securityIdentifier, FundamentalProperty.ValuationRatios_DilutedEVToEBITDA);
+
+        /// <summary>
+        /// Diluted enterprise value divided by EBIT
+        /// </summary>
+        /// <remarks>
+        /// Morningstar DataId: EQVQR
+        /// </remarks>
+        [JsonProperty("EQVQR")]
+        public double DilutedEVToEBIT => FundamentalService.Get<double>(_timeProvider.GetUtcNow(), _securityIdentifier, FundamentalProperty.ValuationRatios_DilutedEVToEBIT);
+
+        /// <summary>
+        /// Diluted enterprise value divided by free cash flow
+        /// </summary>
+        /// <remarks>
+        /// Morningstar DataId: EQENX
+        /// </remarks>
+        [JsonProperty("EQENX")]
+        public double DilutedEVToFCF => FundamentalService.Get<double>(_timeProvider.GetUtcNow(), _securityIdentifier, FundamentalProperty.ValuationRatios_DilutedEVToFCF);
+
+        /// <summary>
+        /// Diluted enterprise value divided by normalized EBITDA
+        /// </summary>
+        /// <remarks>
+        /// Morningstar DataId: EQ03L
+        /// </remarks>
+        [JsonProperty("EQ03L")]
+        public double DilutedEVToNormalizedEBITDA => FundamentalService.Get<double>(_timeProvider.GetUtcNow(), _securityIdentifier, FundamentalProperty.ValuationRatios_DilutedEVToNormalizedEBITDA);
+
+        /// <summary>
+        /// Diluted enterprise value divided by normalized EBIT
+        /// </summary>
+        /// <remarks>
+        /// Morningstar DataId: EQ49U
+        /// </remarks>
+        [JsonProperty("EQ49U")]
+        public double DilutedEVToNormalizedEBIT => FundamentalService.Get<double>(_timeProvider.GetUtcNow(), _securityIdentifier, FundamentalProperty.ValuationRatios_DilutedEVToNormalizedEBIT);
+
+        /// <summary>
+        /// Enterprise value divided by normalized EBITDA
+        /// </summary>
+        /// <remarks>
+        /// Morningstar DataId: EQU5W
+        /// </remarks>
+        [JsonProperty("EQU5W")]
+        public double NormalizedEVToEBITDA => FundamentalService.Get<double>(_timeProvider.GetUtcNow(), _securityIdentifier, FundamentalProperty.ValuationRatios_NormalizedEVToEBITDA);
+
+        /// <summary>
+        /// Enterprise value divided by normalized EBIT
+        /// </summary>
+        /// <remarks>
+        /// Morningstar DataId: EQA80
+        /// </remarks>
+        [JsonProperty("EQA80")]
+        public double NormalizedEVToEBIT => FundamentalService.Get<double>(_timeProvider.GetUtcNow(), _securityIdentifier, FundamentalProperty.ValuationRatios_NormalizedEVToEBIT);
+
+        /// <summary>
+        /// Total debt divided by enterprise value
+        /// </summary>
+        /// <remarks>
+        /// Morningstar DataId: EQYLK
+        /// </remarks>
+        [JsonProperty("EQYLK")]
+        public double TotalDebtToEV => FundamentalService.Get<double>(_timeProvider.GetUtcNow(), _securityIdentifier, FundamentalProperty.ValuationRatios_TotalDebtToEV);
+
+        /// <summary>
+        /// Five year average of enterprise value to EBITDA
+        /// </summary>
+        /// <remarks>
+        /// Morningstar DataId: EQJQN
+        /// </remarks>
+        [JsonProperty("EQJQN")]
+        public double EVToEBITDA5YrAvg => FundamentalService.Get<double>(_timeProvider.GetUtcNow(), _securityIdentifier, FundamentalProperty.ValuationRatios_EVToEBITDA5YrAvg);
+
+        /// <summary>
+        /// Five year average of enterprise value to EBIT
+        /// </summary>
+        /// <remarks>
+        /// Morningstar DataId: EQ324
+        /// </remarks>
+        [JsonProperty("EQ324")]
+        public double EVToEBIT5YrAvg => FundamentalService.Get<double>(_timeProvider.GetUtcNow(), _securityIdentifier, FundamentalProperty.ValuationRatios_EVToEBIT5YrAvg);
+
+        /// <summary>
+        /// Five year average of the price to book ratio
+        /// </summary>
+        /// <remarks>
+        /// Morningstar DataId: EQSC9
+        /// </remarks>
+        [JsonProperty("EQSC9")]
+        public double PBRatio5YrAvg => FundamentalService.Get<double>(_timeProvider.GetUtcNow(), _securityIdentifier, FundamentalProperty.ValuationRatios_PBRatio5YrAvg);
+
+        /// <summary>
+        /// Five year average of the price to sales ratio
+        /// </summary>
+        /// <remarks>
+        /// Morningstar DataId: EQPRD
+        /// </remarks>
+        [JsonProperty("EQPRD")]
+        public double PSRatio5YrAvg => FundamentalService.Get<double>(_timeProvider.GetUtcNow(), _securityIdentifier, FundamentalProperty.ValuationRatios_PSRatio5YrAvg);
+
+        /// <summary>
+        /// One year average of the price to free cash flow ratio
+        /// </summary>
+        /// <remarks>
+        /// Morningstar DataId: EQWY2
+        /// </remarks>
+        [JsonProperty("EQWY2")]
+        public double FCFRatio1YrAvg => FundamentalService.Get<double>(_timeProvider.GetUtcNow(), _securityIdentifier, FundamentalProperty.ValuationRatios_FCFRatio1YrAvg);
+
+        /// <summary>
+        /// Five year average of the price to free cash flow ratio
+        /// </summary>
+        /// <remarks>
+        /// Morningstar DataId: EQY80
+        /// </remarks>
+        [JsonProperty("EQY80")]
+        public double FCFRatio5YrAvg => FundamentalService.Get<double>(_timeProvider.GetUtcNow(), _securityIdentifier, FundamentalProperty.ValuationRatios_FCFRatio5YrAvg);
+
+        /// <summary>
+        /// Ten year average of the price to free cash flow ratio
+        /// </summary>
+        /// <remarks>
+        /// Morningstar DataId: EQGOU
+        /// </remarks>
+        [JsonProperty("EQGOU")]
+        public double FCFRatio10YrAvg => FundamentalService.Get<double>(_timeProvider.GetUtcNow(), _securityIdentifier, FundamentalProperty.ValuationRatios_FCFRatio10YrAvg);
+
+        /// <summary>
+        /// Five year average of the price to cash flow ratio
+        /// </summary>
+        /// <remarks>
+        /// Morningstar DataId: EQ7GK
+        /// </remarks>
+        [JsonProperty("EQ7GK")]
+        public double PCashRatio5YrAvg => FundamentalService.Get<double>(_timeProvider.GetUtcNow(), _securityIdentifier, FundamentalProperty.ValuationRatios_PCashRatio5YrAvg);
+
+        /// <summary>
+        /// Five year average of the earning yield
+        /// </summary>
+        /// <remarks>
+        /// Morningstar DataId: EQIEM
+        /// </remarks>
+        [JsonProperty("EQIEM")]
+        public double EarningYield5YrAvg => FundamentalService.Get<double>(_timeProvider.GetUtcNow(), _securityIdentifier, FundamentalProperty.ValuationRatios_EarningYield5YrAvg);
+
+        /// <summary>
+        /// Five year average of the buy back yield
+        /// </summary>
+        /// <remarks>
+        /// Morningstar DataId: EQ0L7
+        /// </remarks>
+        [JsonProperty("EQ0L7")]
+        public double BuyBackYield5YrAvg => FundamentalService.Get<double>(_timeProvider.GetUtcNow(), _securityIdentifier, FundamentalProperty.ValuationRatios_BuyBackYield5YrAvg);
+
+        /// <summary>
+        /// Five year average of the total yield
+        /// </summary>
+        /// <remarks>
+        /// Morningstar DataId: EQCSM
+        /// </remarks>
+        [JsonProperty("EQCSM")]
+        public double TotalYield5YrAvg => FundamentalService.Get<double>(_timeProvider.GetUtcNow(), _securityIdentifier, FundamentalProperty.ValuationRatios_TotalYield5YrAvg);
+
+        /// <summary>
+        /// The per share value of Cash And Cash Equivalents: This is derived using Cash And Cash Equivalents divided by the company's total shares outstanding as of the financial report period end date. Cash And Cash Equivalents: Total of all cash and cash equivalents reported by a company
+        /// </summary>
+        /// <remarks>
+        /// Morningstar DataId: EQGUS
+        /// </remarks>
+        [JsonProperty("EQGUS")]
+        public double CashAndCashEquivalentsPerShare => FundamentalService.Get<double>(_timeProvider.GetUtcNow(), _securityIdentifier, FundamentalProperty.ValuationRatios_CashAndCashEquivalentsPerShare);
+
+        /// <summary>
+        /// This ratio represents the pecentage of net income that the company keeps as retained earnings rather than paying out as dividends. This can be used to indicate whether or not the company is a growth company. This is calculated using 1 minus the Dividend Payout Ratio.
+        /// </summary>
+        /// <remarks>
+        /// Morningstar DataId: EQ0I2
+        /// </remarks>
+        [JsonProperty("EQ0I2")]
+        public double RetentionRate => FundamentalService.Get<double>(_timeProvider.GetUtcNow(), _securityIdentifier, FundamentalProperty.ValuationRatios_RetentionRate);
+
+        /// <summary>
+        /// This ratio represents the pecentage of normalized income that the company keeps as retained earnings rather than paying out as dividends. This can be used to indicate whether or not the company is a growth company. This is calculated using 1 minus the Normalized Dividend Payout Ratio.
+        /// </summary>
+        /// <remarks>
+        /// Morningstar DataId: EQ8MC
+        /// </remarks>
+        [JsonProperty("EQ8MC")]
+        public double NormalizedRetentionRate => FundamentalService.Get<double>(_timeProvider.GetUtcNow(), _securityIdentifier, FundamentalProperty.ValuationRatios_NormalizedRetentionRate);
+
+        /// <summary>
+        /// This ratio represents the value of the company's dividend paid back to shareholders relative to its normalized net income. This can be used to measure the amount a company is paying back to shareholders versus retaining for future growth. This is calculated using Dividend Per Share divided by Normalized Earnings Per Share.
+        /// </summary>
+        /// <remarks>
+        /// Morningstar DataId: EQCGE
+        /// </remarks>
+        [JsonProperty("EQCGE")]
+        public double NormalizedDividendPayOutRatio => FundamentalService.Get<double>(_timeProvider.GetUtcNow(), _securityIdentifier, FundamentalProperty.ValuationRatios_NormalizedDividendPayOutRatio);
+
+        /// <summary>
+        /// This calculation represents the Net earnings per share retained by the company as a percentage of Common Equity Book Value. This can be used as a measure of growth as the reinvestment rate is an estimate of how much a Company's book value is expected to grow over the current year. This is calculated using Earnings Per Share (TTM) net of Dividends Per Share (TTM) divided by average Common Equity Book Value per share.
+        /// </summary>
+        /// <remarks>
+        /// Morningstar DataId: EQ9DZ
+        /// </remarks>
+        [JsonProperty("EQ9DZ")]
+        public double ReinvestmentRate => FundamentalService.Get<double>(_timeProvider.GetUtcNow(), _securityIdentifier, FundamentalProperty.ValuationRatios_ReinvestmentRate);
+
+        /// <summary>
+        /// This calculation represents the Normalized net earnings per share retained by the company as a percentage of Common Equity Book Value. This can be used as a measure of growth as the reinvestment rate is an estimate of how much a Company's book value is expected to grow over the current year. This is calculated using Normalized Earnings Per Share (TTM) net of Dividends Per Share (TTM) divided by average Common Equity Book Value per share.
+        /// </summary>
+        /// <remarks>
+        /// Morningstar DataId: EQZ6G
+        /// </remarks>
+        [JsonProperty("EQZ6G")]
+        public double NormalizedReinvestmentRate => FundamentalService.Get<double>(_timeProvider.GetUtcNow(), _securityIdentifier, FundamentalProperty.ValuationRatios_NormalizedReinvestmentRate);
+
+        /// <summary>
+        /// The per share value of Cash; Cash Equivalents and Short Term Investments: This is derived using Cash; Cash Equivalents and Short Term Investments divided by the company's total shares outstanding as of the financial report period end date. Cash; Cash Equivalents and Short Term Investments: Total of all cash; cash equivalents and short term investments reported by a company
+        /// </summary>
+        /// <remarks>
+        /// Morningstar DataId: EQC0T
+        /// </remarks>
+        [JsonProperty("EQC0T")]
+        public double CashCashEquivalentsAndShortTermInvestmentsPerShare => FundamentalService.Get<double>(_timeProvider.GetUtcNow(), _securityIdentifier, FundamentalProperty.ValuationRatios_CashCashEquivalentsAndShortTermInvestmentsPerShare);
+
+        /// <summary>
+        /// This ratio represents the rate of change of Sales Per Share. This can be used to determine whether trailing sales per share has increased or decreased over the past quarter. This is calculated as the percentage change between the last TTM value of Sales Per Share and the TTM value of Sales Per Share one quarter ago (6 Months ago for semi-annual reporting companies).
+        /// </summary>
+        /// <remarks>
+        /// Morningstar DataId: EQIFE
+        /// </remarks>
+        [JsonProperty("EQIFE")]
+        public double SalesPerShareMomentum => FundamentalService.Get<double>(_timeProvider.GetUtcNow(), _securityIdentifier, FundamentalProperty.ValuationRatios_SalesPerShareMomentum);
+
+        /// <summary>
+        /// This ratio represents the value of a company's stock price relative to its tangible book value per share. This can be used to evaluate the stock price. This is calculated using Stock Price divided by Common Equity Book Value net of Net Intangible Assets per share.
+        /// </summary>
+        /// <remarks>
+        /// Morningstar DataId: EQ0SB
+        /// </remarks>
+        [JsonProperty("EQ0SB")]
+        public double PriceToTangibleBookValueRatio => FundamentalService.Get<double>(_timeProvider.GetUtcNow(), _securityIdentifier, FundamentalProperty.ValuationRatios_PriceToTangibleBookValueRatio);
+
+        /// <summary>
+        /// The per share value of Net Intangible Assets: This is derived using Net Intangible Assets divided by the company's total shares outstanding as of the financial report period end date. Net Intangible Assets: Total net book value of goodwill and all intangible assets calculated using Gross Goodwill and Other Intangible assets; less Accumulated Amortization and Impairments.
+        /// </summary>
+        /// <remarks>
+        /// Morningstar DataId: EQCT8
+        /// </remarks>
+        [JsonProperty("EQCT8")]
+        public double NetIntangibleAssetsPerShare => FundamentalService.Get<double>(_timeProvider.GetUtcNow(), _securityIdentifier, FundamentalProperty.ValuationRatios_NetIntangibleAssetsPerShare);
+
+        /// <summary>
+        /// This calculation represents the rate of change of trailing Earnings Per Share. This can be used to determine whether trailing earnings per share has increased or decreased over the past quarter. This is calculated as the percentage change between the last TTM value of Earnings Per Share and the TTM value of Earnings Per Share one quarter ago (6 Months ago for semi-annual reporting companies).
+        /// </summary>
+        /// <remarks>
+        /// Morningstar DataId: EQQOW
+        /// </remarks>
+        [JsonProperty("EQQOW")]
+        public double EarningsPerShareMomentum => FundamentalService.Get<double>(_timeProvider.GetUtcNow(), _securityIdentifier, FundamentalProperty.ValuationRatios_EarningsPerShareMomentum);
+
+        /// <summary>
+        /// This calculation represents the rate of change of Cash Flow from Operating Activities per Share. This can be used to determine whether trailing cash flows have increased or decreased over the past quarter. This is calculated as the percentage change between the latest trailing twelve months of cash flow from operations per share and the trailing twelve months of cash flow from operations from one quarter ago (6 months ago for semi-annual reporting companies).
+        /// </summary>
+        /// <remarks>
+        /// Morningstar DataId: EQQPE
+        /// </remarks>
+        [JsonProperty("EQQPE")]
+        public double CashFlowPerShareMomentum => FundamentalService.Get<double>(_timeProvider.GetUtcNow(), _securityIdentifier, FundamentalProperty.ValuationRatios_CashFlowPerShareMomentum);
+
+        /// <summary>
+        /// This ratio represents the rate of change of EBITDA Per Share. This can be used to determine whether trailing EBITDA per share has increased or decreased over the past quarter. This is calculated as the percentage change between the last TTM value of EBITDA Per Share and the TTM value of EBITDA Per Share one quarter ago (6 Months ago for semi-annual reporting companies).
+        /// </summary>
+        /// <remarks>
+        /// Morningstar DataId: EQYWA
+        /// </remarks>
+        [JsonProperty("EQYWA")]
+        public double EBITDAPerShareMomentum => FundamentalService.Get<double>(_timeProvider.GetUtcNow(), _securityIdentifier, FundamentalProperty.ValuationRatios_EBITDAPerShareMomentum);
+
+        /// <summary>
+        /// This ratio represents the rate of change of Normalized EBITDA Per Share. This can be used to determine whether trailing Normalized EBITDA per share has increased or decreased over the past quarter. This is calculated as the percentage change between the last TTM value of Normalized EBITDA Per Share and the TTM value of Normalized EBITDA Per Share one quarter ago (6 Months ago for semi-annual reporting companies).
+        /// </summary>
+        /// <remarks>
+        /// Morningstar DataId: EQHT6
+        /// </remarks>
+        [JsonProperty("EQHT6")]
+        public double NormalizedEBITDAPerShareMomentum => FundamentalService.Get<double>(_timeProvider.GetUtcNow(), _securityIdentifier, FundamentalProperty.ValuationRatios_NormalizedEBITDAPerShareMomentum);
+
+        /// <summary>
+        /// This ratio represents the value of a company's stock price relative to its EBITDAR per share. This can be used to evaluate the stock price. This is calculated using Stock Price divided by EBITDAR per share (TTM).
+        /// </summary>
+        /// <remarks>
+        /// Morningstar DataId: EQ9JW
+        /// </remarks>
+        [JsonProperty("EQ9JW")]
+        public double PriceToEBITDARRatio => FundamentalService.Get<double>(_timeProvider.GetUtcNow(), _securityIdentifier, FundamentalProperty.ValuationRatios_PriceToEBITDARRatio);
+
+        /// <summary>
+        /// This ratio represents the value of a company's stock price relative to its Normalized EBITDAR per share. This can be used to evaluate the stock price. This is calculated using Stock Price divided by Normalized EBITDAR per share (TTM).
+        /// </summary>
+        /// <remarks>
+        /// Morningstar DataId: EQFGM
+        /// </remarks>
+        [JsonProperty("EQFGM")]
+        public double NormalizedPriceToEBITDARRatio => FundamentalService.Get<double>(_timeProvider.GetUtcNow(), _securityIdentifier, FundamentalProperty.ValuationRatios_NormalizedPriceToEBITDARRatio);
+
+        /// <summary>
+        /// This ratio represents the value of a company's stock price relative to its normalized EBITDA per share. This can be used to evaluate the stock price. This is calculated using Stock Price divided by normalized EBITDA per share (TTM).
+        /// </summary>
+        /// <remarks>
+        /// Morningstar DataId: EQI4Z
+        /// </remarks>
+        [JsonProperty("EQI4Z")]
+        public double NormalizedPriceToEBITDARatio => FundamentalService.Get<double>(_timeProvider.GetUtcNow(), _securityIdentifier, FundamentalProperty.ValuationRatios_NormalizedPriceToEBITDARatio);
+
+        /// <summary>
+        /// This ratio represents the value of a company's stock price relative to its EBIT per share. This can be used to evaluate the stock price. This is calculated using Stock Price divided by EBIT per share (TTM).
+        /// </summary>
+        /// <remarks>
+        /// Morningstar DataId: EQTIL
+        /// </remarks>
+        [JsonProperty("EQTIL")]
+        public double PriceToEBITRatio => FundamentalService.Get<double>(_timeProvider.GetUtcNow(), _securityIdentifier, FundamentalProperty.ValuationRatios_PriceToEBITRatio);
+
+        /// <summary>
+        /// This ratio represents the value of a company's stock price relative to its Normalized EBIT per share. This can be used to evaluate the stock price. This is calculated using Stock Price divided by Normalized EBIT per share (TTM).
+        /// </summary>
+        /// <remarks>
+        /// Morningstar DataId: EQS52
+        /// </remarks>
+        [JsonProperty("EQS52")]
+        public double NormalizedPriceToEBITRatio => FundamentalService.Get<double>(_timeProvider.GetUtcNow(), _securityIdentifier, FundamentalProperty.ValuationRatios_NormalizedPriceToEBITRatio);
+
+        /// <summary>
+        /// Five year average value of dividend payout ratio; calculated by using our standard growth methodology
+        /// </summary>
+        /// <remarks>
+        /// Morningstar DataId: EQHHA
+        /// </remarks>
+        [JsonProperty("EQHHA")]
+        public double DividendPayoutRatio5YrAvg => FundamentalService.Get<double>(_timeProvider.GetUtcNow(), _securityIdentifier, FundamentalProperty.ValuationRatios_DividendPayoutRatio5YrAvg);
 
         /// <summary>
         /// Creates a new instance for the given time and security

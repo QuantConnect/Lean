@@ -1,4 +1,4 @@
-/*
+﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2023 QuantConnect Corporation.
  *
@@ -43,7 +43,9 @@ namespace QuantConnect.Data.Fundamental
         /// Gets/sets the ThreeMonths period value for the field
         /// </summary>
         [JsonProperty("3M")]
-        public double ThreeMonths => FundamentalService.Get<double>(TimeProvider.GetUtcNow(), SecurityIdentifier, FundamentalProperty.OperationRatios_NetIncomePerEmployee_ThreeMonths);
+        [Obsolete("NetIncomePerEmployee.ThreeMonths was retired by Morningstar in 2026; use NetIncomePerEmployee.OneYear.")]
+        [JsonIgnore]
+        public double ThreeMonths => throw new NotSupportedException("NetIncomePerEmployee.ThreeMonths was retired by Morningstar in 2026; use NetIncomePerEmployee.OneYear.");
 
         /// <summary>
         /// Returns true if the field contains a value for the default period
@@ -73,7 +75,7 @@ namespace QuantConnect.Data.Fundamental
         public override IReadOnlyDictionary<string, double> GetPeriodValues()
         {
             var result = new Dictionary<string, double>();
-            foreach (var kvp in new[] { new Tuple<string, double>("1Y",OneYear), new Tuple<string, double>("3M",ThreeMonths) })
+            foreach (var kvp in new[] { new Tuple<string, double>("1Y",OneYear) })
             {
                 if(!BaseFundamentalDataProvider.IsNone(typeof(double), kvp.Item2))
                 {

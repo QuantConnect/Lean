@@ -1,4 +1,4 @@
-/*
+﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2023 QuantConnect Corporation.
  *
@@ -43,31 +43,41 @@ namespace QuantConnect.Data.Fundamental
         /// Gets/sets the OneMonth period value for the field
         /// </summary>
         [JsonProperty("1M")]
-        public double OneMonth => FundamentalService.Get<double>(TimeProvider.GetUtcNow(), SecurityIdentifier, FundamentalProperty.OperationRatios_InterestCoverage_OneMonth);
+        [Obsolete("InterestCoverage.OneMonth was retired by Morningstar in 2026; use InterestCoverage.OneYear.")]
+        [JsonIgnore]
+        public double OneMonth => throw new NotSupportedException("InterestCoverage.OneMonth was retired by Morningstar in 2026; use InterestCoverage.OneYear.");
 
         /// <summary>
         /// Gets/sets the TwoMonths period value for the field
         /// </summary>
         [JsonProperty("2M")]
-        public double TwoMonths => FundamentalService.Get<double>(TimeProvider.GetUtcNow(), SecurityIdentifier, FundamentalProperty.OperationRatios_InterestCoverage_TwoMonths);
+        [Obsolete("InterestCoverage.TwoMonths was retired by Morningstar in 2026; use InterestCoverage.OneYear.")]
+        [JsonIgnore]
+        public double TwoMonths => throw new NotSupportedException("InterestCoverage.TwoMonths was retired by Morningstar in 2026; use InterestCoverage.OneYear.");
 
         /// <summary>
         /// Gets/sets the ThreeMonths period value for the field
         /// </summary>
         [JsonProperty("3M")]
-        public double ThreeMonths => FundamentalService.Get<double>(TimeProvider.GetUtcNow(), SecurityIdentifier, FundamentalProperty.OperationRatios_InterestCoverage_ThreeMonths);
+        [Obsolete("InterestCoverage.ThreeMonths was retired by Morningstar in 2026; use InterestCoverage.OneYear.")]
+        [JsonIgnore]
+        public double ThreeMonths => throw new NotSupportedException("InterestCoverage.ThreeMonths was retired by Morningstar in 2026; use InterestCoverage.OneYear.");
 
         /// <summary>
         /// Gets/sets the SixMonths period value for the field
         /// </summary>
         [JsonProperty("6M")]
-        public double SixMonths => FundamentalService.Get<double>(TimeProvider.GetUtcNow(), SecurityIdentifier, FundamentalProperty.OperationRatios_InterestCoverage_SixMonths);
+        [Obsolete("InterestCoverage.SixMonths was retired by Morningstar in 2026; use InterestCoverage.OneYear.")]
+        [JsonIgnore]
+        public double SixMonths => throw new NotSupportedException("InterestCoverage.SixMonths was retired by Morningstar in 2026; use InterestCoverage.OneYear.");
 
         /// <summary>
         /// Gets/sets the NineMonths period value for the field
         /// </summary>
         [JsonProperty("9M")]
-        public double NineMonths => FundamentalService.Get<double>(TimeProvider.GetUtcNow(), SecurityIdentifier, FundamentalProperty.OperationRatios_InterestCoverage_NineMonths);
+        [Obsolete("InterestCoverage.NineMonths was retired by Morningstar in 2026; use InterestCoverage.OneYear.")]
+        [JsonIgnore]
+        public double NineMonths => throw new NotSupportedException("InterestCoverage.NineMonths was retired by Morningstar in 2026; use InterestCoverage.OneYear.");
 
         /// <summary>
         /// Returns true if the field contains a value for the default period
@@ -97,7 +107,7 @@ namespace QuantConnect.Data.Fundamental
         public override IReadOnlyDictionary<string, double> GetPeriodValues()
         {
             var result = new Dictionary<string, double>();
-            foreach (var kvp in new[] { new Tuple<string, double>("1Y",OneYear), new Tuple<string, double>("1M",OneMonth), new Tuple<string, double>("2M",TwoMonths), new Tuple<string, double>("3M",ThreeMonths), new Tuple<string, double>("6M",SixMonths), new Tuple<string, double>("9M",NineMonths) })
+            foreach (var kvp in new[] { new Tuple<string, double>("1Y",OneYear) })
             {
                 if(!BaseFundamentalDataProvider.IsNone(typeof(double), kvp.Item2))
                 {

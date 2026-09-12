@@ -1,4 +1,4 @@
-/*
+﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2023 QuantConnect Corporation.
  *
@@ -37,13 +37,17 @@ namespace QuantConnect.Data.Fundamental
         /// Gets/sets the OneMonth period value for the field
         /// </summary>
         [JsonProperty("1M")]
-        public DateTime OneMonth => FundamentalService.Get<DateTime>(TimeProvider.GetUtcNow(), SecurityIdentifier, FundamentalProperty.FinancialStatements_FileDate_OneMonth);
+        [Obsolete("FileDate.OneMonth was retired by Morningstar in 2026; use FileDate.ThreeMonths (also available: SixMonths, TwelveMonths).")]
+        [JsonIgnore]
+        public DateTime OneMonth => throw new NotSupportedException("FileDate.OneMonth was retired by Morningstar in 2026; use FileDate.ThreeMonths (also available: SixMonths, TwelveMonths).");
 
         /// <summary>
         /// Gets/sets the TwoMonths period value for the field
         /// </summary>
         [JsonProperty("2M")]
-        public DateTime TwoMonths => FundamentalService.Get<DateTime>(TimeProvider.GetUtcNow(), SecurityIdentifier, FundamentalProperty.FinancialStatements_FileDate_TwoMonths);
+        [Obsolete("FileDate.TwoMonths was retired by Morningstar in 2026; use FileDate.ThreeMonths (also available: SixMonths, TwelveMonths).")]
+        [JsonIgnore]
+        public DateTime TwoMonths => throw new NotSupportedException("FileDate.TwoMonths was retired by Morningstar in 2026; use FileDate.ThreeMonths (also available: SixMonths, TwelveMonths).");
 
         /// <summary>
         /// Gets/sets the ThreeMonths period value for the field
@@ -61,7 +65,9 @@ namespace QuantConnect.Data.Fundamental
         /// Gets/sets the NineMonths period value for the field
         /// </summary>
         [JsonProperty("9M")]
-        public DateTime NineMonths => FundamentalService.Get<DateTime>(TimeProvider.GetUtcNow(), SecurityIdentifier, FundamentalProperty.FinancialStatements_FileDate_NineMonths);
+        [Obsolete("FileDate.NineMonths was retired by Morningstar in 2026; use FileDate.ThreeMonths (also available: SixMonths, TwelveMonths).")]
+        [JsonIgnore]
+        public DateTime NineMonths => throw new NotSupportedException("FileDate.NineMonths was retired by Morningstar in 2026; use FileDate.ThreeMonths (also available: SixMonths, TwelveMonths).");
 
         /// <summary>
         /// Gets/sets the TwelveMonths period value for the field
@@ -97,7 +103,7 @@ namespace QuantConnect.Data.Fundamental
         public override IReadOnlyDictionary<string, DateTime> GetPeriodValues()
         {
             var result = new Dictionary<string, DateTime>();
-            foreach (var kvp in new[] { new Tuple<string, DateTime>("1M", OneMonth), new Tuple<string, DateTime>("2M", TwoMonths), new Tuple<string, DateTime>("3M", ThreeMonths), new Tuple<string, DateTime>("6M", SixMonths), new Tuple<string, DateTime>("9M", NineMonths), new Tuple<string, DateTime>("12M", TwelveMonths) })
+            foreach (var kvp in new[] { new Tuple<string, DateTime>("3M", ThreeMonths), new Tuple<string, DateTime>("6M", SixMonths), new Tuple<string, DateTime>("12M", TwelveMonths) })
             {
                 if (!BaseFundamentalDataProvider.IsNone(typeof(DateTime), kvp.Item2))
                 {

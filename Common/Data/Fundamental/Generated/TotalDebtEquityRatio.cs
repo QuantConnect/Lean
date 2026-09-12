@@ -1,4 +1,4 @@
-/*
+﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2023 QuantConnect Corporation.
  *
@@ -43,13 +43,17 @@ namespace QuantConnect.Data.Fundamental
         /// Gets/sets the OneMonth period value for the field
         /// </summary>
         [JsonProperty("1M")]
-        public double OneMonth => FundamentalService.Get<double>(TimeProvider.GetUtcNow(), SecurityIdentifier, FundamentalProperty.OperationRatios_TotalDebtEquityRatio_OneMonth);
+        [Obsolete("TotalDebtEquityRatio.OneMonth was retired by Morningstar in 2026; use TotalDebtEquityRatio.ThreeMonths (also available: SixMonths, OneYear).")]
+        [JsonIgnore]
+        public double OneMonth => throw new NotSupportedException("TotalDebtEquityRatio.OneMonth was retired by Morningstar in 2026; use TotalDebtEquityRatio.ThreeMonths (also available: SixMonths, OneYear).");
 
         /// <summary>
         /// Gets/sets the TwoMonths period value for the field
         /// </summary>
         [JsonProperty("2M")]
-        public double TwoMonths => FundamentalService.Get<double>(TimeProvider.GetUtcNow(), SecurityIdentifier, FundamentalProperty.OperationRatios_TotalDebtEquityRatio_TwoMonths);
+        [Obsolete("TotalDebtEquityRatio.TwoMonths was retired by Morningstar in 2026; use TotalDebtEquityRatio.ThreeMonths (also available: SixMonths, OneYear).")]
+        [JsonIgnore]
+        public double TwoMonths => throw new NotSupportedException("TotalDebtEquityRatio.TwoMonths was retired by Morningstar in 2026; use TotalDebtEquityRatio.ThreeMonths (also available: SixMonths, OneYear).");
 
         /// <summary>
         /// Gets/sets the ThreeMonths period value for the field
@@ -67,7 +71,9 @@ namespace QuantConnect.Data.Fundamental
         /// Gets/sets the NineMonths period value for the field
         /// </summary>
         [JsonProperty("9M")]
-        public double NineMonths => FundamentalService.Get<double>(TimeProvider.GetUtcNow(), SecurityIdentifier, FundamentalProperty.OperationRatios_TotalDebtEquityRatio_NineMonths);
+        [Obsolete("TotalDebtEquityRatio.NineMonths was retired by Morningstar in 2026; use TotalDebtEquityRatio.ThreeMonths (also available: SixMonths, OneYear).")]
+        [JsonIgnore]
+        public double NineMonths => throw new NotSupportedException("TotalDebtEquityRatio.NineMonths was retired by Morningstar in 2026; use TotalDebtEquityRatio.ThreeMonths (also available: SixMonths, OneYear).");
 
         /// <summary>
         /// Returns true if the field contains a value for the default period
@@ -97,7 +103,7 @@ namespace QuantConnect.Data.Fundamental
         public override IReadOnlyDictionary<string, double> GetPeriodValues()
         {
             var result = new Dictionary<string, double>();
-            foreach (var kvp in new[] { new Tuple<string, double>("1Y",OneYear), new Tuple<string, double>("1M",OneMonth), new Tuple<string, double>("2M",TwoMonths), new Tuple<string, double>("3M",ThreeMonths), new Tuple<string, double>("6M",SixMonths), new Tuple<string, double>("9M",NineMonths) })
+            foreach (var kvp in new[] { new Tuple<string, double>("1Y",OneYear), new Tuple<string, double>("3M",ThreeMonths), new Tuple<string, double>("6M",SixMonths) })
             {
                 if(!BaseFundamentalDataProvider.IsNone(typeof(double), kvp.Item2))
                 {
