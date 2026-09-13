@@ -57,8 +57,41 @@ namespace QuantConnect.Brokerages
             {SecurityType.Future, Market.CME},
             {SecurityType.FutureOption, Market.CME},
             {SecurityType.Forex, Market.Oanda},
-            {SecurityType.Cfd, Market.InteractiveBrokers}
+            {SecurityType.Cfd, Market.InteractiveBrokers},
+            // where the backtest data lives, IB's listing is checked by ticker
+            {SecurityType.Crypto, Market.Coinbase}
         }.ToReadOnlyDictionary();
+
+        /// <summary>
+        /// The only order types IB accepts for cryptocurrencies
+        /// </summary>
+        private static readonly IReadOnlySet<OrderType> _supportedCryptoOrderTypes = new HashSet<OrderType>
+        {
+            OrderType.Market,
+            OrderType.Limit
+        };
+
+        /// <summary>
+        /// How far from the best ask IB lets a cryptocurrency buy limit order sit, the greater of these two
+        /// </summary>
+        private const decimal _cryptoLimitPriceBand = 10m;
+        private const decimal _cryptoLimitPriceBandPercent = 0.0025m;
+
+        /// <summary>
+        /// IB routes API cryptocurrency orders from Sunday 03:00 to Friday 16:00 New York time only
+        /// </summary>
+        private static readonly Lazy<SecurityExchangeHours> _cryptoVenueHours = new(() =>
+            MarketHoursDatabase.FromDataFolder().GetExchangeHours(Market.InteractiveBrokers, null, SecurityType.Crypto));
+
+        /// <summary>
+        /// The cryptocurrency pairs IB lists, the <see cref="Market.InteractiveBrokers"/> entries of the symbol
+        /// properties database, keyed by ticker: the traded symbol stays on the market holding the backtest data
+        /// </summary>
+        private static readonly Lazy<HashSet<string>> _supportedCryptoPairs = new(() =>
+            SymbolPropertiesDatabase.FromDataFolder()
+                .GetSymbolPropertiesList(Market.InteractiveBrokers, SecurityType.Crypto)
+                .Select(entry => entry.Key.Symbol)
+                .ToHashSet(StringComparer.InvariantCultureIgnoreCase));
 
         /// <summary>
         /// Supported time in force
@@ -137,7 +170,13 @@ namespace QuantConnect.Brokerages
                 return 1m;
             }
 
-            return security.Type == SecurityType.Cfd ? 10m : base.GetLeverage(security);
+            return security.Type switch
+            {
+                SecurityType.Cfd => 10m,
+                // IB does not lend against cryptocurrencies
+                SecurityType.Crypto => 1m,
+                _ => base.GetLeverage(security)
+            };
         }
 
         /// <summary>
@@ -189,12 +228,70 @@ namespace QuantConnect.Brokerages
                 security.Type != SecurityType.FutureOption &&
                 security.Type != SecurityType.Index &&
                 security.Type != SecurityType.IndexOption &&
-                security.Type != SecurityType.Cfd)
+                security.Type != SecurityType.Cfd &&
+                security.Type != SecurityType.Crypto)
             {
                 message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
                     Messages.DefaultBrokerageModel.UnsupportedSecurityType(this, security));
 
                 return false;
+            }
+
+            if (security.Type == SecurityType.Crypto)
+            {
+                // from what is permanently wrong to what depends on the market: the pair, then the
+                // order, then the holdings, then the price, which is the only one a retry can fix
+                if (!_supportedCryptoPairs.Value.Contains(security.Symbol.Value))
+                {
+                    message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
+                        Messages.InteractiveBrokersBrokerageModel.UnsupportedCryptoPair(this, security));
+
+                    return false;
+                }
+
+                if (!_supportedCryptoOrderTypes.Contains(order.Type))
+                {
+                    message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
+                        Messages.InteractiveBrokersBrokerageModel.UnsupportedCryptoOrderType(this, order, _supportedCryptoOrderTypes));
+
+                    return false;
+                }
+
+                if (!IsValidOrderSize(security, order.Quantity, out message))
+                {
+                    return false;
+                }
+
+                if (order.Quantity < 0 && security.Holdings.Quantity < order.AbsoluteQuantity)
+                {
+                    message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
+                        Messages.InteractiveBrokersBrokerageModel.UnsupportedCryptoShortSale(this, security));
+
+                    return false;
+                }
+
+                if (!IsWithinCryptoLimitPriceBand(security, order, out message))
+                {
+                    return false;
+                }
+
+                if (order.Type == OrderType.Market && order.Direction == OrderDirection.Buy && security.Price <= 0)
+                {
+                    message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
+                        Messages.InteractiveBrokersBrokerageModel.CryptoBuyMarketOrderWithoutPrice(security));
+
+                    return false;
+                }
+
+                // the crypto market never closes, IB's venue does
+                var venueTime = security.LocalTime.ConvertTo(security.Exchange.TimeZone, _cryptoVenueHours.Value.TimeZone);
+                if (!_cryptoVenueHours.Value.IsOpen(venueTime, false))
+                {
+                    message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
+                        Messages.InteractiveBrokersBrokerageModel.CryptoVenueClosed(security, _cryptoVenueHours.Value.GetNextMarketOpen(venueTime, false)));
+
+                    return false;
+                }
             }
 
             // validate order quantity
@@ -261,6 +358,40 @@ namespace QuantConnect.Brokerages
         public override bool CanExecuteOrder(Security security, Order order)
         {
             return order.SecurityType != SecurityType.Base;
+        }
+
+        /// <summary>
+        /// Returns true if the given cryptocurrency limit order is priced where IB accepts it. A buy has
+        /// to be within 10 dollars or 0.25% of the best ask, whichever is greater, so it cannot rest below
+        /// the market. Sells are not restricted. The order is let through when there is no price to
+        /// compare against.
+        /// </summary>
+        private bool IsWithinCryptoLimitPriceBand(Security security, Order order, out BrokerageMessageEvent message)
+        {
+            message = null;
+
+            if (order is not LimitOrder limitOrder || order.Direction != OrderDirection.Buy)
+            {
+                return true;
+            }
+
+            // the ask is not always there, the last price is a good enough reference for the check
+            var reference = security.AskPrice > 0 ? security.AskPrice : security.Price;
+            if (reference <= 0)
+            {
+                return true;
+            }
+
+            var tolerance = Math.Max(_cryptoLimitPriceBand, reference * _cryptoLimitPriceBandPercent);
+            if (Math.Abs(limitOrder.LimitPrice - reference) <= tolerance)
+            {
+                return true;
+            }
+
+            message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
+                Messages.InteractiveBrokersBrokerageModel.InvalidCryptoLimitPrice(limitOrder, reference, tolerance));
+
+            return false;
         }
 
         /// <summary>
