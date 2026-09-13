@@ -98,6 +98,16 @@ namespace QuantConnect.Data
         public uint ContractDepthOffset { get; set; }
 
         /// <summary>
+        /// The continuous contract mapping offset in tradeable days
+        /// </summary>
+        public int DataMappingModeDaysOffset { get; set; }
+
+        /// <summary>
+        /// Optional contract expiration months to use when walking continuous future contract depth
+        /// </summary>
+        public IReadOnlyList<int> ContractMonthCycle { get; set; }
+
+        /// <summary>
         /// Gets the tradable days specified by this request, in the security's data time zone
         /// </summary>
         public override IEnumerable<DateTime> TradableDaysInDataTimeZone => Time.EachTradeableDayInTimeZone(ExchangeHours,
@@ -137,7 +147,9 @@ namespace QuantConnect.Data
             DataNormalizationMode dataNormalizationMode,
             TickType tickType,
             DataMappingMode dataMappingMode = DataMappingMode.OpenInterest,
-            uint contractDepthOffset = 0)
+            uint contractDepthOffset = 0,
+            int dataMappingModeDaysOffset = 0,
+            IReadOnlyList<int> contractMonthCycle = null)
             : base(startTimeUtc, endTimeUtc, exchangeHours, tickType, isCustomData, dataType)
         {
             Symbol = symbol;
@@ -149,6 +161,8 @@ namespace QuantConnect.Data
             TickType = tickType;
             DataMappingMode = dataMappingMode;
             ContractDepthOffset = contractDepthOffset;
+            DataMappingModeDaysOffset = dataMappingModeDaysOffset;
+            ContractMonthCycle = contractMonthCycle;
         }
 
         /// <summary>
@@ -161,7 +175,8 @@ namespace QuantConnect.Data
         public HistoryRequest(SubscriptionDataConfig config, SecurityExchangeHours hours, DateTime startTimeUtc, DateTime endTimeUtc)
             : this(startTimeUtc, endTimeUtc, config.Type, config.Symbol, config.Resolution,
                 hours, config.DataTimeZone, config.FillDataForward ? config.Resolution : (Resolution?)null,
-                config.ExtendedMarketHours, config.IsCustomData, config.DataNormalizationMode, config.TickType, config.DataMappingMode, config.ContractDepthOffset)
+                config.ExtendedMarketHours, config.IsCustomData, config.DataNormalizationMode, config.TickType, config.DataMappingMode,
+                config.ContractDepthOffset, config.DataMappingModeDaysOffset, config.ContractMonthCycle)
         {
         }
 
@@ -173,7 +188,8 @@ namespace QuantConnect.Data
         /// <param name="newEndTimeUtc">The end time for this request</param>
         public HistoryRequest(HistoryRequest request, Symbol newSymbol, DateTime newStartTimeUtc, DateTime newEndTimeUtc)
             : this (newStartTimeUtc, newEndTimeUtc, request.DataType, newSymbol, request.Resolution, request.ExchangeHours, request.DataTimeZone, request.FillForwardResolution,
-                  request.IncludeExtendedMarketHours, request.IsCustomData, request.DataNormalizationMode, request.TickType, request.DataMappingMode, request.ContractDepthOffset)
+                  request.IncludeExtendedMarketHours, request.IsCustomData, request.DataNormalizationMode, request.TickType, request.DataMappingMode,
+                  request.ContractDepthOffset, request.DataMappingModeDaysOffset, request.ContractMonthCycle)
         { }
     }
 }

@@ -52,7 +52,9 @@ namespace QuantConnect.Data.UniverseSelection
             UniverseSettings = universeSettings;
             _mapFileProvider = Composer.Instance.GetPart<IMapFileProvider>();
 
-            _config = new SubscriptionDataConfig(Configuration, dataMappingMode: UniverseSettings.DataMappingMode, symbol: _security.Symbol.Canonical);
+            _config = new SubscriptionDataConfig(Configuration, dataMappingMode: UniverseSettings.DataMappingMode, symbol: _security.Symbol.Canonical,
+                dataMappingModeDaysOffset: UniverseSettings.DataMappingModeDaysOffset,
+                contractMonthCycle: UniverseSettings.ContractMonthCycle);
         }
 
         /// <summary>
@@ -66,7 +68,8 @@ namespace QuantConnect.Data.UniverseSelection
             yield return _security.Symbol.Canonical;
 
             var mapFile = _mapFileProvider.ResolveMapFile(_config);
-            var mappedSymbol = mapFile.GetMappedSymbol(utcTime.ConvertFromUtc(_security.Exchange.TimeZone), dataMappingMode: _config.DataMappingMode);
+            var localTime = utcTime.ConvertFromUtc(_security.Exchange.TimeZone);
+            var mappedSymbol = mapFile.GetMappedSymbol(GetMappingSearchDate(localTime), dataMappingMode: _config.DataMappingMode);
             if (!string.IsNullOrEmpty(mappedSymbol) && mappedSymbol != _mappedSymbol)
             {
                 if (_currentSymbol != null)
@@ -77,7 +80,7 @@ namespace QuantConnect.Data.UniverseSelection
                 _mappedSymbol = mappedSymbol;
 
                 _currentSymbol = _security.Symbol.Canonical
-                    .UpdateMappedSymbol(mappedSymbol, Configuration.ContractDepthOffset)
+                    .UpdateMappedSymbol(mappedSymbol, Configuration.ContractDepthOffset, _config.ContractMonthCycle)
                     .Underlying;
             }
 
@@ -144,10 +147,22 @@ namespace QuantConnect.Data.UniverseSelection
                     subscriptionDataTypes: new List<Tuple<Type, TickType>> { pair },
                     dataMappingMode: universeSettings.DataMappingMode,
                     contractDepthOffset: (uint)Math.Abs(universeSettings.ContractDepthOffset),
+                    dataMappingModeDaysOffset: universeSettings.DataMappingModeDaysOffset,
+                    contractMonthCycle: universeSettings.ContractMonthCycle,
                     // open interest is internal and the underlying mapped contracts of the continuous canonical
                     isInternalFeed: !symbol.IsCanonical() || pair.Item2 == TickType.OpenInterest));
             }
             return configs;
+        }
+
+        private DateTime GetMappingSearchDate(DateTime localTime)
+        {
+            if (_config.DataMappingMode != DataMappingMode.TradingDaysBeforeExpiry || _config.DataMappingModeDaysOffset == 0)
+            {
+                return localTime;
+            }
+
+            return Time.AddTradeableDays(_security.Exchange.Hours, localTime, _config.DataMappingModeDaysOffset, Configuration.ExtendedMarketHours);
         }
 
         /// <summary>

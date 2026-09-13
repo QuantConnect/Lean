@@ -221,6 +221,18 @@ namespace QuantConnect.Tests.Common
         }
 
         [Test]
+        public void AddTradeableDaysSkipsClosedDates()
+        {
+            var exchange = CreateUsEquitySecurityExchangeHours();
+            var start = new DateTime(2018, 8, 31);
+            var expected = new DateTime(2018, 9, 4);
+
+            var actual = Time.AddTradeableDays(exchange, start, 1);
+
+            Assert.AreEqual(expected, actual);
+        }
+
+        [Test]
         public void MultipliesTimeSpans()
         {
             var interval = TimeSpan.FromSeconds(1);

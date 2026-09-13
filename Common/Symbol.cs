@@ -15,6 +15,7 @@
 */
 
 using System;
+using System.Collections.Generic;
 using ProtoBuf;
 using Python.Runtime;
 using Newtonsoft.Json;
@@ -482,6 +483,16 @@ namespace QuantConnect
         /// </summary>
         public Symbol UpdateMappedSymbol(string mappedSymbol, uint contractDepthOffset = 0)
         {
+            return UpdateMappedSymbol(mappedSymbol, contractDepthOffset, null);
+        }
+
+        /// <summary>
+        /// Creates new symbol with updated mapped symbol and optional future contract month cycle.
+        /// Symbol Mapping: When symbols change over time (e.g. CHASE-> JPM) need to update the symbol requested.
+        /// Method returns newly created symbol
+        /// </summary>
+        public Symbol UpdateMappedSymbol(string mappedSymbol, uint contractDepthOffset, IReadOnlyCollection<int> contractMonthCycle)
+        {
             // Throw for any option SecurityType that is not for equities, we don't support mapping for them (FOPs and Index Options)
             if (ID.SecurityType.IsOption() && SecurityType != SecurityType.Option)
             {
@@ -497,7 +508,7 @@ namespace QuantConnect
                 }
                 var id = SecurityIdentifier.Parse(mappedSymbol);
                 var underlying = new Symbol(id, mappedSymbol);
-                underlying = underlying.AdjustSymbolByOffset(contractDepthOffset);
+                underlying = underlying.AdjustSymbolByOffset(contractDepthOffset, contractMonthCycle);
 
                 // we map the underlying
                 return new Symbol(ID, underlying.Value, underlying);
@@ -513,7 +524,7 @@ namespace QuantConnect
             // This will ensure that we map all of the underlying Symbol(s) that also require mapping updates.
             if (HasUnderlying)
             {
-                underlyingSymbol = Underlying.UpdateMappedSymbol(mappedSymbol, contractDepthOffset);
+                underlyingSymbol = Underlying.UpdateMappedSymbol(mappedSymbol, contractDepthOffset, contractMonthCycle);
             }
 
             // If this Symbol is not a custom data type, and the security type does not support mapping,

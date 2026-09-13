@@ -16,6 +16,7 @@
 using System;
 using QuantConnect.Scheduling;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace QuantConnect.Data.UniverseSelection
 {
@@ -77,6 +78,17 @@ namespace QuantConnect.Data.UniverseSelection
         public int ContractDepthOffset { get; set; }
 
         /// <summary>
+        /// The continuous contract mapping offset in tradeable days.
+        /// For example, 30 will map 30 tradeable days before the mapped contract's normal mapping date
+        /// </summary>
+        public int DataMappingModeDaysOffset { get; set; }
+
+        /// <summary>
+        /// Optional contract expiration months to use when walking continuous future contract depth
+        /// </summary>
+        public IReadOnlyList<int> ContractMonthCycle { get; set; }
+
+        /// <summary>
         /// Allows a universe to specify which data types to add for a selected symbol
         /// </summary>
         public List<Tuple<Type, TickType>> SubscriptionDataTypes { get; set; }
@@ -101,13 +113,16 @@ namespace QuantConnect.Data.UniverseSelection
         /// <param name="asynchronous">True if universe selection can run asynchronous</param>
         /// <param name="selectionDateRule">If provided, will be used to determine universe selection schedule</param>
         public UniverseSettings(Resolution resolution, decimal leverage, bool fillForward, bool extendedMarketHours, TimeSpan minimumTimeInUniverse, DataNormalizationMode dataNormalizationMode = DataNormalizationMode.Adjusted,
-            DataMappingMode dataMappingMode = DataMappingMode.OpenInterest, int contractDepthOffset = 0, bool? asynchronous = null, IDateRule selectionDateRule = null)
+            DataMappingMode dataMappingMode = DataMappingMode.OpenInterest, int contractDepthOffset = 0, bool? asynchronous = null, IDateRule selectionDateRule = null,
+            int dataMappingModeDaysOffset = 0, IReadOnlyList<int> contractMonthCycle = null)
         {
             Resolution = resolution;
             Leverage = leverage;
             FillForward = fillForward;
             DataMappingMode = dataMappingMode;
             ContractDepthOffset = contractDepthOffset;
+            DataMappingModeDaysOffset = dataMappingModeDaysOffset;
+            ContractMonthCycle = contractMonthCycle?.ToArray();
             ExtendedMarketHours = extendedMarketHours;
             MinimumTimeInUniverse = minimumTimeInUniverse;
             DataNormalizationMode = dataNormalizationMode;
@@ -129,6 +144,8 @@ namespace QuantConnect.Data.UniverseSelection
             FillForward = universeSettings.FillForward;
             DataMappingMode = universeSettings.DataMappingMode;
             ContractDepthOffset = universeSettings.ContractDepthOffset;
+            DataMappingModeDaysOffset = universeSettings.DataMappingModeDaysOffset;
+            ContractMonthCycle = universeSettings.ContractMonthCycle?.ToArray();
             ExtendedMarketHours = universeSettings.ExtendedMarketHours;
             MinimumTimeInUniverse = universeSettings.MinimumTimeInUniverse;
             DataNormalizationMode = universeSettings.DataNormalizationMode;

@@ -556,6 +556,37 @@ namespace QuantConnect
         }
 
         /// <summary>
+        /// Adds the requested number of tradeable days to the supplied local date using the given exchange hours
+        /// </summary>
+        public static DateTime AddTradeableDays(SecurityExchangeHours exchange, DateTime from, int tradeableDays, bool extendedMarketHours = false)
+        {
+            if (tradeableDays < 0)
+            {
+                throw new ArgumentOutOfRangeException(nameof(tradeableDays), "The tradeable day offset must be greater than or equal to zero.");
+            }
+
+            if (tradeableDays == 0)
+            {
+                return from.Date;
+            }
+
+            var count = 0;
+            for (var day = from.Date.AddDays(1); ; day = day.AddDays(1))
+            {
+                if (!exchange.IsDateOpen(day, extendedMarketHours))
+                {
+                    continue;
+                }
+
+                count++;
+                if (count == tradeableDays)
+                {
+                    return day;
+                }
+            }
+        }
+
+        /// <summary>
         /// Define an enumerable date range of tradeable dates but expressed in a different time zone.
         /// </summary>
         /// <remarks>

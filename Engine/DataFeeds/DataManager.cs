@@ -329,6 +329,14 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 throw new InvalidOperationException($"{DataNormalizationMode.ScaledRaw} normalization mode only intended for history requests.");
             }
 
+            if (request.Configuration.DataMappingMode == DataMappingMode.TradingDaysBeforeExpiry &&
+                request.Configuration.DataNormalizationMode != DataNormalizationMode.Raw)
+            {
+                throw new NotSupportedException(
+                    $"{DataMappingMode.TradingDaysBeforeExpiry} does not support {request.Configuration.DataNormalizationMode} normalization because continuous future factor files do not contain factors for shifted roll dates. " +
+                    $"Use {DataNormalizationMode.Raw} normalization or choose a factor-file-backed mapping mode.");
+            }
+
             // before adding the configuration to the data feed let's assert it's valid
             _dataPermissionManager.AssertConfiguration(request.Configuration, request.StartTimeLocal, request.EndTimeLocal);
 
@@ -585,12 +593,14 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             bool isCustomData = false,
             DataNormalizationMode dataNormalizationMode = DataNormalizationMode.Adjusted,
             DataMappingMode dataMappingMode = DataMappingMode.OpenInterest,
-            uint contractDepthOffset = 0
+            uint contractDepthOffset = 0,
+            int dataMappingModeDaysOffset = 0,
+            IReadOnlyList<int> contractMonthCycle = null
             )
         {
             return Add(symbol, resolution, fillForward, extendedMarketHours, isFilteredSubscription, isInternalFeed, isCustomData,
                 new List<Tuple<Type, TickType>> { new Tuple<Type, TickType>(dataType, LeanData.GetCommonTickTypeForCommonDataTypes(dataType, symbol.SecurityType)) },
-                dataNormalizationMode, dataMappingMode, contractDepthOffset)
+                dataNormalizationMode, dataMappingMode, contractDepthOffset, dataMappingModeDaysOffset, contractMonthCycle)
                 .First();
         }
 
@@ -610,7 +620,9 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             List<Tuple<Type, TickType>> subscriptionDataTypes = null,
             DataNormalizationMode dataNormalizationMode = DataNormalizationMode.Adjusted,
             DataMappingMode dataMappingMode = DataMappingMode.OpenInterest,
-            uint contractDepthOffset = 0
+            uint contractDepthOffset = 0,
+            int dataMappingModeDaysOffset = 0,
+            IReadOnlyList<int> contractMonthCycle = null
             )
         {
             var dataTypes = subscriptionDataTypes;
@@ -724,7 +736,9 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                               tickType: tickType,
                               dataNormalizationMode: dataNormalizationMode,
                               dataMappingMode: dataMappingMode,
-                              contractDepthOffset: contractDepthOffset)).ToList();
+                              contractDepthOffset: contractDepthOffset,
+                              dataMappingModeDaysOffset: dataMappingModeDaysOffset,
+                              contractMonthCycle: contractMonthCycle)).ToList();
 
             for (int i = 0; i < result.Count; i++)
             {

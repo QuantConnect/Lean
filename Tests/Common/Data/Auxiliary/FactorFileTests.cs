@@ -396,6 +396,25 @@ namespace QuantConnect.Tests.Common.Data.Auxiliary
         }
 
         [Test]
+        [TestCase(DataNormalizationMode.BackwardsRatio)]
+        [TestCase(DataNormalizationMode.BackwardsPanamaCanal)]
+        [TestCase(DataNormalizationMode.ForwardPanamaCanal)]
+        public void RejectsTradingDaysBeforeExpiryForAdjustedFutureFactorFiles(DataNormalizationMode dataNormalizationMode)
+        {
+            var lines = new[]
+            {
+                "{\"Date\":\"2010-01-28T00:00:00\",\"BackwardsRatioScale\":[1.1575],\"BackwardsPanamaCanalScale\":[7.06],\"ForwardPanamaCanalScale\":[0.0],\"DataMappingMode\":0}"
+            };
+
+            var factorFile = PriceScalingExtensions.SafeRead("cl", lines, SecurityType.Future) as MappingContractFactorProvider;
+
+            Assert.Throws<NotSupportedException>(() => factorFile.GetPriceFactor(
+                new DateTime(2010, 01, 28),
+                dataNormalizationMode,
+                DataMappingMode.TradingDaysBeforeExpiry));
+        }
+
+        [Test]
         public void ResolvesCorrectMostRecentFactorChangeDate()
         {
             var lines = new[]

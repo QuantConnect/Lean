@@ -984,6 +984,10 @@ namespace QuantConnect
         /// The contract maps when any of the back month contracts of the next year have a higher volume that the current front month (3)
         /// </summary>
         OpenInterestAnnual,
+        /// <summary>
+        /// The contract maps a configured number of trading days before the front month contract expires (4)
+        /// </summary>
+        TradingDaysBeforeExpiry
     }
 
     /// <summary>
