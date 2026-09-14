@@ -679,8 +679,6 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 20218
         /// </remarks>
         [JsonProperty("20218")]
-        [Obsolete("GainOnSaleOfPPE was retired by Morningstar in 2026 for all periods; no replacement is available.")]
-        [JsonIgnore]
         public GainOnSaleOfPPEIncomeStatement GainOnSaleOfPPE => _gainOnSaleOfPPE ??= new(_timeProvider, _securityIdentifier);
         private GainOnSaleOfPPEIncomeStatement _gainOnSaleOfPPE;
 
@@ -2051,8 +2049,6 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 20447
         /// </remarks>
         [JsonProperty("20447")]
-        [Obsolete("NormalizedIncomeAsReported was retired by Morningstar in 2026 for all periods; no replacement is available.")]
-        [JsonIgnore]
         public NormalizedIncomeAsReportedIncomeStatement NormalizedIncomeAsReported => _normalizedIncomeAsReported ??= new(_timeProvider, _securityIdentifier);
         private NormalizedIncomeAsReportedIncomeStatement _normalizedIncomeAsReported;
 
@@ -2063,8 +2059,6 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 20448
         /// </remarks>
         [JsonProperty("20448")]
-        [Obsolete("NormalizedEBITDAAsReported was retired by Morningstar in 2026 for all periods; no replacement is available.")]
-        [JsonIgnore]
         public NormalizedEBITDAAsReportedIncomeStatement NormalizedEBITDAAsReported => _normalizedEBITDAAsReported ??= new(_timeProvider, _securityIdentifier);
         private NormalizedEBITDAAsReportedIncomeStatement _normalizedEBITDAAsReported;
 
@@ -2075,8 +2069,6 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 20449
         /// </remarks>
         [JsonProperty("20449")]
-        [Obsolete("NormalizedEBITAsReported was retired by Morningstar in 2026 for all periods; no replacement is available.")]
-        [JsonIgnore]
         public NormalizedEBITAsReportedIncomeStatement NormalizedEBITAsReported => _normalizedEBITAsReported ??= new(_timeProvider, _securityIdentifier);
         private NormalizedEBITAsReportedIncomeStatement _normalizedEBITAsReported;
 
@@ -2087,8 +2079,6 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 20450
         /// </remarks>
         [JsonProperty("20450")]
-        [Obsolete("NormalizedOperatingProfitAsReported was retired by Morningstar in 2026 for all periods; no replacement is available.")]
-        [JsonIgnore]
         public NormalizedOperatingProfitAsReportedIncomeStatement NormalizedOperatingProfitAsReported => _normalizedOperatingProfitAsReported ??= new(_timeProvider, _securityIdentifier);
         private NormalizedOperatingProfitAsReportedIncomeStatement _normalizedOperatingProfitAsReported;
 
