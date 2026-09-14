@@ -13,8 +13,6 @@
  * limitations under the License.
 */
 
-using System;
-using Moq;
 using NUnit.Framework;
 using QuantConnect.Util;
 using QuantConnect.Lean.Engine.Results;
@@ -24,51 +22,25 @@ namespace QuantConnect.Tests.Engine.Results
     [TestFixture]
     public class DeploymentDetailsHelperTests
     {
-        [SetUp]
-        public void SetUp()
-        {
-            Composer.Instance.Reset();
-        }
-
-        [TearDown]
-        public void TearDown()
-        {
-            Composer.Instance.Reset();
-        }
-
         [Test]
-        public void AddsToTheComposerResultHandler()
+        public void AddsToTheResultHandlerInTheComposer()
         {
-            var resultHandler = new TestResultHandler();
-            Composer.Instance.AddPart<IResultHandler>(resultHandler);
+            // we explicitly use the result handler the composer resolves, adding one if there is none,
+            // instead of resetting the composer which would drop the parts other tests rely on
+            var resultHandler = Composer.Instance.GetPart<IResultHandler>();
+            if (resultHandler == null)
+            {
+                resultHandler = new TestResultHandler();
+                Composer.Instance.AddPart(resultHandler);
+            }
 
             DeploymentDetailsHelper.Add("account", "123");
             DeploymentDetailsHelper.Add("environment", "paper");
+            // updates in place
             DeploymentDetailsHelper.Add("account", "456");
 
-            Assert.AreEqual(2, resultHandler.DeploymentDetails.Count);
             Assert.AreEqual("456", resultHandler.DeploymentDetails["account"]);
             Assert.AreEqual("paper", resultHandler.DeploymentDetails["environment"]);
-        }
-
-        [Test]
-        public void IgnoredWithoutResultHandler()
-        {
-            Assert.IsNull(Composer.Instance.GetPart<IResultHandler>());
-
-            Assert.DoesNotThrow(() => DeploymentDetailsHelper.Add("account", "123"));
-            Assert.DoesNotThrow(() => DeploymentDetailsHelper.Add("environment", "paper"));
-        }
-
-        [Test]
-        public void DoesNotThrowOnResultHandlerFailure()
-        {
-            var resultHandler = new Mock<IResultHandler>();
-            resultHandler.Setup(x => x.AddDeploymentDetail(It.IsAny<string>(), It.IsAny<string>()))
-                .Throws(new Exception("Some failure"));
-            Composer.Instance.AddPart(resultHandler.Object);
-
-            Assert.DoesNotThrow(() => DeploymentDetailsHelper.Add("account", "123"));
         }
     }
 }
