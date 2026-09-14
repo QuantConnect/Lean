@@ -71,11 +71,6 @@ namespace QuantConnect.Securities
         protected abstract decimal GetImpliedVolatility(TData contract);
 
         /// <summary>
-        /// Gets the open interest of the given contract
-        /// </summary>
-        protected abstract decimal GetOpenInterest(TData contract);
-
-        /// <summary>
         /// The underlying price data
         /// </summary>
         public BaseData Underlying
@@ -309,15 +304,6 @@ namespace QuantConnect.Securities
         public TUniverse StrikesBelow(decimal price)
         {
             return Contracts(contracts => contracts.Where(x => x.Symbol.ID.StrikePrice < price));
-        }
-
-        /// <summary>
-        /// Applies filter selecting the contracts expiring today
-        /// </summary>
-        /// <returns>Universe with filter applied</returns>
-        public TUniverse ZeroDte()
-        {
-            return Expiration(0, 0);
         }
 
         /// <summary>
@@ -1145,27 +1131,16 @@ namespace QuantConnect.Securities
         }
 
         /// <summary>
-        /// Applies the filter to the universe selecting the contracts with open interest between the given range
+        /// Applies the filter to the universe selecting the contracts with open interest between the given range.
+        /// Not supported for future options
         /// </summary>
         /// <param name="min">The minimum open interest value</param>
         /// <param name="max">The maximum open interest value</param>
         /// <returns>Universe with filter applied</returns>
-        public TUniverse OpenInterest(long min, long max)
+        public override TUniverse OpenInterest(long min, long max)
         {
             ValidateSecurityTypeForSupportedFilters(nameof(OpenInterest));
-            return InRange(GetOpenInterest, min, max);
-        }
-
-        /// <summary>
-        /// Applies the filter to the universe selecting the contracts with open interest between the given range.
-        /// Alias for <see cref="OpenInterest(long, long)"/>
-        /// </summary>
-        /// <param name="min">The minimum open interest value</param>
-        /// <param name="max">The maximum open interest value</param>
-        /// <returns>Universe with filter applied</returns>
-        public TUniverse OI(long min, long max)
-        {
-            return OpenInterest(min, max);
+            return base.OpenInterest(min, max);
         }
 
         private TUniverse Ladder(OptionRight right, int minDaysTillExpiry, decimal higherStrikeFromAtm, decimal middleStrikeFromAtm, decimal lowerStrikeFromAtm)
@@ -1217,18 +1192,6 @@ namespace QuantConnect.Securities
                 .FirstOrDefault()
                 // let's order the symbols too, to guarantee determinism
                 ?.OrderBy(x => x.ID) ?? Enumerable.Empty<Symbol>();
-        }
-
-        /// <summary>
-        /// Selects the contracts whose value, given by the selector, is within the given range. The selector runs once per contract
-        /// </summary>
-        private TUniverse InRange(Func<TData, decimal> selector, decimal min, decimal max)
-        {
-            return Contracts(data => data.Where(contract =>
-            {
-                var value = selector(contract);
-                return value >= min && value <= max;
-            }));
         }
 
         /// <summary>
@@ -1403,6 +1366,11 @@ namespace QuantConnect.Securities
         /// Gets the open interest of the given contract
         /// </summary>
         protected override decimal GetOpenInterest(OptionUniverse contract) => contract.OpenInterest;
+
+        /// <summary>
+        /// Gets the volume of the given contract
+        /// </summary>
+        protected override decimal GetVolume(OptionUniverse contract) => contract.Volume;
 
         /// <summary>
         /// Implicitly convert the universe to a list of symbols

@@ -27,7 +27,7 @@ namespace QuantConnect.Securities
     /// Base class for contract symbols filtering universes.
     /// Used by OptionFilterUniverse and FutureFilterUniverse
     /// </summary>
-    public abstract class ContractSecurityFilterUniverse<T, TData> : IDerivativeSecurityFilterUniverse<TData>
+    public abstract class ContractSecurityFilterUniverse<T, TData> : IDerivativeSecurityFilterUniverse<TData>, IContractFilters<T>
         where T : ContractSecurityFilterUniverse<T, TData>
         where TData : ISymbolProvider
     {
@@ -142,6 +142,16 @@ namespace QuantConnect.Securities
         /// </summary>
         /// <returns>A data instance for the given symbol</returns>
         protected abstract TData CreateDataInstance(Symbol symbol);
+
+        /// <summary>
+        /// Gets the open interest of the given contract
+        /// </summary>
+        protected abstract decimal GetOpenInterest(TData contract);
+
+        /// <summary>
+        /// Gets the volume of the given contract
+        /// </summary>
+        protected abstract decimal GetVolume(TData contract);
 
         /// <summary>
         /// Returns universe, filtered by contract type
@@ -373,6 +383,15 @@ namespace QuantConnect.Securities
         }
 
         /// <summary>
+        /// Applies filter selecting the contracts expiring today
+        /// </summary>
+        /// <returns>Universe with filter applied</returns>
+        public T ZeroDte()
+        {
+            return Expiration(0, 0);
+        }
+
+        /// <summary>
         /// Applies filter selecting the contracts expiring on any of the given dates. Time of day is ignored
         /// </summary>
         /// <param name="expiries">The expiration dates</param>
@@ -406,6 +425,55 @@ namespace QuantConnect.Securities
             var expiryDate = date.Date;
             Data = Data.Where(data => data.Symbol.ID.Date.Date < expiryDate).ToList();
             return (T)this;
+        }
+
+        /// <summary>
+        /// Applies filter selecting the contracts with open interest between the given range
+        /// </summary>
+        /// <param name="min">The minimum open interest value</param>
+        /// <param name="max">The maximum open interest value</param>
+        /// <returns>Universe with filter applied</returns>
+        public virtual T OpenInterest(long min, long max)
+        {
+            return InRange(GetOpenInterest, min, max);
+        }
+
+        /// <summary>
+        /// Applies filter selecting the contracts with open interest between the given range. Alias for <see cref="OpenInterest"/>
+        /// </summary>
+        /// <param name="min">The minimum open interest value</param>
+        /// <param name="max">The maximum open interest value</param>
+        /// <returns>Universe with filter applied</returns>
+        public T OI(long min, long max)
+        {
+            return OpenInterest(min, max);
+        }
+
+        /// <summary>
+        /// Applies filter selecting the contracts with volume between the given range
+        /// </summary>
+        /// <param name="min">The minimum volume</param>
+        /// <param name="max">The maximum volume</param>
+        /// <returns>Universe with filter applied</returns>
+        public T Volume(long min, long max)
+        {
+            return InRange(GetVolume, min, max);
+        }
+
+        /// <summary>
+        /// Selects the contracts whose value, given by the selector, is within the given range. The selector runs once per contract
+        /// </summary>
+        /// <param name="selector">Gets the value of a contract</param>
+        /// <param name="min">The minimum value</param>
+        /// <param name="max">The maximum value</param>
+        /// <returns>Universe with filter applied</returns>
+        protected T InRange(Func<TData, decimal> selector, decimal min, decimal max)
+        {
+            return Contracts(data => data.Where(contract =>
+            {
+                var value = selector(contract);
+                return value >= min && value <= max;
+            }));
         }
 
         /// <summary>
