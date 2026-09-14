@@ -427,10 +427,10 @@ namespace QuantConnect.AlgorithmFactory.Python.Wrappers
         public ObjectStore ObjectStore => _baseAlgorithm.ObjectStore;
 
         /// <summary>
-        /// Gets a read-only view of the brokerage data shared by the brokerage, data queue handler or any other component,
+        /// Gets a read-only view of the deployment details shared by the brokerage, data queue handler or any other component,
         /// for example account information. Usually empty when not running in live mode
         /// </summary>
-        public ReadOnlyExtendedDictionary<string, string> BrokerageData => _baseAlgorithm.BrokerageData;
+        public ReadOnlyExtendedDictionary<string, string> DeploymentDetails => _baseAlgorithm.DeploymentDetails;
 
         /// <summary>
         /// Returns the current Slice object
@@ -1171,10 +1171,10 @@ namespace QuantConnect.AlgorithmFactory.Python.Wrappers
         public void SetParameters(Dictionary<string, string> parameters) => _baseAlgorithm.SetParameters(parameters);
 
         /// <summary>
-        /// Sets the brokerage data read-only view
+        /// Sets the deployment details read-only view
         /// </summary>
-        /// <param name="brokerageData">The brokerage data</param>
-        public void SetBrokerageData(ReadOnlyExtendedDictionary<string, string> brokerageData) => _baseAlgorithm.SetBrokerageData(brokerageData);
+        /// <param name="deploymentDetails">The deployment details</param>
+        public void SetDeploymentDetails(ReadOnlyExtendedDictionary<string, string> deploymentDetails) => _baseAlgorithm.SetDeploymentDetails(deploymentDetails);
 
         /// <summary>
         /// Tries to convert a PyObject into a C# object

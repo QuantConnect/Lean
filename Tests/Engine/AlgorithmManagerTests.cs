@@ -236,11 +236,11 @@ namespace QuantConnect.Tests.Engine
             {
             }
 
-            public void AddBrokerageData(string key, string value)
+            public void AddDeploymentDetail(string key, string value)
             {
             }
 
-            public ReadOnlyExtendedDictionary<string, string> BrokerageData { get; } = new();
+            public ReadOnlyExtendedDictionary<string, string> DeploymentDetails { get; } = new();
 
             public void RuntimeStatistic(string key, string value)
             {

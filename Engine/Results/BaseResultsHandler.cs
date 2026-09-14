@@ -250,14 +250,14 @@ namespace QuantConnect.Lean.Engine.Results
         protected Dictionary<string, string> State { get; set; }
 
         /// <summary>
-        /// Brokerage data shared with the user and the algorithm, see <see cref="AddBrokerageData"/>
+        /// Deployment details shared with the user and the algorithm, see <see cref="AddDeploymentDetail"/>
         /// </summary>
-        private readonly Dictionary<string, string> _brokerageData = new();
+        private readonly Dictionary<string, string> _deploymentDetails = new();
 
         /// <summary>
-        /// Read only view of the brokerage data, see <see cref="AddBrokerageData"/>. Shared with the algorithm
+        /// Read only view of the deployment details, see <see cref="AddDeploymentDetail"/>. Shared with the algorithm
         /// </summary>
-        public ReadOnlyExtendedDictionary<string, string> BrokerageData { get; }
+        public ReadOnlyExtendedDictionary<string, string> DeploymentDetails { get; }
 
         /// <summary>
         /// The handler responsible for communicating messages to listeners
@@ -338,7 +338,7 @@ namespace QuantConnect.Lean.Engine.Results
             Messages = new ConcurrentQueue<Packet>();
             RuntimeStatistics = new Dictionary<string, string>();
             // same instance, so any entries added later are visible through the view
-            BrokerageData = new ReadOnlyExtendedDictionary<string, string>(_brokerageData, copy: false);
+            DeploymentDetails = new ReadOnlyExtendedDictionary<string, string>(_deploymentDetails, copy: false);
             StartTime = DateTime.UtcNow;
             CompileId = "";
             AlgorithmId = "";
@@ -557,32 +557,32 @@ namespace QuantConnect.Lean.Engine.Results
         }
 
         /// <summary>
-        /// Adds or updates a brokerage data entry. Key value pairs the brokerage, data queue handler or any other component
+        /// Adds or updates a deployment detail entry. Key value pairs the brokerage, data queue handler or any other component
         /// wants to share with the user, through the results, and the algorithm, for example account information.
         /// Sensitive data, like credentials, should never be added
         /// </summary>
-        /// <param name="key">The brokerage data key</param>
-        /// <param name="value">The brokerage data value</param>
-        public virtual void AddBrokerageData(string key, string value)
+        /// <param name="key">The deployment detail key</param>
+        /// <param name="value">The deployment detail value</param>
+        public virtual void AddDeploymentDetail(string key, string value)
         {
             if (string.IsNullOrEmpty(key))
             {
                 return;
             }
-            lock (_brokerageData)
+            lock (_deploymentDetails)
             {
-                _brokerageData[key] = value ?? string.Empty;
+                _deploymentDetails[key] = value ?? string.Empty;
             }
         }
 
         /// <summary>
-        /// Creates the algorithm configuration to include in the results, taking a snapshot of the current brokerage data
+        /// Creates the algorithm configuration to include in the results, taking a snapshot of the current deployment details
         /// </summary>
         /// <param name="backtestNodePacket">The associated backtest node packet if any</param>
         /// <returns>A new <see cref="AlgorithmConfiguration"/> instance</returns>
         protected AlgorithmConfiguration CreateAlgorithmConfiguration(BacktestNodePacket backtestNodePacket = null)
         {
-            lock (_brokerageData)
+            lock (_deploymentDetails)
             {
                 return AlgorithmConfiguration.Create(Algorithm, backtestNodePacket);
             }
