@@ -37,17 +37,13 @@ namespace QuantConnect.Data.Fundamental
         /// Gets/sets the OneMonth period value for the field
         /// </summary>
         [JsonProperty("1M")]
-        [Obsolete("FileDate.OneMonth was retired by Morningstar in 2026; use FileDate.ThreeMonths (also available: SixMonths, TwelveMonths).")]
-        [JsonIgnore]
-        public DateTime OneMonth => throw new NotSupportedException("FileDate.OneMonth was retired by Morningstar in 2026; use FileDate.ThreeMonths (also available: SixMonths, TwelveMonths).");
+        public DateTime OneMonth => FundamentalService.Get<DateTime>(TimeProvider.GetUtcNow(), SecurityIdentifier, FundamentalProperty.FinancialStatements_FileDate_OneMonth);
 
         /// <summary>
         /// Gets/sets the TwoMonths period value for the field
         /// </summary>
         [JsonProperty("2M")]
-        [Obsolete("FileDate.TwoMonths was retired by Morningstar in 2026; use FileDate.ThreeMonths (also available: SixMonths, TwelveMonths).")]
-        [JsonIgnore]
-        public DateTime TwoMonths => throw new NotSupportedException("FileDate.TwoMonths was retired by Morningstar in 2026; use FileDate.ThreeMonths (also available: SixMonths, TwelveMonths).");
+        public DateTime TwoMonths => FundamentalService.Get<DateTime>(TimeProvider.GetUtcNow(), SecurityIdentifier, FundamentalProperty.FinancialStatements_FileDate_TwoMonths);
 
         /// <summary>
         /// Gets/sets the ThreeMonths period value for the field
@@ -65,9 +61,7 @@ namespace QuantConnect.Data.Fundamental
         /// Gets/sets the NineMonths period value for the field
         /// </summary>
         [JsonProperty("9M")]
-        [Obsolete("FileDate.NineMonths was retired by Morningstar in 2026; use FileDate.ThreeMonths (also available: SixMonths, TwelveMonths).")]
-        [JsonIgnore]
-        public DateTime NineMonths => throw new NotSupportedException("FileDate.NineMonths was retired by Morningstar in 2026; use FileDate.ThreeMonths (also available: SixMonths, TwelveMonths).");
+        public DateTime NineMonths => FundamentalService.Get<DateTime>(TimeProvider.GetUtcNow(), SecurityIdentifier, FundamentalProperty.FinancialStatements_FileDate_NineMonths);
 
         /// <summary>
         /// Gets/sets the TwelveMonths period value for the field

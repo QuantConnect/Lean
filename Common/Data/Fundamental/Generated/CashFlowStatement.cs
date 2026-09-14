@@ -637,8 +637,6 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 26095
         /// </remarks>
         [JsonProperty("26095")]
-        [Obsolete("ProceedsFromLoans was retired by Morningstar in 2026 for all periods; no replacement is available.")]
-        [JsonIgnore]
         public ProceedsFromLoansCashFlowStatement ProceedsFromLoans => _proceedsFromLoans ??= new(_timeProvider, _securityIdentifier);
         private ProceedsFromLoansCashFlowStatement _proceedsFromLoans;
 
