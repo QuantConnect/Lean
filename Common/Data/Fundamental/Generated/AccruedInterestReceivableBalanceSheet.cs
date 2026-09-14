@@ -49,17 +49,15 @@ namespace QuantConnect.Data.Fundamental
         /// Gets/sets the SixMonths period value for the field
         /// </summary>
         [JsonProperty("6M")]
-        [Obsolete("AccruedInterestReceivable.SixMonths was retired by Morningstar in 2026; use AccruedInterestReceivable.ThreeMonths (also available: TwelveMonths).")]
-        [JsonIgnore]
-        public double SixMonths => throw new NotSupportedException("AccruedInterestReceivable.SixMonths was retired by Morningstar in 2026; use AccruedInterestReceivable.ThreeMonths (also available: TwelveMonths).");
+        public double SixMonths => FundamentalService.Get<double>(TimeProvider.GetUtcNow(), SecurityIdentifier, FundamentalProperty.FinancialStatements_BalanceSheet_AccruedInterestReceivable_SixMonths);
 
         /// <summary>
         /// Gets/sets the NineMonths period value for the field
         /// </summary>
         [JsonProperty("9M")]
-        [Obsolete("AccruedInterestReceivable.NineMonths was retired by Morningstar in 2026; use AccruedInterestReceivable.ThreeMonths (also available: TwelveMonths).")]
+        [Obsolete("AccruedInterestReceivable.NineMonths was retired by Morningstar in 2026; use AccruedInterestReceivable.ThreeMonths (also available: SixMonths, TwelveMonths).")]
         [JsonIgnore]
-        public double NineMonths => throw new NotSupportedException("AccruedInterestReceivable.NineMonths was retired by Morningstar in 2026; use AccruedInterestReceivable.ThreeMonths (also available: TwelveMonths).");
+        public double NineMonths => throw new NotSupportedException("AccruedInterestReceivable.NineMonths was retired by Morningstar in 2026; use AccruedInterestReceivable.ThreeMonths (also available: SixMonths, TwelveMonths).");
 
         /// <summary>
         /// Gets/sets the TwelveMonths period value for the field
@@ -95,7 +93,7 @@ namespace QuantConnect.Data.Fundamental
         public override IReadOnlyDictionary<string, double> GetPeriodValues()
         {
             var result = new Dictionary<string, double>();
-            foreach (var kvp in new[] { new Tuple<string, double>("2M",TwoMonths), new Tuple<string, double>("3M",ThreeMonths), new Tuple<string, double>("12M",TwelveMonths) })
+            foreach (var kvp in new[] { new Tuple<string, double>("2M",TwoMonths), new Tuple<string, double>("3M",ThreeMonths), new Tuple<string, double>("6M",SixMonths), new Tuple<string, double>("12M",TwelveMonths) })
             {
                 if(!BaseFundamentalDataProvider.IsNone(typeof(double), kvp.Item2))
                 {
