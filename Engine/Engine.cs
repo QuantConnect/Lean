@@ -126,8 +126,8 @@ namespace QuantConnect.Lean.Engine
 
                     algorithm.ProjectId = job.ProjectId;
 
-                    // share the brokerage data with the algorithm right away so it's available during initialization
-                    algorithm.SetBrokerageData(AlgorithmHandlers.Results.BrokerageData);
+                    // share the deployment details with the algorithm right away so it's available during initialization
+                    algorithm.SetDeploymentDetails(AlgorithmHandlers.Results.DeploymentDetails);
 
                     // Set algorithm in ILeanManager
                     SystemHandlers.LeanManager.SetAlgorithm(algorithm);

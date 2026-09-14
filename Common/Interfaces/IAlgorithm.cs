@@ -407,10 +407,10 @@ namespace QuantConnect.Interfaces
         ObjectStore ObjectStore { get; }
 
         /// <summary>
-        /// Gets a read-only view of the brokerage data shared by the brokerage, data queue handler or any other component,
+        /// Gets a read-only view of the deployment details shared by the brokerage, data queue handler or any other component,
         /// for example account information. Usually empty when not running in live mode
         /// </summary>
-        ReadOnlyExtendedDictionary<string, string> BrokerageData { get; }
+        ReadOnlyExtendedDictionary<string, string> DeploymentDetails { get; }
 
         /// <summary>
         /// Returns the current Slice object
@@ -481,10 +481,10 @@ namespace QuantConnect.Interfaces
         void SetParameters(Dictionary<string, string> parameters);
 
         /// <summary>
-        /// Sets the brokerage data read-only view
+        /// Sets the deployment details read-only view
         /// </summary>
-        /// <param name="brokerageData">The brokerage data</param>
-        void SetBrokerageData(ReadOnlyExtendedDictionary<string, string> brokerageData);
+        /// <param name="deploymentDetails">The deployment details</param>
+        void SetDeploymentDetails(ReadOnlyExtendedDictionary<string, string> deploymentDetails);
 
         /// <summary>
         /// Determines if the Symbol is shortable at the brokerage

@@ -526,14 +526,14 @@ namespace QuantConnect.Tests.Engine.Results
 
                 resultHandler.Initialize(new(job, messaging, api, transactionHandler, null));
                 // the engine shares the view right after creating the algorithm
-                algorithm.SetBrokerageData(resultHandler.BrokerageData);
+                algorithm.SetDeploymentDetails(resultHandler.DeploymentDetails);
                 // e.g. the brokerage or data queue handler, which are created before the algorithm is set
-                resultHandler.AddBrokerageData("some-key", "some value");
+                resultHandler.AddDeploymentDetail("some-key", "some value");
                 resultHandler.SetAlgorithm(algorithm, 100000);
                 algorithm.SetLocked();
 
-                var expectedBrokerageData = new Dictionary<string, string> { { "some-key", "some value" } };
-                CollectionAssert.AreEquivalent(expectedBrokerageData, algorithm.BrokerageData);
+                var expectedDeploymentDetails = new Dictionary<string, string> { { "some-key", "some value" } };
+                CollectionAssert.AreEquivalent(expectedDeploymentDetails, algorithm.DeploymentDetails);
 
                 // the first update pass stores the status file and the complete results right away, no final result required
                 var expected = new[] { $"{deployId}.json", $"{deployId}-{DateTime.UtcNow:yyyy-MM-dd}_minute.json" };
@@ -544,7 +544,7 @@ namespace QuantConnect.Tests.Engine.Results
                     foreach (var result in resultHandler.GetStoredResults(name))
                     {
                         Assert.IsNotNull(result.AlgorithmConfiguration, $"'{name}' is missing the algorithm configuration");
-                        CollectionAssert.AreEquivalent(expectedBrokerageData, result.AlgorithmConfiguration.BrokerageData);
+                        CollectionAssert.AreEquivalent(expectedDeploymentDetails, result.AlgorithmConfiguration.DeploymentDetails);
                         Assert.AreEqual("10", result.AlgorithmConfiguration.Parameters["ema-fast"]);
                     }
                 }
@@ -556,7 +556,7 @@ namespace QuantConnect.Tests.Engine.Results
         }
 
         [Test]
-        public void BrokerageDataIsSharedWithTheAlgorithmAndTheResults()
+        public void DeploymentDetailsAreSharedWithTheAlgorithmAndTheResults()
         {
             using var api = new Api.Api();
             using var messaging = new QuantConnect.Messaging.Messaging();
@@ -566,37 +566,37 @@ namespace QuantConnect.Tests.Engine.Results
 
             var algorithm = new AlgorithmStub();
             algorithm.SetFinishedWarmingUp();
-            Assert.IsEmpty(algorithm.BrokerageData);
-            Assert.IsEmpty(resultHandler.BrokerageData);
+            Assert.IsEmpty(algorithm.DeploymentDetails);
+            Assert.IsEmpty(resultHandler.DeploymentDetails);
 
             // the engine shares the view right after creating the algorithm, so it's available during initialization
-            algorithm.SetBrokerageData(resultHandler.BrokerageData);
-            resultHandler.AddBrokerageData("account", "123");
-            Assert.AreEqual("123", algorithm.BrokerageData["account"]);
-            Assert.AreEqual("123", resultHandler.BrokerageData["account"]);
+            algorithm.SetDeploymentDetails(resultHandler.DeploymentDetails);
+            resultHandler.AddDeploymentDetail("account", "123");
+            Assert.AreEqual("123", algorithm.DeploymentDetails["account"]);
+            Assert.AreEqual("123", resultHandler.DeploymentDetails["account"]);
 
             resultHandler.SetAlgorithm(algorithm, 100000);
-            Assert.AreSame(resultHandler.BrokerageData, algorithm.BrokerageData);
+            Assert.AreSame(resultHandler.DeploymentDetails, algorithm.DeploymentDetails);
 
             // it's only set once by the engine: the same instance is fine, a different one is not
-            Assert.DoesNotThrow(() => algorithm.SetBrokerageData(resultHandler.BrokerageData));
-            Assert.Throws<InvalidOperationException>(() => algorithm.SetBrokerageData(new ReadOnlyExtendedDictionary<string, string>()));
-            Assert.AreSame(resultHandler.BrokerageData, algorithm.BrokerageData);
+            Assert.DoesNotThrow(() => algorithm.SetDeploymentDetails(resultHandler.DeploymentDetails));
+            Assert.Throws<InvalidOperationException>(() => algorithm.SetDeploymentDetails(new ReadOnlyExtendedDictionary<string, string>()));
+            Assert.AreSame(resultHandler.DeploymentDetails, algorithm.DeploymentDetails);
 
-            resultHandler.AddBrokerageData("environment", "paper");
-            Assert.AreEqual("paper", algorithm.BrokerageData["environment"]);
+            resultHandler.AddDeploymentDetail("environment", "paper");
+            Assert.AreEqual("paper", algorithm.DeploymentDetails["environment"]);
 
             // entries are updated in place, empty keys are ignored and null values are stored as empty
-            resultHandler.AddBrokerageData("account", "456");
-            resultHandler.AddBrokerageData("", "ignored");
-            resultHandler.AddBrokerageData(null, "ignored");
-            resultHandler.AddBrokerageData("empty", null);
-            CollectionAssert.AreEquivalent(new Dictionary<string, string> { { "account", "456" }, { "environment", "paper" }, { "empty", "" } }, algorithm.BrokerageData);
+            resultHandler.AddDeploymentDetail("account", "456");
+            resultHandler.AddDeploymentDetail("", "ignored");
+            resultHandler.AddDeploymentDetail(null, "ignored");
+            resultHandler.AddDeploymentDetail("empty", null);
+            CollectionAssert.AreEquivalent(new Dictionary<string, string> { { "account", "456" }, { "environment", "paper" }, { "empty", "" } }, algorithm.DeploymentDetails);
 
             // read only for the algorithm
-            Assert.Throws<InvalidOperationException>(() => algorithm.BrokerageData.Add("new-key", "new value"));
-            Assert.Throws<InvalidOperationException>(() => algorithm.BrokerageData.Remove("account"));
-            Assert.Throws<InvalidOperationException>(() => algorithm.BrokerageData["account"] = "new value");
+            Assert.Throws<InvalidOperationException>(() => algorithm.DeploymentDetails.Add("new-key", "new value"));
+            Assert.Throws<InvalidOperationException>(() => algorithm.DeploymentDetails.Remove("account"));
+            Assert.Throws<InvalidOperationException>(() => algorithm.DeploymentDetails["account"] = "new value");
 
             // the final result is stored on exit
             resultHandler.Exit();
@@ -604,7 +604,7 @@ namespace QuantConnect.Tests.Engine.Results
             Assert.IsNotEmpty(stored);
             foreach (var result in stored)
             {
-                CollectionAssert.AreEquivalent(algorithm.BrokerageData, result.AlgorithmConfiguration.BrokerageData);
+                CollectionAssert.AreEquivalent(algorithm.DeploymentDetails, result.AlgorithmConfiguration.DeploymentDetails);
             }
         }
 
