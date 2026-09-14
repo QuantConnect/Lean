@@ -159,39 +159,27 @@ namespace QuantConnect.Securities
         }
 
         /// <summary>
-        /// Gets the last trading date of the given contract. Expirations falling on a non trading day, like the
-        /// Saturday expirations of equity options before February 2015, are moved back to the previous trading day
+        /// Gets the last trading date of the given contract, see <see cref="OptionSymbol.GetLastDayOfTrading"/>
         /// </summary>
         /// <param name="contract">The contract</param>
         /// <returns>The date the contract stops trading</returns>
         protected override DateTime GetLastTradingDate(TData contract)
         {
-            return GetLastTradingDate(contract.Symbol.ID.Date);
+            return GetLastTradingDate(contract.Symbol);
         }
 
         /// <summary>
-        /// Gets the last trading date for the given expiration date. Expirations falling on a non trading day, like the
-        /// Saturday expirations of equity options before February 2015, are moved back to the previous trading day
+        /// Gets the last trading date of the given contract, see <see cref="OptionSymbol.GetLastDayOfTrading"/>. Cached per
+        /// expiration date, since every contract in the universe shares the exchange hours
         /// </summary>
-        /// <param name="expiry">The contract expiration date</param>
+        /// <param name="symbol">The contract symbol</param>
         /// <returns>The date the contract stops trading</returns>
-        protected DateTime GetLastTradingDate(DateTime expiry)
+        protected DateTime GetLastTradingDate(Symbol symbol)
         {
-            var date = expiry.Date;
-            if (ExchangeHours == null)
+            var expiry = symbol.ID.Date.Date;
+            if (!_lastTradingDates.TryGetValue(expiry, out var lastTradingDate))
             {
-                return date;
-            }
-
-            if (!_lastTradingDates.TryGetValue(date, out var lastTradingDate))
-            {
-                lastTradingDate = date;
-                // bounded so a closed exchange calendar can't make this loop forever
-                for (var i = 0; i < 7 && !ExchangeHours.IsDateOpen(lastTradingDate); i++)
-                {
-                    lastTradingDate = lastTradingDate.AddDays(-1);
-                }
-                _lastTradingDates[date] = lastTradingDate;
+                _lastTradingDates[expiry] = lastTradingDate = OptionSymbol.GetLastDayOfTrading(symbol);
             }
 
             return lastTradingDate;
@@ -1226,7 +1214,7 @@ namespace QuantConnect.Securities
         private IEnumerable<Symbol> GetContractsForExpiry(IEnumerable<Symbol> symbols, int minDaysTillExpiry)
         {
             var leastExpiryAccepted = _lastExchangeDate.AddDays(minDaysTillExpiry);
-            return symbols.Where(x => GetLastTradingDate(x.ID.Date) >= leastExpiryAccepted)
+            return symbols.Where(x => GetLastTradingDate(x) >= leastExpiryAccepted)
                 .GroupBy(x => x.ID.Date)
                 .OrderBy(x => x.Key)
                 .FirstOrDefault()

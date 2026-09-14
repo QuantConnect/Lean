@@ -295,6 +295,43 @@ namespace QuantConnect.Tests.Common.Data.Market
             Assert.AreEqual(100m, selected[0].ID.StrikePrice);
         }
 
+        // Contracts expiring on a holiday stop trading on the previous trading date, so they are zero DTE on that date:
+        // Good Friday, Thanksgiving, Independence Day and Christmas on their weekday, and Labor Day, a Monday, where the
+        // previous trading date is the Friday before the weekend
+        [TestCase("2012-04-05", "2012-04-06")]
+        [TestCase("2012-11-21", "2012-11-22")]
+        [TestCase("2014-07-03", "2014-07-04")]
+        [TestCase("2015-12-24", "2015-12-25")]
+        [TestCase("2012-08-31", "2012-09-03")]
+        public void ZeroDteCountsHolidayExpiriesOnThePreviousTradingDate(string lastTradingDate, string holidayExpiry)
+        {
+            var date = DateTime.ParseExact(lastTradingDate, "yyyy-MM-dd", CultureInfo.InvariantCulture);
+            var expiry = DateTime.ParseExact(holidayExpiry, "yyyy-MM-dd", CultureInfo.InvariantCulture);
+            var previous = date.AddDays(-1);
+            var expiries = new[] { expiry, expiry.AddDays(28) };
+            var (data, underlying) = CreateUniverseData(date, 100m, expiries, Strikes);
+            var (previousData, previousUnderlying) = CreateUniverseData(previous, 100m, expiries, Strikes);
+
+            // On the last trading date the holiday expiry is zero DTE, on the universe and on the chain
+            var zeroDte = CreateUniverse(data, underlying, date).ZeroDte().ToList();
+            Assert.AreEqual(2 * Strikes.Length, zeroDte.Count);
+            Assert.IsTrue(zeroDte.All(x => x.ID.Date == expiry));
+            var chain = new OptionChain(Canonical, date, data, _symbolProperties);
+            CollectionAssert.AreEquivalent(zeroDte.Select(x => x.Symbol.Value), chain.ZeroDte().Select(x => x.Symbol.Value));
+
+            // The day before it is one day out, and nothing expires
+            Assert.AreEqual(0, CreateUniverse(previousData, previousUnderlying, previous).ZeroDte().Count);
+            var oneDayOut = CreateUniverse(previousData, previousUnderlying, previous).Expiration(1, 1).ToList();
+            Assert.AreEqual(2 * Strikes.Length, oneDayOut.Count);
+            Assert.IsTrue(oneDayOut.All(x => x.ID.Date == expiry));
+
+            // Universe rows are stamped at the end of their day, so the contracts built from the previous day's rows
+            // count their days from the last trading date
+            var contracts = new OptionChain(Canonical, date, previousData, _symbolProperties).Expiration([expiry]).ToList();
+            Assert.AreEqual(2 * Strikes.Length, contracts.Count);
+            Assert.IsTrue(contracts.All(x => x.Time.Date == date && x.DaysToExpiry == 0));
+        }
+
         [Test]
         public void FiltersAreAvailableFromPython()
         {
