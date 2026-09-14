@@ -393,14 +393,12 @@ def get_length(universe):
             FutureFilterUniverse Universe() => new(data, time);
             static IEnumerable<Symbol> Symbols(FutureFilterUniverse universe) => universe.AsEnumerable().Select(x => x.Symbol);
 
-            CollectionAssert.AreEqual(new[] { data[0].Symbol, data[2].Symbol }, Symbols(Universe().ContractMonth(2013, 12)));
-            CollectionAssert.AreEqual(new[] { data[1].Symbol, data[3].Symbol }, Symbols(Universe().ContractMonth(2014, 3)));
-            Assert.AreEqual(0, Universe().ContractMonth(2014, 2).Count);
+            CollectionAssert.AreEqual(new[] { data[0].Symbol, data[2].Symbol }, Symbols(Universe().ContractMonths([12])));
             CollectionAssert.AreEqual(new[] { data[1].Symbol, data[3].Symbol, data[4].Symbol }, Symbols(Universe().ContractMonths([3, 6])));
             CollectionAssert.AreEqual(new[] { data[0].Symbol, data[1].Symbol }, Symbols(Universe().ExpirationCycle(FutureExpirationCycles.March)));
             CollectionAssert.AreEqual(data.Select(x => x.Symbol), Symbols(Universe().ContractMonths(FutureExpirationCycles.March)));
+            Assert.AreEqual(0, Universe().ContractMonths([2]).Count);
             Assert.AreEqual(0, Universe().ContractMonths([]).Count);
-            Assert.Throws<ArgumentOutOfRangeException>(() => Universe().ContractMonth(2014, 13));
         }
 
         [Test]

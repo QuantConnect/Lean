@@ -31,27 +31,15 @@ namespace QuantConnect.Data.Market
         /// </summary>
         /// <param name="months">Months to select contracts from, see <see cref="FutureExpirationCycles"/></param>
         /// <returns>A new chain with the filter applied</returns>
-        public FuturesChain ExpirationCycle(int[] months)
+        public FuturesChain ExpirationCycle(IEnumerable<int> months)
         {
             return Filter(universe => universe.ExpirationCycle(months));
         }
 
         /// <summary>
-        /// Selects the contracts for the given contract month, the month the contract is named after, which for some products,
-        /// e.g. crude oil, is the month after the expiration month.
-        /// Same as <see cref="BaseFutureFilterUniverse{TUniverse, TData}.ContractMonth"/>
-        /// </summary>
-        /// <param name="year">The contract year</param>
-        /// <param name="month">The contract month, 1 to 12</param>
-        /// <returns>A new chain with the filter applied</returns>
-        public FuturesChain ContractMonth(int year, int month)
-        {
-            return Filter(universe => universe.ContractMonth(year, month));
-        }
-
-        /// <summary>
         /// Selects the contracts whose contract month is any of the given months of the year, like <see cref="ExpirationCycle"/>
-        /// but by the contract month instead of the expiration month.
+        /// but by the contract month, the month the contract is named after, which for some products, e.g. crude oil, is the month
+        /// after the expiration month.
         /// Same as <see cref="BaseFutureFilterUniverse{TUniverse, TData}.ContractMonths"/>
         /// </summary>
         /// <param name="months">Months of the year to select contracts from, see <see cref="FutureExpirationCycles"/></param>

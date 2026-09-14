@@ -65,7 +65,6 @@ namespace QuantConnect.Algorithm.CSharp
             AssertExpiries(chain.FarthestExpiration(), "FarthestExpiration()", (2014, 12));
             AssertExpiries(chain.ExpirationCycle([3, 9]), "ExpirationCycle([3, 9])", (2014, 3), (2014, 9));
             // ES contracts are named after their expiration month, so the contract month filters agree with the expiration ones
-            AssertExpiries(chain.ContractMonth(2014, 6), "ContractMonth(2014, 6)", (2014, 6));
             AssertExpiries(chain.ContractMonths([3, 9]), "ContractMonths([3, 9])", (2014, 3), (2014, 9));
             AssertExpiries(chain.ExpiringBefore(EndOf2013), "ExpiringBefore(2013-12-31)", (2013, 12));
             AssertExpiries(chain.ExpiringAfter(EndOf2013).ExpiringBefore(new DateTime(2014, 7, 1)), "ExpiringAfter(2013-12-31).ExpiringBefore(2014-07-01)", (2014, 3), (2014, 6));

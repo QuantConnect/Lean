@@ -50,7 +50,6 @@ class FuturesChainFiltersRegressionAlgorithm(QCAlgorithm):
         self._assert_expiries(chain.farthest_expiration(), "farthest_expiration()", [(2014, 12)])
         self._assert_expiries(chain.expiration_cycle([3, 9]), "expiration_cycle([3, 9])", [(2014, 3), (2014, 9)])
         # ES contracts are named after their expiration month, so the contract month filters agree with the expiration ones
-        self._assert_expiries(chain.contract_month(2014, 6), "contract_month(2014, 6)", [(2014, 6)])
         self._assert_expiries(chain.contract_months([3, 9]), "contract_months([3, 9])", [(2014, 3), (2014, 9)])
         self._assert_expiries(chain.expiring_before(self.END_OF_2013), "expiring_before(2013-12-31)", [(2013, 12)])
         self._assert_expiries(chain.expiring_after(self.END_OF_2013).expiring_before(datetime(2014, 7, 1)), "expiring_after(2013-12-31).expiring_before(2014-07-01)", [(2014, 3), (2014, 6)])

@@ -70,8 +70,6 @@ namespace QuantConnect.Tests.Common.Data.Market
             yield return Case("StandardsOnly.FrontMonth", u => u.StandardsOnly().FrontMonth(), c => c.StandardsOnly().FrontMonth());
             yield return Case("ExpirationCycle(3, 9)", u => u.ExpirationCycle([3, 9]), c => c.ExpirationCycle([3, 9]));
             yield return Case("ExpirationCycle(1)", u => u.ExpirationCycle([1]), c => c.ExpirationCycle([1]), empty: true);
-            yield return Case("ContractMonth(2014, 6)", u => u.ContractMonth(2014, 6), c => c.ContractMonth(2014, 6));
-            yield return Case("ContractMonth(2015, 3)", u => u.ContractMonth(2015, 3), c => c.ContractMonth(2015, 3), empty: true);
             yield return Case("ContractMonths(3, 12)", u => u.ContractMonths([3, 12]), c => c.ContractMonths([3, 12]));
             yield return Case("ContractMonths(1)", u => u.ContractMonths([1]), c => c.ContractMonths([1]), empty: true);
             yield return Case("OpenInterest(1000, 100000)", u => u.OpenInterest(1000, 100000), c => c.OpenInterest(1000, 100000));
@@ -188,11 +186,11 @@ namespace QuantConnect.Tests.Common.Data.Market
             var expectedFiltered = chain.Expiration(0, 300).BackMonths().ExpirationCycle([3, 6]).Select(x => x.Symbol).ToList();
             var expectedSets = chain.Expiration([Expiries[1], Expiries[3]]).OpenInterest(1000, 100000).Select(x => x.Symbol).ToList();
             var expectedWhere = chain.Where(x => x.Volume >= 3000).Select(x => x.Symbol).ToList();
-            var expectedContractMonths = chain.ContractMonths([3, 12]).ContractMonth(2014, 12).Select(x => x.Symbol).ToList();
+            var expectedContractMonths = chain.ContractMonths([3, 12]).ExpiringAfter(Expiries[0]).Select(x => x.Symbol).ToList();
             Assert.AreEqual(2, expectedFiltered.Count);
             Assert.AreEqual(2, expectedSets.Count);
             Assert.AreEqual(3, expectedWhere.Count);
-            Assert.AreEqual(1, expectedContractMonths.Count);
+            Assert.AreEqual(2, expectedContractMonths.Count);
 
             using (Py.GIL())
             {
@@ -209,7 +207,7 @@ def where_chain(chain):
     return chain.where(lambda contract: contract.volume >= 3000)
 
 def contract_months(chain):
-    return chain.contract_months([3, 12]).contract_month(2014, 12)
+    return chain.contract_months([3, 12]).expiring_after(datetime(2013, 12, 20))
 ");
                 using var pyChain = chain.ToPython();
 

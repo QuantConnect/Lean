@@ -28,13 +28,7 @@ namespace QuantConnect.Securities
         /// <summary>
         /// Selects the contracts expiring in any of the given months of the year, see <see cref="FutureExpirationCycles"/>
         /// </summary>
-        TSelf ExpirationCycle(int[] months);
-
-        /// <summary>
-        /// Selects the contracts for the given contract month, the month the contract is named after, which for some products,
-        /// e.g. crude oil, is the month after the expiration month
-        /// </summary>
-        TSelf ContractMonth(int year, int month);
+        TSelf ExpirationCycle(IEnumerable<int> months);
 
         /// <summary>
         /// Selects the contracts whose contract month is any of the given months of the year, see <see cref="FutureExpirationCycles"/>.

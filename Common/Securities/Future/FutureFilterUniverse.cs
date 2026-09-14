@@ -58,28 +58,16 @@ namespace QuantConnect.Securities
         /// </summary>
         /// <param name="months">Months to select contracts from</param>
         /// <returns>Universe with filter applied</returns>
-        public TUniverse ExpirationCycle(int[] months)
+        public TUniverse ExpirationCycle(IEnumerable<int> months)
         {
             var monthHashSet = months.ToHashSet();
             return Contracts(contracts => contracts.Where(x => monthHashSet.Contains(x.Symbol.ID.Date.Month)));
         }
 
         /// <summary>
-        /// Selects the contracts for the given contract month, the month the contract is named after. For some products, e.g. crude oil,
-        /// that is the month after the expiration month, see <see cref="FuturesExpiryUtilityFunctions.GetFutureContractMonth"/>
-        /// </summary>
-        /// <param name="year">The contract year</param>
-        /// <param name="month">The contract month, 1 to 12</param>
-        /// <returns>Universe with filter applied</returns>
-        public TUniverse ContractMonth(int year, int month)
-        {
-            var contractMonth = new DateTime(year, month, 1);
-            return Contracts(contracts => contracts.Where(x => FuturesExpiryUtilityFunctions.GetFutureContractMonth(x.Symbol) == contractMonth));
-        }
-
-        /// <summary>
         /// Selects the contracts whose contract month is any of the given months of the year, see <see cref="FutureExpirationCycles"/>.
-        /// Like <see cref="ExpirationCycle"/> but by the contract month, which for some products, e.g. crude oil, is the month after the expiration month
+        /// Like <see cref="ExpirationCycle"/> but by the contract month, the month the contract is named after, which for some products,
+        /// e.g. crude oil, is the month after the expiration month, see <see cref="FuturesExpiryUtilityFunctions.GetFutureContractMonth"/>
         /// </summary>
         /// <param name="months">Months of the year to select contracts from</param>
         /// <returns>Universe with filter applied</returns>
