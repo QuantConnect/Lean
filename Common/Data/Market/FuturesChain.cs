@@ -16,14 +16,18 @@
 using System;
 using System.Collections.Generic;
 using QuantConnect.Data.UniverseSelection;
+using QuantConnect.Securities;
 
 namespace QuantConnect.Data.Market
 {
     /// <summary>
     /// Represents an entire chain of futures contracts for a single underlying
-    /// This type is <see cref="IEnumerable{FuturesContract}"/>
+    /// This type is <see cref="IEnumerable{FuturesContract}"/>.
+    /// The chain can be narrowed down with the same filters available for futures universe selection
+    /// (see <see cref="IFutureContractFilters{TSelf}"/> and <see cref="FutureFilterUniverse"/>), e.g. <c>chain.expiration(0, 90).front_month()</c>.
+    /// Each filter returns a new chain, leaving this one untouched.
     /// </summary>
-    public class FuturesChain : BaseChain<FuturesContract, FuturesContracts>
+    public partial class FuturesChain : BaseChain<FuturesContract, FuturesContracts, FuturesChain, FuturesChainFilterUniverse>, IFutureContractFilters<FuturesChain>
     {
         /// <summary>
         /// Initializes a new instance of the <see cref="FuturesChain"/> class
@@ -58,6 +62,15 @@ namespace QuantConnect.Data.Market
         /// </summary>
         private FuturesChain(FuturesChain other)
             : base(other)
+        {
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="FuturesChain"/> class as a copy of the specified chain
+        /// containing only the given subset of its contracts
+        /// </summary>
+        private FuturesChain(FuturesChain other, IEnumerable<FuturesContract> contracts)
+            : base(other, contracts)
         {
         }
 

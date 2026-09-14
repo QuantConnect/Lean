@@ -25,7 +25,7 @@ namespace QuantConnect.Securities
     /// Option contracts filter over the contracts of an <see cref="OptionChain"/>, so chains offer
     /// the same filters as the option universe selection (<see cref="OptionFilterUniverse"/>)
     /// </summary>
-    internal class OptionChainFilterUniverse : BaseOptionFilterUniverse<OptionChainFilterUniverse, OptionContract>
+    public class OptionChainFilterUniverse : BaseOptionFilterUniverse<OptionChainFilterUniverse, OptionContract>
     {
         private readonly Symbol _symbol;
         private SecurityExchangeHours _exchangeHours;
@@ -45,7 +45,7 @@ namespace QuantConnect.Securities
         /// Initializes a new instance of the <see cref="OptionChainFilterUniverse"/> class over the contracts of the given chain
         /// </summary>
         /// <param name="chain">The option chain to filter</param>
-        public OptionChainFilterUniverse(OptionChain chain)
+        internal OptionChainFilterUniverse(OptionChain chain)
             : base(GetContracts(chain), GetUnderlying(chain), chain.ExchangeTime, GetStrikeMultiplier(chain))
         {
             _symbol = chain.Symbol;
@@ -73,6 +73,11 @@ namespace QuantConnect.Securities
         /// Gets the open interest of the given contract
         /// </summary>
         protected override decimal GetOpenInterest(OptionContract contract) => contract.OpenInterest;
+
+        /// <summary>
+        /// Gets the volume of the given contract
+        /// </summary>
+        protected override decimal GetVolume(OptionContract contract) => contract.Volume;
 
         private static IReadOnlyList<OptionContract> GetContracts(OptionChain chain)
         {

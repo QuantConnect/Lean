@@ -27,7 +27,7 @@ namespace QuantConnect.Data.Market
     /// (see <see cref="IOptionContractFilters{TSelf}"/> and <see cref="OptionFilterUniverse"/>), e.g. <c>chain.calls_only().expiration(0, 30).strikes(-2, 2)</c>.
     /// Each filter returns a new chain, leaving this one untouched.
     /// </summary>
-    public partial class OptionChain : BaseChain<OptionContract, OptionContracts>, IOptionContractFilters<OptionChain>
+    public partial class OptionChain : BaseChain<OptionContract, OptionContracts, OptionChain, OptionChainFilterUniverse>, IOptionContractFilters<OptionChain>
     {
         /// <summary>
         /// Initializes a new instance of the <see cref="OptionChain"/> class

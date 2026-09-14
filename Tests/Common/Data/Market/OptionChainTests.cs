@@ -79,6 +79,8 @@ namespace QuantConnect.Tests.Common.Data.Market
             yield return Case("StrikesAbove.StrikesBelow", u => u.StrikesAbove(95m).StrikesBelow(105m), c => c.StrikesAbove(95m).StrikesBelow(105m));
             yield return Case("StrikesAbove(max)", u => u.StrikesAbove(110m), c => c.StrikesAbove(110m), empty: true);
             yield return Case("ZeroDte", u => u.ZeroDte(), c => c.ZeroDte(), empty: true);
+            yield return Case("Volume(5, 20)", u => u.Volume(5, 20), c => c.Volume(5, 20));
+            yield return Case("Volume(5, 20).OpenInterest(100, 1500)", u => u.Volume(5, 20).OpenInterest(100, 1500), c => c.Volume(5, 20).OpenInterest(100, 1500));
             yield return Case("CallsOnly", u => u.CallsOnly(), c => c.CallsOnly());
             yield return Case("PutsOnly", u => u.PutsOnly(), c => c.PutsOnly());
             yield return Case("OutOfTheMoney", u => u.OutOfTheMoney(), c => c.OutOfTheMoney());
@@ -165,7 +167,10 @@ namespace QuantConnect.Tests.Common.Data.Market
             foreach (var universeFilter in universeFilters)
             {
                 var parameters = universeFilter.GetParameters().Select(x => x.ParameterType).ToArray();
-                var chainFilter = typeof(IOptionContractFilters<OptionChain>).GetMethod(universeFilter.Name, parameters);
+                // the shared contract filters are declared on the base interface
+                var chainFilter = typeof(IOptionContractFilters<OptionChain>).GetInterfaces().Prepend(typeof(IOptionContractFilters<OptionChain>))
+                    .Select(x => x.GetMethod(universeFilter.Name, parameters))
+                    .FirstOrDefault(x => x != null);
                 Assert.IsNotNull(chainFilter, $"{universeFilter.Name}({string.Join(", ", parameters.Select(x => x.Name))}) is not an option chain filter");
             }
         }
@@ -425,6 +430,10 @@ def bounds(chain):
             // the expiration filters count from the CME date, every ES option is a standard contract
             Assert.AreEqual(10, chain.Expiration(70, 80).Count);
             Assert.AreEqual(0, chain.ZeroDte().Count);
+            // a chain dated on a Saturday counts from the next CME session, 75 days to the expiry instead of 76
+            var saturdayChain = new OptionChain(canonical, new DateTime(2020, 1, 4), data, symbolProperties);
+            Assert.AreEqual(10, saturdayChain.Expiration(0, 75).Count);
+            Assert.AreEqual(0, saturdayChain.Expiration(76, 80).Count);
             Assert.AreEqual(10, chain.StandardsOnly().FarthestExpiration().Count);
             Assert.AreEqual(0, chain.WeeklysOnly().Count);
             Assert.IsTrue(chain.All(x => x.DaysToExpiry == (future.ID.Date - x.Time.Date).Days));

@@ -13,16 +13,14 @@
  * limitations under the License.
 */
 
-using System;
 using System.Collections.Generic;
-using System.Linq;
-using Python.Runtime;
 using QuantConnect.Securities;
 
 namespace QuantConnect.Data.Market
 {
     /// <summary>
     /// The option chain filters, the same ones the option universe selection offers, see <see cref="IOptionContractFilters{TSelf}"/>.
+    /// The filters shared with the futures chains live in <see cref="BaseChain{T, TContractsCollection, TSelf, TUniverse}"/>.
     /// Each filter returns a new chain, leaving this one untouched
     /// </summary>
     public partial class OptionChain
@@ -39,67 +37,6 @@ namespace QuantConnect.Data.Market
         public OptionChain Strikes(int minStrike, int maxStrike)
         {
             return Filter(universe => universe.Strikes(minStrike, maxStrike));
-        }
-
-        /// <summary>
-        /// Selects the contracts expiring in the given range relative to the chain date.
-        /// Same as <see cref="ContractSecurityFilterUniverse{T, TData}.Expiration(TimeSpan, TimeSpan)"/>
-        /// </summary>
-        /// <param name="minExpiry">The minimum time until expiry to include, for example, TimeSpan.FromDays(10)
-        /// would exclude contracts expiring in less than 10 days</param>
-        /// <param name="maxExpiry">The maximum time until expiry to include, for example, TimeSpan.FromDays(10)
-        /// would exclude contracts expiring in more than 10 days</param>
-        /// <returns>A new chain with the filter applied</returns>
-        public OptionChain Expiration(TimeSpan minExpiry, TimeSpan maxExpiry)
-        {
-            return Filter(universe => universe.Expiration(minExpiry, maxExpiry));
-        }
-
-        /// <summary>
-        /// Selects the contracts expiring in the given range of days relative to the chain date.
-        /// Same as <see cref="ContractSecurityFilterUniverse{T, TData}.Expiration(int, int)"/>
-        /// </summary>
-        /// <param name="minExpiryDays">The minimum time, expressed in days, until expiry to include, for example, 10
-        /// would exclude contracts expiring in less than 10 days</param>
-        /// <param name="maxExpiryDays">The maximum time, expressed in days, until expiry to include, for example, 10
-        /// would exclude contracts expiring in more than 10 days</param>
-        /// <returns>A new chain with the filter applied</returns>
-        public OptionChain Expiration(int minExpiryDays, int maxExpiryDays)
-        {
-            return Filter(universe => universe.Expiration(minExpiryDays, maxExpiryDays));
-        }
-
-        /// <summary>
-        /// Selects the contracts expiring on any of the given dates. Time of day is ignored.
-        /// Same as <see cref="ContractSecurityFilterUniverse{T, TData}.Expiration(IEnumerable{DateTime})"/>
-        /// </summary>
-        /// <param name="expiries">The expiration dates</param>
-        /// <returns>A new chain with the filter applied</returns>
-        public OptionChain Expiration(IEnumerable<DateTime> expiries)
-        {
-            return Filter(universe => universe.Expiration(expiries));
-        }
-
-        /// <summary>
-        /// Selects the contracts expiring after the given date, excluding it. Time of day is ignored.
-        /// Same as <see cref="ContractSecurityFilterUniverse{T, TData}.ExpiringAfter"/>
-        /// </summary>
-        /// <param name="date">The date the expirations must be after</param>
-        /// <returns>A new chain with the filter applied</returns>
-        public OptionChain ExpiringAfter(DateTime date)
-        {
-            return Filter(universe => universe.ExpiringAfter(date));
-        }
-
-        /// <summary>
-        /// Selects the contracts expiring before the given date, excluding it. Time of day is ignored.
-        /// Same as <see cref="ContractSecurityFilterUniverse{T, TData}.ExpiringBefore"/>
-        /// </summary>
-        /// <param name="date">The date the expirations must be before</param>
-        /// <returns>A new chain with the filter applied</returns>
-        public OptionChain ExpiringBefore(DateTime date)
-        {
-            return Filter(universe => universe.ExpiringBefore(date));
         }
 
         /// <summary>
@@ -133,15 +70,6 @@ namespace QuantConnect.Data.Market
         public OptionChain StrikesBelow(decimal price)
         {
             return Filter(universe => universe.StrikesBelow(price));
-        }
-
-        /// <summary>
-        /// Selects the contracts expiring today. Same as <see cref="BaseOptionFilterUniverse{TUniverse, TData}.ZeroDte"/>
-        /// </summary>
-        /// <returns>A new chain with the filter applied</returns>
-        public OptionChain ZeroDte()
-        {
-            return Filter(universe => universe.ZeroDte());
         }
 
         /// <summary>
@@ -225,62 +153,6 @@ namespace QuantConnect.Data.Market
         public OptionChain ATM(decimal? maxStrikeDistance = null)
         {
             return AtTheMoney(maxStrikeDistance);
-        }
-
-        /// <summary>
-        /// Selects the standard contracts in the chain, excluding weeklys. Unlike <see cref="ContractSecurityFilterUniverse{T, TData}.StandardsOnly"/>,
-        /// it applies to the contracts already selected, so it can be combined with the expiry filters in any order
-        /// </summary>
-        /// <returns>A new chain with the filter applied</returns>
-        public OptionChain StandardsOnly()
-        {
-            return Filter(universe => universe.StandardsOnly());
-        }
-
-        /// <summary>
-        /// Selects the non standard weekly contracts in the chain. Unlike <see cref="ContractSecurityFilterUniverse{T, TData}.WeeklysOnly"/>,
-        /// it applies to the contracts already selected, so it can be combined with the expiry filters in any order
-        /// </summary>
-        /// <returns>A new chain with the filter applied</returns>
-        public OptionChain WeeklysOnly()
-        {
-            return Filter(universe => universe.WeeklysOnly());
-        }
-
-        /// <summary>
-        /// Selects the contracts of the nearest expiration. Same as <see cref="ContractSecurityFilterUniverse{T, TData}.FrontMonth"/>
-        /// </summary>
-        /// <returns>A new chain with the filter applied</returns>
-        public OptionChain FrontMonth()
-        {
-            return Filter(universe => universe.FrontMonth());
-        }
-
-        /// <summary>
-        /// Selects the contracts of the farthest expiration. Same as <see cref="ContractSecurityFilterUniverse{T, TData}.FarthestExpiration"/>
-        /// </summary>
-        /// <returns>A new chain with the filter applied</returns>
-        public OptionChain FarthestExpiration()
-        {
-            return Filter(universe => universe.FarthestExpiration());
-        }
-
-        /// <summary>
-        /// Selects the contracts of all expirations but the nearest one. Same as <see cref="ContractSecurityFilterUniverse{T, TData}.BackMonths"/>
-        /// </summary>
-        /// <returns>A new chain with the filter applied</returns>
-        public OptionChain BackMonths()
-        {
-            return Filter(universe => universe.BackMonths());
-        }
-
-        /// <summary>
-        /// Selects the contracts of the second nearest expiration. Same as <see cref="ContractSecurityFilterUniverse{T, TData}.BackMonth"/>
-        /// </summary>
-        /// <returns>A new chain with the filter applied</returns>
-        public OptionChain BackMonth()
-        {
-            return Filter(universe => universe.BackMonth());
         }
 
         /// <summary>
@@ -413,39 +285,6 @@ namespace QuantConnect.Data.Market
         public OptionChain IV(decimal min, decimal max)
         {
             return ImpliedVolatility(min, max);
-        }
-
-        /// <summary>
-        /// Selects the contracts with open interest in the given range. Same as <see cref="BaseOptionFilterUniverse{TUniverse, TData}.OpenInterest"/>
-        /// </summary>
-        /// <param name="min">The minimum open interest value</param>
-        /// <param name="max">The maximum open interest value</param>
-        /// <returns>A new chain with the filter applied</returns>
-        public OptionChain OpenInterest(long min, long max)
-        {
-            return Filter(universe => universe.OpenInterest(min, max));
-        }
-
-        /// <summary>
-        /// Selects the contracts with open interest in the given range. Alias for <see cref="OpenInterest"/>
-        /// </summary>
-        /// <param name="min">The minimum open interest value</param>
-        /// <param name="max">The maximum open interest value</param>
-        /// <returns>A new chain with the filter applied</returns>
-        public OptionChain OI(long min, long max)
-        {
-            return OpenInterest(min, max);
-        }
-
-        /// <summary>
-        /// Selects the contracts matching the given predicate, e.g. <c>chain.where(lambda contract: contract.open_interest > 100)</c>.
-        /// From C# use Linq's Where, which keeps this chain's type untouched
-        /// </summary>
-        /// <param name="predicate">Function determining which contracts are kept</param>
-        /// <returns>A new chain with the filter applied</returns>
-        public OptionChain Where(PyObject predicate)
-        {
-            return new OptionChain(this, Contracts.Values.Where(predicate.SafeAs<Func<OptionContract, bool>>()));
         }
 
         #endregion
@@ -661,17 +500,23 @@ namespace QuantConnect.Data.Market
             return Filter(universe => universe.PutLadder(minDaysTillExpiry, higherStrikeFromAtm, middleStrikeFromAtm, lowerStrikeFromAtm));
         }
 
+        #endregion
+
         /// <summary>
-        /// Applies the given universe filter to the contracts of this chain and returns the result as a new chain
+        /// Creates the filter universe over the contracts of this chain
         /// </summary>
-        /// <param name="filter">The universe filter to apply</param>
-        private OptionChain Filter(Func<OptionChainFilterUniverse, OptionChainFilterUniverse> filter)
+        protected override OptionChainFilterUniverse CreateFilterUniverse()
         {
-            var universe = new OptionChainFilterUniverse(this);
-            // the type filters (standards/weeklys) are only applied on demand, like the universe selection does after the user filter
-            return new OptionChain(this, filter(universe).ApplyTypesFilter());
+            return new OptionChainFilterUniverse(this);
         }
 
-        #endregion
+        /// <summary>
+        /// Creates a copy of this chain with only the given contracts
+        /// </summary>
+        /// <param name="contracts">The contracts to keep</param>
+        protected override OptionChain CreateChain(IEnumerable<OptionContract> contracts)
+        {
+            return new OptionChain(this, contracts);
+        }
     }
 }
