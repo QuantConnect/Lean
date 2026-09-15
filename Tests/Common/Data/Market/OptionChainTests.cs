@@ -333,12 +333,14 @@ namespace QuantConnect.Tests.Common.Data.Market
         }
 
         [Test]
-        public void ZeroDteCountsIndexAndFutureOptionsOnTheirExpirationDate()
+        public void ZeroDteCountsIndexAndFutureOptionsOnTheirLastTradingDate()
         {
-            // Index options count on their expiration date, like ZeroDTEIndexOptionsRegressionAlgorithm expects for SPX on its Friday
+            // SPX settles in the morning of its Friday expiration, so it stops trading on the Thursday, or the Wednesday when the
+            // Thursday is a holiday, like Thanksgiving; SPXW settles in the afternoon and trades until its expiration
             var spx = Symbol.CreateCanonicalOption(Symbols.SPX, market: QuantConnect.Market.USA);
             var spxw = Symbol.CreateCanonicalOption(Symbols.SPX, targetOption: "SPXW", market: QuantConnect.Market.USA);
-            AssertZeroDteOn(spx, new DateTime(2021, 1, 15), new DateTime(2021, 1, 15), 3800m);
+            AssertZeroDteOn(spx, new DateTime(2021, 1, 15), new DateTime(2021, 1, 14), 3800m);
+            AssertZeroDteOn(spx, new DateTime(2020, 11, 27), new DateTime(2020, 11, 25), 3600m);
             AssertZeroDteOn(spxw, new DateTime(2021, 1, 13), new DateTime(2021, 1, 13), 3800m);
 
             // Future options trade until their expiration date

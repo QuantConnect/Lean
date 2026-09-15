@@ -27,8 +27,9 @@ namespace QuantConnect.Algorithm.CSharp
     {
         public override void Initialize()
         {
-            SetStartDate(2021, 01, 15);
-            SetEndDate(2021, 01, 15);
+            // The SPX contracts dated Friday the 15th stop trading on Thursday the 14th, their last 0DTE day
+            SetStartDate(2021, 01, 14);
+            SetEndDate(2021, 01, 14);
             SetCash(100000);
 
             var index = AddIndex("SPX");
@@ -42,14 +43,14 @@ namespace QuantConnect.Algorithm.CSharp
 
             _selectionDays = new List<DateTime>()
             {
-                new DateTime(2021, 01, 15),
+                new DateTime(2021, 01, 14),
             };
         }
 
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
-        public override long DataPoints => 27;
+        public override long DataPoints => 6483;
 
         /// <summary>
         /// Data Points count of the algorithm history

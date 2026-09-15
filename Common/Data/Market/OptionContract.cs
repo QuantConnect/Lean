@@ -108,7 +108,8 @@ namespace QuantConnect.Data.Market
 
         /// <summary>
         /// Calendar days from this contract's time until its last trading date, see <see cref="Extensions.GetLastTradingDate"/>:
-        /// the previous open day for expirations on a Saturday or holiday
+        /// the previous open day for expirations on a Saturday or holiday, the business day before for index options that settle
+        /// in the morning
         /// </summary>
         [PandasIgnore]
         public override int DaysToExpiry => ((_lastTradingDate ??= Symbol.GetLastTradingDate()) - Time.Date).Days;
