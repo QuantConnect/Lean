@@ -3513,7 +3513,8 @@ namespace QuantConnect.Algorithm
             foreach (var (symbol, contracts) in optionChainsData)
             {
                 var symbolProperties = SymbolPropertiesDatabase.GetSymbolProperties(symbol.ID.Market, symbol, symbol.SecurityType, AccountCurrency);
-                var optionChain = new OptionChain(symbol, GetTimeInExchangeTimeZone(symbol).Date, contracts, symbolProperties, flatten);
+                var exchangeHours = MarketHoursDatabase.GetExchangeHours(symbol.ID.Market, symbol, symbol.SecurityType);
+                var optionChain = new OptionChain(symbol, UtcTime.ConvertFromUtc(exchangeHours.TimeZone).Date, contracts, symbolProperties, exchangeHours, flatten);
                 chains.Add(symbol, optionChain);
             }
 

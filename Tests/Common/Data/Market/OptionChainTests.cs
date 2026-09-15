@@ -380,6 +380,23 @@ namespace QuantConnect.Tests.Common.Data.Market
         }
 
         [Test]
+        public void ChainExchangeHoursReachTheFiltersAndTheContracts()
+        {
+            // 2012-02-17 is the Friday before a Saturday expiration: the walk-back runs on the hours the chain was built with
+            var date = new DateTime(2012, 2, 17);
+            var (data, _) = CreateSaturdayExpiriesData("2012-02-16");
+            var exchangeHours = CreateOption().Exchange.Hours;
+            var chain = new OptionChain(Canonical, date, data, _symbolProperties, exchangeHours);
+            Assert.AreSame(exchangeHours, chain.ExchangeHours);
+
+            var zeroDte = chain.ZeroDte();
+            Assert.AreEqual(2 * Strikes.Length, zeroDte.Count);
+            Assert.IsTrue(zeroDte.All(x => x.Expiry == new DateTime(2012, 2, 18) && x.DaysToExpiry == 0));
+            Assert.AreSame(exchangeHours, zeroDte.ExchangeHours);
+            Assert.AreSame(exchangeHours, zeroDte.PutsOnly().ExchangeHours);
+        }
+
+        [Test]
         public void FiltersAreAvailableFromPython()
         {
             var chain = CreateChain();

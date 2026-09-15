@@ -49,6 +49,7 @@ namespace QuantConnect.Securities
             : base(GetContracts(chain), GetUnderlying(chain), chain.ExchangeTime, GetStrikeMultiplier(chain))
         {
             _symbol = chain.Symbol;
+            _exchangeHours = chain.ExchangeHours;
         }
 
         /// <summary>

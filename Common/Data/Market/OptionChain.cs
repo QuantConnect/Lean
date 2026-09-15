@@ -47,11 +47,13 @@ namespace QuantConnect.Data.Market
         /// <param name="time">The time of this chain</param>
         /// <param name="contracts">The list of contracts data</param>
         /// <param name="symbolProperties">The option symbol properties</param>
+        /// <param name="exchangeHours">The option exchange hours, so the filters and the contracts don't look them up</param>
         /// <param name="flatten">Whether to flatten the data frame</param>
         public OptionChain(Symbol canonicalOptionSymbol, DateTime time, IEnumerable<OptionUniverse> contracts, SymbolProperties symbolProperties,
-            bool flatten = true)
+            SecurityExchangeHours exchangeHours = null, bool flatten = true)
             : this(canonicalOptionSymbol, time, flatten)
         {
+            ExchangeHours = exchangeHours;
             var underlyingSet = false;
             foreach (var contractData in contracts)
             {
@@ -62,7 +64,7 @@ namespace QuantConnect.Data.Market
                     underlyingSet = true;
                 }
                 if (contractData.Symbol.ID.Date.Date < time.Date) continue;
-                Contracts[contractData.Symbol] = OptionContract.Create(contractData, symbolProperties);
+                Contracts[contractData.Symbol] = OptionContract.Create(contractData, symbolProperties, exchangeHours);
             }
         }
 

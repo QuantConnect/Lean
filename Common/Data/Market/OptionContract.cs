@@ -29,6 +29,7 @@ namespace QuantConnect.Data.Market
     {
         private IOptionData _optionData = OptionPriceModelResultData.Null;
         private readonly SymbolProperties _symbolProperties;
+        private readonly SecurityExchangeHours _exchangeHours;
         private DateTime? _lastTradingDate;
 
         /// <summary>
@@ -126,6 +127,7 @@ namespace QuantConnect.Data.Market
             : base(security.Symbol)
         {
             _symbolProperties = security.SymbolProperties;
+            _exchangeHours = (security as Security)?.Exchange.Hours;
         }
 
         /// <summary>
@@ -133,10 +135,12 @@ namespace QuantConnect.Data.Market
         /// </summary>
         /// <param name="contractData">The option universe contract data to use as source for this contract</param>
         /// <param name="symbolProperties">The contract symbol properties</param>
-        public OptionContract(OptionUniverse contractData, SymbolProperties symbolProperties)
+        /// <param name="exchangeHours">The contract exchange hours, so the days to expiry don't look them up</param>
+        public OptionContract(OptionUniverse contractData, SymbolProperties symbolProperties, SecurityExchangeHours exchangeHours = null)
             : base(contractData.Symbol)
         {
             _symbolProperties = symbolProperties;
+            _exchangeHours = exchangeHours;
             _optionData = new OptionUniverseData(contractData);
         }
 
@@ -183,9 +187,10 @@ namespace QuantConnect.Data.Market
         /// </summary>
         /// <param name="contractData">The option universe contract data to use as source for this contract</param>
         /// <param name="symbolProperties">The contract symbol properties</param>
-        public static OptionContract Create(OptionUniverse contractData, SymbolProperties symbolProperties)
+        /// <param name="exchangeHours">The contract exchange hours, so the days to expiry don't look them up</param>
+        public static OptionContract Create(OptionUniverse contractData, SymbolProperties symbolProperties, SecurityExchangeHours exchangeHours = null)
         {
-            var contract = new OptionContract(contractData, symbolProperties)
+            var contract = new OptionContract(contractData, symbolProperties, exchangeHours)
             {
                 Time = contractData.EndTime,
             };
@@ -224,8 +229,15 @@ namespace QuantConnect.Data.Market
         /// </summary>
         private DateTime GetLastTradingDate()
         {
+            if (Symbol.SecurityType != SecurityType.Option)
+            {
+                return Symbol.ID.Date.Date;
+            }
+
             // equity options were dated on the Saturday after their last trading day until the OCC moved expirations to Friday in 2015
-            return Symbol.SecurityType == SecurityType.Option ? OptionSymbol.GetLastDayOfTrading(Symbol) : Symbol.ID.Date.Date;
+            return _exchangeHours == null
+                ? OptionSymbol.GetLastDayOfTrading(Symbol)
+                : OptionSymbol.GetLastDayOfTrading(Symbol, _exchangeHours);
         }
 
         private interface IOptionData

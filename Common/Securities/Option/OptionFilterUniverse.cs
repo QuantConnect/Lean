@@ -44,7 +44,9 @@ namespace QuantConnect.Securities
         private bool _refreshUniqueStrikes;
         private DateTime _lastExchangeDate;
         private readonly decimal _underlyingScaleFactor = 1;
-        private readonly Dictionary<DateTime, DateTime> _lastTradingDates = new();
+        // the contracts come grouped by expiration, so the last resolved date answers the next contract most of the time
+        private DateTime _lastExpiry;
+        private DateTime _lastTradingDate;
 
         /// <summary>
         /// The underlying price data
@@ -171,7 +173,7 @@ namespace QuantConnect.Securities
 
         /// <summary>
         /// Gets the last trading date of the given contract, see <see cref="GetLastTradingDate(TData)"/>. Uses the universe
-        /// exchange hours and caches per expiration date, since every contract in the universe shares them
+        /// exchange hours and keeps the last resolved expiration, since every contract in the universe shares them
         /// </summary>
         /// <param name="symbol">The contract symbol</param>
         /// <returns>The date the contract stops trading</returns>
@@ -183,16 +185,16 @@ namespace QuantConnect.Securities
                 return expiry;
             }
 
-            if (!_lastTradingDates.TryGetValue(expiry, out var lastTradingDate))
+            if (expiry != _lastExpiry)
             {
                 // equity options were dated on the Saturday after their last trading day until the OCC moved expirations to Friday in 2015
-                lastTradingDate = ExchangeHours == null
+                _lastTradingDate = ExchangeHours == null
                     ? OptionSymbol.GetLastDayOfTrading(symbol)
                     : OptionSymbol.GetLastDayOfTrading(symbol, ExchangeHours);
-                _lastTradingDates[expiry] = lastTradingDate;
+                _lastExpiry = expiry;
             }
 
-            return lastTradingDate;
+            return _lastTradingDate;
         }
 
         /// <summary>
