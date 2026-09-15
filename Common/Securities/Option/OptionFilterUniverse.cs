@@ -159,7 +159,7 @@ namespace QuantConnect.Securities
         }
 
         /// <summary>
-        /// Gets the last trading date of the given contract, see <see cref="OptionSymbol.GetLastDayOfTrading"/>
+        /// Gets the last trading date of the given contract, see <see cref="Extensions.GetLastTradingDate"/>
         /// </summary>
         /// <param name="contract">The contract</param>
         /// <returns>The date the contract stops trading</returns>
@@ -169,8 +169,8 @@ namespace QuantConnect.Securities
         }
 
         /// <summary>
-        /// Gets the last trading date of the given contract, see <see cref="OptionSymbol.GetLastDayOfTrading"/>. Cached per
-        /// expiration date, since every contract in the universe shares the exchange hours
+        /// Gets the last trading date of the given contract, see <see cref="Extensions.GetLastTradingDate"/>. Cached per
+        /// expiration date, since every contract in the universe shares the option ticker and exchange hours
         /// </summary>
         /// <param name="symbol">The contract symbol</param>
         /// <returns>The date the contract stops trading</returns>
@@ -179,7 +179,7 @@ namespace QuantConnect.Securities
             var expiry = symbol.ID.Date.Date;
             if (!_lastTradingDates.TryGetValue(expiry, out var lastTradingDate))
             {
-                _lastTradingDates[expiry] = lastTradingDate = OptionSymbol.GetLastDayOfTrading(symbol);
+                _lastTradingDates[expiry] = lastTradingDate = symbol.GetLastTradingDate();
             }
 
             return lastTradingDate;

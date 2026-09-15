@@ -333,6 +333,53 @@ namespace QuantConnect.Tests.Common.Data.Market
         }
 
         [Test]
+        public void ZeroDteCountsIndexAndFutureOptionsOnTheirLastTradingDate()
+        {
+            // SPX settles in the morning of its Friday expiration, so it stops trading on the Thursday; SPXW trades until its expiration
+            var spx = Symbol.CreateCanonicalOption(Symbols.SPX, market: QuantConnect.Market.USA);
+            var spxw = Symbol.CreateCanonicalOption(Symbols.SPX, targetOption: "SPXW", market: QuantConnect.Market.USA);
+            AssertZeroDteOn(spx, new DateTime(2021, 1, 15), new DateTime(2021, 1, 14), 3800m);
+            AssertZeroDteOn(spxw, new DateTime(2021, 1, 13), new DateTime(2021, 1, 13), 3800m);
+
+            // Future options trade until their expiration date
+            var future = Symbol.CreateFuture("ES", QuantConnect.Market.CME, new DateTime(2020, 3, 20));
+            AssertZeroDteOn(Symbol.CreateCanonicalOption(future), future.ID.Date, future.ID.Date, 3200m);
+        }
+
+        private static void AssertZeroDteOn(Symbol canonical, DateTime expiry, DateTime lastTradingDate, decimal strike)
+        {
+            var contracts = new[] { OptionRight.Call, OptionRight.Put }
+                .Select(right => Symbol.CreateOption(canonical.Underlying, canonical.ID.Symbol, canonical.ID.Market, canonical.ID.OptionStyle, right, strike, expiry))
+                .Select(symbol => (symbol, 100m, 0.15m, new Greeks(0.5m, 0.01m, 5, -0.5m * 365m, 1, 0)))
+                .ToList();
+            var previous = lastTradingDate.AddDays(-1);
+            var (data, underlying) = CreateUniverseData(canonical, lastTradingDate, strike, contracts);
+            var (previousData, previousUnderlying) = CreateUniverseData(canonical, previous, strike, contracts);
+            var symbolProperties = SymbolPropertiesDatabase.FromDataFolder().GetSymbolProperties(canonical.ID.Market, canonical, canonical.SecurityType, Currencies.USD);
+            OptionFilterUniverse Universe(List<OptionUniverse> rows, BaseData spot, DateTime date)
+            {
+                var universe = new OptionFilterUniverse(CreateOption(canonical), rows, spot);
+                universe.Refresh(rows, spot, date);
+                return universe;
+            }
+
+            // Zero DTE on the last trading date, on the universe and on the chain, one day out the day before
+            Assert.AreEqual(2, Universe(data, underlying, lastTradingDate).ZeroDte().Count, $"{canonical} zero DTE on {lastTradingDate:yyyy-MM-dd}");
+            Assert.AreEqual(2, new OptionChain(canonical, lastTradingDate, data, symbolProperties).ZeroDte().Count);
+            Assert.AreEqual(0, Universe(previousData, previousUnderlying, previous).ZeroDte().Count);
+            Assert.AreEqual(2, Universe(previousData, previousUnderlying, previous).Expiration(1, 1).Count);
+            if (lastTradingDate != expiry)
+            {
+                Assert.AreEqual(0, Universe(data, underlying, expiry).ZeroDte().Count, $"{canonical} no longer trades on {expiry:yyyy-MM-dd}");
+            }
+
+            // Universe rows are stamped at the end of their day, so the contracts built from the previous day's rows count from the last trading date
+            var chain = new OptionChain(canonical, lastTradingDate, previousData, symbolProperties);
+            Assert.AreEqual(2, chain.Count);
+            Assert.IsTrue(chain.All(x => x.Time.Date == lastTradingDate && x.DaysToExpiry == 0));
+        }
+
+        [Test]
         public void FiltersAreAvailableFromPython()
         {
             var chain = CreateChain();
@@ -655,7 +702,7 @@ def naked_put(chain):
             var exchangeHours = MarketHoursDatabase.FromDataFolder().GetExchangeHours(canonical.ID.Market, canonical, canonical.SecurityType);
             return new Option(
                 exchangeHours,
-                new SubscriptionDataConfig(typeof(TradeBar), canonical, Resolution.Minute, TimeZones.NewYork, TimeZones.NewYork, true, false, false),
+                new SubscriptionDataConfig(typeof(TradeBar), canonical, Resolution.Minute, exchangeHours.TimeZone, exchangeHours.TimeZone, true, false, false),
                 new Cash(Currencies.USD, 0, 1m),
                 new OptionSymbolProperties(SymbolProperties.GetDefault(Currencies.USD)),
                 ErrorCurrencyConverter.Instance,
