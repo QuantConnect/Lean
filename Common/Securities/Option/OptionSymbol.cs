@@ -95,6 +95,20 @@ namespace QuantConnect.Securities.Option
         /// <returns></returns>
         public static DateTime GetLastDayOfTrading(Symbol symbol)
         {
+            var exchangeHours = MarketHoursDatabase.FromDataFolder()
+                                              .GetEntry(symbol.ID.Market, symbol, symbol.SecurityType)
+                                              .ExchangeHours;
+            return GetLastDayOfTrading(symbol, exchangeHours);
+        }
+
+        /// <summary>
+        /// Returns the last trading date for the option contract, using the given exchange hours instead of looking them up
+        /// </summary>
+        /// <param name="symbol">Option symbol</param>
+        /// <param name="exchangeHours">The exchange hours of the option</param>
+        /// <returns></returns>
+        public static DateTime GetLastDayOfTrading(Symbol symbol, SecurityExchangeHours exchangeHours)
+        {
             // The OCC proposed rule change: starting from 1 Feb 2015 standard monthly contracts
             // expire on 3rd Friday, not Saturday following 3rd Friday as it was before.
             // More details: https://www.sec.gov/rules/sro/occ/2013/34-69480.pdf
@@ -108,10 +122,6 @@ namespace QuantConnect.Securities.Option
             {
                 daysBefore--;
             }
-
-            var exchangeHours = MarketHoursDatabase.FromDataFolder()
-                                              .GetEntry(symbol.ID.Market, symbol, symbol.SecurityType)
-                                              .ExchangeHours;
 
             while (!exchangeHours.IsDateOpen(symbolDateTime.AddDays(daysBefore)))
             {

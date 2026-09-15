@@ -107,12 +107,11 @@ namespace QuantConnect.Data.Market
         public decimal UnderlyingLastPrice => _optionData.UnderlyingLastPrice;
 
         /// <summary>
-        /// Calendar days from this contract's time until its last trading date, see <see cref="Extensions.GetLastTradingDate"/>:
-        /// the previous open day for expirations on a Saturday or holiday, the business day before for index options that settle
-        /// in the morning
+        /// Calendar days from this contract's time until its last trading date: the previous open day for equity options expiring
+        /// on a Saturday or holiday, see <see cref="OptionSymbol.GetLastDayOfTrading(Symbol)"/>, the expiration date otherwise
         /// </summary>
         [PandasIgnore]
-        public override int DaysToExpiry => ((_lastTradingDate ??= Symbol.GetLastTradingDate()) - Time.Date).Days;
+        public override int DaysToExpiry => ((_lastTradingDate ??= GetLastTradingDate()) - Time.Date).Days;
 
         /// <summary>
         /// The option symbol properties
@@ -219,6 +218,15 @@ namespace QuantConnect.Data.Market
         }
 
         #region Option Contract Data Handlers
+
+        /// <summary>
+        /// The previous open day for equity options expiring on a Saturday or a holiday, the expiration date otherwise
+        /// </summary>
+        private DateTime GetLastTradingDate()
+        {
+            // equity options were dated on the Saturday after their last trading day until the OCC moved expirations to Friday in 2015
+            return Symbol.SecurityType == SecurityType.Option ? OptionSymbol.GetLastDayOfTrading(Symbol) : Symbol.ID.Date.Date;
+        }
 
         private interface IOptionData
         {

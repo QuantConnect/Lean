@@ -159,7 +159,8 @@ namespace QuantConnect.Securities
         }
 
         /// <summary>
-        /// Gets the last trading date of the given contract, see <see cref="Extensions.GetLastTradingDate"/>
+        /// Gets the last trading date of the given contract: the previous open day for equity options expiring on a Saturday
+        /// or a holiday, see <see cref="OptionSymbol.GetLastDayOfTrading(Symbol, SecurityExchangeHours)"/>, the expiration date otherwise
         /// </summary>
         /// <param name="contract">The contract</param>
         /// <returns>The date the contract stops trading</returns>
@@ -169,17 +170,26 @@ namespace QuantConnect.Securities
         }
 
         /// <summary>
-        /// Gets the last trading date of the given contract, see <see cref="Extensions.GetLastTradingDate"/>. Cached per
-        /// expiration date, since every contract in the universe shares the option ticker and exchange hours
+        /// Gets the last trading date of the given contract, see <see cref="GetLastTradingDate(TData)"/>. Uses the universe
+        /// exchange hours and caches per expiration date, since every contract in the universe shares them
         /// </summary>
         /// <param name="symbol">The contract symbol</param>
         /// <returns>The date the contract stops trading</returns>
         protected DateTime GetLastTradingDate(Symbol symbol)
         {
             var expiry = symbol.ID.Date.Date;
+            if (symbol.SecurityType != SecurityType.Option)
+            {
+                return expiry;
+            }
+
             if (!_lastTradingDates.TryGetValue(expiry, out var lastTradingDate))
             {
-                _lastTradingDates[expiry] = lastTradingDate = symbol.GetLastTradingDate();
+                // equity options were dated on the Saturday after their last trading day until the OCC moved expirations to Friday in 2015
+                lastTradingDate = ExchangeHours == null
+                    ? OptionSymbol.GetLastDayOfTrading(symbol)
+                    : OptionSymbol.GetLastDayOfTrading(symbol, ExchangeHours);
+                _lastTradingDates[expiry] = lastTradingDate;
             }
 
             return lastTradingDate;
