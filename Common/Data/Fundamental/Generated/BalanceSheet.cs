@@ -197,6 +197,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 23031
         /// </remarks>
         [JsonProperty("23031")]
+        [Obsolete("CashAndDueFromBanks was retired by Morningstar in 2026 for all periods; no replacement is available.")]
+        [JsonIgnore]
         public CashAndDueFromBanksBalanceSheet CashAndDueFromBanks => _cashAndDueFromBanks ??= new(_timeProvider, _securityIdentifier);
         private CashAndDueFromBanksBalanceSheet _cashAndDueFromBanks;
 
