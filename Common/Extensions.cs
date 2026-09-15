@@ -56,7 +56,6 @@ using QuantConnect.Data.Auxiliary;
 using QuantConnect.Exceptions;
 using QuantConnect.Securities.Future;
 using QuantConnect.Securities.FutureOption;
-using QuantConnect.Securities.IndexOption;
 using QuantConnect.Securities.Option;
 using QuantConnect.Statistics;
 using Newtonsoft.Json.Linq;
@@ -3597,9 +3596,8 @@ namespace QuantConnect
         }
 
         /// <summary>
-        /// Gets the last trading date of the given option contract: the previous open day for equity options dated on a Saturday
-        /// or a holiday, the day before the expiration for the index options that settle in the morning, like SPX, and the
-        /// expiration date otherwise
+        /// Gets the last trading date of the given option contract: the previous open day for equity and index options dated on a
+        /// Saturday or a holiday, see <see cref="OptionSymbol.GetLastDayOfTrading"/>, and the expiration date for future options
         /// </summary>
         /// <param name="symbol">The option contract symbol</param>
         /// <returns>The date the contract stops trading</returns>
@@ -3608,9 +3606,8 @@ namespace QuantConnect
             switch (symbol.ID.SecurityType)
             {
                 case SecurityType.Option:
-                    return OptionSymbol.GetLastDayOfTrading(symbol);
                 case SecurityType.IndexOption:
-                    return IndexOptionSymbol.GetLastTradingDate(symbol.ID.Symbol, symbol.ID.Date.Date);
+                    return OptionSymbol.GetLastDayOfTrading(symbol);
                 case SecurityType.FutureOption:
                     return FutureOptionSymbol.GetLastDayOfTrading(symbol);
                 default:
