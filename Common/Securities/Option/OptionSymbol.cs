@@ -96,8 +96,8 @@ namespace QuantConnect.Securities.Option
         public static DateTime GetLastDayOfTrading(Symbol symbol)
         {
             var exchangeHours = MarketHoursDatabase.FromDataFolder()
-                                              .GetEntry(symbol.ID.Market, symbol, symbol.SecurityType)
-                                              .ExchangeHours;
+                .GetEntry(symbol.ID.Market, symbol, symbol.SecurityType)
+                .ExchangeHours;
             return GetLastDayOfTrading(symbol, exchangeHours);
         }
 
