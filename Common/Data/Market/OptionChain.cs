@@ -29,6 +29,9 @@ namespace QuantConnect.Data.Market
     /// </summary>
     public partial class OptionChain : BaseChain<OptionContract, OptionContracts, OptionChain, OptionChainFilterUniverse>, IOptionContractFilters<OptionChain>
     {
+        private readonly SymbolProperties _symbolProperties;
+        private readonly SecurityExchangeHours _exchangeHours;
+
         /// <summary>
         /// Initializes a new instance of the <see cref="OptionChain"/> class
         /// </summary>
@@ -41,16 +44,34 @@ namespace QuantConnect.Data.Market
         }
 
         /// <summary>
+        /// Initializes a new instance of the <see cref="OptionChain"/> class with the option symbol properties and exchange hours,
+        /// so the filters don't look them up
+        /// </summary>
+        /// <param name="canonicalOptionSymbol">The symbol for this chain.</param>
+        /// <param name="time">The time of this chain</param>
+        /// <param name="symbolProperties">The option symbol properties</param>
+        /// <param name="exchangeHours">The option exchange hours</param>
+        /// <param name="flatten">Whether to flatten the data frame</param>
+        internal OptionChain(Symbol canonicalOptionSymbol, DateTime time, SymbolProperties symbolProperties, SecurityExchangeHours exchangeHours,
+            bool flatten = true)
+            : this(canonicalOptionSymbol, time, flatten)
+        {
+            _symbolProperties = symbolProperties;
+            _exchangeHours = exchangeHours;
+        }
+
+        /// <summary>
         /// Initializes a new option chain for a list of contracts as <see cref="OptionUniverse"/> instances
         /// </summary>
         /// <param name="canonicalOptionSymbol">The canonical option symbol</param>
         /// <param name="time">The time of this chain</param>
         /// <param name="contracts">The list of contracts data</param>
         /// <param name="symbolProperties">The option symbol properties</param>
+        /// <param name="exchangeHours">The option exchange hours</param>
         /// <param name="flatten">Whether to flatten the data frame</param>
         public OptionChain(Symbol canonicalOptionSymbol, DateTime time, IEnumerable<OptionUniverse> contracts, SymbolProperties symbolProperties,
-            bool flatten = true)
-            : this(canonicalOptionSymbol, time, flatten)
+            SecurityExchangeHours exchangeHours = null, bool flatten = true)
+            : this(canonicalOptionSymbol, time, symbolProperties, exchangeHours, flatten)
         {
             var underlyingSet = false;
             foreach (var contractData in contracts)
@@ -62,7 +83,7 @@ namespace QuantConnect.Data.Market
                     underlyingSet = true;
                 }
                 if (contractData.Symbol.ID.Date.Date < time.Date) continue;
-                Contracts[contractData.Symbol] = OptionContract.Create(contractData, symbolProperties);
+                Contracts[contractData.Symbol] = OptionContract.Create(contractData, symbolProperties, exchangeHours);
             }
         }
 
@@ -72,6 +93,8 @@ namespace QuantConnect.Data.Market
         private OptionChain(OptionChain other)
             : base(other)
         {
+            _symbolProperties = other._symbolProperties;
+            _exchangeHours = other._exchangeHours;
         }
 
         /// <summary>
@@ -81,6 +104,8 @@ namespace QuantConnect.Data.Market
         private OptionChain(OptionChain other, IEnumerable<OptionContract> contracts)
             : base(other, contracts)
         {
+            _symbolProperties = other._symbolProperties;
+            _exchangeHours = other._exchangeHours;
         }
 
         /// <summary>

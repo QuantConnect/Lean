@@ -45,10 +45,13 @@ namespace QuantConnect.Securities
         /// Initializes a new instance of the <see cref="OptionChainFilterUniverse"/> class over the contracts of the given chain
         /// </summary>
         /// <param name="chain">The option chain to filter</param>
-        internal OptionChainFilterUniverse(OptionChain chain)
-            : base(GetContracts(chain), GetUnderlying(chain), chain.ExchangeTime, GetStrikeMultiplier(chain))
+        /// <param name="symbolProperties">The option symbol properties, if known</param>
+        /// <param name="exchangeHours">The option exchange hours, looked up in the market hours database when null</param>
+        internal OptionChainFilterUniverse(OptionChain chain, SymbolProperties symbolProperties, SecurityExchangeHours exchangeHours)
+            : base(GetContracts(chain), GetUnderlying(chain), chain.ExchangeTime, symbolProperties?.StrikeMultiplier ?? 1)
         {
             _symbol = chain.Symbol;
+            _exchangeHours = exchangeHours;
         }
 
         /// <summary>
@@ -90,11 +93,6 @@ namespace QuantConnect.Securities
             // A chain without underlying data carries an empty placeholder, which must not be used as a zero price
             var underlying = chain.Underlying;
             return underlying != null && underlying.Price != 0 ? underlying : null;
-        }
-
-        private static decimal GetStrikeMultiplier(OptionChain chain)
-        {
-            return chain.Contracts.Values.FirstOrDefault()?.SymbolProperties?.StrikeMultiplier ?? 1;
         }
     }
 }

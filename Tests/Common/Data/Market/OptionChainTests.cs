@@ -15,6 +15,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -256,6 +257,141 @@ namespace QuantConnect.Tests.Common.Data.Market
 
             Assert.AreEqual(0, chain.Underlying.Price);
             Assert.AreEqual(chain.Count, chain.Strikes(0, 0).Count);
+        }
+
+        // Before February 2015 equity options expired on Saturdays, the day after their last trading date.
+        // Days to expiration are counted on the last trading date, so 2012-02-18 is 0 days out on Friday 2012-02-17,
+        // and the Saturday after Good Friday 2012-04-06 is 0 days out on Thursday 2012-04-05
+        [TestCase("2012-02-17", 0, 0, "2012-02-18")]
+        [TestCase("2012-02-17", 1, 40, "2012-03-17")]
+        [TestCase("2012-04-05", 0, 0, "2012-04-07")]
+        [TestCase("2012-04-05", 1, 60, "2012-05-19")]
+        public void ExpirationFilterCountsSaturdayExpiriesOnTheirLastTradingDate(string date, int minDays, int maxDays, string expectedExpiry)
+        {
+            var (data, underlying) = CreateSaturdayExpiriesData(date);
+            var expected = DateTime.ParseExact(expectedExpiry, "yyyy-MM-dd", CultureInfo.InvariantCulture);
+
+            var universe = CreateUniverse(data, underlying, underlying.Time).Expiration(minDays, maxDays).ToList();
+            var chain = new OptionChain(Canonical, underlying.Time, data, _symbolProperties).Expiration(minDays, maxDays).ToList();
+
+            Assert.AreEqual(2 * Strikes.Length, universe.Count);
+            Assert.IsTrue(universe.All(x => x.ID.Date == expected));
+            CollectionAssert.AreEquivalent(universe.Select(x => x.Symbol.Value), chain.Select(x => x.Symbol.Value));
+        }
+
+        [TestCase("2012-02-17", 0, "2012-02-18")]
+        [TestCase("2012-02-17", 1, "2012-03-17")]
+        [TestCase("2012-04-05", 0, "2012-04-07")]
+        [TestCase("2012-04-05", 1, "2012-05-19")]
+        public void StrategyFiltersCountSaturdayExpiriesOnTheirLastTradingDate(string date, int minDaysTillExpiry, string expectedExpiry)
+        {
+            var (data, underlying) = CreateSaturdayExpiriesData(date);
+            var expected = DateTime.ParseExact(expectedExpiry, "yyyy-MM-dd", CultureInfo.InvariantCulture);
+
+            var selected = CreateUniverse(data, underlying, underlying.Time).NakedCall(minDaysTillExpiry, 0).ToList();
+
+            Assert.AreEqual(1, selected.Count);
+            Assert.AreEqual(expected, selected[0].ID.Date);
+            Assert.AreEqual(100m, selected[0].ID.StrikePrice);
+        }
+
+        // Contracts expiring on a holiday stop trading on the previous trading date, so they are zero DTE on that date:
+        // Good Friday, Thanksgiving, Independence Day and Christmas on their weekday, and Labor Day, a Monday, where the
+        // previous trading date is the Friday before the weekend
+        [TestCase("2012-04-05", "2012-04-06")]
+        [TestCase("2012-11-21", "2012-11-22")]
+        [TestCase("2014-07-03", "2014-07-04")]
+        [TestCase("2015-12-24", "2015-12-25")]
+        [TestCase("2012-08-31", "2012-09-03")]
+        public void ZeroDteCountsHolidayExpiriesOnThePreviousTradingDate(string lastTradingDate, string holidayExpiry)
+        {
+            var date = DateTime.ParseExact(lastTradingDate, "yyyy-MM-dd", CultureInfo.InvariantCulture);
+            var expiry = DateTime.ParseExact(holidayExpiry, "yyyy-MM-dd", CultureInfo.InvariantCulture);
+            var previous = date.AddDays(-1);
+            var expiries = new[] { expiry, expiry.AddDays(28) };
+            var (data, underlying) = CreateUniverseData(date, 100m, expiries, Strikes);
+            var (previousData, previousUnderlying) = CreateUniverseData(previous, 100m, expiries, Strikes);
+
+            // On the last trading date the holiday expiry is zero DTE, on the universe and on the chain
+            var zeroDte = CreateUniverse(data, underlying, date).ZeroDte().ToList();
+            Assert.AreEqual(2 * Strikes.Length, zeroDte.Count);
+            Assert.IsTrue(zeroDte.All(x => x.ID.Date == expiry));
+            var chain = new OptionChain(Canonical, date, data, _symbolProperties);
+            CollectionAssert.AreEquivalent(zeroDte.Select(x => x.Symbol.Value), chain.ZeroDte().Select(x => x.Symbol.Value));
+
+            // The day before it is one day out, and nothing expires
+            Assert.AreEqual(0, CreateUniverse(previousData, previousUnderlying, previous).ZeroDte().Count);
+            var oneDayOut = CreateUniverse(previousData, previousUnderlying, previous).Expiration(1, 1).ToList();
+            Assert.AreEqual(2 * Strikes.Length, oneDayOut.Count);
+            Assert.IsTrue(oneDayOut.All(x => x.ID.Date == expiry));
+
+            // Universe rows are stamped at the end of their day, so the contracts built from the previous day's rows
+            // count their days from the last trading date
+            var contracts = new OptionChain(Canonical, date, previousData, _symbolProperties).Expiration([expiry]).ToList();
+            Assert.AreEqual(2 * Strikes.Length, contracts.Count);
+            Assert.IsTrue(contracts.All(x => x.Time.Date == date && x.DaysToExpiry == 0));
+        }
+
+        [Test]
+        public void ZeroDteCountsIndexAndFutureOptionsOnTheirExpirationDate()
+        {
+            // Index options count on their expiration date, like ZeroDTEIndexOptionsRegressionAlgorithm expects for SPX on its Friday
+            var spx = Symbol.CreateCanonicalOption(Symbols.SPX, market: QuantConnect.Market.USA);
+            var spxw = Symbol.CreateCanonicalOption(Symbols.SPX, targetOption: "SPXW", market: QuantConnect.Market.USA);
+            AssertZeroDteOn(spx, new DateTime(2021, 1, 15), new DateTime(2021, 1, 15), 3800m);
+            AssertZeroDteOn(spxw, new DateTime(2021, 1, 13), new DateTime(2021, 1, 13), 3800m);
+
+            // Future options trade until their expiration date
+            var future = Symbol.CreateFuture("ES", QuantConnect.Market.CME, new DateTime(2020, 3, 20));
+            AssertZeroDteOn(Symbol.CreateCanonicalOption(future), future.ID.Date, future.ID.Date, 3200m);
+        }
+
+        private static void AssertZeroDteOn(Symbol canonical, DateTime expiry, DateTime lastTradingDate, decimal strike)
+        {
+            var contracts = new[] { OptionRight.Call, OptionRight.Put }
+                .Select(right => Symbol.CreateOption(canonical.Underlying, canonical.ID.Symbol, canonical.ID.Market, canonical.ID.OptionStyle, right, strike, expiry))
+                .Select(symbol => (symbol, 100m, 0.15m, new Greeks(0.5m, 0.01m, 5, -0.5m * 365m, 1, 0)))
+                .ToList();
+            var previous = lastTradingDate.AddDays(-1);
+            var (data, underlying) = CreateUniverseData(canonical, lastTradingDate, strike, contracts);
+            var (previousData, previousUnderlying) = CreateUniverseData(canonical, previous, strike, contracts);
+            var symbolProperties = SymbolPropertiesDatabase.FromDataFolder().GetSymbolProperties(canonical.ID.Market, canonical, canonical.SecurityType, Currencies.USD);
+            OptionFilterUniverse Universe(List<OptionUniverse> rows, BaseData spot, DateTime date)
+            {
+                var universe = new OptionFilterUniverse(CreateOption(canonical), rows, spot);
+                universe.Refresh(rows, spot, date);
+                return universe;
+            }
+
+            // Zero DTE on the last trading date, on the universe and on the chain, one day out the day before
+            Assert.AreEqual(2, Universe(data, underlying, lastTradingDate).ZeroDte().Count, $"{canonical} zero DTE on {lastTradingDate:yyyy-MM-dd}");
+            Assert.AreEqual(2, new OptionChain(canonical, lastTradingDate, data, symbolProperties).ZeroDte().Count);
+            Assert.AreEqual(0, Universe(previousData, previousUnderlying, previous).ZeroDte().Count);
+            Assert.AreEqual(2, Universe(previousData, previousUnderlying, previous).Expiration(1, 1).Count);
+            if (lastTradingDate != expiry)
+            {
+                Assert.AreEqual(0, Universe(data, underlying, expiry).ZeroDte().Count, $"{canonical} no longer trades on {expiry:yyyy-MM-dd}");
+            }
+
+            // Universe rows are stamped at the end of their day, so the contracts built from the previous day's rows count from the last trading date
+            var chain = new OptionChain(canonical, lastTradingDate, previousData, symbolProperties);
+            Assert.AreEqual(2, chain.Count);
+            Assert.IsTrue(chain.All(x => x.Time.Date == lastTradingDate && x.DaysToExpiry == 0));
+        }
+
+        [Test]
+        public void ChainBuiltWithExchangeHoursCountsSaturdayExpiriesOnTheFriday()
+        {
+            // 2012-02-17 is the Friday before a Saturday expiration: the walk-back runs on the hours the chain was built with
+            var date = new DateTime(2012, 2, 17);
+            var (data, _) = CreateSaturdayExpiriesData("2012-02-16");
+            var chain = new OptionChain(Canonical, date, data, _symbolProperties, CreateOption().Exchange.Hours);
+
+            var zeroDte = chain.ZeroDte();
+            Assert.AreEqual(2 * Strikes.Length, zeroDte.Count);
+            Assert.IsTrue(zeroDte.All(x => x.Expiry == new DateTime(2012, 2, 18) && x.DaysToExpiry == 0));
+            // the filtered chains carry the hours too
+            Assert.AreEqual(Strikes.Length, zeroDte.PutsOnly().ZeroDte().Count);
         }
 
         [Test]
@@ -569,13 +705,19 @@ def naked_put(chain):
             return new OptionChain(Canonical, Date, _data, _symbolProperties);
         }
 
+        private (List<OptionUniverse>, BaseData) CreateSaturdayExpiriesData(string date)
+        {
+            var expiries = new[] { new DateTime(2012, 2, 18), new DateTime(2012, 3, 17), new DateTime(2012, 4, 7), new DateTime(2012, 5, 19) };
+            return CreateUniverseData(DateTime.ParseExact(date, "yyyy-MM-dd", CultureInfo.InvariantCulture), 100m, expiries, Strikes);
+        }
+
         private static Option CreateOption(Symbol canonical = null)
         {
             canonical ??= Canonical;
             var exchangeHours = MarketHoursDatabase.FromDataFolder().GetExchangeHours(canonical.ID.Market, canonical, canonical.SecurityType);
             return new Option(
                 exchangeHours,
-                new SubscriptionDataConfig(typeof(TradeBar), canonical, Resolution.Minute, TimeZones.NewYork, TimeZones.NewYork, true, false, false),
+                new SubscriptionDataConfig(typeof(TradeBar), canonical, Resolution.Minute, exchangeHours.TimeZone, exchangeHours.TimeZone, true, false, false),
                 new Cash(Currencies.USD, 0, 1m),
                 new OptionSymbolProperties(SymbolProperties.GetDefault(Currencies.USD)),
                 ErrorCurrencyConverter.Instance,
