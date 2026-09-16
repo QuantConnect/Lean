@@ -1068,7 +1068,7 @@ namespace QuantConnect.Api
             }
             catch (Exception exception)
             {
-                var message = $"Api.DownloadBytes(): Failed to download data from {address}";
+                var message = $"Api.DownloadBytes(): Failed to download data from {address.RemoveQueryString()}";
                 if (!userName.IsNullOrEmpty() || !password.IsNullOrEmpty())
                 {
                     message += $" with username: {userName} and password: {(string.IsNullOrEmpty(password) ? "" : new string('*', password.Length))}";
