@@ -181,7 +181,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                         var currentTime = dateTimeUtc.ConvertFromUtc(TimeZones.NewYork);
                         foreach (var symbol in selectSymbolsResult)
                         {
-                            fineCollection.Data.Add(new Fundamental(currentTime, symbol));
+                            fineCollection.Data.Add(Fundamental.ForDate(currentTime.Date, symbol));
                         }
                     }
 
