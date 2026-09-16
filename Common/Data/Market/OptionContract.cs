@@ -115,11 +115,6 @@ namespace QuantConnect.Data.Market
         public override int DaysToExpiry => ((_lastTradingDate ??= GetLastTradingDate()) - Time.Date).Days;
 
         /// <summary>
-        /// The option symbol properties
-        /// </summary>
-        internal SymbolProperties SymbolProperties => _symbolProperties;
-
-        /// <summary>
         /// Initializes a new instance of the <see cref="OptionContract"/> class
         /// </summary>
         /// <param name="security">The option contract security</param>
@@ -135,7 +130,7 @@ namespace QuantConnect.Data.Market
         /// </summary>
         /// <param name="contractData">The option universe contract data to use as source for this contract</param>
         /// <param name="symbolProperties">The contract symbol properties</param>
-        /// <param name="exchangeHours">The contract exchange hours, so the days to expiry don't look them up</param>
+        /// <param name="exchangeHours">The contract exchange hours</param>
         public OptionContract(OptionUniverse contractData, SymbolProperties symbolProperties, SecurityExchangeHours exchangeHours = null)
             : base(contractData.Symbol)
         {
@@ -187,7 +182,7 @@ namespace QuantConnect.Data.Market
         /// </summary>
         /// <param name="contractData">The option universe contract data to use as source for this contract</param>
         /// <param name="symbolProperties">The contract symbol properties</param>
-        /// <param name="exchangeHours">The contract exchange hours, so the days to expiry don't look them up</param>
+        /// <param name="exchangeHours">The contract exchange hours</param>
         public static OptionContract Create(OptionUniverse contractData, SymbolProperties symbolProperties, SecurityExchangeHours exchangeHours = null)
         {
             var contract = new OptionContract(contractData, symbolProperties, exchangeHours)

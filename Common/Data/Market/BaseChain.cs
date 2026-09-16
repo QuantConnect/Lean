@@ -19,7 +19,6 @@ using System.Collections.Generic;
 using System.Linq;
 using Python.Runtime;
 using QuantConnect.Python;
-using QuantConnect.Securities;
 using QuantConnect.Securities.Option;
 using QuantConnect.Util;
 
@@ -70,11 +69,6 @@ namespace QuantConnect.Data.Market
             get => _exchangeTime ?? Time;
             set => _exchangeTime = value;
         }
-
-        /// <summary>
-        /// The exchange hours of the contracts when known, so the filters don't look them up
-        /// </summary>
-        internal SecurityExchangeHours ExchangeHours { get; set; }
 
         /// <summary>
         /// Gets all ticks for every option contract in this chain, keyed by option symbol
@@ -189,7 +183,6 @@ namespace QuantConnect.Data.Market
             Symbol = other.Symbol;
             Time = other.Time;
             _exchangeTime = other._exchangeTime;
-            ExchangeHours = other.ExchangeHours;
             Value = other.Value;
             Underlying = other.Underlying;
             Ticks = other.Ticks;

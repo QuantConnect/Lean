@@ -507,7 +507,7 @@ namespace QuantConnect.Data.Market
         /// </summary>
         protected override OptionChainFilterUniverse CreateFilterUniverse()
         {
-            return new OptionChainFilterUniverse(this);
+            return new OptionChainFilterUniverse(this, _symbolProperties, _exchangeHours);
         }
 
         /// <summary>
