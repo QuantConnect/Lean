@@ -110,11 +110,6 @@ namespace QuantConnect.Securities
         }
 
         /// <summary>
-        /// Gets the exchange hours of this security, see <see cref="Exchange"/>
-        /// </summary>
-        public SecurityExchangeHours ExchangeHours => Exchange.Hours;
-
-        /// <summary>
         /// Type of the security.
         /// </summary>
         /// <remarks>

@@ -78,9 +78,9 @@ namespace QuantConnect.Interfaces
         SymbolProperties SymbolProperties { get; }
 
         /// <summary>
-        /// <see cref="SecurityExchangeHours"/> of the symbol
+        /// <see cref="SecurityExchange"/> of the symbol
         /// </summary>
-        SecurityExchangeHours ExchangeHours { get; }
+        SecurityExchange Exchange { get; }
 
         /// <summary>
         /// Update any security properties based on the latest market data and time
