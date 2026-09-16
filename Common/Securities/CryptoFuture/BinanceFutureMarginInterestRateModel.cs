@@ -53,6 +53,15 @@ namespace QuantConnect.Securities.CryptoFuture
                 return;
             }
 
+            var lastData = cryptoFuture.GetLastData();
+            if (lastData == null || lastData.EndTime < time)
+            {
+                // The security is no longer receiving current market data, so the cached funding rate is stale.
+                // Keep the schedule aligned so that a future data point is not applied to past funding intervals.
+                _nextFundingRateApplication = GetNextFundingRateApplication(time);
+                return;
+            }
+
             while(time >= _nextFundingRateApplication)
             {
                 // When the funding rate is positive, the price of the perpetual contract is higher than the mark price,
