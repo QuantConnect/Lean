@@ -122,7 +122,7 @@ namespace QuantConnect.Data.Market
             : base(security.Symbol)
         {
             _symbolProperties = security.SymbolProperties;
-            _exchangeHours = (security as Security)?.Exchange.Hours;
+            _exchangeHours = security.ExchangeHours;
         }
 
         /// <summary>

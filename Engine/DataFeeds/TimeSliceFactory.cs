@@ -428,7 +428,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             if (!optionChains.TryGetValue(canonical, out chain))
             {
                 // the data is already in the exchange time zone, unlike the algorithm time the chain is stamped with
-                chain = new OptionChain(canonical, algorithmTime, security.SymbolProperties, (security as QuantConnect.Securities.Security)?.Exchange.Hours)
+                chain = new OptionChain(canonical, algorithmTime, security.SymbolProperties, security.ExchangeHours)
                 {
                     ExchangeTime = baseData.EndTime
                 };
