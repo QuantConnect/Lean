@@ -537,6 +537,30 @@ namespace QuantConnect
         }
 
         /// <summary>
+        /// Removes the query string of the given url, which may hold credentials, so it can be shown to the user
+        /// </summary>
+        /// <remarks>Expects the url by itself, it will not remove the query string of a url embedded in a larger
+        /// message. Any fragment is kept, it holds the entry name for remote zipped sources</remarks>
+        public static string RemoveQueryString(this string url)
+        {
+            if (string.IsNullOrEmpty(url))
+            {
+                return url;
+            }
+
+            var queryStart = url.IndexOf('?');
+            if (queryStart < 0)
+            {
+                return url;
+            }
+
+            var fragmentStart = url.IndexOf('#', queryStart);
+            return fragmentStart < 0
+                ? url.Substring(0, queryStart)
+                : url.Substring(0, queryStart) + url.Substring(fragmentStart);
+        }
+
+        /// <summary>
         /// Helper method to batch a collection of <see cref="AlphaResultPacket"/> into 1 single instance.
         /// Will return null if the provided list is empty. Will keep the last Order instance per order id,
         /// which is the latest. Implementations trusts the provided 'resultPackets' list to batch is in order

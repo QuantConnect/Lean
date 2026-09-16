@@ -43,6 +43,21 @@ namespace QuantConnect.Tests.Common.Data
         }
 
         [Test]
+        public void ToStringWithoutQueryStringHidesTheSourceCredentials()
+        {
+            var source = new SubscriptionDataSource(
+                "https://data.nasdaq.com/api/v3/datatables/WGC/GOLD_DAILY_USD.csv?api_key=secret",
+                SubscriptionTransportMedium.RemoteFile,
+                FileFormat.Csv);
+
+            Assert.AreEqual("RemoteFile: Csv https://data.nasdaq.com/api/v3/datatables/WGC/GOLD_DAILY_USD.csv",
+                source.ToStringWithoutQueryString());
+            // the source itself is left alone, it is still used to fetch the data
+            Assert.AreEqual("RemoteFile: Csv https://data.nasdaq.com/api/v3/datatables/WGC/GOLD_DAILY_USD.csv?api_key=secret",
+                source.ToString());
+        }
+
+        [Test]
         public void ComparesNotEqualWithDifferentTransportMedium()
         {
             var one = new SubscriptionDataSource("source", SubscriptionTransportMedium.LocalFile);

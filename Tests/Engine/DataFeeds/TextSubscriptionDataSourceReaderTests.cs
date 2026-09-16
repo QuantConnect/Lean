@@ -52,6 +52,32 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         }
 
         [Test]
+        public void InvalidSourceMessageRemovesTheSourceQueryString()
+        {
+            using var dataCacheProvider = new SingleEntryDataCacheProvider(TestGlobals.DataProvider);
+            var reader = new TextSubscriptionDataSourceReader(
+                dataCacheProvider,
+                _config,
+                _initialDate,
+                false,
+                null);
+
+            InvalidSourceEventArgs invalidSource = null;
+            reader.InvalidSource += (_, args) => invalidSource = args;
+
+            // the transport medium is irrelevant here, a query string may hold credentials for any of them
+            var source = new SubscriptionDataSource("a-source-that-does-not-exist.csv?api_key=secret",
+                SubscriptionTransportMedium.LocalFile, FileFormat.Csv);
+
+            Assert.IsEmpty(reader.Read(source).ToList());
+            Assert.IsNotNull(invalidSource);
+            // the source is left untouched, only the message the user gets hides the credentials
+            Assert.AreEqual("a-source-that-does-not-exist.csv?api_key=secret", invalidSource.Source.Source);
+            Assert.IsFalse(invalidSource.Exception.Message.Contains("secret"), invalidSource.Exception.Message);
+            StringAssert.Contains("a-source-that-does-not-exist.csv", invalidSource.Exception.Message);
+        }
+
+        [Test]
         public void CachedDataIsReturnedAsClone()
         {
             using var singleEntryDataCacheProvider = new SingleEntryDataCacheProvider(TestGlobals.DataProvider);

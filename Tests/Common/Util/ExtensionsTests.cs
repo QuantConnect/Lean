@@ -451,6 +451,23 @@ namespace QuantConnect.Tests.Common.Util
             Assert.AreEqual(expected, toConvert.ToCamelCase());
         }
 
+        [TestCase("", "")]
+        [TestCase(null, null)]
+        [TestCase("https://data.nasdaq.com/api/v3/datatables/WGC/GOLD_DAILY_USD.csv?api_key=secret", "https://data.nasdaq.com/api/v3/datatables/WGC/GOLD_DAILY_USD.csv")]
+        [TestCase("https://data.nasdaq.com/api/v3/datatables/WGC/GOLD_DAILY_USD.csv", "https://data.nasdaq.com/api/v3/datatables/WGC/GOLD_DAILY_USD.csv")]
+        [TestCase("https://www.quantconnect.com/data.zip?api_key=secret#entry.csv", "https://www.quantconnect.com/data.zip#entry.csv")]
+        [TestCase("https://www.quantconnect.com/data.zip#entry.csv?api_key=secret", "https://www.quantconnect.com/data.zip#entry.csv")]
+        // the query string is removed as given, it is not normalized first, else a value holding a character
+        // Uri escapes would not be found and the credentials would be shown to the user
+        [TestCase("https://data.nasdaq.com/api/v3/datatables/WGC/GOLD_DAILY_USD.csv?ticker=GOLD SPOT&api_key=secret", "https://data.nasdaq.com/api/v3/datatables/WGC/GOLD_DAILY_USD.csv")]
+        [TestCase("https://data.nasdaq.com/api/v3/datatables/WGC/GOLD_DAILY_USD.csv?api_key=sec|ret", "https://data.nasdaq.com/api/v3/datatables/WGC/GOLD_DAILY_USD.csv")]
+        [TestCase("../../../Data/equity/usa/daily/spy.zip", "../../../Data/equity/usa/daily/spy.zip")]
+        [TestCase("../../../Data/equity/usa/daily/spy.zip#spy.csv", "../../../Data/equity/usa/daily/spy.zip#spy.csv")]
+        public void RemoveQueryString(string url, string expected)
+        {
+            Assert.AreEqual(expected, url.RemoveQueryString());
+        }
+
         [Test]
         public void BatchAlphaResultPacket()
         {

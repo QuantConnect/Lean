@@ -19,11 +19,13 @@ using QuantConnect.Data;
 using QuantConnect.Data.Market;
 using QuantConnect.Interfaces;
 using QuantConnect.Lean.Engine.DataFeeds;
+using QuantConnect.Lean.Engine.DataFeeds.Transport;
 using QuantConnect.Securities;
 using QuantConnect.Util;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Net;
 
 namespace QuantConnect.Tests.Engine.DataFeeds
 {
@@ -127,6 +129,55 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             Assert.IsFalse(newTradableDateCalled);
         }
 
+        [Test]
+        public void DownloadFailedMessageHidesTheSourceCredentials()
+        {
+            // the download fails with the url in its exception message, like Api.DownloadBytes does
+            RemoteFileSubscriptionStreamReader.SetDownloadProvider(new ThrowingDownloadProvider());
+            try
+            {
+                var date = new DateTime(2019, 12, 9);
+                var config = new SubscriptionDataConfig(typeof(TestCustomData),
+                    Symbol.CreateBase(typeof(TestCustomData), Symbols.SPY, Market.USA),
+                    Resolution.Daily,
+                    TimeZones.Utc,
+                    TimeZones.Utc,
+                    false,
+                    false,
+                    false,
+                    isCustom: true);
+                var request = new HistoryRequest(config, SecurityExchangeHours.AlwaysOpen(TimeZones.Utc), date, date.AddDays(1));
+
+                using var dataCacheProvider = new SingleEntryDataCacheProvider(TestGlobals.DataProvider, isDataEphemeral: true);
+                using var dataReader = new SubscriptionDataReader(config,
+                    request,
+                    TestGlobals.MapFileProvider,
+                    TestGlobals.FactorFileProvider,
+                    dataCacheProvider,
+                    TestGlobals.DataProvider,
+                    null);
+
+                DownloadFailedEventArgs downloadFailed = null;
+                dataReader.DownloadFailed += (sender, args) => downloadFailed ??= args;
+
+                while (dataReader.MoveNext())
+                {
+                }
+
+                Assert.IsNotNull(downloadFailed, "the failed download should be reported");
+                // this is the message the user gets, it can never hold the source credentials
+                Assert.IsFalse(downloadFailed.Message.Contains(TestCustomData.ApiKey), downloadFailed.Message);
+                StringAssert.Contains(TestCustomData.SourceUrl, downloadFailed.Message);
+            }
+            finally
+            {
+                // the download provider is static state shared with the other fixtures, leave a working one behind
+                var api = new QuantConnect.Api.Api();
+                api.Initialize(Globals.UserId, Globals.UserToken, Globals.DataFolder);
+                RemoteFileSubscriptionStreamReader.SetDownloadProvider(api);
+            }
+        }
+
         private static BaseDataRequest GetRequest(Type dataType, DateTime start, DateTime end, Resolution resolution, out SubscriptionDataConfig config)
         {
             var symbol = Symbol.CreateOption(
@@ -149,6 +200,36 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 false,
                 false);
             return new HistoryRequest(config, entry.ExchangeHours, start, end);
+        }
+
+        private class TestCustomData : BaseData
+        {
+            public const string ApiKey = "the-api-key";
+            public const string SourceUrl = "https://data.nasdaq.invalid/api/v3/datatables/WGC/GOLD_DAILY_USD.csv";
+
+            public override SubscriptionDataSource GetSource(SubscriptionDataConfig config, DateTime date, bool isLiveMode)
+            {
+                return new SubscriptionDataSource($"{SourceUrl}?api_key={ApiKey}", SubscriptionTransportMedium.RemoteFile, FileFormat.Csv);
+            }
+
+            // like NasdaqDataLink, else the reader reports the shorter 'we could not fetch' message instead
+            public override bool IsSparseData()
+            {
+                return true;
+            }
+        }
+
+        private class ThrowingDownloadProvider : IDownloadProvider
+        {
+            public byte[] DownloadBytes(string address, IEnumerable<KeyValuePair<string, string>> headers, string userName, string password)
+            {
+                throw new WebException($"Failed to download data from {address}");
+            }
+
+            public string Download(string address, IEnumerable<KeyValuePair<string, string>> headers, string userName, string password)
+            {
+                throw new WebException($"Failed to download data from {address}");
+            }
         }
 
         private class TestDataCacheProvider : IDataCacheProvider

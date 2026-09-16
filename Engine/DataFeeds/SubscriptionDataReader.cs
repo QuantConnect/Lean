@@ -512,7 +512,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                         new DownloadFailedEventArgs(_config.Symbol,
                             "We could not fetch the requested data. " +
                             "This may not be valid data, or a failed download of custom data. " +
-                            $"Skipping source ({args.Source.Source})."));
+                            $"Skipping source ({args.Source.Source.RemoveQueryString()})."));
                     return;
                 }
 
@@ -526,7 +526,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     case SubscriptionTransportMedium.RemoteFile:
                         OnDownloadFailed(
                             new DownloadFailedEventArgs(_config.Symbol,
-                                $"Error downloading custom data source file, skipped: {source} " +
+                                $"Error downloading custom data source file, skipped: {source.ToStringWithoutQueryString()} " +
                                 $"Error: {args.Exception.Message}", args.Exception.StackTrace));
                         break;
 

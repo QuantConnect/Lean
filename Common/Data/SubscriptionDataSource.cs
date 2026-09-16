@@ -190,7 +190,21 @@ namespace QuantConnect.Data
         /// <filterpriority>2</filterpriority>
         public override string ToString()
         {
-            return Invariant($"{TransportMedium}: {Format} {Source}");
+            return ToString(Source);
+        }
+
+        /// <summary>
+        /// Returns a string representation of this instance with the source query string removed, which may hold
+        /// credentials, so it can be shown to the user
+        /// </summary>
+        public string ToStringWithoutQueryString()
+        {
+            return ToString(Source.RemoveQueryString());
+        }
+
+        private string ToString(string source)
+        {
+            return Invariant($"{TransportMedium}: {Format} {source}");
         }
 
         /// <summary>

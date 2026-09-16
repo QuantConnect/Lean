@@ -70,7 +70,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 // if the reader doesn't have data then we're done with this subscription
                 if (reader == null || reader.EndOfStream)
                 {
-                    OnInvalidSource(source, new Exception($"The reader was empty for source: ${source.Source}"));
+                    OnInvalidSource(source, new Exception($"The reader was empty for source: {source.Source.RemoveQueryString()}"));
                     yield break;
                 }
 
