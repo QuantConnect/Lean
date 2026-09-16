@@ -36,6 +36,11 @@ namespace QuantConnect.Securities
         public static readonly int[] March = { 3, 6, 9, 12 };
 
         /// <summary>
+        /// June Cycle: Expirations in June
+        /// </summary>
+        public static readonly int[] June = { 6 };
+
+        /// <summary>
         /// December Cycle: Expirations in December
         /// </summary>
         public static readonly int[] December = { 12 };

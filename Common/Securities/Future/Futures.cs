@@ -1667,6 +1667,11 @@ namespace QuantConnect.Securities
             /// TecDAX Futures
             /// </summary>
             public const string TecDAX = "FTDX";
+
+            /// <summary>
+            /// Spot-Quoted Nasdaq-100 Futures
+            /// </summary>
+            public const string SpotQuotedNasdaq100 = "QNDX";
         }
 
         /// <summary>
