@@ -225,9 +225,7 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 26026
         /// </remarks>
         [JsonProperty("26026")]
-        [Obsolete("ChangeInAccruedInvestmentIncome was retired by Morningstar in 2026 for all periods; no replacement is available.")]
-        [JsonIgnore]
-        public ChangeInAccruedInvestmentIncomeCashFlowStatement ChangeInAccruedInvestmentIncome => _changeInAccruedInvestmentIncome ??= new(_timeProvider, _securityIdentifier);
+                public ChangeInAccruedInvestmentIncomeCashFlowStatement ChangeInAccruedInvestmentIncome => _changeInAccruedInvestmentIncome ??= new(_timeProvider, _securityIdentifier);
         private ChangeInAccruedInvestmentIncomeCashFlowStatement _changeInAccruedInvestmentIncome;
 
         /// <summary>
@@ -427,9 +425,7 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 26058
         /// </remarks>
         [JsonProperty("26058")]
-        [Obsolete("Depletion was retired by Morningstar in 2026 for all periods; no replacement is available.")]
-        [JsonIgnore]
-        public DepletionCashFlowStatement Depletion => _depletion ??= new(_timeProvider, _securityIdentifier);
+                public DepletionCashFlowStatement Depletion => _depletion ??= new(_timeProvider, _securityIdentifier);
         private DepletionCashFlowStatement _depletion;
 
         /// <summary>
@@ -549,9 +545,7 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 26078
         /// </remarks>
         [JsonProperty("26078")]
-        [Obsolete("NetForeignCurrencyExchangeGainLoss was retired by Morningstar in 2026 for all periods; no replacement is available.")]
-        [JsonIgnore]
-        public NetForeignCurrencyExchangeGainLossCashFlowStatement NetForeignCurrencyExchangeGainLoss => _netForeignCurrencyExchangeGainLoss ??= new(_timeProvider, _securityIdentifier);
+                public NetForeignCurrencyExchangeGainLossCashFlowStatement NetForeignCurrencyExchangeGainLoss => _netForeignCurrencyExchangeGainLoss ??= new(_timeProvider, _securityIdentifier);
         private NetForeignCurrencyExchangeGainLossCashFlowStatement _netForeignCurrencyExchangeGainLoss;
 
         /// <summary>
@@ -1083,9 +1077,7 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 26171
         /// </remarks>
         [JsonProperty("26171")]
-        [Obsolete("RealizedGainLossOnSaleOfLoansAndLease was retired by Morningstar in 2026 for all periods; no replacement is available.")]
-        [JsonIgnore]
-        public RealizedGainLossOnSaleOfLoansAndLeaseCashFlowStatement RealizedGainLossOnSaleOfLoansAndLease => _realizedGainLossOnSaleOfLoansAndLease ??= new(_timeProvider, _securityIdentifier);
+                public RealizedGainLossOnSaleOfLoansAndLeaseCashFlowStatement RealizedGainLossOnSaleOfLoansAndLease => _realizedGainLossOnSaleOfLoansAndLease ??= new(_timeProvider, _securityIdentifier);
         private RealizedGainLossOnSaleOfLoansAndLeaseCashFlowStatement _realizedGainLossOnSaleOfLoansAndLease;
 
         /// <summary>
@@ -1455,9 +1447,7 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 26229
         /// </remarks>
         [JsonProperty("26229")]
-        [Obsolete("DividendsPaidDirect was retired by Morningstar in 2026 for all periods; no replacement is available.")]
-        [JsonIgnore]
-        public DividendsPaidDirectCashFlowStatement DividendsPaidDirect => _dividendsPaidDirect ??= new(_timeProvider, _securityIdentifier);
+                public DividendsPaidDirectCashFlowStatement DividendsPaidDirect => _dividendsPaidDirect ??= new(_timeProvider, _securityIdentifier);
         private DividendsPaidDirectCashFlowStatement _dividendsPaidDirect;
 
         /// <summary>
