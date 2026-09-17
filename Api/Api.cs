@@ -553,6 +553,25 @@ namespace QuantConnect.Api
         }
 
         /// <summary>
+        /// Gets the logs of a specific backtest
+        /// </summary>
+        /// <param name="projectId">Id of the project from which to read the backtest</param>
+        /// <param name="backtestId">Id of the backtest from which to read the logs</param>
+        /// <param name="query">Optional keyword to filter the log lines, null to return every line</param>
+        /// <param name="start">Start line (inclusive) of logs to read</param>
+        /// <param name="end">End line (exclusive) of logs to read. Note that end - start must not exceed 250.
+        /// Defaults to a full window starting at <paramref name="start"/></param>
+        /// <returns><see cref="BacktestLog"/> with the requested log lines and the total log line count</returns>
+        /// <exception cref="ArgumentException">The requested window is wider than the documented maximum</exception>
+        public BacktestLog ReadBacktestLog(int projectId, string backtestId, string query = null, int start = 0, int end = 0)
+        {
+            end = ResolveWindowEnd(start, end, MaxLogLinesWindow, "log lines");
+
+            TryJsonPost("backtests/read/log", out BacktestLog result, new { projectId, backtestId, start, end, query });
+            return result;
+        }
+
+        /// <summary>
         /// Create a live algorithm.
         /// </summary>
         /// <param name="projectId">Id of the project on QuantConnect</param>
@@ -760,9 +779,12 @@ namespace QuantConnect.Api
         /// <param name="startLine">Start line (inclusive) of logs to read</param>
         /// <param name="endLine">End line (exclusive) of logs to read. Note that endLine - startLine must not exceed 250.
         /// Defaults to a full window starting at <paramref name="startLine"/></param>
+        /// <param name="query">Optional keyword to filter the log lines, null to return every line</param>
+        /// <param name="deploymentLogs">Whether only the logs of the given <paramref name="algorithmId"/> deployment should be returned</param>
         /// <returns><see cref="LiveLog"/> List of strings that represent the logs of the algorithm</returns>
         /// <exception cref="ArgumentException">The requested window is wider than the documented maximum</exception>
-        public LiveLog ReadLiveLogs(int projectId, string algorithmId, int startLine = 0, int endLine = 0)
+        public LiveLog ReadLiveLogs(int projectId, string algorithmId, int startLine = 0, int endLine = 0, string query = null,
+            bool deploymentLogs = false)
         {
             endLine = ResolveWindowEnd(startLine, endLine, MaxLogLinesWindow, "log lines");
 
@@ -775,8 +797,16 @@ namespace QuantConnect.Api
                     algorithmId,
                     startLine,
                     endLine,
+                    deploymentLogs,
+                    query,
                 });
             return result;
+        }
+
+        // Explicit so the added optional arguments don't change the arity IApi declares
+        LiveLog IApi.ReadLiveLogs(int projectId, string algorithmId, int startLine, int endLine)
+        {
+            return ReadLiveLogs(projectId, algorithmId, startLine, endLine);
         }
 
         /// <summary>
