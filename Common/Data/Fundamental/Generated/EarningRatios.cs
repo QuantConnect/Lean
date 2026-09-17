@@ -81,7 +81,7 @@ namespace QuantConnect.Data.Fundamental
         private RegressionGrowthofDividends5Years _regressionGrowthofDividends5Years;
 
         /// <summary>
-        /// The growth in the company's free cash flow per share on a percentage basis. Morningstar calculates the growth percentage based on the free cash flow divided by average diluted shares outstanding reported in the Financial Statements within the company filings or reports.
+        /// The growth in the company's free cash flow to equity holders per share on a percentage basis; unlike free cash flow, it also reflects net borrowing.
         /// </summary>
         /// <remarks>
         /// Morningstar DataId: 13020

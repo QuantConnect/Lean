@@ -24,7 +24,7 @@ using QuantConnect.Data.UniverseSelection;
 namespace QuantConnect.Data.Fundamental
 {
     /// <summary>
-    /// Carrying value of amounts transferred by customers to third parties for security purposes that are expected to be returned or applied towards payment after one year or beyond the operating cycle, if longer.
+    /// Deposits held by a bank from individual customers.
     /// </summary>
     public class CustomerAccountsBalanceSheet : MultiPeriodField
     {

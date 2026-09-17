@@ -24,7 +24,7 @@ using QuantConnect.Data.UniverseSelection;
 namespace QuantConnect.Data.Fundamental
 {
     /// <summary>
-    /// An amount owed to a firm that is not expected to be received by the firm within one year from the date of the balance sheet.
+    /// Deferred tax assets: taxes paid or carried forward that are not yet recognized in the income statement.
     /// </summary>
     public class DeferredAssetsBalanceSheet : MultiPeriodField
     {

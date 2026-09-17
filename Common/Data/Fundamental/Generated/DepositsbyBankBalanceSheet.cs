@@ -24,7 +24,7 @@ using QuantConnect.Data.UniverseSelection;
 namespace QuantConnect.Data.Fundamental
 {
     /// <summary>
-    /// Banks investment in the ongoing entity.
+    /// Deposits held by a bank from other banks or institutions.
     /// </summary>
     public class DepositsbyBankBalanceSheet : MultiPeriodField
     {

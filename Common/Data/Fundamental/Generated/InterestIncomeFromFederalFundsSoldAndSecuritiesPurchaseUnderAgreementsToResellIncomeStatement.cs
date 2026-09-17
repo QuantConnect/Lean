@@ -1,4 +1,4 @@
-/*
+﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2023 QuantConnect Corporation.
  *
@@ -24,7 +24,7 @@ using QuantConnect.Data.UniverseSelection;
 namespace QuantConnect.Data.Fundamental
 {
     /// <summary>
-    /// The carrying value of funds outstanding loaned in the form of security resale agreements if the agreement requires the purchaser to resell the identical security purchased or a security that meets the definition of ""substantially the same"" in the case of a dollar roll. Also includes purchases of participations in pools of securities that are subject to a resale agreement; This category includes all interest income generated from federal funds sold and securities purchases under agreements to resell; This category includes all interest income generated from federal funds sold and securities purchases under agreements to resell.
+    /// Interest income earned on federal (central bank) funds sold and on securities purchased under agreements to resell.
     /// </summary>
     public class InterestIncomeFromFederalFundsSoldAndSecuritiesPurchaseUnderAgreementsToResellIncomeStatement : MultiPeriodField
     {

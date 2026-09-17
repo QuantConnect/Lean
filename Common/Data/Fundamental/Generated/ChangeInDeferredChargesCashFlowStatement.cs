@@ -24,7 +24,7 @@ using QuantConnect.Data.UniverseSelection;
 namespace QuantConnect.Data.Fundamental
 {
     /// <summary>
-    /// The net change during the reporting period in the value of expenditures made during the current reporting period for benefits that will be received over a period of years. This item is usually only available for bank industry.
+    /// The increase or decrease between reporting periods in deferred assets and deferred liabilities.
     /// </summary>
     public class ChangeInDeferredChargesCashFlowStatement : MultiPeriodField
     {

@@ -24,7 +24,7 @@ using QuantConnect.Data.UniverseSelection;
 namespace QuantConnect.Data.Fundamental
 {
     /// <summary>
-    /// The total amount of stock authorized for issue by a corporation, including common and preferred stock.
+    /// The value of the issued common shares of the company.
     /// </summary>
     public class CapitalStockBalanceSheet : MultiPeriodField
     {

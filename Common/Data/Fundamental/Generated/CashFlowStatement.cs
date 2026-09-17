@@ -109,7 +109,7 @@ namespace QuantConnect.Data.Fundamental
         private CashFlowFromContinuingOperatingActivitiesCashFlowStatement _cashFlowFromContinuingOperatingActivities;
 
         /// <summary>
-        /// The aggregate amount of cash flow from discontinued operation, including operating activities, investing activities, and financing activities.
+        /// The net cash flow from discontinued operations that is not classified into operating, investing or financing cash flow.
         /// </summary>
         /// <remarks>
         /// Morningstar DataId: 26011
@@ -219,7 +219,7 @@ namespace QuantConnect.Data.Fundamental
         private ChangeInAccruedExpenseCashFlowStatement _changeInAccruedExpense;
 
         /// <summary>
-        /// The net change during the reporting period in investment income that has been earned but not yet received in cash.
+        /// The increase or decrease between reporting periods in accrued income, unbilled revenue and costs in excess of billings.
         /// </summary>
         /// <remarks>
         /// Morningstar DataId: 26026
@@ -589,7 +589,7 @@ namespace QuantConnect.Data.Fundamental
         private PreferredStockPaymentsCashFlowStatement _preferredStockPayments;
 
         /// <summary>
-        /// The cash outflow for debt initially having maturity due after one year or beyond the normal operating cycle, if longer.
+        /// The cash outflow for the repayment of debt during the period: long term debt where the company reports it separately, otherwise all debt.
         /// </summary>
         /// <remarks>
         /// Morningstar DataId: 26090
@@ -639,7 +639,7 @@ namespace QuantConnect.Data.Fundamental
         private CommonStockIssuanceCashFlowStatement _commonStockIssuance;
 
         /// <summary>
-        /// The cash inflow from a debt initially having maturity due after one year or beyond the operating cycle, if longer.
+        /// The cash inflow from the issuance of debt during the period, whatever its maturity.
         /// </summary>
         /// <remarks>
         /// Morningstar DataId: 26099
@@ -839,7 +839,7 @@ namespace QuantConnect.Data.Fundamental
         private AmortizationOfSecuritiesCashFlowStatement _amortizationOfSecurities;
 
         /// <summary>
-        /// The charge against earnings resulting from the aggregate write down of all assets from their carrying value to their fair value.
+        /// The non-cash impairment, write-off or write-down, net of reversals, of capital assets: property, plant and equipment, intangibles and fixed asset investments. Other non-current assets are not included.
         /// </summary>
         /// <remarks>
         /// Morningstar DataId: 26143
@@ -859,7 +859,7 @@ namespace QuantConnect.Data.Fundamental
         private ChangeInDividendPayableCashFlowStatement _changeInDividendPayable;
 
         /// <summary>
-        /// The net change during the reporting period in the value of expenditures made during the current reporting period for benefits that will be received over a period of years. This item is usually only available for bank industry.
+        /// The increase or decrease between reporting periods in deferred assets and deferred liabilities.
         /// </summary>
         /// <remarks>
         /// Morningstar DataId: 26145
@@ -971,7 +971,7 @@ namespace QuantConnect.Data.Fundamental
         private GainLossOnSaleOfPPECashFlowStatement _gainLossOnSaleOfPPE;
 
         /// <summary>
-        /// An expense reported in the income statement and needs to be removed from net income to arrive at cash provided by (used in) operations to the extent that such interest has not been paid. This item is usually only available for insurance industry.
+        /// Non-cash adjustments for interest and finance income and expenses during the period, including the interest an insurer credits on policyholder deposits.
         /// </summary>
         /// <remarks>
         /// Morningstar DataId: 26161

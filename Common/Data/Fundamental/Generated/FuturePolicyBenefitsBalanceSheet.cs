@@ -24,7 +24,7 @@ using QuantConnect.Data.UniverseSelection;
 namespace QuantConnect.Data.Fundamental
 {
     /// <summary>
-    /// Accounting policy pertaining to an insurance entity's net liability for future benefits (for example, death, cash surrender value) to be paid to or on behalf of policyholders, describing the bases, methodologies and components of the reserve, and assumptions regarding estimates of expected investment yields, mortality, morbidity, terminations and expenses.
+    /// Reserves set aside by an insurer for future policy benefits, for claims incurred but not yet settled, and for claims incurred but not reported.
     /// </summary>
     public class FuturePolicyBenefitsBalanceSheet : MultiPeriodField
     {
