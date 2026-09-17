@@ -797,8 +797,9 @@ namespace QuantConnect.Tests.API
 
             // Wait to receive the orders
             var readLiveOrders = WaitForReadLiveOrdersResponse(projectId, 60 * 5);
-            Assert.IsTrue(readLiveOrders.Any());
-            Assert.AreEqual(Symbols.SPY, readLiveOrders.First().Symbol);
+            Assert.GreaterOrEqual(readLiveOrders.Length, 1);
+            Assert.IsTrue(readLiveOrders.Orders.Any());
+            Assert.AreEqual(Symbols.SPY, readLiveOrders.Orders.First().Symbol);
 
             // Liquidate live algorithm; will also stop algorithm
             var liquidateLive = ApiClient.LiquidateLiveAlgorithm(projectId);
@@ -879,11 +880,11 @@ def CreateLiveAlgorithmFromPython(apiClient, projectId, compileId, nodeId):
         /// <param name="projectId">Id of the project</param>
         /// <param name="seconds">Seconds to allow for receive an order</param>
         /// <returns></returns>
-        private List<ApiOrderResponse> WaitForReadLiveOrdersResponse(int projectId, int seconds)
+        private OrdersResponseWrapper WaitForReadLiveOrdersResponse(int projectId, int seconds)
         {
-            var readLiveOrders = new List<ApiOrderResponse>();
+            var readLiveOrders = new OrdersResponseWrapper();
             var finish = DateTime.UtcNow.AddSeconds(seconds);
-            while (DateTime.UtcNow < finish && !readLiveOrders.Any())
+            while (DateTime.UtcNow < finish && !readLiveOrders.Orders.Any())
             {
                 Thread.Sleep(10000);
                 readLiveOrders = ApiClient.ReadLiveOrders(projectId);

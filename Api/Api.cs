@@ -44,6 +44,7 @@ namespace QuantConnect.Api
     {
         private readonly BlockingCollection<Lazy<HttpClient>> _clientPool;
         private string _dataFolder;
+        private const int MaxPageSize = 100;
 
         /// <summary>
         /// Serializer settings to use
@@ -412,13 +413,16 @@ namespace QuantConnect.Api
         /// </summary>
         /// <param name="projectId">Id of the project from which to read the orders</param>
         /// <param name="backtestId">Id of the backtest from which to read the orders</param>
-        /// <param name="start">Starting index of the orders to be fetched. Required if end > 100</param>
-        /// <param name="end">Last index of the orders to be fetched. Note that end - start must be less than 100</param>
+        /// <param name="start">Starting index of the orders to be fetched</param>
+        /// <param name="end">Last index of the orders to be fetched. Note that end - start must be less than or equal to 100.
+        /// If 0, it defaults to start + 100</param>
         /// <remarks>Will throw an <see cref="WebException"/> if there are any API errors</remarks>
-        /// <returns>The list of <see cref="Order"/></returns>
-
-        public List<ApiOrderResponse> ReadBacktestOrders(int projectId, string backtestId, int start = 0, int end = 100)
+        /// <returns><see cref="OrdersResponseWrapper"/> holding the requested orders and the total order count</returns>
+        /// <exception cref="ArgumentException">The requested window is larger than 100 orders</exception>
+        public OrdersResponseWrapper ReadBacktestOrders(int projectId, string backtestId, int start = 0, int end = 0)
         {
+            end = GetPageEnd("orders", start, end);
+
             using var request = ApiUtils.CreateJsonPostRequest("backtests/orders/read", new
             {
                 start,
@@ -427,7 +431,7 @@ namespace QuantConnect.Api
                 backtestId
             });
 
-            return MakeRequestOrThrow<OrdersResponseWrapper>(request, nameof(ReadBacktestOrders)).Orders;
+            return MakeRequestOrThrow<OrdersResponseWrapper>(request, nameof(ReadBacktestOrders));
         }
 
         /// <summary>
@@ -536,16 +540,7 @@ namespace QuantConnect.Api
         /// <exception cref="ArgumentException"></exception>
         public InsightResponse ReadBacktestInsights(int projectId, string backtestId, int start = 0, int end = 0)
         {
-            //var reque
-            var diff = end - start;
-            if (diff > 100)
-            {
-                throw new ArgumentException($"The difference between the start and end index of the insights must be smaller than 100, but it was {diff}.");
-            }
-            else if (end == 0)
-            {
-                end = start + 100;
-            }
+            end = GetPageEnd("insights", start, end);
 
             TryJsonPost("backtests/insights/read", out InsightResponse result, new { projectId, backtestId, start, end });
             return result;
@@ -683,13 +678,16 @@ namespace QuantConnect.Api
         /// Returns the orders of the specified project id live algorithm.
         /// </summary>
         /// <param name="projectId">Id of the project from which to read the live orders</param>
-        /// <param name="start">Starting index of the orders to be fetched. Required if end > 100</param>
-        /// <param name="end">Last index of the orders to be fetched. Note that end - start must be less than 100</param>
+        /// <param name="start">Starting index of the orders to be fetched</param>
+        /// <param name="end">Last index of the orders to be fetched. Note that end - start must be less than or equal to 100.
+        /// If 0, it defaults to start + 100</param>
         /// <remarks>Will throw an <see cref="WebException"/> if there are any API errors</remarks>
-        /// <returns>The list of <see cref="Order"/></returns>
-
-        public List<ApiOrderResponse> ReadLiveOrders(int projectId, int start = 0, int end = 100)
+        /// <returns><see cref="OrdersResponseWrapper"/> holding the requested orders and the total order count</returns>
+        /// <exception cref="ArgumentException">The requested window is larger than 100 orders</exception>
+        public OrdersResponseWrapper ReadLiveOrders(int projectId, int start = 0, int end = 0)
         {
+            end = GetPageEnd("orders", start, end);
+
             using var request = ApiUtils.CreateJsonPostRequest("live/orders/read", new
             {
                 start,
@@ -697,7 +695,7 @@ namespace QuantConnect.Api
                 projectId
             });
 
-            return MakeRequestOrThrow<OrdersResponseWrapper>(request, nameof(ReadLiveOrders)).Orders;
+            return MakeRequestOrThrow<OrdersResponseWrapper>(request, nameof(ReadLiveOrders));
         }
 
         /// <summary>
@@ -822,15 +820,7 @@ namespace QuantConnect.Api
         /// <exception cref="ArgumentException"></exception>
         public InsightResponse ReadLiveInsights(int projectId, int start = 0, int end = 0)
         {
-            var diff = end - start;
-            if (diff > 100)
-            {
-                throw new ArgumentException($"The difference between the start and end index of the insights must be smaller than 100, but it was {diff}.");
-            }
-            else if (end == 0)
-            {
-                end = start + 100;
-            }
+            end = GetPageEnd("insights", start, end);
 
             TryJsonPost("live/insights/read", out InsightResponse result, new { projectId, start, end });
             return result;
@@ -1501,6 +1491,20 @@ namespace QuantConnect.Api
             }
 
             return result;
+        }
+
+        /// <summary>
+        /// Validates a paging window of at most <see cref="MaxPageSize"/> items and returns the end index,
+        /// defaulting an unset end (0) to a full page from start
+        /// </summary>
+        private static int GetPageEnd(string itemsName, int start, int end)
+        {
+            var diff = end - start;
+            if (diff > MaxPageSize)
+            {
+                throw new ArgumentException($"The difference between the start and end index of the {itemsName} must be smaller than {MaxPageSize}, but it was {diff}.");
+            }
+            return end == 0 ? start + MaxPageSize : end;
         }
 
         /// <summary>
