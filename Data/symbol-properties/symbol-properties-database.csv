@@ -1516,6 +1516,18 @@ coinbase,ZRXEUR,crypto,0x-Euro,EUR,1,0.000001,0.00001,ZRX-EUR,0.79,
 coinbase,ZRXUSD,crypto,0x Protocol-US Dollar,USD,1,0.000001,0.00001,ZRX-USD,0.00001
 coinbase,ZRXUSDC,crypto,0x Protocol-USDC,USDC,1,0.000001,0.00001,ZRX-USDC,0.00001
 
+interactivebrokers,AAVEUSD,crypto,Aave-US Dollar,USD,1,0.01,0.001,AAVE,0.001
+interactivebrokers,BCHUSD,crypto,Bitcoin Cash-US Dollar,USD,1,0.05,0.00000001,BCH,0.00000001
+interactivebrokers,BTCUSD,crypto,Bitcoin-US Dollar,USD,1,0.25,0.00000001,BTC,0.00000001
+interactivebrokers,ETHUSD,crypto,Ethereum-US Dollar,USD,1,0.05,0.00000001,ETH,0.00000001
+interactivebrokers,LINKUSD,crypto,Chainlink-US Dollar,USD,1,0.01,0.00000001,LINK,0.00000001
+interactivebrokers,LTCUSD,crypto,Litecoin-US Dollar,USD,1,0.01,0.00000001,LTC,0.00000001
+interactivebrokers,MATICUSD,crypto,Polygon-US Dollar,USD,1,0.01,0.00000001,MATIC,0.00000001
+interactivebrokers,PAXGUSD,crypto,PAX Gold-US Dollar,USD,1,0.01,0.00001,PAXG,0.00001
+interactivebrokers,SHIBUSD,crypto,Shiba Inu-US Dollar,USD,1,0.00000001,0.00000001,SHIB,0.00000001
+interactivebrokers,SOLUSD,crypto,Solana-US Dollar,USD,1,0.01,0.00000001,SOL,0.00000001
+interactivebrokers,UNIUSD,crypto,Uniswap-US Dollar,USD,1,0.001,0.000001,UNI,0.000001
+
 bitfinex,1INCHUSD,crypto,1INCH-US Dollar,USD,1,0.00001,0.00000001,t1INCH:USD,4.0,
 bitfinex,1INCHUSDT,crypto,1INCH-Tether USDt,USDT,1,0.00001,0.00000001,t1INCH:UST,4.0,
 bitfinex,AAABBB,crypto,AAA-BBB,BBB,1,0.00001,0.00000001,tAAABBB,2.0,

@@ -54,6 +54,18 @@ namespace QuantConnect.Orders.Fees
         private const decimal _koreaFutureFeeRate = 0.00004m;
 
         /// <summary>
+        /// Cryptocurrency commissions go from 0.12% to 0.18% of the trade value depending on the
+        /// monthly volume, we assume the highest rate.
+        /// Reference at https://www.interactivebrokers.com/en/pricing/commissions-cryptocurrencies.php
+        /// </summary>
+        private const decimal _cryptoCommissionRate = 0.0018m;
+
+        /// <summary>
+        /// Minimum cryptocurrency commission charged per order, USD 1.75 or its equivalent in the quote currency
+        /// </summary>
+        private const decimal _cryptoMinimumOrderFee = 1.75m;
+
+        /// <summary>
         /// Initializes a new instance of the <see cref="ImmediateFillModel"/>
         /// </summary>
         /// <param name="monthlyForexTradeAmountInUSDollars">Monthly FX dollar volume traded</param>
@@ -94,7 +106,8 @@ namespace QuantConnect.Orders.Fees
 
             var quantity = order.AbsoluteQuantity;
             decimal feeResult;
-            string feeCurrency;
+            // IB Forex and Crypto fees are all in USD
+            var feeCurrency = Currencies.USD;
             var market = security.Symbol.ID.Market;
             switch (security.Type)
             {
@@ -103,8 +116,6 @@ namespace QuantConnect.Orders.Fees
                     var totalOrderValue = order.GetValue(security);
                     var fee = Math.Abs(_forexCommissionRate*totalOrderValue);
                     feeResult = Math.Max(_forexMinimumOrderFee, fee);
-                    // IB Forex fees are all in USD
-                    feeCurrency = Currencies.USD;
                     break;
 
                 case SecurityType.Option:
@@ -189,6 +200,11 @@ namespace QuantConnect.Orders.Fees
                         _ => 1.0m
                     };
                     feeResult = Math.Max(feeResult, minimumFee);
+                    break;
+
+                case SecurityType.Crypto:
+                    var cryptoValue = Math.Abs(order.GetValue(security));
+                    feeResult = Math.Max(_cryptoMinimumOrderFee, _cryptoCommissionRate * cryptoValue);
                     break;
 
                 default:
