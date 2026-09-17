@@ -55,7 +55,7 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 20007
         /// </remarks>
         [JsonProperty("20007")]
-                public AmortizationIncomeStatement Amortization => _amortization ??= new(_timeProvider, _securityIdentifier);
+        public AmortizationIncomeStatement Amortization => _amortization ??= new(_timeProvider, _securityIdentifier);
         private AmortizationIncomeStatement _amortization;
 
         /// <summary>
@@ -85,7 +85,7 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 20017
         /// </remarks>
         [JsonProperty("20017")]
-                public DepletionIncomeStatement Depletion => _depletion ??= new(_timeProvider, _securityIdentifier);
+        public DepletionIncomeStatement Depletion => _depletion ??= new(_timeProvider, _securityIdentifier);
         private DepletionIncomeStatement _depletion;
 
         /// <summary>
@@ -95,7 +95,7 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 20018
         /// </remarks>
         [JsonProperty("20018")]
-                public DepreciationIncomeStatement Depreciation => _depreciation ??= new(_timeProvider, _securityIdentifier);
+        public DepreciationIncomeStatement Depreciation => _depreciation ??= new(_timeProvider, _securityIdentifier);
         private DepreciationIncomeStatement _depreciation;
 
         /// <summary>
@@ -105,7 +105,7 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 20019
         /// </remarks>
         [JsonProperty("20019")]
-                public DepreciationAndAmortizationIncomeStatement DepreciationAndAmortization => _depreciationAndAmortization ??= new(_timeProvider, _securityIdentifier);
+        public DepreciationAndAmortizationIncomeStatement DepreciationAndAmortization => _depreciationAndAmortization ??= new(_timeProvider, _securityIdentifier);
         private DepreciationAndAmortizationIncomeStatement _depreciationAndAmortization;
 
         /// <summary>
@@ -397,7 +397,7 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 20134
         /// </remarks>
         [JsonProperty("20134")]
-                public PreferredStockDividendsIncomeStatement PreferredStockDividends => _preferredStockDividends ??= new(_timeProvider, _securityIdentifier);
+        public PreferredStockDividendsIncomeStatement PreferredStockDividends => _preferredStockDividends ??= new(_timeProvider, _securityIdentifier);
         private PreferredStockDividendsIncomeStatement _preferredStockDividends;
 
         /// <summary>
@@ -457,7 +457,7 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 20158
         /// </remarks>
         [JsonProperty("20158")]
-                public SellingAndMarketingExpenseIncomeStatement SellingAndMarketingExpense => _sellingAndMarketingExpense ??= new(_timeProvider, _securityIdentifier);
+        public SellingAndMarketingExpenseIncomeStatement SellingAndMarketingExpense => _sellingAndMarketingExpense ??= new(_timeProvider, _securityIdentifier);
         private SellingAndMarketingExpenseIncomeStatement _sellingAndMarketingExpense;
 
         /// <summary>
@@ -557,7 +557,7 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 20204
         /// </remarks>
         [JsonProperty("20204")]
-                public CreditCardIncomeStatement CreditCard => _creditCard ??= new(_timeProvider, _securityIdentifier);
+        public CreditCardIncomeStatement CreditCard => _creditCard ??= new(_timeProvider, _securityIdentifier);
         private CreditCardIncomeStatement _creditCard;
 
         /// <summary>
@@ -567,7 +567,7 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 20206
         /// </remarks>
         [JsonProperty("20206")]
-                public DividendIncomeIncomeStatement DividendIncome => _dividendIncome ??= new(_timeProvider, _securityIdentifier);
+        public DividendIncomeIncomeStatement DividendIncome => _dividendIncome ??= new(_timeProvider, _securityIdentifier);
         private DividendIncomeIncomeStatement _dividendIncome;
 
         /// <summary>
@@ -627,7 +627,7 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 20215
         /// </remarks>
         [JsonProperty("20215")]
-                public FuelIncomeStatement Fuel => _fuel ??= new(_timeProvider, _securityIdentifier);
+        public FuelIncomeStatement Fuel => _fuel ??= new(_timeProvider, _securityIdentifier);
         private FuelIncomeStatement _fuel;
 
         /// <summary>
@@ -637,7 +637,7 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 20216
         /// </remarks>
         [JsonProperty("20216")]
-                public FuelAndPurchasePowerIncomeStatement FuelAndPurchasePower => _fuelAndPurchasePower ??= new(_timeProvider, _securityIdentifier);
+        public FuelAndPurchasePowerIncomeStatement FuelAndPurchasePower => _fuelAndPurchasePower ??= new(_timeProvider, _securityIdentifier);
         private FuelAndPurchasePowerIncomeStatement _fuelAndPurchasePower;
 
         /// <summary>
@@ -647,7 +647,7 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 20217
         /// </remarks>
         [JsonProperty("20217")]
-                public GainOnSaleOfBusinessIncomeStatement GainOnSaleOfBusiness => _gainOnSaleOfBusiness ??= new(_timeProvider, _securityIdentifier);
+        public GainOnSaleOfBusinessIncomeStatement GainOnSaleOfBusiness => _gainOnSaleOfBusiness ??= new(_timeProvider, _securityIdentifier);
         private GainOnSaleOfBusinessIncomeStatement _gainOnSaleOfBusiness;
 
         /// <summary>
@@ -667,7 +667,7 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 20219
         /// </remarks>
         [JsonProperty("20219")]
-                public GainOnSaleOfSecurityIncomeStatement GainOnSaleOfSecurity => _gainOnSaleOfSecurity ??= new(_timeProvider, _securityIdentifier);
+        public GainOnSaleOfSecurityIncomeStatement GainOnSaleOfSecurity => _gainOnSaleOfSecurity ??= new(_timeProvider, _securityIdentifier);
         private GainOnSaleOfSecurityIncomeStatement _gainOnSaleOfSecurity;
 
         /// <summary>
@@ -687,7 +687,7 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 20225
         /// </remarks>
         [JsonProperty("20225")]
-                public ImpairmentOfCapitalAssetsIncomeStatement ImpairmentOfCapitalAssets => _impairmentOfCapitalAssets ??= new(_timeProvider, _securityIdentifier);
+        public ImpairmentOfCapitalAssetsIncomeStatement ImpairmentOfCapitalAssets => _impairmentOfCapitalAssets ??= new(_timeProvider, _securityIdentifier);
         private ImpairmentOfCapitalAssetsIncomeStatement _impairmentOfCapitalAssets;
 
         /// <summary>
@@ -717,7 +717,7 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 20235
         /// </remarks>
         [JsonProperty("20235")]
-                public InterestExpenseForDepositIncomeStatement InterestExpenseForDeposit => _interestExpenseForDeposit ??= new(_timeProvider, _securityIdentifier);
+        public InterestExpenseForDepositIncomeStatement InterestExpenseForDeposit => _interestExpenseForDeposit ??= new(_timeProvider, _securityIdentifier);
         private InterestExpenseForDepositIncomeStatement _interestExpenseForDeposit;
 
         /// <summary>
@@ -727,7 +727,7 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 20236
         /// </remarks>
         [JsonProperty("20236")]
-                public InterestExpenseForFederalFundsSoldAndSecuritiesPurchaseUnderAgreementsToResellIncomeStatement InterestExpenseForFederalFundsSoldAndSecuritiesPurchaseUnderAgreementsToResell => _interestExpenseForFederalFundsSoldAndSecuritiesPurchaseUnderAgreementsToResell ??= new(_timeProvider, _securityIdentifier);
+        public InterestExpenseForFederalFundsSoldAndSecuritiesPurchaseUnderAgreementsToResellIncomeStatement InterestExpenseForFederalFundsSoldAndSecuritiesPurchaseUnderAgreementsToResell => _interestExpenseForFederalFundsSoldAndSecuritiesPurchaseUnderAgreementsToResell ??= new(_timeProvider, _securityIdentifier);
         private InterestExpenseForFederalFundsSoldAndSecuritiesPurchaseUnderAgreementsToResellIncomeStatement _interestExpenseForFederalFundsSoldAndSecuritiesPurchaseUnderAgreementsToResell;
 
         /// <summary>
@@ -737,7 +737,7 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 20238
         /// </remarks>
         [JsonProperty("20238")]
-                public InterestExpenseForLongTermDebtAndCapitalSecuritiesIncomeStatement InterestExpenseForLongTermDebtAndCapitalSecurities => _interestExpenseForLongTermDebtAndCapitalSecurities ??= new(_timeProvider, _securityIdentifier);
+        public InterestExpenseForLongTermDebtAndCapitalSecuritiesIncomeStatement InterestExpenseForLongTermDebtAndCapitalSecurities => _interestExpenseForLongTermDebtAndCapitalSecurities ??= new(_timeProvider, _securityIdentifier);
         private InterestExpenseForLongTermDebtAndCapitalSecuritiesIncomeStatement _interestExpenseForLongTermDebtAndCapitalSecurities;
 
         /// <summary>
@@ -747,7 +747,7 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 20239
         /// </remarks>
         [JsonProperty("20239")]
-                public InterestExpenseForShortTermDebtIncomeStatement InterestExpenseForShortTermDebt => _interestExpenseForShortTermDebt ??= new(_timeProvider, _securityIdentifier);
+        public InterestExpenseForShortTermDebtIncomeStatement InterestExpenseForShortTermDebt => _interestExpenseForShortTermDebt ??= new(_timeProvider, _securityIdentifier);
         private InterestExpenseForShortTermDebtIncomeStatement _interestExpenseForShortTermDebt;
 
         /// <summary>
@@ -757,7 +757,7 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 20240
         /// </remarks>
         [JsonProperty("20240")]
-                public InterestIncomeFromDepositsIncomeStatement InterestIncomeFromDeposits => _interestIncomeFromDeposits ??= new(_timeProvider, _securityIdentifier);
+        public InterestIncomeFromDepositsIncomeStatement InterestIncomeFromDeposits => _interestIncomeFromDeposits ??= new(_timeProvider, _securityIdentifier);
         private InterestIncomeFromDepositsIncomeStatement _interestIncomeFromDeposits;
 
         /// <summary>
@@ -767,7 +767,7 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 20241
         /// </remarks>
         [JsonProperty("20241")]
-                public InterestIncomeFromFederalFundsSoldAndSecuritiesPurchaseUnderAgreementsToResellIncomeStatement InterestIncomeFromFederalFundsSoldAndSecuritiesPurchaseUnderAgreementsToResell => _interestIncomeFromFederalFundsSoldAndSecuritiesPurchaseUnderAgreementsToResell ??= new(_timeProvider, _securityIdentifier);
+        public InterestIncomeFromFederalFundsSoldAndSecuritiesPurchaseUnderAgreementsToResellIncomeStatement InterestIncomeFromFederalFundsSoldAndSecuritiesPurchaseUnderAgreementsToResell => _interestIncomeFromFederalFundsSoldAndSecuritiesPurchaseUnderAgreementsToResell ??= new(_timeProvider, _securityIdentifier);
         private InterestIncomeFromFederalFundsSoldAndSecuritiesPurchaseUnderAgreementsToResellIncomeStatement _interestIncomeFromFederalFundsSoldAndSecuritiesPurchaseUnderAgreementsToResell;
 
         /// <summary>
@@ -797,7 +797,7 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 20245
         /// </remarks>
         [JsonProperty("20245")]
-                public InterestIncomeFromLoansAndLeaseIncomeStatement InterestIncomeFromLoansAndLease => _interestIncomeFromLoansAndLease ??= new(_timeProvider, _securityIdentifier);
+        public InterestIncomeFromLoansAndLeaseIncomeStatement InterestIncomeFromLoansAndLease => _interestIncomeFromLoansAndLease ??= new(_timeProvider, _securityIdentifier);
         private InterestIncomeFromLoansAndLeaseIncomeStatement _interestIncomeFromLoansAndLease;
 
         /// <summary>
@@ -827,7 +827,7 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 20252
         /// </remarks>
         [JsonProperty("20252")]
-                public MaintenanceAndRepairsIncomeStatement MaintenanceAndRepairs => _maintenanceAndRepairs ??= new(_timeProvider, _securityIdentifier);
+        public MaintenanceAndRepairsIncomeStatement MaintenanceAndRepairs => _maintenanceAndRepairs ??= new(_timeProvider, _securityIdentifier);
         private MaintenanceAndRepairsIncomeStatement _maintenanceAndRepairs;
 
         /// <summary>
@@ -867,7 +867,7 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 20258
         /// </remarks>
         [JsonProperty("20258")]
-                public NetRealizedGainLossOnInvestmentsIncomeStatement NetRealizedGainLossOnInvestments => _netRealizedGainLossOnInvestments ??= new(_timeProvider, _securityIdentifier);
+        public NetRealizedGainLossOnInvestmentsIncomeStatement NetRealizedGainLossOnInvestments => _netRealizedGainLossOnInvestments ??= new(_timeProvider, _securityIdentifier);
         private NetRealizedGainLossOnInvestmentsIncomeStatement _netRealizedGainLossOnInvestments;
 
         /// <summary>
@@ -877,7 +877,7 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 20260
         /// </remarks>
         [JsonProperty("20260")]
-                public OccupancyAndEquipmentIncomeStatement OccupancyAndEquipment => _occupancyAndEquipment ??= new(_timeProvider, _securityIdentifier);
+        public OccupancyAndEquipmentIncomeStatement OccupancyAndEquipment => _occupancyAndEquipment ??= new(_timeProvider, _securityIdentifier);
         private OccupancyAndEquipmentIncomeStatement _occupancyAndEquipment;
 
         /// <summary>
@@ -907,7 +907,7 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 20265
         /// </remarks>
         [JsonProperty("20265")]
-                public OtherInterestExpenseIncomeStatement OtherInterestExpense => _otherInterestExpense ??= new(_timeProvider, _securityIdentifier);
+        public OtherInterestExpenseIncomeStatement OtherInterestExpense => _otherInterestExpense ??= new(_timeProvider, _securityIdentifier);
         private OtherInterestExpenseIncomeStatement _otherInterestExpense;
 
         /// <summary>
@@ -917,7 +917,7 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 20266
         /// </remarks>
         [JsonProperty("20266")]
-                public OtherInterestIncomeIncomeStatement OtherInterestIncome => _otherInterestIncome ??= new(_timeProvider, _securityIdentifier);
+        public OtherInterestIncomeIncomeStatement OtherInterestIncome => _otherInterestIncome ??= new(_timeProvider, _securityIdentifier);
         private OtherInterestIncomeIncomeStatement _otherInterestIncome;
 
         /// <summary>
@@ -957,7 +957,7 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 20273
         /// </remarks>
         [JsonProperty("20273")]
-                public PolicyholderBenefitsCededIncomeStatement PolicyholderBenefitsCeded => _policyholderBenefitsCeded ??= new(_timeProvider, _securityIdentifier);
+        public PolicyholderBenefitsCededIncomeStatement PolicyholderBenefitsCeded => _policyholderBenefitsCeded ??= new(_timeProvider, _securityIdentifier);
         private PolicyholderBenefitsCededIncomeStatement _policyholderBenefitsCeded;
 
         /// <summary>
@@ -967,7 +967,7 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 20274
         /// </remarks>
         [JsonProperty("20274")]
-                public PolicyholderBenefitsGrossIncomeStatement PolicyholderBenefitsGross => _policyholderBenefitsGross ??= new(_timeProvider, _securityIdentifier);
+        public PolicyholderBenefitsGrossIncomeStatement PolicyholderBenefitsGross => _policyholderBenefitsGross ??= new(_timeProvider, _securityIdentifier);
         private PolicyholderBenefitsGrossIncomeStatement _policyholderBenefitsGross;
 
         /// <summary>
@@ -977,7 +977,7 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 20275
         /// </remarks>
         [JsonProperty("20275")]
-                public PolicyholderDividendsIncomeStatement PolicyholderDividends => _policyholderDividends ??= new(_timeProvider, _securityIdentifier);
+        public PolicyholderDividendsIncomeStatement PolicyholderDividends => _policyholderDividends ??= new(_timeProvider, _securityIdentifier);
         private PolicyholderDividendsIncomeStatement _policyholderDividends;
 
         /// <summary>
@@ -987,7 +987,7 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 20276
         /// </remarks>
         [JsonProperty("20276")]
-                public PolicyholderInterestIncomeStatement PolicyholderInterest => _policyholderInterest ??= new(_timeProvider, _securityIdentifier);
+        public PolicyholderInterestIncomeStatement PolicyholderInterest => _policyholderInterest ??= new(_timeProvider, _securityIdentifier);
         private PolicyholderInterestIncomeStatement _policyholderInterest;
 
         /// <summary>
@@ -1007,7 +1007,7 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 20283
         /// </remarks>
         [JsonProperty("20283")]
-                public ProvisionForDoubtfulAccountsIncomeStatement ProvisionForDoubtfulAccounts => _provisionForDoubtfulAccounts ??= new(_timeProvider, _securityIdentifier);
+        public ProvisionForDoubtfulAccountsIncomeStatement ProvisionForDoubtfulAccounts => _provisionForDoubtfulAccounts ??= new(_timeProvider, _securityIdentifier);
         private ProvisionForDoubtfulAccountsIncomeStatement _provisionForDoubtfulAccounts;
 
         /// <summary>
@@ -1017,7 +1017,7 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 20287
         /// </remarks>
         [JsonProperty("20287")]
-                public RentAndLandingFeesIncomeStatement RentAndLandingFees => _rentAndLandingFees ??= new(_timeProvider, _securityIdentifier);
+        public RentAndLandingFeesIncomeStatement RentAndLandingFees => _rentAndLandingFees ??= new(_timeProvider, _securityIdentifier);
         private RentAndLandingFeesIncomeStatement _rentAndLandingFees;
 
         /// <summary>
@@ -1039,7 +1039,7 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 20292
         /// </remarks>
         [JsonProperty("20292")]
-                public SalariesAndWagesIncomeStatement SalariesAndWages => _salariesAndWages ??= new(_timeProvider, _securityIdentifier);
+        public SalariesAndWagesIncomeStatement SalariesAndWages => _salariesAndWages ??= new(_timeProvider, _securityIdentifier);
         private SalariesAndWagesIncomeStatement _salariesAndWages;
 
         /// <summary>
@@ -1061,7 +1061,7 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 20295
         /// </remarks>
         [JsonProperty("20295")]
-                public ServiceChargeOnDepositorAccountsIncomeStatement ServiceChargeOnDepositorAccounts => _serviceChargeOnDepositorAccounts ??= new(_timeProvider, _securityIdentifier);
+        public ServiceChargeOnDepositorAccountsIncomeStatement ServiceChargeOnDepositorAccounts => _serviceChargeOnDepositorAccounts ??= new(_timeProvider, _securityIdentifier);
         private ServiceChargeOnDepositorAccountsIncomeStatement _serviceChargeOnDepositorAccounts;
 
         /// <summary>
@@ -1081,7 +1081,7 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 20300
         /// </remarks>
         [JsonProperty("20300")]
-                public TrustFeesbyCommissionsIncomeStatement TrustFeesbyCommissions => _trustFeesbyCommissions ??= new(_timeProvider, _securityIdentifier);
+        public TrustFeesbyCommissionsIncomeStatement TrustFeesbyCommissions => _trustFeesbyCommissions ??= new(_timeProvider, _securityIdentifier);
         private TrustFeesbyCommissionsIncomeStatement _trustFeesbyCommissions;
 
         /// <summary>
@@ -1101,7 +1101,7 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 20304
         /// </remarks>
         [JsonProperty("20304")]
-                public WriteOffIncomeStatement WriteOff => _writeOff ??= new(_timeProvider, _securityIdentifier);
+        public WriteOffIncomeStatement WriteOff => _writeOff ??= new(_timeProvider, _securityIdentifier);
         private WriteOffIncomeStatement _writeOff;
 
         /// <summary>
@@ -1121,7 +1121,7 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 20308
         /// </remarks>
         [JsonProperty("20308")]
-                public AmortizationOfIntangiblesIncomeStatement AmortizationOfIntangibles => _amortizationOfIntangibles ??= new(_timeProvider, _securityIdentifier);
+        public AmortizationOfIntangiblesIncomeStatement AmortizationOfIntangibles => _amortizationOfIntangibles ??= new(_timeProvider, _securityIdentifier);
         private AmortizationOfIntangiblesIncomeStatement _amortizationOfIntangibles;
 
         /// <summary>
@@ -1153,7 +1153,7 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 20312
         /// </remarks>
         [JsonProperty("20312")]
-                public OtherOperatingExpensesIncomeStatement OtherOperatingExpenses => _otherOperatingExpenses ??= new(_timeProvider, _securityIdentifier);
+        public OtherOperatingExpensesIncomeStatement OtherOperatingExpenses => _otherOperatingExpenses ??= new(_timeProvider, _securityIdentifier);
         private OtherOperatingExpensesIncomeStatement _otherOperatingExpenses;
 
         /// <summary>
@@ -1183,7 +1183,7 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 20315
         /// </remarks>
         [JsonProperty("20315")]
-                public ReconciledDepreciationIncomeStatement ReconciledDepreciation => _reconciledDepreciation ??= new(_timeProvider, _securityIdentifier);
+        public ReconciledDepreciationIncomeStatement ReconciledDepreciation => _reconciledDepreciation ??= new(_timeProvider, _securityIdentifier);
         private ReconciledDepreciationIncomeStatement _reconciledDepreciation;
 
         /// <summary>
@@ -1213,7 +1213,7 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 20333
         /// </remarks>
         [JsonProperty("20333")]
-                public GainLossonSaleofAssetsIncomeStatement GainLossonSaleofAssets => _gainLossonSaleofAssets ??= new(_timeProvider, _securityIdentifier);
+        public GainLossonSaleofAssetsIncomeStatement GainLossonSaleofAssets => _gainLossonSaleofAssets ??= new(_timeProvider, _securityIdentifier);
         private GainLossonSaleofAssetsIncomeStatement _gainLossonSaleofAssets;
 
         /// <summary>
@@ -1243,7 +1243,7 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 20343
         /// </remarks>
         [JsonProperty("20343")]
-                public LossonExtinguishmentofDebtIncomeStatement LossonExtinguishmentofDebt => _lossonExtinguishmentofDebt ??= new(_timeProvider, _securityIdentifier);
+        public LossonExtinguishmentofDebtIncomeStatement LossonExtinguishmentofDebt => _lossonExtinguishmentofDebt ??= new(_timeProvider, _securityIdentifier);
         private LossonExtinguishmentofDebtIncomeStatement _lossonExtinguishmentofDebt;
 
         /// <summary>
@@ -1283,7 +1283,7 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 20359
         /// </remarks>
         [JsonProperty("20359")]
-                public StaffCostsIncomeStatement StaffCosts => _staffCosts ??= new(_timeProvider, _securityIdentifier);
+        public StaffCostsIncomeStatement StaffCosts => _staffCosts ??= new(_timeProvider, _securityIdentifier);
         private StaffCostsIncomeStatement _staffCosts;
 
         /// <summary>
@@ -1325,7 +1325,7 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 20367
         /// </remarks>
         [JsonProperty("20367")]
-                public IncomefromAssociatesandOtherParticipatingInterestsIncomeStatement IncomefromAssociatesandOtherParticipatingInterests => _incomefromAssociatesandOtherParticipatingInterests ??= new(_timeProvider, _securityIdentifier);
+        public IncomefromAssociatesandOtherParticipatingInterestsIncomeStatement IncomefromAssociatesandOtherParticipatingInterests => _incomefromAssociatesandOtherParticipatingInterests ??= new(_timeProvider, _securityIdentifier);
         private IncomefromAssociatesandOtherParticipatingInterestsIncomeStatement _incomefromAssociatesandOtherParticipatingInterests;
 
         /// <summary>
@@ -1335,7 +1335,7 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 20368
         /// </remarks>
         [JsonProperty("20368")]
-                public TotalOtherFinanceCostIncomeStatement TotalOtherFinanceCost => _totalOtherFinanceCost ??= new(_timeProvider, _securityIdentifier);
+        public TotalOtherFinanceCostIncomeStatement TotalOtherFinanceCost => _totalOtherFinanceCost ??= new(_timeProvider, _securityIdentifier);
         private TotalOtherFinanceCostIncomeStatement _totalOtherFinanceCost;
 
         /// <summary>
@@ -1387,7 +1387,7 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 20381
         /// </remarks>
         [JsonProperty("20381")]
-                public OtherStaffCostsIncomeStatement OtherStaffCosts => _otherStaffCosts ??= new(_timeProvider, _securityIdentifier);
+        public OtherStaffCostsIncomeStatement OtherStaffCosts => _otherStaffCosts ??= new(_timeProvider, _securityIdentifier);
         private OtherStaffCostsIncomeStatement _otherStaffCosts;
 
         /// <summary>
@@ -1611,7 +1611,7 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 20420
         /// </remarks>
         [JsonProperty("20420")]
-                public NormalizedEBITDAIncomeStatement NormalizedEBITDA => _normalizedEBITDA ??= new(_timeProvider, _securityIdentifier);
+        public NormalizedEBITDAIncomeStatement NormalizedEBITDA => _normalizedEBITDA ??= new(_timeProvider, _securityIdentifier);
         private NormalizedEBITDAIncomeStatement _normalizedEBITDA;
 
         /// <summary>
@@ -1621,7 +1621,7 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 20422
         /// </remarks>
         [JsonProperty("20422")]
-                public StockBasedCompensationIncomeStatement StockBasedCompensation => _stockBasedCompensation ??= new(_timeProvider, _securityIdentifier);
+        public StockBasedCompensationIncomeStatement StockBasedCompensation => _stockBasedCompensation ??= new(_timeProvider, _securityIdentifier);
         private StockBasedCompensationIncomeStatement _stockBasedCompensation;
 
         /// <summary>
@@ -1641,7 +1641,7 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 20425
         /// </remarks>
         [JsonProperty("20425")]
-                public InvestmentContractLiabilitiesIncurredIncomeStatement InvestmentContractLiabilitiesIncurred => _investmentContractLiabilitiesIncurred ??= new(_timeProvider, _securityIdentifier);
+        public InvestmentContractLiabilitiesIncurredIncomeStatement InvestmentContractLiabilitiesIncurred => _investmentContractLiabilitiesIncurred ??= new(_timeProvider, _securityIdentifier);
         private InvestmentContractLiabilitiesIncurredIncomeStatement _investmentContractLiabilitiesIncurred;
 
         /// <summary>
@@ -1723,7 +1723,7 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 20435
         /// </remarks>
         [JsonProperty("20435")]
-                public TotalOperatingIncomeAsReportedIncomeStatement TotalOperatingIncomeAsReported => _totalOperatingIncomeAsReported ??= new(_timeProvider, _securityIdentifier);
+        public TotalOperatingIncomeAsReportedIncomeStatement TotalOperatingIncomeAsReported => _totalOperatingIncomeAsReported ??= new(_timeProvider, _securityIdentifier);
         private TotalOperatingIncomeAsReportedIncomeStatement _totalOperatingIncomeAsReported;
 
         /// <summary>
@@ -1743,7 +1743,7 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 20437
         /// </remarks>
         [JsonProperty("20437")]
-                public OtherCostofRevenueIncomeStatement OtherCostofRevenue => _otherCostofRevenue ??= new(_timeProvider, _securityIdentifier);
+        public OtherCostofRevenueIncomeStatement OtherCostofRevenue => _otherCostofRevenue ??= new(_timeProvider, _securityIdentifier);
         private OtherCostofRevenueIncomeStatement _otherCostofRevenue;
 
         /// <summary>
@@ -1753,7 +1753,7 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 20438
         /// </remarks>
         [JsonProperty("20438")]
-                public RentandLandingFeesCostofRevenueIncomeStatement RentandLandingFeesCostofRevenue => _rentandLandingFeesCostofRevenue ??= new(_timeProvider, _securityIdentifier);
+        public RentandLandingFeesCostofRevenueIncomeStatement RentandLandingFeesCostofRevenue => _rentandLandingFeesCostofRevenue ??= new(_timeProvider, _securityIdentifier);
         private RentandLandingFeesCostofRevenueIncomeStatement _rentandLandingFeesCostofRevenue;
 
         /// <summary>
@@ -1763,7 +1763,7 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 20439
         /// </remarks>
         [JsonProperty("20439")]
-                public DDACostofRevenueIncomeStatement DDACostofRevenue => _dDACostofRevenue ??= new(_timeProvider, _securityIdentifier);
+        public DDACostofRevenueIncomeStatement DDACostofRevenue => _dDACostofRevenue ??= new(_timeProvider, _securityIdentifier);
         private DDACostofRevenueIncomeStatement _dDACostofRevenue;
 
         /// <summary>
@@ -1803,7 +1803,7 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 20443
         /// </remarks>
         [JsonProperty("20443")]
-                public DepreciationSupplementalIncomeStatement DepreciationSupplemental => _depreciationSupplemental ??= new(_timeProvider, _securityIdentifier);
+        public DepreciationSupplementalIncomeStatement DepreciationSupplemental => _depreciationSupplemental ??= new(_timeProvider, _securityIdentifier);
         private DepreciationSupplementalIncomeStatement _depreciationSupplemental;
 
         /// <summary>
@@ -1813,7 +1813,7 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 20444
         /// </remarks>
         [JsonProperty("20444")]
-                public AmortizationSupplementalIncomeStatement AmortizationSupplemental => _amortizationSupplemental ??= new(_timeProvider, _securityIdentifier);
+        public AmortizationSupplementalIncomeStatement AmortizationSupplemental => _amortizationSupplemental ??= new(_timeProvider, _securityIdentifier);
         private AmortizationSupplementalIncomeStatement _amortizationSupplemental;
 
         /// <summary>
