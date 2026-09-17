@@ -220,7 +220,7 @@ namespace QuantConnect.Data.Fundamental
         public string RegisteredProvince => FundamentalService.Get<string>(_timeProvider.GetUtcNow(), _securityIdentifier, FundamentalProperty.CompanyProfile_RegisteredProvince);
 
         /// <summary>
-        /// Country for registered office
+        /// The 3 character ISO code of the country in the company's contact address, the same one HeadquarterCountry gives.
         /// </summary>
         /// <remarks>
         /// Morningstar DataId: 2122

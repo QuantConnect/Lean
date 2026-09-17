@@ -39,7 +39,7 @@ namespace QuantConnect.Data.Fundamental
         private RevenueGrowth _revenueGrowth;
 
         /// <summary>
-        /// The growth in the company's operating income on a percentage basis. Morningstar calculates the growth percentage based on the underlying operating income data reported in the Income Statement within the company filings or reports.
+        /// The growth in the company's operating income and expenses line on a percentage basis.
         /// </summary>
         /// <remarks>
         /// Morningstar DataId: 10002
@@ -229,7 +229,7 @@ namespace QuantConnect.Data.Fundamental
         private LongTermDebtEquityRatio _longTermDebtEquityRatio;
 
         /// <summary>
-        /// Refers to the ratio of Total Assets to Common Equity. Morningstar calculates the ratio by using the underlying data reported in the Balance Sheet within the company filings or reports: Total Assets / Common Equity. [Note: Common Equity = Total Shareholder's Equity - Preferred Stock]
+        /// The degree of combined leverage: the percentage change in the company's net income relative to the percentage change in its revenue.
         /// </summary>
         /// <remarks>
         /// Morningstar DataId: 11014
