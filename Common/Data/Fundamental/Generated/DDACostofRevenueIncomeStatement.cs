@@ -24,7 +24,7 @@ using QuantConnect.Data.UniverseSelection;
 namespace QuantConnect.Data.Fundamental
 {
     /// <summary>
-    /// Costs of depreciation and amortization on assets used for the revenue-generating activities during the accounting period
+    /// The total non-cash depreciation and amortization charged on tangible and intangible assets during the accounting period.
     /// </summary>
     public class DDACostofRevenueIncomeStatement : MultiPeriodField
     {

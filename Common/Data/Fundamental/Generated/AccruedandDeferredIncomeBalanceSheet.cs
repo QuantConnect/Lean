@@ -24,7 +24,7 @@ using QuantConnect.Data.UniverseSelection;
 namespace QuantConnect.Data.Fundamental
 {
     /// <summary>
-    /// Sum of accrued liabilities and deferred income (amount received in advance but the services are not provided in respect of amount).
+    /// Obligations for goods and services received but not yet invoiced, reported in current liabilities. Deferred income is not included.
     /// </summary>
     public class AccruedandDeferredIncomeBalanceSheet : MultiPeriodField
     {

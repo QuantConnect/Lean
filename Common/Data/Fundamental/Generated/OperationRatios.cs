@@ -49,7 +49,7 @@ namespace QuantConnect.Data.Fundamental
         private OperationIncomeGrowth _operationIncomeGrowth;
 
         /// <summary>
-        /// The growth in the company's net income on a percentage basis. Morningstar calculates the growth percentage based on the underlying net income data reported in the Income Statement within the company filings or reports.
+        /// The growth in the company's net income available to common stockholders, which is net income after preferred dividends, on a percentage basis.
         /// </summary>
         /// <remarks>
         /// Morningstar DataId: 10003
@@ -129,7 +129,7 @@ namespace QuantConnect.Data.Fundamental
         private PretaxMargin _pretaxMargin;
 
         /// <summary>
-        /// Refers to the ratio of net income to revenue. Morningstar calculates the ratio by using the underlying data reported in the company filings or reports: Net Income / Revenue.
+        /// Refers to the ratio of net income from continuing operations to revenue: Net Income from Continuing Operations / Revenue.
         /// </summary>
         /// <remarks>
         /// Morningstar DataId: 11004

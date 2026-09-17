@@ -24,7 +24,7 @@ using QuantConnect.Data.UniverseSelection;
 namespace QuantConnect.Data.Fundamental
 {
     /// <summary>
-    /// Cash that the company can use only for specific purposes or cash deposit or placing of owned property by a debtor (the pledger) to a creditor (the pledgee) as a security for a loan or obligation.
+    /// Cash, cash equivalents and investments whose withdrawal or use is restricted for more than one year or a normal operating cycle.
     /// </summary>
     public class CashRestrictedOrPledgedBalanceSheet : MultiPeriodField
     {

@@ -24,7 +24,7 @@ using QuantConnect.Data.UniverseSelection;
 namespace QuantConnect.Data.Fundamental
 {
     /// <summary>
-    /// Fair values as of the balance sheet date of all assets resulting from contracts that meet the criteria of being accounted for as derivative instruments, net of the effects of master netting arrangements.
+    /// Fair value of the derivative and hedging assets the company intends to hold for more than one year or a normal operating cycle.
     /// </summary>
     public class FinancialAssetsBalanceSheet : MultiPeriodField
     {

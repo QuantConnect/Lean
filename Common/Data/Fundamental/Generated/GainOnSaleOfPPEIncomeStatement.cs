@@ -24,7 +24,7 @@ using QuantConnect.Data.UniverseSelection;
 namespace QuantConnect.Data.Fundamental
 {
     /// <summary>
-    /// The amount of excess earned in comparison to the net book value for sale of property, plant, equipment. This item is usually not available for bank and insurance industries.
+    /// The net gain or loss on the disposal or sale of assets, recognized in the non-operating section of the income statement; not limited to property, plant and equipment.
     /// </summary>
     public class GainOnSaleOfPPEIncomeStatement : MultiPeriodField
     {

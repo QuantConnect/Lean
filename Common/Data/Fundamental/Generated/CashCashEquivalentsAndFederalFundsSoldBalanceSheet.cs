@@ -24,7 +24,7 @@ using QuantConnect.Data.UniverseSelection;
 namespace QuantConnect.Data.Fundamental
 {
     /// <summary>
-    /// The aggregate amount of cash, cash equivalents, and federal funds sold.
+    /// The aggregate amount of cash, cash equivalents and short term investments.
     /// </summary>
     public class CashCashEquivalentsAndFederalFundsSoldBalanceSheet : MultiPeriodField
     {

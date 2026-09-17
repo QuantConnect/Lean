@@ -247,7 +247,7 @@ namespace QuantConnect.Data.Fundamental
         public bool TradingStatus => FundamentalService.Get<bool>(_timeProvider.GetUtcNow(), _securityIdentifier, FundamentalProperty.SecurityReference_TradingStatus);
 
         /// <summary>
-        /// <remarks> Morningstar DataId: 1029 </remarks>
+        /// The Morningstar market symbol of the listing.
         /// </summary>
         /// <remarks>
         /// Morningstar DataId: 1029

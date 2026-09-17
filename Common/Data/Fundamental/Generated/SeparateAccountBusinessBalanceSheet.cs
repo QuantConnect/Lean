@@ -1,4 +1,4 @@
-/*
+﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2023 QuantConnect Corporation.
  *
@@ -24,7 +24,7 @@ using QuantConnect.Data.UniverseSelection;
 namespace QuantConnect.Data.Fundamental
 {
     /// <summary>
-    /// Refers to revenue that is generated that is not part of typical operations.
+    /// Assets an insurance company holds in separate accounts: bought by the company but owned by the investors who provided the funds, legally segregated and reported apart from the company's other investments.
     /// </summary>
     public class SeparateAccountBusinessBalanceSheet : MultiPeriodField
     {

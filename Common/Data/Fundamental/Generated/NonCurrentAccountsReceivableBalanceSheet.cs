@@ -24,7 +24,7 @@ using QuantConnect.Data.UniverseSelection;
 namespace QuantConnect.Data.Fundamental
 {
     /// <summary>
-    /// Accounts receivable represents sums owed to the business that the business records as revenue. Gross accounts receivable is accounts receivable before the business deducts uncollectable accounts to calculate the true value of accounts receivable.
+    /// Amounts due from customers, and other receivables, collectible beyond one year or a normal operating cycle.
     /// </summary>
     public class NonCurrentAccountsReceivableBalanceSheet : MultiPeriodField
     {

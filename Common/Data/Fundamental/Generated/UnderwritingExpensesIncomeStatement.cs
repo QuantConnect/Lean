@@ -24,7 +24,7 @@ using QuantConnect.Data.UniverseSelection;
 namespace QuantConnect.Data.Fundamental
 {
     /// <summary>
-    /// Also known as Policy Acquisition Costs; and reported by insurance companies. The cost incurred by an insurer when deciding whether to accept or decline a risk; may include meetings with the insureds or brokers, actuarial review of loss history, or physical inspections of exposures. Also, expenses deducted from insurance company revenues (including incurred losses and acquisition costs) to determine underwriting profit.
+    /// Other underwriting expenses of an insurer that are not classified elsewhere. The amortization of deferred policy acquisition costs is not included.
     /// </summary>
     public class UnderwritingExpensesIncomeStatement : MultiPeriodField
     {

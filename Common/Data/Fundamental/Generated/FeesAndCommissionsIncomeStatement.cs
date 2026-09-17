@@ -24,7 +24,7 @@ using QuantConnect.Data.UniverseSelection;
 namespace QuantConnect.Data.Fundamental
 {
     /// <summary>
-    /// Total fees and commissions earned from providing services such as leasing of space or maintaining: (1) depositor accounts; (2) transfer agent; (3) fiduciary and trust; (4) brokerage and underwriting; (5) mortgage; (6) credit cards; (7) correspondent clearing; and (8) other such services and activities performed for others. This item is usually available for bank and insurance industries.
+    /// Fees and commission income less fees and commission expense.
     /// </summary>
     public class FeesAndCommissionsIncomeStatement : MultiPeriodField
     {

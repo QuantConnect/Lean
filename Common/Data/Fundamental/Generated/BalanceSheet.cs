@@ -151,7 +151,7 @@ namespace QuantConnect.Data.Fundamental
         private AvailableForSaleSecuritiesBalanceSheet _availableForSaleSecurities;
 
         /// <summary>
-        /// The total amount of stock authorized for issue by a corporation, including common and preferred stock.
+        /// The value of the issued common shares of the company.
         /// </summary>
         /// <remarks>
         /// Morningstar DataId: 23027
@@ -203,7 +203,7 @@ namespace QuantConnect.Data.Fundamental
         private CashAndDueFromBanksBalanceSheet _cashAndDueFromBanks;
 
         /// <summary>
-        /// The aggregate amount of cash, cash equivalents, and federal funds sold.
+        /// The aggregate amount of cash, cash equivalents and short term investments.
         /// </summary>
         /// <remarks>
         /// Morningstar DataId: 23032
@@ -283,7 +283,7 @@ namespace QuantConnect.Data.Fundamental
         private CurrentCapitalLeaseObligationBalanceSheet _currentCapitalLeaseObligation;
 
         /// <summary>
-        /// An amount owed to a firm that is not expected to be received by the firm within one year from the date of the balance sheet.
+        /// Deferred tax assets: taxes paid or carried forward that are not yet recognized in the income statement.
         /// </summary>
         /// <remarks>
         /// Morningstar DataId: 23052
@@ -445,7 +445,7 @@ namespace QuantConnect.Data.Fundamental
         private FixedMaturityInvestmentsBalanceSheet _fixedMaturityInvestments;
 
         /// <summary>
-        /// Accounting policy pertaining to an insurance entity's net liability for future benefits (for example, death, cash surrender value) to be paid to or on behalf of policyholders, describing the bases, methodologies and components of the reserve, and assumptions regarding estimates of expected investment yields, mortality, morbidity, terminations and expenses.
+        /// Reserves set aside by an insurer for future policy benefits, for claims incurred but not yet settled, and for claims incurred but not reported.
         /// </summary>
         /// <remarks>
         /// Morningstar DataId: 23095
@@ -505,7 +505,7 @@ namespace QuantConnect.Data.Fundamental
         private GrossPPEBalanceSheet _grossPPE;
 
         /// <summary>
-        /// Debt securities that a firm has the ability and intent to hold until maturity.
+        /// Debt securities that a firm has the ability and intent to hold until maturity, maturing beyond one year or a normal operating cycle.
         /// </summary>
         /// <remarks>
         /// Morningstar DataId: 23102
@@ -755,7 +755,7 @@ namespace QuantConnect.Data.Fundamental
         private PayablesAndAccruedExpensesBalanceSheet _payablesAndAccruedExpenses;
 
         /// <summary>
-        /// Accounting policy pertaining to an insurance entity's net liability for future benefits (for example, death, cash surrender value) to be paid to or on behalf of policyholders, describing the bases, methodologies and components of the reserve, and assumptions regarding estimates of expected investment yields, mortality, morbidity, terminations and expenses.
+        /// Reserves set aside by an insurer for future policy benefits, for claims incurred but not yet settled, and for claims incurred but not reported.
         /// </summary>
         /// <remarks>
         /// Morningstar DataId: 23169
@@ -865,7 +865,7 @@ namespace QuantConnect.Data.Fundamental
         private SecurityAgreeToBeResellBalanceSheet _securityAgreeToBeResell;
 
         /// <summary>
-        /// Represent obligations of the company to deliver the specified security at the contracted price and, thereby, create a liability to purchase the security in the market at prevailing prices.
+        /// Financial liabilities held with the intent to trade for short term profit, including obligations to deliver securities sold short.
         /// </summary>
         /// <remarks>
         /// Morningstar DataId: 23208
@@ -885,7 +885,7 @@ namespace QuantConnect.Data.Fundamental
         private SeparateAccountAssetsBalanceSheet _separateAccountAssets;
 
         /// <summary>
-        /// Refers to revenue that is generated that is not part of typical operations.
+        /// Assets an insurance company holds in separate accounts: bought by the company but owned by the investors who provided the funds, legally segregated and reported apart from the company's other investments.
         /// </summary>
         /// <remarks>
         /// Morningstar DataId: 23210
@@ -895,7 +895,7 @@ namespace QuantConnect.Data.Fundamental
         private SeparateAccountBusinessBalanceSheet _separateAccountBusiness;
 
         /// <summary>
-        /// The current assets section of a company's balance sheet that contains the investments that a company holds with the purpose for trading.
+        /// The total of all short term financial investments.
         /// </summary>
         /// <remarks>
         /// Morningstar DataId: 23212
@@ -1145,7 +1145,7 @@ namespace QuantConnect.Data.Fundamental
         private GrossAccountsReceivableBalanceSheet _grossAccountsReceivable;
 
         /// <summary>
-        /// Accounts receivable represents sums owed to the business that the business records as revenue. Gross accounts receivable is accounts receivable before the business deducts uncollectable accounts to calculate the true value of accounts receivable.
+        /// Amounts due from customers, and other receivables, collectible beyond one year or a normal operating cycle.
         /// </summary>
         /// <remarks>
         /// Morningstar DataId: 23263
@@ -1215,7 +1215,7 @@ namespace QuantConnect.Data.Fundamental
         private AssetsOfDiscontinuedOperationsBalanceSheet _assetsOfDiscontinuedOperations;
 
         /// <summary>
-        /// All indebtedness for borrowed money or the deferred purchase price of property or services, including without limitation reimbursement and other obligations with respect to surety bonds and letters of credit, all obligations evidenced by notes, bonds debentures or similar instruments, all capital lease obligations and all contingent obligations.
+        /// The carrying value of amounts due to banks or institutions within one year or a normal operating cycle, including revolving credit, facilities and lines of credit.
         /// </summary>
         /// <remarks>
         /// Morningstar DataId: 23271
@@ -1305,7 +1305,7 @@ namespace QuantConnect.Data.Fundamental
         private ConsumerLoanBalanceSheet _consumerLoan;
 
         /// <summary>
-        /// The company's minimum pension obligations to its former employees, paid into a defined pension plan to satisfy all pension entitlements that have been earned by employees to date.
+        /// Accumulated gains or losses from pension and other post-retirement plans, recorded in reserves or accumulated other comprehensive income.
         /// </summary>
         /// <remarks>
         /// Morningstar DataId: 23284
@@ -1405,7 +1405,7 @@ namespace QuantConnect.Data.Fundamental
         private FederalHomeLoanBankStockBalanceSheet _federalHomeLoanBankStock;
 
         /// <summary>
-        /// Fair values as of the balance sheet date of all assets resulting from contracts that meet the criteria of being accounted for as derivative instruments, net of the effects of master netting arrangements.
+        /// Fair value of the derivative and hedging assets the company intends to hold for more than one year or a normal operating cycle.
         /// </summary>
         /// <remarks>
         /// Morningstar DataId: 23298
@@ -1585,7 +1585,7 @@ namespace QuantConnect.Data.Fundamental
         private MortgageLoanBalanceSheet _mortgageLoan;
 
         /// <summary>
-        /// It means the aggregate amount of mortgage and consumer loans. This item is typically available for the insurance industry.
+        /// Loans collateralized by a specified piece of real estate (mortgage loans). Consumer loans are not included.
         /// </summary>
         /// <remarks>
         /// Morningstar DataId: 23323
@@ -1615,7 +1615,7 @@ namespace QuantConnect.Data.Fundamental
         private OtherAssetsBalanceSheet _otherAssets;
 
         /// <summary>
-        /// Other Capital Stock that is not otherwise classified.
+        /// The carrying value of stock issued and outstanding, including common and preferred stock.
         /// </summary>
         /// <remarks>
         /// Morningstar DataId: 23330
@@ -1715,7 +1715,7 @@ namespace QuantConnect.Data.Fundamental
         private OtherReceivablesBalanceSheet _otherReceivables;
 
         /// <summary>
-        /// A loan issued by an insurance company that uses the cash value of a person's life insurance policy as collateral. This item is usually only available in the insurance industry.
+        /// The long term obligation for employees' future pension and other post-retirement benefits, including retirement benefit obligations and severance cost.
         /// </summary>
         /// <remarks>
         /// Morningstar DataId: 23344
@@ -1745,7 +1745,7 @@ namespace QuantConnect.Data.Fundamental
         private PreferredStockEquityBalanceSheet _preferredStockEquity;
 
         /// <summary>
-        /// Tangible assets that are held by an entity for use in the production or supply of goods and services, for rental to others, or for administrative purposes and that are expected to provide economic benefit for more than one year. This item is available for manufacturing, bank and transportation industries.
+        /// The cost of other properties, and of improvements to properties, that are not categorized elsewhere; the net book value where accumulated depreciation is not reported.
         /// </summary>
         /// <remarks>
         /// Morningstar DataId: 23351
@@ -1885,7 +1885,7 @@ namespace QuantConnect.Data.Fundamental
         private TaxesReceivableBalanceSheet _taxesReceivable;
 
         /// <summary>
-        /// Stockholder's Equity plus Long Term Debt.
+        /// Total equity, including non-controlling interests, plus long term debt.
         /// </summary>
         /// <remarks>
         /// Morningstar DataId: 23374
@@ -1905,7 +1905,7 @@ namespace QuantConnect.Data.Fundamental
         private TotalDeferredCreditsAndOtherNonCurrentLiabilitiesBalanceSheet _totalDeferredCreditsAndOtherNonCurrentLiabilities;
 
         /// <summary>
-        /// Revenues that are not currently billed from the customer under the terms of the contract. This item is usually only available for utility industry.
+        /// Amounts owed to the company by other parties, including accrued income and revenue not yet billed to the customer under the terms of the contract.
         /// </summary>
         /// <remarks>
         /// Morningstar DataId: 23376
@@ -1915,7 +1915,7 @@ namespace QuantConnect.Data.Fundamental
         private UnbilledReceivablesBalanceSheet _unbilledReceivables;
 
         /// <summary>
-        /// A profit or loss that results from holding onto an asset rather than cashing it in and officially taking the profit or loss.
+        /// Accumulated unrealized gains or losses on available-for-sale financial investments, held in accumulated other comprehensive income.
         /// </summary>
         /// <remarks>
         /// Morningstar DataId: 23377
@@ -2281,7 +2281,7 @@ namespace QuantConnect.Data.Fundamental
         private OtherLoansCurrentBalanceSheet _otherLoansCurrent;
 
         /// <summary>
-        /// Sum of accrued liabilities and deferred income (amount received in advance but the services are not provided in respect of amount).
+        /// Obligations for goods and services received but not yet invoiced, reported in current liabilities. Deferred income is not included.
         /// </summary>
         /// <remarks>
         /// Morningstar DataId: 23422
@@ -2313,7 +2313,7 @@ namespace QuantConnect.Data.Fundamental
         private OtherLoansNonCurrentBalanceSheet _otherLoansNonCurrent;
 
         /// <summary>
-        /// Other reserves owned by the company that cannot be identified by other specific items in the Reserves section.
+        /// The sum of all reserves and accumulated other comprehensive income or losses.
         /// </summary>
         /// <remarks>
         /// Morningstar DataId: 23430
@@ -2367,7 +2367,7 @@ namespace QuantConnect.Data.Fundamental
         private EquitySharesInvestmentsBalanceSheet _equitySharesInvestments;
 
         /// <summary>
-        /// Banks investment in the ongoing entity.
+        /// Deposits held by a bank from other banks or institutions.
         /// </summary>
         /// <remarks>
         /// Morningstar DataId: 23436
@@ -2377,7 +2377,7 @@ namespace QuantConnect.Data.Fundamental
         private DepositsbyBankBalanceSheet _depositsbyBank;
 
         /// <summary>
-        /// Carrying value of amounts transferred by customers to third parties for security purposes that are expected to be returned or applied towards payment after one year or beyond the operating cycle, if longer.
+        /// Deposits held by a bank from individual customers.
         /// </summary>
         /// <remarks>
         /// Morningstar DataId: 23437
@@ -2397,7 +2397,7 @@ namespace QuantConnect.Data.Fundamental
         private ItemsinTheCourseofTransmissiontoOtherBanksBalanceSheet _itemsinTheCourseofTransmissiontoOtherBanks;
 
         /// <summary>
-        /// Total carrying amount of total trading, financial liabilities and debt in a non-differentiated balance sheet.
+        /// The company's total debt: long term debt and capital lease obligations plus current debt and capital lease obligations.
         /// </summary>
         /// <remarks>
         /// Morningstar DataId: 23439
@@ -2419,7 +2419,7 @@ namespace QuantConnect.Data.Fundamental
         private DebtSecuritiesinIssueBalanceSheet _debtSecuritiesinIssue;
 
         /// <summary>
-        /// The total carrying value of securities loaned to other broker dealers, typically used by such parties to cover short sales, secured by cash or other securities furnished by such parties until the borrowing is closed; in a Non-Differentiated Balance Sheet.
+        /// Debt that ranks after the other classes of debt should the company fall into liquidation or bankruptcy.
         /// </summary>
         /// <remarks>
         /// Morningstar DataId: 23441
@@ -2859,7 +2859,7 @@ namespace QuantConnect.Data.Fundamental
         private HedgingAssetsCurrentBalanceSheet _hedgingAssetsCurrent;
 
         /// <summary>
-        /// Loans that entitles the lender (or the holder of loan debenture) to convert the loan to common or preferred stock (ordinary or preference shares) at a specified rate conversion rate and a specified time frame; in a Non-Differentiated Balance Sheet.
+        /// The carrying value of loans convertible into common or preferred stock that are scheduled to be repaid beyond one year or a normal operating cycle; the non-current portion only.
         /// </summary>
         /// <remarks>
         /// Morningstar DataId: 23519
@@ -2869,7 +2869,7 @@ namespace QuantConnect.Data.Fundamental
         private ConvertibleLoansTotalBalanceSheet _convertibleLoansTotal;
 
         /// <summary>
-        /// Total debt financing obligation issued by a bank or similar financial institution to a company that entitles the lender or holder of the instrument to interest payments and the repayment of principal at a specified time; in a Non-Differentiated Balance Sheet.
+        /// The carrying value of loans from banks or similar institutions due beyond one year or a normal operating cycle; the non-current portion only.
         /// </summary>
         /// <remarks>
         /// Morningstar DataId: 23520
@@ -2981,7 +2981,7 @@ namespace QuantConnect.Data.Fundamental
         private BiologicalAssetsBalanceSheet _biologicalAssets;
 
         /// <summary>
-        /// Cash that the company can use only for specific purposes or cash deposit or placing of owned property by a debtor (the pledger) to a creditor (the pledgee) as a security for a loan or obligation.
+        /// Cash, cash equivalents and investments whose withdrawal or use is restricted for more than one year or a normal operating cycle.
         /// </summary>
         /// <remarks>
         /// Morningstar DataId: 23536

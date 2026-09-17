@@ -24,7 +24,7 @@ using QuantConnect.Data.UniverseSelection;
 namespace QuantConnect.Data.Fundamental
 {
     /// <summary>
-    /// Loans that entitles the lender (or the holder of loan debenture) to convert the loan to common or preferred stock (ordinary or preference shares) at a specified rate conversion rate and a specified time frame; in a Non-Differentiated Balance Sheet.
+    /// The carrying value of loans convertible into common or preferred stock that are scheduled to be repaid beyond one year or a normal operating cycle; the non-current portion only.
     /// </summary>
     public class ConvertibleLoansTotalBalanceSheet : MultiPeriodField
     {

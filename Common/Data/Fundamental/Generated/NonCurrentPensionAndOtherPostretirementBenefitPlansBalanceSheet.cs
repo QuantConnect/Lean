@@ -24,7 +24,7 @@ using QuantConnect.Data.UniverseSelection;
 namespace QuantConnect.Data.Fundamental
 {
     /// <summary>
-    /// A loan issued by an insurance company that uses the cash value of a person's life insurance policy as collateral. This item is usually only available in the insurance industry.
+    /// The long term obligation for employees' future pension and other post-retirement benefits, including retirement benefit obligations and severance cost.
     /// </summary>
     public class NonCurrentPensionAndOtherPostretirementBenefitPlansBalanceSheet : MultiPeriodField
     {

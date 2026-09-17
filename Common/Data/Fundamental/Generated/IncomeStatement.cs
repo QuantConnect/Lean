@@ -59,7 +59,7 @@ namespace QuantConnect.Data.Fundamental
         private AmortizationIncomeStatement _amortization;
 
         /// <summary>
-        /// The gradual elimination of a liability, such as a mortgage, in regular payments over a specified period of time. Such payments must be sufficient to cover both principal and interest.
+        /// The amortization and accretion of securities allocated to the accounting period, such as the accretion of convertible notes.
         /// </summary>
         /// <remarks>
         /// Morningstar DataId: 20008
@@ -149,7 +149,7 @@ namespace QuantConnect.Data.Fundamental
         private NetIncomeExtraordinaryIncomeStatement _netIncomeExtraordinary;
 
         /// <summary>
-        /// The aggregate amount of fees, commissions, and other income.
+        /// Other revenue that is not classified elsewhere. Fees and commissions are not included.
         /// </summary>
         /// <remarks>
         /// Morningstar DataId: 20031
@@ -229,7 +229,7 @@ namespace QuantConnect.Data.Fundamental
         private NetNonOperatingInterestIncomeExpenseIncomeStatement _netNonOperatingInterestIncomeExpense;
 
         /// <summary>
-        /// Losses generally refer to (1) the amount of reduction in the value of an insured's property caused by an insured peril, (2) the amount sought through an insured's claim, or (3) the amount paid on behalf of an insured under an insurance contract. Loss Adjustment Expenses is expenses incurred in the course of investigating and settling claims that includes any legal and adjusters' fees and the costs of paying claims and all related expenses.
+        /// The sum of net policyholder benefits and claims, the net change in insurance liability provisions, other insurance expenses and expenses on investment contracts, loss adjustment expense included.
         /// </summary>
         /// <remarks>
         /// Morningstar DataId: 20084
@@ -491,7 +491,7 @@ namespace QuantConnect.Data.Fundamental
         private TotalExpensesIncomeStatement _totalExpenses;
 
         /// <summary>
-        /// Income generated from interest-bearing deposits or accounts.
+        /// The sum of the company's interest income and its dividend and investment income.
         /// </summary>
         /// <remarks>
         /// Morningstar DataId: 20177
@@ -601,7 +601,7 @@ namespace QuantConnect.Data.Fundamental
         private ExplorationDevelopmentAndMineralPropertyLeaseExpensesIncomeStatement _explorationDevelopmentAndMineralPropertyLeaseExpenses;
 
         /// <summary>
-        /// Total fees and commissions earned from providing services such as leasing of space or maintaining: (1) depositor accounts; (2) transfer agent; (3) fiduciary and trust; (4) brokerage and underwriting; (5) mortgage; (6) credit cards; (7) correspondent clearing; and (8) other such services and activities performed for others. This item is usually available for bank and insurance industries.
+        /// Fees and commission income less fees and commission expense.
         /// </summary>
         /// <remarks>
         /// Morningstar DataId: 20213
@@ -651,7 +651,7 @@ namespace QuantConnect.Data.Fundamental
         private GainOnSaleOfBusinessIncomeStatement _gainOnSaleOfBusiness;
 
         /// <summary>
-        /// The amount of excess earned in comparison to the net book value for sale of property, plant, equipment. This item is usually not available for bank and insurance industries.
+        /// The net gain or loss on the disposal or sale of assets, recognized in the non-operating section of the income statement; not limited to property, plant and equipment.
         /// </summary>
         /// <remarks>
         /// Morningstar DataId: 20218
@@ -761,7 +761,7 @@ namespace QuantConnect.Data.Fundamental
         private InterestIncomeFromDepositsIncomeStatement _interestIncomeFromDeposits;
 
         /// <summary>
-        /// The carrying value of funds outstanding loaned in the form of security resale agreements if the agreement requires the purchaser to resell the identical security purchased or a security that meets the definition of ""substantially the same"" in the case of a dollar roll. Also includes purchases of participations in pools of securities that are subject to a resale agreement; This category includes all interest income generated from federal funds sold and securities purchases under agreements to resell; This category includes all interest income generated from federal funds sold and securities purchases under agreements to resell.
+        /// Interest income earned on federal (central bank) funds sold and on securities purchased under agreements to resell.
         /// </summary>
         /// <remarks>
         /// Morningstar DataId: 20241
@@ -1085,7 +1085,7 @@ namespace QuantConnect.Data.Fundamental
         private TrustFeesbyCommissionsIncomeStatement _trustFeesbyCommissions;
 
         /// <summary>
-        /// Also known as Policy Acquisition Costs; and reported by insurance companies. The cost incurred by an insurer when deciding whether to accept or decline a risk; may include meetings with the insureds or brokers, actuarial review of loss history, or physical inspections of exposures. Also, expenses deducted from insurance company revenues (including incurred losses and acquisition costs) to determine underwriting profit.
+        /// Other underwriting expenses of an insurer that are not classified elsewhere. The amortization of deferred policy acquisition costs is not included.
         /// </summary>
         /// <remarks>
         /// Morningstar DataId: 20301
@@ -1227,7 +1227,7 @@ namespace QuantConnect.Data.Fundamental
         private GainonSaleofLoansIncomeStatement _gainonSaleofLoans;
 
         /// <summary>
-        /// Gain on the disposal of investment property.
+        /// The gain or loss from selling other assets, such as foreclosed assets, in the ordinary course of business. Sales of investments, loans, investment properties and property, plant and equipment are not included.
         /// </summary>
         /// <remarks>
         /// Morningstar DataId: 20335
@@ -1757,7 +1757,7 @@ namespace QuantConnect.Data.Fundamental
         private RentandLandingFeesCostofRevenueIncomeStatement _rentandLandingFeesCostofRevenue;
 
         /// <summary>
-        /// Costs of depreciation and amortization on assets used for the revenue-generating activities during the accounting period
+        /// The total non-cash depreciation and amortization charged on tangible and intangible assets during the accounting period.
         /// </summary>
         /// <remarks>
         /// Morningstar DataId: 20439

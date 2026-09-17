@@ -200,7 +200,7 @@ namespace QuantConnect.Data.Fundamental
         public double ForwardDividendYield => FundamentalService.Get<double>(_timeProvider.GetUtcNow(), _securityIdentifier, FundamentalProperty.ValuationRatios_ForwardDividendYield);
 
         /// <summary>
-        /// Estimated Earnings Per Share / Price Note: a) The "Next" Year's EPS Estimate is used; For instance, if today's actual date is March 1, 2009, the "Current" EPS Estimate for MSFT is June 2009, and the "Next" EPS Estimate for MSFT is June 2010; the latter is used. b) The eps estimated data is sourced from a third party.
+        /// The consensus estimate of the current fiscal year's earnings per share divided by the price.
         /// </summary>
         /// <remarks>
         /// Morningstar DataId: 14019
@@ -418,7 +418,7 @@ namespace QuantConnect.Data.Fundamental
         public string ForwardCalculationStyle => throw new NotSupportedException("ForwardCalculationStyle was retired by Morningstar in 2026; no replacement is available.");
 
         /// <summary>
-        /// Used to collect the forward dividend for companies where our formula will not produce the correct value.
+        /// The dividend expected to be paid over the next year, calculated by annualizing the last cash dividend paid or the latest one announced.
         /// </summary>
         /// <remarks>
         /// Morningstar DataId: 14043
@@ -438,7 +438,7 @@ namespace QuantConnect.Data.Fundamental
         public string TrailingCalculationStyle => throw new NotSupportedException("TrailingCalculationStyle was retired by Morningstar in 2026; no replacement is available.");
 
         /// <summary>
-        /// Used to collect the trailing dividend for companies where our formula will not produce the correct value.
+        /// The total of the regular cash dividends paid per share within the past twelve months.
         /// </summary>
         /// <remarks>
         /// Morningstar DataId: 14045

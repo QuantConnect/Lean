@@ -92,7 +92,7 @@ namespace QuantConnect.Data.Fundamental
         public string HeadquarterProvince => FundamentalService.Get<string>(_timeProvider.GetUtcNow(), _securityIdentifier, FundamentalProperty.CompanyProfile_HeadquarterProvince);
 
         /// <summary>
-        /// The headquarter country as given in the latest report
+        /// The 3 character ISO code of the country of the company's headquarter, taken from its contact address.
         /// </summary>
         /// <remarks>
         /// Morningstar DataId: 2107

@@ -24,7 +24,7 @@ using QuantConnect.Data.UniverseSelection;
 namespace QuantConnect.Data.Fundamental
 {
     /// <summary>
-    /// Losses generally refer to (1) the amount of reduction in the value of an insured's property caused by an insured peril, (2) the amount sought through an insured's claim, or (3) the amount paid on behalf of an insured under an insurance contract. Loss Adjustment Expenses is expenses incurred in the course of investigating and settling claims that includes any legal and adjusters' fees and the costs of paying claims and all related expenses.
+    /// The sum of net policyholder benefits and claims, the net change in insurance liability provisions, other insurance expenses and expenses on investment contracts, loss adjustment expense included.
     /// </summary>
     public class LossAdjustmentExpenseIncomeStatement : MultiPeriodField
     {
