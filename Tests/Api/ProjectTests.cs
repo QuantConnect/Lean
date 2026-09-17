@@ -335,7 +335,7 @@ namespace QuantConnect.Algorithm.CSharp
 
                 // In the same way, read the orders returned in the backtest
                 var backtestOrdersRead = ApiClient.ReadBacktestOrders(project.Projects.First().ProjectId, backtest.BacktestId, 0, 1);
-                Assert.GreaterOrEqual(backtestOrdersRead.Length, 1);
+                Assert.GreaterOrEqual(backtestOrdersRead.Length, backtestOrdersRead.Orders.Count);
                 Assert.IsTrue(backtestOrdersRead.Orders.Any());
                 Assert.AreEqual(Symbols.SPY.Value, backtestOrdersRead.Orders.First().Symbol.Value);
 
@@ -464,7 +464,7 @@ namespace QuantConnect.Algorithm.CSharp
                 stringRepresentation = backtestOrder.ToString();
                 Assert.IsTrue(ApiTestBase.IsValidJson(stringRepresentation));
             }
-            Assert.GreaterOrEqual(backtestOrdersRead.Length, 1);
+            Assert.GreaterOrEqual(backtestOrdersRead.Length, backtestOrdersRead.Orders.Count);
             Assert.IsTrue(backtestOrdersRead.Orders.Any());
             Assert.AreEqual(Symbols.SPY.Value, backtestOrdersRead.Orders.First().Symbol.Value);
 

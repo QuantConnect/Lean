@@ -797,7 +797,7 @@ namespace QuantConnect.Tests.API
 
             // Wait to receive the orders
             var readLiveOrders = WaitForReadLiveOrdersResponse(projectId, 60 * 5);
-            Assert.GreaterOrEqual(readLiveOrders.Length, 1);
+            Assert.GreaterOrEqual(readLiveOrders.Length, readLiveOrders.Orders.Count);
             Assert.IsTrue(readLiveOrders.Orders.Any());
             Assert.AreEqual(Symbols.SPY, readLiveOrders.Orders.First().Symbol);
 
