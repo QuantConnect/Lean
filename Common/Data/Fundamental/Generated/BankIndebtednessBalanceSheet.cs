@@ -24,7 +24,7 @@ using QuantConnect.Data.UniverseSelection;
 namespace QuantConnect.Data.Fundamental
 {
     /// <summary>
-    /// All indebtedness for borrowed money or the deferred purchase price of property or services, including without limitation reimbursement and other obligations with respect to surety bonds and letters of credit, all obligations evidenced by notes, bonds debentures or similar instruments, all capital lease obligations and all contingent obligations.
+    /// The carrying value of amounts due to banks or institutions within one year or a normal operating cycle, including revolving credit, facilities and lines of credit.
     /// </summary>
     public class BankIndebtednessBalanceSheet : MultiPeriodField
     {

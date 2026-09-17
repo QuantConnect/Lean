@@ -24,7 +24,7 @@ using QuantConnect.Data.UniverseSelection;
 namespace QuantConnect.Data.Fundamental
 {
     /// <summary>
-    /// The aggregate amount of fees, commissions, and other income.
+    /// Other revenue that is not classified elsewhere. Fees and commissions are not included.
     /// </summary>
     public class FeeRevenueAndOtherIncomeIncomeStatement : MultiPeriodField
     {

@@ -24,7 +24,7 @@ using QuantConnect.Data.UniverseSelection;
 namespace QuantConnect.Data.Fundamental
 {
     /// <summary>
-    /// The net change during the reporting period in investment income that has been earned but not yet received in cash.
+    /// The increase or decrease between reporting periods in accrued income, unbilled revenue and costs in excess of billings.
     /// </summary>
     public class ChangeInAccruedInvestmentIncomeCashFlowStatement : MultiPeriodField
     {

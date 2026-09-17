@@ -24,7 +24,7 @@ using QuantConnect.Data.UniverseSelection;
 namespace QuantConnect.Data.Fundamental
 {
     /// <summary>
-    /// Other Capital Stock that is not otherwise classified.
+    /// The carrying value of stock issued and outstanding, including common and preferred stock.
     /// </summary>
     public class OtherCapitalStockBalanceSheet : MultiPeriodField
     {

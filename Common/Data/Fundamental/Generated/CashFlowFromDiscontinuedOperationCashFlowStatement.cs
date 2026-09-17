@@ -24,7 +24,7 @@ using QuantConnect.Data.UniverseSelection;
 namespace QuantConnect.Data.Fundamental
 {
     /// <summary>
-    /// The aggregate amount of cash flow from discontinued operation, including operating activities, investing activities, and financing activities.
+    /// The net cash flow from discontinued operations that is not classified into operating, investing or financing cash flow.
     /// </summary>
     public class CashFlowFromDiscontinuedOperationCashFlowStatement : MultiPeriodField
     {

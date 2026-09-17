@@ -24,7 +24,7 @@ using QuantConnect.Data.UniverseSelection;
 namespace QuantConnect.Data.Fundamental
 {
     /// <summary>
-    /// Debt securities that a firm has the ability and intent to hold until maturity.
+    /// Debt securities that a firm has the ability and intent to hold until maturity, maturing beyond one year or a normal operating cycle.
     /// </summary>
     public class HeldToMaturitySecuritiesBalanceSheet : MultiPeriodField
     {

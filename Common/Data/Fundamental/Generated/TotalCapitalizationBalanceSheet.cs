@@ -24,7 +24,7 @@ using QuantConnect.Data.UniverseSelection;
 namespace QuantConnect.Data.Fundamental
 {
     /// <summary>
-    /// Stockholder's Equity plus Long Term Debt.
+    /// Total equity, including non-controlling interests, plus long term debt.
     /// </summary>
     public class TotalCapitalizationBalanceSheet : MultiPeriodField
     {

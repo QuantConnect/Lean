@@ -24,7 +24,7 @@ using QuantConnect.Data.UniverseSelection;
 namespace QuantConnect.Data.Fundamental
 {
     /// <summary>
-    /// Total carrying amount of total trading, financial liabilities and debt in a non-differentiated balance sheet.
+    /// The company's total debt: long term debt and capital lease obligations plus current debt and capital lease obligations.
     /// </summary>
     public class TradingandFinancialLiabilitiesBalanceSheet : MultiPeriodField
     {
