@@ -125,7 +125,7 @@ namespace QuantConnect.Data.Fundamental
         private FinancialStatementsPeriodType _periodType;
 
         /// <summary>
-        /// The sum of Tier 1 and Tier 2 Capital. Tier 1 capital consists of common shareholders equity, perpetual preferred shareholders equity with non-cumulative dividends, retained earnings, and minority interests in the equity accounts of consolidated subsidiaries. Tier 2 capital consists of subordinated debt, intermediate-term preferred stock, cumulative and long-term preferred stock, and a portion of a bank's allowance for loan and lease losses.
+        /// The total capital ratio: total regulatory capital, Tier 1 plus Tier 2, divided by risk weighted assets.
         /// </summary>
         /// <remarks>
         /// Morningstar DataId: 28004

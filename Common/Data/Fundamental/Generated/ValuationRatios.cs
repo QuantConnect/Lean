@@ -335,7 +335,7 @@ namespace QuantConnect.Data.Fundamental
         public double RatioPE5YearAverage => FundamentalService.Get<double>(_timeProvider.GetUtcNow(), _securityIdentifier, FundamentalProperty.ValuationRatios_RatioPE5YearAverage);
 
         /// <summary>
-        /// Price change this month, expressed as latest price/last month end price.
+        /// The month to date price return, dividends excluded: the change in the split and spin-off adjusted price divided by the price at the start of the month.
         /// </summary>
         /// <remarks>
         /// Morningstar DataId: 14034

@@ -24,7 +24,7 @@ using QuantConnect.Data.UniverseSelection;
 namespace QuantConnect.Data.Fundamental
 {
     /// <summary>
-    /// Short-term (typical maturity is less than one year), highly liquid government or corporate debt instrument such as bankers' acceptance, promissory notes, and treasury bills.
+    /// The sum of federal (central bank) funds sold, securities purchased under agreements to resell, and securities borrowed.
     /// </summary>
     public class MoneyMarketInvestmentsBalanceSheet : MultiPeriodField
     {

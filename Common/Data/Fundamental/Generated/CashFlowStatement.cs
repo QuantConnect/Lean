@@ -609,7 +609,7 @@ namespace QuantConnect.Data.Fundamental
         private ShortTermDebtPaymentsCashFlowStatement _shortTermDebtPayments;
 
         /// <summary>
-        /// The cash inflow from borrowing money or property for a bank or insurance company.
+        /// The cash inflow from the repayment or sale of loans the company had granted.
         /// </summary>
         /// <remarks>
         /// Morningstar DataId: 26095

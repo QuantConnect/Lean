@@ -24,7 +24,7 @@ using QuantConnect.Data.UniverseSelection;
 namespace QuantConnect.Data.Fundamental
 {
     /// <summary>
-    /// The sum of the money market investments held by a bank's depositors, which are FDIC insured.
+    /// Treasury bills and other eligible bills: short term government backed obligations maturing within one year.
     /// </summary>
     public class TotalMoneyMarketInvestmentsIncomeStatement : MultiPeriodField
     {
