@@ -1157,7 +1157,7 @@ namespace QuantConnect.Data.Fundamental
         private OtherOperatingExpensesIncomeStatement _otherOperatingExpenses;
 
         /// <summary>
-        /// The sum of the money market investments held by a bank's depositors, which are FDIC insured.
+        /// Treasury bills and other eligible bills: short term government backed obligations maturing within one year.
         /// </summary>
         /// <remarks>
         /// Morningstar DataId: 20313
@@ -1167,7 +1167,7 @@ namespace QuantConnect.Data.Fundamental
         private TotalMoneyMarketInvestmentsIncomeStatement _totalMoneyMarketInvestments;
 
         /// <summary>
-        /// The Cost Of Revenue plus Depreciation, Depletion &amp; Amortization from the IncomeStatement; minus Depreciation, Depletion &amp; Amortization from the Cash Flow Statement
+        /// The costs incurred to provide the goods or services that generate revenue, as reported; not reconciled for depreciation and amortization.
         /// </summary>
         /// <remarks>
         /// Morningstar DataId: 20314
@@ -1197,7 +1197,7 @@ namespace QuantConnect.Data.Fundamental
         private NormalizedIncomeIncomeStatement _normalizedIncome;
 
         /// <summary>
-        /// Revenue less expenses and taxes from the entity's ongoing operations net of minority interest and before income (loss) from: Preferred Dividends; Extraordinary Gains and Losses; Income from Cumulative Effects of Accounting Change; Discontinuing Operation; Income from Tax Loss Carry forward; Other Gains/Losses.
+        /// Net income or loss after non-controlling interests; discontinued operations and extraordinary items are included.
         /// </summary>
         /// <remarks>
         /// Morningstar DataId: 20331
@@ -1657,7 +1657,7 @@ namespace QuantConnect.Data.Fundamental
         private ReinsuranceRecoveriesofInvestmentContractIncomeStatement _reinsuranceRecoveriesofInvestmentContract;
 
         /// <summary>
-        /// Total amount paid in dividends to equity securities investors.
+        /// The gross amount, before tax, distributed to all of the company's shareholders.
         /// </summary>
         /// <remarks>
         /// Morningstar DataId: 20429
