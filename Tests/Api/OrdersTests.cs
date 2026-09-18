@@ -159,8 +159,8 @@ namespace QuantConnect.Tests.API
             Assert.AreEqual(expectedEnd, body["end"].Value<int>());
         }
 
-        [TestCase(0, 100)]
-        [TestCase(250, 350)]
+        [TestCase(0, 1000)]
+        [TestCase(250, 1250)]
         public void ReadLiveOrdersDefaultsTheEndIndexToAFullWindow(int start, int expectedEnd)
         {
             using var server = new StubApiServer(SuccessfulOrdersResponse);
@@ -188,7 +188,7 @@ namespace QuantConnect.Tests.API
             using var api = new Api.Api();
             api.Initialize(0, "token", Globals.DataFolder);
 
-            Assert.Throws<ArgumentException>(() => api.ReadLiveOrders(23456789, start: 0, end: 101));
+            Assert.Throws<ArgumentException>(() => api.ReadLiveOrders(23456789, start: 0, end: 1001));
         }
 
         [Test]

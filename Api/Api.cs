@@ -44,7 +44,7 @@ namespace QuantConnect.Api
     {
         // Widest start/end window each paging endpoint documents
         private const int MaxBacktestOrdersWindow = 100;
-        private const int MaxLiveOrdersWindow = 100;
+        private const int MaxLiveOrdersWindow = 1000;
         private const int MaxInsightsWindow = 100;
         private const int MaxLogLinesWindow = 250;
 
@@ -706,7 +706,7 @@ namespace QuantConnect.Api
         /// <param name="algorithmId">Deploy id (algorithm id) of the live running algorithm. Optional, the API
         /// defaults to the latest deployment of the project</param>
         /// <param name="start">Starting index of the orders to be fetched</param>
-        /// <param name="end">Last index of the orders to be fetched. Note that end - start must not exceed 100.
+        /// <param name="end">Last index of the orders to be fetched. Note that end - start must not exceed 1000.
         /// Defaults to a full window starting at <paramref name="start"/></param>
         /// <remarks>Will throw an <see cref="WebException"/> if there are any API errors</remarks>
         /// <returns>The <see cref="OrdersResponseWrapper"/> with the requested orders and the total order count</returns>
