@@ -14,28 +14,22 @@
 */
 
 using System.Collections.Generic;
-using Newtonsoft.Json;
 
 namespace QuantConnect.Api
 {
     /// <summary>
-    /// Logs from a live algorithm
+    /// Logs from a backtest
     /// </summary>
-    public class LiveLog : RestResponse
+    public class BacktestLog : RestResponse
     {
         /// <summary>
-        /// List of logs from the live algorithm
+        /// List of log lines from the backtest
         /// </summary>
         public List<string> Logs { get; set; }
 
         /// <summary>
-        /// Total amount of rows in the logs across all the live deployments of the project
+        /// Total number of log lines in the backtest
         /// </summary>
         public int Length { get; set; }
-
-        /// <summary>
-        /// Amount of log rows before the deployment requested through the algorithm id
-        /// </summary>
-        public int DeploymentOffset { get; set; }
     }
 }

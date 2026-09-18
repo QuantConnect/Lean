@@ -17,6 +17,8 @@ using System;
 using System.IO;
 using System.Web;
 using System.Linq;
+using System.Text.RegularExpressions;
+using System.Globalization;
 using NUnit.Framework;
 using QuantConnect.Api;
 using System.Collections.Generic;
@@ -34,6 +36,63 @@ namespace QuantConnect.Tests.API
     [TestFixture, Explicit("Requires configured api access and available backtest node to run on"), Parallelizable(ParallelScope.Fixtures)]
     public class ProjectTests : ApiTestBase
     {
+        /// <summary>
+        /// Places a market order per minute bar until 150 exist: several pages for a 100 window, still quick for a small one
+        /// </summary>
+        private const string ManyOrdersAlgorithm = @"
+using QuantConnect.Data;
+
+namespace QuantConnect.Algorithm.CSharp
+{
+    public class ManyOrdersAlgorithm : QCAlgorithm
+    {
+        private Symbol _spy;
+
+        public override void Initialize()
+        {
+            SetStartDate(2013, 10, 7);
+            SetEndDate(2013, 10, 7);
+            SetCash(100000);
+            _spy = AddEquity(""SPY"", Resolution.Minute).Symbol;
+        }
+
+        public override void OnData(Slice slice)
+        {
+            if (Transactions.OrdersCount < 150)
+            {
+                MarketOrder(_spy, Time.Minute % 2 == 0 ? 1 : -1);
+            }
+        }
+    }
+}";
+        /// <summary>
+        /// Logs one numbered line per minute bar on a single day, marking every tenth one, so a backtest
+        /// has a few hundred log lines to page through and a subset to search for
+        /// </summary>
+        private const string ManyLogsAlgorithm = @"
+using QuantConnect.Data;
+
+namespace QuantConnect.Algorithm.CSharp
+{
+    public class ManyLogsAlgorithm : QCAlgorithm
+    {
+        private int _lines;
+
+        public override void Initialize()
+        {
+            SetStartDate(2013, 10, 7);
+            SetEndDate(2013, 10, 7);
+            SetCash(100000);
+            AddEquity(""SPY"", Resolution.Minute);
+        }
+
+        public override void OnData(Slice slice)
+        {
+            _lines++;
+            Log(_lines % 10 == 0 ? $""Marker line {_lines}"" : $""Plain line {_lines}"");
+        }
+    }
+}";
         private readonly Dictionary<string, object> _defaultSettings = new Dictionary<string, object>()
             {
                 { "id", "QuantConnectBrokerage" },
@@ -306,8 +365,9 @@ namespace QuantConnect.Tests.API
 
                 // In the same way, read the orders returned in the backtest
                 var backtestOrdersRead = ApiClient.ReadBacktestOrders(project.Projects.First().ProjectId, backtest.BacktestId, 0, 1);
-                Assert.IsTrue(backtestOrdersRead.Any());
-                Assert.AreEqual(Symbols.SPY.Value, backtestOrdersRead.First().Symbol.Value);
+                Assert.GreaterOrEqual(backtestOrdersRead.Length, backtestOrdersRead.Orders.Count);
+                Assert.IsTrue(backtestOrdersRead.Orders.Any());
+                Assert.AreEqual(Symbols.SPY.Value, backtestOrdersRead.Orders.First().Symbol.Value);
 
                 // Verify we have the backtest in our project
                 var listBacktests = ApiClient.ListBacktests(project.Projects.First().ProjectId);
@@ -339,6 +399,179 @@ namespace QuantConnect.Tests.API
             Assert.IsTrue(deleteProject.Success);
         }
 
+        /// <summary>
+        /// Pages through every order of a backtest using the given window size and checks
+        /// that the reported total length matches the orders actually received
+        /// </summary>
+        [TestCase(20)]
+        [TestCase(50)]
+        [TestCase(100)]
+        public void ReadBacktestOrdersPaginatesThroughAllOrders(int windowSize)
+        {
+            var projectName = $"{GetTimestamp()} Test {TestAccount} Orders Pagination";
+            var projectResult = ApiClient.CreateProject(projectName, Language.CSharp, TestOrganization);
+            Assert.IsTrue(projectResult.Success, $"Error creating project:\n    {string.Join("\n    ", projectResult.Errors)}");
+            var project = projectResult.Projects.First();
+
+            try
+            {
+                var updateProjectFileContent = ApiClient.UpdateProjectFileContent(project.ProjectId, "Main.cs", ManyOrdersAlgorithm);
+                Assert.IsTrue(updateProjectFileContent.Success,
+                    $"Error updating project file:\n    {string.Join("\n    ", updateProjectFileContent.Errors)}");
+
+                var compile = ApiClient.CreateCompile(project.ProjectId);
+                compile = WaitForCompilerResponse(ApiClient, project.ProjectId, compile.CompileId);
+                Assert.IsTrue(compile.Success, $"Error compiling project:\n    {string.Join("\n    ", compile.Errors)}");
+
+                var backtest = ApiClient.CreateBacktest(project.ProjectId, compile.CompileId, $"Orders Pagination Backtest {GetTimestamp()}");
+                backtest = WaitForBacktestCompletion(ApiClient, project.ProjectId, backtest.BacktestId, secondsTimeout: 300);
+                Assert.IsTrue(backtest.Success, $"Error running backtest:\n    {string.Join("\n    ", backtest.Errors)}");
+                var totalOrders = int.Parse(backtest.Statistics["Total Orders"], System.Globalization.CultureInfo.InvariantCulture);
+                Assert.Greater(totalOrders, windowSize, "The backtest needs more orders than the window size to exercise pagination");
+
+                var orders = new List<QuantConnect.Orders.ApiOrderResponse>();
+                var pages = 0;
+                int length;
+                do
+                {
+                    var page = ApiClient.ReadBacktestOrders(project.ProjectId, backtest.BacktestId, orders.Count, orders.Count + windowSize);
+                    Assert.IsTrue(page.Success, $"Error reading orders:\n    {string.Join("\n    ", page.Errors)}");
+                    Assert.IsNotEmpty(page.Orders, $"Received an empty page at index {orders.Count} of {page.Length}");
+                    pages++;
+                    QuantConnect.Logging.Log.Trace($"Page {pages}: start {orders.Count}, window {windowSize}, received {page.Orders.Count}, length {page.Length}");
+
+                    length = page.Length;
+                    orders.AddRange(page.Orders);
+                }
+                while (orders.Count < length);
+
+                Assert.AreEqual(totalOrders, length, "The length reported by the API should be the total order count of the backtest");
+                Assert.AreEqual(totalOrders, orders.Count, "Paging should have received every order exactly once");
+                CollectionAssert.AllItemsAreUnique(orders.Select(x => x.Order.Id));
+                Assert.Greater(pages, 1);
+            }
+            finally
+            {
+                ApiClient.DeleteProject(project.ProjectId);
+            }
+        }
+        /// <summary>
+        /// Pages through every log line of a backtest using the given window size and checks that
+        /// the reported total matches the lines received and that the numbered lines arrive once each
+        /// </summary>
+        [TestCase(100)]
+        [TestCase(200)]
+        public void ReadBacktestLogPaginatesThroughAllLines(int windowSize)
+        {
+            RunBacktest(ManyLogsAlgorithm, "Logs Pagination", out var projectId, out var backtestId);
+            try
+            {
+                var lines = ReadAllBacktestLogLines(projectId, backtestId, null, windowSize, out var length);
+
+                foreach (var line in lines.Take(20))
+                {
+                    Console.WriteLine(line);
+                }
+
+                Assert.AreEqual(length, lines.Count, "Paging should have received every log line exactly once");
+                var numbers = NumberedLines(lines);
+                Assert.Greater(numbers.Count, windowSize, "The backtest needs more numbered lines than the window size to exercise pagination");
+                CollectionAssert.AreEqual(Enumerable.Range(1, numbers.Count), numbers, "The numbered lines should arrive in order with no gaps or duplicates");
+            }
+            finally
+            {
+                ApiClient.DeleteProject(projectId);
+            }
+        }
+
+        /// <summary>
+        /// Searches the backtest log with the query filter, paging through the matches, and checks that
+        /// only the marked lines come back and that all of them do
+        /// </summary>
+        [TestCase(20)]
+        [TestCase(100)]
+        public void ReadBacktestLogFiltersLinesByQuery(int windowSize)
+        {
+            RunBacktest(ManyLogsAlgorithm, "Logs Query", out var projectId, out var backtestId);
+            try
+            {
+                var allNumbers = NumberedLines(ReadAllBacktestLogLines(projectId, backtestId, null, 200, out _));
+                var expected = allNumbers.Where(x => x % 10 == 0).ToList();
+                Assert.Greater(expected.Count, 1);
+
+                var lines = ReadAllBacktestLogLines(projectId, backtestId, "Marker", windowSize, out var length);
+
+                foreach (var line in lines.Take(20))
+                {
+                    Console.WriteLine(line);
+                }
+
+                Assert.AreEqual(length, lines.Count, "Paging should have received every matching line exactly once");
+                Assert.IsTrue(lines.All(x => x.Contains("Marker", StringComparison.Ordinal)), "Every returned line should contain the query");
+                CollectionAssert.AreEqual(expected, NumberedLines(lines), "The query should return exactly the marked lines, in order");
+            }
+            finally
+            {
+                ApiClient.DeleteProject(projectId);
+            }
+        }
+
+        /// <summary>
+        /// Creates a project with the given algorithm, compiles it and runs a backtest to completion
+        /// </summary>
+        private void RunBacktest(string algorithm, string testName, out int projectId, out string backtestId)
+        {
+            var projectResult = ApiClient.CreateProject($"{GetTimestamp()} Test {TestAccount} {testName}", Language.CSharp, TestOrganization);
+            Assert.IsTrue(projectResult.Success, $"Error creating project: {string.Join(", ", projectResult.Errors)}");
+            projectId = projectResult.Projects.First().ProjectId;
+
+            var updateProjectFileContent = ApiClient.UpdateProjectFileContent(projectId, "Main.cs", algorithm);
+            Assert.IsTrue(updateProjectFileContent.Success, $"Error updating project file: {string.Join(", ", updateProjectFileContent.Errors)}");
+
+            var compile = ApiClient.CreateCompile(projectId);
+            compile = WaitForCompilerResponse(ApiClient, projectId, compile.CompileId);
+            Assert.IsTrue(compile.Success, $"Error compiling project: {string.Join(", ", compile.Errors)}");
+
+            var backtest = ApiClient.CreateBacktest(projectId, compile.CompileId, $"{testName} Backtest {GetTimestamp()}");
+            backtest = WaitForBacktestCompletion(ApiClient, projectId, backtest.BacktestId, secondsTimeout: 300);
+            Assert.IsTrue(backtest.Success, $"Error running backtest: {string.Join(", ", backtest.Errors)}");
+            backtestId = backtest.BacktestId;
+        }
+
+        /// <summary>
+        /// Reads the whole backtest log, or only the lines matching the query, in pages of the given size
+        /// </summary>
+        private List<string> ReadAllBacktestLogLines(int projectId, string backtestId, string query, int windowSize, out int length)
+        {
+            var lines = new List<string>();
+            var pages = 0;
+            do
+            {
+                var page = ApiClient.ReadBacktestLog(projectId, backtestId, lines.Count, lines.Count + windowSize, query);
+                Assert.IsTrue(page.Success, $"Error reading the backtest log: {string.Join(", ", page.Errors)}");
+                Assert.IsNotEmpty(page.Logs, $"Received an empty page at index {lines.Count} of {page.Length}");
+                pages++;
+                QuantConnect.Logging.Log.Trace($"Page {pages}: query {query ?? "(none)"}, start {lines.Count}, window {windowSize}, received {page.Logs.Count}, length {page.Length}");
+
+                length = page.Length;
+                lines.AddRange(page.Logs);
+            }
+            while (lines.Count < length);
+
+            return lines;
+        }
+
+        /// <summary>
+        /// Extracts the number of every line the test algorithm wrote, ignoring any other engine output
+        /// </summary>
+        private static List<int> NumberedLines(IEnumerable<string> lines)
+        {
+            return lines
+                .Select(x => Regex.Match(x, @"(?:Plain|Marker) line (\d+)"))
+                .Where(x => x.Success)
+                .Select(x => int.Parse(x.Groups[1].Value, CultureInfo.InvariantCulture))
+                .ToList();
+        }
         [Test]
         public void ReadBacktestOrdersReportAndChart()
         {
@@ -373,13 +606,14 @@ namespace QuantConnect.Tests.API
             backtestRead = WaitForBacktestCompletion(ApiClient, project.ProjectId, backtest.BacktestId);
             var backtestOrdersRead = ApiClient.ReadBacktestOrders(project.ProjectId, backtest.BacktestId);
             string stringRepresentation;
-            foreach (var backtestOrder in backtestOrdersRead)
+            foreach (var backtestOrder in backtestOrdersRead.Orders)
             {
                 stringRepresentation = backtestOrder.ToString();
                 Assert.IsTrue(ApiTestBase.IsValidJson(stringRepresentation));
             }
-            Assert.IsTrue(backtestOrdersRead.Any());
-            Assert.AreEqual(Symbols.SPY.Value, backtestOrdersRead.First().Symbol.Value);
+            Assert.GreaterOrEqual(backtestOrdersRead.Length, backtestOrdersRead.Orders.Count);
+            Assert.IsTrue(backtestOrdersRead.Orders.Any());
+            Assert.AreEqual(Symbols.SPY.Value, backtestOrdersRead.Orders.First().Symbol.Value);
 
             var readBacktestReport = ApiClient.ReadBacktestReport(project.ProjectId, backtest.BacktestId);
             stringRepresentation = readBacktestReport.ToString();
