@@ -281,8 +281,7 @@ namespace QuantConnect.Orders
                     {
                         StopPrice = SafeDecimalValueOrDefault(jObject["StopPrice"] ?? jObject["stopPrice"]),
                         TrailingAmount = SafeDecimalValueOrDefault(jObject["TrailingAmount"] ?? jObject["trailingAmount"]),
-                        // the api documents this flag as 'trailingPercentage', lean serializes it as 'trailingAsPercentage'
-                        TrailingAsPercentage = SafeBooleanValueOrDefault(jObject, "trailingAsPercentage", "trailingPercentage")
+                        TrailingAsPercentage = SafeBooleanValueOrDefault(jObject, "trailingAsPercentage")
                     };
                     break;
 

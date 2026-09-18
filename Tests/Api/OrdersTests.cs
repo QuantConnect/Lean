@@ -86,7 +86,7 @@ namespace QuantConnect.Tests.API
                     ""symbol"": { ""value"": ""SPY"", ""id"": ""SPY R735QTJ8XC9X"", ""permtick"": ""SPY"" },
                     ""stopPrice"": 143.0,
                     ""trailingAmount"": 0.05,
-                    ""trailingPercentage"": true,
+                    ""trailingAsPercentage"": true,
                     ""price"": 144.0,
                     ""time"": ""2013-10-07T13:33:00Z"",
                     ""quantity"": -5.0,
