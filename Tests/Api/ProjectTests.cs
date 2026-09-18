@@ -547,7 +547,7 @@ namespace QuantConnect.Algorithm.CSharp
             var pages = 0;
             do
             {
-                var page = ApiClient.ReadBacktestLog(projectId, backtestId, query, lines.Count, lines.Count + windowSize);
+                var page = ApiClient.ReadBacktestLog(projectId, backtestId, lines.Count, lines.Count + windowSize, query);
                 Assert.IsTrue(page.Success, $"Error reading the backtest log: {string.Join(", ", page.Errors)}");
                 Assert.IsNotEmpty(page.Logs, $"Received an empty page at index {lines.Count} of {page.Length}");
                 pages++;

@@ -44,7 +44,7 @@ namespace QuantConnect.Tests.API
             using var server = new StubApiServer(SuccessfulBacktestLogResponse);
             using var api = server.CreateApi();
 
-            api.ReadBacktestLog(23456789, "26c7bb06b8487cff1c7b3c44652b30f1", "Error", 10, 60);
+            api.ReadBacktestLog(23456789, "26c7bb06b8487cff1c7b3c44652b30f1", 10, 60, "Error");
 
             var request = server.GetSingleRequest();
             Assert.AreEqual("/backtests/read/log", request.Path);

@@ -226,11 +226,11 @@ namespace QuantConnect.Interfaces
         /// </summary>
         /// <param name="projectId">Id of the project from which to read the backtest</param>
         /// <param name="backtestId">Id of the backtest from which to read the logs</param>
-        /// <param name="query">Keyword to filter the log lines</param>
         /// <param name="start">Start line (inclusive) of logs to read</param>
         /// <param name="end">End line (exclusive) of logs to read</param>
+        /// <param name="query">Keyword to filter the log lines</param>
         /// <returns><see cref="BacktestLog"/> with the requested log lines and the total log line count</returns>
-        BacktestLog ReadBacktestLog(int projectId, string backtestId, string query = null, int start = 0, int end = 0);
+        BacktestLog ReadBacktestLog(int projectId, string backtestId, int start = 0, int end = 0, string query = null);
 
 #pragma warning disable CS1574
         /// <summary>
