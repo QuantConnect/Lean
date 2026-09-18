@@ -271,7 +271,7 @@ namespace QuantConnect.Orders
                     {
                         LimitPrice = SafeDecimalValueOrDefault(jObject["LimitPrice"] ?? jObject["limitPrice"]),
                         StopPrice = SafeDecimalValueOrDefault(jObject["stopPrice"] ?? jObject["StopPrice"]),
-                        StopTriggered = SafeBooleanValueOrDefault(jObject, "stopTriggered"),
+                        StopTriggered = jObject["StopTriggered"]?.Value<bool>() ?? jObject["stopTriggered"]?.Value<bool>() ?? default(bool),
                         StopTriggeredTime = jObject["StopTriggeredTime"]?.Value<DateTime?>() ?? jObject["stopTriggeredTime"]?.Value<DateTime?>()
                     };
                     break;
@@ -281,7 +281,7 @@ namespace QuantConnect.Orders
                     {
                         StopPrice = SafeDecimalValueOrDefault(jObject["StopPrice"] ?? jObject["stopPrice"]),
                         TrailingAmount = SafeDecimalValueOrDefault(jObject["TrailingAmount"] ?? jObject["trailingAmount"]),
-                        TrailingAsPercentage = SafeBooleanValueOrDefault(jObject, "trailingAsPercentage")
+                        TrailingAsPercentage = jObject["TrailingAsPercentage"]?.Value<bool>() ?? jObject["trailingAsPercentage"]?.Value<bool>() ?? default(bool)
                     };
                     break;
 
@@ -290,7 +290,7 @@ namespace QuantConnect.Orders
                     {
                         LimitPrice = SafeDecimalValueOrDefault(jObject["LimitPrice"] ?? jObject["limitPrice"]),
                         TriggerPrice = SafeDecimalValueOrDefault(jObject["TriggerPrice"] ?? jObject["triggerPrice"]),
-                        TriggerTouched = SafeBooleanValueOrDefault(jObject, "triggerTouched")
+                        TriggerTouched = jObject["TriggerTouched"]?.Value<bool>() ?? jObject["triggerTouched"]?.Value<bool>() ?? default(bool)
                     };
                     break;
 
@@ -408,24 +408,6 @@ namespace QuantConnect.Orders
         private static decimal SafeDecimalValueOrDefault(JToken token)
         {
             return token == null ? default : SafeDecimalValue(token);
-        }
-
-        /// <summary>
-        /// Gets the boolean value of the first of the given camel case property names present in the object,
-        /// also trying each name in pascal case, or false if none of them is present
-        /// </summary>
-        private static bool SafeBooleanValueOrDefault(JObject jObject, params string[] camelCaseNames)
-        {
-            foreach (var name in camelCaseNames)
-            {
-                var token = jObject[name] ?? jObject[char.ToUpperInvariant(name[0]) + name.Substring(1)];
-                if (token != null && token.Type != JTokenType.Null)
-                {
-                    return token.Value<bool>();
-                }
-            }
-
-            return default;
         }
     }
 }
