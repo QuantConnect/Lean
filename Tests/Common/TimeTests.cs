@@ -167,6 +167,32 @@ namespace QuantConnect.Tests.Common
             Assert.AreEqual(expectedStart, start);
         }
 
+        // HKFE trades 09:15-12:00 and 13:00-16:30, so the day has two market closes
+        // before the first close: today does not count
+        [TestCase("2018-02-01 10:00:00", "2018-01-18 00:00:00")]
+        [TestCase("2018-02-01 12:00:00", "2018-01-18 00:00:00")]
+        // during the lunch break, after the first close and before the last: today still does not count
+        [TestCase("2018-02-01 12:30:00", "2018-01-18 00:00:00")]
+        // during the afternoon session: today still does not count
+        [TestCase("2018-02-01 13:00:00", "2018-01-18 00:00:00")]
+        [TestCase("2018-02-01 15:00:00", "2018-01-18 00:00:00")]
+        [TestCase("2018-02-01 16:29:59", "2018-01-18 00:00:00")]
+        // at the last close: today's completed bar counts
+        [TestCase("2018-02-01 16:30:00", "2018-01-18 16:30:00")]
+        // after the last close: today counts
+        [TestCase("2018-02-01 17:00:00", "2018-01-18 17:00:00")]
+        public void GetStartTimeForDailyTradeBarsCountsSessionsOnMarketsWithLunchBreak(string endTime, string expectedStartTime)
+        {
+            var mhdbEntry = MarketHoursDatabase.FromDataFolder().GetEntry(Market.HKFE, "HSI", SecurityType.Future);
+            var hours = mhdbEntry.ExchangeHours;
+            var end = DateTime.ParseExact(endTime, "yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture);
+            var expectedStart = DateTime.ParseExact(expectedStartTime, "yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture);
+
+            var start = Time.GetStartTimeForTradeBars(hours, end, Time.OneDay, 10, false, mhdbEntry.DataTimeZone, dailyPreciseEndTime: true);
+
+            Assert.AreEqual(expectedStart, start);
+        }
+
         [Test]
         public void EachTradeableDayInTimeZoneIsSameForEqualTimeZones()
         {

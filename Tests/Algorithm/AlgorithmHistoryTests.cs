@@ -3236,6 +3236,50 @@ tradeBar = TradeBar
             Assert.AreEqual(marketOpen, requestStart);
         }
 
+        // This reproduces https://github.com/QuantConnect/Lean/issues/9784
+        // HKFE trades 09:15-12:00 and 13:00-16:30 Hong Kong time, algorithm time zone is New York (13 hours behind in winter)
+        // 00:00 New York is 13:00 Hong Kong, inside the afternoon session: today does not count
+        [TestCase(Language.CSharp, "2018-02-01 00:00:00", "2018-01-18 00:00:00")]
+        [TestCase(Language.Python, "2018-02-01 00:00:00", "2018-01-18 00:00:00")]
+        // 04:00 New York is 17:00 Hong Kong, after the last close: today counts
+        [TestCase(Language.CSharp, "2018-02-01 04:00:00", "2018-01-18 17:00:00")]
+        [TestCase(Language.Python, "2018-02-01 04:00:00", "2018-01-18 17:00:00")]
+        public void DailyHistoryBarCountOnMarketsWithLunchBreak(Language language, string algorithmTime, string expectedStartExchangeTime)
+        {
+            var algorithm = GetAlgorithm(DateTime.ParseExact(algorithmTime, "yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture));
+            algorithm.Settings.DailyPreciseEndTime = true;
+            algorithm.Settings.SeedInitialPrices = false;
+            algorithm.HistoryProvider = _testHistoryProvider;
+            var hsi = algorithm.AddFuture("HSI", Resolution.Daily, Market.HKFE);
+
+            if (language == Language.CSharp)
+            {
+                algorithm.History(hsi.Symbol, 10, Resolution.Daily).ToList();
+            }
+            else
+            {
+                using (Py.GIL())
+                {
+                    using var module = PyModule.FromString("testModule", @"
+from AlgorithmImports import *
+
+def get_history(algorithm, symbol):
+    return algorithm.history(symbol, 10, Resolution.DAILY)
+");
+                    algorithm.SetPandasConverter();
+                    using var getHistory = module.GetAttr("get_history");
+                    using var result = getHistory.Invoke(algorithm.ToPython(), hsi.Symbol.ToPython());
+                }
+            }
+
+            var expectedStart = DateTime.ParseExact(expectedStartExchangeTime, "yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture)
+                .ConvertToUtc(hsi.Exchange.TimeZone);
+            var request = _testHistoryProvider.HistryRequests.Single(x => x.DataType == typeof(TradeBar));
+            Assert.AreEqual(expectedStart, request.StartTimeUtc);
+            Assert.AreEqual(algorithm.UtcTime, request.EndTimeUtc);
+            Assert.AreEqual(Resolution.Daily, request.Resolution);
+        }
+
         // This reproduces https://github.com/QuantConnect/Lean/issues/7504
         [TestCase(Language.CSharp)]
         [TestCase(Language.Python)]
