@@ -87,8 +87,8 @@ namespace QuantConnect.Tests.API
             Assert.AreEqual(JTokenType.Null, body["query"].Type);
         }
 
-        [TestCase(0, 250)]
-        [TestCase(500, 750)]
+        [TestCase(0, 200)]
+        [TestCase(500, 700)]
         public void ReadBacktestLogDefaultsTheEndLineToAFullWindow(int start, int expectedEnd)
         {
             using var server = new StubApiServer(SuccessfulBacktestLogResponse);
@@ -121,7 +121,7 @@ namespace QuantConnect.Tests.API
             using var api = new Api.Api();
             api.Initialize(0, "token", Globals.DataFolder);
 
-            Assert.Throws<ArgumentException>(() => api.ReadBacktestLog(23456789, "26c7bb06b8487cff1c7b3c44652b30f1", start: 0, end: 251));
+            Assert.Throws<ArgumentException>(() => api.ReadBacktestLog(23456789, "26c7bb06b8487cff1c7b3c44652b30f1", start: 0, end: 201));
         }
 
         [Test]

@@ -47,6 +47,7 @@ namespace QuantConnect.Api
         private const int MaxLiveOrdersWindow = 1000;
         private const int MaxInsightsWindow = 100;
         private const int MaxLogLinesWindow = 250;
+        private const int MaxBacktestLogLinesWindow = 200;
 
         private readonly BlockingCollection<Lazy<HttpClient>> _clientPool;
         private string _dataFolder;
@@ -559,13 +560,13 @@ namespace QuantConnect.Api
         /// <param name="backtestId">Id of the backtest from which to read the logs</param>
         /// <param name="query">Optional keyword to filter the log lines, null to return every line</param>
         /// <param name="start">Start line (inclusive) of logs to read</param>
-        /// <param name="end">End line (exclusive) of logs to read. Note that end - start must not exceed 250.
+        /// <param name="end">End line (exclusive) of logs to read. Note that end - start must not exceed 200.
         /// Defaults to a full window starting at <paramref name="start"/></param>
         /// <returns><see cref="BacktestLog"/> with the requested log lines and the total log line count</returns>
         /// <exception cref="ArgumentException">The requested window is wider than the documented maximum</exception>
         public BacktestLog ReadBacktestLog(int projectId, string backtestId, string query = null, int start = 0, int end = 0)
         {
-            end = ResolveWindowEnd(start, end, MaxLogLinesWindow, "log lines");
+            end = ResolveWindowEnd(start, end, MaxBacktestLogLinesWindow, "log lines");
 
             TryJsonPost("backtests/read/log", out BacktestLog result, new { projectId, backtestId, start, end, query });
             return result;
