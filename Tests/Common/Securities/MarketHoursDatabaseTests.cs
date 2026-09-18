@@ -252,15 +252,23 @@ namespace QuantConnect.Tests.Common.Securities
 
             Assert.IsFalse(exchangeHours.Holidays.Contains(day));
             Assert.AreEqual(earlyCloseTime, exchangeHours.EarlyCloses[day]);
-            Assert.AreEqual(day + earlyCloseTime, exchangeHours.GetLastDailyMarketClose(day, false));
 
+            // A halt at the regular open leaves no regular session, so the close anchor only exists on days that keep one
+            if (exchangeHours.IsDateOpen(day))
+            {
+                Assert.AreEqual(day + earlyCloseTime, exchangeHours.GetLastDailyMarketClose(day, false));
+            }
+
+            var segments = exchangeHours.GetMarketHours(day).Segments;
             if (lateOpen == null)
             {
                 Assert.IsFalse(exchangeHours.LateOpens.ContainsKey(day));
+                Assert.AreEqual(earlyCloseTime, segments.Last().End);
                 return;
             }
 
             var lateOpenTime = TimeSpan.Parse(lateOpen, CultureInfo.InvariantCulture);
+            Assert.AreEqual(earlyCloseTime, segments.Last(segment => segment.Start < lateOpenTime).End);
             Assert.AreEqual(lateOpenTime, exchangeHours.LateOpens[day]);
             Assert.AreEqual(lateOpenTime, exchangeHours.GetMarketHours(day).GetMarketOpen(earlyCloseTime, true));
         }
