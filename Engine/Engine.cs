@@ -20,6 +20,7 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
+using QuantConnect.Algorithm;
 using QuantConnect.AlgorithmFactory.Python.Wrappers;
 using QuantConnect.Brokerages;
 using QuantConnect.Configuration;
@@ -265,6 +266,8 @@ namespace QuantConnect.Lean.Engine
                     }
 
                     //Initialize the internal state of algorithm and job: executes the algorithm.Initialize() method.
+                    // Make brokerage account services available before setup invokes algorithm.Initialize().
+                    SetBrokerageAccountServices(algorithm, brokerage);
                     initializeComplete = AlgorithmHandlers.Setup.Setup(new SetupHandlerParameters(dataManager.UniverseSelection, algorithm,
                         brokerage, job, AlgorithmHandlers.Results, AlgorithmHandlers.Transactions, AlgorithmHandlers.RealTime,
                         AlgorithmHandlers.DataCacheProvider, AlgorithmHandlers.MapFileProvider));
@@ -351,24 +354,34 @@ namespace QuantConnect.Lean.Engine
                         var isolator = new Isolator();
 
                         // Execute the Algorithm Code:
-                        var complete = isolator.ExecuteWithTimeLimit(AlgorithmHandlers.Setup.MaximumRuntime, algorithmManager.TimeLimit.IsWithinLimit, () =>
-                        {
-                            try
+                        var complete = ExecuteWithBrokerageAccountMutationLifecycle(
+                            algorithm,
+                            () => isolator.ExecuteWithTimeLimit(AlgorithmHandlers.Setup.MaximumRuntime, algorithmManager.TimeLimit.IsWithinLimit, () =>
                             {
-                                //Run Algorithm Job:
-                                // -> Using this Data Feed,
-                                // -> Send Orders to this TransactionHandler,
-                                // -> Send Results to ResultHandler.
-                                algorithmManager.Run(job, algorithm, synchronizer, AlgorithmHandlers.Transactions, AlgorithmHandlers.Results, AlgorithmHandlers.RealTime, SystemHandlers.LeanManager, isolator.CancellationTokenSource, performanceTrackingTool);
-                            }
-                            catch (Exception err)
-                            {
-                                algorithm.SetRuntimeError(err, "AlgorithmManager.Run");
-                                return;
-                            }
+                                var algorithmManagerCompleted = RunWithBrokerageAccountMutationsEnabled(algorithm, () =>
+                                {
+                                    try
+                                    {
+                                        //Run Algorithm Job:
+                                        // -> Using this Data Feed,
+                                        // -> Send Orders to this TransactionHandler,
+                                        // -> Send Results to ResultHandler.
+                                        algorithmManager.Run(job, algorithm, synchronizer, AlgorithmHandlers.Transactions, AlgorithmHandlers.Results, AlgorithmHandlers.RealTime, SystemHandlers.LeanManager, isolator.CancellationTokenSource, performanceTrackingTool);
+                                        return true;
+                                    }
+                                    catch (Exception err)
+                                    {
+                                        algorithm.SetRuntimeError(err, "AlgorithmManager.Run");
+                                        return false;
+                                    }
+                                });
+                                if (!algorithmManagerCompleted)
+                                {
+                                    return;
+                                }
 
-                            Log.Trace("Engine.Run(): Exiting Algorithm Manager");
-                        }, job.Controls.RamAllocation, workerThread: workerThread, sleepIntervalMillis: algorithm.LiveMode ? 10000 : 1000);
+                                Log.Trace("Engine.Run(): Exiting Algorithm Manager");
+                            }, job.Controls.RamAllocation, workerThread: workerThread, sleepIntervalMillis: algorithm.LiveMode ? 10000 : 1000));
 
                         if (!complete)
                         {
@@ -569,6 +582,88 @@ namespace QuantConnect.Lean.Engine
             provider.ReaderErrorDetected += (sender, args) => { AlgorithmHandlers.Results.RuntimeError(args.Message, args.StackTrace); };
 
             return provider;
+        }
+
+        /// <summary>
+        /// Installs the brokerage account-state provider and any supported group-mutation managers on the algorithm.
+        /// </summary>
+        /// <param name="algorithm">Algorithm receiving the brokerage account services</param>
+        /// <param name="brokerage">Brokerage supplying the account services</param>
+        private static void SetBrokerageAccountServices(IAlgorithm algorithm, IBrokerage brokerage)
+        {
+            if (algorithm is not IBrokerageAccountServiceConsumer consumer ||
+                brokerage is not IBrokerageAccountStateProvider provider)
+            {
+                return;
+            }
+
+            consumer.SetBrokerageAccountStateProvider(provider);
+            consumer.SetBrokerageAccountGroupManager(brokerage as IBrokerageAccountGroupManager);
+            consumer.SetBrokerageAccountGroupAllocationManager(brokerage as IBrokerageAccountGroupAllocationManager);
+        }
+
+        /// <summary>
+        /// Gets the underlying C# algorithm that owns the brokerage account services.
+        /// </summary>
+        /// <param name="algorithm">Algorithm or Python wrapper to inspect</param>
+        /// <returns>The underlying C# algorithm, or null when it is unavailable</returns>
+        private static QCAlgorithm GetBrokerageAccountServiceAlgorithm(IAlgorithm algorithm) =>
+            algorithm is AlgorithmPythonWrapper wrapper ? wrapper.BaseAlgorithm : algorithm as QCAlgorithm;
+
+        /// <summary>
+        /// Sets whether supported C# and Python algorithms may request account-group mutations.
+        /// </summary>
+        /// <param name="algorithm">Algorithm whose mutation services are updated</param>
+        /// <param name="ready">True to accept mutation requests; otherwise, false</param>
+        private static void SetBrokerageAccountMutationServicesReady(IAlgorithm algorithm, bool ready) =>
+            GetBrokerageAccountServiceAlgorithm(algorithm)?.SetBrokerageAccountMutationServicesReady(ready);
+
+        /// <summary>
+        /// Permanently revokes account-group mutation authority for this algorithm run.
+        /// </summary>
+        /// <param name="algorithm">Algorithm whose mutation services are revoked</param>
+        private static void RevokeBrokerageAccountMutationServices(IAlgorithm algorithm) =>
+            GetBrokerageAccountServiceAlgorithm(algorithm)?.RevokeBrokerageAccountMutationServices();
+
+        /// <summary>
+        /// Runs the isolator controller operation and permanently revokes mutation authority when it exits.
+        /// </summary>
+        /// <param name="algorithm">Algorithm whose mutation services are controlled</param>
+        /// <param name="runIsolator">Isolator controller operation to run</param>
+        /// <returns>The value returned by <paramref name="runIsolator"/></returns>
+        internal static bool ExecuteWithBrokerageAccountMutationLifecycle(
+            IAlgorithm algorithm,
+            Func<bool> runIsolator)
+        {
+            try
+            {
+                return runIsolator();
+            }
+            finally
+            {
+                RevokeBrokerageAccountMutationServices(algorithm);
+            }
+        }
+
+        /// <summary>
+        /// Enables brokerage account-group mutations only while the algorithm manager is running.
+        /// </summary>
+        /// <param name="algorithm">Algorithm whose mutation services are controlled</param>
+        /// <param name="runAlgorithm">Algorithm-manager operation to run</param>
+        /// <returns>The value returned by <paramref name="runAlgorithm"/></returns>
+        internal static bool RunWithBrokerageAccountMutationsEnabled(IAlgorithm algorithm, Func<bool> runAlgorithm)
+        {
+            try
+            {
+                SetBrokerageAccountMutationServicesReady(algorithm, true);
+                return runAlgorithm();
+            }
+            finally
+            {
+                // Prevent account-group mutations after AlgorithmManager.Run completes or throws,
+                // including failures before stream enumeration begins.
+                SetBrokerageAccountMutationServicesReady(algorithm, false);
+            }
         }
 
         /// <summary>
