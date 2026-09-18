@@ -224,6 +224,73 @@ namespace QuantConnect.Tests.Common.Securities
             }
         }
 
+        [TestCase("ES", Market.CME, "7/3/2023", "13:15:00", "18:00:00")]
+        [TestCase("MNQ", Market.CME, "7/3/2024", "13:15:00", "18:00:00")]
+        [TestCase("YM", Market.CBOT, "7/3/2024", "13:15:00", "18:00:00")]
+        [TestCase("EMD", Market.CME, "7/3/2024", "12:15:00", "17:00:00")]
+        [TestCase("ES", Market.CME, "1/9/2025", "09:30:00", "18:00:00")]
+        [TestCase("LE", Market.CME, "1/9/2025", "12:15:00", null)]
+        [TestCase("ES", Market.CME, "11/29/2024", "13:15:00", null)]
+        [TestCase("ZN", Market.CBOT, "11/29/2024", "12:15:00", null)]
+        [TestCase("ZC", Market.CBOT, "11/29/2024", "12:05:00", null)]
+        [TestCase("6E", Market.CME, "11/29/2024", "13:45:00", null)]
+        [TestCase("BTC", Market.CME, "11/29/2024", "13:45:00", null)]
+        [TestCase("CL", Market.NYMEX, "11/29/2024", "14:45:00", null)]
+        [TestCase("GC", Market.COMEX, "11/29/2024", "14:45:00", null)]
+        [TestCase("ZN", Market.CBOT, "1/9/2025", "12:15:00", "17:00:00")]
+        [TestCase("ZC", Market.CBOT, "1/9/2025", "12:15:00", "19:00:00")]
+        [TestCase("YM", Market.CBOT, "1/9/2025", "09:30:00", "18:00:00")]
+        public void CorrectlyReadsCMEGroupFutureShortenedSessions(string futureTicker, string market, string date, string earlyClose, string lateOpen)
+        {
+            var provider = MarketHoursDatabase.FromDataFolder();
+            var ticker = OptionSymbol.MapToUnderlying(futureTicker, SecurityType.Future);
+            var future = Symbol.Create(ticker, SecurityType.Future, market);
+
+            var exchangeHours = provider.GetEntry(market, ticker, future.SecurityType).ExchangeHours;
+            var day = DateTime.Parse(date, CultureInfo.InvariantCulture);
+            var earlyCloseTime = TimeSpan.Parse(earlyClose, CultureInfo.InvariantCulture);
+
+            Assert.IsFalse(exchangeHours.Holidays.Contains(day));
+            Assert.AreEqual(earlyCloseTime, exchangeHours.EarlyCloses[day]);
+
+            // A halt at the regular open leaves no regular session, so the close anchor only exists on days that keep one
+            if (exchangeHours.IsDateOpen(day))
+            {
+                Assert.AreEqual(day + earlyCloseTime, exchangeHours.GetLastDailyMarketClose(day, false));
+            }
+
+            var segments = exchangeHours.GetMarketHours(day).Segments;
+            if (lateOpen == null)
+            {
+                Assert.IsFalse(exchangeHours.LateOpens.ContainsKey(day));
+                Assert.AreEqual(earlyCloseTime, segments.Last().End);
+                return;
+            }
+
+            var lateOpenTime = TimeSpan.Parse(lateOpen, CultureInfo.InvariantCulture);
+            Assert.AreEqual(earlyCloseTime, segments.Last(segment => segment.Start < lateOpenTime).End);
+            Assert.AreEqual(lateOpenTime, exchangeHours.LateOpens[day]);
+            Assert.AreEqual(lateOpenTime, exchangeHours.GetMarketHours(day).GetMarketOpen(earlyCloseTime, true));
+        }
+
+        [TestCase("ES", Market.CME, "12/25/2025", false, true)]
+        [TestCase("CL", Market.NYMEX, "12/25/2025", false, true)]
+        [TestCase("ZN", Market.CBOT, "12/25/2025", false, true)]
+        [TestCase("GC", Market.COMEX, "1/9/2025", true, true)]
+        [TestCase("AW", Market.CBOT, "1/9/2025", false, false)]
+        public void CorrectlyReadsCMEGroupFutureSessionAvailability(string futureTicker, string market, string date, bool hasRegularSession, bool hasExtendedSession)
+        {
+            var provider = MarketHoursDatabase.FromDataFolder();
+            var ticker = OptionSymbol.MapToUnderlying(futureTicker, SecurityType.Future);
+            var future = Symbol.Create(ticker, SecurityType.Future, market);
+
+            var exchangeHours = provider.GetEntry(market, ticker, future.SecurityType).ExchangeHours;
+            var day = DateTime.Parse(date, CultureInfo.InvariantCulture);
+
+            Assert.AreEqual(hasRegularSession, exchangeHours.IsDateOpen(day));
+            Assert.AreEqual(hasExtendedSession, exchangeHours.IsDateOpen(day, true));
+        }
+
         /// <summary>
         /// An early close or a late open only says something about a day the exchange trades. Both get
         /// carried from one year to the next, and carrying them by calendar date rather than by trading
