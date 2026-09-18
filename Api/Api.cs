@@ -46,8 +46,7 @@ namespace QuantConnect.Api
         private const int MaxBacktestOrdersWindow = 100;
         private const int MaxLiveOrdersWindow = 1000;
         private const int MaxInsightsWindow = 100;
-        private const int MaxLogLinesWindow = 250;
-        private const int MaxBacktestLogLinesWindow = 200;
+        private const int MaxLogLinesWindow = 200;
 
         private readonly BlockingCollection<Lazy<HttpClient>> _clientPool;
         private string _dataFolder;
@@ -566,7 +565,7 @@ namespace QuantConnect.Api
         /// <exception cref="ArgumentException">The requested window is wider than the documented maximum</exception>
         public BacktestLog ReadBacktestLog(int projectId, string backtestId, string query = null, int start = 0, int end = 0)
         {
-            end = ResolveWindowEnd(start, end, MaxBacktestLogLinesWindow, "log lines");
+            end = ResolveWindowEnd(start, end, MaxLogLinesWindow, "log lines");
 
             TryJsonPost("backtests/read/log", out BacktestLog result, new { projectId, backtestId, start, end, query });
             return result;
@@ -778,7 +777,7 @@ namespace QuantConnect.Api
         /// <param name="projectId">Project Id of the live running algorithm</param>
         /// <param name="algorithmId">Algorithm Id of the live running algorithm</param>
         /// <param name="startLine">Start line (inclusive) of logs to read</param>
-        /// <param name="endLine">End line (exclusive) of logs to read. Note that endLine - startLine must not exceed 250.
+        /// <param name="endLine">End line (exclusive) of logs to read. Note that endLine - startLine must not exceed 200.
         /// Defaults to a full window starting at <paramref name="startLine"/></param>
         /// <param name="query">Optional keyword to filter the log lines, null to return every line</param>
         /// <param name="deploymentLogs">Whether only the logs of the given <paramref name="algorithmId"/> deployment should be returned</param>

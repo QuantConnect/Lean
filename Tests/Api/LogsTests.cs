@@ -101,8 +101,8 @@ namespace QuantConnect.Tests.API
             Assert.AreEqual(expectedEnd, body["end"].Value<int>());
         }
 
-        [TestCase(0, 250)]
-        [TestCase(500, 750)]
+        [TestCase(0, 200)]
+        [TestCase(500, 700)]
         public void ReadLiveLogsDefaultsTheEndLineToAFullWindow(int startLine, int expectedEndLine)
         {
             using var server = new StubApiServer(SuccessfulLiveLogResponse);
@@ -130,7 +130,7 @@ namespace QuantConnect.Tests.API
             using var api = new Api.Api();
             api.Initialize(0, "token", Globals.DataFolder);
 
-            Assert.Throws<ArgumentException>(() => api.ReadLiveLogs(23456789, "L-6e9d8a78f5af89d401f630585be90e43", 0, 251));
+            Assert.Throws<ArgumentException>(() => api.ReadLiveLogs(23456789, "L-6e9d8a78f5af89d401f630585be90e43", 0, 201));
         }
 
         [Test]
