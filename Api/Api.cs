@@ -803,12 +803,6 @@ namespace QuantConnect.Api
             return result;
         }
 
-        // Explicit so the added optional arguments don't change the arity IApi declares
-        LiveLog IApi.ReadLiveLogs(int projectId, string algorithmId, int startLine, int endLine)
-        {
-            return ReadLiveLogs(projectId, algorithmId, startLine, endLine);
-        }
-
         /// <summary>
         /// Returns a chart object from a live algorithm
         /// </summary>
