@@ -1,4 +1,4 @@
-/*
+﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2023 QuantConnect Corporation.
  *
@@ -24,7 +24,7 @@ using QuantConnect.Data.UniverseSelection;
 namespace QuantConnect.Data.Fundamental
 {
     /// <summary>
-    /// The exact date that is given in the financial statements for each quarter's end.
+    /// The period ending date of the financial statements, dated by the filing the balance sheet, income statement and cash flow statement were reported in. Each statement also carries its own date: BalanceSheet.PeriodEndingDate, IncomeStatement.PeriodEndingDate and CashFlowStatement.PeriodEndingDate.
     /// </summary>
     public class FinancialStatementsPeriodEndingDate : MultiPeriodField<DateTime>
     {

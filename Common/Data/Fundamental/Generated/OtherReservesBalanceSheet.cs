@@ -1,4 +1,4 @@
-/*
+﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2023 QuantConnect Corporation.
  *
@@ -24,7 +24,7 @@ using QuantConnect.Data.UniverseSelection;
 namespace QuantConnect.Data.Fundamental
 {
     /// <summary>
-    /// Other reserves owned by the company that cannot be identified by other specific items in the Reserves section.
+    /// The sum of all reserves and accumulated other comprehensive income or losses.
     /// </summary>
     public class OtherReservesBalanceSheet : MultiPeriodField
     {

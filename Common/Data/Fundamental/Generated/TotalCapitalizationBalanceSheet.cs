@@ -1,4 +1,4 @@
-/*
+﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2023 QuantConnect Corporation.
  *
@@ -24,7 +24,7 @@ using QuantConnect.Data.UniverseSelection;
 namespace QuantConnect.Data.Fundamental
 {
     /// <summary>
-    /// Stockholder's Equity plus Long Term Debt.
+    /// Total equity, including non-controlling interests, plus long term debt.
     /// </summary>
     public class TotalCapitalizationBalanceSheet : MultiPeriodField
     {
@@ -37,13 +37,17 @@ namespace QuantConnect.Data.Fundamental
         /// Gets/sets the OneMonth period value for the field
         /// </summary>
         [JsonProperty("1M")]
-        public double OneMonth => FundamentalService.Get<double>(TimeProvider.GetUtcNow(), SecurityIdentifier, FundamentalProperty.FinancialStatements_BalanceSheet_TotalCapitalization_OneMonth);
+        [Obsolete("TotalCapitalization.OneMonth was retired by Morningstar in 2026; use TotalCapitalization.ThreeMonths (also available: TwelveMonths).")]
+        [JsonIgnore]
+        public double OneMonth => throw new NotSupportedException("TotalCapitalization.OneMonth was retired by Morningstar in 2026; use TotalCapitalization.ThreeMonths (also available: TwelveMonths).");
 
         /// <summary>
         /// Gets/sets the TwoMonths period value for the field
         /// </summary>
         [JsonProperty("2M")]
-        public double TwoMonths => FundamentalService.Get<double>(TimeProvider.GetUtcNow(), SecurityIdentifier, FundamentalProperty.FinancialStatements_BalanceSheet_TotalCapitalization_TwoMonths);
+        [Obsolete("TotalCapitalization.TwoMonths was retired by Morningstar in 2026; use TotalCapitalization.ThreeMonths (also available: TwelveMonths).")]
+        [JsonIgnore]
+        public double TwoMonths => throw new NotSupportedException("TotalCapitalization.TwoMonths was retired by Morningstar in 2026; use TotalCapitalization.ThreeMonths (also available: TwelveMonths).");
 
         /// <summary>
         /// Gets/sets the ThreeMonths period value for the field
@@ -55,13 +59,17 @@ namespace QuantConnect.Data.Fundamental
         /// Gets/sets the SixMonths period value for the field
         /// </summary>
         [JsonProperty("6M")]
-        public double SixMonths => FundamentalService.Get<double>(TimeProvider.GetUtcNow(), SecurityIdentifier, FundamentalProperty.FinancialStatements_BalanceSheet_TotalCapitalization_SixMonths);
+        [Obsolete("TotalCapitalization.SixMonths was retired by Morningstar in 2026; use TotalCapitalization.ThreeMonths (also available: TwelveMonths).")]
+        [JsonIgnore]
+        public double SixMonths => throw new NotSupportedException("TotalCapitalization.SixMonths was retired by Morningstar in 2026; use TotalCapitalization.ThreeMonths (also available: TwelveMonths).");
 
         /// <summary>
         /// Gets/sets the NineMonths period value for the field
         /// </summary>
         [JsonProperty("9M")]
-        public double NineMonths => FundamentalService.Get<double>(TimeProvider.GetUtcNow(), SecurityIdentifier, FundamentalProperty.FinancialStatements_BalanceSheet_TotalCapitalization_NineMonths);
+        [Obsolete("TotalCapitalization.NineMonths was retired by Morningstar in 2026; use TotalCapitalization.ThreeMonths (also available: TwelveMonths).")]
+        [JsonIgnore]
+        public double NineMonths => throw new NotSupportedException("TotalCapitalization.NineMonths was retired by Morningstar in 2026; use TotalCapitalization.ThreeMonths (also available: TwelveMonths).");
 
         /// <summary>
         /// Gets/sets the TwelveMonths period value for the field
@@ -97,7 +105,7 @@ namespace QuantConnect.Data.Fundamental
         public override IReadOnlyDictionary<string, double> GetPeriodValues()
         {
             var result = new Dictionary<string, double>();
-            foreach (var kvp in new[] { new Tuple<string, double>("1M",OneMonth), new Tuple<string, double>("2M",TwoMonths), new Tuple<string, double>("3M",ThreeMonths), new Tuple<string, double>("6M",SixMonths), new Tuple<string, double>("9M",NineMonths), new Tuple<string, double>("12M",TwelveMonths) })
+            foreach (var kvp in new[] { new Tuple<string, double>("3M",ThreeMonths), new Tuple<string, double>("12M",TwelveMonths) })
             {
                 if(!BaseFundamentalDataProvider.IsNone(typeof(double), kvp.Item2))
                 {
