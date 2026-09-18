@@ -72,6 +72,11 @@ namespace QuantConnect.Api
         public string ProjectName { get; set; }
 
         /// <summary>
+        /// Description of the project the live algorithm is in
+        /// </summary>
+        public string Description { get; set; }
+
+        /// <summary>
         /// Name of the data center where the algorithm is physically located.
         /// </summary>
         public string Datacenter { get; set; }
@@ -80,6 +85,11 @@ namespace QuantConnect.Api
         /// Indicates if the algorithm is being live shared
         /// </summary>
         public bool Public { get; set; }
+
+        /// <summary>
+        /// Indicates if public streaming is enabled for the algorithm
+        /// </summary>
+        public bool IsPublicStreaming { get; set; }
 
         /// <summary>
         /// Files present in the project in which the algorithm is

@@ -54,5 +54,46 @@ namespace QuantConnect.Api
         /// Signature order of files to be compiled
         /// </summary>
         public List<string> SignatureOrder { get; set; }
+
+        /// <summary>
+        /// List of files and their associated parameters detected during compilation
+        /// </summary>
+        public List<FileParameters> Parameters { get; set; }
+    }
+
+    /// <summary>
+    /// Parameters detected in a project file during compilation
+    /// </summary>
+    public class FileParameters
+    {
+        /// <summary>
+        /// Path of the file in the project
+        /// </summary>
+        [JsonProperty(PropertyName = "file")]
+        public string File { get; set; }
+
+        /// <summary>
+        /// List of parameters detected in the file
+        /// </summary>
+        [JsonProperty(PropertyName = "parameters")]
+        public List<ParameterDetail> Parameters { get; set; }
+    }
+
+    /// <summary>
+    /// A single parameter detected in a project file during compilation
+    /// </summary>
+    public class ParameterDetail
+    {
+        /// <summary>
+        /// Line number where the parameter was detected
+        /// </summary>
+        [JsonProperty(PropertyName = "line")]
+        public int Line { get; set; }
+
+        /// <summary>
+        /// Description of the detected parameter
+        /// </summary>
+        [JsonProperty(PropertyName = "type")]
+        public string Type { get; set; }
     }
 }

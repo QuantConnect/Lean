@@ -38,6 +38,11 @@ namespace QuantConnect.Api
         public string OptimizationTarget { get; set; }
 
         /// <summary>
+        /// Desired value for the optimization target statistic
+        /// </summary>
+        public decimal? TargetValue { get; set; }
+
+        /// <summary>
         /// List with grid charts representing the grid layout
         /// </summary>
         public List<GridChart> GridLayout { get; set; }

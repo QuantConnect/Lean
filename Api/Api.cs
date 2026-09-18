@@ -34,6 +34,7 @@ using System.Net.Http.Headers;
 using System.Collections.Concurrent;
 using System.Text;
 using Newtonsoft.Json.Serialization;
+using Newtonsoft.Json.Converters;
 
 namespace QuantConnect.Api
 {
@@ -46,6 +47,13 @@ namespace QuantConnect.Api
         private const int MaxOrdersWindow = 100;
         private const int MaxInsightsWindow = 100;
         private const int MaxLogLinesWindow = 200;
+
+        // The ai tools endpoints take the api language code, "C#" or "Py", and omit the optional members
+        private static readonly JsonSerializerSettings AIToolsSerializerSettings = new()
+        {
+            Converters = { new StringEnumConverter() },
+            NullValueHandling = NullValueHandling.Ignore
+        };
 
         private readonly BlockingCollection<Lazy<HttpClient>> _clientPool;
         private string _dataFolder;
@@ -136,11 +144,111 @@ namespace QuantConnect.Api
         /// <summary>
         /// List details of all projects
         /// </summary>
+        /// <param name="start">Starting (inclusive, zero-based) index of the projects to be fetched</param>
+        /// <param name="end">Last (exclusive) index of the projects to be fetched. Zero to let the API apply its own limit</param>
         /// <returns><see cref="ProjectResponse"/> that contains information regarding the project</returns>
 
-        public ProjectResponse ListProjects()
+        public ProjectResponse ListProjects(int start = 0, int end = 0)
         {
-            TryJsonPost("projects/read", out ProjectResponse result);
+            object payload = end > 0 ? new { start, end } : new { start };
+            TryJsonPost("projects/read", out ProjectResponse result, payload);
+            return result;
+        }
+
+        /// <summary>
+        /// Update a project's name or description
+        /// </summary>
+        /// <param name="projectId">Project id to update</param>
+        /// <param name="name">The new name for the project, null to leave it unchanged</param>
+        /// <param name="description">The new description for the project, null to leave it unchanged</param>
+        /// <returns><see cref="RestResponse"/> indicating success</returns>
+
+        public RestResponse UpdateProject(int projectId, string name = null, string description = null)
+        {
+            var payload = new Dictionary<string, object> { { "projectId", projectId } };
+            if (name != null)
+            {
+                payload["name"] = name;
+            }
+            if (description != null)
+            {
+                payload["description"] = description;
+            }
+
+            TryJsonPost("projects/update", out RestResponse result, payload);
+            return result;
+        }
+
+        /// <summary>
+        /// Add a collaborator to a project
+        /// </summary>
+        /// <param name="projectId">Id of the project to add the collaborator to</param>
+        /// <param name="collaboratorUserId">User id of the collaborator to add</param>
+        /// <param name="collaborationLiveControl">Whether the collaborator can deploy and stop live algorithms</param>
+        /// <param name="collaborationWrite">Whether the collaborator can edit the code</param>
+        /// <returns><see cref="ProjectCollaboratorsResponse"/> with the collaborators of the project</returns>
+
+        public ProjectCollaboratorsResponse CreateProjectCollaborator(int projectId, string collaboratorUserId,
+            bool collaborationLiveControl, bool collaborationWrite)
+        {
+            TryJsonPost("projects/collaboration/create", out ProjectCollaboratorsResponse result,
+                new { projectId, collaboratorUserId, collaborationLiveControl, collaborationWrite });
+            return result;
+        }
+
+        /// <summary>
+        /// List all collaborators on a project
+        /// </summary>
+        /// <param name="projectId">Id of the project from which to read the collaborators</param>
+        /// <returns><see cref="ReadProjectCollaboratorsResponse"/> with the collaborators of the project and the owner permissions</returns>
+
+        public ReadProjectCollaboratorsResponse ReadProjectCollaborators(int projectId)
+        {
+            TryJsonPost("projects/collaboration/read", out ReadProjectCollaboratorsResponse result, new { projectId });
+            return result;
+        }
+
+        /// <summary>
+        /// Update the permissions of a collaborator in a project
+        /// </summary>
+        /// <param name="projectId">Id of the project the collaborator is on</param>
+        /// <param name="collaboratorUserId">User id of the collaborator to update</param>
+        /// <param name="liveControl">Whether the collaborator can deploy and stop live algorithms</param>
+        /// <param name="write">Whether the collaborator can edit the code</param>
+        /// <returns><see cref="ProjectCollaboratorsResponse"/> with the collaborators of the project</returns>
+
+        public ProjectCollaboratorsResponse UpdateProjectCollaborator(int projectId, string collaboratorUserId,
+            bool liveControl, bool write)
+        {
+            TryJsonPost("projects/collaboration/update", out ProjectCollaboratorsResponse result,
+                new { projectId, collaboratorUserId, liveControl, write });
+            return result;
+        }
+
+        /// <summary>
+        /// Remove a collaborator from a project
+        /// </summary>
+        /// <param name="projectId">Id of the project to remove the collaborator from</param>
+        /// <param name="collaboratorId">User id of the collaborator to remove</param>
+        /// <returns><see cref="ProjectCollaboratorsResponse"/> with the remaining collaborators of the project</returns>
+
+        public ProjectCollaboratorsResponse DeleteProjectCollaborator(int projectId, string collaboratorId)
+        {
+            TryJsonPost("projects/collaboration/delete", out ProjectCollaboratorsResponse result, new { projectId, collaboratorId });
+            return result;
+        }
+
+        /// <summary>
+        /// Lock a project so it can be edited. This is necessary when the project has collaborators
+        /// or when an LLM is editing files on your behalf
+        /// </summary>
+        /// <param name="projectId">Id of the project to lock</param>
+        /// <param name="codeSourceId">Name of the environment that's creating the request</param>
+        /// <returns><see cref="RestResponse"/> indicating success</returns>
+
+        public RestResponse AcquireProjectCollaborationLock(int projectId, string codeSourceId)
+        {
+            TryJsonPost("projects/collaboration/lock/acquire", out RestResponse result, new { projectId, codeSourceId });
             return result;
         }
 
@@ -151,11 +259,15 @@ namespace QuantConnect.Api
         /// <param name="projectId">The project to which the file should be added</param>
         /// <param name="name">The name of the new file</param>
         /// <param name="content">The content of the new file</param>
+        /// <param name="codeSourceId">Name of the environment that's creating the request</param>
         /// <returns><see cref="ProjectFilesResponse"/> that includes information about the newly created file</returns>
 
-        public RestResponse AddProjectFile(int projectId, string name, string content)
+        public RestResponse AddProjectFile(int projectId, string name, string content, string codeSourceId = null)
         {
-            TryJsonPost("files/create", out RestResponse result, new { projectId, name, content });
+            object payload = codeSourceId == null
+                ? new { projectId, name, content }
+                : new { projectId, name, content, codeSourceId };
+            TryJsonPost("files/create", out RestResponse result, payload);
             return result;
         }
 
@@ -165,17 +277,16 @@ namespace QuantConnect.Api
         /// <param name="projectId">Project id to which the file belongs</param>
         /// <param name="oldFileName">The current name of the file</param>
         /// <param name="newFileName">The new name for the file</param>
-        /// <returns><see cref="RestResponse"/> indicating success</returns>
+        /// <param name="codeSourceId">Name of the environment that's creating the request</param>
+        /// <returns><see cref="ProjectFilesResponse"/> indicating success, which may include the updated project files</returns>
 
-        public RestResponse UpdateProjectFileName(int projectId, string oldFileName, string newFileName)
+        public ProjectFilesResponse UpdateProjectFileName(int projectId, string oldFileName, string newFileName,
+            string codeSourceId = null)
         {
-            var payload = new
-            {
-                projectId,
-                name = oldFileName,
-                newName = newFileName
-            };
-            TryJsonPost("files/update", out RestResponse result, payload);
+            object payload = codeSourceId == null
+                ? new { projectId, name = oldFileName, newName = newFileName }
+                : new { projectId, name = oldFileName, newName = newFileName, codeSourceId };
+            TryJsonPost("files/update", out ProjectFilesResponse result, payload);
             return result;
         }
 
@@ -186,17 +297,16 @@ namespace QuantConnect.Api
         /// <param name="projectId">Project id to which the file belongs</param>
         /// <param name="fileName">The name of the file that should be updated</param>
         /// <param name="newFileContents">The new contents of the file</param>
-        /// <returns><see cref="RestResponse"/> indicating success</returns>
+        /// <param name="codeSourceId">Name of the environment that's creating the request</param>
+        /// <returns><see cref="ProjectFilesResponse"/> indicating success, which may include the updated project files</returns>
 
-        public RestResponse UpdateProjectFileContent(int projectId, string fileName, string newFileContents)
+        public ProjectFilesResponse UpdateProjectFileContent(int projectId, string fileName, string newFileContents,
+            string codeSourceId = null)
         {
-            var payload = new
-            {
-                projectId,
-                name = fileName,
-                content = newFileContents
-            };
-            TryJsonPost("files/update", out RestResponse result, payload);
+            object payload = codeSourceId == null
+                ? new { projectId, name = fileName, content = newFileContents }
+                : new { projectId, name = fileName, content = newFileContents, codeSourceId };
+            TryJsonPost("files/update", out ProjectFilesResponse result, payload);
             return result;
         }
 
@@ -205,11 +315,13 @@ namespace QuantConnect.Api
         /// Read all files in a project
         /// </summary>
         /// <param name="projectId">Project id to which the file belongs</param>
+        /// <param name="codeSourceId">Name of the environment that's creating the request</param>
         /// <returns><see cref="ProjectFilesResponse"/> that includes the information about all files in the project</returns>
 
-        public ProjectFilesResponse ReadProjectFiles(int projectId)
+        public ProjectFilesResponse ReadProjectFiles(int projectId, string codeSourceId = null)
         {
-            TryJsonPost("files/read", out ProjectFilesResponse result, new { projectId });
+            object payload = codeSourceId == null ? new { projectId } : new { projectId, codeSourceId };
+            TryJsonPost("files/read", out ProjectFilesResponse result, payload);
             return result;
         }
 
@@ -242,11 +354,15 @@ namespace QuantConnect.Api
         /// </summary>
         /// <param name="projectId">Project id to which the file belongs</param>
         /// <param name="fileName">The name of the file</param>
+        /// <param name="codeSourceId">Name of the environment that's creating the request</param>
         /// <returns><see cref="ProjectFilesResponse"/> that includes the file information</returns>
 
-        public ProjectFilesResponse ReadProjectFile(int projectId, string fileName)
+        public ProjectFilesResponse ReadProjectFile(int projectId, string fileName, string codeSourceId = null)
         {
-            TryJsonPost("files/read", out ProjectFilesResponse result, new { projectId, name = fileName });
+            object payload = codeSourceId == null
+                ? new { projectId, name = fileName }
+                : new { projectId, name = fileName, codeSourceId };
+            TryJsonPost("files/read", out ProjectFilesResponse result, payload);
             return result;
         }
 
@@ -264,11 +380,28 @@ namespace QuantConnect.Api
         /// </summary>
         /// <param name="projectId">Project id to which the file belongs</param>
         /// <param name="name">The name of the file that should be deleted</param>
+        /// <param name="codeSourceId">Name of the environment that's creating the request</param>
         /// <returns><see cref="RestResponse"/> that includes the information about all files in the project</returns>
 
-        public RestResponse DeleteProjectFile(int projectId, string name)
+        public RestResponse DeleteProjectFile(int projectId, string name, string codeSourceId = null)
         {
-            TryJsonPost("files/delete", out RestResponse result, new { projectId, name });
+            object payload = codeSourceId == null ? new { projectId, name } : new { projectId, name, codeSourceId };
+            TryJsonPost("files/delete", out RestResponse result, payload);
+            return result;
+        }
+
+        /// <summary>
+        /// Apply a patch in unified diff format to one or more files in a project
+        /// </summary>
+        /// <param name="projectId">Project id that contains the files to patch</param>
+        /// <param name="patch">The patch to apply, in unified diff format as produced by git diff</param>
+        /// <param name="codeSourceId">Name of the environment that's creating the request</param>
+        /// <returns><see cref="RestResponse"/> indicating success</returns>
+
+        public RestResponse PatchProjectFile(int projectId, string patch, string codeSourceId = null)
+        {
+            object payload = codeSourceId == null ? new { projectId, patch } : new { projectId, patch, codeSourceId };
+            TryJsonPost("files/patch", out RestResponse result, payload);
             return result;
         }
 
@@ -326,22 +459,20 @@ namespace QuantConnect.Api
         /// <param name="projectId">Id for the project to backtest</param>
         /// <param name="compileId">Compile id for the project</param>
         /// <param name="backtestName">Name for the new backtest</param>
+        /// <param name="parameters">Parameters to use for the backtest, null to use the ones defined in the project</param>
         /// <returns><see cref="Backtest"/>t</returns>
 
-        public Backtest CreateBacktest(int projectId, string compileId, string backtestName)
+        public Backtest CreateBacktest(int projectId, string compileId, string backtestName, Dictionary<string, string> parameters = null)
         {
-            TryJsonPost("backtests/create",
-                out BacktestResponseWrapper result,
-                new
-                {
-                    projectId,
-                    compileId,
-                    backtestName
-                });
+            object payload = parameters == null
+                ? new { projectId, compileId, backtestName }
+                : new { projectId, compileId, backtestName, parameters };
+            TryJsonPost("backtests/create", out BacktestResponseWrapper result, payload);
 
             // Use API Response values for Backtest Values
             result.Backtest.Success = result.Success;
             result.Backtest.Errors = result.Errors;
+            result.Backtest.Debugging = result.Debugging;
 
             // Return only the backtest object
             return result.Backtest;
@@ -407,6 +538,7 @@ namespace QuantConnect.Api
             // Use API Response values for Backtest Values
             result.Backtest.Success = result.Success;
             result.Backtest.Errors = result.Errors;
+            result.Backtest.Debugging = result.Debugging;
 
             // Return only the backtest object
             return result.Backtest;
@@ -547,7 +679,7 @@ namespace QuantConnect.Api
         {
             end = ResolveWindowEnd(start, end, MaxInsightsWindow, "insights");
 
-            TryJsonPost("backtests/insights/read", out InsightResponse result, new { projectId, backtestId, start, end });
+            TryJsonPost("backtests/read/insights", out InsightResponse result, new { projectId, backtestId, start, end });
             return result;
         }
 
@@ -568,6 +700,17 @@ namespace QuantConnect.Api
             end = ResolveWindowEnd(start, end, MaxLogLinesWindow, "log lines");
 
             TryJsonPost("backtests/read/log", out BacktestLog result, new { projectId, backtestId, start, end, query });
+            return result;
+        }
+
+        /// <summary>
+        /// Read the authentication token of an external brokerage or data provider connection
+        /// </summary>
+        /// <param name="brokerage">Brokerage or data provider the connection was authorized with</param>
+        /// <returns><see cref="AuthorizeExternalConnectionResponse"/> with the authorization data of the connection</returns>
+        public AuthorizeExternalConnectionResponse ReadLiveAuth0(string brokerage)
+        {
+            TryJsonPost("live/auth0/read", out AuthorizeExternalConnectionResponse result, new { brokerage });
             return result;
         }
 
@@ -654,8 +797,9 @@ namespace QuantConnect.Api
         /// Get a list of live running algorithms for user
         /// </summary>
         /// <param name="status">Filter the statuses of the algorithms returned from the api</param>
+        /// <param name="projectId">Id of the project to include in the response, null to include every project</param>
         /// <returns><see cref="LiveList"/></returns>
-        public LiveList ListLiveAlgorithms(AlgorithmStatus? status = null)
+        public LiveList ListLiveAlgorithms(AlgorithmStatus? status = null, int? projectId = null)
         {
             // Only the following statuses are supported by the Api
             if (status.HasValue &&
@@ -668,10 +812,17 @@ namespace QuantConnect.Api
                     "The Api only supports Algorithm Statuses of Running, Stopped, RuntimeError and Liquidated");
             }
 
-            var payload = status.HasValue
-                ? new { status = status.ToString() }
-                : null;
-            TryJsonPost("live/list", out LiveList result, payload);
+            var payload = new Dictionary<string, object>();
+            if (status.HasValue)
+            {
+                payload["status"] = status.ToString();
+            }
+            if (projectId.HasValue)
+            {
+                payload["projectId"] = projectId.Value;
+            }
+
+            TryJsonPost("live/list", out LiveList result, payload.Count > 0 ? payload : null);
             return result;
         }
 
@@ -679,12 +830,15 @@ namespace QuantConnect.Api
         /// Read out a live algorithm in the project id specified.
         /// </summary>
         /// <param name="projectId">Project id to read</param>
-        /// <param name="deployId">Specific instance id to read</param>
+        /// <param name="deployId">Specific instance id to read, null to read the latest deployment of the project</param>
         /// <returns><see cref="LiveAlgorithmResults"/></returns>
 
-        public LiveAlgorithmResults ReadLiveAlgorithm(int projectId, string deployId)
+        public LiveAlgorithmResults ReadLiveAlgorithm(int projectId, string deployId = null)
         {
-            TryJsonPost("live/read", out LiveAlgorithmResults result, new { projectId, deployId });
+            object payload = string.IsNullOrEmpty(deployId)
+                ? new { projectId }
+                : new { projectId, deployId };
+            TryJsonPost("live/read", out LiveAlgorithmResults result, payload);
             return result;
         }
 
@@ -842,16 +996,21 @@ namespace QuantConnect.Api
         /// Read out the insights of a live algorithm
         /// </summary>
         /// <param name="projectId">Id of the project from which to read the live algorithm</param>
+        /// <param name="algorithmId">Deploy id (algorithm id) of the live running algorithm. Optional, the API
+        /// defaults to the latest deployment of the project</param>
         /// <param name="start">Starting index of the insights to be fetched</param>
         /// <param name="end">Last index of the insights to be fetched. Note that end - start must not exceed 100.
         /// Defaults to a full window starting at <paramref name="start"/></param>
         /// <returns><see cref="InsightResponse"/></returns>
         /// <exception cref="ArgumentException">The requested window is wider than the documented maximum</exception>
-        public InsightResponse ReadLiveInsights(int projectId, int start = 0, int end = 0)
+        public InsightResponse ReadLiveInsights(int projectId, string algorithmId = null, int start = 0, int end = 0)
         {
             end = ResolveWindowEnd(start, end, MaxInsightsWindow, "insights");
 
-            TryJsonPost("live/insights/read", out InsightResponse result, new { projectId, start, end });
+            object payload = string.IsNullOrEmpty(algorithmId)
+                ? new { projectId, start, end }
+                : new { projectId, start, end, algorithmId };
+            TryJsonPost("live/insights/read", out InsightResponse result, payload);
             return result;
         }
 
@@ -928,7 +1087,8 @@ namespace QuantConnect.Api
             var payloadStr = JsonConvert.SerializeObject(new { backtestId, projectId });
             var report = new BacktestReport();
             var finish = DateTime.UtcNow.AddMinutes(1);
-            while (DateTime.UtcNow < finish && !report.Success)
+            // The endpoint answers with a generating response until the report is ready
+            while (DateTime.UtcNow < finish && (!report.Success || report.Generating))
             {
                 Thread.Sleep(10000);
                 using var request = ApiUtils.CreateJsonPostRequest("backtests/read/report", payloadStr);
@@ -1438,6 +1598,85 @@ namespace QuantConnect.Api
         public ListObjectStoreResponse ListObjectStore(string organizationId, string path)
         {
             TryJsonPost("object/list", out ListObjectStoreResponse result, new { organizationId, path });
+            return result;
+        }
+
+        /// <summary>
+        /// Run a backtest for a few seconds to initialize the algorithm and get the initialization errors, if any
+        /// </summary>
+        /// <param name="language">Programming language of the files</param>
+        /// <param name="files">Files to process</param>
+        /// <returns><see cref="BacktestInitResponse"/></returns>
+        public BacktestInitResponse BacktestInitAITool(Language language, List<AIFile> files)
+        {
+            TryJsonPost("ai/tools/backtest-init", out BacktestInitResponse result, new { language, files },
+                jsonSerializerSettings: AIToolsSerializerSettings);
+            return result;
+        }
+
+        /// <summary>
+        /// Get the code completion suggestions for a specific text input
+        /// </summary>
+        /// <param name="language">Programming language to complete the sentence for</param>
+        /// <param name="sentence">Sentence to complete</param>
+        /// <param name="responseSizeLimit">Maximum number of suggestions to return</param>
+        /// <returns><see cref="CodeCompletionResponse"/></returns>
+        public CodeCompletionResponse CompleteCodeAITool(Language language, string sentence, int? responseSizeLimit = null)
+        {
+            TryJsonPost("ai/tools/complete", out CodeCompletionResponse result, new { language, sentence, responseSizeLimit },
+                jsonSerializerSettings: AIToolsSerializerSettings);
+            return result;
+        }
+
+        /// <summary>
+        /// Get additional context and suggestions for an error message
+        /// </summary>
+        /// <param name="language">Programming language the error comes from</param>
+        /// <param name="message">Error message to enhance</param>
+        /// <param name="stacktrace">Stack trace of the error</param>
+        /// <returns><see cref="ErrorEnhanceResponse"/></returns>
+        public ErrorEnhanceResponse ErrorEnhanceAITool(Language language, string message, string stacktrace = null)
+        {
+            TryJsonPost("ai/tools/error-enhance", out ErrorEnhanceResponse result, new { language, error = new { message, stacktrace } },
+                jsonSerializerSettings: AIToolsSerializerSettings);
+            return result;
+        }
+
+        /// <summary>
+        /// Update Python code to follow the PEP8 style
+        /// </summary>
+        /// <param name="files">Files to convert</param>
+        /// <returns><see cref="PEP8ConvertResponse"/></returns>
+        public PEP8ConvertResponse PEP8ConvertAITool(List<AIFile> files)
+        {
+            TryJsonPost("ai/tools/pep8-convert", out PEP8ConvertResponse result, new { files },
+                jsonSerializerSettings: AIToolsSerializerSettings);
+            return result;
+        }
+
+        /// <summary>
+        /// Check the syntax of the given files
+        /// </summary>
+        /// <param name="language">Programming language of the files</param>
+        /// <param name="files">Files to process</param>
+        /// <returns><see cref="SyntaxCheckResponse"/></returns>
+        public SyntaxCheckResponse SyntaxCheckAITool(Language language, List<AIFile> files)
+        {
+            TryJsonPost("ai/tools/syntax-check", out SyntaxCheckResponse result, new { language, files },
+                jsonSerializerSettings: AIToolsSerializerSettings);
+            return result;
+        }
+
+        /// <summary>
+        /// Search for content in QuantConnect
+        /// </summary>
+        /// <param name="language">Programming language of the content to search</param>
+        /// <param name="criteria">Criteria for the search</param>
+        /// <returns><see cref="SearchResponse"/></returns>
+        public SearchResponse SearchAITool(Language language, List<SearchCriteria> criteria)
+        {
+            TryJsonPost("ai/tools/search", out SearchResponse result, new { language, criteria },
+                jsonSerializerSettings: AIToolsSerializerSettings);
             return result;
         }
 

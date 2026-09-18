@@ -80,6 +80,36 @@ namespace QuantConnect.Api
     }
 
     /// <summary>
+    /// Response received when creating, updating or removing a collaborator of a project
+    /// </summary>
+    public class ProjectCollaboratorsResponse : RestResponse
+    {
+        /// <summary>
+        /// List of collaborators
+        /// </summary>
+        [JsonProperty(PropertyName = "collaborators")]
+        public List<Collaborator> Collaborators { get; set; }
+    }
+
+    /// <summary>
+    /// Response received when reading the collaborators of a project
+    /// </summary>
+    public class ReadProjectCollaboratorsResponse : ProjectCollaboratorsResponse
+    {
+        /// <summary>
+        /// Indicate if the project owner has the right to deploy and stop live algorithms
+        /// </summary>
+        [JsonProperty(PropertyName = "userLiveControl")]
+        public bool UserLiveControl { get; set; }
+
+        /// <summary>
+        /// Permissions of the project owner. Can be "read" or "write"
+        /// </summary>
+        [JsonProperty(PropertyName = "userPermissions")]
+        public string UserPermissions { get; set; }
+    }
+
+    /// <summary>
     /// Library response
     /// </summary>
     public class Library
@@ -378,6 +408,24 @@ namespace QuantConnect.Api
         /// </summary>
         [JsonProperty(PropertyName = "encryptionKey")]
         public EncryptionKey EncryptionKey { get; set; }
+
+        /// <summary>
+        /// Indicates if the project is pinned in the terminal landing page
+        /// </summary>
+        [JsonProperty(PropertyName = "isPinned")]
+        public bool IsPinned { get; set; }
+
+        /// <summary>
+        /// The maximum file length allowed in the project
+        /// </summary>
+        [JsonProperty(PropertyName = "maxFileSize")]
+        public int MaxFileSize { get; set; }
+
+        /// <summary>
+        /// Text file with at least 64 characters to be used to authenticate private backtests requests
+        /// </summary>
+        [JsonProperty(PropertyName = "sharingTokenBacktest")]
+        public string SharingTokenBacktest { get; set; }
     }
 
     /// <summary>

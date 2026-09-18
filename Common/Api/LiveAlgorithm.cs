@@ -53,6 +53,12 @@ namespace QuantConnect.Api
         /// HTTP status response code
         /// </summary>
         public string ResponseCode { get; set; }
+
+        /// <summary>
+        /// Summary of the algorithm created
+        /// </summary>
+        [JsonProperty(PropertyName = "live")]
+        public LiveAlgorithmResults Live { get; set; }
     }
 
     /// <summary>
@@ -89,9 +95,29 @@ namespace QuantConnect.Api
         public string Subscription { get; set; }
 
         /// <summary>
+        /// Equity value of the deployment.
+        /// </summary>
+        public decimal Equity { get; set; }
+
+        /// <summary>
+        /// Environment in which the deployment is running.
+        /// </summary>
+        public string Environment { get; set; }
+
+        /// <summary>
+        /// Description of the project the algorithm is in.
+        /// </summary>
+        public string Description { get; set; }
+
+        /// <summary>
         /// Live algorithm error message from a crash or algorithm runtime error.
         /// </summary>
         public string Error { get; set; }
+
+        /// <summary>
+        /// Quant Leagues the algorithm is enrolled in.
+        /// </summary>
+        public List<string> Leagues { get; set; }
     }
 
     /// <summary>

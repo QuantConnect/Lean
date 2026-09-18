@@ -13,31 +13,20 @@
  * limitations under the License.
 */
 
+using System.Collections.Generic;
 using Newtonsoft.Json;
 
 namespace QuantConnect.Api
 {
     /// <summary>
-    /// Class for wrapping Read Chart response
+    /// Response for authenticating with an external brokerage or data provider for a live algorithm
     /// </summary>
-    public class ReadChartResponse: RestResponse
+    public class AuthorizeExternalConnectionResponse : RestResponse
     {
         /// <summary>
-        /// Chart object from the ReadChart response
+        /// Authentication information from the data provider or brokerage, including the access token or refresh token
         /// </summary>
-        [JsonProperty(PropertyName = "chart")]
-        public Chart Chart { get; set; }
-
-        /// <summary>
-        /// Status of the chart generation process, "loading" while the chart is not ready yet
-        /// </summary>
-        [JsonProperty(PropertyName = "status")]
-        public string Status { get; set; }
-
-        /// <summary>
-        /// Loading percentage of the chart generation process
-        /// </summary>
-        [JsonProperty(PropertyName = "progress")]
-        public decimal Progress { get; set; }
+        [JsonProperty(PropertyName = "authorization")]
+        public Dictionary<string, object> Authorization { get; set; }
     }
 }

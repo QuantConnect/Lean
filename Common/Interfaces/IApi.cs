@@ -54,13 +54,67 @@ namespace QuantConnect.Interfaces
         ProjectResponse ReadProject(int projectId);
 
         /// <summary>
+        /// Update a project's name or description
+        /// </summary>
+        /// <param name="projectId">Project id to update</param>
+        /// <param name="name">The new name for the project</param>
+        /// <param name="description">The new description for the project</param>
+        /// <returns><see cref="RestResponse"/> indicating success</returns>
+        RestResponse UpdateProject(int projectId, string name = null, string description = null);
+
+        /// <summary>
+        /// Add a collaborator to a project
+        /// </summary>
+        /// <param name="projectId">Id of the project to add the collaborator to</param>
+        /// <param name="collaboratorUserId">User id of the collaborator to add</param>
+        /// <param name="collaborationLiveControl">Whether the collaborator can deploy and stop live algorithms</param>
+        /// <param name="collaborationWrite">Whether the collaborator can edit the code</param>
+        /// <returns><see cref="ProjectCollaboratorsResponse"/> with the collaborators of the project</returns>
+        ProjectCollaboratorsResponse CreateProjectCollaborator(int projectId, string collaboratorUserId,
+            bool collaborationLiveControl, bool collaborationWrite);
+
+        /// <summary>
+        /// List all collaborators on a project
+        /// </summary>
+        /// <param name="projectId">Id of the project from which to read the collaborators</param>
+        /// <returns><see cref="ReadProjectCollaboratorsResponse"/> with the collaborators of the project and the owner permissions</returns>
+        ReadProjectCollaboratorsResponse ReadProjectCollaborators(int projectId);
+
+        /// <summary>
+        /// Update the permissions of a collaborator in a project
+        /// </summary>
+        /// <param name="projectId">Id of the project the collaborator is on</param>
+        /// <param name="collaboratorUserId">User id of the collaborator to update</param>
+        /// <param name="liveControl">Whether the collaborator can deploy and stop live algorithms</param>
+        /// <param name="write">Whether the collaborator can edit the code</param>
+        /// <returns><see cref="ProjectCollaboratorsResponse"/> with the collaborators of the project</returns>
+        ProjectCollaboratorsResponse UpdateProjectCollaborator(int projectId, string collaboratorUserId, bool liveControl, bool write);
+
+        /// <summary>
+        /// Remove a collaborator from a project
+        /// </summary>
+        /// <param name="projectId">Id of the project to remove the collaborator from</param>
+        /// <param name="collaboratorId">User id of the collaborator to remove</param>
+        /// <returns><see cref="ProjectCollaboratorsResponse"/> with the remaining collaborators of the project</returns>
+        ProjectCollaboratorsResponse DeleteProjectCollaborator(int projectId, string collaboratorId);
+
+        /// <summary>
+        /// Lock a project so it can be edited
+        /// </summary>
+        /// <param name="projectId">Id of the project to lock</param>
+        /// <param name="codeSourceId">Name of the environment that's creating the request</param>
+        /// <returns><see cref="RestResponse"/> indicating success</returns>
+        RestResponse AcquireProjectCollaborationLock(int projectId, string codeSourceId);
+
+        /// <summary>
         /// Add a file to a project
         /// </summary>
         /// <param name="projectId">The project to which the file should be added</param>
         /// <param name="name">The name of the new file</param>
         /// <param name="content">The content of the new file</param>
+        /// <param name="codeSourceId">Name of the environment that's creating the request</param>
         /// <returns><see cref="ProjectFilesResponse"/> that includes information about the newly created file</returns>
-        RestResponse AddProjectFile(int projectId, string name, string content);
+        RestResponse AddProjectFile(int projectId, string name, string content, string codeSourceId = null);
 
         /// <summary>
         /// Update the name of a file
@@ -68,8 +122,9 @@ namespace QuantConnect.Interfaces
         /// <param name="projectId">Project id to which the file belongs</param>
         /// <param name="oldFileName">The current name of the file</param>
         /// <param name="newFileName">The new name for the file</param>
-        /// <returns><see cref="RestResponse"/> indicating success</returns>
-        RestResponse UpdateProjectFileName(int projectId, string oldFileName, string newFileName);
+        /// <param name="codeSourceId">Name of the environment that's creating the request</param>
+        /// <returns><see cref="ProjectFilesResponse"/> indicating success, which may include the updated project files</returns>
+        ProjectFilesResponse UpdateProjectFileName(int projectId, string oldFileName, string newFileName, string codeSourceId = null);
 
         /// <summary>
         /// Update the contents of a file
@@ -77,23 +132,35 @@ namespace QuantConnect.Interfaces
         /// <param name="projectId">Project id to which the file belongs</param>
         /// <param name="fileName">The name of the file that should be updated</param>
         /// <param name="newFileContents">The new contents of the file</param>
+        /// <param name="codeSourceId">Name of the environment that's creating the request</param>
+        /// <returns><see cref="ProjectFilesResponse"/> indicating success, which may include the updated project files</returns>
+        ProjectFilesResponse UpdateProjectFileContent(int projectId, string fileName, string newFileContents, string codeSourceId = null);
+
+        /// <summary>
+        /// Apply a patch in unified diff format to one or more files in a project
+        /// </summary>
+        /// <param name="projectId">Project id that contains the files to patch</param>
+        /// <param name="patch">The patch to apply, in unified diff format</param>
+        /// <param name="codeSourceId">Name of the environment that's creating the request</param>
         /// <returns><see cref="RestResponse"/> indicating success</returns>
-        RestResponse UpdateProjectFileContent(int projectId, string fileName, string newFileContents);
+        RestResponse PatchProjectFile(int projectId, string patch, string codeSourceId = null);
 
         /// <summary>
         /// Read a file in a project
         /// </summary>
         /// <param name="projectId">Project id to which the file belongs</param>
         /// <param name="fileName">The name of the file</param>
+        /// <param name="codeSourceId">Name of the environment that's creating the request</param>
         /// <returns><see cref="ProjectFilesResponse"/> that includes the file information</returns>
-        ProjectFilesResponse ReadProjectFile(int projectId, string fileName);
+        ProjectFilesResponse ReadProjectFile(int projectId, string fileName, string codeSourceId = null);
 
         /// <summary>
         /// Read all files in a project
         /// </summary>
         /// <param name="projectId">Project id to which the file belongs</param>
+        /// <param name="codeSourceId">Name of the environment that's creating the request</param>
         /// <returns><see cref="ProjectFilesResponse"/> that includes the information about all files in the project</returns>
-        ProjectFilesResponse ReadProjectFiles(int projectId);
+        ProjectFilesResponse ReadProjectFiles(int projectId, string codeSourceId = null);
 
         /// <summary>
         /// Read all nodes in a project.
@@ -116,8 +183,9 @@ namespace QuantConnect.Interfaces
         /// </summary>
         /// <param name="projectId">Project id to which the file belongs</param>
         /// <param name="name">The name of the file that should be deleted</param>
+        /// <param name="codeSourceId">Name of the environment that's creating the request</param>
         /// <returns><see cref="ProjectFilesResponse"/> that includes the information about all files in the project</returns>
-        RestResponse DeleteProjectFile(int projectId, string name);
+        RestResponse DeleteProjectFile(int projectId, string name, string codeSourceId = null);
 
         /// <summary>
         /// Delete a specific project owned by the user from QuantConnect.com
@@ -129,8 +197,10 @@ namespace QuantConnect.Interfaces
         /// <summary>
         /// Read back a list of all projects on the account for a user.
         /// </summary>
+        /// <param name="start">Starting (inclusive, zero-based) index of the projects to be fetched</param>
+        /// <param name="end">Last (exclusive) index of the projects to be fetched</param>
         /// <returns>Container for list of projects</returns>
-        ProjectResponse ListProjects();
+        ProjectResponse ListProjects(int start = 0, int end = 0);
 
         /// <summary>
         /// Create a new compile job request for this project id.
@@ -150,11 +220,12 @@ namespace QuantConnect.Interfaces
         /// <summary>
         /// Create a new backtest from a specified projectId and compileId
         /// </summary>
-        /// <param name="projectId"></param>
-        /// <param name="compileId"></param>
-        /// <param name="backtestName"></param>
-        /// <returns></returns>
-        Backtest CreateBacktest(int projectId, string compileId, string backtestName);
+        /// <param name="projectId">Id for the project to backtest</param>
+        /// <param name="compileId">Compile id for the project</param>
+        /// <param name="backtestName">Name for the new backtest</param>
+        /// <param name="parameters">Parameters to use for the backtest</param>
+        /// <returns>Backtest result object</returns>
+        Backtest CreateBacktest(int projectId, string compileId, string backtestName, Dictionary<string, string> parameters = null);
 
         /// <summary>
         /// Read out the full result of a specific backtest
@@ -173,7 +244,7 @@ namespace QuantConnect.Interfaces
         /// <param name="name">New backtest name to set</param>
         /// <param name="note">Note attached to the backtest</param>
         /// <returns>Rest response on success</returns>
-        RestResponse UpdateBacktest(int projectId, string backtestId, string name = "", string note = "");
+        RestResponse UpdateBacktest(int projectId, string backtestId, string name = null, string note = "");
 
         /// <summary>
         /// Updates the tags collection for a backtest
@@ -198,7 +269,7 @@ namespace QuantConnect.Interfaces
         /// <param name="projectId">Project id to search</param>
         /// <param name="includeStatistics">True for include statistics in the response, false otherwise</param>
         /// <returns>BacktestList container for list of backtests</returns>
-        BacktestSummaryList ListBacktests(int projectId, bool includeStatistics = false);
+        BacktestSummaryList ListBacktests(int projectId, bool includeStatistics = true);
 
         /// <summary>
         /// Read out the insights of a backtest
@@ -360,11 +431,11 @@ namespace QuantConnect.Interfaces
         /// Read out the insights of a live algorithm
         /// </summary>
         /// <param name="projectId">Id of the project from which to read the live algorithm</param>
+        /// <param name="algorithmId">Deploy id (algorithm id) of the live running algorithm</param>
         /// <param name="start">Starting index of the insights to be fetched</param>
-        /// <param name="end">Last index of the insights to be fetched. Note that end - start must be less than 100</param>
+        /// <param name="end">Last index of the insights to be fetched</param>
         /// <returns><see cref="InsightResponse"/></returns>
-        /// <exception cref="ArgumentException"></exception>
-        public InsightResponse ReadLiveInsights(int projectId, int start = 0, int end = 0);
+        public InsightResponse ReadLiveInsights(int projectId, string algorithmId = null, int start = 0, int end = 0);
 
         /// <summary>
         /// Returns the orders of the specified project id live algorithm.
@@ -436,6 +507,13 @@ namespace QuantConnect.Interfaces
         public Organization ReadOrganization(string organizationId = null);
 
         /// <summary>
+        /// Read the authentication token of an external brokerage or data provider connection
+        /// </summary>
+        /// <param name="brokerage">Brokerage or data provider the connection was authorized with</param>
+        /// <returns><see cref="AuthorizeExternalConnectionResponse"/> with the authorization data of the connection</returns>
+        AuthorizeExternalConnectionResponse ReadLiveAuth0(string brokerage);
+
+        /// <summary>
         /// Create a new live algorithm for a logged in user.
         /// </summary>
         /// <param name="projectId">Id of the project on QuantConnect</param>
@@ -451,8 +529,9 @@ namespace QuantConnect.Interfaces
         /// Get a list of live running algorithms for a logged in user.
         /// </summary>
         /// <param name="status">Filter the statuses of the algorithms returned from the api</param>
+        /// <param name="projectId">Id of the project to include in the response</param>
         /// <returns>List of live algorithm instances</returns>
-        LiveList ListLiveAlgorithms(AlgorithmStatus? status = null);
+        LiveList ListLiveAlgorithms(AlgorithmStatus? status = null, int? projectId = null);
 
         /// <summary>
         /// Read out a live algorithm in the project id specified.
@@ -460,7 +539,7 @@ namespace QuantConnect.Interfaces
         /// <param name="projectId">Project id to read</param>
         /// <param name="deployId">Specific instance id to read</param>
         /// <returns>Live object with the results</returns>
-        LiveAlgorithmResults ReadLiveAlgorithm(int projectId, string deployId);
+        LiveAlgorithmResults ReadLiveAlgorithm(int projectId, string deployId = null);
 
         /// <summary>
         /// Liquidate a live algorithm from the specified project.
@@ -576,6 +655,55 @@ namespace QuantConnect.Interfaces
         /// <param name="path">Path to the Object Store files</param>
         /// <returns><see cref="ListObjectStoreResponse"/></returns>
         ListObjectStoreResponse ListObjectStore(string organizationId, string path);
+
+        /// <summary>
+        /// Run a backtest for a few seconds to initialize the algorithm and get the initialization errors, if any
+        /// </summary>
+        /// <param name="language">Programming language of the files</param>
+        /// <param name="files">Files to process</param>
+        /// <returns><see cref="BacktestInitResponse"/></returns>
+        BacktestInitResponse BacktestInitAITool(Language language, List<AIFile> files);
+
+        /// <summary>
+        /// Get the code completion suggestions for a specific text input
+        /// </summary>
+        /// <param name="language">Programming language to complete the sentence for</param>
+        /// <param name="sentence">Sentence to complete</param>
+        /// <param name="responseSizeLimit">Maximum number of suggestions to return</param>
+        /// <returns><see cref="CodeCompletionResponse"/></returns>
+        CodeCompletionResponse CompleteCodeAITool(Language language, string sentence, int? responseSizeLimit = null);
+
+        /// <summary>
+        /// Get additional context and suggestions for an error message
+        /// </summary>
+        /// <param name="language">Programming language the error comes from</param>
+        /// <param name="message">Error message to enhance</param>
+        /// <param name="stacktrace">Stack trace of the error</param>
+        /// <returns><see cref="ErrorEnhanceResponse"/></returns>
+        ErrorEnhanceResponse ErrorEnhanceAITool(Language language, string message, string stacktrace = null);
+
+        /// <summary>
+        /// Update Python code to follow the PEP8 style
+        /// </summary>
+        /// <param name="files">Files to convert</param>
+        /// <returns><see cref="PEP8ConvertResponse"/></returns>
+        PEP8ConvertResponse PEP8ConvertAITool(List<AIFile> files);
+
+        /// <summary>
+        /// Check the syntax of the given files
+        /// </summary>
+        /// <param name="language">Programming language of the files</param>
+        /// <param name="files">Files to process</param>
+        /// <returns><see cref="SyntaxCheckResponse"/></returns>
+        SyntaxCheckResponse SyntaxCheckAITool(Language language, List<AIFile> files);
+
+        /// <summary>
+        /// Search for content in QuantConnect
+        /// </summary>
+        /// <param name="language">Programming language of the content to search</param>
+        /// <param name="criteria">Criteria for the search</param>
+        /// <returns><see cref="SearchResponse"/></returns>
+        SearchResponse SearchAITool(Language language, List<SearchCriteria> criteria);
 
         /// <summary>
         /// Gets a list of LEAN versions with their corresponding basic descriptions
