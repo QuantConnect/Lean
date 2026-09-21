@@ -374,17 +374,7 @@ namespace QuantConnect.Interfaces
         /// <param name="start">Starting index of the orders to be fetched</param>
         /// <param name="end">Last index of the orders to be fetched</param>
         /// <returns>The <see cref="OrdersResponseWrapper"/> with the requested orders and the total order count</returns>
-        OrdersResponseWrapper ReadLiveOrders(int projectId, string algorithmId, int start = 0, int end = 0);
-
-        /// <summary>
-        /// Returns the orders of the latest deployment of the specified project id live algorithm.
-        /// </summary>
-        /// <param name="projectId">Id of the project from which to read the live orders</param>
-        /// <param name="start">Starting index of the orders to be fetched</param>
-        /// <param name="end">Last index of the orders to be fetched</param>
-        /// <returns>The <see cref="OrdersResponseWrapper"/> with the requested orders and the total order count</returns>
-        [Obsolete("Use the overload taking the algorithm id: ReadLiveOrders(projectId, algorithmId, start, end)")]
-        OrdersResponseWrapper ReadLiveOrders(int projectId, int start = 0, int end = 0);
+        OrdersResponseWrapper ReadLiveOrders(int projectId, string algorithmId = null, int start = 0, int end = 0);
 
         /// <summary>
         /// Gets the link to the downloadable data.

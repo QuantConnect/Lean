@@ -894,7 +894,7 @@ def CreateLiveAlgorithmFromPython(apiClient, projectId, compileId, nodeId):
             while (DateTime.UtcNow < finish && !readLiveOrders.Orders.Any())
             {
                 Thread.Sleep(10000);
-                readLiveOrders = ApiClient.ReadLiveOrders(projectId, null);
+                readLiveOrders = ApiClient.ReadLiveOrders(projectId);
             }
             return readLiveOrders;
         }
