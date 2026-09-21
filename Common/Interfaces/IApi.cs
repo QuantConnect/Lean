@@ -387,11 +387,21 @@ namespace QuantConnect.Interfaces
         /// Read out the insights of a live algorithm
         /// </summary>
         /// <param name="projectId">Id of the project from which to read the live algorithm</param>
+        /// <param name="algorithmId">Deploy id (algorithm id) of the live running algorithm, null for the latest deployment</param>
         /// <param name="start">Starting index of the insights to be fetched</param>
         /// <param name="end">Last index of the insights to be fetched</param>
-        /// <param name="algorithmId">Deploy id (algorithm id) of the live running algorithm</param>
         /// <returns><see cref="InsightResponse"/></returns>
-        public InsightResponse ReadLiveInsights(int projectId, int start = 0, int end = 0, string algorithmId = null);
+        public InsightResponse ReadLiveInsights(int projectId, string algorithmId, int start = 0, int end = 0);
+
+        /// <summary>
+        /// Read out the insights of the latest deployment of a live algorithm
+        /// </summary>
+        /// <param name="projectId">Id of the project from which to read the live algorithm</param>
+        /// <param name="start">Starting index of the insights to be fetched</param>
+        /// <param name="end">Last index of the insights to be fetched</param>
+        /// <returns><see cref="InsightResponse"/></returns>
+        [Obsolete("Use the overload taking the algorithm id: ReadLiveInsights(projectId, algorithmId, start, end)")]
+        public InsightResponse ReadLiveInsights(int projectId, int start = 0, int end = 0);
 
         /// <summary>
         /// Returns the orders of the specified project id live algorithm.

@@ -905,14 +905,14 @@ namespace QuantConnect.Api
         /// Read out the insights of a live algorithm
         /// </summary>
         /// <param name="projectId">Id of the project from which to read the live algorithm</param>
+        /// <param name="algorithmId">Deploy id (algorithm id) of the live running algorithm, for example
+        /// "L-6e9d8a78f5af89d401f630585be90e43", null for the latest deployment of the project</param>
         /// <param name="start">Starting index of the insights to be fetched</param>
         /// <param name="end">Last index of the insights to be fetched. Note that end - start must not exceed 100.
         /// Defaults to a full window starting at <paramref name="start"/></param>
-        /// <param name="algorithmId">Deploy id (algorithm id) of the live running algorithm, for example
-        /// "L-6e9d8a78f5af89d401f630585be90e43". Optional, the API defaults to the latest deployment of the project</param>
         /// <returns><see cref="InsightResponse"/></returns>
         /// <exception cref="ArgumentException">The requested window is wider than the documented maximum</exception>
-        public InsightResponse ReadLiveInsights(int projectId, int start = 0, int end = 0, string algorithmId = null)
+        public InsightResponse ReadLiveInsights(int projectId, string algorithmId, int start = 0, int end = 0)
         {
             end = ResolveWindowEnd(start, end, MaxInsightsWindow, "insights");
 
@@ -921,6 +921,20 @@ namespace QuantConnect.Api
                 : new { projectId, start, end, algorithmId };
             TryJsonPost("live/insights/read", out InsightResponse result, payload);
             return result;
+        }
+
+        /// <summary>
+        /// Read out the insights of the latest deployment of a live algorithm
+        /// </summary>
+        /// <param name="projectId">Id of the project from which to read the live algorithm</param>
+        /// <param name="start">Starting index of the insights to be fetched</param>
+        /// <param name="end">Last index of the insights to be fetched. Note that end - start must not exceed 100.
+        /// Defaults to a full window starting at <paramref name="start"/></param>
+        /// <returns><see cref="InsightResponse"/></returns>
+        [Obsolete("Use the overload taking the algorithm id: ReadLiveInsights(projectId, algorithmId, start, end)")]
+        public InsightResponse ReadLiveInsights(int projectId, int start = 0, int end = 0)
+        {
+            return ReadLiveInsights(projectId, null, start, end);
         }
 
         /// <summary>

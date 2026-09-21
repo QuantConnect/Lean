@@ -530,7 +530,7 @@ namespace QuantConnect.Algorithm.CSharp
             Assert.Throws<ArgumentException>(() => ApiClient.ReadBacktestOrders(projectId, backtestId, 0, 101));
             Assert.Throws<ArgumentException>(() => ApiClient.ReadLiveOrders(projectId, null, 0, 101));
             Assert.Throws<ArgumentException>(() => ApiClient.ReadBacktestInsights(projectId, backtestId, 0, 101));
-            Assert.Throws<ArgumentException>(() => ApiClient.ReadLiveInsights(projectId, start: 0, end: 101));
+            Assert.Throws<ArgumentException>(() => ApiClient.ReadLiveInsights(projectId, null, 0, 101));
             Assert.Throws<ArgumentException>(() => ApiClient.ReadBacktestLog(projectId, backtestId, 0, 201));
             Assert.Throws<ArgumentException>(() => ApiClient.ReadLiveLogs(projectId, "L-deploy-id", 0, 201));
         }
@@ -736,23 +736,23 @@ namespace QuantConnect.Algorithm.CSharp
                 Assert.IsTrue(stopLive.Success, $"ApiClient.StopLiveAlgorithm(): Error: {string.Join(",", stopLive.Errors)}");
 
                 // Try to read the insights from the algorithm
-                var readInsights = ApiClient.ReadLiveInsights(projectId, start: 0, end: 5);
+                var readInsights = ApiClient.ReadLiveInsights(projectId, null, 0, 5);
                 var finish = DateTime.UtcNow.AddMinutes(2);
                 do
                 {
                     Thread.Sleep(5000);
-                    readInsights = ApiClient.ReadLiveInsights(projectId, start: 0, end: 5);
+                    readInsights = ApiClient.ReadLiveInsights(projectId, null, 0, 5);
                 }
                 while (finish > DateTime.UtcNow && !readInsights.Insights.Any());
 
                 Assert.IsTrue(readInsights.Success, $"ApiClient.ReadLiveInsights(): Error: {string.Join(",", readInsights.Errors)}");
                 Assert.IsNotEmpty(readInsights.Insights);
                 Assert.IsTrue(readInsights.Length >= 0);
-                Assert.Throws<ArgumentException>(() => ApiClient.ReadLiveInsights(projectId, start: 0, end: 101));
-                Assert.DoesNotThrow(() => ApiClient.ReadLiveInsights(projectId));
+                Assert.Throws<ArgumentException>(() => ApiClient.ReadLiveInsights(projectId, null, 0, 101));
+                Assert.DoesNotThrow(() => ApiClient.ReadLiveInsights(projectId, null));
 
                 // the documented algorithmId narrows the read to a single deployment of the project
-                var byAlgorithmId = ApiClient.ReadLiveInsights(projectId, 0, 5, createLiveAlgorithm.DeployId);
+                var byAlgorithmId = ApiClient.ReadLiveInsights(projectId, createLiveAlgorithm.DeployId, 0, 5);
                 Assert.IsTrue(byAlgorithmId.Success, $"ApiClient.ReadLiveInsights(): Error: {string.Join(",", byAlgorithmId.Errors)}");
                 CollectionAssert.AreEqual(readInsights.Insights.Select(x => x.Id).ToList(),
                     byAlgorithmId.Insights.Select(x => x.Id).ToList());
