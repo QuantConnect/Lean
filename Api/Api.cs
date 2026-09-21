@@ -136,8 +136,8 @@ namespace QuantConnect.Api
         /// <summary>
         /// List details of all projects
         /// </summary>
-        /// <param name="start">Starting (inclusive, zero-based) index of the projects to be fetched</param>
-        /// <param name="end">Last (exclusive) index of the projects to be fetched. Zero to let the API apply its own limit</param>
+        /// <param name="start">Starting (inclusive, zero-based) index of the projects to be fetched, for example 0</param>
+        /// <param name="end">Last (exclusive) index of the projects to be fetched, for example 100. Zero to let the API apply its own limit</param>
         /// <returns><see cref="ProjectResponse"/> that contains information regarding the project</returns>
 
         public ProjectResponse ListProjects(int start = 0, int end = 0)
@@ -151,8 +151,8 @@ namespace QuantConnect.Api
         /// Update a project's name or description
         /// </summary>
         /// <param name="projectId">Project id to update</param>
-        /// <param name="name">The new name for the project, null to leave it unchanged</param>
-        /// <param name="description">The new description for the project, null to leave it unchanged</param>
+        /// <param name="name">The new name for the project, for example "New Project Name", null to leave it unchanged</param>
+        /// <param name="description">The new description for the project, for example "New Project Description", null to leave it unchanged</param>
         /// <returns><see cref="RestResponse"/> indicating success</returns>
 
         public RestResponse UpdateProject(int projectId, string name = null, string description = null)
@@ -177,7 +177,7 @@ namespace QuantConnect.Api
         /// <param name="projectId">The project to which the file should be added</param>
         /// <param name="name">The name of the new file</param>
         /// <param name="content">The content of the new file</param>
-        /// <param name="codeSourceId">Name of the environment that's creating the request</param>
+        /// <param name="codeSourceId">Name of the environment that's creating the request, for example "Lean" or "Research"</param>
         /// <returns><see cref="ProjectFilesResponse"/> that includes information about the newly created file</returns>
 
         public RestResponse AddProjectFile(int projectId, string name, string content, string codeSourceId = null)
@@ -195,7 +195,7 @@ namespace QuantConnect.Api
         /// <param name="projectId">Project id to which the file belongs</param>
         /// <param name="oldFileName">The current name of the file</param>
         /// <param name="newFileName">The new name for the file</param>
-        /// <param name="codeSourceId">Name of the environment that's creating the request</param>
+        /// <param name="codeSourceId">Name of the environment that's creating the request, for example "Lean" or "Research"</param>
         /// <returns><see cref="ProjectFilesResponse"/> indicating success, which may include the updated project files</returns>
 
         public ProjectFilesResponse UpdateProjectFileName(int projectId, string oldFileName, string newFileName,
@@ -215,7 +215,7 @@ namespace QuantConnect.Api
         /// <param name="projectId">Project id to which the file belongs</param>
         /// <param name="fileName">The name of the file that should be updated</param>
         /// <param name="newFileContents">The new contents of the file</param>
-        /// <param name="codeSourceId">Name of the environment that's creating the request</param>
+        /// <param name="codeSourceId">Name of the environment that's creating the request, for example "Lean" or "Research"</param>
         /// <returns><see cref="ProjectFilesResponse"/> indicating success, which may include the updated project files</returns>
 
         public ProjectFilesResponse UpdateProjectFileContent(int projectId, string fileName, string newFileContents,
@@ -233,7 +233,7 @@ namespace QuantConnect.Api
         /// Read all files in a project
         /// </summary>
         /// <param name="projectId">Project id to which the file belongs</param>
-        /// <param name="codeSourceId">Name of the environment that's creating the request</param>
+        /// <param name="codeSourceId">Name of the environment that's creating the request, for example "Lean" or "Research"</param>
         /// <returns><see cref="ProjectFilesResponse"/> that includes the information about all files in the project</returns>
 
         public ProjectFilesResponse ReadProjectFiles(int projectId, string codeSourceId = null)
@@ -272,7 +272,7 @@ namespace QuantConnect.Api
         /// </summary>
         /// <param name="projectId">Project id to which the file belongs</param>
         /// <param name="fileName">The name of the file</param>
-        /// <param name="codeSourceId">Name of the environment that's creating the request</param>
+        /// <param name="codeSourceId">Name of the environment that's creating the request, for example "Lean" or "Research"</param>
         /// <returns><see cref="ProjectFilesResponse"/> that includes the file information</returns>
 
         public ProjectFilesResponse ReadProjectFile(int projectId, string fileName, string codeSourceId = null)
@@ -298,7 +298,7 @@ namespace QuantConnect.Api
         /// </summary>
         /// <param name="projectId">Project id to which the file belongs</param>
         /// <param name="name">The name of the file that should be deleted</param>
-        /// <param name="codeSourceId">Name of the environment that's creating the request</param>
+        /// <param name="codeSourceId">Name of the environment that's creating the request, for example "Lean" or "Research"</param>
         /// <returns><see cref="RestResponse"/> that includes the information about all files in the project</returns>
 
         public RestResponse DeleteProjectFile(int projectId, string name, string codeSourceId = null)
@@ -312,8 +312,9 @@ namespace QuantConnect.Api
         /// Apply a patch in unified diff format to one or more files in a project
         /// </summary>
         /// <param name="projectId">Project id that contains the files to patch</param>
-        /// <param name="patch">The patch to apply, in unified diff format as produced by git diff</param>
-        /// <param name="codeSourceId">Name of the environment that's creating the request</param>
+        /// <param name="patch">The patch to apply, in unified diff format as produced by git diff, for example one that
+        /// starts with "diff --git a/main.py b/main.py" and carries the changed hunks of that file</param>
+        /// <param name="codeSourceId">Name of the environment that's creating the request, for example "Lean" or "Research"</param>
         /// <returns><see cref="RestResponse"/> indicating success</returns>
 
         public RestResponse PatchProjectFile(int projectId, string patch, string codeSourceId = null)
@@ -715,7 +716,7 @@ namespace QuantConnect.Api
         /// Get a list of live running algorithms for user
         /// </summary>
         /// <param name="status">Filter the statuses of the algorithms returned from the api</param>
-        /// <param name="projectId">Id of the project to include in the response, null to include every project</param>
+        /// <param name="projectId">Id of the project to include in the response, for example 23456789, null to include every project</param>
         /// <returns><see cref="LiveList"/></returns>
         public LiveList ListLiveAlgorithms(AlgorithmStatus? status = null, int? projectId = null)
         {
@@ -775,7 +776,8 @@ namespace QuantConnect.Api
         /// Returns the orders of the specified project id live algorithm.
         /// </summary>
         /// <param name="projectId">Id of the project from which to read the live orders</param>
-        /// <param name="algorithmId">Deploy id (algorithm id) of the live running algorithm, null for the latest deployment of the project</param>
+        /// <param name="algorithmId">Deploy id (algorithm id) of the live running algorithm, for example
+        /// "L-6e9d8a78f5af89d401f630585be90e43", null for the latest deployment of the project</param>
         /// <param name="start">Starting index of the orders to be fetched</param>
         /// <param name="end">Last index of the orders to be fetched. Note that end - start must not exceed 100.
         /// Defaults to a full window starting at <paramref name="start"/></param>
@@ -914,8 +916,8 @@ namespace QuantConnect.Api
         /// Read out the insights of a live algorithm
         /// </summary>
         /// <param name="projectId">Id of the project from which to read the live algorithm</param>
-        /// <param name="algorithmId">Deploy id (algorithm id) of the live running algorithm. Optional, the API
-        /// defaults to the latest deployment of the project</param>
+        /// <param name="algorithmId">Deploy id (algorithm id) of the live running algorithm, for example
+        /// "L-6e9d8a78f5af89d401f630585be90e43". Optional, the API defaults to the latest deployment of the project</param>
         /// <param name="start">Starting index of the insights to be fetched</param>
         /// <param name="end">Last index of the insights to be fetched. Note that end - start must not exceed 100.
         /// Defaults to a full window starting at <paramref name="start"/></param>
