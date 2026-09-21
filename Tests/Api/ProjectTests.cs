@@ -26,6 +26,7 @@ using QuantConnect.Optimizer.Parameters;
 using QuantConnect.Util;
 using QuantConnect.Optimizer;
 using QuantConnect.Optimizer.Objectives;
+using QuantConnect.Interfaces;
 using System.Threading;
 
 namespace QuantConnect.Tests.API
@@ -93,6 +94,8 @@ namespace QuantConnect.Algorithm.CSharp
         }
     }
 }";
+        private const string CodeSourceId = "Lean API Tests";
+
         private readonly Dictionary<string, object> _defaultSettings = new Dictionary<string, object>()
             {
                 { "id", "QuantConnectBrokerage" },
@@ -747,6 +750,12 @@ namespace QuantConnect.Algorithm.CSharp
                 Assert.IsTrue(readInsights.Length >= 0);
                 Assert.Throws<ArgumentException>(() => ApiClient.ReadLiveInsights(projectId, start: 0, end: 101));
                 Assert.DoesNotThrow(() => ApiClient.ReadLiveInsights(projectId));
+
+                // the documented algorithmId narrows the read to a single deployment of the project
+                var byAlgorithmId = ApiClient.ReadLiveInsights(projectId, createLiveAlgorithm.DeployId, 0, 5);
+                Assert.IsTrue(byAlgorithmId.Success, $"ApiClient.ReadLiveInsights(): Error: {string.Join(",", byAlgorithmId.Errors)}");
+                CollectionAssert.AreEqual(readInsights.Insights.Select(x => x.Id).ToList(),
+                    byAlgorithmId.Insights.Select(x => x.Id).ToList());
             }
             catch (Exception ex)
             {
@@ -1015,6 +1024,328 @@ namespace QuantConnect.Algorithm.CSharp
             // Delete the project
             var deleteProject = ApiClient.DeleteProject(projectId);
             Assert.IsTrue(deleteProject.Success);
+        }
+
+        /// <summary>
+        /// The documented start and end paging of projects/read is sent and narrows the response
+        /// </summary>
+        [Test]
+        public void ListProjectsPagesTheAccountProjects()
+        {
+            var firstPage = ApiClient.ListProjects(0, 1);
+            Assert.IsTrue(firstPage.Success, $"Error listing projects: {string.Join(", ", firstPage.Errors)}");
+            Assert.AreEqual(1, firstPage.Projects.Count, "A one project window should come back with a single project");
+
+            var everyProject = ApiClient.ListProjects();
+            Assert.IsTrue(everyProject.Success, $"Error listing projects: {string.Join(", ", everyProject.Errors)}");
+            Assert.GreaterOrEqual(everyProject.Projects.Count, firstPage.Projects.Count);
+            CollectionAssert.Contains(everyProject.Projects.Select(x => x.ProjectId).ToList(), firstPage.Projects[0].ProjectId);
+        }
+
+        /// <summary>
+        /// The project response carries the documented pinning, file size and backtest sharing members
+        /// </summary>
+        [Test]
+        public void ReadProjectReturnsTheDocumentedMembers()
+        {
+            var result = ApiClient.ReadProject(TestProject.ProjectId);
+            Assert.IsTrue(result.Success, $"Error reading the project: {string.Join(", ", result.Errors)}");
+
+            var project = result.Projects.Single();
+            Assert.Greater(project.MaxFileSize, 0, "Every project documents the maximum length of its files");
+            Assert.IsFalse(project.IsPinned, "A project the tests just created is not pinned");
+            // documented as nullable: only a project with backtest sharing enabled carries a token
+            Assert.IsTrue(project.SharingTokenBacktest == null || project.SharingTokenBacktest.Length >= 64,
+                $"Unexpected backtest sharing token: {project.SharingTokenBacktest}");
+        }
+
+        /// <summary>
+        /// projects/update posts only the properties it was given, so a rename leaves the description alone
+        /// </summary>
+        [Test]
+        public void UpdateProjectNameAndDescription()
+        {
+            var originalName = TestProject.Name;
+            var newName = $"{originalName}-Renamed";
+            var description = $"Updated at {GetTimestamp()}";
+
+            try
+            {
+                var update = ApiClient.UpdateProject(TestProject.ProjectId, newName, description);
+                Assert.IsTrue(update.Success, $"Error updating the project: {string.Join(", ", update.Errors)}");
+
+                var project = ApiClient.ReadProject(TestProject.ProjectId).Projects.Single();
+                Assert.AreEqual(newName, project.Name);
+                Assert.AreEqual(description, project.Description);
+
+                var rename = ApiClient.UpdateProject(TestProject.ProjectId, name: originalName);
+                Assert.IsTrue(rename.Success, $"Error updating the project: {string.Join(", ", rename.Errors)}");
+
+                project = ApiClient.ReadProject(TestProject.ProjectId).Projects.Single();
+                Assert.AreEqual(originalName, project.Name);
+                Assert.AreEqual(description, project.Description, "A name only update must not clear the description");
+            }
+            finally
+            {
+                ApiClient.UpdateProject(TestProject.ProjectId, originalName, string.Empty);
+            }
+        }
+
+        /// <summary>
+        /// Every file method takes the documented codeSourceId and the api accepts it
+        /// </summary>
+        [Test]
+        public void FileMethodsSendTheDocumentedCodeSourceId()
+        {
+            var fileName = $"CodeSource{GetTimestamp()}.cs";
+            var renamedFileName = $"Renamed{fileName}";
+
+            try
+            {
+                var added = ApiClient.AddProjectFile(TestProject.ProjectId, fileName, "// created", CodeSourceId);
+                Assert.IsTrue(added.Success, $"Error adding the file: {string.Join(", ", added.Errors)}");
+
+                var read = ApiClient.ReadProjectFile(TestProject.ProjectId, fileName, CodeSourceId);
+                Assert.IsTrue(read.Success, $"Error reading the file: {string.Join(", ", read.Errors)}");
+                Assert.AreEqual("// created", read.Files.Single().Code);
+
+                var readAll = ApiClient.ReadProjectFiles(TestProject.ProjectId, CodeSourceId);
+                Assert.IsTrue(readAll.Success, $"Error reading the project files: {string.Join(", ", readAll.Errors)}");
+                Assert.IsTrue(readAll.Files.Any(x => x.Name == fileName));
+
+                var updatedContent = ApiClient.UpdateProjectFileContent(TestProject.ProjectId, fileName, "// updated", CodeSourceId);
+                Assert.IsTrue(updatedContent.Success, $"Error updating the file content: {string.Join(", ", updatedContent.Errors)}");
+
+                var updatedName = ApiClient.UpdateProjectFileName(TestProject.ProjectId, fileName, renamedFileName, CodeSourceId);
+                Assert.IsTrue(updatedName.Success, $"Error updating the file name: {string.Join(", ", updatedName.Errors)}");
+
+                var deleted = ApiClient.DeleteProjectFile(TestProject.ProjectId, renamedFileName, CodeSourceId);
+                Assert.IsTrue(deleted.Success, $"Error deleting the file: {string.Join(", ", deleted.Errors)}");
+            }
+            finally
+            {
+                ApiClient.DeleteProjectFile(TestProject.ProjectId, fileName);
+                ApiClient.DeleteProjectFile(TestProject.ProjectId, renamedFileName);
+            }
+        }
+
+        /// <summary>
+        /// files/update answers with the updated project files instead of a plain rest response
+        /// </summary>
+        [Test]
+        public void UpdateProjectFileReturnsTheUpdatedFiles()
+        {
+            var fileName = $"Updated{GetTimestamp()}.cs";
+            var renamedFileName = $"Renamed{fileName}";
+
+            try
+            {
+                var added = ApiClient.AddProjectFile(TestProject.ProjectId, fileName, "// original");
+                Assert.IsTrue(added.Success, $"Error adding the file: {string.Join(", ", added.Errors)}");
+
+                var updatedContent = ApiClient.UpdateProjectFileContent(TestProject.ProjectId, fileName, "// replaced");
+                Assert.IsTrue(updatedContent.Success, $"Error updating the file content: {string.Join(", ", updatedContent.Errors)}");
+                Assert.IsNotNull(updatedContent.Files, "files/update is documented to answer with the updated files");
+                Assert.AreEqual("// replaced", updatedContent.Files.Single(x => x.Name == fileName).Code);
+
+                var updatedName = ApiClient.UpdateProjectFileName(TestProject.ProjectId, fileName, renamedFileName);
+                Assert.IsTrue(updatedName.Success, $"Error updating the file name: {string.Join(", ", updatedName.Errors)}");
+                Assert.IsNotNull(updatedName.Files, "files/update is documented to answer with the updated files");
+                Assert.IsTrue(updatedName.Files.Any(x => x.Name == renamedFileName));
+            }
+            finally
+            {
+                ApiClient.DeleteProjectFile(TestProject.ProjectId, fileName);
+                ApiClient.DeleteProjectFile(TestProject.ProjectId, renamedFileName);
+            }
+        }
+
+        /// <summary>
+        /// files/patch applies a unified diff to a file of the project
+        /// </summary>
+        [Test]
+        public void PatchProjectFileAppliesAUnifiedDiff()
+        {
+            var fileName = $"Patched{GetTimestamp()}.cs";
+            var patch = $"diff --git a/{fileName} b/{fileName}\nindex 1234567..abcdefg 100644\n--- a/{fileName}\n+++ b/{fileName}\n" +
+                "@@ -1,3 +1,3 @@\n // line one\n-// line two\n+// patched line\n // line three\n";
+
+            try
+            {
+                var added = ApiClient.AddProjectFile(TestProject.ProjectId, fileName, "// line one\n// line two\n// line three\n");
+                Assert.IsTrue(added.Success, $"Error adding the file: {string.Join(", ", added.Errors)}");
+
+                var patched = ApiClient.PatchProjectFile(TestProject.ProjectId, patch);
+                Assert.IsTrue(patched.Success, $"Error patching the file: {string.Join(", ", patched.Errors)}");
+
+                var read = ApiClient.ReadProjectFile(TestProject.ProjectId, fileName);
+                Assert.IsTrue(read.Success, $"Error reading the file: {string.Join(", ", read.Errors)}");
+                var code = read.Files.Single().Code;
+                StringAssert.Contains("// patched line", code);
+                StringAssert.DoesNotContain("// line two", code);
+            }
+            finally
+            {
+                ApiClient.DeleteProjectFile(TestProject.ProjectId, fileName);
+            }
+        }
+
+        /// <summary>
+        /// compile/create reports the parameters it detected in the files of the project
+        /// </summary>
+        [Test]
+        public void CreateCompileReportsTheDetectedFileParameters()
+        {
+            var compile = ApiClient.CreateCompile(TestProject.ProjectId);
+            Assert.IsTrue(compile.Success, $"Error creating the compile: {string.Join(", ", compile.Errors)}");
+            Assert.IsNotNull(compile.Parameters, "compile/create is documented to report the parameters detected in each file");
+            Assert.IsTrue(compile.Parameters.All(x => !string.IsNullOrEmpty(x.File)));
+
+            var detected = compile.Parameters.Where(x => x.Parameters != null).SelectMany(x => x.Parameters).ToList();
+            Assert.IsNotEmpty(detected, "The template algorithm of the project declares parameters the api detects");
+            Assert.IsTrue(detected.All(x => x.Line > 0 && !string.IsNullOrEmpty(x.Type)),
+                $"Incomplete parameter details: {string.Join(", ", detected.Select(x => $"{x.Line}: {x.Type}"))}");
+        }
+
+        /// <summary>
+        /// backtests/create sends the documented parameters and reports the debugging flag of the run
+        /// </summary>
+        [Test]
+        public void CreateBacktestSendsTheGivenParameters()
+        {
+            var projectResult = ApiClient.CreateProject($"{GetTimestamp()} Test {TestAccount} Backtest Parameters",
+                Language.CSharp, TestOrganization);
+            Assert.IsTrue(projectResult.Success, $"Error creating project: {string.Join(", ", projectResult.Errors)}");
+            var projectId = projectResult.Projects.First().ProjectId;
+
+            try
+            {
+                var code = File.ReadAllText("../../../Algorithm.CSharp/ParameterizedAlgorithm.cs");
+                var updateProjectFileContent = ApiClient.UpdateProjectFileContent(projectId, "Main.cs", code);
+                Assert.IsTrue(updateProjectFileContent.Success,
+                    $"Error updating project file: {string.Join(", ", updateProjectFileContent.Errors)}");
+
+                var compile = ApiClient.CreateCompile(projectId);
+                compile = WaitForCompilerResponse(ApiClient, projectId, compile.CompileId);
+                Assert.IsTrue(compile.Success, $"Error compiling project: {string.Join(", ", compile.Errors)}");
+
+                var parameters = new Dictionary<string, string> { { "ema-fast", "20" }, { "ema-slow", "60" } };
+                var backtest = ApiClient.CreateBacktest(projectId, compile.CompileId, $"Parameters Backtest {GetTimestamp()}", parameters);
+                Assert.IsTrue(backtest.Success, $"Error creating backtest: {string.Join(", ", backtest.Errors)}");
+                Assert.IsFalse(backtest.Debugging, "A backtest created through the api does not run under debugging mode");
+
+                backtest = WaitForBacktestCompletion(ApiClient, projectId, backtest.BacktestId, secondsTimeout: 300);
+                Assert.IsTrue(backtest.Success, $"Error running backtest: {string.Join(", ", backtest.Errors)}");
+                Assert.IsFalse(backtest.Debugging);
+                Assert.IsNotNull(backtest.ParameterSet, "The backtest reports the parameters it ran with");
+                Assert.AreEqual("20", backtest.ParameterSet.Value["ema-fast"]);
+                Assert.AreEqual("60", backtest.ParameterSet.Value["ema-slow"]);
+            }
+            finally
+            {
+                ApiClient.DeleteProject(projectId);
+            }
+        }
+
+        /// <summary>
+        /// The interface default matches the class, so a listing through IApi still asks for the statistics
+        /// </summary>
+        [Test]
+        public void ListBacktestsThroughTheInterfaceIncludesStatistics()
+        {
+            IApi api = ApiClient;
+            var throughInterface = api.ListBacktests(TestProject.ProjectId);
+            Assert.IsTrue(throughInterface.Success, $"Error listing backtests: {string.Join(", ", throughInterface.Errors)}");
+
+            var withoutStatistics = ApiClient.ListBacktests(TestProject.ProjectId, includeStatistics: false);
+            Assert.IsTrue(withoutStatistics.Success, $"Error listing backtests: {string.Join(", ", withoutStatistics.Errors)}");
+
+            Assert.IsNull(withoutStatistics.Backtests.Single(x => x.BacktestId == TestBacktest.BacktestId).Trades);
+            Assert.IsNotNull(throughInterface.Backtests.Single(x => x.BacktestId == TestBacktest.BacktestId).Trades,
+                "The interface default must ask for the statistics, like the class default does");
+        }
+
+        /// <summary>
+        /// The interface default matches the class, so updating only the note through IApi keeps the name
+        /// </summary>
+        [Test]
+        public void UpdateBacktestThroughTheInterfaceKeepsTheName()
+        {
+            IApi api = ApiClient;
+            var note = $"Note {GetTimestamp()}";
+
+            var update = api.UpdateBacktest(TestProject.ProjectId, TestBacktest.BacktestId, note: note);
+            Assert.IsTrue(update.Success, $"Error updating the backtest: {string.Join(", ", update.Errors)}");
+
+            var read = ApiClient.ReadBacktest(TestProject.ProjectId, TestBacktest.BacktestId);
+            Assert.IsTrue(read.Success, $"Error reading the backtest: {string.Join(", ", read.Errors)}");
+            Assert.AreEqual(note, read.Note);
+            Assert.AreEqual(TestBacktest.Name, read.Name, "A null name default must leave the backtest name alone");
+        }
+
+        /// <summary>
+        /// backtests/read/report answers with a generating flag until the report is ready, and the client
+        /// keeps polling instead of handing back an empty report
+        /// </summary>
+        [Test]
+        public void ReadBacktestReportWaitsUntilTheReportIsGenerated()
+        {
+            var report = ApiClient.ReadBacktestReport(TestProject.ProjectId, TestBacktest.BacktestId);
+            Assert.IsTrue(report.Success, $"Error reading the backtest report: {string.Join(", ", report.Errors)}");
+            Assert.IsFalse(report.Generating, "The polling must not hand back a report that is still being generated");
+            Assert.IsNotEmpty(report.Report);
+        }
+
+        /// <summary>
+        /// backtests/chart/read answers with a loading status and its progress while the chart is being
+        /// generated, and with the chart itself once it is ready
+        /// </summary>
+        [Test]
+        public void ReadBacktestChartReportsItsLoadingStatus()
+        {
+            var chart = ApiClient.ReadBacktestChart(TestProject.ProjectId, "Strategy Equity", 0, 0, 100, TestBacktest.BacktestId);
+            var finish = DateTime.UtcNow.AddMinutes(2);
+            while (IsLoading(chart.Status) && DateTime.UtcNow < finish)
+            {
+                Assert.GreaterOrEqual(chart.Progress, 0m);
+                Assert.LessOrEqual(chart.Progress, 1m);
+                Thread.Sleep(5000);
+                chart = ApiClient.ReadBacktestChart(TestProject.ProjectId, "Strategy Equity", 0, 0, 100, TestBacktest.BacktestId);
+            }
+
+            Assert.IsTrue(chart.Success, $"Error reading the backtest chart: {string.Join(", ", chart.Errors)}");
+            Assert.IsFalse(IsLoading(chart.Status), "The chart was still loading after two minutes");
+            Assert.IsNotNull(chart.Chart);
+        }
+
+        /// <summary>
+        /// backtests/orders/read answers with a loading status and its progress while the orders are being
+        /// generated, and with the orders themselves once they are ready
+        /// </summary>
+        [Test]
+        public void ReadBacktestOrdersReportsItsLoadingStatus()
+        {
+            var orders = ApiClient.ReadBacktestOrders(TestProject.ProjectId, TestBacktest.BacktestId, 0, 10);
+            var finish = DateTime.UtcNow.AddMinutes(2);
+            while (IsLoading(orders.Status) && DateTime.UtcNow < finish)
+            {
+                Assert.GreaterOrEqual(orders.Progress, 0m);
+                Assert.LessOrEqual(orders.Progress, 1m);
+                Thread.Sleep(5000);
+                orders = ApiClient.ReadBacktestOrders(TestProject.ProjectId, TestBacktest.BacktestId, 0, 10);
+            }
+
+            Assert.IsTrue(orders.Success, $"Error reading the backtest orders: {string.Join(", ", orders.Errors)}");
+            Assert.IsFalse(IsLoading(orders.Status), "The orders were still loading after two minutes");
+            Assert.IsNotEmpty(orders.Orders);
+        }
+
+        /// <summary>
+        /// The paged endpoints report "loading" while the result they page through is still being built
+        /// </summary>
+        private static bool IsLoading(string status)
+        {
+            return string.Equals(status, "loading", StringComparison.OrdinalIgnoreCase);
         }
 
         private static string GetTimestamp()
