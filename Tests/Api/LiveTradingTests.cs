@@ -963,30 +963,6 @@ def CreateLiveAlgorithmFromPython(apiClient, projectId, compileId, nodeId):
         }
 
         /// <summary>
-        /// Every brokerage the endpoint documents goes through an external login first, so the test account
-        /// has no authorized connection to read and the endpoint answers with the documented failure shape
-        /// </summary>
-        [TestCase("alpaca")]
-        [TestCase("tradestation")]
-        [TestCase("charlesschwab")]
-        [TestCase("tastytrade")]
-        public void ReadLiveAuth0(string brokerage)
-        {
-            var response = ApiClient.ReadLiveAuth0(brokerage);
-
-            Assert.IsNotNull(response, "The endpoint answered with something that could not be deserialized");
-            Assert.IsTrue(ApiTestBase.IsValidJson(response.ToString()));
-            if (response.Success)
-            {
-                Assert.IsNotEmpty(response.Authorization, "An authorized connection carries its authentication data");
-            }
-            else
-            {
-                Assert.IsNotEmpty(response.Errors, "An unauthorized connection reports why it could not be read");
-            }
-        }
-
-        /// <summary>
         /// Deploys the default paper algorithm to a new project and hands back the api response, so a test
         /// can assert on it. The caller stops the deployment and deletes the project
         /// </summary>

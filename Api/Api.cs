@@ -623,17 +623,6 @@ namespace QuantConnect.Api
         }
 
         /// <summary>
-        /// Read the authentication token of an external brokerage or data provider connection
-        /// </summary>
-        /// <param name="brokerage">Brokerage or data provider the connection was authorized with</param>
-        /// <returns><see cref="AuthorizeExternalConnectionResponse"/> with the authorization data of the connection</returns>
-        public AuthorizeExternalConnectionResponse ReadLiveAuth0(string brokerage)
-        {
-            TryJsonPost("live/auth0/read", out AuthorizeExternalConnectionResponse result, new { brokerage });
-            return result;
-        }
-
-        /// <summary>
         /// Create a live algorithm.
         /// </summary>
         /// <param name="projectId">Id of the project on QuantConnect</param>

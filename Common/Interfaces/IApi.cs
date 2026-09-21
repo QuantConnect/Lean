@@ -463,13 +463,6 @@ namespace QuantConnect.Interfaces
         public Organization ReadOrganization(string organizationId = null);
 
         /// <summary>
-        /// Read the authentication token of an external brokerage or data provider connection
-        /// </summary>
-        /// <param name="brokerage">Brokerage or data provider the connection was authorized with</param>
-        /// <returns><see cref="AuthorizeExternalConnectionResponse"/> with the authorization data of the connection</returns>
-        AuthorizeExternalConnectionResponse ReadLiveAuth0(string brokerage);
-
-        /// <summary>
         /// Create a new live algorithm for a logged in user.
         /// </summary>
         /// <param name="projectId">Id of the project on QuantConnect</param>
