@@ -525,7 +525,7 @@ namespace QuantConnect.Algorithm.CSharp
             var projectId = TestProject.ProjectId;
             var backtestId = TestBacktest.BacktestId;
             Assert.Throws<ArgumentException>(() => ApiClient.ReadBacktestOrders(projectId, backtestId, 0, 101));
-            Assert.Throws<ArgumentException>(() => ApiClient.ReadLiveOrders(projectId, start: 0, end: 101));
+            Assert.Throws<ArgumentException>(() => ApiClient.ReadLiveOrders(projectId, null, 0, 101));
             Assert.Throws<ArgumentException>(() => ApiClient.ReadBacktestInsights(projectId, backtestId, 0, 101));
             Assert.Throws<ArgumentException>(() => ApiClient.ReadLiveInsights(projectId, 0, 101));
             Assert.Throws<ArgumentException>(() => ApiClient.ReadBacktestLog(projectId, backtestId, 0, 201));

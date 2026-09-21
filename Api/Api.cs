@@ -703,15 +703,14 @@ namespace QuantConnect.Api
         /// Returns the orders of the specified project id live algorithm.
         /// </summary>
         /// <param name="projectId">Id of the project from which to read the live orders</param>
+        /// <param name="algorithmId">Deploy id (algorithm id) of the live running algorithm, null for the latest deployment of the project</param>
         /// <param name="start">Starting index of the orders to be fetched</param>
         /// <param name="end">Last index of the orders to be fetched. Note that end - start must not exceed 100.
         /// Defaults to a full window starting at <paramref name="start"/></param>
-        /// <param name="algorithmId">Deploy id (algorithm id) of the live running algorithm. Optional, the API
-        /// defaults to the latest deployment of the project</param>
         /// <remarks>Will throw an <see cref="WebException"/> if there are any API errors</remarks>
         /// <returns>The <see cref="OrdersResponseWrapper"/> with the requested orders and the total order count</returns>
         /// <exception cref="ArgumentException">The requested window is wider than the documented maximum</exception>
-        public OrdersResponseWrapper ReadLiveOrders(int projectId, int start = 0, int end = 0, string algorithmId = null)
+        public OrdersResponseWrapper ReadLiveOrders(int projectId, string algorithmId, int start = 0, int end = 0)
         {
             end = ResolveWindowEnd(start, end, MaxOrdersWindow, "orders");
 
@@ -721,6 +720,20 @@ namespace QuantConnect.Api
             using var request = ApiUtils.CreateJsonPostRequest("live/orders/read", payload);
 
             return MakeRequestOrThrow<OrdersResponseWrapper>(request, nameof(ReadLiveOrders));
+        }
+
+        /// <summary>
+        /// Returns the orders of the latest deployment of the specified project id live algorithm.
+        /// </summary>
+        /// <param name="projectId">Id of the project from which to read the live orders</param>
+        /// <param name="start">Starting index of the orders to be fetched</param>
+        /// <param name="end">Last index of the orders to be fetched. Note that end - start must not exceed 100.
+        /// Defaults to a full window starting at <paramref name="start"/></param>
+        /// <returns>The <see cref="OrdersResponseWrapper"/> with the requested orders and the total order count</returns>
+        [Obsolete("Use the overload taking the algorithm id: ReadLiveOrders(projectId, algorithmId, start, end)")]
+        public OrdersResponseWrapper ReadLiveOrders(int projectId, int start = 0, int end = 0)
+        {
+            return ReadLiveOrders(projectId, null, start, end);
         }
 
         /// <summary>
