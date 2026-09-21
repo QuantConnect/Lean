@@ -613,55 +613,6 @@ namespace QuantConnect.Interfaces
         ListObjectStoreResponse ListObjectStore(string organizationId, string path);
 
         /// <summary>
-        /// Run a backtest for a few seconds to initialize the algorithm and get the initialization errors, if any
-        /// </summary>
-        /// <param name="language">Programming language of the files</param>
-        /// <param name="files">Files to process</param>
-        /// <returns><see cref="BacktestInitResponse"/></returns>
-        BacktestInitResponse BacktestInitAITool(Language language, List<AIFile> files);
-
-        /// <summary>
-        /// Get the code completion suggestions for a specific text input
-        /// </summary>
-        /// <param name="language">Programming language to complete the sentence for</param>
-        /// <param name="sentence">Sentence to complete</param>
-        /// <param name="responseSizeLimit">Maximum number of suggestions to return</param>
-        /// <returns><see cref="CodeCompletionResponse"/></returns>
-        CodeCompletionResponse CompleteCodeAITool(Language language, string sentence, int? responseSizeLimit = null);
-
-        /// <summary>
-        /// Get additional context and suggestions for an error message
-        /// </summary>
-        /// <param name="language">Programming language the error comes from</param>
-        /// <param name="message">Error message to enhance</param>
-        /// <param name="stacktrace">Stack trace of the error</param>
-        /// <returns><see cref="ErrorEnhanceResponse"/></returns>
-        ErrorEnhanceResponse ErrorEnhanceAITool(Language language, string message, string stacktrace = null);
-
-        /// <summary>
-        /// Update Python code to follow the PEP8 style
-        /// </summary>
-        /// <param name="files">Files to convert</param>
-        /// <returns><see cref="PEP8ConvertResponse"/></returns>
-        PEP8ConvertResponse PEP8ConvertAITool(List<AIFile> files);
-
-        /// <summary>
-        /// Check the syntax of the given files
-        /// </summary>
-        /// <param name="language">Programming language of the files</param>
-        /// <param name="files">Files to process</param>
-        /// <returns><see cref="SyntaxCheckResponse"/></returns>
-        SyntaxCheckResponse SyntaxCheckAITool(Language language, List<AIFile> files);
-
-        /// <summary>
-        /// Search for content in QuantConnect
-        /// </summary>
-        /// <param name="language">Programming language of the content to search</param>
-        /// <param name="criteria">Criteria for the search</param>
-        /// <returns><see cref="SearchResponse"/></returns>
-        SearchResponse SearchAITool(Language language, List<SearchCriteria> criteria);
-
-        /// <summary>
         /// Gets a list of LEAN versions with their corresponding basic descriptions
         /// </summary>
         public VersionsResponse ReadLeanVersions();

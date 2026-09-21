@@ -34,7 +34,6 @@ using System.Net.Http.Headers;
 using System.Collections.Concurrent;
 using System.Text;
 using Newtonsoft.Json.Serialization;
-using Newtonsoft.Json.Converters;
 
 namespace QuantConnect.Api
 {
@@ -47,13 +46,6 @@ namespace QuantConnect.Api
         private const int MaxOrdersWindow = 100;
         private const int MaxInsightsWindow = 100;
         private const int MaxLogLinesWindow = 200;
-
-        // The ai tools endpoints take the api language code, "C#" or "Py", and omit the optional members
-        private static readonly JsonSerializerSettings AIToolsSerializerSettings = new()
-        {
-            Converters = { new StringEnumConverter() },
-            NullValueHandling = NullValueHandling.Ignore
-        };
 
         private readonly BlockingCollection<Lazy<HttpClient>> _clientPool;
         private string _dataFolder;
@@ -1524,85 +1516,6 @@ namespace QuantConnect.Api
         public ListObjectStoreResponse ListObjectStore(string organizationId, string path)
         {
             TryJsonPost("object/list", out ListObjectStoreResponse result, new { organizationId, path });
-            return result;
-        }
-
-        /// <summary>
-        /// Run a backtest for a few seconds to initialize the algorithm and get the initialization errors, if any
-        /// </summary>
-        /// <param name="language">Programming language of the files</param>
-        /// <param name="files">Files to process</param>
-        /// <returns><see cref="BacktestInitResponse"/></returns>
-        public BacktestInitResponse BacktestInitAITool(Language language, List<AIFile> files)
-        {
-            TryJsonPost("ai/tools/backtest-init", out BacktestInitResponse result, new { language, files },
-                jsonSerializerSettings: AIToolsSerializerSettings);
-            return result;
-        }
-
-        /// <summary>
-        /// Get the code completion suggestions for a specific text input
-        /// </summary>
-        /// <param name="language">Programming language to complete the sentence for</param>
-        /// <param name="sentence">Sentence to complete</param>
-        /// <param name="responseSizeLimit">Maximum number of suggestions to return</param>
-        /// <returns><see cref="CodeCompletionResponse"/></returns>
-        public CodeCompletionResponse CompleteCodeAITool(Language language, string sentence, int? responseSizeLimit = null)
-        {
-            TryJsonPost("ai/tools/complete", out CodeCompletionResponse result, new { language, sentence, responseSizeLimit },
-                jsonSerializerSettings: AIToolsSerializerSettings);
-            return result;
-        }
-
-        /// <summary>
-        /// Get additional context and suggestions for an error message
-        /// </summary>
-        /// <param name="language">Programming language the error comes from</param>
-        /// <param name="message">Error message to enhance</param>
-        /// <param name="stacktrace">Stack trace of the error</param>
-        /// <returns><see cref="ErrorEnhanceResponse"/></returns>
-        public ErrorEnhanceResponse ErrorEnhanceAITool(Language language, string message, string stacktrace = null)
-        {
-            TryJsonPost("ai/tools/error-enhance", out ErrorEnhanceResponse result, new { language, error = new { message, stacktrace } },
-                jsonSerializerSettings: AIToolsSerializerSettings);
-            return result;
-        }
-
-        /// <summary>
-        /// Update Python code to follow the PEP8 style
-        /// </summary>
-        /// <param name="files">Files to convert</param>
-        /// <returns><see cref="PEP8ConvertResponse"/></returns>
-        public PEP8ConvertResponse PEP8ConvertAITool(List<AIFile> files)
-        {
-            TryJsonPost("ai/tools/pep8-convert", out PEP8ConvertResponse result, new { files },
-                jsonSerializerSettings: AIToolsSerializerSettings);
-            return result;
-        }
-
-        /// <summary>
-        /// Check the syntax of the given files
-        /// </summary>
-        /// <param name="language">Programming language of the files</param>
-        /// <param name="files">Files to process</param>
-        /// <returns><see cref="SyntaxCheckResponse"/></returns>
-        public SyntaxCheckResponse SyntaxCheckAITool(Language language, List<AIFile> files)
-        {
-            TryJsonPost("ai/tools/syntax-check", out SyntaxCheckResponse result, new { language, files },
-                jsonSerializerSettings: AIToolsSerializerSettings);
-            return result;
-        }
-
-        /// <summary>
-        /// Search for content in QuantConnect
-        /// </summary>
-        /// <param name="language">Programming language of the content to search</param>
-        /// <param name="criteria">Criteria for the search</param>
-        /// <returns><see cref="SearchResponse"/></returns>
-        public SearchResponse SearchAITool(Language language, List<SearchCriteria> criteria)
-        {
-            TryJsonPost("ai/tools/search", out SearchResponse result, new { language, criteria },
-                jsonSerializerSettings: AIToolsSerializerSettings);
             return result;
         }
 
