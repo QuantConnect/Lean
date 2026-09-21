@@ -14,6 +14,7 @@
  *
 */
 
+using Newtonsoft.Json;
 using QuantConnect.Algorithm;
 using QuantConnect.AlgorithmFactory.Python.Wrappers;
 using QuantConnect.Brokerages;
@@ -418,6 +419,8 @@ namespace QuantConnect.Lean.Engine.Results
 
                 StoreInsights();
 
+                StoreDataMonitorReport();
+
                 // Save summary results
                 SaveResults($"{AlgorithmId}-summary.json", CreateResultSummary(result));
 
@@ -451,6 +454,25 @@ namespace QuantConnect.Lean.Engine.Results
             {
                 Log.Error(err);
             }
+        }
+
+        /// <summary>
+        /// Stores the data monitor report, see <see cref="DataMonitor"/>
+        /// </summary>
+        /// <remarks>Invoked once the backtest ends, after the data monitor exited. The report names the request files
+        /// the data monitor wrote next to it in the results destination folder. We keep the file name the data monitor
+        /// used, consumers like the local platform expect it</remarks>
+        protected virtual void StoreDataMonitorReport()
+        {
+            var report = DataMonitor?.Report;
+            if (report == null)
+            {
+                // no data request was monitored
+                return;
+            }
+
+            var timestamp = DateTime.UtcNow.ToStringInvariant("yyyyMMddHHmmssfff");
+            File.WriteAllText(GetResultsPath($"data-monitor-report-{timestamp}.json"), JsonConvert.SerializeObject(report, Formatting.None));
         }
 
         /// <summary>
