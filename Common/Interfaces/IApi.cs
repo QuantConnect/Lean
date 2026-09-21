@@ -387,11 +387,11 @@ namespace QuantConnect.Interfaces
         /// Read out the insights of a live algorithm
         /// </summary>
         /// <param name="projectId">Id of the project from which to read the live algorithm</param>
-        /// <param name="algorithmId">Deploy id (algorithm id) of the live running algorithm</param>
         /// <param name="start">Starting index of the insights to be fetched</param>
         /// <param name="end">Last index of the insights to be fetched</param>
+        /// <param name="algorithmId">Deploy id (algorithm id) of the live running algorithm</param>
         /// <returns><see cref="InsightResponse"/></returns>
-        public InsightResponse ReadLiveInsights(int projectId, string algorithmId = null, int start = 0, int end = 0);
+        public InsightResponse ReadLiveInsights(int projectId, int start = 0, int end = 0, string algorithmId = null);
 
         /// <summary>
         /// Returns the orders of the specified project id live algorithm.

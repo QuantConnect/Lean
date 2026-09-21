@@ -752,7 +752,7 @@ namespace QuantConnect.Algorithm.CSharp
                 Assert.DoesNotThrow(() => ApiClient.ReadLiveInsights(projectId));
 
                 // the documented algorithmId narrows the read to a single deployment of the project
-                var byAlgorithmId = ApiClient.ReadLiveInsights(projectId, createLiveAlgorithm.DeployId, 0, 5);
+                var byAlgorithmId = ApiClient.ReadLiveInsights(projectId, 0, 5, createLiveAlgorithm.DeployId);
                 Assert.IsTrue(byAlgorithmId.Success, $"ApiClient.ReadLiveInsights(): Error: {string.Join(",", byAlgorithmId.Errors)}");
                 CollectionAssert.AreEqual(readInsights.Insights.Select(x => x.Id).ToList(),
                     byAlgorithmId.Insights.Select(x => x.Id).ToList());
