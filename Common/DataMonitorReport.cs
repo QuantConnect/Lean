@@ -94,6 +94,18 @@ namespace QuantConnect
         public IReadOnlyList<double> DataRequestRates { get; set; }
 
         /// <summary>
+        /// Name of the file listing the data requests that were successfully fetched, if they were stored
+        /// </summary>
+        [JsonProperty(PropertyName = "succeeded-data-requests-file", NullValueHandling = NullValueHandling.Ignore)]
+        public string SucceededDataRequestsFile { get; set; }
+
+        /// <summary>
+        /// Name of the file listing the data requests that could not be fetched, if they were stored
+        /// </summary>
+        [JsonProperty(PropertyName = "failed-data-requests-file", NullValueHandling = NullValueHandling.Ignore)]
+        public string FailedDataRequestsFile { get; set; }
+
+        /// <summary>
         /// Initializes an empty instance of the <see cref="DataMonitorReport"/> class
         /// </summary>
         public DataMonitorReport()
@@ -108,19 +120,25 @@ namespace QuantConnect
         /// <param name="succeededUniverseDataRequestsCount">Number of universe data paths that were requested and successfuly served</param>
         /// <param name="failedUniverseDataRequestsCount">Number of universe data paths that were requested but could not be served</param>
         /// <param name="dataRequestRates">Rates at which data requests were made per second</param>
-        public DataMonitorReport(long succeededDataRequestsCount, 
-            long failedDataRequestsCount, 
-            long succeededUniverseDataRequestsCount, 
-            long failedUniverseDataRequestsCount, 
-            IReadOnlyList<double> dataRequestRates)
+        /// <param name="succeededDataRequestsFile">Name of the file listing the succeeded data requests, if stored</param>
+        /// <param name="failedDataRequestsFile">Name of the file listing the failed data requests, if stored</param>
+        public DataMonitorReport(long succeededDataRequestsCount,
+            long failedDataRequestsCount,
+            long succeededUniverseDataRequestsCount,
+            long failedUniverseDataRequestsCount,
+            IReadOnlyList<double> dataRequestRates,
+            string succeededDataRequestsFile = null,
+            string failedDataRequestsFile = null)
         {
             SucceededDataRequestsCount = succeededDataRequestsCount;
             FailedDataRequestsCount = failedDataRequestsCount;
             SucceededUniverseDataRequestsCount = succeededUniverseDataRequestsCount;
             FailedUniverseDataRequestsCount = failedUniverseDataRequestsCount;
             DataRequestRates = dataRequestRates;
+            SucceededDataRequestsFile = succeededDataRequestsFile;
+            FailedDataRequestsFile = failedDataRequestsFile;
         }
-        
+
         private static double GetPercentage(long total, long value)
         {
             if (total == 0)

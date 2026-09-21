@@ -324,6 +324,11 @@ namespace QuantConnect.Lean.Engine.Results
         protected PerformanceTrackingTool PerformanceTrackingTool { get; set; }
 
         /// <summary>
+        /// The data monitor tracking the data requests. May be null when the host doesn't monitor data requests.
+        /// </summary>
+        protected IDataMonitor DataMonitor { get; set; }
+
+        /// <summary>
         /// Creates a new instance
         /// </summary>
         protected BaseResultsHandler()
@@ -518,6 +523,7 @@ namespace QuantConnect.Lean.Engine.Results
             State["Hostname"] = _hostName;
             MapFileProvider = parameters.MapFileProvider;
             PerformanceTrackingTool = parameters.PerformanceTrackingTool;
+            DataMonitor = parameters.DataMonitor;
 
             SerializerSettings = new()
             {

@@ -108,7 +108,8 @@ namespace QuantConnect.Lean.Engine
 
                 //-> Set the result handler type for this algorithm job, and launch the associated result thread.
                 AlgorithmHandlers.Results.Initialize(
-                    new(job, SystemHandlers.Notify, SystemHandlers.Api, AlgorithmHandlers.Transactions, AlgorithmHandlers.MapFileProvider, performanceTrackingTool));
+                    new(job, SystemHandlers.Notify, SystemHandlers.Api, AlgorithmHandlers.Transactions, AlgorithmHandlers.MapFileProvider, performanceTrackingTool,
+                        AlgorithmHandlers.DataMonitor));
 
                 IBrokerage brokerage = null;
                 DataManager dataManager = null;
@@ -424,6 +425,9 @@ namespace QuantConnect.Lean.Engine
                 synchronizer.DisposeSafely();
                 // Close data feed, alphas. Could be running even if algorithm initialization failed
                 AlgorithmHandlers.DataFeed.Exit();
+
+                // No more data requests once the feed is closed: generate the data monitor report so the result handler can store it
+                AlgorithmHandlers.DataMonitor.Exit();
 
                 //Close result handler:
                 AlgorithmHandlers.Results.Exit();

@@ -264,6 +264,7 @@ namespace QuantConnect.Tests
         }
         public class NullDataMonitor : IDataMonitor
         {
+            public DataMonitorReport Report => null;
             public void Dispose()
             { }
             public void Exit()
