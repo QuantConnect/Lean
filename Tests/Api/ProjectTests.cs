@@ -517,6 +517,37 @@ namespace QuantConnect.Algorithm.CSharp
         }
 
         /// <summary>
+        /// The paged read methods reject a window wider than the endpoint maximum before any request is sent
+        /// </summary>
+        [Test]
+        public void PagedReadsRejectAWindowWiderThanTheMaximum()
+        {
+            var projectId = TestProject.ProjectId;
+            var backtestId = TestBacktest.BacktestId;
+            Assert.Throws<ArgumentException>(() => ApiClient.ReadBacktestOrders(projectId, backtestId, 0, 101));
+            Assert.Throws<ArgumentException>(() => ApiClient.ReadLiveOrders(projectId, start: 0, end: 101));
+            Assert.Throws<ArgumentException>(() => ApiClient.ReadBacktestInsights(projectId, backtestId, 0, 101));
+            Assert.Throws<ArgumentException>(() => ApiClient.ReadLiveInsights(projectId, 0, 101));
+            Assert.Throws<ArgumentException>(() => ApiClient.ReadBacktestLog(projectId, backtestId, 0, 201));
+            Assert.Throws<ArgumentException>(() => ApiClient.ReadLiveLogs(projectId, "L-deploy-id", 0, 201));
+        }
+
+        /// <summary>
+        /// A paged read given only a start index requests a full window from it instead of a negative one
+        /// </summary>
+        [Test]
+        public void PagedReadsDefaultTheWindowWhenOnlyStartIsGiven()
+        {
+            var orders = ApiClient.ReadBacktestOrders(TestProject.ProjectId, TestBacktest.BacktestId, start: 1);
+            Assert.IsTrue(orders.Success, $"Error reading orders: {string.Join(", ", orders.Errors)}");
+            Assert.GreaterOrEqual(orders.Length, orders.Orders.Count);
+
+            var logs = ApiClient.ReadBacktestLog(TestProject.ProjectId, TestBacktest.BacktestId, start: 1);
+            Assert.IsTrue(logs.Success, $"Error reading the backtest log: {string.Join(", ", logs.Errors)}");
+            Assert.GreaterOrEqual(logs.Length, logs.Logs.Count);
+        }
+
+        /// <summary>
         /// Creates a project with the given algorithm, compiles it and runs a backtest to completion
         /// </summary>
         private void RunBacktest(string algorithm, string testName, out int projectId, out string backtestId)

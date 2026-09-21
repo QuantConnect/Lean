@@ -712,6 +712,13 @@ namespace QuantConnect.Tests.API
             Assert.IsTrue(liveLogs.Length >= 0);
             Assert.IsTrue(liveLogs.DeploymentOffset >= 0);
 
+            // Filter by the longest word of the first line, so only lines containing it come back
+            var keyword = liveLogs.Logs[0].Split(' ').OrderByDescending(x => x.Length).First();
+            var filteredLogs = ApiClient.ReadLiveLogs(firstLiveAlgo.ProjectId, firstLiveAlgo.DeployId, 0, 20, query: keyword);
+            Assert.IsTrue(filteredLogs.Success);
+            Assert.Greater(filteredLogs.Logs.Count, 0);
+            Assert.IsTrue(filteredLogs.Logs.All(x => x.Contains(keyword, StringComparison.Ordinal)));
+
             Assert.Throws<ArgumentException>(() => ApiClient.ReadLiveLogs(firstLiveAlgo.ProjectId, firstLiveAlgo.DeployId, 0, 251));
         }
 

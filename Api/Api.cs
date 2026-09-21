@@ -43,8 +43,7 @@ namespace QuantConnect.Api
     public class Api : IApi, IDownloadProvider
     {
         // Widest start/end window each paging endpoint documents
-        private const int MaxBacktestOrdersWindow = 100;
-        private const int MaxLiveOrdersWindow = 1000;
+        private const int MaxOrdersWindow = 100;
         private const int MaxInsightsWindow = 100;
         private const int MaxLogLinesWindow = 200;
 
@@ -426,7 +425,7 @@ namespace QuantConnect.Api
         /// <exception cref="ArgumentException">The requested window is wider than the documented maximum</exception>
         public OrdersResponseWrapper ReadBacktestOrders(int projectId, string backtestId, int start = 0, int end = 0)
         {
-            end = ResolveWindowEnd(start, end, MaxBacktestOrdersWindow, "orders");
+            end = ResolveWindowEnd(start, end, MaxOrdersWindow, "orders");
 
             using var request = ApiUtils.CreateJsonPostRequest("backtests/orders/read", new
             {
@@ -560,7 +559,8 @@ namespace QuantConnect.Api
         /// <param name="start">Start line (inclusive) of logs to read</param>
         /// <param name="end">End line (exclusive) of logs to read. Note that end - start must not exceed 200.
         /// Defaults to a full window starting at <paramref name="start"/></param>
-        /// <param name="query">Optional keyword to filter the log lines, null to return every line</param>
+        /// <param name="query">Optional keyword to filter the log lines, null to return every line.
+        /// For example, "Error" returns only the lines containing that word</param>
         /// <returns><see cref="BacktestLog"/> with the requested log lines and the total log line count</returns>
         /// <exception cref="ArgumentException">The requested window is wider than the documented maximum</exception>
         public BacktestLog ReadBacktestLog(int projectId, string backtestId, int start = 0, int end = 0, string query = null)
@@ -706,14 +706,14 @@ namespace QuantConnect.Api
         /// <param name="algorithmId">Deploy id (algorithm id) of the live running algorithm. Optional, the API
         /// defaults to the latest deployment of the project</param>
         /// <param name="start">Starting index of the orders to be fetched</param>
-        /// <param name="end">Last index of the orders to be fetched. Note that end - start must not exceed 1000.
+        /// <param name="end">Last index of the orders to be fetched. Note that end - start must not exceed 100.
         /// Defaults to a full window starting at <paramref name="start"/></param>
         /// <remarks>Will throw an <see cref="WebException"/> if there are any API errors</remarks>
         /// <returns>The <see cref="OrdersResponseWrapper"/> with the requested orders and the total order count</returns>
         /// <exception cref="ArgumentException">The requested window is wider than the documented maximum</exception>
         public OrdersResponseWrapper ReadLiveOrders(int projectId, string algorithmId = null, int start = 0, int end = 0)
         {
-            end = ResolveWindowEnd(start, end, MaxLiveOrdersWindow, "orders");
+            end = ResolveWindowEnd(start, end, MaxOrdersWindow, "orders");
 
             object payload = string.IsNullOrEmpty(algorithmId)
                 ? new { start, end, projectId }
@@ -779,7 +779,8 @@ namespace QuantConnect.Api
         /// <param name="startLine">Start line (inclusive) of logs to read</param>
         /// <param name="endLine">End line (exclusive) of logs to read. Note that endLine - startLine must not exceed 200.
         /// Defaults to a full window starting at <paramref name="startLine"/></param>
-        /// <param name="query">Optional keyword to filter the log lines, null to return every line</param>
+        /// <param name="query">Optional keyword to filter the log lines, null to return every line.
+        /// For example, "Error" returns only the lines containing that word</param>
         /// <param name="deploymentLogs">Whether only the logs of the given <paramref name="algorithmId"/> deployment should be returned</param>
         /// <returns><see cref="LiveLog"/> List of strings that represent the logs of the algorithm</returns>
         /// <exception cref="ArgumentException">The requested window is wider than the documented maximum</exception>
