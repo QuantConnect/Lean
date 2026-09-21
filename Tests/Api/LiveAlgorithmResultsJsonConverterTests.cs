@@ -68,8 +68,8 @@ namespace QuantConnect.Tests.API
             Assert.IsNull(result.Errors);
             Assert.IsNull(result.Stopped);
             Assert.AreEqual(default(DateTime), result.Launched);
-            Assert.IsEmpty(result.Charts);
-            Assert.IsEmpty(result.Files);
+            Assert.IsNull(result.Charts);
+            Assert.IsNull(result.Files);
         }
 
         [Test]
@@ -80,6 +80,16 @@ namespace QuantConnect.Tests.API
             CollectionAssert.AreEqual(new[] { "First error", "Second error" }, result.Errors);
             Assert.AreEqual("Running", result.Status, "The fields after the errors are still deserialized");
             CollectionAssert.AreEquivalent(new Dictionary<string, string> { { "Unrealized", "0" } }, result.RuntimeStatistics);
+        }
+
+        [Test]
+        public void AFailedResponseStopsAtTheErrors()
+        {
+            var json = @"{ ""success"": false, ""errors"": [ ""Not started"" ], ""charts"": { ""Equity"": {} } }";
+            var result = JsonConvert.DeserializeObject<LiveAlgorithmResults>(json, new LiveAlgorithmResultsJsonConverter());
+
+            CollectionAssert.AreEqual(new[] { "Not started" }, result.Errors);
+            Assert.IsNull(result.Charts, "Charts and files are not read once the response reports a failure");
         }
 
         [Test]

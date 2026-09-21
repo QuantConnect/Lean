@@ -94,6 +94,12 @@ namespace QuantConnect.Api
                 Errors = jObject["errors"]?.ToObject<List<string>>()
             };
 
+            if (!liveAlgoResults.Success)
+            {
+                // Either there was an error in the running algorithm or the algorithm hasn't started
+                return liveAlgoResults;
+            }
+
             // Deserialize charting data
             var chartDictionary = new Dictionary<string, Chart>();
             var charts = jObject["charts"] ?? jObject["Charts"];
