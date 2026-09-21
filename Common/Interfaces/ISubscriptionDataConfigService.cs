@@ -42,7 +42,9 @@ namespace QuantConnect.Interfaces
             bool isCustomData = false,
             DataNormalizationMode dataNormalizationMode = DataNormalizationMode.Adjusted,
             DataMappingMode dataMappingMode = DataMappingMode.OpenInterest,
-            uint contractDepthOffset = 0
+            uint contractDepthOffset = 0,
+            int dataMappingModeDaysOffset = 0,
+            IReadOnlyList<int> contractMonthCycle = null
             );
 
         /// <summary>
@@ -61,7 +63,9 @@ namespace QuantConnect.Interfaces
             List<Tuple<Type, TickType>> subscriptionDataTypes = null,
             DataNormalizationMode dataNormalizationMode = DataNormalizationMode.Adjusted,
             DataMappingMode dataMappingMode = DataMappingMode.OpenInterest,
-            uint contractDepthOffset = 0
+            uint contractDepthOffset = 0,
+            int dataMappingModeDaysOffset = 0,
+            IReadOnlyList<int> contractMonthCycle = null
             );
 
         /// <summary>

@@ -20,6 +20,7 @@ using QuantConnect.Interfaces;
 using QuantConnect.Data.Market;
 using System.Collections.Generic;
 using QuantConnect.Data.Auxiliary;
+using QuantConnect.Securities;
 
 namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
 {
@@ -40,6 +41,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
         /// </summary>
         protected MapFile MapFile { get; private set; }
 
+        private SecurityExchangeHours _exchangeHours;
+
         /// <summary>
         /// Initializes this instance
         /// </summary>
@@ -55,12 +58,14 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
         {
             _mapFileProvider = mapFileProvider;
             Config = config;
+            _exchangeHours = MarketHoursDatabase.FromDataFolder().GetEntry(Config.Market, Config.Symbol, Config.SecurityType).ExchangeHours;
             InitializeMapFile();
 
-            if (MapFile.HasData(startTime.Date))
+            var mappingSearchDate = GetMappingSearchDate(startTime.Date);
+            if (MapFile.HasData(mappingSearchDate))
             {
                 // initialize mapped symbol using request start date
-                Config.MappedSymbol = MapFile.GetMappedSymbol(startTime.Date, Config.MappedSymbol, Config.DataMappingMode);
+                Config.MappedSymbol = MapFile.GetMappedSymbol(mappingSearchDate, Config.MappedSymbol, Config.DataMappingMode);
             }
         }
 
@@ -71,11 +76,12 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
         /// <returns>New mapping event if any</returns>
         public virtual IEnumerable<BaseData> GetEvents(NewTradableDateEventArgs eventArgs)
         {
+            var mappingSearchDate = GetMappingSearchDate(eventArgs.Date);
             if (Config.Symbol == eventArgs.Symbol
-                && MapFile.HasData(eventArgs.Date))
+                && MapFile.HasData(mappingSearchDate))
             {
                 var old = Config.MappedSymbol;
-                var newSymbol = MapFile.GetMappedSymbol(eventArgs.Date, Config.MappedSymbol, Config.DataMappingMode);
+                var newSymbol = MapFile.GetMappedSymbol(mappingSearchDate, Config.MappedSymbol, Config.DataMappingMode);
                 Config.MappedSymbol = newSymbol;
 
                 // check to see if the symbol was remapped
@@ -97,6 +103,16 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
         protected void InitializeMapFile()
         {
             MapFile = _mapFileProvider.ResolveMapFile(Config);
+        }
+
+        private DateTime GetMappingSearchDate(DateTime date)
+        {
+            if (Config.DataMappingMode != DataMappingMode.TradingDaysBeforeExpiry || Config.DataMappingModeDaysOffset == 0)
+            {
+                return date;
+            }
+
+            return Time.AddTradeableDays(_exchangeHours, date, Config.DataMappingModeDaysOffset, Config.ExtendedMarketHours);
         }
     }
 }

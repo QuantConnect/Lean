@@ -14,6 +14,7 @@
 */
 
 using System;
+using System.Linq;
 using NodaTime;
 using QuantConnect.Util;
 using QuantConnect.Securities;
@@ -109,6 +110,17 @@ namespace QuantConnect.Data
         public uint ContractDepthOffset { get; }
 
         /// <summary>
+        /// The continuous contract mapping offset in tradeable days.
+        /// For example, 30 will map 30 tradeable days before the mapped contract's normal mapping date
+        /// </summary>
+        public int DataMappingModeDaysOffset { get; }
+
+        /// <summary>
+        /// Optional contract expiration months to use when walking continuous future contract depth
+        /// </summary>
+        public IReadOnlyList<int> ContractMonthCycle { get; }
+
+        /// <summary>
         /// Price Scaling Factor:
         /// </summary>
         public decimal PriceScaleFactor { get; set; }
@@ -143,7 +155,7 @@ namespace QuantConnect.Data
                     return;
                 }
                 var oldSymbol = Symbol;
-                Symbol = Symbol.UpdateMappedSymbol(value, ContractDepthOffset);
+                Symbol = Symbol.UpdateMappedSymbol(value, ContractDepthOffset, ContractMonthCycle);
 
                 if (MappedSymbol != oldMappedValue)
                 {
@@ -197,6 +209,10 @@ namespace QuantConnect.Data
         /// <param name="dataMappingMode">The contract mapping mode to use for the security</param>
         /// <param name="contractDepthOffset">The continuous contract desired offset from the current front month.
         /// For example, 0 (default) will use the front month, 1 will use the back month contract</param>
+        /// <param name="mappedConfig">True if this is created as a mapped config. This is useful for continuous contract at live trading
+        /// where we subscribe to the mapped symbol but want to preserve uniqueness</param>
+        /// <param name="dataMappingModeDaysOffset">The continuous contract mapping offset in tradeable days</param>
+        /// <param name="contractMonthCycle">Optional contract expiration months to use when walking continuous future contract depth</param>
         public SubscriptionDataConfig(Type objectType,
             Symbol symbol,
             Resolution resolution,
@@ -211,7 +227,9 @@ namespace QuantConnect.Data
             DataNormalizationMode dataNormalizationMode = DataNormalizationMode.Adjusted,
             DataMappingMode dataMappingMode = DataMappingMode.OpenInterest,
             uint contractDepthOffset = 0,
-            bool mappedConfig = false)
+            bool mappedConfig = false,
+            int dataMappingModeDaysOffset = 0,
+            IReadOnlyList<int> contractMonthCycle = null)
         {
             if (objectType == null) throw new ArgumentNullException(nameof(objectType));
             if (symbol == null) throw new ArgumentNullException(nameof(symbol));
@@ -229,6 +247,8 @@ namespace QuantConnect.Data
             DataTimeZone = dataTimeZone;
             _mappedConfig = mappedConfig;
             DataMappingMode = dataMappingMode;
+            DataMappingModeDaysOffset = dataMappingModeDaysOffset;
+            ContractMonthCycle = contractMonthCycle?.ToArray();
             ExchangeTimeZone = exchangeTimeZone;
             ContractDepthOffset = contractDepthOffset;
             IsFilteredSubscription = isFilteredSubscription;
@@ -265,6 +285,8 @@ namespace QuantConnect.Data
         /// For example, 0 (default) will use the front month, 1 will use the back month contract</param>
         /// <param name="mappedConfig">True if this is created as a mapped config. This is useful for continuous contract at live trading
         /// where we subscribe to the mapped symbol but want to preserve uniqueness</param>
+        /// <param name="dataMappingModeDaysOffset">The continuous contract mapping offset in tradeable days</param>
+        /// <param name="contractMonthCycle">Optional contract expiration months to use when walking continuous future contract depth</param>
         public SubscriptionDataConfig(SubscriptionDataConfig config,
             Type objectType = null,
             Symbol symbol = null,
@@ -280,7 +302,9 @@ namespace QuantConnect.Data
             DataNormalizationMode? dataNormalizationMode = null,
             DataMappingMode? dataMappingMode = null,
             uint? contractDepthOffset = null,
-            bool? mappedConfig = null)
+            bool? mappedConfig = null,
+            int? dataMappingModeDaysOffset = null,
+            IReadOnlyList<int> contractMonthCycle = null)
             : this(
             objectType ?? config.Type,
             symbol ?? config.Symbol,
@@ -296,7 +320,9 @@ namespace QuantConnect.Data
             dataNormalizationMode ?? config.DataNormalizationMode,
             dataMappingMode ?? config.DataMappingMode,
             contractDepthOffset ?? config.ContractDepthOffset,
-            mappedConfig ?? false
+            mappedConfig ?? false,
+            dataMappingModeDaysOffset ?? config.DataMappingModeDaysOffset,
+            contractMonthCycle ?? config.ContractMonthCycle
             )
         {
             PriceScaleFactor = config.PriceScaleFactor;
@@ -326,6 +352,8 @@ namespace QuantConnect.Data
                 && DataMappingMode == other.DataMappingMode
                 && ExchangeTimeZone.Equals(other.ExchangeTimeZone)
                 && ContractDepthOffset == other.ContractDepthOffset
+                && DataMappingModeDaysOffset == other.DataMappingModeDaysOffset
+                && ContractMonthCyclesAreEqual(ContractMonthCycle, other.ContractMonthCycle)
                 && IsFilteredSubscription == other.IsFilteredSubscription
                 && _mappedConfig == other._mappedConfig;
         }
@@ -364,6 +392,14 @@ namespace QuantConnect.Data
                 hashCode = (hashCode*397) ^ IsInternalFeed.GetHashCode();
                 hashCode = (hashCode*397) ^ IsCustomData.GetHashCode();
                 hashCode = (hashCode*397) ^ DataMappingMode.GetHashCode();
+                hashCode = (hashCode*397) ^ DataMappingModeDaysOffset.GetHashCode();
+                if (ContractMonthCycle != null)
+                {
+                    foreach (var month in ContractMonthCycle)
+                    {
+                        hashCode = (hashCode*397) ^ month.GetHashCode();
+                    }
+                }
                 hashCode = (hashCode*397) ^ DataTimeZone.Id.GetHashCode();// timezone hash is expensive, use id instead
                 hashCode = (hashCode*397) ^ ExchangeTimeZone.Id.GetHashCode();// timezone hash is expensive, use id instead
                 hashCode = (hashCode*397) ^ ContractDepthOffset.GetHashCode();
@@ -409,6 +445,19 @@ namespace QuantConnect.Data
         public string ToString(string symbol)
         {
             return Invariant($"{symbol},#{ContractDepthOffset},{MappedSymbol},{Resolution},{Type.Name},{TickType},{DataNormalizationMode},{DataMappingMode}{(IsInternalFeed ? ",Internal" : string.Empty)}");
+        }
+
+        private static bool ContractMonthCyclesAreEqual(IReadOnlyList<int> left, IReadOnlyList<int> right)
+        {
+            if (ReferenceEquals(left, right))
+            {
+                return true;
+            }
+            if (left == null || right == null)
+            {
+                return false;
+            }
+            return left.SequenceEqual(right);
         }
 
         /// <summary>

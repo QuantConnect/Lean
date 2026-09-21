@@ -1058,7 +1058,7 @@ namespace QuantConnect.Algorithm
                         request.DataType, request.Symbol, request.Resolution, request.ExchangeHours,
                         request.DataTimeZone, request.FillForwardResolution, request.IncludeExtendedMarketHours,
                         request.IsCustomData, request.DataNormalizationMode, request.TickType, request.DataMappingMode,
-                        request.ContractDepthOffset);
+                        request.ContractDepthOffset, request.DataMappingModeDaysOffset, request.ContractMonthCycle);
 
                     if (!sentMessage)
                     {
@@ -1295,6 +1295,8 @@ namespace QuantConnect.Algorithm
                 var dataNormalizationMode = userConfigIfAny?.DataNormalizationMode ?? UniverseSettings.GetUniverseNormalizationModeOrDefault(symbol.SecurityType);
                 var dataMappingMode = userConfigIfAny?.DataMappingMode ?? UniverseSettings.GetUniverseMappingModeOrDefault(symbol.SecurityType, symbol.ID.Market);
                 var contractDepthOffset = userConfigIfAny?.ContractDepthOffset ?? (uint)Math.Abs(UniverseSettings.ContractDepthOffset);
+                var dataMappingModeDaysOffset = userConfigIfAny?.DataMappingModeDaysOffset ?? UniverseSettings.DataMappingModeDaysOffset;
+                var contractMonthCycle = userConfigIfAny?.ContractMonthCycle ?? UniverseSettings.ContractMonthCycle;
 
                 // If type was specified and not a lean data type and also not abstract, we create a new subscription
                 if (type != null && !LeanData.IsCommonLeanDataType(type) && !type.IsAbstract)
@@ -1326,7 +1328,9 @@ namespace QuantConnect.Algorithm
                         true,
                         dataNormalizationMode,
                         dataMappingMode,
-                        contractDepthOffset)};
+                        contractDepthOffset,
+                        dataMappingModeDaysOffset: dataMappingModeDaysOffset,
+                        contractMonthCycle: contractMonthCycle)};
                 }
 
                 var res = GetResolution(symbol, resolution, type);
@@ -1356,7 +1360,9 @@ namespace QuantConnect.Algorithm
                             true,
                             dataNormalizationMode,
                             dataMappingMode,
-                            contractDepthOffset);
+                            contractDepthOffset,
+                            dataMappingModeDaysOffset: dataMappingModeDaysOffset,
+                            contractMonthCycle: contractMonthCycle);
                     })
                     // lets make sure to respect the order of the data types, if used on a history request will affect outcome when using pushthrough for example
                     .OrderByDescending(config => GetTickTypeOrder(config.SecurityType, config.TickType));

@@ -359,9 +359,72 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             Assert.That(exception.Message, Does.Contain(nameof(DataNormalizationMode.ScaledRaw)));
         }
 
+        [TestCase(DataNormalizationMode.BackwardsRatio)]
+        [TestCase(DataNormalizationMode.BackwardsPanamaCanal)]
+        [TestCase(DataNormalizationMode.ForwardPanamaCanal)]
+        public void TradingDaysBeforeExpiryAdjustedNormalizationFailsBeforeCreatingSubscription(DataNormalizationMode dataNormalizationMode)
+        {
+            var dataPermissionManager = new DataPermissionManager();
+            var dataFeed = new TestDataFeed();
+            var dataManager = new DataManager(dataFeed,
+                new UniverseSelection(_algorithm,
+                    _securityService,
+                    dataPermissionManager,
+                    TestGlobals.DataProvider),
+                _algorithm,
+                _algorithm.TimeKeeper,
+                MarketHoursDatabase.AlwaysOpen,
+                false,
+                new RegisteredSecurityDataTypesProvider(),
+                dataPermissionManager);
+
+            var symbol = Symbol.CreateFuture(Futures.Indices.SP500EMini, Market.CME, new DateTime(2015, 12, 18));
+            var config = new SubscriptionDataConfig(typeof(TradeBar),
+                symbol,
+                Resolution.Daily,
+                TimeZones.NewYork,
+                TimeZones.NewYork,
+                true,
+                false,
+                false,
+                dataNormalizationMode: dataNormalizationMode,
+                dataMappingMode: DataMappingMode.TradingDaysBeforeExpiry,
+                dataMappingModeDaysOffset: 2);
+
+            using var universe = new TestUniverse(
+                config,
+                new UniverseSettings(Resolution.Daily, 1, false, false, TimeSpan.FromDays(365)));
+            var security = new QuantConnect.Securities.Future.Future(
+                SecurityExchangeHours.AlwaysOpen(TimeZones.NewYork),
+                config,
+                new Cash(Currencies.USD, 1, 1),
+                SymbolProperties.GetDefault(Currencies.USD),
+                new IdentityCurrencyConverter(Currencies.USD),
+                new RegisteredSecurityDataTypesProvider());
+
+            var subscriptionRequest = new SubscriptionRequest(
+                false,
+                universe,
+                security,
+                config,
+                new DateTime(2014, 10, 10),
+                new DateTime(2015, 10, 10));
+
+            var exception = Assert.Throws<NotSupportedException>(() =>
+            {
+                dataManager.AddSubscription(subscriptionRequest);
+            });
+
+            Assert.That(exception.Message, Does.Contain(nameof(DataMappingMode.TradingDaysBeforeExpiry)));
+            Assert.That(exception.Message, Does.Contain(dataNormalizationMode.ToString()));
+            Assert.AreEqual(0, dataFeed.CreateSubscriptionCallCount);
+        }
+
         private class TestDataFeed : IDataFeed
         {
             public Subscription Subscription { get; set; }
+
+            public int CreateSubscriptionCallCount { get; private set; }
 
             public bool IsActive { get; }
 
@@ -374,6 +437,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
 
             public Subscription CreateSubscription(SubscriptionRequest request)
             {
+                CreateSubscriptionCallCount++;
                 return Subscription;
             }
 
