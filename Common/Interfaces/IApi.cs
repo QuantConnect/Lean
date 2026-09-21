@@ -63,50 +63,6 @@ namespace QuantConnect.Interfaces
         RestResponse UpdateProject(int projectId, string name = null, string description = null);
 
         /// <summary>
-        /// Add a collaborator to a project
-        /// </summary>
-        /// <param name="projectId">Id of the project to add the collaborator to</param>
-        /// <param name="collaboratorUserId">User id of the collaborator to add</param>
-        /// <param name="collaborationLiveControl">Whether the collaborator can deploy and stop live algorithms</param>
-        /// <param name="collaborationWrite">Whether the collaborator can edit the code</param>
-        /// <returns><see cref="ProjectCollaboratorsResponse"/> with the collaborators of the project</returns>
-        ProjectCollaboratorsResponse CreateProjectCollaborator(int projectId, string collaboratorUserId,
-            bool collaborationLiveControl, bool collaborationWrite);
-
-        /// <summary>
-        /// List all collaborators on a project
-        /// </summary>
-        /// <param name="projectId">Id of the project from which to read the collaborators</param>
-        /// <returns><see cref="ReadProjectCollaboratorsResponse"/> with the collaborators of the project and the owner permissions</returns>
-        ReadProjectCollaboratorsResponse ReadProjectCollaborators(int projectId);
-
-        /// <summary>
-        /// Update the permissions of a collaborator in a project
-        /// </summary>
-        /// <param name="projectId">Id of the project the collaborator is on</param>
-        /// <param name="collaboratorUserId">User id of the collaborator to update</param>
-        /// <param name="liveControl">Whether the collaborator can deploy and stop live algorithms</param>
-        /// <param name="write">Whether the collaborator can edit the code</param>
-        /// <returns><see cref="ProjectCollaboratorsResponse"/> with the collaborators of the project</returns>
-        ProjectCollaboratorsResponse UpdateProjectCollaborator(int projectId, string collaboratorUserId, bool liveControl, bool write);
-
-        /// <summary>
-        /// Remove a collaborator from a project
-        /// </summary>
-        /// <param name="projectId">Id of the project to remove the collaborator from</param>
-        /// <param name="collaboratorId">User id of the collaborator to remove</param>
-        /// <returns><see cref="ProjectCollaboratorsResponse"/> with the remaining collaborators of the project</returns>
-        ProjectCollaboratorsResponse DeleteProjectCollaborator(int projectId, string collaboratorId);
-
-        /// <summary>
-        /// Lock a project so it can be edited
-        /// </summary>
-        /// <param name="projectId">Id of the project to lock</param>
-        /// <param name="codeSourceId">Name of the environment that's creating the request</param>
-        /// <returns><see cref="RestResponse"/> indicating success</returns>
-        RestResponse AcquireProjectCollaborationLock(int projectId, string codeSourceId);
-
-        /// <summary>
         /// Add a file to a project
         /// </summary>
         /// <param name="projectId">The project to which the file should be added</param>
