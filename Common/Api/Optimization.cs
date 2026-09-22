@@ -43,6 +43,11 @@ namespace QuantConnect.Api
         public decimal? TargetValue { get; set; }
 
         /// <summary>
+        /// Defines the direction of the optimization
+        /// </summary>
+        public Extremum Extremum { get; set; }
+
+        /// <summary>
         /// List with grid charts representing the grid layout
         /// </summary>
         public List<GridChart> GridLayout { get; set; }

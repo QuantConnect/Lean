@@ -46,11 +46,6 @@ namespace QuantConnect.Api
         public string Name { get; set; }
 
         /// <summary>
-        /// Defines the direction of the optimization
-        /// </summary>
-        public Extremum Extremum { get; set; }
-
-        /// <summary>
         /// Status of the optimization
         /// </summary>
         [JsonConverter(typeof(StringEnumConverter), converterParameters: typeof(CamelCaseNamingStrategy))]

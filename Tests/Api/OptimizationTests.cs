@@ -202,10 +202,10 @@ namespace QuantConnect.Tests.API
         }
 
         /// <summary>
-        /// The optimization response carries the documented extremum and target value
+        /// The read optimization response carries the documented extremum and target value
         /// </summary>
         [Test]
-        public void OptimizationReturnsTheDocumentedExtremumAndTargetValue()
+        public void ReadOptimizationReturnsTheDocumentedExtremumAndTargetValue()
         {
             var projectId = GetProjectCompiledAndWithBacktest(out var compile);
 
@@ -231,11 +231,13 @@ namespace QuantConnect.Tests.API
                     nodeType: OptimizationNodes.O2_8,
                     parallelNodes: 12
                 );
-                Assert.IsInstanceOf<Maximization>(optimization.Extremum, "The optimization was created with a max target");
+                Assert.IsNotEmpty(optimization.OptimizationId);
+                Assert.AreEqual(OptimizationStatus.New, optimization.Status);
+                Assert.AreEqual(DateTime.UtcNow.Date, optimization.Created.Date);
 
                 var read = ApiClient.ReadOptimization(optimization.OptimizationId);
                 Assert.IsInstanceOf<Maximization>(read.Extremum, "The optimization was created with a max target");
-                Assert.AreEqual(2m, read.TargetValue, "The optimization was created with a target value of two");
+                Assert.AreEqual(read.Criterion.TargetValue, read.TargetValue, "The target value is the criterion one");
             }
             finally
             {

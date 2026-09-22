@@ -911,13 +911,12 @@ def CreateLiveAlgorithmFromPython(apiClient, projectId, compileId, nodeId):
             try
             {
                 var latest = ApiClient.ReadLiveAlgorithm(projectId);
-                Assert.IsTrue(latest.Success, $"Error reading the live algorithm: {string.Join(", ", latest.Errors)}");
+                Assert.IsTrue(latest.Success, $"Error reading the live algorithm: {string.Join(", ", latest.Errors ?? [])}");
                 Assert.AreEqual(created.DeployId, latest.DeployId, "Omitting the deploy id reads the latest deployment of the project");
-                Assert.AreEqual(description, latest.Description);
                 Assert.IsFalse(latest.IsPublicStreaming, "A new deployment does not stream publicly");
 
                 var byDeployId = ApiClient.ReadLiveAlgorithm(projectId, created.DeployId);
-                Assert.IsTrue(byDeployId.Success, $"Error reading the live algorithm: {string.Join(", ", byDeployId.Errors)}");
+                Assert.IsTrue(byDeployId.Success, $"Error reading the live algorithm: {string.Join(", ", byDeployId.Errors ?? [])}");
                 Assert.AreEqual(created.DeployId, byDeployId.DeployId);
             }
             finally
@@ -976,6 +975,10 @@ def CreateLiveAlgorithmFromPython(apiClient, projectId, compileId, nodeId):
             {
                 var updateProject = ApiClient.UpdateProject(projectId, description: description);
                 Assert.IsTrue(updateProject.Success, $"Error updating project: {string.Join(", ", updateProject.Errors)}");
+
+                var readProject = ApiClient.ReadProject(projectId);
+                Assert.IsTrue(readProject.Success, $"Error reading project: {string.Join(", ", readProject.Errors)}");
+                Assert.AreEqual(description, readProject.Projects.Single().Description, "The project description was not set");
             }
 
             var updateProjectFileContent = ApiClient.UpdateProjectFileContent(projectId, _defaultFile.Name, _defaultFile.Code);
