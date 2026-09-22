@@ -18,6 +18,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel.Composition;
 using QuantConnect.Api;
+using QuantConnect.Orders;
 using QuantConnect.Notifications;
 using QuantConnect.Optimizer.Objectives;
 using QuantConnect.Optimizer.Parameters;
@@ -175,6 +176,15 @@ namespace QuantConnect.Interfaces
         RestResponse UpdateBacktest(int projectId, string backtestId, string name = "", string note = "");
 
         /// <summary>
+        /// Updates the tags collection for a backtest
+        /// </summary>
+        /// <param name="projectId">Project for the backtest we want to update</param>
+        /// <param name="backtestId">Backtest id we want to update</param>
+        /// <param name="tags">The new backtest tags</param>
+        /// <returns><see cref="RestResponse"/></returns>
+        RestResponse UpdateBacktestTags(int projectId, string backtestId, IReadOnlyCollection<string> tags);
+
+        /// <summary>
         /// Delete a backtest from the specified project and backtestId.
         /// </summary>
         /// <param name="projectId">Project for the backtest we want to delete</param>
@@ -200,6 +210,27 @@ namespace QuantConnect.Interfaces
         /// <returns><see cref="InsightResponse"/></returns>
         /// <exception cref="ArgumentException"></exception>
         public InsightResponse ReadBacktestInsights(int projectId, string backtestId, int start = 0, int end = 0);
+
+        /// <summary>
+        /// Returns the orders of the specified backtest and project id.
+        /// </summary>
+        /// <param name="projectId">Id of the project from which to read the orders</param>
+        /// <param name="backtestId">Id of the backtest from which to read the orders</param>
+        /// <param name="start">Starting index of the orders to be fetched</param>
+        /// <param name="end">Last index of the orders to be fetched</param>
+        /// <returns>The <see cref="OrdersResponseWrapper"/> with the requested orders and the total order count</returns>
+        OrdersResponseWrapper ReadBacktestOrders(int projectId, string backtestId, int start = 0, int end = 0);
+
+        /// <summary>
+        /// Gets the logs of a specific backtest
+        /// </summary>
+        /// <param name="projectId">Id of the project from which to read the backtest</param>
+        /// <param name="backtestId">Id of the backtest from which to read the logs</param>
+        /// <param name="start">Start line (inclusive) of logs to read</param>
+        /// <param name="end">End line (exclusive) of logs to read</param>
+        /// <param name="query">Keyword to filter the log lines</param>
+        /// <returns><see cref="BacktestLog"/> with the requested log lines and the total log line count</returns>
+        BacktestLog ReadBacktestLog(int projectId, string backtestId, int start = 0, int end = 0, string query = null);
 
 #pragma warning disable CS1574
         /// <summary>
@@ -300,10 +331,12 @@ namespace QuantConnect.Interfaces
         /// </summary>
         /// <param name="projectId">Project Id of the live running algorithm</param>
         /// <param name="algorithmId">Algorithm Id of the live running algorithm</param>
-        /// <param name="startLine">Start line of logs to read</param>
-        /// <param name="endLine">End line of logs to read</param>
-        /// <returns>List of strings that represent the logs of the algorithm</returns>
-        LiveLog ReadLiveLogs(int projectId, string algorithmId, int startLine, int endLine);
+        /// <param name="startLine">Start line (inclusive) of logs to read</param>
+        /// <param name="endLine">End line (exclusive) of logs to read</param>
+        /// <param name="query">Keyword to filter the log lines</param>
+        /// <param name="deploymentLogs">Whether only the logs of the given <paramref name="algorithmId"/> deployment should be returned</param>
+        /// <returns><see cref="LiveLog"/> with the requested log lines</returns>
+        LiveLog ReadLiveLogs(int projectId, string algorithmId, int startLine = 0, int endLine = 0, string query = null, bool deploymentLogs = false);
 
         /// <summary>
         /// Returns a chart object from a live algorithm
@@ -332,6 +365,16 @@ namespace QuantConnect.Interfaces
         /// <returns><see cref="InsightResponse"/></returns>
         /// <exception cref="ArgumentException"></exception>
         public InsightResponse ReadLiveInsights(int projectId, int start = 0, int end = 0);
+
+        /// <summary>
+        /// Returns the orders of the specified project id live algorithm.
+        /// </summary>
+        /// <param name="projectId">Id of the project from which to read the live orders</param>
+        /// <param name="algorithmId">Deploy id (algorithm id) of the live running algorithm, null for the latest deployment</param>
+        /// <param name="start">Starting index of the orders to be fetched</param>
+        /// <param name="end">Last index of the orders to be fetched</param>
+        /// <returns>The <see cref="OrdersResponseWrapper"/> with the requested orders and the total order count</returns>
+        OrdersResponseWrapper ReadLiveOrders(int projectId, string algorithmId = null, int start = 0, int end = 0);
 
         /// <summary>
         /// Gets the link to the downloadable data.
@@ -527,9 +570,25 @@ namespace QuantConnect.Interfaces
         public RestResponse DeleteObjectStore(string organizationId, string key);
 
         /// <summary>
+        /// Request to list Object Store files of a specific organization and path
+        /// </summary>
+        /// <param name="organizationId">Organization ID we would like to list the Object Store files from</param>
+        /// <param name="path">Path to the Object Store files</param>
+        /// <returns><see cref="ListObjectStoreResponse"/></returns>
+        ListObjectStoreResponse ListObjectStore(string organizationId, string path);
+
+        /// <summary>
         /// Gets a list of LEAN versions with their corresponding basic descriptions
         /// </summary>
         public VersionsResponse ReadLeanVersions();
+
+        /// <summary>
+        /// Create a live command
+        /// </summary>
+        /// <param name="projectId">Project for the live instance we want to run the command against</param>
+        /// <param name="command">The command to run</param>
+        /// <returns><see cref="RestResponse"/></returns>
+        RestResponse CreateLiveCommand(int projectId, object command);
 
         /// <summary>
         /// Broadcast a live command
