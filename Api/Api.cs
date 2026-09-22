@@ -196,15 +196,15 @@ namespace QuantConnect.Api
         /// <param name="oldFileName">The current name of the file</param>
         /// <param name="newFileName">The new name for the file</param>
         /// <param name="codeSourceId">Name of the environment that's creating the request, for example "Lean" or "Research"</param>
-        /// <returns><see cref="ProjectFilesResponse"/> indicating success, which may include the updated project files</returns>
+        /// <returns><see cref="RestResponse"/> indicating success</returns>
 
-        public ProjectFilesResponse UpdateProjectFileName(int projectId, string oldFileName, string newFileName,
+        public RestResponse UpdateProjectFileName(int projectId, string oldFileName, string newFileName,
             string codeSourceId = null)
         {
             object payload = codeSourceId == null
                 ? new { projectId, name = oldFileName, newName = newFileName }
                 : new { projectId, name = oldFileName, newName = newFileName, codeSourceId };
-            TryJsonPost("files/update", out ProjectFilesResponse result, payload);
+            TryJsonPost("files/update", out RestResponse result, payload);
             return result;
         }
 
@@ -216,15 +216,15 @@ namespace QuantConnect.Api
         /// <param name="fileName">The name of the file that should be updated</param>
         /// <param name="newFileContents">The new contents of the file</param>
         /// <param name="codeSourceId">Name of the environment that's creating the request, for example "Lean" or "Research"</param>
-        /// <returns><see cref="ProjectFilesResponse"/> indicating success, which may include the updated project files</returns>
+        /// <returns><see cref="RestResponse"/> indicating success</returns>
 
-        public ProjectFilesResponse UpdateProjectFileContent(int projectId, string fileName, string newFileContents,
+        public RestResponse UpdateProjectFileContent(int projectId, string fileName, string newFileContents,
             string codeSourceId = null)
         {
             object payload = codeSourceId == null
                 ? new { projectId, name = fileName, content = newFileContents }
                 : new { projectId, name = fileName, content = newFileContents, codeSourceId };
-            TryJsonPost("files/update", out ProjectFilesResponse result, payload);
+            TryJsonPost("files/update", out RestResponse result, payload);
             return result;
         }
 

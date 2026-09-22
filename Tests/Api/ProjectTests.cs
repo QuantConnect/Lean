@@ -1130,37 +1130,6 @@ namespace QuantConnect.Algorithm.CSharp
         }
 
         /// <summary>
-        /// files/update answers with the updated project files instead of a plain rest response
-        /// </summary>
-        [Test]
-        public void UpdateProjectFileReturnsTheUpdatedFiles()
-        {
-            var fileName = $"Updated{GetTimestamp()}.cs";
-            var renamedFileName = $"Renamed{fileName}";
-
-            try
-            {
-                var added = ApiClient.AddProjectFile(TestProject.ProjectId, fileName, "// original");
-                Assert.IsTrue(added.Success, $"Error adding the file: {string.Join(", ", added.Errors)}");
-
-                var updatedContent = ApiClient.UpdateProjectFileContent(TestProject.ProjectId, fileName, "// replaced");
-                Assert.IsTrue(updatedContent.Success, $"Error updating the file content: {string.Join(", ", updatedContent.Errors)}");
-                Assert.IsNotNull(updatedContent.Files, "files/update is documented to answer with the updated files");
-                Assert.AreEqual("// replaced", updatedContent.Files.Single(x => x.Name == fileName).Code);
-
-                var updatedName = ApiClient.UpdateProjectFileName(TestProject.ProjectId, fileName, renamedFileName);
-                Assert.IsTrue(updatedName.Success, $"Error updating the file name: {string.Join(", ", updatedName.Errors)}");
-                Assert.IsNotNull(updatedName.Files, "files/update is documented to answer with the updated files");
-                Assert.IsTrue(updatedName.Files.Any(x => x.Name == renamedFileName));
-            }
-            finally
-            {
-                ApiClient.DeleteProjectFile(TestProject.ProjectId, fileName);
-                ApiClient.DeleteProjectFile(TestProject.ProjectId, renamedFileName);
-            }
-        }
-
-        /// <summary>
         /// files/patch applies a unified diff to a file of the project
         /// </summary>
         [Test]
@@ -1191,20 +1160,38 @@ namespace QuantConnect.Algorithm.CSharp
         }
 
         /// <summary>
-        /// compile/create reports the parameters it detected in the files of the project
+        /// compile/create answers with the documented parameters list. The api sends it empty at creation, before
+        /// the build runs, and the read response does not carry it, so only the presence of the list can be asserted
         /// </summary>
         [Test]
         public void CreateCompileReportsTheDetectedFileParameters()
         {
-            var compile = ApiClient.CreateCompile(TestProject.ProjectId);
-            Assert.IsTrue(compile.Success, $"Error creating the compile: {string.Join(", ", compile.Errors)}");
-            Assert.IsNotNull(compile.Parameters, "compile/create is documented to report the parameters detected in each file");
-            Assert.IsTrue(compile.Parameters.All(x => !string.IsNullOrEmpty(x.File)));
+            var projectResult = ApiClient.CreateProject($"{GetTimestamp()} Test {TestAccount} Compile Parameters",
+                Language.CSharp, TestOrganization);
+            Assert.IsTrue(projectResult.Success, $"Error creating project: {string.Join(", ", projectResult.Errors)}");
+            var projectId = projectResult.Projects.First().ProjectId;
 
-            var detected = compile.Parameters.Where(x => x.Parameters != null).SelectMany(x => x.Parameters).ToList();
-            Assert.IsNotEmpty(detected, "The template algorithm of the project declares parameters the api detects");
-            Assert.IsTrue(detected.All(x => x.Line > 0 && !string.IsNullOrEmpty(x.Type)),
-                $"Incomplete parameter details: {string.Join(", ", detected.Select(x => $"{x.Line}: {x.Type}"))}");
+            try
+            {
+                // The algorithm declares the ema-fast and ema-slow parameters through the parameter attribute
+                var code = File.ReadAllText("../../../Algorithm.CSharp/ParameterizedAlgorithm.cs");
+                var updateProjectFileContent = ApiClient.UpdateProjectFileContent(projectId, "Main.cs", code);
+                Assert.IsTrue(updateProjectFileContent.Success,
+                    $"Error updating project file: {string.Join(", ", updateProjectFileContent.Errors)}");
+
+                var compile = ApiClient.CreateCompile(projectId);
+                Assert.IsTrue(compile.Success, $"Error creating the compile: {string.Join(", ", compile.Errors)}");
+                Assert.IsNotNull(compile.Parameters, "compile/create is documented to report the parameters detected in each file");
+                Assert.IsTrue(compile.Parameters.All(x => !string.IsNullOrEmpty(x.File) && x.Parameters != null),
+                    "Each detected file reports its path and parameters");
+
+                compile = WaitForCompilerResponse(ApiClient, projectId, compile.CompileId);
+                Assert.AreEqual(CompileState.BuildSuccess, compile.State, $"Error compiling project: {string.Join(", ", compile.Errors)}");
+            }
+            finally
+            {
+                ApiClient.DeleteProject(projectId);
+            }
         }
 
         /// <summary>

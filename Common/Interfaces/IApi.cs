@@ -79,8 +79,8 @@ namespace QuantConnect.Interfaces
         /// <param name="oldFileName">The current name of the file</param>
         /// <param name="newFileName">The new name for the file</param>
         /// <param name="codeSourceId">Name of the environment that's creating the request</param>
-        /// <returns><see cref="ProjectFilesResponse"/> indicating success, which may include the updated project files</returns>
-        ProjectFilesResponse UpdateProjectFileName(int projectId, string oldFileName, string newFileName, string codeSourceId = null);
+        /// <returns><see cref="RestResponse"/> indicating success</returns>
+        RestResponse UpdateProjectFileName(int projectId, string oldFileName, string newFileName, string codeSourceId = null);
 
         /// <summary>
         /// Update the contents of a file
@@ -89,8 +89,8 @@ namespace QuantConnect.Interfaces
         /// <param name="fileName">The name of the file that should be updated</param>
         /// <param name="newFileContents">The new contents of the file</param>
         /// <param name="codeSourceId">Name of the environment that's creating the request</param>
-        /// <returns><see cref="ProjectFilesResponse"/> indicating success, which may include the updated project files</returns>
-        ProjectFilesResponse UpdateProjectFileContent(int projectId, string fileName, string newFileContents, string codeSourceId = null);
+        /// <returns><see cref="RestResponse"/> indicating success</returns>
+        RestResponse UpdateProjectFileContent(int projectId, string fileName, string newFileContents, string codeSourceId = null);
 
         /// <summary>
         /// Apply a patch in unified diff format to one or more files in a project
