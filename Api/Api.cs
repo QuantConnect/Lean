@@ -309,22 +309,6 @@ namespace QuantConnect.Api
         }
 
         /// <summary>
-        /// Apply a patch in unified diff format to one or more files in a project
-        /// </summary>
-        /// <param name="projectId">Project id that contains the files to patch</param>
-        /// <param name="patch">The patch to apply, in unified diff format as produced by git diff, for example one that
-        /// starts with "diff --git a/main.py b/main.py" and carries the changed hunks of that file</param>
-        /// <param name="codeSourceId">Name of the environment that's creating the request, for example "Lean" or "Research"</param>
-        /// <returns><see cref="RestResponse"/> indicating success</returns>
-
-        public RestResponse PatchProjectFile(int projectId, string patch, string codeSourceId = null)
-        {
-            object payload = codeSourceId == null ? new { projectId, patch } : new { projectId, patch, codeSourceId };
-            TryJsonPost("files/patch", out RestResponse result, payload);
-            return result;
-        }
-
-        /// <summary>
         /// Delete a project
         /// </summary>
         /// <param name="projectId">Project id we own and wish to delete</param>

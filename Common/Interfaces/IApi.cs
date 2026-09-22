@@ -93,15 +93,6 @@ namespace QuantConnect.Interfaces
         RestResponse UpdateProjectFileContent(int projectId, string fileName, string newFileContents, string codeSourceId = null);
 
         /// <summary>
-        /// Apply a patch in unified diff format to one or more files in a project
-        /// </summary>
-        /// <param name="projectId">Project id that contains the files to patch</param>
-        /// <param name="patch">The patch to apply, in unified diff format</param>
-        /// <param name="codeSourceId">Name of the environment that's creating the request</param>
-        /// <returns><see cref="RestResponse"/> indicating success</returns>
-        RestResponse PatchProjectFile(int projectId, string patch, string codeSourceId = null);
-
-        /// <summary>
         /// Read a file in a project
         /// </summary>
         /// <param name="projectId">Project id to which the file belongs</param>
