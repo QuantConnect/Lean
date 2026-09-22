@@ -100,7 +100,7 @@ namespace QuantConnect.Api
         public decimal Equity { get; set; }
 
         /// <summary>
-        /// Environment in which the deployment is running.
+        /// Environment in which the deployment is running: "live", "paper" or "uat".
         /// </summary>
         public string Environment { get; set; }
 
