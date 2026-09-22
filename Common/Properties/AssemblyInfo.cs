@@ -17,6 +17,7 @@ using System.Runtime.InteropServices;
 // The following GUID is for the ID of the typelib if this project is exposed to COM
 [assembly: Guid("94687ba0-0b5f-43f7-a911-83b5a89651cf")]
 
+[assembly: InternalsVisibleTo("QuantConnect.Algorithm")]
 [assembly: InternalsVisibleTo("QuantConnect.Algorithm.Framework")]
 [assembly: InternalsVisibleTo("QuantConnect.Brokerages")]
 [assembly: InternalsVisibleTo("QuantConnect.Lean.Engine")]

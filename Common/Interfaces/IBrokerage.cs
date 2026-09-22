@@ -157,5 +157,6 @@ namespace QuantConnect.Interfaces
         /// Enables or disables concurrent processing of messages to and from the brokerage.
         /// </summary>
         bool ConcurrencyEnabled { get; set; }
+
     }
 }

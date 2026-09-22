@@ -1,4 +1,5 @@
 ﻿using System.Reflection;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
 // General Information about an assembly is controlled through the following 
@@ -15,3 +16,5 @@ using System.Runtime.InteropServices;
 
 // The following GUID is for the ID of the typelib if this project is exposed to COM
 [assembly: Guid("044b87ad-d9f9-45c8-90b3-683de09ac42c")]
+
+[assembly: InternalsVisibleTo("QuantConnect.Tests")]

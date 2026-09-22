@@ -13,6 +13,7 @@
  * limitations under the License.
 */
 
+using QuantConnect.Orders;
 using QuantConnect.Securities;
 using System;
 using System.Collections.Generic;
@@ -33,6 +34,23 @@ namespace QuantConnect.Brokerages
         /// Market name
         /// </summary>
         protected override string MarketName => Market.BinanceUS;
+
+        /// <summary>
+        /// Returns true if the brokerage could accept this order. Binance US does not expose the order list endpoints,
+        /// so contingent orders are not supported
+        /// </summary>
+        /// <param name="security">The security of the order</param>
+        /// <param name="order">The order to be processed</param>
+        /// <param name="message">If this function returns false, a brokerage message detailing why the order may not be submitted</param>
+        /// <returns>True if the brokerage could process the order, false otherwise</returns>
+        public override bool CanSubmitOrder(Security security, Order order, out BrokerageMessageEvent message)
+        {
+            if (!this.ValidateContingentOrdersNotSupported(order, out message))
+            {
+                return false;
+            }
+            return base.CanSubmitOrder(security, order, out message);
+        }
 
         /// <summary>
         /// Gets a map of the default markets to be used for each security type

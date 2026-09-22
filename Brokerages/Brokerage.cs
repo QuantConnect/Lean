@@ -203,6 +203,44 @@ namespace QuantConnect.Brokerages
         }
 
         /// <summary>
+        /// Helper method for brokerages which support contingent orders (OCO, OTO, OUO, brackets): to be called after emitting fill order events,
+        /// it will notify through <see cref="OnOrderUpdated"/> the children orders which were triggered by an order which completely filled,
+        /// all its legs for a combo order, so they are no longer held by the brokerage but working in the market
+        /// </summary>
+        /// <param name="orderEvents">The order events that were emitted</param>
+        /// <param name="orderProvider">The order provider to use</param>
+        protected void OnContingentOrdersTriggered(IReadOnlyList<OrderEvent> orderEvents, IOrderProvider orderProvider)
+        {
+            try
+            {
+                if (orderProvider == null || orderEvents == null)
+                {
+                    return;
+                }
+
+                // only fills trigger children, other events could add actions on the same orders, like canceling them
+                // the brokerage cancels and resizes the orders on its side, so only the triggered ones are notified
+                var (updates, _) = TriggeredContingentOrdersProcessor.Process(orderEvents.Where(orderEvent => orderEvent.Status == OrderStatus.Filled),
+                    orderProvider.GetOrderById, DateTime.UtcNow);
+                if (updates == null)
+                {
+                    return;
+                }
+                foreach (var update in updates)
+                {
+                    if (update.ContingencyTriggered)
+                    {
+                        OnOrderUpdated(update);
+                    }
+                }
+            }
+            catch (Exception err)
+            {
+                Log.Error(err);
+            }
+        }
+
+        /// <summary>
         /// Event invocator for the OrderIdChanged event
         /// </summary>
         /// <param name="e">The BrokerageOrderIdChangedEvent</param>
@@ -470,6 +508,20 @@ namespace QuantConnect.Brokerages
         /// Specifies whether the brokerage will instantly update account balances
         /// </summary>
         public virtual bool AccountInstantlyUpdated => false;
+
+        /// <summary>
+        /// Cache holding the legs of a combo order until all of them have been placed, so the brokerage can submit them together
+        /// </summary>
+        protected GroupOrderCacheManager GroupOrderCacheManager { get; } = new();
+
+        /// <summary>
+        /// Cache holding the orders of a set of contingent orders (OCO, OTO, OUO, brackets) until all of them have been placed,
+        /// so the brokerage can submit them together
+        /// </summary>
+        protected ContingentOrderCache ContingentOrderCache { get; } = new();
+
+        // only the orders to trigger are used: no filled quantities nor securities are required, it holds no state
+        private static readonly ContingentOrderProcessor TriggeredContingentOrdersProcessor = new(_ => 0, null);
 
         /// <summary>
         /// Returns the brokerage account's base currency

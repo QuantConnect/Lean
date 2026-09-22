@@ -2875,7 +2875,8 @@ namespace QuantConnect
                 order.Time,
                 order.Tag,
                 order.Properties,
-                order.GroupOrderManager);
+                order.GroupOrderManager,
+                contingency: order.Contingency);
 
             submitOrderRequest.SetOrderId(order.Id);
             var orderTicket = new OrderTicket(transactionManager, submitOrderRequest);

@@ -40,6 +40,7 @@ namespace QuantConnect.Securities
         private readonly IAlgorithm _algorithm;
         private int _orderId;
         private int _groupOrderManagerId;
+        private int _contingentOrderSetId;
         private readonly SecurityManager _securities;
         private TimeSpan _marketOrderFillTimeout = TimeSpan.MinValue;
 
@@ -389,8 +390,48 @@ namespace QuantConnect.Securities
         /// <returns>Total quantity that hasn't been filled yet for all orders that were not filtered</returns>
         public decimal GetOpenOrdersRemainingQuantity(Func<OrderTicket, bool> filter = null)
         {
-            return GetOpenOrderTickets(filter, memoize: false)
-                .Aggregate(0m, (d, t) => d + t.QuantityRemaining);
+            var result = 0m;
+            // for contingent orders (OCO/OUO) at most one of the siblings is expected to fill, we take the biggest per symbol
+            Dictionary<(int, int, Symbol), decimal> siblingsRemainingQuantity = null;
+            foreach (var ticket in GetOpenOrderTickets(filter, memoize: false))
+            {
+                var contingency = ticket.Contingency;
+                if (contingency == null)
+                {
+                    result += ticket.QuantityRemaining;
+                    continue;
+                }
+
+                if (contingency.IsWaitingForTrigger)
+                {
+                    // held by the brokerage until its parent fills, it's not working yet
+                    continue;
+                }
+
+                var member = contingency.GetLink(null);
+                if (member == null)
+                {
+                    result += ticket.QuantityRemaining;
+                    continue;
+                }
+
+                siblingsRemainingQuantity ??= new();
+                var key = (contingency.Id, member.Id, ticket.Symbol);
+                var remaining = ticket.QuantityRemaining;
+                if (!siblingsRemainingQuantity.TryGetValue(key, out var existing) || Math.Abs(remaining) > Math.Abs(existing))
+                {
+                    siblingsRemainingQuantity[key] = remaining;
+                }
+            }
+
+            if (siblingsRemainingQuantity != null)
+            {
+                foreach (var remaining in siblingsRemainingQuantity.Values)
+                {
+                    result += remaining;
+                }
+            }
+            return result;
         }
 
         /// <summary>
@@ -569,6 +610,15 @@ namespace QuantConnect.Securities
         public int GetIncrementGroupOrderManagerId()
         {
             return Interlocked.Increment(ref _groupOrderManagerId);
+        }
+
+        /// <summary>
+        /// Get a new contingent order set id, and increment the internal counter.
+        /// </summary>
+        /// <returns>New unique int contingent order set id.</returns>
+        public int GetIncrementContingentOrderSetId()
+        {
+            return Interlocked.Increment(ref _contingentOrderSetId);
         }
 
         /// <summary>

@@ -54,7 +54,7 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
         private readonly List<Thread> _threads;
         // for each order (or combo group) being processed, the follow up requests waiting their turn in arrival order,
         // or null until a second request actually needs parking. while the key is here the order is already running
-        private readonly Dictionary<(bool IsGroup, int Id), Queue<OrderRequest>> _inFlight = new();
+        private readonly Dictionary<(int Kind, int Id), Queue<OrderRequest>> _inFlight = new();
         // guards the in flight map, the threads list and the growth/shutdown flags
         private readonly Lock _lock = new();
         // maximum number of worker threads the pool can grow to on demand
@@ -487,14 +487,19 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
         }
 
         /// <summary>
-        /// Builds the routing key that ties an order's requests together, the combo group when it has one, otherwise
-        /// the order itself. Order ids and group ids are separate counters that can share a value, so the flag keeps
-        /// a simple order and a combo group from colliding.
+        /// Builds the routing key that ties an order's requests together: the set of contingent orders when it's part of one,
+        /// which can hold combo orders too, else the combo group when it has one, otherwise the order itself.
+        /// Order ids, group ids and contingent ids are separate counters that can share a value, so the kind keeps them from colliding.
         /// </summary>
-        private static (bool IsGroup, int Id) GetRoutingKey(Order order)
+        private static (int Kind, int Id) GetRoutingKey(Order order)
         {
+            var contingent = order.Contingency;
+            if (contingent?.Id > 0)
+            {
+                return (2, contingent.Id);
+            }
             var group = order.GroupOrderManager;
-            return group?.Id > 0 ? (true, group.Id) : (false, order.Id);
+            return group?.Id > 0 ? (1, group.Id) : (0, order.Id);
         }
 
         /// <summary>
@@ -503,9 +508,9 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
         private readonly struct WorkItem
         {
             public OrderRequest Request { get; }
-            public (bool IsGroup, int Id) Key { get; }
+            public (int Kind, int Id) Key { get; }
 
-            public WorkItem(OrderRequest request, (bool IsGroup, int Id) key)
+            public WorkItem(OrderRequest request, (int Kind, int Id) key)
             {
                 Request = request;
                 Key = key;

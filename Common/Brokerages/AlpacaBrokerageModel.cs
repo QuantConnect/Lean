@@ -35,6 +35,15 @@ namespace QuantConnect.Brokerages
         private static readonly TimeOnly _mooWindowStart = new(19, 0, 0);
 
         /// <summary>
+        /// The contingency types supported by the brokerage: bracket, oco and oto order classes
+        /// </summary>
+        private readonly HashSet<ContingencyType> _supportedContingencyTypes = new()
+        {
+            ContingencyType.OneCancelsOther,
+            ContingencyType.OneTriggersOther
+        };
+
+        /// <summary>
         /// A dictionary that maps each supported <see cref="SecurityType"/> to an array of <see cref="OrderType"/> supported by Alpaca brokerage.
         /// </summary>
         private readonly Dictionary<SecurityType, HashSet<OrderType>> _supportOrderTypeBySecurityType = new()
@@ -70,6 +79,57 @@ namespace QuantConnect.Brokerages
         public override IFeeModel GetFeeModel(Security security)
         {
             return new AlpacaFeeModel();
+        }
+
+        /// <summary>
+        /// Validates contingent orders, Alpaca supports these order classes, always for a single equity symbol:
+        ///  - bracket: an entry order which triggers a take profit limit order and a stop loss order, where one cancels the other
+        ///  - oto: an entry order which triggers a single take profit limit order or stop loss order
+        ///  - oco: a take profit limit order and a stop loss order where one cancels the other, to exit an existing position
+        /// </summary>
+        private bool CanSubmitContingentOrder(Security security, Order order, out BrokerageMessageEvent message)
+        {
+            if (!this.ValidateContingentOrder(order, _supportedContingencyTypes, out message, supportsComboOrders: false,
+                supportsMultipleSymbols: false, supportsNesting: false, maximumOrderCount: 3))
+            {
+                return false;
+            }
+
+            var contingency = order.Contingency;
+            if (contingency == null)
+            {
+                return true;
+            }
+
+            var isParent = order.GetContingencyLink(ContingencyRole.Parent) != null;
+            var isChild = order.GetContingencyLink(ContingencyRole.Child) != null;
+            var isMember = order.GetSiblingLink() != null;
+            if (security.Type != SecurityType.Equity)
+            {
+                message = this.UnsupportedContingentOrdersShape("only equities are supported.");
+            }
+            else if (isParent && isMember)
+            {
+                message = this.UnsupportedContingentOrdersShape("the entry order can not be part of a one cancels other contingency.");
+            }
+            else if (!isParent && order.Type != OrderType.Limit && order.Type != OrderType.StopMarket && order.Type != OrderType.StopLimit)
+            {
+                message = this.UnsupportedContingentOrdersShape("the exit orders have to be a limit order (take profit) or a stop market/limit order (stop loss).");
+            }
+            else if (contingency.Count == 3 && !isParent && !(isChild && isMember))
+            {
+                message = this.UnsupportedContingentOrdersShape("3 orders are only supported as a bracket: an entry order which triggers a take profit and a stop loss where one cancels the other.");
+            }
+            else if (isMember && contingency.OrderTypes.Count > 0 && (!contingency.OrderTypes.Contains(OrderType.Limit)
+                || !contingency.OrderTypes.Contains(OrderType.StopMarket) && !contingency.OrderTypes.Contains(OrderType.StopLimit)))
+            {
+                message = this.UnsupportedContingentOrdersShape("one cancels other requires a limit order (take profit) and a stop market/limit order (stop loss).");
+            }
+            else if (isMember && !isChild && contingency.Directions.Count > 1)
+            {
+                message = this.UnsupportedContingentOrdersShape("one cancels other orders have to be for the same side.");
+            }
+            return message == null;
         }
 
         /// <summary>
@@ -115,6 +175,11 @@ namespace QuantConnect.Brokerages
                 return false;
             }
 
+            if (!CanSubmitContingentOrder(security, order, out message))
+            {
+                return false;
+            }
+
             if (!BrokerageExtensions.ValidateCrossZeroOrder(this, security, order, out message))
             {
                 return false;
@@ -139,6 +204,13 @@ namespace QuantConnect.Brokerages
         public override bool CanUpdateOrder(Security security, Order order, UpdateOrderRequest request, out BrokerageMessageEvent message)
         {
             message = null;
+            if (order.Contingency != null && request.Quantity.HasValue && request.Quantity.Value != order.Quantity)
+            {
+                // the legs of bracket, oco and oto orders are sized by the brokerage
+                message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
+                    Messages.DefaultBrokerageModel.UnsupportedContingentOrdersQuantityUpdate(this));
+                return false;
+            }
             return true;
         }
 
