@@ -42,7 +42,9 @@ namespace QuantConnect.Brokerages
             { SecurityType.Equity, new HashSet<OrderType> { OrderType.Market, OrderType.Limit, OrderType.StopMarket, OrderType.StopLimit,
                 OrderType.TrailingStop, OrderType.MarketOnOpen, OrderType.MarketOnClose } },
             // Market and limit order types see https://docs.alpaca.markets/docs/options-trading-overview
-            { SecurityType.Option, new HashSet<OrderType> { OrderType.Market, OrderType.Limit } },
+            // Combo market and combo limit are the multi-leg option orders see https://docs.alpaca.markets/docs/options-level-3-trading
+            { SecurityType.Option, new HashSet<OrderType> { OrderType.Market, OrderType.Limit, OrderType.ComboMarket, OrderType.ComboLimit } },
+            { SecurityType.IndexOption, new HashSet<OrderType> { OrderType.Market, OrderType.Limit, OrderType.ComboMarket, OrderType.ComboLimit } },
             { SecurityType.Crypto, new HashSet<OrderType> { OrderType.Market, OrderType.Limit, OrderType.StopLimit }}
         };
 
@@ -94,6 +96,14 @@ namespace QuantConnect.Brokerages
             {
                 message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
                     Messages.DefaultBrokerageModel.UnsupportedOrderType(this, order, supportOrderTypes));
+                return false;
+            }
+
+            // Every leg of a combo carries the group, so the number of legs is known from the first leg Lean sends.
+            if (order.Type is OrderType.ComboMarket or OrderType.ComboLimit && order.GroupOrderManager.Count is < 2 or > 4)
+            {
+                message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
+                    Messages.AlpacaBrokerageModel.UnsupportedComboOrderLegCount(this, order.GroupOrderManager.Count));
                 return false;
             }
 
