@@ -89,7 +89,6 @@ namespace QuantConnect.Api
                 Description = jObject.Value<string>("description"),
                 Datacenter = jObject.Value<string>("datacenter"),
                 Public = jObject.Value<bool>("public"),
-                IsPublicStreaming = jObject.Value<bool>("isPublicStreaming"),
                 Success = jObject.Value<bool>("success"),
                 Errors = jObject["errors"]?.ToObject<List<string>>()
             };

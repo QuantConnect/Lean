@@ -93,12 +93,11 @@ namespace QuantConnect.Tests.API
         }
 
         [Test]
-        public void DeserializesTheDescriptionAndThePublicStreamingFlag()
+        public void DeserializesTheDescription()
         {
-            var result = Deserialize(@"""description"": ""My project"", ""isPublicStreaming"": true,");
+            var result = Deserialize(@"""description"": ""My project"",");
 
             Assert.AreEqual("My project", result.Description);
-            Assert.IsTrue(result.IsPublicStreaming);
         }
 
         private static LiveAlgorithmResults Deserialize(string extraFields = "")

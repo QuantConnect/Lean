@@ -1043,20 +1043,16 @@ namespace QuantConnect.Algorithm.CSharp
         }
 
         /// <summary>
-        /// The project response carries the documented pinning, file size and backtest sharing members
+        /// The project response carries the documented maximum file size
         /// </summary>
         [Test]
-        public void ReadProjectReturnsTheDocumentedMembers()
+        public void ReadProjectReturnsTheMaxFileSize()
         {
             var result = ApiClient.ReadProject(TestProject.ProjectId);
             Assert.IsTrue(result.Success, $"Error reading the project: {string.Join(", ", result.Errors)}");
 
             var project = result.Projects.Single();
             Assert.Greater(project.MaxFileSize, 0, "Every project documents the maximum length of its files");
-            Assert.IsFalse(project.IsPinned, "A project the tests just created is not pinned");
-            // documented as nullable: only a project with backtest sharing enabled carries a token
-            Assert.IsTrue(project.SharingTokenBacktest == null || project.SharingTokenBacktest.Length >= 64,
-                $"Unexpected backtest sharing token: {project.SharingTokenBacktest}");
         }
 
         /// <summary>

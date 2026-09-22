@@ -380,22 +380,10 @@ namespace QuantConnect.Api
         public EncryptionKey EncryptionKey { get; set; }
 
         /// <summary>
-        /// Indicates if the project is pinned in the terminal landing page
-        /// </summary>
-        [JsonProperty(PropertyName = "isPinned")]
-        public bool IsPinned { get; set; }
-
-        /// <summary>
         /// The maximum file length allowed in the project
         /// </summary>
         [JsonProperty(PropertyName = "maxFileSize")]
         public int MaxFileSize { get; set; }
-
-        /// <summary>
-        /// Text file with at least 64 characters to be used to authenticate private backtests requests
-        /// </summary>
-        [JsonProperty(PropertyName = "sharingTokenBacktest")]
-        public string SharingTokenBacktest { get; set; }
     }
 
     /// <summary>

@@ -87,11 +87,6 @@ namespace QuantConnect.Api
         public bool Public { get; set; }
 
         /// <summary>
-        /// Indicates if public streaming is enabled for the algorithm
-        /// </summary>
-        public bool IsPublicStreaming { get; set; }
-
-        /// <summary>
         /// Files present in the project in which the algorithm is
         /// </summary>
         public List<ProjectFile> Files { get; set; }

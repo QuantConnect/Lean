@@ -113,11 +113,6 @@ namespace QuantConnect.Api
         /// Live algorithm error message from a crash or algorithm runtime error.
         /// </summary>
         public string Error { get; set; }
-
-        /// <summary>
-        /// Quant Leagues the algorithm is enrolled in.
-        /// </summary>
-        public List<string> Leagues { get; set; }
     }
 
     /// <summary>

@@ -913,7 +913,6 @@ def CreateLiveAlgorithmFromPython(apiClient, projectId, compileId, nodeId):
                 var latest = ApiClient.ReadLiveAlgorithm(projectId);
                 Assert.IsTrue(latest.Success, $"Error reading the live algorithm: {string.Join(", ", latest.Errors ?? [])}");
                 Assert.AreEqual(created.DeployId, latest.DeployId, "Omitting the deploy id reads the latest deployment of the project");
-                Assert.IsFalse(latest.IsPublicStreaming, "A new deployment does not stream publicly");
 
                 var byDeployId = ApiClient.ReadLiveAlgorithm(projectId, created.DeployId);
                 Assert.IsTrue(byDeployId.Success, $"Error reading the live algorithm: {string.Join(", ", byDeployId.Errors ?? [])}");
@@ -927,7 +926,7 @@ def CreateLiveAlgorithmFromPython(apiClient, projectId, compileId, nodeId):
 
         /// <summary>
         /// live/list takes the documented projectId filter, and every summary carries the equity,
-        /// environment, description and leagues of its deployment
+        /// environment and description of its deployment
         /// </summary>
         [Test]
         public void ListLiveAlgorithmsFiltersByProjectId()
@@ -953,7 +952,6 @@ def CreateLiveAlgorithmFromPython(apiClient, projectId, compileId, nodeId):
                 Assert.AreEqual("paper", summary.Environment);
                 Assert.AreEqual(description, summary.Description);
                 Assert.Greater(summary.Equity, 0);
-                Assert.IsNotNull(summary.Leagues);
             }
             finally
             {
