@@ -296,6 +296,31 @@ namespace QuantConnect.Tests.Common.Securities.Options.StrategyMatcher
             Assert.AreEqual(BullCallLadder.Name, match.Strategies.Single().Name);
         }
 
+        [TestCase(1, 1, -1, "Bull Call Spread: +1 595, -1 605; Naked Call: +1 600")]
+        [TestCase(-2, -2, 2, "Bear Call Spread: -2 595, +2 605; Naked Call: -2 600")]
+        public void MatchesIdenticalBooksIdenticallyRegardlessOfSymbolHashes(int quantity595, int quantity600, int quantity605,
+            string expected)
+        {
+            // symbol hashes include the ticker's string hash, which differs per ticker here just like it does per process
+            var matcher = new OptionStrategyMatcher(OptionStrategyMatcherOptions.ForDefinitions(AllDefinitions));
+            var expiry = new DateTime(2020, 10, 23);
+            var results = new HashSet<string>();
+            for (var i = 0; i < 100; i++)
+            {
+                var ticker = $"TICKER{i}";
+                var positions = OptionPositionCollection.Empty.AddRange(
+                    new OptionPosition(Symbol.CreateOption(ticker, Market.USA, OptionStyle.American, OptionRight.Call, 595m, expiry), quantity595),
+                    new OptionPosition(Symbol.CreateOption(ticker, Market.USA, OptionStyle.American, OptionRight.Call, 600m, expiry), quantity600),
+                    new OptionPosition(Symbol.CreateOption(ticker, Market.USA, OptionStyle.American, OptionRight.Call, 605m, expiry), quantity605));
+
+                var strategies = matcher.MatchOnce(positions).Strategies
+                    .Select(strategy => $"{strategy.Name}: " + string.Join(", ", strategy.OptionLegs.Select(leg => $"{leg.Quantity:+#;-#} {leg.Strike}")));
+                results.Add(string.Join("; ", strategies));
+            }
+
+            CollectionAssert.AreEquivalent(new[] { expected }, results);
+        }
+
         private static decimal ScoreSingleMatch(OptionStrategyDefinition definition, OptionPositionCollection positions)
         {
             var options = OptionStrategyMatcherOptions.ForDefinitions(definition);
