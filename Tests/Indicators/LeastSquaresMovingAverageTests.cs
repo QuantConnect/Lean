@@ -108,5 +108,14 @@ namespace QuantConnect.Tests.Indicators
             indicator.Update(time.AddMinutes(period.Value - 1), Prices[period.Value - 1]);
             Assert.IsTrue(indicator.IsReady);
         }
+
+        [Test]
+        public void PeriodBelowMinimumThrows()
+        {
+            var period = 1;
+
+            var exception = Assert.Throws<ArgumentException>(() => new LeastSquaresMovingAverage(period));
+            Assert.That(exception.Message, Is.EqualTo($"Period parameter for LeastSquaresMovingAverage indicator must be greater than 1 but was {period}."));
+        }
     }
 }

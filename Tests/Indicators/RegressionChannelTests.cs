@@ -105,5 +105,14 @@ namespace QuantConnect.Tests.Indicators
             Assert.AreEqual(1, lowerChannelUpdateCount);
             Assert.AreEqual(1, upperChannelUpdateCount);
         }
+
+        [Test]
+        public void PeriodBelowMinimumThrows()
+        {
+            var period = 1;
+
+            var exception = Assert.Throws<ArgumentException>(() => new RegressionChannel(period, 2m));
+            Assert.That(exception.Message, Is.EqualTo($"Period parameter for RegressionChannel indicator must be greater than 1 but was {period}."));
+        }
     }
 }
