@@ -68,9 +68,8 @@ namespace QuantConnect.Interfaces
         /// <param name="projectId">The project to which the file should be added</param>
         /// <param name="name">The name of the new file</param>
         /// <param name="content">The content of the new file</param>
-        /// <param name="codeSourceId">Name of the environment that's creating the request</param>
         /// <returns><see cref="ProjectFilesResponse"/> that includes information about the newly created file</returns>
-        RestResponse AddProjectFile(int projectId, string name, string content, string codeSourceId = null);
+        RestResponse AddProjectFile(int projectId, string name, string content);
 
         /// <summary>
         /// Update the name of a file
@@ -78,9 +77,8 @@ namespace QuantConnect.Interfaces
         /// <param name="projectId">Project id to which the file belongs</param>
         /// <param name="oldFileName">The current name of the file</param>
         /// <param name="newFileName">The new name for the file</param>
-        /// <param name="codeSourceId">Name of the environment that's creating the request</param>
         /// <returns><see cref="RestResponse"/> indicating success</returns>
-        RestResponse UpdateProjectFileName(int projectId, string oldFileName, string newFileName, string codeSourceId = null);
+        RestResponse UpdateProjectFileName(int projectId, string oldFileName, string newFileName);
 
         /// <summary>
         /// Update the contents of a file
@@ -88,26 +86,23 @@ namespace QuantConnect.Interfaces
         /// <param name="projectId">Project id to which the file belongs</param>
         /// <param name="fileName">The name of the file that should be updated</param>
         /// <param name="newFileContents">The new contents of the file</param>
-        /// <param name="codeSourceId">Name of the environment that's creating the request</param>
         /// <returns><see cref="RestResponse"/> indicating success</returns>
-        RestResponse UpdateProjectFileContent(int projectId, string fileName, string newFileContents, string codeSourceId = null);
+        RestResponse UpdateProjectFileContent(int projectId, string fileName, string newFileContents);
 
         /// <summary>
         /// Read a file in a project
         /// </summary>
         /// <param name="projectId">Project id to which the file belongs</param>
         /// <param name="fileName">The name of the file</param>
-        /// <param name="codeSourceId">Name of the environment that's creating the request</param>
         /// <returns><see cref="ProjectFilesResponse"/> that includes the file information</returns>
-        ProjectFilesResponse ReadProjectFile(int projectId, string fileName, string codeSourceId = null);
+        ProjectFilesResponse ReadProjectFile(int projectId, string fileName);
 
         /// <summary>
         /// Read all files in a project
         /// </summary>
         /// <param name="projectId">Project id to which the file belongs</param>
-        /// <param name="codeSourceId">Name of the environment that's creating the request</param>
         /// <returns><see cref="ProjectFilesResponse"/> that includes the information about all files in the project</returns>
-        ProjectFilesResponse ReadProjectFiles(int projectId, string codeSourceId = null);
+        ProjectFilesResponse ReadProjectFiles(int projectId);
 
         /// <summary>
         /// Read all nodes in a project.
@@ -130,9 +125,8 @@ namespace QuantConnect.Interfaces
         /// </summary>
         /// <param name="projectId">Project id to which the file belongs</param>
         /// <param name="name">The name of the file that should be deleted</param>
-        /// <param name="codeSourceId">Name of the environment that's creating the request</param>
         /// <returns><see cref="ProjectFilesResponse"/> that includes the information about all files in the project</returns>
-        RestResponse DeleteProjectFile(int projectId, string name, string codeSourceId = null);
+        RestResponse DeleteProjectFile(int projectId, string name);
 
         /// <summary>
         /// Delete a specific project owned by the user from QuantConnect.com

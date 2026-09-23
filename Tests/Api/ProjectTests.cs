@@ -94,8 +94,6 @@ namespace QuantConnect.Algorithm.CSharp
         }
     }
 }";
-        private const string CodeSourceId = "Lean API Tests";
-
         private readonly Dictionary<string, object> _defaultSettings = new Dictionary<string, object>()
             {
                 { "id", "QuantConnectBrokerage" },
@@ -1084,44 +1082,6 @@ namespace QuantConnect.Algorithm.CSharp
             finally
             {
                 ApiClient.UpdateProject(TestProject.ProjectId, originalName, string.Empty);
-            }
-        }
-
-        /// <summary>
-        /// Every file method takes the documented codeSourceId and the api accepts it
-        /// </summary>
-        [Test]
-        public void FileMethodsSendTheDocumentedCodeSourceId()
-        {
-            var fileName = $"CodeSource{GetTimestamp()}.cs";
-            var renamedFileName = $"Renamed{fileName}";
-
-            try
-            {
-                var added = ApiClient.AddProjectFile(TestProject.ProjectId, fileName, "// created", CodeSourceId);
-                Assert.IsTrue(added.Success, $"Error adding the file: {string.Join(", ", added.Errors)}");
-
-                var read = ApiClient.ReadProjectFile(TestProject.ProjectId, fileName, CodeSourceId);
-                Assert.IsTrue(read.Success, $"Error reading the file: {string.Join(", ", read.Errors)}");
-                Assert.AreEqual("// created", read.Files.Single().Code);
-
-                var readAll = ApiClient.ReadProjectFiles(TestProject.ProjectId, CodeSourceId);
-                Assert.IsTrue(readAll.Success, $"Error reading the project files: {string.Join(", ", readAll.Errors)}");
-                Assert.IsTrue(readAll.Files.Any(x => x.Name == fileName));
-
-                var updatedContent = ApiClient.UpdateProjectFileContent(TestProject.ProjectId, fileName, "// updated", CodeSourceId);
-                Assert.IsTrue(updatedContent.Success, $"Error updating the file content: {string.Join(", ", updatedContent.Errors)}");
-
-                var updatedName = ApiClient.UpdateProjectFileName(TestProject.ProjectId, fileName, renamedFileName, CodeSourceId);
-                Assert.IsTrue(updatedName.Success, $"Error updating the file name: {string.Join(", ", updatedName.Errors)}");
-
-                var deleted = ApiClient.DeleteProjectFile(TestProject.ProjectId, renamedFileName, CodeSourceId);
-                Assert.IsTrue(deleted.Success, $"Error deleting the file: {string.Join(", ", deleted.Errors)}");
-            }
-            finally
-            {
-                ApiClient.DeleteProjectFile(TestProject.ProjectId, fileName);
-                ApiClient.DeleteProjectFile(TestProject.ProjectId, renamedFileName);
             }
         }
 

@@ -177,15 +177,11 @@ namespace QuantConnect.Api
         /// <param name="projectId">The project to which the file should be added</param>
         /// <param name="name">The name of the new file</param>
         /// <param name="content">The content of the new file</param>
-        /// <param name="codeSourceId">Name of the environment that's creating the request, for example "Lean" or "Research"</param>
         /// <returns><see cref="ProjectFilesResponse"/> that includes information about the newly created file</returns>
 
-        public RestResponse AddProjectFile(int projectId, string name, string content, string codeSourceId = null)
+        public RestResponse AddProjectFile(int projectId, string name, string content)
         {
-            object payload = codeSourceId == null
-                ? new { projectId, name, content }
-                : new { projectId, name, content, codeSourceId };
-            TryJsonPost("files/create", out RestResponse result, payload);
+            TryJsonPost("files/create", out RestResponse result, new { projectId, name, content });
             return result;
         }
 
@@ -195,15 +191,16 @@ namespace QuantConnect.Api
         /// <param name="projectId">Project id to which the file belongs</param>
         /// <param name="oldFileName">The current name of the file</param>
         /// <param name="newFileName">The new name for the file</param>
-        /// <param name="codeSourceId">Name of the environment that's creating the request, for example "Lean" or "Research"</param>
         /// <returns><see cref="RestResponse"/> indicating success</returns>
 
-        public RestResponse UpdateProjectFileName(int projectId, string oldFileName, string newFileName,
-            string codeSourceId = null)
+        public RestResponse UpdateProjectFileName(int projectId, string oldFileName, string newFileName)
         {
-            object payload = codeSourceId == null
-                ? new { projectId, name = oldFileName, newName = newFileName }
-                : new { projectId, name = oldFileName, newName = newFileName, codeSourceId };
+            var payload = new
+            {
+                projectId,
+                name = oldFileName,
+                newName = newFileName
+            };
             TryJsonPost("files/update", out RestResponse result, payload);
             return result;
         }
@@ -215,15 +212,16 @@ namespace QuantConnect.Api
         /// <param name="projectId">Project id to which the file belongs</param>
         /// <param name="fileName">The name of the file that should be updated</param>
         /// <param name="newFileContents">The new contents of the file</param>
-        /// <param name="codeSourceId">Name of the environment that's creating the request, for example "Lean" or "Research"</param>
         /// <returns><see cref="RestResponse"/> indicating success</returns>
 
-        public RestResponse UpdateProjectFileContent(int projectId, string fileName, string newFileContents,
-            string codeSourceId = null)
+        public RestResponse UpdateProjectFileContent(int projectId, string fileName, string newFileContents)
         {
-            object payload = codeSourceId == null
-                ? new { projectId, name = fileName, content = newFileContents }
-                : new { projectId, name = fileName, content = newFileContents, codeSourceId };
+            var payload = new
+            {
+                projectId,
+                name = fileName,
+                content = newFileContents
+            };
             TryJsonPost("files/update", out RestResponse result, payload);
             return result;
         }
@@ -233,13 +231,11 @@ namespace QuantConnect.Api
         /// Read all files in a project
         /// </summary>
         /// <param name="projectId">Project id to which the file belongs</param>
-        /// <param name="codeSourceId">Name of the environment that's creating the request, for example "Lean" or "Research"</param>
         /// <returns><see cref="ProjectFilesResponse"/> that includes the information about all files in the project</returns>
 
-        public ProjectFilesResponse ReadProjectFiles(int projectId, string codeSourceId = null)
+        public ProjectFilesResponse ReadProjectFiles(int projectId)
         {
-            object payload = codeSourceId == null ? new { projectId } : new { projectId, codeSourceId };
-            TryJsonPost("files/read", out ProjectFilesResponse result, payload);
+            TryJsonPost("files/read", out ProjectFilesResponse result, new { projectId });
             return result;
         }
 
@@ -272,15 +268,11 @@ namespace QuantConnect.Api
         /// </summary>
         /// <param name="projectId">Project id to which the file belongs</param>
         /// <param name="fileName">The name of the file</param>
-        /// <param name="codeSourceId">Name of the environment that's creating the request, for example "Lean" or "Research"</param>
         /// <returns><see cref="ProjectFilesResponse"/> that includes the file information</returns>
 
-        public ProjectFilesResponse ReadProjectFile(int projectId, string fileName, string codeSourceId = null)
+        public ProjectFilesResponse ReadProjectFile(int projectId, string fileName)
         {
-            object payload = codeSourceId == null
-                ? new { projectId, name = fileName }
-                : new { projectId, name = fileName, codeSourceId };
-            TryJsonPost("files/read", out ProjectFilesResponse result, payload);
+            TryJsonPost("files/read", out ProjectFilesResponse result, new { projectId, name = fileName });
             return result;
         }
 
@@ -298,13 +290,11 @@ namespace QuantConnect.Api
         /// </summary>
         /// <param name="projectId">Project id to which the file belongs</param>
         /// <param name="name">The name of the file that should be deleted</param>
-        /// <param name="codeSourceId">Name of the environment that's creating the request, for example "Lean" or "Research"</param>
         /// <returns><see cref="RestResponse"/> that includes the information about all files in the project</returns>
 
-        public RestResponse DeleteProjectFile(int projectId, string name, string codeSourceId = null)
+        public RestResponse DeleteProjectFile(int projectId, string name)
         {
-            object payload = codeSourceId == null ? new { projectId, name } : new { projectId, name, codeSourceId };
-            TryJsonPost("files/delete", out RestResponse result, payload);
+            TryJsonPost("files/delete", out RestResponse result, new { projectId, name });
             return result;
         }
 
