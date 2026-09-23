@@ -1139,6 +1139,46 @@ namespace QuantConnect.Tests.Common.Securities
             Assert.AreEqual(0m, maintenanceMargin.Value);
         }
 
+        // long put, short put, short call, long call strikes; leg quantity; expected strategy; expected margin
+        [TestCase(380, 390, 410, 420, 2, "Iron Condor", 2000)]
+        [TestCase(385, 390, 410, 425, 2, "Iron Condor", 3000)]
+        [TestCase(375, 390, 410, 420, 2, "Iron Condor", 3000)]
+        [TestCase(395, 400, 400, 405, 2, "Iron Butterfly", 1000)]
+        [TestCase(380, 390, 410, 425, -2, "Short Iron Condor", 0)]
+        public void IronCondorAndButterflyMarginUsesTheWiderWing(int longPutStrike, int shortPutStrike, int shortCallStrike, int longCallStrike,
+            int quantity, string expectedStrategy, decimal expectedMargin)
+        {
+            _equity.SetMarketPrice(new Tick { Value = 400m });
+
+            var expiry = new DateTime(2016, 1, 15);
+            var legs = new[]
+            {
+                (OptionRight.Put, longPutStrike, quantity),
+                (OptionRight.Put, shortPutStrike, -quantity),
+                (OptionRight.Call, shortCallStrike, -quantity),
+                (OptionRight.Call, longCallStrike, quantity)
+            };
+            foreach (var (right, strike, legQuantity) in legs)
+            {
+                var option = _algorithm.AddOptionContract(Symbols.CreateOptionSymbol("SPY", right, strike, expiry));
+                option.SetMarketPrice(new Tick { Value = 1m });
+                option.Holdings.SetHoldings(option.Price, legQuantity);
+            }
+
+            Assert.AreEqual(1, _portfolio.Positions.Groups.Count,
+                string.Join(", ", _portfolio.Positions.Groups.Select(group => $"{group.BuyingPowerModel} x{group.Quantity}")));
+            var positionGroup = _portfolio.Positions.Groups.Single();
+            Assert.AreEqual(expectedStrategy, positionGroup.BuyingPowerModel.ToString());
+
+            var initialMargin = (OptionInitialMargin)positionGroup.BuyingPowerModel.GetInitialMarginRequirement(
+                new PositionGroupInitialMarginParameters(_portfolio, positionGroup));
+            var maintenanceMargin = positionGroup.BuyingPowerModel.GetMaintenanceMargin(
+                new PositionGroupMaintenanceMarginParameters(_portfolio, positionGroup));
+
+            Assert.AreEqual(expectedMargin, initialMargin.ValueWithoutPremium);
+            Assert.AreEqual(expectedMargin, maintenanceMargin.Value);
+        }
+
         [Test]
         public void FullyLiquidatesSingleLotGroupWhenMarginCallRequiresPartialReduction()
         {
