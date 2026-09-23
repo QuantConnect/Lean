@@ -13,7 +13,7 @@
  * limitations under the License.
 */
 
-using System.Collections.Generic;
+using Common.Util;
 using QuantConnect.Interfaces;
 
 namespace QuantConnect.Orders
@@ -27,7 +27,10 @@ namespace QuantConnect.Orders
         /// Custom FIX tags to send with the order. The key is the FIX tag number
         /// and the value is the tag value, e.g. AdditionalProperties["9301"] = "1"
         /// </summary>
-        public Dictionary<string, string> AdditionalProperties { get; set; } = [];
+        /// <remarks>Starts empty. Python cannot assign a plain dict to it, since pythonnet has no
+        /// conversion for it; add the entries one by one, bulk load them from a dict with update(),
+        /// and reset with clear()</remarks>
+        public BaseExtendedDictionary<string, string> AdditionalProperties { get; set; } = [];
 
         /// <summary>
         /// Instruction for order handling on Broker floor
@@ -60,7 +63,7 @@ namespace QuantConnect.Orders
         public override IOrderProperties Clone()
         {
             var clone = (FixOrderProperties)MemberwiseClone();
-            clone.AdditionalProperties = new Dictionary<string, string>(AdditionalProperties);
+            clone.AdditionalProperties = new BaseExtendedDictionary<string, string>(AdditionalProperties);
             return clone;
         }
     }

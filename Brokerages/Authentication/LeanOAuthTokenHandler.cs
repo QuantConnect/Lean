@@ -15,7 +15,9 @@
 
 using System;
 using QuantConnect.Api;
+using QuantConnect.Util;
 using System.Threading;
+using System.Threading.Tasks;
 
 namespace QuantConnect.Brokerages.Authentication
 {
@@ -50,12 +52,17 @@ namespace QuantConnect.Brokerages.Authentication
         /// <summary>
         /// The maximum number of retry attempts when fetching an access token.
         /// </summary>
-        protected virtual int MaxRetryCount { get; set; } = 3;
+        protected virtual int MaxRetryCount { get; set; } = 5;
 
         /// <summary>
         /// The time interval to wait between retry attempts when fetching an access token.
         /// </summary>
-        protected virtual TimeSpan RetryInterval { get; set; } = TimeSpan.FromSeconds(5);
+        protected virtual TimeSpan RetryInterval { get; set; } = TimeSpan.FromSeconds(15);
+
+        /// <summary>
+        /// The time interval between attempts to recover a failed authentication.
+        /// </summary>
+        protected virtual TimeSpan RecoveryInterval { get; set; } = TimeSpan.FromSeconds(30);
 
         /// <summary>
         /// Lock object used to synchronize token refresh across threads.
@@ -91,9 +98,25 @@ namespace QuantConnect.Brokerages.Authentication
         private DateTime _tokenExpiresAt;
 
         /// <summary>
+        /// Whether the last authentication failed, while true the recovery task owns the retrying.
+        /// Always accessed inside <see cref="_lock"/>.
+        /// </summary>
+        private bool _authenticationFailed;
+
+        /// <summary>
+        /// Cancels the recovery task, not null while one is running. Always accessed inside <see cref="_lock"/>.
+        /// </summary>
+        private CancellationTokenSource _recoveryCancellation;
+
+        /// <summary>
         /// Some padding before expiration to request a new token
         /// </summary>
         public TimeSpan OffsetBeforeExpiration { get; set; } = TimeSpan.FromMinutes(2);
+
+        /// <summary>
+        /// Raised when authentication succeeds
+        /// </summary>
+        public event EventHandler AuthenticationSucceeded;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="LeanOAuthTokenHandler"/> class.
@@ -127,24 +150,17 @@ namespace QuantConnect.Brokerages.Authentication
                     return _tokenCredentials;
                 }
 
+                if (_authenticationFailed)
+                {
+                    // the recovery task is already retrying, fail fast instead of holding the lock for a token we know we can't get
+                    throw new InvalidOperationException($"LeanOAuthTokenHandler.{nameof(GetAccessToken)}: Authentication failed, waiting for it to recover.");
+                }
+
                 for (var retryCount = 0; retryCount <= MaxRetryCount; retryCount++)
                 {
                     try
                     {
-                        using var request = ApiUtils.CreateJsonPostRequest("live/auth0/refresh", _jsonBodyRequest);
-
-                        if (_apiClient.TryRequest<T>(request, out var response))
-                        {
-                            if (response.Success)
-                            {
-                                _tokenExpiresAt = DateTime.UtcNow + _tokenLifetime - OffsetBeforeExpiration;
-                                return _tokenCredentials = response;
-                            }
-                        }
-
-                        Logging.Log.Error($"LeanOAuthTokenHandler.{nameof(GetAccessToken)}: Failed to retrieve access token. Response: {response}. Last known expiry: {_tokenExpiresAt.ToStringInvariant()}.");
-                        throw new InvalidOperationException($"Authentication failed. " +
-                            $"Details: {(response?.Errors?.Count > 0 ? string.Join(",", response.Errors) : "empty")}");
+                        return RequestAccessToken();
                     }
                     catch when (retryCount < MaxRetryCount)
                     {
@@ -157,6 +173,8 @@ namespace QuantConnect.Brokerages.Authentication
                     }
                     catch (Exception ex)
                     {
+                        _authenticationFailed = true;
+                        StartRecovery();
                         OnAuthenticationFailed(ex);
                         throw;
                     }
@@ -165,6 +183,113 @@ namespace QuantConnect.Brokerages.Authentication
                 // Unreachable — the loop always returns or throws
                 throw new InvalidOperationException($"LeanOAuthTokenHandler.{nameof(GetAccessToken)}: Unexpected state in token retry loop.");
             }
+        }
+
+        /// <summary>
+        /// Stops the recovery task, if any, before releasing the handler.
+        /// </summary>
+        protected override void Dispose(bool disposing)
+        {
+            if (disposing)
+            {
+                lock (_lock)
+                {
+                    StopRecovery();
+                }
+            }
+
+            base.Dispose(disposing);
+        }
+
+        /// <summary>
+        /// Requests a new access token, caching it and reporting the recovery of a failed authentication.
+        /// Always called inside <see cref="_lock"/>.
+        /// </summary>
+        /// <param name="logFailure">Whether to log a failed request, false for the recovery task so that a long
+        /// outage does not fill the log with one error every <see cref="RecoveryInterval"/>.</param>
+        /// <returns>A <see cref="LeanTokenCredentials"/> instance containing the token type and access token string.</returns>
+        private T RequestAccessToken(bool logFailure = true)
+        {
+            using var request = ApiUtils.CreateJsonPostRequest("live/auth0/refresh", _jsonBodyRequest);
+
+            if (_apiClient.TryRequest<T>(request, out var response) && response.Success)
+            {
+                _tokenExpiresAt = DateTime.UtcNow + _tokenLifetime - OffsetBeforeExpiration;
+                _tokenCredentials = response;
+
+                if (_authenticationFailed)
+                {
+                    _authenticationFailed = false;
+                    StopRecovery();
+                    AuthenticationSucceeded?.Invoke(this, EventArgs.Empty);
+                }
+
+                return response;
+            }
+
+            if (logFailure)
+            {
+                Logging.Log.Error($"LeanOAuthTokenHandler.{nameof(GetAccessToken)}: Failed to retrieve access token. Response: {response}. Last known expiry: {_tokenExpiresAt.ToStringInvariant()}.");
+            }
+            throw new InvalidOperationException($"Authentication failed. " +
+                $"Details: {(response?.Errors?.Count > 0 ? string.Join(",", response.Errors) : "empty")}");
+        }
+
+        /// <summary>
+        /// Starts the task that retries a failed authentication until it succeeds, so that recovering does not
+        /// depend on the brokerage happening to request another token. Always called inside <see cref="_lock"/>.
+        /// </summary>
+        private void StartRecovery()
+        {
+            if (_recoveryCancellation != null)
+            {
+                return;
+            }
+
+            var recoveryCancellation = _recoveryCancellation = new CancellationTokenSource();
+
+            Task.Factory.StartNew(() =>
+            {
+                try
+                {
+                    // the task owns the disposal of its cancellation source, so it can never wait on a disposed handle
+                    while (!recoveryCancellation.Token.WaitHandle.WaitOne(RecoveryInterval))
+                    {
+                        lock (_lock)
+                        {
+                            if (!_authenticationFailed)
+                            {
+                                break;
+                            }
+
+                            try
+                            {
+                                RequestAccessToken(logFailure: false);
+                                break;
+                            }
+                            catch (Exception ex)
+                            {
+                                Logging.Log.Debug($"LeanOAuthTokenHandler.{nameof(StartRecovery)}: {ex.Message}");
+                            }
+                        }
+                    }
+                }
+                finally
+                {
+                    recoveryCancellation.DisposeSafely();
+                }
+            }, CancellationToken.None, TaskCreationOptions.LongRunning, TaskScheduler.Default);
+        }
+
+        /// <summary>
+        /// Stops the recovery task, which disposes of its own cancellation source once it exits.
+        /// Always called inside <see cref="_lock"/>.
+        /// </summary>
+        private void StopRecovery()
+        {
+            var recoveryCancellation = _recoveryCancellation;
+            _recoveryCancellation = null;
+            recoveryCancellation?.Cancel();
         }
     }
 }

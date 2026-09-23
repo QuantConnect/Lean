@@ -231,6 +231,18 @@ namespace QuantConnect.Tests.Common.Securities.Options
         }
 
         [Test]
+        public void TypeFiltersMustBeAppliedBeforeExpiryFilters()
+        {
+            var universe = new OptionFilterUniverse(GetOption(), _testOptionsData, _underlying);
+            var count = universe.Count;
+
+            universe.FrontMonth();
+
+            Assert.Less(universe.Count, count);
+            Assert.Throws<InvalidOperationException>(() => universe.StandardsOnly());
+        }
+
+        [Test]
         public void CountReturnsTheNumberOfContractsInTheUniverse()
         {
             var minIV = 0.10m;

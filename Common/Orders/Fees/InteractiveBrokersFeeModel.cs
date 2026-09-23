@@ -43,8 +43,15 @@ namespace QuantConnect.Orders.Fees
             {
                 { Market.USA, UnitedStatesFutureFees },
                 { Market.HKFE, HongKongFutureFees },
-                { Market.EUREX, EUREXFutureFees }
+                { Market.EUREX, EUREXFutureFees },
+                { Market.KRX, KoreaFutureFees }
             };
+
+        /// <summary>
+        /// Korea Exchange futures are charged a flat rate of the trade value, which already includes
+        /// the exchange, regulatory, clearing and carrying fees.
+        /// </summary>
+        private const decimal _koreaFutureFeeRate = 0.00004m;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="ImmediateFillModel"/>
@@ -376,6 +383,16 @@ namespace QuantConnect.Orders.Fees
 
             // let's add a 50% extra charge for exchange fees
             return new CashAmount(ibFeePerContract * 1.5m, security.QuoteCurrency.Symbol);
+        }
+
+        /// <summary>
+        /// Gets the fee for a single Korea Exchange future contract, a percentage of its trade value
+        /// in the contract quote currency
+        /// </summary>
+        private static CashAmount KoreaFutureFees(Security security)
+        {
+            var tradeValuePerContract = security.Price * security.SymbolProperties.ContractMultiplier;
+            return new CashAmount(_koreaFutureFeeRate * tradeValuePerContract, security.QuoteCurrency.Symbol);
         }
 
         private static CashAmount EUREXFutureFees(Security security)

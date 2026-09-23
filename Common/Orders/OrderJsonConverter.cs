@@ -270,7 +270,9 @@ namespace QuantConnect.Orders
                     order = new StopLimitOrder
                     {
                         LimitPrice = SafeDecimalValueOrDefault(jObject["LimitPrice"] ?? jObject["limitPrice"]),
-                        StopPrice = SafeDecimalValueOrDefault(jObject["stopPrice"] ?? jObject["StopPrice"])
+                        StopPrice = SafeDecimalValueOrDefault(jObject["stopPrice"] ?? jObject["StopPrice"]),
+                        StopTriggered = jObject["StopTriggered"]?.Value<bool>() ?? jObject["stopTriggered"]?.Value<bool>() ?? default(bool),
+                        StopTriggeredTime = jObject["StopTriggeredTime"]?.Value<DateTime?>() ?? jObject["stopTriggeredTime"]?.Value<DateTime?>()
                     };
                     break;
 
@@ -287,7 +289,8 @@ namespace QuantConnect.Orders
                     order = new LimitIfTouchedOrder
                     {
                         LimitPrice = SafeDecimalValueOrDefault(jObject["LimitPrice"] ?? jObject["limitPrice"]),
-                        TriggerPrice = SafeDecimalValueOrDefault(jObject["TriggerPrice"] ?? jObject["triggerPrice"])
+                        TriggerPrice = SafeDecimalValueOrDefault(jObject["TriggerPrice"] ?? jObject["triggerPrice"]),
+                        TriggerTouched = jObject["TriggerTouched"]?.Value<bool>() ?? jObject["triggerTouched"]?.Value<bool>() ?? default(bool)
                     };
                     break;
 

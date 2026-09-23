@@ -104,12 +104,15 @@ namespace QuantConnect.Lean.Engine
                 //-> Initialize messaging system
                 SystemHandlers.Notify.SetAuthentication(job);
 
+                var performanceTrackingTool = new PerformanceTrackingTool();
+
                 //-> Set the result handler type for this algorithm job, and launch the associated result thread.
-                AlgorithmHandlers.Results.Initialize(new(job, SystemHandlers.Notify, SystemHandlers.Api, AlgorithmHandlers.Transactions, AlgorithmHandlers.MapFileProvider));
+                AlgorithmHandlers.Results.Initialize(
+                    new(job, SystemHandlers.Notify, SystemHandlers.Api, AlgorithmHandlers.Transactions, AlgorithmHandlers.MapFileProvider, performanceTrackingTool,
+                        AlgorithmHandlers.DataMonitor));
 
                 IBrokerage brokerage = null;
                 DataManager dataManager = null;
-                var performanceTrackingTool = new PerformanceTrackingTool();
                 var synchronizer = _liveMode ? new LiveSynchronizer() : new Synchronizer();
                 try
                 {
@@ -123,6 +126,9 @@ namespace QuantConnect.Lean.Engine
                     algorithm = AlgorithmHandlers.Setup.CreateAlgorithmInstance(job, assemblyPath);
 
                     algorithm.ProjectId = job.ProjectId;
+
+                    // share the deployment details with the algorithm right away so it's available during initialization
+                    algorithm.SetDeploymentDetails(AlgorithmHandlers.Results.DeploymentDetails);
 
                     // Set algorithm in ILeanManager
                     SystemHandlers.LeanManager.SetAlgorithm(algorithm);
@@ -381,7 +387,7 @@ namespace QuantConnect.Lean.Engine
                     // Algorithm runtime error:
                     if (algorithm.RunTimeError != null)
                     {
-                        HandleAlgorithmError(job, algorithm.RunTimeError);
+                        HandleAlgorithmError(job, algorithm, algorithm.RunTimeError);
                     }
 
                     // notify the LEAN manager that the algorithm has finished
@@ -419,6 +425,9 @@ namespace QuantConnect.Lean.Engine
                 synchronizer.DisposeSafely();
                 // Close data feed, alphas. Could be running even if algorithm initialization failed
                 AlgorithmHandlers.DataFeed.Exit();
+
+                // No more data requests once the feed is closed: generate the data monitor report so the result handler can store it
+                AlgorithmHandlers.DataMonitor.Exit();
 
                 //Close result handler:
                 AlgorithmHandlers.Results.Exit();
@@ -477,13 +486,18 @@ namespace QuantConnect.Lean.Engine
         /// Handle an error in the algorithm.Run method.
         /// </summary>
         /// <param name="job">Job we're processing</param>
+        /// <param name="algorithm">The algorithm instance that raised the error</param>
         /// <param name="err">Error from algorithm stack</param>
-        private void HandleAlgorithmError(AlgorithmNodePacket job, Exception err)
+        private void HandleAlgorithmError(AlgorithmNodePacket job, IAlgorithm algorithm, Exception err)
         {
             AlgorithmHandlers.DataFeed?.Exit();
             if (AlgorithmHandlers.Results != null)
             {
                 var message = $"Runtime Error: {err.Message}";
+                if (TryGetOutOfMemoryErrorDetails(job, algorithm, err, out var outOfMemoryDetails))
+                {
+                    message += outOfMemoryDetails;
+                }
                 Log.Trace("Engine.Run(): Sending runtime error to user...");
                 AlgorithmHandlers.Results.LogMessage(message);
 
@@ -493,6 +507,42 @@ namespace QuantConnect.Lean.Engine
                 AlgorithmHandlers.Results.RuntimeError(message, stackTrace);
                 SystemHandlers.Api.SetAlgorithmStatus(job.AlgorithmId, AlgorithmStatus.RuntimeError, $"{message} Stack Trace: {stackTrace}");
             }
+        }
+
+        /// <summary>
+        /// Checks whether the given exception is an <see cref="OutOfMemoryException"/>,
+        /// producing details about the algorithm state and the common causes to be appended to the runtime error message
+        /// </summary>
+        /// <param name="job">Job we're processing</param>
+        /// <param name="algorithm">The algorithm instance that raised the error</param>
+        /// <param name="err">Error from algorithm stack</param>
+        /// <param name="details">The out of memory details, null if the error is not an out of memory error</param>
+        /// <returns>True if the error is an out of memory error</returns>
+        private static bool TryGetOutOfMemoryErrorDetails(AlgorithmNodePacket job, IAlgorithm algorithm, Exception err, out string details)
+        {
+            details = null;
+            if (err is not OutOfMemoryException)
+            {
+                return false;
+            }
+
+            details = Invariant($" The algorithm exhausted its {job.RamAllocation}MB of RAM.");
+            if (algorithm != null)
+            {
+                try
+                {
+                    details += Invariant($" State: {algorithm.Securities.Count} securities, {algorithm.SubscriptionManager.Count} subscriptions, {algorithm.UniverseManager.Count} universes.");
+                }
+                catch (Exception stateException)
+                {
+                    // best effort: don't let diagnostics collection replace the original error
+                    Log.Error(stateException);
+                }
+            }
+            details += " Common causes: universe/subscription count too high for the allocated RAM; unbounded buffers such as rolling windows," +
+                " consolidators or accumulated history results. Fixes: reduce universe size/subscriptions, use coarser resolutions," +
+                " or bound buffers.";
+            return true;
         }
 
         /// <summary>

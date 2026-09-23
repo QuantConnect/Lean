@@ -117,6 +117,10 @@ public class DerivativeUniverseData
     /// <returns>A CSV formatted string representing the data.</returns>
     public string ToCsv()
     {
+        if (_symbol.SecurityType == SecurityType.Future)
+        {
+            return FutureUniverse.ToCsv(_symbol, _open, _high, _low, _close, _volume, _openInterest);
+        }
         return OptionUniverse.ToCsv(_symbol, _open, _high, _low, _close, _volume, _openInterest, null, NullGreeks.Instance);
     }
 }

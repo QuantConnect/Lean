@@ -72,5 +72,15 @@ namespace QuantConnect.Indicators
 
             return (_maximum.Current.Value + _minimum.Current.Value) / 2;
         }
+
+        /// <summary>
+        /// Resets this indicator to its initial state
+        /// </summary>
+        public override void Reset()
+        {
+            _maximum.Reset();
+            _minimum.Reset();
+            base.Reset();
+        }
     }
 }

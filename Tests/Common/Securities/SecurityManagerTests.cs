@@ -14,6 +14,7 @@
 */
 
 using System;
+using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.Linq;
 using NUnit.Framework;
@@ -37,6 +38,30 @@ namespace QuantConnect.Tests.Common.Securities
             var timeKeeper = new TimeKeeper(new DateTime(2015, 12, 07));
             _subscriptionManager = new SubscriptionManager(NullTimeKeeper.Instance);
             _subscriptionManager.SetDataManager(new DataManagerStub(timeKeeper));
+        }
+
+        [Test]
+        public void MissingSecurityMessageNamesSymbolAndSuggestsSafeAccess()
+        {
+            var timeKeeper = new TimeKeeper(new DateTime(2015, 12, 07));
+            var manager = new SecurityManager(timeKeeper);
+            try
+            {
+                Messages.SetAlgorithmLanguage(Language.CSharp);
+                var exception = Assert.Throws<KeyNotFoundException>(() => { var security = manager[Symbols.AAPL]; });
+                StringAssert.Contains("AAPL", exception.Message);
+                StringAssert.Contains("Securities.TryGetValue(symbol, out var value)", exception.Message);
+                StringAssert.Contains("Securities.ContainsKey(symbol)", exception.Message);
+
+                Messages.SetAlgorithmLanguage(Language.Python);
+                exception = Assert.Throws<KeyNotFoundException>(() => { var security = manager[Symbols.AAPL]; });
+                StringAssert.Contains("self.securities.get(symbol)", exception.Message);
+                StringAssert.Contains("if symbol in self.securities:", exception.Message);
+            }
+            finally
+            {
+                Messages.SetAlgorithmLanguage(Language.CSharp);
+            }
         }
 
         [Test]

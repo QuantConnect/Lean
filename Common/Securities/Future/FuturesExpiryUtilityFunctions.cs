@@ -415,6 +415,9 @@ namespace QuantConnect.Securities.Future
             { Futures.Energy.NaturalGasHenryHubPenultimateFinancial, 1 },
             { Futures.Energy.WTIHoustonArgusVsWTITradeMonth, 1 },
             { Futures.Energy.WTIHoustonCrudeOil, 1 },
+            { Futures.Financials.MicroUltraTenYearUSTreasuryNote, 1 },
+            { Futures.Financials.MicroUltraUSTreasuryBond, 1 },
+            { Futures.Metals.OneOunceGold, 1 },
             { Futures.Softs.Sugar11, 1 },
             { Futures.Softs.Sugar11CME, 1 }
         };

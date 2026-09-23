@@ -14,6 +14,7 @@
 */
 
 using QuantConnect.Data;
+using QuantConnect.Data.Market;
 using QuantConnect.Securities;
 
 namespace QuantConnect.Orders.Slippage
@@ -41,7 +42,10 @@ namespace QuantConnect.Orders.Slippage
             var lastData = asset.GetLastData();
             if (lastData == null) return 0;
 
-            return lastData.Value*_slippagePercent;
+            // Market on open orders fill at the bar open, which is the price we have to reference, not the bar close
+            var referencePrice = order.Type == OrderType.MarketOnOpen && lastData is IBar bar ? bar.Open : lastData.Value;
+
+            return referencePrice * _slippagePercent;
         }
     }
 }

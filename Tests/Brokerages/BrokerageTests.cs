@@ -50,8 +50,6 @@ namespace QuantConnect.Tests.Brokerages
         [SetUp]
         public void Setup()
         {
-            Log.LogHandler = new NUnitLogHandler();
-
             Log.Trace("");
             Log.Trace("");
             Log.Trace("--- SETUP ---");
@@ -161,7 +159,7 @@ namespace QuantConnect.Tests.Brokerages
             foreach (var orderEvent in orderEvents)
             {
                 var order = _orderProvider.GetOrderById(orderEvent.OrderId);
-                order.Status = orderEvent.Status;
+                OrderProvider.HandleOrderEvent(orderEvent);
 
                 Log.Trace("");
                 Log.Trace($"ORDER STATUS CHANGED: {orderEvent}, Type: {order.Type}");
@@ -770,7 +768,7 @@ namespace QuantConnect.Tests.Brokerages
                 OrderProvider.Add(order);
                 if (!Brokerage.PlaceOrder(order) && !allowFailedSubmission)
                 {
-                    Assert.Fail("Brokerage failed to place the order: " + orders);
+                    Assert.Fail($"Brokerage failed to place the order: {order}");
                 }
             }
 

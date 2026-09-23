@@ -83,6 +83,11 @@ namespace Common.Util
         /// <returns>true if the key was found; otherwise, false</returns>
         public override bool TryGetValue(TKey key, out TValue value)
         {
+            if (ReferenceEquals(key, null))
+            {
+                value = default;
+                return false;
+            }
             return Dictionary.TryGetValue(key, out value);
         }
 
@@ -170,7 +175,7 @@ namespace Common.Util
         /// <returns>true if the dictionary contains an element with the specified key; otherwise, false</returns>
         public override bool ContainsKey(TKey key)
         {
-            return Dictionary.ContainsKey(key);
+            return !ReferenceEquals(key, null) && Dictionary.ContainsKey(key);
         }
 
         /// <summary>
@@ -240,6 +245,15 @@ namespace Common.Util
         /// </summary>
         /// <param name="dictionary">The dictionary whose elements are copied to the new dictionary</param>
         public BaseExtendedDictionary(IDictionary<TKey, TValue> dictionary) : base(new Dictionary<TKey, TValue>(dictionary))
+        {
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the BaseExtendedDictionary class using the specified dictionary
+        /// </summary>
+        /// <param name="dictionary">The dictionary to use as the data source</param>
+        /// <param name="copy">True to copy the elements into a new dictionary, false to wrap the given instance so that any changes made to it are reflected</param>
+        public BaseExtendedDictionary(Dictionary<TKey, TValue> dictionary, bool copy) : base(copy ? new Dictionary<TKey, TValue>(dictionary) : dictionary)
         {
         }
 

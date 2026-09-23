@@ -162,5 +162,24 @@ namespace QuantConnect.Tests.Indicators
                 ibmRenkoConsolidator.Dispose();
             }
         }
+
+        [Test]
+        public void IsNotReadyWithoutTrackedAssets()
+        {
+            var indicator = CreateNewHighsNewLowsIndicator();
+
+            Assert.IsFalse(indicator.IsReady);
+        }
+
+        [Test]
+        public void IsNotReadyOnceTheLastTrackedAssetIsRemoved()
+        {
+            var indicator = CreateNewHighsNewLowsIndicator();
+            indicator.Add(Symbols.AAPL);
+            indicator.Remove(Symbols.AAPL);
+
+            Assert.IsFalse(indicator.IsReady);
+        }
+
     }
 }

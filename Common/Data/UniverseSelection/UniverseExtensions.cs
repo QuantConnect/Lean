@@ -28,6 +28,23 @@ namespace QuantConnect.Data.UniverseSelection
     public static class UniverseExtensions
     {
         /// <summary>
+        /// Gets the given universe as the requested type, checking the universe it decorates, if any
+        /// </summary>
+        /// <typeparam name="T">The type to look for</typeparam>
+        /// <param name="universe">The universe to check</param>
+        /// <param name="result">The universe as the requested type, if any</param>
+        /// <returns>True if the universe, or one it decorates, is of the requested type</returns>
+        public static bool TryGetUniverse<T>(this Universe universe, out T result) where T : class
+        {
+            result = universe as T;
+            if (result == null && universe is UniverseDecorator decorator)
+            {
+                return decorator.TryGetUnderlying(out result);
+            }
+            return result != null;
+        }
+
+        /// <summary>
         /// Creates a new universe that logically is the result of wiring the two universes together such that
         /// the first will produce subscriptions for the second and the second will only select on data that has
         /// passed the first.
@@ -206,7 +223,8 @@ namespace QuantConnect.Data.UniverseSelection
 
                 using var writer = new StreamWriter(universeDownloadParameters.GetUniverseFileName(processingDate));
 
-                writer.WriteLine($"#{OptionUniverse.CsvHeader}");
+                var securityType = universeDownloadParameters.Symbol.SecurityType;
+                writer.WriteLine($"#{(securityType == SecurityType.Future ? FutureUniverse.CsvHeader : OptionUniverse.CsvHeader(securityType))}");
 
                 // Write option data, sorted by contract type (Call/Put), strike price, expiration date, and then by full ID
                 foreach (var universeData in universeDataBySymbol

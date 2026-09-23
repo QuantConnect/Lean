@@ -69,6 +69,7 @@ namespace QuantConnect.Tests.Brokerages.Paper
             var slice = new Slice(algorithm.Time, new List<BaseData>(), algorithm.Time);
             slice.Dividends.Add(new Dividend(Symbols.SPY, algorithm.Time, distributionPerShare, 100m));
             algorithm.SetCurrentSlice(slice);
+            algorithm.SetFinishedWarmingUp();
 
             // invoke brokerage
             using var brokerage = new PaperBrokerage(algorithm, null);
@@ -77,6 +78,38 @@ namespace QuantConnect.Tests.Brokerages.Paper
             // verify results
             var postDistributionCash = USD.Amount;
             Assert.AreEqual(preDistributionCash + expectedTotalDistribution, postDistributionCash);
+        }
+
+        [Test]
+        public void DoesNotApplyDividendDistributionDuringWarmup()
+        {
+            // init algorithm
+            var algorithm = new AlgorithmStub(new MockDataFeed());
+            algorithm.AddSecurities(equities: new List<string> { "SPY" });
+            algorithm.SetWarmup(TimeSpan.FromDays(1));
+            algorithm.PostInitialize();
+
+            // init holdings
+            var SPY = algorithm.Securities[Symbols.SPY];
+            SPY.SetMarketPrice(new Tick { Value = 100m });
+            SPY.Holdings.SetHoldings(100m, 1000);
+
+            // resolve expected outcome
+            var USD = algorithm.Portfolio.CashBook[Currencies.USD];
+            var preDistributionCash = USD.Amount;
+            var distributionPerShare = 10m;
+
+            // create slice w/ dividend during warmup
+            var slice = new Slice(algorithm.Time, new List<BaseData>(), algorithm.Time);
+            slice.Dividends.Add(new Dividend(Symbols.SPY, algorithm.Time, distributionPerShare, 100m));
+            algorithm.SetCurrentSlice(slice);
+
+            // invoke brokerage
+            using var brokerage = new PaperBrokerage(algorithm, null);
+            brokerage.Scan();
+
+            // verify results
+            Assert.AreEqual(preDistributionCash, USD.Amount);
         }
 
         [Test]

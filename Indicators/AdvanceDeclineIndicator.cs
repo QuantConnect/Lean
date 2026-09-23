@@ -150,6 +150,7 @@ namespace QuantConnect.Indicators
             {
                 _currentPeriod[key] = null;
             }
+            _currentPeriodTime = null;
 
             base.Reset();
         }

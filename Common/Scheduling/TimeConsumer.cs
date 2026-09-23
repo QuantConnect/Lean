@@ -42,5 +42,16 @@ namespace QuantConnect.Scheduling
         /// to be <see cref="IsolatorLimitProvider"/>
         /// </summary>
         public DateTime? NextTimeRequest { get; set; }
+
+        /// <summary>
+        /// Name of the work being executed, if any, e.g. the scheduled event's name. Used to name the
+        /// long-running work in logs when additional time is requested
+        /// </summary>
+        public string Name { get; set; }
+
+        /// <summary>
+        /// The number of additional minutes that have been requested for this consumer so far
+        /// </summary>
+        public int AdditionalMinutesRequested { get; set; }
     }
 }

@@ -14,6 +14,7 @@
 */
 
 using System;
+using System.Collections.Generic;
 using NUnit.Framework;
 using QuantConnect.Indicators;
 
@@ -37,6 +38,29 @@ namespace QuantConnect.Tests.Indicators
             for (var i = 0; i < 10; i++)
             {
                 Assert.DoesNotThrow(() => crsi.Update(DateTime.UtcNow, 0m));
+            }
+        }
+
+        [Test]
+        public void ProducesTheSameValuesAfterReset()
+        {
+            var crsi = new ConnorsRelativeStrengthIndex(2, 2, 3);
+            var reference = new DateTime(2024, 1, 1);
+            var prices = new[] { 10m, 11m, 10.5m, 12m, 11.5m, 13m };
+
+            var expected = new List<decimal>();
+            for (var i = 0; i < prices.Length; i++)
+            {
+                crsi.Update(reference.AddDays(i), prices[i]);
+                expected.Add(crsi.Current.Value);
+            }
+
+            crsi.Reset();
+
+            for (var i = 0; i < prices.Length; i++)
+            {
+                crsi.Update(reference.AddDays(i), prices[i]);
+                Assert.AreEqual(expected[i], crsi.Current.Value);
             }
         }
 

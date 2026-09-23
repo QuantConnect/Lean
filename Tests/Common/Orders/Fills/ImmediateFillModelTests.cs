@@ -317,6 +317,49 @@ namespace QuantConnect.Tests.Common.Orders.Fills
             Assert.AreEqual(OrderStatus.Filled, fill.Status);
         }
 
+        // buy: the trigger bar closes above the limit, the next bar trades through it and closes above it
+        [TestCase(100, 100, 100.25, 100.6, 100.8, 99.8, 100.6)]
+        // sell: the trigger bar closes below the limit, the next bar trades through it and closes below it
+        [TestCase(-100, 100, 99.75, 99.4, 100.2, 99.2, 99.4)]
+        public void StopLimitFillsAsLimitOrderOnBarsAfterTheTriggerBar(decimal quantity, decimal stopPrice, decimal limitPrice,
+            decimal open, decimal high, decimal low, decimal close)
+        {
+            var model = new ImmediateFillModel();
+            var order = new StopLimitOrder(Symbols.SPY, quantity, stopPrice, limitPrice, Noon.ConvertToUtc(TimeZones.NewYork));
+            var config = CreateTradeBarConfig(Symbols.SPY, false);
+            var security = GetSecurity(config);
+            var parameters = new FillModelParameters(security, order, new MockSubscriptionDataConfigProvider(config), Time.OneHour, null);
+
+            // the stop triggers but the bar closes on the wrong side of the limit, the low/high could predate the trigger
+            var triggerBar = quantity > 0
+                ? new TradeBar(Noon, Symbols.SPY, 99.5m, 101.5m, 99.5m, 101m, 100)
+                : new TradeBar(Noon, Symbols.SPY, 100.5m, 100.5m, 98.5m, 99m, 100);
+            TimeKeeper.SetUtcDateTime(triggerBar.EndTime.ConvertToUtc(TimeZones.NewYork));
+            security.SetMarketPrice(triggerBar);
+
+            var fill = model.Fill(parameters).Single();
+
+            Assert.AreEqual(OrderStatus.None, fill.Status);
+            Assert.IsTrue(order.StopTriggered);
+            Assert.AreEqual(triggerBar.EndTime.ConvertToUtc(TimeZones.NewYork), order.StopTriggeredTime);
+
+            // scanning the trigger bar again, e.g. live mode, must not use its range either
+            fill = model.Fill(parameters).Single();
+
+            Assert.AreEqual(OrderStatus.None, fill.Status);
+
+            // the next bar is entirely after the trigger, so it fills like a resting limit order
+            var nextBar = new TradeBar(triggerBar.EndTime, Symbols.SPY, open, high, low, close, 100);
+            TimeKeeper.SetUtcDateTime(nextBar.EndTime.ConvertToUtc(TimeZones.NewYork));
+            security.SetMarketPrice(nextBar);
+
+            fill = model.Fill(parameters).Single();
+
+            Assert.AreEqual(OrderStatus.Filled, fill.Status);
+            Assert.AreEqual(order.Quantity, fill.FillQuantity);
+            Assert.AreEqual(limitPrice, fill.FillPrice);
+        }
+
         [TestCase(true)]
         [TestCase(false)]
         public void PerformsStopMarketFillBuy(bool isInternal)

@@ -91,10 +91,15 @@ namespace QuantConnect.Algorithm.CSharp
         {
             if (orderEvent.Status == OrderStatus.Filled)
             {
-                var order = Transactions.GetOrderById(orderEvent.OrderId);
-                if (!((StopLimitOrder)order).StopTriggered)
+                var order = (StopLimitOrder)Transactions.GetOrderById(orderEvent.OrderId);
+                if (!order.StopTriggered)
                 {
                     throw new RegressionTestException("StopLimitOrder StopTriggered should haven been set if the order filled.");
+                }
+
+                if (order.StopTriggeredTime == null || order.StopTriggeredTime > orderEvent.UtcTime)
+                {
+                    throw new RegressionTestException($"StopLimitOrder StopTriggeredTime should have been set before the fill. Time: {order.StopTriggeredTime}");
                 }
 
                 if (orderEvent.Direction == OrderDirection.Buy)
@@ -196,7 +201,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Lowest Capacity Asset", "SPY R735QTJ8XC9X"},
             {"Portfolio Turnover", "0.02%"},
             {"Drawdown Recovery", "39"},
-            {"OrderListHash", "f315858f3f9e6a983cfcf887237f70fd"}
+            {"OrderListHash", "d1a9afc74f04b71239e726ac6f88a098"}
         };
     }
 }

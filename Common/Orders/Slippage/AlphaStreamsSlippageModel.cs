@@ -13,6 +13,7 @@
  * limitations under the License.
 */
 
+using QuantConnect.Data.Market;
 using QuantConnect.Securities;
 using System.Collections.Generic;
 
@@ -40,7 +41,13 @@ namespace QuantConnect.Orders.Slippage
                 return 0;
             }
 
-            return _slippagePercent * asset.GetLastData()?.Value ?? 0;
+            var lastData = asset.GetLastData();
+            if (lastData == null) return 0;
+
+            // Market on open orders fill at the bar open, which is the price we have to reference, not the bar close
+            var referencePrice = order.Type == OrderType.MarketOnOpen && lastData is IBar bar ? bar.Open : lastData.Value;
+
+            return _slippagePercent * referencePrice;
         }
     }
 }

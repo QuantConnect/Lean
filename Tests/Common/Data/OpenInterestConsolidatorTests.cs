@@ -81,6 +81,8 @@ namespace QuantConnect.Tests.Common.Data
                 new OpenInterest(){ Time = time.AddMinutes(8), Symbol = Symbols.SPY, Value = 25 },
                 new OpenInterest(){ Time = time.AddMinutes(9), Symbol = Symbols.SPY, Value = 30 },
                 new OpenInterest(){ Time = time.AddMinutes(10), Symbol = Symbols.SPY, Value = 26 },
+                new OpenInterest(){ Time = time.AddDays(1), Symbol = Symbols.SPY, Value = 31 },
+                new OpenInterest(){ Time = time.AddDays(2), Symbol = Symbols.SPY, Value = 27 },
             };
         }
 

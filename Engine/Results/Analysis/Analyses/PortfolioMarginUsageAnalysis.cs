@@ -26,6 +26,12 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
     public class PortfolioMarginUsageAnalysis : BaseResultsAnalysis
     {
         /// <summary>
+        /// This analysis reads the current margin chart instead of scanning the order event
+        /// and log streams, so its in-run findings are replaced on every run.
+        /// </summary>
+        public override bool IsStateBased { get; } = true;
+
+        /// <summary>
         /// Gets the description of the detected margin under-utilisation issue.
         /// </summary>
         public override string Issue { get; } = "The algorithm sometimes only utilizes a small proportion of the margin available.";

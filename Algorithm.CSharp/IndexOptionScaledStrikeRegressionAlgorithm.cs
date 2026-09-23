@@ -109,7 +109,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
-        public long DataPoints => 106;
+        public long DataPoints => 104;
 
         /// <summary>
         /// Data Points count of the algorithm history
@@ -135,25 +135,25 @@ namespace QuantConnect.Algorithm.CSharp
             {"Start Equity", "100000"},
             {"End Equity", "274018.3"},
             {"Net Profit", "174.018%"},
-            {"Sharpe Ratio", "6.74816637965336E+27"},
+            {"Sharpe Ratio", "6.85437353574334E+27"},
             {"Sortino Ratio", "0"},
-            {"Probabilistic Sharpe Ratio", "95.427%"},
+            {"Probabilistic Sharpe Ratio", "95.711%"},
             {"Loss Rate", "50%"},
             {"Win Rate", "50%"},
             {"Profit-Loss Ratio", "5803.35"},
             {"Alpha", "7.922816251426434E+28"},
-            {"Beta", "4.566"},
-            {"Annual Standard Deviation", "11.741"},
-            {"Annual Variance", "137.844"},
-            {"Information Ratio", "6.749778840887739E+27"},
-            {"Tracking Error", "11.738"},
-            {"Treynor Ratio", "1.7351225556608623E+28"},
+            {"Beta", "-19.045"},
+            {"Annual Standard Deviation", "11.559"},
+            {"Annual Variance", "133.605"},
+            {"Information Ratio", "6.846268207893466E+27"},
+            {"Tracking Error", "11.572"},
+            {"Treynor Ratio", "-4.1599647001098314E+27"},
             {"Total Fees", "$0.00"},
             {"Estimated Strategy Capacity", "$7000.00"},
             {"Lowest Capacity Asset", "NQX 31M220FF67A3Y|NDX 31"},
             {"Portfolio Turnover", "6.40%"},
             {"Drawdown Recovery", "1"},
-            {"OrderListHash", "bbdd7eb2f738326a6184bc71d435c6cb"}
+            {"OrderListHash", "785c2daf879f0e3d4ca5c9ba143475ea"}
         };
     }
 }

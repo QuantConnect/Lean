@@ -153,6 +153,24 @@ namespace QuantConnect.Tests.Indicators.CandlestickPatterns
             TestHelper.TestIndicatorReset(indicator, testFileName);
         }
 
+        [Test, TestCaseSource(nameof(PatternTestParameters))]
+        public void WarmsUpProperly(CandlestickPattern indicator, string columnName, string testFileName)
+        {
+            // the sample count below only means anything from a known starting point
+            indicator.Reset();
+
+            var period = indicator.WarmUpPeriod;
+            var startDate = new DateTime(2019, 1, 1);
+
+            for (var i = 0; i < period; i++)
+            {
+                indicator.Update(new TradeBar(startDate.AddDays(i), Symbols.SPY, 100m + i, 105m + i, 95m + i, 100m + i, 100m, Time.OneDay));
+                Assert.AreEqual(i == period - 1, indicator.IsReady);
+            }
+
+            Assert.AreEqual(period, indicator.Samples);
+        }
+
         private static Action<IndicatorBase<IBaseDataBar>, double> Assertion
         {
             get

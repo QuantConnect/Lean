@@ -182,6 +182,16 @@ namespace QuantConnect
                 return Invariant($"The {brokerageModel.GetType().Name} does not support {orderType} orders with {timeInForce} TIF outside regular hours. ") +
                     Invariant($"Only {OrderType.Limit} orders with {TimeInForce.Day} TIF are supported outside regular trading hours.");
             }
+
+            /// <summary>
+            /// Returns a message indicating that the number of legs of the combo order is not supported by the given brokerage model.
+            /// </summary>
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public static string UnsupportedComboOrderLegCount(IBrokerageModel brokerageModel, int legCount)
+            {
+                return Invariant($"The {brokerageModel.GetType().Name} does not support combo orders with {legCount} legs. ") +
+                    Invariant($"A combo order takes from 2 to 4 option legs.");
+            }
         }
 
         /// <summary>

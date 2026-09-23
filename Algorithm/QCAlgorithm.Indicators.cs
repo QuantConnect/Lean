@@ -1365,6 +1365,27 @@ namespace QuantConnect.Algorithm
         }
 
         /// <summary>
+        /// Creates a Least Squares Moving Average indicator for the given target symbol in relation with
+        /// the reference used, that is, the regression line of the target prices on the reference prices.
+        /// The indicator will be automatically updated on the given resolution.
+        /// </summary>
+        /// <param name="target">The target symbol whose LSMA we want</param>
+        /// <param name="reference">The reference symbol to regress the target symbol on</param>
+        /// <param name="period">The period of the LSMA indicator</param>
+        /// <param name="resolution">The resolution</param>
+        /// <param name="selector">Selects a value from the BaseData to send into the indicator, if null defaults to casting the input value to a TradeBar</param>
+        /// <returns>The LeastSquaresMovingAverageWithReference indicator for the given parameters</returns>
+        [DocumentationAttribute(Indicators)]
+        public LeastSquaresMovingAverageWithReference LSMA(Symbol target, Symbol reference, int period, Resolution? resolution = null, Func<IBaseData, IBaseDataBar> selector = null)
+        {
+            var name = CreateIndicatorName(QuantConnect.Symbol.None, $"LSMA({period})", resolution);
+            var leastSquaresMovingAverage = new LeastSquaresMovingAverageWithReference(name, target, reference, period);
+            InitializeIndicator(leastSquaresMovingAverage, resolution, selector, target, reference);
+
+            return leastSquaresMovingAverage;
+        }
+
+        /// <summary>
         /// Creates a new LinearWeightedMovingAverage indicator.  This indicator will linearly distribute
         /// the weights across the periods.
         /// </summary>

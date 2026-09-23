@@ -712,6 +712,13 @@ namespace QuantConnect.Tests.API
             Assert.IsTrue(liveLogs.Length >= 0);
             Assert.IsTrue(liveLogs.DeploymentOffset >= 0);
 
+            // Filter by the longest word of the first line, so only lines containing it come back
+            var keyword = liveLogs.Logs[0].Split(' ').OrderByDescending(x => x.Length).First();
+            var filteredLogs = ApiClient.ReadLiveLogs(firstLiveAlgo.ProjectId, firstLiveAlgo.DeployId, 0, 20, query: keyword);
+            Assert.IsTrue(filteredLogs.Success);
+            Assert.Greater(filteredLogs.Logs.Count, 0);
+            Assert.IsTrue(filteredLogs.Logs.All(x => x.Contains(keyword, StringComparison.Ordinal)));
+
             Assert.Throws<ArgumentException>(() => ApiClient.ReadLiveLogs(firstLiveAlgo.ProjectId, firstLiveAlgo.DeployId, 0, 251));
         }
 
@@ -797,8 +804,9 @@ namespace QuantConnect.Tests.API
 
             // Wait to receive the orders
             var readLiveOrders = WaitForReadLiveOrdersResponse(projectId, 60 * 5);
-            Assert.IsTrue(readLiveOrders.Any());
-            Assert.AreEqual(Symbols.SPY, readLiveOrders.First().Symbol);
+            Assert.GreaterOrEqual(readLiveOrders.Length, readLiveOrders.Orders.Count);
+            Assert.IsTrue(readLiveOrders.Orders.Any());
+            Assert.AreEqual(Symbols.SPY, readLiveOrders.Orders.First().Symbol);
 
             // Liquidate live algorithm; will also stop algorithm
             var liquidateLive = ApiClient.LiquidateLiveAlgorithm(projectId);
@@ -879,11 +887,11 @@ def CreateLiveAlgorithmFromPython(apiClient, projectId, compileId, nodeId):
         /// <param name="projectId">Id of the project</param>
         /// <param name="seconds">Seconds to allow for receive an order</param>
         /// <returns></returns>
-        private List<ApiOrderResponse> WaitForReadLiveOrdersResponse(int projectId, int seconds)
+        private OrdersResponseWrapper WaitForReadLiveOrdersResponse(int projectId, int seconds)
         {
-            var readLiveOrders = new List<ApiOrderResponse>();
+            var readLiveOrders = new OrdersResponseWrapper();
             var finish = DateTime.UtcNow.AddSeconds(seconds);
-            while (DateTime.UtcNow < finish && !readLiveOrders.Any())
+            while (DateTime.UtcNow < finish && !readLiveOrders.Orders.Any())
             {
                 Thread.Sleep(10000);
                 readLiveOrders = ApiClient.ReadLiveOrders(projectId);

@@ -62,6 +62,11 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators.Factories
                 foreach (var date in request.TradableDaysInDataTimeZone)
                 {
                     var source = sourceFactory.GetSource(configuration, date, false);
+                    if (source == null)
+                    {
+                        // a null source is equivalent to an unreachable source: no data for this date, move to the next day
+                        continue;
+                    }
                     var factory = SubscriptionDataSourceReader.ForSource(source, dataCacheProvider, configuration, date, false, sourceFactory,
                         dataProvider, _objectStore);
                     var coarseFundamentalForDate = factory.Read(source);

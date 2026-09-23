@@ -225,6 +225,43 @@ class CustomDataClass(PythonDataTests.TestPythonData):
             }
         }
 
+        [TestCase(true)]
+        [TestCase(false)]
+        public void GetSourceReturningNoneGivesNull(bool isLiveMode)
+        {
+            using (Py.GIL())
+            {
+                dynamic testModule = PyModule.FromString("testModule",
+                    @"
+from AlgorithmImports import *
+
+class CustomDataTest(PythonData):
+    def get_source(self, config, date, is_live):
+        if is_live:
+            # live signals arrive through another channel, there is no file to poll
+            return None
+        return SubscriptionDataSource('source', SubscriptionTransportMedium.OBJECT_STORE, FileFormat.CSV)");
+
+                var type = Extensions.CreateType(testModule.GetAttr("CustomDataTest"));
+                var customDataTest = new PythonData(testModule.GetAttr("CustomDataTest")());
+                var config = new SubscriptionDataConfig(type, Symbols.SPY, Resolution.Daily, DateTimeZone.Utc,
+                    DateTimeZone.Utc, false, false, false, isCustom: true);
+
+                var source = customDataTest.GetSource(config, new DateTime(2022, 5, 5), isLiveMode);
+
+                if (isLiveMode)
+                {
+                    // None has to survive the boundary as a null, it's what the data feed checks for
+                    Assert.IsNull(source);
+                }
+                else
+                {
+                    Assert.IsNotNull(source);
+                    Assert.AreEqual("source", source.Source);
+                }
+            }
+        }
+
         private static BaseData GetDataFromModule(dynamic testModule)
         {
             var type = Extensions.CreateType(testModule.GetAttr("CustomDataTest"));

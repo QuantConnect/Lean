@@ -233,9 +233,12 @@ namespace QuantConnect.Indicators
 
         private bool HasSufficientPreviousDataForComputation()
         {
-            return _trackedAssets.All(asset =>
-                asset.RollingPreviousHigh.IsReady
-                && asset.RollingPreviousLow.IsReady);
+            // All() holds over an empty set, so without this the indicator reports itself
+            // ready before any asset is tracked
+            return _trackedAssets.Any()
+                && _trackedAssets.All(asset =>
+                    asset.RollingPreviousHigh.IsReady
+                    && asset.RollingPreviousLow.IsReady);
         }
 
         private void UpdatePreviousValues(TrackedAsset asset, IBaseDataBar bar)

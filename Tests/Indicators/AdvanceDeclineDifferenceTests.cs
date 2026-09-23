@@ -84,6 +84,26 @@ namespace QuantConnect.Tests.Indicators
         }
 
         [Test]
+        public void ProducesTheSameValuesAfterReset()
+        {
+            var indicator = CreateIndicator();
+            var reference = System.DateTime.Today;
+
+            UpdateStocks(indicator, reference.AddMinutes(1), 1m, 1m, 1m);
+            UpdateStocks(indicator, reference.AddMinutes(2), 2m, 0.5m, 3m);
+            var expected = indicator.Current.Value;
+            Assert.AreNotEqual(0m, expected);
+
+            UpdateStocks(indicator, reference.AddMinutes(3), 3m, 1m, 2m);
+            indicator.Reset();
+
+            UpdateStocks(indicator, reference.AddMinutes(1), 1m, 1m, 1m);
+            UpdateStocks(indicator, reference.AddMinutes(2), 2m, 0.5m, 3m);
+
+            Assert.AreEqual(expected, indicator.Current.Value);
+        }
+
+        [Test]
         public virtual void IgnorePeriodIfAnyStockMissed()
         {
             var adDifference = (AdvanceDeclineDifference)CreateIndicator();
@@ -293,6 +313,13 @@ namespace QuantConnect.Tests.Indicators
                 // The last update used Symbol.GOOG, so the indicator's current Symbol should be GOOG
                 Assert.AreEqual(Symbols.GOOG, indicator.Current.Symbol);
             }
+        }
+
+        private static void UpdateStocks(IndicatorBase<TradeBar> indicator, System.DateTime time, decimal aapl, decimal ibm, decimal goog)
+        {
+            indicator.Update(new TradeBar() { Symbol = Symbols.AAPL, Close = aapl, Volume = 100, Time = time });
+            indicator.Update(new TradeBar() { Symbol = Symbols.IBM, Close = ibm, Volume = 100, Time = time });
+            indicator.Update(new TradeBar() { Symbol = Symbols.GOOG, Close = goog, Volume = 100, Time = time });
         }
 
         protected override string TestFileName => "arms_data.txt";

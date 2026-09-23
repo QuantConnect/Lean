@@ -88,6 +88,74 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             enablePriceScale = enablePriceScale && config.PricesShouldBeScaled();
             var lastTradableDate = DateTime.MinValue;
 
+            ScheduleEnumerator(config.Symbol, enumerator, enqueueable, data =>
+            {
+                // Use our config filter to see if we should emit this
+                // This currently catches Auxiliary data that we don't want to emit
+                if (data != null && !config.ShouldEmitData(data, request.IsUniverseSubscription))
+                {
+                    return null;
+                }
+
+                // In the event we have "Raw" configuration, we will force our subscription data
+                // to precalculate adjusted data. The data will still be emitted as raw, but
+                // if the config is changed at any point it can emit adjusted data as well
+                // See SubscriptionData.Create() and PrecalculatedSubscriptionData for more
+                var requestMode = config.DataNormalizationMode;
+                if (config.SecurityType == SecurityType.Equity)
+                {
+                    requestMode = requestMode != DataNormalizationMode.Raw ? requestMode : DataNormalizationMode.Adjusted;
+                }
+
+                var priceScaleFrontierDate = data.GetUpdatePriceScaleFrontier().Date;
+
+                // We update our price scale factor when the date changes for non fill forward bars or if we haven't initialized yet.
+                // We don't take into account auxiliary data because we don't scale it and because the underlying price data could be fill forwarded
+                if (enablePriceScale && priceScaleFrontierDate > lastTradableDate && data.DataType != MarketDataType.Auxiliary && (!data.IsFillForward || lastTradableDate == DateTime.MinValue))
+                {
+                    var factorFile = factorFileProvider.Get(request.Configuration.Symbol);
+                    lastTradableDate = priceScaleFrontierDate;
+                    request.Configuration.PriceScaleFactor = factorFile.GetPriceScale(lastTradableDate, requestMode, config.ContractDepthOffset, config.DataMappingMode);
+                }
+
+                return SubscriptionData.Create(dailyStrictEndTimeEnabled,
+                    config,
+                    exchangeHours,
+                    subscription.OffsetProvider,
+                    data,
+                    requestMode,
+                    enablePriceScale ? request.Configuration.PriceScaleFactor : null);
+            });
+
+            return subscription;
+        }
+
+        /// <summary>
+        /// Setups a worker task to enumerate the given enumerator, feeding a blocking <see cref="EnqueueableEnumerator{T}"/> which is returned.
+        /// Useful for enumerators which perform blocking IO, like the live warmup enumerators performing history requests, so that they run
+        /// concurrently on the workers instead of sequentially driven by the consuming thread, which will only block until the next data
+        /// point of each enumerator is available
+        /// </summary>
+        /// <param name="symbol">The symbol associated with this work</param>
+        /// <param name="enumerator">The data enumerator stack to enumerate</param>
+        /// <returns>A blocking enumerator providing the data</returns>
+        public static IEnumerator<BaseData> ScheduleEnumerator(Symbol symbol, IEnumerator<BaseData> enumerator)
+        {
+            var enqueueable = new EnqueueableEnumerator<BaseData>(blocking: true);
+            ScheduleEnumerator(symbol, enumerator, enqueueable, data => data, endOnNullDataPoint: true);
+            return enqueueable;
+        }
+
+        /// <summary>
+        /// Setups a worker task to enumerate the given enumerator, processing each data point and feeding the given enumerator
+        /// </summary>
+        /// <param name="endOnNullDataPoint">When true, a null data point is taken as the enumerator having ended, since in live mode
+        /// enumerators will return true with a null current value when they have no more data. Else null data points are forwarded</param>
+        /// <remarks>A null processed non null data point is skipped</remarks>
+        private static void ScheduleEnumerator<T>(Symbol symbol, IEnumerator<BaseData> enumerator, EnqueueableEnumerator<T> enqueueable,
+            Func<BaseData, T> processDataPoint, bool endOnNullDataPoint = false)
+            where T : class
+        {
             Func<int, bool> produce = (workBatchSize) =>
             {
                 try
@@ -95,7 +163,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     var count = 0;
                     while (enumerator.MoveNext())
                     {
-                        // subscription has been removed, no need to continue enumerating
+                        // the consumer has been removed, no need to continue enumerating
                         if (enqueueable.HasFinished)
                         {
                             enumerator.DisposeSafely();
@@ -103,45 +171,20 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                         }
 
                         var data = enumerator.Current;
-
-                        // Use our config filter to see if we should emit this
-                        // This currently catches Auxiliary data that we don't want to emit
-                        if (data != null && !config.ShouldEmitData(data, request.IsUniverseSubscription))
+                        if (data == null && endOnNullDataPoint)
                         {
+                            break;
+                        }
+
+                        var processedDataPoint = processDataPoint(data);
+                        if (data != null && processedDataPoint == null)
+                        {
+                            // filtered out
                             continue;
                         }
 
-                        // In the event we have "Raw" configuration, we will force our subscription data
-                        // to precalculate adjusted data. The data will still be emitted as raw, but
-                        // if the config is changed at any point it can emit adjusted data as well
-                        // See SubscriptionData.Create() and PrecalculatedSubscriptionData for more
-                        var requestMode = config.DataNormalizationMode;
-                        if (config.SecurityType == SecurityType.Equity)
-                        {
-                            requestMode = requestMode != DataNormalizationMode.Raw ? requestMode : DataNormalizationMode.Adjusted;
-                        }
-
-                        var priceScaleFrontierDate = data.GetUpdatePriceScaleFrontier().Date;
-
-                        // We update our price scale factor when the date changes for non fill forward bars or if we haven't initialized yet.
-                        // We don't take into account auxiliary data because we don't scale it and because the underlying price data could be fill forwarded
-                        if (enablePriceScale && priceScaleFrontierDate > lastTradableDate && data.DataType != MarketDataType.Auxiliary && (!data.IsFillForward || lastTradableDate == DateTime.MinValue))
-                        {
-                            var factorFile = factorFileProvider.Get(request.Configuration.Symbol);
-                            lastTradableDate = priceScaleFrontierDate;
-                            request.Configuration.PriceScaleFactor = factorFile.GetPriceScale(lastTradableDate, requestMode, config.ContractDepthOffset, config.DataMappingMode);
-                        }
-
-                        SubscriptionData subscriptionData = SubscriptionData.Create(dailyStrictEndTimeEnabled,
-                            config,
-                            exchangeHours,
-                            subscription.OffsetProvider,
-                            data,
-                            requestMode,
-                            enablePriceScale ? request.Configuration.PriceScaleFactor : null);
-
                         // drop the data into the back of the enqueueable
-                        enqueueable.Enqueue(subscriptionData);
+                        enqueueable.Enqueue(processedDataPoint);
 
                         count++;
                         // stop executing if added more data than the work batch size, we don't want to fill the ram
@@ -153,7 +196,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 }
                 catch (Exception exception)
                 {
-                    Log.Error(exception, $"Subscription worker task exception {request.Configuration}.");
+                    Log.Error(exception, $"Enumerator worker task exception {symbol}.");
                 }
 
                 // we made it here because MoveNext returned false or we exploded, stop the enqueueable
@@ -163,8 +206,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 return false;
             };
 
-            WeightedWorkScheduler.Instance.QueueWork(config.Symbol, produce,
-                // if the subscription finished we return 0, so the work is prioritized and gets removed
+            WeightedWorkScheduler.Instance.QueueWork(symbol, produce,
+                // if the enumerator finished we return 0, so the work is prioritized and gets removed
                 () =>
                 {
                     if (enqueueable.HasFinished)
@@ -174,8 +217,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     return enqueueable.Count;
                 }
             );
-
-            return subscription;
         }
 
         /// <summary>

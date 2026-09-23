@@ -38,6 +38,7 @@ using QuantConnect.Data.Fundamental;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Tests.Common.Data.Fundamental;
 using QuantConnect.Logging;
+using QuantConnect.Configuration;
 
 namespace QuantConnect.Tests.Algorithm
 {
@@ -3235,6 +3236,50 @@ tradeBar = TradeBar
             Assert.AreEqual(marketOpen, requestStart);
         }
 
+        // This reproduces https://github.com/QuantConnect/Lean/issues/9784
+        // HKFE trades 09:15-12:00 and 13:00-16:30 Hong Kong time, algorithm time zone is New York (13 hours behind in winter)
+        // 00:00 New York is 13:00 Hong Kong, inside the afternoon session: today does not count
+        [TestCase(Language.CSharp, "2018-02-01 00:00:00", "2018-01-18 00:00:00")]
+        [TestCase(Language.Python, "2018-02-01 00:00:00", "2018-01-18 00:00:00")]
+        // 04:00 New York is 17:00 Hong Kong, after the last close: today counts
+        [TestCase(Language.CSharp, "2018-02-01 04:00:00", "2018-01-18 17:00:00")]
+        [TestCase(Language.Python, "2018-02-01 04:00:00", "2018-01-18 17:00:00")]
+        public void DailyHistoryBarCountOnMarketsWithLunchBreak(Language language, string algorithmTime, string expectedStartExchangeTime)
+        {
+            var algorithm = GetAlgorithm(DateTime.ParseExact(algorithmTime, "yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture));
+            algorithm.Settings.DailyPreciseEndTime = true;
+            algorithm.Settings.SeedInitialPrices = false;
+            algorithm.HistoryProvider = _testHistoryProvider;
+            var hsi = algorithm.AddFuture("HSI", Resolution.Daily, Market.HKFE);
+
+            if (language == Language.CSharp)
+            {
+                algorithm.History(hsi.Symbol, 10, Resolution.Daily).ToList();
+            }
+            else
+            {
+                using (Py.GIL())
+                {
+                    using var module = PyModule.FromString("testModule", @"
+from AlgorithmImports import *
+
+def get_history(algorithm, symbol):
+    return algorithm.history(symbol, 10, Resolution.DAILY)
+");
+                    algorithm.SetPandasConverter();
+                    using var getHistory = module.GetAttr("get_history");
+                    using var result = getHistory.Invoke(algorithm.ToPython(), hsi.Symbol.ToPython());
+                }
+            }
+
+            var expectedStart = DateTime.ParseExact(expectedStartExchangeTime, "yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture)
+                .ConvertToUtc(hsi.Exchange.TimeZone);
+            var request = _testHistoryProvider.HistryRequests.Single(x => x.DataType == typeof(TradeBar));
+            Assert.AreEqual(expectedStart, request.StartTimeUtc);
+            Assert.AreEqual(algorithm.UtcTime, request.EndTimeUtc);
+            Assert.AreEqual(Resolution.Daily, request.Resolution);
+        }
+
         // This reproduces https://github.com/QuantConnect/Lean/issues/7504
         [TestCase(Language.CSharp)]
         [TestCase(Language.Python)]
@@ -4285,6 +4330,100 @@ def get_history(algorithm, symbol):
                     new TestCaseData(language, Symbols.ES_Future_Chain, Resolution.Minute, futureStart, futureStart.AddDays(2), 900),
                 };
             }).ToArray();
+        }
+
+        [Test]
+        public void WarnsOnLargeHistoryRequest()
+        {
+            Config.Set("history-request-cells-warning-threshold", "1000");
+            try
+            {
+                var algorithm = CreateAlgorithmForHistoryWarningTests();
+                var symbol = algorithm.AddEquity("SPY", Resolution.Daily).Symbol;
+
+                // ~365 daily bars x 5 columns > 1000 cells
+                algorithm.History(new[] { symbol }, 365, Resolution.Daily);
+
+                Assert.AreEqual(1, algorithm.DebugMessages.Count(x => x.Contains("large history request")));
+
+                // the warning is only sent once per algorithm
+                algorithm.History(new[] { symbol }, 365, Resolution.Daily);
+                Assert.AreEqual(1, algorithm.DebugMessages.Count(x => x.Contains("large history request")));
+            }
+            finally
+            {
+                Config.Reset();
+            }
+        }
+
+        [Test]
+        public void WarnsOnLargeTickHistoryRequest()
+        {
+            Config.Set("history-request-cells-warning-threshold", "1000000");
+            try
+            {
+                var algorithm = CreateAlgorithmForHistoryWarningTests();
+                var symbol = algorithm.AddEquity("SPY", Resolution.Tick).Symbol;
+
+                // one market day estimated at 10 ticks per second: 234,000 bars x 5 columns > 1,000,000 cells.
+                // At 1 tick per second the estimate would stay under the threshold and miss the warning
+                algorithm.History(new[] { symbol }, TimeSpan.FromDays(1), Resolution.Tick);
+
+                Assert.AreEqual(1, algorithm.DebugMessages.Count(x => x.Contains("large history request")));
+            }
+            finally
+            {
+                Config.Reset();
+            }
+        }
+
+        [Test]
+        public void DoesNotWarnOnSmallHistoryRequest()
+        {
+            // default threshold
+            var algorithm = CreateAlgorithmForHistoryWarningTests();
+            var symbol = algorithm.AddEquity("SPY", Resolution.Daily).Symbol;
+
+            algorithm.History(new[] { symbol }, 30, Resolution.Daily);
+
+            Assert.AreEqual(0, algorithm.DebugMessages.Count(x => x.Contains("large history request")));
+        }
+
+        [Test]
+        public void WarnsOnRepeatedOverlappingHistoryRequests()
+        {
+            // the "large call" floor tracked for overlap detection is threshold / 50 = 2000 cells
+            Config.Set("history-request-cells-warning-threshold", "100000");
+            try
+            {
+                var algorithm = CreateAlgorithmForHistoryWarningTests();
+                var symbol = algorithm.AddEquity("SPY", Resolution.Daily).Symbol;
+
+                for (var i = 0; i < 40; i++)
+                {
+                    // ~800 daily bars x 5 columns = ~4000 cells: over the large-call floor, under the size warning threshold
+                    algorithm.History(new[] { symbol }, 800, Resolution.Daily);
+                }
+
+                Assert.AreEqual(0, algorithm.DebugMessages.Count(x => x.Contains("large history request")));
+                Assert.AreEqual(1, algorithm.DebugMessages.Count(x => x.Contains("overlapping")));
+            }
+            finally
+            {
+                Config.Reset();
+            }
+        }
+
+        private static QCAlgorithm CreateAlgorithmForHistoryWarningTests()
+        {
+            // the warning thresholds are read from the config when the algorithm is created,
+            // so we create a dedicated instance instead of using the fixture's algorithm
+            var algorithm = new QCAlgorithm();
+            algorithm.SubscriptionManager.SetDataManager(new DataManagerStub(algorithm));
+            algorithm.HistoryProvider = new TestHistoryProvider();
+            algorithm.SetStartDate(2013, 10, 07);
+            algorithm.Settings.SeedInitialPrices = false;
+            return algorithm;
         }
 
         private QCAlgorithm GetAlgorithm(DateTime dateTime)

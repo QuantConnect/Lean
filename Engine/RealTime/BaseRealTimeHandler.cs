@@ -119,7 +119,8 @@ namespace QuantConnect.Lean.Engine.RealTime
         {
             Algorithm = algorithm;
             ResultHandler = resultHandler;
-            TimeMonitor = new TimeMonitor(GetTimeMonitorTimeout());
+            // surface long-running scheduled event warnings in the user's logs, not just the engine log
+            TimeMonitor = new TimeMonitor(GetTimeMonitorTimeout()) { UserWarningHandler = message => ResultHandler?.DebugMessage(message) };
             IsolatorLimitProvider = isolatorLimitProvider;
 
             if (job.Language == Language.CSharp)

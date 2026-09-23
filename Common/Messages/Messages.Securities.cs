@@ -840,14 +840,14 @@ namespace QuantConnect
         public static class SecurityManager
         {
             /// <summary>
-            /// Returns a string message saying the given symbol was not found in the user security list
+            /// Returns a string message saying the given symbol was not found in the user security list.
+            /// It also suggests the safe access idioms that prevent the exception
             /// </summary>
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public static string SymbolNotFoundInSecurities(QuantConnect.Symbol symbol)
             {
-                return Invariant($@"This asset symbol ({
-                    symbol}) was not found in your security list. Please add this security or check it exists before using it with 'Securities.ContainsKey(""{
-                    QuantConnect.SymbolCache.GetTicker(symbol)}"")'");
+                return Invariant($"This asset symbol ({symbol}) was not found in your security list. ") +
+                    $"Please add this security before using it. {SafeKeyAccessSuggestion(FormatCodeRoot("Securities"))}";
             }
 
             /// <summary>

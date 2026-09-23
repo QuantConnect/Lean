@@ -133,6 +133,30 @@ namespace QuantConnect.Tests.Common.Securities.Futures
         }
 
         [Test]
+        public void OneOunceGoldRollsForwardToListedContractMonth()
+        {
+            var canonical = Symbol.Create(QuantConnect.Securities.Futures.Metals.OneOunceGold, SecurityType.Future, Market.COMEX);
+            var expiration = FuturesExpiryFunctions.FuturesExpiryDictionary[canonical];
+
+            // 1OZ only lists Feb/Apr/Jun/Aug/Oct/Dec, so an unlisted month rolls forward to the next listing.
+            // September rolls to Oct 2025, terminating on the third last business day of September
+            Assert.AreEqual(new DateTime(2025, 9, 26, 0, 0, 0), expiration(new DateTime(2025, 9, 1)));
+            // November rolls to Dec 2026, where 11/26 is Thanksgiving
+            Assert.AreEqual(new DateTime(2026, 11, 25, 0, 0, 0), expiration(new DateTime(2026, 11, 1)));
+        }
+
+        [TestCase(QuantConnect.Securities.Futures.Financials.MicroUltraTenYearUSTreasuryNote)]
+        [TestCase(QuantConnect.Securities.Futures.Financials.MicroUltraUSTreasuryBond)]
+        public void MicroUltraTreasuriesRollForwardToQuarterlyContractMonth(string ticker)
+        {
+            var canonical = Symbol.Create(ticker, SecurityType.Future, Market.CBOT);
+            var expiration = FuturesExpiryFunctions.FuturesExpiryDictionary[canonical];
+
+            // Only Mar/Jun/Sep/Dec are listed, so January rolls forward to Mar 2025
+            Assert.AreEqual(new DateTime(2025, 2, 27, 19, 0, 0), expiration(new DateTime(2025, 1, 1)));
+        }
+
+        [Test]
         public void FuturesExpiryFunction_MissingSymbol_ShouldThrowArgumentException()
         {
             const string badSymbol = "AAAAA";
@@ -388,6 +412,8 @@ namespace QuantConnect.Tests.Common.Securities.Futures
         [TestCase(QuantConnect.Securities.Futures.Financials.UltraUSTreasuryBond, TwelveOne)]
         [TestCase(QuantConnect.Securities.Futures.Financials.UltraTenYearUSTreasuryNote, Zero)]
         [TestCase(QuantConnect.Securities.Futures.Financials.MicroY10TreasuryNote, Zero)]
+        [TestCase(QuantConnect.Securities.Futures.Financials.MicroUltraTenYearUSTreasuryNote, TwoPMCentralTime)]
+        [TestCase(QuantConnect.Securities.Futures.Financials.MicroUltraUSTreasuryBond, TwoPMCentralTime)]
         public void FinancialsExpiryDateFunction_WithDifferentDates_ShouldFollowContract(string symbol, string dayTime)
         {
             Assert.IsTrue(_data.ContainsKey(symbol), "Symbol " + symbol + " not present in Test Data");
@@ -505,6 +531,7 @@ namespace QuantConnect.Tests.Common.Securities.Futures
         [TestCase(QuantConnect.Securities.Futures.Metals.MiniNYSilver, OneTwentyFivePM)]
         [TestCase(QuantConnect.Securities.Futures.Metals.Gold100Oz, OneThirtyPM)]
         [TestCase(QuantConnect.Securities.Futures.Metals.Silver5000Oz, OneTwentyFivePM)]
+        [TestCase(QuantConnect.Securities.Futures.Metals.OneOunceGold, Zero)]
         public void MetalsExpiryDateFunction_WithDifferentDates_ShouldFollowContract(string symbol, string dayTime)
         {
             Assert.IsTrue(_data.ContainsKey(symbol), "Symbol " + symbol + " not present in Test Data");

@@ -32,6 +32,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
         private readonly TimeSpan _dataResolution;
         private readonly TimeSpan _underlyingTimeout;
         private readonly ITimeProvider _timeProvider;
+        private readonly bool _extendedMarketHours;
+        private readonly DateTimeZone _dataTimeZone;
 
         private TimeSpan _marketCloseTimeSpan;
         private TimeSpan _marketOpenTimeSpan;
@@ -64,6 +66,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
             _timeProvider = timeProvider;
             _dataResolution = dataResolution.ToTimeSpan();
             _underlyingTimeout = GetMaximumDataTimeout(dataResolution);
+            _extendedMarketHours = isExtendedMarketHours;
+            _dataTimeZone = dataTimeZone;
         }
 
         /// <summary>
@@ -86,9 +90,48 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Enumerators
                     underlyingTimeout = _underlyingTimeout;
                 }
 
+                var utcNow = _timeProvider.GetUtcNow();
                 var nextEndTimeUtc = (fillForward.EndTime + underlyingTimeout).ConvertToUtc(Exchange.TimeZone);
-                if (next != null || nextEndTimeUtc <= _timeProvider.GetUtcNow())
+                if (next != null || nextEndTimeUtc <= utcNow)
                 {
+                    // a candidate more than one fill forward period behind real time means we are catching up after a time jump,
+                    // for example the warmup to live handover: instead of back filling the whole gap bar by bar, skip to the
+                    // latest expected bar and fill forward from there to now
+                    if ((fillForward.EndTime + fillForwardResolution + underlyingTimeout).ConvertToUtc(Exchange.TimeZone) <= utcNow
+                        && fillForwardResolution <= Time.OneHour)
+                    {
+                        // jump the reference near real time in a single step: the latest expected bar is the single
+                        // trade bar ending at or before now, respecting open hours
+                        var exchangeNow = utcNow.ConvertFromUtc(Exchange.TimeZone);
+                        var targetEndTime = Time.GetStartTimeForTradeBars(Exchange.Hours, exchangeNow, fillForwardResolution, 1,
+                            _extendedMarketHours, _dataTimeZone) + fillForwardResolution;
+                        if (next != null)
+                        {
+                            // when real data is waiting, jump one period short of it so the regular fill forward
+                            // behavior takes over from there
+                            var nextTarget = next.Time.RoundDown(fillForwardResolution) - fillForwardResolution;
+                            if (nextTarget < targetEndTime)
+                            {
+                                targetEndTime = nextTarget;
+                            }
+                        }
+
+                        var jumpEndTime = targetEndTime - fillForwardResolution;
+                        if (jumpEndTime > fillForward.EndTime)
+                        {
+                            var period = fillForward.EndTime - fillForward.Time;
+                            var jumped = fillForward.Clone(fillForward: true);
+                            jumped.Time = jumpEndTime - period;
+                            jumped.EndTime = jumpEndTime;
+                            if (base.RequiresFillForwardData(fillForwardResolution, jumped, next, out var jumpedCandidate)
+                                && jumpedCandidate != null
+                                && (jumpedCandidate.EndTime + underlyingTimeout).ConvertToUtc(Exchange.TimeZone) <= utcNow)
+                            {
+                                fillForward = jumpedCandidate;
+                            }
+                        }
+                    }
+
                     // we FF if next is here but in the future or next has not come yet and we've wait enough time
                     return true;
                 }

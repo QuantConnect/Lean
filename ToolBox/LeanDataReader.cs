@@ -16,8 +16,8 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.IO.Compression;
 using System.Linq;
-using Ionic.Zip;
 using NodaTime;
 using QuantConnect.Data;
 using QuantConnect.Logging;
@@ -115,20 +115,17 @@ namespace QuantConnect.ToolBox
             }
 
             var factory = (BaseData) ObjectActivator.GetActivator(_config.Type).Invoke(new object[0]);
+            // for futures and options if no entry was provided we get the contract symbol from the zip entry
+            var readSymbolFromEntry = _zipentry == null && (_config.SecurityType == SecurityType.Future || _config.SecurityType.IsOption());
 
             if (_config.Type.ImplementsStreamReader())
             {
-                using (var zip = new ZipFile(_zipPath))
+                using (var zip = new ZipArchive(File.OpenRead(_zipPath), ZipArchiveMode.Read))
                 {
-                    foreach (var zipEntry in zip.Where(x => _zipentry == null || string.Equals(x.FileName, _zipentry, StringComparison.OrdinalIgnoreCase)))
+                    foreach (var zipEntry in zip.Entries.Where(x => _zipentry == null || string.Equals(x.FullName, _zipentry, StringComparison.OrdinalIgnoreCase)))
                     {
-                        // we get the contract symbol from the zip entry if not already provided with the zip entry
-                        var symbol = _config.Symbol;
-                        if(_zipentry == null && (_config.SecurityType == SecurityType.Future || _config.SecurityType.IsOption()))
-                        {
-                            symbol = LeanData.ReadSymbolFromZipEntry(_config.Symbol, _config.Resolution, zipEntry.FileName);
-                        }
-                        using (var entryReader = new StreamReader(zipEntry.OpenReader()))
+                        var symbol = readSymbolFromEntry ? LeanData.ReadSymbolFromZipEntry(_config.Symbol, _config.Resolution, zipEntry.FullName) : _config.Symbol;
+                        using (var entryReader = new StreamReader(zipEntry.Open()))
                         {
                             while (!entryReader.EndOfStream)
                             {
@@ -140,35 +137,18 @@ namespace QuantConnect.ToolBox
                     }
                 }
             }
-            // for futures and options if no entry was provided we just read all
-            else if (_zipentry == null && (_config.SecurityType == SecurityType.Future || _config.SecurityType.IsOption()))
+            else
             {
-                foreach (var entries in Compression.Unzip(_zipPath))
+                foreach (var entry in Compression.Unzip(_zipPath).Where(x => _zipentry == null || string.Equals(x.Key, _zipentry, StringComparison.OrdinalIgnoreCase)))
                 {
-                    // we get the contract symbol from the zip entry
-                    var symbol = LeanData.ReadSymbolFromZipEntry(_config.Symbol, _config.Resolution, entries.Key);
-                    foreach (var line in entries.Value)
+                    var symbol = readSymbolFromEntry ? LeanData.ReadSymbolFromZipEntry(_config.Symbol, _config.Resolution, entry.Key) : _config.Symbol;
+                    foreach (var line in entry.Value)
                     {
                         var dataPoint = factory.Reader(_config, line, _date, false);
                         dataPoint.Symbol = symbol;
                         yield return dataPoint;
                     }
                 }
-            }
-            else
-            {
-                ZipFile zipFile;
-                using (var unzipped = Compression.Unzip(_zipPath, _zipentry, out zipFile))
-                {
-                    if (unzipped == null)
-                        yield break;
-                    string line;
-                    while ((line = unzipped.ReadLine()) != null)
-                    {
-                        yield return factory.Reader(_config, line, _date, false);
-                    }
-                }
-                zipFile.Dispose();
             }
         }
 

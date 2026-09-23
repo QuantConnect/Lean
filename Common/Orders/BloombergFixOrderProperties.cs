@@ -20,5 +20,41 @@ namespace QuantConnect.Orders
     /// </summary>
     public class BloombergFixOrderProperties : FixOrderProperties
     {
+        /// <summary>
+        /// The broker the shares are borrowed from for a short sale.
+        /// Reads and writes fix tag LocateBroker 5700 in <see cref="FixOrderProperties.AdditionalProperties"/>.
+        /// </summary>
+        public string LocateBroker
+        {
+            get { return GetTag("5700"); }
+            set { SetTag("5700", value); }
+        }
+
+        /// <summary>
+        /// Whether a locate is required for the short sale, "Y" or "N".
+        /// Reads and writes fix tag LocateReqd 114 in <see cref="FixOrderProperties.AdditionalProperties"/>.
+        /// </summary>
+        public string LocateReqd
+        {
+            get { return GetTag("114"); }
+            set { SetTag("114", value); }
+        }
+
+        private string GetTag(string tag)
+        {
+            return AdditionalProperties != null && AdditionalProperties.TryGetValue(tag, out var value) ? value : null;
+        }
+
+        private void SetTag(string tag, string value)
+        {
+            if (value == null)
+            {
+                AdditionalProperties?.Remove(tag);
+            }
+            else
+            {
+                AdditionalProperties[tag] = value;
+            }
+        }
     }
 }

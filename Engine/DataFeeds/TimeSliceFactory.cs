@@ -427,7 +427,11 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             var canonical = symbol.Canonical;
             if (!optionChains.TryGetValue(canonical, out chain))
             {
-                chain = new OptionChain(canonical, algorithmTime);
+                // the data is already in the exchange time zone, unlike the algorithm time the chain is stamped with
+                chain = new OptionChain(canonical, algorithmTime, security.SymbolProperties, security.Exchange.Hours)
+                {
+                    ExchangeTime = baseData.EndTime
+                };
                 optionChains[canonical] = chain;
             }
 
@@ -504,7 +508,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     return false;
                 }
 
-                chain = new FuturesChain(canonical, algorithmTime);
+                chain = new FuturesChain(canonical, algorithmTime) { ExchangeTime = baseData.EndTime };
                 futuresChains[canonical] = chain;
             }
 

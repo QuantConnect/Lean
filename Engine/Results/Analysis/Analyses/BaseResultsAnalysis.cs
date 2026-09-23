@@ -35,6 +35,23 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
         public abstract int Weight { get; }
 
         /// <summary>
+        /// Whether this analysis can also run while the backtest is still in progress, against a
+        /// snapshot of the intermediate results. Most analyses read only the result snapshot, so
+        /// this defaults to true. Analyses that need the completed run (runtime errors, equity
+        /// curves, final statistics, completion logs) or that read algorithm state that is not
+        /// safe to access while it runs override this to leave them to the final analysis only.
+        /// </summary>
+        public virtual bool RunsInRun { get; } = true;
+
+        /// <summary>
+        /// Whether this analysis reads the current backtest state (statistics, orders, charts)
+        /// instead of scanning the append-only order event and log streams. When run in-run, it
+        /// runs against the full current state on every run and its findings replace the
+        /// previous ones instead of accumulating.
+        /// </summary>
+        public virtual bool IsStateBased { get; }
+
+        /// <summary>
         /// Runs the analysis against all backtest data provided in <paramref name="parameters"/>.
         /// </summary>
         public abstract IReadOnlyList<QuantConnect.Analysis> Run(ResultsAnalysisRunParameters parameters);

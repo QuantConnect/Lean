@@ -312,5 +312,23 @@ namespace QuantConnect.Tests.Indicators
                 Assert.AreEqual(Symbols.AAPL, indicator.Current.Symbol);
             }
         }
+
+        [Test]
+        public void PeriodBelowMinimumThrows()
+        {
+            // One return is not a sample, so the smallest period this can accept is two
+            var period = 1;
+
+            var exception = Assert.Throws<ArgumentException>(() => new Beta(Symbols.SPY, Symbols.AAPL, period));
+            Assert.That(exception.Message, Is.EqualTo($"Period parameter for Beta indicator must be greater than 1 but was {period}."));
+        }
+
+        [Test]
+        public void PeriodOfTwoIsAccepted()
+        {
+            // Two returns give a finite, well defined beta, unlike the correlation
+            // of two points, which is 1 or -1 whatever the data says
+            Assert.DoesNotThrow(() => new Beta(Symbols.SPY, Symbols.AAPL, 2));
+        }
     }
 }

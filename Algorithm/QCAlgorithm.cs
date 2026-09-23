@@ -107,6 +107,7 @@ namespace QuantConnect.Algorithm
         private bool _tagsLimitReachedLogSent;
         private bool _tagsCollectionTruncatedLogSent;
         private bool _hasShownDailyConsolidationWarning;
+        private bool _optionUnderlyingResolutionWarningSent;
         private bool _indexOptionTickerAsUnderlyingWarningSent;
         private DateTime _start;
         private DateTime _startDate;   //Default start and end dates.
@@ -151,6 +152,7 @@ namespace QuantConnect.Algorithm
         private TimeSpan? _warmupTimeSpan;
         private int? _warmupBarCount;
         private Dictionary<string, string> _parameters = new Dictionary<string, string>();
+        private bool _deploymentDetailsSet;
         private SecurityDefinitionSymbolResolver _securityDefinitionSymbolResolver;
 
         private SecurityDefinitionSymbolResolver SecurityDefinitionSymbolResolver
@@ -748,6 +750,13 @@ namespace QuantConnect.Algorithm
         public ObjectStore ObjectStore { get; private set; }
 
         /// <summary>
+        /// Gets a read-only view of the deployment details shared by the brokerage, data queue handler or any other component,
+        /// for example account information. Usually empty when not running in live mode
+        /// </summary>
+        [DocumentationAttribute(LiveTrading)]
+        public ReadOnlyExtendedDictionary<string, string> DeploymentDetails { get; private set; } = new();
+
+        /// <summary>
         /// The current statistics for the running algorithm.
         /// </summary>
         [DocumentationAttribute(StatisticsTag)]
@@ -915,6 +924,25 @@ namespace QuantConnect.Algorithm
         public ReadOnlyExtendedDictionary<string, string> GetParameters()
         {
             return _parameters.ToReadOnlyExtendedDictionary();
+        }
+
+        /// <summary>
+        /// Sets the deployment details read-only view. Can only be set once, it's shared by the engine
+        /// </summary>
+        /// <param name="deploymentDetails">The deployment details</param>
+        [DocumentationAttribute(LiveTrading)]
+        public void SetDeploymentDetails(ReadOnlyExtendedDictionary<string, string> deploymentDetails)
+        {
+            if (deploymentDetails == null)
+            {
+                throw new ArgumentNullException(nameof(deploymentDetails));
+            }
+            if (_deploymentDetailsSet && !ReferenceEquals(DeploymentDetails, deploymentDetails))
+            {
+                throw new InvalidOperationException("QCAlgorithm.SetDeploymentDetails(): the deployment details have already been set, they can only be set once");
+            }
+            DeploymentDetails = deploymentDetails;
+            _deploymentDetailsSet = true;
         }
 
         /// <summary>
@@ -2198,6 +2226,9 @@ namespace QuantConnect.Algorithm
                 canonicalSymbol = QuantConnect.Symbol.CreateCanonicalOption(underlying, targetOption, market, alias);
             }
 
+            WarnIfUnderlyingResolutionIsCoarser(canonicalSymbol,
+                SubscriptionManager.SubscriptionDataConfigService.GetSubscriptionDataConfigs(underlying), resolution);
+
             return (Option)AddSecurity(canonicalSymbol, resolution, fillForward, leverage);
         }
 
@@ -2399,6 +2430,26 @@ namespace QuantConnect.Algorithm
         }
 
         /// <summary>
+        /// Warns once if the option resolution is finer than the existing underlying subscription,
+        /// since the option pricing models would then use a stale underlying price
+        /// </summary>
+        private void WarnIfUnderlyingResolutionIsCoarser(Symbol option, List<SubscriptionDataConfig> underlyingConfigs, Resolution? optionResolution)
+        {
+            if (_optionUnderlyingResolutionWarningSent || underlyingConfigs.Count == 0)
+            {
+                return;
+            }
+
+            var resolution = optionResolution ?? UniverseSettings.Resolution;
+            var underlyingResolution = underlyingConfigs.GetHighestResolution();
+            if (underlyingResolution > resolution)
+            {
+                Debug($"Warning: {Messages.QCAlgorithm.OptionUnderlyingResolutionIsCoarser(option, resolution, underlyingResolution)}");
+                _optionUnderlyingResolutionWarningSent = true;
+            }
+        }
+
+        /// <summary>
         /// Creates and adds a new single <see cref="Option"/> contract to the algorithm
         /// </summary>
         /// <param name="symbol">The option contract symbol</param>
@@ -2453,6 +2504,8 @@ namespace QuantConnect.Algorithm
                     }
                 }
             }
+
+            WarnIfUnderlyingResolutionIsCoarser(symbol, underlyingConfigs, resolution);
 
             var configs = SubscriptionManager.SubscriptionDataConfigService.Add(symbol, resolution, fillForward, extendedMarketHours,
                 dataNormalizationMode: DataNormalizationMode.Raw);
@@ -3460,7 +3513,8 @@ namespace QuantConnect.Algorithm
             foreach (var (symbol, contracts) in optionChainsData)
             {
                 var symbolProperties = SymbolPropertiesDatabase.GetSymbolProperties(symbol.ID.Market, symbol, symbol.SecurityType, AccountCurrency);
-                var optionChain = new OptionChain(symbol, GetTimeInExchangeTimeZone(symbol).Date, contracts, symbolProperties, flatten);
+                var exchangeHours = MarketHoursDatabase.GetExchangeHours(symbol.ID.Market, symbol, symbol.SecurityType);
+                var optionChain = new OptionChain(symbol, UtcTime.ConvertFromUtc(exchangeHours.TimeZone).Date, contracts, symbolProperties, exchangeHours, flatten);
                 chains.Add(symbol, optionChain);
             }
 

@@ -26,7 +26,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds.WorkScheduling
         /// <summary>
         /// The quantity of workers to be used
         /// </summary>
-        public static int WorkersCount = Configuration.Config.GetInt("data-feed-workers-count", Environment.ProcessorCount);
+        /// <remarks>In live trading we default to a lower count, these workers are only used to warmup, live nodes cpu and ram are limited</remarks>
+        public static int WorkersCount = Configuration.Config.GetInt("data-feed-workers-count", Globals.LiveMode ? 2 : Environment.ProcessorCount);
 
         /// <summary>
         /// Add a new work item to the queue

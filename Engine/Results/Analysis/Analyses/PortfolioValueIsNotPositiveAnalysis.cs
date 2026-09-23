@@ -23,6 +23,12 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
     public class PortfolioValueIsNotPositiveAnalysis : BaseResultsAnalysis
     {
         /// <summary>
+        /// This analysis reads the current portfolio statistics instead of scanning the order event
+        /// and log streams, so its in-run findings are replaced on every run.
+        /// </summary>
+        public override bool IsStateBased { get; } = true;
+
+        /// <summary>
         /// Gets the description of the non-positive portfolio equity issue.
         /// </summary>
         public override string Issue { get; } = "The portfolio equity dropped to zero or below.";
@@ -44,6 +50,13 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
         /// <returns>Analysis results flagging the issue when ending equity is zero or negative.</returns>
         public IReadOnlyList<QuantConnect.Analysis> Run(Result result)
         {
+            if (result.TotalPerformance == null)
+            {
+                // The statistics are withheld when they are not meaningful yet,
+                // like while the algorithm warms up
+                return [];
+            }
+
             var hasEquity = result.TotalPerformance.PortfolioStatistics.EndEquity > 0;
             var potentialSolutions = hasEquity ? [] : Solutions();
             return SingleResponse(!hasEquity, potentialSolutions);

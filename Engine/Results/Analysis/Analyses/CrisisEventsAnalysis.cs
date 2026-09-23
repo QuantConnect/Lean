@@ -31,6 +31,11 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
     public class CrisisEventsAnalysis : BaseResultsAnalysis
     {
         /// <summary>
+        /// This analysis compares the equity and benchmark curves, which are only built for the final analysis.
+        /// </summary>
+        public override bool RunsInRun { get; } = false;
+
+        /// <summary>
         /// Gets the description indicating that the strategy underperformed the benchmark during crisis events.
         /// </summary>
         public override string Issue { get; } = "The strategy underperformed the benchmark during some crisis events in terms of risk-adjusted returns.";

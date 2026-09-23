@@ -26,6 +26,10 @@ using QuantConnect.Data.Market;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Python;
 using QuantConnect.Securities;
+using QuantConnect.Securities.Future;
+using QuantConnect.Securities.FutureOption;
+using QuantConnect.Securities.IndexOption;
+using QuantConnect.Securities.Option;
 using QuantConnect.Tests.Common.Data.Fundamental;
 using QuantConnect.Util;
 
@@ -422,6 +426,137 @@ namespace QuantConnect.Tests.Common.Securities
             Assert.AreEqual(securityCache.BidPrice, 0m);
             Assert.AreEqual(securityCache.AskPrice, 0m);
             Assert.AreEqual(securityCache.Volume, volume);
+        }
+
+        [TestCaseSource(nameof(ChainUniverseOpenInterestCacheTypes))]
+        public void StoreData_ChainUniverseData_SetsOpenInterest(Type cacheType)
+        {
+            var cache = (SecurityCache)Activator.CreateInstance(cacheType);
+            var universeData = CreateChainUniverseData(cache, new DateTime(2016, 02, 18), 1234);
+
+            cache.StoreData(new[] { universeData }, universeData.GetType());
+
+            Assert.AreEqual(1234, cache.OpenInterest);
+            Assert.IsTrue(cache.HasData(universeData.GetType()));
+        }
+
+        [Test]
+        public void StoreData_ChainUniverseData_DoesNotSetOpenInterestOnBaseCache()
+        {
+            var cache = new SecurityCache();
+            var universeData = CreateChainUniverseData(cache, new DateTime(2016, 02, 18), 1234);
+
+            cache.StoreData(new[] { universeData }, universeData.GetType());
+
+            Assert.AreEqual(0, cache.OpenInterest);
+            Assert.IsTrue(cache.HasData(universeData.GetType()));
+        }
+
+        [TestCaseSource(nameof(ChainUniverseOpenInterestCacheTypes))]
+        public void StoreData_ChainUniverseData_DoesNotOverrideNewerOpenInterestTick(Type cacheType)
+        {
+            var cache = (SecurityCache)Activator.CreateInstance(cacheType);
+            var universeData = CreateChainUniverseData(cache, new DateTime(2016, 02, 18), 1234);
+
+            // In live trading the chain universe file of the previous tradable date is fed into the algorithm
+            // after the open interest tick of the day was already received
+            var openInterestTick = new OpenInterest(universeData.EndTime.AddHours(6), universeData.Symbol, 5000);
+            cache.AddDataList(new[] { openInterestTick }, typeof(OpenInterest));
+            Assert.AreEqual(5000, cache.OpenInterest);
+
+            cache.StoreData(new[] { universeData }, universeData.GetType());
+
+            Assert.AreEqual(5000, cache.OpenInterest);
+            // The universe data point is still stored in the cache
+            Assert.IsTrue(cache.HasData(universeData.GetType()));
+        }
+
+        [TestCaseSource(nameof(ChainUniverseOpenInterestCacheTypes))]
+        public void StoreData_ChainUniverseData_DoesNotOverrideOpenInterestTickWithSameEndTime(Type cacheType)
+        {
+            var cache = (SecurityCache)Activator.CreateInstance(cacheType);
+            var universeData = CreateChainUniverseData(cache, new DateTime(2016, 02, 18), 1234);
+
+            // Daily open interest data is stamped at midnight, matching the end time of the previous date's chain universe data
+            var openInterestTick = new OpenInterest(universeData.EndTime, universeData.Symbol, 5000);
+            cache.AddData(openInterestTick);
+            Assert.AreEqual(5000, cache.OpenInterest);
+
+            cache.StoreData(new[] { universeData }, universeData.GetType());
+
+            Assert.AreEqual(5000, cache.OpenInterest);
+        }
+
+        [TestCaseSource(nameof(ChainUniverseOpenInterestCacheTypes))]
+        public void StoreData_ChainUniverseData_OverridesOlderOpenInterestTick(Type cacheType)
+        {
+            var cache = (SecurityCache)Activator.CreateInstance(cacheType);
+            var universeData = CreateChainUniverseData(cache, new DateTime(2016, 02, 18), 1234);
+
+            // In backtesting the chain universe data of the day is emitted at the end of the day,
+            // after the open interest ticks of the day
+            var openInterestTick = new OpenInterest(universeData.EndTime.AddHours(-6), universeData.Symbol, 5000);
+            cache.AddData(openInterestTick);
+            Assert.AreEqual(5000, cache.OpenInterest);
+
+            cache.StoreData(new[] { universeData }, universeData.GetType());
+
+            Assert.AreEqual(1234, cache.OpenInterest);
+        }
+
+        [TestCaseSource(nameof(ChainUniverseOpenInterestCacheTypes))]
+        public void OpenInterestTick_OverridesChainUniverseDataOpenInterest(Type cacheType)
+        {
+            var cache = (SecurityCache)Activator.CreateInstance(cacheType);
+            var date = new DateTime(2016, 02, 18);
+            var universeData = CreateChainUniverseData(cache, date, 1234);
+            cache.StoreData(new[] { universeData }, universeData.GetType());
+            Assert.AreEqual(1234, cache.OpenInterest);
+
+            // A newer open interest tick always overrides the universe open interest
+            var openInterestTick = new OpenInterest(universeData.EndTime.AddHours(6), universeData.Symbol, 5000);
+            cache.AddData(openInterestTick);
+            Assert.AreEqual(5000, cache.OpenInterest);
+
+            // And the next day's universe data is newer than the tick so it overrides it
+            var nextUniverseData = CreateChainUniverseData(cache, date.AddDays(1), 4321);
+            cache.StoreData(new[] { nextUniverseData }, nextUniverseData.GetType());
+            Assert.AreEqual(4321, cache.OpenInterest);
+        }
+
+        [TestCaseSource(nameof(ChainUniverseOpenInterestCacheTypes))]
+        public void Reset_ClearsLastOpenInterestUpdateTime(Type cacheType)
+        {
+            var cache = (SecurityCache)Activator.CreateInstance(cacheType);
+            var universeData = CreateChainUniverseData(cache, new DateTime(2016, 02, 18), 1234);
+            var openInterestTick = new OpenInterest(universeData.EndTime.AddHours(6), universeData.Symbol, 5000);
+            cache.AddData(openInterestTick);
+
+            cache.Reset();
+            Assert.AreEqual(0, cache.OpenInterest);
+
+            cache.StoreData(new[] { universeData }, universeData.GetType());
+
+            Assert.AreEqual(1234, cache.OpenInterest);
+        }
+
+        private static readonly Type[] ChainUniverseOpenInterestCacheTypes =
+        {
+            typeof(OptionCache),
+            typeof(IndexOptionCache),
+            typeof(FutureOptionCache),
+            typeof(FutureCache)
+        };
+
+        private static BaseChainUniverseData CreateChainUniverseData(SecurityCache cache, DateTime date, decimal openInterest)
+        {
+            // open,high,low,close,volume,open_interest
+            var csv = $"100,101,99,100,5000,{openInterest.ToStringInvariant()}";
+            if (cache is FutureCache)
+            {
+                return new FutureUniverse(date, Symbols.Future_ESZ18_Dec2018, csv);
+            }
+            return new OptionUniverse(date, Symbols.SPY_C_192_Feb19_2016, csv);
         }
 
         [Test]

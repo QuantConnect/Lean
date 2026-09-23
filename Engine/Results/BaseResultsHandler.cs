@@ -29,6 +29,7 @@ using QuantConnect.Packets;
 using QuantConnect.Securities.Positions;
 using QuantConnect.Statistics;
 using QuantConnect.Util;
+using Common.Util;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -249,6 +250,16 @@ namespace QuantConnect.Lean.Engine.Results
         protected Dictionary<string, string> State { get; set; }
 
         /// <summary>
+        /// Deployment details shared with the user and the algorithm, see <see cref="AddDeploymentDetail"/>
+        /// </summary>
+        private readonly Dictionary<string, string> _deploymentDetails = new();
+
+        /// <summary>
+        /// Read only view of the deployment details, see <see cref="AddDeploymentDetail"/>. Shared with the algorithm
+        /// </summary>
+        public ReadOnlyExtendedDictionary<string, string> DeploymentDetails { get; }
+
+        /// <summary>
         /// The handler responsible for communicating messages to listeners
         /// </summary>
         protected IMessagingHandler MessagingHandler { get; set; }
@@ -307,6 +318,17 @@ namespace QuantConnect.Lean.Engine.Results
         protected IMapFileProvider MapFileProvider { get; set; }
 
         /// <summary>
+        /// The tool tracking the engine's performance counters, used by the in-run
+        /// algorithm speed analysis. May be null when the host doesn't track performance.
+        /// </summary>
+        protected PerformanceTrackingTool PerformanceTrackingTool { get; set; }
+
+        /// <summary>
+        /// The data monitor tracking the data requests. May be null when the host doesn't monitor data requests.
+        /// </summary>
+        protected IDataMonitor DataMonitor { get; set; }
+
+        /// <summary>
         /// Creates a new instance
         /// </summary>
         protected BaseResultsHandler()
@@ -320,6 +342,8 @@ namespace QuantConnect.Lean.Engine.Results
 
             Messages = new ConcurrentQueue<Packet>();
             RuntimeStatistics = new Dictionary<string, string>();
+            // same instance, so any entries added later are visible through the view
+            DeploymentDetails = new ReadOnlyExtendedDictionary<string, string>(_deploymentDetails, copy: false);
             StartTime = DateTime.UtcNow;
             CompileId = "";
             AlgorithmId = "";
@@ -498,6 +522,8 @@ namespace QuantConnect.Lean.Engine.Results
             _updateRunner.Start();
             State["Hostname"] = _hostName;
             MapFileProvider = parameters.MapFileProvider;
+            PerformanceTrackingTool = parameters.PerformanceTrackingTool;
+            DataMonitor = parameters.DataMonitor;
 
             SerializerSettings = new()
             {
@@ -534,6 +560,38 @@ namespace QuantConnect.Lean.Engine.Results
             // Wire algorithm name and tags updates
             algorithm.NameUpdated += (sender, name) => AlgorithmNameUpdated(name);
             algorithm.TagsUpdated += (sender, tags) => AlgorithmTagsUpdated(tags);
+        }
+
+        /// <summary>
+        /// Adds or updates a deployment detail entry. Key value pairs the brokerage, data queue handler or any other component
+        /// wants to share with the user, through the results, and the algorithm, for example account information.
+        /// Sensitive data, like credentials, should never be added
+        /// </summary>
+        /// <param name="key">The deployment detail key</param>
+        /// <param name="value">The deployment detail value</param>
+        public virtual void AddDeploymentDetail(string key, string value)
+        {
+            if (string.IsNullOrEmpty(key))
+            {
+                return;
+            }
+            lock (_deploymentDetails)
+            {
+                _deploymentDetails[key] = value ?? string.Empty;
+            }
+        }
+
+        /// <summary>
+        /// Creates the algorithm configuration to include in the results, taking a snapshot of the current deployment details
+        /// </summary>
+        /// <param name="backtestNodePacket">The associated backtest node packet if any</param>
+        /// <returns>A new <see cref="AlgorithmConfiguration"/> instance</returns>
+        protected AlgorithmConfiguration CreateAlgorithmConfiguration(BacktestNodePacket backtestNodePacket = null)
+        {
+            lock (_deploymentDetails)
+            {
+                return AlgorithmConfiguration.Create(Algorithm, backtestNodePacket);
+            }
         }
 
         /// <summary>
@@ -653,6 +711,38 @@ namespace QuantConnect.Lean.Engine.Results
         /// <remarks>Useful so that live trading implementation can freeze the returned value if there is no user exchange open
         /// so we ignore extended market hours updates</remarks>
         protected decimal GetPortfolioValue() => _portfolioValue.Value;
+
+        /// <summary>
+        /// Event fired when the algorithm's warm-up period finishes, right before the algorithm's
+        /// <see cref="IAlgorithm.OnWarmupFinished"/> callback is triggered.
+        /// Re-captures the starting portfolio value and dependent baselines, since the value captured
+        /// at setup time used currency conversion rates seeded at the warm-up start
+        /// </summary>
+        public virtual void OnWarmupFinished()
+        {
+            // warm-up has brought the currency conversion rates up to date, so now both holdings prices
+            // and conversion rates are current and we can capture the real starting portfolio value
+            UpdatePortfolioValues(Algorithm.UtcTime, force: true);
+            var currentPortfolioValue = GetPortfolioValue();
+            // only reassign values that actually changed, so unchanged ones keep their original decimal
+            // scale and their statistics string representation
+            if (CumulativeMaxPortfolioValue != currentPortfolioValue)
+            {
+                CumulativeMaxPortfolioValue = currentPortfolioValue;
+            }
+            if (DailyPortfolioValue != currentPortfolioValue)
+            {
+                DailyPortfolioValue = currentPortfolioValue;
+            }
+            if (StartingPortfolioValue != currentPortfolioValue)
+            {
+                StartingPortfolioValue = currentPortfolioValue;
+                // discard any equity bar built during warm-up so the first sample opens at the re-captured value
+                CurrentAlgorithmEquity = null;
+                Log.Trace($"{GetType().Name}.OnWarmupFinished(): " +
+                    $"Re-captured starting portfolio value after warm-up: {StartingPortfolioValue.ToStringInvariant()}");
+            }
+        }
 
         /// <summary>
         /// Gets the current benchmark value
@@ -910,6 +1000,127 @@ namespace QuantConnect.Lean.Engine.Results
             SeriesType seriesType,
             ISeriesPoint value,
             string unit = "$");
+
+        private bool _runtimeStatisticRejectedWarningSent;
+
+        /// <summary>
+        /// Maximum number of runtime statistics
+        /// </summary>
+        public const int MaxRuntimeStatisticsCount = 50;
+
+        /// <summary>
+        /// Maximum length of a runtime statistic key and value
+        /// </summary>
+        public const int MaxRuntimeStatisticLength = 200;
+
+        /// <summary>
+        /// Stores a runtime statistic, enforcing the configured count, length and format limits.
+        /// Callers must hold the <see cref="RuntimeStatistics"/> lock.
+        /// </summary>
+        /// <param name="key">Runtime headline statistic name</param>
+        /// <param name="value">Runtime headline statistic value</param>
+        /// <returns>True if the statistic was stored</returns>
+        protected bool TrySetRuntimeStatistic(string key, string value)
+        {
+            if (string.IsNullOrEmpty(key))
+            {
+                return false;
+            }
+            value ??= string.Empty;
+
+            if (key.Length > MaxRuntimeStatisticLength)
+            {
+                key = key.Substring(0, MaxRuntimeStatisticLength);
+            }
+            if (value.Length > MaxRuntimeStatisticLength)
+            {
+                value = value.Substring(0, MaxRuntimeStatisticLength);
+            }
+
+            if (IsEncodedRuntimeStatistic(key) || IsEncodedRuntimeStatistic(value))
+            {
+                SendRuntimeStatisticRejectedWarning($"Runtime statistic '{key}' was ignored: encoded values are not supported, statistics must be human readable text.");
+                return false;
+            }
+
+            if (!RuntimeStatistics.ContainsKey(key) && RuntimeStatistics.Count >= MaxRuntimeStatisticsCount)
+            {
+                SendRuntimeStatisticRejectedWarning($"Runtime statistic '{key}' was ignored: exceeded maximum runtime statistics count, new statistics will be ignored. Limit is currently set at {MaxRuntimeStatisticsCount}.");
+                return false;
+            }
+
+            RuntimeStatistics[key] = value;
+            return true;
+        }
+
+        /// <summary>
+        /// Sends a one time debug message to the algorithm when a runtime statistic is rejected
+        /// </summary>
+        private void SendRuntimeStatisticRejectedWarning(string message)
+        {
+            if (_runtimeStatisticRejectedWarningSent)
+            {
+                return;
+            }
+            _runtimeStatisticRejectedWarningSent = true;
+
+            if (this is IResultHandler resultHandler)
+            {
+                resultHandler.DebugMessage(message);
+            }
+            else
+            {
+                Log.Trace($"BaseResultsHandler.TrySetRuntimeStatistic(): {message}");
+            }
+        }
+
+        /// <summary>
+        /// Determines whether the given text looks like an encoded blob (base64 or hexadecimal) rather than a human readable statistic
+        /// </summary>
+        private static bool IsEncodedRuntimeStatistic(string text)
+        {
+            const int minimumLength = 16;
+            if (text.Length < minimumLength)
+            {
+                return false;
+            }
+
+            var isHex = true;
+            var hasUpper = false;
+            var hasLower = false;
+            var hasDigit = false;
+            var hasLetter = false;
+            foreach (var c in text)
+            {
+                if (char.IsUpper(c))
+                {
+                    hasUpper = true;
+                    hasLetter = true;
+                }
+                else if (char.IsLower(c))
+                {
+                    hasLower = true;
+                    hasLetter = true;
+                }
+                else if (char.IsDigit(c))
+                {
+                    hasDigit = true;
+                }
+                else if (c != '+' && c != '/' && c != '=' && c != '-' && c != '_')
+                {
+                    // whitespace, punctuation, currency symbols, etc. => human readable
+                    return false;
+                }
+
+                if (isHex && !Uri.IsHexDigit(c))
+                {
+                    isHex = false;
+                }
+            }
+
+            // a plain number is fine, hex needs at least one letter; base64 mixes cases and digits
+            return (isHex && hasLetter) || (hasUpper && hasLower && hasDigit);
+        }
 
         /// <summary>
         /// Gets the algorithm runtime statistics

@@ -59,14 +59,52 @@ namespace QuantConnect.Exceptions
         {
             var pe = (PythonException)exception;
 
+            // KeyError's message is the repr() of the missing key, so string keys come through quoted ("'SPY'")
+            // but object keys (e.g. a Symbol used on a plain dict) come through as
+            // "<QuantConnect.Symbol object at 0x...>", which the quote/bracket parsing below can't handle and
+            // used to render a blank key in the final message ("ensure that the  key exist in the collection").
+            // Read the key from the exception value instead, where str() yields a meaningful name in both cases.
+            // Depending on whether the error indicator was normalized, the value is either the KeyError instance
+            // (the key is args[0]) or the raw args tuple the exception was created with.
             var key = string.Empty;
-            if (pe.Message.Contains('[', StringComparison.InvariantCulture))
+            using (Py.GIL())
             {
-                key = pe.Message.GetStringBetweenChars('[', ']');
+                try
+                {
+                    using var args = pe.Value != null && pe.Value.HasAttr("args") ? pe.Value.GetAttr("args") : null;
+                    var container = args ?? pe.Value;
+                    if (container != null && !container.IsNone())
+                    {
+                        if (PyTuple.IsTupleType(container))
+                        {
+                            if (container.Length() > 0)
+                            {
+                                using var firstArg = container[0];
+                                key = firstArg.ToString();
+                            }
+                        }
+                        else
+                        {
+                            key = container.ToString();
+                        }
+                    }
+                }
+                catch (PythonException)
+                {
+                    // best effort, fall back to parsing the message below
+                }
             }
-            else if (pe.Message.Contains('\'', StringComparison.InvariantCulture))
+
+            if (string.IsNullOrWhiteSpace(key))
             {
-                key = pe.Message.GetStringBetweenChars('\'', '\'');
+                if (pe.Message.Contains('[', StringComparison.InvariantCulture))
+                {
+                    key = pe.Message.GetStringBetweenChars('[', ']');
+                }
+                else if (pe.Message.Contains('\'', StringComparison.InvariantCulture))
+                {
+                    key = pe.Message.GetStringBetweenChars('\'', '\'');
+                }
             }
             var message = Messages.KeyErrorPythonExceptionInterpreter.KeyNotFoundInCollection(key);
 

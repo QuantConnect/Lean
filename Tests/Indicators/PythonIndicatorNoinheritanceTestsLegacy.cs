@@ -61,6 +61,11 @@ class CustomSimpleMovingAverage():
         count = len(self.queue)
         self.{(SnakeCase ? "value" : "Value")} = sum(self.queue) / count
         self.{(SnakeCase ? "is_ready" : "IsReady")} = count == self.queue.maxlen
+
+    def {(SnakeCase ? "reset" : "Reset")}(self):
+        self.queue.clear()
+        self.{(SnakeCase ? "value" : "Value")} = 0
+        self.{(SnakeCase ? "is_ready" : "IsReady")} = False
 "
                 );
                 var indicator = module.GetAttr("CustomSimpleMovingAverage")

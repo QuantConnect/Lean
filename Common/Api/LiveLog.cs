@@ -29,12 +29,12 @@ namespace QuantConnect.Api
         public List<string> Logs { get; set; }
 
         /// <summary>
-        /// Total amount of rows in the logs
+        /// Total amount of rows in the logs across all the live deployments of the project
         /// </summary>
         public int Length { get; set; }
 
         /// <summary>
-        /// Amount of log rows before the current deployment
+        /// Amount of log rows before the deployment requested through the algorithm id
         /// </summary>
         public int DeploymentOffset { get; set; }
     }

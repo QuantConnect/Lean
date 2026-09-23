@@ -64,7 +64,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds.WorkScheduling
 
             _initializationTask = Task.Run(() =>
             {
-                MaxWorkWeight = Configuration.Config.GetInt("data-feed-max-work-weight", 400);
+                // in live trading we default to a lower weight, these workers are only used to warmup, live nodes cpu and ram are limited
+                MaxWorkWeight = Configuration.Config.GetInt("data-feed-max-work-weight", Globals.LiveMode ? 100 : 400);
                 Logging.Log.Trace($"WeightedWorkScheduler(): will use {WorkersCount} workers and MaxWorkWeight is {MaxWorkWeight}");
 
                 for (var i = 0; i < WorkersCount; i++)

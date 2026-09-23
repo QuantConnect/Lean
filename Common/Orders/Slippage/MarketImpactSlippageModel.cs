@@ -127,8 +127,11 @@ namespace QuantConnect.Orders.Slippage
             // realized market impact
             var realizedImpact = temporaryImpact + permanentImpact * 0.5d;
 
+            // Market on open orders fill at the bar open, which is the price we have to reference, not the bar close
+            var referencePrice = order.Type == OrderType.MarketOnOpen && asset.GetLastData() is IBar bar ? bar.Open : asset.Price;
+
             // estimate the slippage by temporary impact
-            return SlippageFromImpactEstimation(realizedImpact) * asset.Price;
+            return SlippageFromImpactEstimation(realizedImpact) * referencePrice;
         }
 
         /// <summary>

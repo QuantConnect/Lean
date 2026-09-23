@@ -506,22 +506,6 @@ namespace QuantConnect
     }
 
     /// <summary>
-    /// Cloud storage permission options.
-    /// </summary>
-    public enum StoragePermissions
-    {
-        /// <summary>
-        /// Public Storage Permissions (0)
-        /// </summary>
-        Public,
-
-        /// <summary>
-        /// Authenticated Read Storage Permissions (1)
-        /// </summary>
-        Authenticated
-    }
-
-    /// <summary>
     /// Types of tick data
     /// </summary>
     /// <remarks>QuantConnect currently only has trade, quote, open interest tick data.</remarks>

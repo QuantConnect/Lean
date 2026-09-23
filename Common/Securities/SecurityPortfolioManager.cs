@@ -834,8 +834,10 @@ namespace QuantConnect.Securities
             var quantity = security.Holdings.Quantity / split.SplitFactor;
             var avgPrice = security.Holdings.AveragePrice * split.SplitFactor;
 
-            // we'll model this as a cash adjustment
+            // we'll model this as a cash adjustment. The security is priced in its quote currency,
+            // so the cash in lieu needs to be converted into the account currency
             var leftOver = quantity - (int)quantity;
+            var conversionRate = security.QuoteCurrency.ConversionRate;
 
             security.Holdings.SetHoldings(avgPrice, (int)quantity);
 
@@ -847,13 +849,13 @@ namespace QuantConnect.Securities
                 // will cause this to return null, in this case we can't possibly
                 // have any holdings or price to set since we haven't received
                 // data yet, so just do nothing
-                _baseCurrencyCash.AddAmount(leftOver * split.ReferencePrice * split.SplitFactor);
+                _baseCurrencyCash.AddAmount(leftOver * split.ReferencePrice * split.SplitFactor * conversionRate);
                 return;
             }
 
             security.ApplySplit(split);
             // The data price should have been adjusted already
-            _baseCurrencyCash.AddAmount(leftOver * next.Price);
+            _baseCurrencyCash.AddAmount(leftOver * next.Price * conversionRate);
 
             // security price updated
             InvalidateTotalPortfolioValue();

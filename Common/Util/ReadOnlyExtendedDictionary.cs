@@ -41,6 +41,15 @@ namespace Common.Util
         }
 
         /// <summary>
+        /// Initializes a new instance of the ReadOnlyExtendedDictionary class using the specified dictionary
+        /// </summary>
+        /// <param name="dictionary">The dictionary to use as the data source</param>
+        /// <param name="copy">True to copy the elements into a new dictionary, false to wrap the given instance so that any changes made to it are reflected</param>
+        public ReadOnlyExtendedDictionary(Dictionary<TKey, TValue> dictionary, bool copy) : base(dictionary, copy)
+        {
+        }
+
+        /// <summary>
         /// Initializes a new instance of the ReadOnlyExtendedDictionary class
         /// using the specified <paramref name="data"/> as a data source
         /// </summary>
@@ -99,7 +108,7 @@ namespace Common.Util
         /// </summary>
         /// <param name="key">The key of the element to add</param>
         /// <param name="value">The value of the element to add</param>
-        public new void Add(TKey key, TValue value)
+        public override void Add(TKey key, TValue value)
         {
             throw new InvalidOperationException("Dictionary is read-only");
         }
@@ -108,7 +117,7 @@ namespace Common.Util
         /// Adds an element with the provided key-value pair to the dictionary
         /// </summary>
         /// <param name="item">The key-value pair to add</param>
-        public new void Add(KeyValuePair<TKey, TValue> item)
+        public override void Add(KeyValuePair<TKey, TValue> item)
         {
             throw new InvalidOperationException("Dictionary is read-only");
         }
@@ -118,7 +127,7 @@ namespace Common.Util
         /// </summary>
         /// <param name="item">The key-value pair to remove</param>
         /// <returns>true if the key-value pair was successfully removed; otherwise, false</returns>
-        public new bool Remove(KeyValuePair<TKey, TValue> item)
+        public override bool Remove(KeyValuePair<TKey, TValue> item)
         {
             throw new InvalidOperationException("Dictionary is read-only");
         }

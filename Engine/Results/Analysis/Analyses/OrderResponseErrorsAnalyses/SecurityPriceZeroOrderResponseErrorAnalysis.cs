@@ -53,7 +53,8 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
                 ? "```\nself.settings.seed_initial_prices = True\n```"
                 : "```\nSettings.SeedInitialPrices = true;\n```"),
 
-            "This error also occurs if the data is missing. Investigate if it's a data issue.",
+            "This error also occurs if the data is missing. Investigate if it's a data issue. " +
+            "If the security legitimately has no data to trade on (for example, it's delisted or halted), add a guard that skips orders for securities whose price is still $0.",
         ];
     }
 }

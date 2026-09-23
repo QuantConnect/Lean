@@ -61,7 +61,7 @@ namespace QuantConnect.Indicators
             : base(name, targetSymbol, referenceSymbol, period)
         {
             // Assert the period is greater than two, otherwise the correlation can not be computed
-            if (period < 2)
+            if (period < 3)
             {
                 throw new ArgumentException($"Period parameter for Correlation indicator must be greater than 2 but was {period}");
             }

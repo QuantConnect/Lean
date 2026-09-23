@@ -17,6 +17,8 @@ using System;
 using System.IO;
 using System.Collections.Generic;
 using QuantConnect.Data.Fundamental;
+using QuantConnect.Interfaces;
+using QuantConnect.Securities;
 
 namespace QuantConnect.Data.UniverseSelection
 {
@@ -25,8 +27,27 @@ namespace QuantConnect.Data.UniverseSelection
     /// </summary>
     public class CoarseFundamentalDataProvider : BaseFundamentalDataProvider
     {
+        private static SecurityExchangeHours _exchangeHours;
+
         private DateTime _date;
+        private DateTime _fileDate;
         private readonly Dictionary<SecurityIdentifier, CoarseFundamental> _coarseFundamental = new();
+
+        /// <summary>
+        /// Initializes the service
+        /// </summary>
+        /// <param name="dataProvider">The data provider instance to use</param>
+        /// <param name="liveMode">True if running in live mode</param>
+        public override void Initialize(IDataProvider dataProvider, bool liveMode)
+        {
+            base.Initialize(dataProvider, liveMode);
+            if (liveMode)
+            {
+                // in live trading, fall back to the backup coarse universe file, if any, as a last resort,
+                // consistent with the universe selection data itself
+                DataProvider = new BackupUniverseFileDataProvider(dataProvider);
+            }
+        }
 
         /// <summary>
         /// Will fetch the requested fundamental information for the requested time and symbol
@@ -47,29 +68,53 @@ namespace QuantConnect.Data.UniverseSelection
                 }
                 _date = time;
 
-                var path = Path.Combine(Globals.DataFolder, "equity", "usa", "fundamental", "coarse", $"{time:yyyyMMdd}.csv");
-                var fileStream = DataProvider.Fetch(path);
-                if (fileStream == null)
+                if (!TryLoad(time.Date))
                 {
-                    return GetDefault<T>();
-                }
-
-                _coarseFundamental.Clear();
-                using (var reader = new StreamReader(fileStream))
-                {
-                    while (!reader.EndOfStream)
+                    // there's no data for the requested date, for example a weekend or holiday, we forward fill the previous trading day data
+                    _exchangeHours ??= MarketHoursDatabase.FromDataFolder().GetExchangeHours(QuantConnect.Market.USA, null, SecurityType.Equity);
+                    if (!TryLoad(_exchangeHours.GetPreviousTradingDay(time.Date)))
                     {
-                        var line = reader.ReadLine();
-                        var coarse = Read(line, time);
-                        if (coarse != null)
-                        {
-                            _coarseFundamental[coarse.Symbol.ID] = coarse;
-                        }
+                        return GetDefault<T>();
                     }
                 }
 
                 return GetProperty<T>(securityIdentifier, enumName);
             }
+        }
+
+        /// <summary>
+        /// Loads the coarse data file for the given date, unless it's already loaded
+        /// </summary>
+        /// <returns>False if there is no data for the given date</returns>
+        private bool TryLoad(DateTime date)
+        {
+            if (date == _fileDate)
+            {
+                return true;
+            }
+
+            var path = Path.Combine(Globals.DataFolder, "equity", "usa", "fundamental", "coarse", $"{date:yyyyMMdd}.csv");
+            var fileStream = DataProvider.Fetch(path);
+            if (fileStream == null)
+            {
+                return false;
+            }
+
+            _fileDate = date;
+            _coarseFundamental.Clear();
+            using (var reader = new StreamReader(fileStream))
+            {
+                while (!reader.EndOfStream)
+                {
+                    var line = reader.ReadLine();
+                    var coarse = Read(line, date);
+                    if (coarse != null)
+                    {
+                        _coarseFundamental[coarse.Symbol.ID] = coarse;
+                    }
+                }
+            }
+            return true;
         }
 
         /// <summary>

@@ -49,6 +49,12 @@ namespace QuantConnect.Data.Market
         public DateTime Expiry => Symbol.ID.Date;
 
         /// <summary>
+        /// Calendar days from this contract's time until it stops trading
+        /// </summary>
+        [PandasIgnore]
+        public virtual int DaysToExpiry => (Expiry.Date - Time.Date).Days;
+
+        /// <summary>
         /// Gets the local date time this contract's data was last updated
         /// </summary>
         [PandasIgnore]

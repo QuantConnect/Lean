@@ -400,6 +400,8 @@ namespace QuantConnect.Tests.Python
 
         }
 
+        protected override bool EmitsConsolidatedBars => false;
+
         protected override IEnumerable<IBaseData> GetTestValues()
         {
             var time = DateTime.Today;

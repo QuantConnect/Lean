@@ -15,6 +15,7 @@
 */
 
 using System.Collections.Generic;
+using QuantConnect.Data;
 
 namespace QuantConnect.Securities
 {
@@ -22,7 +23,7 @@ namespace QuantConnect.Securities
     /// Represents derivative symbols universe used in filtering.
     /// </summary>
     public interface IDerivativeSecurityFilterUniverse<T> : IEnumerable<T>
-        where T : IChainUniverseData
+        where T : ISymbolProvider
     {
         /// <summary>
         /// The number of contracts in the universe

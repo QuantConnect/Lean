@@ -131,6 +131,16 @@ namespace QuantConnect.Algorithm.CSharp
         public AlgorithmStatus AlgorithmStatus => AlgorithmStatus.Completed;
 
         /// <summary>
+        /// Special arrangement for consistency test - we check if limits work fine
+        /// </summary>
+        public Dictionary<string, string> CustomConfigurations => new()
+        {
+            { "symbol-minute-limit", "100" },
+            { "symbol-second-limit", "100" },
+            { "symbol-tick-limit", "100" }
+        };
+
+        /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
         /// </summary>
         public Dictionary<string, string> ExpectedStatistics => new Dictionary<string, string>

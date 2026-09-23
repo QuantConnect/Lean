@@ -29,6 +29,11 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
     public class StatisticalSignificanceOfDailyReturnsAnalysis : BaseResultsAnalysis
     {
         /// <summary>
+        /// This analysis compares the equity and benchmark curves, which are only built for the final analysis.
+        /// </summary>
+        public override bool RunsInRun { get; } = false;
+
+        /// <summary>
         /// Gets the description of the statistical insignificance issue.
         /// </summary>
         public override string Issue { get; } = "The distribution of the strategy's daily returns in excess of the benchmark's daily returns has a p-value above 0.05. " +

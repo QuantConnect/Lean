@@ -23,6 +23,7 @@ using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Interfaces;
 using QuantConnect.Orders;
 using QuantConnect.Packets;
+using Common.Util;
 using QuantConnect.Statistics;
 
 namespace QuantConnect.Lean.Engine.Results
@@ -56,6 +57,12 @@ namespace QuantConnect.Lean.Engine.Results
         /// Event fired each time that we add/remove securities from the data feed
         /// </summary>
         void OnSecuritiesChanged(SecurityChanges changes);
+
+        /// <summary>
+        /// Event fired when the algorithm's warm-up period finishes, right before the algorithm's
+        /// <see cref="IAlgorithm.OnWarmupFinished"/> callback is triggered
+        /// </summary>
+        void OnWarmupFinished();
 
         /// <summary>
         /// Initialize the result handler with this result packet.
@@ -134,6 +141,20 @@ namespace QuantConnect.Lean.Engine.Results
         /// <param name="key">Runtime headline statistic name</param>
         /// <param name="value">Runtime headline statistic value</param>
         void RuntimeStatistic(string key, string value);
+
+        /// <summary>
+        /// Adds or updates a deployment detail entry. Key value pairs the brokerage, data queue handler or any other component
+        /// wants to share with the user, through the results, and the algorithm, for example account information.
+        /// Sensitive data, like credentials, should never be added
+        /// </summary>
+        /// <param name="key">The deployment detail key</param>
+        /// <param name="value">The deployment detail value</param>
+        void AddDeploymentDetail(string key, string value);
+
+        /// <summary>
+        /// Read only view of the deployment details, see <see cref="AddDeploymentDetail"/>. Shared with the algorithm
+        /// </summary>
+        ReadOnlyExtendedDictionary<string, string> DeploymentDetails { get; }
 
         /// <summary>
         /// Send a new order event.

@@ -15,6 +15,7 @@
 
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Interfaces;
+using QuantConnect.Python;
 using QuantConnect.Securities;
 using QuantConnect.Securities.Option;
 using System;
@@ -28,6 +29,8 @@ namespace QuantConnect.Data.Market
     {
         private IOptionData _optionData = OptionPriceModelResultData.Null;
         private readonly SymbolProperties _symbolProperties;
+        private readonly SecurityExchangeHours _exchangeHours;
+        private DateTime? _lastTradingDate;
 
         /// <summary>
         /// Gets the strike price
@@ -105,6 +108,13 @@ namespace QuantConnect.Data.Market
         public decimal UnderlyingLastPrice => _optionData.UnderlyingLastPrice;
 
         /// <summary>
+        /// Calendar days from this contract's time until its last trading date: the previous open day for equity options expiring
+        /// on a Saturday or holiday, see <see cref="OptionSymbol.GetLastDayOfTrading(Symbol)"/>, the expiration date otherwise
+        /// </summary>
+        [PandasIgnore]
+        public override int DaysToExpiry => ((_lastTradingDate ??= GetLastTradingDate()) - Time.Date).Days;
+
+        /// <summary>
         /// Initializes a new instance of the <see cref="OptionContract"/> class
         /// </summary>
         /// <param name="security">The option contract security</param>
@@ -112,6 +122,7 @@ namespace QuantConnect.Data.Market
             : base(security.Symbol)
         {
             _symbolProperties = security.SymbolProperties;
+            _exchangeHours = security.Exchange.Hours;
         }
 
         /// <summary>
@@ -119,10 +130,12 @@ namespace QuantConnect.Data.Market
         /// </summary>
         /// <param name="contractData">The option universe contract data to use as source for this contract</param>
         /// <param name="symbolProperties">The contract symbol properties</param>
-        public OptionContract(OptionUniverse contractData, SymbolProperties symbolProperties)
+        /// <param name="exchangeHours">The contract exchange hours</param>
+        public OptionContract(OptionUniverse contractData, SymbolProperties symbolProperties, SecurityExchangeHours exchangeHours = null)
             : base(contractData.Symbol)
         {
             _symbolProperties = symbolProperties;
+            _exchangeHours = exchangeHours;
             _optionData = new OptionUniverseData(contractData);
         }
 
@@ -169,9 +182,10 @@ namespace QuantConnect.Data.Market
         /// </summary>
         /// <param name="contractData">The option universe contract data to use as source for this contract</param>
         /// <param name="symbolProperties">The contract symbol properties</param>
-        public static OptionContract Create(OptionUniverse contractData, SymbolProperties symbolProperties)
+        /// <param name="exchangeHours">The contract exchange hours</param>
+        public static OptionContract Create(OptionUniverse contractData, SymbolProperties symbolProperties, SecurityExchangeHours exchangeHours = null)
         {
-            var contract = new OptionContract(contractData, symbolProperties)
+            var contract = new OptionContract(contractData, symbolProperties, exchangeHours)
             {
                 Time = contractData.EndTime,
             };
@@ -204,6 +218,22 @@ namespace QuantConnect.Data.Market
         }
 
         #region Option Contract Data Handlers
+
+        /// <summary>
+        /// The previous open day for equity options expiring on a Saturday or a holiday, the expiration date otherwise
+        /// </summary>
+        private DateTime GetLastTradingDate()
+        {
+            if (Symbol.SecurityType != SecurityType.Option)
+            {
+                return Symbol.ID.Date.Date;
+            }
+
+            // equity options were dated on the Saturday after their last trading day until the OCC moved expirations to Friday in 2015
+            return _exchangeHours == null
+                ? OptionSymbol.GetLastDayOfTrading(Symbol)
+                : OptionSymbol.GetLastDayOfTrading(Symbol, _exchangeHours);
+        }
 
         private interface IOptionData
         {

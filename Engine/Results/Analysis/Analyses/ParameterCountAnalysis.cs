@@ -24,6 +24,12 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
     public class ParameterCountAnalysis : BaseResultsAnalysis
     {
         /// <summary>
+        /// This analysis reads the algorithm's parameters, and its overfitting-risk warning is only
+        /// meaningful for the completed run.
+        /// </summary>
+        public override bool RunsInRun { get; } = false;
+
+        /// <summary>
         /// Gets the description of the excessive parameter count issue.
         /// </summary>
         public override string Issue { get; } = "The algorithm has so many numeric parameters it's at risk of overfitting.";

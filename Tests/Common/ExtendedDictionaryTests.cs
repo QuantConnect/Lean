@@ -16,9 +16,13 @@
 using NUnit.Framework;
 using Python.Runtime;
 using QuantConnect.Statistics;
+using System;
 using System.Collections.Generic;
 using System.Linq;
+using QuantConnect.Data;
 using QuantConnect.Data.Market;
+using QuantConnect.Securities;
+using QuantConnect.Securities.Positions;
 
 namespace QuantConnect.Tests.Common
 {
@@ -227,6 +231,39 @@ def set(dictionary, key, value):
 
             exception = Assert.Throws<ClrBubbledException>(() => module.InvokeMethod("get", pyDict, pyStringNonExistingSymbol));
             Assert.IsInstanceOf<KeyNotFoundException>(exception.InnerException);
+        }
+
+        private static IEnumerable<TestCaseData> NullKeyTestCases()
+        {
+            var time = new DateTime(2025, 1, 1);
+            var securities = new SecurityManager(new TimeKeeper(time, TimeZones.NewYork));
+
+            yield return new TestCaseData(securities).SetArgDisplayNames(nameof(SecurityManager));
+            yield return new TestCaseData(new SecurityPortfolioManager(securities, new SecurityTransactionManager(null, securities), new AlgorithmSettings()))
+                .SetArgDisplayNames(nameof(SecurityPortfolioManager));
+            yield return new TestCaseData(new CashBook()).SetArgDisplayNames(nameof(CashBook));
+            yield return new TestCaseData(new Slice(time, new List<BaseData>(), time)).SetArgDisplayNames(nameof(Slice));
+            yield return new TestCaseData(new DataDictionary<TradeBar>()).SetArgDisplayNames("DataDictionary");
+            yield return new TestCaseData(new TradeBars()).SetArgDisplayNames(nameof(TradeBars));
+            yield return new TestCaseData(new OptionChains()).SetArgDisplayNames(nameof(OptionChains));
+            yield return new TestCaseData(new FuturesChains()).SetArgDisplayNames(nameof(FuturesChains));
+            yield return new TestCaseData(new UniverseManager()).SetArgDisplayNames(nameof(UniverseManager));
+            yield return new TestCaseData(new SecurityPositionGroupModel()).SetArgDisplayNames(nameof(SecurityPositionGroupModel));
+        }
+
+        [TestCaseSource(nameof(NullKeyTestCases))]
+        public void DictionariesHandleNullKeysGracefully(object dictionary)
+        {
+            AssertNullKeyIsHandledGracefully((dynamic)dictionary);
+        }
+
+        private static void AssertNullKeyIsHandledGracefully<TKey, TValue>(ExtendedDictionary<TKey, TValue> dictionary)
+            where TKey : class
+            where TValue : class
+        {
+            Assert.IsFalse(dictionary.ContainsKey(null));
+            Assert.IsFalse(dictionary.TryGetValue(null, out _));
+            Assert.IsNull(dictionary.get(null));
         }
 
         private class TestDictionary<TKey, TValue> : ExtendedDictionary<TKey, TValue>

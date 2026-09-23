@@ -1,0 +1,4 @@
+# we don't have historical information for this symbol
+# CME CBOT outright maintenance margin, 09/2026-12/2026; initial = 110% of maintenance
+date,initial,maintenance
+19900101,567,515

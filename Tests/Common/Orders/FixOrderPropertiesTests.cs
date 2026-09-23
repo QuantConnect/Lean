@@ -14,6 +14,7 @@
 */
 
 using NUnit.Framework;
+using Python.Runtime;
 using QuantConnect.Interfaces;
 using QuantConnect.Orders;
 
@@ -36,6 +37,49 @@ namespace QuantConnect.Tests.Common.Orders
 
             properties.AdditionalProperties["9301"] = "2";
             Assert.AreEqual("1", clone.AdditionalProperties["9301"]);
+        }
+
+        [Test]
+        public void LocateTagPassthroughsSurviveTheDictionarySwap()
+        {
+            // The tags are the store behind the properties, so writing either way must be visible
+            // from the other.
+            var properties = new BloombergFixOrderProperties { LocateBroker = "MLCO" };
+            Assert.AreEqual("MLCO", properties.AdditionalProperties["5700"]);
+
+            properties.AdditionalProperties["114"] = "Y";
+            Assert.AreEqual("Y", properties.LocateReqd);
+
+            properties.LocateBroker = null;
+            Assert.IsFalse(properties.AdditionalProperties.ContainsKey("5700"));
+            Assert.IsNull(properties.LocateBroker);
+        }
+
+        [Test]
+        public void UpdatesAdditionalPropertiesFromPlainPythonDictionary()
+        {
+            using (Py.GIL())
+            {
+                // pythonnet cannot convert a plain dict for assignment, so update() is what lets a
+                // Python algorithm bulk load its custom tags.
+                var module = PyModule.FromString("fixAdditionalPropertiesModule",
+                    @"
+from AlgorithmImports import *
+
+def getOrderProperties() -> BloombergFixOrderProperties:
+    properties = BloombergFixOrderProperties()
+    properties.additional_properties.update({ ""5700"": ""MLCO"", ""9301"": ""1"" })
+    return properties
+");
+
+                dynamic getOrderProperties = module.GetAttr("getOrderProperties");
+                var properties = (BloombergFixOrderProperties)getOrderProperties();
+
+                Assert.IsNotNull(properties);
+                Assert.AreEqual(2, properties.AdditionalProperties.Count);
+                Assert.AreEqual("1", properties.AdditionalProperties["9301"]);
+                Assert.AreEqual("MLCO", properties.LocateBroker);
+            }
         }
     }
 }

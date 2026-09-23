@@ -573,5 +573,37 @@ namespace QuantConnect.Tests.ToolBox
             }
         }
 
+
+        [Test]
+        public void ReadsZipWithDuplicatedEntries()
+        {
+            // legacy zips written with DotNetZip for unicode symbols can contain the same (mangled) entry name multiple times,
+            // DotNetZip's reader renames duplicates through a process wide counter which overflows after 25 calls
+            var symbol = Symbol.Create("币安人生usdc", SecurityType.Crypto, Market.Binance);
+            var directory = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
+            var filePath = LeanData.GenerateZipFilePath(directory, symbol, DateTime.UtcNow, Resolution.Daily, TickType.Trade);
+            Directory.CreateDirectory(Path.GetDirectoryName(filePath));
+            try
+            {
+                using (var archive = System.IO.Compression.ZipFile.Open(filePath, System.IO.Compression.ZipArchiveMode.Create))
+                {
+                    for (var i = 0; i < 30; i++)
+                    {
+                        var entry = archive.CreateEntry("????usdc.csv");
+                        using var writer = new StreamWriter(entry.Open());
+                        writer.WriteLine($"2024010{i % 9 + 1} 00:00,1,2,0.5,1.5,100");
+                    }
+                }
+
+                var data = new LeanDataReader(filePath).Parse().ToList();
+
+                Assert.AreEqual(30, data.Count);
+                Assert.IsTrue(data.All(x => x.Symbol == symbol && x is TradeBar));
+            }
+            finally
+            {
+                Directory.Delete(directory, true);
+            }
+        }
     }
 }

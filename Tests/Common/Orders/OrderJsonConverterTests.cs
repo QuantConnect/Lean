@@ -203,13 +203,46 @@ namespace QuantConnect.Tests.Common.Orders
                 Id = 12345,
                 Price = 209.03m,
                 ContingentId = 123456,
-                BrokerId = new List<string> {"727", "54970"}
+                BrokerId = new List<string> {"727", "54970"},
+                StopTriggered = true,
+                StopTriggeredTime = new DateTime(2015, 11, 23, 17, 16, 0)
             };
 
             var actual = TestOrderType(expected);
 
             Assert.AreEqual(expected.StopPrice, actual.StopPrice);
             Assert.AreEqual(expected.LimitPrice, actual.LimitPrice);
+            Assert.AreEqual(expected.StopTriggered, actual.StopTriggered);
+            Assert.AreEqual(expected.StopTriggeredTime, actual.StopTriggeredTime);
+        }
+
+        [TestCase("")]
+        [TestCase(",'StopTriggered':false,'StopTriggeredTime':null")]
+        [TestCase(",'stopTriggered':false,'stopTriggeredTime':null")]
+        public void DeserializesStopLimitOrderWithoutStopTriggeredTime(string extraFields)
+        {
+            var json = $@"{{'Type':3,
+'Id':1,
+'ContingentId':0,
+'BrokerId':['1'],
+'Symbol':{{'Value':'SPY','Permtick':'SPY'}},
+'Price':209.03,
+'StopPrice':210.10,
+'LimitPrice':200.23,
+'Time':'2015-11-23T17:15:37Z',
+'Quantity':100,
+'Status':1,
+'TimeInForce':0,
+'Tag':'',
+'SecurityType':1,
+'Direction':0{extraFields}}}";
+
+            var order = (StopLimitOrder)DeserializeOrder<StopLimitOrder>(json);
+
+            Assert.AreEqual(210.10m, order.StopPrice);
+            Assert.AreEqual(200.23m, order.LimitPrice);
+            Assert.IsFalse(order.StopTriggered);
+            Assert.IsNull(order.StopTriggeredTime);
         }
 
         [TestCase(Symbols.SymbolsKey.SPY)]

@@ -97,6 +97,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                         }
                         catch (Exception exception)
                         {
+                            RethrowIfOutOfMemory(exception, filename, entryName);
                             if (exception is ZipException || exception is ZlibException)
                             {
                                 Log.Error("ZipDataCacheProvider.Fetch(): Corrupt zip file/entry: " + filename + "#" + entryName + " Error: " + exception);
@@ -109,8 +110,13 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 }
                 catch (Exception err)
                 {
-                    Log.Error(err, "Inner try/catch");
                     stream?.DisposeSafely();
+                    if (err is OutOfMemoryException)
+                    {
+                        // let the memory diagnostic bubble up instead of resurfacing as a confusing downstream failure
+                        throw;
+                    }
+                    Log.Error(err, "Inner try/catch");
                     return null;
                 }
             }
@@ -290,6 +296,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 {
                     // don't leak the file stream!
                     dataStream.DisposeSafely();
+                    RethrowIfOutOfMemory(exception, filename, entryName);
                     if (exception is ZipException || exception is ZlibException)
                     {
                         Log.Error("ZipDataCacheProvider.Fetch(): Corrupt zip file/entry: " + filename + "#" + entryName + " Error: " + exception);
@@ -412,6 +419,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 }
                 catch (Exception exception)
                 {
+                    RethrowIfOutOfMemory(exception, filename, entryName: null);
                     if (exception is ZipException || exception is ZlibException)
                     {
                         Log.Error("ZipDataCacheProvider.Fetch(): Corrupt zip file/entry: " + filename + " Error: " + exception);
@@ -423,6 +431,25 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             }
 
             return false;
+        }
+
+        /// <summary>
+        /// Rethrows as a memory diagnostic if the exception is, or wraps, an <see cref="OutOfMemoryException"/>.
+        /// Ionic wraps allocation failures into 'ZipException: Cannot read that as a ZipFile', which would otherwise
+        /// be logged as a corrupt zip file and swallowed
+        /// </summary>
+        private static void RethrowIfOutOfMemory(Exception exception, string filename, string entryName)
+        {
+            for (var inner = exception; inner != null; inner = inner.InnerException)
+            {
+                if (inner is OutOfMemoryException)
+                {
+                    var entry = entryName != null ? "#" + entryName : string.Empty;
+                    throw new OutOfMemoryException("ZipDataCacheProvider.Fetch(): ran out of memory reading " + filename + entry +
+                        ". This is memory exhaustion, not a corrupt data file: reduce the number of subscriptions" +
+                        " (e.g. narrow option universe filters) or the amount of data requested.", exception);
+                }
+            }
         }
 
 

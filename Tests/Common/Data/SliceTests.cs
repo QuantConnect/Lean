@@ -161,6 +161,36 @@ namespace QuantConnect.Tests.Common.Data
         }
 
         [Test]
+        public void KeyNotFoundMessageNamesKeyAndSuggestsSafeAccess()
+        {
+            var tradeBar = new TradeBar { Symbol = Symbols.SPY, Time = DateTime.Now };
+            var slice = new Slice(DateTime.Now, new[] { tradeBar }, DateTime.Now);
+            try
+            {
+                Messages.SetAlgorithmLanguage(Language.CSharp);
+                var exception = Assert.Throws<KeyNotFoundException>(() => { var data = slice[Symbols.AAPL]; });
+                StringAssert.Contains("'AAPL", exception.Message);
+                StringAssert.Contains("Slice", exception.Message);
+                StringAssert.Contains("data.TryGetValue(symbol, out var value)", exception.Message);
+                StringAssert.Contains("data.ContainsKey(symbol)", exception.Message);
+
+                Messages.SetAlgorithmLanguage(Language.Python);
+                exception = Assert.Throws<KeyNotFoundException>(() => { var data = slice[Symbols.AAPL]; });
+                StringAssert.Contains("data.get(symbol)", exception.Message);
+                StringAssert.Contains("if symbol in data:", exception.Message);
+
+                // DataDictionary subtypes render their friendly generic type name through the same template
+                var dictionary = new DataDictionary<TradeBar>();
+                exception = Assert.Throws<KeyNotFoundException>(() => { var data = dictionary[Symbols.AAPL]; });
+                StringAssert.Contains("DataDictionary<TradeBar>", exception.Message);
+            }
+            finally
+            {
+                Messages.SetAlgorithmLanguage(Language.CSharp);
+            }
+        }
+
+        [Test]
         public void AccessesTradeBarCollection()
         {
             TradeBar tradeBar1 = new TradeBar { Symbol = Symbols.SPY, Time = DateTime.Now };
