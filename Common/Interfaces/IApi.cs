@@ -478,12 +478,11 @@ namespace QuantConnect.Interfaces
         LiveList ListLiveAlgorithms(AlgorithmStatus? status = null, int? projectId = null);
 
         /// <summary>
-        /// Read out a live algorithm in the project id specified.
+        /// Read out the latest deployment of the live algorithm of the project id specified.
         /// </summary>
         /// <param name="projectId">Project id to read</param>
-        /// <param name="deployId">Specific instance id to read</param>
         /// <returns>Live object with the results</returns>
-        LiveAlgorithmResults ReadLiveAlgorithm(int projectId, string deployId = null);
+        LiveAlgorithmResults ReadLiveAlgorithm(int projectId);
 
         /// <summary>
         /// Liquidate a live algorithm from the specified project.

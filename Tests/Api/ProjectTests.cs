@@ -726,38 +726,50 @@ namespace QuantConnect.Algorithm.CSharp
                 var createLiveAlgorithm = ApiClient.CreateLiveAlgorithm(projectId, compileId, freeNode.FirstOrDefault().Id, _defaultSettings, dataProviders: dataProviders);
                 Assert.IsTrue(createLiveAlgorithm.Success, $"ApiClient.CreateLiveAlgorithm(): Error: {string.Join(",", createLiveAlgorithm.Errors)}");
 
-                // Wait 2 minutes
-                Thread.Sleep(120000);
-
-                // Stop the algorithm
-                var stopLive = ApiClient.StopLiveAlgorithm(projectId);
-                Assert.IsTrue(stopLive.Success, $"ApiClient.StopLiveAlgorithm(): Error: {string.Join(",", stopLive.Errors)}");
-
-                // Try to read the insights from the algorithm
-                var readInsights = ApiClient.ReadLiveInsights(projectId, null, 0, 5);
-                var finish = DateTime.UtcNow.AddMinutes(2);
-                do
-                {
-                    Thread.Sleep(5000);
-                    readInsights = ApiClient.ReadLiveInsights(projectId, null, 0, 5);
-                }
-                while (finish > DateTime.UtcNow && !readInsights.Insights.Any());
-
-                Assert.IsTrue(readInsights.Success, $"ApiClient.ReadLiveInsights(): Error: {string.Join(",", readInsights.Errors)}");
-                Assert.IsNotEmpty(readInsights.Insights);
+                // Let the algorithm run for a while, then stop it so the server can send its insights
+                RunThenStopLiveAlgorithm(projectId);
+                var readInsights = WaitForLiveInsights(projectId, null);
                 Assert.IsTrue(readInsights.Length >= 0);
                 Assert.Throws<ArgumentException>(() => ApiClient.ReadLiveInsights(projectId, null, 0, 101));
                 Assert.DoesNotThrow(() => ApiClient.ReadLiveInsights(projectId, null));
 
-                // the documented algorithmId narrows the read to a single deployment of the project
-                var byAlgorithmId = ApiClient.ReadLiveInsights(projectId, createLiveAlgorithm.DeployId, 0, 5);
-                Assert.IsTrue(byAlgorithmId.Success, $"ApiClient.ReadLiveInsights(): Error: {string.Join(",", byAlgorithmId.Errors)}");
-                CollectionAssert.AreEqual(readInsights.Insights.Select(x => x.Id).ToList(),
-                    byAlgorithmId.Insights.Select(x => x.Id).ToList());
+                // A second deployment of the same project tells the one asked for by algorithmId apart from the whole project
+                WaitForLiveAlgorithmToStop(ApiClient, projectId);
+                nodesResponse = ApiClient.ReadProjectNodes(projectId);
+                Assert.IsTrue(nodesResponse.Success);
+                freeNode = nodesResponse.Nodes.LiveNodes.Where(x => x.Busy == false);
+                Assert.IsNotEmpty(freeNode, "No free Live Nodes found");
+                var secondLiveAlgorithm = ApiClient.CreateLiveAlgorithm(projectId, compileId, freeNode.FirstOrDefault().Id, _defaultSettings, dataProviders: dataProviders);
+                Assert.IsTrue(secondLiveAlgorithm.Success, $"ApiClient.CreateLiveAlgorithm(): Error: {string.Join(",", secondLiveAlgorithm.Errors)}");
+                Assert.AreNotEqual(createLiveAlgorithm.DeployId, secondLiveAlgorithm.DeployId);
+                RunThenStopLiveAlgorithm(projectId);
+
+                // The first deployment can no longer emit, so its insight ids identify it whatever the second one emitted
+                var firstIds = readInsights.Insights.Select(x => x.Id).ToList();
+
+                // With insights of its own on the second deployment, a server ignoring the algorithmId cannot pass the checks below
+                var bySecondId = WaitForLiveInsights(projectId, secondLiveAlgorithm.DeployId);
+                CollectionAssert.IsEmpty(bySecondId.Insights.Select(x => x.Id).Intersect(firstIds),
+                    "The second deployment must not report the insights of the first one");
+
+                var byFirstId = ApiClient.ReadLiveInsights(projectId, createLiveAlgorithm.DeployId, 0, 5);
+                Assert.IsTrue(byFirstId.Success, $"ApiClient.ReadLiveInsights(): Error: {string.Join(",", byFirstId.Errors)}");
+                CollectionAssert.AreEqual(firstIds, byFirstId.Insights.Select(x => x.Id).ToList(),
+                    "The server must read the insights of the given algorithmId, not the latest deployment");
+
+                // Without an algorithmId the insights of every deployment of the project come back together
+                var expectedTotal = byFirstId.Length + bySecondId.Length;
+                var all = ApiClient.ReadLiveInsights(projectId, null, 0, Math.Min(expectedTotal, 100));
+                Assert.IsTrue(all.Success, $"ApiClient.ReadLiveInsights(): Error: {string.Join(",", all.Errors)}");
+                Assert.AreEqual(expectedTotal, all.Length, "Omitting the algorithmId reads the insights of every deployment of the project");
+                var allIds = all.Insights.Select(x => x.Id).ToList();
+                CollectionAssert.IsSubsetOf(firstIds, allIds);
+                CollectionAssert.IsSubsetOf(bySecondId.Insights.Select(x => x.Id).ToList(), allIds);
             }
             catch (Exception ex)
             {
-                // Delete the project in case of an error
+                // Stop whatever is running and delete the project in case of an error
+                ApiClient.LiquidateLiveAlgorithm(projectId);
                 Assert.IsTrue(ApiClient.DeleteProject(projectId).Success);
                 throw ex;
             }
@@ -891,7 +903,7 @@ namespace QuantConnect.Algorithm.CSharp
                 Assert.IsTrue(createLiveAlgorithm.Success, $"ApiClient.CreateLiveAlgorithm(): Error: {string.Join(",", createLiveAlgorithm.Errors)}");
 
                 // Read live algorithm
-                var readLiveAlgorithm = ApiClient.ReadLiveAlgorithm(projectId, createLiveAlgorithm.DeployId);
+                var readLiveAlgorithm = ApiClient.ReadLiveAlgorithm(projectId);
                 stringRepresentation = readLiveAlgorithm.ToString();
                 Assert.IsTrue(ApiTestBase.IsValidJson(stringRepresentation));
                 Assert.IsTrue(readLiveAlgorithm.Success, $"ApiClient.ReadLiveAlgorithm(): Error: {string.Join(",", readLiveAlgorithm.Errors)}");
@@ -1229,6 +1241,37 @@ namespace QuantConnect.Algorithm.CSharp
         private static string GetTimestamp()
         {
             return DateTime.UtcNow.ToStringInvariant("yyyyMMddHHmmssfffff");
+        }
+
+        /// <summary>
+        /// Lets the live algorithm of the project run for two minutes, then stops it so the server can serve its insights
+        /// </summary>
+        private void RunThenStopLiveAlgorithm(int projectId)
+        {
+            Thread.Sleep(120000);
+
+            var stopLive = ApiClient.StopLiveAlgorithm(projectId);
+            Assert.IsTrue(stopLive.Success, $"ApiClient.StopLiveAlgorithm(): Error: {string.Join(",", stopLive.Errors)}");
+        }
+
+        /// <summary>
+        /// Polls the first page of insights of the deployment, or of every deployment of the project when no algorithm id is given,
+        /// until it holds at least one insight
+        /// </summary>
+        private InsightResponse WaitForLiveInsights(int projectId, string algorithmId)
+        {
+            InsightResponse insights;
+            var finish = DateTime.UtcNow.AddMinutes(2);
+            do
+            {
+                Thread.Sleep(5000);
+                insights = ApiClient.ReadLiveInsights(projectId, algorithmId, 0, 5);
+            }
+            while (finish > DateTime.UtcNow && !insights.Insights.Any());
+
+            Assert.IsTrue(insights.Success, $"ApiClient.ReadLiveInsights(): Error: {string.Join(",", insights.Errors)}");
+            Assert.IsNotEmpty(insights.Insights, $"No insights reported for the {algorithmId ?? "project"} in time");
+            return insights;
         }
 
         private void GetProjectAndCompileIdToReadInsights(out int projectId, out string compileId)

@@ -709,18 +709,14 @@ namespace QuantConnect.Api
         }
 
         /// <summary>
-        /// Read out a live algorithm in the project id specified.
+        /// Read out the latest deployment of the live algorithm of the project id specified.
         /// </summary>
         /// <param name="projectId">Project id to read</param>
-        /// <param name="deployId">Specific instance id to read, null to read the latest deployment of the project</param>
         /// <returns><see cref="LiveAlgorithmResults"/></returns>
 
-        public LiveAlgorithmResults ReadLiveAlgorithm(int projectId, string deployId = null)
+        public LiveAlgorithmResults ReadLiveAlgorithm(int projectId)
         {
-            object payload = string.IsNullOrEmpty(deployId)
-                ? new { projectId }
-                : new { projectId, deployId };
-            TryJsonPost("live/read", out LiveAlgorithmResults result, payload);
+            TryJsonPost("live/read", out LiveAlgorithmResults result, new { projectId });
             return result;
         }
 

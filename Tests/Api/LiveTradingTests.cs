@@ -901,22 +901,29 @@ def CreateLiveAlgorithmFromPython(apiClient, projectId, compileId, nodeId):
         }
 
         /// <summary>
-        /// live/read takes an optional deploy id, and without one it reads the latest deployment of the project
+        /// live/read takes no deploy id, which the spec does not document, and always reads the latest deployment of the project
         /// </summary>
         [Test]
-        public void ReadLiveAlgorithmWithoutADeployId()
+        public void ReadLiveAlgorithmReadsTheLatestDeployment()
         {
-            var description = $"Deployed by ReadLiveAlgorithmWithoutADeployId at {DateTime.UtcNow.ToStringInvariant("yyyy-MM-dd HH-mm-ss")}";
-            var created = DeployPaperAlgorithm(out var projectId, description);
+            var description = $"Deployed by ReadLiveAlgorithmReadsTheLatestDeployment at {DateTime.UtcNow.ToStringInvariant("yyyy-MM-dd HH-mm-ss")}";
+            var first = DeployPaperAlgorithm(out var projectId, out var compileId, description);
             try
             {
-                var latest = ApiClient.ReadLiveAlgorithm(projectId);
-                Assert.IsTrue(latest.Success, $"Error reading the live algorithm: {string.Join(", ", latest.Errors ?? [])}");
-                Assert.AreEqual(created.DeployId, latest.DeployId, "Omitting the deploy id reads the latest deployment of the project");
+                var read = ApiClient.ReadLiveAlgorithm(projectId);
+                Assert.IsTrue(read.Success, $"Error reading the live algorithm: {string.Join(", ", read.Errors ?? [])}");
+                Assert.AreEqual(first.DeployId, read.DeployId);
 
-                var byDeployId = ApiClient.ReadLiveAlgorithm(projectId, created.DeployId);
-                Assert.IsTrue(byDeployId.Success, $"Error reading the live algorithm: {string.Join(", ", byDeployId.Errors ?? [])}");
-                Assert.AreEqual(created.DeployId, byDeployId.DeployId);
+                // A second deployment of the same project shows the read follows the newest one
+                var stop = ApiClient.StopLiveAlgorithm(projectId);
+                Assert.IsTrue(stop.Success, $"Error stopping the live algorithm: {string.Join(", ", stop.Errors)}");
+                WaitForLiveAlgorithmToStop(ApiClient, projectId);
+                var second = DeployPaperAlgorithm(projectId, compileId);
+                Assert.AreNotEqual(first.DeployId, second.DeployId);
+
+                read = ApiClient.ReadLiveAlgorithm(projectId);
+                Assert.IsTrue(read.Success, $"Error reading the live algorithm: {string.Join(", ", read.Errors ?? [])}");
+                Assert.AreEqual(second.DeployId, read.DeployId, "The read follows the newest deployment of the project");
             }
             finally
             {
@@ -965,6 +972,15 @@ def CreateLiveAlgorithmFromPython(apiClient, projectId, compileId, nodeId):
         /// </summary>
         private CreateLiveAlgorithmResponse DeployPaperAlgorithm(out int projectId, string description = null)
         {
+            return DeployPaperAlgorithm(out projectId, out _, description);
+        }
+
+        /// <summary>
+        /// Deploys the default paper algorithm to a new project and hands back the api response and the compile id,
+        /// so a test can deploy the same build again. The caller stops the deployment and deletes the project
+        /// </summary>
+        private CreateLiveAlgorithmResponse DeployPaperAlgorithm(out int projectId, out string compileId, string description = null)
+        {
             var project = ApiClient.CreateProject($"Test project - {DateTime.Now.ToStringInvariant()}", Language.CSharp, TestOrganization);
             Assert.IsTrue(project.Success, $"Error creating project: {string.Join(", ", project.Errors)}");
             projectId = project.Projects.First().ProjectId;
@@ -986,13 +1002,22 @@ def CreateLiveAlgorithmFromPython(apiClient, projectId, compileId, nodeId):
             Assert.IsTrue(compile.Success, $"Error compiling project: {string.Join(", ", compile.Errors)}");
             compile = WaitForCompilerResponse(ApiClient, projectId, compile.CompileId, 30);
             Assert.AreEqual(CompileState.BuildSuccess, compile.State, $"Error compiling project: {string.Join(", ", compile.Errors)}");
+            compileId = compile.CompileId;
 
+            return DeployPaperAlgorithm(projectId, compileId);
+        }
+
+        /// <summary>
+        /// Deploys an already compiled project to a free live node with the default paper settings
+        /// </summary>
+        private CreateLiveAlgorithmResponse DeployPaperAlgorithm(int projectId, string compileId)
+        {
             var nodesResponse = ApiClient.ReadProjectNodes(projectId);
             Assert.IsTrue(nodesResponse.Success, $"Error reading project nodes: {string.Join(", ", nodesResponse.Errors)}");
             var freeNode = nodesResponse.Nodes.LiveNodes.FirstOrDefault(x => !x.Busy);
             Assert.IsNotNull(freeNode, "No free Live Nodes found");
 
-            var created = ApiClient.CreateLiveAlgorithm(projectId, compile.CompileId, freeNode.Id, _defaultSettings);
+            var created = ApiClient.CreateLiveAlgorithm(projectId, compileId, freeNode.Id, _defaultSettings);
             Assert.IsTrue(created.Success, $"Error deploying the live algorithm: {string.Join(", ", created.Errors)}");
 
             return created;
