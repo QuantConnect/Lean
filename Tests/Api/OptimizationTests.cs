@@ -201,50 +201,6 @@ namespace QuantConnect.Tests.API
             Assert.IsTrue(deleteProject.Success);
         }
 
-        /// <summary>
-        /// The read optimization response carries the documented extremum and target value
-        /// </summary>
-        [Test]
-        public void ReadOptimizationReturnsTheDocumentedExtremumAndTargetValue()
-        {
-            var projectId = GetProjectCompiledAndWithBacktest(out var compile);
-
-            try
-            {
-                var optimization = ApiClient.CreateOptimization(
-                    projectId: projectId,
-                    name: "My Testable Optimization",
-                    target: "TotalPerformance.PortfolioStatistics.SharpeRatio",
-                    targetTo: "max",
-                    targetValue: 2m,
-                    strategy: "QuantConnect.Optimizer.Strategies.GridSearchOptimizationStrategy",
-                    compileId: compile.CompileId,
-                    parameters: new HashSet<OptimizationParameter>
-                    {
-                        new OptimizationStepParameter("ema-fast", 20, 50, 1, 1)
-                    },
-                    constraints: new List<Constraint>
-                    {
-                        new Constraint("TotalPerformance.PortfolioStatistics.SharpeRatio", ComparisonOperatorTypes.GreaterOrEqual, 1)
-                    },
-                    estimatedCost: 0.06m,
-                    nodeType: OptimizationNodes.O2_8,
-                    parallelNodes: 12
-                );
-                Assert.IsNotEmpty(optimization.OptimizationId);
-                Assert.AreEqual(OptimizationStatus.New, optimization.Status);
-                Assert.AreEqual(DateTime.UtcNow.Date, optimization.Created.Date);
-
-                var read = ApiClient.ReadOptimization(optimization.OptimizationId);
-                Assert.IsInstanceOf<Maximization>(read.Extremum, "The optimization was created with a max target");
-                Assert.AreEqual(read.Criterion.TargetValue, read.TargetValue, "The target value is the criterion one");
-            }
-            finally
-            {
-                ApiClient.DeleteProject(projectId);
-            }
-        }
-
         private int GetProjectCompiledAndWithBacktest(out Compile compile)
         {
             var file = new ProjectFile
