@@ -882,6 +882,157 @@ def CreateLiveAlgorithmFromPython(apiClient, projectId, compileId, nodeId):
         }
 
         /// <summary>
+        /// live/create answers with the summary of the algorithm it just deployed
+        /// </summary>
+        [Test]
+        public void CreateLiveAlgorithmReturnsTheDeployedAlgorithmSummary()
+        {
+            var created = DeployPaperAlgorithm(out var projectId);
+            try
+            {
+                Assert.IsNotNull(created.Live, "live/create is documented to answer with the summary of the algorithm");
+                Assert.AreEqual(created.DeployId, created.Live.DeployId);
+                Assert.IsNotEmpty(created.Live.Status);
+            }
+            finally
+            {
+                StopAndDeleteProject(projectId);
+            }
+        }
+
+        /// <summary>
+        /// live/read takes no deploy id, which the spec does not document, and always reads the latest deployment of the project
+        /// </summary>
+        [Test]
+        public void ReadLiveAlgorithmReadsTheLatestDeployment()
+        {
+            var description = $"Deployed by ReadLiveAlgorithmReadsTheLatestDeployment at {DateTime.UtcNow.ToStringInvariant("yyyy-MM-dd HH-mm-ss")}";
+            var first = DeployPaperAlgorithm(out var projectId, out var compileId, description);
+            try
+            {
+                var read = ApiClient.ReadLiveAlgorithm(projectId);
+                Assert.IsTrue(read.Success, $"Error reading the live algorithm: {string.Join(", ", read.Errors ?? [])}");
+                Assert.AreEqual(first.DeployId, read.DeployId);
+
+                // A second deployment of the same project shows the read follows the newest one
+                var stop = ApiClient.StopLiveAlgorithm(projectId);
+                Assert.IsTrue(stop.Success, $"Error stopping the live algorithm: {string.Join(", ", stop.Errors)}");
+                WaitForLiveAlgorithmToStop(ApiClient, projectId);
+                var second = DeployPaperAlgorithm(projectId, compileId);
+                Assert.AreNotEqual(first.DeployId, second.DeployId);
+
+                read = ApiClient.ReadLiveAlgorithm(projectId);
+                Assert.IsTrue(read.Success, $"Error reading the live algorithm: {string.Join(", ", read.Errors ?? [])}");
+                Assert.AreEqual(second.DeployId, read.DeployId, "The read follows the newest deployment of the project");
+            }
+            finally
+            {
+                StopAndDeleteProject(projectId);
+            }
+        }
+
+        /// <summary>
+        /// live/list takes the documented projectId filter, and every summary carries the equity,
+        /// environment and description of its deployment
+        /// </summary>
+        [Test]
+        public void ListLiveAlgorithmsFiltersByProjectId()
+        {
+            var description = $"Deployed by ListLiveAlgorithmsFiltersByProjectId at {DateTime.UtcNow.ToStringInvariant("yyyy-MM-dd HH-mm-ss")}";
+            var created = DeployPaperAlgorithm(out var projectId, description);
+            try
+            {
+                // the equity is only reported once the deployment sends its first result packet
+                var listed = ApiClient.ListLiveAlgorithms(projectId: projectId);
+                var finish = DateTime.UtcNow.AddMinutes(3);
+                while (listed.Success && listed.Algorithms.All(x => x.Equity == 0) && DateTime.UtcNow < finish)
+                {
+                    Thread.Sleep(10000);
+                    listed = ApiClient.ListLiveAlgorithms(projectId: projectId);
+                }
+
+                Assert.IsTrue(listed.Success, $"Error listing the live algorithms: {string.Join(", ", listed.Errors)}");
+                Assert.IsTrue(listed.Algorithms.All(x => x.ProjectId == projectId),
+                    "The projectId filter must narrow the list to the deployments of one project");
+
+                var summary = listed.Algorithms.Single(x => x.DeployId == created.DeployId);
+                Assert.AreEqual("paper", summary.Environment);
+                Assert.AreEqual(description, summary.Description);
+                Assert.Greater(summary.Equity, 0);
+            }
+            finally
+            {
+                StopAndDeleteProject(projectId);
+            }
+        }
+
+        /// <summary>
+        /// Deploys the default paper algorithm to a new project and hands back the api response, so a test
+        /// can assert on it. The caller stops the deployment and deletes the project
+        /// </summary>
+        private CreateLiveAlgorithmResponse DeployPaperAlgorithm(out int projectId, string description = null)
+        {
+            return DeployPaperAlgorithm(out projectId, out _, description);
+        }
+
+        /// <summary>
+        /// Deploys the default paper algorithm to a new project and hands back the api response and the compile id,
+        /// so a test can deploy the same build again. The caller stops the deployment and deletes the project
+        /// </summary>
+        private CreateLiveAlgorithmResponse DeployPaperAlgorithm(out int projectId, out string compileId, string description = null)
+        {
+            var project = ApiClient.CreateProject($"Test project - {DateTime.Now.ToStringInvariant()}", Language.CSharp, TestOrganization);
+            Assert.IsTrue(project.Success, $"Error creating project: {string.Join(", ", project.Errors)}");
+            projectId = project.Projects.First().ProjectId;
+
+            if (description != null)
+            {
+                var updateProject = ApiClient.UpdateProject(projectId, description: description);
+                Assert.IsTrue(updateProject.Success, $"Error updating project: {string.Join(", ", updateProject.Errors)}");
+
+                var readProject = ApiClient.ReadProject(projectId);
+                Assert.IsTrue(readProject.Success, $"Error reading project: {string.Join(", ", readProject.Errors)}");
+                Assert.AreEqual(description, readProject.Projects.Single().Description, "The project description was not set");
+            }
+
+            var updateProjectFileContent = ApiClient.UpdateProjectFileContent(projectId, _defaultFile.Name, _defaultFile.Code);
+            Assert.IsTrue(updateProjectFileContent.Success, $"Error updating project file: {string.Join(", ", updateProjectFileContent.Errors)}");
+
+            var compile = ApiClient.CreateCompile(projectId);
+            Assert.IsTrue(compile.Success, $"Error compiling project: {string.Join(", ", compile.Errors)}");
+            compile = WaitForCompilerResponse(ApiClient, projectId, compile.CompileId, 30);
+            Assert.AreEqual(CompileState.BuildSuccess, compile.State, $"Error compiling project: {string.Join(", ", compile.Errors)}");
+            compileId = compile.CompileId;
+
+            return DeployPaperAlgorithm(projectId, compileId);
+        }
+
+        /// <summary>
+        /// Deploys an already compiled project to a free live node with the default paper settings
+        /// </summary>
+        private CreateLiveAlgorithmResponse DeployPaperAlgorithm(int projectId, string compileId)
+        {
+            var nodesResponse = ApiClient.ReadProjectNodes(projectId);
+            Assert.IsTrue(nodesResponse.Success, $"Error reading project nodes: {string.Join(", ", nodesResponse.Errors)}");
+            var freeNode = nodesResponse.Nodes.LiveNodes.FirstOrDefault(x => !x.Busy);
+            Assert.IsNotNull(freeNode, "No free Live Nodes found");
+
+            var created = ApiClient.CreateLiveAlgorithm(projectId, compileId, freeNode.Id, _defaultSettings);
+            Assert.IsTrue(created.Success, $"Error deploying the live algorithm: {string.Join(", ", created.Errors)}");
+
+            return created;
+        }
+
+        /// <summary>
+        /// Liquidating the live algorithm of the project also stops it
+        /// </summary>
+        private void StopAndDeleteProject(int projectId)
+        {
+            ApiClient.LiquidateLiveAlgorithm(projectId);
+            ApiClient.DeleteProject(projectId);
+        }
+
+        /// <summary>
         /// Wait to receive at least one order
         /// </summary>
         /// <param name="projectId">Id of the project</param>

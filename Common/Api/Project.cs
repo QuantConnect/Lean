@@ -378,6 +378,12 @@ namespace QuantConnect.Api
         /// </summary>
         [JsonProperty(PropertyName = "encryptionKey")]
         public EncryptionKey EncryptionKey { get; set; }
+
+        /// <summary>
+        /// The maximum file length allowed in the project
+        /// </summary>
+        [JsonProperty(PropertyName = "maxFileSize")]
+        public int MaxFileSize { get; set; }
     }
 
     /// <summary>

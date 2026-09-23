@@ -54,6 +54,15 @@ namespace QuantConnect.Interfaces
         ProjectResponse ReadProject(int projectId);
 
         /// <summary>
+        /// Update a project's name or description
+        /// </summary>
+        /// <param name="projectId">Project id to update</param>
+        /// <param name="name">The new name for the project</param>
+        /// <param name="description">The new description for the project</param>
+        /// <returns><see cref="RestResponse"/> indicating success</returns>
+        RestResponse UpdateProject(int projectId, string name = null, string description = null);
+
+        /// <summary>
         /// Add a file to a project
         /// </summary>
         /// <param name="projectId">The project to which the file should be added</param>
@@ -129,8 +138,10 @@ namespace QuantConnect.Interfaces
         /// <summary>
         /// Read back a list of all projects on the account for a user.
         /// </summary>
+        /// <param name="start">Starting (inclusive, zero-based) index of the projects to be fetched</param>
+        /// <param name="end">Last (exclusive) index of the projects to be fetched</param>
         /// <returns>Container for list of projects</returns>
-        ProjectResponse ListProjects();
+        ProjectResponse ListProjects(int start = 0, int end = 0);
 
         /// <summary>
         /// Create a new compile job request for this project id.
@@ -150,11 +161,12 @@ namespace QuantConnect.Interfaces
         /// <summary>
         /// Create a new backtest from a specified projectId and compileId
         /// </summary>
-        /// <param name="projectId"></param>
-        /// <param name="compileId"></param>
-        /// <param name="backtestName"></param>
-        /// <returns></returns>
-        Backtest CreateBacktest(int projectId, string compileId, string backtestName);
+        /// <param name="projectId">Id for the project to backtest</param>
+        /// <param name="compileId">Compile id for the project</param>
+        /// <param name="backtestName">Name for the new backtest</param>
+        /// <param name="parameters">Parameters to use for the backtest</param>
+        /// <returns>Backtest result object</returns>
+        Backtest CreateBacktest(int projectId, string compileId, string backtestName, Dictionary<string, string> parameters = null);
 
         /// <summary>
         /// Read out the full result of a specific backtest
@@ -173,7 +185,7 @@ namespace QuantConnect.Interfaces
         /// <param name="name">New backtest name to set</param>
         /// <param name="note">Note attached to the backtest</param>
         /// <returns>Rest response on success</returns>
-        RestResponse UpdateBacktest(int projectId, string backtestId, string name = "", string note = "");
+        RestResponse UpdateBacktest(int projectId, string backtestId, string name = null, string note = "");
 
         /// <summary>
         /// Updates the tags collection for a backtest
@@ -198,7 +210,7 @@ namespace QuantConnect.Interfaces
         /// <param name="projectId">Project id to search</param>
         /// <param name="includeStatistics">True for include statistics in the response, false otherwise</param>
         /// <returns>BacktestList container for list of backtests</returns>
-        BacktestSummaryList ListBacktests(int projectId, bool includeStatistics = false);
+        BacktestSummaryList ListBacktests(int projectId, bool includeStatistics = true);
 
         /// <summary>
         /// Read out the insights of a backtest
@@ -360,10 +372,20 @@ namespace QuantConnect.Interfaces
         /// Read out the insights of a live algorithm
         /// </summary>
         /// <param name="projectId">Id of the project from which to read the live algorithm</param>
+        /// <param name="algorithmId">Deploy id (algorithm id) of the live running algorithm, null for the latest deployment</param>
         /// <param name="start">Starting index of the insights to be fetched</param>
-        /// <param name="end">Last index of the insights to be fetched. Note that end - start must be less than 100</param>
+        /// <param name="end">Last index of the insights to be fetched</param>
         /// <returns><see cref="InsightResponse"/></returns>
-        /// <exception cref="ArgumentException"></exception>
+        public InsightResponse ReadLiveInsights(int projectId, string algorithmId, int start = 0, int end = 0);
+
+        /// <summary>
+        /// Read out the insights of the latest deployment of a live algorithm
+        /// </summary>
+        /// <param name="projectId">Id of the project from which to read the live algorithm</param>
+        /// <param name="start">Starting index of the insights to be fetched</param>
+        /// <param name="end">Last index of the insights to be fetched</param>
+        /// <returns><see cref="InsightResponse"/></returns>
+        [Obsolete("Use the overload taking the algorithm id: ReadLiveInsights(projectId, algorithmId, start, end)")]
         public InsightResponse ReadLiveInsights(int projectId, int start = 0, int end = 0);
 
         /// <summary>
@@ -451,16 +473,16 @@ namespace QuantConnect.Interfaces
         /// Get a list of live running algorithms for a logged in user.
         /// </summary>
         /// <param name="status">Filter the statuses of the algorithms returned from the api</param>
+        /// <param name="projectId">Id of the project to include in the response</param>
         /// <returns>List of live algorithm instances</returns>
-        LiveList ListLiveAlgorithms(AlgorithmStatus? status = null);
+        LiveList ListLiveAlgorithms(AlgorithmStatus? status = null, int? projectId = null);
 
         /// <summary>
-        /// Read out a live algorithm in the project id specified.
+        /// Read out the latest deployment of the live algorithm of the project id specified.
         /// </summary>
         /// <param name="projectId">Project id to read</param>
-        /// <param name="deployId">Specific instance id to read</param>
         /// <returns>Live object with the results</returns>
-        LiveAlgorithmResults ReadLiveAlgorithm(int projectId, string deployId);
+        LiveAlgorithmResults ReadLiveAlgorithm(int projectId);
 
         /// <summary>
         /// Liquidate a live algorithm from the specified project.

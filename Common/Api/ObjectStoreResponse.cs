@@ -81,7 +81,7 @@ namespace QuantConnect.Api
         /// <summary>
         /// True if it is a folder, false otherwise
         /// </summary>
-        [JsonProperty(PropertyName = "isFolder")]
+        [JsonProperty(PropertyName = "folder")]
         public bool IsFolder { get; set; }
     }
 
@@ -125,6 +125,18 @@ namespace QuantConnect.Api
         /// </summary>
         [JsonProperty(PropertyName = "objects")]
         public List<SummaryObjectStore> Objects { get; set; }
+
+        /// <summary>
+        /// The current page number in the paginated response
+        /// </summary>
+        [JsonProperty(PropertyName = "page")]
+        public int Page { get; set; }
+
+        /// <summary>
+        /// The total number of pages in the paginated response
+        /// </summary>
+        [JsonProperty(PropertyName = "totalPages")]
+        public int TotalPages { get; set; }
 
         /// <summary>
         /// Size of all objects stored in bytes

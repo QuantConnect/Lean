@@ -59,6 +59,6 @@ namespace QuantConnect.Api
         /// The last 4 digits of the card
         /// </summary>
         [JsonProperty(PropertyName = "last4")]
-        public decimal LastFourDigits { get; set; }
+        public string LastFourDigits { get; set; }
     }
 }

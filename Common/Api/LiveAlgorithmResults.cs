@@ -72,6 +72,11 @@ namespace QuantConnect.Api
         public string ProjectName { get; set; }
 
         /// <summary>
+        /// Description of the project the live algorithm is in
+        /// </summary>
+        public string Description { get; set; }
+
+        /// <summary>
         /// Name of the data center where the algorithm is physically located.
         /// </summary>
         public string Datacenter { get; set; }

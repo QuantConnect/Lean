@@ -53,6 +53,12 @@ namespace QuantConnect.Api
         /// HTTP status response code
         /// </summary>
         public string ResponseCode { get; set; }
+
+        /// <summary>
+        /// Summary of the algorithm created
+        /// </summary>
+        [JsonProperty(PropertyName = "live")]
+        public LiveAlgorithmResults Live { get; set; }
     }
 
     /// <summary>
@@ -87,6 +93,21 @@ namespace QuantConnect.Api
         /// Data limitations mean we can only stream one chart at a time to the consumer. See which chart you're watching here.
         /// </remarks>
         public string Subscription { get; set; }
+
+        /// <summary>
+        /// Equity value of the deployment.
+        /// </summary>
+        public decimal Equity { get; set; }
+
+        /// <summary>
+        /// Environment in which the deployment is running: "live", "paper" or "uat".
+        /// </summary>
+        public string Environment { get; set; }
+
+        /// <summary>
+        /// Description of the project the algorithm is in.
+        /// </summary>
+        public string Description { get; set; }
 
         /// <summary>
         /// Live algorithm error message from a crash or algorithm runtime error.

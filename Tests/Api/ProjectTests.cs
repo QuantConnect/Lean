@@ -26,6 +26,7 @@ using QuantConnect.Optimizer.Parameters;
 using QuantConnect.Util;
 using QuantConnect.Optimizer;
 using QuantConnect.Optimizer.Objectives;
+using QuantConnect.Interfaces;
 using System.Threading;
 
 namespace QuantConnect.Tests.API
@@ -527,7 +528,7 @@ namespace QuantConnect.Algorithm.CSharp
             Assert.Throws<ArgumentException>(() => ApiClient.ReadBacktestOrders(projectId, backtestId, 0, 101));
             Assert.Throws<ArgumentException>(() => ApiClient.ReadLiveOrders(projectId, null, 0, 101));
             Assert.Throws<ArgumentException>(() => ApiClient.ReadBacktestInsights(projectId, backtestId, 0, 101));
-            Assert.Throws<ArgumentException>(() => ApiClient.ReadLiveInsights(projectId, 0, 101));
+            Assert.Throws<ArgumentException>(() => ApiClient.ReadLiveInsights(projectId, null, 0, 101));
             Assert.Throws<ArgumentException>(() => ApiClient.ReadBacktestLog(projectId, backtestId, 0, 201));
             Assert.Throws<ArgumentException>(() => ApiClient.ReadLiveLogs(projectId, "L-deploy-id", 0, 201));
         }
@@ -725,32 +726,50 @@ namespace QuantConnect.Algorithm.CSharp
                 var createLiveAlgorithm = ApiClient.CreateLiveAlgorithm(projectId, compileId, freeNode.FirstOrDefault().Id, _defaultSettings, dataProviders: dataProviders);
                 Assert.IsTrue(createLiveAlgorithm.Success, $"ApiClient.CreateLiveAlgorithm(): Error: {string.Join(",", createLiveAlgorithm.Errors)}");
 
-                // Wait 2 minutes
-                Thread.Sleep(120000);
-
-                // Stop the algorithm
-                var stopLive = ApiClient.StopLiveAlgorithm(projectId);
-                Assert.IsTrue(stopLive.Success, $"ApiClient.StopLiveAlgorithm(): Error: {string.Join(",", stopLive.Errors)}");
-
-                // Try to read the insights from the algorithm
-                var readInsights = ApiClient.ReadLiveInsights(projectId, 0, 5);
-                var finish = DateTime.UtcNow.AddMinutes(2);
-                do
-                {
-                    Thread.Sleep(5000);
-                    readInsights = ApiClient.ReadLiveInsights(projectId, 0, 5);
-                }
-                while (finish > DateTime.UtcNow && !readInsights.Insights.Any());
-
-                Assert.IsTrue(readInsights.Success, $"ApiClient.ReadLiveInsights(): Error: {string.Join(",", readInsights.Errors)}");
-                Assert.IsNotEmpty(readInsights.Insights);
+                // Let the algorithm run for a while, then stop it so the server can send its insights
+                RunThenStopLiveAlgorithm(projectId);
+                var readInsights = WaitForLiveInsights(projectId, null);
                 Assert.IsTrue(readInsights.Length >= 0);
-                Assert.Throws<ArgumentException>(() => ApiClient.ReadLiveInsights(projectId, 0, 101));
-                Assert.DoesNotThrow(() => ApiClient.ReadLiveInsights(projectId));
+                Assert.Throws<ArgumentException>(() => ApiClient.ReadLiveInsights(projectId, null, 0, 101));
+                Assert.DoesNotThrow(() => ApiClient.ReadLiveInsights(projectId, null));
+
+                // A second deployment of the same project tells the one asked for by algorithmId apart from the whole project
+                WaitForLiveAlgorithmToStop(ApiClient, projectId);
+                nodesResponse = ApiClient.ReadProjectNodes(projectId);
+                Assert.IsTrue(nodesResponse.Success);
+                freeNode = nodesResponse.Nodes.LiveNodes.Where(x => x.Busy == false);
+                Assert.IsNotEmpty(freeNode, "No free Live Nodes found");
+                var secondLiveAlgorithm = ApiClient.CreateLiveAlgorithm(projectId, compileId, freeNode.FirstOrDefault().Id, _defaultSettings, dataProviders: dataProviders);
+                Assert.IsTrue(secondLiveAlgorithm.Success, $"ApiClient.CreateLiveAlgorithm(): Error: {string.Join(",", secondLiveAlgorithm.Errors)}");
+                Assert.AreNotEqual(createLiveAlgorithm.DeployId, secondLiveAlgorithm.DeployId);
+                RunThenStopLiveAlgorithm(projectId);
+
+                // The first deployment can no longer emit, so its insight ids identify it whatever the second one emitted
+                var firstIds = readInsights.Insights.Select(x => x.Id).ToList();
+
+                // With insights of its own on the second deployment, a server ignoring the algorithmId cannot pass the checks below
+                var bySecondId = WaitForLiveInsights(projectId, secondLiveAlgorithm.DeployId);
+                CollectionAssert.IsEmpty(bySecondId.Insights.Select(x => x.Id).Intersect(firstIds),
+                    "The second deployment must not report the insights of the first one");
+
+                var byFirstId = ApiClient.ReadLiveInsights(projectId, createLiveAlgorithm.DeployId, 0, 5);
+                Assert.IsTrue(byFirstId.Success, $"ApiClient.ReadLiveInsights(): Error: {string.Join(",", byFirstId.Errors)}");
+                CollectionAssert.AreEqual(firstIds, byFirstId.Insights.Select(x => x.Id).ToList(),
+                    "The server must read the insights of the given algorithmId, not the latest deployment");
+
+                // Without an algorithmId the insights of every deployment of the project come back together
+                var expectedTotal = byFirstId.Length + bySecondId.Length;
+                var all = ApiClient.ReadLiveInsights(projectId, null, 0, Math.Min(expectedTotal, 100));
+                Assert.IsTrue(all.Success, $"ApiClient.ReadLiveInsights(): Error: {string.Join(",", all.Errors)}");
+                Assert.AreEqual(expectedTotal, all.Length, "Omitting the algorithmId reads the insights of every deployment of the project");
+                var allIds = all.Insights.Select(x => x.Id).ToList();
+                CollectionAssert.IsSubsetOf(firstIds, allIds);
+                CollectionAssert.IsSubsetOf(bySecondId.Insights.Select(x => x.Id).ToList(), allIds);
             }
             catch (Exception ex)
             {
-                // Delete the project in case of an error
+                // Stop whatever is running and delete the project in case of an error
+                ApiClient.LiquidateLiveAlgorithm(projectId);
                 Assert.IsTrue(ApiClient.DeleteProject(projectId).Success);
                 throw ex;
             }
@@ -884,7 +903,7 @@ namespace QuantConnect.Algorithm.CSharp
                 Assert.IsTrue(createLiveAlgorithm.Success, $"ApiClient.CreateLiveAlgorithm(): Error: {string.Join(",", createLiveAlgorithm.Errors)}");
 
                 // Read live algorithm
-                var readLiveAlgorithm = ApiClient.ReadLiveAlgorithm(projectId, createLiveAlgorithm.DeployId);
+                var readLiveAlgorithm = ApiClient.ReadLiveAlgorithm(projectId);
                 stringRepresentation = readLiveAlgorithm.ToString();
                 Assert.IsTrue(ApiTestBase.IsValidJson(stringRepresentation));
                 Assert.IsTrue(readLiveAlgorithm.Success, $"ApiClient.ReadLiveAlgorithm(): Error: {string.Join(",", readLiveAlgorithm.Errors)}");
@@ -1017,9 +1036,242 @@ namespace QuantConnect.Algorithm.CSharp
             Assert.IsTrue(deleteProject.Success);
         }
 
+        /// <summary>
+        /// The documented start and end paging of projects/read is sent and narrows the response
+        /// </summary>
+        [Test]
+        public void ListProjectsPagesTheAccountProjects()
+        {
+            var firstPage = ApiClient.ListProjects(0, 1);
+            Assert.IsTrue(firstPage.Success, $"Error listing projects: {string.Join(", ", firstPage.Errors)}");
+            Assert.AreEqual(1, firstPage.Projects.Count, "A one project window should come back with a single project");
+
+            var everyProject = ApiClient.ListProjects();
+            Assert.IsTrue(everyProject.Success, $"Error listing projects: {string.Join(", ", everyProject.Errors)}");
+            Assert.GreaterOrEqual(everyProject.Projects.Count, firstPage.Projects.Count);
+            CollectionAssert.Contains(everyProject.Projects.Select(x => x.ProjectId).ToList(), firstPage.Projects[0].ProjectId);
+        }
+
+        /// <summary>
+        /// The project response carries the documented maximum file size
+        /// </summary>
+        [Test]
+        public void ReadProjectReturnsTheMaxFileSize()
+        {
+            var result = ApiClient.ReadProject(TestProject.ProjectId);
+            Assert.IsTrue(result.Success, $"Error reading the project: {string.Join(", ", result.Errors)}");
+
+            var project = result.Projects.Single();
+            Assert.Greater(project.MaxFileSize, 0, "Every project documents the maximum length of its files");
+        }
+
+        /// <summary>
+        /// projects/update posts only the properties it was given, so a rename leaves the description alone
+        /// </summary>
+        [Test]
+        public void UpdateProjectNameAndDescription()
+        {
+            var originalName = TestProject.Name;
+            var newName = $"{originalName}-Renamed";
+            var description = $"Updated at {GetTimestamp()}";
+
+            try
+            {
+                var update = ApiClient.UpdateProject(TestProject.ProjectId, newName, description);
+                Assert.IsTrue(update.Success, $"Error updating the project: {string.Join(", ", update.Errors)}");
+
+                var project = ApiClient.ReadProject(TestProject.ProjectId).Projects.Single();
+                Assert.AreEqual(newName, project.Name);
+                Assert.AreEqual(description, project.Description);
+
+                var rename = ApiClient.UpdateProject(TestProject.ProjectId, name: originalName);
+                Assert.IsTrue(rename.Success, $"Error updating the project: {string.Join(", ", rename.Errors)}");
+
+                project = ApiClient.ReadProject(TestProject.ProjectId).Projects.Single();
+                Assert.AreEqual(originalName, project.Name);
+                Assert.AreEqual(description, project.Description, "A name only update must not clear the description");
+            }
+            finally
+            {
+                ApiClient.UpdateProject(TestProject.ProjectId, originalName, string.Empty);
+            }
+        }
+
+        /// <summary>
+        /// backtests/create sends the documented parameters and reports the debugging flag of the run
+        /// </summary>
+        [Test]
+        public void CreateBacktestSendsTheGivenParameters()
+        {
+            var projectResult = ApiClient.CreateProject($"{GetTimestamp()} Test {TestAccount} Backtest Parameters",
+                Language.CSharp, TestOrganization);
+            Assert.IsTrue(projectResult.Success, $"Error creating project: {string.Join(", ", projectResult.Errors)}");
+            var projectId = projectResult.Projects.First().ProjectId;
+
+            try
+            {
+                var code = File.ReadAllText("../../../Algorithm.CSharp/ParameterizedAlgorithm.cs");
+                var updateProjectFileContent = ApiClient.UpdateProjectFileContent(projectId, "Main.cs", code);
+                Assert.IsTrue(updateProjectFileContent.Success,
+                    $"Error updating project file: {string.Join(", ", updateProjectFileContent.Errors)}");
+
+                var compile = ApiClient.CreateCompile(projectId);
+                compile = WaitForCompilerResponse(ApiClient, projectId, compile.CompileId);
+                Assert.IsTrue(compile.Success, $"Error compiling project: {string.Join(", ", compile.Errors)}");
+
+                var parameters = new Dictionary<string, string> { { "ema-fast", "20" }, { "ema-slow", "60" } };
+                var backtest = ApiClient.CreateBacktest(projectId, compile.CompileId, $"Parameters Backtest {GetTimestamp()}", parameters);
+                Assert.IsTrue(backtest.Success, $"Error creating backtest: {string.Join(", ", backtest.Errors)}");
+                Assert.IsFalse(backtest.Debugging, "A backtest created through the api does not run under debugging mode");
+
+                backtest = WaitForBacktestCompletion(ApiClient, projectId, backtest.BacktestId, secondsTimeout: 300);
+                Assert.IsTrue(backtest.Success, $"Error running backtest: {string.Join(", ", backtest.Errors)}");
+                Assert.IsFalse(backtest.Debugging);
+                Assert.IsNotNull(backtest.ParameterSet, "The backtest reports the parameters it ran with");
+                Assert.AreEqual("20", backtest.ParameterSet.Value["ema-fast"]);
+                Assert.AreEqual("60", backtest.ParameterSet.Value["ema-slow"]);
+            }
+            finally
+            {
+                ApiClient.DeleteProject(projectId);
+            }
+        }
+
+        /// <summary>
+        /// The interface default matches the class, so a listing through IApi still asks for the statistics
+        /// </summary>
+        [Test]
+        public void ListBacktestsThroughTheInterfaceIncludesStatistics()
+        {
+            IApi api = ApiClient;
+            var throughInterface = api.ListBacktests(TestProject.ProjectId);
+            Assert.IsTrue(throughInterface.Success, $"Error listing backtests: {string.Join(", ", throughInterface.Errors)}");
+
+            var withoutStatistics = ApiClient.ListBacktests(TestProject.ProjectId, includeStatistics: false);
+            Assert.IsTrue(withoutStatistics.Success, $"Error listing backtests: {string.Join(", ", withoutStatistics.Errors)}");
+
+            Assert.IsNull(withoutStatistics.Backtests.Single(x => x.BacktestId == TestBacktest.BacktestId).Trades);
+            Assert.IsNotNull(throughInterface.Backtests.Single(x => x.BacktestId == TestBacktest.BacktestId).Trades,
+                "The interface default must ask for the statistics, like the class default does");
+        }
+
+        /// <summary>
+        /// The interface default matches the class, so updating only the note through IApi keeps the name
+        /// </summary>
+        [Test]
+        public void UpdateBacktestThroughTheInterfaceKeepsTheName()
+        {
+            IApi api = ApiClient;
+            var note = $"Note {GetTimestamp()}";
+
+            var update = api.UpdateBacktest(TestProject.ProjectId, TestBacktest.BacktestId, note: note);
+            Assert.IsTrue(update.Success, $"Error updating the backtest: {string.Join(", ", update.Errors)}");
+
+            var read = ApiClient.ReadBacktest(TestProject.ProjectId, TestBacktest.BacktestId);
+            Assert.IsTrue(read.Success, $"Error reading the backtest: {string.Join(", ", read.Errors)}");
+            Assert.AreEqual(note, read.Note);
+            Assert.AreEqual(TestBacktest.Name, read.Name, "A null name default must leave the backtest name alone");
+        }
+
+        /// <summary>
+        /// backtests/read/report answers with a generating flag until the report is ready, and the client
+        /// keeps polling instead of handing back an empty report
+        /// </summary>
+        [Test]
+        public void ReadBacktestReportWaitsUntilTheReportIsGenerated()
+        {
+            var report = ApiClient.ReadBacktestReport(TestProject.ProjectId, TestBacktest.BacktestId);
+            Assert.IsTrue(report.Success, $"Error reading the backtest report: {string.Join(", ", report.Errors)}");
+            Assert.IsFalse(report.Generating, "The polling must not hand back a report that is still being generated");
+            Assert.IsNotEmpty(report.Report);
+        }
+
+        /// <summary>
+        /// backtests/chart/read answers with a loading status and its progress while the chart is being
+        /// generated, and with the chart itself once it is ready
+        /// </summary>
+        [Test]
+        public void ReadBacktestChartReportsItsLoadingStatus()
+        {
+            var chart = ApiClient.ReadBacktestChart(TestProject.ProjectId, "Strategy Equity", 0, 0, 100, TestBacktest.BacktestId);
+            var finish = DateTime.UtcNow.AddMinutes(2);
+            while (IsLoading(chart.Status) && DateTime.UtcNow < finish)
+            {
+                Assert.GreaterOrEqual(chart.Progress, 0m);
+                Assert.LessOrEqual(chart.Progress, 1m);
+                Thread.Sleep(5000);
+                chart = ApiClient.ReadBacktestChart(TestProject.ProjectId, "Strategy Equity", 0, 0, 100, TestBacktest.BacktestId);
+            }
+
+            Assert.IsTrue(chart.Success, $"Error reading the backtest chart: {string.Join(", ", chart.Errors)}");
+            Assert.IsFalse(IsLoading(chart.Status), "The chart was still loading after two minutes");
+            Assert.IsNotNull(chart.Chart);
+        }
+
+        /// <summary>
+        /// backtests/orders/read answers with a loading status and its progress while the orders are being
+        /// generated, and with the orders themselves once they are ready
+        /// </summary>
+        [Test]
+        public void ReadBacktestOrdersReportsItsLoadingStatus()
+        {
+            var orders = ApiClient.ReadBacktestOrders(TestProject.ProjectId, TestBacktest.BacktestId, 0, 10);
+            var finish = DateTime.UtcNow.AddMinutes(2);
+            while (IsLoading(orders.Status) && DateTime.UtcNow < finish)
+            {
+                Assert.GreaterOrEqual(orders.Progress, 0m);
+                Assert.LessOrEqual(orders.Progress, 1m);
+                Thread.Sleep(5000);
+                orders = ApiClient.ReadBacktestOrders(TestProject.ProjectId, TestBacktest.BacktestId, 0, 10);
+            }
+
+            Assert.IsTrue(orders.Success, $"Error reading the backtest orders: {string.Join(", ", orders.Errors)}");
+            Assert.IsFalse(IsLoading(orders.Status), "The orders were still loading after two minutes");
+            Assert.IsNotEmpty(orders.Orders);
+        }
+
+        /// <summary>
+        /// The paged endpoints report "loading" while the result they page through is still being built
+        /// </summary>
+        private static bool IsLoading(string status)
+        {
+            return string.Equals(status, "loading", StringComparison.OrdinalIgnoreCase);
+        }
+
         private static string GetTimestamp()
         {
             return DateTime.UtcNow.ToStringInvariant("yyyyMMddHHmmssfffff");
+        }
+
+        /// <summary>
+        /// Lets the live algorithm of the project run for two minutes, then stops it so the server can serve its insights
+        /// </summary>
+        private void RunThenStopLiveAlgorithm(int projectId)
+        {
+            Thread.Sleep(120000);
+
+            var stopLive = ApiClient.StopLiveAlgorithm(projectId);
+            Assert.IsTrue(stopLive.Success, $"ApiClient.StopLiveAlgorithm(): Error: {string.Join(",", stopLive.Errors)}");
+        }
+
+        /// <summary>
+        /// Polls the first page of insights of the deployment, or of every deployment of the project when no algorithm id is given,
+        /// until it holds at least one insight
+        /// </summary>
+        private InsightResponse WaitForLiveInsights(int projectId, string algorithmId)
+        {
+            InsightResponse insights;
+            var finish = DateTime.UtcNow.AddMinutes(2);
+            do
+            {
+                Thread.Sleep(5000);
+                insights = ApiClient.ReadLiveInsights(projectId, algorithmId, 0, 5);
+            }
+            while (finish > DateTime.UtcNow && !insights.Insights.Any());
+
+            Assert.IsTrue(insights.Success, $"ApiClient.ReadLiveInsights(): Error: {string.Join(",", insights.Errors)}");
+            Assert.IsNotEmpty(insights.Insights, $"No insights reported for the {algorithmId ?? "project"} in time");
+            return insights;
         }
 
         private void GetProjectAndCompileIdToReadInsights(out int projectId, out string compileId)

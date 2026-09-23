@@ -14,7 +14,6 @@
 */
 
 using System;
-using System.Linq;
 using Newtonsoft.Json;
 using QuantConnect.Util;
 using QuantConnect.Orders;
@@ -74,28 +73,29 @@ namespace QuantConnect.Api
         {
             var jObject = JObject.Load(reader);
 
-            // We don't deserialize the json object directly since it contains properties such as `files` and `charts`
-            // that need to be deserialized in a different way
+            // `files` and `charts` need their own deserialization, and every field is optional since an
+            // errored or not yet started deployment only reports a subset of them
             var liveAlgoResults = new LiveAlgorithmResults
             {
-                Message = jObject["message"].Value<string>(),
-                Status = jObject["status"].Value<string>(),
-                DeployId = jObject["deployId"].Value<string>(),
-                CloneId = jObject["cloneId"].Value<int>(),
-                Launched = jObject["launched"].Value<DateTime>(),
-                Stopped = jObject["stopped"].Value<DateTime?>(),
-                Brokerage = jObject["brokerage"].Value<string>(),
-                SecurityTypes = jObject["securityTypes"].Value<string>(),
-                ProjectName = jObject["projectName"].Value<string>(),
-                Datacenter = jObject["datacenter"].Value<string>(),
-                Public = jObject["public"].Value<bool>(),
-                Success = jObject["success"].Value<bool>()
+                Message = jObject.Value<string>("message"),
+                Status = jObject.Value<string>("status"),
+                DeployId = jObject.Value<string>("deployId"),
+                CloneId = jObject.Value<int>("cloneId"),
+                Launched = jObject.Value<DateTime>("launched"),
+                Stopped = jObject.Value<DateTime?>("stopped"),
+                Brokerage = jObject.Value<string>("brokerage"),
+                SecurityTypes = jObject.Value<string>("securityTypes"),
+                ProjectName = jObject.Value<string>("projectName"),
+                Description = jObject.Value<string>("description"),
+                Datacenter = jObject.Value<string>("datacenter"),
+                Public = jObject.Value<bool>("public"),
+                Success = jObject.Value<bool>("success"),
+                Errors = jObject["errors"]?.ToObject<List<string>>()
             };
 
             if (!liveAlgoResults.Success)
             {
                 // Either there was an error in the running algorithm or the algorithm hasn't started
-                liveAlgoResults.Errors = jObject.Last.Children().Select(error => error.ToString()).ToList();
                 return liveAlgoResults;
             }
 

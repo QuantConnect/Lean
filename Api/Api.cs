@@ -136,14 +136,40 @@ namespace QuantConnect.Api
         /// <summary>
         /// List details of all projects
         /// </summary>
+        /// <param name="start">Starting (inclusive, zero-based) index of the projects to be fetched, for example 0</param>
+        /// <param name="end">Last (exclusive) index of the projects to be fetched, for example 100. Zero to let the API apply its own limit</param>
         /// <returns><see cref="ProjectResponse"/> that contains information regarding the project</returns>
 
-        public ProjectResponse ListProjects()
+        public ProjectResponse ListProjects(int start = 0, int end = 0)
         {
-            TryJsonPost("projects/read", out ProjectResponse result);
+            object payload = end > 0 ? new { start, end } : new { start };
+            TryJsonPost("projects/read", out ProjectResponse result, payload);
             return result;
         }
 
+        /// <summary>
+        /// Update a project's name or description
+        /// </summary>
+        /// <param name="projectId">Project id to update</param>
+        /// <param name="name">The new name for the project, for example "New Project Name", null to leave it unchanged</param>
+        /// <param name="description">The new description for the project, for example "New Project Description", null to leave it unchanged</param>
+        /// <returns><see cref="RestResponse"/> indicating success</returns>
+
+        public RestResponse UpdateProject(int projectId, string name = null, string description = null)
+        {
+            var payload = new Dictionary<string, object> { { "projectId", projectId } };
+            if (name != null)
+            {
+                payload["name"] = name;
+            }
+            if (description != null)
+            {
+                payload["description"] = description;
+            }
+
+            TryJsonPost("projects/update", out RestResponse result, payload);
+            return result;
+        }
 
         /// <summary>
         /// Add a file to a project
@@ -326,22 +352,20 @@ namespace QuantConnect.Api
         /// <param name="projectId">Id for the project to backtest</param>
         /// <param name="compileId">Compile id for the project</param>
         /// <param name="backtestName">Name for the new backtest</param>
+        /// <param name="parameters">Parameters to use for the backtest, null to use the ones defined in the project</param>
         /// <returns><see cref="Backtest"/>t</returns>
 
-        public Backtest CreateBacktest(int projectId, string compileId, string backtestName)
+        public Backtest CreateBacktest(int projectId, string compileId, string backtestName, Dictionary<string, string> parameters = null)
         {
-            TryJsonPost("backtests/create",
-                out BacktestResponseWrapper result,
-                new
-                {
-                    projectId,
-                    compileId,
-                    backtestName
-                });
+            object payload = parameters == null
+                ? new { projectId, compileId, backtestName }
+                : new { projectId, compileId, backtestName, parameters };
+            TryJsonPost("backtests/create", out BacktestResponseWrapper result, payload);
 
             // Use API Response values for Backtest Values
             result.Backtest.Success = result.Success;
             result.Backtest.Errors = result.Errors;
+            result.Backtest.Debugging = result.Debugging;
 
             // Return only the backtest object
             return result.Backtest;
@@ -407,6 +431,7 @@ namespace QuantConnect.Api
             // Use API Response values for Backtest Values
             result.Backtest.Success = result.Success;
             result.Backtest.Errors = result.Errors;
+            result.Backtest.Debugging = result.Debugging;
 
             // Return only the backtest object
             return result.Backtest;
@@ -547,7 +572,7 @@ namespace QuantConnect.Api
         {
             end = ResolveWindowEnd(start, end, MaxInsightsWindow, "insights");
 
-            TryJsonPost("backtests/insights/read", out InsightResponse result, new { projectId, backtestId, start, end });
+            TryJsonPost("backtests/read/insights", out InsightResponse result, new { projectId, backtestId, start, end });
             return result;
         }
 
@@ -654,8 +679,9 @@ namespace QuantConnect.Api
         /// Get a list of live running algorithms for user
         /// </summary>
         /// <param name="status">Filter the statuses of the algorithms returned from the api</param>
+        /// <param name="projectId">Id of the project to include in the response, for example 23456789, null to include every project</param>
         /// <returns><see cref="LiveList"/></returns>
-        public LiveList ListLiveAlgorithms(AlgorithmStatus? status = null)
+        public LiveList ListLiveAlgorithms(AlgorithmStatus? status = null, int? projectId = null)
         {
             // Only the following statuses are supported by the Api
             if (status.HasValue &&
@@ -668,23 +694,29 @@ namespace QuantConnect.Api
                     "The Api only supports Algorithm Statuses of Running, Stopped, RuntimeError and Liquidated");
             }
 
-            var payload = status.HasValue
-                ? new { status = status.ToString() }
-                : null;
-            TryJsonPost("live/list", out LiveList result, payload);
+            var payload = new Dictionary<string, object>();
+            if (status.HasValue)
+            {
+                payload["status"] = status.ToString();
+            }
+            if (projectId.HasValue)
+            {
+                payload["projectId"] = projectId.Value;
+            }
+
+            TryJsonPost("live/list", out LiveList result, payload.Count > 0 ? payload : null);
             return result;
         }
 
         /// <summary>
-        /// Read out a live algorithm in the project id specified.
+        /// Read out the latest deployment of the live algorithm of the project id specified.
         /// </summary>
         /// <param name="projectId">Project id to read</param>
-        /// <param name="deployId">Specific instance id to read</param>
         /// <returns><see cref="LiveAlgorithmResults"/></returns>
 
-        public LiveAlgorithmResults ReadLiveAlgorithm(int projectId, string deployId)
+        public LiveAlgorithmResults ReadLiveAlgorithm(int projectId)
         {
-            TryJsonPost("live/read", out LiveAlgorithmResults result, new { projectId, deployId });
+            TryJsonPost("live/read", out LiveAlgorithmResults result, new { projectId });
             return result;
         }
 
@@ -703,7 +735,8 @@ namespace QuantConnect.Api
         /// Returns the orders of the specified project id live algorithm.
         /// </summary>
         /// <param name="projectId">Id of the project from which to read the live orders</param>
-        /// <param name="algorithmId">Deploy id (algorithm id) of the live running algorithm, null for the latest deployment of the project</param>
+        /// <param name="algorithmId">Deploy id (algorithm id) of the live running algorithm, for example
+        /// "L-6e9d8a78f5af89d401f630585be90e43", null for the latest deployment of the project</param>
         /// <param name="start">Starting index of the orders to be fetched</param>
         /// <param name="end">Last index of the orders to be fetched. Note that end - start must not exceed 100.
         /// Defaults to a full window starting at <paramref name="start"/></param>
@@ -842,17 +875,36 @@ namespace QuantConnect.Api
         /// Read out the insights of a live algorithm
         /// </summary>
         /// <param name="projectId">Id of the project from which to read the live algorithm</param>
+        /// <param name="algorithmId">Deploy id (algorithm id) of the live running algorithm, for example
+        /// "L-6e9d8a78f5af89d401f630585be90e43", null for the latest deployment of the project</param>
         /// <param name="start">Starting index of the insights to be fetched</param>
         /// <param name="end">Last index of the insights to be fetched. Note that end - start must not exceed 100.
         /// Defaults to a full window starting at <paramref name="start"/></param>
         /// <returns><see cref="InsightResponse"/></returns>
         /// <exception cref="ArgumentException">The requested window is wider than the documented maximum</exception>
-        public InsightResponse ReadLiveInsights(int projectId, int start = 0, int end = 0)
+        public InsightResponse ReadLiveInsights(int projectId, string algorithmId, int start = 0, int end = 0)
         {
             end = ResolveWindowEnd(start, end, MaxInsightsWindow, "insights");
 
-            TryJsonPost("live/insights/read", out InsightResponse result, new { projectId, start, end });
+            object payload = string.IsNullOrEmpty(algorithmId)
+                ? new { projectId, start, end }
+                : new { projectId, start, end, algorithmId };
+            TryJsonPost("live/insights/read", out InsightResponse result, payload);
             return result;
+        }
+
+        /// <summary>
+        /// Read out the insights of the latest deployment of a live algorithm
+        /// </summary>
+        /// <param name="projectId">Id of the project from which to read the live algorithm</param>
+        /// <param name="start">Starting index of the insights to be fetched</param>
+        /// <param name="end">Last index of the insights to be fetched. Note that end - start must not exceed 100.
+        /// Defaults to a full window starting at <paramref name="start"/></param>
+        /// <returns><see cref="InsightResponse"/></returns>
+        [Obsolete("Use the overload taking the algorithm id: ReadLiveInsights(projectId, algorithmId, start, end)")]
+        public InsightResponse ReadLiveInsights(int projectId, int start = 0, int end = 0)
+        {
+            return ReadLiveInsights(projectId, null, start, end);
         }
 
         /// <summary>
@@ -928,7 +980,8 @@ namespace QuantConnect.Api
             var payloadStr = JsonConvert.SerializeObject(new { backtestId, projectId });
             var report = new BacktestReport();
             var finish = DateTime.UtcNow.AddMinutes(1);
-            while (DateTime.UtcNow < finish && !report.Success)
+            // The endpoint answers with a generating response until the report is ready
+            while (DateTime.UtcNow < finish && (!report.Success || report.Generating))
             {
                 Thread.Sleep(10000);
                 using var request = ApiUtils.CreateJsonPostRequest("backtests/read/report", payloadStr);
