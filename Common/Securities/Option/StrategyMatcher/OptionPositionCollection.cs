@@ -604,7 +604,7 @@ namespace QuantConnect.Securities.Option.StrategyMatcher
                 }
             }
 
-            return string.CompareOrdinal(left.Symbol.ID.ToString(), right.Symbol.ID.ToString());
+            return left.Symbol.ID.CompareTo(right.Symbol.ID);
         }
 
         /// <summary>
