@@ -37,6 +37,7 @@ using QuantConnect.Securities.Future;
 using QuantConnect.Securities.IndexOption;
 using QuantConnect.Securities.Option;
 using QuantConnect.Tests.Engine.DataFeeds;
+using QuantConnect.Tests.Engine.HistoricalData;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -145,6 +146,65 @@ namespace QuantConnect.Tests.Algorithm
             Assert.Greater(nonUniverseSubscriptions.Count, 0);
             Assert.That(nonUniverseSubscriptions.Select(x => x.ExtendedMarketHours),
                 Has.All.EqualTo(extendedMarketHours));
+        }
+
+        [TestCase("KM", Market.KRX, DataMappingMode.LastTradingDay, true)]
+        [TestCase("FESX", Market.EUREX, DataMappingMode.LastTradingDay, true)]
+        [TestCase("ES", Market.CME, DataMappingMode.OpenInterest, false)]
+        public void AddFutureDefaultsToAvailableDataMappingMode(string ticker, string market, DataMappingMode expectedMode, bool expectWarning)
+        {
+            var future = _algo.AddFuture(ticker, Resolution.Daily, market);
+            // a second fallback does not repeat the warning
+            _algo.AddFuture("HSI", Resolution.Daily, Market.HKFE);
+
+            var continuousConfigs = _algo.SubscriptionManager.SubscriptionDataConfigService
+                .GetSubscriptionDataConfigs(future.Symbol, includeInternalConfigs: true)
+                .Where(x => x.Type != typeof(FutureUniverse))
+                .ToList();
+            Assert.Greater(continuousConfigs.Count, 0);
+            Assert.That(continuousConfigs.Select(x => x.DataMappingMode), Has.All.EqualTo(expectedMode));
+
+            var warnings = _algo.DebugMessages.Where(x => x.Contains("data mapping mode is not available")).ToList();
+            Assert.AreEqual(1, warnings.Count);
+            var expectedMarket = expectWarning ? market : Market.HKFE;
+            Assert.That(warnings[0], Does.EndWith($"Warning: OpenInterest data mapping mode is not available for {expectedMarket.ToUpperInvariant()} futures, using LastTradingDay instead."));
+        }
+
+        [TestCase("KM", Market.KRX, DataMappingMode.OpenInterest, true)]
+        [TestCase("FESX", Market.EUREX, DataMappingMode.OpenInterestAnnual, true)]
+        [TestCase("FESX", Market.EUREX, DataMappingMode.LastTradingDay, false)]
+        [TestCase("ES", Market.CME, DataMappingMode.OpenInterest, false)]
+        public void AddFutureWithExplicitUnavailableDataMappingModeWarnsOnce(string ticker, string market, DataMappingMode dataMappingMode, bool expectWarning)
+        {
+            var future = _algo.AddFuture(ticker, Resolution.Daily, market, dataMappingMode: dataMappingMode);
+            _algo.AddFuture("HSI", Resolution.Daily, Market.HKFE, dataMappingMode: DataMappingMode.OpenInterest);
+
+            var continuousConfigs = _algo.SubscriptionManager.SubscriptionDataConfigService
+                .GetSubscriptionDataConfigs(future.Symbol, includeInternalConfigs: true)
+                .Where(x => x.Type != typeof(FutureUniverse))
+                .ToList();
+            // the explicit mode is respected, not replaced by the fallback
+            Assert.That(continuousConfigs.Select(x => x.DataMappingMode), Has.All.EqualTo(dataMappingMode));
+            Assert.IsFalse(_algo.DebugMessages.Any(x => x.Contains("using LastTradingDay instead.")));
+
+            var warnings = _algo.DebugMessages.Where(x => x.Contains("no contract will be mapped")).ToList();
+            Assert.AreEqual(1, warnings.Count);
+            var expected = expectWarning
+                ? $"Warning: {dataMappingMode} data mapping mode is not available for {market.ToUpperInvariant()} futures, no contract will be mapped. Use LastTradingDay instead."
+                : "Warning: OpenInterest data mapping mode is not available for HKFE futures, no contract will be mapped. Use LastTradingDay instead.";
+            Assert.That(warnings[0], Does.EndWith(expected));
+        }
+
+        [Test]
+        public void HistoryWithExplicitUnavailableDataMappingModeWarnsOnce()
+        {
+            var future = _algo.AddFuture("FESX", Resolution.Daily, Market.EUREX);
+            _algo.HistoryProvider = new TestHistoryProvider();
+
+            _algo.History(future.Symbol, 5, Resolution.Daily, dataMappingMode: DataMappingMode.OpenInterest).ToList();
+            _algo.History(future.Symbol, 5, Resolution.Daily, dataMappingMode: DataMappingMode.OpenInterest).ToList();
+
+            Assert.AreEqual(1, _algo.DebugMessages.Count(x => x.Contains("no contract will be mapped")));
         }
 
         [TestCaseSource(nameof(FuturesTestCases))]

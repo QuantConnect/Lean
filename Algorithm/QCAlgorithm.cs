@@ -153,6 +153,8 @@ namespace QuantConnect.Algorithm
         private int? _warmupBarCount;
         private Dictionary<string, string> _parameters = new Dictionary<string, string>();
         private bool _deploymentDetailsSet;
+        private bool _dataMappingModeFallbackWarningSent;
+        private bool _unavailableDataMappingModeWarningSent;
         private SecurityDefinitionSymbolResolver _securityDefinitionSymbolResolver;
 
         private SecurityDefinitionSymbolResolver SecurityDefinitionSymbolResolver
@@ -2095,6 +2097,8 @@ namespace QuantConnect.Algorithm
                     }
                     else
                     {
+                        WarnIfDataMappingModeUnavailable(symbol, dataMappingMode);
+
                         // add the expected configurations of the canonical symbol right away, will allow it to warmup and indicators register to them
                         var dataTypes = SubscriptionManager.LookupSubscriptionConfigDataTypes(SecurityType.Future,
                             GetResolution(symbol, resolution, null), isCanonical: false);
@@ -2102,7 +2106,7 @@ namespace QuantConnect.Algorithm
                         {
                             ExtendedMarketHours = extendedMarketHours.Value,
                             FillForward = fillForward.Value,
-                            DataMappingMode = dataMappingMode ?? UniverseSettings.GetUniverseMappingModeOrDefault(symbol.SecurityType, symbol.ID.Market),
+                            DataMappingMode = dataMappingMode ?? GetUniverseMappingModeOrDefault(symbol),
                             DataNormalizationMode = dataNormalizationMode ?? UniverseSettings.GetUniverseNormalizationModeOrDefault(symbol.SecurityType),
                             ContractDepthOffset = (int)contractOffset,
                             SubscriptionDataTypes = dataTypes,
@@ -2131,6 +2135,33 @@ namespace QuantConnect.Algorithm
             }
 
             return AddToUserDefinedUniverse(security, configs);
+        }
+
+        /// <summary>
+        /// Gets the default data mapping mode for the given symbol, warning once if the universe settings mode is not available for its market
+        /// </summary>
+        private DataMappingMode GetUniverseMappingModeOrDefault(Symbol symbol)
+        {
+            var dataMappingMode = UniverseSettings.GetUniverseMappingModeOrDefault(symbol.SecurityType, symbol.ID.Market);
+            if (dataMappingMode != UniverseSettings.DataMappingMode && !_dataMappingModeFallbackWarningSent)
+            {
+                _dataMappingModeFallbackWarningSent = true;
+                Debug($"Warning: {UniverseSettings.DataMappingMode} data mapping mode is not available for {symbol.ID.Market.ToUpperInvariant()} futures, using {dataMappingMode} instead.");
+            }
+            return dataMappingMode;
+        }
+
+        /// <summary>
+        /// Warns once if an explicitly requested data mapping mode has no mapping data for the future's market
+        /// </summary>
+        private void WarnIfDataMappingModeUnavailable(Symbol symbol, DataMappingMode? dataMappingMode)
+        {
+            if (dataMappingMode.HasValue && symbol.SecurityType == SecurityType.Future && !_unavailableDataMappingModeWarningSent
+                && !dataMappingMode.Value.IsAvailableForFutureMarket(symbol.ID.Market))
+            {
+                _unavailableDataMappingModeWarningSent = true;
+                Debug($"Warning: {dataMappingMode} data mapping mode is not available for {symbol.ID.Market.ToUpperInvariant()} futures, no contract will be mapped. Use {DataMappingMode.LastTradingDay} instead.");
+            }
         }
 
         /// <summary>

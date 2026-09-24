@@ -1104,6 +1104,7 @@ namespace QuantConnect.Algorithm
         {
             return symbols.Where(HistoryRequestValid).SelectMany(x =>
             {
+                WarnIfDataMappingModeUnavailable(x, dataMappingMode);
                 var requests = new List<HistoryRequest>();
 
                 foreach (var config in GetMatchingSubscriptions(x, requestedType, resolution))
@@ -1148,6 +1149,8 @@ namespace QuantConnect.Algorithm
         {
             return symbols.Where(HistoryRequestValid).SelectMany(symbol =>
             {
+                WarnIfDataMappingModeUnavailable(symbol, dataMappingMode);
+
                 // Match or create configs for the symbol
                 var configs = GetMatchingSubscriptions(symbol, requestedType, resolution, useAllSubscriptions).ToList();
                 if (configs.Count == 0)
@@ -1293,7 +1296,7 @@ namespace QuantConnect.Algorithm
                 // Inherit values from existing subscriptions or use defaults
                 var extendedMarketHours = userConfigIfAny?.ExtendedMarketHours ?? UniverseSettings.ExtendedMarketHours;
                 var dataNormalizationMode = userConfigIfAny?.DataNormalizationMode ?? UniverseSettings.GetUniverseNormalizationModeOrDefault(symbol.SecurityType);
-                var dataMappingMode = userConfigIfAny?.DataMappingMode ?? UniverseSettings.GetUniverseMappingModeOrDefault(symbol.SecurityType, symbol.ID.Market);
+                var dataMappingMode = userConfigIfAny?.DataMappingMode ?? GetUniverseMappingModeOrDefault(symbol);
                 var contractDepthOffset = userConfigIfAny?.ContractDepthOffset ?? (uint)Math.Abs(UniverseSettings.ContractDepthOffset);
 
                 // If type was specified and not a lean data type and also not abstract, we create a new subscription
