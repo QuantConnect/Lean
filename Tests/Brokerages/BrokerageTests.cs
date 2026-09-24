@@ -566,7 +566,7 @@ namespace QuantConnect.Tests.Brokerages
 
         /// <summary>
         /// Places a set of resting contingent orders: all of them are working, the ones triggered by another held.
-        /// Canceling the first order cancels the whole set
+        /// Canceling the first order cancels the orders it triggers too. Whether the rest of its group is canceled depends on the brokerage
         /// </summary>
         public virtual void ContingentOrdersCancel(ContingentOrderTestParameters parameters)
         {
@@ -574,8 +574,9 @@ namespace QuantConnect.Tests.Brokerages
             Assert.IsTrue(orders.All(order => order.GetContingencyLink(ContingencyRole.Child) == null || order.IsWaitingForTrigger()), "The triggered orders should be held");
 
             var first = orders.First();
+            var canceledOrders = first.GetContingentDescendants(orders).Append(first).ToList();
             Assert.IsTrue(Brokerage.CancelOrder(first), $"Brokerage failed to cancel the order: {first}");
-            WaitForOrders(() => orders.All(order => order.Status == OrderStatus.Canceled), "all the orders canceled");
+            WaitForOrders(() => canceledOrders.All(order => order.Status == OrderStatus.Canceled), "the order and the orders it triggers canceled");
         }
 
         /// <summary>
@@ -628,7 +629,7 @@ namespace QuantConnect.Tests.Brokerages
                 Assert.IsTrue(Brokerage.PlaceOrder(order), $"Brokerage failed to place the order: {order}");
             }
             WaitForOrders(() => orders[0].Status == OrderStatus.Filled
-                && orders[0].GetContingentChildren(orders).All(child => !child.IsWaitingForTrigger() && child.Status == OrderStatus.Submitted),
+                && orders[0].GetContingentChildren(orders).All(child => !child.IsWaitingForTrigger() && child.Status is OrderStatus.Submitted or OrderStatus.UpdateSubmitted),
                 "the first order filled and the orders it triggers working");
         }
 

@@ -204,8 +204,23 @@ namespace QuantConnect.Orders
         /// </summary>
         internal IEnumerable<OrderType> GetParentOrderTypes()
         {
-            var child = GetLink(ContingencyRole.Child);
-            if (child == null)
+            return GetOrderTypes(GetLink(ContingencyRole.Child), ContingencyRole.Parent);
+        }
+
+        /// <summary>
+        /// The order types of the members of the group of this order, like the ones where one cancels the other, including this order
+        /// </summary>
+        internal IEnumerable<OrderType> GetSiblingOrderTypes()
+        {
+            return GetOrderTypes(GetLink(null), null);
+        }
+
+        /// <summary>
+        /// The order types of the orders of the set with a link of the given role to the given contingency
+        /// </summary>
+        private IEnumerable<OrderType> GetOrderTypes(ContingencyLink link, ContingencyRole? role)
+        {
+            if (link == null)
             {
                 yield break;
             }
@@ -218,7 +233,7 @@ namespace QuantConnect.Orders
                 }
                 for (var i = 0; i < links.Count; i++)
                 {
-                    if (links[i].Role == ContingencyRole.Parent && links[i].Id == child.Id)
+                    if (links[i].Role == role && links[i].Id == link.Id)
                     {
                         yield return member.OrderType;
                         break;

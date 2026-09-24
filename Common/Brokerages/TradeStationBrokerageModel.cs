@@ -157,11 +157,19 @@ namespace QuantConnect.Brokerages
                 return false;
             }
 
-            if (order.GetSiblingLink()?.Type == ContingencyType.OneUpdatesOther && order.Contingency.Symbols.Count > 1)
+            if (order.GetSiblingLink()?.Type == ContingencyType.OneUpdatesOther)
             {
-                // a bracket (BRK) group, where a fill reduces the other orders, requires the same symbol
-                message = this.UnsupportedContingentOrdersShape($"{ContingencyType.OneUpdatesOther} orders have to be for the same symbol.");
-                return false;
+                // a bracket (BRK) group, where a fill reduces the other orders, requires the same symbol and a stop order
+                if (order.Contingency.Symbols.Count > 1)
+                {
+                    message = this.UnsupportedContingentOrdersShape($"{ContingencyType.OneUpdatesOther} orders have to be for the same symbol.");
+                    return false;
+                }
+                if (!order.Contingency.GetSiblingOrderTypes().Any(type => type is OrderType.StopMarket or OrderType.StopLimit or OrderType.TrailingStop))
+                {
+                    message = this.UnsupportedContingentOrdersShape($"{ContingencyType.OneUpdatesOther} orders require a stop order.");
+                    return false;
+                }
             }
 
             if (!BrokerageExtensions.ValidateCrossZeroOrder(this, security, order, out message, NotSupportedCrossZeroOrderTypes))

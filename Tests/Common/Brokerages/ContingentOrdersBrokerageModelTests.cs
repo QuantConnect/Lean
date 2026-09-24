@@ -140,6 +140,8 @@ namespace QuantConnect.Tests.Common.Brokerages
             AssertCanSubmit(model, CreateBracket(Symbols.SPY, ContingencyType.OneUpdatesOther), true);
             AssertCanSubmit(model, CreateOneCancelsOther(Symbols.SPY, Symbols.AAPL), true);
             AssertCanSubmit(model, CreateOneCancelsOther(Symbols.SPY, Symbols.AAPL, ContingencyType.OneUpdatesOther), false, "same symbol");
+            AssertCanSubmit(model, ToOrders(Factory.OneUpdatesOther(Factory.LimitOrder(Symbols.SPY, -1, 110), Factory.LimitOrder(Symbols.SPY, -1, 111))[0]),
+                false, "require a stop order");
             AssertCanSubmit(model, CreateChain(), false, "can not trigger other orders in turn");
         }
 
