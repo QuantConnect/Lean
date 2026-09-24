@@ -44,6 +44,7 @@ namespace QuantConnect.Securities.Option.StrategyMatcher
         private readonly ImmutableDictionary<PositionSide, ImmutableHashSet<Symbol>> _sides;
         private readonly ImmutableSortedDictionary<decimal,  ImmutableHashSet<Symbol>> _strikes;
         private readonly ImmutableSortedDictionary<DateTime, ImmutableHashSet<Symbol>> _expirations;
+        private OptionPosition[] _orderedPositions;
 
         /// <summary>
         /// Gets the underlying security's symbol
@@ -569,7 +570,41 @@ namespace QuantConnect.Securities.Option.StrategyMatcher
         /// <returns>An enumerator that can be used to iterate through the collection.</returns>
         public IEnumerator<OptionPosition> GetEnumerator()
         {
-            return _positions.Select(kvp => kvp.Value).GetEnumerator();
+            // hash order depends on per-process string hashes, so a fixed order keeps matching reproducible
+            if (_orderedPositions == null)
+            {
+                var positions = _positions.Values.ToArray();
+                Array.Sort(positions, ComparePositions);
+                _orderedPositions = positions;
+            }
+            return ((IEnumerable<OptionPosition>)_orderedPositions).GetEnumerator();
+        }
+
+        private static int ComparePositions(OptionPosition left, OptionPosition right)
+        {
+            if (left.IsUnderlying != right.IsUnderlying)
+            {
+                return left.IsUnderlying ? -1 : 1;
+            }
+
+            if (!left.IsUnderlying)
+            {
+                var comparison = left.Expiration.CompareTo(right.Expiration);
+                if (comparison == 0)
+                {
+                    comparison = left.Strike.CompareTo(right.Strike);
+                }
+                if (comparison == 0)
+                {
+                    comparison = left.Right.CompareTo(right.Right);
+                }
+                if (comparison != 0)
+                {
+                    return comparison;
+                }
+            }
+
+            return left.Symbol.ID.CompareTo(right.Symbol.ID);
         }
 
         /// <summary>
