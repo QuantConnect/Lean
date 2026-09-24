@@ -214,7 +214,9 @@ namespace QuantConnect.Tests.API
                         return backtest;
                     }
                 }
-            } while (((backtest == null || (backtest.Success && backtest.Progress < 1)) && DateTime.UtcNow < finish));
+            // The api can report full progress before it stores the final statistics
+            } while ((backtest == null || (backtest.Success && (backtest.Progress < 1 || backtest.Statistics?.ContainsKey("Total Orders") != true)))
+                && DateTime.UtcNow < finish);
 
             return backtest;
         }

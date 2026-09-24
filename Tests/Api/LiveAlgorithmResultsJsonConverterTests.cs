@@ -100,6 +100,24 @@ namespace QuantConnect.Tests.API
             Assert.AreEqual("My project", result.Description);
         }
 
+        [Test]
+        public void DeserializesFilesWithoutModifiedDateOrId()
+        {
+            var json = @"{
+                ""success"": true,
+                ""files"": [ { ""id"": null, ""content"": ""code"", ""modified"": null, ""name"": ""Main.cs"", ""open"": false, ""isLibrary"": false, ""projectId"": 123 } ]
+            }";
+            var result = JsonConvert.DeserializeObject<LiveAlgorithmResults>(json, new LiveAlgorithmResultsJsonConverter());
+
+            Assert.AreEqual(1, result.Files.Count);
+            var file = result.Files[0];
+            Assert.AreEqual("Main.cs", file.Name);
+            Assert.AreEqual("code", file.Code);
+            Assert.AreEqual(123, file.ProjectId);
+            Assert.IsNull(file.DateModified);
+            Assert.IsNull(file.Id);
+        }
+
         private static LiveAlgorithmResults Deserialize(string extraFields = "")
         {
             var json = $@"{{
