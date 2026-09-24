@@ -13,6 +13,8 @@
  * limitations under the License.
 */
 
+using System;
+
 namespace QuantConnect.Indicators
 {
     /// <summary>
@@ -67,11 +69,16 @@ namespace QuantConnect.Indicators
         /// Initializes a new instance of the <see cref="RegressionChannel"/> class.
         /// </summary>
         /// <param name="name">The name of this indicator</param>
-        /// <param name="period">The number of data points to hold in the window</param>
+        /// <param name="period">The number of data points to hold in the window, must be greater than one</param>
         /// <param name="k">The number of standard deviations specifying the distance between the linear regression and upper or lower channel lines</param>
         public RegressionChannel(string name, int period, decimal k)
             : base(name)
         {
+            if (period < 2)
+            {
+                throw new ArgumentException($"Period parameter for RegressionChannel indicator must be greater than 1 but was {period}.");
+            }
+
             _standardDeviation = new StandardDeviation(period);
             LinearRegression = new LeastSquaresMovingAverage(name + "_LinearRegression", period);
             LowerChannel = LinearRegression.Minus(_standardDeviation.Times(k), name + "_LowerChannel");
@@ -82,7 +89,7 @@ namespace QuantConnect.Indicators
         /// <summary>
         /// Initializes a new instance of the <see cref="LeastSquaresMovingAverage"/> class.
         /// </summary>
-        /// <param name="period">The number of data points to hold in the window.</param>
+        /// <param name="period">The number of data points to hold in the window, must be greater than one.</param>
         /// <param name="k">The number of standard deviations specifying the distance between the linear regression and upper or lower channel lines</param>
         public RegressionChannel(int period, decimal k)
             : this($"RC({period},{k})", period, k)

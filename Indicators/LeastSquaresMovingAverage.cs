@@ -52,10 +52,15 @@ namespace QuantConnect.Indicators
         /// Initializes a new instance of the <see cref="LeastSquaresMovingAverage"/> class.
         /// </summary>
         /// <param name="name">The name of this indicator</param>
-        /// <param name="period">The number of data points to hold in the window</param>
+        /// <param name="period">The number of data points to hold in the window, must be greater than one</param>
         public LeastSquaresMovingAverage(string name, int period)
             : base(name, period)
         {
+            if (period < 2)
+            {
+                throw new ArgumentException($"Period parameter for LeastSquaresMovingAverage indicator must be greater than 1 but was {period}.");
+            }
+
             _t = Vector<double>.Build.Dense(period, i => i + 1).ToArray();
             Intercept = new Identity(name + "_Intercept");
             Slope = new Identity(name + "_Slope");
@@ -64,7 +69,7 @@ namespace QuantConnect.Indicators
         /// <summary>
         /// Initializes a new instance of the <see cref="LeastSquaresMovingAverage"/> class.
         /// </summary>
-        /// <param name="period">The number of data points to hold in the window.</param>
+        /// <param name="period">The number of data points to hold in the window, must be greater than one.</param>
         public LeastSquaresMovingAverage(int period)
             : this($"LSMA({period})", period)
         {
