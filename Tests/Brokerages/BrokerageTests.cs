@@ -625,7 +625,8 @@ namespace QuantConnect.Tests.Brokerages
             var orders = PlaceOrderWaitForStatus(parameters.CreateOrders(GetDefaultQuantity()), OrderStatus.Submitted);
 
             var openOrders = Brokerage.GetOpenOrders();
-            var rebuiltOrders = orders.Select(order => openOrders.SingleOrDefault(openOrder => openOrder.BrokerId.Contains(order.BrokerId[0]))).ToList();
+            // the legs of a combo order share the brokerage id
+            var rebuiltOrders = orders.Select(order => openOrders.SingleOrDefault(openOrder => openOrder.BrokerId.Contains(order.BrokerId[0]) && openOrder.Symbol == order.Symbol)).ToList();
             Assert.IsTrue(rebuiltOrders.All(order => order?.Contingency != null),
                 $"Every order should be rebuilt with its contingency: [{string.Join(", ", rebuiltOrders.Select(order => order == null ? "missing" : $"{order}: {order.Contingency}"))}]");
             Assert.IsTrue(rebuiltOrders.All(order => ReferenceEquals(order.Contingency.OrderIds, rebuiltOrders[0].Contingency.OrderIds) && order.Contingency.Count == orders.Count),
