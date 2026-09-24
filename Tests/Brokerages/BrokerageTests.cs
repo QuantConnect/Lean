@@ -617,6 +617,29 @@ namespace QuantConnect.Tests.Brokerages
         }
 
         /// <summary>
+        /// Places a set of resting contingent orders: the brokerage open orders are rebuilt with the same contingencies,
+        /// like when an algorithm is deployed with existing open orders
+        /// </summary>
+        public virtual void ContingentOrdersGetOpenOrders(ContingentOrderTestParameters parameters)
+        {
+            var orders = PlaceOrderWaitForStatus(parameters.CreateOrders(GetDefaultQuantity()), OrderStatus.Submitted);
+
+            var openOrders = Brokerage.GetOpenOrders();
+            var rebuiltOrders = orders.Select(order => openOrders.SingleOrDefault(openOrder => openOrder.BrokerId.Contains(order.BrokerId[0]))).ToList();
+            Assert.IsTrue(rebuiltOrders.All(order => order?.Contingency != null),
+                $"Every order should be rebuilt with its contingency: [{string.Join(", ", rebuiltOrders.Select(order => order == null ? "missing" : $"{order}: {order.Contingency}"))}]");
+            Assert.IsTrue(rebuiltOrders.All(order => ReferenceEquals(order.Contingency.OrderIds, rebuiltOrders[0].Contingency.OrderIds) && order.Contingency.Count == orders.Count),
+                "The rebuilt orders should share a single set");
+
+            foreach (var (order, rebuiltOrder) in orders.Zip(rebuiltOrders))
+            {
+                CollectionAssert.AreEquivalent(order.Contingency.Links.Select(link => (link.Type, link.Role)), rebuiltOrder.Contingency.Links.Select(link => (link.Type, link.Role)),
+                    $"The rebuilt links of {order}");
+                Assert.AreEqual(order.IsWaitingForTrigger(), rebuiltOrder.IsWaitingForTrigger(), $"The rebuilt order should be held as {order}");
+            }
+        }
+
+        /// <summary>
         /// Places a set of contingent orders where the first order fills right away, like a market entry:
         /// the orders it triggers are released and working
         /// </summary>
