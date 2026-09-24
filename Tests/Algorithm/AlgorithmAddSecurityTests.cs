@@ -196,6 +196,47 @@ namespace QuantConnect.Tests.Algorithm
         }
 
         [Test]
+        public void AddFutureAgainWithDifferentSettingsWarnsOnce()
+        {
+            var future = _algo.AddFuture(Futures.Indices.SP500EMini, Resolution.Daily, dataMappingMode: DataMappingMode.OpenInterest);
+            _algo.AddFuture(Futures.Indices.SP500EMini, Resolution.Daily, dataMappingMode: DataMappingMode.LastTradingDay);
+            _algo.AddFuture(Futures.Indices.SP500EMini, Resolution.Daily, dataMappingMode: DataMappingMode.FirstDayMonth);
+
+            var continuousConfigs = _algo.SubscriptionManager.SubscriptionDataConfigService
+                .GetSubscriptionDataConfigs(future.Symbol, includeInternalConfigs: true)
+                .Where(x => x.Type != typeof(FutureUniverse))
+                .ToList();
+            Assert.That(continuousConfigs.Select(x => x.DataMappingMode), Has.All.EqualTo(DataMappingMode.OpenInterest));
+
+            var warnings = _algo.DebugMessages.Where(x => x.Contains("was already added")).ToList();
+            Assert.AreEqual(1, warnings.Count);
+            Assert.That(warnings[0], Does.EndWith("Warning: /ES was already added, ignoring the requested data mapping mode LastTradingDay (keeping OpenInterest)."));
+        }
+
+        [Test]
+        public void AddFutureAgainWithAllSettingsDifferentListsThemInOneWarning()
+        {
+            _algo.AddFuture(Futures.Indices.SP500EMini, Resolution.Daily);
+            _algo.AddFuture(Futures.Indices.SP500EMini, Resolution.Daily, dataMappingMode: DataMappingMode.LastTradingDay,
+                dataNormalizationMode: DataNormalizationMode.Raw, contractDepthOffset: 1);
+
+            var warnings = _algo.DebugMessages.Where(x => x.Contains("was already added")).ToList();
+            Assert.AreEqual(1, warnings.Count);
+            Assert.That(warnings[0], Does.EndWith("Warning: /ES was already added, ignoring the requested data mapping mode LastTradingDay (keeping OpenInterest), " +
+                "data normalization mode Raw (keeping BackwardsRatio), contract depth offset 1 (keeping 0)."));
+        }
+
+        [TestCase(null)]
+        [TestCase(DataMappingMode.OpenInterest)]
+        public void AddFutureAgainWithSameSettingsDoesNotWarn(DataMappingMode? dataMappingMode)
+        {
+            _algo.AddFuture(Futures.Indices.SP500EMini, Resolution.Daily, dataMappingMode: DataMappingMode.OpenInterest);
+            _algo.AddFuture(Futures.Indices.SP500EMini, Resolution.Daily, dataMappingMode: dataMappingMode);
+
+            Assert.IsFalse(_algo.DebugMessages.Any(x => x.Contains("was already added")));
+        }
+
+        [Test]
         public void HistoryWithExplicitUnavailableDataMappingModeWarnsOnce()
         {
             var future = _algo.AddFuture("FESX", Resolution.Daily, Market.EUREX);

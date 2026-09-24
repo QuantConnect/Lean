@@ -155,6 +155,7 @@ namespace QuantConnect.Algorithm
         private bool _deploymentDetailsSet;
         private bool _dataMappingModeFallbackWarningSent;
         private bool _unavailableDataMappingModeWarningSent;
+        private bool _ignoredContinuousFutureSettingsWarningSent;
         private SecurityDefinitionSymbolResolver _securityDefinitionSymbolResolver;
 
         private SecurityDefinitionSymbolResolver SecurityDefinitionSymbolResolver
@@ -2131,6 +2132,11 @@ namespace QuantConnect.Algorithm
 
                     AddUniverse(universe);
                 }
+                else if (symbol.SecurityType == SecurityType.Future
+                    && UniverseManager.TryGetValue(ContinuousContractUniverse.CreateSymbol(symbol), out var continuousUniverse))
+                {
+                    WarnIfContinuousFutureSettingsIgnored(symbol, continuousUniverse.UniverseSettings, dataMappingMode, dataNormalizationMode, (int)contractOffset);
+                }
                 return security;
             }
 
@@ -2161,6 +2167,38 @@ namespace QuantConnect.Algorithm
             {
                 _unavailableDataMappingModeWarningSent = true;
                 Debug($"Warning: {dataMappingMode} data mapping mode is not available for {symbol.ID.Market.ToUpperInvariant()} futures, no contract will be mapped. Use {DataMappingMode.LastTradingDay} instead.");
+            }
+        }
+
+        /// <summary>
+        /// Warns once if a future is added again with continuous contract settings that differ from the existing ones, which are kept
+        /// </summary>
+        private void WarnIfContinuousFutureSettingsIgnored(Symbol symbol, UniverseSettings existingSettings, DataMappingMode? dataMappingMode,
+            DataNormalizationMode? dataNormalizationMode, int contractDepthOffset)
+        {
+            if (_ignoredContinuousFutureSettingsWarningSent)
+            {
+                return;
+            }
+
+            var ignoredSettings = new List<string>();
+            if (dataMappingMode.HasValue && dataMappingMode != existingSettings.DataMappingMode)
+            {
+                ignoredSettings.Add($"data mapping mode {dataMappingMode} (keeping {existingSettings.DataMappingMode})");
+            }
+            if (dataNormalizationMode.HasValue && dataNormalizationMode != existingSettings.DataNormalizationMode)
+            {
+                ignoredSettings.Add($"data normalization mode {dataNormalizationMode} (keeping {existingSettings.DataNormalizationMode})");
+            }
+            if (contractDepthOffset != existingSettings.ContractDepthOffset)
+            {
+                ignoredSettings.Add($"contract depth offset {contractDepthOffset} (keeping {existingSettings.ContractDepthOffset})");
+            }
+
+            if (ignoredSettings.Count > 0)
+            {
+                _ignoredContinuousFutureSettingsWarningSent = true;
+                Debug($"Warning: {symbol} was already added, ignoring the requested {string.Join(", ", ignoredSettings)}.");
             }
         }
 
