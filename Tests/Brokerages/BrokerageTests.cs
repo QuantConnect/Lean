@@ -131,8 +131,21 @@ namespace QuantConnect.Tests.Brokerages
             }
             brokerage.OrdersStatusChanged += HandleEvents;
             brokerage.OrderIdChanged += HandleOrderIdChangedEvents;
+            brokerage.OrderUpdated += HandleOrderUpdatedEvents;
 
             return brokerage;
+        }
+
+        /// <summary>
+        /// Applies the brokerage updates of the orders the way the transaction handler does: contingent orders held waiting
+        /// for their parent are released
+        /// </summary>
+        private void HandleOrderUpdatedEvents(object _, OrderUpdateEvent orderUpdateEvent)
+        {
+            if (orderUpdateEvent.ContingencyTriggered && OrderProvider.GetOrderById(orderUpdateEvent.OrderId)?.GetContingencyLink(ContingencyRole.Child) is { } child)
+            {
+                child.Triggered = true;
+            }
         }
 
         /// <summary>
@@ -234,6 +247,7 @@ namespace QuantConnect.Tests.Brokerages
         {
             brokerage.OrdersStatusChanged -= HandleEvents;
             brokerage.OrderIdChanged -= HandleOrderIdChangedEvents;
+            brokerage.OrderUpdated -= HandleOrderUpdatedEvents;
             brokerage.Disconnect();
             brokerage.DisposeSafely();
         }
@@ -548,6 +562,87 @@ namespace QuantConnect.Tests.Brokerages
             }
 
             Brokerage.OrdersStatusChanged -= brokerageOnOrdersStatusChanged;
+        }
+
+        /// <summary>
+        /// Places a set of resting contingent orders: all of them are working, the ones triggered by another held.
+        /// Canceling the first order cancels the whole set
+        /// </summary>
+        public virtual void ContingentOrdersCancel(ContingentOrderTestParameters parameters)
+        {
+            var orders = PlaceOrderWaitForStatus(parameters.CreateOrders(GetDefaultQuantity()), OrderStatus.Submitted);
+            Assert.IsTrue(orders.All(order => order.GetContingencyLink(ContingencyRole.Child) == null || order.IsWaitingForTrigger()), "The triggered orders should be held");
+
+            var first = orders.First();
+            Assert.IsTrue(Brokerage.CancelOrder(first), $"Brokerage failed to cancel the order: {first}");
+            WaitForOrders(() => orders.All(order => order.Status == OrderStatus.Canceled), "all the orders canceled");
+        }
+
+        /// <summary>
+        /// Places a set of resting contingent orders and updates each of them unchanged, the held ones included: the brokerage accepts the updates
+        /// </summary>
+        public virtual void ContingentOrdersUpdate(ContingentOrderTestParameters parameters)
+        {
+            var orders = PlaceOrderWaitForStatus(parameters.CreateOrders(GetDefaultQuantity()), OrderStatus.Submitted);
+
+            var updatedOrderIds = new HashSet<int>();
+            EventHandler<List<OrderEvent>> onOrdersStatusChanged = (_, orderEvents) =>
+            {
+                lock (updatedOrderIds)
+                {
+                    updatedOrderIds.UnionWith(orderEvents.Where(orderEvent => orderEvent.Status == OrderStatus.UpdateSubmitted).Select(orderEvent => orderEvent.OrderId));
+                }
+            };
+            Brokerage.OrdersStatusChanged += onOrdersStatusChanged;
+            try
+            {
+                foreach (var order in orders)
+                {
+                    Assert.IsTrue(Brokerage.UpdateOrder(order), $"Brokerage failed to update the order: {order}");
+                }
+                WaitForOrders(() =>
+                {
+                    lock (updatedOrderIds)
+                    {
+                        return orders.All(order => updatedOrderIds.Contains(order.Id));
+                    }
+                }, "all the updates submitted");
+            }
+            finally
+            {
+                Brokerage.OrdersStatusChanged -= onOrdersStatusChanged;
+            }
+            Assert.IsTrue(orders.All(order => order.Status != OrderStatus.Invalid), "No update should be rejected");
+        }
+
+        /// <summary>
+        /// Places a set of contingent orders where the first order fills right away, like a market entry:
+        /// the orders it triggers are released and working
+        /// </summary>
+        public virtual void ContingentOrdersTrigger(ContingentOrderTestParameters parameters)
+        {
+            var orders = parameters.CreateOrders(GetDefaultQuantity());
+            foreach (var order in orders)
+            {
+                OrderProvider.Add(order);
+                Assert.IsTrue(Brokerage.PlaceOrder(order), $"Brokerage failed to place the order: {order}");
+            }
+            WaitForOrders(() => orders[0].Status == OrderStatus.Filled
+                && orders[0].GetContingentChildren(orders).All(child => !child.IsWaitingForTrigger() && child.Status == OrderStatus.Submitted),
+                "the first order filled and the orders it triggers working");
+        }
+
+        /// <summary>
+        /// Waits until the given condition on the orders, kept up to date through the brokerage events, is met
+        /// </summary>
+        protected static void WaitForOrders(Func<bool> condition, string description, double secondsTimeout = 30)
+        {
+            var stopwatch = Stopwatch.StartNew();
+            while (!condition() && stopwatch.Elapsed.TotalSeconds < secondsTimeout)
+            {
+                Thread.Sleep(100);
+            }
+            Assert.IsTrue(condition(), $"Timed out waiting for {description}");
         }
 
         [Test]
