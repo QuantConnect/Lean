@@ -37,6 +37,7 @@ namespace QuantConnect.Algorithm
         private static readonly int SeedRetryDailyLookbackPeriod = Config.GetInt("seed-retry-daily-lookback-period", 10);
 
         private bool _dataDictionaryTickWarningSent;
+        private bool _unavailableDataMappingModeWarningSent;
 
         private readonly LargeHistoryRequestDiagnostics _largeHistoryRequestDiagnostics = new();
 
@@ -1172,6 +1173,19 @@ namespace QuantConnect.Algorithm
                         extendedMarketHours, dataMappingMode, dataNormalizationMode, contractDepthOffset);
                 });
             });
+        }
+
+        /// <summary>
+        /// Warns once if an explicitly requested data mapping mode has no mapping data for the future's market
+        /// </summary>
+        private void WarnIfDataMappingModeUnavailable(Symbol symbol, DataMappingMode? dataMappingMode)
+        {
+            if (dataMappingMode.HasValue && symbol.SecurityType == SecurityType.Future && !_unavailableDataMappingModeWarningSent
+                && !dataMappingMode.Value.IsAvailableForFutureMarket(symbol.ID.Market))
+            {
+                _unavailableDataMappingModeWarningSent = true;
+                Debug($"Warning: {dataMappingMode} data mapping mode is not available for {symbol.ID.Market.ToUpperInvariant()} futures, no contract will be mapped. Use {DataMappingMode.LastTradingDay} instead.");
+            }
         }
 
         private int GetTickTypeOrder(SecurityType securityType, TickType tickType)

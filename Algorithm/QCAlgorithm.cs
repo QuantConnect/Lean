@@ -154,7 +154,6 @@ namespace QuantConnect.Algorithm
         private Dictionary<string, string> _parameters = new Dictionary<string, string>();
         private bool _deploymentDetailsSet;
         private readonly HashSet<string> _dataMappingModeFallbackWarnedMarkets = new();
-        private bool _unavailableDataMappingModeWarningSent;
         private bool _ignoredContinuousFutureSettingsWarningSent;
         private SecurityDefinitionSymbolResolver _securityDefinitionSymbolResolver;
 
@@ -2160,19 +2159,6 @@ namespace QuantConnect.Algorithm
                 Debug($"Warning: {requestedDataMappingMode} data mapping mode is not available for {symbol.ID.Market.ToUpperInvariant()} futures, using {fallbackDataMappingMode} instead.");
             }
             return fallbackDataMappingMode;
-        }
-
-        /// <summary>
-        /// Warns once if an explicitly requested data mapping mode has no mapping data for the future's market
-        /// </summary>
-        private void WarnIfDataMappingModeUnavailable(Symbol symbol, DataMappingMode? dataMappingMode)
-        {
-            if (dataMappingMode.HasValue && symbol.SecurityType == SecurityType.Future && !_unavailableDataMappingModeWarningSent
-                && !dataMappingMode.Value.IsAvailableForFutureMarket(symbol.ID.Market))
-            {
-                _unavailableDataMappingModeWarningSent = true;
-                Debug($"Warning: {dataMappingMode} data mapping mode is not available for {symbol.ID.Market.ToUpperInvariant()} futures, no contract will be mapped. Use {DataMappingMode.LastTradingDay} instead.");
-            }
         }
 
         /// <summary>
