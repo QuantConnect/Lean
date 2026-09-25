@@ -175,7 +175,7 @@ namespace QuantConnect.Tests.Common.Securities
             Assert.AreEqual(Market.FXCM, market);
 
             // Change the data folder so another symbol properties file is used
-            var originalDataFolder = Config.Get("data-folder");
+            var originalDataFolder = Globals.DataFolder;
             Config.Set("data-folder", "./TestData");
             Globals.Reset();
 
