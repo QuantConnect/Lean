@@ -70,6 +70,71 @@ namespace QuantConnect.Tests.Algorithm
             FundamentalService.Initialize(_dataProvider, new NullFundamentalDataProvider(), false);
         }
 
+        [TestCase(null)]
+        [TestCase(DataMappingMode.FirstDayMonth)]
+        public void HistoryWithExplicitUnavailableDataMappingModeFallsBackToMarketDefault(DataMappingMode? addedFutureDataMappingMode)
+        {
+            var symbol = Symbol.Create("FESX", SecurityType.Future, Market.EUREX);
+            if (addedFutureDataMappingMode.HasValue)
+            {
+                _algorithm.AddFuture("FESX", Resolution.Daily, Market.EUREX, dataMappingMode: addedFutureDataMappingMode);
+            }
+
+            _algorithm.History(symbol, 5, Resolution.Daily, dataMappingMode: DataMappingMode.OpenInterest).ToList();
+            _algorithm.History(symbol, _algorithm.Time.AddDays(-5), _algorithm.Time, Resolution.Daily, dataMappingMode: DataMappingMode.OpenInterest).ToList();
+
+            var requests = _testHistoryProvider.HistryRequests.Where(x => x.Symbol == symbol).ToList();
+            Assert.Greater(requests.Count, 0);
+            // the market default is used, not the added future's mode
+            Assert.That(requests.Select(x => x.DataMappingMode), Has.All.EqualTo(DataMappingMode.LastTradingDay));
+            Assert.That(_algorithm.DebugMessages.Single(x => x.Contains("data mapping mode is not available")),
+                Does.EndWith("Warning: OpenInterest data mapping mode is not available for EUREX futures, using LastTradingDay instead."));
+        }
+
+        [Test]
+        public void HistoryWithoutDataMappingModeFallsBackForFutureNotAdded()
+        {
+            var symbol = Symbol.Create("FESX", SecurityType.Future, Market.EUREX);
+
+            _algorithm.History(symbol, 5, Resolution.Daily).ToList();
+
+            var requests = _testHistoryProvider.HistryRequests.Where(x => x.Symbol == symbol).ToList();
+            Assert.Greater(requests.Count, 0);
+            Assert.That(requests.Select(x => x.DataMappingMode), Has.All.EqualTo(DataMappingMode.LastTradingDay));
+            Assert.That(_algorithm.DebugMessages.Single(x => x.Contains("data mapping mode is not available")),
+                Does.EndWith("Warning: OpenInterest data mapping mode is not available for EUREX futures, using LastTradingDay instead."));
+        }
+
+        [Test]
+        public void HistoryWithExplicitAvailableDataMappingModeKeepsIt()
+        {
+            var symbol = Symbol.Create("FESX", SecurityType.Future, Market.EUREX);
+
+            _algorithm.History(symbol, 5, Resolution.Daily, dataMappingMode: DataMappingMode.FirstDayMonth).ToList();
+
+            var requests = _testHistoryProvider.HistryRequests.Where(x => x.Symbol == symbol).ToList();
+            Assert.Greater(requests.Count, 0);
+            Assert.That(requests.Select(x => x.DataMappingMode), Has.All.EqualTo(DataMappingMode.FirstDayMonth));
+            Assert.IsFalse(_algorithm.DebugMessages.Any(x => x.Contains("data mapping mode is not available")));
+        }
+
+        [Test]
+        public void HistoryWithExplicitUnavailableDataMappingModeDoesNotFallBackForContractsOrChains()
+        {
+            var symbol = Symbol.Create("FESX", SecurityType.Future, Market.EUREX);
+            var contract = Symbol.CreateFuture("FESX", Market.EUREX, new DateTime(2024, 6, 21));
+
+            _algorithm.History(contract, 5, Resolution.Daily, dataMappingMode: DataMappingMode.OpenInterest).ToList();
+            _algorithm.History<FutureUniverse>(symbol, 5, Resolution.Daily, dataMappingMode: DataMappingMode.OpenInterest).ToList();
+
+            var contractRequests = _testHistoryProvider.HistryRequests.Where(x => x.Symbol == contract).ToList();
+            var chainRequests = _testHistoryProvider.HistryRequests.Where(x => x.DataType == typeof(FutureUniverse)).ToList();
+            Assert.Greater(contractRequests.Count, 0);
+            Assert.Greater(chainRequests.Count, 0);
+            Assert.That(contractRequests.Concat(chainRequests).Select(x => x.DataMappingMode), Has.All.EqualTo(DataMappingMode.OpenInterest));
+            Assert.IsFalse(_algorithm.DebugMessages.Any(x => x.Contains("data mapping mode is not available")));
+        }
+
         [TestCase(Language.Python)]
         [TestCase(Language.CSharp)]
         public void FundamentalHistory(Language language)

@@ -1106,10 +1106,10 @@ namespace QuantConnect.Algorithm
             {
                 var requests = new List<HistoryRequest>();
 
-                foreach (var config in GetMatchingSubscriptions(x, requestedType, resolution))
+                foreach (var config in GetMatchingSubscriptions(x, requestedType, resolution, dataMappingMode: dataMappingMode))
                 {
                     var request = _historyRequestFactory.CreateHistoryRequest(config, startAlgoTz, endAlgoTz, GetExchangeHours(x, requestedType), resolution,
-                        fillForward, extendedMarketHours, dataMappingMode, dataNormalizationMode, contractDepthOffset);
+                        fillForward, extendedMarketHours, GetHistoryDataMappingMode(config, dataMappingMode), dataNormalizationMode, contractDepthOffset);
                     requests.Add(request);
                 }
 
@@ -1149,7 +1149,7 @@ namespace QuantConnect.Algorithm
             return symbols.Where(HistoryRequestValid).SelectMany(symbol =>
             {
                 // Match or create configs for the symbol
-                var configs = GetMatchingSubscriptions(symbol, requestedType, resolution, useAllSubscriptions).ToList();
+                var configs = GetMatchingSubscriptions(symbol, requestedType, resolution, useAllSubscriptions, dataMappingMode).ToList();
                 if (configs.Count == 0)
                 {
                     return Enumerable.Empty<HistoryRequest>();
@@ -1166,9 +1166,24 @@ namespace QuantConnect.Algorithm
                     var end = Time;
 
                     return _historyRequestFactory.CreateHistoryRequest(config, start, end, exchange, res, fillForward,
-                        extendedMarketHours, dataMappingMode, dataNormalizationMode, contractDepthOffset);
+                        extendedMarketHours, GetHistoryDataMappingMode(config, dataMappingMode), dataNormalizationMode, contractDepthOffset);
                 });
             });
+        }
+
+        /// <summary>
+        /// Gets the data mapping mode for a history request, falling back to the market default if the requested one is not available
+        /// </summary>
+        private DataMappingMode? GetHistoryDataMappingMode(SubscriptionDataConfig config, DataMappingMode? dataMappingMode)
+        {
+            var symbol = config.Symbol;
+            // only continuous futures data is mapped, not contracts nor chain universe data
+            if (!dataMappingMode.HasValue || symbol.SecurityType != SecurityType.Future || !symbol.IsCanonical()
+                || !LeanData.IsCommonLeanDataType(config.Type))
+            {
+                return dataMappingMode;
+            }
+            return GetDataMappingModeOrDefault(symbol, dataMappingMode);
         }
 
         private int GetTickTypeOrder(SecurityType securityType, TickType tickType)
@@ -1176,7 +1191,8 @@ namespace QuantConnect.Algorithm
             return SubscriptionManager.AvailableDataTypes[securityType].IndexOf(tickType);
         }
 
-        private IEnumerable<SubscriptionDataConfig> GetMatchingSubscriptions(Symbol symbol, Type type, Resolution? resolution = null, bool useAllSubscriptions = false)
+        private IEnumerable<SubscriptionDataConfig> GetMatchingSubscriptions(Symbol symbol, Type type, Resolution? resolution = null, bool useAllSubscriptions = false,
+            DataMappingMode? dataMappingMode = null)
         {
             var subscriptions = SubscriptionManager.SubscriptionDataConfigService
                 // we add internal subscription so that history requests are covered, this allows us to warm them up too
@@ -1293,7 +1309,9 @@ namespace QuantConnect.Algorithm
                 // Inherit values from existing subscriptions or use defaults
                 var extendedMarketHours = userConfigIfAny?.ExtendedMarketHours ?? UniverseSettings.ExtendedMarketHours;
                 var dataNormalizationMode = userConfigIfAny?.DataNormalizationMode ?? UniverseSettings.GetUniverseNormalizationModeOrDefault(symbol.SecurityType);
-                var dataMappingMode = userConfigIfAny?.DataMappingMode ?? UniverseSettings.GetUniverseMappingModeOrDefault(symbol.SecurityType, symbol.ID.Market);
+                var requestedDataMappingMode = dataMappingMode ?? userConfigIfAny?.DataMappingMode;
+                // only continuous futures data falls back from an unavailable mapping mode, other data types are not mapped
+                var unmappedDataMappingMode = requestedDataMappingMode ?? UniverseSettings.GetUniverseMappingModeOrDefault(symbol.SecurityType, symbol.ID.Market);
                 var contractDepthOffset = userConfigIfAny?.ContractDepthOffset ?? (uint)Math.Abs(UniverseSettings.ContractDepthOffset);
 
                 // If type was specified and not a lean data type and also not abstract, we create a new subscription
@@ -1325,7 +1343,7 @@ namespace QuantConnect.Algorithm
                         LeanData.GetCommonTickTypeForCommonDataTypes(dataType, symbol.SecurityType),
                         true,
                         dataNormalizationMode,
-                        dataMappingMode,
+                        unmappedDataMappingMode,
                         contractDepthOffset)};
                 }
 
@@ -1341,6 +1359,9 @@ namespace QuantConnect.Algorithm
                         // Use the config type to get an accurate mhdb entry
                         var entry = MarketHoursDatabase.GetEntry(symbol, new[] { configType });
                         var res = GetResolution(symbol, resolution, configType);
+                        var configDataMappingMode = LeanData.IsCommonLeanDataType(configType)
+                            ? GetDataMappingModeOrDefault(symbol, requestedDataMappingMode)
+                            : unmappedDataMappingMode;
 
                         return new SubscriptionDataConfig(
                             configType,
@@ -1355,7 +1376,7 @@ namespace QuantConnect.Algorithm
                             x.Item2,
                             true,
                             dataNormalizationMode,
-                            dataMappingMode,
+                            configDataMappingMode,
                             contractDepthOffset);
                     })
                     // lets make sure to respect the order of the data types, if used on a history request will affect outcome when using pushthrough for example
