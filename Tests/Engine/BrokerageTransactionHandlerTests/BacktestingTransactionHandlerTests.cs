@@ -30,6 +30,7 @@ using QuantConnect.Logging;
 using QuantConnect.Orders;
 using QuantConnect.Orders.Fees;
 using QuantConnect.Orders.Fills;
+using QuantConnect.Packets;
 using QuantConnect.Securities;
 using QuantConnect.Tests.Engine.DataFeeds;
 
@@ -390,6 +391,67 @@ namespace QuantConnect.Tests.Engine.BrokerageTransactionHandlerTests
                 Assert.IsTrue(finishedEvent.Wait(10000));
                 Assert.Greater(transactionHandler.ProcessingThreadNames.Count, 1);
                 CollectionAssert.AreEquivalent(orderRequests.Select(x => x.ToString()), transactionHandler.ProcessedRequests.Select(x => x.ToString()));
+            }
+            finally
+            {
+                transactionHandler.Exit();
+            }
+        }
+
+        [Test]
+        public void ProcessesContingentOrdersInLivePaperTrading()
+        {
+            // the fxcm brokerage model doesn't support contingent orders
+            _algorithm.SetBrokerageModel(BrokerageName.Default);
+            _algorithm.SetLiveMode(true);
+            using var brokerage = new PaperBrokerage(_algorithm, new LiveNodePacket());
+            var transactionHandler = new BacktestingTransactionHandler();
+            transactionHandler.Initialize(_algorithm, brokerage, new BacktestingResultHandler());
+
+            try
+            {
+                _algorithm.Transactions.SetOrderProcessor(transactionHandler);
+                var security = _algorithm.Securities[Ticker];
+                _algorithm.Portfolio.CashBook["EUR"].ConversionRate = 1.1m;
+                var time = new DateTime(2025, 07, 03, 10, 0, 0);
+                void Step(decimal price)
+                {
+                    time = time.AddMinutes(1);
+                    _algorithm.SetDateTime(time);
+                    security.SetMarketPrice(new Tick(time, security.Symbol, price, price, price));
+                    // like the live engine on each time loop, scans the paper brokerage
+                    transactionHandler.ProcessSynchronousEvents();
+                }
+                Step(1.10m);
+
+                var tickets = _algorithm.BracketOrder(security.Symbol, 1000, takeProfitPrice: 1.12m, stopLossPrice: 1.05m, limitPrice: 1.09m);
+                var entry = tickets[0];
+                Assert.AreEqual(3, tickets.Count, tickets[0].SubmitRequest.Response.ErrorMessage);
+                var takeProfit = tickets[1];
+                var stopLoss = tickets[2];
+
+                // the transaction threads place the set once all its orders arrived
+                Assert.IsTrue(SpinWait.SpinUntil(() => tickets.All(x => x.Status == OrderStatus.Submitted), 10000),
+                    $"The contingent orders were not submitted: {string.Join(", ", tickets.Select(x => x.Status))}");
+                Assert.IsTrue(takeProfit.Contingency.IsWaitingForTrigger);
+                Assert.IsTrue(stopLoss.Contingency.IsWaitingForTrigger);
+
+                // the children are held even if the price goes through their prices
+                Step(1.13m);
+                Assert.IsTrue(tickets.All(x => x.Status == OrderStatus.Submitted));
+
+                // the entry fills, triggering the children
+                Step(1.08m);
+                Assert.AreEqual(OrderStatus.Filled, entry.Status);
+                Assert.IsTrue(new[] { takeProfit, stopLoss }.All(x => x.Status == OrderStatus.Submitted && !x.Contingency.IsWaitingForTrigger));
+                Assert.AreEqual(1000, security.Holdings.Quantity);
+
+                // the take profit fills, canceling the stop loss
+                Step(1.13m);
+                Assert.AreEqual(OrderStatus.Filled, takeProfit.Status);
+                Assert.AreEqual(OrderStatus.Canceled, stopLoss.Status);
+                Assert.AreEqual(0, security.Holdings.Quantity);
+                Assert.IsEmpty(_algorithm.Transactions.GetOpenOrders());
             }
             finally
             {
