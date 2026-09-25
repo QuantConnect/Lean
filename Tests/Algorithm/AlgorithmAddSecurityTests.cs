@@ -219,7 +219,7 @@ namespace QuantConnect.Tests.Algorithm
 
             var continuousUniverse = _algo.UniverseManager[ContinuousContractUniverse.CreateSymbol(future.Symbol)];
             Assert.AreEqual(DataMappingMode.LastTradingDay, continuousUniverse.UniverseSettings.DataMappingMode);
-            Assert.IsFalse(_algo.DebugMessages.Any(x => x.Contains("was already added")));
+            Assert.IsFalse(_algo.DebugMessages.Any(x => x.Contains("already added")));
         }
 
         [Test]
@@ -235,10 +235,9 @@ namespace QuantConnect.Tests.Algorithm
                 .ToList();
             Assert.That(continuousConfigs.Select(x => x.DataMappingMode), Has.All.EqualTo(DataMappingMode.OpenInterest));
 
-            var warnings = _algo.DebugMessages.Where(x => x.Contains("was already added")).ToList();
+            var warnings = _algo.DebugMessages.Where(x => x.Contains("already added")).ToList();
             Assert.AreEqual(1, warnings.Count);
-            Assert.That(warnings[0], Does.EndWith("Warning: /ES was already added, ignoring the requested data mapping mode LastTradingDay (keeping OpenInterest). " +
-                "Add it only once in Initialize, or, to change these settings after Initialize, remove it with RemoveSecurity() and add it again."));
+            Assert.That(warnings[0], Does.EndWith("Warning: /ES already added, ignoring data mapping mode LastTradingDay. Add it once, or remove and re-add it after Initialize."));
         }
 
         [Test]
@@ -248,11 +247,10 @@ namespace QuantConnect.Tests.Algorithm
             _algo.AddFuture(Futures.Indices.SP500EMini, Resolution.Daily, dataMappingMode: DataMappingMode.LastTradingDay,
                 dataNormalizationMode: DataNormalizationMode.Raw, contractDepthOffset: 1);
 
-            var warnings = _algo.DebugMessages.Where(x => x.Contains("was already added")).ToList();
+            var warnings = _algo.DebugMessages.Where(x => x.Contains("already added")).ToList();
             Assert.AreEqual(1, warnings.Count);
-            Assert.That(warnings[0], Does.EndWith("Warning: /ES was already added, ignoring the requested data mapping mode LastTradingDay (keeping OpenInterest), " +
-                "data normalization mode Raw (keeping BackwardsRatio), contract depth offset 1 (keeping 0). " +
-                "Add it only once in Initialize, or, to change these settings after Initialize, remove it with RemoveSecurity() and add it again."));
+            Assert.That(warnings[0], Does.EndWith("Warning: /ES already added, ignoring data mapping mode LastTradingDay, normalization mode Raw, contract depth offset 1. " +
+                "Add it once, or remove and re-add it after Initialize."));
         }
 
         [Test]
@@ -262,9 +260,8 @@ namespace QuantConnect.Tests.Algorithm
             _algo.SetLocked();
             _algo.AddFuture(Futures.Indices.SP500EMini, Resolution.Daily, dataMappingMode: DataMappingMode.LastTradingDay);
 
-            Assert.That(_algo.DebugMessages.Single(x => x.Contains("was already added")),
-                Does.EndWith("Warning: /ES was already added, ignoring the requested data mapping mode LastTradingDay (keeping OpenInterest). " +
-                "To change these settings, remove it with RemoveSecurity() and add it again."));
+            Assert.That(_algo.DebugMessages.Single(x => x.Contains("already added")),
+                Does.EndWith("Warning: /ES already added, ignoring data mapping mode LastTradingDay. Remove it first to change its settings."));
         }
 
         [TestCase(null)]
@@ -274,7 +271,7 @@ namespace QuantConnect.Tests.Algorithm
             _algo.AddFuture(Futures.Indices.SP500EMini, Resolution.Daily, dataMappingMode: DataMappingMode.OpenInterest);
             _algo.AddFuture(Futures.Indices.SP500EMini, Resolution.Daily, dataMappingMode: dataMappingMode);
 
-            Assert.IsFalse(_algo.DebugMessages.Any(x => x.Contains("was already added")));
+            Assert.IsFalse(_algo.DebugMessages.Any(x => x.Contains("already added")));
         }
 
         [Test]
@@ -283,7 +280,7 @@ namespace QuantConnect.Tests.Algorithm
             _algo.AddFuture("FESX", Resolution.Daily, Market.EUREX);
             _algo.AddFuture("FESX", Resolution.Daily, Market.EUREX, dataMappingMode: DataMappingMode.OpenInterest);
 
-            Assert.IsFalse(_algo.DebugMessages.Any(x => x.Contains("was already added")));
+            Assert.IsFalse(_algo.DebugMessages.Any(x => x.Contains("already added")));
             Assert.AreEqual(1, _algo.DebugMessages.Count(x => x.Contains("data mapping mode is not available")));
         }
 

@@ -1105,11 +1105,11 @@ namespace QuantConnect.Algorithm
         {
             return symbols.Where(HistoryRequestValid).SelectMany(x =>
             {
-                WarnIfDataMappingModeUnavailable(x, dataMappingMode);
                 var requests = new List<HistoryRequest>();
 
                 foreach (var config in GetMatchingSubscriptions(x, requestedType, resolution))
                 {
+                    WarnIfDataMappingModeUnavailable(config, dataMappingMode);
                     var request = _historyRequestFactory.CreateHistoryRequest(config, startAlgoTz, endAlgoTz, GetExchangeHours(x, requestedType), resolution,
                         fillForward, extendedMarketHours, dataMappingMode, dataNormalizationMode, contractDepthOffset);
                     requests.Add(request);
@@ -1150,8 +1150,6 @@ namespace QuantConnect.Algorithm
         {
             return symbols.Where(HistoryRequestValid).SelectMany(symbol =>
             {
-                WarnIfDataMappingModeUnavailable(symbol, dataMappingMode);
-
                 // Match or create configs for the symbol
                 var configs = GetMatchingSubscriptions(symbol, requestedType, resolution, useAllSubscriptions).ToList();
                 if (configs.Count == 0)
@@ -1161,6 +1159,8 @@ namespace QuantConnect.Algorithm
 
                 return configs.Select(config =>
                 {
+                    WarnIfDataMappingModeUnavailable(config, dataMappingMode);
+
                     // If no requested type was passed, use the config type to get the resolution (if not provided) and the exchange hours
                     var type = requestedType ?? config.Type;
                     var res = resolution ?? config.Resolution;
@@ -1176,11 +1176,14 @@ namespace QuantConnect.Algorithm
         }
 
         /// <summary>
-        /// Warns once if an explicitly requested data mapping mode has no mapping data for the future's market
+        /// Warns once if an explicitly requested data mapping mode has no mapping data for a continuous future history request
         /// </summary>
-        private void WarnIfDataMappingModeUnavailable(Symbol symbol, DataMappingMode? dataMappingMode)
+        private void WarnIfDataMappingModeUnavailable(SubscriptionDataConfig config, DataMappingMode? dataMappingMode)
         {
-            if (dataMappingMode.HasValue && symbol.SecurityType == SecurityType.Future && !_unavailableDataMappingModeWarningSent
+            var symbol = config.Symbol;
+            // only continuous futures data is mapped, not contracts nor chain universe data
+            if (dataMappingMode.HasValue && symbol.SecurityType == SecurityType.Future && symbol.IsCanonical()
+                && LeanData.IsCommonLeanDataType(config.Type) && !_unavailableDataMappingModeWarningSent
                 && !dataMappingMode.Value.IsAvailableForFutureMarket(symbol.ID.Market))
             {
                 _unavailableDataMappingModeWarningSent = true;
@@ -1310,7 +1313,7 @@ namespace QuantConnect.Algorithm
                 // Inherit values from existing subscriptions or use defaults
                 var extendedMarketHours = userConfigIfAny?.ExtendedMarketHours ?? UniverseSettings.ExtendedMarketHours;
                 var dataNormalizationMode = userConfigIfAny?.DataNormalizationMode ?? UniverseSettings.GetUniverseNormalizationModeOrDefault(symbol.SecurityType);
-                var dataMappingMode = userConfigIfAny?.DataMappingMode ?? GetDataMappingModeOrDefault(symbol);
+                var dataMappingMode = GetDataMappingModeOrDefault(symbol, userConfigIfAny?.DataMappingMode);
                 var contractDepthOffset = userConfigIfAny?.ContractDepthOffset ?? (uint)Math.Abs(UniverseSettings.ContractDepthOffset);
 
                 // If type was specified and not a lean data type and also not abstract, we create a new subscription

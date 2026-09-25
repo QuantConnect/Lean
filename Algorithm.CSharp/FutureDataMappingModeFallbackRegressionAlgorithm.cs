@@ -43,7 +43,7 @@ namespace QuantConnect.Algorithm.CSharp
 
             // Open interest resolves to the mode already in use, so this is not a conflicting re-add
             AddFuture(Futures.Indices.EuroStoxx50, Resolution.Minute, dataMappingMode: DataMappingMode.LastTradingDay);
-            if (DebugMessages.Any(message => message.Contains("was already added")))
+            if (DebugMessages.Any(message => message.Contains("already added")))
             {
                 throw new RegressionTestException("Unexpected re-add warning for a future added again with the same data mapping mode");
             }
@@ -76,8 +76,7 @@ namespace QuantConnect.Algorithm.CSharp
             AssertWarning("Warning: OpenInterest data mapping mode is not available for EUREX futures, no contract will be mapped. Use LastTradingDay instead.");
 
             AddFuture(Futures.Indices.EuroStoxx50, Resolution.Minute, dataMappingMode: DataMappingMode.FirstDayMonth);
-            AssertWarning("Warning: /FESX was already added, ignoring the requested data mapping mode FirstDayMonth (keeping LastTradingDay). " +
-                "To change these settings, remove it with RemoveSecurity() and add it again.");
+            AssertWarning("Warning: /FESX already added, ignoring data mapping mode FirstDayMonth. Remove it first to change its settings.");
         }
 
         public override void OnEndOfAlgorithm()

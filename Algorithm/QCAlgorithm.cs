@@ -2175,24 +2175,24 @@ namespace QuantConnect.Algorithm
             var ignoredSettings = new List<string>();
             if (dataMappingMode.HasValue && dataMappingMode != existingSettings.DataMappingMode)
             {
-                ignoredSettings.Add($"data mapping mode {dataMappingMode} (keeping {existingSettings.DataMappingMode})");
+                ignoredSettings.Add($"data mapping mode {dataMappingMode}");
             }
             if (dataNormalizationMode.HasValue && dataNormalizationMode != existingSettings.DataNormalizationMode)
             {
-                ignoredSettings.Add($"data normalization mode {dataNormalizationMode} (keeping {existingSettings.DataNormalizationMode})");
+                ignoredSettings.Add($"normalization mode {dataNormalizationMode}");
             }
             if (contractDepthOffset != existingSettings.ContractDepthOffset)
             {
-                ignoredSettings.Add($"contract depth offset {contractDepthOffset} (keeping {existingSettings.ContractDepthOffset})");
+                ignoredSettings.Add($"contract depth offset {contractDepthOffset}");
             }
 
             if (ignoredSettings.Count > 0)
             {
                 _ignoredContinuousFutureSettingsWarningSent = true;
                 var instructions = _locked
-                    ? "To change these settings, remove it with RemoveSecurity() and add it again."
-                    : "Add it only once in Initialize, or, to change these settings after Initialize, remove it with RemoveSecurity() and add it again.";
-                Debug($"Warning: {symbol} was already added, ignoring the requested {string.Join(", ", ignoredSettings)}. {instructions}");
+                    ? "Remove it first to change its settings."
+                    : "Add it once, or remove and re-add it after Initialize.";
+                Debug($"Warning: {symbol} already added, ignoring {string.Join(", ", ignoredSettings)}. {instructions}");
             }
         }
 

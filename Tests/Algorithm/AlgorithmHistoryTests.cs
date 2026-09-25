@@ -86,6 +86,20 @@ namespace QuantConnect.Tests.Algorithm
                 "no contract will be mapped. Use LastTradingDay instead."));
         }
 
+        [Test]
+        public void HistoryWithExplicitUnavailableDataMappingModeDoesNotWarnForContractsOrChains()
+        {
+            var future = _algorithm.AddFuture("FESX", Resolution.Daily, Market.EUREX);
+            var contract = Symbol.CreateFuture("FESX", Market.EUREX, new DateTime(2024, 6, 21));
+
+            _algorithm.History(contract, 5, Resolution.Daily, dataMappingMode: DataMappingMode.OpenInterest).ToList();
+            _algorithm.History<FutureUniverse>(future.Symbol, 5, Resolution.Daily, dataMappingMode: DataMappingMode.OpenInterest).ToList();
+
+            Assert.IsTrue(_testHistoryProvider.HistryRequests.Any(x => x.Symbol == contract));
+            Assert.IsTrue(_testHistoryProvider.HistryRequests.Any(x => x.DataType == typeof(FutureUniverse)));
+            Assert.IsFalse(_algorithm.DebugMessages.Any(x => x.Contains("no contract will be mapped")));
+        }
+
         [TestCase(Language.Python)]
         [TestCase(Language.CSharp)]
         public void FundamentalHistory(Language language)

@@ -28,7 +28,7 @@ class FutureDataMappingModeFallbackRegressionAlgorithm(QCAlgorithm):
 
         # Open interest resolves to the mode already in use, so this is not a conflicting re-add
         self.add_future(Futures.Indices.EURO_STOXX_50, Resolution.MINUTE, data_mapping_mode=DataMappingMode.LAST_TRADING_DAY)
-        if any("was already added" in message for message in self.debug_messages):
+        if any("already added" in message for message in self.debug_messages):
             raise AssertionError("Unexpected re-add warning for a future added again with the same data mapping mode")
 
         self._checked_after_initialize = False
@@ -51,8 +51,7 @@ class FutureDataMappingModeFallbackRegressionAlgorithm(QCAlgorithm):
         self._assert_warning("Warning: OpenInterest data mapping mode is not available for EUREX futures, no contract will be mapped. Use LastTradingDay instead.")
 
         self.add_future(Futures.Indices.EURO_STOXX_50, Resolution.MINUTE, data_mapping_mode=DataMappingMode.FIRST_DAY_MONTH)
-        self._assert_warning("Warning: /FESX was already added, ignoring the requested data mapping mode FirstDayMonth (keeping LastTradingDay). "
-            "To change these settings, remove it with RemoveSecurity() and add it again.")
+        self._assert_warning("Warning: /FESX already added, ignoring data mapping mode FirstDayMonth. Remove it first to change its settings.")
 
     def on_end_of_algorithm(self):
         if not self._checked_after_initialize:
