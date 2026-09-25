@@ -57,6 +57,7 @@ namespace QuantConnect.Api
             { PerformanceMetrics.StartEquity, 22 },
             { PerformanceMetrics.EndEquity, 23 },
             { PerformanceMetrics.DrawdownRecovery, 24 },
+            { PerformanceMetrics.AdjustedSharpeRatio, 25 },
         };
 
         private static string[] StatisticNames { get; } = StatisticsIndices

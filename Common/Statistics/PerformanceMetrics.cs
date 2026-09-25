@@ -103,6 +103,13 @@ namespace QuantConnect.Statistics
         public const string ProbabilisticSharpeRatio = "Probabilistic Sharpe Ratio";
 
         /// <summary>
+        /// Adjusted Sharpe Ratio accounts for skewness and kurtosis in the return distribution;
+        /// for a positive Sharpe ratio it penalizes negative skewness and excess kurtosis
+        /// </summary>
+        /// <remarks>See Pezier, J. and White, A. (2006), "The Relative Merits of Investable Hedge Fund Indices and of Funds of Hedge Funds in Optimal Passive Portfolios", ICMA Centre Discussion Papers in Finance DP2006-10</remarks>
+        public const string AdjustedSharpeRatio = "Adjusted Sharpe Ratio";
+
+        /// <summary>
         /// The ratio of the average win rate to the average loss rate
         /// </summary>
         /// <remarks>If the average loss rate is zero, ProfitLossRatio is set to 0</remarks>
