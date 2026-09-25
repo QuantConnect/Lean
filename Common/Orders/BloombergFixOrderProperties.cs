@@ -40,6 +40,19 @@ namespace QuantConnect.Orders
             set { SetTag("114", value); }
         }
 
+        /// <summary>
+        /// Whether the plugin works the position side out from the current holdings (buy-to-open, sell-to-close, etc.)
+        /// instead of sending a plain buy or sell. On by default
+        /// </summary>
+        public bool AutomaticPositionSides { get; set; } = true;
+
+        /// <summary>
+        /// Can optionally specify the position side of the order (buy-to-open, sell-to-close, etc.)
+        /// instead of the plugin working it out from the current holdings
+        /// </summary>
+        /// <remarks>Has precedence over <see cref="AutomaticPositionSides"/></remarks>
+        public OrderPosition? PositionSide { get; set; }
+
         private string GetTag(string tag)
         {
             return AdditionalProperties != null && AdditionalProperties.TryGetValue(tag, out var value) ? value : null;
