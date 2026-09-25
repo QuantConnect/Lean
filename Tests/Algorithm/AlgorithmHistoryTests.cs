@@ -70,6 +70,22 @@ namespace QuantConnect.Tests.Algorithm
             FundamentalService.Initialize(_dataProvider, new NullFundamentalDataProvider(), false);
         }
 
+        [Test]
+        public void HistoryWithExplicitUnavailableDataMappingModeKeepsItAndWarnsOnce()
+        {
+            var future = _algorithm.AddFuture("FESX", Resolution.Daily, Market.EUREX);
+
+            _algorithm.History(future.Symbol, 5, Resolution.Daily, dataMappingMode: DataMappingMode.OpenInterest).ToList();
+            _algorithm.History(future.Symbol, 5, Resolution.Daily, dataMappingMode: DataMappingMode.OpenInterest).ToList();
+
+            Assert.Greater(_testHistoryProvider.HistryRequests.Count, 0);
+            Assert.That(_testHistoryProvider.HistryRequests.Select(x => x.DataMappingMode), Has.All.EqualTo(DataMappingMode.OpenInterest));
+            var warnings = _algorithm.DebugMessages.Where(x => x.Contains("no contract will be mapped")).ToList();
+            Assert.AreEqual(1, warnings.Count);
+            Assert.That(warnings[0], Does.EndWith("Warning: OpenInterest data mapping mode is not available for EUREX futures, " +
+                "no contract will be mapped. Use LastTradingDay instead."));
+        }
+
         [TestCase(Language.Python)]
         [TestCase(Language.CSharp)]
         public void FundamentalHistory(Language language)

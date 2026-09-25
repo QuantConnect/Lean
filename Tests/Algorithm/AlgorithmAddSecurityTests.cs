@@ -37,7 +37,6 @@ using QuantConnect.Securities.Future;
 using QuantConnect.Securities.IndexOption;
 using QuantConnect.Securities.Option;
 using QuantConnect.Tests.Engine.DataFeeds;
-using QuantConnect.Tests.Engine.HistoricalData;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -152,6 +151,7 @@ namespace QuantConnect.Tests.Algorithm
         [TestCase("FESX", Market.EUREX, null, DataMappingMode.LastTradingDay, true)]
         [TestCase("ES", Market.CME, null, DataMappingMode.OpenInterest, false)]
         [TestCase("KM", Market.KRX, DataMappingMode.OpenInterest, DataMappingMode.LastTradingDay, true)]
+        [TestCase("FESX", Market.EUREX, DataMappingMode.OpenInterest, DataMappingMode.LastTradingDay, true)]
         [TestCase("FESX", Market.EUREX, DataMappingMode.OpenInterestAnnual, DataMappingMode.LastTradingDay, true)]
         [TestCase("FESX", Market.EUREX, DataMappingMode.FirstDayMonth, DataMappingMode.FirstDayMonth, false)]
         [TestCase("ES", Market.CME, DataMappingMode.OpenInterest, DataMappingMode.OpenInterest, false)]
@@ -285,18 +285,6 @@ namespace QuantConnect.Tests.Algorithm
 
             Assert.IsFalse(_algo.DebugMessages.Any(x => x.Contains("was already added")));
             Assert.AreEqual(1, _algo.DebugMessages.Count(x => x.Contains("data mapping mode is not available")));
-        }
-
-        [Test]
-        public void HistoryWithExplicitUnavailableDataMappingModeWarnsOnce()
-        {
-            var future = _algo.AddFuture("FESX", Resolution.Daily, Market.EUREX);
-            _algo.HistoryProvider = new TestHistoryProvider();
-
-            _algo.History(future.Symbol, 5, Resolution.Daily, dataMappingMode: DataMappingMode.OpenInterest).ToList();
-            _algo.History(future.Symbol, 5, Resolution.Daily, dataMappingMode: DataMappingMode.OpenInterest).ToList();
-
-            Assert.AreEqual(1, _algo.DebugMessages.Count(x => x.Contains("no contract will be mapped")));
         }
 
         [TestCaseSource(nameof(FuturesTestCases))]
