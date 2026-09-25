@@ -222,7 +222,7 @@ namespace QuantConnect.Brokerages
 
                 case BloombergFixOrderProperties bloombergFix:
                     if ((string.IsNullOrEmpty(bloombergFix.LocateBroker) && string.IsNullOrEmpty(bloombergFix.LocateReqd))
-                        || IsShortOpen(null, quantity, holdingsQuantity))
+                        || IsShortOpen(bloombergFix.PositionSide, quantity, holdingsQuantity))
                     {
                         return null;
                     }
