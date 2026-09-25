@@ -652,9 +652,18 @@ namespace QuantConnect.Tests.Brokerages
                 OrderProvider.Add(order);
                 Assert.IsTrue(Brokerage.PlaceOrder(order), $"Brokerage failed to place the order: {order}");
             }
+            var children = orders[0].GetContingentChildren(orders).ToList();
             WaitForOrders(() => orders[0].Status == OrderStatus.Filled
-                && orders[0].GetContingentChildren(orders).All(child => !child.IsWaitingForTrigger() && child.Status is OrderStatus.Submitted or OrderStatus.UpdateSubmitted),
+                && children.All(child => !child.IsWaitingForTrigger() && child.Status is OrderStatus.Submitted or OrderStatus.UpdateSubmitted),
                 "the first order filled and the orders it triggers working");
+
+            // the triggered orders are canceled before the position is closed on tear down: some brokerages reserve the position for
+            // the working exit orders until they are canceled. Canceling one can cancel the others, like the siblings of a bracket
+            foreach (var child in children.Where(child => child.Status.IsOpen()))
+            {
+                Brokerage.CancelOrder(child);
+            }
+            WaitForOrders(() => children.All(child => child.Status == OrderStatus.Canceled), "the triggered orders canceled");
         }
 
         /// <summary>

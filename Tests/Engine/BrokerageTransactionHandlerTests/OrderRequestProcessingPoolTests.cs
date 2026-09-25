@@ -275,5 +275,64 @@ namespace QuantConnect.Tests.Engine.BrokerageTransactionHandlerTests
             Assert.IsNull(processingError, $"the pool reported an error: {processingError}");
             Assert.IsFalse(pool.IsActive);
         }
+
+        // The orders of a set of contingent orders are processed one at a time in arrival order, like the requests of a
+        // single order, so the set is placed once all of them arrived. Other orders don't wait for them
+        [Test]
+        public void ContingentOrdersAreProcessedInArrivalOrderWithoutBlockingOtherOrders()
+        {
+            using var gate = new ManualResetEventSlim(false);
+            var processed = new ConcurrentQueue<OrderRequest>();
+            Exception processingError = null;
+            var pool = new OrderRequestProcessingPool(concurrencyEnabled: true, minimumThreads: 2, maximumThreads: 2,
+                request =>
+                {
+                    processed.Enqueue(request);
+                    if (request.Tag == "entry")
+                    {
+                        gate.Wait();
+                    }
+                },
+                exception => processingError = exception);
+
+            try
+            {
+                var symbol = Symbols.SPY;
+                var reference = new DateTime(2025, 07, 03, 10, 0, 0);
+                var entry = new SubmitOrderRequest(OrderType.Limit, symbol.SecurityType, symbol, 1, 0, 100, reference, "entry");
+                entry.Bracket(takeProfitPrice: 110, stopLossPrice: 90);
+                // the entry, then the take profit and the stop loss
+                var contingentOrders = entry.Contingency.Requests;
+                Assert.AreSame(entry, contingentOrders[0]);
+                // the set id matches the id of the other order: they are still routed apart
+                entry.Contingency.SetId(4);
+                for (var i = 0; i < contingentOrders.Count; i++)
+                {
+                    contingentOrders[i].SetOrderId(i + 1);
+                }
+                var other = new SubmitOrderRequest(OrderType.Market, symbol.SecurityType, symbol, 1, 0, 0, reference, "other");
+                other.SetOrderId(4);
+
+                pool.Dispatch(contingentOrders[0], Order.CreateOrder(contingentOrders[0]));
+                Assert.IsTrue(SpinWait.SpinUntil(() => processed.Count >= 1, 10000), "the worker never got the entry");
+                pool.Dispatch(contingentOrders[1], Order.CreateOrder(contingentOrders[1]));
+                pool.Dispatch(other, Order.CreateOrder(other));
+                pool.Dispatch(contingentOrders[2], Order.CreateOrder(contingentOrders[2]));
+
+                // the other order runs while the entry is processed, the rest of the set waits for it
+                Assert.IsTrue(SpinWait.SpinUntil(() => processed.Contains(other), 10000), "the other order waited for the contingent orders");
+                CollectionAssert.AreEqual(new OrderRequest[] { contingentOrders[0], other }, processed);
+
+                gate.Set();
+                Assert.IsTrue(SpinWait.SpinUntil(() => processed.Count == 4, 10000), "the contingent orders were not processed");
+                CollectionAssert.AreEqual(contingentOrders, processed.Where(request => request != other));
+                Assert.IsNull(processingError, $"the pool reported an error: {processingError}");
+            }
+            finally
+            {
+                gate.Set();
+                pool.DisposeSafely();
+            }
+        }
     }
 }
