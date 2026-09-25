@@ -538,6 +538,38 @@ namespace QuantConnect.Tests.Common.Securities
             Assert.AreEqual(returnedEntry, entry);
         }
 
+        [TestCase("VIX9D")]
+        [TestCase("VIX6M")]
+        [TestCase("VIX1D")]
+        [TestCase("VIX1Y")]
+        [TestCase("VVIX")]
+        [TestCase("RVX")]
+        [TestCase("VXN")]
+        [TestCase("VXD")]
+        [TestCase("VWA")]
+        [TestCase("VWB")]
+        [TestCase("VXTH")]
+        [TestCase("COR1M")]
+        [TestCase("COR3M")]
+        [TestCase("COR6M")]
+        [TestCase("COR9M")]
+        [TestCase("COR1Y")]
+        [TestCase("COR30D")]
+        [TestCase("BXD")]
+        [TestCase("BXM")]
+        [TestCase("BXN")]
+        [TestCase("CLL")]
+        public void CorrectlyReadsCboeIndexMarketClose(string ticker)
+        {
+            var db = MarketHoursDatabase.FromDataFolder();
+            var exchangeHours = db.GetExchangeHours(Market.USA, Symbol.Create(ticker, SecurityType.Index, Market.USA), SecurityType.Index);
+
+            // Cboe's regular session for these indices ends at 16:15 ET, like VIX and SPX
+            var date = new DateTime(2026, 9, 17);
+            Assert.AreEqual(date.AddHours(8.5), exchangeHours.GetNextMarketOpen(date, false));
+            Assert.AreEqual(date.Add(new TimeSpan(15, 15, 0)), exchangeHours.GetNextMarketClose(date, false));
+        }
+
         [TestCase("VIX3M")]
         [TestCase("VVIX")]
         [TestCase("TESTIDX")]
