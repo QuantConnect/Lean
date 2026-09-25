@@ -47,7 +47,7 @@ namespace QuantConnect.Optimizer.Launcher
             Directory.CreateDirectory(_rootResultDirectory);
 
             _leanLocation = Configuration.Config.Get("lean-binaries-location",
-                Path.Combine(Directory.GetCurrentDirectory(), "../../../Launcher/bin/Debug/QuantConnect.Lean.Launcher"));
+                Path.Combine(Directory.GetCurrentDirectory(), "../../../Launcher/bin/Debug/QuantConnect.Lean.Launcher.dll"));
 
             var closeLeanAutomatically = Configuration.Config.GetBool("optimizer-close-automatically", true);
             _extraLeanArguments = $"--close-automatically {closeLeanAutomatically}";
@@ -85,18 +85,11 @@ namespace QuantConnect.Optimizer.Launcher
             var resultDirectory = Path.Combine(_rootResultDirectory, backtestId);
             Directory.CreateDirectory(resultDirectory);
 
-            // Use ProcessStartInfo class
-            var startInfo = new ProcessStartInfo
-            {
-                FileName = _leanLocation,
-                WorkingDirectory = Directory.GetParent(_leanLocation).FullName,
-                Arguments = $"--results-destination-folder \"{resultDirectory}\" --algorithm-id \"{backtestId}\" --optimization-id \"{optimizationId}\" --parameters {parameterSet} --backtest-name \"{backtestName}\" {_extraLeanArguments}",
-                WindowStyle = ProcessWindowStyle.Minimized
-            };
+            var arguments = $"--results-destination-folder \"{resultDirectory}\" --algorithm-id \"{backtestId}\" --optimization-id \"{optimizationId}\" --parameters {parameterSet} --backtest-name \"{backtestName}\" {_extraLeanArguments}";
 
             var process = new Process
             {
-                StartInfo = startInfo,
+                StartInfo = CreateLeanStartInfo(_leanLocation, arguments),
                 EnableRaisingEvents = true
             };
             _processByBacktestId[backtestId] = process;
@@ -119,6 +112,32 @@ namespace QuantConnect.Optimizer.Launcher
             process.Start();
 
             return backtestId;
+        }
+
+        /// <summary>
+        /// Creates the start info to launch Lean from the given location
+        /// </summary>
+        /// <param name="leanLocation">The Lean launcher assembly (.dll) or executable to run</param>
+        /// <param name="arguments">The Lean command line arguments</param>
+        /// <returns>The start info for the Lean process</returns>
+        internal static ProcessStartInfo CreateLeanStartInfo(string leanLocation, string arguments)
+        {
+            var startInfo = new ProcessStartInfo
+            {
+                FileName = leanLocation,
+                WorkingDirectory = Directory.GetParent(leanLocation).FullName,
+                Arguments = arguments,
+                WindowStyle = ProcessWindowStyle.Minimized
+            };
+
+            // Run assemblies through the dotnet host: the native apphost only runs on the architecture it was built for
+            if (leanLocation.EndsWith(".dll", StringComparison.OrdinalIgnoreCase))
+            {
+                startInfo.FileName = "dotnet";
+                startInfo.Arguments = $"\"{leanLocation}\" {arguments}";
+            }
+
+            return startInfo;
         }
 
         /// <summary>
