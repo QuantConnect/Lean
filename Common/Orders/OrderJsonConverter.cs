@@ -17,6 +17,7 @@ using System;
 using System.Linq;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using System.Collections.Generic;
 using QuantConnect.Brokerages;
 using QuantConnect.Securities;
 
@@ -179,6 +180,8 @@ namespace QuantConnect.Orders
             {
                 order.ContingentId = jsonContingentId.Value<int>();
             }
+
+            DeserializeContingency(jObject, order);
 
             var timeInForce = jObject["Properties"]?["TimeInForce"] ?? jObject["TimeInForce"] ?? jObject["Duration"];
             if (timeInForce == null)
@@ -385,6 +388,56 @@ namespace QuantConnect.Orders
             }
 
             return result;
+        }
+
+        /// <summary>
+        /// Deserializes the contingency of the order from the JSON object, if any, available for any order type
+        /// </summary>
+        private static void DeserializeContingency(JObject jObject, Order order)
+        {
+            var contingencyToken = jObject["Contingency"] ?? jObject["contingency"];
+            if (contingencyToken == null || contingencyToken.Type != JTokenType.Object)
+            {
+                // not a contingent order, or an order serialized before they existed
+                return;
+            }
+            var linksToken = contingencyToken["Links"] ?? contingencyToken["links"];
+            var count = (contingencyToken["Count"] ?? contingencyToken["count"])?.Value<int>() ?? 0;
+            if (linksToken == null || linksToken.Type != JTokenType.Array || count < 1)
+            {
+                return;
+            }
+
+            var links = new List<ContingencyLink>();
+            foreach (var token in linksToken)
+            {
+                if (token.Type != JTokenType.Object)
+                {
+                    continue;
+                }
+                var type = (ContingencyType)((token["Type"] ?? token["type"])?.Value<int>() ?? 0);
+                var roleToken = token["Role"] ?? token["role"];
+                var role = roleToken != null && roleToken.Type != JTokenType.Null ? (ContingencyRole?)roleToken.Value<int>() : null;
+                if (!ContingencyLink.IsValidRole(type, role))
+                {
+                    continue;
+                }
+                var triggeredTime = token["TriggeredTime"] ?? token["triggeredTime"];
+                links.Add(new ContingencyLink(
+                    (token["Id"] ?? token["id"])?.Value<int>() ?? 0,
+                    type,
+                    role,
+                    (token["Triggered"] ?? token["triggered"])?.Value<bool>() ?? false,
+                    triggeredTime != null && triggeredTime.Type != JTokenType.Null ? triggeredTime.Value<DateTime>() : null));
+            }
+
+            var contingency = new OrderContingency((contingencyToken["Id"] ?? contingencyToken["id"])?.Value<int>() ?? 0, count, links);
+            var orderIds = contingencyToken["OrderIds"] ?? contingencyToken["orderIds"];
+            if (orderIds != null && orderIds.Type == JTokenType.Array)
+            {
+                contingency.OrderIds.UnionWith(orderIds.Values<int>());
+            }
+            order.Contingency = contingency;
         }
 
         /// <summary>

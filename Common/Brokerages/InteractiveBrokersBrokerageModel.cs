@@ -71,6 +71,16 @@ namespace QuantConnect.Brokerages
         };
 
         /// <summary>
+        /// Supported contingency types
+        /// </summary>
+        protected virtual HashSet<ContingencyType> SupportedContingencyTypes { get; } = new HashSet<ContingencyType>
+        {
+            ContingencyType.OneCancelsOther,
+            ContingencyType.OneTriggersOther,
+            ContingencyType.OneUpdatesOther
+        };
+
+        /// <summary>
         /// Supported order types
         /// </summary>
         protected virtual HashSet<OrderType> SupportedOrderTypes { get; } = new HashSet<OrderType>
@@ -154,6 +164,18 @@ namespace QuantConnect.Brokerages
         public override bool CanSubmitOrder(Security security, Order order, out BrokerageMessageEvent message)
         {
             message = null;
+
+            // contingent orders of any type and shape are supported, including combo orders: OCA groups and attached orders
+            if (!this.ValidateContingentOrder(order, SupportedContingencyTypes, out message))
+            {
+                return false;
+            }
+            if (order.Type == OrderType.TrailingStop && order.Contingency != null
+                && order.Contingency.GetParentOrderTypes().Any(type => type != OrderType.Limit && type != OrderType.StopLimit))
+            {
+                message = this.UnsupportedContingentOrdersShape("a trailing stop order can only be triggered by a limit or stop limit order.");
+                return false;
+            }
 
             // validate order type
             if (!SupportedOrderTypes.Contains(order.Type))

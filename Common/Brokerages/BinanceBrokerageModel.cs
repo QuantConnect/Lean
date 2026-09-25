@@ -28,6 +28,15 @@ namespace QuantConnect.Brokerages
     /// </summary>
     public class BinanceBrokerageModel : DefaultBrokerageModel
     {
+        /// <summary>
+        /// The contingency types supported by the brokerage: OCO, OTO and OTOCO order lists
+        /// </summary>
+        private readonly HashSet<ContingencyType> _supportedContingencyTypes = new()
+        {
+            ContingencyType.OneCancelsOther,
+            ContingencyType.OneTriggersOther
+        };
+
         private const decimal _defaultLeverage = 3;
         private const decimal _defaultFutureLeverage = 25;
 
@@ -102,6 +111,52 @@ namespace QuantConnect.Brokerages
         {
             message = new BrokerageMessageEvent(BrokerageMessageType.Warning, 0, Messages.DefaultBrokerageModel.OrderUpdateNotSupported);
             return false;
+        }
+
+        /// <summary>
+        /// Validates contingent orders, Binance spot supports these order lists, always for a single symbol:
+        ///  - OCO: a limit order and a stop limit order, for the same side, where one cancels the other
+        ///  - OTO: a working limit order which triggers a single pending order once completely filled
+        ///  - OTOCO: a working limit order which triggers a pending OCO
+        /// </summary>
+        private bool CanSubmitContingentOrder(Security security, Order order, out BrokerageMessageEvent message)
+        {
+            if (!this.ValidateContingentOrder(order, _supportedContingencyTypes, out message, supportsComboOrders: false,
+                supportsMultipleSymbols: false, supportsNesting: false, maximumOrderCount: 3))
+            {
+                return false;
+            }
+
+            var contingency = order.Contingency;
+            if (contingency == null)
+            {
+                return true;
+            }
+
+            var isParent = order.GetContingencyLink(ContingencyRole.Parent) != null;
+            var isChild = order.GetContingencyLink(ContingencyRole.Child) != null;
+            var isMember = order.GetSiblingLink() != null;
+            if (security.Type != SecurityType.Crypto)
+            {
+                message = this.UnsupportedContingentOrdersShape("only spot crypto is supported.");
+            }
+            else if (isParent && (isMember || order.Type != OrderType.Limit))
+            {
+                message = this.UnsupportedContingentOrdersShape("the working order which triggers others has to be a single limit order.");
+            }
+            else if (isMember && order.Type != OrderType.Limit && order.Type != OrderType.StopLimit)
+            {
+                message = this.UnsupportedContingentOrdersShape("one cancels other requires a limit order and a stop limit order.");
+            }
+            else if (contingency.Count == 3 && !isParent && !(isChild && isMember))
+            {
+                message = this.UnsupportedContingentOrdersShape("3 orders are only supported as a working limit order which triggers two orders where one cancels the other.");
+            }
+            else if (isMember && contingency.Directions.Count > 1 && !isChild)
+            {
+                message = this.UnsupportedContingentOrdersShape("one cancels other orders have to be for the same side.");
+            }
+            return message == null;
         }
 
         /// <summary>
@@ -188,6 +243,11 @@ namespace QuantConnect.Brokerages
                 message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
                     Messages.DefaultBrokerageModel.UnsupportedSecurityType(this, security));
 
+                return false;
+            }
+
+            if (!CanSubmitContingentOrder(security, order, out message))
+            {
                 return false;
             }
             return base.CanSubmitOrder(security, order, out message);

@@ -423,6 +423,8 @@ namespace QuantConnect.Securities
                 }
             }
 
+            var isContingentMember = order.GetSiblingLink() != null;
+
             // fetch open orders with matching symbol/side
             var openOrders = portfolio.Transactions.GetOpenOrders(x =>
                 {
@@ -433,12 +435,17 @@ namespace QuantConnect.Securities
                            // don't count our current order
                            x.Id != order.Id &&
                            // only count working orders
-                           (x.Type == OrderType.Limit || x.Type == OrderType.StopMarket);
+                           (x.Type == OrderType.Limit || x.Type == OrderType.StopMarket) &&
+                           // don't count contingent orders held waiting for their parent to fill, nor our contingent siblings
+                           // (OCO/OUO) since at most one of us is expected to fill
+                           (x.Contingency == null || !x.IsWaitingForTrigger() && !(isContingentMember && order.IsContingentSibling(x)));
                 }
             );
 
             // calculate reserved quantity for selected orders
             var openOrdersReservedQuantity = 0m;
+            // at most one of the members of a contingency (OCO/OUO) is expected to fill, so they reserve once: the biggest of them
+            Dictionary<(int, int), decimal> contingentSiblingsReservedQuantity = null;
             foreach (var openOrder in openOrders)
             {
                 var orderSecurity = portfolio.Securities[openOrder.Symbol];
@@ -453,7 +460,27 @@ namespace QuantConnect.Securities
                         quantityInTargetCurrency *= GetOrderPrice(security, openOrder);
                     }
 
+                    var member = openOrder.Contingency != null ? openOrder.GetSiblingLink() : null;
+                    if (member != null)
+                    {
+                        contingentSiblingsReservedQuantity ??= new();
+                        var key = (openOrder.Contingency.Id, member.Id);
+                        if (!contingentSiblingsReservedQuantity.TryGetValue(key, out var existing) || quantityInTargetCurrency > existing)
+                        {
+                            contingentSiblingsReservedQuantity[key] = quantityInTargetCurrency;
+                        }
+                        continue;
+                    }
+
                     openOrdersReservedQuantity += quantityInTargetCurrency;
+                }
+            }
+
+            if (contingentSiblingsReservedQuantity != null)
+            {
+                foreach (var reserved in contingentSiblingsReservedQuantity.Values)
+                {
+                    openOrdersReservedQuantity += reserved;
                 }
             }
 

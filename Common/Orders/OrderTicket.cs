@@ -153,6 +153,15 @@ namespace QuantConnect.Orders
         }
 
         /// <summary>
+        /// Gets the current contingency of this order: the set of contingent orders it belongs to (OCO, OTO, OUO, brackets)
+        /// and how it relates to them. Null if it's not a contingent order
+        /// </summary>
+        public OrderContingency Contingency
+        {
+            get { return _order == null ? _submitRequest.Contingency : _order.Contingency; }
+        }
+
+        /// <summary>
         /// Gets the <see cref="SubmitOrderRequest"/> that initiated this order
         /// </summary>
         public SubmitOrderRequest SubmitRequest

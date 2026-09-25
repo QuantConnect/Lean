@@ -15,6 +15,7 @@
 */
 
 using System;
+using System.Linq;
 using QuantConnect.Orders;
 using QuantConnect.Securities;
 using QuantConnect.Orders.Fees;
@@ -53,6 +54,16 @@ namespace QuantConnect.Brokerages
             SecurityType.Equity,
             SecurityType.Option,
             SecurityType.IndexOption
+        };
+
+        /// <summary>
+        /// The contingency types supported by the brokerage: OCO and BRK (a fill reduces the rest) order groups and order sends order (OSO)
+        /// </summary>
+        private readonly HashSet<ContingencyType> _supportedContingencyTypes = new()
+        {
+            ContingencyType.OneCancelsOther,
+            ContingencyType.OneTriggersOther,
+            ContingencyType.OneUpdatesOther
         };
 
         /// <summary>
@@ -138,6 +149,27 @@ namespace QuantConnect.Brokerages
             {
                 message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported", Messages.DefaultBrokerageModel.UnsupportedOrderType(this, order, _supportOrderTypes));
                 return false;
+            }
+
+            // order groups (OCO, BRK) and order sends order (OSO)
+            if (!this.ValidateContingentOrder(order, _supportedContingencyTypes, out message, supportsComboOrders: false, supportsNesting: false))
+            {
+                return false;
+            }
+
+            if (order.GetSiblingLink()?.Type == ContingencyType.OneUpdatesOther)
+            {
+                // a bracket (BRK) group, where a fill reduces the other orders, requires the same symbol and a stop order
+                if (order.Contingency.Symbols.Count > 1)
+                {
+                    message = this.UnsupportedContingentOrdersShape($"{ContingencyType.OneUpdatesOther} orders have to be for the same symbol.");
+                    return false;
+                }
+                if (!order.Contingency.GetSiblingOrderTypes().Any(type => type is OrderType.StopMarket or OrderType.StopLimit or OrderType.TrailingStop))
+                {
+                    message = this.UnsupportedContingentOrdersShape($"{ContingencyType.OneUpdatesOther} orders require a stop order.");
+                    return false;
+                }
             }
 
             if (!BrokerageExtensions.ValidateCrossZeroOrder(this, security, order, out message, NotSupportedCrossZeroOrderTypes))
