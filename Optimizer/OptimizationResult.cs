@@ -13,6 +13,9 @@
  * limitations under the License.
 */
 
+using System;
+using System.Collections.Generic;
+using QuantConnect.Api;
 using QuantConnect.Optimizer.Parameters;
 
 namespace QuantConnect.Optimizer
@@ -48,9 +51,14 @@ namespace QuantConnect.Optimizer
         public ParameterSet ParameterSet { get; }
 
         /// <summary>
-        /// Aggregate diagnostic for the whole optimization; populated only on the final result fired via <see cref="LeanOptimizer.Ended"/>.
+        /// Aggregate analysis for the whole optimization; populated only on the final result fired via <see cref="LeanOptimizer.Ended"/>.
         /// </summary>
         public OptimizationAnalysis Analysis { get; set; }
+
+        /// <summary>
+        /// Lightweight backtest summaries produced during the optimization.
+        /// </summary>
+        public IReadOnlyList<OptimizationBacktest> Backtests { get; set; } = Array.Empty<OptimizationBacktest>();
 
         /// <summary>
         /// Create an instance of <see cref="OptimizationResult"/>
