@@ -148,14 +148,17 @@ namespace QuantConnect.Tests.Algorithm
                 Has.All.EqualTo(extendedMarketHours));
         }
 
-        [TestCase("KM", Market.KRX, DataMappingMode.LastTradingDay, true)]
-        [TestCase("FESX", Market.EUREX, DataMappingMode.LastTradingDay, true)]
-        [TestCase("ES", Market.CME, DataMappingMode.OpenInterest, false)]
-        public void AddFutureDefaultsToAvailableDataMappingMode(string ticker, string market, DataMappingMode expectedMode, bool expectWarning)
+        [TestCase("KM", Market.KRX, null, DataMappingMode.LastTradingDay, true)]
+        [TestCase("FESX", Market.EUREX, null, DataMappingMode.LastTradingDay, true)]
+        [TestCase("ES", Market.CME, null, DataMappingMode.OpenInterest, false)]
+        [TestCase("KM", Market.KRX, DataMappingMode.OpenInterest, DataMappingMode.LastTradingDay, true)]
+        [TestCase("FESX", Market.EUREX, DataMappingMode.OpenInterestAnnual, DataMappingMode.LastTradingDay, true)]
+        [TestCase("FESX", Market.EUREX, DataMappingMode.FirstDayMonth, DataMappingMode.FirstDayMonth, false)]
+        [TestCase("ES", Market.CME, DataMappingMode.OpenInterest, DataMappingMode.OpenInterest, false)]
+        public void AddFutureFallsBackFromUnavailableDataMappingMode(string ticker, string market, DataMappingMode? dataMappingMode,
+            DataMappingMode expectedMode, bool expectWarning)
         {
-            var future = _algo.AddFuture(ticker, Resolution.Daily, market);
-            // a second fallback does not repeat the warning
-            _algo.AddFuture("HSI", Resolution.Daily, Market.HKFE);
+            var future = _algo.AddFuture(ticker, Resolution.Daily, market, dataMappingMode: dataMappingMode);
 
             var continuousConfigs = _algo.SubscriptionManager.SubscriptionDataConfigService
                 .GetSubscriptionDataConfigs(future.Symbol, includeInternalConfigs: true)
@@ -165,34 +168,58 @@ namespace QuantConnect.Tests.Algorithm
             Assert.That(continuousConfigs.Select(x => x.DataMappingMode), Has.All.EqualTo(expectedMode));
 
             var warnings = _algo.DebugMessages.Where(x => x.Contains("data mapping mode is not available")).ToList();
-            Assert.AreEqual(1, warnings.Count);
-            var expectedMarket = expectWarning ? market : Market.HKFE;
-            Assert.That(warnings[0], Does.EndWith($"Warning: OpenInterest data mapping mode is not available for {expectedMarket.ToUpperInvariant()} futures, using LastTradingDay instead."));
+            if (expectWarning)
+            {
+                Assert.AreEqual(1, warnings.Count);
+                var requestedMode = dataMappingMode ?? DataMappingMode.OpenInterest;
+                Assert.That(warnings[0], Does.EndWith($"Warning: {requestedMode} data mapping mode is not available for {market.ToUpperInvariant()} futures, using LastTradingDay instead."));
+            }
+            else
+            {
+                Assert.IsEmpty(warnings);
+            }
         }
 
-        [TestCase("KM", Market.KRX, DataMappingMode.OpenInterest, true)]
-        [TestCase("FESX", Market.EUREX, DataMappingMode.OpenInterestAnnual, true)]
-        [TestCase("FESX", Market.EUREX, DataMappingMode.LastTradingDay, false)]
-        [TestCase("ES", Market.CME, DataMappingMode.OpenInterest, false)]
-        public void AddFutureWithExplicitUnavailableDataMappingModeWarnsOnce(string ticker, string market, DataMappingMode dataMappingMode, bool expectWarning)
+        [Test]
+        public void AddFutureDataMappingModeFallbackWarnsOncePerMarket()
         {
-            var future = _algo.AddFuture(ticker, Resolution.Daily, market, dataMappingMode: dataMappingMode);
+            _algo.AddFuture("FESX", Resolution.Daily, Market.EUREX, dataMappingMode: DataMappingMode.OpenInterest);
+            _algo.AddFuture("FDAX", Resolution.Daily, Market.EUREX);
             _algo.AddFuture("HSI", Resolution.Daily, Market.HKFE, dataMappingMode: DataMappingMode.OpenInterest);
+            _algo.AddFuture("KM", Resolution.Daily, Market.KRX);
+
+            var warnings = _algo.DebugMessages.Where(x => x.Contains("data mapping mode is not available")).ToList();
+            Assert.AreEqual(3, warnings.Count);
+            Assert.That(warnings[0], Does.EndWith("Warning: OpenInterest data mapping mode is not available for EUREX futures, using LastTradingDay instead."));
+            Assert.That(warnings[1], Does.EndWith("Warning: OpenInterest data mapping mode is not available for HKFE futures, using LastTradingDay instead."));
+            Assert.That(warnings[2], Does.EndWith("Warning: OpenInterest data mapping mode is not available for KRX futures, using LastTradingDay instead."));
+        }
+
+        [Test]
+        public void AddFutureFallsBackToUniverseSettingsDataMappingMode()
+        {
+            _algo.UniverseSettings.DataMappingMode = DataMappingMode.FirstDayMonth;
+            var future = _algo.AddFuture("FESX", Resolution.Daily, Market.EUREX, dataMappingMode: DataMappingMode.OpenInterest);
 
             var continuousConfigs = _algo.SubscriptionManager.SubscriptionDataConfigService
                 .GetSubscriptionDataConfigs(future.Symbol, includeInternalConfigs: true)
                 .Where(x => x.Type != typeof(FutureUniverse))
                 .ToList();
-            // the explicit mode is respected, not replaced by the fallback
-            Assert.That(continuousConfigs.Select(x => x.DataMappingMode), Has.All.EqualTo(dataMappingMode));
-            Assert.IsFalse(_algo.DebugMessages.Any(x => x.Contains("using LastTradingDay instead.")));
+            Assert.That(continuousConfigs.Select(x => x.DataMappingMode), Has.All.EqualTo(DataMappingMode.FirstDayMonth));
+            Assert.That(_algo.DebugMessages.Single(x => x.Contains("data mapping mode is not available")),
+                Does.EndWith("Warning: OpenInterest data mapping mode is not available for EUREX futures, using FirstDayMonth instead."));
+        }
 
-            var warnings = _algo.DebugMessages.Where(x => x.Contains("no contract will be mapped")).ToList();
-            Assert.AreEqual(1, warnings.Count);
-            var expected = expectWarning
-                ? $"Warning: {dataMappingMode} data mapping mode is not available for {market.ToUpperInvariant()} futures, no contract will be mapped. Use LastTradingDay instead."
-                : "Warning: OpenInterest data mapping mode is not available for HKFE futures, no contract will be mapped. Use LastTradingDay instead.";
-            Assert.That(warnings[0], Does.EndWith(expected));
+        [Test]
+        public void AddFutureAfterRemovingItAppliesNewSettings()
+        {
+            var future = _algo.AddFuture(Futures.Indices.SP500EMini, Resolution.Daily, dataMappingMode: DataMappingMode.OpenInterest);
+            _algo.RemoveSecurity(future.Symbol);
+            future = _algo.AddFuture(Futures.Indices.SP500EMini, Resolution.Daily, dataMappingMode: DataMappingMode.LastTradingDay);
+
+            var continuousUniverse = _algo.UniverseManager[ContinuousContractUniverse.CreateSymbol(future.Symbol)];
+            Assert.AreEqual(DataMappingMode.LastTradingDay, continuousUniverse.UniverseSettings.DataMappingMode);
+            Assert.IsFalse(_algo.DebugMessages.Any(x => x.Contains("was already added")));
         }
 
         [Test]
@@ -210,7 +237,8 @@ namespace QuantConnect.Tests.Algorithm
 
             var warnings = _algo.DebugMessages.Where(x => x.Contains("was already added")).ToList();
             Assert.AreEqual(1, warnings.Count);
-            Assert.That(warnings[0], Does.EndWith("Warning: /ES was already added, ignoring the requested data mapping mode LastTradingDay (keeping OpenInterest)."));
+            Assert.That(warnings[0], Does.EndWith("Warning: /ES was already added, ignoring the requested data mapping mode LastTradingDay (keeping OpenInterest). " +
+                "Add it only once in Initialize, or, to change these settings after Initialize, remove it with RemoveSecurity() and add it again."));
         }
 
         [Test]
@@ -223,7 +251,20 @@ namespace QuantConnect.Tests.Algorithm
             var warnings = _algo.DebugMessages.Where(x => x.Contains("was already added")).ToList();
             Assert.AreEqual(1, warnings.Count);
             Assert.That(warnings[0], Does.EndWith("Warning: /ES was already added, ignoring the requested data mapping mode LastTradingDay (keeping OpenInterest), " +
-                "data normalization mode Raw (keeping BackwardsRatio), contract depth offset 1 (keeping 0)."));
+                "data normalization mode Raw (keeping BackwardsRatio), contract depth offset 1 (keeping 0). " +
+                "Add it only once in Initialize, or, to change these settings after Initialize, remove it with RemoveSecurity() and add it again."));
+        }
+
+        [Test]
+        public void AddFutureAgainAfterInitializeWarnsToRemoveItFirst()
+        {
+            _algo.AddFuture(Futures.Indices.SP500EMini, Resolution.Daily, dataMappingMode: DataMappingMode.OpenInterest);
+            _algo.SetLocked();
+            _algo.AddFuture(Futures.Indices.SP500EMini, Resolution.Daily, dataMappingMode: DataMappingMode.LastTradingDay);
+
+            Assert.That(_algo.DebugMessages.Single(x => x.Contains("was already added")),
+                Does.EndWith("Warning: /ES was already added, ignoring the requested data mapping mode LastTradingDay (keeping OpenInterest). " +
+                "To change these settings, remove it with RemoveSecurity() and add it again."));
         }
 
         [TestCase(null)]
@@ -234,6 +275,16 @@ namespace QuantConnect.Tests.Algorithm
             _algo.AddFuture(Futures.Indices.SP500EMini, Resolution.Daily, dataMappingMode: dataMappingMode);
 
             Assert.IsFalse(_algo.DebugMessages.Any(x => x.Contains("was already added")));
+        }
+
+        [Test]
+        public void AddFutureAgainWithUnavailableDataMappingModeResolvingToSameModeDoesNotWarn()
+        {
+            _algo.AddFuture("FESX", Resolution.Daily, Market.EUREX);
+            _algo.AddFuture("FESX", Resolution.Daily, Market.EUREX, dataMappingMode: DataMappingMode.OpenInterest);
+
+            Assert.IsFalse(_algo.DebugMessages.Any(x => x.Contains("was already added")));
+            Assert.AreEqual(1, _algo.DebugMessages.Count(x => x.Contains("data mapping mode is not available")));
         }
 
         [Test]

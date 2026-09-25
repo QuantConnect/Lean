@@ -153,7 +153,7 @@ namespace QuantConnect.Algorithm
         private int? _warmupBarCount;
         private Dictionary<string, string> _parameters = new Dictionary<string, string>();
         private bool _deploymentDetailsSet;
-        private bool _dataMappingModeFallbackWarningSent;
+        private readonly HashSet<string> _dataMappingModeFallbackWarnedMarkets = new();
         private bool _unavailableDataMappingModeWarningSent;
         private bool _ignoredContinuousFutureSettingsWarningSent;
         private SecurityDefinitionSymbolResolver _securityDefinitionSymbolResolver;
@@ -2098,8 +2098,6 @@ namespace QuantConnect.Algorithm
                     }
                     else
                     {
-                        WarnIfDataMappingModeUnavailable(symbol, dataMappingMode);
-
                         // add the expected configurations of the canonical symbol right away, will allow it to warmup and indicators register to them
                         var dataTypes = SubscriptionManager.LookupSubscriptionConfigDataTypes(SecurityType.Future,
                             GetResolution(symbol, resolution, null), isCanonical: false);
@@ -2107,7 +2105,7 @@ namespace QuantConnect.Algorithm
                         {
                             ExtendedMarketHours = extendedMarketHours.Value,
                             FillForward = fillForward.Value,
-                            DataMappingMode = dataMappingMode ?? GetUniverseMappingModeOrDefault(symbol),
+                            DataMappingMode = GetDataMappingModeOrDefault(symbol, dataMappingMode),
                             DataNormalizationMode = dataNormalizationMode ?? UniverseSettings.GetUniverseNormalizationModeOrDefault(symbol.SecurityType),
                             ContractDepthOffset = (int)contractOffset,
                             SubscriptionDataTypes = dataTypes,
@@ -2135,7 +2133,8 @@ namespace QuantConnect.Algorithm
                 else if (symbol.SecurityType == SecurityType.Future
                     && UniverseManager.TryGetValue(ContinuousContractUniverse.CreateSymbol(symbol), out var continuousUniverse))
                 {
-                    WarnIfContinuousFutureSettingsIgnored(symbol, continuousUniverse.UniverseSettings, dataMappingMode, dataNormalizationMode, (int)contractOffset);
+                    var requestedDataMappingMode = dataMappingMode.HasValue ? GetDataMappingModeOrDefault(symbol, dataMappingMode) : (DataMappingMode?)null;
+                    WarnIfContinuousFutureSettingsIgnored(symbol, continuousUniverse.UniverseSettings, requestedDataMappingMode, dataNormalizationMode, (int)contractOffset);
                 }
                 return security;
             }
@@ -2144,17 +2143,23 @@ namespace QuantConnect.Algorithm
         }
 
         /// <summary>
-        /// Gets the default data mapping mode for the given symbol, warning once if the universe settings mode is not available for its market
+        /// Gets the requested or default data mapping mode for the given symbol, falling back to the market default if it is not available,
+        /// warning once per market when it does
         /// </summary>
-        private DataMappingMode GetUniverseMappingModeOrDefault(Symbol symbol)
+        private DataMappingMode GetDataMappingModeOrDefault(Symbol symbol, DataMappingMode? dataMappingMode = null)
         {
-            var dataMappingMode = UniverseSettings.GetUniverseMappingModeOrDefault(symbol.SecurityType, symbol.ID.Market);
-            if (dataMappingMode != UniverseSettings.DataMappingMode && !_dataMappingModeFallbackWarningSent)
+            var requestedDataMappingMode = dataMappingMode ?? UniverseSettings.DataMappingMode;
+            if (symbol.SecurityType != SecurityType.Future || requestedDataMappingMode.IsAvailableForFutureMarket(symbol.ID.Market))
             {
-                _dataMappingModeFallbackWarningSent = true;
-                Debug($"Warning: {UniverseSettings.DataMappingMode} data mapping mode is not available for {symbol.ID.Market.ToUpperInvariant()} futures, using {dataMappingMode} instead.");
+                return requestedDataMappingMode;
             }
-            return dataMappingMode;
+
+            var fallbackDataMappingMode = UniverseSettings.GetUniverseMappingModeOrDefault(symbol.SecurityType, symbol.ID.Market);
+            if (_dataMappingModeFallbackWarnedMarkets.Add(symbol.ID.Market))
+            {
+                Debug($"Warning: {requestedDataMappingMode} data mapping mode is not available for {symbol.ID.Market.ToUpperInvariant()} futures, using {fallbackDataMappingMode} instead.");
+            }
+            return fallbackDataMappingMode;
         }
 
         /// <summary>
@@ -2198,7 +2203,10 @@ namespace QuantConnect.Algorithm
             if (ignoredSettings.Count > 0)
             {
                 _ignoredContinuousFutureSettingsWarningSent = true;
-                Debug($"Warning: {symbol} was already added, ignoring the requested {string.Join(", ", ignoredSettings)}.");
+                var instructions = _locked
+                    ? "To change these settings, remove it with RemoveSecurity() and add it again."
+                    : "Add it only once in Initialize, or, to change these settings after Initialize, remove it with RemoveSecurity() and add it again.";
+                Debug($"Warning: {symbol} was already added, ignoring the requested {string.Join(", ", ignoredSettings)}. {instructions}");
             }
         }
 

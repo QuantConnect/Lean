@@ -1296,7 +1296,7 @@ namespace QuantConnect.Algorithm
                 // Inherit values from existing subscriptions or use defaults
                 var extendedMarketHours = userConfigIfAny?.ExtendedMarketHours ?? UniverseSettings.ExtendedMarketHours;
                 var dataNormalizationMode = userConfigIfAny?.DataNormalizationMode ?? UniverseSettings.GetUniverseNormalizationModeOrDefault(symbol.SecurityType);
-                var dataMappingMode = userConfigIfAny?.DataMappingMode ?? GetUniverseMappingModeOrDefault(symbol);
+                var dataMappingMode = userConfigIfAny?.DataMappingMode ?? GetDataMappingModeOrDefault(symbol);
                 var contractDepthOffset = userConfigIfAny?.ContractDepthOffset ?? (uint)Math.Abs(UniverseSettings.ContractDepthOffset);
 
                 // If type was specified and not a lean data type and also not abstract, we create a new subscription
