@@ -2133,7 +2133,7 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
         private bool IsShortable(SubmitOrderRequest request)
         {
             var contingency = request.Contingency;
-            var member = contingency?.Links.FirstOrDefault(link => link.Role == null);
+            var member = contingency?.GetLink(null);
             if (member == null)
             {
                 return _algorithm.Shortable(request.Symbol, request.Quantity);
@@ -2147,8 +2147,7 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
             }
 
             var openOrderQuantity = _algorithm.Transactions.GetOpenOrdersRemainingQuantity(ticket => ticket.Symbol == request.Symbol
-                && !(ticket.Contingency?.Id == contingency.Id
-                    && ticket.Contingency.Links.Any(link => link.Role == null && link.Id == member.Id)));
+                && !(ticket.Contingency?.Id == contingency.Id && ticket.Contingency.GetLink(null)?.Id == member.Id));
             return security.Holdings.Quantity + openOrderQuantity - Math.Abs(request.Quantity) >= -shortableQuantity;
         }
 

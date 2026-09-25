@@ -48,7 +48,7 @@ namespace QuantConnect.Orders
         /// </summary>
         public Symbol Symbol
         {
-            get; private set;
+            get; internal set;
         }
 
         /// <summary>

@@ -238,17 +238,8 @@ namespace QuantConnect.Orders
         private SubmitOrderRequest Create(OrderType type, Symbol symbol, decimal quantity, decimal stopPrice, decimal limitPrice, decimal triggerPrice,
             decimal trailingAmount, bool trailingAsPercentage, bool asynchronous, string tag, IOrderProperties orderProperties)
         {
-            symbol = GetCurrentSymbol(symbol);
             return new SubmitOrderRequest(type, symbol.SecurityType, symbol, quantity, stopPrice, limitPrice, triggerPrice, trailingAmount, trailingAsPercentage,
                 _algorithm.UtcTime, tag, orderProperties ?? _algorithm.DefaultOrderProperties?.Clone(), asynchronous: asynchronous);
-        }
-
-        /// <summary>
-        /// Gets the current symbol of the security, which can have been renamed since the given one was created
-        /// </summary>
-        private Symbol GetCurrentSymbol(Symbol symbol)
-        {
-            return _algorithm.Securities.TryGetValue(symbol, out var security) ? security.Symbol : symbol;
         }
 
         private List<SubmitOrderRequest> Combo(OrderType type, List<Leg> legs, decimal quantity, decimal limitPrice, bool asynchronous, string tag,
@@ -284,8 +275,7 @@ namespace QuantConnect.Orders
                     legType = OrderType.ComboLegLimit;
                 }
 
-                var symbol = GetCurrentSymbol(leg.Symbol);
-                requests.Add(new SubmitOrderRequest(legType, symbol.SecurityType, symbol, ((decimal)leg.Quantity).GetOrderLegGroupQuantity(groupOrderManager),
+                requests.Add(new SubmitOrderRequest(legType, leg.Symbol.SecurityType, leg.Symbol, ((decimal)leg.Quantity).GetOrderLegGroupQuantity(groupOrderManager),
                     0, legLimitPrice, 0, 0, false, _algorithm.UtcTime, tag, orderProperties ?? _algorithm.DefaultOrderProperties?.Clone(), groupOrderManager, asynchronous));
             }
             return requests;

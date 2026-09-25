@@ -166,13 +166,10 @@ namespace QuantConnect.Algorithm
             Action conversionWarning = null;
             // the legs of the combo orders which are not part of a set of contingent orders, all of them are required
             Dictionary<GroupOrderManager, int> comboLegs = null;
+            // the sets of contingent orders already added
+            HashSet<IReadOnlyList<SubmitOrderRequest>> contingentSets = null;
             foreach (var order in orders)
             {
-                if (requests.Contains(order))
-                {
-                    // along with the rest of its set
-                    continue;
-                }
                 if (order.Contingency == null)
                 {
                     if (order.GroupOrderManager != null)
@@ -189,6 +186,11 @@ namespace QuantConnect.Algorithm
                     continue;
                 }
                 var setRequests = order.Contingency.Requests;
+                if (!(contingentSets ??= new()).Add(setRequests))
+                {
+                    // along with the rest of its set
+                    continue;
+                }
                 for (var i = 0; i < setRequests.Count; i++)
                 {
                     var request = setRequests[i];
@@ -242,6 +244,8 @@ namespace QuantConnect.Algorithm
             }
 
             var security = GetSecurityForOrder(request.Symbol);
+            // the security can have been renamed since the symbol was created
+            request.Symbol = security.Symbol;
             var held = IsHeld(request);
             if (request.Contingency?.Id == 0)
             {

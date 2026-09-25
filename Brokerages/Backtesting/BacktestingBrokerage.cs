@@ -254,9 +254,9 @@ namespace QuantConnect.Brokerages.Backtesting
                 // process each pending order to produce fills/fire events, by id. When more than one member of the same OCO/OUO contingency
                 // could fill with the same data we can't know which one would of happen first, so we make the pessimistic assumption:
                 // stop orders, like the stop loss, go first and the rest of the members, like the take profit, are processed last
-                foreach (var kvp in _pending.SafeEnumeration()
-                    .OrderBy(x => x.Value != null && !x.Value.Type.IsStopOrder() && x.Value.GetSiblingLink() != null)
-                    .ThenBy(x => x.Key))
+                foreach (var kvp in _pending.SafeEnumeration().OrderBy(x => x.Value != null && !x.Value.Type.IsStopOrder() && x.Value.GetSiblingLink() != null
+                    ? x.Key + (long)int.MaxValue
+                    : x.Key))
                 {
                     var order = kvp.Value;
                     if (order == null)
@@ -266,7 +266,7 @@ namespace QuantConnect.Brokerages.Backtesting
                         continue;
                     }
 
-                    if (!_pending.ContainsKey(kvp.Key))
+                    if (order.Contingency != null && !_pending.ContainsKey(kvp.Key))
                     {
                         // removed as a consequence of a previous fill during this scan, like a contingent sibling (OCO)
                         continue;
