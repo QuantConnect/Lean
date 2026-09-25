@@ -2148,7 +2148,7 @@ namespace QuantConnect.Algorithm
         private DataMappingMode GetDataMappingModeOrDefault(Symbol symbol, DataMappingMode? dataMappingMode = null)
         {
             var requestedDataMappingMode = dataMappingMode ?? UniverseSettings.DataMappingMode;
-            if (symbol.SecurityType != SecurityType.Future || requestedDataMappingMode.IsAvailableForFutureMarket(symbol.ID.Market))
+            if (symbol.SecurityType != SecurityType.Future || !symbol.IsCanonical() || requestedDataMappingMode.IsAvailableForFutureMarket(symbol.ID.Market))
             {
                 return requestedDataMappingMode;
             }

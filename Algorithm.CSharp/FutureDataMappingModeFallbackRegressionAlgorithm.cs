@@ -63,17 +63,19 @@ namespace QuantConnect.Algorithm.CSharp
                 throw new RegressionTestException($"Unexpected mapped contract {_future.Mapped}, expected the June contract");
             }
 
-            if (History(_future.Symbol, 10, Resolution.Minute).Count() == 0)
+            var history = History(_future.Symbol, 10, Resolution.Minute).Select(x => x.Close).ToList();
+            if (history.Count == 0)
             {
                 throw new RegressionTestException("Expected history for the continuous future using the fallback data mapping mode");
             }
 
-            var openInterestHistory = History(_future.Symbol, 10, Resolution.Minute, dataMappingMode: DataMappingMode.OpenInterest);
-            if (openInterestHistory.Any())
+            // explicit open interest falls back to the same mode, the market warning was already sent by AddFuture
+            var openInterestHistory = History(_future.Symbol, 10, Resolution.Minute, dataMappingMode: DataMappingMode.OpenInterest).Select(x => x.Close).ToList();
+            if (!openInterestHistory.SequenceEqual(history))
             {
-                throw new RegressionTestException("Expected no history for the explicitly requested open interest data mapping mode");
+                throw new RegressionTestException("Expected the explicit open interest history to match the fallback data mapping mode history");
             }
-            AssertWarning("Warning: OpenInterest data mapping mode is not available for EUREX futures, no contract will be mapped. Use LastTradingDay instead.");
+            AssertWarning("Warning: OpenInterest data mapping mode is not available for EUREX futures, using LastTradingDay instead.");
 
             AddFuture(Futures.Indices.EuroStoxx50, Resolution.Minute, dataMappingMode: DataMappingMode.FirstDayMonth);
             AssertWarning("Warning: /FESX already added, ignoring data mapping mode FirstDayMonth. Remove it first to change its settings.");
@@ -117,7 +119,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// Data Points count of the algorithm history
         /// </summary>
-        public int AlgorithmHistoryDataPoints => 10;
+        public int AlgorithmHistoryDataPoints => 20;
 
         /// <summary>
         /// Final status of the algorithm

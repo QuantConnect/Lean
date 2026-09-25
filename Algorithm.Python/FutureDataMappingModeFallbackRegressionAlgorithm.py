@@ -42,13 +42,15 @@ class FutureDataMappingModeFallbackRegressionAlgorithm(QCAlgorithm):
         if self._future.mapped.id.date.month != 6:
             raise AssertionError(f"Unexpected mapped contract {self._future.mapped}, expected the June contract")
 
-        if self.history(self._future.symbol, 10, Resolution.MINUTE).empty:
+        history = self.history(self._future.symbol, 10, Resolution.MINUTE)
+        if history.empty:
             raise AssertionError("Expected history for the continuous future using the fallback data mapping mode")
 
+        # explicit open interest falls back to the same mode, the market warning was already sent by add_future
         open_interest_history = self.history(self._future.symbol, 10, Resolution.MINUTE, data_mapping_mode=DataMappingMode.OPEN_INTEREST)
-        if not open_interest_history.empty:
-            raise AssertionError("Expected no history for the explicitly requested open interest data mapping mode")
-        self._assert_warning("Warning: OpenInterest data mapping mode is not available for EUREX futures, no contract will be mapped. Use LastTradingDay instead.")
+        if list(open_interest_history["close"]) != list(history["close"]):
+            raise AssertionError("Expected the explicit open interest history to match the fallback data mapping mode history")
+        self._assert_warning("Warning: OpenInterest data mapping mode is not available for EUREX futures, using LastTradingDay instead.")
 
         self.add_future(Futures.Indices.EURO_STOXX_50, Resolution.MINUTE, data_mapping_mode=DataMappingMode.FIRST_DAY_MONTH)
         self._assert_warning("Warning: /FESX already added, ignoring data mapping mode FirstDayMonth. Remove it first to change its settings.")
