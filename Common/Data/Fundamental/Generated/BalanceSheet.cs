@@ -1,4 +1,4 @@
-/*
+﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2023 QuantConnect Corporation.
  *
@@ -37,6 +37,16 @@ namespace QuantConnect.Data.Fundamental
         [JsonProperty("23542")]
         public BalanceSheetFileDate BSFileDate => _bSFileDate ??= new(_timeProvider, _securityIdentifier);
         private BalanceSheetFileDate _bSFileDate;
+
+        /// <summary>
+        /// Period ending date of the balance sheet as its own feed delivers it. PeriodEndingDate on FinancialStatements moves only once every statement has reached a period; this one moves as soon as the balance sheet has.
+        /// </summary>
+        /// <remarks>
+        /// Morningstar DataId: EQQ6C
+        /// </remarks>
+        [JsonProperty("EQQ6C")]
+        public BalanceSheetPeriodEndingDate PeriodEndingDate => _balanceSheetPeriodEndingDate ??= new(_timeProvider, _securityIdentifier);
+        private BalanceSheetPeriodEndingDate _balanceSheetPeriodEndingDate;
 
         /// <summary>
         /// Any money that a company owes its suppliers for goods and services purchased on credit and is expected to pay within the next year or operating cycle.
@@ -135,11 +145,13 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 23020
         /// </remarks>
         [JsonProperty("23020")]
+        [Obsolete("AvailableForSaleSecurities was retired by Morningstar in 2026 for all periods; no replacement is available.")]
+        [JsonIgnore]
         public AvailableForSaleSecuritiesBalanceSheet AvailableForSaleSecurities => _availableForSaleSecurities ??= new(_timeProvider, _securityIdentifier);
         private AvailableForSaleSecuritiesBalanceSheet _availableForSaleSecurities;
 
         /// <summary>
-        /// The total amount of stock authorized for issue by a corporation, including common and preferred stock.
+        /// The value of the issued common shares of the company.
         /// </summary>
         /// <remarks>
         /// Morningstar DataId: 23027
@@ -185,11 +197,13 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 23031
         /// </remarks>
         [JsonProperty("23031")]
+        [Obsolete("CashAndDueFromBanks was retired by Morningstar in 2026 for all periods; no replacement is available.")]
+        [JsonIgnore]
         public CashAndDueFromBanksBalanceSheet CashAndDueFromBanks => _cashAndDueFromBanks ??= new(_timeProvider, _securityIdentifier);
         private CashAndDueFromBanksBalanceSheet _cashAndDueFromBanks;
 
         /// <summary>
-        /// The aggregate amount of cash, cash equivalents, and federal funds sold.
+        /// The aggregate amount of cash, cash equivalents and short term investments.
         /// </summary>
         /// <remarks>
         /// Morningstar DataId: 23032
@@ -269,7 +283,7 @@ namespace QuantConnect.Data.Fundamental
         private CurrentCapitalLeaseObligationBalanceSheet _currentCapitalLeaseObligation;
 
         /// <summary>
-        /// An amount owed to a firm that is not expected to be received by the firm within one year from the date of the balance sheet.
+        /// Deferred tax assets: taxes paid or carried forward that are not yet recognized in the income statement.
         /// </summary>
         /// <remarks>
         /// Morningstar DataId: 23052
@@ -395,6 +409,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 23076
         /// </remarks>
         [JsonProperty("23076")]
+        [Obsolete("EquityInvestments was retired by Morningstar in 2026 for all periods; no replacement is available.")]
+        [JsonIgnore]
         public EquityInvestmentsBalanceSheet EquityInvestments => _equityInvestments ??= new(_timeProvider, _securityIdentifier);
         private EquityInvestmentsBalanceSheet _equityInvestments;
 
@@ -429,7 +445,7 @@ namespace QuantConnect.Data.Fundamental
         private FixedMaturityInvestmentsBalanceSheet _fixedMaturityInvestments;
 
         /// <summary>
-        /// Accounting policy pertaining to an insurance entity's net liability for future benefits (for example, death, cash surrender value) to be paid to or on behalf of policyholders, describing the bases, methodologies and components of the reserve, and assumptions regarding estimates of expected investment yields, mortality, morbidity, terminations and expenses.
+        /// Reserves set aside by an insurer for future policy benefits, for claims incurred but not yet settled, and for claims incurred but not reported.
         /// </summary>
         /// <remarks>
         /// Morningstar DataId: 23095
@@ -489,7 +505,7 @@ namespace QuantConnect.Data.Fundamental
         private GrossPPEBalanceSheet _grossPPE;
 
         /// <summary>
-        /// Debt securities that a firm has the ability and intent to hold until maturity.
+        /// Debt securities that a firm has the ability and intent to hold until maturity, maturing beyond one year or a normal operating cycle.
         /// </summary>
         /// <remarks>
         /// Morningstar DataId: 23102
@@ -619,7 +635,7 @@ namespace QuantConnect.Data.Fundamental
         private MinorityInterestBalanceSheet _minorityInterest;
 
         /// <summary>
-        /// Short-term (typical maturity is less than one year), highly liquid government or corporate debt instrument such as bankers' acceptance, promissory notes, and treasury bills.
+        /// The sum of federal (central bank) funds sold, securities purchased under agreements to resell, and securities borrowed.
         /// </summary>
         /// <remarks>
         /// Morningstar DataId: 23133
@@ -739,7 +755,7 @@ namespace QuantConnect.Data.Fundamental
         private PayablesAndAccruedExpensesBalanceSheet _payablesAndAccruedExpenses;
 
         /// <summary>
-        /// Accounting policy pertaining to an insurance entity's net liability for future benefits (for example, death, cash surrender value) to be paid to or on behalf of policyholders, describing the bases, methodologies and components of the reserve, and assumptions regarding estimates of expected investment yields, mortality, morbidity, terminations and expenses.
+        /// Reserves set aside by an insurer for future policy benefits, for claims incurred but not yet settled, and for claims incurred but not reported.
         /// </summary>
         /// <remarks>
         /// Morningstar DataId: 23169
@@ -849,7 +865,7 @@ namespace QuantConnect.Data.Fundamental
         private SecurityAgreeToBeResellBalanceSheet _securityAgreeToBeResell;
 
         /// <summary>
-        /// Represent obligations of the company to deliver the specified security at the contracted price and, thereby, create a liability to purchase the security in the market at prevailing prices.
+        /// Financial liabilities held with the intent to trade for short term profit, including obligations to deliver securities sold short.
         /// </summary>
         /// <remarks>
         /// Morningstar DataId: 23208
@@ -869,7 +885,7 @@ namespace QuantConnect.Data.Fundamental
         private SeparateAccountAssetsBalanceSheet _separateAccountAssets;
 
         /// <summary>
-        /// Refers to revenue that is generated that is not part of typical operations.
+        /// Assets an insurance company holds in separate accounts: bought by the company but owned by the investors who provided the funds, legally segregated and reported apart from the company's other investments.
         /// </summary>
         /// <remarks>
         /// Morningstar DataId: 23210
@@ -879,7 +895,7 @@ namespace QuantConnect.Data.Fundamental
         private SeparateAccountBusinessBalanceSheet _separateAccountBusiness;
 
         /// <summary>
-        /// The current assets section of a company's balance sheet that contains the investments that a company holds with the purpose for trading.
+        /// The total of all short term financial investments.
         /// </summary>
         /// <remarks>
         /// Morningstar DataId: 23212
@@ -1129,7 +1145,7 @@ namespace QuantConnect.Data.Fundamental
         private GrossAccountsReceivableBalanceSheet _grossAccountsReceivable;
 
         /// <summary>
-        /// Accounts receivable represents sums owed to the business that the business records as revenue. Gross accounts receivable is accounts receivable before the business deducts uncollectable accounts to calculate the true value of accounts receivable.
+        /// Amounts due from customers, and other receivables, collectible beyond one year or a normal operating cycle.
         /// </summary>
         /// <remarks>
         /// Morningstar DataId: 23263
@@ -1199,7 +1215,7 @@ namespace QuantConnect.Data.Fundamental
         private AssetsOfDiscontinuedOperationsBalanceSheet _assetsOfDiscontinuedOperations;
 
         /// <summary>
-        /// All indebtedness for borrowed money or the deferred purchase price of property or services, including without limitation reimbursement and other obligations with respect to surety bonds and letters of credit, all obligations evidenced by notes, bonds debentures or similar instruments, all capital lease obligations and all contingent obligations.
+        /// The carrying value of amounts due to banks or institutions within one year or a normal operating cycle, including revolving credit, facilities and lines of credit.
         /// </summary>
         /// <remarks>
         /// Morningstar DataId: 23271
@@ -1289,7 +1305,7 @@ namespace QuantConnect.Data.Fundamental
         private ConsumerLoanBalanceSheet _consumerLoan;
 
         /// <summary>
-        /// The company's minimum pension obligations to its former employees, paid into a defined pension plan to satisfy all pension entitlements that have been earned by employees to date.
+        /// Accumulated gains or losses from pension and other post-retirement plans, recorded in reserves or accumulated other comprehensive income.
         /// </summary>
         /// <remarks>
         /// Morningstar DataId: 23284
@@ -1389,7 +1405,7 @@ namespace QuantConnect.Data.Fundamental
         private FederalHomeLoanBankStockBalanceSheet _federalHomeLoanBankStock;
 
         /// <summary>
-        /// Fair values as of the balance sheet date of all assets resulting from contracts that meet the criteria of being accounted for as derivative instruments, net of the effects of master netting arrangements.
+        /// Fair value of the derivative and hedging assets the company intends to hold for more than one year or a normal operating cycle.
         /// </summary>
         /// <remarks>
         /// Morningstar DataId: 23298
@@ -1569,7 +1585,7 @@ namespace QuantConnect.Data.Fundamental
         private MortgageLoanBalanceSheet _mortgageLoan;
 
         /// <summary>
-        /// It means the aggregate amount of mortgage and consumer loans. This item is typically available for the insurance industry.
+        /// Loans collateralized by a specified piece of real estate (mortgage loans). Consumer loans are not included.
         /// </summary>
         /// <remarks>
         /// Morningstar DataId: 23323
@@ -1599,7 +1615,7 @@ namespace QuantConnect.Data.Fundamental
         private OtherAssetsBalanceSheet _otherAssets;
 
         /// <summary>
-        /// Other Capital Stock that is not otherwise classified.
+        /// The carrying value of stock issued and outstanding, including common and preferred stock.
         /// </summary>
         /// <remarks>
         /// Morningstar DataId: 23330
@@ -1699,7 +1715,7 @@ namespace QuantConnect.Data.Fundamental
         private OtherReceivablesBalanceSheet _otherReceivables;
 
         /// <summary>
-        /// A loan issued by an insurance company that uses the cash value of a person's life insurance policy as collateral. This item is usually only available in the insurance industry.
+        /// The long term obligation for employees' future pension and other post-retirement benefits, including retirement benefit obligations and severance cost.
         /// </summary>
         /// <remarks>
         /// Morningstar DataId: 23344
@@ -1729,7 +1745,7 @@ namespace QuantConnect.Data.Fundamental
         private PreferredStockEquityBalanceSheet _preferredStockEquity;
 
         /// <summary>
-        /// Tangible assets that are held by an entity for use in the production or supply of goods and services, for rental to others, or for administrative purposes and that are expected to provide economic benefit for more than one year. This item is available for manufacturing, bank and transportation industries.
+        /// The cost of other properties, and of improvements to properties, that are not categorized elsewhere; the net book value where accumulated depreciation is not reported.
         /// </summary>
         /// <remarks>
         /// Morningstar DataId: 23351
@@ -1869,7 +1885,7 @@ namespace QuantConnect.Data.Fundamental
         private TaxesReceivableBalanceSheet _taxesReceivable;
 
         /// <summary>
-        /// Stockholder's Equity plus Long Term Debt.
+        /// Total equity, including non-controlling interests, plus long term debt.
         /// </summary>
         /// <remarks>
         /// Morningstar DataId: 23374
@@ -1889,7 +1905,7 @@ namespace QuantConnect.Data.Fundamental
         private TotalDeferredCreditsAndOtherNonCurrentLiabilitiesBalanceSheet _totalDeferredCreditsAndOtherNonCurrentLiabilities;
 
         /// <summary>
-        /// Revenues that are not currently billed from the customer under the terms of the contract. This item is usually only available for utility industry.
+        /// Amounts owed to the company by other parties, including accrued income and revenue not yet billed to the customer under the terms of the contract.
         /// </summary>
         /// <remarks>
         /// Morningstar DataId: 23376
@@ -1899,7 +1915,7 @@ namespace QuantConnect.Data.Fundamental
         private UnbilledReceivablesBalanceSheet _unbilledReceivables;
 
         /// <summary>
-        /// A profit or loss that results from holding onto an asset rather than cashing it in and officially taking the profit or loss.
+        /// Accumulated unrealized gains or losses on available-for-sale financial investments, held in accumulated other comprehensive income.
         /// </summary>
         /// <remarks>
         /// Morningstar DataId: 23377
@@ -2225,6 +2241,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 23415
         /// </remarks>
         [JsonProperty("23415")]
+        [Obsolete("FinanceLeaseReceivables was retired by Morningstar in 2026 for all periods; no replacement is available.")]
+        [JsonIgnore]
         public FinanceLeaseReceivablesBalanceSheet FinanceLeaseReceivables => _financeLeaseReceivables ??= new(_timeProvider, _securityIdentifier);
         private FinanceLeaseReceivablesBalanceSheet _financeLeaseReceivables;
 
@@ -2235,6 +2253,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 23418
         /// </remarks>
         [JsonProperty("23418")]
+        [Obsolete("ConvertibleLoansCurrent was retired by Morningstar in 2026 for all periods; no replacement is available.")]
+        [JsonIgnore]
         public ConvertibleLoansCurrentBalanceSheet ConvertibleLoansCurrent => _convertibleLoansCurrent ??= new(_timeProvider, _securityIdentifier);
         private ConvertibleLoansCurrentBalanceSheet _convertibleLoansCurrent;
 
@@ -2245,6 +2265,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 23419
         /// </remarks>
         [JsonProperty("23419")]
+        [Obsolete("BankLoansCurrent was retired by Morningstar in 2026 for all periods; no replacement is available.")]
+        [JsonIgnore]
         public BankLoansCurrentBalanceSheet BankLoansCurrent => _bankLoansCurrent ??= new(_timeProvider, _securityIdentifier);
         private BankLoansCurrentBalanceSheet _bankLoansCurrent;
 
@@ -2259,7 +2281,7 @@ namespace QuantConnect.Data.Fundamental
         private OtherLoansCurrentBalanceSheet _otherLoansCurrent;
 
         /// <summary>
-        /// Sum of accrued liabilities and deferred income (amount received in advance but the services are not provided in respect of amount).
+        /// Obligations for goods and services received but not yet invoiced, reported in current liabilities. Deferred income is not included.
         /// </summary>
         /// <remarks>
         /// Morningstar DataId: 23422
@@ -2275,6 +2297,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 23426
         /// </remarks>
         [JsonProperty("23426")]
+        [Obsolete("BankLoansNonCurrent was retired by Morningstar in 2026 for all periods; no replacement is available.")]
+        [JsonIgnore]
         public BankLoansNonCurrentBalanceSheet BankLoansNonCurrent => _bankLoansNonCurrent ??= new(_timeProvider, _securityIdentifier);
         private BankLoansNonCurrentBalanceSheet _bankLoansNonCurrent;
 
@@ -2289,7 +2313,7 @@ namespace QuantConnect.Data.Fundamental
         private OtherLoansNonCurrentBalanceSheet _otherLoansNonCurrent;
 
         /// <summary>
-        /// Other reserves owned by the company that cannot be identified by other specific items in the Reserves section.
+        /// The sum of all reserves and accumulated other comprehensive income or losses.
         /// </summary>
         /// <remarks>
         /// Morningstar DataId: 23430
@@ -2315,6 +2339,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 23433
         /// </remarks>
         [JsonProperty("23433")]
+        [Obsolete("LoansandAdvancestoCustomer was retired by Morningstar in 2026 for all periods; no replacement is available.")]
+        [JsonIgnore]
         public LoansandAdvancestoCustomerBalanceSheet LoansandAdvancestoCustomer => _loansandAdvancestoCustomer ??= new(_timeProvider, _securityIdentifier);
         private LoansandAdvancestoCustomerBalanceSheet _loansandAdvancestoCustomer;
 
@@ -2335,11 +2361,13 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 23435
         /// </remarks>
         [JsonProperty("23435")]
+        [Obsolete("EquitySharesInvestments was retired by Morningstar in 2026 for all periods; no replacement is available.")]
+        [JsonIgnore]
         public EquitySharesInvestmentsBalanceSheet EquitySharesInvestments => _equitySharesInvestments ??= new(_timeProvider, _securityIdentifier);
         private EquitySharesInvestmentsBalanceSheet _equitySharesInvestments;
 
         /// <summary>
-        /// Banks investment in the ongoing entity.
+        /// Deposits held by a bank from other banks or institutions.
         /// </summary>
         /// <remarks>
         /// Morningstar DataId: 23436
@@ -2349,7 +2377,7 @@ namespace QuantConnect.Data.Fundamental
         private DepositsbyBankBalanceSheet _depositsbyBank;
 
         /// <summary>
-        /// Carrying value of amounts transferred by customers to third parties for security purposes that are expected to be returned or applied towards payment after one year or beyond the operating cycle, if longer.
+        /// Deposits held by a bank from individual customers.
         /// </summary>
         /// <remarks>
         /// Morningstar DataId: 23437
@@ -2369,7 +2397,7 @@ namespace QuantConnect.Data.Fundamental
         private ItemsinTheCourseofTransmissiontoOtherBanksBalanceSheet _itemsinTheCourseofTransmissiontoOtherBanks;
 
         /// <summary>
-        /// Total carrying amount of total trading, financial liabilities and debt in a non-differentiated balance sheet.
+        /// The company's total debt: long term debt and capital lease obligations plus current debt and capital lease obligations.
         /// </summary>
         /// <remarks>
         /// Morningstar DataId: 23439
@@ -2385,11 +2413,13 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 23440
         /// </remarks>
         [JsonProperty("23440")]
+        [Obsolete("DebtSecuritiesinIssue was retired by Morningstar in 2026 for all periods; no replacement is available.")]
+        [JsonIgnore]
         public DebtSecuritiesinIssueBalanceSheet DebtSecuritiesinIssue => _debtSecuritiesinIssue ??= new(_timeProvider, _securityIdentifier);
         private DebtSecuritiesinIssueBalanceSheet _debtSecuritiesinIssue;
 
         /// <summary>
-        /// The total carrying value of securities loaned to other broker dealers, typically used by such parties to cover short sales, secured by cash or other securities furnished by such parties until the borrowing is closed; in a Non-Differentiated Balance Sheet.
+        /// Debt that ranks after the other classes of debt should the company fall into liquidation or bankruptcy.
         /// </summary>
         /// <remarks>
         /// Morningstar DataId: 23441
@@ -2425,6 +2455,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 23445
         /// </remarks>
         [JsonProperty("23445")]
+        [Obsolete("ClaimsOutstanding was retired by Morningstar in 2026 for all periods; no replacement is available.")]
+        [JsonIgnore]
         public ClaimsOutstandingBalanceSheet ClaimsOutstanding => _claimsOutstanding ??= new(_timeProvider, _securityIdentifier);
         private ClaimsOutstandingBalanceSheet _claimsOutstanding;
 
@@ -2495,6 +2527,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 23459
         /// </remarks>
         [JsonProperty("23459")]
+        [Obsolete("FinanceLeaseReceivablesCurrent was retired by Morningstar in 2026 for all periods; no replacement is available.")]
+        [JsonIgnore]
         public FinanceLeaseReceivablesCurrentBalanceSheet FinanceLeaseReceivablesCurrent => _financeLeaseReceivablesCurrent ??= new(_timeProvider, _securityIdentifier);
         private FinanceLeaseReceivablesCurrentBalanceSheet _financeLeaseReceivablesCurrent;
 
@@ -2505,6 +2539,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 23460
         /// </remarks>
         [JsonProperty("23460")]
+        [Obsolete("FinanceLeaseReceivablesNonCurrent was retired by Morningstar in 2026 for all periods; no replacement is available.")]
+        [JsonIgnore]
         public FinanceLeaseReceivablesNonCurrentBalanceSheet FinanceLeaseReceivablesNonCurrent => _financeLeaseReceivablesNonCurrent ??= new(_timeProvider, _securityIdentifier);
         private FinanceLeaseReceivablesNonCurrentBalanceSheet _financeLeaseReceivablesNonCurrent;
 
@@ -2635,6 +2671,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 23481
         /// </remarks>
         [JsonProperty("23481")]
+        [Obsolete("TaxAssetsTotal was retired by Morningstar in 2026 for all periods; no replacement is available.")]
+        [JsonIgnore]
         public TaxAssetsTotalBalanceSheet TaxAssetsTotal => _taxAssetsTotal ??= new(_timeProvider, _securityIdentifier);
         private TaxAssetsTotalBalanceSheet _taxAssetsTotal;
 
@@ -2775,6 +2813,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 23508
         /// </remarks>
         [JsonProperty("23508")]
+        [Obsolete("DepositsReceivedunderCededInsuranceContract was retired by Morningstar in 2026 for all periods; no replacement is available.")]
+        [JsonIgnore]
         public DepositsReceivedunderCededInsuranceContractBalanceSheet DepositsReceivedunderCededInsuranceContract => _depositsReceivedunderCededInsuranceContract ??= new(_timeProvider, _securityIdentifier);
         private DepositsReceivedunderCededInsuranceContractBalanceSheet _depositsReceivedunderCededInsuranceContract;
 
@@ -2819,7 +2859,7 @@ namespace QuantConnect.Data.Fundamental
         private HedgingAssetsCurrentBalanceSheet _hedgingAssetsCurrent;
 
         /// <summary>
-        /// Loans that entitles the lender (or the holder of loan debenture) to convert the loan to common or preferred stock (ordinary or preference shares) at a specified rate conversion rate and a specified time frame; in a Non-Differentiated Balance Sheet.
+        /// The carrying value of loans convertible into common or preferred stock that are scheduled to be repaid beyond one year or a normal operating cycle; the non-current portion only.
         /// </summary>
         /// <remarks>
         /// Morningstar DataId: 23519
@@ -2829,7 +2869,7 @@ namespace QuantConnect.Data.Fundamental
         private ConvertibleLoansTotalBalanceSheet _convertibleLoansTotal;
 
         /// <summary>
-        /// Total debt financing obligation issued by a bank or similar financial institution to a company that entitles the lender or holder of the instrument to interest payments and the repayment of principal at a specified time; in a Non-Differentiated Balance Sheet.
+        /// The carrying value of loans from banks or similar institutions due beyond one year or a normal operating cycle; the non-current portion only.
         /// </summary>
         /// <remarks>
         /// Morningstar DataId: 23520
@@ -2885,6 +2925,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 23530
         /// </remarks>
         [JsonProperty("23530")]
+        [Obsolete("PreTreShaNum was retired by Morningstar in 2026 for all periods; no replacement is available.")]
+        [JsonIgnore]
         public PreTreShaNumBalanceSheet PreTreShaNum => _preTreShaNum ??= new(_timeProvider, _securityIdentifier);
         private PreTreShaNumBalanceSheet _preTreShaNum;
 
@@ -2939,7 +2981,7 @@ namespace QuantConnect.Data.Fundamental
         private BiologicalAssetsBalanceSheet _biologicalAssets;
 
         /// <summary>
-        /// Cash that the company can use only for specific purposes or cash deposit or placing of owned property by a debtor (the pledger) to a creditor (the pledgee) as a security for a loan or obligation.
+        /// Cash, cash equivalents and investments whose withdrawal or use is restricted for more than one year or a normal operating cycle.
         /// </summary>
         /// <remarks>
         /// Morningstar DataId: 23536
@@ -2955,6 +2997,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 23537
         /// </remarks>
         [JsonProperty("23537")]
+        [Obsolete("ConvertibleLoansNonCurrent was retired by Morningstar in 2026 for all periods; no replacement is available.")]
+        [JsonIgnore]
         public ConvertibleLoansNonCurrentBalanceSheet ConvertibleLoansNonCurrent => _convertibleLoansNonCurrent ??= new(_timeProvider, _securityIdentifier);
         private ConvertibleLoansNonCurrentBalanceSheet _convertibleLoansNonCurrent;
 
@@ -3055,6 +3099,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 23551
         /// </remarks>
         [JsonProperty("23551")]
+        [Obsolete("TotalDebtInMaturitySchedule was retired by Morningstar in 2026 for all periods; no replacement is available.")]
+        [JsonIgnore]
         public TotalDebtInMaturityScheduleBalanceSheet TotalDebtInMaturitySchedule => _totalDebtInMaturitySchedule ??= new(_timeProvider, _securityIdentifier);
         private TotalDebtInMaturityScheduleBalanceSheet _totalDebtInMaturitySchedule;
 
@@ -3120,6 +3166,126 @@ namespace QuantConnect.Data.Fundamental
 
         private readonly ITimeProvider _timeProvider;
         private readonly SecurityIdentifier _securityIdentifier;
+
+        /// <summary>
+        /// This data point represents the sum of Preferred Stock; Preferred Units and Preferred Securities Outside Stockholder's Equity as listed on the company's balance sheet.
+        /// </summary>
+        /// <remarks>
+        /// Morningstar DataId: EQ30C
+        /// </remarks>
+        [JsonProperty("EQ30C")]
+        public TotalPreferredBalanceSheet TotalPreferred => _totalPreferredBalanceSheet ??= new(_timeProvider, _securityIdentifier);
+        private TotalPreferredBalanceSheet _totalPreferredBalanceSheet;
+
+        /// <summary>
+        /// This data point represents the sum of Total Liabilities and Total Equity as listed on the company's balance sheet.
+        /// </summary>
+        /// <remarks>
+        /// Morningstar DataId: EQ661
+        /// </remarks>
+        [JsonProperty("EQ661")]
+        public TotalLiabilitiesAndEquityBalanceSheet TotalLiabilitiesAndEquity => _totalLiabilitiesAndEquityBalanceSheet ??= new(_timeProvider, _securityIdentifier);
+        private TotalLiabilitiesAndEquityBalanceSheet _totalLiabilitiesAndEquityBalanceSheet;
+
+        /// <summary>
+        /// This calculation represents the difference between the company's operating assets and operating liabilities; and can be used to measure a company's efficiency and short term financial health. This is calculated using Total Assets - Total Liabilities + (Total Debt - Cash).
+        /// </summary>
+        /// <remarks>
+        /// Morningstar DataId: EQQ62
+        /// </remarks>
+        [JsonProperty("EQQ62")]
+        public NetOperatingAssetsBalanceSheet NetOperatingAssets => _netOperatingAssetsBalanceSheet ??= new(_timeProvider, _securityIdentifier);
+        private NetOperatingAssetsBalanceSheet _netOperatingAssetsBalanceSheet;
+
+        /// <summary>
+        /// This data point represents the value of a company's total assets net of intangible items such as goodwill; patents; etc. This can be used to measure the portion of a company's total assets that are tangible. This is calculated using Total Assets minus Net Intangible Assets.
+        /// </summary>
+        /// <remarks>
+        /// Morningstar DataId: EQUZ5
+        /// </remarks>
+        [JsonProperty("EQUZ5")]
+        public NetTangibleAssetsCalculatedBalanceSheet NetTangibleAssetsCalculated => _netTangibleAssetsCalculatedBalanceSheet ??= new(_timeProvider, _securityIdentifier);
+        private NetTangibleAssetsCalculatedBalanceSheet _netTangibleAssetsCalculatedBalanceSheet;
+
+        /// <summary>
+        /// Sum of all paid-in capital; including common stock and preferred stock.
+        /// </summary>
+        /// <remarks>
+        /// Morningstar DataId: EQZVT
+        /// </remarks>
+        [JsonProperty("EQZVT")]
+        public PaidInCapitalBalanceSheet PaidInCapital => _paidInCapitalBalanceSheet ??= new(_timeProvider, _securityIdentifier);
+        private PaidInCapitalBalanceSheet _paidInCapitalBalanceSheet;
+
+        /// <summary>
+        /// Cumulative amount of wear and tear or obsolescence charged against the tangible assets of the company.
+        /// </summary>
+        /// <remarks>
+        /// Morningstar DataId: EQOCG
+        /// </remarks>
+        [JsonProperty("EQOCG")]
+        public AccumulatedDepreciationValueBalanceSheet AccumulatedDepreciationValue => _accumulatedDepreciationValueBalanceSheet ??= new(_timeProvider, _securityIdentifier);
+        private AccumulatedDepreciationValueBalanceSheet _accumulatedDepreciationValueBalanceSheet;
+
+        /// <summary>
+        /// Carrying value of the portion of all long-term debt that is scheduled to be repaid within one year or a normal operating cycle (whichever is longer) and all capital lease obligations.
+        /// </summary>
+        /// <remarks>
+        /// Morningstar DataId: EQHFD
+        /// </remarks>
+        [JsonProperty("EQHFD")]
+        public CurrentPortionOfLongTermDebtAndCapitalLeaseBalanceSheet CurrentPortionOfLongTermDebtAndCapitalLease => _currentPortionOfLongTermDebtAndCapitalLeaseBalanceSheet ??= new(_timeProvider, _securityIdentifier);
+        private CurrentPortionOfLongTermDebtAndCapitalLeaseBalanceSheet _currentPortionOfLongTermDebtAndCapitalLeaseBalanceSheet;
+
+        /// <summary>
+        /// Total gross book value of the company's goodwill and other intangible assets.
+        /// </summary>
+        /// <remarks>
+        /// Morningstar DataId: EQG6I
+        /// </remarks>
+        [JsonProperty("EQG6I")]
+        public GrossGoodwillAndOtherIntangibleAssetsBalanceSheet GrossGoodwillAndOtherIntangibleAssets => _grossGoodwillAndOtherIntangibleAssetsBalanceSheet ??= new(_timeProvider, _securityIdentifier);
+        private GrossGoodwillAndOtherIntangibleAssetsBalanceSheet _grossGoodwillAndOtherIntangibleAssetsBalanceSheet;
+
+        /// <summary>
+        /// Amount due within one year or a normal operating cycle (whichever is longer); and not categorized in the above. Includes: rent receivable
+        /// </summary>
+        /// <remarks>
+        /// Morningstar DataId: EQ6E9
+        /// </remarks>
+        [JsonProperty("EQ6E9")]
+        public OtherReceivablesCurrentBalanceSheet OtherReceivablesCurrent => _otherReceivablesCurrentBalanceSheet ??= new(_timeProvider, _securityIdentifier);
+        private OtherReceivablesCurrentBalanceSheet _otherReceivablesCurrentBalanceSheet;
+
+        /// <summary>
+        /// Cost of tangible assets held by the company under a lease arrangement that cannot be delineated under its respective category in the above. Includes: Net book value if accumulated depreciation is not reported
+        /// </summary>
+        /// <remarks>
+        /// Morningstar DataId: EQ1XV
+        /// </remarks>
+        [JsonProperty("EQ1XV")]
+        public LeasedPropertyPlantAndEquipmentBalanceSheet LeasedPropertyPlantAndEquipment => _leasedPropertyPlantAndEquipmentBalanceSheet ??= new(_timeProvider, _securityIdentifier);
+        private LeasedPropertyPlantAndEquipmentBalanceSheet _leasedPropertyPlantAndEquipmentBalanceSheet;
+
+        /// <summary>
+        /// Other intangibles not categorized in the above. Includes: Net book value if accumulated amortization is not reported; Club membership
+        /// </summary>
+        /// <remarks>
+        /// Morningstar DataId: EQ01L
+        /// </remarks>
+        [JsonProperty("EQ01L")]
+        public OtherIntangibleAssetsValueBalanceSheet OtherIntangibleAssetsValue => _otherIntangibleAssetsValueBalanceSheet ??= new(_timeProvider, _securityIdentifier);
+        private OtherIntangibleAssetsValueBalanceSheet _otherIntangibleAssetsValueBalanceSheet;
+
+        /// <summary>
+        /// Cost of the furniture; fixtures and office equipment owned by the company for its business operations. Includes: Computer hardware and software
+        /// </summary>
+        /// <remarks>
+        /// Morningstar DataId: EQ8LK
+        /// </remarks>
+        [JsonProperty("EQ8LK")]
+        public FurnitureFixturesAndOfficeEquipmentBalanceSheet FurnitureFixturesAndOfficeEquipment => _furnitureFixturesAndOfficeEquipmentBalanceSheet ??= new(_timeProvider, _securityIdentifier);
+        private FurnitureFixturesAndOfficeEquipmentBalanceSheet _furnitureFixturesAndOfficeEquipmentBalanceSheet;
 
         /// <summary>
         /// Creates a new instance for the given time and security

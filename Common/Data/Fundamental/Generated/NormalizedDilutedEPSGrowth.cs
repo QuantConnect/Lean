@@ -1,4 +1,4 @@
-/*
+﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2023 QuantConnect Corporation.
  *
@@ -37,46 +37,43 @@ namespace QuantConnect.Data.Fundamental
         /// Gets/sets the OneYear period value for the field
         /// </summary>
         [JsonProperty("1Y")]
-        public double OneYear => FundamentalService.Get<double>(TimeProvider.GetUtcNow(), SecurityIdentifier, FundamentalProperty.EarningRatios_NormalizedDilutedEPSGrowth_OneYear);
+        [Obsolete("NormalizedDilutedEPSGrowth was retired by Morningstar in 2026 for all periods; no replacement is available.")]
+        [JsonIgnore]
+        public double OneYear => throw new NotSupportedException("NormalizedDilutedEPSGrowth was retired by Morningstar in 2026 for all periods; no replacement is available.");
 
         /// <summary>
         /// Gets/sets the ThreeMonths period value for the field
         /// </summary>
         [JsonProperty("3M")]
-        public double ThreeMonths => FundamentalService.Get<double>(TimeProvider.GetUtcNow(), SecurityIdentifier, FundamentalProperty.EarningRatios_NormalizedDilutedEPSGrowth_ThreeMonths);
+        [Obsolete("NormalizedDilutedEPSGrowth was retired by Morningstar in 2026 for all periods; no replacement is available.")]
+        [JsonIgnore]
+        public double ThreeMonths => throw new NotSupportedException("NormalizedDilutedEPSGrowth was retired by Morningstar in 2026 for all periods; no replacement is available.");
 
         /// <summary>
         /// Gets/sets the ThreeYears period value for the field
         /// </summary>
         [JsonProperty("3Y")]
-        public double ThreeYears => FundamentalService.Get<double>(TimeProvider.GetUtcNow(), SecurityIdentifier, FundamentalProperty.EarningRatios_NormalizedDilutedEPSGrowth_ThreeYears);
+        [Obsolete("NormalizedDilutedEPSGrowth was retired by Morningstar in 2026 for all periods; no replacement is available.")]
+        [JsonIgnore]
+        public double ThreeYears => throw new NotSupportedException("NormalizedDilutedEPSGrowth was retired by Morningstar in 2026 for all periods; no replacement is available.");
 
         /// <summary>
         /// Gets/sets the FiveYears period value for the field
         /// </summary>
         [JsonProperty("5Y")]
-        public double FiveYears => FundamentalService.Get<double>(TimeProvider.GetUtcNow(), SecurityIdentifier, FundamentalProperty.EarningRatios_NormalizedDilutedEPSGrowth_FiveYears);
+        [Obsolete("NormalizedDilutedEPSGrowth was retired by Morningstar in 2026 for all periods; no replacement is available.")]
+        [JsonIgnore]
+        public double FiveYears => throw new NotSupportedException("NormalizedDilutedEPSGrowth was retired by Morningstar in 2026 for all periods; no replacement is available.");
 
         /// <summary>
         /// Returns true if the field contains a value for the default period
         /// </summary>
-        public override bool HasValue => !BaseFundamentalDataProvider.IsNone(typeof(double), FundamentalService.Get<double>(TimeProvider.GetUtcNow(), SecurityIdentifier, FundamentalProperty.EarningRatios_NormalizedDilutedEPSGrowth_OneYear));
+        public override bool HasValue => false;
 
         /// <summary>
         /// Returns the default value for the field
         /// </summary>
-        public override double Value
-        {
-            get
-            {
-                var defaultValue = FundamentalService.Get<double>(TimeProvider.GetUtcNow(), SecurityIdentifier, FundamentalProperty.EarningRatios_NormalizedDilutedEPSGrowth_OneYear);
-                if (!BaseFundamentalDataProvider.IsNone(typeof(double), defaultValue))
-                {
-                    return defaultValue;
-                }
-                return base.Value;
-            }
-        }
+        public override double Value => throw new NotSupportedException("NormalizedDilutedEPSGrowth was retired by Morningstar in 2026 for all periods; no replacement is available.");
 
         /// <summary>
         /// Gets a dictionary of period names and values for the field
@@ -85,7 +82,7 @@ namespace QuantConnect.Data.Fundamental
         public override IReadOnlyDictionary<string, double> GetPeriodValues()
         {
             var result = new Dictionary<string, double>();
-            foreach (var kvp in new[] { new Tuple<string, double>("1Y",OneYear), new Tuple<string, double>("3M",ThreeMonths), new Tuple<string, double>("3Y",ThreeYears), new Tuple<string, double>("5Y",FiveYears) })
+            foreach (var kvp in System.Array.Empty<Tuple<string, double>>())
             {
                 if(!BaseFundamentalDataProvider.IsNone(typeof(double), kvp.Item2))
                 {

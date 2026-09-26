@@ -1,4 +1,4 @@
-/*
+﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2023 QuantConnect Corporation.
  *
@@ -24,7 +24,7 @@ using QuantConnect.Data.UniverseSelection;
 namespace QuantConnect.Data.Fundamental
 {
     /// <summary>
-    /// The Cost Of Revenue plus Depreciation, Depletion &amp; Amortization from the IncomeStatement; minus Depreciation, Depletion &amp; Amortization from the Cash Flow Statement
+    /// The costs incurred to provide the goods or services that generate revenue, as reported; not reconciled for depreciation and amortization.
     /// </summary>
     public class ReconciledCostOfRevenueIncomeStatement : MultiPeriodField
     {
