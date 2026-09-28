@@ -16,6 +16,8 @@
 
 using System;
 using System.IO;
+using System.IO.Compression;
+using System.Text;
 using NUnit.Framework;
 using Path = System.IO.Path;
 using System.Threading.Tasks;
@@ -81,6 +83,30 @@ namespace QuantConnect.Tests.Engine.DataCacheProviders
         }
 
         [Test]
+        public void FetchReopensCachedZipAfterReadFailure()
+        {
+            var dataProvider = new StaleHandleDataProvider();
+            using var dataCacheProvider = new ZipDataCacheProvider(dataProvider, cacheTimer: 60);
+            const string key = "/data/equity/usa/daily/spy.zip#spy.csv";
+
+            using (var reader = new StreamReader(dataCacheProvider.Fetch(key)))
+            {
+                Assert.AreEqual(StaleHandleDataProvider.Content, reader.ReadToEnd());
+            }
+
+            dataProvider.LastStream.Stale = true;
+            Assert.IsNull(dataCacheProvider.Fetch(key));
+
+            var stream = dataCacheProvider.Fetch(key);
+            Assert.IsNotNull(stream, "a zip whose cached handle went stale should be re-opened on the next fetch");
+            using (var reader = new StreamReader(stream))
+            {
+                Assert.AreEqual(StaleHandleDataProvider.Content, reader.ReadToEnd());
+            }
+            Assert.AreEqual(2, dataProvider.FetchCount);
+        }
+
+        [Test]
         public void StoreFailsCorruptedFile()
         {
             var dataCacheProvider = new ZipDataCacheProvider(TestGlobals.DataProvider, cacheTimer: 0.1);
@@ -100,6 +126,59 @@ namespace QuantConnect.Tests.Engine.DataCacheProviders
         {
             dataCacheProvider.Fetch(_tempZipFileEntry);
             dataCacheProvider.Store(_tempZipFileEntry, data);
+        }
+
+        /// <summary>
+        /// Provider serving a valid zip whose last stream can be made to fail like a file handle gone stale (ESTALE)
+        /// </summary>
+        private class StaleHandleDataProvider : IDataProvider
+        {
+            public const string Content = "20260928 00:00,1,2,3,4,5";
+            private readonly byte[] _zip;
+
+            public event EventHandler<DataProviderNewDataRequestEventArgs> NewDataRequest;
+
+            public int FetchCount { get; private set; }
+
+            public StaleHandleStream LastStream { get; private set; }
+
+            public StaleHandleDataProvider()
+            {
+                using var zipStream = new MemoryStream();
+                using (var archive = new ZipArchive(zipStream, ZipArchiveMode.Create, leaveOpen: true))
+                using (var writer = new StreamWriter(archive.CreateEntry("spy.csv").Open()))
+                {
+                    writer.Write(Content);
+                }
+                _zip = zipStream.ToArray();
+            }
+
+            public Stream Fetch(string key)
+            {
+                NewDataRequest?.Invoke(this, null);
+                FetchCount++;
+                LastStream = new StaleHandleStream(_zip);
+                return LastStream;
+            }
+        }
+
+        private class StaleHandleStream : MemoryStream
+        {
+            public bool Stale { get; set; }
+
+            public StaleHandleStream(byte[] buffer) : base(buffer)
+            {
+            }
+
+            public override int Read(byte[] buffer, int offset, int count)
+            {
+                return Stale ? throw new IOException("Stale file handle") : base.Read(buffer, offset, count);
+            }
+
+            public override int Read(Span<byte> buffer)
+            {
+                return Stale ? throw new IOException("Stale file handle") : base.Read(buffer);
+            }
         }
 
         /// <summary>
