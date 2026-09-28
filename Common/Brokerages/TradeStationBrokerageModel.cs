@@ -205,23 +205,7 @@ namespace QuantConnect.Brokerages
                 return false;
             }
 
-            if (IsComboOrderType(order.Type) && request.Quantity != null && request.Quantity != order.Quantity)
-            {
-                message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported", Messages.DefaultBrokerageModel.UnsupportedUpdateQuantityOrder(this, order.Type));
-                return false;
-            }
-
             return true;
-        }
-
-        /// <summary>
-        /// Determines if the provided order type is a combo order.
-        /// </summary>
-        /// <param name="orderType">The order type to check.</param>
-        /// <returns>True if the order type is a combo order; otherwise, false.</returns>
-        private static bool IsComboOrderType(OrderType orderType)
-        {
-            return orderType == OrderType.ComboMarket || orderType == OrderType.ComboLimit;
         }
 
         /// <summary>
