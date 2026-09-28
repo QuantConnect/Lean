@@ -3948,9 +3948,7 @@ namespace QuantConnect
             switch (securityType)
             {
                 case SecurityType.Future:
-                    if ((universeSettings.DataMappingMode == DataMappingMode.OpenInterest
-                        || universeSettings.DataMappingMode == DataMappingMode.OpenInterestAnnual)
-                        && (market == Market.HKFE || market == Market.EUREX || market == Market.ICE))
+                    if (!universeSettings.DataMappingMode.IsAvailableForFutureMarket(market))
                     {
                         // circle around default OI for currently no OI available data
                         return DataMappingMode.LastTradingDay;
@@ -3959,6 +3957,15 @@ namespace QuantConnect
                 default:
                     return universeSettings.DataMappingMode;
             }
+        }
+
+        /// <summary>
+        /// Determines whether there is mapping data for the given data mapping mode in the given future market
+        /// </summary>
+        public static bool IsAvailableForFutureMarket(this DataMappingMode dataMappingMode, string market)
+        {
+            return dataMappingMode != DataMappingMode.OpenInterest && dataMappingMode != DataMappingMode.OpenInterestAnnual
+                || market != Market.HKFE && market != Market.EUREX && market != Market.ICE && market != Market.KRX;
         }
 
         /// <summary>

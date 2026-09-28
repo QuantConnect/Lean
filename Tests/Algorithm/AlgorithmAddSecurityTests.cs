@@ -147,6 +147,143 @@ namespace QuantConnect.Tests.Algorithm
                 Has.All.EqualTo(extendedMarketHours));
         }
 
+        [TestCase("KM", Market.KRX, null, DataMappingMode.LastTradingDay, true)]
+        [TestCase("FESX", Market.EUREX, null, DataMappingMode.LastTradingDay, true)]
+        [TestCase("ES", Market.CME, null, DataMappingMode.OpenInterest, false)]
+        [TestCase("KM", Market.KRX, DataMappingMode.OpenInterest, DataMappingMode.LastTradingDay, true)]
+        [TestCase("FESX", Market.EUREX, DataMappingMode.OpenInterest, DataMappingMode.LastTradingDay, true)]
+        [TestCase("FESX", Market.EUREX, DataMappingMode.OpenInterestAnnual, DataMappingMode.LastTradingDay, true)]
+        [TestCase("FESX", Market.EUREX, DataMappingMode.FirstDayMonth, DataMappingMode.FirstDayMonth, false)]
+        [TestCase("ES", Market.CME, DataMappingMode.OpenInterest, DataMappingMode.OpenInterest, false)]
+        public void AddFutureFallsBackFromUnavailableDataMappingMode(string ticker, string market, DataMappingMode? dataMappingMode,
+            DataMappingMode expectedMode, bool expectWarning)
+        {
+            var future = _algo.AddFuture(ticker, Resolution.Daily, market, dataMappingMode: dataMappingMode);
+
+            var continuousConfigs = _algo.SubscriptionManager.SubscriptionDataConfigService
+                .GetSubscriptionDataConfigs(future.Symbol, includeInternalConfigs: true)
+                .Where(x => x.Type != typeof(FutureUniverse))
+                .ToList();
+            Assert.Greater(continuousConfigs.Count, 0);
+            Assert.That(continuousConfigs.Select(x => x.DataMappingMode), Has.All.EqualTo(expectedMode));
+
+            var warnings = _algo.DebugMessages.Where(x => x.Contains("data mapping mode is not available")).ToList();
+            if (expectWarning)
+            {
+                Assert.AreEqual(1, warnings.Count);
+                var requestedMode = dataMappingMode ?? DataMappingMode.OpenInterest;
+                Assert.That(warnings[0], Does.EndWith($"Warning: {requestedMode} data mapping mode is not available for {market.ToUpperInvariant()} futures, using LastTradingDay instead."));
+            }
+            else
+            {
+                Assert.IsEmpty(warnings);
+            }
+        }
+
+        [Test]
+        public void AddFutureDataMappingModeFallbackWarnsOncePerMarket()
+        {
+            _algo.AddFuture("FESX", Resolution.Daily, Market.EUREX, dataMappingMode: DataMappingMode.OpenInterest);
+            _algo.AddFuture("FDAX", Resolution.Daily, Market.EUREX);
+            _algo.AddFuture("HSI", Resolution.Daily, Market.HKFE, dataMappingMode: DataMappingMode.OpenInterest);
+            _algo.AddFuture("KM", Resolution.Daily, Market.KRX);
+
+            var warnings = _algo.DebugMessages.Where(x => x.Contains("data mapping mode is not available")).ToList();
+            Assert.AreEqual(3, warnings.Count);
+            Assert.That(warnings[0], Does.EndWith("Warning: OpenInterest data mapping mode is not available for EUREX futures, using LastTradingDay instead."));
+            Assert.That(warnings[1], Does.EndWith("Warning: OpenInterest data mapping mode is not available for HKFE futures, using LastTradingDay instead."));
+            Assert.That(warnings[2], Does.EndWith("Warning: OpenInterest data mapping mode is not available for KRX futures, using LastTradingDay instead."));
+        }
+
+        [Test]
+        public void AddFutureFallsBackToUniverseSettingsDataMappingMode()
+        {
+            _algo.UniverseSettings.DataMappingMode = DataMappingMode.FirstDayMonth;
+            var future = _algo.AddFuture("FESX", Resolution.Daily, Market.EUREX, dataMappingMode: DataMappingMode.OpenInterest);
+
+            var continuousConfigs = _algo.SubscriptionManager.SubscriptionDataConfigService
+                .GetSubscriptionDataConfigs(future.Symbol, includeInternalConfigs: true)
+                .Where(x => x.Type != typeof(FutureUniverse))
+                .ToList();
+            Assert.That(continuousConfigs.Select(x => x.DataMappingMode), Has.All.EqualTo(DataMappingMode.FirstDayMonth));
+            Assert.That(_algo.DebugMessages.Single(x => x.Contains("data mapping mode is not available")),
+                Does.EndWith("Warning: OpenInterest data mapping mode is not available for EUREX futures, using FirstDayMonth instead."));
+        }
+
+        [Test]
+        public void AddFutureAfterRemovingItAppliesNewSettings()
+        {
+            var future = _algo.AddFuture(Futures.Indices.SP500EMini, Resolution.Daily, dataMappingMode: DataMappingMode.OpenInterest);
+            _algo.RemoveSecurity(future.Symbol);
+            future = _algo.AddFuture(Futures.Indices.SP500EMini, Resolution.Daily, dataMappingMode: DataMappingMode.LastTradingDay);
+
+            var continuousUniverse = _algo.UniverseManager[ContinuousContractUniverse.CreateSymbol(future.Symbol)];
+            Assert.AreEqual(DataMappingMode.LastTradingDay, continuousUniverse.UniverseSettings.DataMappingMode);
+            Assert.IsFalse(_algo.DebugMessages.Any(x => x.Contains("already added")));
+        }
+
+        [Test]
+        public void AddFutureAgainWithDifferentSettingsWarnsOnce()
+        {
+            var future = _algo.AddFuture(Futures.Indices.SP500EMini, Resolution.Daily, dataMappingMode: DataMappingMode.OpenInterest);
+            _algo.AddFuture(Futures.Indices.SP500EMini, Resolution.Daily, dataMappingMode: DataMappingMode.LastTradingDay);
+            _algo.AddFuture(Futures.Indices.SP500EMini, Resolution.Daily, dataMappingMode: DataMappingMode.FirstDayMonth);
+
+            var continuousConfigs = _algo.SubscriptionManager.SubscriptionDataConfigService
+                .GetSubscriptionDataConfigs(future.Symbol, includeInternalConfigs: true)
+                .Where(x => x.Type != typeof(FutureUniverse))
+                .ToList();
+            Assert.That(continuousConfigs.Select(x => x.DataMappingMode), Has.All.EqualTo(DataMappingMode.OpenInterest));
+
+            var warnings = _algo.DebugMessages.Where(x => x.Contains("already added")).ToList();
+            Assert.AreEqual(1, warnings.Count);
+            Assert.That(warnings[0], Does.EndWith("Warning: /ES already added, ignoring data mapping mode LastTradingDay. Add it once, or remove and re-add it after Initialize."));
+        }
+
+        [Test]
+        public void AddFutureAgainWithAllSettingsDifferentListsThemInOneWarning()
+        {
+            _algo.AddFuture(Futures.Indices.SP500EMini, Resolution.Daily);
+            _algo.AddFuture(Futures.Indices.SP500EMini, Resolution.Daily, dataMappingMode: DataMappingMode.LastTradingDay,
+                dataNormalizationMode: DataNormalizationMode.Raw, contractDepthOffset: 1);
+
+            var warnings = _algo.DebugMessages.Where(x => x.Contains("already added")).ToList();
+            Assert.AreEqual(1, warnings.Count);
+            Assert.That(warnings[0], Does.EndWith("Warning: /ES already added, ignoring data mapping mode LastTradingDay, normalization mode Raw, contract depth offset 1. " +
+                "Add it once, or remove and re-add it after Initialize."));
+        }
+
+        [Test]
+        public void AddFutureAgainAfterInitializeWarnsToRemoveItFirst()
+        {
+            _algo.AddFuture(Futures.Indices.SP500EMini, Resolution.Daily, dataMappingMode: DataMappingMode.OpenInterest);
+            _algo.SetLocked();
+            _algo.AddFuture(Futures.Indices.SP500EMini, Resolution.Daily, dataMappingMode: DataMappingMode.LastTradingDay);
+
+            Assert.That(_algo.DebugMessages.Single(x => x.Contains("already added")),
+                Does.EndWith("Warning: /ES already added, ignoring data mapping mode LastTradingDay. Remove it first to change its settings."));
+        }
+
+        [TestCase(null)]
+        [TestCase(DataMappingMode.OpenInterest)]
+        public void AddFutureAgainWithSameSettingsDoesNotWarn(DataMappingMode? dataMappingMode)
+        {
+            _algo.AddFuture(Futures.Indices.SP500EMini, Resolution.Daily, dataMappingMode: DataMappingMode.OpenInterest);
+            _algo.AddFuture(Futures.Indices.SP500EMini, Resolution.Daily, dataMappingMode: dataMappingMode);
+
+            Assert.IsFalse(_algo.DebugMessages.Any(x => x.Contains("already added")));
+        }
+
+        [Test]
+        public void AddFutureAgainWithUnavailableDataMappingModeResolvingToSameModeDoesNotWarn()
+        {
+            _algo.AddFuture("FESX", Resolution.Daily, Market.EUREX);
+            _algo.AddFuture("FESX", Resolution.Daily, Market.EUREX, dataMappingMode: DataMappingMode.OpenInterest);
+
+            Assert.IsFalse(_algo.DebugMessages.Any(x => x.Contains("already added")));
+            Assert.AreEqual(1, _algo.DebugMessages.Count(x => x.Contains("data mapping mode is not available")));
+        }
+
         [TestCaseSource(nameof(FuturesTestCases))]
         public void AddFutureWithExtendedMarketHours(Func<QCAlgorithm, Security> getFuture)
         {
