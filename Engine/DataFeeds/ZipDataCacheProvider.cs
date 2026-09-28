@@ -97,6 +97,13 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                         }
                         catch (Exception exception)
                         {
+                            // a read can fail for good on a cached instance, e.g. its file handle went stale after the file was
+                            // replaced, so drop it and let the next request re-open the file
+                            lock (existingZip)
+                            {
+                                _zipFileCache.TryRemove(new KeyValuePair<string, CachedZipFile>(filename, existingZip));
+                                existingZip.DisposeSafely();
+                            }
                             RethrowIfOutOfMemory(exception, filename, entryName);
                             if (exception is ZipException || exception is ZlibException)
                             {
