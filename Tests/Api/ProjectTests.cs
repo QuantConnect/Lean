@@ -930,11 +930,12 @@ namespace QuantConnect.Algorithm.CSharp
                 Assert.IsTrue(readLiveLogs.Length >= 0, "The length of the logs was negative!");
                 Assert.IsTrue(readLiveLogs.DeploymentOffset >= 0, "The deploymentOffset");
             }
-            catch (Exception ex)
+            catch
             {
-                // Delete the project in case of an error
+                // Stop whatever is running and delete the project in case of an error
+                ApiClient.LiquidateLiveAlgorithm(projectId);
                 Assert.IsTrue(ApiClient.DeleteProject(projectId).Success);
-                throw ex;
+                throw;
             }
 
             // Delete the project
