@@ -65,7 +65,7 @@ namespace QuantConnect.Tests.API
             Assert.IsFalse(result.Success);
             Assert.IsNull(result.Status);
             Assert.IsNull(result.DeployId);
-            Assert.IsNull(result.Errors);
+            CollectionAssert.IsEmpty(result.Errors, "Like every other response, a missing errors array reads as no errors");
             Assert.IsNull(result.Stopped);
             Assert.AreEqual(default(DateTime), result.Launched);
             Assert.IsNull(result.Charts);

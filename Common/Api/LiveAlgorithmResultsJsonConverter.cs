@@ -90,7 +90,7 @@ namespace QuantConnect.Api
                 Datacenter = jObject.Value<string>("datacenter"),
                 Public = jObject.Value<bool>("public"),
                 Success = jObject.Value<bool>("success"),
-                Errors = jObject["errors"]?.ToObject<List<string>>()
+                Errors = jObject["errors"]?.ToObject<List<string>>() ?? new List<string>()
             };
 
             if (!liveAlgoResults.Success)
