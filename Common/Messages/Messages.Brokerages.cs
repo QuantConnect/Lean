@@ -187,15 +187,6 @@ namespace QuantConnect
             }
 
             /// <summary>
-            /// Returns a message indicating that the specified order type cannot be updated quantity using the given brokerage model.
-            /// </summary>
-            [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public static string UnsupportedUpdateQuantityOrder(IBrokerageModel brokerageModel, OrderType orderType)
-            {
-                return Invariant($"Order type '{orderType}' is not supported to update quantity in the {brokerageModel.GetType().Name}.");
-            }
-
-            /// <summary>
             /// Builds a descriptive error message when a <see cref="OrderType.MarketOnOpen"/> 
             /// order is submitted outside the valid submission window.
             /// </summary>
