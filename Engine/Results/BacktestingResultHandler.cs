@@ -75,6 +75,11 @@ namespace QuantConnect.Lean.Engine.Results
         protected bool RunResultsAnalysis { get; set; } = true;
 
         /// <summary>
+        /// The delay after the handler starts before the first result is stored, which also runs the first in-run analysis
+        /// </summary>
+        protected virtual TimeSpan InitialResultStoreDelay { get; } = TimeSpan.FromSeconds(5);
+
+        /// <summary>
         /// A dictionary containing summary statistics
         /// </summary>
         public Dictionary<string, string> FinalStatistics { get; private set; }
@@ -91,7 +96,7 @@ namespace QuantConnect.Lean.Engine.Results
             _chartSeriesCount = new();
 
             // Delay uploading first packet
-            _nextS3Update = StartTime.AddSeconds(5);
+            _nextS3Update = StartTime.Add(InitialResultStoreDelay);
         }
 
         /// <summary>
