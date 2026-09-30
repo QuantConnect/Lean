@@ -27,6 +27,7 @@ using QuantConnect.Tests.Engine.DataFeeds;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -611,8 +612,11 @@ namespace QuantConnect.Tests.Engine.Results
                 resultHandler.Charts[chart.Name] = chart;
 
                 // The handler stores its first result, running the in-run analysis on it, 5 seconds after its
-                // construction, and an update before that blocks the next ones until the backtest advances a day
-                Thread.Sleep(TimeSpan.FromSeconds(5.5));
+                // construction, and an update before that blocks the next ones until the backtest advances a day,
+                // so make the first update store at once
+                typeof(BacktestingResultHandler)
+                    .GetField("_nextS3Update", BindingFlags.Instance | BindingFlags.NonPublic)
+                    .SetValue(resultHandler, DateTime.MinValue);
 
                 // The algorithm thread samples under the chart lock. Sampling the last point again overwrites it,
                 // which keeps the chart bounded but still invalidates any enumeration of it in progress
