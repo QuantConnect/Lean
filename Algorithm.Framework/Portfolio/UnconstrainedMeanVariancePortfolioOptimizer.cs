@@ -15,14 +15,20 @@
 
 using Accord.Math;
 using Accord.Statistics;
+using QuantConnect.Algorithm.Framework.Alphas;
 
 namespace QuantConnect.Algorithm.Framework.Portfolio
 {
     /// <summary>
     /// Provides an implementation of a portfolio optimizer with unconstrained mean variance.
     /// </summary>
-    public class UnconstrainedMeanVariancePortfolioOptimizer : IPortfolioOptimizer
+    public class UnconstrainedMeanVariancePortfolioOptimizer : IPortfolioOptimizer, INamedModel
     {
+        /// <summary>
+        /// Defines a name for the portfolio optimizer
+        /// </summary>
+        public string Name { get; } = nameof(UnconstrainedMeanVariancePortfolioOptimizer);
+
         /// <summary>
         /// Perform portfolio optimization for a provided matrix of historical returns and an array of expected returns
         /// </summary>

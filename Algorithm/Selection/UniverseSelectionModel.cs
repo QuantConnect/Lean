@@ -15,6 +15,7 @@
 
 using System;
 using System.Collections.Generic;
+using QuantConnect.Algorithm.Framework.Alphas;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Interfaces;
 using QuantConnect.Python;
@@ -24,14 +25,19 @@ namespace QuantConnect.Algorithm.Framework.Selection
     /// <summary>
     /// Provides a base class for universe selection models.
     /// </summary>
-    public class UniverseSelectionModel : BasePythonWrapper<UniverseSelectionModel>, IUniverseSelectionModel
+    public class UniverseSelectionModel : BasePythonWrapper<UniverseSelectionModel>, IUniverseSelectionModel, INamedModel
     {
+        /// <summary>
+        /// Defines a name for the framework model
+        /// </summary>
+        public virtual string Name { get; set; }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="UniverseSelectionModel"/> class.
         /// </summary>
         public UniverseSelectionModel()
         {
+            Name = GetType().Name;
         }
 
         /// <summary>

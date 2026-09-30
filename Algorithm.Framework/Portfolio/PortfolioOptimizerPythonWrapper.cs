@@ -15,6 +15,7 @@
 */
 
 using Python.Runtime;
+using QuantConnect.Algorithm.Framework.Alphas;
 using QuantConnect.Python;
 
 namespace QuantConnect.Algorithm.Framework.Portfolio
@@ -22,8 +23,27 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
     /// <summary>
     /// Python wrapper for custom portfolio optimizer
     /// </summary>
-    public class PortfolioOptimizerPythonWrapper : BasePythonWrapper<IPortfolioOptimizer>, IPortfolioOptimizer
+    public class PortfolioOptimizerPythonWrapper : BasePythonWrapper<IPortfolioOptimizer>, IPortfolioOptimizer, INamedModel
     {
+        /// <summary>
+        /// Defines a name for the portfolio optimizer
+        /// </summary>
+        public string Name
+        {
+            get
+            {
+                using (Py.GIL())
+                {
+                    if (HasAttr(nameof(Name)))
+                    {
+                        return GetProperty<string>(nameof(Name));
+                    }
+
+                    return GetProperty("__class__").GetAttr("__name__").GetAndDispose<string>();
+                }
+            }
+        }
+
         /// <summary>
         /// Creates a new instance
         /// </summary>

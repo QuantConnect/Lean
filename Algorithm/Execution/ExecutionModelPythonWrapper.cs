@@ -30,6 +30,25 @@ namespace QuantConnect.Algorithm.Framework.Execution
         private readonly bool _onOrderEventsDefined;
 
         /// <summary>
+        /// Defines a name for the framework model
+        /// </summary>
+        public override string Name
+        {
+            get
+            {
+                using (Py.GIL())
+                {
+                    if (HasAttr(nameof(Name)))
+                    {
+                        return GetProperty<string>(nameof(Name));
+                    }
+
+                    return GetProperty("__class__").GetAttr("__name__").GetAndDispose<string>();
+                }
+            }
+        }
+
+        /// <summary>
         /// Constructor for initialising the <see cref="IExecutionModel"/> class with wrapped <see cref="PyObject"/> object
         /// </summary>
         /// <param name="model">Model defining how to execute trades to reach a portfolio target</param>

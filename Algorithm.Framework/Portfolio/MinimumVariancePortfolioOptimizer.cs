@@ -18,6 +18,8 @@ using System.Linq;
 using Accord.Math;
 using Accord.Math.Optimization;
 using Accord.Statistics;
+using QuantConnect.Algorithm.Framework.Alphas;
+using static System.FormattableString;
 
 namespace QuantConnect.Algorithm.Framework.Portfolio
 {
@@ -26,11 +28,16 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
     /// with the weight range from -1 to 1 and minimize the portfolio variance with a target return of 2%
     /// </summary>
     /// <remarks>The budged constrain is scaled down/up to ensure that the sum of the absolute value of the weights is 1.</remarks>
-    public class MinimumVariancePortfolioOptimizer : IPortfolioOptimizer
+    public class MinimumVariancePortfolioOptimizer : IPortfolioOptimizer, INamedModel
     {
         private double _lower;
         private double _upper;
         private double _targetReturn;
+
+        /// <summary>
+        /// Defines a name for the portfolio optimizer
+        /// </summary>
+        public string Name { get; }
 
         /// <summary>
         /// Initialize a new instance of <see cref="MinimumVariancePortfolioOptimizer"/>
@@ -43,6 +50,7 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
             _lower = lower;
             _upper = upper;
             _targetReturn = targetReturn;
+            Name = Invariant($"{nameof(MinimumVariancePortfolioOptimizer)}({lower},{upper},{targetReturn})");
         }
 
         /// <summary>

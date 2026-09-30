@@ -17,6 +17,8 @@ using System;
 using System.Linq;
 using Accord.Math;
 using Accord.Statistics;
+using QuantConnect.Algorithm.Framework.Alphas;
+using static System.FormattableString;
 
 namespace QuantConnect.Algorithm.Framework.Portfolio
 {
@@ -24,10 +26,15 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
     /// Provides an implementation of a risk parity portfolio optimizer that calculate the optimal weights
     /// with the weight range from 0 to 1 and equalize the risk carried by each asset
     /// </summary>
-    public class RiskParityPortfolioOptimizer : IPortfolioOptimizer
+    public class RiskParityPortfolioOptimizer : IPortfolioOptimizer, INamedModel
     {
         private double _lower = 1e-05;
         private double _upper = Double.MaxValue;
+
+        /// <summary>
+        /// Defines a name for the portfolio optimizer
+        /// </summary>
+        public string Name { get; }
 
         /// <summary>
         /// Initialize a new instance of <see cref="RiskParityPortfolioOptimizer"/>
@@ -38,6 +45,7 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
         {
             _lower = lower ?? _lower;     // has to be greater than or equal to 0
             _upper = upper ?? _upper;
+            Name = Invariant($"{nameof(RiskParityPortfolioOptimizer)}({_lower},{_upper})");
         }
 
         /// <summary>

@@ -18,6 +18,8 @@ using System.Linq;
 using Accord.Math;
 using Accord.Math.Optimization;
 using Accord.Statistics;
+using QuantConnect.Algorithm.Framework.Alphas;
+using static System.FormattableString;
 
 namespace QuantConnect.Algorithm.Framework.Portfolio
 {
@@ -26,11 +28,16 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
     /// The interval of weights in optimization method can be changed based on the long-short algorithm.
     /// The default model uses flat risk free rate and weight for an individual security range from -1 to 1.
     /// </summary>
-    public class MaximumSharpeRatioPortfolioOptimizer : IPortfolioOptimizer
+    public class MaximumSharpeRatioPortfolioOptimizer : IPortfolioOptimizer, INamedModel
     {
         private double _lower;
         private double _upper;
         private double _riskFreeRate;
+
+        /// <summary>
+        /// Defines a name for the portfolio optimizer
+        /// </summary>
+        public string Name { get; }
 
         /// <summary>
         /// Initialize a new instance of <see cref="MaximumSharpeRatioPortfolioOptimizer"/>
@@ -43,6 +50,7 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
             _lower = lower;
             _upper = upper;
             _riskFreeRate = riskFreeRate;
+            Name = Invariant($"{nameof(MaximumSharpeRatioPortfolioOptimizer)}({lower},{upper},{riskFreeRate})");
         }
 
         /// <summary>

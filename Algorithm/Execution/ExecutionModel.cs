@@ -14,6 +14,7 @@
 */
 
 using QuantConnect.Algorithm.Framework.Portfolio;
+using QuantConnect.Algorithm.Framework.Alphas;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Orders;
 using QuantConnect.Python;
@@ -23,8 +24,13 @@ namespace QuantConnect.Algorithm.Framework.Execution
     /// <summary>
     /// Provides a base class for execution models
     /// </summary>
-    public class ExecutionModel : BasePythonWrapper<ExecutionModel>, IExecutionModel
+    public class ExecutionModel : BasePythonWrapper<ExecutionModel>, IExecutionModel, INamedModel
     {
+        /// <summary>
+        /// Defines a name for the framework model
+        /// </summary>
+        public virtual string Name { get; set; }
+
         /// <summary>
         /// If true, orders should be submitted asynchronously.
         /// </summary>
@@ -36,6 +42,7 @@ namespace QuantConnect.Algorithm.Framework.Execution
         /// <param name="asynchronous">If true, orders should be submitted asynchronously</param>
         public ExecutionModel(bool asynchronous = true)
         {
+            Name = GetType().Name;
             Asynchronous = asynchronous;
         }
 

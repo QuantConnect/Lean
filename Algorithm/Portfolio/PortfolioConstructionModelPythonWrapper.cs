@@ -31,6 +31,25 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
         private readonly bool _implementsDetermineTargetPercent;
 
         /// <summary>
+        /// Defines a name for the framework model
+        /// </summary>
+        public override string Name
+        {
+            get
+            {
+                using (Py.GIL())
+                {
+                    if (_model.HasAttr(nameof(Name)))
+                    {
+                        return _model.GetProperty<string>(nameof(Name));
+                    }
+
+                    return _model.GetProperty("__class__").GetAttr("__name__").GetAndDispose<string>();
+                }
+            }
+        }
+
+        /// <summary>
         /// True if should rebalance portfolio on security changes. True by default
         /// </summary>
         public override bool RebalanceOnSecurityChanges

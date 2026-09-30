@@ -14,6 +14,7 @@
 */
 
 using System.Collections.Generic;
+using QuantConnect.Algorithm.Framework.Alphas;
 using QuantConnect.Algorithm.Framework.Portfolio;
 using QuantConnect.Data.UniverseSelection;
 
@@ -22,8 +23,21 @@ namespace QuantConnect.Algorithm.Framework.Risk
     /// <summary>
     /// Provides a base class for risk management models
     /// </summary>
-    public class RiskManagementModel : IRiskManagementModel
+    public class RiskManagementModel : IRiskManagementModel, INamedModel
     {
+        /// <summary>
+        /// Defines a name for the framework model
+        /// </summary>
+        public virtual string Name { get; set; }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="RiskManagementModel"/> class
+        /// </summary>
+        public RiskManagementModel()
+        {
+            Name = GetType().Name;
+        }
+
         /// <summary>
         /// Manages the algorithm's risk at each time step
         /// </summary>

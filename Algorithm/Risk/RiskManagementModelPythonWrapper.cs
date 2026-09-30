@@ -29,6 +29,25 @@ namespace QuantConnect.Algorithm.Framework.Risk
         private readonly BasePythonWrapper<IRiskManagementModel> _model;
 
         /// <summary>
+        /// Defines a name for the framework model
+        /// </summary>
+        public override string Name
+        {
+            get
+            {
+                using (Py.GIL())
+                {
+                    if (_model.HasAttr(nameof(Name)))
+                    {
+                        return _model.GetProperty<string>(nameof(Name));
+                    }
+
+                    return _model.GetProperty("__class__").GetAttr("__name__").GetAndDispose<string>();
+                }
+            }
+        }
+
+        /// <summary>
         /// Constructor for initialising the <see cref="IRiskManagementModel"/> class with wrapped <see cref="PyObject"/> object
         /// </summary>
         /// <param name="model">Model defining how risk is managed</param>

@@ -30,6 +30,25 @@ namespace QuantConnect.Algorithm.Framework.Selection
         private readonly bool _modelHasGetNextRefreshTime;
 
         /// <summary>
+        /// Defines a name for the framework model
+        /// </summary>
+        public override string Name
+        {
+            get
+            {
+                using (Py.GIL())
+                {
+                    if (HasAttr(nameof(Name)))
+                    {
+                        return GetProperty<string>(nameof(Name));
+                    }
+
+                    return GetProperty("__class__").GetAttr("__name__").GetAndDispose<string>();
+                }
+            }
+        }
+
+        /// <summary>
         /// Gets the next time the framework should invoke the `CreateUniverses` method to refresh the set of universes.
         /// </summary>
         public override DateTime GetNextRefreshTimeUtc()

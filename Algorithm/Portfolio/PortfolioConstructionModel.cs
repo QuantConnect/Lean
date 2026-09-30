@@ -27,11 +27,16 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
     /// <summary>
     /// Provides a base class for portfolio construction models
     /// </summary>
-    public class PortfolioConstructionModel : IPortfolioConstructionModel
+    public class PortfolioConstructionModel : IPortfolioConstructionModel, INamedModel
     {
         private Func<DateTime, DateTime?> _rebalancingFunc;
         private DateTime? _rebalancingTime;
         private bool _securityChanges;
+
+        /// <summary>
+        /// Defines a name for the framework model
+        /// </summary>
+        public virtual string Name { get; set; }
 
         /// <summary>
         /// True if should rebalance portfolio on security changes. True by default
@@ -63,6 +68,7 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
         /// will trigger rebalance. If null will be ignored</param>
         public PortfolioConstructionModel(Func<DateTime, DateTime?> rebalancingFunc)
         {
+            Name = GetType().Name;
             _rebalancingFunc = rebalancingFunc;
         }
 

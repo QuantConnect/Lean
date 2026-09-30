@@ -22,8 +22,13 @@ namespace QuantConnect.Algorithm.Framework.Portfolio
     /// <summary>
     /// Base alpha streams portfolio construction model
     /// </summary>
-    public class AlphaStreamsPortfolioConstructionModel : IPortfolioConstructionModel
+    public class AlphaStreamsPortfolioConstructionModel : IPortfolioConstructionModel, INamedModel
     {
+        /// <summary>
+        /// Defines a name for the framework model
+        /// </summary>
+        public virtual string Name { get; set; } = nameof(AlphaStreamsPortfolioConstructionModel);
+
         /// <summary>
         /// Get's the weight for an alpha
         /// </summary>
