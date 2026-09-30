@@ -225,8 +225,16 @@ namespace QuantConnect.Lean.Engine.Results
                     const int maxOrders = 100;
                     var orderCount = TransactionHandler.Orders.Count;
 
+                    // The in-run analyses enumerate the charts while the algorithm thread keeps sampling them,
+                    // which fails the enumeration, so hand them a copy taken under the chart lock
+                    Dictionary<string, Chart> charts;
+                    lock (ChartLock)
+                    {
+                        charts = Charts.ToDictionary(x => x.Key, x => x.Value.Clone());
+                    }
+
                     var completeResult = new BacktestResult(new BacktestResultParameters(
-                        Charts,
+                        charts,
                         orderCount > maxOrders ? TransactionHandler.Orders.Skip(orderCount - maxOrders).ToDictionary() : TransactionHandler.Orders.ToDictionary(),
                         Algorithm.Transactions.TransactionRecord,
                         new Dictionary<string, string>(),

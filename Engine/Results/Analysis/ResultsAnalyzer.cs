@@ -267,8 +267,8 @@ namespace QuantConnect.Lean.Engine.Results.Analysis
         /// <param name="result">The current intermediate backtest result. Its orders and order events
         /// are windows truncated to the most recent ones, so the in-run analyses can miss orders and
         /// events already evicted from them; the final analysis re-scans the complete data. Its charts
-        /// are the handler's live ones, read without synchronization: a torn read while the algorithm
-        /// thread updates them can fail a run, which the handler catches, and the next run retries.</param>
+        /// are a copy the handler takes under its chart lock, so the analyses can enumerate them while
+        /// the algorithm thread keeps sampling the live ones.</param>
         /// <param name="logs">The full list of log lines produced so far; the analyzer analyzes the
         /// lines past the ones consumed by previous runs.</param>
         /// <param name="totalPerformance">The current total algorithm performance, for analyses that read
