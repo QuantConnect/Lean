@@ -961,11 +961,11 @@ namespace QuantConnect
         /// <remarks>Another example is the Corn 'DEC 2021 ZCZ1' contract, which expires on December, 14 2021, so the mapping date will be December 1, 2021.</remarks>
         FirstDayMonth,
         /// <summary>
-        /// The contract maps when the following back month contract has a higher open interest that the current front month (2)
+        /// The contract maps when the following back month contract has a higher open interest than the current front month (2)
         /// </summary>
         OpenInterest,
         /// <summary>
-        /// The contract maps when any of the back month contracts of the next year have a higher volume that the current front month (3)
+        /// The contract maps when any of the back month contracts of the next year have a higher open interest than the current front month (3)
         /// </summary>
         OpenInterestAnnual,
     }
