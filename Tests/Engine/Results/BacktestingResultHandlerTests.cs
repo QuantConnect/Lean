@@ -22,10 +22,13 @@ using QuantConnect.Lean.Engine.TransactionHandlers;
 using QuantConnect.Logging;
 using QuantConnect.Packets;
 using QuantConnect.Report;
+using QuantConnect.Statistics;
 using QuantConnect.Tests.Engine.DataFeeds;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace QuantConnect.Tests.Engine.Results
 {
@@ -582,11 +585,84 @@ namespace QuantConnect.Tests.Engine.Results
             }
         }
 
+        [Test]
+        public void InRunAnalysisRunsWhileTheAlgorithmSamplesTheCharts()
+        {
+            using var api = new Api.Api();
+            using var messaging = new QuantConnect.Messaging.Messaging();
+            var resultHandler = new TestableBacktestingResultHandler();
+            resultHandler.Initialize(new(new BacktestNodePacket(), messaging, api, new BacktestingTransactionHandler(), null));
+
+            using var sampling = new CancellationTokenSource();
+            try
+            {
+                var algorithm = new AlgorithmStub();
+                resultHandler.SetAlgorithm(algorithm, 100000);
+
+                // A margin chart large enough for the analysis to still be reading it when the next sample lands
+                var series = new Series("SPY", SeriesType.StackedArea, "%");
+                var time = new DateTime(2024, 1, 1);
+                for (var i = 0; i < 100000; i++)
+                {
+                    series.AddPoint(new ChartPoint(time.AddMinutes(i), 50));
+                }
+                var chart = new Chart(BaseResultsHandler.PortfolioMarginKey);
+                chart.AddSeries(series);
+                resultHandler.Charts[chart.Name] = chart;
+
+                // The algorithm thread samples under the chart lock. Sampling the last point again overwrites it,
+                // which keeps the chart bounded but still invalidates any enumeration of it in progress
+                var lastPoint = series.Values[^1];
+                var sampler = Task.Run(() =>
+                {
+                    while (!sampling.IsCancellationRequested)
+                    {
+                        lock (resultHandler.ExposedChartLock)
+                        {
+                            series.AddPoint(new ChartPoint(lastPoint.Time, 50));
+                        }
+                    }
+                });
+
+                // Locking the algorithm enables the handler updates
+                algorithm.SetLocked();
+                Assert.IsTrue(resultHandler.InRunAnalysisRan.Wait(TimeSpan.FromSeconds(30)), "The in-run analysis did not run");
+
+                sampling.Cancel();
+                sampler.Wait();
+                Assert.IsNotNull(resultHandler.InRunAnalysisFindings, "The in-run analysis failed, see the logged error");
+            }
+            finally
+            {
+                sampling.Cancel();
+                resultHandler.Exit();
+            }
+        }
+
         private class TestableBacktestingResultHandler : BacktestingResultHandler
         {
             public decimal ExposedStartingPortfolioValue => StartingPortfolioValue;
             public decimal ExposedDailyPortfolioValue => DailyPortfolioValue;
             public decimal ExposedCumulativeMaxPortfolioValue => CumulativeMaxPortfolioValue;
+            public object ExposedChartLock => ChartLock;
+
+            // Store the first result, which runs the first in-run analysis, on the first update instead of 5 seconds in
+            protected override TimeSpan InitialResultStoreDelay => TimeSpan.Zero;
+
+            public ManualResetEventSlim InRunAnalysisRan { get; } = new();
+
+            /// <summary>
+            /// The findings of the first in-run analysis run, null when the analysis failed
+            /// </summary>
+            public IReadOnlyList<QuantConnect.Analysis> InRunAnalysisFindings { get; private set; }
+
+            protected override IReadOnlyList<QuantConnect.Analysis> RunInRunResultsAnalysis(BacktestResult completeResult,
+                AlgorithmPerformance totalPerformance)
+            {
+                InRunAnalysisFindings = base.RunInRunResultsAnalysis(completeResult, totalPerformance);
+                InRunAnalysisRan.Set();
+                return InRunAnalysisFindings;
+            }
         }
     }
 }

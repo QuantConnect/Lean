@@ -75,6 +75,11 @@ namespace QuantConnect.Lean.Engine.Results
         protected bool RunResultsAnalysis { get; set; } = true;
 
         /// <summary>
+        /// The delay after the handler starts before the first result is stored, which also runs the first in-run analysis
+        /// </summary>
+        protected virtual TimeSpan InitialResultStoreDelay { get; } = TimeSpan.FromSeconds(5);
+
+        /// <summary>
         /// A dictionary containing summary statistics
         /// </summary>
         public Dictionary<string, string> FinalStatistics { get; private set; }
@@ -91,7 +96,7 @@ namespace QuantConnect.Lean.Engine.Results
             _chartSeriesCount = new();
 
             // Delay uploading first packet
-            _nextS3Update = StartTime.AddSeconds(5);
+            _nextS3Update = StartTime.Add(InitialResultStoreDelay);
         }
 
         /// <summary>
@@ -225,8 +230,10 @@ namespace QuantConnect.Lean.Engine.Results
                     const int maxOrders = 100;
                     var orderCount = TransactionHandler.Orders.Count;
 
+                    // The in-run analyses enumerate the charts while the algorithm thread keeps sampling them,
+                    // which fails the enumeration, so hand them a copy taken under the chart lock
                     var completeResult = new BacktestResult(new BacktestResultParameters(
-                        Charts,
+                        CloneCharts(),
                         orderCount > maxOrders ? TransactionHandler.Orders.Skip(orderCount - maxOrders).ToDictionary() : TransactionHandler.Orders.ToDictionary(),
                         Algorithm.Transactions.TransactionRecord,
                         new Dictionary<string, string>(),
@@ -332,28 +339,26 @@ namespace QuantConnect.Lean.Engine.Results
                     // Get Storage Location:
                     var key = $"{AlgorithmId}.json";
 
-                    BacktestResult results;
-                    lock (ChartLock)
+                    // The charts are a snapshot taken under the chart lock, so they are cleaned up and stored without another copy
+                    if (result.Results.Charts.TryGetValue(PortfolioMarginKey, out var marginChart))
                     {
-                        results = new BacktestResult(new BacktestResultParameters(
-                            result.Results.Charts.ToDictionary(x => x.Key, x => x.Value.Clone()),
-                            result.Results.Orders,
-                            result.Results.ProfitLoss,
-                            result.Results.Statistics,
-                            result.Results.RuntimeStatistics,
-                            result.Results.RollingWindow,
-                            null, // null order events, we store them separately
-                            result.Results.TotalPerformance,
-                            result.Results.AlgorithmConfiguration,
-                            result.Results.State,
-                            result.Results.Analysis,
-                            result.Results.ServerStatistics));
-
-                        if (result.Results.Charts.TryGetValue(PortfolioMarginKey, out var marginChart))
-                        {
-                            PortfolioMarginChart.RemoveSinglePointSeries(marginChart);
-                        }
+                        PortfolioMarginChart.RemoveSinglePointSeries(marginChart);
                     }
+
+                    var results = new BacktestResult(new BacktestResultParameters(
+                        result.Results.Charts,
+                        result.Results.Orders,
+                        result.Results.ProfitLoss,
+                        result.Results.Statistics,
+                        result.Results.RuntimeStatistics,
+                        result.Results.RollingWindow,
+                        null, // null order events, we store them separately
+                        result.Results.TotalPerformance,
+                        result.Results.AlgorithmConfiguration,
+                        result.Results.State,
+                        result.Results.Analysis,
+                        result.Results.ServerStatistics));
+
                     // Save results
                     SaveResults(key, results);
 
@@ -384,7 +389,8 @@ namespace QuantConnect.Lean.Engine.Results
                 if (Algorithm != null)
                 {
                     //Convert local dictionary:
-                    var charts = new Dictionary<string, Chart>(Charts);
+                    // The algorithm thread can still be sampling when it was stopped for exceeding a limit
+                    var charts = CloneCharts();
                     var orders = new Dictionary<int, Order>(TransactionHandler.Orders);
                     var profitLoss = new SortedDictionary<DateTime, decimal>(Algorithm.Transactions.TransactionRecord);
                     var statisticsResults = GenerateStatisticsResults(charts, profitLoss, _capacityEstimate);
@@ -516,6 +522,17 @@ namespace QuantConnect.Lean.Engine.Results
             lock (LogStore)
             {
                 return LogStore.Select(x => x.Message).ToList();
+            }
+        }
+
+        /// <summary>
+        /// Takes a snapshot of the charts under the chart lock.
+        /// </summary>
+        private Dictionary<string, Chart> CloneCharts()
+        {
+            lock (ChartLock)
+            {
+                return Charts.ToDictionary(x => x.Key, x => x.Value.Clone());
             }
         }
 
