@@ -1527,7 +1527,7 @@ namespace QuantConnect.Algorithm
         /// <summary>
         /// Sets the benchmark used for computing statistics of the algorithm to the specified symbol
         /// </summary>
-        /// <param name="symbol">symbol to use as the benchmark</param>
+        /// <param name="symbol">symbol to use as the benchmark, null to disable the benchmark</param>
         [DocumentationAttribute(TradingAndOrders)]
         [DocumentationAttribute(SecuritiesAndPortfolio)]
         [DocumentationAttribute(Indicators)]
@@ -1536,6 +1536,13 @@ namespace QuantConnect.Algorithm
             if (_locked)
             {
                 throw new InvalidOperationException(Messages.QCAlgorithm.SetBenchmarkAlreadyInitialized());
+            }
+
+            if (symbol == null)
+            {
+                // Equivalent to no benchmark
+                Benchmark = new FuncBenchmark(_ => 0);
+                return;
             }
 
             // Create our security benchmark
