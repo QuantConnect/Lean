@@ -22,6 +22,7 @@ class StatisticsResultsAlgorithm(QCAlgorithm):
 
     most_traded_security_statistic = "Most Traded Security"
     most_traded_security_trade_count_statistic = "Most Traded Security Trade Count"
+    initialize_statistic = "Initialize Statistic"
 
     def initialize(self):
         self.set_start_date(2013, 10, 7)
@@ -38,6 +39,9 @@ class StatisticsResultsAlgorithm(QCAlgorithm):
         self.slow_ibm_ema = self.ema(self.spy, 30, Resolution.MINUTE)
 
         self.trade_counts = {self.spy: 0, self.ibm: 0}
+
+        # Custom summary statistics can also be set during initialization
+        self.set_summary_statistic(StatisticsResultsAlgorithm.initialize_statistic, 1)
 
     def on_data(self, data: Slice):
         if not self.slow_spy_ema.is_ready: return
@@ -97,6 +101,8 @@ class StatisticsResultsAlgorithm(QCAlgorithm):
             raise AssertionError(f"Statistic {StatisticsResultsAlgorithm.most_traded_security_statistic} should be in the summary statistics")
         if StatisticsResultsAlgorithm.most_traded_security_trade_count_statistic not in statistics:
             raise AssertionError(f"Statistic {StatisticsResultsAlgorithm.most_traded_security_trade_count_statistic} should be in the summary statistics")
+        if StatisticsResultsAlgorithm.initialize_statistic not in statistics or statistics[StatisticsResultsAlgorithm.initialize_statistic] != "1":
+            raise AssertionError(f"Statistic {StatisticsResultsAlgorithm.initialize_statistic} set during initialization should be in the summary statistics")
 
         most_trade_security, most_trade_security_trade_count = self.get_most_trade_security()
         self.check_most_traded_security_statistic(statistics, most_trade_security, most_trade_security_trade_count)
