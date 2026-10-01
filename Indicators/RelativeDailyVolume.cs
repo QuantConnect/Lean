@@ -26,7 +26,7 @@ namespace QuantConnect.Indicators
     /// 
     /// Current volume from open to current time of day / Average over the past x days from open to current time of day
     /// </summary>
-    public class RelativeDailyVolume : TradeBarIndicator
+    public class RelativeDailyVolume : TradeBarIndicator, IIndicatorWarmUpPeriodProvider
     {
         private readonly SortedDictionary<TimeSpan, SimpleMovingAverage> _relativeData;
         private readonly Dictionary<DateTime, decimal> _currentData;
@@ -38,6 +38,18 @@ namespace QuantConnect.Indicators
         /// Gets a flag indicating when the indicator is ready and fully initialized
         /// </summary>
         public override bool IsReady => _days >= _period;
+
+        /// <summary>
+        /// Required period, in data points, for the indicator to be ready and fully initialized.
+        /// </summary>
+        /// <remarks>
+        /// This indicator is ready once it has seen <c>period</c> complete days of data, so the number of data points
+        /// it needs depends on the resolution it is updated with and on the market hours of the security, and it cannot
+        /// be derived from the period alone. It defaults to zero, which means no warm up is performed. Set it to the
+        /// number of bars, at the resolution the indicator is updated with, that span the required number of days to
+        /// have <c>WarmUpIndicator</c> warm it up.
+        /// </remarks>
+        public int WarmUpPeriod { get; set; }
 
         /// <summary>
         /// Initializes a new instance of the RelativeDailyVolume class using the specified period
@@ -86,7 +98,7 @@ namespace QuantConnect.Indicators
                 }
                 _currentData.Clear();
                 _previousDay = input.Time.Day;
-                _days += 1; // _days is starting from -1, to reach IsReady => _days == WarmUpPeriod; also means WarmUpPeriod+1
+                _days += 1; // _days is starting from -1, to reach IsReady => _days == _period; also means _period+1 days
             }
 
             _currentData[input.Time] = input.Volume;

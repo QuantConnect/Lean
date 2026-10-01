@@ -114,6 +114,40 @@ namespace QuantConnect.Tests.Indicators
         }
 
         [Test]
+        public void WarmUpPeriodDefaultsToZeroAndSkipsWarmUp()
+        {
+            var algorithm = CreateAlgorithm();
+            algorithm.SetDateTime(new DateTime(2013, 10, 11, 15, 0, 0));
+            algorithm.AddEquity("SPY", Resolution.Minute);
+
+            var rdv = new RelativeDailyVolume(2);
+            Assert.AreEqual(0, rdv.WarmUpPeriod);
+
+            algorithm.WarmUpIndicator(Symbols.SPY, rdv, Resolution.Minute);
+
+            Assert.IsFalse(rdv.IsReady);
+            Assert.AreEqual(0, rdv.Samples);
+        }
+
+        [TestCase(Resolution.Minute, 3 * 390)]
+        [TestCase(Resolution.Hour, 3 * 7)]
+        public void WarmsUpWithUserDefinedWarmUpPeriod(Resolution resolution, int warmUpPeriod)
+        {
+            // Regression test for GH #8629: the number of bars needed to warm up this indicator depends on the
+            // resolution and the market hours, so it is left for the user to define through WarmUpPeriod
+            var algorithm = CreateAlgorithm();
+            algorithm.SetDateTime(new DateTime(2013, 10, 11, 15, 0, 0));
+            algorithm.AddEquity("SPY", resolution);
+
+            var rdv = new RelativeDailyVolume(2) { WarmUpPeriod = warmUpPeriod };
+            algorithm.WarmUpIndicator(Symbols.SPY, rdv, resolution);
+
+            Assert.IsTrue(rdv.IsReady);
+            Assert.AreEqual(warmUpPeriod, rdv.Samples);
+            Assert.AreNotEqual(0m, rdv.Current.Value);
+        }
+
+        [Test]
         public void UsesMostRecentHistoricalSlotForIntradayGap()
         {
             // Regression test for the missing break in the fallback loop (GH #9629).
