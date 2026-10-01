@@ -503,6 +503,14 @@ namespace QuantConnect.Algorithm
                 throw new ArgumentException($"'{name}' is a reserved statistic name.");
             }
 
+            if (_statisticsService == null)
+            {
+                // the statistics service is attached after Initialize, keep the statistic until then
+                _pendingSummaryStatistics ??= new();
+                _pendingSummaryStatistics[name] = value;
+                return;
+            }
+
             _statisticsService.SetSummaryStatistic(name, value);
         }
 

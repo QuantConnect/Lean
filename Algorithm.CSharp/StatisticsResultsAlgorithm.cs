@@ -32,6 +32,7 @@ namespace QuantConnect.Algorithm.CSharp
     {
         private const string MostTradedSecurityStatistic = "Most Traded Security";
         private const string MostTradedSecurityTradeCountStatistic = "Most Traded Security Trade Count";
+        private const string InitializeStatistic = "Initialize Statistic";
 
         private Symbol _spy;
 
@@ -61,6 +62,9 @@ namespace QuantConnect.Algorithm.CSharp
 
             _fastIbmEma = EMA(_spy, 10, Resolution.Minute);
             _slowIbmEma = EMA(_spy, 30, Resolution.Minute);
+
+            // Custom summary statistics can also be set during initialization
+            SetSummaryStatistic(InitializeStatistic, 1);
         }
 
         public override void OnData(Slice slice)
@@ -151,6 +155,10 @@ namespace QuantConnect.Algorithm.CSharp
             if (!statistics.ContainsKey(MostTradedSecurityTradeCountStatistic))
             {
                 throw new RegressionTestException($"Statistic {MostTradedSecurityTradeCountStatistic} should be in the summary statistics");
+            }
+            if (!statistics.TryGetValue(InitializeStatistic, out var initializeStatistic) || initializeStatistic != "1")
+            {
+                throw new RegressionTestException($"Statistic {InitializeStatistic} set during initialization should be in the summary statistics");
             }
             var mostTradeSecurityKvp = _tradeCounts.MaxBy(kvp => kvp.Value);
             CheckMostTradedSecurityStatistic(statistics, mostTradeSecurityKvp.Key, mostTradeSecurityKvp.Value);

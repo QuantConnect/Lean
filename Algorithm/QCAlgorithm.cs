@@ -121,6 +121,8 @@ namespace QuantConnect.Algorithm
         private ConcurrentQueue<string> _logMessages = new ConcurrentQueue<string>();
         private ConcurrentQueue<string> _errorMessages = new ConcurrentQueue<string>();
         private IStatisticsService _statisticsService;
+        // summary statistics set before the statistics service is attached, e.g. during Initialize
+        private Dictionary<string, string> _pendingSummaryStatistics;
         private IBrokerageModel _brokerageModel;
 
         private bool _sentBroadcastCommandsDisabled;
@@ -3914,6 +3916,15 @@ namespace QuantConnect.Algorithm
             if (_statisticsService == null)
             {
                 _statisticsService = statisticsService;
+
+                if (_pendingSummaryStatistics != null)
+                {
+                    foreach (var (name, value) in _pendingSummaryStatistics)
+                    {
+                        _statisticsService.SetSummaryStatistic(name, value);
+                    }
+                    _pendingSummaryStatistics = null;
+                }
             }
         }
 
