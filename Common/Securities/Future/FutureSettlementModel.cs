@@ -52,7 +52,10 @@ namespace QuantConnect.Securities.Future
                 var removedSettledProfit = factor * futureHolding.SettledProfit;
                 futureHolding.SettledProfit -= removedSettledProfit;
 
-                applyFundsParameters.CashAmount = new CashAmount(applyFundsParameters.CashAmount.Amount - removedSettledProfit, applyFundsParameters.CashAmount.Currency);
+                var conversionRate = security.QuoteCurrency.ConversionRate;
+                var removedSettledProfitInQuoteCurrency = conversionRate != 0 ? removedSettledProfit / conversionRate : removedSettledProfit;
+
+                applyFundsParameters.CashAmount = new CashAmount(applyFundsParameters.CashAmount.Amount - removedSettledProfitInQuoteCurrency, applyFundsParameters.CashAmount.Currency);
             }
 
             base.ApplyFunds(applyFundsParameters);
@@ -82,7 +85,10 @@ namespace QuantConnect.Securities.Future
                     {
                         futureHolding.SettledProfit += dailyProfitLoss;
 
-                        settlementParameters.Portfolio.CashBook[security.QuoteCurrency.Symbol].AddAmount(dailyProfitLoss);
+                        var conversionRate = security.QuoteCurrency.ConversionRate;
+                        var dailyProfitLossInQuoteCurrency = conversionRate != 0 ? dailyProfitLoss / conversionRate : dailyProfitLoss;
+
+                        settlementParameters.Portfolio.CashBook[security.QuoteCurrency.Symbol].AddAmount(dailyProfitLossInQuoteCurrency);
                         Log.Trace($"FutureSettlementModel.Scan({security.Symbol}): {security.LocalTime} Daily P&L: {dailyProfitLoss} " +
                             $"Quantity: {_settledFutureQuantity} Settlement: {_settlementPrice} UnrealizedProfit: {futureHolding.UnrealizedProfit}");
                     }

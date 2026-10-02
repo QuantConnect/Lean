@@ -245,5 +245,134 @@ namespace QuantConnect.Tests.Common.Securities.Futures
         {
             security.SetMarketPrice(new Tick(Noon, security.Symbol, string.Empty, Exchange.UNKNOWN, quantity: 1, price));
         }
+
+        [TestCase(1400, 10, 1300, 1200, 1.35)]
+        [TestCase(1400, -10, 1300, 1200, 1.35)]
+        [TestCase(1300, 10, 1400, 1500, 1.35)]
+        [TestCase(1300, -10, 1400, 1500, 1.35)]
+        [TestCase(1400, 10, 1300, 1500, 1.35)]
+        [TestCase(1400, -10, 1300, 1500, 1.35)]
+        [TestCase(1300, 10, 1400, 1200, 1.35)]
+        [TestCase(1300, -10, 1400, 1200, 1.35)]
+        public void DailySettlementNonAccountCurrency(decimal averagePrice, decimal quantity, decimal futurePriceStep1, decimal futurePriceStep2, decimal conversionRate)
+        {
+            _portfolio.CashBook[Currencies.USD].ConversionRate = conversionRate;
+
+            _future.Holdings.SetHoldings(averagePrice, quantity);
+            SetPrice(_future, futurePriceStep1);
+            _portfolio.InvalidateTotalPortfolioValue();
+
+            var expectedTpv = _portfolio.TotalPortfolioValue;
+            var startCash = _portfolio.CashBook[Currencies.USD].Amount;
+            Assert.AreEqual(0, _futureHoldings.SettledProfit);
+
+            // advance time
+            _timeKeeper.UpdateTime(_timeKeeper.LocalTime.AddDays(1));
+            _model.Scan(new ScanSettlementModelParameters(_portfolio, _future, _timeKeeper.LocalTime));
+            _portfolio.InvalidateTotalPortfolioValue();
+
+            Assert.AreEqual(_portfolio.TotalPortfolioValue, expectedTpv);
+            var expectedCash = startCash + (_future.Holdings.UnrealizedProfit / conversionRate);
+            Assert.AreEqual(expectedCash, _portfolio.CashBook[Currencies.USD].Amount);
+            Assert.AreEqual(_future.Holdings.UnrealizedProfit, _futureHoldings.SettledProfit);
+            Assert.AreEqual(0, _futureHoldings.UnsettledProfit);
+
+            // we call it again, nothing should change
+            SetPrice(_future, futurePriceStep2);
+            _portfolio.InvalidateTotalPortfolioValue();
+            _model.Scan(new ScanSettlementModelParameters(_portfolio, _future, _timeKeeper.LocalTime));
+
+            // price movement does affect TPV not cash
+            expectedTpv = expectedTpv + (futurePriceStep2 - futurePriceStep1) * quantity * conversionRate;
+            Assert.AreEqual(expectedTpv, _portfolio.TotalPortfolioValue);
+            Assert.AreEqual(expectedCash, _portfolio.CashBook[Currencies.USD].Amount);
+            Assert.AreNotEqual(0, _futureHoldings.UnsettledProfit);
+
+            // advance time
+            _timeKeeper.UpdateTime(_timeKeeper.LocalTime.AddDays(1));
+            _model.Scan(new ScanSettlementModelParameters(_portfolio, _future, _timeKeeper.LocalTime));
+            _portfolio.InvalidateTotalPortfolioValue();
+
+            Assert.AreEqual(expectedTpv, _portfolio.TotalPortfolioValue);
+            Assert.AreEqual(startCash + (_future.Holdings.UnrealizedProfit / conversionRate), _portfolio.CashBook[Currencies.USD].Amount);
+            Assert.AreEqual(_future.Holdings.UnrealizedProfit, _futureHoldings.SettledProfit);
+            Assert.AreEqual(0, _futureHoldings.UnsettledProfit);
+        }
+
+        [TestCase(1400, 10, 1300, 0, 1.35)]
+        [TestCase(1400, -10, 1300, 0, 1.35)]
+        [TestCase(1300, 10, 1400, 0, 1.35)]
+        [TestCase(1300, -10, 1400, 0, 1.35)]
+        [TestCase(1400, 10, 1300, 1, 1.35)]
+        [TestCase(1400, -10, 1300, 1, 1.35)]
+        [TestCase(1300, 10, 1400, 1, 1.35)]
+        [TestCase(1300, -10, 1400, 1, 1.35)]
+        [TestCase(1400, 10, 1300, -1, 1.35)]
+        [TestCase(1400, -10, 1300, -1, 1.35)]
+        [TestCase(1300, 10, 1400, -1, 1.35)]
+        [TestCase(1300, -10, 1400, -1, 1.35)]
+        [TestCase(1400, 10, 1300, -20, 1.35)]
+        [TestCase(1300, 10, 1400, -20, 1.35)]
+        [TestCase(1400, -10, 1300, 20, 1.35)]
+        [TestCase(1300, -10, 1400, 20, 1.35)]
+        public void HoldingsQuantityChangeNonAccountCurrency(decimal averagePrice, decimal quantity, decimal futurePrice, decimal newQuantity, decimal conversionRate)
+        {
+            _portfolio.CashBook[Currencies.USD].ConversionRate = conversionRate;
+
+            _future.Holdings.SetHoldings(averagePrice, quantity);
+            SetPrice(_future, futurePrice);
+            _portfolio.InvalidateTotalPortfolioValue();
+
+            var expectedTpv = _portfolio.TotalPortfolioValue;
+            var startCash = _portfolio.CashBook[Currencies.USD].Amount;
+            // advance time
+            _timeKeeper.UpdateTime(_timeKeeper.LocalTime.AddDays(1));
+            _model.Scan(new ScanSettlementModelParameters(_portfolio, _future, _timeKeeper.LocalTime));
+            _portfolio.InvalidateTotalPortfolioValue();
+
+            var expectedSettledProfitInAccountCurrency = _future.Holdings.UnrealizedProfit;
+            var expectedSettledCashInQuoteCurrency = expectedSettledProfitInAccountCurrency / conversionRate;
+            var expectedCash = startCash + expectedSettledCashInQuoteCurrency;
+            Assert.AreEqual(_portfolio.TotalPortfolioValue, expectedTpv);
+            Assert.AreEqual(expectedCash, _portfolio.CashBook[Currencies.USD].Amount);
+
+            // we change the holdings quantity
+            var fillPrice = futurePrice * 0.9m;
+            var fillQuantity = -(quantity - newQuantity);
+            var absoluteQuantityClosed = Math.Min(Math.Abs(fillQuantity), _future.Holdings.AbsoluteQuantity);
+            var closedQuantity = Math.Sign(-fillQuantity) * absoluteQuantityClosed;
+
+            Assert.AreEqual(Math.Sign(closedQuantity), Math.Sign(quantity));
+            var fundsInQuoteCurrency = (_future.Holdings.TotalCloseProfit(includeFees: false, exitPrice: fillPrice, _future.Holdings.AveragePrice, closedQuantity)) / conversionRate;
+            var funds = new CashAmount(fundsInQuoteCurrency, Currencies.USD);
+            var fill = new OrderEvent(1, _future.Symbol, _timeKeeper.LocalTime, OrderStatus.Filled, Extensions.GetOrderDirection(fillQuantity), fillPrice, fillQuantity, OrderFee.Zero);
+            _future.SettlementModel.ApplyFunds(new ApplyFundsSettlementModelParameters(_portfolio, _future, _timeKeeper.LocalTime.ConvertToUtc(_timeKeeper.TimeZone), funds, fill));
+
+            // if we change side the cash adjustment will go to 0, until we scan again
+            var settledProfit = 0m;
+            expectedCash = startCash + funds.Amount;
+            if (Math.Sign(newQuantity) == Math.Sign(quantity))
+            {
+                // if we increase the position the cash adjustment will remain the same, until we scan again
+                if (newQuantity < 0 && newQuantity < quantity)
+                {
+                    settledProfit = expectedSettledProfitInAccountCurrency;
+                }
+                else if (newQuantity > 0 && newQuantity > quantity)
+                {
+                    settledProfit = expectedSettledProfitInAccountCurrency;
+                }
+                else
+                {
+                    // we reduced the position
+                    settledProfit = expectedSettledProfitInAccountCurrency * (newQuantity / quantity);
+                    expectedCash = startCash + funds.Amount + (settledProfit / conversionRate);
+                }
+            }
+
+            var futureHoldings = (FutureHolding)_future.Holdings;
+            Assert.AreEqual(settledProfit, futureHoldings.SettledProfit);
+            Assert.AreEqual(expectedCash, _portfolio.CashBook[Currencies.USD].Amount);
+        }
     }
 }
