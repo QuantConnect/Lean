@@ -227,6 +227,7 @@ namespace QuantConnect.Statistics
                 { PerformanceMetrics.SharpeRatio, Math.Round((double)totalPerformance.PortfolioStatistics.SharpeRatio, 3).ToStringInvariant() },
                 { PerformanceMetrics.SortinoRatio, Math.Round((double)totalPerformance.PortfolioStatistics.SortinoRatio, 3).ToStringInvariant() },
                 { PerformanceMetrics.ProbabilisticSharpeRatio, Math.Round(totalPerformance.PortfolioStatistics.ProbabilisticSharpeRatio.SafeMultiply100(), 3).ToStringInvariant() + "%"},
+                { PerformanceMetrics.AdjustedSharpeRatio, Math.Round((double)totalPerformance.PortfolioStatistics.AdjustedSharpeRatio, 3).ToStringInvariant() },
                 { PerformanceMetrics.LossRate, Math.Round(totalPerformance.PortfolioStatistics.LossRate.SafeMultiply100()).ToStringInvariant() + "%" },
                 { PerformanceMetrics.WinRate, Math.Round(totalPerformance.PortfolioStatistics.WinRate.SafeMultiply100()).ToStringInvariant() + "%" },
                 { PerformanceMetrics.ProfitLossRatio, Math.Round(totalPerformance.PortfolioStatistics.ProfitLossRatio, 2).ToStringInvariant() },

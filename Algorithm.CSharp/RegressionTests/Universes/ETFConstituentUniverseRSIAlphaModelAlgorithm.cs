@@ -230,6 +230,7 @@ namespace QuantConnect.Algorithm.CSharp
             {"Sharpe Ratio", "1.377"},
             {"Sortino Ratio", "1.963"},
             {"Probabilistic Sharpe Ratio", "56.920%"},
+            {"Adjusted Sharpe Ratio", "1.382"},
             {"Loss Rate", "63%"},
             {"Win Rate", "37%"},
             {"Profit-Loss Ratio", "1.83"},

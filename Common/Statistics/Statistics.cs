@@ -223,6 +223,29 @@ namespace QuantConnect.Statistics
         }
 
         /// <summary>
+        /// Helper method to calculate the adjusted sharpe ratio
+        /// </summary>
+        /// <remarks>See Pezier, J. and White, A. (2006), "The Relative Merits of Investable Hedge Fund Indices and of Funds of Hedge Funds in Optimal Passive Portfolios", ICMA Centre Discussion Papers in Finance DP2006-10</remarks>
+        /// <param name="listPerformance">The list of algorithm performance values</param>
+        /// <param name="sharpeRatio">The annualized Sharpe ratio to adjust</param>
+        /// <param name="riskFreeRate">The risk free rate for each performance sample</param>
+        /// <returns>Adjusted Sharpe Ratio</returns>
+        public static double AdjustedSharpeRatio(List<double> listPerformance, double sharpeRatio, double riskFreeRate = 0)
+        {
+            var observedSharpeRatio = ObservedSharpeRatio(listPerformance, riskFreeRate);
+
+            var skewness = listPerformance.Skewness();
+            var kurtosis = listPerformance.Kurtosis();
+
+            if (double.IsNaN(skewness) || double.IsNaN(kurtosis))
+            {
+                return 0;
+            }
+
+            return sharpeRatio * (1 + (skewness / 6) * observedSharpeRatio - (kurtosis / 24) * Math.Pow(observedSharpeRatio, 2));
+        }
+
+        /// <summary>
         /// Calculates the observed sharpe ratio
         /// </summary>
         /// <param name="listPerformance">The performance samples to use</param>
