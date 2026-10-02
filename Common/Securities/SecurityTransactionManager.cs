@@ -253,7 +253,7 @@ namespace QuantConnect.Securities
         {
             if (_algorithm != null && _algorithm.IsWarmingUp)
             {
-                throw new InvalidOperationException(Messages.SecurityTransactionManager.CancelOpenOrdersNotAllowedOnInitializeOrWarmUp());
+                return new List<OrderTicket>();
             }
 
             var cancelledOrders = new List<OrderTicket>();
@@ -275,7 +275,7 @@ namespace QuantConnect.Securities
         {
             if (_algorithm != null && _algorithm.IsWarmingUp)
             {
-                throw new InvalidOperationException(Messages.SecurityTransactionManager.CancelOpenOrdersNotAllowedOnInitializeOrWarmUp());
+                return new List<OrderTicket>();
             }
 
             var cancelledOrders = new List<OrderTicket>();
