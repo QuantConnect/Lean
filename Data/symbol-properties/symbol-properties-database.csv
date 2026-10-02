@@ -303,6 +303,7 @@ cme,MSF,future,Micro Swiss Franc/U.S. Dollar (CHF/USD) Futures,USD,12500,0.0001,
 cme,NIY,future,Nikkei/YEN Futures,JPY,500.0,5.0,1.0
 cme,NKD,future,Nikkei/USD Futures,USD,5.0,5.0,1.0
 cme,NQ,future,E-mini Nasdaq-100 Futures,USD,20.0,0.25,1.0
+cme,QNDX,future,Spot-Quoted Nasdaq-100 Futures,USD,0.1,1.0,1.0
 cme,RS1,future,E-mini Russell 1000 future,USD,50.0,0.1,1.0
 cme,RTY,future,E-mini  Russell 2000 Index Futures,USD,50.0,0.1,1.0
 cme,RX,future,DJRE Futures,USD,100.0,0.1,1.0
