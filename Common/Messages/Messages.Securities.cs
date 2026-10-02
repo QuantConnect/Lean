@@ -971,15 +971,6 @@ namespace QuantConnect
         public static class SecurityTransactionManager
         {
             /// <summary>
-            /// Returns a string message saying CancelOpenOrders operation is not allowed in Initialize or during warm up
-            /// </summary>
-            [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public static string CancelOpenOrdersNotAllowedOnInitializeOrWarmUp()
-            {
-                return $"This operation is not allowed in {FormatCode("Initialize")} or during warm up: {FormatCode("CancelOpenOrders")}. Please move this code to the {FormatCode("OnWarmupFinished")}() method.";
-            }
-
-            /// <summary>
             /// Returns a string message saying the order was canceled by the CancelOpenOrders() at the given time
             /// </summary>
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
