@@ -1,4 +1,4 @@
-/*
+﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2023 QuantConnect Corporation.
  *
@@ -24,7 +24,7 @@ using QuantConnect.Data.UniverseSelection;
 namespace QuantConnect.Data.Fundamental
 {
     /// <summary>
-    /// The total carrying value of securities loaned to other broker dealers, typically used by such parties to cover short sales, secured by cash or other securities furnished by such parties until the borrowing is closed; in a Non-Differentiated Balance Sheet.
+    /// Debt that ranks after the other classes of debt should the company fall into liquidation or bankruptcy.
     /// </summary>
     public class SubordinatedLiabilitiesBalanceSheet : MultiPeriodField
     {

@@ -1,4 +1,4 @@
-/*
+﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2023 QuantConnect Corporation.
  *
@@ -24,7 +24,7 @@ using QuantConnect.Data.UniverseSelection;
 namespace QuantConnect.Data.Fundamental
 {
     /// <summary>
-    /// It means the aggregate amount of mortgage and consumer loans. This item is typically available for the insurance industry.
+    /// Loans collateralized by a specified piece of real estate (mortgage loans). Consumer loans are not included.
     /// </summary>
     public class MortgageAndConsumerloansBalanceSheet : MultiPeriodField
     {

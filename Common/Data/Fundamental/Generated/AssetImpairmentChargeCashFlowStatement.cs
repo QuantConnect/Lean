@@ -1,4 +1,4 @@
-/*
+﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2023 QuantConnect Corporation.
  *
@@ -24,7 +24,7 @@ using QuantConnect.Data.UniverseSelection;
 namespace QuantConnect.Data.Fundamental
 {
     /// <summary>
-    /// The charge against earnings resulting from the aggregate write down of all assets from their carrying value to their fair value.
+    /// The non-cash impairment, write-off or write-down, net of reversals, of capital assets: property, plant and equipment, intangibles and fixed asset investments. Other non-current assets are not included.
     /// </summary>
     public class AssetImpairmentChargeCashFlowStatement : MultiPeriodField
     {

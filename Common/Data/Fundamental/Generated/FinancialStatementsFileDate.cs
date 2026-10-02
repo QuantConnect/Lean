@@ -1,4 +1,4 @@
-/*
+﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2023 QuantConnect Corporation.
  *
@@ -97,7 +97,7 @@ namespace QuantConnect.Data.Fundamental
         public override IReadOnlyDictionary<string, DateTime> GetPeriodValues()
         {
             var result = new Dictionary<string, DateTime>();
-            foreach (var kvp in new[] { new Tuple<string, DateTime>("1M", OneMonth), new Tuple<string, DateTime>("2M", TwoMonths), new Tuple<string, DateTime>("3M", ThreeMonths), new Tuple<string, DateTime>("6M", SixMonths), new Tuple<string, DateTime>("9M", NineMonths), new Tuple<string, DateTime>("12M", TwelveMonths) })
+            foreach (var kvp in new[] { new Tuple<string, DateTime>("3M", ThreeMonths), new Tuple<string, DateTime>("6M", SixMonths), new Tuple<string, DateTime>("12M", TwelveMonths) })
             {
                 if (!BaseFundamentalDataProvider.IsNone(typeof(DateTime), kvp.Item2))
                 {

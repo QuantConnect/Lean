@@ -1,4 +1,4 @@
-/*
+﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2023 QuantConnect Corporation.
  *
@@ -24,7 +24,7 @@ using QuantConnect.Data.UniverseSelection;
 namespace QuantConnect.Data.Fundamental
 {
     /// <summary>
-    /// The cash inflow from borrowing money or property for a bank or insurance company.
+    /// The cash inflow from the repayment or sale of loans the company had granted.
     /// </summary>
     public class ProceedsFromLoansCashFlowStatement : MultiPeriodField
     {

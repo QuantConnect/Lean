@@ -1,4 +1,4 @@
-/*
+﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2023 QuantConnect Corporation.
  *
@@ -24,7 +24,7 @@ using QuantConnect.Data.UniverseSelection;
 namespace QuantConnect.Data.Fundamental
 {
     /// <summary>
-    /// The current assets section of a company's balance sheet that contains the investments that a company holds with the purpose for trading.
+    /// The total of all short term financial investments.
     /// </summary>
     public class ShortTermInvestmentsAvailableForSaleBalanceSheet : MultiPeriodField
     {

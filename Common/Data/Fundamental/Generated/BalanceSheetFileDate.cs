@@ -1,4 +1,4 @@
-/*
+﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2023 QuantConnect Corporation.
  *
@@ -37,7 +37,9 @@ namespace QuantConnect.Data.Fundamental
         /// Gets/sets the OneMonth period value for the field
         /// </summary>
         [JsonProperty("1M")]
-        public DateTime OneMonth => FundamentalService.Get<DateTime>(TimeProvider.GetUtcNow(), SecurityIdentifier, FundamentalProperty.FinancialStatements_BalanceSheet_BSFileDate_OneMonth);
+        [Obsolete("BSFileDate.OneMonth was retired by Morningstar in 2026; use BSFileDate.ThreeMonths (also available: TwelveMonths).")]
+        [JsonIgnore]
+        public DateTime OneMonth => throw new NotSupportedException("BSFileDate.OneMonth was retired by Morningstar in 2026; use BSFileDate.ThreeMonths (also available: TwelveMonths).");
 
         /// <summary>
         /// Gets/sets the SixMonths period value for the field
@@ -79,7 +81,7 @@ namespace QuantConnect.Data.Fundamental
         public override IReadOnlyDictionary<string, DateTime> GetPeriodValues()
         {
             var result = new Dictionary<string, DateTime>();
-            foreach (var kvp in new[] { new Tuple<string, DateTime>("1M", OneMonth), new Tuple<string, DateTime>("3M", ThreeMonths), new Tuple<string, DateTime>("12M", TwelveMonths) })
+            foreach (var kvp in new[] { new Tuple<string, DateTime>("3M", ThreeMonths), new Tuple<string, DateTime>("12M", TwelveMonths) })
             {
                 if (!BaseFundamentalDataProvider.IsNone(typeof(DateTime), kvp.Item2))
                 {

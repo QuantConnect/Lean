@@ -1,4 +1,4 @@
-/*
+﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2023 QuantConnect Corporation.
  *
@@ -24,7 +24,7 @@ using QuantConnect.Data.UniverseSelection;
 namespace QuantConnect.Data.Fundamental
 {
     /// <summary>
-    /// The cash inflow from a debt initially having maturity due after one year or beyond the operating cycle, if longer.
+    /// The cash inflow from the issuance of debt during the period, whatever its maturity.
     /// </summary>
     public class LongTermDebtIssuanceCashFlowStatement : MultiPeriodField
     {
