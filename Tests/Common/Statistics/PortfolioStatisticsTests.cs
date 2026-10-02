@@ -186,6 +186,26 @@ namespace QuantConnect.Tests.Common.Statistics
             Assert.DoesNotThrow(() => new PortfolioStatistics(profitLoss, equity, portfolioTurnover, listPerformance, listBenchmark, startingCapital, riskFreeInterestRateModel, tradingDaysPerYear));
         }
 
+        [Test]
+        public void PortfolioStatisticsDoesNotFailWhenAlphaExceedsDecimalRange()
+        {
+            var profitLoss = new SortedDictionary<DateTime, decimal>();
+            var equity = new SortedDictionary<DateTime, decimal>();
+            var portfolioTurnover = new SortedDictionary<DateTime, decimal>();
+            // A deposit into a live account shows up as one huge daily return, which caps the annual performance at decimal.MaxValue
+            var listPerformance = new List<double>() { 0.001, 0.004, 1.56, 0.002 };
+            // The benchmark rises on the deposit day and falls overall, so beta is large and the benchmark term of alpha is negative
+            var listBenchmark = new List<double>() { -0.004, -0.006, 0.005, -0.003 };
+            var startingCapital = 100000;
+            var riskFreeInterestRateModel = new InterestRateProvider();
+            var tradingDaysPerYear = 252;
+
+            var statistics = default(PortfolioStatistics);
+            Assert.DoesNotThrow(() => statistics = new PortfolioStatistics(profitLoss, equity, portfolioTurnover, listPerformance, listBenchmark, startingCapital, riskFreeInterestRateModel, tradingDaysPerYear));
+
+            Assert.AreEqual(decimal.MaxValue, statistics.Alpha);
+        }
+
         /// <summary>
         /// Initialize and return Portfolio Statistics depends on input data
         /// </summary>
