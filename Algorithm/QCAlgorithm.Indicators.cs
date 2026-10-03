@@ -3046,6 +3046,25 @@ namespace QuantConnect.Algorithm
 
 
         /// <summary>
+        /// Creates a new RealizedVolatility indicator for the symbol. The indicator will be automatically
+        /// updated on the given resolution.
+        /// </summary>
+        /// <param name="symbol">The symbol whose RealizedVolatility we want</param>
+        /// <param name="period">The period of the rolling window used to compute volatility</param>
+        /// <param name="resolution">The resolution</param>
+        /// <param name="selector">Selects a value from the BaseData to send into the indicator, if null defaults to casting the input value to a TradeBar</param>
+        /// <returns>A new RealizedVolatility indicator with the specified period</returns>
+        [DocumentationAttribute(Indicators)]
+        public RealizedVolatility RV(Symbol symbol, int period, Resolution? resolution = null, Func<IBaseData, IBaseDataBar> selector = null)
+        {
+            var name = CreateIndicatorName(symbol, $"RV({period})", resolution);
+            var indicator = new RealizedVolatility(name, period);
+            InitializeIndicator(indicator, resolution, selector, symbol);
+
+            return indicator;
+        }
+
+        /// <summary>
         /// Creates a new RogersSatchellVolatility indicator for the symbol. The indicator will be automatically
         /// updated on the given resolution.
         /// </summary>
