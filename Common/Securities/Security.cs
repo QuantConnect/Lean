@@ -1196,6 +1196,21 @@ namespace QuantConnect.Securities
         }
 
         /// <summary>
+        /// Applies a cash dividend to the security's cached market price
+        /// </summary>
+        internal void ApplyDividend(Dividend dividend)
+        {
+            var lastData = Cache.GetData();
+            if (lastData == null)
+            {
+                return;
+            }
+
+            Cache.ApplyDividend(dividend.Distribution);
+            UpdateMarketPrice(lastData);
+        }
+
+        /// <summary>
         /// Updates the symbol properties of this security
         /// </summary>
         internal virtual void UpdateSymbolProperties(SymbolProperties symbolProperties)

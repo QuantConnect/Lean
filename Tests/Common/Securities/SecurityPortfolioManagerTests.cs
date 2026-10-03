@@ -2582,6 +2582,35 @@ namespace QuantConnect.Tests.Common.Securities
             Assert.AreEqual(profitLoss + dividendPayment - fee, algorithm.Portfolio.TotalNetProfit);
         }
 
+        [TestCase(DataNormalizationMode.Raw)]
+        [TestCase(DataNormalizationMode.SplitAdjusted)]
+        public void CashDividendReducesCachedMarketPrice(DataNormalizationMode mode)
+        {
+            var algorithm = new QCAlgorithm();
+            algorithm.UniverseSettings.DataNormalizationMode = mode;
+            algorithm.SubscriptionManager.SetDataManager(new DataManagerStub(algorithm));
+
+            var spy = algorithm.AddEquity("SPY");
+            spy.SetMarketPrice(new TradeBar(new DateTime(2000, 01, 01), Symbols.SPY, 100m, 105m, 95m, 100m, 100m, Time.OneMinute));
+            spy.Holdings.SetHoldings(100m, 10);
+            var initialCash = algorithm.Portfolio.CashBook[Currencies.USD].Amount;
+            var initialPortfolioValue = algorithm.Portfolio.TotalPortfolioValue;
+
+            var dividend = new Dividend(Symbols.SPY, new DateTime(2000, 01, 02), 90m, 100m);
+            algorithm.Portfolio.ApplyDividend(dividend,
+                algorithm.LiveMode,
+                algorithm.SubscriptionManager.SubscriptionDataConfigService
+                    .GetSubscriptionDataConfigs(spy.Symbol)
+                    .DataNormalizationMode());
+
+            Assert.AreEqual(initialCash + 900m, algorithm.Portfolio.CashBook[Currencies.USD].Amount);
+            Assert.AreEqual(10, spy.Holdings.Quantity);
+            Assert.AreEqual(10m, spy.Price);
+            Assert.AreEqual(10m, spy.GetLastData().Price);
+            Assert.AreEqual(100m, spy.Holdings.HoldingsValue);
+            Assert.AreEqual(initialPortfolioValue, algorithm.Portfolio.TotalPortfolioValue);
+        }
+
         [TestCase()]
         [TestCase(200000)]
         public void SetAccountCurrency(decimal? startingCash = null)
