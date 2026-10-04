@@ -15,8 +15,14 @@
 */
 
 using NUnit.Framework;
+using QuantConnect.Data;
+using QuantConnect.Data.Market;
+using QuantConnect.Interfaces;
 using QuantConnect.Lean.Engine.DataFeeds.DataDownloader;
 using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading;
 
 namespace QuantConnect.Tests.Engine.DataFeeds.DataDownloader
 {
@@ -79,6 +85,107 @@ namespace QuantConnect.Tests.Engine.DataFeeds.DataDownloader
             Assert.IsFalse(res);
             Assert.AreEqual(default(DateTime), start);
             Assert.AreEqual(default(DateTime), end);
+        }
+
+        [Test]
+        public void ReturnsEveryBarOfEveryContractForCanonicalFuture()
+        {
+            var startUtc = new DateTime(2025, 12, 08);
+            var endUtc = new DateTime(2025, 12, 09);
+            var canonical = Symbol.Create(Securities.Futures.Indices.MicroNASDAQ100EMini, SecurityType.Future, Market.CME);
+            var first = Symbol.CreateFuture(Securities.Futures.Indices.MicroNASDAQ100EMini, Market.CME, new DateTime(2025, 12, 19));
+            var second = Symbol.CreateFuture(Securities.Futures.Indices.MicroNASDAQ100EMini, Market.CME, new DateTime(2026, 06, 19));
+
+            // the second contract waits until the first bar of the first contract is in the collection
+            using var firstBarAdded = new ManualResetEventSlim(false);
+            var downloader = new TestDataDownloader(parameters =>
+            {
+                if (parameters.Symbol == first)
+                {
+                    return GetBars(first, startUtc, 3, afterFirstBar: firstBarAdded.Set);
+                }
+                return GetBars(second, startUtc, 3, beforeFirstBar: () => firstBarAdded.Wait(TimeSpan.FromSeconds(10)));
+            });
+            var decorator = new CanonicalDataDownloaderDecorator(downloader, new TestFutureChainProvider(first, second), null);
+
+            var data = decorator.Get(new DataDownloaderGetParameters(canonical, Resolution.Minute, startUtc, endUtc, TickType.Trade));
+
+            Assert.IsNotNull(data);
+            var expected = new[] { first, second }
+                .SelectMany(symbol => Enumerable.Range(0, 3).Select(minute => $"{symbol.ID} {startUtc.AddMinutes(minute):O}"));
+            CollectionAssert.AreEquivalent(expected, data.Select(bar => $"{bar.Symbol.ID} {bar.Time:O}").ToList());
+        }
+
+        [Test]
+        public void ReturnsNullForCanonicalFutureWhenNoContractHasData()
+        {
+            var startUtc = new DateTime(2025, 12, 08);
+            var canonical = Symbol.Create(Securities.Futures.Indices.MicroNASDAQ100EMini, SecurityType.Future, Market.CME);
+            var contract = Symbol.CreateFuture(Securities.Futures.Indices.MicroNASDAQ100EMini, Market.CME, new DateTime(2025, 12, 19));
+            var downloader = new TestDataDownloader(parameters => Enumerable.Empty<BaseData>());
+            var decorator = new CanonicalDataDownloaderDecorator(downloader, new TestFutureChainProvider(contract), null);
+
+            var data = decorator.Get(new DataDownloaderGetParameters(canonical, Resolution.Minute, startUtc, startUtc.AddDays(1), TickType.Trade));
+
+            Assert.IsNull(data);
+        }
+
+        [Test]
+        public void ReturnsNullForCanonicalFutureWithNoContract()
+        {
+            var startUtc = new DateTime(2025, 12, 08);
+            var canonical = Symbol.Create(Securities.Futures.Indices.MicroNASDAQ100EMini, SecurityType.Future, Market.CME);
+            var downloader = new TestDataDownloader(parameters => Enumerable.Empty<BaseData>());
+            var decorator = new CanonicalDataDownloaderDecorator(downloader, new TestFutureChainProvider(), null);
+
+            var data = decorator.Get(new DataDownloaderGetParameters(canonical, Resolution.Minute, startUtc, startUtc.AddDays(1), TickType.Trade));
+
+            Assert.IsNull(data);
+        }
+
+        private static IEnumerable<BaseData> GetBars(Symbol symbol, DateTime start, int count, Action beforeFirstBar = null, Action afterFirstBar = null)
+        {
+            beforeFirstBar?.Invoke();
+            for (var i = 0; i < count; i++)
+            {
+                yield return new TradeBar(start.AddMinutes(i), symbol, 1m, 1m, 1m, 1m, 1m, Time.OneMinute);
+                if (i == 0)
+                {
+                    // the caller asks for the second bar only after it added the first bar to its collection
+                    afterFirstBar?.Invoke();
+                }
+            }
+        }
+
+        private class TestDataDownloader : IDataDownloader
+        {
+            private readonly Func<DataDownloaderGetParameters, IEnumerable<BaseData>> _contractData;
+
+            public TestDataDownloader(Func<DataDownloaderGetParameters, IEnumerable<BaseData>> contractData)
+            {
+                _contractData = contractData;
+            }
+
+            public IEnumerable<BaseData> Get(DataDownloaderGetParameters dataDownloaderGetParameters)
+            {
+                // like a downloader with no support for canonical symbols
+                return dataDownloaderGetParameters.Symbol.IsCanonical() ? null : _contractData(dataDownloaderGetParameters);
+            }
+        }
+
+        private class TestFutureChainProvider : IFutureChainProvider
+        {
+            private readonly Symbol[] _contracts;
+
+            public TestFutureChainProvider(params Symbol[] contracts)
+            {
+                _contracts = contracts;
+            }
+
+            public IEnumerable<Symbol> GetFutureContractList(Symbol symbol, DateTime date)
+            {
+                return _contracts;
+            }
         }
     }
 }

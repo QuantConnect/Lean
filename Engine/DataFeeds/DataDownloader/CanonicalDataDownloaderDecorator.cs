@@ -120,6 +120,19 @@ namespace QuantConnect.Lean.Engine.DataFeeds.DataDownloader
         }
 
         /// <summary>
+        /// Initializes a new instance of the <see cref="CanonicalDataDownloaderDecorator"/> class with the given chain providers.
+        /// </summary>
+        /// <param name="dataDownloader">The underlying data downloader to decorate with canonical symbol support.</param>
+        /// <param name="futureChainProvider">The future chain provider for resolving future contract lists.</param>
+        /// <param name="optionChainProvider">The option chain provider for resolving option contract lists.</param>
+        internal CanonicalDataDownloaderDecorator(IDataDownloader dataDownloader, IFutureChainProvider futureChainProvider, IOptionChainProvider optionChainProvider)
+        {
+            _dataDownloader = dataDownloader;
+            _futureChainProvider = futureChainProvider;
+            _optionChainProvider = optionChainProvider;
+        }
+
+        /// <summary>
         /// Get historical data enumerable for a single symbol, type and resolution given this start and end time (in UTC).
         /// For canonical symbols, automatically resolves and downloads data for all underlying contracts.
         /// </summary>
@@ -243,9 +256,9 @@ namespace QuantConnect.Lean.Engine.DataFeeds.DataDownloader
                 }
             });
 
-            var consumingEnumerable = blockingCollection.GetConsumingEnumerable();
-
-            if (!consumingEnumerable.Any())
+            // blocks until the first data point arrives or the producer completes with no data.
+            // We keep the data point we take: checking with Any() would remove it from the collection and drop it
+            if (!blockingCollection.TryTake(out var firstDataPoint, Timeout.Infinite))
             {
                 if (Interlocked.Read(ref processedContracts) == 0)
                 {
@@ -254,7 +267,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.DataDownloader
                 return null;
             }
 
-            return consumingEnumerable;
+            return blockingCollection.GetConsumingEnumerable().Prepend(firstDataPoint);
         }
 
         /// <summary>
