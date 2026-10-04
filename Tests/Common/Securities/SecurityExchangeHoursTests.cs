@@ -600,6 +600,40 @@ namespace QuantConnect.Tests.Common.Securities
             }
         }
 
+        [Test]
+        public void EarlyClosesAndLateOpensTakePrecedenceOverHolidays()
+        {
+            var date = new DateTime(2020, 1, 20); // Monday
+            var holidays = new HashSet<DateTime> { date };
+            var earlyCloses = new Dictionary<DateTime, TimeSpan> { { date, new TimeSpan(13, 0, 0) } };
+            var lateOpens = new Dictionary<DateTime, TimeSpan> { { date, new TimeSpan(18, 0, 0) } };
+
+            var monday = new LocalMarketHours(
+                DayOfWeek.Monday,
+                new MarketHoursSegment(MarketHoursState.PreMarket, new TimeSpan(0, 0, 0), new TimeSpan(9, 30, 0)),
+                new MarketHoursSegment(MarketHoursState.Market, new TimeSpan(9, 30, 0), new TimeSpan(17, 0, 0)),
+                new MarketHoursSegment(MarketHoursState.PostMarket, new TimeSpan(18, 0, 0), new TimeSpan(1, 0, 0, 0))
+            );
+
+            var hours = new Dictionary<DayOfWeek, LocalMarketHours>
+            {
+                { DayOfWeek.Sunday, LocalMarketHours.ClosedAllDay(DayOfWeek.Sunday) },
+                { DayOfWeek.Monday, monday },
+                { DayOfWeek.Tuesday, LocalMarketHours.ClosedAllDay(DayOfWeek.Tuesday) },
+                { DayOfWeek.Wednesday, LocalMarketHours.ClosedAllDay(DayOfWeek.Wednesday) },
+                { DayOfWeek.Thursday, LocalMarketHours.ClosedAllDay(DayOfWeek.Thursday) },
+                { DayOfWeek.Friday, LocalMarketHours.ClosedAllDay(DayOfWeek.Friday) },
+                { DayOfWeek.Saturday, LocalMarketHours.ClosedAllDay(DayOfWeek.Saturday) }
+            };
+
+            var exchangeHours = new SecurityExchangeHours(TimeZones.NewYork, holidays, hours, earlyCloses, lateOpens);
+
+            Assert.IsFalse(exchangeHours.Holidays.Contains(date));
+            var marketHours = exchangeHours.GetMarketHours(date);
+            Assert.IsFalse(marketHours.IsClosedAllDay);
+            Assert.IsTrue(exchangeHours.IsDateOpen(date, extendedMarketHours: true));
+        }
+
         private static TestCaseData[] GetTestCases()
         {
             return new[]

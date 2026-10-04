@@ -123,6 +123,24 @@ namespace QuantConnect.Tests.Common.Util
                 "Equity-usa-GOOG");
         }
 
+        [Test]
+        public void HandlesWildcardHolidayWithSymbolEarlyCloseAndLateOpen()
+        {
+            var database = MarketHoursDatabase.FromDataFolder();
+            var mgcEntry = database.GetEntry(Market.COMEX, "MGC", SecurityType.Future);
+            var date = new DateTime(2020, 1, 20);
+
+            Assert.IsFalse(mgcEntry.ExchangeHours.Holidays.Contains(date));
+            Assert.IsTrue(mgcEntry.ExchangeHours.EarlyCloses.ContainsKey(date));
+            Assert.AreEqual(new TimeSpan(13, 0, 0), mgcEntry.ExchangeHours.EarlyCloses[date]);
+            Assert.IsTrue(mgcEntry.ExchangeHours.LateOpens.ContainsKey(date));
+            Assert.AreEqual(new TimeSpan(18, 0, 0), mgcEntry.ExchangeHours.LateOpens[date]);
+
+            var marketHours = mgcEntry.ExchangeHours.GetMarketHours(date);
+            Assert.IsFalse(marketHours.IsClosedAllDay);
+            Assert.IsTrue(mgcEntry.ExchangeHours.IsDateOpen(date, extendedMarketHours: true));
+        }
+
         /// <summary>
         /// Equity-usa-GOOG is more specific than Equity-usa-[*].
         /// The early closes for GOOG should override the early closes for the common entry ([*]).

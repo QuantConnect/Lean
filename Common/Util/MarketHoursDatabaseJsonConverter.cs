@@ -337,6 +337,10 @@ namespace QuantConnect.Util
                     }
                 }
 
+                // A date with an early close or late open is an active trading day, not a full-day closure (holiday)
+                holidayDates.ExceptWith(earlyCloses.Keys);
+                holidayDates.ExceptWith(lateOpens.Keys);
+
                 var exchangeHours = new SecurityExchangeHours(DateTimeZoneProviders.Tzdb[ExchangeTimeZone], holidayDates, hours, earlyCloses, lateOpens, bankHolidayDates);
                 return new MarketHoursDatabase.Entry(DateTimeZoneProviders.Tzdb[DataTimeZone], exchangeHours);
             }

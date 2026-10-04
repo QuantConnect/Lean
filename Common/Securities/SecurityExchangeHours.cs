@@ -145,10 +145,13 @@ namespace QuantConnect.Securities
             IEnumerable<DateTime> bankHolidayDates = null)
         {
             TimeZone = timeZone;
-            _holidays = holidayDates.Select(x => x.Date.Ticks).ToHashSet();
-            _bankHolidays = (bankHolidayDates ?? Enumerable.Empty<DateTime>()).Select(x => x.Date.Ticks).ToHashSet();
             _earlyCloses = earlyCloses;
             _lateOpens = lateOpens;
+            _holidays = holidayDates
+                .Where(x => !earlyCloses.ContainsKey(x.Date) && !lateOpens.ContainsKey(x.Date))
+                .Select(x => x.Date.Ticks)
+                .ToHashSet();
+            _bankHolidays = (bankHolidayDates ?? Enumerable.Empty<DateTime>()).Select(x => x.Date.Ticks).ToHashSet();
             _openHoursByDay = marketHoursForEachDayOfWeek;
 
             SetMarketHoursForDay(DayOfWeek.Sunday, out _sunday);
