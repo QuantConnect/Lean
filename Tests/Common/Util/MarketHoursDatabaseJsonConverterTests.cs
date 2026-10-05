@@ -123,6 +123,33 @@ namespace QuantConnect.Tests.Common.Util
                 "Equity-usa-GOOG");
         }
 
+        [TestCase(Market.COMEX, "MGC", "2020-01-20", "Monday: PreMarket: 00:00:00-09:30:00 | Market: 09:30:00-13:00:00 | PostMarket: 18:00:00-1.00:00:00")]
+        [TestCase(Market.NYMEX, "CL", "2020-07-03", "Friday: PreMarket: 00:00:00-09:30:00 | Market: 09:30:00-13:00:00")]
+        // the 17:15 early close falls in the break after the regular session, so it does not shorten it
+        [TestCase(Market.NYMEX, "CL", "2009-01-19", "Monday: PreMarket: 00:00:00-09:30:00 | Market: 09:30:00-17:00:00 | PostMarket: 18:00:00-1.00:00:00")]
+        [TestCase(Market.CBOT, "EH", "2012-07-04", "Wednesday: PreMarket: 00:00:00-08:30:00 | Market: 08:30:00-12:15:00 | PostMarket: 17:00:00-1.00:00:00")]
+        public void WildcardHolidayDoesNotOverrideEntryEarlyCloseAndLateOpen(string market, string ticker, DateTime date, string expectedMarketHours)
+        {
+            var exchangeHours = MarketHoursDatabase.FromDataFolder().GetEntry(market, ticker, SecurityType.Future).ExchangeHours;
+
+            Assert.IsFalse(exchangeHours.Holidays.Contains(date));
+            // expiration rules still skip the market-wide holiday
+            Assert.IsTrue(exchangeHours.BankHolidays.Contains(date));
+            Assert.AreEqual(expectedMarketHours, exchangeHours.GetMarketHours(date).ToString());
+        }
+
+        // no early close or late open of its own on the market-wide holiday
+        [TestCase(SecurityType.Future, Market.COMEX, "GC", "2020-01-20")]
+        // its own holiday is not overridden by the market-wide early close
+        [TestCase(SecurityType.Cfd, Market.Oanda, "HK33HKD", "2018-12-31")]
+        public void KeepsHolidaysTheEntryDoesNotTradeOn(SecurityType securityType, string market, string ticker, DateTime date)
+        {
+            var exchangeHours = MarketHoursDatabase.FromDataFolder().GetEntry(market, ticker, securityType).ExchangeHours;
+
+            Assert.IsTrue(exchangeHours.Holidays.Contains(date));
+            Assert.IsTrue(exchangeHours.GetMarketHours(date).IsClosedAllDay);
+        }
+
         /// <summary>
         /// Equity-usa-GOOG is more specific than Equity-usa-[*].
         /// The early closes for GOOG should override the early closes for the common entry ([*]).
