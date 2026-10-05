@@ -583,8 +583,8 @@ namespace QuantConnect.Securities
                     }
                     else if (earlyCloseTime < segment.Start)
                     {
-                        // we will drop any remaining segment starting by this one
-                        index = i - 1;
+                        // we will drop any remaining segment starting by this one, keeping the ones that ended before the early close
+                        index = i;
                         break;
                     }
                 }
