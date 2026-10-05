@@ -57,9 +57,9 @@ class QC500UniverseSelectionModel(FundamentalUniverseSelectionModel):
         The stock's market cap must be greater than 500 million'''
 
         sorted_by_sector = sorted([x for x in fundamental if x.company_reference.country_id == "USA"
-                                        and x.company_reference.primary_exchange_id in ["NYS","NAS"]
+                                        and self.is_nyse_or_nasdaq(x)
                                         and (algorithm.time - x.security_reference.ipo_date).days > 180
-                                        and x.market_cap > 5e8],
+                                        and self.market_cap(x) > 5e8],
                                key = lambda x: x.company_reference.industry_template_code)
 
         count = len(sorted_by_sector)
@@ -83,3 +83,19 @@ class QC500UniverseSelectionModel(FundamentalUniverseSelectionModel):
 
         sorted_by_dollar_volume = sorted(sorted_by_dollar_volume, key = lambda x: self.dollar_volume_by_symbol[x.Symbol], reverse=True)
         return [x.Symbol for x in sorted_by_dollar_volume[:self.number_of_symbols_fine]]
+
+    @staticmethod
+    def is_nyse_or_nasdaq(fundamental: FineFundamental) -> bool:
+        '''True if the primary exchange is the NYSE or NASDAQ.
+        Morningstar codes the NYSE as "NYS" or "NYSE" and leaves the primary exchange empty on some securities,
+        so the listing exchange is the fallback'''
+        exchange = fundamental.company_reference.primary_exchange_id or fundamental.security_reference.exchange_id
+        return exchange in ["NYS", "NYSE", "NAS"]
+
+    @staticmethod
+    def market_cap(fundamental: FineFundamental) -> float:
+        '''The market cap, or price times shares outstanding where Morningstar has none.
+        Shares outstanding are restated for later splits, so the split factor puts the price on the same basis'''
+        if fundamental.market_cap > 0:
+            return fundamental.market_cap
+        return float(fundamental.price * fundamental.split_factor) * fundamental.company_profile.shares_outstanding
