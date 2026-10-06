@@ -1,4 +1,4 @@
-/*
+﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2023 QuantConnect Corporation.
  *
@@ -24,7 +24,7 @@ using QuantConnect.Data.UniverseSelection;
 namespace QuantConnect.Data.Fundamental
 {
     /// <summary>
-    /// Gain on the disposal of investment property.
+    /// The gain or loss from selling other assets, such as foreclosed assets, in the ordinary course of business. Sales of investments, loans, investment properties and property, plant and equipment are not included.
     /// </summary>
     public class GainonSaleofInvestmentPropertyIncomeStatement : MultiPeriodField
     {

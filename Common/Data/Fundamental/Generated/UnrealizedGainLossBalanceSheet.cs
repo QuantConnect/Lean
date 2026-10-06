@@ -1,4 +1,4 @@
-/*
+﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2023 QuantConnect Corporation.
  *
@@ -24,7 +24,7 @@ using QuantConnect.Data.UniverseSelection;
 namespace QuantConnect.Data.Fundamental
 {
     /// <summary>
-    /// A profit or loss that results from holding onto an asset rather than cashing it in and officially taking the profit or loss.
+    /// Accumulated unrealized gains or losses on available-for-sale financial investments, held in accumulated other comprehensive income.
     /// </summary>
     public class UnrealizedGainLossBalanceSheet : MultiPeriodField
     {

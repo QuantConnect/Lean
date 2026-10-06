@@ -1,4 +1,4 @@
-/*
+﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2023 QuantConnect Corporation.
  *
@@ -24,7 +24,7 @@ using QuantConnect.Data.UniverseSelection;
 namespace QuantConnect.Data.Fundamental
 {
     /// <summary>
-    /// Short-term (typical maturity is less than one year), highly liquid government or corporate debt instrument such as bankers' acceptance, promissory notes, and treasury bills.
+    /// The sum of federal (central bank) funds sold, securities purchased under agreements to resell, and securities borrowed.
     /// </summary>
     public class MoneyMarketInvestmentsBalanceSheet : MultiPeriodField
     {
@@ -49,7 +49,9 @@ namespace QuantConnect.Data.Fundamental
         /// Gets/sets the NineMonths period value for the field
         /// </summary>
         [JsonProperty("9M")]
-        public double NineMonths => FundamentalService.Get<double>(TimeProvider.GetUtcNow(), SecurityIdentifier, FundamentalProperty.FinancialStatements_BalanceSheet_MoneyMarketInvestments_NineMonths);
+        [Obsolete("MoneyMarketInvestments.NineMonths was retired by Morningstar in 2026; use MoneyMarketInvestments.ThreeMonths (also available: SixMonths, TwelveMonths).")]
+        [JsonIgnore]
+        public double NineMonths => throw new NotSupportedException("MoneyMarketInvestments.NineMonths was retired by Morningstar in 2026; use MoneyMarketInvestments.ThreeMonths (also available: SixMonths, TwelveMonths).");
 
         /// <summary>
         /// Gets/sets the TwelveMonths period value for the field
@@ -85,7 +87,7 @@ namespace QuantConnect.Data.Fundamental
         public override IReadOnlyDictionary<string, double> GetPeriodValues()
         {
             var result = new Dictionary<string, double>();
-            foreach (var kvp in new[] { new Tuple<string, double>("3M",ThreeMonths), new Tuple<string, double>("6M",SixMonths), new Tuple<string, double>("9M",NineMonths), new Tuple<string, double>("12M",TwelveMonths) })
+            foreach (var kvp in new[] { new Tuple<string, double>("3M",ThreeMonths), new Tuple<string, double>("6M",SixMonths), new Tuple<string, double>("12M",TwelveMonths) })
             {
                 if(!BaseFundamentalDataProvider.IsNone(typeof(double), kvp.Item2))
                 {

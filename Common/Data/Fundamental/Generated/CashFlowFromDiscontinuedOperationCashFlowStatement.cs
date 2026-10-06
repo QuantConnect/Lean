@@ -1,4 +1,4 @@
-/*
+﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2023 QuantConnect Corporation.
  *
@@ -24,7 +24,7 @@ using QuantConnect.Data.UniverseSelection;
 namespace QuantConnect.Data.Fundamental
 {
     /// <summary>
-    /// The aggregate amount of cash flow from discontinued operation, including operating activities, investing activities, and financing activities.
+    /// The net cash flow from discontinued operations that is not classified into operating, investing or financing cash flow.
     /// </summary>
     public class CashFlowFromDiscontinuedOperationCashFlowStatement : MultiPeriodField
     {
