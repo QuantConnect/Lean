@@ -38,15 +38,24 @@ namespace QuantConnect.Tests.Common.Securities.Futures
         [SetUp]
         public void Setup()
         {
+            CreateFuture(Currencies.USD);
+        }
+
+        private void CreateFuture(string quoteCurrency)
+        {
             var securities = new SecurityManager(TimeKeeper);
             var transactions = new SecurityTransactionManager(null, securities);
             _portfolio = new SecurityPortfolioManager(securities, transactions, new AlgorithmSettings());
+            if (!_portfolio.CashBook.ContainsKey(quoteCurrency))
+            {
+                _portfolio.CashBook.Add(quoteCurrency, 0, 1);
+            }
             _model = new FutureSettlementModel();
             var entry = MarketHoursDatabase.FromDataFolder().GetEntry(Symbols.Fut_SPY_Feb19_2016.ID.Market, Symbols.Fut_SPY_Feb19_2016, SecurityType.Future);
             _future = new Future(Symbols.Fut_SPY_Feb19_2016,
                 entry.ExchangeHours,
-                _portfolio.CashBook[Currencies.USD],
-                SymbolProperties.GetDefault(Currencies.USD),
+                _portfolio.CashBook[quoteCurrency],
+                SymbolProperties.GetDefault(quoteCurrency),
                 _portfolio.CashBook,
                 RegisteredSecurityDataTypesProvider.Null,
                 new FutureCache());
@@ -239,6 +248,76 @@ namespace QuantConnect.Tests.Common.Securities.Futures
             var closeProfit2 = new CashAmount(_future.Holdings.TotalCloseProfit(includeFees: false, exitPrice: exitFillPrice, averagePrice, -fillQuantityD), Currencies.USD);
             Assert.AreEqual(startCash + closeProfit.Amount + closeProfit2.Amount, _portfolio.CashBook[Currencies.USD].Amount);
             Assert.AreEqual(startTpv + closeProfit.Amount + closeProfit2.Amount, _portfolio.TotalPortfolioValue);
+        }
+
+        [TestCase(10)]
+        [TestCase(-10)]
+        public void DailySettlementInQuoteCurrency(decimal quantity)
+        {
+            // a contract quoted in EUR held in a USD account: the daily settlements move the EUR cash by the price variation in EUR,
+            // a conversion rate change alone has nothing to settle
+            CreateFuture(Currencies.EUR);
+            var quoteCash = _portfolio.CashBook[Currencies.EUR];
+            quoteCash.ConversionRate = 1.10m;
+            var startTpv = _portfolio.TotalPortfolioValue;
+
+            _future.Holdings.SetHoldings(1400, quantity);
+            SetPrice(_future, 1300);
+
+            // advance time
+            _timeKeeper.UpdateTime(_timeKeeper.LocalTime.AddDays(1).ConvertToUtc(_timeKeeper.TimeZone));
+            _model.Scan(new ScanSettlementModelParameters(_portfolio, _future, _timeKeeper.LocalTime));
+            _portfolio.InvalidateTotalPortfolioValue();
+
+            var expectedQuoteCash = (1300 - 1400) * quantity;
+            Assert.AreEqual(expectedQuoteCash, quoteCash.Amount);
+            Assert.AreEqual(expectedQuoteCash * 1.10m, _futureHoldings.SettledProfit);
+            Assert.AreEqual(0, _futureHoldings.UnsettledProfit);
+            Assert.AreEqual(startTpv + expectedQuoteCash * 1.10m, _portfolio.TotalPortfolioValue);
+
+            // the conversion rate moves but the price doesn't: the settled EUR are worth more, there's nothing new to settle
+            quoteCash.ConversionRate = 1.20m;
+            _timeKeeper.UpdateTime(_timeKeeper.LocalTime.AddDays(1).ConvertToUtc(_timeKeeper.TimeZone));
+            _model.Scan(new ScanSettlementModelParameters(_portfolio, _future, _timeKeeper.LocalTime));
+            _portfolio.InvalidateTotalPortfolioValue();
+
+            Assert.AreEqual(expectedQuoteCash, quoteCash.Amount);
+            Assert.AreEqual(expectedQuoteCash * 1.20m, _futureHoldings.SettledProfit);
+            Assert.AreEqual(0, _futureHoldings.UnsettledProfit);
+            Assert.AreEqual(startTpv + expectedQuoteCash * 1.20m, _portfolio.TotalPortfolioValue);
+
+            // the price moves: only the new price variation is settled
+            SetPrice(_future, 1350);
+            _timeKeeper.UpdateTime(_timeKeeper.LocalTime.AddDays(1).ConvertToUtc(_timeKeeper.TimeZone));
+            _model.Scan(new ScanSettlementModelParameters(_portfolio, _future, _timeKeeper.LocalTime));
+            _portfolio.InvalidateTotalPortfolioValue();
+
+            expectedQuoteCash = (1350 - 1400) * quantity;
+            Assert.AreEqual(expectedQuoteCash, quoteCash.Amount);
+            Assert.AreEqual(expectedQuoteCash * 1.20m, _futureHoldings.SettledProfit);
+            Assert.AreEqual(0, _futureHoldings.UnsettledProfit);
+            Assert.AreEqual(startTpv + expectedQuoteCash * 1.20m, _portfolio.TotalPortfolioValue);
+
+            // close half of the position at a different conversion rate: the EUR cash holds the closed half trade profit plus the open half settled profit
+            quoteCash.ConversionRate = 1.15m;
+            _future.PortfolioModel.ProcessFill(_portfolio, _future, new OrderEvent(1, _future.Symbol, _timeKeeper.LocalTime, OrderStatus.Filled, Extensions.GetOrderDirection(-quantity / 2), 1360, -quantity / 2, OrderFee.Zero));
+            _portfolio.InvalidateTotalPortfolioValue();
+
+            var openHalfSettledProfit = (1350 - 1400) * quantity / 2;
+            expectedQuoteCash = (1360 - 1400) * quantity / 2 + openHalfSettledProfit;
+            Assert.AreEqual(expectedQuoteCash, quoteCash.Amount);
+            Assert.AreEqual(openHalfSettledProfit * 1.15m, _futureHoldings.SettledProfit);
+
+            // close the rest of the position: the EUR cash holds the whole trade profit in EUR, no settlement residue is left behind
+            quoteCash.ConversionRate = 1.05m;
+            _future.PortfolioModel.ProcessFill(_portfolio, _future, new OrderEvent(2, _future.Symbol, _timeKeeper.LocalTime, OrderStatus.Filled, Extensions.GetOrderDirection(-quantity / 2), 1380, -quantity / 2, OrderFee.Zero));
+            _portfolio.InvalidateTotalPortfolioValue();
+
+            expectedQuoteCash = (1360 - 1400) * quantity / 2 + (1380 - 1400) * quantity / 2;
+            Assert.AreEqual(expectedQuoteCash, quoteCash.Amount);
+            Assert.AreEqual(0, _futureHoldings.SettledProfit);
+            Assert.AreEqual(0, _futureHoldings.UnsettledProfit);
+            Assert.AreEqual(startTpv + expectedQuoteCash * 1.05m, _portfolio.TotalPortfolioValue);
         }
 
         private static void SetPrice(Security security, decimal price)
