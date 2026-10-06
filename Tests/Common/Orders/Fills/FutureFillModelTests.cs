@@ -157,6 +157,53 @@ namespace QuantConnect.Tests.Common.Orders.Fills
             Assert.AreEqual(freshClose, fill.FillPrice);
         }
 
+        // A market order on an internal-only daily subscription, like the mapped contract of a continuous future,
+        // whose only available data is the previous close must wait for fresh data instead of filling on the stale
+        // price, even when the gap is smaller than one daily bar.
+        // See https://github.com/QuantConnect/Lean/issues/9827.
+        [TestCase(OrderDirection.Buy)]
+        [TestCase(OrderDirection.Sell)]
+        public void MarketOrderWaitsForFreshDataWithInternalOnlyDailyConfig(OrderDirection orderDirection)
+        {
+            var model = new FutureFillModel();
+            var symbol = Symbols.ES_Future_Chain;
+            var config = new SubscriptionDataConfig(typeof(TradeBar), symbol, Resolution.Daily,
+                TimeZones.NewYork, TimeZones.NewYork, true, true, true);
+            var security = GetSecurity(config);
+            var quantity = orderDirection == OrderDirection.Buy ? 100 : -100;
+
+            // Tuesday noon, mid-session. The previous daily close is 19.5 hours stale: less than one daily
+            // bar, but well past the stale price span.
+            var orderTime = Noon;
+            var timeKeeper = new TimeKeeper(orderTime.ConvertToUtc(TimeZones.NewYork), new[] { TimeZones.NewYork });
+            security.SetLocalTimeKeeper(timeKeeper.GetLocalTimeKeeper(TimeZones.NewYork));
+
+            const decimal staleClose = 101.123m;
+            var staleBarEnd = orderTime.AddHours(-19.5);
+            security.SetMarketPrice(new TradeBar(staleBarEnd.Add(-Time.OneDay), symbol,
+                101m, 101.2m, 100.9m, staleClose, 100, Time.OneDay));
+
+            var order = new MarketOrder(symbol, quantity, orderTime.ConvertToUtc(TimeZones.NewYork));
+            var parameters = new FillModelParameters(security, order, new MockSubscriptionDataConfigProvider(config), Time.OneHour, null);
+
+            // Must not fill on the stale previous close
+            var fill = model.Fill(parameters).Single();
+            Assert.AreNotEqual(OrderStatus.Filled, fill.Status);
+            Assert.AreNotEqual(OrderStatus.PartiallyFilled, fill.Status);
+            Assert.AreEqual(0, fill.FillQuantity);
+
+            // Once a fresh daily bar is available, the order fills on it
+            const decimal freshClose = 102.345m;
+            timeKeeper.SetUtcDateTime(orderTime.AddHours(1).ConvertToUtc(TimeZones.NewYork));
+            security.SetMarketPrice(new TradeBar(orderTime.AddHours(-1), symbol,
+                102m, 102.5m, 101.9m, freshClose, 100, Time.OneDay));
+
+            fill = model.Fill(parameters).Single();
+            Assert.AreEqual(OrderStatus.Filled, fill.Status);
+            Assert.AreEqual(order.Quantity, fill.FillQuantity);
+            Assert.AreEqual(freshClose, fill.FillPrice);
+        }
+
         private SubscriptionDataConfig CreateTradeBarConfig(Symbol symbol, bool isInternal = false, bool extendedMarketHours = true)
         {
             return new SubscriptionDataConfig(typeof(TradeBar), symbol, Resolution.Minute, TimeZones.NewYork, TimeZones.NewYork, true, extendedMarketHours, isInternal);

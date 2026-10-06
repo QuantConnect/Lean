@@ -1033,24 +1033,24 @@ namespace QuantConnect.Orders.Fills
             subscriptionConfigs ??= GetSubscriptionDataConfigs(asset);
 
             // Only the subscriptions whose data is sent to the algorithm (non-internal) decide whether all subscribed
-            // resolutions are coarse (hour/daily).
-            var hasNonInternal = false;
-            foreach (var config in subscriptionConfigs)
+            // resolutions are coarse (hour/daily). Securities fed by internal subscriptions only, like the mapped
+            // contract of a continuous future, have no such subscriptions: fall back to the internal configs so a
+            // stale previous close still waits for fresh data instead of filling immediately.
+            var candidates = subscriptionConfigs.Where(config => !config.IsInternalFeed).ToList();
+            if (candidates.Count == 0)
             {
-                if (config.IsInternalFeed)
-                {
-                    continue;
-                }
+                candidates = subscriptionConfigs;
+            }
 
+            foreach (var config in candidates)
+            {
                 if (config.Resolution != Resolution.Hour && config.Resolution != Resolution.Daily)
                 {
                     return false;
                 }
-
-                hasNonInternal = true;
             }
 
-            return hasNonInternal;
+            return candidates.Count > 0;
         }
 
         /// <summary>
