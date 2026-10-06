@@ -38,6 +38,12 @@ namespace QuantConnect.Api
     public class Organization: StringRepresentation
     {
         /// <summary>
+        /// Type of the organization's seats, like "researcher", "team", "trading firm" or "institution"
+        /// </summary>
+        [JsonProperty(PropertyName = "type")]
+        public string Type { get; set; }
+
+        /// <summary>
         /// Data Agreement information
         /// </summary>
         [JsonProperty(PropertyName = "data")]
