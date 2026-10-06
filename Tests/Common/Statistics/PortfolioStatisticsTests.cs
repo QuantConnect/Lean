@@ -65,16 +65,17 @@ namespace QuantConnect.Tests.Common.Statistics
         {
             get
             {
-                yield return new TestCaseData(202, 0.00589787137120101M, 0.0767976000354244M, -3.0952570635188M, 0.167632655086644M, 0.252197874915608M);
-                yield return new TestCaseData(252, 0.00735774052248839M, 0.0857772727620108M, -3.3486737318423M, 0.187233350684845M, 0.257146306116665M);
-                yield return new TestCaseData(365, 0.0106570448043979M, 0.103232963748978M, -3.75507953923657M, 0.225335372429895M, 0.264390639112978M);
+                yield return new TestCaseData(202, 0.00589787137120101M, 0.0767976000354244M, -3.0952570635188M, 0.167632655086644M, 0.252197874915608M, -3.25009706197024M);
+                yield return new TestCaseData(252, 0.00735774052248839M, 0.0857772727620108M, -3.3486737318423M, 0.187233350684845M, 0.257146306116665M, -3.51619087979233M);
+                yield return new TestCaseData(365, 0.0106570448043979M, 0.103232963748978M, -3.75507953923657M, 0.225335372429895M, 0.264390639112978M, -3.94292710669497M);
             }
         }
 
         [TestCaseSource(nameof(StatisticsCases))]
         public void ITMOptionAssignmentWithDifferentTradingDaysPerYearValue(
             int tradingDaysPerYear, decimal expectedAnnualVariance, decimal expectedAnnualStandardDeviation,
-            decimal expectedSharpeRatio, decimal expectedTrackingError, decimal expectedProbabilisticSharpeRatio)
+            decimal expectedSharpeRatio, decimal expectedTrackingError, decimal expectedProbabilisticSharpeRatio,
+            decimal expectedAdjustedSharpeRatio)
         {
             var listPerformance = new List<double> { -0.009025132, 0.003653969, 0, 0 };
             var listBenchmark = new List<double> { -0.011587791300935783, 0.00054375782787618543, 0.022165997700413956, 0.006263266301918822 };
@@ -86,6 +87,7 @@ namespace QuantConnect.Tests.Common.Statistics
             Assert.AreEqual(expectedSharpeRatio, statistics.SharpeRatio);
             Assert.AreEqual(expectedTrackingError, statistics.TrackingError);
             Assert.AreEqual(expectedProbabilisticSharpeRatio, statistics.ProbabilisticSharpeRatio);
+            Assert.AreEqual(expectedAdjustedSharpeRatio, statistics.AdjustedSharpeRatio);
         }
 
         [Test]
@@ -121,6 +123,34 @@ namespace QuantConnect.Tests.Common.Statistics
             var excessStatistics = BuildStatistics(0.068m);
             Assert.Less(excessStatistics.SharpeRatio, 0m);
             Assert.Less(excessStatistics.ProbabilisticSharpeRatio, 0.1m);
+        }
+
+        [Test]
+        public void AdjustedSharpeRatioMatchesIndependentReferenceValueWithRiskFreeRate()
+        {
+            // Same fat-tailed series as AdjustedSharpeRatioTests.MatchesIndependentReferenceValue, run
+            // through PortfolioStatistics with a non-zero risk-free rate and non-empty equity so the
+            // rate actually reaches Statistics.AdjustedSharpeRatio at PortfolioStatistics.cs's own call
+            // site; reference value computed independently in plain Python from PortfolioStatistics'
+            // own formulas (annualized performance, annual standard deviation, Sharpe ratio, then the
+            // bias-corrected G1/G2 skew/kurtosis adjustment), so it fails if riskFreeRate is dropped
+            // either there or inside the AdjustedSharpeRatio helper
+            var performance = new List<double> { 0.01, 0.02, -0.01, 0.03, 0.01, -0.02, 0.015, 0.005, -0.005, 0.02, 0.01, -0.15 };
+            var start = new DateTime(2023, 1, 1);
+            var equity = new SortedDictionary<DateTime, decimal>();
+            var value = 100_000m;
+            for (var i = 0; i < performance.Count; i++)
+            {
+                value *= (decimal)(1 + performance[i]);
+                equity[start.AddDays(i)] = value;
+            }
+
+            var statistics = new PortfolioStatistics(
+                new SortedDictionary<DateTime, decimal>(), equity, new SortedDictionary<DateTime, decimal>(),
+                performance, performance, 100_000m,
+                new ConstantRiskFreeRateInterestRateModel(0.05m), _tradingDaysPerYear);
+
+            Assert.AreEqual(-1.1083882446119753d, (double)statistics.AdjustedSharpeRatio, 1e-6);
         }
 
         [Test]
