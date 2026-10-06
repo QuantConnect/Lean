@@ -107,6 +107,13 @@ namespace QuantConnect.Statistics
         public decimal SharpeRatio { get; set; }
 
         /// <summary>
+        /// Adjusted Sharpe ratio: penalizes the Sharpe ratio for negative skewness and fat tails (kurtosis).
+        /// </summary>
+        /// <remarks>Pezier and White (2006)</remarks>
+        [JsonConverter(typeof(JsonRoundingConverter))]
+        public decimal AdjustedSharpeRatio { get; set; }
+
+        /// <summary>
         /// Probabilistic Sharpe Ratio is a probability measure associated with the Sharpe ratio.
         /// It informs us of the probability that the estimated Sharpe ratio is greater than a chosen benchmark
         /// </summary>
@@ -292,6 +299,7 @@ namespace QuantConnect.Statistics
 
             var riskFreeRate = riskFreeInterestRateModel.GetAverageRiskFreeRate(equity.Select(x => x.Key));
             SharpeRatio = AnnualStandardDeviation == 0 ? 0 : Statistics.SharpeRatio(annualPerformance, AnnualStandardDeviation, riskFreeRate);
+            AdjustedSharpeRatio = Statistics.AdjustedSharpeRatio(listPerformance, SharpeRatio);
 
             var annualDownsideDeviation = Statistics.AnnualDownsideStandardDeviation(listPerformance, tradingDaysPerYear).SafeDecimalCast();
             SortinoRatio = annualDownsideDeviation == 0 ? 0 : Statistics.SharpeRatio(annualPerformance, annualDownsideDeviation, riskFreeRate);

@@ -237,6 +237,50 @@ namespace QuantConnect.Statistics
         }
 
         /// <summary>
+        /// Calculates the Adjusted Sharpe Ratio (Pezier and White, 2006) which adjusts the Sharpe Ratio
+        /// for skewness and kurtosis of the return distribution.
+        /// </summary>
+        /// <param name="listPerformance">The performance samples to use</param>
+        /// <param name="sharpeRatio">The annualized Sharpe ratio</param>
+        /// <returns>The adjusted Sharpe ratio</returns>
+        public static double AdjustedSharpeRatio(List<double> listPerformance, double sharpeRatio)
+        {
+            if (listPerformance.Count < 3 || sharpeRatio == 0)
+            {
+                return 0;
+            }
+
+            var skewness = listPerformance.Skewness();
+            var kurtosis = listPerformance.Kurtosis();
+
+            if (skewness.IsNaNOrInfinity() || kurtosis.IsNaNOrInfinity())
+            {
+                return 0;
+            }
+
+            var asr = sharpeRatio * (1.0d + (skewness / 6.0d) * sharpeRatio - (kurtosis / 24.0d) * Math.Pow(sharpeRatio, 2));
+
+            if (double.IsNaN(asr) || double.IsInfinity(asr))
+            {
+                return 0;
+            }
+
+            return asr;
+        }
+
+        /// <summary>
+        /// Calculates the Adjusted Sharpe Ratio (Pezier and White, 2006) which adjusts the Sharpe Ratio
+        /// for skewness and kurtosis of the return distribution.
+        /// </summary>
+        /// <param name="listPerformance">The performance samples to use</param>
+        /// <param name="sharpeRatio">The annualized Sharpe ratio</param>
+        /// <returns>The adjusted Sharpe ratio</returns>
+        public static decimal AdjustedSharpeRatio(List<double> listPerformance, decimal sharpeRatio)
+        {
+            return AdjustedSharpeRatio(listPerformance, (double)sharpeRatio).SafeDecimalCast();
+        }
+
+        /// <summary>
         /// Calculate the drawdown between a high and current value
         /// </summary>
         /// <param name="current">Current value</param>
