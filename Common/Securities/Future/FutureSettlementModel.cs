@@ -48,9 +48,9 @@ namespace QuantConnect.Securities.Future
                 var factor = quantityClosedSettled / _settledFutureQuantity;
                 _settledFutureQuantity -= quantityClosedSettled;
 
-                // the passed in cash amount will hold the complete profit/loss of the trade, so we need to substract the settled profit we were given or taken from
-                var removedSettledProfit = factor * futureHolding.SettledProfit;
-                futureHolding.SettledProfit -= removedSettledProfit;
+                // the passed in cash amount will hold the complete profit/loss of the trade in the quote currency, so we need to substract the settled profit we were given or taken from
+                var removedSettledProfit = factor * futureHolding.GetSettledProfitAmount().Amount;
+                futureHolding.AddSettledProfit(-removedSettledProfit);
 
                 applyFundsParameters.CashAmount = new CashAmount(applyFundsParameters.CashAmount.Amount - removedSettledProfit, applyFundsParameters.CashAmount.Currency);
             }
@@ -76,14 +76,16 @@ namespace QuantConnect.Securities.Future
                     _settlementPrice = futureCache.SettlementPrice;
                     _settledFutureQuantity = security.Holdings.Quantity;
 
-                    // We settled the daily P&L, losers pay winners
-                    var dailyProfitLoss = futureHolding.TotalCloseProfit(includeFees: false, exitPrice: _settlementPrice) - futureHolding.SettledProfit;
+                    // We settled the daily P&L, losers pay winners. Settlement happens in the quote currency of the contract, at the settlement price variation
+                    var totalProfitLoss = futureHolding.GetQuantityValue(_settledFutureQuantity, _settlementPrice).Amount
+                        - futureHolding.GetQuantityValue(_settledFutureQuantity, futureHolding.AveragePrice).Amount;
+                    var dailyProfitLoss = totalProfitLoss - futureHolding.GetSettledProfitAmount().Amount;
                     if (dailyProfitLoss != 0)
                     {
-                        futureHolding.SettledProfit += dailyProfitLoss;
+                        futureHolding.AddSettledProfit(dailyProfitLoss);
 
                         settlementParameters.Portfolio.CashBook[security.QuoteCurrency.Symbol].AddAmount(dailyProfitLoss);
-                        Log.Trace($"FutureSettlementModel.Scan({security.Symbol}): {security.LocalTime} Daily P&L: {dailyProfitLoss} " +
+                        Log.Trace($"FutureSettlementModel.Scan({security.Symbol}): {security.LocalTime} Daily P&L: {dailyProfitLoss} {security.QuoteCurrency.Symbol} " +
                             $"Quantity: {_settledFutureQuantity} Settlement: {_settlementPrice} UnrealizedProfit: {futureHolding.UnrealizedProfit}");
                     }
                 }

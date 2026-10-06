@@ -21,10 +21,18 @@ namespace QuantConnect.Securities.Future
     /// <seealso cref="SecurityHolding"/>
     public class FutureHolding : SecurityHolding
     {
+        private decimal _settledProfit;
+
         /// <summary>
-        /// The cash settled profit for the current open position
+        /// The cash settled profit for the current open position in units of the account's currency
         /// </summary>
-        public virtual decimal SettledProfit { get; set; }
+        public virtual decimal SettledProfit
+        {
+            get
+            {
+                return _settledProfit * Security.QuoteCurrency.ConversionRate;
+            }
+        }
 
         /// <summary>
         /// Unsettled profit for the current open position <see cref="SettledProfit"/>
@@ -45,6 +53,25 @@ namespace QuantConnect.Securities.Future
         public FutureHolding(Security security, ICurrencyConverter currencyConverter)
             : base(security, currencyConverter)
         {
+        }
+
+        /// <summary>
+        /// Gets the cash settled profit for the current open position in units of the quote currency,
+        /// which is the cash amount the daily settlements moved into the quote currency cash
+        /// </summary>
+        /// <returns>The settled profit in the quote currency</returns>
+        public ConvertibleCashAmount GetSettledProfitAmount()
+        {
+            return new ConvertibleCashAmount(_settledProfit, Security.QuoteCurrency);
+        }
+
+        /// <summary>
+        /// Adds a settlement to the running total of settled profit in units of the quote currency.
+        /// </summary>
+        /// <param name="settledProfit">The cash the settlement moved into the quote currency cash</param>
+        public void AddSettledProfit(decimal settledProfit)
+        {
+            _settledProfit += settledProfit;
         }
     }
 }
