@@ -219,18 +219,26 @@ namespace QuantConnect.Report
         {
             // Handles the conversion of Symbol to Security for us.
             var looper = new PortfolioLooper(0, new List<Order>(), resolution);
-            var securities = new List<Security>();
-
-            looper.Algorithm.SetStartDate(start);
-            looper.Algorithm.SetEndDate(end);
-
-            foreach (var symbol in symbols)
+            try
             {
-                var configs = looper.Algorithm.SubscriptionManager.SubscriptionDataConfigService.Add(symbol, resolution, false, false);
-                securities.Add(looper.Algorithm.Securities.CreateSecurity(symbol, configs));
-            }
+                var securities = new List<Security>();
 
-            return GetHistory(looper.Algorithm, securities, resolution);
+                looper.Algorithm.SetStartDate(start);
+                looper.Algorithm.SetEndDate(end);
+
+                foreach (var symbol in symbols)
+                {
+                    var configs = looper.Algorithm.SubscriptionManager.SubscriptionDataConfigService.Add(symbol, resolution, false, false);
+                    securities.Add(looper.Algorithm.Securities.CreateSecurity(symbol, configs));
+                }
+
+                return GetHistory(looper.Algorithm, securities, resolution);
+            }
+            finally
+            {
+                // the history is already materialized. Until disposed, the result handler thread keeps the looper algorithm alive
+                looper.DisposeSafely();
+            }
         }
 
         /// <summary>
@@ -275,7 +283,6 @@ namespace QuantConnect.Report
                 previousOrderId = order.Id;
             }
 
-            PortfolioLooper looper = null;
             PointInTimePortfolio prev = null;
             foreach (var deploymentOrders in portfolioDeployments)
             {
@@ -300,12 +307,19 @@ namespace QuantConnect.Report
                 }
 
                 // For every deployment, we want to start fresh.
-                looper = new PortfolioLooper(deployment.LastValue(), deploymentOrders, algorithmConfiguration: algorithmConfiguration);
-
-                foreach (var portfolio in looper.ProcessOrders(deploymentOrders))
+                var looper = new PortfolioLooper(deployment.LastValue(), deploymentOrders, algorithmConfiguration: algorithmConfiguration);
+                try
                 {
-                    prev = portfolio;
-                    yield return portfolio;
+                    foreach (var portfolio in looper.ProcessOrders(deploymentOrders))
+                    {
+                        prev = portfolio;
+                        yield return portfolio;
+                    }
+                }
+                finally
+                {
+                    // dispose every deployment's looper, also on failure, its result handler thread keeps the algorithm alive until disposed
+                    looper.DisposeSafely();
                 }
             }
 
@@ -313,8 +327,6 @@ namespace QuantConnect.Report
             {
                 yield return new PointInTimePortfolio(prev, equityCurve.LastKey());
             }
-
-            looper.DisposeSafely();
         }
 
         /// <summary>

@@ -50,7 +50,7 @@ namespace QuantConnect.Report
         public Order Order { get; private set; }
 
         /// <summary>
-        /// A list of holdings at the current moment in time
+        /// A list of the open holdings at the current moment in time, plus the holding of the processed order's symbol
         /// </summary>
         public List<PointInTimeHolding> Holdings { get; private set; }
 
@@ -70,7 +70,12 @@ namespace QuantConnect.Report
             Order = order;
             TotalPortfolioValue = portfolio.TotalPortfolioValue;
             Cash = portfolio.Cash;
-            Holdings = portfolio.Securities.Values.Select(x => new PointInTimeHolding(x.Symbol, x.Holdings.HoldingsValue, x.Holdings.Quantity)).ToList();
+            // Snapshotting every security for every order grows with orders * securities, only keep the open positions.
+            // The order's symbol is always kept so its asset class is still represented once the position is closed
+            Holdings = portfolio.Securities.Values
+                .Where(x => x.Holdings.Quantity != 0 || x.Symbol == order.Symbol)
+                .Select(x => new PointInTimeHolding(x.Symbol, x.Holdings.HoldingsValue, x.Holdings.Quantity))
+                .ToList();
             Leverage = Holdings.Sum(x => x.AbsoluteHoldingsValue) / TotalPortfolioValue;
         }
 
