@@ -44,6 +44,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         private bool _anyDoesNotHaveFundamentalDataWarningLogged;
         private readonly SecurityChangesConstructor _securityChangesConstructor;
         private bool _universeSelectionSizeWarningSent;
+        private DateTime _nextPendingDelistedRemovalsCheck;
         // a selection must be at least 1/N of its resolution threshold before the large selection check runs
         private const int MinimumSignificantSelectionRatio = 10;
         private static readonly int SelectionSizeWarningResolutionCount = Enum.GetValues<Resolution>().Length;
@@ -477,19 +478,62 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 security.IsDelisted = true;
                 security.Reset();
 
-                _algorithm.Securities.Remove(data.Symbol);
-
                 // Add the security removal to the security changes but only if not pending for removal.
                 // If pending, the removed change event was already emitted for this security
+                var changes = SecurityChanges.None;
                 if (!_pendingRemovalsManager.IsPendingForRemoval(security, isInternalFeed))
                 {
                     _securityChangesConstructor.Remove(security, isInternalFeed);
-
-                    return _securityChangesConstructor.Flush();
+                    changes = _securityChangesConstructor.Flush();
                 }
+
+                // like any other removal, keep the security until it's safe to remove it: the delisting liquidation
+                // still has to happen and its funds have to settle, see CheckPendingDelistedRemovals.
+                // Only this feed's memberships, the other feed's removal change is emitted when its own delisting is handled
+                var isSafeToRemove = true;
+                foreach (var universe in _algorithm.UniverseManager.Values)
+                {
+                    if (universe.Securities.TryGetValue(data.Symbol, out var member)
+                        && member.IsInternal == isInternalFeed
+                        && _pendingRemovalsManager.TryRemoveMember(member, universe) == null)
+                    {
+                        isSafeToRemove = false;
+                    }
+                }
+
+                if (isSafeToRemove)
+                {
+                    _algorithm.Securities.Remove(data.Symbol);
+                }
+                return changes;
             }
 
             return SecurityChanges.None;
+        }
+
+        /// <summary>
+        /// Removes from the algorithm the delisted securities which are now safe to remove, checked hourly like the cash settlement.
+        /// Their universe membership is left as is, a delisted security can't be selected again
+        /// </summary>
+        /// <param name="dateTimeUtc">The current utc time</param>
+        public void CheckPendingDelistedRemovals(DateTime dateTimeUtc)
+        {
+            if (dateTimeUtc < _nextPendingDelistedRemovalsCheck)
+            {
+                return;
+            }
+            _nextPendingDelistedRemovalsCheck = dateTimeUtc.RoundDown(Time.OneHour) + Time.OneHour;
+
+            var removedMembers = _pendingRemovalsManager.CheckPendingDelistedRemovals();
+            if (removedMembers == null)
+            {
+                return;
+            }
+
+            foreach (var removedMember in removedMembers)
+            {
+                _algorithm.Securities.Remove(removedMember.Security.Symbol);
+            }
         }
 
         /// <summary>

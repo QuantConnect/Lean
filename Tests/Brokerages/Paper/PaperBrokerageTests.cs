@@ -196,6 +196,105 @@ namespace QuantConnect.Tests.Brokerages.Paper
         }
 
         [Test]
+        public void SettlesFundsOfSecurityDelistedBeforeSettlement()
+        {
+            // init algorithm
+            var algorithm = new AlgorithmStub(new MockDataFeed());
+            algorithm.SetLiveMode(true);
+            algorithm.SetBrokerageModel(BrokerageName.Default, AccountType.Cash);
+
+            var marketHoursDatabase = MarketHoursDatabase.FromDataFolder();
+            var symbolPropertiesDataBase = SymbolPropertiesDatabase.FromDataFolder();
+            var dataPermissionManager = new DataPermissionManager();
+            var universeSelection = new UniverseSelection(
+                algorithm,
+                new SecurityService(algorithm.Portfolio.CashBook, marketHoursDatabase, symbolPropertiesDataBase, algorithm, RegisteredSecurityDataTypesProvider.Null, new SecurityCacheProvider(algorithm.Portfolio), algorithm: algorithm),
+                dataPermissionManager,
+                TestGlobals.DataProvider);
+            var dataManager = new DataManager(new MockDataFeed(),
+                universeSelection,
+                algorithm,
+                algorithm.TimeKeeper,
+                marketHoursDatabase,
+                true,
+                RegisteredSecurityDataTypesProvider.Null,
+                dataPermissionManager);
+
+            algorithm.SubscriptionManager.SetDataManager(dataManager);
+            algorithm.AddSecurities(equities: new List<string> { "SPY" });
+            algorithm.PostInitialize();
+
+            var security = algorithm.Securities[Symbols.SPY];
+            Assert.IsInstanceOf<DelayedSettlementModel>(security.SettlementModel);
+
+            // add the security to its user defined universe like the universe selection would
+            algorithm.OnEndOfTimeStep();
+            var universe = algorithm.UniverseManager[UserDefinedUniverse.CreateSymbol(SecurityType.Equity, Market.USA)];
+            Assert.IsTrue(universe.AddMember(algorithm.UtcTime, security, false));
+
+            // sale on the last trading day, its proceeds settle T+1 at 6AM, after the security is delisted at midnight
+            var saleTimeUtc = new DateTime(2025, 4, 1, 19, 0, 0);
+            var delistingTimeUtc = new DateTime(2025, 4, 2, 4, 0, 0);
+            var afterSettlementTimeUtc = new DateTime(2025, 4, 2, 12, 0, 0);
+            var proceeds = 1000m;
+            var initialCash = algorithm.Portfolio.CashBook[Currencies.USD].Amount;
+            security.SettlementModel.ApplyFunds(new ApplyFundsSettlementModelParameters(algorithm.Portfolio, security, saleTimeUtc,
+                new CashAmount(proceeds, Currencies.USD), null));
+            Assert.AreEqual(proceeds, algorithm.Portfolio.UnsettledCash);
+
+            var synchronizer = new DelistingSynchronizer(algorithm, universeSelection, Symbols.SPY, delistingTimeUtc, afterSettlementTimeUtc);
+
+            // init algorithm manager
+            var manager = new AlgorithmManager(true);
+            var job = new LiveNodePacket
+            {
+                UserId = 1,
+                ProjectId = 2,
+                DeployId = $"{nameof(PaperBrokerageTests)}.{nameof(SettlesFundsOfSecurityDelistedBeforeSettlement)}"
+            };
+            var results = new LiveTradingResultHandler();
+            var transactions = new BacktestingTransactionHandler();
+            using var brokerage = new PaperBrokerage(algorithm, job);
+
+            // initialize results and transactions
+            using var eventMessagingHandler = new EventMessagingHandler();
+            using var api = new Api.Api();
+            results.Initialize(new(job, eventMessagingHandler, api, transactions, null));
+            results.SetAlgorithm(algorithm, algorithm.Portfolio.TotalPortfolioValue);
+            transactions.Initialize(algorithm, brokerage, results);
+            var realTime = new BacktestingRealTimeHandler();
+
+            try
+            {
+                using var nullLeanManager = new AlgorithmManagerTests.NullLeanManager();
+
+                using var tokenSource = new CancellationTokenSource();
+                // run algorithm manager
+                manager.Run(job,
+                    algorithm,
+                    synchronizer,
+                    transactions,
+                    results,
+                    realTime,
+                    nullLeanManager,
+                    tokenSource,
+                    new()
+                );
+
+                Assert.IsTrue(security.IsDelisted);
+                Assert.IsFalse(algorithm.Securities.Values.Contains(security));
+                Assert.AreEqual(0m, algorithm.Portfolio.UnsettledCash);
+                Assert.AreEqual(initialCash + proceeds, algorithm.Portfolio.CashBook[Currencies.USD].Amount);
+            }
+            finally
+            {
+                realTime.Exit();
+                results.Exit();
+                transactions.Exit();
+            }
+        }
+
+        [Test]
         public void PredictableCashSettlement()
         {
             var symbol = Symbols.SPY;
@@ -369,6 +468,62 @@ namespace QuantConnect.Tests.Brokerages.Paper
 
                 yield return _timeSliceFactory.Create(DateTime.UtcNow,
                     new List<DataFeedPacket> { dataFeedPacket },
+                    SecurityChanges.None,
+                    new Dictionary<Universe, BaseDataCollection>()
+                );
+            }
+        }
+
+        class DelistingSynchronizer : ISynchronizer
+        {
+            private readonly IAlgorithm _algorithm;
+            private readonly UniverseSelection _universeSelection;
+            private readonly Symbol _symbol;
+            private readonly DateTime _delistingTimeUtc;
+            private readonly DateTime _afterDelistingTimeUtc;
+            private readonly TimeSliceFactory _timeSliceFactory;
+
+            public DelistingSynchronizer(IAlgorithm algorithm, UniverseSelection universeSelection, Symbol symbol,
+                DateTime delistingTimeUtc, DateTime afterDelistingTimeUtc)
+            {
+                _algorithm = algorithm;
+                _universeSelection = universeSelection;
+                _symbol = symbol;
+                _delistingTimeUtc = delistingTimeUtc;
+                _afterDelistingTimeUtc = afterDelistingTimeUtc;
+                _timeSliceFactory = new TimeSliceFactory(TimeZones.NewYork);
+            }
+
+            public IEnumerable<TimeSlice> StreamData(CancellationToken cancellationToken)
+            {
+                var delisting = new Delisting(_symbol, _delistingTimeUtc.ConvertFromUtc(TimeZones.NewYork), 0, DelistingType.Delisted);
+                var dataFeedPacket = new DataFeedPacket(_algorithm.Securities[_symbol],
+                    _algorithm.SubscriptionManager.Subscriptions.First(s => s.Symbol == _symbol),
+                    new List<BaseData> { delisting }, Ref.CreateReadOnly(() => false));
+
+                // like the subscription synchronizer, handle the delisting before emitting it
+                _universeSelection.CheckPendingDelistedRemovals(_delistingTimeUtc);
+                _universeSelection.HandleDelisting(delisting, false);
+
+                yield return _timeSliceFactory.Create(_delistingTimeUtc,
+                    new List<DataFeedPacket> { dataFeedPacket },
+                    SecurityChanges.None,
+                    new Dictionary<Universe, BaseDataCollection>()
+                );
+
+                // the funds settle in this time step
+                _universeSelection.CheckPendingDelistedRemovals(_afterDelistingTimeUtc);
+                yield return _timeSliceFactory.Create(_afterDelistingTimeUtc,
+                    new List<DataFeedPacket>(),
+                    SecurityChanges.None,
+                    new Dictionary<Universe, BaseDataCollection>()
+                );
+
+                // the security is removed on the next hourly check
+                var nextCheckTimeUtc = _afterDelistingTimeUtc.AddHours(1);
+                _universeSelection.CheckPendingDelistedRemovals(nextCheckTimeUtc);
+                yield return _timeSliceFactory.Create(nextCheckTimeUtc,
+                    new List<DataFeedPacket>(),
                     SecurityChanges.None,
                     new Dictionary<Universe, BaseDataCollection>()
                 );

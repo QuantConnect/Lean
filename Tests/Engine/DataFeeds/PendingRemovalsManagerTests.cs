@@ -245,6 +245,77 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             Assert.AreEqual(security, pendingRemovals.PendingRemovals.Values.First().First().Security);
         }
 
+        [Test]
+        public void DelistedWontBeReturnedNorCanceledBecauseReSelected()
+        {
+            var orderProvider = new FakeOrderProcessor();
+            var pendingRemovals = new PendingRemovalsManager(orderProvider);
+            using var universe = new TestUniverse();
+            var security = SecurityTests.GetSecurity();
+            var member = new Universe.Member(Noon, security, false);
+            ApplyUnsettledFunds(security);
+            security.IsDelisted = true;
+
+            Assert.IsNull(pendingRemovals.TryRemoveMember(member, universe));
+            // the universe can still select it, like a user defined universe in live trading, but a delisted security can't come back
+            Assert.IsFalse(pendingRemovals.CheckPendingRemovals(new HashSet<Symbol> { security.Symbol }, universe).Any());
+            Assert.AreEqual(1, pendingRemovals.PendingRemovals.Values.Count());
+            Assert.AreEqual(security, pendingRemovals.PendingRemovals.Values.First().First().Security);
+        }
+
+        [Test]
+        public void RemovesDelistedOnceFundsSettle()
+        {
+            var orderProvider = new FakeOrderProcessor();
+            var pendingRemovals = new PendingRemovalsManager(orderProvider);
+            using var universe = new TestUniverse();
+            var security = SecurityTests.GetSecurity();
+            var member = new Universe.Member(Noon, security, false);
+            var portfolio = ApplyUnsettledFunds(security);
+            security.IsDelisted = true;
+
+            Assert.IsNull(pendingRemovals.TryRemoveMember(member, universe));
+            Assert.IsNull(pendingRemovals.CheckPendingDelistedRemovals());
+            Assert.AreEqual(1, pendingRemovals.PendingRemovals.Values.Count());
+
+            security.SettlementModel.Scan(new ScanSettlementModelParameters(portfolio, security, TimeKeeper.UtcTime.AddDays(10)));
+
+            var result = pendingRemovals.CheckPendingDelistedRemovals();
+            Assert.AreEqual(1, result.Count);
+            Assert.AreEqual(universe, result[0].Universe);
+            Assert.AreEqual(security, result[0].Security);
+            Assert.AreEqual(0, pendingRemovals.PendingRemovals.Keys.Count());
+        }
+
+        [Test]
+        public void DelistedRemovalsCheckIgnoresNonDelisted()
+        {
+            var orderProvider = new FakeOrderProcessor();
+            var pendingRemovals = new PendingRemovalsManager(orderProvider);
+            using var universe = new TestUniverse();
+            var security = SecurityTests.GetSecurity();
+            var member = new Universe.Member(Noon, security, false);
+            orderProvider.AddOrder(new LimitOrder(security.Symbol, 1, 1, DateTime.UtcNow));
+            Assert.IsNull(pendingRemovals.TryRemoveMember(member, universe));
+            orderProvider.Clear();
+
+            // safe to remove, but its removal is left to the universe selection
+            Assert.IsNull(pendingRemovals.CheckPendingDelistedRemovals());
+            Assert.AreEqual(1, pendingRemovals.PendingRemovals.Values.Count());
+            Assert.AreEqual(1, pendingRemovals.CheckPendingRemovals(new HashSet<Symbol>(), universe).Count);
+        }
+
+        private static SecurityPortfolioManager ApplyUnsettledFunds(Security security)
+        {
+            security.SetSettlementModel(new DelayedSettlementModel(1, TimeSpan.FromHours(8)));
+            var securities = new SecurityManager(TimeKeeper);
+            var transactions = new SecurityTransactionManager(null, securities);
+            var portfolio = new SecurityPortfolioManager(securities, transactions, new AlgorithmSettings());
+            security.SettlementModel.ApplyFunds(new ApplyFundsSettlementModelParameters(portfolio, security, TimeKeeper.UtcTime.Date.AddDays(1),
+                new CashAmount(1000, Currencies.USD), null));
+            return portfolio;
+        }
+
         private class TestUniverse : Universe
         {
             public TestUniverse()
