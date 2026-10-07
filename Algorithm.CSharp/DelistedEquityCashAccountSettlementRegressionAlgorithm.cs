@@ -96,6 +96,10 @@ namespace QuantConnect.Algorithm.CSharp
             {
                 throw new RegressionTestException("Expected the delisted security to be removed once its funds settled");
             }
+            if (UniverseManager.ActiveSecurities.ContainsKey(_aaa))
+            {
+                throw new RegressionTestException("Expected the delisted security to be removed from its universes once its funds settled");
+            }
         }
 
         /// <summary>

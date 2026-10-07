@@ -259,6 +259,12 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     continue;
                 }
 
+                if (_algorithm.Securities.TryGetValue(symbol, out var existingSecurity) && existingSecurity.IsDelisted)
+                {
+                    // a delisted security can't be added again, like when still selected by a user defined universe in live trading
+                    continue;
+                }
+
                 Security underlying = null;
                 if (symbol.HasUnderlying)
                 {
@@ -512,8 +518,8 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         }
 
         /// <summary>
-        /// Removes from the algorithm the delisted securities which are now safe to remove, checked hourly like the cash settlement.
-        /// Their universe membership is left as is, a delisted security can't be selected again
+        /// Removes the delisted securities which are now safe to remove from their universes and the algorithm,
+        /// checked hourly like the cash settlement
         /// </summary>
         /// <param name="dateTimeUtc">The current utc time</param>
         public void CheckPendingDelistedRemovals(DateTime dateTimeUtc)
@@ -524,16 +530,9 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             }
             _nextPendingDelistedRemovalsCheck = dateTimeUtc.RoundDown(Time.OneHour) + Time.OneHour;
 
-            var removedMembers = _pendingRemovalsManager.CheckPendingDelistedRemovals();
-            if (removedMembers == null)
-            {
-                return;
-            }
-
-            foreach (var removedMember in removedMembers)
-            {
-                _algorithm.Securities.Remove(removedMember.Security.Symbol);
-            }
+            RemoveSecurityFromUniverse(_pendingRemovalsManager.CheckPendingDelistedRemovals(),
+                dateTimeUtc,
+                _algorithm.EndDate.ConvertToUtc(_algorithm.TimeZone));
         }
 
         /// <summary>
@@ -666,6 +665,12 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                             _algorithm.Securities.Remove(member.Symbol);
                         }
                     }
+                }
+
+                if (member.IsDelisted)
+                {
+                    // the subscriptions of a delisted security end with its data, so they aren't removed above
+                    _algorithm.Securities.Remove(member.Symbol);
                 }
             }
         }

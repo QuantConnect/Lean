@@ -283,6 +283,8 @@ namespace QuantConnect.Tests.Brokerages.Paper
 
                 Assert.IsTrue(security.IsDelisted);
                 Assert.IsFalse(algorithm.Securities.Values.Contains(security));
+                Assert.IsFalse(universe.ContainsMember(Symbols.SPY));
+                Assert.IsFalse(security.IsTradable);
                 Assert.AreEqual(0m, algorithm.Portfolio.UnsettledCash);
                 Assert.AreEqual(initialCash + proceeds, algorithm.Portfolio.CashBook[Currencies.USD].Amount);
             }
