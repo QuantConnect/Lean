@@ -58,10 +58,16 @@ namespace QuantConnect.Lean.Engine.Results
         public PerformanceTrackingTool PerformanceTrackingTool { get; set; }
 
         /// <summary>
+        /// The data monitor tracking the data requests, whose report the result handler can store on exit.
+        /// Optional: may be null when the host doesn't monitor data requests.
+        /// </summary>
+        public IDataMonitor DataMonitor { get; set; }
+
+        /// <summary>
         /// Creates a new instance
         /// </summary>
         public ResultHandlerInitializeParameters(AlgorithmNodePacket job, IMessagingHandler messagingHandler, IApi api, ITransactionHandler transactionHandler,
-            IMapFileProvider mapFileProvider, PerformanceTrackingTool performanceTrackingTool = null)
+            IMapFileProvider mapFileProvider, PerformanceTrackingTool performanceTrackingTool = null, IDataMonitor dataMonitor = null)
         {
             Job = job;
             Api = api;
@@ -69,6 +75,7 @@ namespace QuantConnect.Lean.Engine.Results
             MessagingHandler = messagingHandler;
             TransactionHandler = transactionHandler;
             PerformanceTrackingTool = performanceTrackingTool;
+            DataMonitor = dataMonitor;
         }
     }
 }

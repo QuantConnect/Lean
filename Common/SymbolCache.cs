@@ -162,7 +162,9 @@ namespace QuantConnect
                     // fall-back full-text search as a back-shim for custom data symbols.
                     // permitting a user to use BTC to resolve to BTC.Bitcoin
                     var search = $"{ticker}.";
-                    var match = Symbols.Where(kvp => kvp.Key.StartsWith(search, StringComparison.InvariantCultureIgnoreCase) && kvp.Value is not null).ToList();
+                    var match = Symbols.Where(kvp => kvp.Key.StartsWith(search, StringComparison.InvariantCultureIgnoreCase)
+                        && kvp.Value is not null
+                        && kvp.Value.SecurityType == SecurityType.Base).ToList();
 
                     if (match.Count == 0)
                     {

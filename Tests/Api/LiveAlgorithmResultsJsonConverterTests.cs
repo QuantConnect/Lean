@@ -1,0 +1,145 @@
+/*
+ * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
+ * Lean Algorithmic Trading Engine v2.0. Copyright 2014 QuantConnect Corporation.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+*/
+
+using System;
+using System.Collections.Generic;
+using Newtonsoft.Json;
+using NUnit.Framework;
+using QuantConnect.Api;
+
+namespace QuantConnect.Tests.API
+{
+    [TestFixture]
+    public class LiveAlgorithmResultsJsonConverterTests
+    {
+        [TestCase("deploymentDetails")]
+        [TestCase("DeploymentDetails")]
+        public void DeserializesDeploymentDetails(string name)
+        {
+            var result = Deserialize($@"""{name}"": {{ ""Account"": ""U1234567"", ""environment"": ""paper"" }},");
+
+            CollectionAssert.AreEquivalent(
+                new Dictionary<string, string> { { "Account", "U1234567" }, { "environment", "paper" } },
+                result.DeploymentDetails);
+        }
+
+        [Test]
+        public void DeploymentDetailsAreOptional()
+        {
+            // deployments running an older Lean, or whose brokerage shares none, report nothing
+            var result = Deserialize();
+
+            Assert.IsNull(result.DeploymentDetails);
+            // the rest is still deserialized
+            Assert.AreEqual("DeployId", result.DeployId);
+            Assert.AreEqual("Running", result.Status);
+            CollectionAssert.AreEquivalent(new Dictionary<string, string> { { "Unrealized", "0" } }, result.RuntimeStatistics);
+        }
+
+        [Test]
+        public void ServerStatisticsAreStillDeserialized()
+        {
+            var result = Deserialize(@"""serverStatistics"": { ""CPU Usage"": ""1%"" },");
+
+            CollectionAssert.AreEquivalent(new Dictionary<string, string> { { "CPU Usage", "1%" } }, result.ServerStatistics);
+        }
+
+        [Test]
+        public void EveryFieldIsOptional()
+        {
+            // an errored or not yet started deployment only reports a subset of the fields
+            var result = JsonConvert.DeserializeObject<LiveAlgorithmResults>("{}", new LiveAlgorithmResultsJsonConverter());
+
+            Assert.IsFalse(result.Success);
+            Assert.IsNull(result.Status);
+            Assert.IsNull(result.DeployId);
+            CollectionAssert.IsEmpty(result.Errors, "Like every other response, a missing errors array reads as no errors");
+            Assert.IsNull(result.Stopped);
+            Assert.AreEqual(default(DateTime), result.Launched);
+            Assert.IsNull(result.Charts);
+            Assert.IsNull(result.Files);
+        }
+
+        [Test]
+        public void ErrorsAreReadFromTheErrorsArray()
+        {
+            var result = Deserialize(@"""errors"": [ ""First error"", ""Second error"" ],");
+
+            CollectionAssert.AreEqual(new[] { "First error", "Second error" }, result.Errors);
+            Assert.AreEqual("Running", result.Status, "The fields after the errors are still deserialized");
+            CollectionAssert.AreEquivalent(new Dictionary<string, string> { { "Unrealized", "0" } }, result.RuntimeStatistics);
+        }
+
+        [Test]
+        public void AFailedResponseStopsAtTheErrors()
+        {
+            var json = @"{ ""success"": false, ""errors"": [ ""Not started"" ], ""charts"": { ""Equity"": {} } }";
+            var result = JsonConvert.DeserializeObject<LiveAlgorithmResults>(json, new LiveAlgorithmResultsJsonConverter());
+
+            CollectionAssert.AreEqual(new[] { "Not started" }, result.Errors);
+            Assert.IsNull(result.Charts, "Charts and files are not read once the response reports a failure");
+        }
+
+        [Test]
+        public void DeserializesTheDescription()
+        {
+            var result = Deserialize(@"""description"": ""My project"",");
+
+            Assert.AreEqual("My project", result.Description);
+        }
+
+        [Test]
+        public void DeserializesFilesWithoutModifiedDateOrId()
+        {
+            var json = @"{
+                ""success"": true,
+                ""files"": [ { ""id"": null, ""content"": ""code"", ""modified"": null, ""name"": ""Main.cs"", ""open"": false, ""isLibrary"": false, ""projectId"": 123 } ]
+            }";
+            var result = JsonConvert.DeserializeObject<LiveAlgorithmResults>(json, new LiveAlgorithmResultsJsonConverter());
+
+            Assert.AreEqual(1, result.Files.Count);
+            var file = result.Files[0];
+            Assert.AreEqual("Main.cs", file.Name);
+            Assert.AreEqual("code", file.Code);
+            Assert.AreEqual(123, file.ProjectId);
+            Assert.IsNull(file.DateModified);
+            Assert.IsNull(file.Id);
+        }
+
+        private static LiveAlgorithmResults Deserialize(string extraFields = "")
+        {
+            var json = $@"{{
+                ""success"": true,
+                ""message"": """",
+                ""status"": ""Running"",
+                ""deployId"": ""DeployId"",
+                ""cloneId"": 1,
+                ""launched"": ""2026-09-14T00:00:00Z"",
+                ""stopped"": null,
+                ""brokerage"": ""Paper Trading"",
+                ""securityTypes"": ""Equity"",
+                ""projectName"": ""ProjectName"",
+                ""datacenter"": ""Datacenter"",
+                ""public"": false,
+                ""files"": [],
+                ""charts"": {{}},
+                {extraFields}
+                ""runtimeStatistics"": {{ ""Unrealized"": ""0"" }}
+            }}";
+
+            return JsonConvert.DeserializeObject<LiveAlgorithmResults>(json, new LiveAlgorithmResultsJsonConverter());
+        }
+    }
+}

@@ -165,6 +165,25 @@ namespace QuantConnect.Tests.API
         }
 
         /// <summary>
+        /// Polls the latest deployment of the project until the api reports it stopped, so it can be deployed again
+        /// </summary>
+        public static void WaitForLiveAlgorithmToStop(Api.Api apiClient, int projectId, int seconds = 180)
+        {
+            var finish = DateTime.UtcNow.AddSeconds(seconds);
+            var status = string.Empty;
+            while (DateTime.UtcNow < finish)
+            {
+                status = apiClient.ReadLiveAlgorithm(projectId).Status ?? string.Empty;
+                if (status.Equals(AlgorithmStatus.Stopped.ToString(), StringComparison.OrdinalIgnoreCase))
+                {
+                    return;
+                }
+                Thread.Sleep(5000);
+            }
+            Assert.Fail($"The live algorithm of project {projectId} did not stop in time, last status: {status}");
+        }
+
+        /// <summary>
         /// Wait for the backtest to complete
         /// </summary>
         /// <param name="projectId">Project id to scan</param>
@@ -195,7 +214,9 @@ namespace QuantConnect.Tests.API
                         return backtest;
                     }
                 }
-            } while (((backtest == null || (backtest.Success && backtest.Progress < 1)) && DateTime.UtcNow < finish));
+            // The api can report full progress before it stores the final statistics
+            } while ((backtest == null || (backtest.Success && (backtest.Progress < 1 || backtest.Statistics?.ContainsKey("Total Orders") != true)))
+                && DateTime.UtcNow < finish);
 
             return backtest;
         }

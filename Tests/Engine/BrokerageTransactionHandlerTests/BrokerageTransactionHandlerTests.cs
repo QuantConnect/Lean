@@ -298,6 +298,10 @@ namespace QuantConnect.Tests.Engine.BrokerageTransactionHandlerTests
                 .SetName("ShortSellKeepsLocateTags");
             yield return new TestCaseData(CreateLocateTagProperties(), 20m, -10m, false)
                 .SetName("SellToCloseDropsLocateTags");
+            yield return new TestCaseData(new BloombergFixOrderProperties { LocateBroker = "MLCO", PositionSide = OrderPosition.SellToOpen }, 20m, -10m, true)
+                .SetName("BloombergFixPositionSideShortKeepsLocate");
+            yield return new TestCaseData(new BloombergFixOrderProperties { LocateBroker = "MLCO", PositionSide = OrderPosition.SellToClose }, 0m, -10m, false)
+                .SetName("BloombergFixPositionSideCloseDropsLocate");
 
             // TerminalLink keeps the locate broker and locate id together; either one alone counts
             yield return new TestCaseData(new TerminalLinkOrderProperties { LocateBroker = "MLCO", LocateId = "LOC-123" }, 0m, -10m, true)

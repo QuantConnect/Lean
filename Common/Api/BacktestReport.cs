@@ -25,5 +25,10 @@ namespace QuantConnect.Api
         /// HTML data of the report with embedded base64 images
         /// </summary>
         public string Report { get; set; }
+
+        /// <summary>
+        /// Indicates if the report is still being generated
+        /// </summary>
+        public bool Generating { get; set; }
     }
 }

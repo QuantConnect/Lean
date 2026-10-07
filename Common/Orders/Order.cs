@@ -34,6 +34,7 @@ namespace QuantConnect.Orders
         private decimal _quantity;
         private decimal _price;
         private int _id;
+        private OrderContingency _contingency;
 
         /// <summary>
         /// Order ID.
@@ -52,6 +53,7 @@ namespace QuantConnect.Orders
                         GroupOrderManager.OrderIds.Add(_id);
                     }
                 }
+                RegisterContingentOrderId();
             }
         }
 
@@ -231,6 +233,22 @@ namespace QuantConnect.Orders
         public GroupOrderManager GroupOrderManager { get; set; }
 
         /// <summary>
+        /// The contingency of this order, if any: the set of contingent orders it belongs to (OCO, OTO, OUO, brackets)
+        /// and the links defining how it relates to the rest of the orders in the set
+        /// </summary>
+        [JsonProperty(PropertyName = "contingency", DefaultValueHandling = DefaultValueHandling.Ignore)]
+        public OrderContingency Contingency
+        {
+            get => _contingency;
+            set
+            {
+                _contingency = value;
+                _contingency?.SetOrder(this);
+                RegisterContingentOrderId();
+            }
+        }
+
+        /// <summary>
         /// The adjustment mode used on the order fill price
         /// </summary>
         [JsonProperty(PropertyName = "priceAdjustmentMode")]
@@ -332,6 +350,20 @@ namespace QuantConnect.Orders
         }
 
         /// <summary>
+        /// Registers this order id in its set of contingent orders, if any
+        /// </summary>
+        private void RegisterContingentOrderId()
+        {
+            if (_id != 0 && _contingency != null)
+            {
+                lock (_contingency.OrderIds)
+                {
+                    _contingency.OrderIds.Add(_id);
+                }
+            }
+        }
+
+        /// <summary>
         /// Gets a new unique incremental id for this order
         /// </summary>
         /// <returns>Returns a new id for this order</returns>
@@ -388,6 +420,8 @@ namespace QuantConnect.Orders
             // The group order manager has to be set before the quantity,
             // since combo orders might need it to calculate the quantity in the Quantity setter.
             order.GroupOrderManager = GroupOrderManager;
+            // the set is shared, the links are cloned
+            order.Contingency = Contingency?.Clone();
             order.Time = Time;
             order.LastFillTime = LastFillTime;
             order.LastUpdateTime = LastUpdateTime;
@@ -412,12 +446,16 @@ namespace QuantConnect.Orders
         /// <returns>The <see cref="Order"/> that matches the request</returns>
         public static Order CreateOrder(SubmitOrderRequest request)
         {
-            return CreateOrder(request.OrderId, request.OrderType, request.Symbol, request.Quantity, request.Time,
+            var order = CreateOrder(request.OrderType, request.Symbol, request.Quantity, request.Time,
                  request.Tag, request.OrderProperties, request.LimitPrice, request.StopPrice, request.TriggerPrice, request.TrailingAmount,
                  request.TrailingAsPercentage, request.GroupOrderManager);
+            order.Contingency = request.Contingency?.Clone();
+            order.Status = OrderStatus.New;
+            order.Id = request.OrderId;
+            return order;
         }
 
-        private static Order CreateOrder(int orderId, OrderType type, Symbol symbol, decimal quantity, DateTime time,
+        private static Order CreateOrder(OrderType type, Symbol symbol, decimal quantity, DateTime time,
             string tag, IOrderProperties properties, decimal limitPrice, decimal stopPrice, decimal triggerPrice, decimal trailingAmount,
             bool trailingAsPercentage, GroupOrderManager groupOrderManager)
         {
@@ -475,8 +513,6 @@ namespace QuantConnect.Orders
                 default:
                     throw new ArgumentOutOfRangeException();
             }
-            order.Status = OrderStatus.New;
-            order.Id = orderId;
             return order;
         }
     }

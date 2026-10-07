@@ -29,6 +29,7 @@ using QuantConnect.Packets;
 using QuantConnect.Securities.Positions;
 using QuantConnect.Statistics;
 using QuantConnect.Util;
+using Common.Util;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -249,6 +250,16 @@ namespace QuantConnect.Lean.Engine.Results
         protected Dictionary<string, string> State { get; set; }
 
         /// <summary>
+        /// Deployment details shared with the user and the algorithm, see <see cref="AddDeploymentDetail"/>
+        /// </summary>
+        private readonly Dictionary<string, string> _deploymentDetails = new();
+
+        /// <summary>
+        /// Read only view of the deployment details, see <see cref="AddDeploymentDetail"/>. Shared with the algorithm
+        /// </summary>
+        public ReadOnlyExtendedDictionary<string, string> DeploymentDetails { get; }
+
+        /// <summary>
         /// The handler responsible for communicating messages to listeners
         /// </summary>
         protected IMessagingHandler MessagingHandler { get; set; }
@@ -313,6 +324,11 @@ namespace QuantConnect.Lean.Engine.Results
         protected PerformanceTrackingTool PerformanceTrackingTool { get; set; }
 
         /// <summary>
+        /// The data monitor tracking the data requests. May be null when the host doesn't monitor data requests.
+        /// </summary>
+        protected IDataMonitor DataMonitor { get; set; }
+
+        /// <summary>
         /// Creates a new instance
         /// </summary>
         protected BaseResultsHandler()
@@ -326,6 +342,8 @@ namespace QuantConnect.Lean.Engine.Results
 
             Messages = new ConcurrentQueue<Packet>();
             RuntimeStatistics = new Dictionary<string, string>();
+            // same instance, so any entries added later are visible through the view
+            DeploymentDetails = new ReadOnlyExtendedDictionary<string, string>(_deploymentDetails, copy: false);
             StartTime = DateTime.UtcNow;
             CompileId = "";
             AlgorithmId = "";
@@ -505,6 +523,7 @@ namespace QuantConnect.Lean.Engine.Results
             State["Hostname"] = _hostName;
             MapFileProvider = parameters.MapFileProvider;
             PerformanceTrackingTool = parameters.PerformanceTrackingTool;
+            DataMonitor = parameters.DataMonitor;
 
             SerializerSettings = new()
             {
@@ -541,6 +560,38 @@ namespace QuantConnect.Lean.Engine.Results
             // Wire algorithm name and tags updates
             algorithm.NameUpdated += (sender, name) => AlgorithmNameUpdated(name);
             algorithm.TagsUpdated += (sender, tags) => AlgorithmTagsUpdated(tags);
+        }
+
+        /// <summary>
+        /// Adds or updates a deployment detail entry. Key value pairs the brokerage, data queue handler or any other component
+        /// wants to share with the user, through the results, and the algorithm, for example account information.
+        /// Sensitive data, like credentials, should never be added
+        /// </summary>
+        /// <param name="key">The deployment detail key</param>
+        /// <param name="value">The deployment detail value</param>
+        public virtual void AddDeploymentDetail(string key, string value)
+        {
+            if (string.IsNullOrEmpty(key))
+            {
+                return;
+            }
+            lock (_deploymentDetails)
+            {
+                _deploymentDetails[key] = value ?? string.Empty;
+            }
+        }
+
+        /// <summary>
+        /// Creates the algorithm configuration to include in the results, taking a snapshot of the current deployment details
+        /// </summary>
+        /// <param name="backtestNodePacket">The associated backtest node packet if any</param>
+        /// <returns>A new <see cref="AlgorithmConfiguration"/> instance</returns>
+        protected AlgorithmConfiguration CreateAlgorithmConfiguration(BacktestNodePacket backtestNodePacket = null)
+        {
+            lock (_deploymentDetails)
+            {
+                return AlgorithmConfiguration.Create(Algorithm, backtestNodePacket);
+            }
         }
 
         /// <summary>

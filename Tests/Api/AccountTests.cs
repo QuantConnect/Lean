@@ -34,7 +34,7 @@ namespace QuantConnect.Tests.API
 
             if (hasCard)
             {
-                Assert.AreEqual(1, account.Card.LastFourDigits);
+                Assert.AreEqual("0001", account.Card.LastFourDigits);
                 Assert.AreEqual("visa", account.Card.Brand);
                 Assert.AreEqual(new DateTime(2027, 12, 1), account.Card.Expiration);
             }

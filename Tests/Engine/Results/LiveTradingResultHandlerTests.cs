@@ -36,6 +36,7 @@ using QuantConnect.Lean.Engine.TransactionHandlers;
 using QuantConnect.Tests.Common.Data.UniverseSelection;
 using QuantConnect.Data.Custom.IconicTypes;
 using System.Collections.Generic;
+using Common.Util;
 
 namespace QuantConnect.Tests.Engine.Results
 {
@@ -500,9 +501,119 @@ namespace QuantConnect.Tests.Engine.Results
             }
         }
 
+        [Test]
+        public void StoredResultsCarryAlgorithmConfigurationFromTheStart()
+        {
+            using var api = new Api.Api();
+            using var messaging = new QuantConnect.Messaging.Messaging();
+            var deployId = "TestDeployId";
+            var job = new LiveNodePacket { DeployId = deployId };
+            var resultHandler = new TestableStoredResultsHandler();
+
+            try
+            {
+                var algorithm = new AlgorithmStub();
+                algorithm.SetDateTime(DateTime.UtcNow);
+                // normally initialized by the setup handlers, required for statistics generation
+                algorithm.Settings.TradingDaysPerYear = 365;
+                algorithm.SetParameters(new Dictionary<string, string> { { "ema-fast", "10" } });
+                algorithm.PostInitialize();
+
+                var transactionHandler = new BacktestingTransactionHandler();
+                using var brokerage = new BacktestingBrokerage(algorithm);
+                transactionHandler.Initialize(algorithm, brokerage, resultHandler);
+                algorithm.Transactions.SetOrderProcessor(transactionHandler);
+
+                resultHandler.Initialize(new(job, messaging, api, transactionHandler, null));
+                // the engine shares the view right after creating the algorithm
+                algorithm.SetDeploymentDetails(resultHandler.DeploymentDetails);
+                // e.g. the brokerage or data queue handler, which are created before the algorithm is set
+                resultHandler.AddDeploymentDetail("some-key", "some value");
+                resultHandler.SetAlgorithm(algorithm, 100000);
+                algorithm.SetLocked();
+
+                var expectedDeploymentDetails = new Dictionary<string, string> { { "some-key", "some value" } };
+                CollectionAssert.AreEquivalent(expectedDeploymentDetails, algorithm.DeploymentDetails);
+
+                // the first update pass stores the status file and the complete results right away, no final result required
+                var expected = new[] { $"{deployId}.json", $"{deployId}-{DateTime.UtcNow:yyyy-MM-dd}_minute.json" };
+                Assert.IsTrue(resultHandler.WaitForStoredResults(expected, TimeSpan.FromSeconds(30)), "Initial store did not happen");
+
+                foreach (var name in expected)
+                {
+                    foreach (var result in resultHandler.GetStoredResults(name))
+                    {
+                        Assert.IsNotNull(result.AlgorithmConfiguration, $"'{name}' is missing the algorithm configuration");
+                        CollectionAssert.AreEquivalent(expectedDeploymentDetails, result.AlgorithmConfiguration.DeploymentDetails);
+                        Assert.AreEqual("10", result.AlgorithmConfiguration.Parameters["ema-fast"]);
+                    }
+                }
+            }
+            finally
+            {
+                resultHandler.Exit();
+            }
+        }
+
+        [Test]
+        public void DeploymentDetailsAreSharedWithTheAlgorithmAndTheResults()
+        {
+            using var api = new Api.Api();
+            using var messaging = new QuantConnect.Messaging.Messaging();
+            var deployId = "TestDeployId";
+            var resultHandler = new TestableStoredResultsHandler();
+            resultHandler.Initialize(new(new LiveNodePacket { DeployId = deployId }, messaging, api, new BacktestingTransactionHandler(), null));
+
+            var algorithm = new AlgorithmStub();
+            algorithm.SetFinishedWarmingUp();
+            Assert.IsEmpty(algorithm.DeploymentDetails);
+            Assert.IsEmpty(resultHandler.DeploymentDetails);
+
+            // the engine shares the view right after creating the algorithm, so it's available during initialization
+            algorithm.SetDeploymentDetails(resultHandler.DeploymentDetails);
+            resultHandler.AddDeploymentDetail("account", "123");
+            Assert.AreEqual("123", algorithm.DeploymentDetails["account"]);
+            Assert.AreEqual("123", resultHandler.DeploymentDetails["account"]);
+
+            resultHandler.SetAlgorithm(algorithm, 100000);
+            Assert.AreSame(resultHandler.DeploymentDetails, algorithm.DeploymentDetails);
+
+            // it's only set once by the engine: the same instance is fine, a different one is not
+            Assert.DoesNotThrow(() => algorithm.SetDeploymentDetails(resultHandler.DeploymentDetails));
+            Assert.Throws<InvalidOperationException>(() => algorithm.SetDeploymentDetails(new ReadOnlyExtendedDictionary<string, string>()));
+            Assert.AreSame(resultHandler.DeploymentDetails, algorithm.DeploymentDetails);
+
+            resultHandler.AddDeploymentDetail("environment", "paper");
+            Assert.AreEqual("paper", algorithm.DeploymentDetails["environment"]);
+
+            // entries are updated in place, empty keys are ignored and null values are stored as empty
+            resultHandler.AddDeploymentDetail("account", "456");
+            resultHandler.AddDeploymentDetail("", "ignored");
+            resultHandler.AddDeploymentDetail(null, "ignored");
+            resultHandler.AddDeploymentDetail("empty", null);
+            CollectionAssert.AreEquivalent(new Dictionary<string, string> { { "account", "456" }, { "environment", "paper" }, { "empty", "" } }, algorithm.DeploymentDetails);
+
+            // read only for the algorithm
+            Assert.Throws<InvalidOperationException>(() => algorithm.DeploymentDetails.Add("new-key", "new value"));
+            Assert.Throws<InvalidOperationException>(() => algorithm.DeploymentDetails.Remove("account"));
+            Assert.Throws<InvalidOperationException>(() => algorithm.DeploymentDetails["account"] = "new value");
+
+            // the final result is stored on exit
+            resultHandler.Exit();
+            var stored = resultHandler.GetStoredResults($"{deployId}.json");
+            Assert.IsNotEmpty(stored);
+            foreach (var result in stored)
+            {
+                CollectionAssert.AreEquivalent(algorithm.DeploymentDetails, result.AlgorithmConfiguration.DeploymentDetails);
+            }
+        }
+
         private class TestableStoredResultsHandler : LiveTradingResultHandler
         {
             public List<KeyValuePair<string, Result>> StoredResults { get; } = new();
+
+            // speed up the update loop
+            protected override TimeSpan MainUpdateInterval => TimeSpan.FromMilliseconds(100);
 
             public override void SaveResults(string name, Result result)
             {
@@ -510,6 +621,28 @@ namespace QuantConnect.Tests.Engine.Results
                 {
                     StoredResults.Add(new(name, result));
                 }
+            }
+
+            public List<Result> GetStoredResults(string name)
+            {
+                lock (StoredResults)
+                {
+                    return StoredResults.Where(pair => pair.Key.EndsWith(name, StringComparison.InvariantCulture)).Select(pair => pair.Value).ToList();
+                }
+            }
+
+            public bool WaitForStoredResults(IEnumerable<string> names, TimeSpan timeout)
+            {
+                var start = DateTime.UtcNow;
+                while (DateTime.UtcNow - start < timeout)
+                {
+                    if (names.All(name => GetStoredResults(name).Count > 0))
+                    {
+                        return true;
+                    }
+                    Thread.Sleep(50);
+                }
+                return names.All(name => GetStoredResults(name).Count > 0);
             }
 
             public override string SaveLogs(string id, List<LogEntry> logs)

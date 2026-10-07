@@ -37,10 +37,10 @@ namespace QuantConnect.Api
         public string Code { get; set; }
 
         /// <summary>
-        /// DateTime project file was modified
+        /// DateTime project file was modified, can be null
         /// </summary>
         [JsonProperty(PropertyName = "modified")]
-        public DateTime DateModified{ get; set; }
+        public DateTime? DateModified { get; set; }
 
         /// <summary>
         /// Indicates if the project file is a library or not

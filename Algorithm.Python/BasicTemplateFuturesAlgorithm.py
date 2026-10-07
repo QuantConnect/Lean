@@ -49,12 +49,9 @@ class BasicTemplateFuturesAlgorithm(QCAlgorithm):
     def on_data(self,slice):
         if not self.portfolio.invested:
             for chain in slice.future_chains:
-                 # Get contracts expiring no earlier than in 90 days
-                contracts = list(filter(lambda x: x.expiry > self.time + timedelta(90), chain.value))
-
-                # if there is any contract, trade the front contract
-                if len(contracts) == 0: continue
-                front = sorted(contracts, key = lambda x: x.expiry, reverse=True)[0]
+                # Get the front contract expiring no earlier than in 90 days, if any, and trade it
+                front = next(iter(chain.value.expiring_after(self.time + timedelta(90)).front_month()), None)
+                if front is None: continue
 
                 self.contract_symbol = front.symbol
                 self.market_order(front.symbol , 1)

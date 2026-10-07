@@ -27,5 +27,17 @@ namespace QuantConnect.Api
         /// </summary>
         [JsonProperty(PropertyName = "chart")]
         public Chart Chart { get; set; }
+
+        /// <summary>
+        /// Status of the chart generation process, "loading" while the chart is not ready yet
+        /// </summary>
+        [JsonProperty(PropertyName = "status")]
+        public string Status { get; set; }
+
+        /// <summary>
+        /// Loading percentage of the chart generation process
+        /// </summary>
+        [JsonProperty(PropertyName = "progress")]
+        public decimal Progress { get; set; }
     }
 }

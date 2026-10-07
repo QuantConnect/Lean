@@ -149,6 +149,25 @@ namespace QuantConnect.Tests.API
             Assert.AreEqual(path, result.Path);
         }
 
+        /// <summary>
+        /// object/list flags the directories it lists and reports the page it answered with
+        /// </summary>
+        [Test]
+        public void ListObjectStoreReportsFoldersAndPages()
+        {
+            var result = ApiClient.ListObjectStore(TestOrganization, _ciTestFolder);
+            Assert.IsTrue(result.Success, $"Error listing the object store: {string.Join(", ", result.Errors)}");
+            Assert.IsNotEmpty(result.Objects);
+            Assert.GreaterOrEqual(result.TotalPages, 1, "The listing is documented to be paginated");
+            Assert.LessOrEqual(result.Page, result.TotalPages);
+
+            var folder = result.Objects.Single(x => x.Key.Contains("CustomData", StringComparison.Ordinal));
+            Assert.IsTrue(folder.IsFolder, "The fixture stores a file under CustomData, so it is listed as a folder");
+
+            var file = result.Objects.Single(x => x.Key.Contains("filename.zip", StringComparison.Ordinal));
+            Assert.IsFalse(file.IsFolder);
+        }
+
         private static object[] GetObjectStoreWorksAsExpectedTestCases =
         {
             new object[] { "Two keys present", new List<string> { _ciTestFolder + "/trades_test.json", _ciTestFolder + "/profile_results.json" }, true},

@@ -33,7 +33,9 @@ namespace QuantConnect.Orders.TimeInForces
         {
             var exchangeHours = security.Exchange.Hours;
 
-            var orderTime = order.Time.ConvertFromUtc(exchangeHours.TimeZone);
+            // for contingent child orders the clock starts ticking once they are triggered, when their parent fills
+            var workingTime = order.GetWorkingTime();
+            var orderTime = workingTime.ConvertFromUtc(exchangeHours.TimeZone);
             var time = security.LocalTime;
 
             bool expired;
@@ -48,7 +50,7 @@ namespace QuantConnect.Orders.TimeInForces
                     var cutOffTimeZone = TimeZones.NewYork;
                     var cutOffTimeSpan = TimeSpan.FromHours(17);
 
-                    orderTime = order.Time.ConvertFromUtc(cutOffTimeZone);
+                    orderTime = workingTime.ConvertFromUtc(cutOffTimeZone);
                     var expiryTime = orderTime.Date.Add(cutOffTimeSpan);
                     if (orderTime.TimeOfDay > cutOffTimeSpan)
                     {

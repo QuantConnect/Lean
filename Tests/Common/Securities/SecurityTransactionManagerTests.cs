@@ -115,6 +115,18 @@ namespace QuantConnect.Tests.Common.Securities
         }
 
         [Test]
+        public void CancelOpenOrdersReturnsEmptyWhileWarmingUp()
+        {
+            var algorithm = new QCAlgorithm();
+            algorithm.SubscriptionManager.SetDataManager(new DataManagerStub(algorithm));
+            var spy = algorithm.AddEquity("SPY").Symbol;
+
+            Assert.IsTrue(algorithm.IsWarmingUp);
+            Assert.IsEmpty(algorithm.Transactions.CancelOpenOrders());
+            Assert.IsEmpty(algorithm.Transactions.CancelOpenOrders(spy));
+        }
+
+        [Test]
         public void OrderEnumerablesAreMemoizedExposingCount()
         {
             var (algorithm, transactionHandler, backtestingBrokerage, spy) = CreateAlgorithmWithOpenOrders();

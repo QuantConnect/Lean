@@ -87,11 +87,81 @@ namespace QuantConnect.Tests.Common.Data.UniverseSelection
             Assert.AreEqual(1, dataProvider.BackupCoarseFileRequests);
         }
 
+        // tuesday: the requested date file. Saturday and sunday: forward fills friday's file
+        [TestCase("2014-03-25", 544.99, 1)]
+        [TestCase("2014-03-29", 536.86, 2)]
+        [TestCase("2014-03-30", 536.86, 2)]
+        public void ForwardFillsPreviousTradingDayDataWhenThereIsNoDataForTheRequestedDate(string dateStr, decimal expectedPrice, int expectedFetches)
+        {
+            var dataProvider = new CountingDataProvider(TestGlobals.DataProvider);
+            var provider = CreateProvider(dataProvider, liveMode: false);
+            var date = DateTime.ParseExact(dateStr, "yyyy-MM-dd", System.Globalization.CultureInfo.InvariantCulture);
+
+            var price = provider.Get<decimal>(date, Symbols.AAPL.ID, FundamentalProperty.Value);
+
+            Assert.AreEqual(expectedPrice, price);
+            Assert.AreEqual(expectedFetches, dataProvider.Requests);
+        }
+
+        [Test]
+        public void DoesNotForwardFillBeyondThePreviousTradingDay()
+        {
+            // sunday, and there is no data for the previous trading day (friday 21st) either
+            var dataProvider = new CountingDataProvider(TestGlobals.DataProvider);
+            var provider = CreateProvider(dataProvider, liveMode: false);
+
+            var price = provider.Get<decimal>(new DateTime(2014, 03, 23), Symbols.AAPL.ID, FundamentalProperty.Value);
+
+            Assert.AreEqual(decimal.Zero, price);
+            Assert.AreEqual(2, dataProvider.Requests);
+        }
+
+        [Test]
+        public void DoesNotReloadAnAlreadyLoadedFile()
+        {
+            var dataProvider = new CountingDataProvider(TestGlobals.DataProvider);
+            var provider = CreateProvider(dataProvider, liveMode: false);
+
+            // saturday: forward fills friday's file
+            Assert.AreEqual(536.86m, provider.Get<decimal>(new DateTime(2014, 03, 29), Symbols.AAPL.ID, FundamentalProperty.Value));
+            Assert.AreEqual(2, dataProvider.Requests);
+
+            // sunday: friday's file is already loaded
+            Assert.AreEqual(536.86m, provider.Get<decimal>(new DateTime(2014, 03, 30), Symbols.AAPL.ID, FundamentalProperty.Value));
+            Assert.AreEqual(3, dataProvider.Requests);
+
+            // monday: the requested date file
+            Assert.AreEqual(536.74m, provider.Get<decimal>(new DateTime(2014, 03, 31), Symbols.AAPL.ID, FundamentalProperty.Value));
+            Assert.AreEqual(4, dataProvider.Requests);
+        }
+
         private static CoarseFundamentalDataProvider CreateProvider(IDataProvider dataProvider, bool liveMode)
         {
             var provider = new CoarseFundamentalDataProvider();
             provider.Initialize(dataProvider, liveMode);
             return provider;
+        }
+
+        private class CountingDataProvider : IDataProvider
+        {
+            private readonly IDataProvider _dataProvider;
+
+            public int Requests { get; private set; }
+
+#pragma warning disable 0067 // the event is never used
+            public event EventHandler<DataProviderNewDataRequestEventArgs> NewDataRequest;
+#pragma warning restore 0067
+
+            public CountingDataProvider(IDataProvider dataProvider)
+            {
+                _dataProvider = dataProvider;
+            }
+
+            public Stream Fetch(string key)
+            {
+                Requests++;
+                return _dataProvider.Fetch(key);
+            }
         }
 
         private class BackupCoarseFileDataProvider : IDataProvider

@@ -81,5 +81,38 @@ def getOrderProperties() -> BloombergFixOrderProperties:
                 Assert.AreEqual("MLCO", properties.LocateBroker);
             }
         }
+
+        [Test]
+        public void PositionSidesAreAutomaticByDefault()
+        {
+            var properties = new BloombergFixOrderProperties();
+
+            Assert.IsTrue(properties.AutomaticPositionSides);
+            Assert.IsNull(properties.PositionSide);
+        }
+
+        [Test]
+        public void SetsPositionSidesFromPython()
+        {
+            using (Py.GIL())
+            {
+                var module = PyModule.FromString("fixPositionSideModule",
+                    @"
+from AlgorithmImports import *
+
+def getOrderProperties() -> BloombergFixOrderProperties:
+    properties = BloombergFixOrderProperties()
+    properties.automatic_position_sides = False
+    properties.position_side = OrderPosition.BUY_TO_CLOSE
+    return properties
+");
+
+                dynamic getOrderProperties = module.GetAttr("getOrderProperties");
+                var properties = (BloombergFixOrderProperties)getOrderProperties();
+
+                Assert.IsFalse(properties.AutomaticPositionSides);
+                Assert.AreEqual(OrderPosition.BuyToClose, properties.PositionSide);
+            }
+        }
     }
 }

@@ -46,7 +46,6 @@ namespace QuantConnect.Lean.Engine.Results.Analysis.Analyses
             new Default.UnsupportedCrossZeroOrderUpdateAnalysis(),
             new Default.UnsupportedOrderTypeAnalysis(),
             new Default.UnsupportedSecurityTypeAnalysis(),
-            new Default.UnsupportedUpdateQuantityOrderAnalysis(),
             // InteractiveBrokersBrokerageModel
             new IB.InvalidForexOrderSizeAnalysis(),
         ];

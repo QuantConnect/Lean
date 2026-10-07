@@ -15,6 +15,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using Moq;
 using NUnit.Framework;
@@ -28,6 +29,7 @@ using QuantConnect.Lean.Engine.Results;
 using QuantConnect.Orders;
 using QuantConnect.Packets;
 using QuantConnect.Securities;
+using QuantConnect.Tests.Common.Data.Fundamental;
 
 namespace QuantConnect.Tests.Engine.DataFeeds
 {
@@ -323,6 +325,69 @@ namespace QuantConnect.Tests.Engine.DataFeeds
 
             Assert.AreEqual(1, securityChanges.Count);
             Assert.AreEqual(Symbols.AAPL, securityChanges.AddedSecurities.First().Symbol);
+        }
+
+        // Tuesday: the previous day is a trading day. Monday: the previous day is sunday, the data provider forward fills friday's data
+        [TestCase("2014-03-25", 539.1)]
+        [TestCase("2014-03-31", 536.86)]
+        public void ChainedFundamentalUniverseSelectionDataIsForThePreviousDay(string selectionDateStr, decimal expectedPrice)
+        {
+            // Reproduces https://github.com/QuantConnect/Lean/issues/9793: the fundamental data built for a chained universe
+            // (universe not based on fundamental data + fundamental selector) must not carry the selection date itself
+            var selectionDate = DateTime.ParseExact(selectionDateStr, "yyyy-MM-dd", CultureInfo.InvariantCulture);
+            var algorithm = new AlgorithmStub(new MockDataFeed());
+            algorithm.SetStartDate(selectionDate.AddDays(-5));
+            algorithm.SetEndDate(selectionDate.AddDays(5));
+
+            List<Fundamental> fundamentals = null;
+            algorithm.AddUniverse(
+                algorithm.Universe.ETF("SPY", algorithm.UniverseSettings, constituents => constituents.Select(x => x.Symbol)),
+                fine =>
+                {
+                    fundamentals = fine.ToList();
+                    return fundamentals.Select(x => x.Symbol);
+                }
+            );
+            // OnEndOfTimeStep will add all pending universe additions
+            algorithm.OnEndOfTimeStep();
+
+            // use the coarse data files so we can assert the fundamental values we get
+            FundamentalService.Initialize(TestGlobals.DataProvider, new CoarseFundamentalDataProvider(), false);
+            try
+            {
+                var universe = algorithm.UniverseManager.Values.First();
+                var securityChanges = algorithm.DataManager.UniverseSelection.ApplyUniverseSelection(
+                    universe,
+                    selectionDate.ConvertToUtc(TimeZones.NewYork),
+                    new BaseDataCollection(
+                        selectionDate,
+                        universe.Symbol,
+                        new[]
+                        {
+                            new ETFConstituentUniverse
+                            {
+                                Symbol = Symbols.AAPL,
+                                Time = selectionDate.AddDays(-1)
+                            }
+                        }
+                    )
+                );
+
+                Assert.AreEqual(1, securityChanges.AddedSecurities.Count);
+                Assert.AreEqual(Symbols.AAPL, securityChanges.AddedSecurities.Single().Symbol);
+
+                var fundamental = fundamentals.Single();
+                Assert.AreEqual(Symbols.AAPL, fundamental.Symbol);
+                // the data became available at the selection time, it's the previous day data
+                Assert.AreEqual(selectionDate.AddDays(-1), fundamental.Time);
+                Assert.AreEqual(selectionDate, fundamental.EndTime);
+                // the price is the previous trading day close, not the selection date close
+                Assert.AreEqual(expectedPrice, fundamental.Value);
+            }
+            finally
+            {
+                FundamentalService.Initialize(TestGlobals.DataProvider, new NullFundamentalDataProvider(), false);
+            }
         }
 
         [Test]

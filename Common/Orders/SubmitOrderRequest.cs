@@ -14,12 +14,16 @@
 */
 
 using System;
+using System.Linq;
+using System.Collections.Generic;
 using QuantConnect.Interfaces;
 
 namespace QuantConnect.Orders
 {
     /// <summary>
-    /// Defines a request to submit a new order
+    /// Defines a request to submit a new order. Built through <see cref="OrderFactory"/> it is also the specification of an order which can
+    /// be composed with others before being submitted: an order can trigger others once it fills (<see cref="Triggers(SubmitOrderRequest[])"/>),
+    /// which can in turn be related to each other (<see cref="OrderFactory.OneCancelsOther(SubmitOrderRequest[])"/>), see <see cref="Bracket"/>
     /// </summary>
     public class SubmitOrderRequest : OrderRequest
     {
@@ -44,7 +48,7 @@ namespace QuantConnect.Orders
         /// </summary>
         public Symbol Symbol
         {
-            get; private set;
+            get; internal set;
         }
 
         /// <summary>
@@ -52,7 +56,7 @@ namespace QuantConnect.Orders
         /// </summary>
         public OrderType OrderType
         {
-            get; private set;
+            get; internal set;
         }
 
         /// <summary>
@@ -76,7 +80,7 @@ namespace QuantConnect.Orders
         /// </summary>
         public decimal StopPrice
         {
-            get; private set;
+            get; internal set;
         }
 
         /// <summary>
@@ -120,12 +124,22 @@ namespace QuantConnect.Orders
         }
 
         /// <summary>
+        /// Gets the contingency of this order: the set of contingent orders it belongs to and how it relates to them.
+        /// If null, the order is not a contingent order. Composed before being submitted through <see cref="Triggers(SubmitOrderRequest[])"/>,
+        /// <see cref="Bracket"/>, <see cref="OrderFactory.OneCancelsOther(SubmitOrderRequest[])"/> and <see cref="OrderFactory.OneUpdatesOther(SubmitOrderRequest[])"/>
+        /// </summary>
+        public OrderContingency Contingency
+        {
+            get; internal set;
+        }
+
+        /// <summary>
         /// Whether this request should be asynchronous,
         /// which means the ticket will be returned to the algorithm without waiting for submission
         /// </summary>
         public bool Asynchronous
         {
-            get;
+            get; private set;
         }
 
         /// <summary>
@@ -147,6 +161,7 @@ namespace QuantConnect.Orders
         /// <param name="groupOrderManager">The manager for this combo order</param>
         /// <param name="asynchronous">True if this request should be asynchronous,
         /// which means the ticket will be returned to the algorithm without waiting for submission</param>
+        /// <param name="contingency">The contingency of this order, if any: the set of contingent orders it belongs to and how it relates to them</param>
         public SubmitOrderRequest(
             OrderType orderType,
             SecurityType securityType,
@@ -161,7 +176,8 @@ namespace QuantConnect.Orders
             string tag,
             IOrderProperties properties = null,
             GroupOrderManager groupOrderManager = null,
-            bool asynchronous = false
+            bool asynchronous = false,
+            OrderContingency contingency = null
             )
             : base(time, (int)OrderResponseErrorCode.UnableToFindOrder, tag)
         {
@@ -177,6 +193,7 @@ namespace QuantConnect.Orders
             TrailingAsPercentage = trailingAsPercentage;
             OrderProperties = properties;
             Asynchronous = asynchronous;
+            Contingency = contingency;
         }
 
         /// <summary>
@@ -255,6 +272,57 @@ namespace QuantConnect.Orders
         internal void SetOrderId(int orderId)
         {
             OrderId = orderId;
+        }
+
+        /// <summary>
+        /// Sets the orders this order will trigger once it is completely filled (One Triggers Other): they are held until then
+        /// and canceled if this order is canceled. The triggered orders are independent of each other, unless grouped through
+        /// <see cref="OrderFactory.OneCancelsOther(SubmitOrderRequest[])"/> or <see cref="OrderFactory.OneUpdatesOther(SubmitOrderRequest[])"/>.
+        /// For the legs of a combo order see <see cref="IAlgorithm"/> OneTriggersOtherOrder, they are triggered together once all the legs fill
+        /// </summary>
+        /// <param name="orders">The orders to trigger, for a combo order all its legs</param>
+        /// <returns>This instance</returns>
+        public SubmitOrderRequest Triggers(params SubmitOrderRequest[] orders)
+        {
+            return Triggers((IEnumerable<SubmitOrderRequest>)orders);
+        }
+
+        /// <summary>
+        /// Sets the orders this order will trigger once it is completely filled (One Triggers Other), see <see cref="Triggers(SubmitOrderRequest[])"/>
+        /// </summary>
+        /// <param name="orders">The orders to trigger, for a combo order all its legs</param>
+        /// <returns>This instance</returns>
+        public SubmitOrderRequest Triggers(IEnumerable<SubmitOrderRequest> orders)
+        {
+            OrderContingency.Trigger(new[] { this }, orders);
+            return this;
+        }
+
+        /// <summary>
+        /// Brackets this order with a take profit limit order and a stop loss order, of the opposite quantity, which are held until
+        /// this order fills (One Triggers a One Cancels Other)
+        /// </summary>
+        /// <param name="takeProfitPrice">The limit price of the take profit order</param>
+        /// <param name="stopLossPrice">The stop price of the stop loss order</param>
+        /// <param name="stopLossLimitPrice">Optionally the limit price of the stop loss order, turning it into a stop limit order</param>
+        /// <param name="contingencyType">How the take profit and stop loss relate: by default the first one to fill cancels the other.
+        /// Use <see cref="ContingencyType.OneUpdatesOther"/> so that a partial fill resizes the other</param>
+        /// <returns>This instance</returns>
+        public SubmitOrderRequest Bracket(decimal takeProfitPrice, decimal stopLossPrice, decimal? stopLossLimitPrice = null,
+            ContingencyType contingencyType = ContingencyType.OneCancelsOther)
+        {
+            if (GroupOrderManager != null)
+            {
+                throw new InvalidOperationException($"{nameof(Bracket)} is not supported for combo orders, please use {nameof(Triggers)}");
+            }
+
+            // the exits take after this order, each with its own properties instance
+            var takeProfit = new SubmitOrderRequest(OrderType.Limit, SecurityType, Symbol, -Quantity, 0, takeProfitPrice, Time, Tag, OrderProperties?.Clone());
+            var stopLoss = stopLossLimitPrice.HasValue
+                ? new SubmitOrderRequest(OrderType.StopLimit, SecurityType, Symbol, -Quantity, stopLossPrice, stopLossLimitPrice.Value, Time, Tag, OrderProperties?.Clone())
+                : new SubmitOrderRequest(OrderType.StopMarket, SecurityType, Symbol, -Quantity, stopLossPrice, 0, Time, Tag, OrderProperties?.Clone());
+            OrderContingency.Relate(contingencyType == ContingencyType.OneUpdatesOther ? ContingencyType.OneUpdatesOther : ContingencyType.OneCancelsOther, new[] { takeProfit, stopLoss });
+            return Triggers(takeProfit, stopLoss);
         }
 
         /// <summary>

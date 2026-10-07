@@ -600,6 +600,17 @@ namespace QuantConnect.Tests.Common.Securities
             }
         }
 
+        [TestCase(false, "Monday: PreMarket: 00:00:00-08:30:00 | Market: 08:30:00-16:00:00")]
+        [TestCase(true, "Monday: PreMarket: 00:00:00-08:30:00 | Market: 08:30:00-16:00:00 | PostMarket: 17:00:00-1.01:00:00")]
+        public void EarlyCloseBetweenSegmentsKeepsSegmentsBeforeIt(bool lateOpen, string expectedMarketHours)
+        {
+            var monday = new DateTime(2020, 7, 6);
+            // the early close falls in the 16:00 to 17:00 break, after the regular session ended
+            var exchangeHours = CreateCustomFutureExchangeHours(monday.AddHours(16.5), lateOpen ? monday.AddHours(17) : new DateTime());
+
+            Assert.AreEqual(expectedMarketHours, exchangeHours.GetMarketHours(monday).ToString());
+        }
+
         private static TestCaseData[] GetTestCases()
         {
             return new[]

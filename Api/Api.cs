@@ -42,6 +42,11 @@ namespace QuantConnect.Api
     /// </summary>
     public class Api : IApi, IDownloadProvider
     {
+        // Widest start/end window each paging endpoint documents
+        private const int MaxOrdersWindow = 100;
+        private const int MaxInsightsWindow = 100;
+        private const int MaxLogLinesWindow = 200;
+
         private readonly BlockingCollection<Lazy<HttpClient>> _clientPool;
         private string _dataFolder;
 
@@ -131,14 +136,40 @@ namespace QuantConnect.Api
         /// <summary>
         /// List details of all projects
         /// </summary>
+        /// <param name="start">Starting (inclusive, zero-based) index of the projects to be fetched, for example 0</param>
+        /// <param name="end">Last (exclusive) index of the projects to be fetched, for example 100. Zero to let the API apply its own limit</param>
         /// <returns><see cref="ProjectResponse"/> that contains information regarding the project</returns>
 
-        public ProjectResponse ListProjects()
+        public ProjectResponse ListProjects(int start = 0, int end = 0)
         {
-            TryJsonPost("projects/read", out ProjectResponse result);
+            object payload = end > 0 ? new { start, end } : new { start };
+            TryJsonPost("projects/read", out ProjectResponse result, payload);
             return result;
         }
 
+        /// <summary>
+        /// Update a project's name or description
+        /// </summary>
+        /// <param name="projectId">Project id to update</param>
+        /// <param name="name">The new name for the project, for example "New Project Name", null to leave it unchanged</param>
+        /// <param name="description">The new description for the project, for example "New Project Description", null to leave it unchanged</param>
+        /// <returns><see cref="RestResponse"/> indicating success</returns>
+
+        public RestResponse UpdateProject(int projectId, string name = null, string description = null)
+        {
+            var payload = new Dictionary<string, object> { { "projectId", projectId } };
+            if (name != null)
+            {
+                payload["name"] = name;
+            }
+            if (description != null)
+            {
+                payload["description"] = description;
+            }
+
+            TryJsonPost("projects/update", out RestResponse result, payload);
+            return result;
+        }
 
         /// <summary>
         /// Add a file to a project
@@ -321,22 +352,20 @@ namespace QuantConnect.Api
         /// <param name="projectId">Id for the project to backtest</param>
         /// <param name="compileId">Compile id for the project</param>
         /// <param name="backtestName">Name for the new backtest</param>
+        /// <param name="parameters">Parameters to use for the backtest, null to use the ones defined in the project</param>
         /// <returns><see cref="Backtest"/>t</returns>
 
-        public Backtest CreateBacktest(int projectId, string compileId, string backtestName)
+        public Backtest CreateBacktest(int projectId, string compileId, string backtestName, Dictionary<string, string> parameters = null)
         {
-            TryJsonPost("backtests/create",
-                out BacktestResponseWrapper result,
-                new
-                {
-                    projectId,
-                    compileId,
-                    backtestName
-                });
+            object payload = parameters == null
+                ? new { projectId, compileId, backtestName }
+                : new { projectId, compileId, backtestName, parameters };
+            TryJsonPost("backtests/create", out BacktestResponseWrapper result, payload);
 
             // Use API Response values for Backtest Values
             result.Backtest.Success = result.Success;
             result.Backtest.Errors = result.Errors;
+            result.Backtest.Debugging = result.Debugging;
 
             // Return only the backtest object
             return result.Backtest;
@@ -402,6 +431,7 @@ namespace QuantConnect.Api
             // Use API Response values for Backtest Values
             result.Backtest.Success = result.Success;
             result.Backtest.Errors = result.Errors;
+            result.Backtest.Debugging = result.Debugging;
 
             // Return only the backtest object
             return result.Backtest;
@@ -412,13 +442,16 @@ namespace QuantConnect.Api
         /// </summary>
         /// <param name="projectId">Id of the project from which to read the orders</param>
         /// <param name="backtestId">Id of the backtest from which to read the orders</param>
-        /// <param name="start">Starting index of the orders to be fetched. Required if end > 100</param>
-        /// <param name="end">Last index of the orders to be fetched. Note that end - start must be less than 100</param>
+        /// <param name="start">Starting index of the orders to be fetched</param>
+        /// <param name="end">Last index of the orders to be fetched. Note that end - start must not exceed 100.
+        /// Defaults to a full window starting at <paramref name="start"/></param>
         /// <remarks>Will throw an <see cref="WebException"/> if there are any API errors</remarks>
-        /// <returns>The list of <see cref="Order"/></returns>
-
-        public List<ApiOrderResponse> ReadBacktestOrders(int projectId, string backtestId, int start = 0, int end = 100)
+        /// <returns>The <see cref="OrdersResponseWrapper"/> with the requested orders and the total order count</returns>
+        /// <exception cref="ArgumentException">The requested window is wider than the documented maximum</exception>
+        public OrdersResponseWrapper ReadBacktestOrders(int projectId, string backtestId, int start = 0, int end = 0)
         {
+            end = ResolveWindowEnd(start, end, MaxOrdersWindow, "orders");
+
             using var request = ApiUtils.CreateJsonPostRequest("backtests/orders/read", new
             {
                 start,
@@ -427,7 +460,7 @@ namespace QuantConnect.Api
                 backtestId
             });
 
-            return MakeRequestOrThrow<OrdersResponseWrapper>(request, nameof(ReadBacktestOrders)).Orders;
+            return MakeRequestOrThrow<OrdersResponseWrapper>(request, nameof(ReadBacktestOrders));
         }
 
         /// <summary>
@@ -531,23 +564,35 @@ namespace QuantConnect.Api
         /// <param name="projectId">Id of the project from which to read the backtest</param>
         /// <param name="backtestId">Backtest id from which we want to get the insights</param>
         /// <param name="start">Starting index of the insights to be fetched</param>
-        /// <param name="end">Last index of the insights to be fetched. Note that end - start must be less than 100</param>
+        /// <param name="end">Last index of the insights to be fetched. Note that end - start must not exceed 100.
+        /// Defaults to a full window starting at <paramref name="start"/></param>
         /// <returns><see cref="InsightResponse"/></returns>
-        /// <exception cref="ArgumentException"></exception>
+        /// <exception cref="ArgumentException">The requested window is wider than the documented maximum</exception>
         public InsightResponse ReadBacktestInsights(int projectId, string backtestId, int start = 0, int end = 0)
         {
-            //var reque
-            var diff = end - start;
-            if (diff > 100)
-            {
-                throw new ArgumentException($"The difference between the start and end index of the insights must be smaller than 100, but it was {diff}.");
-            }
-            else if (end == 0)
-            {
-                end = start + 100;
-            }
+            end = ResolveWindowEnd(start, end, MaxInsightsWindow, "insights");
 
-            TryJsonPost("backtests/insights/read", out InsightResponse result, new { projectId, backtestId, start, end });
+            TryJsonPost("backtests/read/insights", out InsightResponse result, new { projectId, backtestId, start, end });
+            return result;
+        }
+
+        /// <summary>
+        /// Gets the logs of a specific backtest
+        /// </summary>
+        /// <param name="projectId">Id of the project from which to read the backtest</param>
+        /// <param name="backtestId">Id of the backtest from which to read the logs</param>
+        /// <param name="start">Start line (inclusive) of logs to read</param>
+        /// <param name="end">End line (exclusive) of logs to read. Note that end - start must not exceed 200.
+        /// Defaults to a full window starting at <paramref name="start"/></param>
+        /// <param name="query">Optional keyword to filter the log lines, null to return every line.
+        /// For example, "Error" returns only the lines containing that word</param>
+        /// <returns><see cref="BacktestLog"/> with the requested log lines and the total log line count</returns>
+        /// <exception cref="ArgumentException">The requested window is wider than the documented maximum</exception>
+        public BacktestLog ReadBacktestLog(int projectId, string backtestId, int start = 0, int end = 0, string query = null)
+        {
+            end = ResolveWindowEnd(start, end, MaxLogLinesWindow, "log lines");
+
+            TryJsonPost("backtests/read/log", out BacktestLog result, new { projectId, backtestId, start, end, query });
             return result;
         }
 
@@ -634,8 +679,9 @@ namespace QuantConnect.Api
         /// Get a list of live running algorithms for user
         /// </summary>
         /// <param name="status">Filter the statuses of the algorithms returned from the api</param>
+        /// <param name="projectId">Id of the project to include in the response, for example 23456789, null to include every project</param>
         /// <returns><see cref="LiveList"/></returns>
-        public LiveList ListLiveAlgorithms(AlgorithmStatus? status = null)
+        public LiveList ListLiveAlgorithms(AlgorithmStatus? status = null, int? projectId = null)
         {
             // Only the following statuses are supported by the Api
             if (status.HasValue &&
@@ -648,23 +694,29 @@ namespace QuantConnect.Api
                     "The Api only supports Algorithm Statuses of Running, Stopped, RuntimeError and Liquidated");
             }
 
-            var payload = status.HasValue
-                ? new { status = status.ToString() }
-                : null;
-            TryJsonPost("live/list", out LiveList result, payload);
+            var payload = new Dictionary<string, object>();
+            if (status.HasValue)
+            {
+                payload["status"] = status.ToString();
+            }
+            if (projectId.HasValue)
+            {
+                payload["projectId"] = projectId.Value;
+            }
+
+            TryJsonPost("live/list", out LiveList result, payload.Count > 0 ? payload : null);
             return result;
         }
 
         /// <summary>
-        /// Read out a live algorithm in the project id specified.
+        /// Read out the latest deployment of the live algorithm of the project id specified.
         /// </summary>
         /// <param name="projectId">Project id to read</param>
-        /// <param name="deployId">Specific instance id to read</param>
         /// <returns><see cref="LiveAlgorithmResults"/></returns>
 
-        public LiveAlgorithmResults ReadLiveAlgorithm(int projectId, string deployId)
+        public LiveAlgorithmResults ReadLiveAlgorithm(int projectId)
         {
-            TryJsonPost("live/read", out LiveAlgorithmResults result, new { projectId, deployId });
+            TryJsonPost("live/read", out LiveAlgorithmResults result, new { projectId });
             return result;
         }
 
@@ -683,21 +735,24 @@ namespace QuantConnect.Api
         /// Returns the orders of the specified project id live algorithm.
         /// </summary>
         /// <param name="projectId">Id of the project from which to read the live orders</param>
-        /// <param name="start">Starting index of the orders to be fetched. Required if end > 100</param>
-        /// <param name="end">Last index of the orders to be fetched. Note that end - start must be less than 100</param>
+        /// <param name="algorithmId">Deploy id (algorithm id) of the live running algorithm, for example
+        /// "L-6e9d8a78f5af89d401f630585be90e43", null for the latest deployment of the project</param>
+        /// <param name="start">Starting index of the orders to be fetched</param>
+        /// <param name="end">Last index of the orders to be fetched. Note that end - start must not exceed 100.
+        /// Defaults to a full window starting at <paramref name="start"/></param>
         /// <remarks>Will throw an <see cref="WebException"/> if there are any API errors</remarks>
-        /// <returns>The list of <see cref="Order"/></returns>
-
-        public List<ApiOrderResponse> ReadLiveOrders(int projectId, int start = 0, int end = 100)
+        /// <returns>The <see cref="OrdersResponseWrapper"/> with the requested orders and the total order count</returns>
+        /// <exception cref="ArgumentException">The requested window is wider than the documented maximum</exception>
+        public OrdersResponseWrapper ReadLiveOrders(int projectId, string algorithmId = null, int start = 0, int end = 0)
         {
-            using var request = ApiUtils.CreateJsonPostRequest("live/orders/read", new
-            {
-                start,
-                end,
-                projectId
-            });
+            end = ResolveWindowEnd(start, end, MaxOrdersWindow, "orders");
 
-            return MakeRequestOrThrow<OrdersResponseWrapper>(request, nameof(ReadLiveOrders)).Orders;
+            object payload = string.IsNullOrEmpty(algorithmId)
+                ? new { start, end, projectId }
+                : new { start, end, projectId, algorithmId };
+            using var request = ApiUtils.CreateJsonPostRequest("live/orders/read", payload);
+
+            return MakeRequestOrThrow<OrdersResponseWrapper>(request, nameof(ReadLiveOrders));
         }
 
         /// <summary>
@@ -753,16 +808,18 @@ namespace QuantConnect.Api
         /// </summary>
         /// <param name="projectId">Project Id of the live running algorithm</param>
         /// <param name="algorithmId">Algorithm Id of the live running algorithm</param>
-        /// <param name="startLine">Start line of logs to read</param>
-        /// <param name="endLine">End line of logs to read</param>
+        /// <param name="startLine">Start line (inclusive) of logs to read</param>
+        /// <param name="endLine">End line (exclusive) of logs to read. Note that endLine - startLine must not exceed 200.
+        /// Defaults to a full window starting at <paramref name="startLine"/></param>
+        /// <param name="query">Optional keyword to filter the log lines, null to return every line.
+        /// For example, "Error" returns only the lines containing that word</param>
+        /// <param name="deploymentLogs">Whether only the logs of the given <paramref name="algorithmId"/> deployment should be returned</param>
         /// <returns><see cref="LiveLog"/> List of strings that represent the logs of the algorithm</returns>
-        public LiveLog ReadLiveLogs(int projectId, string algorithmId, int startLine, int endLine)
+        /// <exception cref="ArgumentException">The requested window is wider than the documented maximum</exception>
+        public LiveLog ReadLiveLogs(int projectId, string algorithmId, int startLine = 0, int endLine = 0, string query = null,
+            bool deploymentLogs = false)
         {
-            var logLinesNumber = endLine - startLine;
-            if (logLinesNumber > 250)
-            {
-                throw new ArgumentException($"The maximum number of log lines allowed is 250. But the number of log lines was {logLinesNumber}.");
-            }
+            endLine = ResolveWindowEnd(startLine, endLine, MaxLogLinesWindow, "log lines");
 
             TryJsonPost("live/logs/read",
                 out LiveLog result,
@@ -773,6 +830,8 @@ namespace QuantConnect.Api
                     algorithmId,
                     startLine,
                     endLine,
+                    deploymentLogs,
+                    query,
                 });
             return result;
         }
@@ -816,24 +875,36 @@ namespace QuantConnect.Api
         /// Read out the insights of a live algorithm
         /// </summary>
         /// <param name="projectId">Id of the project from which to read the live algorithm</param>
+        /// <param name="algorithmId">Deploy id (algorithm id) of the live running algorithm, for example
+        /// "L-6e9d8a78f5af89d401f630585be90e43", null for the latest deployment of the project</param>
         /// <param name="start">Starting index of the insights to be fetched</param>
-        /// <param name="end">Last index of the insights to be fetched. Note that end - start must be less than 100</param>
+        /// <param name="end">Last index of the insights to be fetched. Note that end - start must not exceed 100.
+        /// Defaults to a full window starting at <paramref name="start"/></param>
         /// <returns><see cref="InsightResponse"/></returns>
-        /// <exception cref="ArgumentException"></exception>
+        /// <exception cref="ArgumentException">The requested window is wider than the documented maximum</exception>
+        public InsightResponse ReadLiveInsights(int projectId, string algorithmId, int start = 0, int end = 0)
+        {
+            end = ResolveWindowEnd(start, end, MaxInsightsWindow, "insights");
+
+            object payload = string.IsNullOrEmpty(algorithmId)
+                ? new { projectId, start, end }
+                : new { projectId, start, end, algorithmId };
+            TryJsonPost("live/insights/read", out InsightResponse result, payload);
+            return result;
+        }
+
+        /// <summary>
+        /// Read out the insights of the latest deployment of a live algorithm
+        /// </summary>
+        /// <param name="projectId">Id of the project from which to read the live algorithm</param>
+        /// <param name="start">Starting index of the insights to be fetched</param>
+        /// <param name="end">Last index of the insights to be fetched. Note that end - start must not exceed 100.
+        /// Defaults to a full window starting at <paramref name="start"/></param>
+        /// <returns><see cref="InsightResponse"/></returns>
+        [Obsolete("Use the overload taking the algorithm id: ReadLiveInsights(projectId, algorithmId, start, end)")]
         public InsightResponse ReadLiveInsights(int projectId, int start = 0, int end = 0)
         {
-            var diff = end - start;
-            if (diff > 100)
-            {
-                throw new ArgumentException($"The difference between the start and end index of the insights must be smaller than 100, but it was {diff}.");
-            }
-            else if (end == 0)
-            {
-                end = start + 100;
-            }
-
-            TryJsonPost("live/insights/read", out InsightResponse result, new { projectId, start, end });
-            return result;
+            return ReadLiveInsights(projectId, null, start, end);
         }
 
         /// <summary>
@@ -909,7 +980,8 @@ namespace QuantConnect.Api
             var payloadStr = JsonConvert.SerializeObject(new { backtestId, projectId });
             var report = new BacktestReport();
             var finish = DateTime.UtcNow.AddMinutes(1);
-            while (DateTime.UtcNow < finish && !report.Success)
+            // The endpoint answers with a generating response until the report is ready
+            while (DateTime.UtcNow < finish && (!report.Success || report.Generating))
             {
                 Thread.Sleep(10000);
                 using var request = ApiUtils.CreateJsonPostRequest("backtests/read/report", payloadStr);
@@ -1482,6 +1554,32 @@ namespace QuantConnect.Api
         protected virtual ApiConnection CreateApiConnection(int userId, string token)
         {
             return new ApiConnection(userId, token);
+        }
+
+        /// <summary>
+        /// Resolves the end index of a paging request, where an unset end means a full window from the start index
+        /// </summary>
+        /// <param name="start">Start index of the requested window</param>
+        /// <param name="end">End index of the requested window, zero to request a full window</param>
+        /// <param name="maxWindow">Widest window the endpoint documents</param>
+        /// <param name="itemsName">Name of the paged items, used in the error message</param>
+        /// <returns>The end index to send</returns>
+        /// <exception cref="ArgumentException">The requested window is wider than <paramref name="maxWindow"/></exception>
+        private static int ResolveWindowEnd(int start, int end, int maxWindow, string itemsName)
+        {
+            if (end == 0)
+            {
+                return start + maxWindow;
+            }
+
+            var window = end - start;
+            if (window > maxWindow)
+            {
+                throw new ArgumentException($"The difference between the start and end index of the {itemsName} must be " +
+                    $"smaller than or equal to {maxWindow}, but it was {window}.");
+            }
+
+            return end;
         }
 
         /// <summary>

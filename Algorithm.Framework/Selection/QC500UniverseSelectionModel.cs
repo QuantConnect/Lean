@@ -111,9 +111,9 @@ namespace QuantConnect.Algorithm.Framework.Selection
             var filteredFine =
                 (from x in fine
                  where x.CompanyReference.CountryId == "USA" &&
-                       (x.CompanyReference.PrimaryExchangeID == "NYS" || x.CompanyReference.PrimaryExchangeID == "NAS") &&
+                       IsNyseOrNasdaq(x) &&
                        (algorithm.Time - x.SecurityReference.IPODate).Days > 180 &&
-                       x.MarketCap > 500000000m
+                       GetMarketCap(x) > 500000000m
                  select x).ToList();
 
             var count = filteredFine.Count;
@@ -146,6 +146,34 @@ namespace QuantConnect.Algorithm.Framework.Selection
                 .OrderByDescending(x => _dollarVolumeBySymbol[x.Symbol])
                 .Take(_numberOfSymbolsFine)
                 .Select(x => x.Symbol);
+        }
+
+        /// <summary>
+        /// True if the primary exchange is the NYSE or NASDAQ.
+        /// Morningstar codes the NYSE as "NYS" or "NYSE" and leaves the primary exchange empty on some securities,
+        /// so the listing exchange is the fallback
+        /// </summary>
+        private static bool IsNyseOrNasdaq(FineFundamental fine)
+        {
+            var exchange = fine.CompanyReference.PrimaryExchangeID;
+            if (string.IsNullOrEmpty(exchange))
+            {
+                exchange = fine.SecurityReference.ExchangeId;
+            }
+            return exchange is "NYS" or "NYSE" or "NAS";
+        }
+
+        /// <summary>
+        /// The market cap, or price times shares outstanding where Morningstar has none.
+        /// Shares outstanding are restated for later splits, so the split factor puts the price on the same basis
+        /// </summary>
+        private static decimal GetMarketCap(FineFundamental fine)
+        {
+            if (fine.MarketCap > 0)
+            {
+                return fine.MarketCap;
+            }
+            return fine.Price * fine.SplitFactor * fine.CompanyProfile.SharesOutstanding;
         }
     }
 }

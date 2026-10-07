@@ -25,10 +25,15 @@ namespace QuantConnect.Interfaces
     public interface IDataMonitor : IDisposable
     {
         /// <summary>
+        /// The final report generated on <see cref="Exit"/>, null until then or if no data request was monitored
+        /// </summary>
+        DataMonitorReport Report { get; }
+
+        /// <summary>
         /// Terminates the data monitor generating a final report
         /// </summary>
         void Exit();
-        
+
         /// <summary>
         /// Event handler for the <see cref="IDataProvider.NewDataRequest"/> event
         /// </summary>

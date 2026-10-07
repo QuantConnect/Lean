@@ -22,6 +22,7 @@ using Newtonsoft.Json;
 using QuantConnect.Packets;
 using QuantConnect.Algorithm;
 using QuantConnect.Brokerages;
+using Common.Util;
 using Newtonsoft.Json.Serialization;
 
 namespace QuantConnect.Tests.Common
@@ -105,6 +106,40 @@ namespace QuantConnect.Tests.Common
             Assert.AreEqual(algorithmConfiguration.OutOfSampleMaxEndDate, deserialize.OutOfSampleMaxEndDate);
             Assert.AreEqual(algorithmConfiguration.StartDate, deserialize.StartDate);
             Assert.AreEqual(algorithmConfiguration.Tags, deserialize.Tags);
+        }
+
+        [Test]
+        public void DeploymentDetailsAreOnlyIncludedWhenSet()
+        {
+            var algorithm = new QCAlgorithm();
+
+            // not set, e.g. backtesting
+            var algorithmConfiguration = AlgorithmConfiguration.Create(algorithm, null);
+            Assert.IsNull(algorithmConfiguration.DeploymentDetails);
+            var serialized = JsonConvert.SerializeObject(algorithmConfiguration);
+            Assert.IsFalse(serialized.Contains("DeploymentDetails", StringComparison.InvariantCultureIgnoreCase));
+
+            // set, e.g. live trading
+            var deploymentDetails = new Dictionary<string, string> { { "some-key", "some value" }, { "some-other-key", "another value" } };
+            algorithm.SetDeploymentDetails(new ReadOnlyExtendedDictionary<string, string>(deploymentDetails, copy: false));
+            algorithmConfiguration = AlgorithmConfiguration.Create(algorithm, null);
+            CollectionAssert.AreEquivalent(deploymentDetails, algorithmConfiguration.DeploymentDetails);
+
+            // the configuration holds a snapshot, later changes are reflected by the algorithm but not by the existing configuration
+            deploymentDetails.Remove("some-other-key");
+            deploymentDetails["some-key"] = "";
+            Assert.AreEqual(2, algorithmConfiguration.DeploymentDetails.Count);
+            Assert.AreEqual("some value", algorithmConfiguration.DeploymentDetails["some-key"]);
+            CollectionAssert.AreEquivalent(deploymentDetails, algorithm.DeploymentDetails);
+
+            algorithmConfiguration = AlgorithmConfiguration.Create(algorithm, null);
+            CollectionAssert.AreEquivalent(deploymentDetails, algorithmConfiguration.DeploymentDetails);
+
+            serialized = JsonConvert.SerializeObject(algorithmConfiguration);
+            Assert.IsTrue(serialized.Contains("\"DeploymentDetails\":{\"some-key\":\"\"}", StringComparison.InvariantCulture));
+
+            var deserialized = JsonConvert.DeserializeObject<AlgorithmConfiguration>(serialized);
+            CollectionAssert.AreEquivalent(deploymentDetails, deserialized.DeploymentDetails);
         }
 
         private static TestCaseData[] AlgorithmConfigurationTestCases => new[]

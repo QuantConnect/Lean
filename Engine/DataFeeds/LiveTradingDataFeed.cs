@@ -327,7 +327,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             var tzOffsetProvider = new TimeZoneOffsetProvider(request.Configuration.ExchangeTimeZone, request.StartTimeUtc, request.EndTimeUtc);
 
             IEnumerator<BaseData> enumerator = null;
-            if (request.Universe is ITimeTriggeredUniverse timeTriggered)
+            if (request.Universe.TryGetUniverse(out ITimeTriggeredUniverse timeTriggered))
             {
                 Log.Trace($"LiveTradingDataFeed.CreateUniverseSubscription(): Creating user defined universe: {config.Symbol.ID}");
 

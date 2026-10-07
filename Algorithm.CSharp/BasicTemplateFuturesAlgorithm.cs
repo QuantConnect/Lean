@@ -88,11 +88,7 @@ namespace QuantConnect.Algorithm.CSharp
                 foreach(var chain in slice.FutureChains)
                 {
                     // find the front contract expiring no earlier than in 90 days
-                    var contract = (
-                        from futuresContract in chain.Value.OrderBy(x => x.Expiry)
-                        where futuresContract.Expiry > Time.Date.AddDays(90)
-                        select futuresContract
-                    ).FirstOrDefault();
+                    var contract = chain.Value.ExpiringAfter(Time.Date.AddDays(90)).FrontMonth().FirstOrDefault();
 
                     // if found, trade it
                     if (contract != null)

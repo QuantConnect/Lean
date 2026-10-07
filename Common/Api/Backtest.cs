@@ -212,6 +212,11 @@ namespace QuantConnect.Api
         /// </summary>
         [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
         public IReadOnlyList<Analysis> Analysis { get; set; }
+
+        /// <summary>
+        /// Indicates if the backtest is run under debugging mode
+        /// </summary>
+        public bool Debugging { get; set; }
     }
 
     /// <summary>

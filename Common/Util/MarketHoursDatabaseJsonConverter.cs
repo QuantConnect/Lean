@@ -316,9 +316,18 @@ namespace QuantConnect.Util
 
                 if(marketEntry != null)
                 {
-                    if (marketEntry.ExchangeHours.Holidays.Count > 0)
+                    foreach (var holiday in marketEntry.ExchangeHours.Holidays)
                     {
-                        holidayDates.UnionWith(marketEntry.ExchangeHours.Holidays);
+                        // an early close or late open of this entry on a market-wide holiday means this entry trades on that date,
+                        // but expiration rules should still skip it, the same as a bank holiday
+                        if (earlyCloses.ContainsKey(holiday) || lateOpens.ContainsKey(holiday))
+                        {
+                            bankHolidayDates.Add(holiday);
+                        }
+                        else
+                        {
+                            holidayDates.Add(holiday);
+                        }
                     }
 
                     if (marketEntry.ExchangeHours.BankHolidays.Count > 0)

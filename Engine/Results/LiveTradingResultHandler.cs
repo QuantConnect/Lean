@@ -263,7 +263,8 @@ namespace QuantConnect.Lean.Engine.Results
                         var orders = new Dictionary<int, Order>(TransactionHandler.Orders);
                         var complete = new LiveResultPacket(_job, new LiveResult(new LiveResultParameters(chartComplete, orders,
                             Algorithm.Transactions.TransactionRecord, holdings, Algorithm.Portfolio.CashBook, deltaStatistics,
-                            runtimeStatistics, orderEvents, statistics.TotalPerformance, serverStatistics, state: GetAlgorithmState())));
+                            runtimeStatistics, orderEvents, statistics.TotalPerformance, serverStatistics,
+                            algorithmConfiguration: CreateAlgorithmConfiguration(), state: GetAlgorithmState())));
                         StoreResult(complete);
                         _holdingsChangeMonitor.MarkStored();
                         _nextChartsUpdate = DateTime.UtcNow.Add(ChartUpdateInterval);
@@ -523,6 +524,8 @@ namespace QuantConnect.Lean.Engine.Results
                     runtimeStatistics: runtimeStatistics,
                     orderEvents: null, // we stored order events separately
                     serverStatistics: serverStatistics,
+                    // stored from the start so it's available to the user while the algorithm is running
+                    algorithmConfiguration: Algorithm != null ? CreateAlgorithmConfiguration() : null,
                     state: algorithmState));
 
                 SaveResults($"{AlgorithmId}.json", result);
@@ -851,7 +854,7 @@ namespace QuantConnect.Lean.Engine.Results
                     result = new LiveResultPacket(_job,
                         new LiveResult(new LiveResultParameters(charts, orders, profitLoss, new Dictionary<string, Holding>(),
                             Algorithm.Portfolio.CashBook, statisticsResults.Summary, runtime, GetOrderEventsToStore(), serverStatistics: serverStatistics,
-                            algorithmConfiguration: AlgorithmConfiguration.Create(Algorithm, null), state: endState, totalPerformance: statisticsResults.TotalPerformance)));
+                            algorithmConfiguration: CreateAlgorithmConfiguration(), state: endState, totalPerformance: statisticsResults.TotalPerformance)));
                 }
                 else
                 {

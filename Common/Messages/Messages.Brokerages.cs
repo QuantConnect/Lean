@@ -111,6 +111,53 @@ namespace QuantConnect
             }
 
             /// <summary>
+            /// Returns a string message saying the given brokerage model does not support contingent orders
+            /// </summary>
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public static string UnsupportedContingentOrders(IBrokerageModel brokerageModel)
+            {
+                return Invariant($"The {brokerageModel.GetType().Name} does not support contingent orders (OCO, OTO, OUO, brackets).");
+            }
+
+            /// <summary>
+            /// Returns a string message saying the contingency type of the given order is unsupported by the given brokerage model.
+            /// It also mentions the supported contingency types
+            /// </summary>
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public static string UnsupportedContingencyType(IBrokerageModel brokerageModel, Orders.ContingencyType contingencyType,
+                IEnumerable<Orders.ContingencyType> supportedContingencyTypes)
+            {
+                return Invariant($"The {brokerageModel.GetType().Name} does not support {contingencyType} contingent orders. Only supports [{string.Join(',', supportedContingencyTypes)}]");
+            }
+
+            /// <summary>
+            /// Returns a string message saying the given brokerage model does not support updating contingent orders
+            /// </summary>
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public static string UnsupportedContingentOrdersUpdate(IBrokerageModel brokerageModel)
+            {
+                return Invariant($"The {brokerageModel.GetType().Name} does not support updating contingent orders, please cancel and submit them again.");
+            }
+
+            /// <summary>
+            /// Returns a string message saying the given brokerage model does not support updating the quantity of contingent orders
+            /// </summary>
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public static string UnsupportedContingentOrdersQuantityUpdate(IBrokerageModel brokerageModel)
+            {
+                return Invariant($"The {brokerageModel.GetType().Name} does not support updating the quantity of contingent orders.");
+            }
+
+            /// <summary>
+            /// Returns a string message saying the shape of the set of contingent orders is unsupported by the given brokerage model
+            /// </summary>
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public static string UnsupportedContingentOrdersShape(IBrokerageModel brokerageModel, string reason)
+            {
+                return Invariant($"The {brokerageModel.GetType().Name} does not support this set of contingent orders: {reason}");
+            }
+
+            /// <summary>
             /// Returns a string message saying the Time In Force of the given order is unsupported by the given brokerage
             /// model
             /// </summary>
@@ -137,15 +184,6 @@ namespace QuantConnect
             public static string UnsupportedCrossZeroByOrderType(IBrokerageModel brokerageModel, OrderType orderType)
             {
                 return Invariant($"Order type '{orderType}' is not supported for orders that cross the zero holdings threshold in the {brokerageModel.GetType().Name}. This means you cannot change a position from positive to negative or vice versa using this order type. Please close the existing position first.");
-            }
-
-            /// <summary>
-            /// Returns a message indicating that the specified order type cannot be updated quantity using the given brokerage model.
-            /// </summary>
-            [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public static string UnsupportedUpdateQuantityOrder(IBrokerageModel brokerageModel, OrderType orderType)
-            {
-                return Invariant($"Order type '{orderType}' is not supported to update quantity in the {brokerageModel.GetType().Name}.");
             }
 
             /// <summary>
@@ -181,6 +219,16 @@ namespace QuantConnect
             {
                 return Invariant($"The {brokerageModel.GetType().Name} does not support {orderType} orders with {timeInForce} TIF outside regular hours. ") +
                     Invariant($"Only {OrderType.Limit} orders with {TimeInForce.Day} TIF are supported outside regular trading hours.");
+            }
+
+            /// <summary>
+            /// Returns a message indicating that the number of legs of the combo order is not supported by the given brokerage model.
+            /// </summary>
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public static string UnsupportedComboOrderLegCount(IBrokerageModel brokerageModel, int legCount)
+            {
+                return Invariant($"The {brokerageModel.GetType().Name} does not support combo orders with {legCount} legs. ") +
+                    Invariant($"A combo order takes from 2 to 4 option legs.");
             }
         }
 

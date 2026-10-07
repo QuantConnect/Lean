@@ -17,7 +17,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Threading;
-using Newtonsoft.Json;
+using QuantConnect.Configuration;
 using QuantConnect.Interfaces;
 using QuantConnect.Logging;
 using QuantConnect.Util;
@@ -29,6 +29,12 @@ namespace QuantConnect.Data
     /// </summary>
     public class DataMonitor : IDataMonitor
     {
+        // the succeeded requests are one line per data file read, we only count them unless asked to list them
+        private static readonly bool StoreSucceededDataRequests = Config.GetBool("data-monitor-store-succeeded-requests", false);
+
+        // a data path per line, 100K is around 10MB, past it we just count them, see the report for the total
+        private const int FailedDataRequestsFileLimit = 100000;
+
         private bool _exited;
 
         private TextWriter _succeededDataRequestsWriter;
@@ -52,6 +58,11 @@ namespace QuantConnect.Data
         private readonly string _resultsDestinationFolder;
 
         private readonly object _threadLock = new();
+
+        /// <summary>
+        /// The final report generated on <see cref="Exit"/>, null until then or if no data request was monitored
+        /// </summary>
+        public DataMonitorReport Report { get; private set; }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="DataMonitor"/> class
@@ -96,8 +107,18 @@ namespace QuantConnect.Data
             }
             else
             {
-                WriteLineToFile(_failedDataRequestsWriter, path, _failedDataRequestsFileName);
-                Interlocked.Increment(ref _failedDataRequestsCount);
+                var failedCount = Interlocked.Increment(ref _failedDataRequestsCount);
+                if (failedCount <= FailedDataRequestsFileLimit)
+                {
+                    WriteLineToFile(_failedDataRequestsWriter, path, _failedDataRequestsFileName);
+                }
+                else if (failedCount == FailedDataRequestsFileLimit + 1)
+                {
+                    // only the first request past the limit writes the notice
+                    WriteLineToFile(_failedDataRequestsWriter,
+                        $"Truncated at {FailedDataRequestsFileLimit} failed data requests, see the report for the total count",
+                        _failedDataRequestsFileName);
+                }
                 if (isUniverseData)
                 {
                     Interlocked.Increment(ref _failedUniverseDataRequestsCount);
@@ -126,7 +147,7 @@ namespace QuantConnect.Data
             _succeededDataRequestsWriter?.Close();
             _failedDataRequestsWriter?.Close();
 
-            StoreDataMonitorReport(GenerateReport());
+            Report = GenerateReport();
 
             _succeededDataRequestsWriter.DisposeSafely();
             _failedDataRequestsWriter.DisposeSafely();
@@ -171,7 +192,10 @@ namespace QuantConnect.Data
                     return;
                 }
                 // we create the files on demand
-                _succeededDataRequestsWriter = OpenStream(_succeededDataRequestsFileName);
+                if (StoreSucceededDataRequests)
+                {
+                    _succeededDataRequestsWriter = OpenStream(_succeededDataRequestsFileName);
+                }
                 _failedDataRequestsWriter = OpenStream(_failedDataRequestsFileName);
 
                 _cancellationTokenSource = new CancellationTokenSource();
@@ -194,7 +218,9 @@ namespace QuantConnect.Data
                 _failedDataRequestsCount,
                 _succeededUniverseDataRequestsCount,
                 _failedUniverseDataRequestsCount,
-                _requestRates);
+                _requestRates,
+                _succeededDataRequestsWriter != null ? Path.GetFileName(_succeededDataRequestsFileName) : null,
+                Path.GetFileName(_failedDataRequestsFileName));
 
             Logging.Log.Trace($"DataMonitor.GenerateReport():{Environment.NewLine}" +
                 $"DATA USAGE:: Total data requests {report.TotalRequestsCount}{Environment.NewLine}" +
@@ -231,22 +257,6 @@ namespace QuantConnect.Data
             _lastRequestRateCalculationTime = now;
         }
 
-        /// <summary>
-        /// Stores the data monitor report
-        /// </summary>
-        /// <param name="report">The data monitor report to be stored</param>
-        private void StoreDataMonitorReport(DataMonitorReport report)
-        {
-            if (report == null)
-            {
-                return;
-            }
-
-            var path = GetFilePath("data-monitor-report.json");
-            var data = JsonConvert.SerializeObject(report, Formatting.None);
-            File.WriteAllText(path, data);
-        }
-
         private string GetFilePath(string filename)
         {
             var baseFilename = Path.GetFileNameWithoutExtension(filename);
@@ -263,6 +273,10 @@ namespace QuantConnect.Data
 
         private static void WriteLineToFile(TextWriter writer, string line, string filename)
         {
+            if (writer == null)
+            {
+                return;
+            }
             try
             {
                 writer.WriteLine(line);

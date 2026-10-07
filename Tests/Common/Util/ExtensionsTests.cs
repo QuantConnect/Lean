@@ -62,6 +62,21 @@ namespace QuantConnect.Tests.Common.Util
             Assert.AreEqual(expected, enums);
         }
 
+        [TestCase(Market.CME, DataMappingMode.OpenInterest, DataMappingMode.OpenInterest)]
+        [TestCase(Market.CME, DataMappingMode.OpenInterestAnnual, DataMappingMode.OpenInterestAnnual)]
+        [TestCase(Market.EUREX, DataMappingMode.OpenInterest, DataMappingMode.LastTradingDay)]
+        [TestCase(Market.HKFE, DataMappingMode.OpenInterest, DataMappingMode.LastTradingDay)]
+        [TestCase(Market.ICE, DataMappingMode.OpenInterest, DataMappingMode.LastTradingDay)]
+        [TestCase(Market.KRX, DataMappingMode.OpenInterest, DataMappingMode.LastTradingDay)]
+        [TestCase(Market.KRX, DataMappingMode.OpenInterestAnnual, DataMappingMode.LastTradingDay)]
+        [TestCase(Market.KRX, DataMappingMode.FirstDayMonth, DataMappingMode.FirstDayMonth)]
+        public void GetUniverseMappingModeOrDefault(string market, DataMappingMode settingsMode, DataMappingMode expected)
+        {
+            var settings = new UniverseSettings(Resolution.Daily, 1, true, false, TimeSpan.Zero) { DataMappingMode = settingsMode };
+
+            Assert.AreEqual(expected, settings.GetUniverseMappingModeOrDefault(SecurityType.Future, market));
+        }
+
         [TestCase("tt", "", "tt")]
         [TestCase("tt", "t", "t")]
         [TestCase("tt", "tt", "")]

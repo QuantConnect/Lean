@@ -77,6 +77,45 @@ namespace QuantConnect.Tests.Algorithm.Framework.Selection
             Assert.IsTrue(fineCountByDateTime.All(kvp => kvp.Key.Day == 1 && kvp.Value == 500));
         }
 
+        // The new Morningstar generation codes the NYSE as "NYSE", leaves some primary exchanges empty
+        // and has no market cap before 2009-10, where shares outstanding times price stands in
+        [TestCase(Language.CSharp, "NYSE", null, 500000001L, 0L, true)]
+        [TestCase(Language.Python, "NYSE", null, 500000001L, 0L, true)]
+        [TestCase(Language.CSharp, null, "NAS", 500000001L, 0L, true)]
+        [TestCase(Language.Python, null, "NAS", 500000001L, 0L, true)]
+        [TestCase(Language.CSharp, "TSX", "NYSE", 500000001L, 0L, false)]
+        [TestCase(Language.Python, "TSX", "NYSE", 500000001L, 0L, false)]
+        [TestCase(Language.CSharp, "NYS", null, 0L, 5000001L, true)]
+        [TestCase(Language.Python, "NYS", null, 0L, 5000001L, true)]
+        [TestCase(Language.CSharp, "NYS", null, 0L, 4000000L, false)]
+        [TestCase(Language.Python, "NYS", null, 0L, 4000000L, false)]
+        public void FiltersUniverseWithNewMorningstarData(Language language, string primaryExchangeId, string exchangeId,
+            long marketCap, long sharesOutstanding, bool selects)
+        {
+            RunSimulation(language,
+                (symbol, time) => new CoarseFundamentalSource
+                {
+                    Symbol = symbol,
+                    EndTime = time,
+                    Value = 100,
+                    VolumeSetter = 1000,
+                    DollarVolumeSetter = 100000 * double.Parse(symbol.Value.Substring(3)),
+                    HasFundamentalDataSetter = true
+                },
+                (symbol, time) => new FineFundamental(time, symbol)
+                {
+                    Value = 100
+                },
+                new TestFundamentalDataProvider(_industryTemplateCodeDict, primaryExchangeId, exchangeId, marketCap, sharesOutstanding),
+                out var algorithm,
+                out var coarseCountByDateTime,
+                out var fineCountByDateTime);
+
+            var months = (algorithm.EndDate - algorithm.StartDate).Days / 30;
+            Assert.AreEqual(selects ? months : 0, fineCountByDateTime.Count);
+            Assert.IsTrue(fineCountByDateTime.All(kvp => kvp.Value == 500));
+        }
+
         [TestCase(Language.CSharp)]
         [TestCase(Language.Python)]
         public void DoesNotFilterUniverseWithCoarseDataHasFundamentalFalse(Language language)
@@ -222,10 +261,19 @@ namespace QuantConnect.Tests.Algorithm.Framework.Selection
         private class TestFundamentalDataProvider : IFundamentalDataProvider
         {
             private readonly Dictionary<char, string> _industryTemplateCodeDict;
+            private readonly string _primaryExchangeId;
+            private readonly string _exchangeId;
+            private readonly long _marketCap;
+            private readonly long _sharesOutstanding;
 
-            public TestFundamentalDataProvider(Dictionary<char, string> industryTemplateCodeDict)
+            public TestFundamentalDataProvider(Dictionary<char, string> industryTemplateCodeDict, string primaryExchangeId = "NYS",
+                string exchangeId = null, long marketCap = 500000001, long sharesOutstanding = 0)
             {
                 _industryTemplateCodeDict = industryTemplateCodeDict;
+                _primaryExchangeId = primaryExchangeId;
+                _exchangeId = exchangeId;
+                _marketCap = marketCap;
+                _sharesOutstanding = sharesOutstanding;
             }
             public T Get<T>(DateTime time, SecurityIdentifier securityIdentifier, FundamentalProperty name)
             {
@@ -242,7 +290,11 @@ namespace QuantConnect.Tests.Algorithm.Framework.Selection
                 switch (name)
                 {
                     case "CompanyProfile_MarketCap":
-                        return 500000001;
+                        return _marketCap;
+                    case "CompanyProfile_SharesOutstanding":
+                        return _sharesOutstanding;
+                    case "SecurityReference_ExchangeId":
+                        return _exchangeId;
                     case "SecurityReference_IPODate":
                         return time.AddDays(-200);
                     case "EarningReports_BasicAverageShares_ThreeMonths":
@@ -250,7 +302,7 @@ namespace QuantConnect.Tests.Algorithm.Framework.Selection
                     case "CompanyReference_CountryId":
                         return "USA";
                     case "CompanyReference_PrimaryExchangeID":
-                        return "NYS";
+                        return _primaryExchangeId;
                     case "CompanyReference_IndustryTemplateCode":
                         return _industryTemplateCodeDict[securityIdentifier.Symbol[0]];
                 }

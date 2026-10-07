@@ -299,7 +299,7 @@ namespace QuantConnect.Statistics
             var benchmarkVariance = listBenchmark.Variance();
             Beta = benchmarkVariance.IsNaNOrZero() ? 0 : (decimal)(listPerformance.Covariance(listBenchmark) / benchmarkVariance);
 
-            Alpha = Beta == 0 ? 0 : annualPerformance - (riskFreeRate + Beta * (benchmarkAnnualPerformance - riskFreeRate));
+            Alpha = Beta == 0 ? 0 : Extensions.SafeDecimalCast((double)annualPerformance - ((double)riskFreeRate + (double)Beta * ((double)benchmarkAnnualPerformance - (double)riskFreeRate)));
 
             TrackingError = (decimal)Statistics.TrackingError(listPerformance, listBenchmark, (double)tradingDaysPerYear);
 

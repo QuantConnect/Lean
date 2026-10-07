@@ -318,12 +318,15 @@ namespace QuantConnect.Tests.Common.Securities
             var data = symbols.Select(x => new OptionUniverse() { Symbol = x });
             var filterUniverse = new OptionFilterUniverse(option, data.ToList(), underlying);
             var filtered = filter.Filter(filterUniverse).ToList();
-            Assert.AreEqual(5, filtered.Count);
+            // 2016-02-26 is a Friday: the weekend expiries 8 and 9 days out count on their last trading date, Friday 7 days out
+            Assert.AreEqual(7, filtered.Count);
             Assert.AreEqual(symbols[3], filtered[0].Symbol);
             Assert.AreEqual(symbols[4], filtered[1].Symbol);
             Assert.AreEqual(symbols[5], filtered[2].Symbol);
             Assert.AreEqual(symbols[6], filtered[3].Symbol);
             Assert.AreEqual(symbols[7], filtered[4].Symbol);
+            Assert.AreEqual(symbols[8], filtered[5].Symbol);
+            Assert.AreEqual(symbols[9], filtered[6].Symbol);
         }
 
         [Test]

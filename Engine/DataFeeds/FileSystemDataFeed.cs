@@ -179,9 +179,9 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         protected IEnumerator<BaseData> CreateUniverseEnumerator(SubscriptionRequest request)
         {
             ISubscriptionEnumeratorFactory factory = _subscriptionFactory;
-            if (request.Universe is ITimeTriggeredUniverse)
+            if (request.Universe.TryGetUniverse(out ITimeTriggeredUniverse timeTriggeredUniverse))
             {
-                factory = new TimeTriggeredUniverseSubscriptionEnumeratorFactory(request.Universe as ITimeTriggeredUniverse, _marketHoursDatabase);
+                factory = new TimeTriggeredUniverseSubscriptionEnumeratorFactory(timeTriggeredUniverse, _marketHoursDatabase);
             }
             else if (request.Configuration.Type == typeof(FundamentalUniverse))
             {

@@ -48,8 +48,8 @@ namespace QuantConnect.Tests.Brokerages.TradeStation
             Assert.That(isPossibleUpdate, Is.EqualTo(isShouldUpdate));
         }
 
-        [TestCase(OrderType.ComboMarket, 1, 1, 2, 0, false)]
-        [TestCase(OrderType.ComboLimit, 1, 1, 2, 0, false)]
+        [TestCase(OrderType.ComboMarket, 1, 1, 2, 0, true)]
+        [TestCase(OrderType.ComboLimit, 1, 1, 2, 0, true)]
         [TestCase(OrderType.ComboLimit, 1, 1, 1, 20, true)]
         public void CanUpdateComboOrders(OrderType orderType, decimal holdingQuantity, decimal orderQuantity, decimal newOrderQuantity, decimal newLimitPrice, bool isShouldUpdate)
         {

@@ -13,48 +13,23 @@
  * limitations under the License.
 */
 
-using System;
 using System.Collections.Generic;
 
 namespace QuantConnect.Securities
 {
     /// <summary>
     /// The option contract filters shared by the option universe selection (<see cref="OptionFilterUniverse"/>)
-    /// and the option chain (<see cref="Data.Market.OptionChain"/>), so both offer the same filters with the same semantics.
+    /// and the option chain (<see cref="Data.Market.OptionChain"/>), so both offer the same filters with the same semantics,
+    /// on top of the ones every contract has, see <see cref="IContractFilters{TSelf}"/>.
     /// <c>OptionChainTests.ChainExposesEveryUniverseFilter</c> checks that every universe filter is declared here
     /// </summary>
     /// <typeparam name="TSelf">The implementing type, returned by every filter for chaining</typeparam>
-    public interface IOptionContractFilters<TSelf>
+    public interface IOptionContractFilters<TSelf> : IContractFilters<TSelf>
     {
         /// <summary>
         /// Selects the contracts with strikes in the given range relative to the underlying price, in number of strikes
         /// </summary>
         TSelf Strikes(int minStrike, int maxStrike);
-
-        /// <summary>
-        /// Selects the contracts expiring in the given range relative to the current date
-        /// </summary>
-        TSelf Expiration(TimeSpan minExpiry, TimeSpan maxExpiry);
-
-        /// <summary>
-        /// Selects the contracts expiring in the given range of days relative to the current date
-        /// </summary>
-        TSelf Expiration(int minExpiryDays, int maxExpiryDays);
-
-        /// <summary>
-        /// Selects the contracts expiring on any of the given dates, ignoring the time of day
-        /// </summary>
-        TSelf Expiration(IEnumerable<DateTime> expiries);
-
-        /// <summary>
-        /// Selects the contracts expiring after the given date, excluding it
-        /// </summary>
-        TSelf ExpiringAfter(DateTime date);
-
-        /// <summary>
-        /// Selects the contracts expiring before the given date, excluding it
-        /// </summary>
-        TSelf ExpiringBefore(DateTime date);
 
         /// <summary>
         /// Selects the contracts with any of the given strike prices
@@ -70,11 +45,6 @@ namespace QuantConnect.Securities
         /// Selects the contracts with strikes below the given price, excluding it
         /// </summary>
         TSelf StrikesBelow(decimal price);
-
-        /// <summary>
-        /// Selects the contracts expiring today
-        /// </summary>
-        TSelf ZeroDte();
 
         /// <summary>
         /// Selects the out of the money contracts: calls above and puts below the underlying price
@@ -117,36 +87,6 @@ namespace QuantConnect.Securities
         /// Selects the put contracts
         /// </summary>
         TSelf PutsOnly();
-
-        /// <summary>
-        /// Selects the standard contracts, excluding weeklys
-        /// </summary>
-        TSelf StandardsOnly();
-
-        /// <summary>
-        /// Selects the non standard weekly contracts
-        /// </summary>
-        TSelf WeeklysOnly();
-
-        /// <summary>
-        /// Selects the contracts of the nearest expiration
-        /// </summary>
-        TSelf FrontMonth();
-
-        /// <summary>
-        /// Selects the contracts of the farthest expiration
-        /// </summary>
-        TSelf FarthestExpiration();
-
-        /// <summary>
-        /// Selects the contracts of all expirations but the nearest one
-        /// </summary>
-        TSelf BackMonths();
-
-        /// <summary>
-        /// Selects the contracts of the second nearest expiration
-        /// </summary>
-        TSelf BackMonth();
 
         /// <summary>
         /// Selects the contracts with delta in the given range
@@ -207,16 +147,6 @@ namespace QuantConnect.Securities
         /// Selects the contracts with implied volatility in the given range. Alias for <see cref="ImpliedVolatility"/>
         /// </summary>
         TSelf IV(decimal min, decimal max);
-
-        /// <summary>
-        /// Selects the contracts with open interest in the given range
-        /// </summary>
-        TSelf OpenInterest(long min, long max);
-
-        /// <summary>
-        /// Selects the contracts with open interest in the given range. Alias for <see cref="OpenInterest"/>
-        /// </summary>
-        TSelf OI(long min, long max);
 
         /// <summary>
         /// Selects the single call contract with the closest match to the criteria given

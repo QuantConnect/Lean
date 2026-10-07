@@ -636,10 +636,12 @@ namespace QuantConnect
         {
             if (futureYear.HasValue)
             {
+                // a double digit year already defines the decade, so we can only be off by a century: 'Z36' is 2036 never 2026
+                var step = parsed.ExpirationYearShortLength > 1 ? 100 : 10;
                 var referenceYear = 1900 + parsed.ExpirationYearShort;
                 while (referenceYear < futureYear.Value)
                 {
-                    referenceYear += 10;
+                    referenceYear += step;
                 }
 
                 return referenceYear;

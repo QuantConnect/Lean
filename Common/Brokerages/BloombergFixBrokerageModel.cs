@@ -63,6 +63,11 @@ namespace QuantConnect.Brokerages
         /// <param name="message">If this function returns false, a brokerage message detailing why the order may not be submitted</param>
         public override bool CanSubmitOrder(Security security, Order order, out BrokerageMessageEvent message)
         {
+            if (!this.ValidateContingentOrdersNotSupported(order, out message))
+            {
+                return false;
+            }
+
             if (!_supportedSecurityTypes.Contains(security.Type))
             {
                 message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",

@@ -70,6 +70,22 @@ namespace QuantConnect.Data.UniverseSelection
         }
 
         /// <summary>
+        /// Gets the decorated universe as the given type, unwrapping nested decorators
+        /// </summary>
+        /// <typeparam name="T">The type to look for</typeparam>
+        /// <param name="underlying">The decorated universe as the given type, if any</param>
+        /// <returns>True if the decorated universe, or one it decorates, is of the given type</returns>
+        public bool TryGetUnderlying<T>(out T underlying) where T : class
+        {
+            underlying = Universe as T;
+            if (underlying == null && Universe is UniverseDecorator decorator)
+            {
+                return decorator.TryGetUnderlying(out underlying);
+            }
+            return underlying != null;
+        }
+
+        /// <summary>
         /// Gets the subscription requests to be added for the specified security
         /// </summary>
         /// <param name="security">The security to get subscriptions for</param>

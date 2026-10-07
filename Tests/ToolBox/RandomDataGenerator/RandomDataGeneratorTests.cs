@@ -168,7 +168,7 @@ namespace QuantConnect.Tests.ToolBox.RandomDataGenerator
         public void RandomDataGeneratorCompletesSuccessfully()
         {
             var tempFolder = Path.Combine(Path.GetTempPath(), $"LeanTest_{Guid.NewGuid()}");
-            var originalDataFolder = Config.Get("data-folder");
+            var originalDataFolder = Globals.DataFolder;
             try
             {
                 Directory.CreateDirectory(tempFolder);
@@ -231,7 +231,7 @@ namespace QuantConnect.Tests.ToolBox.RandomDataGenerator
         public void RandomDataGeneratorWritesDerivativeUniverseFiles(SecurityType securityType, string market, string ticker, Resolution resolution)
         {
             var tempFolder = Path.Combine(Path.GetTempPath(), $"LeanTest_{Guid.NewGuid()}");
-            var originalDataFolder = Config.Get("data-folder");
+            var originalDataFolder = Globals.DataFolder;
             try
             {
                 Directory.CreateDirectory(tempFolder);

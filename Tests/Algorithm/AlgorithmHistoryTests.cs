@@ -70,6 +70,71 @@ namespace QuantConnect.Tests.Algorithm
             FundamentalService.Initialize(_dataProvider, new NullFundamentalDataProvider(), false);
         }
 
+        [TestCase(null)]
+        [TestCase(DataMappingMode.FirstDayMonth)]
+        public void HistoryWithExplicitUnavailableDataMappingModeFallsBackToMarketDefault(DataMappingMode? addedFutureDataMappingMode)
+        {
+            var symbol = Symbol.Create("FESX", SecurityType.Future, Market.EUREX);
+            if (addedFutureDataMappingMode.HasValue)
+            {
+                _algorithm.AddFuture("FESX", Resolution.Daily, Market.EUREX, dataMappingMode: addedFutureDataMappingMode);
+            }
+
+            _algorithm.History(symbol, 5, Resolution.Daily, dataMappingMode: DataMappingMode.OpenInterest).ToList();
+            _algorithm.History(symbol, _algorithm.Time.AddDays(-5), _algorithm.Time, Resolution.Daily, dataMappingMode: DataMappingMode.OpenInterest).ToList();
+
+            var requests = _testHistoryProvider.HistryRequests.Where(x => x.Symbol == symbol).ToList();
+            Assert.Greater(requests.Count, 0);
+            // the market default is used, not the added future's mode
+            Assert.That(requests.Select(x => x.DataMappingMode), Has.All.EqualTo(DataMappingMode.LastTradingDay));
+            Assert.That(_algorithm.DebugMessages.Single(x => x.Contains("data mapping mode is not available")),
+                Does.EndWith("Warning: OpenInterest data mapping mode is not available for EUREX futures, using LastTradingDay instead."));
+        }
+
+        [Test]
+        public void HistoryWithoutDataMappingModeFallsBackForFutureNotAdded()
+        {
+            var symbol = Symbol.Create("FESX", SecurityType.Future, Market.EUREX);
+
+            _algorithm.History(symbol, 5, Resolution.Daily).ToList();
+
+            var requests = _testHistoryProvider.HistryRequests.Where(x => x.Symbol == symbol).ToList();
+            Assert.Greater(requests.Count, 0);
+            Assert.That(requests.Select(x => x.DataMappingMode), Has.All.EqualTo(DataMappingMode.LastTradingDay));
+            Assert.That(_algorithm.DebugMessages.Single(x => x.Contains("data mapping mode is not available")),
+                Does.EndWith("Warning: OpenInterest data mapping mode is not available for EUREX futures, using LastTradingDay instead."));
+        }
+
+        [Test]
+        public void HistoryWithExplicitAvailableDataMappingModeKeepsIt()
+        {
+            var symbol = Symbol.Create("FESX", SecurityType.Future, Market.EUREX);
+
+            _algorithm.History(symbol, 5, Resolution.Daily, dataMappingMode: DataMappingMode.FirstDayMonth).ToList();
+
+            var requests = _testHistoryProvider.HistryRequests.Where(x => x.Symbol == symbol).ToList();
+            Assert.Greater(requests.Count, 0);
+            Assert.That(requests.Select(x => x.DataMappingMode), Has.All.EqualTo(DataMappingMode.FirstDayMonth));
+            Assert.IsFalse(_algorithm.DebugMessages.Any(x => x.Contains("data mapping mode is not available")));
+        }
+
+        [Test]
+        public void HistoryWithExplicitUnavailableDataMappingModeDoesNotFallBackForContractsOrChains()
+        {
+            var symbol = Symbol.Create("FESX", SecurityType.Future, Market.EUREX);
+            var contract = Symbol.CreateFuture("FESX", Market.EUREX, new DateTime(2024, 6, 21));
+
+            _algorithm.History(contract, 5, Resolution.Daily, dataMappingMode: DataMappingMode.OpenInterest).ToList();
+            _algorithm.History<FutureUniverse>(symbol, 5, Resolution.Daily, dataMappingMode: DataMappingMode.OpenInterest).ToList();
+
+            var contractRequests = _testHistoryProvider.HistryRequests.Where(x => x.Symbol == contract).ToList();
+            var chainRequests = _testHistoryProvider.HistryRequests.Where(x => x.DataType == typeof(FutureUniverse)).ToList();
+            Assert.Greater(contractRequests.Count, 0);
+            Assert.Greater(chainRequests.Count, 0);
+            Assert.That(contractRequests.Concat(chainRequests).Select(x => x.DataMappingMode), Has.All.EqualTo(DataMappingMode.OpenInterest));
+            Assert.IsFalse(_algorithm.DebugMessages.Any(x => x.Contains("data mapping mode is not available")));
+        }
+
         [TestCase(Language.Python)]
         [TestCase(Language.CSharp)]
         public void FundamentalHistory(Language language)
@@ -3234,6 +3299,50 @@ tradeBar = TradeBar
             var requestStart = historyRequestFactory.GetStartTimeAlgoTz(aapl.Symbol, requestPeriods, resolution, exchangeHours,
                 config.DataTimeZone, config.Type, extendedMarketHours: requestWithExtendedMarket);
             Assert.AreEqual(marketOpen, requestStart);
+        }
+
+        // This reproduces https://github.com/QuantConnect/Lean/issues/9784
+        // HKFE trades 09:15-12:00 and 13:00-16:30 Hong Kong time, algorithm time zone is New York (13 hours behind in winter)
+        // 00:00 New York is 13:00 Hong Kong, inside the afternoon session: today does not count
+        [TestCase(Language.CSharp, "2018-02-01 00:00:00", "2018-01-18 00:00:00")]
+        [TestCase(Language.Python, "2018-02-01 00:00:00", "2018-01-18 00:00:00")]
+        // 04:00 New York is 17:00 Hong Kong, after the last close: today counts
+        [TestCase(Language.CSharp, "2018-02-01 04:00:00", "2018-01-18 17:00:00")]
+        [TestCase(Language.Python, "2018-02-01 04:00:00", "2018-01-18 17:00:00")]
+        public void DailyHistoryBarCountOnMarketsWithLunchBreak(Language language, string algorithmTime, string expectedStartExchangeTime)
+        {
+            var algorithm = GetAlgorithm(DateTime.ParseExact(algorithmTime, "yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture));
+            algorithm.Settings.DailyPreciseEndTime = true;
+            algorithm.Settings.SeedInitialPrices = false;
+            algorithm.HistoryProvider = _testHistoryProvider;
+            var hsi = algorithm.AddFuture("HSI", Resolution.Daily, Market.HKFE);
+
+            if (language == Language.CSharp)
+            {
+                algorithm.History(hsi.Symbol, 10, Resolution.Daily).ToList();
+            }
+            else
+            {
+                using (Py.GIL())
+                {
+                    using var module = PyModule.FromString("testModule", @"
+from AlgorithmImports import *
+
+def get_history(algorithm, symbol):
+    return algorithm.history(symbol, 10, Resolution.DAILY)
+");
+                    algorithm.SetPandasConverter();
+                    using var getHistory = module.GetAttr("get_history");
+                    using var result = getHistory.Invoke(algorithm.ToPython(), hsi.Symbol.ToPython());
+                }
+            }
+
+            var expectedStart = DateTime.ParseExact(expectedStartExchangeTime, "yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture)
+                .ConvertToUtc(hsi.Exchange.TimeZone);
+            var request = _testHistoryProvider.HistryRequests.Single(x => x.DataType == typeof(TradeBar));
+            Assert.AreEqual(expectedStart, request.StartTimeUtc);
+            Assert.AreEqual(algorithm.UtcTime, request.EndTimeUtc);
+            Assert.AreEqual(Resolution.Daily, request.Resolution);
         }
 
         // This reproduces https://github.com/QuantConnect/Lean/issues/7504

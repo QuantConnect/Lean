@@ -36,6 +36,18 @@ namespace QuantConnect.Orders
         /// </summary>
         [JsonProperty(PropertyName = "orders")]
         public List<ApiOrderResponse> Orders { get; set; } = new();
+
+        /// <summary>
+        /// Status of the order generation process, "loading" while the orders are not ready yet
+        /// </summary>
+        [JsonProperty(PropertyName = "status")]
+        public string Status { get; set; }
+
+        /// <summary>
+        /// Loading percentage of the order generation process
+        /// </summary>
+        [JsonProperty(PropertyName = "progress")]
+        public decimal Progress { get; set; }
     }
 
     /// <summary>

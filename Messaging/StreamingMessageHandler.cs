@@ -37,6 +37,7 @@ namespace QuantConnect.Messaging
         private PushSocket _server;
         private AlgorithmNodePacket _job;
         private OrderEventJsonConverter _orderEventJsonConverter;
+        private readonly object _socketLock = new object();
 
         /// <summary>
         /// Gets or sets whether this messaging handler has any current subscribers.
@@ -100,7 +101,10 @@ namespace QuantConnect.Messaging
 
             message.Append(payload);
 
-            _server.SendMultipartMessage(message);
+            lock (_socketLock)
+            {
+                _server?.SendMultipartMessage(message);
+            }
         }
 
         /// <summary>
@@ -126,6 +130,11 @@ namespace QuantConnect.Messaging
         /// </summary>
         public void Dispose()
         {
+            lock (_socketLock)
+            {
+                _server?.Dispose();
+                _server = null;
+            }
         }
     }
 }
