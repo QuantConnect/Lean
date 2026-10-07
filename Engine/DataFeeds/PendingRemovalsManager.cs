@@ -144,6 +144,12 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 var universeRemoving = kvp.Key;
                 foreach (var member in kvp.Value.ToList())
                 {
+                    if (member.Security.IsDelisted)
+                    {
+                        // delisted securities can't be selected again, they are handled by CheckPendingDelistedRemovals
+                        continue;
+                    }
+
                     var isSafeToRemove = IsSafeToRemove(member, universeRemoving);
                     if (isSafeToRemove
                         ||
@@ -157,18 +163,51 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                             result.Add(new RemovedMember(universeRemoving, member.Security));
                         }
 
-                        _pendingRemovals[universeRemoving].Remove(member);
-
-                        // if there are no more pending removals for this universe lets remove it
-                        if (!_pendingRemovals[universeRemoving].Any())
-                        {
-                            _pendingRemovals.Remove(universeRemoving);
-                        }
+                        RemovePendingRemoval(universeRemoving, member);
                     }
                 }
             }
 
             return result;
+        }
+
+        /// <summary>
+        /// Will check the pending removals of delisted securities, which can't be selected again, so we don't wait for a universe selection
+        /// </summary>
+        /// <returns>The delisted members which are now safe to remove, null if none</returns>
+        public List<RemovedMember> CheckPendingDelistedRemovals()
+        {
+            List<RemovedMember> result = null;
+            foreach (var kvp in _pendingRemovals)
+            {
+                foreach (var member in kvp.Value)
+                {
+                    if (member.Security.IsDelisted && IsSafeToRemove(member, kvp.Key))
+                    {
+                        (result ??= new()).Add(new RemovedMember(kvp.Key, member.Security));
+                    }
+                }
+            }
+
+            if (result != null)
+            {
+                foreach (var removedMember in result)
+                {
+                    RemovePendingRemoval(removedMember.Universe, _pendingRemovals[removedMember.Universe].Find(x => x.Security == removedMember.Security));
+                }
+            }
+            return result;
+        }
+
+        private void RemovePendingRemoval(Universe universe, Universe.Member member)
+        {
+            _pendingRemovals[universe].Remove(member);
+
+            // if there are no more pending removals for this universe lets remove it
+            if (_pendingRemovals[universe].Count == 0)
+            {
+                _pendingRemovals.Remove(universe);
+            }
         }
 
         /// <summary>
