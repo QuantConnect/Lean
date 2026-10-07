@@ -1196,6 +1196,16 @@ namespace QuantConnect.Securities
         }
 
         /// <summary>
+        /// Applies the cash dividend to the security
+        /// </summary>
+        internal void ApplyDividend(Dividend dividend)
+        {
+            Cache.ApplyDividend(dividend);
+            // the adjusted price is not a new observation, so only the holdings take it
+            Holdings.UpdateMarketPrice(Price);
+        }
+
+        /// <summary>
         /// Updates the symbol properties of this security
         /// </summary>
         internal virtual void UpdateSymbolProperties(SymbolProperties symbolProperties)

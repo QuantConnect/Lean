@@ -2582,6 +2582,33 @@ namespace QuantConnect.Tests.Common.Securities
             Assert.AreEqual(profitLoss + dividendPayment - fee, algorithm.Portfolio.TotalNetProfit);
         }
 
+        [TestCase(DataNormalizationMode.Raw, 90)]
+        [TestCase(DataNormalizationMode.SplitAdjusted, 90)]
+        [TestCase(DataNormalizationMode.Adjusted, 100)]
+        [TestCase(DataNormalizationMode.TotalReturn, 100)]
+        public void CashDividendIsPaidOutOfThePrice(DataNormalizationMode mode, decimal expectedPrice)
+        {
+            var algorithm = new QCAlgorithm();
+            algorithm.SubscriptionManager.SetDataManager(new DataManagerStub(algorithm));
+
+            var spy = algorithm.AddEquity("SPY", dataNormalizationMode: mode);
+            // Update with both a trade and quote bar
+            spy.SetMarketPrice(new TradeBar(new DateTime(2000, 01, 01), Symbols.SPY, 100m, 100m, 100m, 100m, 100m, Time.OneMinute));
+            spy.SetMarketPrice(new QuoteBar(new DateTime(2000, 01, 01), Symbols.SPY, new Bar(100m, 100m, 100m, 100m), 100m, new Bar(100m, 100m, 100m, 100m), 100m, Time.OneMinute));
+            spy.Holdings.SetHoldings(100m, 100);
+            var initialPortfolioValue = algorithm.Portfolio.TotalPortfolioValue;
+
+            var dividend = new Dividend(Symbols.SPY, new DateTime(2000, 01, 02), 10m, 100m);
+            algorithm.Portfolio.ApplyDividend(dividend, algorithm.LiveMode, mode);
+
+            Assert.AreEqual(expectedPrice, spy.Price);
+            Assert.AreEqual(expectedPrice, spy.Holdings.Price);
+            Assert.AreEqual(expectedPrice, spy.Cache.GetData<TradeBar>().Close);
+            Assert.AreEqual(expectedPrice, spy.Cache.GetData<QuoteBar>().Close);
+            // the distribution moves from the holdings into the cash, the portfolio value is the same
+            Assert.AreEqual(initialPortfolioValue, algorithm.Portfolio.TotalPortfolioValue);
+        }
+
         [TestCase()]
         [TestCase(200000)]
         public void SetAccountCurrency(decimal? startingCash = null)
