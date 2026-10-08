@@ -237,6 +237,115 @@ namespace QuantConnect.Statistics
         }
 
         /// <summary>
+        /// Calculates the annualized Adjusted Sharpe Ratio (Pezier and White, 2006) which adjusts the Sharpe Ratio
+        /// for skewness and excess kurtosis of the return distribution at consistent time horizons.
+        /// </summary>
+        /// <remarks>
+        /// Under i.i.d. returns, the per-period adjustment is computed from the per-period Sharpe ratio,
+        /// sample skewness, and sample excess kurtosis (MathNet's <see cref="DescriptiveStatistics.Kurtosis"/> returns excess kurtosis, K - 3),
+        /// and then annualized by multiplying by sqrt(tradingDaysPerYear).
+        /// </remarks>
+        /// <param name="listPerformance">The performance samples to use</param>
+        /// <param name="riskFreeRate">The per-sample risk-free rate (e.g. annual risk-free rate / tradingDaysPerYear)</param>
+        /// <param name="tradingDaysPerYear">The number of trading days per year for annualization</param>
+        /// <returns>The annualized adjusted Sharpe ratio</returns>
+        public static double AdjustedSharpeRatio(List<double> listPerformance, double riskFreeRate = 0, double tradingDaysPerYear = 252)
+        {
+            if (listPerformance.Count < 3 || tradingDaysPerYear <= 0)
+            {
+                return 0;
+            }
+
+            var observedSharpeRatio = ObservedSharpeRatio(listPerformance, riskFreeRate);
+            if (observedSharpeRatio == 0 || double.IsNaN(observedSharpeRatio) || double.IsInfinity(observedSharpeRatio))
+            {
+                return 0;
+            }
+
+            var skewness = listPerformance.Skewness();
+            var excessKurtosis = listPerformance.Kurtosis(); // MathNet returns excess kurtosis (K - 3)
+
+            if (skewness.IsNaNOrInfinity() || excessKurtosis.IsNaNOrInfinity())
+            {
+                return 0;
+            }
+
+            // Pezier and White (2006) expansion at the sampling frequency
+            var asrPeriod = observedSharpeRatio * (1.0d + (skewness / 6.0d) * observedSharpeRatio - (excessKurtosis / 24.0d) * Math.Pow(observedSharpeRatio, 2));
+
+            if (double.IsNaN(asrPeriod) || double.IsInfinity(asrPeriod))
+            {
+                return 0;
+            }
+
+            return asrPeriod * Math.Sqrt(tradingDaysPerYear);
+        }
+
+        /// <summary>
+        /// Calculates the annualized Adjusted Sharpe Ratio (Pezier and White, 2006) which adjusts the Sharpe Ratio
+        /// for skewness and excess kurtosis of the return distribution at consistent time horizons.
+        /// </summary>
+        /// <param name="listPerformance">The performance samples to use</param>
+        /// <param name="riskFreeRate">The per-sample risk-free rate (e.g. annual risk-free rate / tradingDaysPerYear)</param>
+        /// <param name="tradingDaysPerYear">The number of trading days per year for annualization</param>
+        /// <returns>The annualized adjusted Sharpe ratio</returns>
+        public static decimal AdjustedSharpeRatio(List<double> listPerformance, decimal riskFreeRate, int tradingDaysPerYear)
+        {
+            return AdjustedSharpeRatio(listPerformance, (double)riskFreeRate, tradingDaysPerYear).SafeDecimalCast();
+        }
+
+        /// <summary>
+        /// Calculates the Adjusted Sharpe Ratio (Pezier and White, 2006) given an annualized Sharpe ratio,
+        /// scaling sample skewness and excess kurtosis to the annual horizon.
+        /// </summary>
+        /// <param name="listPerformance">The per-period performance samples to use for skewness and excess kurtosis</param>
+        /// <param name="annualizedSharpeRatio">The annualized Sharpe ratio</param>
+        /// <param name="tradingDaysPerYear">The number of trading days per year</param>
+        /// <returns>The annualized adjusted Sharpe ratio</returns>
+        public static double AdjustedSharpeRatioFromAnnualized(List<double> listPerformance, double annualizedSharpeRatio, double tradingDaysPerYear = 252)
+        {
+            if (listPerformance.Count < 3 || annualizedSharpeRatio == 0 || tradingDaysPerYear <= 0)
+            {
+                return 0;
+            }
+
+            var skewness = listPerformance.Skewness();
+            var excessKurtosis = listPerformance.Kurtosis(); // MathNet returns excess kurtosis (K - 3)
+
+            if (skewness.IsNaNOrInfinity() || excessKurtosis.IsNaNOrInfinity())
+            {
+                return 0;
+            }
+
+            // Scale per-period skewness and excess kurtosis to annual horizon:
+            // S_annual = S_period / sqrt(T), K_excess_annual = K_excess_period / T
+            var annualSkewness = skewness / Math.Sqrt(tradingDaysPerYear);
+            var annualExcessKurtosis = excessKurtosis / tradingDaysPerYear;
+
+            var asr = annualizedSharpeRatio * (1.0d + (annualSkewness / 6.0d) * annualizedSharpeRatio - (annualExcessKurtosis / 24.0d) * Math.Pow(annualizedSharpeRatio, 2));
+
+            if (double.IsNaN(asr) || double.IsInfinity(asr))
+            {
+                return 0;
+            }
+
+            return asr;
+        }
+
+        /// <summary>
+        /// Calculates the Adjusted Sharpe Ratio (Pezier and White, 2006) given an annualized Sharpe ratio,
+        /// scaling sample skewness and excess kurtosis to the annual horizon.
+        /// </summary>
+        /// <param name="listPerformance">The per-period performance samples to use for skewness and excess kurtosis</param>
+        /// <param name="annualizedSharpeRatio">The annualized Sharpe ratio</param>
+        /// <param name="tradingDaysPerYear">The number of trading days per year</param>
+        /// <returns>The annualized adjusted Sharpe ratio</returns>
+        public static decimal AdjustedSharpeRatioFromAnnualized(List<double> listPerformance, decimal annualizedSharpeRatio, int tradingDaysPerYear)
+        {
+            return AdjustedSharpeRatioFromAnnualized(listPerformance, (double)annualizedSharpeRatio, (double)tradingDaysPerYear).SafeDecimalCast();
+        }
+
+        /// <summary>
         /// Calculate the drawdown between a high and current value
         /// </summary>
         /// <param name="current">Current value</param>
