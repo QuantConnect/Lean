@@ -35,6 +35,12 @@ namespace QuantConnect.Tests.Common.Securities
             {"QQQ", "QQQ RIWIV7K5Z9LX"},
             {"QQQQ", "QQQ RIWIV7K5Z9LX"}
         };
+        private static readonly Dictionary<string, string> _cusipWithCheckDigit = new Dictionary<string, string>
+        {
+            {"03783310", "037833100"},
+            {"38259P70", "38259P706"},
+            {"73935A10", "73935A104"}
+        };
 
         [OneTimeSetUp]
         public void SetUp()
@@ -48,7 +54,7 @@ namespace QuantConnect.Tests.Common.Securities
 
             var securityDatabaseLines = string.Join("\n",
                 "AAPL R735QTJ8XC9X,03783310,BBG000B9XRY4,2046251,US0378331005,320193",
-                "GOOG T1AZ164W5VTX,38259P50,BBG000BHSKN9,B020QX2,US38259P5089,",
+                "GOOG T1AZ164W5VTX,38259P508,BBG000BHSKN9,B020QX2,US38259P5089,",
                 "GOOCV VP83T1ZUHROL,38259P70,BBG002W96FT9,BKM4JZ7,US38259P7069,",
                 "QQQ RIWIV7K5Z9LX,73935A10,BBG000BSWKH7,BDQYP67,US46090E1038,");
             File.WriteAllText(securityDatabaseFilePath,securityDatabaseLines);
@@ -109,10 +115,20 @@ namespace QuantConnect.Tests.Common.Securities
         [TestCase("73935A10", 1999, 3, 11, "QQQ", Market.USA)]
         [TestCase("73935A10", 1999, 3, 10, "QQQ", Market.USA)]
         [TestCase("73935A10", 1998, 5, 21, "QQQ", Market.USA)]
+        [TestCase("037833100", 2021, 9, 9, "AAPL", Market.USA)]
+        [TestCase("38259P706", 2021, 9, 9, "GOOG", Market.USA)]
+        [TestCase("38259p706", 2014, 4, 2, "GOOCV", Market.USA)]
+        [TestCase("73935a104", 2011, 3, 22, "QQQQ", Market.USA)]
+        [TestCase("73935A104", 1998, 5, 21, "QQQ", Market.USA)]
         [TestCase("", 2021, 9, 9, null, Market.USA)]
         [TestCase("ABCDEF99", 2021, 9, 9, null, Market.USA)]
         [TestCase(null, 2021, 9, 9, null, Market.USA)]
         [TestCase("1", 2021, 9, 9, null, Market.USA)]
+        [TestCase("0378331", 2021, 9, 9, null, Market.USA)]
+        [TestCase("037833101", 2021, 9, 9, null, Market.USA)]
+        [TestCase("38259P705", 2021, 9, 9, null, Market.USA)]
+        [TestCase("0378331000", 2021, 9, 9, null, Market.USA)]
+        [TestCase("037833!0", 2021, 9, 9, null, Market.USA)]
         public void ResolvesCUSIP(string cusip, int year, int month, int day, string expectedTicker, string expectedMarket)
         {
             var tradingDate = new DateTime(year, month, day);
@@ -124,7 +140,21 @@ namespace QuantConnect.Tests.Common.Securities
 
             AssertSymbol(symbol, expectedTicker, expectedSid, expectedMarket);
 
-            AssertSymbolIdentifier(symbol, _instance.CUSIP(symbol), cusip);
+            // the resolved CUSIP always carries the check digit, even when looked up by the 8-character base
+            var expectedCusip = cusip != null && _cusipWithCheckDigit.TryGetValue(cusip.ToUpperInvariant(), out var fullCusip) ? fullCusip : cusip;
+            AssertSymbolIdentifier(symbol, _instance.CUSIP(symbol), expectedCusip);
+        }
+
+        [TestCase("38259P50")]
+        [TestCase("38259P508")]
+        [TestCase("38259p508")]
+        public void ResolvesCUSIPStoredWithCheckDigit(string cusip)
+        {
+            var symbol = _instance.CUSIP(cusip, new DateTime(2021, 9, 9));
+
+            Assert.IsNotNull(symbol);
+            Assert.AreEqual("GOOG T1AZ164W5VTX", symbol.ID.ToString());
+            Assert.AreEqual("38259P508", _instance.CUSIP(symbol));
         }
 
         [TestCaseSource(nameof(SymbolToCUSIPTestCases))]
@@ -292,11 +322,11 @@ namespace QuantConnect.Tests.Common.Securities
 
         private static TestCaseData[] SymbolToCUSIPTestCases => new[]
         {
-            new TestCaseData(Symbol.Create("AAPL", SecurityType.Equity, Market.USA), "03783310"),
-            new TestCaseData(Symbol.Create("GOOG", SecurityType.Equity, Market.USA), "38259P70"),
-            new TestCaseData(Symbol.Create("GOOCV", SecurityType.Equity, Market.USA), "38259P70"),
-            new TestCaseData(Symbol.Create("QQQ", SecurityType.Equity, Market.USA), "73935A10"),
-            new TestCaseData(Symbol.Create("QQQQ", SecurityType.Equity, Market.USA), "73935A10"),
+            new TestCaseData(Symbol.Create("AAPL", SecurityType.Equity, Market.USA), "037833100"),
+            new TestCaseData(Symbol.Create("GOOG", SecurityType.Equity, Market.USA), "38259P706"),
+            new TestCaseData(Symbol.Create("GOOCV", SecurityType.Equity, Market.USA), "38259P706"),
+            new TestCaseData(Symbol.Create("QQQ", SecurityType.Equity, Market.USA), "73935A104"),
+            new TestCaseData(Symbol.Create("QQQQ", SecurityType.Equity, Market.USA), "73935A104"),
             new TestCaseData(Symbol.Create("ABCD", SecurityType.Equity, Market.USA), null),
             new TestCaseData(null, null)
         };
