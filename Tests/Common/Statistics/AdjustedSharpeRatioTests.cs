@@ -79,9 +79,11 @@ namespace QuantConnect.Tests.Common.Statistics
             var annualizedSharpe = observedSharpe * Math.Sqrt(tradingDaysPerYear);
 
             var directAsr = QuantConnect.Statistics.Statistics.AdjustedSharpeRatio(performance, riskFreeRate, tradingDaysPerYear);
-            var scaledOverloadAsr = QuantConnect.Statistics.Statistics.AdjustedSharpeRatio(performance, annualizedSharpe, tradingDaysPerYear);
+            var scaledOverloadAsr = QuantConnect.Statistics.Statistics.AdjustedSharpeRatioFromAnnualized(performance, annualizedSharpe, tradingDaysPerYear);
+            var scaledOverloadDecimal = QuantConnect.Statistics.Statistics.AdjustedSharpeRatioFromAnnualized(performance, (decimal)annualizedSharpe, (int)tradingDaysPerYear);
 
             Assert.AreEqual(directAsr, scaledOverloadAsr, 1e-10);
+            Assert.AreEqual((decimal)directAsr, scaledOverloadDecimal);
         }
 
         [Test]
@@ -110,10 +112,16 @@ namespace QuantConnect.Tests.Common.Statistics
                 monthlyReturns.Add(compounded);
             }
 
+            // Baseline unadjusted annualized Sharpe ratio should be consistent across horizons (tight tolerance)
+            var dailySharpe = QuantConnect.Statistics.Statistics.SharpeRatio(dailyReturns, 0.0, 252.0);
+            var monthlySharpe = QuantConnect.Statistics.Statistics.SharpeRatio(monthlyReturns, 0.0, 252.0 / chunkSize);
+            Assert.AreEqual(dailySharpe, monthlySharpe, 0.05);
+
             var dailyAsr = QuantConnect.Statistics.Statistics.AdjustedSharpeRatio(dailyReturns, 0.0, 252.0);
             var monthlyAsr = QuantConnect.Statistics.Statistics.AdjustedSharpeRatio(monthlyReturns, 0.0, 252.0 / chunkSize);
 
-            // Both frequencies estimate annualized ASR consistently without being distorted by unscaled daily kurtosis
+            // Both frequencies estimate annualized ASR consistently without being distorted by unscaled daily kurtosis.
+            // Note: 0.15 tolerance accounts for sample estimation noise in higher moments (skewness and heavy-tailed kurtosis) across 120 monthly points.
             Assert.AreEqual(dailyAsr, monthlyAsr, 0.15);
         }
 

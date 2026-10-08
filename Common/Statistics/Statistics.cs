@@ -302,7 +302,7 @@ namespace QuantConnect.Statistics
         /// <param name="annualizedSharpeRatio">The annualized Sharpe ratio</param>
         /// <param name="tradingDaysPerYear">The number of trading days per year</param>
         /// <returns>The annualized adjusted Sharpe ratio</returns>
-        public static double AdjustedSharpeRatio(List<double> listPerformance, double annualizedSharpeRatio, double tradingDaysPerYear)
+        public static double AdjustedSharpeRatioFromAnnualized(List<double> listPerformance, double annualizedSharpeRatio, double tradingDaysPerYear = 252)
         {
             if (listPerformance.Count < 3 || annualizedSharpeRatio == 0 || tradingDaysPerYear <= 0)
             {
@@ -340,9 +340,9 @@ namespace QuantConnect.Statistics
         /// <param name="annualizedSharpeRatio">The annualized Sharpe ratio</param>
         /// <param name="tradingDaysPerYear">The number of trading days per year</param>
         /// <returns>The annualized adjusted Sharpe ratio</returns>
-        public static decimal AdjustedSharpeRatio(List<double> listPerformance, decimal annualizedSharpeRatio, int tradingDaysPerYear)
+        public static decimal AdjustedSharpeRatioFromAnnualized(List<double> listPerformance, decimal annualizedSharpeRatio, int tradingDaysPerYear)
         {
-            return AdjustedSharpeRatio(listPerformance, (double)annualizedSharpeRatio, (double)tradingDaysPerYear).SafeDecimalCast();
+            return AdjustedSharpeRatioFromAnnualized(listPerformance, (double)annualizedSharpeRatio, (double)tradingDaysPerYear).SafeDecimalCast();
         }
 
         /// <summary>
