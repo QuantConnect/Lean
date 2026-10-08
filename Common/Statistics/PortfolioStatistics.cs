@@ -299,7 +299,7 @@ namespace QuantConnect.Statistics
 
             var riskFreeRate = riskFreeInterestRateModel.GetAverageRiskFreeRate(equity.Select(x => x.Key));
             SharpeRatio = AnnualStandardDeviation == 0 ? 0 : Statistics.SharpeRatio(annualPerformance, AnnualStandardDeviation, riskFreeRate);
-            AdjustedSharpeRatio = Statistics.AdjustedSharpeRatio(listPerformance, SharpeRatio);
+            AdjustedSharpeRatio = Statistics.AdjustedSharpeRatio(listPerformance, (double)riskFreeRate / tradingDaysPerYear, tradingDaysPerYear).SafeDecimalCast();
 
             var annualDownsideDeviation = Statistics.AnnualDownsideStandardDeviation(listPerformance, tradingDaysPerYear).SafeDecimalCast();
             SortinoRatio = annualDownsideDeviation == 0 ? 0 : Statistics.SharpeRatio(annualPerformance, annualDownsideDeviation, riskFreeRate);
