@@ -704,15 +704,6 @@ namespace QuantConnect
             {
                 return Invariant($"A short sale of {order.Symbol.Value} at eToro needs the stop loss rate. Set {nameof(EtoroOrderProperties.StopLossRate)} in {nameof(EtoroOrderProperties)} to the absolute price at which eToro closes the short position.");
             }
-
-            /// <summary>
-            /// Returns a message explaining that eToro has no order update.
-            /// </summary>
-            [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public static string UnsupportedOrderUpdate(Orders.Order order)
-            {
-                return Invariant($"eToro does not support updating orders. Cancel order {order.Id} and place a new one.");
-            }
         }
 
         /// <summary>
