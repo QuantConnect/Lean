@@ -692,6 +692,30 @@ namespace QuantConnect
         }
 
         /// <summary>
+        /// Provides user-facing messages for the <see cref="Brokerages.EtoroBrokerageModel"/> class and its consumers or related classes
+        /// </summary>
+        public static class EtoroBrokerageModel
+        {
+            /// <summary>
+            /// Returns a message explaining that a short sale needs the stop loss rate in the eToro order properties.
+            /// </summary>
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public static string ShortSaleRequiresStopLossRate(Orders.Order order)
+            {
+                return Invariant($"A short sale of {order.Symbol.Value} at eToro needs the stop loss rate. Set {nameof(EtoroOrderProperties.StopLossRate)} in {nameof(EtoroOrderProperties)} to the absolute price at which eToro closes the short position.");
+            }
+
+            /// <summary>
+            /// Returns a message explaining that eToro has no order update.
+            /// </summary>
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public static string UnsupportedOrderUpdate(Orders.Order order)
+            {
+                return Invariant($"eToro does not support updating orders. Cancel order {order.Id} and place a new one.");
+            }
+        }
+
+        /// <summary>
         /// Provides user-facing messages for the <see cref="Brokerages.RBIBrokerageModel"/> class and its consumers or related classes
         /// </summary>
         public static class RBIBrokerageModel
