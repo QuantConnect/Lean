@@ -122,6 +122,53 @@ namespace QuantConnect.Tests.Python
         }
 
         [Test]
+        public void MacroIndicatorReaderSkipsRowsWithoutValue()
+        {
+            using (Py.GIL())
+            {
+                using var module = LoadAlgorithmModule();
+                using var pythonType = module.GetAttr("FXMacroDataMacroIndicator");
+                dynamic pythonTypeDynamic = pythonType;
+
+                var type = Extensions.CreateType(pythonType);
+                var reader = new PythonData(pythonTypeDynamic());
+                var config = CreateConfig(type);
+
+                var fixture =
+                    @"{""data"":["
+                    + @"{""announcement_id"":""missing-value"","
+                    + @"""date"":""2026-09-30"","
+                    + @"""val"":null,"
+                    + @"""announcement_datetime"":1790771400},"
+                    + @"{""announcement_id"":""valid"","
+                    + @"""date"":""2026-08-31"","
+                    + @"""val"":3.4,"
+                    + @"""announcement_datetime"":1789129800}"
+                    + @"]}";
+
+                var collection = reader.Reader(
+                    config,
+                    fixture,
+                    new DateTime(2026, 10, 1),
+                    false
+                ) as BaseDataCollection;
+
+                Assert.IsNotNull(collection);
+
+                var points = collection.Data
+                    .Cast<PythonData>()
+                    .ToList();
+
+                Assert.AreEqual(1, points.Count);
+                Assert.AreEqual(
+                    "valid",
+                    points[0]["announcement_id"]
+                );
+                Assert.AreEqual(3.4m, points[0].Value);
+            }
+        }
+
+        [Test]
         public void ReleaseCalendarReaderUsesAnnouncementDatetimeAndMetadata()
         {
             using (Py.GIL())

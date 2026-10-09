@@ -15,12 +15,26 @@ def _collect_paginated_rows(fetch_page):
     """Collect all list-endpoint rows using limit/offset pagination."""
     offset = 0
     rows = []
+    seen_ids = set()
 
     while True:
         payload = fetch_page(_FXMACRODATA_PAGE_LIMIT, offset)
 
         page_rows = payload.get("data", [])
-        rows.extend(page_rows)
+
+        for row in page_rows:
+            row_id = row.get("announcement_id")
+
+            if row_id is None:
+                row_id = row.get("calendar_event_id")
+
+            if row_id is not None:
+                if row_id in seen_ids:
+                    continue
+
+                seen_ids.add(row_id)
+
+            rows.append(row)
 
         pagination = payload.get("pagination", {})
 
@@ -224,8 +238,13 @@ class FXMacroDataCustomDataRegressionAlgorithm(QCAlgorithm):
         pages = {
             0: {
                 "data": [
-                    {"id": 1},
-                    {"id": 2}
+                    {
+                        "announcement_id": "announcement-a"
+                    },
+                    {
+                        "announcement_id": "announcement-b",
+                        "version": "first"
+                    }
                 ],
                 "pagination": {
                     "limit": 100,
@@ -236,12 +255,18 @@ class FXMacroDataCustomDataRegressionAlgorithm(QCAlgorithm):
             },
             2: {
                 "data": [
-                    {"id": 3}
+                    {
+                        "announcement_id": "announcement-b",
+                        "version": "duplicate"
+                    },
+                    {
+                        "announcement_id": "announcement-c"
+                    }
                 ],
                 "pagination": {
                     "limit": 100,
                     "offset": 2,
-                    "returned_count": 1,
+                    "returned_count": 2,
                     "has_more": False
                 }
             }
@@ -253,14 +278,82 @@ class FXMacroDataCustomDataRegressionAlgorithm(QCAlgorithm):
 
         rows = _collect_paginated_rows(fetch_page)
 
-        if [row["id"] for row in rows] != [1, 2, 3]:
+        if [
+            row["announcement_id"]
+            for row in rows
+        ] != [
+            "announcement-a",
+            "announcement-b",
+            "announcement-c"
+        ]:
             raise AssertionError(
-                f"Unexpected pagination rows: {rows}"
+                f"Unexpected de-duplicated announcement rows: {rows}"
+            )
+
+        if rows[1]["version"] != "first":
+            raise AssertionError(
+                "Pagination de-duplication did not preserve "
+                "the first occurrence"
             )
 
         if calls != [(100, 0), (100, 2)]:
             raise AssertionError(
                 f"Unexpected pagination requests: {calls}"
+            )
+
+        calendar_pages = {
+            0: {
+                "data": [
+                    {
+                        "calendar_event_id": "calendar-a"
+                    },
+                    {
+                        "calendar_event_id": "calendar-b"
+                    }
+                ],
+                "pagination": {
+                    "limit": 100,
+                    "offset": 0,
+                    "returned_count": 2,
+                    "has_more": True
+                }
+            },
+            2: {
+                "data": [
+                    {
+                        "calendar_event_id": "calendar-b"
+                    },
+                    {
+                        "calendar_event_id": "calendar-c"
+                    }
+                ],
+                "pagination": {
+                    "limit": 100,
+                    "offset": 2,
+                    "returned_count": 2,
+                    "has_more": False
+                }
+            }
+        }
+
+        def fetch_calendar_page(limit, offset):
+            return calendar_pages[offset]
+
+        calendar_rows = _collect_paginated_rows(
+            fetch_calendar_page
+        )
+
+        if [
+            row["calendar_event_id"]
+            for row in calendar_rows
+        ] != [
+            "calendar-a",
+            "calendar-b",
+            "calendar-c"
+        ]:
+            raise AssertionError(
+                f"Unexpected de-duplicated calendar rows: "
+                f"{calendar_rows}"
             )
 
     def _verify_indicator_history(self):
@@ -373,8 +466,9 @@ class FXMacroDataMacroIndicator(PythonData):
 
         for row in payload["data"]:
             announcement_datetime = row.get("announcement_datetime")
+            value = row.get("val")
 
-            if announcement_datetime is None:
+            if announcement_datetime is None or value is None:
                 continue
 
             point = FXMacroDataMacroIndicator()
@@ -387,7 +481,7 @@ class FXMacroDataMacroIndicator(PythonData):
                 timezone.utc
             ).replace(tzinfo=None)
 
-            point.value = float(row["val"])
+            point.value = float(value)
 
             # row["date"] is the economic reference period.
             point["reference_date"] = row.get("date")
