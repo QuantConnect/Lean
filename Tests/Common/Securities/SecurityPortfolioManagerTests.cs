@@ -2439,6 +2439,74 @@ namespace QuantConnect.Tests.Common.Securities
             Assert.AreEqual(initialCash + cashDifference, algorithm.Portfolio.CashBook.TotalValueInAccountCurrency);
         }
 
+        // split factors as derived from factor file values rounded to 8 decimals, land just off the exact ratio
+        [TestCase(16, 8.00000003210186, 2, true)] // GE 2021-08-02 1 for 8 reverse split
+        [TestCase(16, 8.00000003210186, 2, false)]
+        [TestCase(-16, 8.00000003210186, -2, true)]
+        [TestCase(100, 0.1428572, 700, true)] // AAPL 2014-06-09 7 for 1 split
+        [TestCase(100, 0.1428572, 700, false)]
+        [TestCase(100, 0.500001120002688, 200, true)] // AAPL 2000-06-21 2 for 1 split
+        [TestCase(100, 0.500001120002688, 200, false)]
+        [TestCase(-100, 0.500001120002688, -200, true)]
+        [TestCase(1000, 0.500001120002688, 2000, true)]
+        public void SplitWithExactWholeShareEntitlementKeepsAllShares(int initialQuantity, decimal splitFactor, int expectedQuantity, bool hasData)
+        {
+            var algorithm = new QCAlgorithm();
+            algorithm.SubscriptionManager.SetDataManager(new DataManagerStub(algorithm));
+            algorithm.SetLiveMode(true);
+
+            var spy = algorithm.AddEquity("SPY");
+            if (hasData)
+            {
+                spy.SetMarketPrice(new Tick(new DateTime(2000, 01, 01), Symbols.SPY, 100m, 99m, 101m) { TickType = TickType.Trade });
+            }
+            spy.Holdings.SetHoldings(100m, initialQuantity);
+            var initialCash = algorithm.Portfolio.CashBook.TotalValueInAccountCurrency;
+
+            var split = new Split(Symbols.SPY, new DateTime(2000, 01, 01), 100, splitFactor, SplitType.SplitOccurred);
+            algorithm.Portfolio.ApplySplit(split,
+                spy,
+                algorithm.LiveMode,
+                algorithm.SubscriptionManager.SubscriptionDataConfigService
+                    .GetSubscriptionDataConfigs(spy.Symbol)
+                    .DataNormalizationMode());
+
+            // the whole entitlement is kept as shares, no cash in lieu
+            Assert.AreEqual(expectedQuantity, spy.Holdings.Quantity);
+            Assert.AreEqual(initialCash, algorithm.Portfolio.CashBook.TotalValueInAccountCurrency);
+        }
+
+        // the shortfall below 200 post split shares, measured in pre split shares, is 200 * splitFactor - 100
+        [TestCase(100, 0.500045, 200, false)] // 0.009 short, under the tolerance: rounding, snapped to the whole share
+        [TestCase(100, 0.50006, 199, true)] // 0.012 short, over the tolerance: kept as cash in lieu
+        [TestCase(17, 8.00000003210186, 2, true)] // genuine 2.125 share entitlement stays fractional
+        [TestCase(-17, 8.00000003210186, -2, true)]
+        public void SplitOnlySnapsShortfallsWithinTolerance(int initialQuantity, decimal splitFactor, int expectedQuantity, bool expectCashInLieu)
+        {
+            var algorithm = new QCAlgorithm();
+            algorithm.SubscriptionManager.SetDataManager(new DataManagerStub(algorithm));
+            algorithm.SetLiveMode(true);
+
+            var spy = algorithm.AddEquity("SPY");
+            spy.SetMarketPrice(new Tick(new DateTime(2000, 01, 01), Symbols.SPY, 100m, 99m, 101m) { TickType = TickType.Trade });
+            spy.Holdings.SetHoldings(100m, initialQuantity);
+            var initialCash = algorithm.Portfolio.CashBook.TotalValueInAccountCurrency;
+
+            var split = new Split(Symbols.SPY, new DateTime(2000, 01, 01), 100, splitFactor, SplitType.SplitOccurred);
+            algorithm.Portfolio.ApplySplit(split,
+                spy,
+                algorithm.LiveMode,
+                algorithm.SubscriptionManager.SubscriptionDataConfigService
+                    .GetSubscriptionDataConfigs(spy.Symbol)
+                    .DataNormalizationMode());
+
+            Assert.AreEqual(expectedQuantity, spy.Holdings.Quantity);
+
+            var expectedCashInLieu = expectCashInLieu ? (initialQuantity / splitFactor - expectedQuantity) * spy.Price : 0m;
+            Assert.AreEqual(expectCashInLieu, expectedCashInLieu != 0m);
+            Assert.AreEqual(initialCash + expectedCashInLieu, algorithm.Portfolio.CashBook.TotalValueInAccountCurrency);
+        }
+
         [TestCase(true)]
         [TestCase(false)]
         public void SplitPartialSharesCashInLieuIsConvertedToAccountCurrency(bool hasData)

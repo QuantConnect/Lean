@@ -34,6 +34,12 @@ namespace QuantConnect.Securities
     /// </summary>
     public class SecurityPortfolioManager : ExtendedDictionary<Symbol, SecurityHolding>, IDictionary<Symbol, SecurityHolding>, ISecurityProvider
     {
+        /// <summary>
+        /// Maximum shortfall, in pre split shares, below a whole post split share that is attributed to
+        /// split factor rounding rather than a real fractional entitlement
+        /// </summary>
+        private const decimal SplitWholeShareTolerance = 0.01m;
+
         private Cash _baseCurrencyCash;
         private bool _setCashWasCalled;
         private bool _baseCashSymbolSetExplicitly;
@@ -832,6 +838,17 @@ namespace QuantConnect.Securities
 
             // we need to modify our holdings in lght of the split factor
             var quantity = security.Holdings.Quantity / split.SplitFactor;
+
+            // the split factor is derived from factor file values rounded to a few decimals, so an entitlement
+            // that should be an exact whole number of shares can land just below it, e.g. 16 / 8.00000003 = 1.99999999.
+            // Snap it to the whole share when the shortfall, measured in pre split shares, is negligible,
+            // else the truncation below would drop a whole share and pay it out as cash in lieu
+            var wholeShares = Math.Sign(quantity) * Math.Ceiling(Math.Abs(quantity));
+            if (Math.Abs(wholeShares - quantity) * split.SplitFactor < SplitWholeShareTolerance)
+            {
+                quantity = wholeShares;
+            }
+
             var avgPrice = security.Holdings.AveragePrice * split.SplitFactor;
 
             // we'll model this as a cash adjustment. The security is priced in its quote currency,
