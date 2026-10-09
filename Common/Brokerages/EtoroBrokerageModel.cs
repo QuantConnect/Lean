@@ -101,7 +101,6 @@ namespace QuantConnect.Brokerages
                 return false;
             }
 
-            // eToro refuses a short sale without a stop loss rate, so the order must carry a positive one in its properties.
             if (BrokerageExtensions.GetOrderPosition(order.Direction, security.Holdings.Quantity) == OrderPosition.SellToOpen
                 && order.Properties is not EtoroOrderProperties { StopLossRate: > 0 })
             {
@@ -129,7 +128,7 @@ namespace QuantConnect.Brokerages
         public override bool CanUpdateOrder(Security security, Order order, UpdateOrderRequest request, out BrokerageMessageEvent message)
         {
             message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
-                Messages.EtoroBrokerageModel.UnsupportedOrderUpdate(order));
+                Messages.DefaultBrokerageModel.OrderUpdateNotSupported);
             return false;
         }
     }
