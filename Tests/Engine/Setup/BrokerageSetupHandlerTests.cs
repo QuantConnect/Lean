@@ -33,6 +33,7 @@ using QuantConnect.Packets;
 using QuantConnect.Securities;
 using QuantConnect.Securities.Option.StrategyMatcher;
 using QuantConnect.Securities.Option;
+using QuantConnect.Securities.Future;
 using QuantConnect.Tests.Engine.DataFeeds;
 using QuantConnect.Util;
 using Bitcoin = QuantConnect.Algorithm.CSharp.LiveTradingFeaturesAlgorithm.Bitcoin;
@@ -499,6 +500,53 @@ namespace QuantConnect.Tests.Engine.Setup
 
             var last = security.GetLastData();
             Assert.IsTrue((DateTime.UtcNow.ConvertFromUtc(security.Exchange.TimeZone) - last.Time) < TimeSpan.FromSeconds(1));
+        }
+
+        [TestCase(3, 1.12686968, 1.12163555)]
+        [TestCase(-2, 4500.25, 4550.75)]
+        [TestCase(5, 100, 100)]
+        public void SeedsSettledProfitOfExistingFutureHolding(decimal quantity, decimal averagePrice, decimal marketPrice)
+        {
+            var symbol = Symbols.Fut_SPY_Feb19_2016;
+            var algorithm = new TestAlgorithm();
+            algorithm.SetHistoryProvider(new BrokerageTransactionHandlerTests.BrokerageTransactionHandlerTests.EmptyHistoryProvider());
+            var job = GetJob();
+
+            var resultHandler = new Mock<IResultHandler>();
+            var transactionHandler = new Mock<ITransactionHandler>();
+            var realTimeHandler = new Mock<IRealTimeHandler>();
+            var brokerage = new Mock<IBrokerage>();
+
+            brokerage.Setup(x => x.IsConnected).Returns(true);
+            brokerage.Setup(x => x.AccountBaseCurrency).Returns(Currencies.USD);
+            // the brokerage cash balance already holds the P&L of the position since entry (variation margin)
+            brokerage.Setup(x => x.GetCashBalance()).Returns(new List<CashAmount> { new CashAmount(100000, Currencies.USD) });
+            brokerage.Setup(x => x.GetAccountHoldings()).Returns(new List<Holding>
+            {
+                new Holding { Symbol = symbol, Quantity = quantity, AveragePrice = averagePrice, MarketPrice = marketPrice }
+            });
+            brokerage.Setup(x => x.GetOpenOrders()).Returns(new List<Order>());
+
+            using var setupHandler = new BrokerageSetupHandler();
+
+            IBrokerageFactory factory;
+            setupHandler.CreateBrokerage(job, algorithm, out factory);
+            factory.Dispose();
+
+            Assert.IsTrue(setupHandler.Setup(new SetupHandlerParameters(_dataManager.UniverseSelection, algorithm, brokerage.Object, job, resultHandler.Object,
+                transactionHandler.Object, realTimeHandler.Object, TestGlobals.DataCacheProvider, TestGlobals.MapFileProvider)));
+
+            var security = algorithm.Securities[symbol];
+            var holding = (FutureHolding)security.Holdings;
+            var expectedSettledProfit = (marketPrice - averagePrice) * quantity * security.SymbolProperties.ContractMultiplier;
+
+            // the position starts settled at the loaded market price
+            Assert.AreEqual(expectedSettledProfit, holding.GetSettledProfitAmount().Amount);
+            Assert.AreEqual(holding.TotalCloseProfit(includeFees: false), holding.SettledProfit);
+            // so the unsettled profit is only the cost of closing, and the P&L since entry is not counted a second time
+            Assert.AreEqual(holding.TotalCloseProfit() - holding.TotalCloseProfit(includeFees: false), holding.UnsettledProfit);
+            // the cash balance is taken from the brokerage as is
+            Assert.AreEqual(100000, algorithm.Portfolio.CashBook[Currencies.USD].Amount);
         }
 
         [Test]
