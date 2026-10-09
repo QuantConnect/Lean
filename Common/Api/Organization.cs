@@ -50,6 +50,12 @@ namespace QuantConnect.Api
         public DataAgreement DataAgreement { get; set; }
 
         /// <summary>
+        /// Whether the organization may export data derivatives from the ObjectStore
+        /// </summary>
+        [JsonProperty(PropertyName = "objectStoreExportDerivative")]
+        public bool ObjectStoreExportDerivative { get; set; }
+
+        /// <summary>
         /// Organization Product Subscriptions
         /// </summary>
         public List<Product> Products { get; set; }
