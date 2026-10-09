@@ -47,6 +47,7 @@ namespace QuantConnect.Tests.API
             Assert.IsTrue(ApiTestBase.IsValidJson(stringRepresentation));
 
             Assert.IsNotEmpty(organization.Type);
+            Assert.IsTrue(organization.ObjectStoreExportDerivative);
             Assert.AreNotEqual(default(DateTime), organization.DataAgreement.Signed);
             Assert.AreNotEqual(0, organization.DataAgreement.EpochSignedTime);
             Assert.AreNotEqual(0, organization.Credit.Balance);
