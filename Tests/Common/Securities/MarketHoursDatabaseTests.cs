@@ -240,6 +240,10 @@ namespace QuantConnect.Tests.Common.Securities
         [TestCase("ZN", Market.CBOT, "1/9/2025", "12:15:00", "17:00:00")]
         [TestCase("ZC", Market.CBOT, "1/9/2025", "12:15:00", "19:00:00")]
         [TestCase("YM", Market.CBOT, "1/9/2025", "09:30:00", "18:00:00")]
+        [TestCase("RS1", Market.CME, "7/3/2023", "13:15:00", "18:00:00")]
+        [TestCase("SDA", Market.CME, "7/3/2024", "13:15:00", "18:00:00")]
+        [TestCase("ESG", Market.CME, "11/29/2024", "13:15:00", null)]
+        [TestCase("TPY", Market.CME, "11/29/2024", "13:15:00", null)]
         public void CorrectlyReadsCMEGroupFutureShortenedSessions(string futureTicker, string market, string date, string earlyClose, string lateOpen)
         {
             var provider = MarketHoursDatabase.FromDataFolder();
