@@ -44,8 +44,9 @@ namespace QuantConnect.Tests.Common.Brokerages
                 yield return new(OrderType.StopLimit, TimeInForce.GoodTilCanceled, false);
                 yield return new(OrderType.StopLimit, TimeInForce.GoodTilDate(DateTime.UtcNow.AddDays(7)), false);
 
-                yield return new(OrderType.Limit, TimeInForce.Day, true); // The only supported case
-                yield return new(OrderType.Limit, TimeInForce.GoodTilCanceled, false);
+                // Alpaca accepts extended hours limit orders with the day or the gtc time in force only
+                yield return new(OrderType.Limit, TimeInForce.Day, true);
+                yield return new(OrderType.Limit, TimeInForce.GoodTilCanceled, true);
                 yield return new(OrderType.Limit, TimeInForce.GoodTilDate(DateTime.UtcNow.AddDays(7)), false);
             }
         }
