@@ -56,7 +56,9 @@ namespace QuantConnect.Tests.Common.Securities
                 "AAPL R735QTJ8XC9X,03783310,BBG000B9XRY4,2046251,US0378331005,320193",
                 "GOOG T1AZ164W5VTX,38259P508,BBG000BHSKN9,B020QX2,US38259P5089,",
                 "GOOCV VP83T1ZUHROL,38259P70,BBG002W96FT9,BKM4JZ7,US38259P7069,",
-                "QQQ RIWIV7K5Z9LX,73935A10,BBG000BSWKH7,BDQYP67,US46090E1038,");
+                "QQQ RIWIV7K5Z9LX,73935A10,BBG000BSWKH7,BDQYP67,US46090E1038,",
+                // shares AAPL's CUSIP base, as a reused or re-issued CUSIP would
+                "SPY R735QTJ8XC9X,037833100,,,,");
             File.WriteAllText(securityDatabaseFilePath,securityDatabaseLines);
         }
 
@@ -155,6 +157,18 @@ namespace QuantConnect.Tests.Common.Securities
             Assert.IsNotNull(symbol);
             Assert.AreEqual("GOOG T1AZ164W5VTX", symbol.ID.ToString());
             Assert.AreEqual("38259P508", _instance.CUSIP(symbol));
+        }
+
+        [TestCase("03783310")]
+        [TestCase("037833100")]
+        public void ResolvesCUSIPSharedByDefinitionsToTheFirstOne(string cusip)
+        {
+            // both AAPL and SPY definitions carry the 037833100 CUSIP, AAPL comes first in the security database
+            var symbol = _instance.CUSIP(cusip, new DateTime(2021, 9, 9));
+
+            Assert.IsNotNull(symbol);
+            Assert.AreEqual("AAPL R735QTJ8XC9X", symbol.ID.ToString());
+            Assert.AreEqual("037833100", _instance.CUSIP(Symbol.Create("SPY", SecurityType.Equity, Market.USA)));
         }
 
         [TestCaseSource(nameof(SymbolToCUSIPTestCases))]
