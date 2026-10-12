@@ -1466,6 +1466,31 @@ namespace QuantConnect.Tests.Engine.BrokerageTransactionHandlerTests
         }
 
         [Test]
+        public void BrokerageOrderEventsCarryTheOrderType()
+        {
+            _transactionHandler = new TestBrokerageTransactionHandler();
+            using var brokerage = new NoSubmitTestBrokerage(_algorithm);
+            _transactionHandler.Initialize(_algorithm, brokerage, new BacktestingResultHandler());
+
+            var security = _algorithm.Securities[_symbol];
+            var price = 1.12m;
+            security.SetMarketPrice(new Tick(DateTime.Now, security.Symbol, price, price, price));
+            var orderRequest = new SubmitOrderRequest(OrderType.Limit, security.Type, security.Symbol, 1000, 0, 1.11m, DateTime.Now, "");
+            _algorithm.Transactions.SetOrderProcessor(_transactionHandler);
+            _transactionHandler.Process(orderRequest);
+            _transactionHandler.PumpPendingRequests();
+
+            // brokerages building events from the order id alone do not know the order type
+            var order = _algorithm.Transactions.GetOpenOrders().Single();
+            brokerage.PublishOrderEvent(new OrderEvent(order.Id, order.Symbol, _algorithm.UtcTime, OrderStatus.Submitted,
+                order.Direction, 0, 0, OrderFee.Zero));
+
+            var orderEvent = _algorithm.OrderEvents.Single(orderEvent => orderEvent.Status == OrderStatus.Submitted);
+            Assert.AreEqual(OrderType.Limit, orderEvent.OrderType);
+            Assert.AreEqual(order.Type, orderEvent.OrderType);
+        }
+
+        [Test]
         public void CancelOrderRequestShouldFailForFilledOrder()
         {
             // Initializes the transaction handler

@@ -115,6 +115,12 @@ namespace QuantConnect.Orders.Serialization
         public OrderDirection Direction { get; set; }
 
         /// <summary>
+        /// The type of the order this event comes from. Null for payloads that predate this property
+        /// </summary>
+        [JsonProperty("orderType", DefaultValueHandling = DefaultValueHandling.Ignore), JsonConverter(typeof(StringEnumConverter), true)]
+        public OrderType? OrderType { get; set; }
+
+        /// <summary>
         /// Any message from the exchange.
         /// </summary>
         [DefaultValue(""), JsonProperty("message", DefaultValueHandling = DefaultValueHandling.Ignore)]
@@ -179,6 +185,7 @@ namespace QuantConnect.Orders.Serialization
             FillPriceCurrency = orderEvent.FillPriceCurrency;
             FillQuantity = orderEvent.FillQuantity;
             Direction = orderEvent.Direction;
+            OrderType = orderEvent.OrderType;
             Message = orderEvent.Message;
             IsAssignment = orderEvent.IsAssignment;
             IsInTheMoney = orderEvent.IsInTheMoney;
