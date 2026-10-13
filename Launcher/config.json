@@ -299,6 +299,7 @@
   "etoro-api-url": "https://public-api.etoro.com",
   "etoro-api-key": "",
   "etoro-user-key": "",
+  "etoro-demo-environment": true,
 
   // Exante trading configuration
   // client-id, application-id, shared-key are required to access Exante REST API
