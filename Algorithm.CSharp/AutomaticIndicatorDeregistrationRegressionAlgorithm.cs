@@ -15,15 +15,17 @@
 
 using System.Collections.Generic;
 using QuantConnect.Data;
+using QuantConnect.Data.Market;
+using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Indicators;
 using QuantConnect.Interfaces;
 
 namespace QuantConnect.Algorithm.CSharp
 {
     /// <summary>
-    /// Example and regression algorithm asserting the behavior of <see cref="IAlgorithmSettings.AutomaticIndicatorDeregistration"/>:
-    /// when enabled, helper-created indicators are automatically deregistered when their security is removed from the
-    /// algorithm, without any explicit cleanup call
+    /// Regression algorithm asserting that the indicators and consolidators created through the helper methods are
+    /// deregistered when their security is removed, with no explicit cleanup, and that fresh ones work after re-adding
+    /// the security. See <see cref="IAlgorithmSettings.AutomaticIndicatorDeregistration"/>
     /// </summary>
     public class AutomaticIndicatorDeregistrationRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
@@ -31,7 +33,12 @@ namespace QuantConnect.Algorithm.CSharp
         private Symbol _ibm;
         private RelativeStrengthIndex _ibmRsi;
         private SimpleMovingAverage _ibmSma;
+        private SimpleMovingAverage _newIbmSma;
+        private int _ibmConsolidatedCount;
+        private int _ibmConsolidatedCountAtRemoval;
+        private long _ibmRsiSamplesAtRemoval;
         private bool _removed;
+        private bool _readded;
 
         /// <summary>
         /// Initialise the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must initialized.
@@ -41,13 +48,12 @@ namespace QuantConnect.Algorithm.CSharp
             SetStartDate(2013, 10, 07);
             SetEndDate(2013, 10, 11);
 
-            Settings.AutomaticIndicatorDeregistration = true;
-
             _spy = AddEquity("SPY").Symbol;
             _ibm = AddEquity("IBM").Symbol;
 
             _ibmRsi = RSI(_ibm, 14, resolution: Resolution.Minute);
             _ibmSma = SMA(_ibm, 10, Resolution.Minute);
+            Consolidate(_ibm, Resolution.Hour, (TradeBar bar) => _ibmConsolidatedCount++);
         }
 
         /// <summary>
@@ -56,10 +62,16 @@ namespace QuantConnect.Algorithm.CSharp
         /// <param name="slice">Slice object keyed by symbol containing the stock data</param>
         public override void OnData(Slice slice)
         {
-            if (!_removed && Time.Day == 9)
+            if (!_removed && Time.Day == 8)
             {
                 _removed = true;
                 RemoveSecurity(_ibm);
+            }
+            else if (_removed && !_readded && Time.Day == 10)
+            {
+                _readded = true;
+                AddEquity("IBM");
+                _newIbmSma = SMA(_ibm, 10, Resolution.Minute);
             }
 
             if (!Portfolio.Invested)
@@ -68,17 +80,40 @@ namespace QuantConnect.Algorithm.CSharp
             }
         }
 
+        /// <summary>
+        /// Event fired each time the we add/remove securities from the data feed
+        /// </summary>
+        /// <param name="changes">Security additions/removals for this time step</param>
+        public override void OnSecuritiesChanged(SecurityChanges changes)
+        {
+            foreach (var security in changes.RemovedSecurities)
+            {
+                if (security.Symbol == _ibm)
+                {
+                    _ibmRsiSamplesAtRemoval = _ibmRsi.Samples;
+                    _ibmConsolidatedCountAtRemoval = _ibmConsolidatedCount;
+
+                    if (_ibmRsi.Consolidators.Count != 0 || _ibmSma.Consolidators.Count != 0)
+                    {
+                        throw new RegressionTestException("The removed security indicators should have been deregistered");
+                    }
+                }
+            }
+        }
+
         public override void OnEndOfAlgorithm()
         {
-            if (!_removed)
+            if (!_removed || _ibmRsiSamplesAtRemoval == 0)
             {
-                throw new RegressionTestException("The security should have been removed");
+                throw new RegressionTestException("The security should have been removed and its indicators deregistered");
             }
-            // the indicators were deregistered by the engine when the security was completely removed,
-            // no explicit cleanup call needed
-            if (_ibmRsi.Consolidators.Count != 0 || _ibmSma.Consolidators.Count != 0)
+            if (_ibmRsi.Samples != _ibmRsiSamplesAtRemoval || _ibmConsolidatedCount != _ibmConsolidatedCountAtRemoval)
             {
-                throw new RegressionTestException("The removed security indicators should have been automatically deregistered");
+                throw new RegressionTestException("Deregistered indicators and consolidators should have stopped getting updates");
+            }
+            if (_newIbmSma == null || !_newIbmSma.IsReady)
+            {
+                throw new RegressionTestException("Indicators created after re-adding the security should be getting updates");
             }
         }
 
@@ -90,12 +125,12 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// This is used by the regression test system to indicate which languages this algorithm is written in.
         /// </summary>
-        public List<Language> Languages { get; } = new() { Language.CSharp };
+        public List<Language> Languages { get; } = new() { Language.CSharp, Language.Python };
 
         /// <summary>
         /// Data Points count of all timeslices of algorithm
         /// </summary>
-        public long DataPoints => 5506;
+        public long DataPoints => 6285;
 
         /// <summary>
         /// Data Points count of the algorithm history

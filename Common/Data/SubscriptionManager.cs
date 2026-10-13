@@ -240,10 +240,8 @@ namespace QuantConnect.Data
                 subscription.Consolidators.Remove(consolidator);
             }
 
-            // dispose the scan wrapper even if the symbol has no subscriptions left (e.g. the security was
-            // already removed from the universe): 'ScanPastConsolidators' only drops disposed wrappers, so a
-            // wrapper that isn't disposed here would be re-enqueued and re-scanned forever, leaking the
-            // consolidator and anything its event handlers reference
+            // dispose the scan wrapper even if the symbol has no subscriptions left (e.g. removed from the universe),
+            // else 'ScanPastConsolidators' keeps re-enqueuing it forever
             if (_consolidators.Remove(consolidator, out var consolidatorsToScan))
             {
                 consolidatorsToScan.Dispose();

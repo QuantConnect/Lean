@@ -724,9 +724,7 @@ def get_consolidator():
             Assert.AreEqual(1, wrappers.Count);
             var wrapper = wrappers[consolidator];
 
-            // simulate the security having left the universe: its subscription data configs are gone before
-            // the consolidator is removed. The scan wrapper must still be disposed, otherwise
-            // 'ScanPastConsolidators' would re-enqueue and re-scan it forever, leaking the consolidator
+            // the security left the universe: its subscription data configs are gone before the consolidator is removed
             algorithm.SubscriptionManager.SetDataManager(new DataManagerStub(algorithm));
             Assert.IsEmpty(algorithm.SubscriptionManager.SubscriptionDataConfigService.GetSubscriptionDataConfigs(symbol));
 

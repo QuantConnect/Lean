@@ -14,11 +14,11 @@
 from AlgorithmImports import *
 
 ### <summary>
-### Example and regression algorithm asserting the behavior of deregister_all: on security removal, a single call
-### disposes all the indicators and consolidators created for it through the algorithm helper methods, so add/remove
-### churn doesn't leak consolidators, and re-adding the security with fresh indicators keeps working
+### Regression algorithm asserting that the indicators and consolidators created through the helper methods are
+### deregistered when their security is removed, with no explicit cleanup, and that fresh ones work after re-adding
+### the security. See settings.automatic_indicator_deregistration
 ### </summary>
-class DeregisterAllRegressionAlgorithm(QCAlgorithm):
+class AutomaticIndicatorDeregistrationRegressionAlgorithm(QCAlgorithm):
 
     def initialize(self):
         self.set_start_date(2013, 10, 7)
@@ -27,7 +27,6 @@ class DeregisterAllRegressionAlgorithm(QCAlgorithm):
         self._spy = self.add_equity("SPY").symbol
         self._ibm = self.add_equity("IBM").symbol
 
-        # per symbol state created through the helper methods, tracked by the engine
         self._ibm_rsi = self.rsi(self._ibm, 14, resolution=Resolution.MINUTE)
         self._ibm_sma = self.sma(self._ibm, 10, Resolution.MINUTE)
         self._ibm_consolidated_count = 0
@@ -48,7 +47,6 @@ class DeregisterAllRegressionAlgorithm(QCAlgorithm):
             self.remove_security(self._ibm)
         elif self._removed and not self._readded and self.time.day == 10:
             self._readded = True
-            # re-adding the security after cleanup works: the helpers create fresh consolidators
             self.add_equity("IBM")
             self._new_ibm_sma = self.sma(self._ibm, 10, Resolution.MINUTE)
 
@@ -57,15 +55,12 @@ class DeregisterAllRegressionAlgorithm(QCAlgorithm):
 
     def on_securities_changed(self, changes):
         for security in changes.removed_securities:
-            # single call cleanup of every helper-created indicator and consolidator of the removed security
-            self.deregister_all(security.symbol)
-
             if security.symbol == self._ibm:
                 self._ibm_rsi_samples_at_removal = self._ibm_rsi.samples
                 self._ibm_consolidated_count_at_removal = self._ibm_consolidated_count
 
                 if self._ibm_rsi.consolidators.count != 0 or self._ibm_sma.consolidators.count != 0:
-                    raise Exception("The removed security indicators should have no consolidators after deregister_all")
+                    raise Exception("The removed security indicators should have been deregistered")
 
     def on_end_of_algorithm(self):
         if not self._removed or self._ibm_rsi_samples_at_removal == 0:

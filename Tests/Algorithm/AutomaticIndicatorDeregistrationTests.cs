@@ -13,17 +13,19 @@
  * limitations under the License.
 */
 
+using System;
 using System.Linq;
 using NUnit.Framework;
 using QuantConnect.Algorithm;
 using QuantConnect.Data.Consolidators;
 using QuantConnect.Data.Market;
+using QuantConnect.Indicators;
 using QuantConnect.Tests.Engine.DataFeeds;
 
 namespace QuantConnect.Tests.Algorithm
 {
     [TestFixture]
-    public class AlgorithmDeregisterAllTests
+    public class AutomaticIndicatorDeregistrationTests
     {
         private QCAlgorithm _algorithm;
         private Symbol _spy;
@@ -46,7 +48,7 @@ namespace QuantConnect.Tests.Algorithm
         }
 
         [Test]
-        public void DeregisterAllDisposesHelperCreatedIndicators()
+        public void DeregistersHelperCreatedIndicatorsOfTheRemovedSecurityOnly()
         {
             var rsi = _algorithm.RSI(_spy, 14, resolution: Resolution.Minute);
             var sma = _algorithm.SMA(_spy, 10, Resolution.Minute);
@@ -55,72 +57,66 @@ namespace QuantConnect.Tests.Algorithm
             Assert.AreEqual(2, ConsolidatorCount(_spy));
             Assert.AreEqual(1, ConsolidatorCount(_ibm));
 
-            _algorithm.DeregisterAll(_spy);
+            _algorithm.Securities.Remove(_spy);
 
             Assert.IsEmpty(rsi.Consolidators);
             Assert.IsEmpty(sma.Consolidators);
             Assert.AreEqual(0, ConsolidatorCount(_spy));
 
-            // other symbols are untouched
             Assert.AreEqual(1, ibmSma.Consolidators.Count);
             Assert.AreEqual(1, ConsolidatorCount(_ibm));
         }
 
         [Test]
-        public void DeregisterAllDisposesHelperCreatedConsolidators()
+        public void DeregistersHelperCreatedConsolidators()
         {
             _algorithm.Consolidate(_spy, Resolution.Hour, (TradeBar bar) => { });
 
             Assert.AreEqual(1, ConsolidatorCount(_spy));
 
-            _algorithm.DeregisterAll(_spy);
+            _algorithm.Securities.Remove(_spy);
 
             Assert.AreEqual(0, ConsolidatorCount(_spy));
         }
 
         [Test]
-        public void DeregisterAllDisposesMultiSymbolIndicatorsThroughAnyOfTheirSymbols()
+        public void DeregistersMultiSymbolIndicatorsThroughAnyOfTheirSymbols()
         {
             var beta = _algorithm.B(_spy, _ibm, 10, Resolution.Daily);
 
             Assert.AreEqual(2, beta.Consolidators.Count);
 
-            _algorithm.DeregisterAll(_spy);
+            _algorithm.Securities.Remove(_spy);
 
-            // the indicator can't work without one of its legs, so it's completely deregistered
             Assert.IsEmpty(beta.Consolidators);
             Assert.AreEqual(0, ConsolidatorCount(_spy));
             Assert.AreEqual(0, ConsolidatorCount(_ibm));
 
-            // deregistering the other leg is a no-op
-            Assert.DoesNotThrow(() => _algorithm.DeregisterAll(_ibm));
+            Assert.DoesNotThrow(() => _algorithm.Securities.Remove(_ibm));
         }
 
         [Test]
-        public void DeregisterAllIsANoOpAfterManualDeregistration()
+        public void IsANoOpAfterManualDeregistration()
         {
             var sma = _algorithm.SMA(_spy, 10, Resolution.Minute);
 
             _algorithm.DeregisterIndicator(sma);
             Assert.AreEqual(0, ConsolidatorCount(_spy));
 
-            Assert.DoesNotThrow(() => _algorithm.DeregisterAll(_spy));
+            Assert.DoesNotThrow(() => _algorithm.Securities.Remove(_spy));
             Assert.AreEqual(0, ConsolidatorCount(_spy));
         }
 
         [Test]
         public void DeregistersManuallyRegisteredIndicatorsButKeepsRawConsolidators()
         {
-            // RegisterIndicator creates and manages the consolidator internally, so it's tracked too
-            var sma = new QuantConnect.Indicators.SimpleMovingAverage(10);
+            var sma = new SimpleMovingAverage(10);
             _algorithm.RegisterIndicator(_spy, sma, Resolution.Minute);
 
-            // consolidators added directly through the subscription manager are not tracked and are
-            // intentionally kept, so users can hold on to them across universe removals
-            using var rawConsolidator = new TradeBarConsolidator(System.TimeSpan.FromHours(1));
+            using var rawConsolidator = new TradeBarConsolidator(TimeSpan.FromHours(1));
             _algorithm.SubscriptionManager.AddConsolidator(_spy, rawConsolidator);
 
-            _algorithm.DeregisterAll(_spy);
+            _algorithm.Securities.Remove(_spy);
 
             Assert.IsEmpty(sma.Consolidators);
             Assert.AreEqual(1, ConsolidatorCount(_spy));
@@ -130,27 +126,21 @@ namespace QuantConnect.Tests.Algorithm
         }
 
         [Test]
-        public void AutomaticallyDeregistersOnSecurityRemovalWhenEnabled()
+        public void DoesNotDeregisterWhenDisabled()
         {
-            _algorithm.Settings.AutomaticIndicatorDeregistration = true;
-            var sma = _algorithm.SMA(_spy, 10, Resolution.Minute);
-            var ibmSma = _algorithm.SMA(_ibm, 10, Resolution.Minute);
-
-            _algorithm.Securities.Remove(_spy);
-
-            Assert.IsEmpty(sma.Consolidators);
-            Assert.AreEqual(0, ConsolidatorCount(_spy));
-            Assert.AreEqual(1, ibmSma.Consolidators.Count);
-        }
-
-        [Test]
-        public void DoesNotAutomaticallyDeregisterByDefault()
-        {
+            _algorithm.Settings.AutomaticIndicatorDeregistration = false;
             var sma = _algorithm.SMA(_spy, 10, Resolution.Minute);
 
             _algorithm.Securities.Remove(_spy);
 
             Assert.AreEqual(1, sma.Consolidators.Count);
+            Assert.AreEqual(1, ConsolidatorCount(_spy));
+        }
+
+        [Test]
+        public void IsEnabledByDefault()
+        {
+            Assert.IsTrue(new QCAlgorithm().Settings.AutomaticIndicatorDeregistration);
         }
     }
 }

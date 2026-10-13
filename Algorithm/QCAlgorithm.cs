@@ -214,14 +214,12 @@ namespace QuantConnect.Algorithm
             Securities = new SecurityManager(_timeKeeper);
             Securities.CollectionChanged += (sender, args) =>
             {
-                // automatically dispose helper-created indicators and consolidators when a security is completely
-                // removed from the algorithm, so universe churn doesn't leak consolidators. Opt-in via settings
-                // because some algorithms intentionally keep indicators alive across removals to reuse them on re-add
+                // the removed security's indicators and consolidators would otherwise be kept but never updated again
                 if (Settings.AutomaticIndicatorDeregistration && args.Action == NotifyCollectionChangedAction.Remove)
                 {
                     foreach (Security security in args.OldItems)
                     {
-                        DeregisterAll(security.Symbol);
+                        DeregisterIndicatorsAndConsolidators(security.Symbol);
                     }
                 }
             };

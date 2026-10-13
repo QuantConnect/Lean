@@ -29,9 +29,8 @@ namespace QuantConnect.Interfaces
         bool AutomaticIndicatorWarmUp { get; set; }
 
         /// <summary>
-        /// Gets whether indicators and consolidators created through the algorithm helper methods are automatically
-        /// deregistered when their security is removed from the algorithm, e.g. when it leaves the universe.
-        /// Disabled by default
+        /// True to deregister the indicators and consolidators created through the algorithm helper methods
+        /// when their security is removed from the algorithm, e.g. when it leaves the universe. True by default
         /// </summary>
         bool AutomaticIndicatorDeregistration { get; set; }
 
