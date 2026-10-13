@@ -21,92 +21,49 @@ namespace QuantConnect.Data.Consolidators
     /// <summary>
     /// Adapts a consolidator with <see cref="TradeBar"/> input so it can be fed from a quote-only
     /// subscription (forex, cfd): each incoming <see cref="QuoteBar"/> is collapsed into a mid-point
-    /// <see cref="TradeBar"/> with zero volume before being forwarded to the wrapped consolidator.
+    /// <see cref="TradeBar"/> without volume (reading it throws) before being forwarded to the wrapped consolidator.
     /// Used by <see cref="SubscriptionManager.AddConsolidator(Symbol,IDataConsolidator,TickType?)"/>
     /// so trade bar consolidators and indicators work out of the box on quote-only security types.
     /// </summary>
-    public class QuoteBarToTradeBarAdapter : IDataConsolidator
+    public class QuoteBarToTradeBarAdapter : ConsolidatorAdapterBase
     {
-        /// <summary>
-        /// The wrapped consolidator receiving the collapsed trade bars
-        /// </summary>
-        public IDataConsolidator Consolidator { get; }
-
-        /// <summary>
-        /// Gets the most recently consolidated piece of data produced by the wrapped consolidator
-        /// </summary>
-        public IBaseData Consolidated => Consolidator.Consolidated;
-
-        /// <summary>
-        /// Gets a clone of the data being currently consolidated by the wrapped consolidator
-        /// </summary>
-        public IBaseData WorkingData => Consolidator.WorkingData;
-
         /// <summary>
         /// Gets the type consumed by this consolidator
         /// </summary>
-        public Type InputType => typeof(QuoteBar);
-
-        /// <summary>
-        /// Gets the type produced by the wrapped consolidator
-        /// </summary>
-        public Type OutputType => Consolidator.OutputType;
-
-        /// <summary>
-        /// Event handler that fires when the wrapped consolidator produces a new piece of data
-        /// </summary>
-        public event DataConsolidatedHandler DataConsolidated
-        {
-            add { Consolidator.DataConsolidated += value; }
-            remove { Consolidator.DataConsolidated -= value; }
-        }
+        public override Type InputType => typeof(QuoteBar);
 
         /// <summary>
         /// Creates a new adapter feeding collapsed quote bars into the given consolidator
         /// </summary>
         /// <param name="consolidator">The consolidator to adapt, must consume <see cref="TradeBar"/> input</param>
         public QuoteBarToTradeBarAdapter(IDataConsolidator consolidator)
+            : base(consolidator)
         {
             if (!consolidator.InputType.IsAssignableFrom(typeof(TradeBar)))
             {
                 throw new ArgumentException($"{nameof(QuoteBarToTradeBarAdapter)} requires a consolidator that accepts {nameof(TradeBar)} input " +
                     $"but was given one with input type {consolidator.InputType.Name}");
             }
-            Consolidator = consolidator;
         }
 
         /// <summary>
         /// Updates the wrapped consolidator with the collapsed version of the specified quote bar
         /// </summary>
         /// <param name="data">The new data for the consolidator</param>
-        public void Update(IBaseData data)
+        public override void Update(IBaseData data)
         {
-            Consolidator.Update(((QuoteBar)data).Collapse());
+            Consolidator.Update(Collapse((QuoteBar)data));
         }
 
         /// <summary>
-        /// Scans the wrapped consolidator to see if it should emit a bar due to time passing
+        /// Collapses the quote bar into a mid-point trade bar that has no volume: quote data carries
+        /// no trade volume, so reading <see cref="TradeBar.Volume"/> on the result throws
         /// </summary>
-        /// <param name="currentLocalTime">The current time in the local time zone (same as <see cref="BaseData.Time"/>)</param>
-        public void Scan(DateTime currentLocalTime)
+        /// <param name="quoteBar">The quote bar to collapse</param>
+        /// <returns>The collapsed trade bar</returns>
+        public static TradeBar Collapse(QuoteBar quoteBar)
         {
-            Consolidator.Scan(currentLocalTime);
-        }
-
-        /// <summary>
-        /// Resets the wrapped consolidator
-        /// </summary>
-        public void Reset()
-        {
-            Consolidator.Reset();
-        }
-
-        /// <summary>
-        /// Disposes the wrapped consolidator
-        /// </summary>
-        public void Dispose()
-        {
-            Consolidator.Dispose();
+            return new QuoteDerivedTradeBar(quoteBar);
         }
     }
 }

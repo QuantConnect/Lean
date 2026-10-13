@@ -32,7 +32,7 @@ namespace QuantConnect.Algorithm.CSharp
     public class ConsolidatorAutoAdaptationRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
         private TradeBarConsolidator _consolidator;
-        private OnBalanceVolume _obv;
+        private MassIndex _mass;
         private RelativeStrengthIndex _weeklyRsi;
         private int _adaptedTradeBars;
 
@@ -47,20 +47,25 @@ namespace QuantConnect.Algorithm.CSharp
             var eurusd = AddForex("EURUSD", Resolution.Minute, Market.Oanda).Symbol;
 
             // a trade bar consolidator on a quote-only feed: the engine feeds it quote bars collapsed
-            // into mid-point trade bars with zero volume
+            // into mid-point trade bars. Quote data carries no trade volume, so reading it throws
             _consolidator = new TradeBarConsolidator(TimeSpan.FromHours(1));
             _consolidator.DataConsolidated += (_, bar) =>
             {
                 _adaptedTradeBars++;
-                if (bar.Volume != 0)
+                try
                 {
-                    throw new RegressionTestException("Expected trade bars collapsed from quote bars to have zero volume");
+                    var volume = bar.Volume;
+                    throw new RegressionTestException("Expected reading the volume of a trade bar collapsed from quote bars to throw");
+                }
+                catch (InvalidOperationException)
+                {
+                    // expected, quote data carries no trade volume
                 }
             };
             SubscriptionManager.AddConsolidator(eurusd, _consolidator);
 
             // a trade bar indicator on a quote-only feed is fed collapsed trade bars as well
-            _obv = OBV(eurusd, Resolution.Hour);
+            _mass = MASS(eurusd, resolution: Resolution.Hour);
 
             // RegisterIndicator accepts calendar periods, like Consolidate does
             _weeklyRsi = new RelativeStrengthIndex(2);
@@ -85,9 +90,9 @@ namespace QuantConnect.Algorithm.CSharp
             {
                 throw new RegressionTestException("Expected the adapted trade bar consolidator to receive data");
             }
-            if (_obv.Samples == 0)
+            if (_mass.Samples == 0)
             {
-                throw new RegressionTestException("Expected the OnBalanceVolume indicator to be updated with collapsed trade bars");
+                throw new RegressionTestException("Expected the MassIndex indicator to be updated with collapsed trade bars");
             }
             if (_weeklyRsi.Samples == 0)
             {

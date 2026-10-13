@@ -77,7 +77,7 @@ namespace QuantConnect.Data
         /// <summary>
         /// True if this is a fill forward piece of data
         /// </summary>
-        public bool IsFillForward { get; private set; }
+        public bool IsFillForward { get; protected set; }
 
         /// <summary>
         /// Current time marker of this data packet.

@@ -3373,8 +3373,8 @@ namespace QuantConnect.Algorithm
                 else if (type == typeof(TradeBar) && consolidator.OutputType == typeof(QuoteBar) && selector == null)
                 {
                     // trade bar indicator registered against a quote-only feed (forex, cfd): collapse each quote bar
-                    // into a mid-point trade bar with zero volume instead of failing
-                    selectorToUse = consolidated => (T)(object)((QuoteBar)consolidated).Collapse();
+                    // into a mid-point trade bar instead of failing. The bar has no volume, reading it throws
+                    selectorToUse = consolidated => (T)(object)QuoteBarToTradeBarAdapter.Collapse((QuoteBar)consolidated);
                 }
                 else
                 {
