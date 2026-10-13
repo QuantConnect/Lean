@@ -96,24 +96,37 @@ namespace QuantConnect.Data.Consolidators
         {
             if (workingBar == null)
             {
-                workingBar = new TradeBar
+                var time = GetRoundedBarTime(data);
+                var period = IsTimeBased && Period.HasValue ? (TimeSpan)Period : data.Period;
+                if (data is QuoteDerivedTradeBar)
                 {
-                    Time = GetRoundedBarTime(data),
-                    Symbol = data.Symbol,
-                    Open = data.Open,
-                    High = data.High,
-                    Low = data.Low,
-                    Close = data.Close,
-                    Volume = data.Volume,
-                    DataType = MarketDataType.TradeBar,
-                    Period = IsTimeBased && Period.HasValue ? (TimeSpan)Period : data.Period
-                };
+                    // bars collapsed from quote bars have no volume, the consolidated bar has none either
+                    workingBar = new QuoteDerivedTradeBar(time, data.Symbol, data.Open, data.High, data.Low, data.Close, period);
+                }
+                else
+                {
+                    workingBar = new TradeBar
+                    {
+                        Time = time,
+                        Symbol = data.Symbol,
+                        Open = data.Open,
+                        High = data.High,
+                        Low = data.Low,
+                        Close = data.Close,
+                        Volume = data.Volume,
+                        DataType = MarketDataType.TradeBar,
+                        Period = period
+                    };
+                }
             }
             else
             {
                 //Aggregate the working bar
                 workingBar.Close = data.Close;
-                workingBar.Volume += data.Volume;
+                if (workingBar is not QuoteDerivedTradeBar)
+                {
+                    workingBar.Volume += data.Volume;
+                }
                 if (data.Low < workingBar.Low) workingBar.Low = data.Low;
                 if (data.High > workingBar.High) workingBar.High = data.High;
             }

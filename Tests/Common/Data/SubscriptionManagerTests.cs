@@ -735,9 +735,10 @@ def get_consolidator():
             registered.Update(new QuoteBar(time.AddHours(1), eurusd, bid, 0, ask, 0, Time.OneMinute));
 
             Assert.IsNotNull(consolidated);
-            // trade bars collapsed from quote bars carry the mid-point prices and zero volume
+            // trade bars collapsed from quote bars carry the mid-point prices and no volume
             Assert.AreEqual(1.6m, consolidated.Close);
-            Assert.AreEqual(0, consolidated.Volume);
+            Assert.IsInstanceOf<QuoteDerivedTradeBar>(consolidated);
+            Assert.Throws<InvalidOperationException>(() => _ = consolidated.Volume);
         }
 
         [Test]
@@ -753,6 +754,44 @@ def get_consolidator():
             // users hold and remove the consolidator they created, not the adapter wrapping it
             algorithm.SubscriptionManager.RemoveConsolidator(eurusd, consolidator);
             Assert.AreEqual(0, algorithm.SubscriptionManager.Subscriptions.Sum(x => x.Consolidators.Count));
+        }
+
+        [Test]
+        public void QuoteToTradeBarAdapterEqualsTheConsolidatorItWraps()
+        {
+            using var consolidator = new TradeBarConsolidator(TimeSpan.FromHours(1));
+            using var adapter = new QuoteBarToTradeBarAdapter(consolidator);
+
+            Assert.IsTrue(adapter.Equals(consolidator));
+            Assert.IsTrue(adapter.Equals(adapter));
+            Assert.AreEqual(consolidator.GetHashCode(), adapter.GetHashCode());
+
+            // collections keyed by the user's consolidator find the registered adapter
+            var set = new HashSet<IDataConsolidator> { adapter };
+            Assert.IsTrue(set.Contains(consolidator));
+            Assert.IsTrue(set.Remove(consolidator));
+            var dictionary = new Dictionary<IDataConsolidator, int> { [adapter] = 1 };
+            Assert.IsTrue(dictionary.Remove(consolidator));
+        }
+
+        [Test]
+        public void ConsolidatorIdentityComparerMatchesAdapterAndWrappedConsolidatorBothWays()
+        {
+            using var consolidator = new TradeBarConsolidator(TimeSpan.FromHours(1));
+            using var adapter = new QuoteBarToTradeBarAdapter(consolidator);
+            using var other = new TradeBarConsolidator(TimeSpan.FromHours(1));
+            var comparer = ConsolidatorIdentityComparer.Instance;
+
+            Assert.IsTrue(comparer.Equals(consolidator, adapter));
+            Assert.IsTrue(comparer.Equals(adapter, consolidator));
+            Assert.IsFalse(comparer.Equals(other, adapter));
+            Assert.AreEqual(comparer.GetHashCode(consolidator), comparer.GetHashCode(adapter));
+
+            // the subscription consolidators set is keyed by the user's consolidator, so either object is found
+            var set = new ConcurrentSet<IDataConsolidator>(comparer) { consolidator };
+            Assert.IsTrue(set.Contains(adapter));
+            Assert.IsTrue(set.Remove(adapter));
+            Assert.AreEqual(0, set.Count);
         }
 
         [Test]

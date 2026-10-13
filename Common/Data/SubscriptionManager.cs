@@ -64,7 +64,7 @@ namespace QuantConnect.Data
         /// </summary>
         public SubscriptionManager(ITimeKeeper timeKeeper)
         {
-            _consolidators = new();
+            _consolidators = new(ConsolidatorIdentityComparer.Instance);
             _timeKeeper = timeKeeper;
             _consolidatorsSortedByScanTime = new(1000, ConsolidatorScanPriority.Comparer);
             _threadSafeCollectionLock = new object();
@@ -212,13 +212,18 @@ namespace QuantConnect.Data
 
             // a trade bar consolidator on a quote-only feed (forex, cfd) can still be fed by collapsing
             // each quote bar into a mid-point trade bar instead of rejecting the registration
-            if (consolidator.InputType == typeof(TradeBar) && (tickType == null || tickType == TickType.Quote) &&
-                subscriptions.Any(x => x.Type == typeof(QuoteBar)))
+            if (consolidator.InputType == typeof(TradeBar) && (tickType == null || tickType == TickType.Quote))
             {
-                Logging.Log.Trace($"SubscriptionManager.AddConsolidator(): {symbol.Value} does not have a {nameof(TradeBar)} subscription: " +
-                    $"feeding the {consolidator.GetType().Name} with quote bars collapsed into mid-point trade bars with zero volume.");
-                AddConsolidator(symbol, new QuoteBarToTradeBarAdapter(consolidator), TickType.Quote);
-                return;
+                var quoteSubscription = subscriptions.FirstOrDefault(x => x.Type == typeof(QuoteBar));
+                if (quoteSubscription != null)
+                {
+                    // the adapter carries no period of its own, validate the consolidator it will feed
+                    ValidateConsolidatorPeriod(symbol, consolidator, quoteSubscription);
+                    Logging.Log.Trace($"SubscriptionManager.AddConsolidator(): {symbol.Value} does not have a {nameof(TradeBar)} subscription: " +
+                        $"feeding the {consolidator.GetType().Name} with quote bars collapsed into mid-point trade bars without volume.");
+                    AddConsolidator(symbol, new QuoteBarToTradeBarAdapter(consolidator), TickType.Quote);
+                    return;
+                }
             }
 
             string tickTypeException = null;
@@ -240,7 +245,7 @@ namespace QuantConnect.Data
         /// </summary>
         private static void ValidateConsolidatorPeriod(Symbol symbol, IDataConsolidator consolidator, SubscriptionDataConfig subscription)
         {
-            var period = ((consolidator as QuoteBarToTradeBarAdapter)?.Consolidator as ConsolidatorBase ?? consolidator as ConsolidatorBase)?.FixedTimeSpanPeriod;
+            var period = (consolidator as ConsolidatorBase)?.FixedTimeSpanPeriod;
             if (period.HasValue && period.Value < subscription.Increment)
             {
                 throw new ArgumentException($"Unable to add consolidator for symbol {symbol.Value}: the consolidator period ({period.Value}) " +
@@ -278,23 +283,8 @@ namespace QuantConnect.Data
             // remove consolidator from each subscription
             foreach (var subscription in _subscriptionManager.GetSubscriptionDataConfigs(symbol))
             {
-                if (!subscription.Consolidators.Remove(consolidator))
-                {
-                    // the consolidator might have been registered wrapped in a quote to trade bar adapter,
-                    // see AddConsolidator: users hold and remove the consolidator they created, not the adapter.
-                    // Equals instead of reference equality so a fresh python wrapper for the same python object matches
-                    var adapter = subscription.Consolidators
-                        .OfType<QuoteBarToTradeBarAdapter>()
-                        .FirstOrDefault(x => x.Consolidator.Equals(consolidator));
-                    if (adapter != null)
-                    {
-                        subscription.Consolidators.Remove(adapter);
-                        if (_consolidators.Remove(adapter, out var adapterToScan))
-                        {
-                            adapterToScan.Dispose();
-                        }
-                    }
-                }
+                // users hold the consolidator they created: a registered adapter equals it, see QuoteBarToTradeBarAdapter
+                subscription.Consolidators.Remove(consolidator);
 
                 if (_consolidators.Remove(consolidator, out var consolidatorsToScan))
                 {
@@ -326,8 +316,8 @@ namespace QuantConnect.Data
         }
 
         /// <summary>
-        /// Finds the <see cref="DataConsolidatorPythonWrapper"/> previously created for the given python
-        /// consolidator so it can be removed and disposed, rather than a throwaway wrapper that would churn
+        /// Finds the consolidator registered for the given python consolidator, its <see cref="DataConsolidatorPythonWrapper"/>
+        /// or the adapter wrapping it, so it can be removed and disposed, rather than a throwaway wrapper that would churn
         /// the live python object's event subscription and leak the original one.
         /// </summary>
         private IDataConsolidator FindPythonConsolidator(Symbol symbol, PyObject pyConsolidator)
@@ -340,11 +330,10 @@ namespace QuantConnect.Data
             {
                 foreach (var existing in subscription.Consolidators)
                 {
-                    // the python consolidator might have been registered wrapped in a quote to trade bar adapter
-                    var candidate = (existing as QuoteBarToTradeBarAdapter)?.Consolidator ?? existing;
-                    if (candidate is DataConsolidatorPythonWrapper && candidate.Equals(pyConsolidator))
+                    // python wrappers, and adapters wrapping one, equal the python object they were created from
+                    if (existing.Equals(pyConsolidator))
                     {
-                        return candidate;
+                        return existing;
                     }
                 }
             }

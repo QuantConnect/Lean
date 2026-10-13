@@ -232,7 +232,7 @@ namespace QuantConnect.Data
             ExchangeTimeZone = exchangeTimeZone;
             ContractDepthOffset = contractDepthOffset;
             IsFilteredSubscription = isFilteredSubscription;
-            Consolidators = new ConcurrentSet<IDataConsolidator>();
+            Consolidators = new ConcurrentSet<IDataConsolidator>(ConsolidatorIdentityComparer.Instance);
             DataNormalizationMode = dataNormalizationMode;
 
             TickType = tickType ?? LeanData.GetCommonTickTypeForCommonDataTypes(objectType, SecurityType);

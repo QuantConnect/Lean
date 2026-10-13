@@ -28,13 +28,13 @@ class ConsolidatorAutoAdaptationRegressionAlgorithm(QCAlgorithm):
         self._adapted_trade_bars = 0
 
         # a trade bar consolidator on a quote-only feed: the engine feeds it quote bars collapsed
-        # into mid-point trade bars with zero volume
+        # into mid-point trade bars. Quote data carries no trade volume, so reading it throws
         self._consolidator = TradeBarConsolidator(timedelta(hours=1))
         self._consolidator.data_consolidated += self._on_trade_bar
         self.subscription_manager.add_consolidator(eurusd, self._consolidator)
 
         # a trade bar indicator on a quote-only feed is fed collapsed trade bars as well
-        self._obv = self.obv(eurusd, Resolution.HOUR)
+        self._mass = self.mass(eurusd, resolution=Resolution.HOUR)
 
         # register_indicator accepts calendar periods, like self.consolidate does
         self._weekly_rsi = RelativeStrengthIndex(2)
@@ -53,13 +53,17 @@ class ConsolidatorAutoAdaptationRegressionAlgorithm(QCAlgorithm):
 
     def _on_trade_bar(self, sender, bar):
         self._adapted_trade_bars += 1
-        if bar.volume != 0:
-            raise AssertionError("Expected trade bars collapsed from quote bars to have zero volume")
+        try:
+            volume = bar.volume
+        except InvalidOperationException:
+            # expected, quote data carries no trade volume
+            return
+        raise AssertionError("Expected reading the volume of a trade bar collapsed from quote bars to throw")
 
     def on_end_of_algorithm(self):
         if self._adapted_trade_bars == 0:
             raise AssertionError("Expected the adapted trade bar consolidator to receive data")
-        if self._obv.samples == 0:
-            raise AssertionError("Expected the OnBalanceVolume indicator to be updated with collapsed trade bars")
+        if self._mass.samples == 0:
+            raise AssertionError("Expected the MassIndex indicator to be updated with collapsed trade bars")
         if self._weekly_rsi.samples == 0:
             raise AssertionError("Expected the weekly RSI to be updated when the week boundary was crossed")
