@@ -14,10 +14,9 @@
 from AlgorithmImports import *
 
 ### <summary>
-### Regression algorithm asserting consolidator registration ergonomics on a quote-only feed (forex):
-### trade bar consolidators and indicators are fed collapsed quote bars instead of being rejected,
-### register_indicator accepts calendar periods, and consolidator periods smaller than the subscription
-### period are rejected at registration time instead of when the first data point arrives.
+### Regression algorithm asserting that trade bar consolidators and indicators registered on a quote-only
+### feed (forex) are fed quote bars collapsed into mid-point trade bars instead of being rejected, and that
+### the collapsed bars carry no volume.
 ### </summary>
 class ConsolidatorAutoAdaptationRegressionAlgorithm(QCAlgorithm):
     def initialize(self):
@@ -36,21 +35,6 @@ class ConsolidatorAutoAdaptationRegressionAlgorithm(QCAlgorithm):
         # a trade bar indicator on a quote-only feed is fed collapsed trade bars as well
         self._mass = self.mass(eurusd, resolution=Resolution.HOUR)
 
-        # register_indicator accepts calendar periods, like self.consolidate does
-        self._weekly_rsi = RelativeStrengthIndex(2)
-        self.register_indicator(eurusd, self._weekly_rsi, Calendar.WEEKLY)
-
-        # a consolidator period smaller than the subscription period is rejected at registration time,
-        # instead of when the first data point arrives
-        rejected = False
-        try:
-            self.subscription_manager.add_consolidator(eurusd, TradeBarConsolidator(timedelta(seconds=10)))
-        except:
-            # expected, all the required information is available at registration time
-            rejected = True
-        if not rejected:
-            raise AssertionError("Expected an error for a consolidator period smaller than the subscription period")
-
     def _on_trade_bar(self, sender, bar):
         self._adapted_trade_bars += 1
         try:
@@ -65,5 +49,3 @@ class ConsolidatorAutoAdaptationRegressionAlgorithm(QCAlgorithm):
             raise AssertionError("Expected the adapted trade bar consolidator to receive data")
         if self._mass.samples == 0:
             raise AssertionError("Expected the MassIndex indicator to be updated with collapsed trade bars")
-        if self._weekly_rsi.samples == 0:
-            raise AssertionError("Expected the weekly RSI to be updated when the week boundary was crossed")

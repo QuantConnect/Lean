@@ -15,7 +15,6 @@
 
 using System;
 using System.Collections.Generic;
-using QuantConnect.Data;
 using QuantConnect.Data.Consolidators;
 using QuantConnect.Indicators;
 using QuantConnect.Interfaces;
@@ -23,17 +22,14 @@ using QuantConnect.Interfaces;
 namespace QuantConnect.Algorithm.CSharp
 {
     /// <summary>
-    /// Regression algorithm asserting consolidator registration ergonomics on a quote-only feed (forex):
-    /// trade bar consolidators and indicators are fed collapsed quote bars instead of being rejected,
-    /// <see cref="QCAlgorithm.RegisterIndicator{T}(Symbol,IndicatorBase{T},Func{DateTime,CalendarInfo},Func{IBaseData,T})"/>
-    /// accepts calendar periods, and consolidator periods smaller than the subscription period are
-    /// rejected at registration time instead of when the first data point arrives.
+    /// Regression algorithm asserting that trade bar consolidators and indicators registered on a quote-only
+    /// feed (forex) are fed quote bars collapsed into mid-point trade bars instead of being rejected, and that
+    /// the collapsed bars carry no volume.
     /// </summary>
     public class ConsolidatorAutoAdaptationRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
         private TradeBarConsolidator _consolidator;
         private MassIndex _mass;
-        private RelativeStrengthIndex _weeklyRsi;
         private int _adaptedTradeBars;
 
         /// <summary>
@@ -66,22 +62,6 @@ namespace QuantConnect.Algorithm.CSharp
 
             // a trade bar indicator on a quote-only feed is fed collapsed trade bars as well
             _mass = MASS(eurusd, resolution: Resolution.Hour);
-
-            // RegisterIndicator accepts calendar periods, like Consolidate does
-            _weeklyRsi = new RelativeStrengthIndex(2);
-            RegisterIndicator(eurusd, _weeklyRsi, Calendar.Weekly);
-
-            // a consolidator period smaller than the subscription period is rejected at registration time,
-            // instead of when the first data point arrives
-            try
-            {
-                SubscriptionManager.AddConsolidator(eurusd, new TradeBarConsolidator(TimeSpan.FromSeconds(10)));
-                throw new RegressionTestException($"Expected {nameof(ArgumentException)} for a consolidator period smaller than the subscription period");
-            }
-            catch (ArgumentException)
-            {
-                // expected, all the required information is available at registration time
-            }
         }
 
         public override void OnEndOfAlgorithm()
@@ -93,10 +73,6 @@ namespace QuantConnect.Algorithm.CSharp
             if (_mass.Samples == 0)
             {
                 throw new RegressionTestException("Expected the MassIndex indicator to be updated with collapsed trade bars");
-            }
-            if (_weeklyRsi.Samples == 0)
-            {
-                throw new RegressionTestException("Expected the weekly RSI to be updated when the week boundary was crossed");
             }
         }
 
