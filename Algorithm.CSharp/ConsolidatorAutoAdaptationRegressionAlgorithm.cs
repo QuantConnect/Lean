@@ -54,7 +54,7 @@ namespace QuantConnect.Algorithm.CSharp
                 _adaptedTradeBars++;
                 try
                 {
-                    var volume = bar.Volume;
+                    _ = bar.Volume;
                     throw new RegressionTestException("Expected reading the volume of a trade bar collapsed from quote bars to throw");
                 }
                 catch (InvalidOperationException)

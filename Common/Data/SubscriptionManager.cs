@@ -219,8 +219,6 @@ namespace QuantConnect.Data
                 {
                     // the adapter carries no period of its own, validate the consolidator it will feed
                     ValidateConsolidatorPeriod(symbol, consolidator, quoteSubscription);
-                    Logging.Log.Trace($"SubscriptionManager.AddConsolidator(): {symbol.Value} does not have a {nameof(TradeBar)} subscription: " +
-                        $"feeding the {consolidator.GetType().Name} with quote bars collapsed into mid-point trade bars without volume.");
                     AddConsolidator(symbol, new QuoteBarToTradeBarAdapter(consolidator), TickType.Quote);
                     return;
                 }

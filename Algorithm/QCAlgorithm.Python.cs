@@ -645,6 +645,13 @@ namespace QuantConnect.Algorithm
                 // Issue #4668 Fix
                 using (Py.GIL())
                 {
+                    // a consolidation calendar, e.g. Calendar.WEEKLY, converts without throwing so try it before the timespan cast
+                    if (pyObject.TrySafeAs(out Func<DateTime, CalendarInfo> calendar))
+                    {
+                        RegisterIndicator(symbol, indicator, ResolveConsolidator(symbol, calendar), selector);
+                        return;
+                    }
+
                     try
                     {
                         // tryConvert does not work for timespan
@@ -657,13 +664,6 @@ namespace QuantConnect.Algorithm
                     }
                     catch (Exception e)
                     {
-                        // Finally, try it as a consolidation calendar, e.g. Calendar.WEEKLY, which Consolidate() also accepts
-                        if (pyObject.TrySafeAs(out Func<DateTime, CalendarInfo> calendar))
-                        {
-                            RegisterIndicator(symbol, indicator, ResolveConsolidator(symbol, calendar), selector);
-                            return;
-                        }
-
                         throw new ArgumentException("Invalid third argument, should be either a valid consolidator, timedelta or " +
                             "calendar (e.g. Calendar.WEEKLY) object. The following exception was thrown: ", e);
                     }
