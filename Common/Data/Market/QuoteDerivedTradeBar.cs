@@ -54,12 +54,7 @@ namespace QuantConnect.Data.Market
         /// Creates a new bar from the mid-point prices of the given quote bar
         /// </summary>
         public QuoteDerivedTradeBar(QuoteBar quoteBar)
-            : this(quoteBar.Collapse())
-        {
-        }
-
-        private QuoteDerivedTradeBar(TradeBar collapsed)
-            : this(collapsed.Time, collapsed.Symbol, collapsed.Open, collapsed.High, collapsed.Low, collapsed.Close, collapsed.Period)
+            : this(quoteBar.Time, quoteBar.Symbol, quoteBar.Open, quoteBar.High, quoteBar.Low, quoteBar.Close, quoteBar.Period)
         {
         }
 
