@@ -38,17 +38,15 @@ namespace QuantConnect.Storage
         private static readonly Regex UnsupportedKeyCharactersRegex = new(@"[^a-zA-Z0-9\\/_#\-\$= .]", RegexOptions.Compiled);
         private static readonly Regex KeyExtensionRegex = new(@"^[a-zA-Z0-9]+$", RegexOptions.Compiled);
 
+        private const string SupportedKeyRules = "keys may only contain english letters, numbers, spaces and the characters" +
+            " '/', '\\', '_', '#', '-', '$' and '=', plus at most one '.' followed by a letters-and-numbers-only extension," +
+            " e.g. 'folder/trade_log-2024.csv'";
+
         // Python helpers for the PyObject APIs, lazily created under the GIL
         private static PyObject _jsonSerializeMethod;
         private static PyObject _jsonDeserializeMethod;
         private static PyObject _dataFrameSerializeMethod;
-
-        /// <summary>
-        /// Human readable description of the format an object store key must follow, stated in key validation errors
-        /// </summary>
-        public static string SupportedKeyRules { get; } = "keys may only contain english letters, numbers, spaces and the characters" +
-            " '/', '\\', '_', '#', '-', '$' and '=', plus at most one '.' followed by a letters-and-numbers-only extension," +
-            " e.g. 'folder/trade_log-2024.csv'";
+        private static PyObject _dataFrameDeserializeMethod;
 
         /// <summary>
         /// Gets the maximum storage limit in bytes
@@ -180,7 +178,20 @@ namespace QuantConnect.Storage
         }
 
         /// <summary>
-        /// Determines whether the given key follows the object store key format, see <see cref="SupportedKeyRules"/>
+        /// Returns the object data for the specified path as a string. Alias of <see cref="Read(string, Encoding)"/>
+        /// </summary>
+        /// <param name="path">The object path</param>
+        /// <param name="encoding">The string encoding used, <see cref="Encoding.UTF8"/> by default</param>
+        /// <returns>A string containing the data</returns>
+        public string ReadText(string path, Encoding encoding = null)
+        {
+            return Read(path, encoding);
+        }
+
+        /// <summary>
+        /// Determines whether the given key follows the object store key format: english letters, numbers, spaces
+        /// and the characters '/', '\', '_', '#', '-', '$' and '=', plus at most one '.' followed by a
+        /// letters-and-numbers-only extension, e.g. 'folder/trade_log-2024.csv'
         /// </summary>
         /// <param name="key">The object store key to validate</param>
         /// <returns>True if the key is supported</returns>
@@ -192,12 +203,77 @@ namespace QuantConnect.Storage
         }
 
         /// <summary>
+        /// Throws if the given key does not follow the object store key format, see <see cref="IsSupportedKey"/>.
+        /// Use it to validate programmatically-built keys when they are constructed, instead of at the final save
+        /// </summary>
+        /// <param name="key">The object store key to validate</param>
+        /// <exception cref="ArgumentException">The key is not supported. The message states the key rules</exception>
+        public static void ValidateKey(string key)
+        {
+            if (!IsSupportedKey(key))
+            {
+                throw new ArgumentException($"ObjectStore: path is not supported: '{key}': {string.Join("; ", GetKeyIssues(key))}." +
+                    $" Object store {SupportedKeyRules}. Use ObjectStore.{nameof(SanitizeKey)}(name) to convert an arbitrary name into a supported path.");
+            }
+        }
+
+        /// <summary>
+        /// Describes why a key fails <see cref="IsSupportedKey"/>, one entry per problem found
+        /// </summary>
+        private static List<string> GetKeyIssues(string key)
+        {
+            var issues = new List<string>();
+            if (string.IsNullOrEmpty(key))
+            {
+                issues.Add("the key is empty");
+                return issues;
+            }
+
+            var unsupported = UnsupportedKeyCharactersRegex.Matches(key).Select(match => $"'{match.Value}'").Distinct().ToList();
+            if (unsupported.Count > 0)
+            {
+                issues.Add($"unsupported character{(unsupported.Count > 1 ? "s" : "")} {string.Join(", ", unsupported)}");
+            }
+
+            // a single leading '.' is allowed, every other '.' must introduce the final extension
+            var name = key.TrimStart('.');
+            var dots = name.Count(c => c == '.');
+            if (dots > 1)
+            {
+                issues.Add($"it has {dots} '.' but at most one '.extension' is allowed");
+            }
+            else if (dots == 1)
+            {
+                var extension = name.Substring(name.IndexOf('.') + 1);
+                if (extension.Length > 0 && !KeyExtensionRegex.IsMatch(extension))
+                {
+                    issues.Add($"the extension '{extension}' may only contain letters and numbers");
+                }
+            }
+            if (name.Length == 0 || name[0] == '.')
+            {
+                issues.Add("it has no name before the '.'");
+            }
+
+            if (key.Count(c => c == '/') > 100 || key.Count(c => c == '\\') > 100)
+            {
+                issues.Add("it has more than 100 '/' or '\\' separators");
+            }
+
+            if (issues.Count == 0)
+            {
+                issues.Add("it does not follow the key format");
+            }
+            return issues;
+        }
+
+        /// <summary>
         /// Converts an arbitrary name into a supported object store key by replacing every unsupported character
         /// with '_', keeping at most the final '.extension'. Useful for programmatically-built keys, for instance
         /// from user-facing names: 'trade log: AI &amp; Cloud.csv' becomes 'trade log_ AI _ Cloud.csv'
         /// </summary>
         /// <param name="key">The arbitrary name to sanitize</param>
-        /// <returns>A key following <see cref="SupportedKeyRules"/></returns>
+        /// <returns>A key following the object store key format, see <see cref="IsSupportedKey"/></returns>
         public static string SanitizeKey(string key)
         {
             if (string.IsNullOrEmpty(key))
@@ -223,10 +299,7 @@ namespace QuantConnect.Storage
                 sanitized = sanitized.Replace('.', '_');
             }
 
-            if (!IsSupportedKey(sanitized))
-            {
-                throw new ArgumentException($"ObjectStore.SanitizeKey(): unable to sanitize key '{key}': object store {SupportedKeyRules}");
-            }
+            ValidateKey(sanitized);
             return sanitized;
         }
 
@@ -246,24 +319,37 @@ namespace QuantConnect.Storage
         }
 
         /// <summary>
-        /// Returns the JSON deserialized object data for the specified path as Python objects,
-        /// or the given default value if the key is not present
+        /// Returns the JSON deserialized object data for the specified path as Python objects
         /// </summary>
         /// <param name="path">The object path</param>
-        /// <param name="defaultValue">Value to return when the key is not present. Defaults to None</param>
-        /// <returns>The deserialized Python object, or <paramref name="defaultValue"/> if the key is not present</returns>
-        public PyObject ReadJson(string path, PyObject defaultValue = null)
+        /// <returns>The deserialized Python object</returns>
+        public PyObject ReadJson(string path)
         {
-            if (!ContainsKey(path))
-            {
-                return defaultValue;
-            }
             var json = Read(path);
             using (Py.GIL())
             {
                 EnsurePythonHelpers();
                 using var pyJson = json.ToPython();
                 return _jsonDeserializeMethod.Invoke(pyJson);
+            }
+        }
+
+        /// <summary>
+        /// Returns the object data for the specified path as a pandas DataFrame, read as JSON if the path has
+        /// a '.json' extension and as CSV otherwise, so a <see cref="SaveDataframe"/> round trip restores the frame.
+        /// A CSV index in ISO-8601 format is restored as a time index
+        /// </summary>
+        /// <param name="path">The object path</param>
+        /// <returns>The pandas DataFrame</returns>
+        public PyObject ReadDataframe(string path)
+        {
+            var serialized = Read(path);
+            using (Py.GIL())
+            {
+                EnsurePythonHelpers();
+                using var pySerialized = serialized.ToPython();
+                using var pyPath = path.ToPython();
+                return _dataFrameDeserializeMethod.Invoke(pySerialized, pyPath);
             }
         }
 
@@ -492,9 +578,24 @@ def serialize_dataframe(value, key):
     if key.lower().endswith('.json'):
         return value.to_json()
     return value.to_csv()
+
+def deserialize_dataframe(serialized, key):
+    import pandas
+    from io import StringIO
+    if key.lower().endswith('.json'):
+        return pandas.read_json(StringIO(serialized))
+    # to_csv() writes the index as the first column, datetimes in ISO-8601: restore a time index when it parses as one
+    frame = pandas.read_csv(StringIO(serialized), index_col=0)
+    if pandas.api.types.is_string_dtype(frame.index):
+        try:
+            frame.index = pandas.to_datetime(frame.index, format='ISO8601')
+        except (ValueError, TypeError):
+            pass
+    return frame
 ");
                 _jsonDeserializeMethod = module.GetAttr("deserialize");
                 _dataFrameSerializeMethod = module.GetAttr("serialize_dataframe");
+                _dataFrameDeserializeMethod = module.GetAttr("deserialize_dataframe");
                 // last so partial initialization is never observed
                 _jsonSerializeMethod = module.GetAttr("serialize");
             }

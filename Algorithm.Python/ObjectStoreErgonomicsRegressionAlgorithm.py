@@ -12,14 +12,15 @@
 # limitations under the License.
 
 from AlgorithmImports import *
+from System.Collections.Generic import KeyNotFoundException
 from decimal import Decimal
 
 ### <summary>
 ### Regression algorithm asserting the ObjectStore ergonomics: unsupported keys are rejected with the
-### key rules stated in the error, sanitize_key converts arbitrary names into supported keys, save_text
-### is an alias of save, reading a missing key lists the available keys in the error, and the tolerant
-### save_json/read_json and save_dataframe helpers handle datetime/date/Decimal/Symbol and data frames
-### out of the box.
+### key rules stated in the error, sanitize_key converts arbitrary names into supported keys, save_text and
+### read_text are aliases of save and read, reading a missing key lists the available keys in the error, and
+### the tolerant save_json/read_json and save_dataframe/read_dataframe helpers handle datetime/date/Decimal/Symbol
+### and data frames out of the box.
 ### </summary>
 class ObjectStoreErgonomicsRegressionAlgorithm(QCAlgorithm):
 
@@ -40,8 +41,17 @@ class ObjectStoreErgonomicsRegressionAlgorithm(QCAlgorithm):
             self.object_store.save(invalid_key, "a,b\n1,2")
         except BaseException as e:
             error = str(e)
-        if error is None or "keys may only contain" not in error or "SanitizeKey" not in error:
-            raise AssertionError(f"Expected the key rules in the unsupported key error, got: '{error}'")
+        if error is None or "unsupported character '&'" not in error or "keys may only contain" not in error or "SanitizeKey" not in error:
+            raise AssertionError(f"Expected the key issue and rules in the unsupported key error, got: '{error}'")
+
+        # validate_key states the same error eagerly, when the key is built
+        error = None
+        try:
+            self.object_store.validate_key(invalid_key)
+        except BaseException as e:
+            error = str(e)
+        if error is None or "unsupported character '&'" not in error:
+            raise AssertionError(f"Expected validate_key to reject the key stating the issue, got: '{error}'")
 
         # sanitize_key converts the arbitrary name into a supported key
         sanitized = self.object_store.sanitize_key(invalid_key)
@@ -71,25 +81,31 @@ class ObjectStoreErgonomicsRegressionAlgorithm(QCAlgorithm):
         if data != expected:
             raise AssertionError(f"Unexpected read_json round trip result: {data}")
 
-        # read_json returns the given default when the key is missing
-        if self.object_store.read_json("ergonomics/missing.json") is not None:
-            raise AssertionError("Expected read_json of a missing key to return None")
-        if self.object_store.read_json("ergonomics/missing.json", {"warmed_up": False}) != {"warmed_up": False}:
-            raise AssertionError("Expected read_json of a missing key to return the given default")
+        # read_json throws on a missing key like every other read method
+        error = None
+        try:
+            self.object_store.read_json("ergonomics/missing.json")
+        except KeyNotFoundException as e:
+            error = str(e)
+        if error is None:
+            raise AssertionError("Expected read_json of a missing key to throw")
 
-        # save_dataframe stores a pandas DataFrame as CSV
+        # save_dataframe stores a pandas DataFrame as CSV and read_dataframe restores it, time index included
         frame = pd.DataFrame({"close": [167.42, 168.0]}, index=pd.to_datetime(["2013-10-10", "2013-10-11"]))
         if not self.object_store.save_dataframe("ergonomics/history.csv", frame):
             raise AssertionError("Expected save_dataframe to succeed")
         csv = self.object_store.read("ergonomics/history.csv")
         if "close" not in csv or "2013-10-10" not in csv:
             raise AssertionError(f"Unexpected save_dataframe content: {csv}")
+        restored = self.object_store.read_dataframe("ergonomics/history.csv")
+        if not restored.equals(frame):
+            raise AssertionError(f"Unexpected read_dataframe round trip result: {restored}")
 
-        # save_text is an alias of save
+        # save_text/read_text are aliases of save/read
         if not self.object_store.save_text("ergonomics/report.txt", "The strategy went up"):
             raise AssertionError("Expected save_text to succeed")
-        if self.object_store.read("ergonomics/report.txt") != "The strategy went up":
-            raise AssertionError("Expected the save_text/read round trip to succeed")
+        if self.object_store.read_text("ergonomics/report.txt") != "The strategy went up":
+            raise AssertionError("Expected the save_text/read_text round trip to succeed")
 
         # reading a missing key lists the available keys in the error
         error = None
