@@ -1140,28 +1140,13 @@ def add_data(object_store):
         }
 
         [Test]
-        public void PythonSaveJsonReadJsonSaveDataframeReadDataframeAndSanitizeKey()
+        public void PythonSaveJsonAndReadJsonRoundTripTolerantTypes()
         {
-            using (Py.GIL())
-            {
-                var testModule = PyModule.FromString("TestObjectStoreErgonomics",
-                    @"
-from AlgorithmImports import *
-from System.Collections.Generic import KeyNotFoundException
-from datetime import datetime
-from decimal import Decimal
-
-def assert_raises_key_not_found(action):
-    try:
-        action()
-    except KeyNotFoundException:
-        return
-    raise AssertionError('Expected a KeyNotFoundException')
-
+            RunPythonTest(@"
 def test(object_store):
     symbol = Symbol.create('SPY', SecurityType.EQUITY, Market.USA)
 
-    # save_json tolerates datetime/date/Decimal/Symbol values and non-string dictionary keys
+    # datetime/date/Decimal/Symbol values and non-string dictionary keys, which json.dumps rejects
     object_store.save_json('ergonomics/log.json', {
         'time': datetime(2024, 1, 2, 3, 4, 5),
         'date': datetime(2024, 1, 1).date(),
@@ -1179,31 +1164,112 @@ def test(object_store):
         'fills': [{str(symbol): 10}]
     }, data
 
-    # read_json throws on a missing key like every other read method
-    assert_raises_key_not_found(lambda: object_store.read_json('ergonomics/missing.json'))
+    object_store.delete('ergonomics/log.json')
+");
+        }
 
-    # save_text/read_text are aliases of save/read
+        [Test]
+        public void PythonReadJsonThrowsOnMissingKey()
+        {
+            RunPythonTest(@"
+def test(object_store):
+    assert_raises_key_not_found(lambda: object_store.read_json('ergonomics/missing.json'))
+");
+        }
+
+        [Test]
+        public void PythonSaveTextAndReadTextAreAliasesOfSaveAndRead()
+        {
+            RunPythonTest(@"
+def test(object_store):
     object_store.save_text('ergonomics/report.txt', 'hello')
     assert object_store.read('ergonomics/report.txt') == 'hello'
     assert object_store.read_text('ergonomics/report.txt') == 'hello'
 
-    # save_dataframe stores a DataFrame as CSV, or JSON for '.json' keys, and read_dataframe restores it
-    import pandas as pd
+    object_store.delete('ergonomics/report.txt')
+");
+        }
+
+        [Test]
+        public void PythonSaveDataframeAndReadDataframeRoundTripAsCsv()
+        {
+            RunPythonTest(@"
+def test(object_store):
     frame = pd.DataFrame({'a': [1, 2], 'b': [3.5, 4.5]})
     object_store.save_dataframe('ergonomics/frame.csv', frame)
     assert 'a,b' in object_store.read('ergonomics/frame.csv')
     pd.testing.assert_frame_equal(object_store.read_dataframe('ergonomics/frame.csv'), frame)
+
+    object_store.delete('ergonomics/frame.csv')
+");
+        }
+
+        [Test]
+        public void PythonSaveDataframeAndReadDataframeRoundTripAsJson()
+        {
+            RunPythonTest(@"
+def test(object_store):
+    frame = pd.DataFrame({'a': [1, 2], 'b': [3.5, 4.5]})
     object_store.save_dataframe('ergonomics/frame.json', frame)
     assert object_store.read('ergonomics/frame.json') == frame.to_json()
     pd.testing.assert_frame_equal(object_store.read_dataframe('ergonomics/frame.json'), frame)
-    assert_raises_key_not_found(lambda: object_store.read_dataframe('ergonomics/missing.csv'))
 
-    # sanitize_key is reachable from the instance
-    assert object_store.sanitize_key('trade_log_ai_hardware_&_cloud.csv') == 'trade_log_ai_hardware___cloud.csv'
-
-    for key in ['ergonomics/log.json', 'ergonomics/report.txt', 'ergonomics/frame.csv', 'ergonomics/frame.json']:
-        object_store.delete(key)
+    object_store.delete('ergonomics/frame.json')
 ");
+        }
+
+        [Test]
+        public void PythonReadDataframeRestoresATimeIndex()
+        {
+            RunPythonTest(@"
+def test(object_store):
+    frame = pd.DataFrame({'close': [167.42, 168.0]}, index=pd.to_datetime(['2013-10-10', '2013-10-11']))
+    object_store.save_dataframe('ergonomics/history.csv', frame)
+    pd.testing.assert_frame_equal(object_store.read_dataframe('ergonomics/history.csv'), frame)
+
+    object_store.delete('ergonomics/history.csv')
+");
+        }
+
+        [Test]
+        public void PythonReadDataframeThrowsOnMissingKey()
+        {
+            RunPythonTest(@"
+def test(object_store):
+    assert_raises_key_not_found(lambda: object_store.read_dataframe('ergonomics/missing.csv'))
+");
+        }
+
+        [Test]
+        public void PythonSanitizeKeyIsReachableFromTheInstance()
+        {
+            RunPythonTest(@"
+def test(object_store):
+    assert object_store.sanitize_key('trade_log_ai_hardware_&_cloud.csv') == 'trade_log_ai_hardware___cloud.csv'
+");
+        }
+
+        /// <summary>
+        /// Runs the 'test(object_store)' function of the given Python source against the test store
+        /// </summary>
+        private void RunPythonTest(string source)
+        {
+            using (Py.GIL())
+            {
+                var testModule = PyModule.FromString("TestObjectStoreErgonomics", @"
+from AlgorithmImports import *
+from System.Collections.Generic import KeyNotFoundException
+from datetime import datetime
+from decimal import Decimal
+import pandas as pd
+
+def assert_raises_key_not_found(action):
+    try:
+        action()
+    except KeyNotFoundException:
+        return
+    raise AssertionError('Expected a KeyNotFoundException')
+" + source);
 
                 dynamic test = testModule.GetAttr("test");
                 Assert.DoesNotThrow(() => test(_store));
