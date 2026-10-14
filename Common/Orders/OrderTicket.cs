@@ -692,6 +692,7 @@ namespace QuantConnect.Orders
         /// an error, where it will return the integer value of the <see cref="OrderResponseErrorCode"/> from
         /// the most recent response
         /// </summary>
+        [StubsIgnore]
         public static implicit operator int(OrderTicket ticket)
         {
             var response = ticket.GetMostRecentOrderResponse();
