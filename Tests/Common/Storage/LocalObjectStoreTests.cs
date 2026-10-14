@@ -592,6 +592,14 @@ namespace QuantConnect.Tests.Common.Storage
         public void ValidatesKeys(string key, bool isSupported)
         {
             Assert.AreEqual(isSupported, ObjectStore.IsSupportedKey(key));
+            if (isSupported)
+            {
+                Assert.DoesNotThrow(() => ObjectStore.ValidateKey(key));
+            }
+            else
+            {
+                Assert.Throws<ArgumentException>(() => ObjectStore.ValidateKey(key));
+            }
         }
 
         [Test]
@@ -600,9 +608,25 @@ namespace QuantConnect.Tests.Common.Storage
             var error = Assert.Throws<ArgumentException>(
                 () => _store.SaveBytes("trade_log_ai_hardware_&_cloud.csv", new byte[] { 1 }));
 
-            Assert.IsTrue(error.Message.Contains("path is not supported: 'trade_log_ai_hardware_&_cloud.csv'"), error.Message);
-            Assert.IsTrue(error.Message.Contains(ObjectStore.SupportedKeyRules), error.Message);
+            Assert.IsTrue(error.Message.Contains("path is not supported: 'trade_log_ai_hardware_&_cloud.csv': unsupported character '&'."), error.Message);
+            Assert.IsTrue(error.Message.Contains("keys may only contain english letters, numbers, spaces and the characters"), error.Message);
             Assert.IsTrue(error.Message.Contains("SanitizeKey"), error.Message);
+        }
+
+        [TestCase("trade log: AI & Cloud.csv", "unsupported characters ':', '&'")]
+        [TestCase("résumé.pdf", "unsupported character 'é'")]
+        [TestCase("file.tar.gz", "it has 2 '.' but at most one '.extension' is allowed")]
+        [TestCase("file.name_v2", "the extension 'name_v2' may only contain letters and numbers")]
+        [TestCase("folder.v1/file", "the extension 'v1/file' may only contain letters and numbers")]
+        [TestCase("trade log: AI.v2.csv", "unsupported character ':'; it has 2 '.' but at most one '.extension' is allowed")]
+        [TestCase(".", "it has no name before the '.'")]
+        [TestCase("", "the key is empty")]
+        [TestCase(null, "the key is empty")]
+        public void UnsupportedKeyErrorStatesTheIssue(string key, string expectedIssue)
+        {
+            var error = Assert.Throws<ArgumentException>(() => ObjectStore.ValidateKey(key));
+
+            Assert.IsTrue(error.Message.Contains($"'{key}': {expectedIssue}."), error.Message);
         }
 
         [TestCase("my_key/file.csv", "my_key/file.csv")]
@@ -631,10 +655,11 @@ namespace QuantConnect.Tests.Common.Storage
         }
 
         [Test]
-        public void SaveTextIsAnAliasOfSave()
+        public void SaveTextAndReadTextAreAliasesOfSaveAndRead()
         {
             Assert.IsTrue(_store.SaveText("save_text_alias.txt", "abc"));
             Assert.AreEqual("abc", _store.Read("save_text_alias.txt"));
+            Assert.AreEqual("abc", _store.ReadText("save_text_alias.txt"));
 
             _store.Delete("save_text_alias.txt");
         }
@@ -1115,15 +1140,23 @@ def add_data(object_store):
         }
 
         [Test]
-        public void PythonSaveJsonReadJsonSaveDataframeAndSanitizeKey()
+        public void PythonSaveJsonReadJsonSaveDataframeReadDataframeAndSanitizeKey()
         {
             using (Py.GIL())
             {
                 var testModule = PyModule.FromString("TestObjectStoreErgonomics",
                     @"
 from AlgorithmImports import *
+from System.Collections.Generic import KeyNotFoundException
 from datetime import datetime
 from decimal import Decimal
+
+def assert_raises_key_not_found(action):
+    try:
+        action()
+    except KeyNotFoundException:
+        return
+    raise AssertionError('Expected a KeyNotFoundException')
 
 def test(object_store):
     symbol = Symbol.create('SPY', SecurityType.EQUITY, Market.USA)
@@ -1146,24 +1179,29 @@ def test(object_store):
         'fills': [{str(symbol): 10}]
     }, data
 
-    # read_json returns the given default when the key is missing
-    assert object_store.read_json('ergonomics/missing.json') is None
-    assert object_store.read_json('ergonomics/missing.json', {'a': 1}) == {'a': 1}
+    # read_json throws on a missing key like every other read method
+    assert_raises_key_not_found(lambda: object_store.read_json('ergonomics/missing.json'))
 
-    # save_text is an alias of save
+    # save_text/read_text are aliases of save/read
     object_store.save_text('ergonomics/report.txt', 'hello')
     assert object_store.read('ergonomics/report.txt') == 'hello'
+    assert object_store.read_text('ergonomics/report.txt') == 'hello'
 
-    # save_dataframe stores a DataFrame as CSV
+    # save_dataframe stores a DataFrame as CSV, or JSON for '.json' keys, and read_dataframe restores it
     import pandas as pd
     frame = pd.DataFrame({'a': [1, 2], 'b': [3.5, 4.5]})
     object_store.save_dataframe('ergonomics/frame.csv', frame)
     assert 'a,b' in object_store.read('ergonomics/frame.csv')
+    pd.testing.assert_frame_equal(object_store.read_dataframe('ergonomics/frame.csv'), frame)
+    object_store.save_dataframe('ergonomics/frame.json', frame)
+    assert object_store.read('ergonomics/frame.json') == frame.to_json()
+    pd.testing.assert_frame_equal(object_store.read_dataframe('ergonomics/frame.json'), frame)
+    assert_raises_key_not_found(lambda: object_store.read_dataframe('ergonomics/missing.csv'))
 
     # sanitize_key is reachable from the instance
     assert object_store.sanitize_key('trade_log_ai_hardware_&_cloud.csv') == 'trade_log_ai_hardware___cloud.csv'
 
-    for key in ['ergonomics/log.json', 'ergonomics/report.txt', 'ergonomics/frame.csv']:
+    for key in ['ergonomics/log.json', 'ergonomics/report.txt', 'ergonomics/frame.csv', 'ergonomics/frame.json']:
         object_store.delete(key)
 ");
 

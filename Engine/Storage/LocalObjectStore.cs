@@ -331,13 +331,7 @@ namespace QuantConnect.Lean.Engine.Storage
             {
                 throw new InvalidOperationException($"LocalObjectStore.SaveBytes(): {NoWritePermissionsError}");
             }
-            else if (!ObjectStore.IsSupportedKey(path))
-            {
-                // state the rules in the error: keys are often built from user-facing names and only fail here,
-                // frequently in OnEndOfAlgorithm after an otherwise green run
-                throw new ArgumentException($"LocalObjectStore: path is not supported: '{path}'. Object store {ObjectStore.SupportedKeyRules}." +
-                    $" Use ObjectStore.{nameof(ObjectStore.SanitizeKey)}(name) to convert an arbitrary name into a supported path.");
-            }
+            ObjectStore.ValidateKey(path);
 
             // after we check the regex
             path = NormalizePath(path);

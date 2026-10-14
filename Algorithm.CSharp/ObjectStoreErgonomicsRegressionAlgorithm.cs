@@ -22,9 +22,9 @@ namespace QuantConnect.Algorithm.CSharp
     /// <summary>
     /// Regression algorithm asserting the ObjectStore ergonomics: unsupported keys are rejected with the
     /// key rules stated in the error, <see cref="Storage.ObjectStore.SanitizeKey"/> converts arbitrary names
-    /// into supported keys, <see cref="Storage.ObjectStore.SaveText"/> is an alias of Save and reading a
-    /// missing key lists the available keys in the error. The Python version of this algorithm additionally
-    /// covers the tolerant save_json/read_json and save_dataframe helpers
+    /// into supported keys, <see cref="Storage.ObjectStore.SaveText"/> and <see cref="Storage.ObjectStore.ReadText"/>
+    /// are aliases of Save and Read, and reading a missing key lists the available keys in the error. The Python
+    /// version of this algorithm additionally covers the tolerant save_json/read_json and save_dataframe/read_dataframe helpers
     /// </summary>
     public class ObjectStoreErgonomicsRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
@@ -57,9 +57,24 @@ namespace QuantConnect.Algorithm.CSharp
             {
                 errorMessage = exception.Message;
             }
-            if (!errorMessage.Contains(Storage.ObjectStore.SupportedKeyRules) || !errorMessage.Contains("SanitizeKey"))
+            if (!errorMessage.Contains("unsupported character '&'") || !errorMessage.Contains("keys may only contain") ||
+                !errorMessage.Contains("SanitizeKey"))
             {
-                throw new RegressionTestException($"Expected the key rules in the unsupported key error, got: '{errorMessage}'");
+                throw new RegressionTestException($"Expected the key issue and rules in the unsupported key error, got: '{errorMessage}'");
+            }
+            // ValidateKey states the same error eagerly, when the key is built
+            errorMessage = string.Empty;
+            try
+            {
+                Storage.ObjectStore.ValidateKey(invalidKey);
+            }
+            catch (ArgumentException exception)
+            {
+                errorMessage = exception.Message;
+            }
+            if (!errorMessage.Contains("unsupported character '&'"))
+            {
+                throw new RegressionTestException($"Expected ValidateKey to reject the key stating the issue, got: '{errorMessage}'");
             }
 
             // SanitizeKey converts the arbitrary name into a supported key
@@ -73,11 +88,12 @@ namespace QuantConnect.Algorithm.CSharp
                 throw new RegressionTestException("Expected the sanitized key to be storable");
             }
 
-            // SaveText is an alias of Save
+            // SaveText and ReadText are aliases of Save and Read
             if (!ObjectStore.SaveText("ergonomics_report.txt", "The strategy went up") ||
-                ObjectStore.Read("ergonomics_report.txt") != "The strategy went up")
+                ObjectStore.Read("ergonomics_report.txt") != "The strategy went up" ||
+                ObjectStore.ReadText("ergonomics_report.txt") != "The strategy went up")
             {
-                throw new RegressionTestException("Expected the SaveText/Read round trip to succeed");
+                throw new RegressionTestException("Expected the SaveText/ReadText round trip to succeed");
             }
 
             // reading a missing key lists the available keys in the error
