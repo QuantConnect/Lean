@@ -110,6 +110,16 @@ def get_tag_and_time(order_event: OrderEvent):
         }
 
         [Test]
+        public void GroupIdIsTakenFromTheOrder()
+        {
+            var order = new MarketOrder(Symbols.BTCUSD, 0.123m, DateTime.UtcNow);
+            Assert.IsNull(new OrderEvent(order, DateTime.UtcNow, OrderFee.Zero).GroupId);
+
+            var comboOrder = new ComboMarketOrder(Symbols.BTCUSD, 0.123m, DateTime.UtcNow, new GroupOrderManager(33, 2, 10));
+            Assert.AreEqual(33, new OrderEvent(comboOrder, DateTime.UtcNow, OrderFee.Zero).GroupId);
+        }
+
+        [Test]
         public void RoundTripSerialization([Values] bool isInTheMoney)
         {
             var order = new MarketOrder(Symbols.BTCUSD, 0.123m, DateTime.UtcNow);
@@ -118,6 +128,7 @@ def get_tag_and_time(order_event: OrderEvent):
                 Message = "Pepe",
                 Status = OrderStatus.PartiallyFilled,
                 OrderType = OrderType.StopLimit,
+                GroupId = 7,
                 StopPrice = 1,
                 LimitPrice = 2,
                 FillPrice = 11,
@@ -137,9 +148,11 @@ def get_tag_and_time(order_event: OrderEvent):
             Assert.IsFalse(serializeObject.Contains("order-fee-currency", StringComparison.InvariantCulture));
             Assert.AreEqual(isInTheMoney, serializeObject.Contains("isInTheMoney", StringComparison.InvariantCulture));
             Assert.IsTrue(serializeObject.Contains("\"orderType\":\"stopLimit\"", StringComparison.InvariantCulture));
+            Assert.IsTrue(serializeObject.Contains("\"groupId\":7", StringComparison.InvariantCulture));
 
             var deserializeObject = JsonConvert.DeserializeObject<OrderEvent>(serializeObject, converter);
             Assert.AreEqual(orderEvent.OrderType, deserializeObject.OrderType);
+            Assert.AreEqual(orderEvent.GroupId, deserializeObject.GroupId);
 
             Assert.AreEqual(orderEvent.Symbol, deserializeObject.Symbol);
             Assert.AreEqual(orderEvent.StopPrice, deserializeObject.StopPrice);
@@ -230,19 +243,22 @@ def get_tag_and_time(order_event: OrderEvent):
             Assert.AreEqual(orderEvent.OrderFee.Value.Currency, deserializeObject.OrderFee.Value.Currency);
             // payloads that predate the order type must not be read back as market orders
             Assert.IsNull(deserializeObject.OrderType);
+            Assert.IsNull(deserializeObject.GroupId);
         }
 
         [Test]
-        public void UnknownOrderTypeIsNotSerialized()
+        public void NullOrderTypeAndGroupIdAreNotSerialized()
         {
             var order = new MarketOrder(Symbols.BTCUSD, 0.123m, DateTime.UtcNow);
             var orderEvent = new OrderEvent(order, DateTime.UtcNow, OrderFee.Zero) { OrderType = null };
 
             var json = JsonConvert.SerializeObject(orderEvent, new OrderEventJsonConverter("id"));
             Assert.IsFalse(json.Contains("orderType", StringComparison.InvariantCulture));
+            Assert.IsFalse(json.Contains("groupId", StringComparison.InvariantCulture));
 
             json = JsonConvert.SerializeObject(orderEvent);
             Assert.IsFalse(json.Contains("OrderType", StringComparison.InvariantCulture));
+            Assert.IsFalse(json.Contains("GroupId", StringComparison.InvariantCulture));
         }
     }
 }

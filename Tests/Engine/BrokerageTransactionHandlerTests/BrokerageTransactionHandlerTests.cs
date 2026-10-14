@@ -1488,6 +1488,47 @@ namespace QuantConnect.Tests.Engine.BrokerageTransactionHandlerTests
             var orderEvent = _algorithm.OrderEvents.Single(orderEvent => orderEvent.Status == OrderStatus.Submitted);
             Assert.AreEqual(OrderType.Limit, orderEvent.OrderType);
             Assert.AreEqual(order.Type, orderEvent.OrderType);
+            Assert.IsNull(orderEvent.GroupId);
+        }
+
+        [Test]
+        public void BrokerageOrderEventsCarryTheGroupId()
+        {
+            var algorithm = new TestAlgorithm { HistoryProvider = new EmptyHistoryProvider() };
+            algorithm.SubscriptionManager.SetDataManager(new DataManagerStub(algorithm));
+            algorithm.SetBrokerageModel(BrokerageName.Default);
+            algorithm.SetCash(1000000);
+            var index = algorithm.AddIndex("SPX").Symbol;
+            var option = Symbol.CreateOption(index, Market.USA, OptionStyle.European, OptionRight.Put, 300m, new DateTime(2024, 05, 16));
+            algorithm.AddIndexOptionContract(option);
+            algorithm.SetFinishedWarmingUp();
+
+            _transactionHandler = new TestBrokerageTransactionHandler();
+            using var brokerage = new NoSubmitTestBrokerage(algorithm);
+            _transactionHandler.Initialize(algorithm, brokerage, new BacktestingResultHandler());
+            algorithm.Transactions.SetOrderProcessor(_transactionHandler);
+
+            var dateTime = new DateTime(2024, 05, 14, 12, 0, 0);
+            var groupOrderManager = new GroupOrderManager(1, 2, 10);
+            foreach (var (symbol, price) in new[] { (index, 1.12m), (option, 330.12m) })
+            {
+                var security = algorithm.Securities[symbol];
+                security.SetMarketPrice(new Tick(dateTime, symbol, price, price, price));
+                algorithm.Transactions.AddOrder(new SubmitOrderRequest(OrderType.ComboMarket, security.Type, symbol, 10, 0, 0, dateTime, "",
+                    groupOrderManager: groupOrderManager));
+            }
+            _transactionHandler.PumpPendingRequests();
+
+            var order = algorithm.Transactions.GetOpenOrders().Single(openOrder => openOrder.Symbol == option);
+            Assert.AreEqual(1, order.GroupOrderManager.Id);
+
+            // brokerages building events from the order id alone do not know the order group
+            brokerage.PublishOrderEvent(new OrderEvent(order.Id, order.Symbol, algorithm.UtcTime, OrderStatus.PartiallyFilled,
+                order.Direction, 330.12m, 1, OrderFee.Zero));
+
+            var orderEvent = algorithm.OrderEvents.Single(orderEvent => orderEvent.Status == OrderStatus.PartiallyFilled);
+            Assert.AreEqual(OrderType.ComboMarket, orderEvent.OrderType);
+            Assert.AreEqual(order.GroupOrderManager.Id, orderEvent.GroupId);
         }
 
         [Test]

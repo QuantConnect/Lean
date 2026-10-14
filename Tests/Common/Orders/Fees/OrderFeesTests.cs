@@ -48,12 +48,14 @@ namespace QuantConnect.Tests.Common.Orders.Fees
         }
 
         [Test]
-        public void AmountIsASynonymOfValueAmount()
+        public void AmountAndCurrencyAreSynonymsOfTheValueAmountAndCurrency()
         {
             var orderFee = new OrderFee(new CashAmount(12.5m, Currencies.USD));
 
             Assert.AreEqual(12.5m, orderFee.Amount);
             Assert.AreEqual(orderFee.Value.Amount, orderFee.Amount);
+            Assert.AreEqual(Currencies.USD, orderFee.Currency);
+            Assert.AreEqual(orderFee.Value.Currency, orderFee.Currency);
             // The synonym is not serialized, only Value is
             Assert.AreEqual("{\"Value\":{\"Amount\":12.5,\"Currency\":\"USD\"}}", JsonConvert.SerializeObject(orderFee));
         }
