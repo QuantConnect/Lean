@@ -38,6 +38,12 @@ namespace QuantConnect.Orders.Fees
         public decimal Amount => Value.Amount;
 
         /// <summary>
+        /// Gets the order fee currency. Synonym of <see cref="Value"/>.<see cref="CashAmount.Currency"/>
+        /// </summary>
+        [JsonIgnore]
+        public string Currency => Value.Currency;
+
+        /// <summary>
         /// Initializes a new instance of the <see cref="OrderFee"/> class
         /// </summary>
         /// <param name="orderFee">The order fee</param>

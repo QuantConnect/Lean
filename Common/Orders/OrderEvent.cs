@@ -130,6 +130,13 @@ namespace QuantConnect.Orders
         public OrderType? OrderType { get; set; }
 
         /// <summary>
+        /// The id of the group of orders the order belongs to if it is a combo order leg, null otherwise
+        /// </summary>
+        [JsonProperty(DefaultValueHandling = DefaultValueHandling.Ignore)]
+        [ProtoMember(21)]
+        public int? GroupId { get; set; }
+
+        /// <summary>
         /// Any message from the exchange.
         /// </summary>
         [DefaultValue(""), JsonProperty(DefaultValueHandling = DefaultValueHandling.Ignore)]
@@ -318,6 +325,7 @@ namespace QuantConnect.Orders
             Quantity = order.Quantity;
             Direction = order.Direction;
             OrderType = order.Type;
+            GroupId = order.GroupId;
 
             //Initialize to zero, manually set fill quantity
             FillQuantity = 0;
@@ -387,6 +395,7 @@ namespace QuantConnect.Orders
                 IsAssignment = serializedOrderEvent.IsAssignment,
                 IsInTheMoney = serializedOrderEvent.IsInTheMoney,
                 OrderType = serializedOrderEvent.OrderType,
+                GroupId = serializedOrderEvent.GroupId,
                 LimitPrice = serializedOrderEvent.LimitPrice,
                 StopPrice = serializedOrderEvent.StopPrice,
                 FillPriceCurrency = serializedOrderEvent.FillPriceCurrency,
