@@ -104,6 +104,20 @@ namespace QuantConnect.Tests.Common.Securities
             Assert.AreEqual(defaultSymbolProperties.LotSize, 1);
         }
 
+        [Test]
+        public void LoadsMicroInrUsdFuturesPropertiesCorrectly()
+        {
+            var db = SymbolPropertiesDatabase.FromDataFolder();
+            var symbol = Symbol.Create(Futures.Currencies.MicroINRUSD, SecurityType.Future, Market.CME);
+
+            var sp = db.GetSymbolProperties(symbol.ID.Market, symbol, symbol.SecurityType, Currencies.USD);
+            Assert.AreEqual(10000m, sp.ContractMultiplier);
+            Assert.AreEqual(0.0001m, sp.MinimumPriceVariation);
+            Assert.AreEqual(1m, sp.LotSize);
+            Assert.AreEqual(100m, sp.PriceMagnifier);
+            Assert.AreEqual(Currencies.USD, sp.QuoteCurrency);
+        }
+
         [TestCase(Market.FXCM, SecurityType.Forex)]
         [TestCase(Market.Oanda, SecurityType.Forex)]
         [TestCase(Market.Coinbase, SecurityType.Crypto)]
