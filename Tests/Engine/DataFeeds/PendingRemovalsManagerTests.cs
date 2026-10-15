@@ -305,6 +305,24 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             Assert.AreEqual(1, pendingRemovals.CheckPendingRemovals(new HashSet<Symbol>(), universe).Count);
         }
 
+        [Test]
+        public void IsPendingForRemovalFromAnyUniverseIgnoresInternalFlag()
+        {
+            var orderProvider = new FakeOrderProcessor();
+            var pendingRemovals = new PendingRemovalsManager(orderProvider);
+            using var universe = new TestUniverse();
+            var security = SecurityTests.GetSecurity();
+            var member = new Universe.Member(Noon, security, true);
+            security.Holdings.SetHoldings(10, 10);
+
+            Assert.IsFalse(pendingRemovals.IsPendingForRemoval(security));
+            Assert.IsNull(pendingRemovals.TryRemoveMember(member, universe));
+
+            Assert.IsTrue(pendingRemovals.IsPendingForRemoval(security));
+            Assert.IsTrue(pendingRemovals.IsPendingForRemoval(security, true));
+            Assert.IsFalse(pendingRemovals.IsPendingForRemoval(security, false));
+        }
+
         private static SecurityPortfolioManager ApplyUnsettledFunds(Security security)
         {
             security.SetSettlementModel(new DelayedSettlementModel(1, TimeSpan.FromHours(8)));

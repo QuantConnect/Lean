@@ -22,6 +22,7 @@ using NUnit.Framework;
 using QuantConnect.Configuration;
 using QuantConnect.Data;
 using QuantConnect.Data.Fundamental;
+using QuantConnect.Data.Market;
 using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Interfaces;
 using QuantConnect.Lean.Engine.DataFeeds;
@@ -284,6 +285,90 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             Assert.AreEqual(security.Symbol, securityChanges.RemovedSecurities.First().Symbol);
 
             Assert.IsFalse(security.IsTradable);
+        }
+
+        [Test]
+        public void DelistedSecurityIsRemovedOnceAllItsUniversesCanRemoveIt()
+        {
+            var algorithm = new AlgorithmStub(new MockDataFeedWithSubscription());
+            var orderProcessorMock = new Mock<IOrderProcessor>();
+            orderProcessorMock.Setup(m => m.GetOpenOrders(It.IsAny<Func<Order, bool>>())).Returns(new List<Order>());
+            algorithm.Transactions.SetOrderProcessor(orderProcessorMock.Object);
+            algorithm.SetStartDate(2015, 11, 2);
+            algorithm.SetEndDate(2015, 11, 6);
+
+            var equity = algorithm.AddEquity("SPY");
+            var universeA = algorithm.AddUniverse("universe-a", dt => new List<string> { "SPY" });
+            var universeB = algorithm.AddUniverse("universe-b", dt => new List<string> { "SPY" });
+            // OnEndOfTimeStep will add all pending universe additions
+            algorithm.OnEndOfTimeStep();
+
+            var time = algorithm.UtcTime;
+            var option = new Security(Symbols.SPY_C_192_Feb19_2016,
+                SecurityExchangeHours.AlwaysOpen(TimeZones.NewYork),
+                new Cash(Currencies.USD, 0, 1m),
+                SymbolProperties.GetDefault(Currencies.USD),
+                ErrorCurrencyConverter.Instance,
+                RegisteredSecurityDataTypesProvider.Null,
+                new SecurityCache());
+            Assert.IsTrue(universeA.AddMember(time, equity, false));
+            Assert.IsTrue(universeB.AddMember(time, equity, false));
+            // universe B can't remove the equity while it holds an option on it
+            Assert.IsTrue(universeB.AddMember(time, option, false));
+            option.Holdings.SetHoldings(1, 1);
+            // the delisting liquidation is still pending
+            equity.Holdings.SetHoldings(100, 10);
+
+            var universeSelection = algorithm.DataManager.UniverseSelection;
+            universeSelection.HandleDelisting(new Delisting(equity.Symbol, time, 100, DelistingType.Delisted), false);
+            Assert.IsTrue(algorithm.Securities.Values.Contains(equity));
+
+            // the delisting liquidation fills, universe A can remove it but universe B is still waiting on the option position
+            equity.Holdings.SetHoldings(100, 0);
+            universeSelection.CheckPendingDelistedRemovals(time.AddHours(1));
+            Assert.IsFalse(universeA.ContainsMember(equity.Symbol));
+            Assert.IsTrue(universeB.ContainsMember(equity.Symbol));
+            Assert.IsTrue(algorithm.Securities.Values.Contains(equity));
+
+            option.Holdings.SetHoldings(1, 0);
+            universeSelection.CheckPendingDelistedRemovals(time.AddHours(2));
+            Assert.IsFalse(universeB.ContainsMember(equity.Symbol));
+            Assert.IsFalse(algorithm.Securities.Values.Contains(equity));
+            Assert.IsFalse(algorithm.UniverseManager.ActiveSecurities.ContainsKey(equity.Symbol));
+        }
+
+        [Test]
+        public void DelistedSecurityPendingRemovalFromRemovedUniverseIsKept()
+        {
+            var algorithm = new AlgorithmStub(new MockDataFeedWithSubscription());
+            var orderProcessorMock = new Mock<IOrderProcessor>();
+            orderProcessorMock.Setup(m => m.GetOpenOrders(It.IsAny<Func<Order, bool>>())).Returns(new List<Order>());
+            algorithm.Transactions.SetOrderProcessor(orderProcessorMock.Object);
+            algorithm.SetStartDate(2015, 11, 2);
+            algorithm.SetEndDate(2015, 11, 6);
+
+            var equity = algorithm.AddEquity("SPY");
+            var universe = algorithm.AddUniverse("my-universe", dt => new List<string> { "SPY" });
+            algorithm.OnEndOfTimeStep();
+
+            var time = algorithm.UtcTime;
+            Assert.IsTrue(universe.AddMember(time, equity, false));
+            equity.Holdings.SetHoldings(100, 10);
+
+            // the universe is disposed and removed, like a refreshed framework universe, its member is kept because of its holdings
+            var universeSelection = algorithm.DataManager.UniverseSelection;
+            universe.Dispose();
+            universeSelection.ApplyUniverseSelection(universe, time, new BaseDataCollection(time, universe.Configuration.Symbol, new List<BaseData>()));
+            algorithm.UniverseManager.Remove(universe.Configuration.Symbol);
+            Assert.IsTrue(algorithm.Securities.Values.Contains(equity));
+
+            universeSelection.HandleDelisting(new Delisting(equity.Symbol, time, 100, DelistingType.Delisted), false);
+            Assert.IsTrue(algorithm.Securities.Values.Contains(equity));
+
+            // the delisting liquidation fills
+            equity.Holdings.SetHoldings(100, 0);
+            universeSelection.CheckPendingDelistedRemovals(time.AddHours(1));
+            Assert.IsFalse(algorithm.Securities.Values.Contains(equity));
         }
 
         [Test]

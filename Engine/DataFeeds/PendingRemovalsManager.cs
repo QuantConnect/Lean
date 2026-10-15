@@ -118,6 +118,16 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         }
 
         /// <summary>
+        /// Will check if the security is pending for removal from any universe, including universes no longer in the universe manager
+        /// </summary>
+        /// <param name="security">The security</param>
+        /// <returns>Whether the security is pending for removal</returns>
+        public bool IsPendingForRemoval(Security security)
+        {
+            return _pendingRemovals.Values.Any(x => x.Any(y => y.Security.Symbol == security.Symbol));
+        }
+
+        /// <summary>
         /// Will check if the member is pending for removal
         /// </summary>
         /// <param name="member">The universe member</param>

@@ -496,18 +496,18 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 // like any other removal, keep the security until it's safe to remove it: the delisting liquidation
                 // still has to happen and its funds have to settle, see CheckPendingDelistedRemovals.
                 // Only this feed's memberships, the other feed's removal change is emitted when its own delisting is handled
-                var isSafeToRemove = true;
                 foreach (var universe in _algorithm.UniverseManager.Values)
                 {
-                    if (universe.Securities.TryGetValue(data.Symbol, out var member)
-                        && member.IsInternal == isInternalFeed
-                        && _pendingRemovalsManager.TryRemoveMember(member, universe) == null)
+                    if (universe.Securities.TryGetValue(data.Symbol, out var member) && member.IsInternal == isInternalFeed)
                     {
-                        isSafeToRemove = false;
+                        // registered as pending if it's not safe to remove yet
+                        _pendingRemovalsManager.TryRemoveMember(member, universe);
                     }
                 }
 
-                if (isSafeToRemove)
+                // its pending removals will remove it once safe, including one from a universe no longer in the universe manager,
+                // like a disposed universe whose member was kept because of its holdings
+                if (!_pendingRemovalsManager.IsPendingForRemoval(security))
                 {
                     _algorithm.Securities.Remove(data.Symbol);
                 }
@@ -667,9 +667,10 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     }
                 }
 
-                if (member.IsDelisted)
+                if (member.IsDelisted && !_pendingRemovalsManager.IsPendingForRemoval(member))
                 {
-                    // the subscriptions of a delisted security end with its data, so they aren't removed above
+                    // the subscriptions of a delisted security end with its data, so they aren't removed above.
+                    // Removed once all its pending removals complete, another universe could still be waiting, e.g. on an option position
                     _algorithm.Securities.Remove(member.Symbol);
                 }
             }
