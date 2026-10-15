@@ -3060,6 +3060,40 @@ namespace QuantConnect.Tests.Engine.BrokerageTransactionHandlerTests
             Assert.AreEqual(providesStopTriggeredTime ? referenceDateTime : algorithm.UtcTime, updatedStopLimitOrder.StopTriggeredTime);
         }
 
+        [TestCase(DataNormalizationMode.Raw, 15.10, 0.03)]
+        [TestCase(DataNormalizationMode.SplitAdjusted, 15.10, 0.03)]
+        [TestCase(DataNormalizationMode.Raw, 20, 0)]
+        public void DelistingAfterCashDistributionDoesNotCountItTwice(DataNormalizationMode mode, decimal distribution, decimal expectedFillPrice)
+        {
+            const decimal lastPrice = 15.13m;
+            const int quantity = 100;
+            var referenceDateTime = new DateTime(2024, 05, 17, 16, 0, 0);
+
+            var algorithm = new TestAlgorithm();
+            algorithm.SetBrokerageMessageHandler(new TestBrokerageMessageHandler());
+
+            _transactionHandler = new TestBrokerageTransactionHandler();
+            using var brokerage = new EventEmittingBrokerage(algorithm);
+            _transactionHandler.Initialize(algorithm, brokerage, new BacktestingResultHandler());
+
+            // the security never trades again after this bar, it pays out the distribution and is delisted
+            var security = algorithm.AddEquity("SPY", dataNormalizationMode: mode);
+            security.SetMarketPrice(new TradeBar(referenceDateTime, security.Symbol, lastPrice, lastPrice, lastPrice, lastPrice, 1000, Time.OneMinute));
+            security.Holdings.SetHoldings(lastPrice, quantity);
+            algorithm.Status = AlgorithmStatus.Running;
+            var initialCash = algorithm.Portfolio.Cash;
+
+            algorithm.Portfolio.ApplyDividend(new Dividend(security.Symbol, referenceDateTime.Date.AddDays(3), distribution, lastPrice), false, mode);
+            brokerage.CreateDelistingNotificationEvent(new DelistingNotificationEventArgs(security.Symbol));
+
+            var fill = _transactionHandler.OrderEvents.Single(orderEvent => orderEvent.Status == OrderStatus.Filled);
+            Assert.AreEqual(expectedFillPrice, fill.FillPrice);
+            Assert.AreEqual(0, security.Holdings.Quantity);
+            // the position is realized once: the distribution plus what is left of the price
+            Assert.AreEqual(initialCash + quantity * (distribution + expectedFillPrice), algorithm.Portfolio.Cash);
+            Assert.AreEqual(algorithm.Portfolio.Cash, algorithm.Portfolio.TotalPortfolioValue);
+        }
+
         internal class TestIncrementalOrderIdAlgorithm : OrderTicketDemoAlgorithm
         {
             public static readonly Dictionary<int, int> OrderEventIds = new Dictionary<int, int>();

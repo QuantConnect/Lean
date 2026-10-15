@@ -639,5 +639,28 @@ namespace QuantConnect.Securities
             _lastTickQuotes.DoForEach(scale);
             _lastTickTrades.DoForEach(scale);
         }
+
+        /// <summary>
+        /// Applies the cash dividend to the security cache values, the distribution is paid out of the price
+        /// </summary>
+        internal void ApplyDividend(Dividend dividend)
+        {
+            // a distribution larger than the last price takes it to zero, never below
+            decimal Adjust(decimal price) => Math.Max(0, price - dividend.Distribution);
+
+            Price = Adjust(Price);
+            Open = Adjust(Open);
+            High = Adjust(High);
+            Low = Adjust(Low);
+            Close = Adjust(Close);
+            BidPrice = Adjust(BidPrice);
+            AskPrice = Adjust(AskPrice);
+
+            // Adjust values for the last data we have cached
+            Action<BaseData> adjust = data => data.Scale((target, _, _) => Adjust(target), 1, 1, decimal.Zero);
+            _dataByType?.Values.DoForEach(dataPoints => dataPoints.DoForEach(adjust));
+            _lastTickQuotes.DoForEach(adjust);
+            _lastTickTrades.DoForEach(adjust);
+        }
     }
 }

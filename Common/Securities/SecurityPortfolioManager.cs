@@ -806,6 +806,11 @@ namespace QuantConnect.Securities
                 // assuming USD, we still need to add Currency to the security object
                 _baseCurrencyCash.AddAmount(total);
                 security.Holdings.AddNewDividend(total);
+
+                // the distribution leaves the price, else it would be counted again until the next trade,
+                // which never comes for a security that is delisted after paying it out
+                security.ApplyDividend(dividend);
+                InvalidateTotalPortfolioValue();
             }
         }
 
