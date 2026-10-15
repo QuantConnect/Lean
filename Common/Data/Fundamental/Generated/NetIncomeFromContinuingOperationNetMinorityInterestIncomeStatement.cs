@@ -1,4 +1,4 @@
-/*
+﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2023 QuantConnect Corporation.
  *
@@ -24,7 +24,7 @@ using QuantConnect.Data.UniverseSelection;
 namespace QuantConnect.Data.Fundamental
 {
     /// <summary>
-    /// Revenue less expenses and taxes from the entity's ongoing operations net of minority interest and before income (loss) from: Preferred Dividends; Extraordinary Gains and Losses; Income from Cumulative Effects of Accounting Change; Discontinuing Operation; Income from Tax Loss Carry forward; Other Gains/Losses.
+    /// Net income or loss after non-controlling interests; discontinued operations and extraordinary items are included.
     /// </summary>
     public class NetIncomeFromContinuingOperationNetMinorityInterestIncomeStatement : MultiPeriodField
     {

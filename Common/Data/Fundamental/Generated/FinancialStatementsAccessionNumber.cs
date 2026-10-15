@@ -1,4 +1,4 @@
-/*
+﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2023 QuantConnect Corporation.
  *
@@ -31,7 +31,7 @@ namespace QuantConnect.Data.Fundamental
         /// <summary>
         /// The default period
         /// </summary>
-        protected override string DefaultPeriod => "OneMonth";
+        protected override string DefaultPeriod => "ThreeMonths";
 
         /// <summary>
         /// Gets/sets the OneMonth period value for the field
@@ -64,9 +64,15 @@ namespace QuantConnect.Data.Fundamental
         public string NineMonths => FundamentalService.Get<string>(TimeProvider.GetUtcNow(), SecurityIdentifier, FundamentalProperty.FinancialStatements_AccessionNumber_NineMonths);
 
         /// <summary>
+        /// Gets/sets the TwelveMonths period value for the field
+        /// </summary>
+        [JsonProperty("12M")]
+        public string TwelveMonths => FundamentalService.Get<string>(TimeProvider.GetUtcNow(), SecurityIdentifier, FundamentalProperty.FinancialStatements_AccessionNumber_TwelveMonths);
+
+        /// <summary>
         /// Returns true if the field contains a value for the default period
         /// </summary>
-        public override bool HasValue => !BaseFundamentalDataProvider.IsNone(typeof(string), FundamentalService.Get<string>(TimeProvider.GetUtcNow(), SecurityIdentifier, FundamentalProperty.FinancialStatements_AccessionNumber_OneMonth));
+        public override bool HasValue => !BaseFundamentalDataProvider.IsNone(typeof(string), FundamentalService.Get<string>(TimeProvider.GetUtcNow(), SecurityIdentifier, FundamentalProperty.FinancialStatements_AccessionNumber_ThreeMonths));
 
         /// <summary>
         /// Returns the default value for the field
@@ -75,7 +81,7 @@ namespace QuantConnect.Data.Fundamental
         {
             get
             {
-                var defaultValue = FundamentalService.Get<string>(TimeProvider.GetUtcNow(), SecurityIdentifier, FundamentalProperty.FinancialStatements_AccessionNumber_OneMonth);
+                var defaultValue = FundamentalService.Get<string>(TimeProvider.GetUtcNow(), SecurityIdentifier, FundamentalProperty.FinancialStatements_AccessionNumber_ThreeMonths);
                 if (!BaseFundamentalDataProvider.IsNone(typeof(string), defaultValue))
                 {
                     return defaultValue;
@@ -91,7 +97,7 @@ namespace QuantConnect.Data.Fundamental
         public override IReadOnlyDictionary<string, string> GetPeriodValues()
         {
             var result = new Dictionary<string, string>();
-            foreach (var kvp in new[] { new Tuple<string, string>("1M", OneMonth), new Tuple<string, string>("2M", TwoMonths), new Tuple<string, string>("3M", ThreeMonths), new Tuple<string, string>("6M", SixMonths), new Tuple<string, string>("9M", NineMonths) })
+            foreach (var kvp in new[] { new Tuple<string, string>("1M", OneMonth), new Tuple<string, string>("2M", TwoMonths), new Tuple<string, string>("3M", ThreeMonths), new Tuple<string, string>("6M", SixMonths), new Tuple<string, string>("9M", NineMonths), new Tuple<string, string>("12M", TwelveMonths) })
             {
                 if (!BaseFundamentalDataProvider.IsNone(typeof(string), kvp.Item2))
                 {

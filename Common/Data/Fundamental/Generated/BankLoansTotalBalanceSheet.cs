@@ -1,4 +1,4 @@
-/*
+﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2023 QuantConnect Corporation.
  *
@@ -24,7 +24,7 @@ using QuantConnect.Data.UniverseSelection;
 namespace QuantConnect.Data.Fundamental
 {
     /// <summary>
-    /// Total debt financing obligation issued by a bank or similar financial institution to a company that entitles the lender or holder of the instrument to interest payments and the repayment of principal at a specified time; in a Non-Differentiated Balance Sheet.
+    /// The carrying value of loans from banks or similar institutions due beyond one year or a normal operating cycle; the non-current portion only.
     /// </summary>
     public class BankLoansTotalBalanceSheet : MultiPeriodField
     {

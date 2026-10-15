@@ -1,4 +1,4 @@
-/*
+﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2023 QuantConnect Corporation.
  *
@@ -24,7 +24,7 @@ using QuantConnect.Data.UniverseSelection;
 namespace QuantConnect.Data.Fundamental
 {
     /// <summary>
-    /// Income generated from interest-bearing deposits or accounts.
+    /// The sum of the company's interest income and its dividend and investment income.
     /// </summary>
     public class InterestIncomeIncomeStatement : MultiPeriodField
     {

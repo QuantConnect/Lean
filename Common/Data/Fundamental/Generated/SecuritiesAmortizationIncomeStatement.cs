@@ -1,4 +1,4 @@
-/*
+﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2023 QuantConnect Corporation.
  *
@@ -24,7 +24,7 @@ using QuantConnect.Data.UniverseSelection;
 namespace QuantConnect.Data.Fundamental
 {
     /// <summary>
-    /// The gradual elimination of a liability, such as a mortgage, in regular payments over a specified period of time. Such payments must be sufficient to cover both principal and interest.
+    /// The amortization and accretion of securities allocated to the accounting period, such as the accretion of convertible notes.
     /// </summary>
     public class SecuritiesAmortizationIncomeStatement : MultiPeriodField
     {

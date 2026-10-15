@@ -1,4 +1,4 @@
-/*
+﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2023 QuantConnect Corporation.
  *
@@ -180,6 +180,24 @@ namespace QuantConnect.Data.Fundamental
         /// </remarks>
         [JsonProperty("3016")]
         public int CANNAICS => FundamentalService.Get<int>(_timeProvider.GetUtcNow(), _securityIdentifier, FundamentalProperty.AssetClassification_CANNAICS);
+
+        /// <summary>
+        /// Structural credit risk: standard deviations between current asset value and the default point
+        /// </summary>
+        /// <remarks>
+        /// Morningstar DataId: EQIPC
+        /// </remarks>
+        [JsonProperty("EQIPC")]
+        public double DistanceToDefault => FundamentalService.Get<double>(_timeProvider.GetUtcNow(), _securityIdentifier, FundamentalProperty.AssetClassification_DistanceToDefault);
+
+        /// <summary>
+        /// The probability the company defaults within one year, derived from distance to default
+        /// </summary>
+        /// <remarks>
+        /// Morningstar DataId: EQRXR
+        /// </remarks>
+        [JsonProperty("EQRXR")]
+        public double ProbabilityOfDefault => FundamentalService.Get<double>(_timeProvider.GetUtcNow(), _securityIdentifier, FundamentalProperty.AssetClassification_ProbabilityOfDefault);
 
         /// <summary>
         /// Creates a new instance for the given time and security

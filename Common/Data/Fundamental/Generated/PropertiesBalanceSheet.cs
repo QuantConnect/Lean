@@ -1,4 +1,4 @@
-/*
+﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2023 QuantConnect Corporation.
  *
@@ -24,7 +24,7 @@ using QuantConnect.Data.UniverseSelection;
 namespace QuantConnect.Data.Fundamental
 {
     /// <summary>
-    /// Tangible assets that are held by an entity for use in the production or supply of goods and services, for rental to others, or for administrative purposes and that are expected to provide economic benefit for more than one year. This item is available for manufacturing, bank and transportation industries.
+    /// The cost of other properties, and of improvements to properties, that are not categorized elsewhere; the net book value where accumulated depreciation is not reported.
     /// </summary>
     public class PropertiesBalanceSheet : MultiPeriodField
     {

@@ -1,4 +1,4 @@
-/*
+﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2023 QuantConnect Corporation.
  *
@@ -37,6 +37,16 @@ namespace QuantConnect.Data.Fundamental
         [JsonProperty("26296")]
         public CashFlowFileDate CFFileDate => _cFFileDate ??= new(_timeProvider, _securityIdentifier);
         private CashFlowFileDate _cFFileDate;
+
+        /// <summary>
+        /// Period ending date of the cash flow statement as its own feed delivers it. PeriodEndingDate on FinancialStatements moves only once every statement has reached a period; this one moves as soon as the cash flow statement has.
+        /// </summary>
+        /// <remarks>
+        /// Morningstar DataId: EQ5AB
+        /// </remarks>
+        [JsonProperty("EQ5AB")]
+        public CashFlowStatementPeriodEndingDate PeriodEndingDate => _cashFlowStatementPeriodEndingDate ??= new(_timeProvider, _securityIdentifier);
+        private CashFlowStatementPeriodEndingDate _cashFlowStatementPeriodEndingDate;
 
         /// <summary>
         /// The systematic and rational apportionment of the acquisition cost of intangible operational assets to future periods in which the benefits contribute to revenue. This field is to include Amortization and any variation where Amortization is the first account listed in the line item, excluding Amortization of Intangibles.
@@ -99,7 +109,7 @@ namespace QuantConnect.Data.Fundamental
         private CashFlowFromContinuingOperatingActivitiesCashFlowStatement _cashFlowFromContinuingOperatingActivities;
 
         /// <summary>
-        /// The aggregate amount of cash flow from discontinued operation, including operating activities, investing activities, and financing activities.
+        /// The net cash flow from discontinued operations that is not classified into operating, investing or financing cash flow.
         /// </summary>
         /// <remarks>
         /// Morningstar DataId: 26011
@@ -209,7 +219,7 @@ namespace QuantConnect.Data.Fundamental
         private ChangeInAccruedExpenseCashFlowStatement _changeInAccruedExpense;
 
         /// <summary>
-        /// The net change during the reporting period in investment income that has been earned but not yet received in cash.
+        /// The increase or decrease between reporting periods in accrued income, unbilled revenue and costs in excess of billings.
         /// </summary>
         /// <remarks>
         /// Morningstar DataId: 26026
@@ -579,7 +589,7 @@ namespace QuantConnect.Data.Fundamental
         private PreferredStockPaymentsCashFlowStatement _preferredStockPayments;
 
         /// <summary>
-        /// The cash outflow for debt initially having maturity due after one year or beyond the normal operating cycle, if longer.
+        /// The cash outflow for the repayment of debt during the period: long term debt where the company reports it separately, otherwise all debt.
         /// </summary>
         /// <remarks>
         /// Morningstar DataId: 26090
@@ -599,7 +609,7 @@ namespace QuantConnect.Data.Fundamental
         private ShortTermDebtPaymentsCashFlowStatement _shortTermDebtPayments;
 
         /// <summary>
-        /// The cash inflow from borrowing money or property for a bank or insurance company.
+        /// The cash inflow from the repayment or sale of loans the company had granted.
         /// </summary>
         /// <remarks>
         /// Morningstar DataId: 26095
@@ -629,7 +639,7 @@ namespace QuantConnect.Data.Fundamental
         private CommonStockIssuanceCashFlowStatement _commonStockIssuance;
 
         /// <summary>
-        /// The cash inflow from a debt initially having maturity due after one year or beyond the operating cycle, if longer.
+        /// The cash inflow from the issuance of debt during the period, whatever its maturity.
         /// </summary>
         /// <remarks>
         /// Morningstar DataId: 26099
@@ -829,7 +839,7 @@ namespace QuantConnect.Data.Fundamental
         private AmortizationOfSecuritiesCashFlowStatement _amortizationOfSecurities;
 
         /// <summary>
-        /// The charge against earnings resulting from the aggregate write down of all assets from their carrying value to their fair value.
+        /// The non-cash impairment, write-off or write-down, net of reversals, of capital assets: property, plant and equipment, intangibles and fixed asset investments. Other non-current assets are not included.
         /// </summary>
         /// <remarks>
         /// Morningstar DataId: 26143
@@ -849,7 +859,7 @@ namespace QuantConnect.Data.Fundamental
         private ChangeInDividendPayableCashFlowStatement _changeInDividendPayable;
 
         /// <summary>
-        /// The net change during the reporting period in the value of expenditures made during the current reporting period for benefits that will be received over a period of years. This item is usually only available for bank industry.
+        /// The increase or decrease between reporting periods in deferred assets and deferred liabilities.
         /// </summary>
         /// <remarks>
         /// Morningstar DataId: 26145
@@ -885,6 +895,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 26148
         /// </remarks>
         [JsonProperty("26148")]
+        [Obsolete("ChangeInOtherWorkingCapital was retired by Morningstar in 2026 for all periods; no replacement is available.")]
+        [JsonIgnore]
         public ChangeInOtherWorkingCapitalCashFlowStatement ChangeInOtherWorkingCapital => _changeInOtherWorkingCapital ??= new(_timeProvider, _securityIdentifier);
         private ChangeInOtherWorkingCapitalCashFlowStatement _changeInOtherWorkingCapital;
 
@@ -959,7 +971,7 @@ namespace QuantConnect.Data.Fundamental
         private GainLossOnSaleOfPPECashFlowStatement _gainLossOnSaleOfPPE;
 
         /// <summary>
-        /// An expense reported in the income statement and needs to be removed from net income to arrive at cash provided by (used in) operations to the extent that such interest has not been paid. This item is usually only available for insurance industry.
+        /// Non-cash adjustments for interest and finance income and expenses during the period, including the interest an insurer credits on policyholder deposits.
         /// </summary>
         /// <remarks>
         /// Morningstar DataId: 26161
@@ -1225,6 +1237,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 26196
         /// </remarks>
         [JsonProperty("26196")]
+        [Obsolete("PurchaseOfSubsidiaries was retired by Morningstar in 2026 for all periods; no replacement is available.")]
+        [JsonIgnore]
         public PurchaseOfSubsidiariesCashFlowStatement PurchaseOfSubsidiaries => _purchaseOfSubsidiaries ??= new(_timeProvider, _securityIdentifier);
         private PurchaseOfSubsidiariesCashFlowStatement _purchaseOfSubsidiaries;
 
@@ -1245,6 +1259,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 26198
         /// </remarks>
         [JsonProperty("26198")]
+        [Obsolete("SaleOfSubsidiaries was retired by Morningstar in 2026 for all periods; no replacement is available.")]
+        [JsonIgnore]
         public SaleOfSubsidiariesCashFlowStatement SaleOfSubsidiaries => _saleOfSubsidiaries ??= new(_timeProvider, _securityIdentifier);
         private SaleOfSubsidiariesCashFlowStatement _saleOfSubsidiaries;
 
@@ -1295,6 +1311,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 26203
         /// </remarks>
         [JsonProperty("26203")]
+        [Obsolete("ShareOfAssociates was retired by Morningstar in 2026 for all periods; no replacement is available.")]
+        [JsonIgnore]
         public ShareOfAssociatesCashFlowStatement ShareOfAssociates => _shareOfAssociates ??= new(_timeProvider, _securityIdentifier);
         private ShareOfAssociatesCashFlowStatement _shareOfAssociates;
 
@@ -1305,6 +1323,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 26204
         /// </remarks>
         [JsonProperty("26204")]
+        [Obsolete("ProfitOnDisposals was retired by Morningstar in 2026 for all periods; no replacement is available.")]
+        [JsonIgnore]
         public ProfitOnDisposalsCashFlowStatement ProfitOnDisposals => _profitOnDisposals ??= new(_timeProvider, _securityIdentifier);
         private ProfitOnDisposalsCashFlowStatement _profitOnDisposals;
 
@@ -1315,6 +1335,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 26205
         /// </remarks>
         [JsonProperty("26205")]
+        [Obsolete("ReorganizationOtherCosts was retired by Morningstar in 2026 for all periods; no replacement is available.")]
+        [JsonIgnore]
         public ReorganizationOtherCostsCashFlowStatement ReorganizationOtherCosts => _reorganizationOtherCosts ??= new(_timeProvider, _securityIdentifier);
         private ReorganizationOtherCostsCashFlowStatement _reorganizationOtherCosts;
 
@@ -1485,6 +1507,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 26235
         /// </remarks>
         [JsonProperty("26235")]
+        [Obsolete("ImpairmentLossReversalRecognizedinProfitorLoss was retired by Morningstar in 2026 for all periods; no replacement is available.")]
+        [JsonIgnore]
         public ImpairmentLossReversalRecognizedinProfitorLossCashFlowStatement ImpairmentLossReversalRecognizedinProfitorLoss => _impairmentLossReversalRecognizedinProfitorLoss ??= new(_timeProvider, _securityIdentifier);
         private ImpairmentLossReversalRecognizedinProfitorLossCashFlowStatement _impairmentLossReversalRecognizedinProfitorLoss;
 
@@ -1585,6 +1609,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 26255
         /// </remarks>
         [JsonProperty("26255")]
+        [Obsolete("ChangeinAccruedIncome was retired by Morningstar in 2026 for all periods; no replacement is available.")]
+        [JsonIgnore]
         public ChangeinAccruedIncomeCashFlowStatement ChangeinAccruedIncome => _changeinAccruedIncome ??= new(_timeProvider, _securityIdentifier);
         private ChangeinAccruedIncomeCashFlowStatement _changeinAccruedIncome;
 
@@ -1635,6 +1661,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 26262
         /// </remarks>
         [JsonProperty("26262")]
+        [Obsolete("ChangeinReinsuranceReceivables was retired by Morningstar in 2026 for all periods; no replacement is available.")]
+        [JsonIgnore]
         public ChangeinReinsuranceReceivablesCashFlowStatement ChangeinReinsuranceReceivables => _changeinReinsuranceReceivables ??= new(_timeProvider, _securityIdentifier);
         private ChangeinReinsuranceReceivablesCashFlowStatement _changeinReinsuranceReceivables;
 
@@ -1715,6 +1743,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 26272
         /// </remarks>
         [JsonProperty("26272")]
+        [Obsolete("MinorityInterest was retired by Morningstar in 2026 for all periods; no replacement is available.")]
+        [JsonIgnore]
         public MinorityInterestCashFlowStatement MinorityInterest => _minorityInterest ??= new(_timeProvider, _securityIdentifier);
         private MinorityInterestCashFlowStatement _minorityInterest;
 
@@ -1765,6 +1795,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 26278
         /// </remarks>
         [JsonProperty("26278")]
+        [Obsolete("CashReceiptsfromSecuritiesRelatedActivities was retired by Morningstar in 2026 for all periods; no replacement is available.")]
+        [JsonIgnore]
         public CashReceiptsfromSecuritiesRelatedActivitiesCashFlowStatement CashReceiptsfromSecuritiesRelatedActivities => _cashReceiptsfromSecuritiesRelatedActivities ??= new(_timeProvider, _securityIdentifier);
         private CashReceiptsfromSecuritiesRelatedActivitiesCashFlowStatement _cashReceiptsfromSecuritiesRelatedActivities;
 
@@ -1785,6 +1817,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 26282
         /// </remarks>
         [JsonProperty("26282")]
+        [Obsolete("CashPaymentsforDepositsbyBanksandCustomers was retired by Morningstar in 2026 for all periods; no replacement is available.")]
+        [JsonIgnore]
         public CashPaymentsforDepositsbyBanksandCustomersCashFlowStatement CashPaymentsforDepositsbyBanksandCustomers => _cashPaymentsforDepositsbyBanksandCustomers ??= new(_timeProvider, _securityIdentifier);
         private CashPaymentsforDepositsbyBanksandCustomersCashFlowStatement _cashPaymentsforDepositsbyBanksandCustomers;
 
@@ -1795,6 +1829,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 26283
         /// </remarks>
         [JsonProperty("26283")]
+        [Obsolete("CashPaymentsforLoans was retired by Morningstar in 2026 for all periods; no replacement is available.")]
+        [JsonIgnore]
         public CashPaymentsforLoansCashFlowStatement CashPaymentsforLoans => _cashPaymentsforLoans ??= new(_timeProvider, _securityIdentifier);
         private CashPaymentsforLoansCashFlowStatement _cashPaymentsforLoans;
 
@@ -1825,6 +1861,8 @@ namespace QuantConnect.Data.Fundamental
         /// Morningstar DataId: 26286
         /// </remarks>
         [JsonProperty("26286")]
+        [Obsolete("CashReceivedfromInsuranceActivities was retired by Morningstar in 2026 for all periods; no replacement is available.")]
+        [JsonIgnore]
         public CashReceivedfromInsuranceActivitiesCashFlowStatement CashReceivedfromInsuranceActivities => _cashReceivedfromInsuranceActivities ??= new(_timeProvider, _securityIdentifier);
         private CashReceivedfromInsuranceActivitiesCashFlowStatement _cashReceivedfromInsuranceActivities;
 
@@ -2000,6 +2038,196 @@ namespace QuantConnect.Data.Fundamental
 
         private readonly ITimeProvider _timeProvider;
         private readonly SecurityIdentifier _securityIdentifier;
+
+        /// <summary>
+        /// This data point represents the calculated variant of depreciation; amortization and depletion. This is calculated by summing up all Depreciation; Amortization and Depletion reported by the company.
+        /// </summary>
+        /// <remarks>
+        /// Morningstar DataId: EQMFF
+        /// </remarks>
+        [JsonProperty("EQMFF")]
+        public DepreciationAmortizationAndDepletionCashFlowStatement DepreciationAmortizationAndDepletion => _depreciationAmortizationAndDepletionCashFlowStatement ??= new(_timeProvider, _securityIdentifier);
+        private DepreciationAmortizationAndDepletionCashFlowStatement _depreciationAmortizationAndDepletionCashFlowStatement;
+
+        /// <summary>
+        /// This data point represents the calculated variant of Repurchase of Preferred Stock which includes all payments made by a company for the purpose of repurchasing preferred stock. This is computed by returning any payments for Preferred Stock reported by the company or any payments net of issuances of preferred stock; where repayments alone are not reported.
+        /// </summary>
+        /// <remarks>
+        /// Morningstar DataId: EQ1O0
+        /// </remarks>
+        [JsonProperty("EQ1O0")]
+        public RepurchaseOfPreferredStockCashFlowStatement RepurchaseOfPreferredStock => _repurchaseOfPreferredStockCashFlowStatement ??= new(_timeProvider, _securityIdentifier);
+        private RepurchaseOfPreferredStockCashFlowStatement _repurchaseOfPreferredStockCashFlowStatement;
+
+        /// <summary>
+        /// This data point represents the amount of cash that has been raised by the company through the issuing of preferred stock over the period. This is calculated by summing up all the proceeds from the Issuance of Preferred Stock.
+        /// </summary>
+        /// <remarks>
+        /// Morningstar DataId: EQ2H2
+        /// </remarks>
+        [JsonProperty("EQ2H2")]
+        public IssuanceOfPreferredStockCashFlowStatement IssuanceOfPreferredStock => _issuanceOfPreferredStockCashFlowStatement ??= new(_timeProvider, _securityIdentifier);
+        private IssuanceOfPreferredStockCashFlowStatement _issuanceOfPreferredStockCashFlowStatement;
+
+        /// <summary>
+        /// This data point represents the amount of capital that has been raised by the company through the method of lease financing; over the period. This is calculated by summing all proceeds from lease financing.
+        /// </summary>
+        /// <remarks>
+        /// Morningstar DataId: EQ2LC
+        /// </remarks>
+        [JsonProperty("EQ2LC")]
+        public IssuanceOfLeaseFinancingCashFlowStatement IssuanceOfLeaseFinancing => _issuanceOfLeaseFinancingCashFlowStatement ??= new(_timeProvider, _securityIdentifier);
+        private IssuanceOfLeaseFinancingCashFlowStatement _issuanceOfLeaseFinancingCashFlowStatement;
+
+        /// <summary>
+        /// This data point represents the calculated variant of Repayment of Long term Debt which includes all payments made by a company towards the Long term Debt appearing on their balance sheet. This is computed by returning any repayments for Long term Debt reported by the company or any repayments net of Long term Debt issuances; where repayments alone are not reported.
+        /// </summary>
+        /// <remarks>
+        /// Morningstar DataId: EQAUR
+        /// </remarks>
+        [JsonProperty("EQAUR")]
+        public RepaymentOfLongTermDebtCashFlowStatement RepaymentOfLongTermDebt => _repaymentOfLongTermDebtCashFlowStatement ??= new(_timeProvider, _securityIdentifier);
+        private RepaymentOfLongTermDebtCashFlowStatement _repaymentOfLongTermDebtCashFlowStatement;
+
+        /// <summary>
+        /// This data point represents the amount of capital that has been raised by the company through the issuing of long term debt; over the period. This is calculated by summing all Issuances of long term debt.
+        /// </summary>
+        /// <remarks>
+        /// Morningstar DataId: EQBC0
+        /// </remarks>
+        [JsonProperty("EQBC0")]
+        public IssuanceOfLongTermDebtCashFlowStatement IssuanceOfLongTermDebt => _issuanceOfLongTermDebtCashFlowStatement ??= new(_timeProvider, _securityIdentifier);
+        private IssuanceOfLongTermDebtCashFlowStatement _issuanceOfLongTermDebtCashFlowStatement;
+
+        /// <summary>
+        /// This data point represents the amount of cash that has been raised by the company through the issuing of common stock over the period. This is calculated by summing up all the proceeds from the Issuance of Common Stock.
+        /// </summary>
+        /// <remarks>
+        /// Morningstar DataId: EQPVN
+        /// </remarks>
+        [JsonProperty("EQPVN")]
+        public IssuanceOfCommonStockCashFlowStatement IssuanceOfCommonStock => _issuanceOfCommonStockCashFlowStatement ??= new(_timeProvider, _securityIdentifier);
+        private IssuanceOfCommonStockCashFlowStatement _issuanceOfCommonStockCashFlowStatement;
+
+        /// <summary>
+        /// This data point represents the amount of capital that has been raised by the company through the issuing of short term debt; over the period. This is calculated by summing all Issuances of short term debt.
+        /// </summary>
+        /// <remarks>
+        /// Morningstar DataId: EQRN5
+        /// </remarks>
+        [JsonProperty("EQRN5")]
+        public IssuanceOfShortTermDebtCashFlowStatement IssuanceOfShortTermDebt => _issuanceOfShortTermDebtCashFlowStatement ??= new(_timeProvider, _securityIdentifier);
+        private IssuanceOfShortTermDebtCashFlowStatement _issuanceOfShortTermDebtCashFlowStatement;
+
+        /// <summary>
+        /// This data point represents the calculated variant of Repurchase of Common Stock which includes all payments made by a company for the purpose of repurchasing common stock. This is computed by returning any payments for Common Stock reported by the company or any payments net of issuances of common stock; where repayments alone are not reported.
+        /// </summary>
+        /// <remarks>
+        /// Morningstar DataId: EQSDG
+        /// </remarks>
+        [JsonProperty("EQSDG")]
+        public RepurchaseOfCommonStockCashFlowStatement RepurchaseOfCommonStock => _repurchaseOfCommonStockCashFlowStatement ??= new(_timeProvider, _securityIdentifier);
+        private RepurchaseOfCommonStockCashFlowStatement _repurchaseOfCommonStockCashFlowStatement;
+
+        /// <summary>
+        /// This data point represents the calculated variant of Repayment of Short term Debt which includes all payments made by a company towards the Short term Debt appearing on their balance sheet. This is computed by returning any repayments for Short term Debt reported by the company or any repayments net of Short term Debt issuances; where repayments alone are not reported.
+        /// </summary>
+        /// <remarks>
+        /// Morningstar DataId: EQVD2
+        /// </remarks>
+        [JsonProperty("EQVD2")]
+        public RepaymentOfShortTermDebtCashFlowStatement RepaymentOfShortTermDebt => _repaymentOfShortTermDebtCashFlowStatement ??= new(_timeProvider, _securityIdentifier);
+        private RepaymentOfShortTermDebtCashFlowStatement _repaymentOfShortTermDebtCashFlowStatement;
+
+        /// <summary>
+        /// This data point represents the calculated variant of Repayment of Lease Financing which includes all payments made by a company towards the leases appearing on their balance sheet. This is computed by returning any repayments for lease financing reported by the company or any repayments net of lease issuances; where repayments alone are not reported.
+        /// </summary>
+        /// <remarks>
+        /// Morningstar DataId: EQW5V
+        /// </remarks>
+        [JsonProperty("EQW5V")]
+        public RepaymentOfLeaseFinancingCashFlowStatement RepaymentOfLeaseFinancing => _repaymentOfLeaseFinancingCashFlowStatement ??= new(_timeProvider, _securityIdentifier);
+        private RepaymentOfLeaseFinancingCashFlowStatement _repaymentOfLeaseFinancingCashFlowStatement;
+
+        /// <summary>
+        /// This calculation represents a company's operating cash flow net of changes in net working capital and capital expenditures. This can be used to measure the cash a company has left over after paying interest expenses on debt and investing in the growth of its business. This is calculated using Cash Flow from Operating Activities - Changes in Net Working Capital - Capital Expenditures.
+        /// </summary>
+        /// <remarks>
+        /// Morningstar DataId: EQLKF
+        /// </remarks>
+        [JsonProperty("EQLKF")]
+        public FreeCashFlowToEquityHoldersCashFlowStatement FreeCashFlowToEquityHolders => _freeCashFlowToEquityHoldersCashFlowStatement ??= new(_timeProvider, _securityIdentifier);
+        private FreeCashFlowToEquityHoldersCashFlowStatement _freeCashFlowToEquityHoldersCashFlowStatement;
+
+        /// <summary>
+        /// This data point represents the latest Cash Flow from Operating Activities (TTM) before changes in Working Capital. This is calculated using Net Cash Flow from Operating Activities - Changes in Net Working Capital.
+        /// </summary>
+        /// <remarks>
+        /// Morningstar DataId: EQS11
+        /// </remarks>
+        [JsonProperty("EQS11")]
+        public CashFlowFromOperationsCashFlowStatement CashFlowFromOperations => _cashFlowFromOperationsCashFlowStatement ??= new(_timeProvider, _securityIdentifier);
+        private CashFlowFromOperationsCashFlowStatement _cashFlowFromOperationsCashFlowStatement;
+
+        /// <summary>
+        /// Income or loss before non-cash adjustments to net income. Includes: discontinued operations if reported separately
+        /// </summary>
+        /// <remarks>
+        /// Morningstar DataId: EQ42O
+        /// </remarks>
+        [JsonProperty("EQ42O")]
+        public IncomeLossBeforeNonCashAdjustmentCashFlowStatement IncomeLossBeforeNonCashAdjustment => _incomeLossBeforeNonCashAdjustmentCashFlowStatement ??= new(_timeProvider, _securityIdentifier);
+        private IncomeLossBeforeNonCashAdjustmentCashFlowStatement _incomeLossBeforeNonCashAdjustmentCashFlowStatement;
+
+        /// <summary>
+        /// Sum of all non-cash income or losses recognized during the accounting period from activities that are not regular or normal in nature.
+        /// </summary>
+        /// <remarks>
+        /// Morningstar DataId: EQADA
+        /// </remarks>
+        [JsonProperty("EQADA")]
+        public IrregularIncomeLossNonCashAdjustmentCashFlowStatement IrregularIncomeLossNonCashAdjustment => _irregularIncomeLossNonCashAdjustmentCashFlowStatement ??= new(_timeProvider, _securityIdentifier);
+        private IrregularIncomeLossNonCashAdjustmentCashFlowStatement _irregularIncomeLossNonCashAdjustmentCashFlowStatement;
+
+        /// <summary>
+        /// Net value of non-cash adjustments arising from the gain or loss on investments made by the company and recognized during the accounting period.
+        /// </summary>
+        /// <remarks>
+        /// Morningstar DataId: EQDIO
+        /// </remarks>
+        [JsonProperty("EQDIO")]
+        public NetInvestmentIncomeLossNonCashAdjustmentCashFlowStatement NetInvestmentIncomeLossNonCashAdjustment => _netInvestmentIncomeLossNonCashAdjustmentCashFlowStatement ??= new(_timeProvider, _securityIdentifier);
+        private NetInvestmentIncomeLossNonCashAdjustmentCashFlowStatement _netInvestmentIncomeLossNonCashAdjustmentCashFlowStatement;
+
+        /// <summary>
+        /// Sum of all non-cash gains or losses recognized during the accounting period from the disposal or sale of fixed assets; businesses; or other assets.
+        /// </summary>
+        /// <remarks>
+        /// Morningstar DataId: EQXE6
+        /// </remarks>
+        [JsonProperty("EQXE6")]
+        public GainLossOnDisposalsNonCashAdjustmentCashFlowStatement GainLossOnDisposalsNonCashAdjustment => _gainLossOnDisposalsNonCashAdjustmentCashFlowStatement ??= new(_timeProvider, _securityIdentifier);
+        private GainLossOnDisposalsNonCashAdjustmentCashFlowStatement _gainLossOnDisposalsNonCashAdjustmentCashFlowStatement;
+
+        /// <summary>
+        /// Sum of interest paid on debt and payment of cash dividends to common and preferred stockholders during the accounting period.
+        /// </summary>
+        /// <remarks>
+        /// Morningstar DataId: EQ91C
+        /// </remarks>
+        [JsonProperty("EQ91C")]
+        public CashDividendsAndInterestPaidCashFlowStatement CashDividendsAndInterestPaid => _cashDividendsAndInterestPaidCashFlowStatement ??= new(_timeProvider, _securityIdentifier);
+        private CashDividendsAndInterestPaidCashFlowStatement _cashDividendsAndInterestPaidCashFlowStatement;
+
+        /// <summary>
+        /// Increase or decrease of all operating capital between reporting periods.
+        /// </summary>
+        /// <remarks>
+        /// Morningstar DataId: EQZ4K
+        /// </remarks>
+        [JsonProperty("EQZ4K")]
+        public ChangeInOtherOperatingCapitalCashFlowStatement ChangeInOtherOperatingCapital => _changeInOtherOperatingCapitalCashFlowStatement ??= new(_timeProvider, _securityIdentifier);
+        private ChangeInOtherOperatingCapitalCashFlowStatement _changeInOtherOperatingCapitalCashFlowStatement;
 
         /// <summary>
         /// Creates a new instance for the given time and security

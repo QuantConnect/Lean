@@ -1,4 +1,4 @@
-/*
+﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2023 QuantConnect Corporation.
  *
@@ -24,7 +24,7 @@ using QuantConnect.Data.UniverseSelection;
 namespace QuantConnect.Data.Fundamental
 {
     /// <summary>
-    /// An expense reported in the income statement and needs to be removed from net income to arrive at cash provided by (used in) operations to the extent that such interest has not been paid. This item is usually only available for insurance industry.
+    /// Non-cash adjustments for interest and finance income and expenses during the period, including the interest an insurer credits on policyholder deposits.
     /// </summary>
     public class InterestCreditedOnPolicyholderDepositsCashFlowStatement : MultiPeriodField
     {

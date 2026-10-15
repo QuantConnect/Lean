@@ -1,4 +1,4 @@
-/*
+﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2023 QuantConnect Corporation.
  *
@@ -24,7 +24,7 @@ using QuantConnect.Data.UniverseSelection;
 namespace QuantConnect.Data.Fundamental
 {
     /// <summary>
-    /// The company's minimum pension obligations to its former employees, paid into a defined pension plan to satisfy all pension entitlements that have been earned by employees to date.
+    /// Accumulated gains or losses from pension and other post-retirement plans, recorded in reserves or accumulated other comprehensive income.
     /// </summary>
     public class MinimumPensionLiabilitiesBalanceSheet : MultiPeriodField
     {

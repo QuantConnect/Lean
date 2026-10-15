@@ -1,4 +1,4 @@
-/*
+﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2023 QuantConnect Corporation.
  *
@@ -24,7 +24,7 @@ using QuantConnect.Data.UniverseSelection;
 namespace QuantConnect.Data.Fundamental
 {
     /// <summary>
-    /// Revenues that are not currently billed from the customer under the terms of the contract. This item is usually only available for utility industry.
+    /// Amounts owed to the company by other parties, including accrued income and revenue not yet billed to the customer under the terms of the contract.
     /// </summary>
     public class UnbilledReceivablesBalanceSheet : MultiPeriodField
     {

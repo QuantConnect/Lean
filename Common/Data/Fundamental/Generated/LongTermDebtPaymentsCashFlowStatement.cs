@@ -1,4 +1,4 @@
-/*
+﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2023 QuantConnect Corporation.
  *
@@ -24,7 +24,7 @@ using QuantConnect.Data.UniverseSelection;
 namespace QuantConnect.Data.Fundamental
 {
     /// <summary>
-    /// The cash outflow for debt initially having maturity due after one year or beyond the normal operating cycle, if longer.
+    /// The cash outflow for the repayment of debt during the period: long term debt where the company reports it separately, otherwise all debt.
     /// </summary>
     public class LongTermDebtPaymentsCashFlowStatement : MultiPeriodField
     {

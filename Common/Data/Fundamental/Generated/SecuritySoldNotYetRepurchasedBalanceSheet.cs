@@ -1,4 +1,4 @@
-/*
+﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2023 QuantConnect Corporation.
  *
@@ -24,7 +24,7 @@ using QuantConnect.Data.UniverseSelection;
 namespace QuantConnect.Data.Fundamental
 {
     /// <summary>
-    /// Represent obligations of the company to deliver the specified security at the contracted price and, thereby, create a liability to purchase the security in the market at prevailing prices.
+    /// Financial liabilities held with the intent to trade for short term profit, including obligations to deliver securities sold short.
     /// </summary>
     public class SecuritySoldNotYetRepurchasedBalanceSheet : MultiPeriodField
     {

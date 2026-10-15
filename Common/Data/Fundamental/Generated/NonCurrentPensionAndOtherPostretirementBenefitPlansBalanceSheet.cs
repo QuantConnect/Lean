@@ -1,4 +1,4 @@
-/*
+﻿/*
  * QUANTCONNECT.COM - Democratizing Finance, Empowering Individuals.
  * Lean Algorithmic Trading Engine v2.0. Copyright 2023 QuantConnect Corporation.
  *
@@ -24,7 +24,7 @@ using QuantConnect.Data.UniverseSelection;
 namespace QuantConnect.Data.Fundamental
 {
     /// <summary>
-    /// A loan issued by an insurance company that uses the cash value of a person's life insurance policy as collateral. This item is usually only available in the insurance industry.
+    /// The long term obligation for employees' future pension and other post-retirement benefits, including retirement benefit obligations and severance cost.
     /// </summary>
     public class NonCurrentPensionAndOtherPostretirementBenefitPlansBalanceSheet : MultiPeriodField
     {
@@ -37,7 +37,9 @@ namespace QuantConnect.Data.Fundamental
         /// Gets/sets the TwoMonths period value for the field
         /// </summary>
         [JsonProperty("2M")]
-        public double TwoMonths => FundamentalService.Get<double>(TimeProvider.GetUtcNow(), SecurityIdentifier, FundamentalProperty.FinancialStatements_BalanceSheet_NonCurrentPensionAndOtherPostretirementBenefitPlans_TwoMonths);
+        [Obsolete("NonCurrentPensionAndOtherPostretirementBenefitPlans.TwoMonths was retired by Morningstar in 2026; use NonCurrentPensionAndOtherPostretirementBenefitPlans.ThreeMonths (also available: SixMonths, TwelveMonths).")]
+        [JsonIgnore]
+        public double TwoMonths => throw new NotSupportedException("NonCurrentPensionAndOtherPostretirementBenefitPlans.TwoMonths was retired by Morningstar in 2026; use NonCurrentPensionAndOtherPostretirementBenefitPlans.ThreeMonths (also available: SixMonths, TwelveMonths).");
 
         /// <summary>
         /// Gets/sets the ThreeMonths period value for the field
@@ -55,7 +57,9 @@ namespace QuantConnect.Data.Fundamental
         /// Gets/sets the NineMonths period value for the field
         /// </summary>
         [JsonProperty("9M")]
-        public double NineMonths => FundamentalService.Get<double>(TimeProvider.GetUtcNow(), SecurityIdentifier, FundamentalProperty.FinancialStatements_BalanceSheet_NonCurrentPensionAndOtherPostretirementBenefitPlans_NineMonths);
+        [Obsolete("NonCurrentPensionAndOtherPostretirementBenefitPlans.NineMonths was retired by Morningstar in 2026; use NonCurrentPensionAndOtherPostretirementBenefitPlans.ThreeMonths (also available: SixMonths, TwelveMonths).")]
+        [JsonIgnore]
+        public double NineMonths => throw new NotSupportedException("NonCurrentPensionAndOtherPostretirementBenefitPlans.NineMonths was retired by Morningstar in 2026; use NonCurrentPensionAndOtherPostretirementBenefitPlans.ThreeMonths (also available: SixMonths, TwelveMonths).");
 
         /// <summary>
         /// Gets/sets the TwelveMonths period value for the field
@@ -91,7 +95,7 @@ namespace QuantConnect.Data.Fundamental
         public override IReadOnlyDictionary<string, double> GetPeriodValues()
         {
             var result = new Dictionary<string, double>();
-            foreach (var kvp in new[] { new Tuple<string, double>("2M",TwoMonths), new Tuple<string, double>("3M",ThreeMonths), new Tuple<string, double>("6M",SixMonths), new Tuple<string, double>("9M",NineMonths), new Tuple<string, double>("12M",TwelveMonths) })
+            foreach (var kvp in new[] { new Tuple<string, double>("3M",ThreeMonths), new Tuple<string, double>("6M",SixMonths), new Tuple<string, double>("12M",TwelveMonths) })
             {
                 if(!BaseFundamentalDataProvider.IsNone(typeof(double), kvp.Item2))
                 {
