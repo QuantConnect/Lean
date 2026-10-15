@@ -245,6 +245,43 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             Assert.AreEqual(security, pendingRemovals.PendingRemovals.Values.First().First().Security);
         }
 
+        [Test]
+        public void DelistedIsKeptUntilFundsSettle()
+        {
+            var orderProvider = new FakeOrderProcessor();
+            var pendingRemovals = new PendingRemovalsManager(orderProvider);
+            var security = SecurityTests.GetSecurity();
+            security.IsDelisted = true;
+
+            security.SetSettlementModel(new DelayedSettlementModel(1, TimeSpan.FromHours(8)));
+            var securities = new SecurityManager(TimeKeeper);
+            var transactions = new SecurityTransactionManager(null, securities);
+            var portfolio = new SecurityPortfolioManager(securities, transactions, new AlgorithmSettings());
+            security.SettlementModel.ApplyFunds(new ApplyFundsSettlementModelParameters(portfolio, security, TimeKeeper.UtcTime.Date.AddDays(1),
+                new CashAmount(1000, Currencies.USD), null));
+
+            Assert.IsFalse(pendingRemovals.TryRemoveDelisted(security));
+            Assert.IsNull(pendingRemovals.CheckPendingDelistedRemovals());
+
+            security.SettlementModel.Scan(new ScanSettlementModelParameters(portfolio, security, TimeKeeper.UtcTime.AddDays(10)));
+
+            var result = pendingRemovals.CheckPendingDelistedRemovals();
+            Assert.AreEqual(1, result.Count);
+            Assert.AreEqual(security, result[0]);
+            Assert.IsNull(pendingRemovals.CheckPendingDelistedRemovals());
+        }
+
+        [Test]
+        public void DelistedIsRemovedIfSafe()
+        {
+            var pendingRemovals = new PendingRemovalsManager(new FakeOrderProcessor());
+            var security = SecurityTests.GetSecurity();
+            security.IsDelisted = true;
+
+            Assert.IsTrue(pendingRemovals.TryRemoveDelisted(security));
+            Assert.IsNull(pendingRemovals.CheckPendingDelistedRemovals());
+        }
+
         private class TestUniverse : Universe
         {
             public TestUniverse()

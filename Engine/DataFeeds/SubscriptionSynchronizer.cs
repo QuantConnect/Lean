@@ -101,6 +101,9 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 var frontierUtc = _timeProvider.GetUtcNow();
                 _frontierTimeProvider.SetCurrentTimeUtc(frontierUtc);
 
+                // delisted securities have no data nor universe selection to trigger their pending removal
+                _universeSelection.CheckPendingDelistedRemovals(frontierUtc);
+
                 SecurityChanges newChanges;
                 do
                 {

@@ -27,6 +27,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
     public class PendingRemovalsManager
     {
         private readonly Dictionary<Universe, List<Universe.Member>> _pendingRemovals;
+        private readonly List<Security> _pendingDelistedRemovals = new();
         private readonly IOrderProvider _orderProvider;
 
         /// <summary>
@@ -51,30 +52,32 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         private bool IsSafeToRemove(Universe.Member member, Universe universe)
         {
             var security = member.Security;
-
-            // but don't physically remove it from the algorithm if we hold stock or have open orders against it or an open target
-            var openOrders = _orderProvider.GetOpenOrders(x => x.Symbol == security.Symbol);
-            if (!security.HoldStock && !openOrders.Any() && (security.Holdings.Target == null || security.Holdings.Target.Quantity == 0))
+            if (!IsSafeToRemove(security))
             {
-                if (universe.Securities.Any(pair =>
-                    pair.Key.Underlying == security.Symbol && !IsSafeToRemove(pair.Value, universe)))
-                {
-                    // don't remove if any member in the universe which uses this 'member' as underlying can't be removed
-                    // covers the options use case
-                    return false;
-                }
-
-                // don't remove if there are unsettled positions
-                var unsettledCash = security.SettlementModel.GetUnsettledCash();
-                if (unsettledCash != default && unsettledCash.Amount > 0)
-                {
-                    return false;
-                }
-
-                return true;
+                return false;
             }
 
-            return false;
+            // don't remove if any member in the universe which uses this 'member' as underlying can't be removed
+            // covers the options use case
+            return !universe.Securities.Any(pair => pair.Key.Underlying == security.Symbol && !IsSafeToRemove(pair.Value, universe));
+        }
+
+        /// <summary>
+        /// Determines if we can safely remove the security from the algorithm.
+        /// We must ensure that we have zero holdings, no open orders, no existing portfolio targets and no unsettled funds
+        /// </summary>
+        private bool IsSafeToRemove(Security security)
+        {
+            // but don't physically remove it from the algorithm if we hold stock or have open orders against it or an open target
+            var openOrders = _orderProvider.GetOpenOrders(x => x.Symbol == security.Symbol);
+            if (security.HoldStock || openOrders.Any() || security.Holdings.Target != null && security.Holdings.Target.Quantity != 0)
+            {
+                return false;
+            }
+
+            // don't remove if there are unsettled positions
+            var unsettledCash = security.SettlementModel.GetUnsettledCash();
+            return unsettledCash == default || unsettledCash.Amount <= 0;
         }
 
         /// <summary>
@@ -104,6 +107,46 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             }
 
             return null;
+        }
+
+        /// <summary>
+        /// Will determine if the delisted <see cref="Security"/> can be removed from the algorithm.
+        /// If it can't be removed yet, like before its delisting liquidation or while its funds settle,
+        /// it's kept as a pending removal, see <see cref="CheckPendingDelistedRemovals"/>
+        /// </summary>
+        /// <param name="security">The delisted security to remove</param>
+        /// <returns>True if the security can be removed</returns>
+        public bool TryRemoveDelisted(Security security)
+        {
+            if (IsSafeToRemove(security))
+            {
+                return true;
+            }
+
+            if (!_pendingDelistedRemovals.Contains(security))
+            {
+                _pendingDelistedRemovals.Add(security);
+            }
+            return false;
+        }
+
+        /// <summary>
+        /// Will check the pending removals of delisted securities, see <see cref="TryRemoveDelisted"/>
+        /// </summary>
+        /// <returns>The delisted securities which can now be removed, null if none</returns>
+        public List<Security> CheckPendingDelistedRemovals()
+        {
+            List<Security> result = null;
+            for (var i = _pendingDelistedRemovals.Count - 1; i >= 0; i--)
+            {
+                var security = _pendingDelistedRemovals[i];
+                if (IsSafeToRemove(security))
+                {
+                    _pendingDelistedRemovals.RemoveAt(i);
+                    (result ??= new()).Add(security);
+                }
+            }
+            return result;
         }
 
         /// <summary>

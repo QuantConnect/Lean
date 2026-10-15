@@ -44,6 +44,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         private bool _anyDoesNotHaveFundamentalDataWarningLogged;
         private readonly SecurityChangesConstructor _securityChangesConstructor;
         private bool _universeSelectionSizeWarningSent;
+        private DateTime _nextPendingDelistedRemovalsCheck;
         // a selection must be at least 1/N of its resolution threshold before the large selection check runs
         private const int MinimumSignificantSelectionRatio = 10;
         private static readonly int SelectionSizeWarningResolutionCount = Enum.GetValues<Resolution>().Length;
@@ -255,6 +256,12 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 if (universe.Securities.ContainsKey(symbol))
                 {
                     // if its already part of the universe no need to re add it
+                    continue;
+                }
+
+                if (_algorithm.Securities.TryGetValue(symbol, out var existingSecurity) && existingSecurity.IsDelisted)
+                {
+                    // a delisted security can't be added again, like when still selected by a user defined universe in live trading
                     continue;
                 }
 
@@ -477,7 +484,12 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 security.IsDelisted = true;
                 security.Reset();
 
-                _algorithm.Securities.Remove(data.Symbol);
+                // keep it until it's safe to remove it, its delisting liquidation and the settlement of its funds
+                // still need it, see CheckPendingDelistedRemovals
+                if (_pendingRemovalsManager.TryRemoveDelisted(security))
+                {
+                    _algorithm.Securities.Remove(data.Symbol);
+                }
 
                 // Add the security removal to the security changes but only if not pending for removal.
                 // If pending, the removed change event was already emitted for this security
@@ -490,6 +502,36 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             }
 
             return SecurityChanges.None;
+        }
+
+        /// <summary>
+        /// Removes the delisted securities which are now safe to remove from the algorithm and their universes,
+        /// checked hourly like the cash settlement
+        /// </summary>
+        /// <param name="dateTimeUtc">The current utc time</param>
+        public void CheckPendingDelistedRemovals(DateTime dateTimeUtc)
+        {
+            if (dateTimeUtc < _nextPendingDelistedRemovalsCheck)
+            {
+                return;
+            }
+            _nextPendingDelistedRemovalsCheck = dateTimeUtc.RoundDown(Time.OneHour) + Time.OneHour;
+
+            var removedSecurities = _pendingRemovalsManager.CheckPendingDelistedRemovals();
+            if (removedSecurities == null)
+            {
+                return;
+            }
+
+            foreach (var security in removedSecurities)
+            {
+                // a delisted security can't be selected again and its subscriptions already ended with its data
+                foreach (var universe in _algorithm.UniverseManager.Values)
+                {
+                    universe.RemoveMember(dateTimeUtc, security);
+                }
+                _algorithm.Securities.Remove(security.Symbol);
+            }
         }
 
         /// <summary>
