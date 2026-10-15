@@ -240,7 +240,33 @@ namespace QuantConnect.Tests.Common.Securities
             Assert.AreEqual(expectedMarketHoursSegment.Start, marketHoursSegment.Start);
             Assert.AreEqual(expectedMarketHoursSegment.End, marketHoursSegment.End);
             Assert.AreEqual(expectedMarketHoursSegment.State, marketHoursSegment.State);
+        }
 
+        [Test]
+        public void GetMarketHoursWithLateOpenAfterAllSegmentsYieldsNoSegments()
+        {
+            var regularHours = new LocalMarketHours(
+                DayOfWeek.Thursday,
+                new MarketHoursSegment(MarketHoursState.Market, new TimeSpan(8, 30, 0), new TimeSpan(13, 5, 0)));
+
+            var lateOpens = new Dictionary<DateTime, TimeSpan>
+            {
+                { new DateTime(2011, 11, 24), new TimeSpan(17, 0, 0) }
+            };
+
+            var exchangeHours = new SecurityExchangeHours(
+                TimeZones.Chicago,
+                Enumerable.Empty<DateTime>(),
+                new[] { regularHours }.ToDictionary(x => x.DayOfWeek),
+                new Dictionary<DateTime, TimeSpan>(),
+                lateOpens);
+
+            var thanksgiving = new DateTime(2011, 11, 24, 10, 0, 0);
+            var marketHours = exchangeHours.GetMarketHours(thanksgiving);
+
+            Assert.IsEmpty(marketHours.Segments);
+            Assert.IsFalse(exchangeHours.IsOpen(thanksgiving, extendedMarketHours: false));
+            Assert.IsFalse(exchangeHours.IsOpen(thanksgiving, extendedMarketHours: true));
         }
 
         [Test]
