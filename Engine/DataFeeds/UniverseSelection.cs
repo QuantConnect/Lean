@@ -484,41 +484,28 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 security.IsDelisted = true;
                 security.Reset();
 
-                // Add the security removal to the security changes but only if not pending for removal.
-                // If pending, the removed change event was already emitted for this security
-                var changes = SecurityChanges.None;
-                if (!_pendingRemovalsManager.IsPendingForRemoval(security, isInternalFeed))
-                {
-                    _securityChangesConstructor.Remove(security, isInternalFeed);
-                    changes = _securityChangesConstructor.Flush();
-                }
-
-                // like any other removal, keep the security until it's safe to remove it: the delisting liquidation
-                // still has to happen and its funds have to settle, see CheckPendingDelistedRemovals.
-                // Only this feed's memberships, the other feed's removal change is emitted when its own delisting is handled
-                foreach (var universe in _algorithm.UniverseManager.Values)
-                {
-                    if (universe.Securities.TryGetValue(data.Symbol, out var member) && member.IsInternal == isInternalFeed)
-                    {
-                        // registered as pending if it's not safe to remove yet
-                        _pendingRemovalsManager.TryRemoveMember(member, universe);
-                    }
-                }
-
-                // its pending removals will remove it once safe, including one from a universe no longer in the universe manager,
-                // like a disposed universe whose member was kept because of its holdings
-                if (!_pendingRemovalsManager.IsPendingForRemoval(security))
+                // keep it until it's safe to remove it, its delisting liquidation and the settlement of its funds
+                // still need it, see CheckPendingDelistedRemovals
+                if (_pendingRemovalsManager.TryRemoveDelisted(security))
                 {
                     _algorithm.Securities.Remove(data.Symbol);
                 }
-                return changes;
+
+                // Add the security removal to the security changes but only if not pending for removal.
+                // If pending, the removed change event was already emitted for this security
+                if (!_pendingRemovalsManager.IsPendingForRemoval(security, isInternalFeed))
+                {
+                    _securityChangesConstructor.Remove(security, isInternalFeed);
+
+                    return _securityChangesConstructor.Flush();
+                }
             }
 
             return SecurityChanges.None;
         }
 
         /// <summary>
-        /// Removes the delisted securities which are now safe to remove from their universes and the algorithm,
+        /// Removes the delisted securities which are now safe to remove from the algorithm and their universes,
         /// checked hourly like the cash settlement
         /// </summary>
         /// <param name="dateTimeUtc">The current utc time</param>
@@ -530,9 +517,21 @@ namespace QuantConnect.Lean.Engine.DataFeeds
             }
             _nextPendingDelistedRemovalsCheck = dateTimeUtc.RoundDown(Time.OneHour) + Time.OneHour;
 
-            RemoveSecurityFromUniverse(_pendingRemovalsManager.CheckPendingDelistedRemovals(),
-                dateTimeUtc,
-                _algorithm.EndDate.ConvertToUtc(_algorithm.TimeZone));
+            var removedSecurities = _pendingRemovalsManager.CheckPendingDelistedRemovals();
+            if (removedSecurities == null)
+            {
+                return;
+            }
+
+            foreach (var security in removedSecurities)
+            {
+                // a delisted security can't be selected again and its subscriptions already ended with its data
+                foreach (var universe in _algorithm.UniverseManager.Values)
+                {
+                    universe.RemoveMember(dateTimeUtc, security);
+                }
+                _algorithm.Securities.Remove(security.Symbol);
+            }
         }
 
         /// <summary>
@@ -665,13 +664,6 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                             _algorithm.Securities.Remove(member.Symbol);
                         }
                     }
-                }
-
-                if (member.IsDelisted && !_pendingRemovalsManager.IsPendingForRemoval(member))
-                {
-                    // the subscriptions of a delisted security end with its data, so they aren't removed above.
-                    // Removed once all its pending removals complete, another universe could still be waiting, e.g. on an option position
-                    _algorithm.Securities.Remove(member.Symbol);
                 }
             }
         }

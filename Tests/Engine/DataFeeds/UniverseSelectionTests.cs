@@ -288,7 +288,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
         }
 
         [Test]
-        public void DelistedSecurityIsRemovedOnceAllItsUniversesCanRemoveIt()
+        public void DelistedSecurityIsRemovedFromItsUniversesOnceSafeToRemove()
         {
             var algorithm = new AlgorithmStub(new MockDataFeedWithSubscription());
             var orderProcessorMock = new Mock<IOrderProcessor>();
@@ -304,18 +304,8 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             algorithm.OnEndOfTimeStep();
 
             var time = algorithm.UtcTime;
-            var option = new Security(Symbols.SPY_C_192_Feb19_2016,
-                SecurityExchangeHours.AlwaysOpen(TimeZones.NewYork),
-                new Cash(Currencies.USD, 0, 1m),
-                SymbolProperties.GetDefault(Currencies.USD),
-                ErrorCurrencyConverter.Instance,
-                RegisteredSecurityDataTypesProvider.Null,
-                new SecurityCache());
             Assert.IsTrue(universeA.AddMember(time, equity, false));
             Assert.IsTrue(universeB.AddMember(time, equity, false));
-            // universe B can't remove the equity while it holds an option on it
-            Assert.IsTrue(universeB.AddMember(time, option, false));
-            option.Holdings.SetHoldings(1, 1);
             // the delisting liquidation is still pending
             equity.Holdings.SetHoldings(100, 10);
 
@@ -323,22 +313,21 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             universeSelection.HandleDelisting(new Delisting(equity.Symbol, time, 100, DelistingType.Delisted), false);
             Assert.IsTrue(algorithm.Securities.Values.Contains(equity));
 
-            // the delisting liquidation fills, universe A can remove it but universe B is still waiting on the option position
-            equity.Holdings.SetHoldings(100, 0);
+            // checked hourly, still not safe to remove
             universeSelection.CheckPendingDelistedRemovals(time.AddHours(1));
-            Assert.IsFalse(universeA.ContainsMember(equity.Symbol));
-            Assert.IsTrue(universeB.ContainsMember(equity.Symbol));
             Assert.IsTrue(algorithm.Securities.Values.Contains(equity));
 
-            option.Holdings.SetHoldings(1, 0);
+            // the delisting liquidation fills
+            equity.Holdings.SetHoldings(100, 0);
             universeSelection.CheckPendingDelistedRemovals(time.AddHours(2));
+            Assert.IsFalse(universeA.ContainsMember(equity.Symbol));
             Assert.IsFalse(universeB.ContainsMember(equity.Symbol));
             Assert.IsFalse(algorithm.Securities.Values.Contains(equity));
             Assert.IsFalse(algorithm.UniverseManager.ActiveSecurities.ContainsKey(equity.Symbol));
         }
 
         [Test]
-        public void DelistedSecurityPendingRemovalFromRemovedUniverseIsKept()
+        public void DelistedSecurityWithoutUniverseIsKeptUntilSafeToRemove()
         {
             var algorithm = new AlgorithmStub(new MockDataFeedWithSubscription());
             var orderProcessorMock = new Mock<IOrderProcessor>();
@@ -347,21 +336,13 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             algorithm.SetStartDate(2015, 11, 2);
             algorithm.SetEndDate(2015, 11, 6);
 
+            // not a member of any universe, like when its universe was removed without deselecting it
             var equity = algorithm.AddEquity("SPY");
-            var universe = algorithm.AddUniverse("my-universe", dt => new List<string> { "SPY" });
-            algorithm.OnEndOfTimeStep();
-
-            var time = algorithm.UtcTime;
-            Assert.IsTrue(universe.AddMember(time, equity, false));
+            Assert.IsFalse(algorithm.UniverseManager.Values.Any(universe => universe.ContainsMember(equity.Symbol)));
             equity.Holdings.SetHoldings(100, 10);
 
-            // the universe is disposed and removed, like a refreshed framework universe, its member is kept because of its holdings
+            var time = algorithm.UtcTime;
             var universeSelection = algorithm.DataManager.UniverseSelection;
-            universe.Dispose();
-            universeSelection.ApplyUniverseSelection(universe, time, new BaseDataCollection(time, universe.Configuration.Symbol, new List<BaseData>()));
-            algorithm.UniverseManager.Remove(universe.Configuration.Symbol);
-            Assert.IsTrue(algorithm.Securities.Values.Contains(equity));
-
             universeSelection.HandleDelisting(new Delisting(equity.Symbol, time, 100, DelistingType.Delisted), false);
             Assert.IsTrue(algorithm.Securities.Values.Contains(equity));
 

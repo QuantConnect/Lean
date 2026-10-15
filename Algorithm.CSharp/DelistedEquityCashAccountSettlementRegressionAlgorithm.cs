@@ -43,13 +43,21 @@ namespace QuantConnect.Algorithm.CSharp
             SetCash(100000);
             SetBrokerageModel(BrokerageName.Default, AccountType.Cash);
 
-            _aaa = AddEquity("AAA.1", Resolution.Daily).Symbol;
+            _aaa = AddDelistedEquity();
             AddEquity("SPY", Resolution.Daily);
+        }
+
+        /// <summary>
+        /// Adds the equity that gets delisted
+        /// </summary>
+        protected virtual Symbol AddDelistedEquity()
+        {
+            return AddEquity("AAA.1", Resolution.Daily).Symbol;
         }
 
         public override void OnData(Slice slice)
         {
-            if (Transactions.OrdersCount == 0)
+            if (Transactions.OrdersCount == 0 && slice.Bars.ContainsKey(_aaa))
             {
                 SetHoldings(_aaa, 0.5);
             }
