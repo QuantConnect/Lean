@@ -186,6 +186,19 @@ namespace QuantConnect.Brokerages.Authentication
         }
 
         /// <summary>
+        /// Drops the cached token after the brokerage rejected it, so that the next <see cref="GetAccessToken"/> requests a new one
+        /// instead of reusing it until it expires.
+        /// </summary>
+        public virtual void InvalidateAccessToken()
+        {
+            lock (_lock)
+            {
+                Logging.Log.Trace($"LeanOAuthTokenHandler.{nameof(InvalidateAccessToken)}: the brokerage rejected the access token, requesting a new one.");
+                _tokenCredentials = null;
+            }
+        }
+
+        /// <summary>
         /// Stops the recovery task, if any, before releasing the handler.
         /// </summary>
         protected override void Dispose(bool disposing)
