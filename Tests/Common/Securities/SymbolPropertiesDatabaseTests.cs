@@ -116,6 +116,13 @@ namespace QuantConnect.Tests.Common.Securities
             Assert.AreEqual(1m, sp.LotSize);
             Assert.AreEqual(100m, sp.PriceMagnifier);
             Assert.AreEqual(Currencies.USD, sp.QuoteCurrency);
+
+            // Tick value: $1 per tick (0.0001 minimum price variation * 10,000 multiplier)
+            Assert.AreEqual(1m, sp.MinimumPriceVariation * sp.ContractMultiplier);
+
+            // Notional contract value at sample price (1.0353 cents/100 INR * 10,000 multiplier = $10,353)
+            const decimal testPrice = 1.0353m;
+            Assert.AreEqual(10353m, testPrice * sp.ContractMultiplier);
         }
 
         [TestCase(Market.FXCM, SecurityType.Forex)]
