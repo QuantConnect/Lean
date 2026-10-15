@@ -611,7 +611,7 @@ namespace QuantConnect.Securities
             List<MarketHoursSegment> segmentsLateOpen = null;
             if (hasLateOpen)
             {
-                var index = 0;
+                var index = marketHoursSegments.Count;
                 segmentsLateOpen = new List<MarketHoursSegment>();
                 for (var i = 0; i < marketHoursSegments.Count; i++)
                 {
