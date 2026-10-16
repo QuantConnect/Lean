@@ -261,6 +261,7 @@
     <None Include="Benchmarks\CoarseFineUniverseSelectionBenchmark.py" />
     <None Include="Benchmarks\IndicatorRibbonBenchmark.py" />
     <None Include="Benchmarks\ScheduledEventsBenchmark.py" />
+    <None Include="Benchmarks\EmptyFuturesBenchmark.py" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Algorithm\QuantConnect.Algorithm.csproj" />
