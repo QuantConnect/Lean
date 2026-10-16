@@ -420,6 +420,70 @@ namespace QuantConnect.Tests.Engine
             Assert.AreEqual(1, ResultHandlerRuntimeErrorTest.Loops);
         }
 
+        [Test]
+        public void SettlesDelistedSecurityUnsettledCashThroughAlgorithmManager()
+        {
+            var algorithm = new QCAlgorithm();
+            algorithm.SubscriptionManager.SetDataManager(new DataManagerStub(algorithm));
+            algorithm.SetBrokerageModel(BrokerageName.Default, AccountType.Cash);
+            algorithm.SetStartDate(2020, 1, 1);
+            algorithm.SetEndDate(2020, 1, 10);
+            algorithm.SetCash(10000);
+
+            var security = algorithm.AddEquity("SPY", Resolution.Daily);
+            var model = new DelayedSettlementModel(1, TimeSpan.FromHours(8));
+            security.SettlementModel = model;
+
+            var timeUtc = new DateTime(2020, 1, 1, 12, 0, 0, DateTimeKind.Utc);
+            algorithm.SetDateTime(timeUtc);
+
+            // Apply funds from liquidation fill (adds to UnsettledCash)
+            model.ApplyFunds(new ApplyFundsSettlementModelParameters(algorithm.Portfolio, security, timeUtc, new CashAmount(1000, Currencies.USD), null));
+            Assert.AreEqual(1000, algorithm.Portfolio.UnsettledCash);
+
+            // Delist and remove security from active collection
+            security.IsDelisted = true;
+            algorithm.Securities.Remove(security.Symbol);
+            Assert.IsFalse(algorithm.Securities.Values.Contains(security));
+            Assert.IsTrue(algorithm.Securities.Total.Contains(security));
+
+            var job = new BacktestNodePacket(1, 2, "3", null, 9m, "SettlesDelistedSecurityUnsettledCashThroughAlgorithmManager");
+            var transactions = new BacktestingTransactionHandler();
+            var results = new NullResultHandler();
+            var realtime = new NullRealTimeHandler();
+            using var leanManager = new NullLeanManager();
+
+            // Advance time past settlement time (T+1 at 8 AM UTC is Jan 2 08:00, advance to Jan 2 12:00)
+            var settlementTimeUtc = timeUtc.AddDays(1).AddHours(4);
+            var timeSlice = new TimeSlice(
+                settlementTimeUtc,
+                0,
+                new Slice(settlementTimeUtc, new List<BaseData>(), new TradeBars(), new QuoteBars(), new Ticks(), new OptionChains(), new FuturesChains(), new Splits(), new Dividends(), new Delistings(), new SymbolChangedEvents(), new MarginInterestRates(), default(DateTime)),
+                new List<DataFeedPacket>(),
+                new List<UpdateData<ISecurityPrice>>(),
+                new List<UpdateData<SubscriptionDataConfig>>(),
+                new List<UpdateData<ISecurityPrice>>(),
+                SecurityChanges.None,
+                new Dictionary<Universe, BaseDataCollection>());
+
+            var synchronizer = new MockTimeSliceSynchronizer(new List<TimeSlice> { timeSlice });
+
+            var algorithmManager = new AlgorithmManager(false);
+            using var tokenSource = new CancellationTokenSource();
+            algorithmManager.Run(job, algorithm, synchronizer, transactions, results, realtime, leanManager, tokenSource, new());
+
+            // Delisted security funds must be settled through AlgorithmManager scanning Total collection
+            Assert.AreEqual(0, algorithm.Portfolio.UnsettledCash);
+            Assert.AreEqual(11000, algorithm.Portfolio.Cash);
+        }
+
+        private class MockTimeSliceSynchronizer : ISynchronizer
+        {
+            private readonly List<TimeSlice> _timeSlices;
+            public MockTimeSliceSynchronizer(List<TimeSlice> timeSlices) => _timeSlices = timeSlices;
+            public IEnumerable<TimeSlice> StreamData(CancellationToken cancellationToken) => _timeSlices;
+        }
+
         public class ResultHandlerRuntimeErrorTest : BasicTemplateDailyAlgorithm
         {
             public static int Loops { get; set; }

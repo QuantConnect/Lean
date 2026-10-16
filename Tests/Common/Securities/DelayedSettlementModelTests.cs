@@ -149,6 +149,50 @@ namespace QuantConnect.Tests.Common.Securities
             Assert.AreEqual(0, portfolio.UnsettledCash);
         }
 
+        [Test]
+        public void SettlesDelistedSecurityFromTotalCollection()
+        {
+            var securities = new SecurityManager(TimeKeeper);
+            var transactions = new SecurityTransactionManager(null, securities);
+            var portfolio = new SecurityPortfolioManager(securities, transactions, new AlgorithmSettings());
+            var model = new DelayedSettlementModel(1, TimeSpan.FromHours(8));
+            var config = CreateTradeBarConfig(Symbols.SPY);
+            var security = new Security(
+                SecurityExchangeHoursTests.CreateUsEquitySecurityExchangeHours(),
+                config,
+                new Cash(Currencies.USD, 0, 1m),
+                SymbolProperties.GetDefault(Currencies.USD),
+                ErrorCurrencyConverter.Instance,
+                RegisteredSecurityDataTypesProvider.Null,
+                new SecurityCache()
+            );
+            security.SettlementModel = model;
+            securities.Add(security);
+
+            portfolio.SetCash(3000);
+            var timeUtc = Noon.ConvertToUtc(TimeZones.NewYork);
+
+            // Apply funds from liquidation fill
+            model.ApplyFunds(new ApplyFundsSettlementModelParameters(portfolio, security, timeUtc, new CashAmount(1000, Currencies.USD), null));
+            Assert.AreEqual(1000, portfolio.UnsettledCash);
+
+            // Security is delisted and removed from active Securities
+            security.IsDelisted = true;
+            securities.Remove(security.Symbol);
+            Assert.IsFalse(securities.Values.Contains(security));
+            Assert.IsTrue(securities.Total.Contains(security));
+
+            // Settle T+1 at 8 AM by scanning Total collection
+            timeUtc = timeUtc.AddDays(1).AddHours(-4);
+            foreach (var sec in securities.Total)
+            {
+                sec.SettlementModel.Scan(new ScanSettlementModelParameters(portfolio, sec, timeUtc));
+            }
+
+            Assert.AreEqual(4000, portfolio.Cash);
+            Assert.AreEqual(0, portfolio.UnsettledCash);
+        }
+
         private SubscriptionDataConfig CreateTradeBarConfig(Symbol symbol)
         {
             return new SubscriptionDataConfig(typeof(TradeBar), symbol, Resolution.Minute, TimeZones.NewYork, TimeZones.NewYork, true, true, false);

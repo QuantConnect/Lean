@@ -281,8 +281,11 @@ namespace QuantConnect.Lean.Engine
                     foreach (var security in algorithm.Securities.Values)
                     {
                         security.MarginInterestRateModel.ApplyMarginInterestRate(new MarginInterestRateParameters(security, time));
+                    }
 
-                        // perform check for settlement of unsettled funds
+                    // perform check for settlement of unsettled funds including delisted securities
+                    foreach (var security in algorithm.Securities.Total)
+                    {
                         security.SettlementModel.Scan(new ScanSettlementModelParameters(algorithm.Portfolio, security, time));
                     }
                     nextSecurityModelScan = time.RoundDown(Time.OneHour) + Time.OneHour;
