@@ -36,6 +36,7 @@ namespace QuantConnect.Securities
         private static readonly object _lock = new object();
 
         private List<SecurityDefinition> _securityDefinitions;
+        private Dictionary<string, SecurityDefinition> _securityDefinitionsByCUSIP;
         private readonly IMapFileProvider _mapFileProvider;
         private readonly string _securitiesDefinitionKey;
         private readonly IDataProvider _dataProvider;
@@ -66,6 +67,9 @@ namespace QuantConnect.Securities
         /// to get the ticker of the symbol on this date.
         /// </param>
         /// <returns>The Lean Symbol corresponding to the CUSIP number on the trading date provided</returns>
+        /// <remarks>Accepts both the full 9-character CUSIP and its 8-character base, without the check digit.
+        /// A 9-character CUSIP whose check digit does not match is not resolved.
+        /// When several definitions share the same 8-character base, the first one in the security database is returned.</remarks>
         public Symbol CUSIP(string cusip, DateTime tradingDate)
         {
             if (string.IsNullOrWhiteSpace(cusip))
@@ -73,9 +77,8 @@ namespace QuantConnect.Securities
                 return null;
             }
 
-            return SecurityDefinitionToSymbol(
-                GetSecurityDefinitions().FirstOrDefault(x => x.CUSIP != null && x.CUSIP.Equals(cusip, StringComparison.InvariantCultureIgnoreCase)),
-                tradingDate);
+            GetSecurityDefinitionsByCUSIP().TryGetValue(GetCUSIPKey(cusip), out var securityDefinition);
+            return SecurityDefinitionToSymbol(securityDefinition, tradingDate);
         }
 
         /// <summary>
@@ -83,9 +86,15 @@ namespace QuantConnect.Securities
         /// </summary>
         /// <param name="symbol">The Lean <see cref="Symbol"/></param>
         /// <returns>The Committee on Uniform Securities Identification Procedures (CUSIP) number corresponding to the given Lean <see cref="Symbol"/></returns>
+        /// <remarks>The CUSIP is returned with its 9th character, the check digit, even when the security definition only provides the 8-character base</remarks>
         public string CUSIP(Symbol symbol)
         {
-            return SymbolToSecurityDefinition(symbol)?.CUSIP;
+            var cusip = SymbolToSecurityDefinition(symbol)?.CUSIP;
+            if (cusip?.Length == 8 && TryGetCUSIPCheckDigit(cusip, out var checkDigit))
+            {
+                return cusip.ToUpperInvariant() + checkDigit;
+            }
+            return cusip;
         }
 
         /// <summary>
@@ -274,6 +283,93 @@ namespace QuantConnect.Securities
         }
 
         /// <summary>
+        /// Gets the key a CUSIP is indexed by: its 8-character base when it is a valid CUSIP, so that the
+        /// 8 and 9-character forms match, or the CUSIP itself otherwise, so it can still be matched exactly
+        /// </summary>
+        private static string GetCUSIPKey(string cusip)
+        {
+            return TryGetCUSIPBase(cusip, out var cusipBase) ? cusipBase : cusip;
+        }
+
+        /// <summary>
+        /// Gets the 8-character base of a CUSIP, the part identifying the issuer and the issue.
+        /// A 9-character CUSIP is only accepted when its check digit is valid.
+        /// </summary>
+        private static bool TryGetCUSIPBase(string cusip, out string cusipBase)
+        {
+            cusipBase = null;
+            if (cusip == null || !TryGetCUSIPCheckDigit(cusip, out var checkDigit))
+            {
+                return false;
+            }
+
+            if (cusip.Length == 8)
+            {
+                cusipBase = cusip;
+            }
+            else if (cusip.Length == 9 && cusip[8] == checkDigit)
+            {
+                cusipBase = cusip.Substring(0, 8);
+            }
+
+            return cusipBase != null;
+        }
+
+        /// <summary>
+        /// Calculates the CUSIP check digit (the 9th character) from the first 8 characters of a CUSIP,
+        /// using the "modulus 10 double add double" algorithm. See https://en.wikipedia.org/wiki/CUSIP
+        /// </summary>
+        private static bool TryGetCUSIPCheckDigit(string cusip, out char checkDigit)
+        {
+            checkDigit = default;
+            if (cusip.Length < 8)
+            {
+                return false;
+            }
+
+            var sum = 0;
+            for (var i = 0; i < 8; i++)
+            {
+                var c = char.ToUpperInvariant(cusip[i]);
+                int value;
+                if (c >= '0' && c <= '9')
+                {
+                    value = c - '0';
+                }
+                else if (c >= 'A' && c <= 'Z')
+                {
+                    value = c - 'A' + 10;
+                }
+                else if (c == '*')
+                {
+                    value = 36;
+                }
+                else if (c == '@')
+                {
+                    value = 37;
+                }
+                else if (c == '#')
+                {
+                    value = 38;
+                }
+                else
+                {
+                    return false;
+                }
+
+                // every second character is doubled
+                if (i % 2 == 1)
+                {
+                    value *= 2;
+                }
+                sum += value / 10 + value % 10;
+            }
+
+            checkDigit = (char)('0' + (10 - sum % 10) % 10);
+            return true;
+        }
+
+        /// <summary>
         /// Get's the security definitions using a lazy initialization
         /// </summary>
         private IEnumerable<SecurityDefinition> GetSecurityDefinitions()
@@ -288,6 +384,28 @@ namespace QuantConnect.Securities
             }
 
             return _securityDefinitions;
+        }
+
+        /// <summary>
+        /// Gets the security definitions indexed by CUSIP, see <see cref="GetCUSIPKey"/>, built once on first use
+        /// </summary>
+        private Dictionary<string, SecurityDefinition> GetSecurityDefinitionsByCUSIP()
+        {
+            var securityDefinitions = GetSecurityDefinitions();
+            lock (_lock)
+            {
+                if (_securityDefinitionsByCUSIP == null)
+                {
+                    _securityDefinitionsByCUSIP = new Dictionary<string, SecurityDefinition>(StringComparer.InvariantCultureIgnoreCase);
+                    foreach (var securityDefinition in securityDefinitions.Where(x => x.CUSIP != null))
+                    {
+                        // keep the first definition in the file, as a linear search would
+                        _securityDefinitionsByCUSIP.TryAdd(GetCUSIPKey(securityDefinition.CUSIP), securityDefinition);
+                    }
+                }
+            }
+
+            return _securityDefinitionsByCUSIP;
         }
 
         /// <summary>
