@@ -33,7 +33,7 @@ using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Algorithm.Framework.Alphas;
 using QuantConnect.Algorithm.Framework.Alphas.Analysis;
 using QuantConnect.Commands;
-using Common.Util;
+using QuantConnect.Util;
 
 namespace QuantConnect.Interfaces
 {

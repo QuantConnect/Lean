@@ -22,7 +22,7 @@ using Newtonsoft.Json;
 using QuantConnect.Packets;
 using QuantConnect.Algorithm;
 using QuantConnect.Brokerages;
-using Common.Util;
+using QuantConnect.Util;
 using Newtonsoft.Json.Serialization;
 
 namespace QuantConnect.Tests.Common

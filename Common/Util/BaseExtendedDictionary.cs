@@ -16,10 +16,9 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using QuantConnect;
 using QuantConnect.Python;
 
-namespace Common.Util
+namespace QuantConnect.Util
 {
     /// <summary>
     /// Provides a generic implementation of ExtendedDictionary with specific dictionary type

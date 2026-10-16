@@ -16,7 +16,7 @@
 using System;
 using QuantConnect.Indicators;
 using QuantConnect.Securities;
-using Common.Data.Consolidators;
+using QuantConnect.Data.Consolidators;
 
 namespace QuantConnect.Data.Market
 {

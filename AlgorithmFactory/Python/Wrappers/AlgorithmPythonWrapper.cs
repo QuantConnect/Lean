@@ -40,7 +40,7 @@ using QuantConnect.Algorithm.Framework.Alphas.Analysis;
 using QuantConnect.Commands;
 using QuantConnect.Algorithm.Framework.Portfolio.SignalExports;
 using QuantConnect.Algorithm.Framework.Execution;
-using Common.Util;
+using QuantConnect.Util;
 
 namespace QuantConnect.AlgorithmFactory.Python.Wrappers
 {

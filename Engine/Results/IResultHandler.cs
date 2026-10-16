@@ -23,7 +23,7 @@ using QuantConnect.Data.UniverseSelection;
 using QuantConnect.Interfaces;
 using QuantConnect.Orders;
 using QuantConnect.Packets;
-using Common.Util;
+using QuantConnect.Util;
 using QuantConnect.Statistics;
 
 namespace QuantConnect.Lean.Engine.Results

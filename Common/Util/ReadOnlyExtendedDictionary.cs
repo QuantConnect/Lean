@@ -17,7 +17,7 @@ using System;
 using System.Collections.Generic;
 using QuantConnect.Python;
 
-namespace Common.Util
+namespace QuantConnect.Util
 {
     /// <summary>
     /// Provides a read-only implementation of ExtendedDictionary

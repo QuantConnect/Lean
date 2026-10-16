@@ -17,7 +17,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using NUnit.Framework;
-using Common.Util;
+using QuantConnect.Util;
 using Python.Runtime;
 
 namespace QuantConnect.Tests.Common
