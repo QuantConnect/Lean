@@ -115,6 +115,14 @@ namespace QuantConnect.Statistics
         public decimal ProbabilisticSharpeRatio { get; set; }
 
         /// <summary>
+        /// Adjusted Sharpe Ratio accounts for skewness and kurtosis in the return distribution;
+        /// for a positive Sharpe ratio it penalizes negative skewness and excess kurtosis
+        /// </summary>
+        /// <remarks>See Pezier, J. and White, A. (2006), "The Relative Merits of Investable Hedge Fund Indices and of Funds of Hedge Funds in Optimal Passive Portfolios", ICMA Centre Discussion Papers in Finance DP2006-10</remarks>
+        [JsonConverter(typeof(JsonRoundingConverter))]
+        public decimal AdjustedSharpeRatio { get; set; }
+
+        /// <summary>
         /// Sortino ratio with respect to risk free rate: measures excess of return per unit of downside risk.
         /// </summary>
         /// <remarks>With risk defined as the algorithm's volatility</remarks>
@@ -310,6 +318,8 @@ namespace QuantConnect.Statistics
             // deannualize a 1 sharpe ratio
             var benchmarkSharpeRatio = 1.0d / Math.Sqrt(tradingDaysPerYear);
             ProbabilisticSharpeRatio = Statistics.ProbabilisticSharpeRatio(listPerformance, benchmarkSharpeRatio, (double)riskFreeRate / tradingDaysPerYear).SafeDecimalCast();
+
+            AdjustedSharpeRatio = Statistics.AdjustedSharpeRatio(listPerformance, (double)SharpeRatio, (double)riskFreeRate / tradingDaysPerYear).SafeDecimalCast();
 
             ValueAtRisk99 = GetValueAtRisk(listPerformance, tradingDaysPerYear, 0.99d);
             ValueAtRisk95 = GetValueAtRisk(listPerformance, tradingDaysPerYear, 0.95d);

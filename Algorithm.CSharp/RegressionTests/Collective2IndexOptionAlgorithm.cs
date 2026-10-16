@@ -139,6 +139,7 @@ namespace QuantConnect.Algorithm.CSharp.RegressionTests
             {"Sharpe Ratio", "-15.229"},
             {"Sortino Ratio", "0"},
             {"Probabilistic Sharpe Ratio", "0.000%"},
+            {"Adjusted Sharpe Ratio", "-16.88"},
             {"Loss Rate", "100%"},
             {"Win Rate", "0%"},
             {"Profit-Loss Ratio", "0"},
