@@ -270,6 +270,72 @@ namespace QuantConnect.Tests.Common.Securities
         }
 
         [Test]
+        public void GetMarketHoursWithMultipleSegmentsAndLateOpenAfterAllSegmentsYieldsNoSegments()
+        {
+            var regularHours = new LocalMarketHours(
+                DayOfWeek.Monday,
+                new MarketHoursSegment(MarketHoursState.PreMarket, new TimeSpan(4, 0, 0), new TimeSpan(9, 30, 0)),
+                new MarketHoursSegment(MarketHoursState.Market, new TimeSpan(9, 30, 0), new TimeSpan(16, 0, 0)),
+                new MarketHoursSegment(MarketHoursState.PostMarket, new TimeSpan(16, 0, 0), new TimeSpan(20, 0, 0)));
+
+            var lateOpens = new Dictionary<DateTime, TimeSpan>
+            {
+                { new DateTime(2026, 10, 19), new TimeSpan(21, 0, 0) }
+            };
+
+            var exchangeHours = new SecurityExchangeHours(
+                TimeZones.NewYork,
+                Enumerable.Empty<DateTime>(),
+                new[] { regularHours }.ToDictionary(x => x.DayOfWeek),
+                new Dictionary<DateTime, TimeSpan>(),
+                lateOpens);
+
+            var date = new DateTime(2026, 10, 19, 10, 0, 0);
+            var marketHours = exchangeHours.GetMarketHours(date);
+
+            Assert.IsEmpty(marketHours.Segments);
+            Assert.IsFalse(exchangeHours.IsOpen(date, extendedMarketHours: false));
+            Assert.IsFalse(exchangeHours.IsOpen(date, extendedMarketHours: true));
+        }
+
+        [Test]
+        public void GetMarketHoursWithEarlyCloseAndLateOpenAfterAllSegmentsPreservesEarlyCloseSegments()
+        {
+            var regularHours = new LocalMarketHours(
+                DayOfWeek.Thursday,
+                new MarketHoursSegment(MarketHoursState.Market, new TimeSpan(8, 30, 0), new TimeSpan(13, 5, 0)));
+
+            var earlyCloses = new Dictionary<DateTime, TimeSpan>
+            {
+                { new DateTime(2011, 11, 24), new TimeSpan(12, 0, 0) }
+            };
+
+            var lateOpens = new Dictionary<DateTime, TimeSpan>
+            {
+                { new DateTime(2011, 11, 24), new TimeSpan(17, 0, 0) }
+            };
+
+            var exchangeHours = new SecurityExchangeHours(
+                TimeZones.Chicago,
+                Enumerable.Empty<DateTime>(),
+                new[] { regularHours }.ToDictionary(x => x.DayOfWeek),
+                earlyCloses,
+                lateOpens);
+
+            var date = new DateTime(2011, 11, 24, 10, 0, 0);
+            var marketHours = exchangeHours.GetMarketHours(date);
+
+            Assert.AreEqual(1, marketHours.Segments.Count);
+            var segment = marketHours.Segments.Single();
+            Assert.AreEqual(new TimeSpan(8, 30, 0), segment.Start);
+            Assert.AreEqual(new TimeSpan(12, 0, 0), segment.End);
+            Assert.AreEqual(MarketHoursState.Market, segment.State);
+
+            Assert.IsTrue(exchangeHours.IsOpen(new DateTime(2011, 11, 24, 11, 0, 0), extendedMarketHours: false));
+            Assert.IsFalse(exchangeHours.IsOpen(new DateTime(2011, 11, 24, 12, 30, 0), extendedMarketHours: false));
+        }
+
+        [Test]
         public void GetNextMarketOpenIsNonInclusiveOfStartTime()
         {
             var exchangeHours = CreateUsEquitySecurityExchangeHours();
