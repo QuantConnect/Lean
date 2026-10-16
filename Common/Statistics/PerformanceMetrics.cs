@@ -21,6 +21,12 @@ namespace QuantConnect.Statistics
     public static class PerformanceMetrics
     {
         /// <summary>
+        /// Adjusted Sharpe ratio: penalizes the Sharpe ratio for negative skewness and fat tails (kurtosis).
+        /// </summary>
+        /// <remarks>Pezier and White (2006)</remarks>
+        public const string AdjustedSharpeRatio = "Adjusted Sharpe Ratio";
+
+        /// <summary>
         /// Algorithm "Alpha" statistic - abnormal returns over the risk free rate and the relationshio (beta) with the benchmark returns.
         /// </summary>
         public const string Alpha = "Alpha";
