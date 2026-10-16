@@ -19,6 +19,7 @@ namespace QuantConnect.Data.Fundamental
     /// <summary>
     /// The fundamental property to access
     /// </summary>
+    [StubsIgnore]
     public enum FundamentalProperty
     {
 #pragma warning disable CS1591, CA1707

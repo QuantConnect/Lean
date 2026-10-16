@@ -69,6 +69,7 @@ namespace QuantConnect.Data.UniverseSelection
         /// <param name="symbol">The symbol instance</param>
         /// <param name="name">The name of the fundamental property</param>
         /// <returns>The fundamental information</returns>
+        [StubsIgnore]
         public static T Get<T>(DateTime time, Symbol symbol, FundamentalProperty name) => Get<T>(time, symbol.ID, name);
 
         /// <summary>
@@ -79,6 +80,7 @@ namespace QuantConnect.Data.UniverseSelection
         /// <param name="securityIdentifier">The security identifier</param>
         /// <param name="name">The name of the fundamental property</param>
         /// <returns>The fundamental information</returns>
+        [StubsIgnore]
         public static T Get<T>(DateTime time, SecurityIdentifier securityIdentifier, FundamentalProperty name)
         {
             return _fundamentalDataProvider.Get<T>(time.Date, securityIdentifier, name);

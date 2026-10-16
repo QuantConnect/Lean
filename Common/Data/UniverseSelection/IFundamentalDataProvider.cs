@@ -39,6 +39,7 @@ namespace QuantConnect.Data.UniverseSelection
         /// <param name="securityIdentifier">The security identifier</param>
         /// <param name="name">The name of the fundamental property</param>
         /// <returns>The fundamental information</returns>
+        [StubsIgnore]
         T Get<T>(DateTime time, SecurityIdentifier securityIdentifier, FundamentalProperty name);
     }
 }
