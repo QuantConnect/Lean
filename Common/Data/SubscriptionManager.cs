@@ -238,11 +238,13 @@ namespace QuantConnect.Data
             foreach (var subscription in _subscriptionManager.GetSubscriptionDataConfigs(symbol))
             {
                 subscription.Consolidators.Remove(consolidator);
+            }
 
-                if (_consolidators.Remove(consolidator, out var consolidatorsToScan))
-                {
-                    consolidatorsToScan.Dispose();
-                }
+            // dispose the scan wrapper even if the symbol has no subscriptions left (e.g. removed from the universe),
+            // else 'ScanPastConsolidators' keeps re-enqueuing it forever
+            if (_consolidators.Remove(consolidator, out var consolidatorsToScan))
+            {
+                consolidatorsToScan.Dispose();
             }
 
             // dispose of the consolidator to remove any remaining event handlers
