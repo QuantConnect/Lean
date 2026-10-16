@@ -51,6 +51,7 @@ namespace QuantConnect.Tests.API
 
         [TestCase("{}", 0)]
         [TestCase("[]", 0)]
+        [TestCase("[{\"key\":\"pinocho\",\"value\":\"19\"},{\"key\":\"pepe\",\"value\":\"-1\"}]", 2)]
         [TestCase(ValidSerialization, 2)]
         public void Deserialization(string validSerialization, int count)
         {

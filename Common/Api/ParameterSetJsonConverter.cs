@@ -71,10 +71,21 @@ namespace QuantConnect.Api
         {
             if (reader.TokenType == JsonToken.StartArray)
             {
-                if (JArray.Load(reader).Count == 0)
+                var jArray = JArray.Load(reader);
+                var parameters = new Dictionary<string, string>();
+
+                foreach (var item in jArray)
                 {
-                    return new ParameterSet(-1, new Dictionary<string, string>());
+                    if (item is JObject jObject && jObject["key"] != null)
+                    {
+                        var key = jObject["key"].ToString();
+                        var value = jObject["value"]?.ToString();
+
+                        parameters[key] = value;
+                    }
                 }
+
+                return new ParameterSet(-1, parameters);
             }
             else if (reader.TokenType == JsonToken.StartObject)
             {
@@ -89,5 +100,6 @@ namespace QuantConnect.Api
 
             throw new ArgumentException($"Unexpected Tokentype {reader.TokenType}");
         }
+
     }
 }
