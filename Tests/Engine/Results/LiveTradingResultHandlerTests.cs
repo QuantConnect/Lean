@@ -36,7 +36,7 @@ using QuantConnect.Lean.Engine.TransactionHandlers;
 using QuantConnect.Tests.Common.Data.UniverseSelection;
 using QuantConnect.Data.Custom.IconicTypes;
 using System.Collections.Generic;
-using Common.Util;
+using QuantConnect.Util;
 
 namespace QuantConnect.Tests.Engine.Results
 {

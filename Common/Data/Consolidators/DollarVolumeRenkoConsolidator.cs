@@ -14,10 +14,8 @@
 */
 
 using QuantConnect.Data.Market;
-using QuantConnect.Data.Consolidators;
-using QuantConnect.Data;
 
-namespace Common.Data.Consolidators
+namespace QuantConnect.Data.Consolidators
 {
     /// <summary>
     /// This consolidator transforms a stream of <see cref="BaseData"/> instances into a stream of <see cref="RenkoBar"/>

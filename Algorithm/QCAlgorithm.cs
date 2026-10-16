@@ -58,7 +58,6 @@ using QuantConnect.Commands;
 using Newtonsoft.Json;
 using QuantConnect.Securities.Index;
 using QuantConnect.Api;
-using Common.Util;
 
 namespace QuantConnect.Algorithm
 {

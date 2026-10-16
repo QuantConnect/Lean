@@ -40,7 +40,6 @@ using QuantConnect.Scheduling;
 using QuantConnect.Securities;
 using QuantConnect.Statistics;
 using QuantConnect.Util;
-using Common.Util;
 using Log = QuantConnect.Logging.Log;
 
 namespace QuantConnect.Tests.Engine

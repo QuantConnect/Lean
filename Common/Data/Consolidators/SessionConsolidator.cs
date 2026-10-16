@@ -14,14 +14,10 @@
 */
 
 using System;
-using QuantConnect;
-using QuantConnect.Data;
 using QuantConnect.Securities;
 using QuantConnect.Data.Market;
-using QuantConnect.Data.Consolidators;
-using QuantConnect.Util;
 
-namespace Common.Data.Consolidators
+namespace QuantConnect.Data.Consolidators
 {
     /// <summary>
     /// Consolidates intraday market data into a single daily <see cref="SessionBar"/> (OHLCV + OpenInterest).
