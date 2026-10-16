@@ -14,8 +14,11 @@
 */
 
 using System;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using System.Threading;
 using QuantConnect.Util;
+using QuantConnect.Api;
 using QuantConnect.Logging;
 using QuantConnect.Configuration;
 using System.Collections.Concurrent;
@@ -44,11 +47,26 @@ namespace QuantConnect.Optimizer
 
         // Per-backtest metrics extracted in NewResult so we don't retain the full backtest JSON.
         private readonly List<OptimizationBacktestMetrics> _completedBacktests = new();
+        private readonly List<OptimizationBacktest> _completedOptimizationBacktests = new();
 
         /// <summary>
         /// The total completed backtests count
         /// </summary>
         protected int CompletedBacktests => _failedBacktest + _completedBacktest;
+
+        /// <summary>
+        /// The lightweight backtest summaries completed by this optimization.
+        /// </summary>
+        public IReadOnlyList<OptimizationBacktest> CompletedOptimizationBacktests
+        {
+            get
+            {
+                lock (_completedOptimizationBacktests)
+                {
+                    return new List<OptimizationBacktest>(_completedOptimizationBacktests);
+                }
+            }
+        }
 
         /// <summary>
         /// Lock to update optimization status
@@ -199,6 +217,10 @@ namespace QuantConnect.Optimizer
                     {
                         backtestsSnapshot = new List<OptimizationBacktestMetrics>(_completedBacktests);
                     }
+                    lock (_completedOptimizationBacktests)
+                    {
+                        result.Backtests = new List<OptimizationBacktest>(_completedOptimizationBacktests);
+                    }
                     var parameters = new OptimizationAnalysisRunParameters(
                         backtestsSnapshot,
                         NodePacket.OptimizationParameters);
@@ -281,6 +303,15 @@ namespace QuantConnect.Optimizer
                     lock (_completedBacktests)
                     {
                         _completedBacktests.Add(metrics);
+                    }
+                }
+
+                var optimizationBacktest = CreateOptimizationBacktest(backtestId, parameterSet, jsonBacktestResult);
+                if (optimizationBacktest != null)
+                {
+                    lock (_completedOptimizationBacktests)
+                    {
+                        _completedOptimizationBacktests.Add(optimizationBacktest);
                     }
                 }
 
@@ -479,6 +510,30 @@ namespace QuantConnect.Optimizer
                 {
                     Log.Error($"LeanOptimizer.LaunchLeanForParameterSet({GetLogDetails()}): Error encountered while placing optimization message into the queue: {ex.Message}");
                 }
+            }
+        }
+
+        private static OptimizationBacktest CreateOptimizationBacktest(string backtestId, ParameterSet parameterSet, string jsonBacktestResult)
+        {
+            if (string.IsNullOrEmpty(jsonBacktestResult))
+            {
+                return null;
+            }
+
+            try
+            {
+                var result = JObject.Parse(jsonBacktestResult);
+                var statistics = result["Statistics"] ?? result["statistics"];
+                return new OptimizationBacktest(parameterSet, backtestId, "OptimizationBacktest")
+                {
+                    Progress = 1,
+                    Statistics = statistics?.ToObject<Dictionary<string, string>>()
+                };
+            }
+            catch (JsonException ex)
+            {
+                Log.Error(ex, $"LeanOptimizer.CreateOptimizationBacktest(): failed to parse backtest result for '{backtestId}'");
+                return null;
             }
         }
     }
