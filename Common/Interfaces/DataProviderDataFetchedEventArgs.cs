@@ -42,7 +42,7 @@ namespace QuantConnect.Interfaces
         /// </summary>
         /// <param name="path">The path to the fetched data</param>
         /// <param name="succeeded">Whether the data was fetched successfully</param>
-        /// <param name="errorMessage">Any error message that occured during the fetch</param>
+        /// <param name="errorMessage">Any error message that occurred during the fetch</param>
         public DataProviderNewDataRequestEventArgs(string path, bool succeeded, string  errorMessage)
         {
             Path = path;
