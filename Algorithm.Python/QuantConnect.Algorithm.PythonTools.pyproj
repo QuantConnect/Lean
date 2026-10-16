@@ -76,6 +76,7 @@
     <Compile Include="CustomDataBitcoinAlgorithm.py" />
     <Compile Include="CustomDataNIFTYAlgorithm.py" />
     <Compile Include="CustomDataRegressionAlgorithm.py" />
+    <Compile Include="FXMacroDataCustomDataRegressionAlgorithm.py" />
     <Compile Include="CustomDataUniverseAlgorithm.py" />
     <Compile Include="CustomModelsAlgorithm.py" />
     <Compile Include="CustomSecurityInitializerAlgorithm.py" />

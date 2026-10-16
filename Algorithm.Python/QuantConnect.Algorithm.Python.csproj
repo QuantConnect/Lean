@@ -189,6 +189,7 @@
     <None Include="CustomDataIndicatorExtensionsAlgorithm.py" />
     <None Include="CustomDataNIFTYAlgorithm.py" />
     <None Include="CustomDataRegressionAlgorithm.py" />
+    <None Include="FXMacroDataCustomDataRegressionAlgorithm.py" />
     <None Include="CustomDataUniverseAlgorithm.py" />
     <None Include="CustomIndicatorAlgorithm.py" />
     <None Include="CustomModelsAlgorithm.py" />
