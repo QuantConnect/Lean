@@ -621,7 +621,7 @@ namespace QuantConnect.Algorithm
         /// </summary>
         /// <param name="symbol">The symbol to register against</param>
         /// <param name="indicator">The indicator to receive data from the consolidator</param>
-        /// <param name="pyObject">The python object that it is trying to register with, could be consolidator or a timespan</param>
+        /// <param name="pyObject">The python object that it is trying to register with, could be consolidator, timespan or a calendar</param>
         /// <param name="selector">Selects a value from the BaseData send into the indicator, if null defaults to a cast (x => (T)x)</param>
         [DocumentationAttribute(Indicators)]
         [DocumentationAttribute(ConsolidatingData)]
@@ -641,10 +641,17 @@ namespace QuantConnect.Algorithm
             }
             catch
             {
-                // Finally, since above didn't work, just try it as a timespan
+                // Since above didn't work, just try it as a timespan
                 // Issue #4668 Fix
                 using (Py.GIL())
                 {
+                    // a consolidation calendar, e.g. Calendar.WEEKLY, converts without throwing so try it before the timespan cast
+                    if (pyObject.TrySafeAs(out Func<DateTime, CalendarInfo> calendar))
+                    {
+                        RegisterIndicator(symbol, indicator, ResolveConsolidator(symbol, calendar), selector);
+                        return;
+                    }
+
                     try
                     {
                         // tryConvert does not work for timespan
@@ -657,7 +664,8 @@ namespace QuantConnect.Algorithm
                     }
                     catch (Exception e)
                     {
-                        throw new ArgumentException("Invalid third argument, should be either a valid consolidator or timedelta object. The following exception was thrown: ", e);
+                        throw new ArgumentException("Invalid third argument, should be either a valid consolidator, timedelta or " +
+                            "calendar (e.g. Calendar.WEEKLY) object. The following exception was thrown: ", e);
                     }
                 }
             }
