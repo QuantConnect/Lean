@@ -65,6 +65,33 @@ namespace QuantConnect.Tests.Common.Orders.Fills
         }
 
         [Test]
+        public void MarketOrderDoesNotFillDuringExtendedHoursWhenSubscriptionHasNoExtendedHours(
+            [Values(OrderDirection.Buy, OrderDirection.Sell)] OrderDirection orderDirection)
+        {
+            var model = new FutureFillModel();
+            var quantity = orderDirection == OrderDirection.Buy ? 100 : -100;
+            var midnight = Noon.AddHours(-12); // Midnight (extended hours segment)
+            var order = new MarketOrder(Symbols.ES_Future_Chain, quantity, midnight);
+            var config = CreateTradeBarConfig(Symbols.ES_Future_Chain, extendedMarketHours: false);
+            var security = GetSecurity(config);
+            TimeKeeper.GetLocalTimeKeeper(TimeZones.NewYork).UpdateTime(midnight.ConvertToUtc(TimeZones.NewYork));
+            security.SetLocalTimeKeeper(TimeKeeper.GetLocalTimeKeeper(TimeZones.NewYork));
+            security.SetMarketPrice(new IndicatorDataPoint(Symbols.ES_Future_Chain, midnight, 101.123m));
+
+            var fill = model.Fill(new FillModelParameters(
+                security,
+                order,
+                new MockSubscriptionDataConfigProvider(config),
+                Time.OneHour,
+                null)).Single();
+
+            Assert.AreEqual(0m, fill.FillQuantity);
+            Assert.AreEqual(0m, fill.FillPrice);
+            Assert.AreNotEqual(OrderStatus.Filled, fill.Status);
+            Assert.AreNotEqual(OrderStatus.PartiallyFilled, fill.Status);
+        }
+
+        [Test]
         public void PerformsStopMarketFill(
             [Values] bool extendedMarketHours,
             [Values(OrderDirection.Buy, OrderDirection.Sell)] OrderDirection orderDirection)

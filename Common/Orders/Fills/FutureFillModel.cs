@@ -42,7 +42,8 @@ namespace QuantConnect.Orders.Fills
             if (order.Status == OrderStatus.Canceled) return fill;
 
             // make sure the exchange is open on regular/extended market hours before filling
-            if (!IsExchangeOpen(asset, true)) return fill;
+            var subscriptionConfigs = GetSubscriptionDataConfigs(asset);
+            if (!IsExchangeOpen(asset, subscriptionConfigs.IsExtendedMarketHours())) return fill;
 
             var prices = GetPricesCheckingPythonWrapper(asset, order.Direction);
             var pricesEndTimeUtc = prices.EndTime.ConvertToUtc(asset.Exchange.TimeZone);
@@ -51,12 +52,8 @@ namespace QuantConnect.Orders.Fills
             // filling at a stale price when the latest data is more than one resolution bar behind the order submission
             // time (e.g. the first bar of the session after the open, or an intraday data gap). Otherwise fill on the
             // stale price with a warning.
-            // Fetched lazily and reused across the stale-data check and the fill-price resolution so the subscription
-            // configs are resolved at most once per fill.
-            List<SubscriptionDataConfig> subscriptionConfigs = null;
             if (pricesEndTimeUtc.Add(Parameters.StalePriceTimeSpan) < order.Time)
             {
-                subscriptionConfigs = GetSubscriptionDataConfigs(asset);
                 if (ShouldWaitForFreshDataOnStale(asset, pricesEndTimeUtc, order.Time, subscriptionConfigs))
                 {
                     return fill;
