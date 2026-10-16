@@ -63,6 +63,16 @@ namespace QuantConnect.Orders
         public DateTime UtcTime { get; set; }
 
         /// <summary>
+        /// The date and time of this event (UTC). Synonym of <see cref="UtcTime"/>
+        /// </summary>
+        [JsonIgnore]
+        public DateTime Time
+        {
+            get { return UtcTime; }
+            set { UtcTime = value; }
+        }
+
+        /// <summary>
         /// Status message of the order.
         /// </summary>
         [ProtoMember(5)]
@@ -113,11 +123,35 @@ namespace QuantConnect.Orders
         public OrderDirection Direction { get; set; }
 
         /// <summary>
+        /// The type of the order this event comes from. Null for events deserialized from payloads that predate this property
+        /// </summary>
+        [JsonProperty(DefaultValueHandling = DefaultValueHandling.Ignore)]
+        [ProtoMember(20)]
+        public OrderType? OrderType { get; set; }
+
+        /// <summary>
+        /// The id of the group of orders the order belongs to if it is a combo order leg, null otherwise
+        /// </summary>
+        [JsonProperty(DefaultValueHandling = DefaultValueHandling.Ignore)]
+        [ProtoMember(21)]
+        public int? GroupId { get; set; }
+
+        /// <summary>
         /// Any message from the exchange.
         /// </summary>
         [DefaultValue(""), JsonProperty(DefaultValueHandling = DefaultValueHandling.Ignore)]
         [ProtoMember(11)]
         public string Message { get; set; }
+
+        /// <summary>
+        /// Any message from the exchange. Synonym of <see cref="Message"/>
+        /// </summary>
+        [JsonIgnore]
+        public string Tag
+        {
+            get { return Message; }
+            set { Message = value; }
+        }
 
         /// <summary>
         /// True if the order event is an assignment
@@ -290,6 +324,8 @@ namespace QuantConnect.Orders
             Status = order.Status;
             Quantity = order.Quantity;
             Direction = order.Direction;
+            OrderType = order.Type;
+            GroupId = order.GroupId;
 
             //Initialize to zero, manually set fill quantity
             FillQuantity = 0;
@@ -348,7 +384,7 @@ namespace QuantConnect.Orders
 
             var orderEvent = new OrderEvent(serializedOrderEvent.OrderId,
                 symbol,
-                DateTime.SpecifyKind(Time.UnixTimeStampToDateTime(serializedOrderEvent.Time), DateTimeKind.Utc),
+                DateTime.SpecifyKind(QuantConnect.Time.UnixTimeStampToDateTime(serializedOrderEvent.Time), DateTimeKind.Utc),
                 serializedOrderEvent.Status,
                 serializedOrderEvent.Direction,
                 serializedOrderEvent.FillPrice,
@@ -358,6 +394,8 @@ namespace QuantConnect.Orders
             {
                 IsAssignment = serializedOrderEvent.IsAssignment,
                 IsInTheMoney = serializedOrderEvent.IsInTheMoney,
+                OrderType = serializedOrderEvent.OrderType,
+                GroupId = serializedOrderEvent.GroupId,
                 LimitPrice = serializedOrderEvent.LimitPrice,
                 StopPrice = serializedOrderEvent.StopPrice,
                 FillPriceCurrency = serializedOrderEvent.FillPriceCurrency,
