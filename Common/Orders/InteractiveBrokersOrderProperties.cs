@@ -31,13 +31,23 @@ namespace QuantConnect.Orders
         /// <summary>
         /// The account group for the order (only used by Financial Advisors)
         /// </summary>
-        /// <remarks>Mutually exclusive with FaProfile and Account</remarks>
+        /// <remarks>
+        /// Mutually exclusive with FaProfile and Account. When unified Financial Advisor groups are enabled and the
+        /// group uses its saved ContractsOrShares allocation method, saved child values may be fractional, but their
+        /// total must be lot-aligned; for a lot size of one, 12.5 + 7.5 = 20 is valid.
+        /// </remarks>
         public string FaGroup { get; set; }
 
         /// <summary>
-        /// The allocation method for the account group order (only used by Financial Advisors)
-        /// Supported allocation methods are: Equal, NetLiq, AvailableEquity, PctChange
+        /// The allocation-method override for the account group order (only used by Financial Advisors).
         /// </summary>
+        /// <remarks>
+        /// When <see cref="FaGroup"/> is explicitly set, supported values remain order overrides and are validated
+        /// against the saved group configuration whenever a Ready snapshot is available. Leave this field empty to
+        /// use the group's saved allocation method; this requires a Ready brokerage account snapshot containing the
+        /// group. PctChange is not supported by unified Financial Advisor groups. When unified groups are disabled,
+        /// the legacy integer <see cref="FaPercentage"/> route remains available for PctChange.
+        /// </remarks>
         public string FaMethod { get; set; }
 
         /// <summary>
