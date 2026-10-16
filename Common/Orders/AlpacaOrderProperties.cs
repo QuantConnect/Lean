@@ -25,5 +25,12 @@ namespace QuantConnect.Orders
         /// Flag to allow orders to also trigger or fill outside of regular trading hours.
         /// </summary>
         public bool OutsideRegularTradingHours { get; set; }
+
+        /// <summary>
+        /// The id the algorithm gives the order, sent to Alpaca as its client order id. Alpaca generates one when it is not set.
+        /// The brokerage reads it back on the orders it loads at startup, so an algorithm can match them to its own records after a restart.
+        /// It must be unique in the Alpaca account, up to 128 characters.
+        /// </summary>
+        public string ClientOrderId { get; set; }
     }
 }
