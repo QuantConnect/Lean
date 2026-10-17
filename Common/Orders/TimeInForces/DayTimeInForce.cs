@@ -73,8 +73,14 @@ namespace QuantConnect.Orders.TimeInForces
                 case SecurityType.FutureOption:
                 case SecurityType.IndexOption:
                 default:
-                    // expires at market close
-                    expired = time >= exchangeHours.GetLastDailyMarketClose(orderTime, false);
+                    // expires at market close, except for MarketOnClose orders which execute at market close and expire strictly after.
+                    // MarketOnClose orders are executed by the fill model (e.g. EquityFillModel.MarketOnCloseFill) when the time slice
+                    // reaches market close. Using strictly greater (time > marketClose) ensures the order remains active during the
+                    // market close slice to allow the fill to execute, and expires on the subsequent slice if left unfilled.
+                    var marketClose = exchangeHours.GetLastDailyMarketClose(orderTime, false);
+                    expired = order.Type == OrderType.MarketOnClose
+                        ? time > marketClose
+                        : time >= marketClose;
                     break;
             }
 
