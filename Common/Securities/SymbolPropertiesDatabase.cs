@@ -75,7 +75,37 @@ namespace QuantConnect.Securities
                 return true;
             }
 
+            if (securityType == SecurityType.CryptoFuture)
+            {
+                var cryptoKey = new SecurityDatabaseKey(SecurityDatabaseKey.Wildcard, symbol, SecurityType.Crypto);
+                if (_keyBySecurityType.TryGetValue(cryptoKey, out result))
+                {
+                    market = result.Market;
+                    return true;
+                }
+            }
+
             market = null;
+            return false;
+        }
+
+        /// <summary>
+        /// Determines if the database contains the specified key
+        /// </summary>
+        /// <param name="key">The key to search for</param>
+        /// <returns>True if an entry is found, otherwise false</returns>
+        protected override bool ContainsKey(SecurityDatabaseKey key)
+        {
+            if (base.ContainsKey(key))
+            {
+                return true;
+            }
+
+            if (key.SecurityType == SecurityType.CryptoFuture)
+            {
+                return base.ContainsKey(new SecurityDatabaseKey(key.Market, key.Symbol, SecurityType.Crypto));
+            }
+
             return false;
         }
 
@@ -104,6 +134,15 @@ namespace QuantConnect.Securities
                     key = new SecurityDatabaseKey(market, lookupTicker, symbol.Underlying.SecurityType);
 
                     if (Entries.TryGetValue(key, out symbolProperties))
+                    {
+                        return symbolProperties;
+                    }
+                }
+                else if (securityType == SecurityType.CryptoFuture)
+                {
+                    // Fall back to crypto spot properties if no specific cryptofuture row exists (e.g. for delisted contracts)
+                    var cryptoKey = new SecurityDatabaseKey(market, lookupTicker, SecurityType.Crypto);
+                    if (Entries.TryGetValue(cryptoKey, out symbolProperties))
                     {
                         return symbolProperties;
                     }

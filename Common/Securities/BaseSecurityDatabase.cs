@@ -135,7 +135,7 @@ namespace QuantConnect.Securities
         /// </summary>
         /// <param name="key">The key to search for</param>
         /// <returns>True if an entry is found, otherwise false</returns>
-        protected bool ContainsKey(SecurityDatabaseKey key)
+        protected virtual bool ContainsKey(SecurityDatabaseKey key)
         {
             return Entries.ContainsKey(key);
         }
