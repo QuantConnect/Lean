@@ -554,6 +554,25 @@ namespace QuantConnect.Tests.Common.Securities
             Assert.AreEqual(1m, wildcardEntry.Value.LotSize);
         }
 
+        [Test]
+        public void FallsBackToCryptoWhenCryptoFutureEntryMissing()
+        {
+            var db = SymbolPropertiesDatabase.FromDataFolder();
+            // AKROUSDT has a spot 'crypto' entry for binance, but no explicit 'cryptofuture' entry
+            var symbol = Symbol.Create("AKROUSDT", SecurityType.CryptoFuture, Market.Binance);
+            var symbolProperties = db.GetSymbolProperties(symbol.ID.Market, symbol, symbol.SecurityType, Currencies.USD);
+
+            Assert.IsNotNull(symbolProperties);
+            Assert.AreEqual("USDT", symbolProperties.QuoteCurrency);
+            Assert.AreEqual(1m, symbolProperties.ContractMultiplier);
+            Assert.AreEqual(0.000001m, symbolProperties.MinimumPriceVariation);
+            Assert.AreEqual(1m, symbolProperties.LotSize);
+
+            Assert.IsTrue(db.ContainsKey(symbol.ID.Market, symbol, symbol.SecurityType));
+            Assert.IsTrue(db.TryGetMarket("AKROUSDT", SecurityType.CryptoFuture, out var market));
+            Assert.AreEqual(Market.Binance, market);
+        }
+
         private class TestingSymbolPropertiesDatabase : SymbolPropertiesDatabase
         {
             public TestingSymbolPropertiesDatabase(string file)
