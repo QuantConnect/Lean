@@ -16,7 +16,6 @@
 using System;
 using Newtonsoft.Json;
 using QuantConnect.Api;
-using Newtonsoft.Json.Linq;
 using System.Collections.Generic;
 
 namespace QuantConnect.Util
@@ -85,15 +84,6 @@ namespace QuantConnect.Util
                 default:
                     throw new ArgumentException($"Unexpected Tokentype {reader.TokenType}");
             }
-        }
-
-        /// <summary>
-        /// Gets the name of a parameter in the {"key": key, "value": value} format, also accepting the 'name' property
-        /// </summary>
-        internal static string GetName(JObject parameter)
-        {
-            return parameter.GetValue("name", StringComparison.OrdinalIgnoreCase)?.Value<string>()
-                ?? parameter.GetValue("key", StringComparison.OrdinalIgnoreCase)?.Value<string>();
         }
     }
 }

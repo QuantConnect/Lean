@@ -15,7 +15,6 @@
 
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
-using QuantConnect.Util;
 using System;
 using System.Reflection;
 
@@ -60,41 +59,38 @@ namespace QuantConnect.Optimizer.Parameters
             JsonSerializer serializer
             )
         {
-            JObject token = JObject.Load(reader);
-            var parameterName = ParameterDictionaryJsonConverter.GetName(token);
+            var parameter = serializer.Deserialize<OptimizationParameterProperties>(reader);
+            var parameterName = parameter?.Name ?? parameter?.Key;
             if (string.IsNullOrEmpty(parameterName))
             {
                 throw new ArgumentException(Messages.OptimizationParameterJsonConverter.OptimizationParameterNotSpecified);
             }
 
-            JToken value;
-            // optional properties can be missing or null
-            var min = GetDecimal(token, "min");
-            var max = GetDecimal(token, "max");
             OptimizationParameter optimizationParameter = null;
-            if (min.HasValue && max.HasValue)
+            if (parameter.Min.HasValue && parameter.Max.HasValue)
             {
-                var step = GetDecimal(token, "step");
-                var minStep = GetDecimal(token, "minStep") ?? GetDecimal(token, "min-step");
-                if (step.HasValue)
+                var min = parameter.Min.Value;
+                var max = parameter.Max.Value;
+                var minStep = parameter.MinStep ?? parameter.MinStepDashed;
+                if (parameter.Step.HasValue)
                 {
                     if (minStep.HasValue)
                     {
-                        optimizationParameter = new OptimizationStepParameter(parameterName, min.Value, max.Value, step.Value, minStep.Value);
+                        optimizationParameter = new OptimizationStepParameter(parameterName, min, max, parameter.Step.Value, minStep.Value);
                     }
                     else
                     {
-                        optimizationParameter = new OptimizationStepParameter(parameterName, min.Value, max.Value, step.Value);
+                        optimizationParameter = new OptimizationStepParameter(parameterName, min, max, parameter.Step.Value);
                     }
                 }
                 else
                 {
-                    optimizationParameter = new OptimizationStepParameter(parameterName, min.Value, max.Value);
+                    optimizationParameter = new OptimizationStepParameter(parameterName, min, max);
                 }
             }
-            else if(token.TryGetValue("value", StringComparison.OrdinalIgnoreCase, out value))
+            else if (parameter.HasValue)
             {
-                optimizationParameter = new StaticOptimizationParameter(parameterName, value.Value<string>());
+                optimizationParameter = new StaticOptimizationParameter(parameterName, parameter.Value);
             }
 
             if (optimizationParameter == null)
@@ -110,9 +106,50 @@ namespace QuantConnect.Optimizer.Parameters
         /// </summary>
         public override bool CanConvert(Type objectType) => typeof(OptimizationParameter).IsAssignableFrom(objectType);
 
-        private static decimal? GetDecimal(JObject parameter, string propertyName)
+        /// <summary>
+        /// The optimization parameter properties as written, the optional ones can be missing or null
+        /// </summary>
+        private class OptimizationParameterProperties
         {
-            return parameter.GetValue(propertyName, StringComparison.OrdinalIgnoreCase)?.Value<decimal?>();
+            private string _value;
+
+            [JsonProperty("name")]
+            public string Name { get; set; }
+
+            [JsonProperty("key")]
+            public string Key { get; set; }
+
+            [JsonProperty("min")]
+            public decimal? Min { get; set; }
+
+            [JsonProperty("max")]
+            public decimal? Max { get; set; }
+
+            [JsonProperty("step")]
+            public decimal? Step { get; set; }
+
+            [JsonProperty("minStep")]
+            public decimal? MinStep { get; set; }
+
+            [JsonProperty("min-step")]
+            public decimal? MinStepDashed { get; set; }
+
+            [JsonProperty("value")]
+            public string Value
+            {
+                get { return _value; }
+                set
+                {
+                    _value = value;
+                    HasValue = true;
+                }
+            }
+
+            /// <summary>
+            /// True if the value property was set, even to null
+            /// </summary>
+            [JsonIgnore]
+            public bool HasValue { get; private set; }
         }
     }
 }
