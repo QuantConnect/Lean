@@ -113,7 +113,7 @@ namespace QuantConnect.Algorithm.Framework.Selection
                  where x.CompanyReference.CountryId == "USA" &&
                        IsNyseOrNasdaq(x) &&
                        (algorithm.Time - x.SecurityReference.IPODate).Days > 180 &&
-                       GetMarketCap(x) > 500000000m
+                       x.MarketCap > 500000000m
                  select x).ToList();
 
             var count = filteredFine.Count;
@@ -161,19 +161,6 @@ namespace QuantConnect.Algorithm.Framework.Selection
                 exchange = fine.SecurityReference.ExchangeId;
             }
             return exchange is "NYS" or "NYSE" or "NAS";
-        }
-
-        /// <summary>
-        /// The market cap, or price times shares outstanding where Morningstar has none.
-        /// Shares outstanding are restated for later splits, so the split factor puts the price on the same basis
-        /// </summary>
-        private static decimal GetMarketCap(FineFundamental fine)
-        {
-            if (fine.MarketCap > 0)
-            {
-                return fine.MarketCap;
-            }
-            return fine.Price * fine.SplitFactor * fine.CompanyProfile.SharesOutstanding;
         }
     }
 }

@@ -46,6 +46,7 @@ namespace QuantConnect.Data.Fundamental
             get
             {
                 var marketCap = CompanyProfile.MarketCap;
+                // Shares outstanding are restated for later splits, so the split factor puts the price on the same basis
                 return marketCap is not 0 ? marketCap : (long)(Price * SplitFactor * CompanyProfile.SharesOutstanding);
             }
         }

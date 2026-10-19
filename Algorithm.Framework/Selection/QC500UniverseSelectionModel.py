@@ -59,7 +59,7 @@ class QC500UniverseSelectionModel(FundamentalUniverseSelectionModel):
         sorted_by_sector = sorted([x for x in fundamental if x.company_reference.country_id == "USA"
                                         and self.is_nyse_or_nasdaq(x)
                                         and (algorithm.time - x.security_reference.ipo_date).days > 180
-                                        and self.market_cap(x) > 5e8],
+                                        and x.market_cap > 5e8],
                                key = lambda x: x.company_reference.industry_template_code)
 
         count = len(sorted_by_sector)
@@ -91,11 +91,3 @@ class QC500UniverseSelectionModel(FundamentalUniverseSelectionModel):
         so the listing exchange is the fallback'''
         exchange = fundamental.company_reference.primary_exchange_id or fundamental.security_reference.exchange_id
         return exchange in ["NYS", "NYSE", "NAS"]
-
-    @staticmethod
-    def market_cap(fundamental: FineFundamental) -> float:
-        '''The market cap, or price times shares outstanding where Morningstar has none.
-        Shares outstanding are restated for later splits, so the split factor puts the price on the same basis'''
-        if fundamental.market_cap > 0:
-            return fundamental.market_cap
-        return float(fundamental.price * fundamental.split_factor) * fundamental.company_profile.shares_outstanding
