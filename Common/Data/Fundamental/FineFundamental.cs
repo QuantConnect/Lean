@@ -38,9 +38,17 @@ namespace QuantConnect.Data.Fundamental
         /// Price * Total SharesOutstanding.
         /// The most current market cap for example, would be the most recent closing price x the most recent reported shares outstanding.
         /// For ADR share classes, market cap is price * (ordinary shares outstanding / adr ratio).
+        /// When the reported market cap is zero, it is computed from the split-adjusted price and the shares outstanding.
         /// </summary>
         [JsonIgnore]
-        public long MarketCap => CompanyProfile.MarketCap;
+        public long MarketCap
+        {
+            get
+            {
+                var marketCap = CompanyProfile.MarketCap;
+                return marketCap is not 0 ? marketCap : (long)(Price * SplitFactor * CompanyProfile.SharesOutstanding);
+            }
+        }
 
         /// <summary>
         /// Return the URL string source of the file. This will be converted to a stream
