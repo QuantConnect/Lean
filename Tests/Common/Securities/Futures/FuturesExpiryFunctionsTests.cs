@@ -118,6 +118,26 @@ namespace QuantConnect.Tests.Common.Securities.Futures
             Assert.AreEqual(expected, expiration(date));
         }
 
+        // January contracts terminate a business day before December's last, CME S-5526, SER-8292, SER-9101 and SER-9466
+        [TestCase("20110101", "20101230")]
+        [TestCase("20190101", "20181228")]
+        [TestCase("20230101", "20221229")]
+        [TestCase("20250101", "20241230")]
+        // 12/31/2021 is a US bank holiday but the Central Bank of Brazil still published its repeated PTAX that day
+        [TestCase("20220101", "20211230")]
+        // other months terminate on the last business day of the preceding month, CME submission 11-125
+        [TestCase("20110401", "20110331")]
+        [TestCase("20120401", "20120330")]
+        public void BrazilianRealFutures(string input, string expectedStr)
+        {
+            var date = Time.ParseDate(input);
+            var expected = Time.ParseDate(expectedStr).Add(new TimeSpan(14, 15, 0));
+
+            var canonical = Symbol.Create(QuantConnect.Securities.Futures.Currencies.BRL, SecurityType.Future, Market.CME);
+            var expiration = FuturesExpiryFunctions.FuturesExpiryDictionary[canonical];
+            Assert.AreEqual(expected, expiration(date));
+        }
+
         [Test]
         public void MCLFutures()
         {
