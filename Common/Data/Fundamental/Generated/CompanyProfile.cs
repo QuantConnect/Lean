@@ -278,13 +278,22 @@ namespace QuantConnect.Data.Fundamental
         public long SharesOutstanding => FundamentalService.Get<long>(_timeProvider.GetUtcNow(), _securityIdentifier, FundamentalProperty.CompanyProfile_SharesOutstanding);
 
         /// <summary>
-        /// Price * Total SharesOutstanding. The most current market cap for example, would be the most recent closing price x the most recent reported shares outstanding. For ADR share classes, market cap is price * (ordinary shares outstanding / adr ratio).
+        /// The market capitalization of the company: the latest closing price of each share class times its shares outstanding, summed over the company's share classes. ShareClassMarketCap holds one class alone.
         /// </summary>
         /// <remarks>
         /// Morningstar DataId: 40001
         /// </remarks>
         [JsonProperty("40001")]
         public long MarketCap => FundamentalService.Get<long>(_timeProvider.GetUtcNow(), _securityIdentifier, FundamentalProperty.CompanyProfile_MarketCap);
+
+        /// <summary>
+        /// The market capitalization of this share class alone: its latest closing price times its own shares outstanding. MarketCap holds the whole company.
+        /// </summary>
+        /// <remarks>
+        /// Morningstar DataId: EQU69
+        /// </remarks>
+        [JsonProperty("EQU69")]
+        public long ShareClassMarketCap => FundamentalService.Get<long>(_timeProvider.GetUtcNow(), _securityIdentifier, FundamentalProperty.CompanyProfile_ShareClassMarketCap);
 
         /// <summary>
         /// This number tells you what cash return you would get if you bought the entire company, including its debt. Enterprise Value = Market Cap + Preferred stock + Long-Term Debt And Capital Lease + Short Term Debt And Capital Lease + Securities Sold But Not Yet Repurchased - Cash, Cash Equivalent And Market Securities - Securities Purchased with Agreement to Resell - Securities Borrowed.
