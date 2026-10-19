@@ -575,13 +575,13 @@ namespace QuantConnect.Securities
                 for (var i = 0; i < marketHoursSegments.Count; i++)
                 {
                     var segment = marketHoursSegments[i];
-                    if (segment.Start <= earlyCloseTime && earlyCloseTime <= segment.End)
+                    if (segment.Start < earlyCloseTime && earlyCloseTime <= segment.End)
                     {
                         newSegment = new MarketHoursSegment(segment.State, segment.Start, earlyCloseTime);
                         index = i;
                         break;
                     }
-                    else if (earlyCloseTime < segment.Start)
+                    else if (earlyCloseTime <= segment.Start)
                     {
                         // we will drop any remaining segment starting by this one, keeping the ones that ended before the early close
                         index = i;
@@ -600,14 +600,14 @@ namespace QuantConnect.Securities
             // the segments before the early close and the the segments after the late opens and append them. Therefore, if that's not the case, this is,
             // if there was an early close but there is not a late open or it's before the early close, we need to update the variable marketHours with
             // the value of newMarketHours, so that it contains the segments before the early close
-            if (segmentsEarlyClose != null && (!hasLateOpen || earlyCloseTime >= lateOpenTime))
+            if (segmentsEarlyClose != null && (!hasLateOpen || earlyCloseTime > lateOpenTime))
             {
                 marketHoursSegments = segmentsEarlyClose;
             }
 
             // If the lateOpenTime is between a segment, change the start time with it
-            // and add it before the segments previous to the lateOpenTime
-            // Otherwise, just take the segments previous to the lateOpenTime
+            // and add it before the segments after the lateOpenTime
+            // Otherwise, just take the segments after the lateOpenTime
             List<MarketHoursSegment> segmentsLateOpen = null;
             if (hasLateOpen)
             {
@@ -616,7 +616,7 @@ namespace QuantConnect.Securities
                 for (var i = 0; i < marketHoursSegments.Count; i++)
                 {
                     var segment = marketHoursSegments[i];
-                    if (segment.Start <= lateOpenTime && lateOpenTime <= segment.End)
+                    if (segment.Start <= lateOpenTime && lateOpenTime < segment.End)
                     {
                         segmentsLateOpen.Add(new(segment.State, lateOpenTime, segment.End));
                         index = i + 1;

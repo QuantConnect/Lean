@@ -703,6 +703,20 @@ namespace QuantConnect.Tests.Common.Securities
             Assert.AreEqual(expectedMarketHours, exchangeHours.GetMarketHours(monday).ToString());
         }
 
+        // late open after the last segment of the day
+        [TestCase("LE", 2011, 11, 24, "Closed All Day")]
+        [TestCase("ETH", 2020, 7, 3, "Closed All Day")]
+        // early close at the start of the only segment of the day
+        [TestCase("GNF", 2012, 2, 19, "Closed All Day")]
+        // early close and late open at the same time, the market closes and reopens at once
+        [TestCase("DC", 2019, 4, 18, "Thursday: PreMarket: 00:00:00-08:30:00 | Market: 08:30:00-13:55:00 | Market: 13:55:00-16:00:00 | PostMarket: 17:00:00-1.00:00:00")]
+        public void EarlyCloseAndLateOpenFromDatabase(string ticker, int year, int month, int day, string expectedMarketHours)
+        {
+            var exchangeHours = MarketHoursDatabase.FromDataFolder().GetEntry(Market.CME, ticker, SecurityType.Future).ExchangeHours;
+
+            Assert.AreEqual(expectedMarketHours, exchangeHours.GetMarketHours(new DateTime(year, month, day)).ToString());
+        }
+
         private static TestCaseData[] GetTestCases()
         {
             return new[]
@@ -757,13 +771,11 @@ namespace QuantConnect.Tests.Common.Securities
                         new MarketHoursSegment(MarketHoursState.PreMarket, new TimeSpan(7, 0, 0), new TimeSpan(8, 30, 0)),
                         new MarketHoursSegment(MarketHoursState.Market, new TimeSpan(8, 30, 0), new TimeSpan(16, 0, 0)))
                 ),
-                // 3.3 Late open after market close (regular hours)
+                // 3.3 Late open after market close (closed all day)
                 new TestCaseData(
                     new DateTime(),
                     new DateTime(2020, 7, 3, 17, 0, 0), // Late open at 17
-                    new LocalMarketHours(DayOfWeek.Friday,
-                        new MarketHoursSegment(MarketHoursState.PreMarket, new TimeSpan(0, 0, 0), new TimeSpan(8, 30, 0)),
-                        new MarketHoursSegment(MarketHoursState.Market, new TimeSpan(8, 30, 0), new TimeSpan(16, 0, 0)))
+                    LocalMarketHours.ClosedAllDay(DayOfWeek.Friday)
                 ),
 
                 // 4. Both early close and late open scenarios
@@ -807,21 +819,33 @@ namespace QuantConnect.Tests.Common.Securities
                     new LocalMarketHours(DayOfWeek.Friday,
                         new MarketHoursSegment(MarketHoursState.PreMarket, new TimeSpan(0, 0, 0), new TimeSpan(8, 30, 0)))
                 ),
-                // 5.2 Late open exactly at market close (market segment has zero duration)
+                // 5.2 Late open exactly at market close (closed all day)
                 new TestCaseData(
                     new DateTime(),
                     new DateTime(2020, 7, 3, 16, 0, 0),
-                    new LocalMarketHours(DayOfWeek.Friday,
-                        new MarketHoursSegment(MarketHoursState.Market, new TimeSpan(16, 0, 0), new TimeSpan(16, 0, 0)))
+                    LocalMarketHours.ClosedAllDay(DayOfWeek.Friday)
                 ),
-                // 5.3 Early close and late open at the same time (split into two segments with zero-duration overlap)
+                // 5.3 Early close and late open at the same time (market closes and reopens at once, split into two segments)
                 new TestCaseData(
                     new DateTime(2020, 7, 3, 13, 0, 0),
                     new DateTime(2020, 7, 3, 13, 0, 0),
                     new LocalMarketHours(DayOfWeek.Friday,
                         new MarketHoursSegment(MarketHoursState.PreMarket, new TimeSpan(0, 0, 0), new TimeSpan(8, 30, 0)),
                         new MarketHoursSegment(MarketHoursState.Market, new TimeSpan(8, 30, 0), new TimeSpan(13, 0, 0)),
-                        new MarketHoursSegment(MarketHoursState.Market, new TimeSpan(13, 0, 0), new TimeSpan(13, 0, 0)))
+                        new MarketHoursSegment(MarketHoursState.Market, new TimeSpan(13, 0, 0), new TimeSpan(16, 0, 0)))
+                ),
+                // 5.4 Late open exactly at market open (premarket dropped)
+                new TestCaseData(
+                    new DateTime(),
+                    new DateTime(2020, 7, 3, 8, 30, 0),
+                    new LocalMarketHours(DayOfWeek.Friday,
+                        new MarketHoursSegment(MarketHoursState.Market, new TimeSpan(8, 30, 0), new TimeSpan(16, 0, 0)))
+                ),
+                // 5.5 Early close exactly at the first segment start (closed all day)
+                new TestCaseData(
+                    new DateTime(2020, 7, 3, 0, 0, 0),
+                    new DateTime(),
+                    LocalMarketHours.ClosedAllDay(DayOfWeek.Friday)
                 ),
             };
         }
