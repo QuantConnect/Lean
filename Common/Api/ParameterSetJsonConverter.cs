@@ -14,9 +14,9 @@
 */
 
 using System;
-using System.Collections.Generic;
 using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
+using QuantConnect.Util;
+using System.Collections.Generic;
 using QuantConnect.Optimizer.Parameters;
 
 namespace QuantConnect.Api
@@ -69,25 +69,28 @@ namespace QuantConnect.Api
         /// </returns>
         public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer)
         {
-            if (reader.TokenType == JsonToken.StartArray)
+            if (reader.TokenType == JsonToken.StartObject)
             {
-                if (JArray.Load(reader).Count == 0)
+                // {"parameterSet": parameters} or {name: value, ...}
+                var parameterSet = new Dictionary<string, string>();
+                while (reader.Read() && reader.TokenType == JsonToken.PropertyName)
                 {
-                    return new ParameterSet(-1, new Dictionary<string, string>());
+                    var name = (string)reader.Value;
+                    if (name == "parameterSet")
+                    {
+                        reader.Read();
+                        parameterSet = ParameterDictionaryJsonConverter.Read(reader, serializer);
+                    }
+                    else
+                    {
+                        parameterSet[name] = reader.ReadAsString();
+                    }
                 }
-            }
-            else if (reader.TokenType == JsonToken.StartObject)
-            {
-                var jObject = JObject.Load(reader);
-
-                var value = jObject["parameterSet"] ?? jObject;
-
-                var parameterSet = new ParameterSet(-1, value.ToObject<Dictionary<string, string>>());
-
-                return parameterSet;
+                return new ParameterSet(-1, parameterSet);
             }
 
-            throw new ArgumentException($"Unexpected Tokentype {reader.TokenType}");
+            var parameters = ParameterDictionaryJsonConverter.Read(reader, serializer);
+            return parameters == null ? null : new ParameterSet(-1, parameters);
         }
     }
 }

@@ -228,6 +228,12 @@ namespace QuantConnect.Api
         /// </summary>
         [JsonProperty(PropertyName = "value")]
         public string Value { get; set; }
+
+        /// <summary>
+        /// Name of parameter in the {"key": key, "value": value} format
+        /// </summary>
+        [JsonProperty(PropertyName = "key")]
+        private string Key { set { Name = value ?? Name; } }
     }
 
     /// <summary>

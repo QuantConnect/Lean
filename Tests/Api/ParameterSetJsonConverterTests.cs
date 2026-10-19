@@ -16,6 +16,7 @@
 using Newtonsoft.Json;
 using NUnit.Framework;
 using System.Collections.Generic;
+using QuantConnect.Api;
 using QuantConnect.Optimizer.Parameters;
 
 namespace QuantConnect.Tests.API
@@ -52,6 +53,12 @@ namespace QuantConnect.Tests.API
         [TestCase("{}", 0)]
         [TestCase("[]", 0)]
         [TestCase(ValidSerialization, 2)]
+        [TestCase("{\"pinocho\":\"19\",\"pepe\":\"-1\"}", 2)]
+        [TestCase("[{\"key\":\"pinocho\",\"value\":\"19\"},{\"key\":\"pepe\",\"value\":\"-1\"}]", 2)]
+        [TestCase("[{\"key\":\"pinocho\",\"value\":19,\"min\":1,\"max\":100,\"step\":1},{\"key\":\"pepe\",\"value\":-1,\"min\":null,\"max\":null,\"step\":null}]", 2)]
+        [TestCase("[{\"name\":\"pinocho\",\"value\":\"19\"},{\"name\":\"pepe\",\"value\":\"-1\"}]", 2)]
+        [TestCase("[{\"key\":\"pinocho\",\"value\":\"19\"},{\"value\":\"7\"},{\"key\":\"pepe\",\"value\":\"-1\"}]", 2)]
+        [TestCase("{\"parameterSet\":[{\"key\":\"pinocho\",\"value\":\"19\"},{\"key\":\"pepe\",\"value\":\"-1\"}]}", 2)]
         public void Deserialization(string validSerialization, int count)
         {
             var deserialized = JsonConvert.DeserializeObject<ParameterSet>(validSerialization);
@@ -63,6 +70,37 @@ namespace QuantConnect.Tests.API
                 Assert.IsTrue(deserialized.Value["pinocho"] == "19");
                 Assert.IsTrue(deserialized.Value["pepe"] == "-1");
             }
+        }
+
+        [TestCase("{\"start-date\":\"2024-01-01T10:00:00Z\"}")]
+        [TestCase("{\"parameterSet\":{\"start-date\":\"2024-01-01T10:00:00Z\"}}")]
+        [TestCase("[{\"key\":\"start-date\",\"value\":\"2024-01-01T10:00:00Z\"}]")]
+        public void DeserializationKeepsDateValues(string serialization)
+        {
+            var deserialized = JsonConvert.DeserializeObject<ParameterSet>(serialization);
+
+            Assert.AreEqual("2024-01-01T10:00:00Z", deserialized.Value["start-date"]);
+        }
+
+        [Test]
+        public void DeserializationNull()
+        {
+            Assert.IsNull(JsonConvert.DeserializeObject<ParameterSet>("null"));
+        }
+
+        [Test]
+        public void BacktestDeserialization()
+        {
+            var json = "{\"backtest\":{\"name\":\"Backtest with parameters\",\"projectId\":0,\"completed\":true,\"backtestId\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\"," +
+                "\"parameterSet\":[{\"key\":\"pinocho\",\"value\":\"19\"},{\"key\":\"pepe\",\"value\":\"-1\"}],\"status\":\"Completed.\",\"progress\":1}," +
+                "\"debugging\":false,\"success\":true,\"errors\":[]}";
+
+            var deserialized = JsonConvert.DeserializeObject<BacktestResponseWrapper>(json);
+
+            Assert.IsNotNull(deserialized.Backtest.ParameterSet);
+            Assert.AreEqual(2, deserialized.Backtest.ParameterSet.Value.Count);
+            Assert.AreEqual("19", deserialized.Backtest.ParameterSet.Value["pinocho"]);
+            Assert.AreEqual("-1", deserialized.Backtest.ParameterSet.Value["pepe"]);
         }
     }
 }

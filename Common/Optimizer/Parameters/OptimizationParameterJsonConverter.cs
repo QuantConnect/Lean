@@ -59,50 +59,38 @@ namespace QuantConnect.Optimizer.Parameters
             JsonSerializer serializer
             )
         {
-            JObject token = JObject.Load(reader);
-            var parameterName = (token.GetValue("name", StringComparison.OrdinalIgnoreCase) ?? token.GetValue("key", StringComparison.OrdinalIgnoreCase))?.Value<string>();
+            var parameter = serializer.Deserialize<OptimizationParameterProperties>(reader);
+            var parameterName = parameter?.Name ?? parameter?.Key;
             if (string.IsNullOrEmpty(parameterName))
             {
                 throw new ArgumentException(Messages.OptimizationParameterJsonConverter.OptimizationParameterNotSpecified);
             }
 
-            JToken value;
-            JToken minToken;
-            JToken maxToken;
             OptimizationParameter optimizationParameter = null;
-            if (token.TryGetValue("min", StringComparison.OrdinalIgnoreCase, out minToken) &&
-                token.TryGetValue("max", StringComparison.OrdinalIgnoreCase, out maxToken))
+            if (parameter.Min.HasValue && parameter.Max.HasValue)
             {
-                var stepToken = token.GetValue("step", StringComparison.OrdinalIgnoreCase)?.Value<decimal>();
-                var minStepToken = token.GetValue("minStep", StringComparison.OrdinalIgnoreCase)?.Value<decimal>() ?? token.GetValue("min-step", StringComparison.OrdinalIgnoreCase)?.Value<decimal>();
-                if (stepToken.HasValue)
+                var min = parameter.Min.Value;
+                var max = parameter.Max.Value;
+                var minStep = parameter.MinStep ?? parameter.MinStepDashed;
+                if (parameter.Step.HasValue)
                 {
-                    if (minStepToken.HasValue)
+                    if (minStep.HasValue)
                     {
-                        optimizationParameter = new OptimizationStepParameter(parameterName,
-                            minToken.Value<decimal>(),
-                            maxToken.Value<decimal>(),
-                            stepToken.Value,
-                            minStepToken.Value);
+                        optimizationParameter = new OptimizationStepParameter(parameterName, min, max, parameter.Step.Value, minStep.Value);
                     }
                     else
                     {
-                        optimizationParameter = new OptimizationStepParameter(parameterName,
-                            minToken.Value<decimal>(),
-                            maxToken.Value<decimal>(),
-                            stepToken.Value);
+                        optimizationParameter = new OptimizationStepParameter(parameterName, min, max, parameter.Step.Value);
                     }
                 }
                 else
                 {
-                    optimizationParameter = new OptimizationStepParameter(parameterName,
-                        minToken.Value<decimal>(),
-                        maxToken.Value<decimal>());
+                    optimizationParameter = new OptimizationStepParameter(parameterName, min, max);
                 }
             }
-            else if(token.TryGetValue("value", StringComparison.OrdinalIgnoreCase, out value))
+            else if (parameter.HasValue)
             {
-                optimizationParameter = new StaticOptimizationParameter(parameterName, value.Value<string>());
+                optimizationParameter = new StaticOptimizationParameter(parameterName, parameter.Value);
             }
 
             if (optimizationParameter == null)
@@ -117,5 +105,51 @@ namespace QuantConnect.Optimizer.Parameters
         /// Determines if an OptimizationParameter is assignable from the given object type
         /// </summary>
         public override bool CanConvert(Type objectType) => typeof(OptimizationParameter).IsAssignableFrom(objectType);
+
+        /// <summary>
+        /// The optimization parameter properties as written, the optional ones can be missing or null
+        /// </summary>
+        private class OptimizationParameterProperties
+        {
+            private string _value;
+
+            [JsonProperty("name")]
+            public string Name { get; set; }
+
+            [JsonProperty("key")]
+            public string Key { get; set; }
+
+            [JsonProperty("min")]
+            public decimal? Min { get; set; }
+
+            [JsonProperty("max")]
+            public decimal? Max { get; set; }
+
+            [JsonProperty("step")]
+            public decimal? Step { get; set; }
+
+            [JsonProperty("minStep")]
+            public decimal? MinStep { get; set; }
+
+            [JsonProperty("min-step")]
+            public decimal? MinStepDashed { get; set; }
+
+            [JsonProperty("value")]
+            public string Value
+            {
+                get { return _value; }
+                set
+                {
+                    _value = value;
+                    HasValue = true;
+                }
+            }
+
+            /// <summary>
+            /// True if the value property was set, even to null
+            /// </summary>
+            [JsonIgnore]
+            public bool HasValue { get; private set; }
+        }
     }
 }

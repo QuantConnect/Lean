@@ -17,6 +17,7 @@
 using System;
 using System.Collections.Generic;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Serialization;
 using NUnit.Framework;
 using QuantConnect.Algorithm.CSharp;
 using QuantConnect.Configuration;
@@ -111,6 +112,62 @@ namespace QuantConnect.Tests.Common.Packets
                 parameter.ExpectedFinalStatus,
                 startDate: new DateTime(2014, 03, 24),
                 endDate: new DateTime(2014, 03, 26));
+        }
+
+        [TestCase("{\"ema-fast\":\"10\",\"ema-slow\":\"20\"}")]
+        [TestCase("[{\"key\":\"ema-fast\",\"value\":\"10\"},{\"key\":\"ema-slow\",\"value\":\"20\",\"min\":10,\"max\":30,\"step\":5}]")]
+        [TestCase("[{\"name\":\"ema-fast\",\"value\":\"10\"},{\"name\":\"ema-slow\",\"value\":20}]")]
+        public void ParametersDeserialization(string parameters)
+        {
+            var job = JsonConvert.DeserializeObject<BacktestNodePacket>($"{{\"Parameters\":{parameters}}}");
+
+            Assert.AreEqual(2, job.Parameters.Count);
+            Assert.AreEqual("10", job.Parameters["ema-fast"]);
+            Assert.AreEqual("20", job.Parameters["ema-slow"]);
+        }
+
+        [TestCase("{\"start-date\":\"2024-01-01\",\"end-date\":\"2024-01-01T10:00:00Z\",\"leverage\":1.10,\"enabled\":true}")]
+        [TestCase("[{\"key\":\"start-date\",\"value\":\"2024-01-01\"},{\"key\":\"end-date\",\"value\":\"2024-01-01T10:00:00Z\"}," +
+            "{\"key\":\"leverage\",\"value\":1.10},{\"key\":\"enabled\",\"value\":true}]")]
+        public void ParametersKeepTheirRawValue(string parameters)
+        {
+            var job = JsonConvert.DeserializeObject<BacktestNodePacket>($"{{\"Parameters\":{parameters}}}");
+
+            Assert.AreEqual("2024-01-01", job.Parameters["start-date"]);
+            Assert.AreEqual("2024-01-01T10:00:00Z", job.Parameters["end-date"]);
+            Assert.AreEqual("1.10", job.Parameters["leverage"]);
+            Assert.AreEqual("true", job.Parameters["enabled"]);
+        }
+
+        [TestCase("{\"ema-fast\":\"10\",\"start-date\":\"2024-01-01T10:00:00Z\"}")]
+        [TestCase("[{\"key\":\"ema-fast\",\"value\":\"10\"},{\"key\":\"start-date\",\"value\":\"2024-01-01T10:00:00Z\"}]")]
+        public void ParametersDeserializationCamelCase(string parameters)
+        {
+            var settings = new JsonSerializerSettings
+            {
+                ContractResolver = new DefaultContractResolver
+                {
+                    NamingStrategy = new CamelCaseNamingStrategy { ProcessDictionaryKeys = false, OverrideSpecifiedNames = true }
+                }
+            };
+
+            var job = JsonConvert.DeserializeObject<BacktestNodePacket>($"{{\"parameters\":{parameters}}}", settings);
+
+            Assert.AreEqual(2, job.Parameters.Count);
+            Assert.AreEqual("10", job.Parameters["ema-fast"]);
+            Assert.AreEqual("2024-01-01T10:00:00Z", job.Parameters["start-date"]);
+        }
+
+        [Test]
+        public void ParametersRoundTrip()
+        {
+            var job = new BacktestNodePacket { Parameters = new Dictionary<string, string> { { "ema-fast", "10" } } };
+
+            var serialized = JsonConvert.SerializeObject(job);
+            var job2 = JsonConvert.DeserializeObject<BacktestNodePacket>(serialized);
+
+            StringAssert.Contains("\"Parameters\":{\"ema-fast\":\"10\"}", serialized);
+            Assert.AreEqual(job.Parameters, job2.Parameters);
         }
 
         [Test, Parallelizable(ParallelScope.Self)]

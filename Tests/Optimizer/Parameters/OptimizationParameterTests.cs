@@ -243,6 +243,92 @@ namespace QuantConnect.Tests.Optimizer.Parameters
                 Assert.AreEqual(10, optimizationParameters[1].Step);
             }
 
+            [TestCase("{\"key\":\"ema-fast\",\"value\":\"100\",\"min\":50,\"max\":150,\"step\":50}")]
+            [TestCase("{\"key\":\"ema-fast\",\"value\":\"100\",\"min\":\"50\",\"max\":\"150\",\"step\":\"50\"}")]
+            [TestCase("{\"key\":\"ema-fast\",\"min\":50,\"max\":150,\"step\":50}")]
+            public void DeserializeKeyValueStepParameter(string json)
+            {
+                var optimizationParameter = JsonConvert.DeserializeObject<OptimizationParameter>(json) as OptimizationStepParameter;
+
+                Assert.NotNull(optimizationParameter);
+                Assert.AreEqual("ema-fast", optimizationParameter.Name);
+                Assert.AreEqual(50, optimizationParameter.MinValue);
+                Assert.AreEqual(150, optimizationParameter.MaxValue);
+                Assert.AreEqual(50, optimizationParameter.Step);
+                Assert.AreEqual(50, optimizationParameter.MinStep);
+            }
+
+            [TestCase("{\"key\":\"ema-fast\",\"value\":\"100\"}")]
+            [TestCase("{\"key\":\"ema-fast\",\"value\":100}")]
+            [TestCase("{\"key\":\"ema-fast\",\"value\":\"100\",\"min\":null,\"max\":null,\"step\":null}")]
+            [TestCase("{\"key\":\"ema-fast\",\"value\":\"100\",\"min\":50,\"step\":50}")]
+            public void DeserializeKeyValueStaticParameter(string json)
+            {
+                var optimizationParameter = JsonConvert.DeserializeObject<OptimizationParameter>(json) as StaticOptimizationParameter;
+
+                Assert.NotNull(optimizationParameter);
+                Assert.AreEqual("ema-fast", optimizationParameter.Name);
+                Assert.AreEqual("100", optimizationParameter.Value);
+            }
+
+            [TestCase("{\"key\":\"start-date\",\"value\":\"2024-01-01T10:00:00Z\"}", "2024-01-01T10:00:00Z")]
+            [TestCase("{\"key\":\"start-date\",\"value\":\"2024-01-01\"}", "2024-01-01")]
+            [TestCase("{\"key\":\"leverage\",\"value\":1.10}", "1.10")]
+            [TestCase("{\"key\":\"enabled\",\"value\":true}", "true")]
+            [TestCase("{\"name\":\"ema-fast\",\"value\":null}", null)]
+            public void DeserializeStaticParameterKeepsValue(string json, string expected)
+            {
+                var optimizationParameter = JsonConvert.DeserializeObject<OptimizationParameter>(json) as StaticOptimizationParameter;
+
+                Assert.NotNull(optimizationParameter);
+                Assert.AreEqual(expected, optimizationParameter.Value);
+            }
+
+            [Test]
+            public void DeserializeCollectionCamelCase()
+            {
+                var json = "[{\"key\":\"ema-fast\",\"min\":50,\"max\":150,\"step\":50,\"minStep\":10},{\"key\":\"start-date\",\"value\":\"2024-01-01T10:00:00Z\"}]";
+                var settings = new JsonSerializerSettings
+                {
+                    ContractResolver = new DefaultContractResolver
+                    {
+                        NamingStrategy = new CamelCaseNamingStrategy { ProcessDictionaryKeys = false, OverrideSpecifiedNames = true }
+                    }
+                };
+                settings.Converters.Add(new OptimizationParameterJsonConverter());
+
+                var optimizationParameters = JsonConvert.DeserializeObject<List<OptimizationParameter>>(json, settings);
+
+                var stepParameter = optimizationParameters[0] as OptimizationStepParameter;
+                Assert.NotNull(stepParameter);
+                Assert.AreEqual("ema-fast", stepParameter.Name);
+                Assert.AreEqual(50, stepParameter.Step);
+                Assert.AreEqual(10, stepParameter.MinStep);
+                var staticParameter = optimizationParameters[1] as StaticOptimizationParameter;
+                Assert.NotNull(staticParameter);
+                Assert.AreEqual("2024-01-01T10:00:00Z", staticParameter.Value);
+            }
+
+            [Test]
+            public void DeserializeKeyValueCollection()
+            {
+                var json = "[{\"key\":\"ema-fast\",\"value\":\"100\",\"min\":50,\"max\":150,\"step\":50},{\"key\":\"ema-slow\",\"value\":\"200\"}]";
+
+                var optimizationParameters = JsonConvert.DeserializeObject<List<OptimizationParameter>>(json);
+
+                Assert.AreEqual(2, optimizationParameters.Count);
+                var stepParameter = optimizationParameters[0] as OptimizationStepParameter;
+                Assert.NotNull(stepParameter);
+                Assert.AreEqual("ema-fast", stepParameter.Name);
+                Assert.AreEqual(50, stepParameter.MinValue);
+                Assert.AreEqual(150, stepParameter.MaxValue);
+                Assert.AreEqual(50, stepParameter.Step);
+                var staticParameter = optimizationParameters[1] as StaticOptimizationParameter;
+                Assert.NotNull(staticParameter);
+                Assert.AreEqual("ema-slow", staticParameter.Name);
+                Assert.AreEqual("200", staticParameter.Value);
+            }
+
             [Test]
             public void ThrowIfNotStepParameter()
             {
