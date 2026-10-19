@@ -15,6 +15,7 @@
 
 using System;
 using Newtonsoft.Json;
+using QuantConnect.Api;
 using Newtonsoft.Json.Linq;
 using System.Collections.Generic;
 
@@ -43,7 +44,7 @@ namespace QuantConnect.Util
         /// </summary>
         public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer)
         {
-            return Read(JToken.Load(reader));
+            return Read(reader, serializer);
         }
 
         /// <summary>
@@ -55,40 +56,35 @@ namespace QuantConnect.Util
         }
 
         /// <summary>
-        /// Reads the parameters dictionary from the given token, null if the token is null
+        /// Reads the parameters dictionary at the reader's current token, null if the token is null.
+        /// Values are read as strings, as written, so dates, decimals and booleans keep their format
         /// </summary>
-        internal static Dictionary<string, string> Read(JToken token)
+        internal static Dictionary<string, string> Read(JsonReader reader, JsonSerializer serializer)
         {
-            if (token.Type == JTokenType.Null)
+            switch (reader.TokenType)
             {
-                return null;
-            }
+                case JsonToken.Null:
+                    return null;
 
-            if (token is JArray array)
-            {
-                // [{"key": key, "value": value}, ...], the optimization properties (min, max, step) don't apply here
-                var parameters = new Dictionary<string, string>();
-                foreach (var element in array)
-                {
-                    if (element is JObject parameter)
+                case JsonToken.StartObject:
+                    // {name: value, ...}
+                    return serializer.Deserialize<Dictionary<string, string>>(reader);
+
+                case JsonToken.StartArray:
+                    // [{"key": key, "value": value}, ...], the optimization properties (min, max, step) don't apply here
+                    var parameters = new Dictionary<string, string>();
+                    foreach (var parameter in serializer.Deserialize<List<Parameter>>(reader))
                     {
-                        var name = GetName(parameter);
-                        if (!string.IsNullOrEmpty(name))
+                        if (!string.IsNullOrEmpty(parameter?.Name))
                         {
-                            parameters[name] = parameter.GetValue("value", StringComparison.OrdinalIgnoreCase)?.Value<string>();
+                            parameters[parameter.Name] = parameter.Value;
                         }
                     }
-                }
-                return parameters;
-            }
+                    return parameters;
 
-            if (token is JObject jObject)
-            {
-                // {name: value, ...}
-                return jObject.ToObject<Dictionary<string, string>>();
+                default:
+                    throw new ArgumentException($"Unexpected Tokentype {reader.TokenType}");
             }
-
-            throw new ArgumentException($"Unexpected Tokentype {token.Type}");
         }
 
         /// <summary>

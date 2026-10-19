@@ -15,8 +15,8 @@
 
 using System;
 using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
 using QuantConnect.Util;
+using System.Collections.Generic;
 using QuantConnect.Optimizer.Parameters;
 
 namespace QuantConnect.Api
@@ -69,13 +69,27 @@ namespace QuantConnect.Api
         /// </returns>
         public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer)
         {
-            var token = JToken.Load(reader);
-            if (token is JObject wrapper && wrapper.TryGetValue("parameterSet", out var wrapped))
+            if (reader.TokenType == JsonToken.StartObject)
             {
-                token = wrapped;
+                // {"parameterSet": parameters} or {name: value, ...}
+                var parameterSet = new Dictionary<string, string>();
+                while (reader.Read() && reader.TokenType == JsonToken.PropertyName)
+                {
+                    var name = (string)reader.Value;
+                    if (name == "parameterSet")
+                    {
+                        reader.Read();
+                        parameterSet = ParameterDictionaryJsonConverter.Read(reader, serializer);
+                    }
+                    else
+                    {
+                        parameterSet[name] = reader.ReadAsString();
+                    }
+                }
+                return new ParameterSet(-1, parameterSet);
             }
 
-            var parameters = ParameterDictionaryJsonConverter.Read(token);
+            var parameters = ParameterDictionaryJsonConverter.Read(reader, serializer);
             return parameters == null ? null : new ParameterSet(-1, parameters);
         }
     }

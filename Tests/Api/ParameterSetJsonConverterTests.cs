@@ -72,6 +72,16 @@ namespace QuantConnect.Tests.API
             }
         }
 
+        [TestCase("{\"start-date\":\"2024-01-01T10:00:00Z\"}")]
+        [TestCase("{\"parameterSet\":{\"start-date\":\"2024-01-01T10:00:00Z\"}}")]
+        [TestCase("[{\"key\":\"start-date\",\"value\":\"2024-01-01T10:00:00Z\"}]")]
+        public void DeserializationKeepsDateValues(string serialization)
+        {
+            var deserialized = JsonConvert.DeserializeObject<ParameterSet>(serialization);
+
+            Assert.AreEqual("2024-01-01T10:00:00Z", deserialized.Value["start-date"]);
+        }
+
         [Test]
         public void DeserializationNull()
         {

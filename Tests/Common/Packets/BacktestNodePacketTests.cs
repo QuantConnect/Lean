@@ -17,6 +17,7 @@
 using System;
 using System.Collections.Generic;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Serialization;
 using NUnit.Framework;
 using QuantConnect.Algorithm.CSharp;
 using QuantConnect.Configuration;
@@ -123,6 +124,38 @@ namespace QuantConnect.Tests.Common.Packets
             Assert.AreEqual(2, job.Parameters.Count);
             Assert.AreEqual("10", job.Parameters["ema-fast"]);
             Assert.AreEqual("20", job.Parameters["ema-slow"]);
+        }
+
+        [TestCase("{\"start-date\":\"2024-01-01\",\"end-date\":\"2024-01-01T10:00:00Z\",\"leverage\":1.10,\"enabled\":true}")]
+        [TestCase("[{\"key\":\"start-date\",\"value\":\"2024-01-01\"},{\"key\":\"end-date\",\"value\":\"2024-01-01T10:00:00Z\"}," +
+            "{\"key\":\"leverage\",\"value\":1.10},{\"key\":\"enabled\",\"value\":true}]")]
+        public void ParametersKeepTheirRawValue(string parameters)
+        {
+            var job = JsonConvert.DeserializeObject<BacktestNodePacket>($"{{\"Parameters\":{parameters}}}");
+
+            Assert.AreEqual("2024-01-01", job.Parameters["start-date"]);
+            Assert.AreEqual("2024-01-01T10:00:00Z", job.Parameters["end-date"]);
+            Assert.AreEqual("1.10", job.Parameters["leverage"]);
+            Assert.AreEqual("true", job.Parameters["enabled"]);
+        }
+
+        [TestCase("{\"ema-fast\":\"10\",\"start-date\":\"2024-01-01T10:00:00Z\"}")]
+        [TestCase("[{\"key\":\"ema-fast\",\"value\":\"10\"},{\"key\":\"start-date\",\"value\":\"2024-01-01T10:00:00Z\"}]")]
+        public void ParametersDeserializationCamelCase(string parameters)
+        {
+            var settings = new JsonSerializerSettings
+            {
+                ContractResolver = new DefaultContractResolver
+                {
+                    NamingStrategy = new CamelCaseNamingStrategy { ProcessDictionaryKeys = false, OverrideSpecifiedNames = true }
+                }
+            };
+
+            var job = JsonConvert.DeserializeObject<BacktestNodePacket>($"{{\"parameters\":{parameters}}}", settings);
+
+            Assert.AreEqual(2, job.Parameters.Count);
+            Assert.AreEqual("10", job.Parameters["ema-fast"]);
+            Assert.AreEqual("2024-01-01T10:00:00Z", job.Parameters["start-date"]);
         }
 
         [Test]
