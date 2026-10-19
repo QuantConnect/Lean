@@ -311,7 +311,7 @@ namespace QuantConnect
         /// <summary>
         /// Checks whether or not certain symbol is a StableCoin without pair in a given market
         /// </summary>
-        /// <param name="symbol">The Symbol from wich we want to know if it's a StableCoin without pair</param>
+        /// <param name="symbol">The Symbol from which we want to know if it's a StableCoin without pair</param>
         /// <param name="market">The market in which we want to search for that StableCoin</param>
         /// <returns>True if the given symbol is a StableCoin without pair in the given market</returns>
         public static bool IsStableCoinWithoutPair(string symbol, string market)
