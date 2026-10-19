@@ -44,7 +44,7 @@ namespace QuantConnect.Data
         /// Remove the given subscription
         /// </summary>
         /// <param name="dataConfig">defines the subscription configuration data.</param>        
-        /// <returns>Returns true if given <see cref="SubscriptionDataConfig"/> was found and succesfully removed; otherwise false.</returns>
+        /// <returns>Returns true if given <see cref="SubscriptionDataConfig"/> was found and successfully removed; otherwise false.</returns>
         bool Remove(SubscriptionDataConfig dataConfig);
 
         /// <summary>
