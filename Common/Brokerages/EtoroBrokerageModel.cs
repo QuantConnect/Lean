@@ -27,13 +27,14 @@ namespace QuantConnect.Brokerages
     public class EtoroBrokerageModel : DefaultBrokerageModel
     {
         /// <summary>
-        /// The security types supported by eToro: US stocks and ETFs, and crypto.
+        /// The security types supported by eToro: US stocks and ETFs, crypto and currency pairs.
         /// </summary>
         private readonly HashSet<SecurityType> _supportSecurityTypes = new(
             new[]
             {
                 SecurityType.Equity,
-                SecurityType.Crypto
+                SecurityType.Crypto,
+                SecurityType.Forex
             });
 
         /// <summary>

@@ -30,6 +30,7 @@ namespace QuantConnect.Tests.Common.Brokerages
 
         [TestCase(SecurityType.Equity)]
         [TestCase(SecurityType.Crypto)]
+        [TestCase(SecurityType.Forex)]
         public void CanSubmitOrderMarketOrderReturnsTrue(SecurityType securityType)
         {
             var security = GetSecurityForType(securityType);
@@ -41,7 +42,6 @@ namespace QuantConnect.Tests.Common.Brokerages
             Assert.That(message, Is.Null);
         }
 
-        [TestCase(SecurityType.Forex)]
         [TestCase(SecurityType.Cfd)]
         [TestCase(SecurityType.Option)]
         [TestCase(SecurityType.Future)]
