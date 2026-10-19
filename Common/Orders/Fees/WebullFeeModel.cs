@@ -140,7 +140,7 @@ namespace QuantConnect.Orders.Fees
             var security = parameters.Security;
             var quantity = order.AbsoluteQuantity;
             var price = security.Price;
-            var underlying = security.Symbol.Underlying?.Value?.ToUpperInvariant() ?? string.Empty;
+            var underlying = security.Symbol.ID.Symbol?.ToUpperInvariant() ?? string.Empty;
             var isMultiLeg = order.Type == OrderType.ComboMarket
                 || order.Type == OrderType.ComboLimit
                 || order.Type == OrderType.ComboLegLimit;
