@@ -112,6 +112,61 @@ namespace QuantConnect.Tests.Common.Orders.TimeInForces
             Assert.IsTrue(timeInForce.IsFillValid(security, order, fill2));
         }
 
+        [TestCase("2018-04-27 10:00", "2018-04-27 16:00")]
+        // early close
+        [TestCase("2016-11-25 10:00", "2016-11-25 13:00")]
+        // submitted after the close, it's for the next trading day close
+        [TestCase("2018-04-27 16:30", "2018-04-30 16:00")]
+        public void DayTimeInForceEquityMarketOnCloseOrderExpiresAtEndOfCloseDay(string orderTime, string marketClose)
+        {
+            var orderUtcTime = Parse.DateTime(orderTime).ConvertToUtc(TimeZones.NewYork);
+            var marketCloseUtcTime = Parse.DateTime(marketClose).ConvertToUtc(TimeZones.NewYork);
+            var endOfDayUtcTime = Parse.DateTime(marketClose).Date.AddDays(1).ConvertToUtc(TimeZones.NewYork);
+
+            var security = new Equity(
+                SecurityExchangeHoursTests.CreateUsEquitySecurityExchangeHours(),
+                new SubscriptionDataConfig(
+                    typeof(TradeBar),
+                    Symbols.SPY,
+                    Resolution.Minute,
+                    TimeZones.NewYork,
+                    TimeZones.NewYork,
+                    true,
+                    true,
+                    true
+                ),
+                new Cash(Currencies.USD, 0, 1m),
+                SymbolProperties.GetDefault(Currencies.USD),
+                ErrorCurrencyConverter.Instance,
+                RegisteredSecurityDataTypesProvider.Null
+            );
+            var localTimeKeeper = new LocalTimeKeeper(orderUtcTime, TimeZones.NewYork);
+            security.SetLocalTimeKeeper(localTimeKeeper);
+
+            var timeInForce = TimeInForce.Day;
+            var orderProperties = new OrderProperties { TimeInForce = timeInForce };
+            var order = new MarketOnCloseOrder(Symbols.SPY, 10, orderUtcTime, "", orderProperties);
+
+            Assert.IsFalse(timeInForce.IsOrderExpired(security, order));
+
+            localTimeKeeper.UpdateTime(marketCloseUtcTime.AddSeconds(-1));
+            Assert.IsFalse(timeInForce.IsOrderExpired(security, order));
+
+            // the order fills at the close
+            localTimeKeeper.UpdateTime(marketCloseUtcTime);
+            Assert.IsFalse(timeInForce.IsOrderExpired(security, order));
+
+            // the fill model might wait for the closing trade ticks
+            localTimeKeeper.UpdateTime(marketCloseUtcTime.AddMinutes(1));
+            Assert.IsFalse(timeInForce.IsOrderExpired(security, order));
+
+            localTimeKeeper.UpdateTime(endOfDayUtcTime.AddTicks(-1));
+            Assert.IsFalse(timeInForce.IsOrderExpired(security, order));
+
+            localTimeKeeper.UpdateTime(endOfDayUtcTime);
+            Assert.IsTrue(timeInForce.IsOrderExpired(security, order));
+        }
+
         [Test]
         public void DayTimeInForceForexOrderBefore5PMExpiresAt5PM()
         {

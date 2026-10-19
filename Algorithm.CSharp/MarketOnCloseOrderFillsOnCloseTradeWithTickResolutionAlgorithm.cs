@@ -114,7 +114,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// This is used by the regression test system to indicate what the expected statistics are from running the algorithm
         /// </summary>
-        public Dictionary<string, string> ExpectedStatistics => new()
+        public virtual Dictionary<string, string> ExpectedStatistics => new()
         {
             {"Total Orders", "2"},
             {"Average Win", "0%"},
