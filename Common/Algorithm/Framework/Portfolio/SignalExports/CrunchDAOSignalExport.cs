@@ -100,7 +100,7 @@ namespace QuantConnect.Algorithm.Framework.Portfolio.SignalExports
         /// submitted before, it deletes the last signal and sends the new one</summary>
         /// <param name="parameters">A list of holdings from the portfolio,
         /// expected to be sent to CrunchDAO API and the algorithm being ran</param>
-        /// <returns>True if the positions were sent to CrunchDAO succesfully and errors were returned, false otherwise</returns>
+        /// <returns>True if the positions were sent to CrunchDAO successfully and errors were returned, false otherwise</returns>
         public override bool Send(SignalExportTargetParameters parameters)
         {
             if (!base.Send(parameters))

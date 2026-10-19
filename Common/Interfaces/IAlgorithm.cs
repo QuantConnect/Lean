@@ -113,7 +113,7 @@ namespace QuantConnect.Interfaces
         /// <summary>
         /// Security transaction manager class controls the store and processing of orders.
         /// </summary>
-        /// <remarks>The orders and their associated events are accessible here. When a new OrderEvent is recieved the algorithm portfolio is updated.</remarks>
+        /// <remarks>The orders and their associated events are accessible here. When a new OrderEvent is received the algorithm portfolio is updated.</remarks>
         SecurityTransactionManager Transactions
         {
             get;
