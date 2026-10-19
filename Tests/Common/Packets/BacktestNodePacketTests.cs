@@ -113,6 +113,30 @@ namespace QuantConnect.Tests.Common.Packets
                 endDate: new DateTime(2014, 03, 26));
         }
 
+        [TestCase("{\"ema-fast\":\"10\",\"ema-slow\":\"20\"}")]
+        [TestCase("[{\"key\":\"ema-fast\",\"value\":\"10\"},{\"key\":\"ema-slow\",\"value\":\"20\",\"min\":10,\"max\":30,\"step\":5}]")]
+        [TestCase("[{\"name\":\"ema-fast\",\"value\":\"10\"},{\"name\":\"ema-slow\",\"value\":20}]")]
+        public void ParametersDeserialization(string parameters)
+        {
+            var job = JsonConvert.DeserializeObject<BacktestNodePacket>($"{{\"Parameters\":{parameters}}}");
+
+            Assert.AreEqual(2, job.Parameters.Count);
+            Assert.AreEqual("10", job.Parameters["ema-fast"]);
+            Assert.AreEqual("20", job.Parameters["ema-slow"]);
+        }
+
+        [Test]
+        public void ParametersRoundTrip()
+        {
+            var job = new BacktestNodePacket { Parameters = new Dictionary<string, string> { { "ema-fast", "10" } } };
+
+            var serialized = JsonConvert.SerializeObject(job);
+            var job2 = JsonConvert.DeserializeObject<BacktestNodePacket>(serialized);
+
+            StringAssert.Contains("\"Parameters\":{\"ema-fast\":\"10\"}", serialized);
+            Assert.AreEqual(job.Parameters, job2.Parameters);
+        }
+
         [Test, Parallelizable(ParallelScope.Self)]
         public void RoundTripNullJobDates()
         {

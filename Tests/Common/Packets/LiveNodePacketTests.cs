@@ -25,6 +25,16 @@ namespace QuantConnect.Tests.Common.Packets
     [TestFixture]
     public class LiveNodePacketTests
     {
+        [TestCase("{\"ema-fast\":\"10\"}")]
+        [TestCase("[{\"key\":\"ema-fast\",\"value\":\"10\",\"min\":null,\"max\":null,\"step\":null}]")]
+        public void ParametersDeserialization(string parameters)
+        {
+            var packet = JsonConvert.DeserializeObject<LiveNodePacket>($"{{\"Parameters\":{parameters}}}");
+
+            Assert.AreEqual(1, packet.Parameters.Count);
+            Assert.AreEqual("10", packet.Parameters["ema-fast"]);
+        }
+
         [Test]
         public void NotificationRoundTrip()
         {

@@ -15,6 +15,7 @@
 
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using QuantConnect.Util;
 using System;
 using System.Reflection;
 
@@ -60,44 +61,35 @@ namespace QuantConnect.Optimizer.Parameters
             )
         {
             JObject token = JObject.Load(reader);
-            var parameterName = (token.GetValue("name", StringComparison.OrdinalIgnoreCase) ?? token.GetValue("key", StringComparison.OrdinalIgnoreCase))?.Value<string>();
+            var parameterName = ParameterDictionaryJsonConverter.GetName(token);
             if (string.IsNullOrEmpty(parameterName))
             {
                 throw new ArgumentException(Messages.OptimizationParameterJsonConverter.OptimizationParameterNotSpecified);
             }
 
             JToken value;
-            JToken minToken;
-            JToken maxToken;
+            // optional properties can be missing or null
+            var min = GetDecimal(token, "min");
+            var max = GetDecimal(token, "max");
             OptimizationParameter optimizationParameter = null;
-            if (token.TryGetValue("min", StringComparison.OrdinalIgnoreCase, out minToken) &&
-                token.TryGetValue("max", StringComparison.OrdinalIgnoreCase, out maxToken))
+            if (min.HasValue && max.HasValue)
             {
-                var stepToken = token.GetValue("step", StringComparison.OrdinalIgnoreCase)?.Value<decimal>();
-                var minStepToken = token.GetValue("minStep", StringComparison.OrdinalIgnoreCase)?.Value<decimal>() ?? token.GetValue("min-step", StringComparison.OrdinalIgnoreCase)?.Value<decimal>();
-                if (stepToken.HasValue)
+                var step = GetDecimal(token, "step");
+                var minStep = GetDecimal(token, "minStep") ?? GetDecimal(token, "min-step");
+                if (step.HasValue)
                 {
-                    if (minStepToken.HasValue)
+                    if (minStep.HasValue)
                     {
-                        optimizationParameter = new OptimizationStepParameter(parameterName,
-                            minToken.Value<decimal>(),
-                            maxToken.Value<decimal>(),
-                            stepToken.Value,
-                            minStepToken.Value);
+                        optimizationParameter = new OptimizationStepParameter(parameterName, min.Value, max.Value, step.Value, minStep.Value);
                     }
                     else
                     {
-                        optimizationParameter = new OptimizationStepParameter(parameterName,
-                            minToken.Value<decimal>(),
-                            maxToken.Value<decimal>(),
-                            stepToken.Value);
+                        optimizationParameter = new OptimizationStepParameter(parameterName, min.Value, max.Value, step.Value);
                     }
                 }
                 else
                 {
-                    optimizationParameter = new OptimizationStepParameter(parameterName,
-                        minToken.Value<decimal>(),
-                        maxToken.Value<decimal>());
+                    optimizationParameter = new OptimizationStepParameter(parameterName, min.Value, max.Value);
                 }
             }
             else if(token.TryGetValue("value", StringComparison.OrdinalIgnoreCase, out value))
@@ -117,5 +109,10 @@ namespace QuantConnect.Optimizer.Parameters
         /// Determines if an OptimizationParameter is assignable from the given object type
         /// </summary>
         public override bool CanConvert(Type objectType) => typeof(OptimizationParameter).IsAssignableFrom(objectType);
+
+        private static decimal? GetDecimal(JObject parameter, string propertyName)
+        {
+            return parameter.GetValue(propertyName, StringComparison.OrdinalIgnoreCase)?.Value<decimal?>();
+        }
     }
 }

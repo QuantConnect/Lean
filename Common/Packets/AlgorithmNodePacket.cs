@@ -17,6 +17,7 @@
 using System;
 using System.Collections.Generic;
 using Newtonsoft.Json;
+using QuantConnect.Util;
 using static QuantConnect.StringExtensions;
 
 namespace QuantConnect.Packets
@@ -135,6 +136,7 @@ namespace QuantConnect.Packets
         /// <summary>
         /// The parameter values used to set algorithm parameters
         /// </summary>
+        [JsonConverter(typeof(ParameterDictionaryJsonConverter))]
         public Dictionary<string, string> Parameters { get; set; } = new Dictionary<string, string>();
 
         /// <summary>
