@@ -77,20 +77,14 @@ namespace QuantConnect.Tests.Algorithm.Framework.Selection
             Assert.IsTrue(fineCountByDateTime.All(kvp => kvp.Key.Day == 1 && kvp.Value == 500));
         }
 
-        // The new Morningstar generation codes the NYSE as "NYSE", leaves some primary exchanges empty
-        // and has no market cap before 2009-10, where shares outstanding times price stands in
-        [TestCase(Language.CSharp, "NYSE", null, 500000001L, 0L, true)]
-        [TestCase(Language.Python, "NYSE", null, 500000001L, 0L, true)]
-        [TestCase(Language.CSharp, null, "NAS", 500000001L, 0L, true)]
-        [TestCase(Language.Python, null, "NAS", 500000001L, 0L, true)]
-        [TestCase(Language.CSharp, "TSX", "NYSE", 500000001L, 0L, false)]
-        [TestCase(Language.Python, "TSX", "NYSE", 500000001L, 0L, false)]
-        [TestCase(Language.CSharp, "NYS", null, 0L, 5000001L, true)]
-        [TestCase(Language.Python, "NYS", null, 0L, 5000001L, true)]
-        [TestCase(Language.CSharp, "NYS", null, 0L, 4000000L, false)]
-        [TestCase(Language.Python, "NYS", null, 0L, 4000000L, false)]
-        public void FiltersUniverseWithNewMorningstarData(Language language, string primaryExchangeId, string exchangeId,
-            long marketCap, long sharesOutstanding, bool selects)
+        // The new Morningstar generation codes the NYSE as "NYSE" and leaves some primary exchanges empty
+        [TestCase(Language.CSharp, "NYSE", null, true)]
+        [TestCase(Language.Python, "NYSE", null, true)]
+        [TestCase(Language.CSharp, null, "NAS", true)]
+        [TestCase(Language.Python, null, "NAS", true)]
+        [TestCase(Language.CSharp, "TSX", "NYSE", false)]
+        [TestCase(Language.Python, "TSX", "NYSE", false)]
+        public void FiltersUniverseWithNewMorningstarData(Language language, string primaryExchangeId, string exchangeId, bool selects)
         {
             RunSimulation(language,
                 (symbol, time) => new CoarseFundamentalSource
@@ -106,7 +100,7 @@ namespace QuantConnect.Tests.Algorithm.Framework.Selection
                 {
                     Value = 100
                 },
-                new TestFundamentalDataProvider(_industryTemplateCodeDict, primaryExchangeId, exchangeId, marketCap, sharesOutstanding),
+                new TestFundamentalDataProvider(_industryTemplateCodeDict, primaryExchangeId, exchangeId),
                 out var algorithm,
                 out var coarseCountByDateTime,
                 out var fineCountByDateTime);
@@ -263,17 +257,13 @@ namespace QuantConnect.Tests.Algorithm.Framework.Selection
             private readonly Dictionary<char, string> _industryTemplateCodeDict;
             private readonly string _primaryExchangeId;
             private readonly string _exchangeId;
-            private readonly long _marketCap;
-            private readonly long _sharesOutstanding;
 
             public TestFundamentalDataProvider(Dictionary<char, string> industryTemplateCodeDict, string primaryExchangeId = "NYS",
-                string exchangeId = null, long marketCap = 500000001, long sharesOutstanding = 0)
+                string exchangeId = null)
             {
                 _industryTemplateCodeDict = industryTemplateCodeDict;
                 _primaryExchangeId = primaryExchangeId;
                 _exchangeId = exchangeId;
-                _marketCap = marketCap;
-                _sharesOutstanding = sharesOutstanding;
             }
             public T Get<T>(DateTime time, SecurityIdentifier securityIdentifier, FundamentalProperty name)
             {
@@ -290,9 +280,7 @@ namespace QuantConnect.Tests.Algorithm.Framework.Selection
                 switch (name)
                 {
                     case "CompanyProfile_MarketCap":
-                        return _marketCap;
-                    case "CompanyProfile_SharesOutstanding":
-                        return _sharesOutstanding;
+                        return 500000001;
                     case "SecurityReference_ExchangeId":
                         return _exchangeId;
                     case "SecurityReference_IPODate":
