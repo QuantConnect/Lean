@@ -15,6 +15,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Collections.Specialized;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Globalization;
@@ -210,6 +211,17 @@ namespace QuantConnect.Algorithm
             SubscriptionManager = new SubscriptionManager(_timeKeeper);
 
             Securities = new SecurityManager(_timeKeeper);
+            Securities.CollectionChanged += (sender, args) =>
+            {
+                // the removed security's indicators and consolidators would otherwise be kept but never updated again
+                if (Settings.AutomaticIndicatorDeregistration && args.Action == NotifyCollectionChangedAction.Remove)
+                {
+                    foreach (Security security in args.OldItems)
+                    {
+                        DeregisterIndicatorsAndConsolidators(security.Symbol);
+                    }
+                }
+            };
             Transactions = new SecurityTransactionManager(this, Securities);
             OrderFactory = new OrderFactory(this);
             Portfolio = new SecurityPortfolioManager(Securities, Transactions, Settings, DefaultOrderProperties);
