@@ -314,6 +314,11 @@ namespace QuantConnect.Packets
         /// <summary>
         /// Agent job packet
         /// </summary>
-        AgentNode
+        AgentNode,
+
+        /// <summary>
+        /// Kronos job packet
+        /// </summary>
+        KronosNode
     }
 }
