@@ -14,7 +14,9 @@
  *
 */
 
+using Newtonsoft.Json;
 using NUnit.Framework;
+using Python.Runtime;
 using QuantConnect.Orders.Fees;
 using QuantConnect.Securities;
 
@@ -43,6 +45,39 @@ namespace QuantConnect.Tests.Common.Orders.Fees
                 book.AccountCurrency);
 
             Assert.AreEqual(0, result3);
+        }
+
+        [Test]
+        public void AmountAndCurrencyAreSynonymsOfTheValueAmountAndCurrency()
+        {
+            var orderFee = new OrderFee(new CashAmount(12.5m, Currencies.USD));
+
+            Assert.AreEqual(12.5m, orderFee.Amount);
+            Assert.AreEqual(orderFee.Value.Amount, orderFee.Amount);
+            Assert.AreEqual(Currencies.USD, orderFee.Currency);
+            Assert.AreEqual(orderFee.Value.Currency, orderFee.Currency);
+            // The synonym is not serialized, only Value is
+            Assert.AreEqual("{\"Value\":{\"Amount\":12.5,\"Currency\":\"USD\"}}", JsonConvert.SerializeObject(orderFee));
+        }
+
+        [Test]
+        public void AmountIsAccessibleFromPython()
+        {
+            var orderFee = new OrderFee(new CashAmount(12.5m, Currencies.USD));
+
+            using (Py.GIL())
+            {
+                var module = PyModule.FromString("testModule",
+                    @"
+from AlgorithmImports import *
+
+def get_amount(order_fee: OrderFee):
+    return order_fee.amount
+");
+
+                dynamic getAmount = module.GetAttr("get_amount");
+                Assert.AreEqual(12.5m, (decimal)getAmount(orderFee));
+            }
         }
     }
 }

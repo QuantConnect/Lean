@@ -13,6 +13,7 @@
  * limitations under the License.
 */
 
+using Newtonsoft.Json;
 using ProtoBuf;
 using QuantConnect.Securities;
 
@@ -29,6 +30,18 @@ namespace QuantConnect.Orders.Fees
         /// </summary>
         [ProtoMember(1)]
         public CashAmount Value { get; set; }
+
+        /// <summary>
+        /// Gets the order fee amount. Synonym of <see cref="Value"/>.<see cref="CashAmount.Amount"/>
+        /// </summary>
+        [JsonIgnore]
+        public decimal Amount => Value.Amount;
+
+        /// <summary>
+        /// Gets the order fee currency. Synonym of <see cref="Value"/>.<see cref="CashAmount.Currency"/>
+        /// </summary>
+        [JsonIgnore]
+        public string Currency => Value.Currency;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="OrderFee"/> class

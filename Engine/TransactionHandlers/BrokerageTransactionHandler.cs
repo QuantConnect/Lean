@@ -1295,6 +1295,8 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
                     // but the order event symbol is the underlying security, not the option contract.
                     orders.Add(new OpenOrderState(order, ticket, security != null && security.Symbol == orderEvent.Symbol ? security : _algorithm.Securities[orderEvent.Symbol]));
                     orderEvent.Ticket = ticket;
+                    orderEvent.OrderType = order.Type;
+                    orderEvent.GroupId = order.GroupId;
                 }
 
                 var fillsToProcess = new List<OrderEvent>(orderEvents.Count);

@@ -16,6 +16,7 @@
 using System;
 using Newtonsoft.Json;
 using NUnit.Framework;
+using Python.Runtime;
 using QuantConnect.Orders;
 using QuantConnect.Orders.Fees;
 using QuantConnect.Orders.Serialization;
@@ -37,6 +38,7 @@ namespace QuantConnect.Tests.Common.Orders
             Assert.IsFalse(json.Contains("LimitPrice", StringComparison.InvariantCulture));
             Assert.IsFalse(json.Contains("StopPrice", StringComparison.InvariantCulture));
             Assert.IsFalse(json.Contains(value: "IsInTheMoney", StringComparison.InvariantCulture));
+            Assert.IsFalse(json.Contains("Tag", StringComparison.InvariantCulture));
 
             json = JsonConvert.SerializeObject(new OrderEvent(order, DateTime.UtcNow, OrderFee.Zero, "This is a message")
             {
@@ -50,6 +52,71 @@ namespace QuantConnect.Tests.Common.Orders
             Assert.IsTrue(json.Contains("LimitPrice", StringComparison.InvariantCulture));
             Assert.IsTrue(json.Contains("StopPrice", StringComparison.InvariantCulture));
             Assert.IsTrue(json.Contains(value: "IsInTheMoney", StringComparison.InvariantCulture));
+            // The Tag and Time synonyms are not serialized, only Message and UtcTime are
+            Assert.IsFalse(json.Contains("\"Tag\"", StringComparison.InvariantCulture));
+            Assert.IsFalse(json.Contains("\"Time\"", StringComparison.InvariantCulture));
+        }
+
+        [Test]
+        public void TagAndTimeAreSynonymsOfMessageAndUtcTime()
+        {
+            var order = new MarketOrder(Symbols.BTCUSD, 0.123m, DateTime.UtcNow);
+            var utcTime = new DateTime(2024, 3, 27, 18, 45, 19, DateTimeKind.Utc);
+            var orderEvent = new OrderEvent(order, utcTime, OrderFee.Zero, "This is a message");
+
+            Assert.AreEqual("This is a message", orderEvent.Tag);
+            Assert.AreEqual(utcTime, orderEvent.Time);
+
+            orderEvent.Tag = "Another message";
+            orderEvent.Time = utcTime.AddHours(1);
+
+            Assert.AreEqual("Another message", orderEvent.Message);
+            Assert.AreEqual(utcTime.AddHours(1), orderEvent.UtcTime);
+        }
+
+        [Test]
+        public void TagAndTimeAreAccessibleFromPython()
+        {
+            var order = new MarketOrder(Symbols.BTCUSD, 0.123m, DateTime.UtcNow);
+            var utcTime = new DateTime(2024, 3, 27, 18, 45, 19, DateTimeKind.Utc);
+            var orderEvent = new OrderEvent(order, utcTime, OrderFee.Zero, "This is a message");
+
+            using (Py.GIL())
+            {
+                var module = PyModule.FromString("testModule",
+                    @"
+from AlgorithmImports import *
+
+def get_tag_and_time(order_event: OrderEvent):
+    return order_event.tag, order_event.time == order_event.utc_time
+");
+
+                dynamic getTagAndTime = module.GetAttr("get_tag_and_time");
+                var result = getTagAndTime(orderEvent);
+
+                Assert.AreEqual("This is a message", (string)result[0]);
+                Assert.IsTrue((bool)result[1]);
+            }
+        }
+
+        [Test]
+        public void OrderTypeIsTakenFromTheOrder()
+        {
+            var order = new StopLimitOrder(Symbols.BTCUSD, 0.123m, 100m, 101m, DateTime.UtcNow);
+            var orderEvent = new OrderEvent(order, DateTime.UtcNow, OrderFee.Zero);
+
+            Assert.AreEqual(OrderType.StopLimit, orderEvent.OrderType);
+            Assert.AreEqual(order.Type, orderEvent.OrderType);
+        }
+
+        [Test]
+        public void GroupIdIsTakenFromTheOrder()
+        {
+            var order = new MarketOrder(Symbols.BTCUSD, 0.123m, DateTime.UtcNow);
+            Assert.IsNull(new OrderEvent(order, DateTime.UtcNow, OrderFee.Zero).GroupId);
+
+            var comboOrder = new ComboMarketOrder(Symbols.BTCUSD, 0.123m, DateTime.UtcNow, new GroupOrderManager(33, 2, 10));
+            Assert.AreEqual(33, new OrderEvent(comboOrder, DateTime.UtcNow, OrderFee.Zero).GroupId);
         }
 
         [Test]
@@ -60,6 +127,8 @@ namespace QuantConnect.Tests.Common.Orders
             {
                 Message = "Pepe",
                 Status = OrderStatus.PartiallyFilled,
+                OrderType = OrderType.StopLimit,
+                GroupId = 7,
                 StopPrice = 1,
                 LimitPrice = 2,
                 FillPrice = 11,
@@ -78,8 +147,12 @@ namespace QuantConnect.Tests.Common.Orders
             Assert.IsFalse(serializeObject.Contains("order-fee-amount", StringComparison.InvariantCulture));
             Assert.IsFalse(serializeObject.Contains("order-fee-currency", StringComparison.InvariantCulture));
             Assert.AreEqual(isInTheMoney, serializeObject.Contains("isInTheMoney", StringComparison.InvariantCulture));
+            Assert.IsTrue(serializeObject.Contains("\"orderType\":\"stopLimit\"", StringComparison.InvariantCulture));
+            Assert.IsTrue(serializeObject.Contains("\"groupId\":7", StringComparison.InvariantCulture));
 
             var deserializeObject = JsonConvert.DeserializeObject<OrderEvent>(serializeObject, converter);
+            Assert.AreEqual(orderEvent.OrderType, deserializeObject.OrderType);
+            Assert.AreEqual(orderEvent.GroupId, deserializeObject.GroupId);
 
             Assert.AreEqual(orderEvent.Symbol, deserializeObject.Symbol);
             Assert.AreEqual(orderEvent.StopPrice, deserializeObject.StopPrice);
@@ -168,6 +241,24 @@ namespace QuantConnect.Tests.Common.Orders
 
             Assert.AreEqual(orderEvent.OrderFee.Value.Amount, deserializeObject.OrderFee.Value.Amount);
             Assert.AreEqual(orderEvent.OrderFee.Value.Currency, deserializeObject.OrderFee.Value.Currency);
+            // payloads that predate the order type must not be read back as market orders
+            Assert.IsNull(deserializeObject.OrderType);
+            Assert.IsNull(deserializeObject.GroupId);
+        }
+
+        [Test]
+        public void NullOrderTypeAndGroupIdAreNotSerialized()
+        {
+            var order = new MarketOrder(Symbols.BTCUSD, 0.123m, DateTime.UtcNow);
+            var orderEvent = new OrderEvent(order, DateTime.UtcNow, OrderFee.Zero) { OrderType = null };
+
+            var json = JsonConvert.SerializeObject(orderEvent, new OrderEventJsonConverter("id"));
+            Assert.IsFalse(json.Contains("orderType", StringComparison.InvariantCulture));
+            Assert.IsFalse(json.Contains("groupId", StringComparison.InvariantCulture));
+
+            json = JsonConvert.SerializeObject(orderEvent);
+            Assert.IsFalse(json.Contains("OrderType", StringComparison.InvariantCulture));
+            Assert.IsFalse(json.Contains("GroupId", StringComparison.InvariantCulture));
         }
     }
 }

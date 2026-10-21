@@ -156,5 +156,35 @@ namespace QuantConnect.Orders
                 _ => throw new ArgumentException($"Unsupported {nameof(OrderDirection)} value: '{orderDirection}'.", nameof(orderDirection))
             };
         }
+
+        /// <summary>
+        /// Gets the id of the group of orders the given combo order leg tickets belong to, null if there are no tickets
+        /// </summary>
+        /// <param name="tickets">The combo order leg tickets</param>
+        /// <returns>The group order manager id of the first ticket</returns>
+        public static int? GetGroupId(this IEnumerable<OrderTicket> tickets)
+        {
+            return tickets.FirstOrDefault()?.SubmitRequest?.GroupOrderManager?.Id;
+        }
+
+        /// <summary>
+        /// Determines whether every one of the given combo order leg tickets is filled
+        /// </summary>
+        /// <param name="tickets">The combo order leg tickets</param>
+        /// <returns>True if there is at least one ticket and all of them are filled</returns>
+        public static bool IsFilled(this IEnumerable<OrderTicket> tickets)
+        {
+            var any = false;
+            foreach (var ticket in tickets)
+            {
+                any = true;
+                if (ticket.Status != OrderStatus.Filled)
+                {
+                    return false;
+                }
+            }
+
+            return any;
+        }
     }
 }

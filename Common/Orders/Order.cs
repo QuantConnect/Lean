@@ -233,6 +233,13 @@ namespace QuantConnect.Orders
         public GroupOrderManager GroupOrderManager { get; set; }
 
         /// <summary>
+        /// The id of the group of orders this order belongs to if it is a combo order leg, null otherwise.
+        /// Synonym of <see cref="GroupOrderManager"/>.<see cref="Orders.GroupOrderManager.Id"/>
+        /// </summary>
+        [JsonIgnore]
+        public int? GroupId => GroupOrderManager?.Id;
+
+        /// <summary>
         /// The contingency of this order, if any: the set of contingent orders it belongs to (OCO, OTO, OUO, brackets)
         /// and the links defining how it relates to the rest of the orders in the set
         /// </summary>
