@@ -31,6 +31,7 @@ using QuantConnect.Lean.Engine.TransactionHandlers;
 using QuantConnect.Logging;
 using QuantConnect.Packets;
 using QuantConnect.Securities;
+using QuantConnect.Securities.Future;
 using QuantConnect.Util;
 
 namespace QuantConnect.Lean.Engine.Setup
@@ -454,6 +455,16 @@ namespace QuantConnect.Lean.Engine.Setup
                             Symbol = holding.Symbol,
                             DataType = MarketDataType.TradeBar
                         });
+
+                        // the brokerage cash balance already holds the P&L of an existing futures position (variation
+                        // margin is settled into cash daily), so the position starts settled at the loaded price. Otherwise
+                        // the unsettled profit carries the P&L since entry a second time into TotalPortfolioValue
+                        if (security.Type == SecurityType.Future
+                            && security.Holdings is FutureHolding futureHolding
+                            && security.SettlementModel is FutureSettlementModel futureSettlementModel)
+                        {
+                            futureSettlementModel.SetSettledPosition(futureHolding, holding.MarketPrice);
+                        }
                     }
                 }
             }
