@@ -239,6 +239,23 @@ namespace QuantConnect.Securities.Future
                     return thirdFriday.Add(new TimeSpan(13,30,0));
                 })
             },
+            // Spot-Quoted Nasdaq-100 (QNDX): https://www.cmegroup.com/markets/equities/nasdaq/spot-quoted-nasdaq-100.contractSpecs.html
+            {Symbol.Create(Futures.Indices.SpotQuotedNasdaq100, SecurityType.Future, Market.CME), (time =>
+                {
+                    var market = Market.CME;
+                    var symbol = Futures.Indices.SpotQuotedNasdaq100;
+                    var holidays = FuturesExpiryUtilityFunctions.GetExpirationHolidays(market, symbol);
+                    // Annual contracts (June), a single long dated contract instead of a quarterly roll
+                    while (!FutureExpirationCycles.June.Contains(time.Month))
+                    {
+                        time = time.AddMonths(1);
+                    }
+
+                    // Trading terminates at 4:00 p.m. ET on the 2nd Friday of the contract month
+                    var secondFriday = FuturesExpiryUtilityFunctions.SecondFriday(time);
+                    return FuturesExpiryUtilityFunctions.AddBusinessDaysIfHoliday(secondFriday, -1, holidays).Add(new TimeSpan(20, 0, 0));
+                })
+            },
             // Dow30EMini (YM): http://www.cmegroup.com/trading/equity-index/us-index/e-mini-dow_contract_specifications.html
             {Symbol.Create(Futures.Indices.Dow30EMini, SecurityType.Future, Market.CBOT), (time =>
                 {

@@ -157,6 +157,17 @@ namespace QuantConnect.Tests.Common.Securities.Futures
         }
 
         [Test]
+        public void SpotQuotedNasdaq100RollsForwardToListedContractMonth()
+        {
+            var canonical = Symbol.Create(QuantConnect.Securities.Futures.Indices.SpotQuotedNasdaq100, SecurityType.Future, Market.CME);
+            var expiration = FuturesExpiryFunctions.FuturesExpiryDictionary[canonical];
+
+            // Only June is listed, so any other month rolls forward to the next June
+            Assert.AreEqual(new DateTime(2027, 6, 11, 20, 0, 0), expiration(new DateTime(2027, 6, 1)));
+            Assert.AreEqual(new DateTime(2027, 6, 11, 20, 0, 0), expiration(new DateTime(2026, 7, 1)));
+        }
+
+        [Test]
         public void FuturesExpiryFunction_MissingSymbol_ShouldThrowArgumentException()
         {
             const string badSymbol = "AAAAA";
