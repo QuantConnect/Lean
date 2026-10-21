@@ -212,6 +212,14 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 dateTimeUtc,
                 algorithmEndDateUtc);
 
+            // A user defined universe can change the configurations of a member it keeps selected, like a new resolution
+            // or a remove and re-add in the same time step. The selected symbols are the same, so this runs before the
+            // unchanged check. Other universes don't change the configurations of their existing members.
+            if (universe is UserDefinedUniverse && universe.Selected != null)
+            {
+                SynchronizeUserDefinedMemberSubscriptions(universe, dateTimeUtc, algorithmEndDateUtc);
+            }
+
             // check for no changes second
             if (ReferenceEquals(selectSymbolsResult, Universe.Unchanged))
             {
@@ -621,6 +629,95 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         {
             resolution = universe.UniverseSettings.Resolution;
             return _universeSelectionSizeWarningThresholds.TryGetValue(resolution, out threshold) && threshold > 0;
+        }
+
+        /// <summary>
+        /// Brings the data feed in line with the configurations a user defined universe currently
+        /// requests for the selected securities it already holds
+        /// </summary>
+        private void SynchronizeUserDefinedMemberSubscriptions(Universe universe, DateTime dateTimeUtc, DateTime algorithmEndDateUtc)
+        {
+            var members = new Dictionary<Symbol, Security>();
+            var requestedConfigs = new HashSet<SubscriptionDataConfig>();
+            foreach (var member in universe.Securities.Values)
+            {
+                var security = member.Security;
+                if (universe.Selected.Contains(security.Symbol))
+                {
+                    members[security.Symbol] = security;
+                    AddUserDefinedMemberSubscriptions(universe, security, requestedConfigs, dateTimeUtc, algorithmEndDateUtc);
+                }
+            }
+
+            if (members.Count == 0)
+            {
+                return;
+            }
+
+            // remove the configurations this universe no longer requests for its members, like the minute feed
+            // left behind by a remove and re-add at tick resolution in the same time step. Only this universe's
+            // request is removed, so another universe using the same configuration is not affected
+            foreach (var subscription in _dataManager.DataFeedSubscriptions.ToList())
+            {
+                if (subscription.IsUniverseSelectionSubscription
+                    || requestedConfigs.Contains(subscription.Configuration)
+                    || !members.TryGetValue(subscription.Configuration.Symbol, out var security)
+                    || !subscription.Universes.Contains(universe))
+                {
+                    continue;
+                }
+
+                if (_dataManager.RemoveSubscription(subscription.Configuration, universe))
+                {
+                    _internalSubscriptionManager.RemovedSubscriptionRequest(new SubscriptionRequest(false, universe, security,
+                        subscription.Configuration, dateTimeUtc, algorithmEndDateUtc));
+                }
+            }
+        }
+
+        private void AddUserDefinedMemberSubscriptions(Universe universe, Security security, HashSet<SubscriptionDataConfig> requestedConfigs,
+            DateTime dateTimeUtc, DateTime algorithmEndDateUtc)
+        {
+            foreach (var request in universe.GetSubscriptionRequests(security, dateTimeUtc, algorithmEndDateUtc,
+                _algorithm.SubscriptionManager.SubscriptionDataConfigService))
+            {
+                if (!request.TradableDaysInDataTimeZone.Any())
+                {
+                    // Remove the config from the data manager. universe.GetSubscriptionRequests() might have added the configs
+                    _dataManager.RemoveSubscription(request.Configuration, universe);
+                    continue;
+                }
+
+                requestedConfigs.Add(request.Configuration);
+
+                if (_dataManager.DataFeedSubscriptions.TryGetValue(request.Configuration, out var existing)
+                    && !existing.EndOfStream
+                    && existing.Universes.Contains(universe))
+                {
+                    continue;
+                }
+
+                if (security.Symbol == request.Configuration.Symbol
+                    && !security.Subscriptions.Contains(request.Configuration))
+                {
+                    // For now this is required for retro compatibility with usages of security.Subscriptions
+                    security.AddData(request.Configuration);
+                }
+
+                var toRemove = _currencySubscriptionDataConfigManager.GetSubscriptionDataConfigToRemove(request.Configuration.Symbol);
+                if (toRemove != null)
+                {
+                    Log.Trace($"UniverseSelection.ApplyUniverseSelection(): Removing internal currency data feed {toRemove}");
+                    _dataManager.RemoveSubscription(toRemove);
+                }
+
+                _dataManager.AddSubscription(request);
+
+                if (!request.IsUniverseSubscription)
+                {
+                    _internalSubscriptionManager.AddedSubscriptionRequest(request);
+                }
+            }
         }
 
         private void RemoveSecurityFromUniverse(

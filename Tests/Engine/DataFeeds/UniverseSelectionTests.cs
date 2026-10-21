@@ -509,6 +509,71 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             Assert.AreEqual(0, securityChanges.AddedSecurities.Count);
         }
 
+        [Test]
+        public void AddingResolutionToExistingUserDefinedSecurityCreatesDataSubscription()
+        {
+            var algorithm = new AlgorithmStub(new MockDataFeedWithSubscription());
+            algorithm.SetStartDate(2012, 3, 27);
+            algorithm.SetEndDate(2012, 3, 30);
+
+            var spy = algorithm.AddEquity("SPY", Resolution.Minute).Symbol;
+            algorithm.OnEndOfTimeStep();
+
+            var universe = algorithm.UniverseManager[UserDefinedUniverse.CreateSymbol(SecurityType.Equity, Market.USA)];
+            var selectionTime = algorithm.EndDate.ConvertToUtc(algorithm.TimeZone).Subtract(TimeSpan.FromDays(2));
+            ApplyUserDefinedSelection(algorithm, universe, selectionTime);
+
+            Assert.IsTrue(HasDataFeedResolution(algorithm, spy, Resolution.Minute));
+            Assert.IsFalse(HasDataFeedResolution(algorithm, spy, Resolution.Tick));
+
+            algorithm.AddEquity("SPY", Resolution.Tick);
+            algorithm.OnEndOfTimeStep();
+            ApplyUserDefinedSelection(algorithm, universe, selectionTime);
+
+            Assert.IsTrue(HasDataFeedResolution(algorithm, spy, Resolution.Minute), "The original minute subscription should stay");
+            Assert.IsTrue(HasDataFeedResolution(algorithm, spy, Resolution.Tick), "The new tick subscription should be created");
+        }
+
+        [Test]
+        public void RemoveAndReaddAtNewResolutionInOneTimeStepReplacesDataSubscription()
+        {
+            var algorithm = new AlgorithmStub(new MockDataFeedWithSubscription());
+            algorithm.SetStartDate(2012, 3, 27);
+            algorithm.SetEndDate(2012, 3, 30);
+
+            var qqq = algorithm.AddEquity("QQQ", Resolution.Minute).Symbol;
+            algorithm.OnEndOfTimeStep();
+
+            var universe = algorithm.UniverseManager[UserDefinedUniverse.CreateSymbol(SecurityType.Equity, Market.USA)];
+            var selectionTime = algorithm.EndDate.ConvertToUtc(algorithm.TimeZone).Subtract(TimeSpan.FromDays(2));
+            ApplyUserDefinedSelection(algorithm, universe, selectionTime);
+            Assert.IsTrue(HasDataFeedResolution(algorithm, qqq, Resolution.Minute));
+
+            Assert.IsTrue(algorithm.RemoveSecurity(qqq));
+            algorithm.AddEquity("QQQ", Resolution.Tick);
+            algorithm.OnEndOfTimeStep();
+            ApplyUserDefinedSelection(algorithm, universe, selectionTime);
+
+            Assert.IsFalse(HasDataFeedResolution(algorithm, qqq, Resolution.Minute), "The removed minute subscription should be dropped");
+            Assert.IsTrue(HasDataFeedResolution(algorithm, qqq, Resolution.Tick), "The re-added tick subscription should be created");
+            Assert.IsTrue(algorithm.Securities[qqq].IsTradable);
+            Assert.IsTrue(algorithm.Securities.ContainsKey(qqq));
+        }
+
+        private static void ApplyUserDefinedSelection(AlgorithmStub algorithm, Universe universe, DateTime selectionTimeUtc)
+        {
+            algorithm.DataManager.UniverseSelection.ApplyUniverseSelection(
+                universe,
+                selectionTimeUtc,
+                new BaseDataCollection(algorithm.UtcTime, universe.Configuration.Symbol, new List<BaseData>()));
+        }
+
+        private static bool HasDataFeedResolution(AlgorithmStub algorithm, Symbol symbol, Resolution resolution)
+        {
+            return algorithm.DataManager.DataFeedSubscriptions.Any(subscription =>
+                subscription.Configuration.Symbol == symbol && subscription.Configuration.Resolution == resolution);
+        }
+
         private IEnumerable<Symbol> CoarseSelectionFunction(IEnumerable<CoarseFundamental> coarse)
         {
             return new List<Symbol> {Symbols.AAPL, Symbols.SPY};
