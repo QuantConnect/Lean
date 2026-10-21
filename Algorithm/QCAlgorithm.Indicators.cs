@@ -1873,6 +1873,27 @@ namespace QuantConnect.Algorithm
         }
 
         /// <summary>
+        /// Creates a new RachevRatio indicator.
+        /// </summary>
+        /// <param name="symbol">The symbol whose Rachev ratio we want</param>
+        /// <param name="period">Number of returns in the lookback period</param>
+        /// <param name="alpha">Tail probability of the best returns, the numerator of the ratio</param>
+        /// <param name="beta">Tail probability of the worst returns, the denominator of the ratio</param>
+        /// <param name="riskFreeRate">Risk-free rate per period, subtracted from each return</param>
+        /// <param name="resolution">The resolution</param>
+        /// <param name="selector">Selects a value from the BaseData to send into the indicator, if null defaults to the Value property of BaseData (x => x.Value)</param>
+        /// <returns>The RachevRatio indicator for the requested symbol over the specified period</returns>
+        [DocumentationAttribute(Indicators)]
+        public RachevRatio RACHEV(Symbol symbol, int period, double alpha = 0.05, double beta = 0.05, double riskFreeRate = 0.0, Resolution? resolution = null, Func<IBaseData, decimal> selector = null)
+        {
+            var name = CreateIndicatorName(symbol, $"RACHEV({period},{alpha},{beta},{riskFreeRate})", resolution);
+            var rachevRatio = new RachevRatio(name, period, alpha, beta, riskFreeRate);
+            InitializeIndicator(rachevRatio, resolution, selector, symbol);
+
+            return rachevRatio;
+        }
+
+        /// <summary>
         /// Creates a new RegressionChannel indicator which will compute the LinearRegression, UpperChannel and LowerChannel lines, the intercept and slope
         /// </summary>
         /// <param name="symbol">The symbol whose RegressionChannel we seek</param>
