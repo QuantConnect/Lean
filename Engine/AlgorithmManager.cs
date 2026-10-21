@@ -595,6 +595,11 @@ namespace QuantConnect.Lean.Engine
                     return;
                 }
 
+                // after the algorithm handled the delisting warnings, at daily resolution the liquidation is submitted on the warning time step
+                performanceTrackingTool.Start(PerformanceTarget.SplitsDividendsDelisting);
+                ProcessPendingDelistings(algorithm, pendingDelistings);
+                performanceTrackingTool.Stop(PerformanceTarget.SplitsDividendsDelisting);
+
                 performanceTrackingTool.Start(PerformanceTarget.Transactions);
                 //If its the historical/paper trading models, wait until market orders have been "filled"
                 // Manually trigger the event handler to prevent thread switch.
@@ -911,6 +916,73 @@ namespace QuantConnect.Lean.Engine
                 {
                     splitWarnings.Add(split);
                 }
+            }
+        }
+
+        /// <summary>
+        /// Liquidates equity holdings with a market on close order on their last trading day, so they fill at that day's close
+        /// instead of at midnight once delisted. Holdings left after it are still liquidated by the delisting notification
+        /// </summary>
+        /// <remarks>Only backtesting tracks pending delistings</remarks>
+        private static void ProcessPendingDelistings(IAlgorithm algorithm, List<Delisting> pendingDelistings)
+        {
+            if (algorithm.IsWarmingUp)
+            {
+                return;
+            }
+
+            foreach (var delisting in pendingDelistings)
+            {
+                if (delisting.Symbol.SecurityType != SecurityType.Equity
+                    || !algorithm.Securities.TryGetValue(delisting.Symbol, out var security)
+                    || security.Holdings.Quantity == 0
+                    || !security.IsTradable
+                    // market on close orders are not supported if the market never closes
+                    || security.Exchange.Hours.IsMarketAlwaysOpen)
+                {
+                    continue;
+                }
+
+                var configs = algorithm.SubscriptionManager.SubscriptionDataConfigService.GetSubscriptionDataConfigs(security.Symbol);
+                if (configs.Count == 0)
+                {
+                    continue;
+                }
+
+                // the warning is emitted on the last trading day, if we are past its close the delisting notification handles it
+                var nextMarketClose = security.Exchange.Hours.GetNextMarketClose(security.LocalTime, false);
+                if (nextMarketClose.Date != delisting.Time.Date)
+                {
+                    continue;
+                }
+
+                // submit on the last time step before the market on close submission buffer: on the warning for daily data,
+                // the hour before the close for hourly data. Tick and second data use the minute to have a time step to submit on
+                var latestSubmissionTime = nextMarketClose.Subtract(MarketOnCloseOrder.SubmissionTimeBuffer);
+                var resolution = configs.GetHighestResolution();
+                var roundingInterval = resolution < Resolution.Minute ? Time.OneMinute : resolution.ToTimeSpan();
+                var submissionTime = latestSubmissionTime.RoundDownInTimeZone(roundingInterval, security.Exchange.TimeZone, configs[0].DataTimeZone);
+                if (security.LocalTime < submissionTime || security.LocalTime > latestSubmissionTime)
+                {
+                    continue;
+                }
+
+                // open orders already closing the position, like the algorithm liquidating on the warning or a previous
+                // liquidation, are left as they are so we never liquidate more than the holdings
+                var holdings = security.Holdings.Quantity;
+                var closingQuantity = algorithm.Transactions.GetOpenOrdersRemainingQuantity(ticket =>
+                    ticket.Symbol == security.Symbol && Math.Sign(ticket.Quantity) != Math.Sign(holdings));
+                var quantity = -(holdings + closingQuantity);
+                if (quantity == 0 || Math.Sign(quantity) == Math.Sign(holdings))
+                {
+                    continue;
+                }
+
+                Log.Trace($"AlgorithmManager.ProcessPendingDelistings(): {algorithm.UtcTime} UTC: submitting MarketOnClose order for " +
+                    $"{quantity} {security.Symbol} to liquidate it before its delisting");
+
+                algorithm.SubmitOrderRequest(new OrderFactory(algorithm).MarketOnCloseOrder(security.Symbol, quantity,
+                    tag: BrokerageTransactionHandler.LiquidateFromDelistingTag));
             }
         }
 
