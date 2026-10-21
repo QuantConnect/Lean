@@ -128,6 +128,32 @@ namespace QuantConnect.Tests.Common.Orders.Fees
             Assert.AreEqual(expectedFee, fee.Value.Amount);
         }
 
+        // IB only trades US dollar quoted cryptocurrencies, the brokerage model rejects the rest
+        [TestCase("BTCUSD", 2, 50000, 0.0018 * 2 * 50000)]
+        [TestCase("BTCUSD", 0.5, 4000, 0.0018 * 0.5 * 4000)]
+        [TestCase("BTCUSD", 0.001, 50000, 1.75)] // The calculated fee will be under 1.75, but that is the minimum fee
+        public void CalculatesCryptoFee(string ticker, decimal quantity, decimal price, decimal expectedFee)
+        {
+            var symbol = Symbol.Create(ticker, SecurityType.Crypto, Market.InteractiveBrokers);
+            var properties = SymbolPropertiesDatabase.FromDataFolder()
+                .GetSymbolProperties(symbol.ID.Market, symbol, symbol.SecurityType, Currencies.USD);
+            var security = new Crypto(symbol,
+                SecurityExchangeHours.AlwaysOpen(TimeZones.Utc),
+                new Cash(properties.QuoteCurrency, 0, 1),
+                new Cash(ticker.RemoveFromEnd(properties.QuoteCurrency), 0, 0),
+                properties,
+                ErrorCurrencyConverter.Instance,
+                RegisteredSecurityDataTypesProvider.Null,
+                new SecurityCache());
+            security.SetMarketPrice(new Tick(DateTime.UtcNow, symbol, price, price));
+
+            var order = new MarketOrder(symbol, quantity, DateTime.UtcNow);
+            var fee = _feeModel.GetOrderFee(new OrderFeeParameters(security, order));
+
+            Assert.AreEqual(Currencies.USD, fee.Value.Currency);
+            Assert.AreEqual(expectedFee, fee.Value.Amount);
+        }
+
         [TestCase(false)]
         [TestCase(true)]
         public void HongKongFutureFee(bool canonical)
@@ -352,11 +378,11 @@ namespace QuantConnect.Tests.Common.Orders.Fees
                 () =>
                 {
                     var tz = TimeZones.NewYork;
-                    var security = new Crypto(
-                        Symbols.BTCUSD,
+                    var symbol = Symbol.Create("XYZ", SecurityType.Base, Market.USA);
+                    var security = new Security(
                         SecurityExchangeHours.AlwaysOpen(tz),
+                        new SubscriptionDataConfig(typeof(TradeBar), symbol, Resolution.Minute, tz, tz, true, false, false),
                         new Cash("USD", 0, 0),
-                        new Cash("BTC", 0, 0),
                         SymbolProperties.GetDefault("USD"),
                         ErrorCurrencyConverter.Instance,
                         RegisteredSecurityDataTypesProvider.Null,

@@ -82,6 +82,16 @@ namespace QuantConnect.Brokerages
                 return false;
             }
 
+            // IB does not route cryptocurrencies over FIX: the session has no CRYPTO security type,
+            // no PAXOS/ZEROHASH destination and no immediate-or-cancel time in force
+            if (security.Type == SecurityType.Crypto)
+            {
+                message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
+                    Messages.InteractiveBrokersFixModel.UnsupportedCryptoSecurityType(this, security));
+
+                return false;
+            }
+
             // only check supported combo order types
             if (order is ComboOrder && order.GroupOrderManager != null && SupportedOrderTypes.Contains(order.Type))
             {
