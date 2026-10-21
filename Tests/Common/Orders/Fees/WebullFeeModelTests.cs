@@ -72,6 +72,19 @@ namespace QuantConnect.Tests.Common.Orders.Fees
             Assert.That(fee.Value.Amount, Is.EqualTo(expectedFee));
         }
 
+        [TestCase(0.80, 1, 1.00)]
+        [TestCase(2.00, 4, 4.36)]
+        public void GetOrderFeeSpxwOptionOnSpxIndex(decimal price, decimal quantity, decimal expectedFee)
+        {
+            // AddIndexOption("SPX", "SPXW"): the underlying is SPX, the option ticker is SPXW
+            var security = CreateSecurity(SecurityType.IndexOption, price, "SPX", "SPXW");
+            var order = new MarketOrder(security.Symbol, quantity, DateTime.UtcNow);
+
+            var fee = _feeModel.GetOrderFee(new OrderFeeParameters(security, order));
+
+            Assert.That(fee.Value.Amount, Is.EqualTo(expectedFee));
+        }
+
         /// <summary>
         /// VIX exchange fee tiers (per contract) + Webull $0.50/contract:
         ///   Tier 1: price ≤ $0.10 -> $0.10 + $0.50 = $0.60
@@ -139,12 +152,12 @@ namespace QuantConnect.Tests.Common.Orders.Fees
         /// Supported types: <see cref="SecurityType.IndexOption"/>, <see cref="SecurityType.Option"/>.
         /// <paramref name="ticker"/> identifies the underlying symbol.
         /// </summary>
-        private static Security CreateSecurity(SecurityType securityType, decimal price, string ticker = "AAPL")
+        private static Security CreateSecurity(SecurityType securityType, decimal price, string ticker = "AAPL", string optionTicker = null)
         {
             var isIndex = securityType == SecurityType.IndexOption;
             var underlying = Symbol.Create(ticker, isIndex ? SecurityType.Index : SecurityType.Equity, Market.USA);
             var symbol = Symbol.CreateOption(
-                underlying, Market.USA,
+                underlying, optionTicker, Market.USA,
                 isIndex ? OptionStyle.European : OptionStyle.American,
                 OptionRight.Call,
                 isIndex ? 1000m : 150m,
