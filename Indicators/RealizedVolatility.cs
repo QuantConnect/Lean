@@ -23,6 +23,8 @@ namespace QuantConnect.Indicators
     /// Parkinson high-low range estimator.
     /// Unlike close-to-close estimators, it uses each bar's High/Low range, which
     /// converges faster but assumes no drift within the bar and no overnight gaps.
+    /// Bars with High &lt; Low or Low &lt;= 0 are invalid and skipped; flat bars (High == Low) are valid
+    /// and contribute a zero term.
     /// </summary>
     public class RealizedVolatility : BarIndicator, IIndicatorWarmUpPeriodProvider
     {
@@ -34,7 +36,7 @@ namespace QuantConnect.Indicators
         /// <summary>
         /// Gets a flag indicating when this indicator is ready and fully initialized
         /// </summary>
-        public override bool IsReady => Samples >= _period;
+        public override bool IsReady => _rollingSum.IsReady;
 
         /// <summary>
         /// Required period, in data points, for the indicator to be ready and fully initialized.
@@ -63,18 +65,29 @@ namespace QuantConnect.Indicators
         }
 
         /// <summary>
+        /// Validates the input and computes the next value. Bars with High &lt; Low or Low &lt;= 0 are
+        /// skipped: they do not enter the window and the indicator keeps its previous value.
+        /// A flat bar (High == Low) is valid and contributes a zero term.
+        /// </summary>
+        /// <param name="input">The input given to the indicator</param>
+        /// <returns>An IndicatorResult object including the status of the indicator</returns>
+        protected override IndicatorResult ValidateAndComputeNextValue(IBaseDataBar input)
+        {
+            if (input.High < input.Low || input.Low <= 0)
+            {
+                return new IndicatorResult(0m, IndicatorStatus.InvalidInput);
+            }
+
+            return base.ValidateAndComputeNextValue(input);
+        }
+
+        /// <summary>
         /// Computes the next value of this indicator from the given state
         /// </summary>
         /// <param name="input">The input given to the indicator</param>
         /// <returns>A new value for this indicator</returns>
         protected override decimal ComputeNextValue(IBaseDataBar input)
         {
-            if (input.High <= input.Low || input.Low <= 0)
-            {
-                // return a sentinel value
-                return 0m;
-            }
-
             var term = Math.Pow(Math.Log((double)input.High / (double)input.Low), 2) / Ln2Times4;
             _rollingSum.Update(input.EndTime, (decimal)term);
 
