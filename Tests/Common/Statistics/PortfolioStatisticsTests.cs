@@ -116,11 +116,13 @@ namespace QuantConnect.Tests.Common.Statistics
             var grossStatistics = BuildStatistics(0m);
             Assert.Greater(grossStatistics.SharpeRatio, 0m);
             Assert.Greater(grossStatistics.ProbabilisticSharpeRatio, 0.5m);
+            Assert.AreEqual(QuantConnect.Statistics.Statistics.AdjustedSharpeRatio(performance, 0.0, _tradingDaysPerYear).SafeDecimalCast(), grossStatistics.AdjustedSharpeRatio);
 
             // A risk-free rate above the return turns the Sharpe ratio negative, and the PSR drops with it
             var excessStatistics = BuildStatistics(0.068m);
             Assert.Less(excessStatistics.SharpeRatio, 0m);
             Assert.Less(excessStatistics.ProbabilisticSharpeRatio, 0.1m);
+            Assert.AreEqual(QuantConnect.Statistics.Statistics.AdjustedSharpeRatio(performance, (double)0.068m / _tradingDaysPerYear, _tradingDaysPerYear).SafeDecimalCast(), excessStatistics.AdjustedSharpeRatio);
         }
 
         [Test]
