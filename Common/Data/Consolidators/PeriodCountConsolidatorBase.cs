@@ -294,6 +294,12 @@ namespace QuantConnect.Data.Consolidators
         protected TimeSpan? Period => _period;
 
         /// <summary>
+        /// The fixed time span period, only set when the user gave an explicit time span, matching the
+        /// data span validation performed in <see cref="Update(T)"/> when the first data point arrives
+        /// </summary>
+        internal override TimeSpan? FixedTimeSpanPeriod => _periodSpecification is TimeSpanPeriodSpecification ? _period : null;
+
+        /// <summary>
         /// Determines whether or not the specified data should be processed
         /// </summary>
         /// <param name="data">The data to check</param>

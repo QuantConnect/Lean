@@ -64,7 +64,7 @@ namespace QuantConnect.Data
         /// </summary>
         public SubscriptionManager(ITimeKeeper timeKeeper)
         {
-            _consolidators = new();
+            _consolidators = new(ConsolidatorIdentityComparer.Instance);
             _timeKeeper = timeKeeper;
             _consolidatorsSortedByScanTime = new(1000, ConsolidatorScanPriority.Comparer);
             _threadSafeCollectionLock = new object();
@@ -164,6 +164,14 @@ namespace QuantConnect.Data
         /// <param name="tickType">Desired tick type for the subscription</param>
         public void AddConsolidator(Symbol symbol, IDataConsolidator consolidator, TickType? tickType = null)
         {
+            if (symbol == null)
+            {
+                // giving the raw NRE from the null symbol comparison below provides no clue of the actual issue,
+                // commonly a Future.Mapped or similar property that is still null when the consolidator is added
+                throw new ArgumentNullException(nameof(symbol), "Cannot add a consolidator because the given symbol is null. " +
+                    "If the symbol comes from a property like Future.Mapped, note it can be null until the security receives data.");
+            }
+
             // Find the right subscription and add the consolidator to it
             var subscriptions = Subscriptions.Where(x => x.Symbol == symbol).ToList();
 
@@ -184,6 +192,10 @@ namespace QuantConnect.Data
                 // we need to be able to pipe data directly from the data feed into the consolidator
                 if (IsSubscriptionValidForConsolidator(subscription, consolidator, tickType))
                 {
+                    // fail here instead of months into the backtest when the first data point arrives,
+                    // see PeriodCountConsolidatorBase.Update: all the information needed is already available
+                    ValidateConsolidatorPeriod(symbol, consolidator, subscription);
+
                     subscription.Consolidators.Add(consolidator);
 
                     var wrapper = _consolidators[consolidator] =
@@ -198,6 +210,20 @@ namespace QuantConnect.Data
                 }
             }
 
+            // a trade bar consolidator on a quote-only feed (forex, cfd) can still be fed by collapsing
+            // each quote bar into a mid-point trade bar instead of rejecting the registration
+            if (consolidator.InputType == typeof(TradeBar) && (tickType == null || tickType == TickType.Quote))
+            {
+                var quoteSubscription = subscriptions.FirstOrDefault(x => x.Type == typeof(QuoteBar));
+                if (quoteSubscription != null)
+                {
+                    // the adapter carries no period of its own, validate the consolidator it will feed
+                    ValidateConsolidatorPeriod(symbol, consolidator, quoteSubscription);
+                    AddConsolidator(symbol, new QuoteBarToTradeBarAdapter(consolidator), TickType.Quote);
+                    return;
+                }
+            }
+
             string tickTypeException = null;
             if (tickType != null && !subscriptions.Where(x => x.TickType == tickType).Any())
             {
@@ -206,7 +232,25 @@ namespace QuantConnect.Data
 
             throw new ArgumentException(tickTypeException ?? ("Type mismatch found between consolidator and symbol. " +
                 $"Symbol: {symbol.Value} does not support input type: {consolidator.InputType.Name}. " +
-                $"Supported types: {string.Join(",", subscriptions.Select(x => x.Type.Name))}."));
+                $"Supported types: {string.Join(",", subscriptions.Select(x => x.Type.Name))}. " +
+                "Alternatively, consider using QCAlgorithm.Consolidate() ('self.consolidate()' in Python), which selects the correct consolidator type automatically."));
+        }
+
+        /// <summary>
+        /// Validates that a fixed time span period consolidator has a period of at least the subscription period,
+        /// mirroring the data span validation <see cref="PeriodCountConsolidatorBase{T,TConsolidated}"/> performs
+        /// when the first data point arrives, so invalid setups fail at registration time in Initialize instead
+        /// </summary>
+        private static void ValidateConsolidatorPeriod(Symbol symbol, IDataConsolidator consolidator, SubscriptionDataConfig subscription)
+        {
+            var period = (consolidator as ConsolidatorBase)?.FixedTimeSpanPeriod;
+            if (period.HasValue && period.Value < subscription.Increment)
+            {
+                throw new ArgumentException($"Unable to add consolidator for symbol {symbol.Value}: the consolidator period ({period.Value}) " +
+                    $"is smaller than the {subscription.Resolution.ResolutionToLower()} subscription period ({subscription.Increment}). " +
+                    "Consolidators can only produce data of the same or lower resolution than their input data, " +
+                    $"either request a higher resolution subscription for {symbol.Value} or use a consolidator period of at least {subscription.Increment}.");
+            }
         }
 
         /// <summary>
@@ -237,6 +281,7 @@ namespace QuantConnect.Data
             // remove consolidator from each subscription
             foreach (var subscription in _subscriptionManager.GetSubscriptionDataConfigs(symbol))
             {
+                // users hold the consolidator they created: a registered adapter equals it, see QuoteBarToTradeBarAdapter
                 subscription.Consolidators.Remove(consolidator);
 
                 if (_consolidators.Remove(consolidator, out var consolidatorsToScan))
@@ -269,8 +314,8 @@ namespace QuantConnect.Data
         }
 
         /// <summary>
-        /// Finds the <see cref="DataConsolidatorPythonWrapper"/> previously created for the given python
-        /// consolidator so it can be removed and disposed, rather than a throwaway wrapper that would churn
+        /// Finds the consolidator registered for the given python consolidator, its <see cref="DataConsolidatorPythonWrapper"/>
+        /// or the adapter wrapping it, so it can be removed and disposed, rather than a throwaway wrapper that would churn
         /// the live python object's event subscription and leak the original one.
         /// </summary>
         private IDataConsolidator FindPythonConsolidator(Symbol symbol, PyObject pyConsolidator)
@@ -283,7 +328,8 @@ namespace QuantConnect.Data
             {
                 foreach (var existing in subscription.Consolidators)
                 {
-                    if (existing is DataConsolidatorPythonWrapper && existing.Equals(pyConsolidator))
+                    // python wrappers, and adapters wrapping one, equal the python object they were created from
+                    if (existing.Equals(pyConsolidator))
                     {
                         return existing;
                     }
