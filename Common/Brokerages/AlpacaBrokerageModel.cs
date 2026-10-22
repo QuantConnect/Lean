@@ -168,7 +168,7 @@ namespace QuantConnect.Brokerages
             }
 
             var supportsOutsideTradingHours = (order.Properties as AlpacaOrderProperties)?.OutsideRegularTradingHours ?? false;
-            if (supportsOutsideTradingHours && (order.Type != OrderType.Limit || order.TimeInForce is not DayTimeInForce))
+            if (supportsOutsideTradingHours && (order.Type != OrderType.Limit || order.TimeInForce is not (DayTimeInForce or GoodTilCanceledTimeInForce)))
             {
                 message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
                     Messages.AlpacaBrokerageModel.TradingOutsideRegularHoursNotSupported(this, order.Type, order.TimeInForce));
