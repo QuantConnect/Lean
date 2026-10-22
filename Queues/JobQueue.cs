@@ -252,6 +252,23 @@ namespace QuantConnect.Queues
             }
             backtestJob.OutOfSampleDays = Config.GetInt("out-of-sample-days");
 
+            // Optional overrides of the algorithm's own start/end dates and starting cash
+            var periodStart = Config.Get("period-start");
+            if (!string.IsNullOrEmpty(periodStart))
+            {
+                backtestJob.PeriodStart = Time.ParseDate(periodStart);
+            }
+            var periodFinish = Config.Get("period-finish");
+            if (!string.IsNullOrEmpty(periodFinish))
+            {
+                backtestJob.PeriodFinish = Time.ParseDate(periodFinish);
+            }
+            var cashAmount = Config.Get("cash-amount");
+            if (!string.IsNullOrEmpty(cashAmount))
+            {
+                backtestJob.CashAmount = new Securities.CashAmount(cashAmount.ToDecimal(), Config.Get("cash-currency", Currencies.USD));
+            }
+
             // Only set optimization id when backtest is for optimization
             if (!optimizationId.IsNullOrEmpty())
             {

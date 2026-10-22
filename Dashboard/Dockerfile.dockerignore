@@ -1,0 +1,11 @@
+**/bin
+**/obj
+.git
+.github
+.vs
+.serena
+.nuget
+packages
+Data
+Tests
+Dashboard/results

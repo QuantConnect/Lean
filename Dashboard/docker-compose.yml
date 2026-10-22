@@ -1,0 +1,11 @@
+services:
+  lean-dashboard:
+    build:
+      context: ..
+      dockerfile: Dashboard/Dockerfile
+    ports:
+      - "127.0.0.1:${DASHBOARD_PORT:-8000}:8000"
+    volumes:
+      - ../Data:/Lean/Data:ro
+      - ./results:/results
+    restart: unless-stopped

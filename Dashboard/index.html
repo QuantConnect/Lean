@@ -1,0 +1,474 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>LEAN Backtest Dashboard</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+  :root {
+    --bg: #f6f7f9; --panel: #ffffff; --text: #1b1f24; --muted: #65707c; --border: #e3e6ea;
+    --accent: #2f6fdf; --bench: #9aa4ae; --pos: #1a8f4c; --neg: #d1453b; --dd: rgba(209,69,59,.18);
+    --input: #ffffff; --hover: #f0f3f7;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #0f1216; --panel: #171b21; --text: #e6e9ed; --muted: #8d97a3; --border: #262c35;
+      --accent: #6b9cff; --bench: #5d6773; --pos: #3cc77a; --neg: #ff6b5f; --dd: rgba(255,107,95,.2);
+      --input: #11151a; --hover: #1e242c;
+    }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--text);
+    font: 14px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans Thai", sans-serif; }
+  .layout { display: grid; grid-template-columns: 300px minmax(0, 1fr); gap: 16px; max-width: 1440px; margin: 0 auto; padding: 20px 16px 48px; }
+  @media (max-width: 900px) { .layout { grid-template-columns: minmax(0, 1fr); } }
+  aside .panel { position: sticky; top: 20px; }
+  h1 { font-size: 20px; margin: 0; }
+  .sub { color: var(--muted); font-size: 13px; }
+  .btn { background: var(--accent); color: #fff; border: 0; border-radius: 8px; padding: 8px 14px; cursor: pointer; font: inherit; }
+  .btn:disabled { opacity: .5; cursor: default; }
+  .btn.ghost { background: none; color: var(--text); border: 1px solid var(--border); }
+  .btn.danger { background: var(--neg); }
+  .panel { background: var(--panel); border: 1px solid var(--border); border-radius: 12px; padding: 16px; margin-bottom: 16px; }
+  .panel h2 { font-size: 15px; margin: 0 0 12px; }
+  label { display: block; font-size: 12px; color: var(--muted); margin: 10px 0 4px; }
+  input, textarea { width: 100%; background: var(--input); color: var(--text); border: 1px solid var(--border); border-radius: 8px; padding: 7px 10px; font: inherit; }
+  textarea { font-family: ui-monospace, Menlo, monospace; font-size: 12px; min-height: 64px; resize: vertical; }
+  .row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .actions { display: flex; gap: 8px; margin-top: 14px; }
+  .actions .btn { flex: 1; }
+  .history { list-style: none; margin: 0; padding: 0; max-height: 360px; overflow-y: auto; }
+  .history li { padding: 8px; border-radius: 8px; cursor: pointer; display: flex; justify-content: space-between; gap: 8px; }
+  .history li:hover, .history li.on { background: var(--hover); }
+  .history .name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .badge { font-size: 11px; padding: 1px 8px; border-radius: 999px; border: 1px solid var(--border); color: var(--muted); white-space: nowrap; }
+  .badge.Running, .badge.Starting { color: var(--accent); border-color: var(--accent); }
+  .badge.Completed { color: var(--pos); border-color: var(--pos); }
+  .badge.RuntimeError, .badge.Error, .badge.Stopped { color: var(--neg); border-color: var(--neg); }
+  .head { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+  .progress { height: 6px; background: var(--border); border-radius: 999px; overflow: hidden; margin-bottom: 16px; }
+  .progress div { height: 100%; width: 0; background: var(--accent); transition: width .3s; }
+  .kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; margin-bottom: 16px; }
+  .kpi { background: var(--panel); border: 1px solid var(--border); border-radius: 12px; padding: 12px 14px; }
+  .kpi .label { color: var(--muted); font-size: 12px; }
+  .kpi .value { font-size: 22px; font-weight: 600; font-variant-numeric: tabular-nums; }
+  .pos { color: var(--pos); } .neg { color: var(--neg); }
+  .chart-box { position: relative; height: 320px; }
+  .chart-box.small { height: 180px; }
+  .table-scroll { overflow-x: auto; max-height: 420px; overflow-y: auto; }
+  table { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; }
+  th, td { padding: 6px 10px; border-bottom: 1px solid var(--border); text-align: right; white-space: nowrap; }
+  th:first-child, td:first-child { text-align: left; }
+  th { color: var(--muted); font-weight: 500; font-size: 12px; position: sticky; top: 0; background: var(--panel); }
+  .stats { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 0 24px; }
+  .stats div { display: flex; justify-content: space-between; padding: 5px 0; border-bottom: 1px solid var(--border); gap: 12px; }
+  .stats span:first-child { color: var(--muted); }
+  .logs { font-family: ui-monospace, Menlo, monospace; font-size: 12px; white-space: pre-wrap; max-height: 420px; overflow-y: auto; margin: 0; }
+  .logs .err { color: var(--neg); }
+  .empty { border: 2px dashed var(--border); border-radius: 12px; padding: 48px 16px; text-align: center; color: var(--muted); }
+  .hidden { display: none !important; }
+  .tabs { display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 12px; }
+  .tabs button { background: none; border: 1px solid var(--border); color: var(--muted); border-radius: 8px; padding: 4px 12px; cursor: pointer; font: inherit; }
+  .tabs button.on { color: var(--text); border-color: var(--accent); }
+  .error-box { color: var(--neg); font-size: 13px; margin-top: 8px; }
+</style>
+</head>
+<body>
+<div class="layout">
+  <aside>
+    <div class="panel">
+      <h2>รัน Backtest</h2>
+      <form id="runForm">
+        <label for="algorithm">กลยุทธ์ (C#)</label>
+        <input id="algorithm" list="algorithmList" value="GoldMovingAverageCrossAlgorithm" required autocomplete="off">
+        <datalist id="algorithmList"></datalist>
+        <div class="row">
+          <div><label for="start">วันเริ่ม</label><input type="date" id="start"></div>
+          <div><label for="end">วันสิ้นสุด</label><input type="date" id="end"></div>
+        </div>
+        <label for="cash">เงินทุน (USD)</label>
+        <input type="number" id="cash" min="1" step="any" placeholder="ตามที่กลยุทธ์กำหนด">
+        <label for="params">Parameters (key=value บรรทัดละค่า)</label>
+        <textarea id="params" placeholder="ema-fast=10&#10;ema-slow=20"></textarea>
+        <div class="sub">ช่องที่เว้นว่างจะใช้ค่าที่กลยุทธ์ตั้งไว้</div>
+        <div class="actions">
+          <button class="btn" type="submit" id="runBtn">▶ รัน</button>
+          <button class="btn danger hidden" type="button" id="stopBtn">■ หยุด</button>
+        </div>
+        <div class="error-box" id="formError"></div>
+      </form>
+    </div>
+    <div class="panel">
+      <h2>ประวัติการรัน</h2>
+      <ul class="history" id="history"></ul>
+    </div>
+  </aside>
+
+  <main>
+    <div class="head">
+      <div>
+        <h1 id="title">LEAN Backtest Dashboard</h1>
+        <div class="sub" id="period">เลือกกลยุทธ์ทางซ้ายแล้วกดรัน หรือเลือกจากประวัติ</div>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center">
+        <span class="badge" id="statusBadge"></span>
+        <input type="file" id="file" accept=".json" class="hidden">
+        <button class="btn ghost" onclick="document.getElementById('file').click()">เปิดไฟล์ผล</button>
+      </div>
+    </div>
+    <div class="progress"><div id="progressBar"></div></div>
+
+    <div class="empty" id="empty">ยังไม่มีข้อมูล</div>
+
+    <div id="dash" class="hidden">
+      <div class="kpis" id="kpis"></div>
+
+      <section class="panel">
+        <h2>Equity เทียบ Benchmark</h2>
+        <div class="chart-box"><canvas id="equityChart"></canvas></div>
+      </section>
+
+      <section class="panel">
+        <h2>Drawdown</h2>
+        <div class="chart-box small"><canvas id="ddChart"></canvas></div>
+      </section>
+
+      <section class="panel">
+        <div class="tabs">
+          <button class="on" data-tab="logs">Log</button>
+          <button data-tab="trades">เทรดที่ปิดแล้ว</button>
+          <button data-tab="orders">Orders</button>
+          <button data-tab="stats">สถิติทั้งหมด</button>
+        </div>
+        <pre class="logs" id="tab-logs"></pre>
+        <div class="table-scroll hidden" id="tab-trades"></div>
+        <div class="table-scroll hidden" id="tab-orders"></div>
+        <div class="stats hidden" id="tab-stats"></div>
+      </section>
+    </div>
+  </main>
+</div>
+
+<script>
+const ORDER_TYPE = ['Market', 'Limit', 'StopMarket', 'StopLimit', 'MarketOnOpen', 'MarketOnClose', 'OptionExercise', 'LimitIfTouched', 'ComboMarket', 'ComboLimit', 'ComboLegLimit', 'TrailingStop'];
+const ORDER_STATUS = { 0: 'New', 1: 'Submitted', 2: 'PartiallyFilled', 3: 'Filled', 5: 'Canceled', 6: 'None', 7: 'Invalid', 8: 'CancelPending', 9: 'UpdateSubmitted' };
+const DIRECTION = ['Buy', 'Sell', 'Hold'];
+const LOG_TYPES = new Set(['Debug', 'SystemDebug', 'Log', 'HandledError', 'RuntimeError']);
+const $ = id => document.getElementById(id);
+const charts = {};
+let state, socket, currentRun = null;
+
+const css = name => getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+// Format dates in the Gregorian calendar regardless of the machine locale
+const fmtDate = d => new Date(d).toLocaleDateString('en-GB', { year: 'numeric', month: 'short', day: 'numeric' });
+const fmtMoney = v => (v ?? 0).toLocaleString('en-US', { style: 'currency', currency: 'USD' });
+const signClass = v => v > 0 ? 'pos' : v < 0 ? 'neg' : '';
+const num = s => parseFloat(String(s).replace(/[^0-9.\-]/g, ''));
+const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
+
+// Result files use camelCase keys, streamed packets use PascalCase: read either
+const pick = (o, key) => o?.[key] ?? o?.[key[0].toLowerCase() + key.slice(1)];
+
+function resetState() {
+  state = { equity: [], bench: [], dd: [], orders: new Map(), trades: [], stats: {}, runtime: {}, logs: [], progress: 0 };
+}
+
+// Series values are [time, value] or OHLC candles [time, open, high, low, close]
+function seriesPoints(results, chart, series) {
+  const values = pick(pick(pick(pick(results, 'Charts')?.[chart], 'Series'), series) ?? {}, 'Values');
+  return (values ?? []).map(v => ({ x: v[0] * 1000, y: v[v.length - 1] }));
+}
+
+function mergePoints(target, points) {
+  for (const p of points) {
+    const last = target[target.length - 1];
+    if (!last || p.x > last.x) target.push(p);
+    else if (p.x === last.x) last.y = p.y;
+  }
+}
+
+// full=true replaces everything (final packet or result file), otherwise the packet holds deltas only
+function applyResults(results, full) {
+  const parts = [['equity', 'Strategy Equity', 'Equity'], ['bench', 'Benchmark', 'Benchmark'], ['dd', 'Drawdown', 'Equity Drawdown']];
+  for (const [key, chart, series] of parts) {
+    const points = seriesPoints(results, chart, series);
+    if (full) state[key] = points; else mergePoints(state[key], points);
+  }
+  if (full) state.orders.clear();
+  for (const order of Object.values(pick(results, 'Orders') ?? {})) state.orders.set(order.id, order);
+
+  const trades = pick(pick(results, 'TotalPerformance'), 'ClosedTrades') ?? [];
+  state.trades = full ? trades : state.trades.concat(trades);
+
+  const stats = pick(results, 'Statistics');
+  if (stats && Object.keys(stats).length) state.stats = stats;
+  const runtime = pick(results, 'RuntimeStatistics');
+  if (runtime && Object.keys(runtime).length) state.runtime = runtime;
+  scheduleRender();
+}
+
+let renderPending = false;
+function scheduleRender() {
+  if (renderPending) return;
+  renderPending = true;
+  requestAnimationFrame(() => { renderPending = false; render(); });
+}
+
+function render() {
+  $('empty').classList.add('hidden');
+  $('dash').classList.remove('hidden');
+  $('progressBar').style.width = (state.progress * 100).toFixed(1) + '%';
+  if (state.equity.length) $('period').textContent = `${fmtDate(state.equity[0].x)} – ${fmtDate(state.equity.at(-1).x)}`;
+  renderKpis();
+  renderEquity();
+  renderDrawdown();
+  renderTrades();
+  renderOrders();
+  renderStats();
+}
+
+function renderKpis() {
+  const s = state.stats, r = state.runtime;
+  const items = Object.keys(s).length ? [
+    ['กำไรสุทธิ', s['Net Profit'], true],
+    ['ผลตอบแทนต่อปี', s['Compounding Annual Return'], true],
+    ['Drawdown สูงสุด', s['Drawdown'] && '-' + s['Drawdown'], true],
+    ['Sharpe Ratio', s['Sharpe Ratio'], true],
+    ['Win Rate', s['Win Rate'], false],
+    ['End Equity', s['End Equity'] && fmtMoney(num(s['End Equity'])), false],
+    ['จำนวน Orders', s['Total Orders'], false],
+  ] : [
+    // While running only the runtime statistics are available
+    ['Equity', r['Equity'], false],
+    ['กำไรสุทธิ', r['Net Profit'], true],
+    ['ผลตอบแทน', r['Return'], true],
+    ['Holdings', r['Holdings'], false],
+    ['Unrealized', r['Unrealized'], true],
+    ['จำนวน Orders', String(state.orders.size), false],
+  ];
+  $('kpis').innerHTML = items.filter(i => i[1] != null).map(([label, v, colored]) =>
+    `<div class="kpi"><div class="label">${label}</div><div class="value ${colored ? signClass(num(v)) : ''}">${esc(v)}</div></div>`
+  ).join('');
+}
+
+function baseOptions(yFormat) {
+  return {
+    responsive: true, maintainAspectRatio: false, animation: false, parsing: false, normalized: true,
+    interaction: { mode: 'index', intersect: false },
+    plugins: {
+      legend: { labels: { color: css('--text'), boxWidth: 12 } },
+      tooltip: { callbacks: { title: items => fmtDate(items[0].parsed.x), label: c => `${c.dataset.label}: ${yFormat(c.parsed.y)}` } },
+    },
+    scales: {
+      x: { type: 'linear', grid: { color: css('--border') },
+        ticks: { color: css('--muted'), maxTicksLimit: 8, callback: v => new Date(v).toLocaleDateString('en-GB', { year: 'numeric', month: 'short' }) } },
+      y: { ticks: { color: css('--muted'), callback: yFormat }, grid: { color: css('--border') } },
+    },
+    elements: { point: { radius: 0 }, line: { borderWidth: 1.5 } },
+  };
+}
+
+function upsertChart(key, canvasId, datasets, options) {
+  if (charts[key]) {
+    datasets.forEach((d, i) => charts[key].data.datasets[i].data = d.data);
+    charts[key].update('none');
+  } else {
+    charts[key] = new Chart($(canvasId), { type: 'line', data: { datasets }, options });
+  }
+}
+
+function renderEquity() {
+  // Rescale the benchmark price so it starts at the same capital as the strategy
+  const start = state.equity[0]?.y;
+  const b0 = state.bench.find(p => p.y)?.y;
+  const bench = start && b0 ? state.bench.map(p => ({ x: p.x, y: p.y / b0 * start })) : [];
+  upsertChart('equity', 'equityChart', [
+    { label: 'กลยุทธ์', data: state.equity, borderColor: css('--accent') },
+    { label: 'Benchmark (ปรับสเกล)', data: bench, borderColor: css('--bench'), borderDash: [4, 3] },
+  ], baseOptions(v => '$' + Math.round(v).toLocaleString('en-US')));
+}
+
+function renderDrawdown() {
+  const options = baseOptions(v => v.toFixed(1) + '%');
+  options.plugins.legend = { display: false };
+  options.plugins.tooltip.callbacks.label = c => `Drawdown: ${c.parsed.y.toFixed(2)}%`;
+  upsertChart('dd', 'ddChart', [
+    { label: 'Drawdown', data: state.dd, borderColor: css('--neg'), backgroundColor: css('--dd'), fill: 'origin' },
+  ], options);
+}
+
+function table(headers, rows) {
+  if (!rows.length) return '<div class="sub">ไม่มีข้อมูล</div>';
+  return `<table><thead><tr>${headers.map(h => `<th>${h}</th>`).join('')}</tr></thead><tbody>${
+    rows.map(r => `<tr>${r.map(c => `<td>${c}</td>`).join('')}</tr>`).join('')}</tbody></table>`;
+}
+
+function renderTrades() {
+  $('tab-trades').innerHTML = table(
+    ['Symbol', 'ฝั่ง', 'เข้า', 'ราคาเข้า', 'ออก', 'ราคาออก', 'จำนวน', 'กำไร/ขาดทุน', 'MAE', 'MFE'],
+    state.trades.map(t => {
+      const pl = pick(t, 'ProfitLoss');
+      return [
+        esc(pick(t, 'Symbols')?.map(s => s.value).join(', ')), pick(t, 'Direction') === 0 ? 'Long' : 'Short',
+        fmtDate(pick(t, 'EntryTime')), pick(t, 'EntryPrice')?.toFixed(2), fmtDate(pick(t, 'ExitTime')), pick(t, 'ExitPrice')?.toFixed(2),
+        pick(t, 'Quantity'), `<span class="${signClass(pl)}">${fmtMoney(pl)}</span>`, fmtMoney(pick(t, 'MAE') ?? t.mae), fmtMoney(pick(t, 'MFE') ?? t.mfe),
+      ];
+    }));
+}
+
+function renderOrders() {
+  $('tab-orders').innerHTML = table(
+    ['#', 'เวลา', 'Symbol', 'ประเภท', 'ฝั่ง', 'จำนวน', 'ราคา', 'มูลค่า', 'สถานะ', 'Tag'],
+    [...state.orders.values()].sort((a, b) => a.id - b.id).map(o => [
+      o.id, fmtDate(o.lastFillTime ?? o.time), esc(o.symbol?.value), ORDER_TYPE[o.type] ?? o.type,
+      `<span class="${o.direction === 0 ? 'pos' : 'neg'}">${DIRECTION[o.direction] ?? o.direction}</span>`,
+      o.quantity, o.price?.toFixed(2), fmtMoney(Math.abs(o.value ?? 0)), ORDER_STATUS[o.status] ?? o.status, esc(o.tag),
+    ]));
+}
+
+function renderStats() {
+  $('tab-stats').innerHTML = Object.entries({ ...state.stats, ...state.runtime })
+    .filter(([k]) => k !== 'OrderListHash')
+    .map(([k, v]) => `<div><span>${esc(k)}</span><span>${esc(v)}</span></div>`).join('') || '<div class="sub">ยังไม่มีข้อมูล</div>';
+}
+
+function addLog(packet) {
+  const el = $('tab-logs');
+  const atBottom = el.scrollHeight - el.scrollTop - el.clientHeight < 40;
+  const isError = packet.Type === 'RuntimeError' || packet.Type === 'HandledError';
+  const line = document.createElement('div');
+  if (isError) line.className = 'err';
+  line.textContent = (packet.Message ?? '') + (packet.StackTrace ? '\n' + packet.StackTrace : '');
+  el.appendChild(line);
+  if (atBottom) el.scrollTop = el.scrollHeight;
+}
+
+function setStatus(status) {
+  $('statusBadge').textContent = status ?? '';
+  $('statusBadge').className = 'badge ' + (status ?? '');
+  const running = currentRun && !['Completed', 'RuntimeError', 'Stopped', 'Error'].includes(status);
+  $('stopBtn').classList.toggle('hidden', !running);
+}
+
+function handlePacket(p) {
+  switch (p.Type) {
+    case 'RunInfo':
+      setStatus(p.status);
+      break;
+    case 'AlgorithmStatus':
+      setStatus(p.Status);
+      break;
+    case 'BacktestResult':
+      state.progress = Number(p.Progress) || 0;
+      applyResults(p.Results, state.progress >= 1);
+      break;
+    case 'RunFinished':
+      setStatus(p.Status);
+      state.progress = p.Status === 'Completed' ? 1 : state.progress;
+      scheduleRender();
+      loadHistory();
+      break;
+    default:
+      if (LOG_TYPES.has(p.Type)) addLog(p);
+  }
+}
+
+function clearView(title) {
+  socket?.close();
+  resetState();
+  $('tab-logs').innerHTML = '';
+  $('title').textContent = title;
+  $('period').textContent = '';
+  setStatus('');
+}
+
+function openRun(meta) {
+  currentRun = meta.id;
+  clearView(meta.algorithm);
+  document.querySelectorAll('#history li').forEach(li => li.classList.toggle('on', li.dataset.id === meta.id));
+  if (['Running', 'Starting'].includes(meta.status)) {
+    const proto = location.protocol === 'https:' ? 'wss' : 'ws';
+    socket = new WebSocket(`${proto}://${location.host}/ws/backtests/${meta.id}`);
+    socket.onmessage = e => handlePacket(JSON.parse(e.data));
+    setStatus(meta.status);
+  } else {
+    setStatus(meta.status);
+    fetch(`/api/backtests/${meta.id}/result`)
+      .then(r => r.ok ? r.json() : Promise.reject())
+      .then(d => { state.progress = 1; applyResults(d, true); })
+      .catch(() => { $('period').textContent = 'ไม่มีไฟล์ผลลัพธ์ (ดู console.log ในโฟลเดอร์ results)'; });
+  }
+}
+
+async function loadHistory() {
+  try {
+    const list = await (await fetch('/api/backtests')).json();
+    $('history').innerHTML = list.map(m => {
+      const profit = m.statistics?.['Net Profit'];
+      return `<li data-id="${esc(m.id)}" class="${m.id === currentRun ? 'on' : ''}">
+        <div style="min-width:0"><div class="name">${esc(m.algorithm)}</div>
+        <div class="sub">${new Date(m.created).toLocaleString('en-GB')}${profit ? ` · <span class="${signClass(num(profit))}">${esc(profit)}</span>` : ''}</div></div>
+        <span class="badge ${esc(m.status)}">${esc(m.status)}</span></li>`;
+    }).join('') || '<li class="sub">ยังไม่มีประวัติ</li>';
+    $('history').querySelectorAll('li[data-id]').forEach(li =>
+      li.addEventListener('click', () => openRun(list.find(m => m.id === li.dataset.id))));
+  } catch { /* server unavailable, e.g. page opened as a file */ }
+}
+
+async function loadAlgorithms() {
+  try {
+    const names = await (await fetch('/api/algorithms')).json();
+    $('algorithmList').innerHTML = names.map(n => `<option value="${esc(n)}">`).join('');
+  } catch { }
+}
+
+$('runForm').addEventListener('submit', async e => {
+  e.preventDefault();
+  $('formError').textContent = '';
+  const parameters = Object.fromEntries($('params').value.split('\n')
+    .map(l => l.trim()).filter(l => l.includes('='))
+    .map(l => [l.slice(0, l.indexOf('=')).trim(), l.slice(l.indexOf('=') + 1).trim()]));
+  const body = {
+    algorithm: $('algorithm').value.trim(),
+    start: $('start').value || null,
+    end: $('end').value || null,
+    cash: $('cash').value ? Number($('cash').value) : null,
+    parameters,
+  };
+  $('runBtn').disabled = true;
+  try {
+    const res = await fetch('/api/backtests', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+    const data = await res.json();
+    if (!res.ok) throw new Error(typeof data.detail === 'string' ? data.detail : JSON.stringify(data.detail));
+    openRun(data);
+    loadHistory();
+  } catch (err) {
+    $('formError').textContent = err.message;
+  } finally {
+    $('runBtn').disabled = false;
+  }
+});
+
+$('stopBtn').addEventListener('click', () => currentRun && fetch(`/api/backtests/${currentRun}/stop`, { method: 'POST' }));
+
+$('file').addEventListener('change', e => {
+  const file = e.target.files[0];
+  if (!file) return;
+  currentRun = null;
+  clearView(file.name.replace(/\.json$/, ''));
+  file.text().then(t => { state.progress = 1; applyResults(JSON.parse(t), true); })
+    .catch(err => alert('อ่านไฟล์ไม่ได้: ' + err.message));
+});
+
+document.querySelectorAll('.tabs button').forEach(b => b.addEventListener('click', () => {
+  document.querySelectorAll('.tabs button').forEach(x => x.classList.toggle('on', x === b));
+  ['logs', 'trades', 'orders', 'stats'].forEach(t => $('tab-' + t).classList.toggle('hidden', t !== b.dataset.tab));
+}));
+
+resetState();
+loadAlgorithms();
+loadHistory();
+</script>
+</body>
+</html>

@@ -1,0 +1,3 @@
+fastapi==0.115.12
+uvicorn[standard]==0.34.2
+pyzmq==27.2.0
