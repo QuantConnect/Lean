@@ -212,12 +212,26 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 dateTimeUtc,
                 algorithmEndDateUtc);
 
-            // A user defined universe can change the configurations of a member it keeps selected, like a new resolution
-            // or a remove and re-add in the same time step. The selected symbols are the same, so this runs before the
-            // unchanged check. Other universes don't change the configurations of their existing members.
-            if (universe is UserDefinedUniverse && universe.Selected != null)
+            // a user defined universe member stays selected when it gets a new resolution or is removed and re-added in the same time step,
+            // so we update its data subscriptions here, the unchanged check below and the new selections loop would skip it
+            if (universe is UserDefinedUniverse userDefinedUniverse
+                && userDefinedUniverse.TryTakeChangedMembers(out var changedMembers, out var replacedConfigs))
             {
-                SynchronizeUserDefinedMemberSubscriptions(universe, dateTimeUtc, algorithmEndDateUtc);
+                foreach (var config in replacedConfigs)
+                {
+                    if (universe.Securities.TryGetValue(config.Symbol, out var member) && _dataManager.RemoveSubscription(config, universe))
+                    {
+                        _internalSubscriptionManager.RemovedSubscriptionRequest(
+                            new SubscriptionRequest(false, universe, member.Security, config, dateTimeUtc, algorithmEndDateUtc));
+                    }
+                }
+                foreach (var symbol in changedMembers)
+                {
+                    if (universe.Securities.TryGetValue(symbol, out var member))
+                    {
+                        AddSubscriptions(universe, member.Security, dateTimeUtc, algorithmEndDateUtc, out _, out _);
+                    }
+                }
             }
 
             // check for no changes second
@@ -281,46 +295,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                 // create the new security, the algorithm thread will add this at the appropriate time
                 var security = GetOrCreateSecurity(pendingAdditions, symbol, universe.UniverseSettings, underlying);
 
-                var addedSubscription = false;
-                var dataFeedAdded = false;
-                var internalFeed = true;
-                foreach (var request in universe.GetSubscriptionRequests(security, dateTimeUtc, algorithmEndDateUtc,
-                                                                         _algorithm.SubscriptionManager.SubscriptionDataConfigService))
-                {
-                    if (!request.TradableDaysInDataTimeZone.Any())
-                    {
-                        // Remove the config from the data manager. universe.GetSubscriptionRequests() might have added the configs
-                        _dataManager.RemoveSubscription(request.Configuration, universe);
-                        continue;
-                    }
-
-                    if (security.Symbol == request.Configuration.Symbol // Just in case check its the same symbol, else AddData will throw.
-                        && !security.Subscriptions.Contains(request.Configuration))
-                    {
-                        // For now this is required for retro compatibility with usages of security.Subscriptions
-                        security.AddData(request.Configuration);
-                    }
-
-                    var toRemove = _currencySubscriptionDataConfigManager.GetSubscriptionDataConfigToRemove(request.Configuration.Symbol);
-                    if (toRemove != null)
-                    {
-                        Log.Trace($"UniverseSelection.ApplyUniverseSelection(): Removing internal currency data feed {toRemove}");
-                        _dataManager.RemoveSubscription(toRemove);
-                    }
-
-                    // 'dataFeedAdded' will help us notify the user for security changes only once per non internal subscription
-                    // for example two universes adding the sample configuration, we don't want two notifications
-                    dataFeedAdded = _dataManager.AddSubscription(request);
-
-                    // only update our security changes if we actually added data
-                    if (!request.IsUniverseSubscription)
-                    {
-                        addedSubscription = true;
-                        // if any config isn't internal then it's not internal
-                        internalFeed &= request.Configuration.IsInternalFeed;
-                        _internalSubscriptionManager.AddedSubscriptionRequest(request);
-                    }
-                }
+                var addedSubscription = AddSubscriptions(universe, security, dateTimeUtc, algorithmEndDateUtc, out var dataFeedAdded, out var internalFeed);
 
                 if (addedSubscription)
                 {
@@ -632,54 +607,17 @@ namespace QuantConnect.Lean.Engine.DataFeeds
         }
 
         /// <summary>
-        /// Brings the data feed in line with the configurations a user defined universe currently
-        /// requests for the selected securities it already holds
+        /// Adds the data subscriptions the universe requests for the given security
         /// </summary>
-        private void SynchronizeUserDefinedMemberSubscriptions(Universe universe, DateTime dateTimeUtc, DateTime algorithmEndDateUtc)
+        /// <returns>True if any non universe subscription was requested</returns>
+        private bool AddSubscriptions(Universe universe, Security security, DateTime dateTimeUtc, DateTime algorithmEndDateUtc,
+            out bool dataFeedAdded, out bool internalFeed)
         {
-            var members = new Dictionary<Symbol, Security>();
-            var requestedConfigs = new HashSet<SubscriptionDataConfig>();
-            foreach (var member in universe.Securities.Values)
-            {
-                var security = member.Security;
-                if (universe.Selected.Contains(security.Symbol))
-                {
-                    members[security.Symbol] = security;
-                    AddUserDefinedMemberSubscriptions(universe, security, requestedConfigs, dateTimeUtc, algorithmEndDateUtc);
-                }
-            }
-
-            if (members.Count == 0)
-            {
-                return;
-            }
-
-            // remove the configurations this universe no longer requests for its members, like the minute feed
-            // left behind by a remove and re-add at tick resolution in the same time step. Only this universe's
-            // request is removed, so another universe using the same configuration is not affected
-            foreach (var subscription in _dataManager.DataFeedSubscriptions.ToList())
-            {
-                if (subscription.IsUniverseSelectionSubscription
-                    || requestedConfigs.Contains(subscription.Configuration)
-                    || !members.TryGetValue(subscription.Configuration.Symbol, out var security)
-                    || !subscription.Universes.Contains(universe))
-                {
-                    continue;
-                }
-
-                if (_dataManager.RemoveSubscription(subscription.Configuration, universe))
-                {
-                    _internalSubscriptionManager.RemovedSubscriptionRequest(new SubscriptionRequest(false, universe, security,
-                        subscription.Configuration, dateTimeUtc, algorithmEndDateUtc));
-                }
-            }
-        }
-
-        private void AddUserDefinedMemberSubscriptions(Universe universe, Security security, HashSet<SubscriptionDataConfig> requestedConfigs,
-            DateTime dateTimeUtc, DateTime algorithmEndDateUtc)
-        {
+            var addedSubscription = false;
+            dataFeedAdded = false;
+            internalFeed = true;
             foreach (var request in universe.GetSubscriptionRequests(security, dateTimeUtc, algorithmEndDateUtc,
-                _algorithm.SubscriptionManager.SubscriptionDataConfigService))
+                                                                     _algorithm.SubscriptionManager.SubscriptionDataConfigService))
             {
                 if (!request.TradableDaysInDataTimeZone.Any())
                 {
@@ -688,16 +626,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     continue;
                 }
 
-                requestedConfigs.Add(request.Configuration);
-
-                if (_dataManager.DataFeedSubscriptions.TryGetValue(request.Configuration, out var existing)
-                    && !existing.EndOfStream
-                    && existing.Universes.Contains(universe))
-                {
-                    continue;
-                }
-
-                if (security.Symbol == request.Configuration.Symbol
+                if (security.Symbol == request.Configuration.Symbol // Just in case check its the same symbol, else AddData will throw.
                     && !security.Subscriptions.Contains(request.Configuration))
                 {
                     // For now this is required for retro compatibility with usages of security.Subscriptions
@@ -711,13 +640,20 @@ namespace QuantConnect.Lean.Engine.DataFeeds
                     _dataManager.RemoveSubscription(toRemove);
                 }
 
-                _dataManager.AddSubscription(request);
+                // 'dataFeedAdded' will help us notify the user for security changes only once per non internal subscription
+                // for example two universes adding the sample configuration, we don't want two notifications
+                dataFeedAdded = _dataManager.AddSubscription(request);
 
+                // only update our security changes if we actually added data
                 if (!request.IsUniverseSubscription)
                 {
+                    addedSubscription = true;
+                    // if any config isn't internal then it's not internal
+                    internalFeed &= request.Configuration.IsInternalFeed;
                     _internalSubscriptionManager.AddedSubscriptionRequest(request);
                 }
             }
+            return addedSubscription;
         }
 
         private void RemoveSecurityFromUniverse(

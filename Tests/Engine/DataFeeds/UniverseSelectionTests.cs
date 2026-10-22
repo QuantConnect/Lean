@@ -560,6 +560,31 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             Assert.IsTrue(algorithm.Securities.ContainsKey(qqq));
         }
 
+        [Test]
+        public void RemoveAndReaddAtSameResolutionInOneTimeStepKeepsDataSubscription()
+        {
+            var algorithm = new AlgorithmStub(new MockDataFeedWithSubscription());
+            algorithm.SetStartDate(2012, 3, 27);
+            algorithm.SetEndDate(2012, 3, 30);
+
+            var qqq = algorithm.AddEquity("QQQ", Resolution.Minute).Symbol;
+            algorithm.OnEndOfTimeStep();
+
+            var universe = algorithm.UniverseManager[UserDefinedUniverse.CreateSymbol(SecurityType.Equity, Market.USA)];
+            var selectionTime = algorithm.EndDate.ConvertToUtc(algorithm.TimeZone).Subtract(TimeSpan.FromDays(2));
+            ApplyUserDefinedSelection(algorithm, universe, selectionTime);
+            var subscriptions = algorithm.DataManager.DataFeedSubscriptions.Where(x => x.Configuration.Symbol == qqq).ToList();
+            Assert.IsNotEmpty(subscriptions);
+
+            Assert.IsTrue(algorithm.RemoveSecurity(qqq));
+            algorithm.AddEquity("QQQ", Resolution.Minute);
+            algorithm.OnEndOfTimeStep();
+            ApplyUserDefinedSelection(algorithm, universe, selectionTime);
+
+            CollectionAssert.AreEquivalent(subscriptions, algorithm.DataManager.DataFeedSubscriptions.Where(x => x.Configuration.Symbol == qqq));
+            Assert.IsTrue(algorithm.Securities[qqq].IsTradable);
+        }
+
         private static void ApplyUserDefinedSelection(AlgorithmStub algorithm, Universe universe, DateTime selectionTimeUtc)
         {
             algorithm.DataManager.UniverseSelection.ApplyUniverseSelection(
