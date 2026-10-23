@@ -2044,6 +2044,39 @@ namespace QuantConnect.Tests.Engine.BrokerageTransactionHandlerTests
             Assert.AreEqual(_algorithm.OrderEvents.Count(orderEvent => orderEvent.Status == OrderStatus.Invalid), 1);
         }
 
+        [TestCase(true, 1, 0)]
+        [TestCase(false, 0, 7)]
+        public void ProcessSynchronousEventsClearsExpiredOptionHoldingsOnlyInLiveMode(bool liveMode, int expectedTickets, int expectedOptionPosition)
+        {
+            // Arrange: a long SPY put held past its expiry, OTM, so it expires worthless
+            var algorithm = new TestAlgorithm();
+            var equity = algorithm.AddEquity("SPY");
+            var optionSymbol = Symbol.CreateOption(equity.Symbol, equity.Symbol.ID.Market, OptionStyle.American, OptionRight.Put, 450m, new DateTime(2021, 9, 8));
+            var option = algorithm.AddOptionContract(optionSymbol);
+            algorithm.Portfolio[equity.Symbol].SetHoldings(460m, 100);
+            algorithm.Portfolio[option.Symbol].SetHoldings(0.01m, 7);
+            equity.SetMarketPrice(new Tick { Value = 460m });
+            algorithm.SetLiveMode(liveMode);
+
+            using var brokerage = new NoSubmitTestBrokerage(algorithm);
+            _transactionHandler = new TestBrokerageTransactionHandler();
+            _transactionHandler.Initialize(algorithm, brokerage, new BacktestingResultHandler());
+            algorithm.Transactions.SetOrderProcessor(_transactionHandler);
+
+            // 8 AM ET the day after expiry, inside the daily cash sync window
+            _transactionHandler.TestCurrentTimeUtc = new DateTime(2021, 9, 9, 12, 0, 0);
+
+            // Act: two time steps, the second must not book anything more
+            _transactionHandler.ProcessSynchronousEvents();
+            _transactionHandler.ProcessSynchronousEvents();
+            _transactionHandler.Exit();
+
+            // Assert
+            Assert.That(algorithm.Transactions.GetOrderTickets().Count(), Is.EqualTo(expectedTickets));
+            Assert.That(algorithm.Portfolio[optionSymbol].Quantity, Is.EqualTo(expectedOptionPosition));
+            Assert.That(algorithm.Portfolio[equity.Symbol].Quantity, Is.EqualTo(100));
+        }
+
         // Short Call --> OTM (expired worthless)
         [TestCase(-1, OptionRight.Call, 455, 100, 450, 1, 0, 100, "OTM")]
         // Short Put --> OTM (expired worthless)
