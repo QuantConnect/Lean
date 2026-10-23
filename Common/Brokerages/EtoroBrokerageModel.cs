@@ -75,6 +75,17 @@ namespace QuantConnect.Brokerages
         }
 
         /// <summary>
+        /// eToro global leverage rule
+        /// </summary>
+        /// <param name="security">Security</param>
+        /// <returns>1, the leverage eToro opens every position at</returns>
+        public override decimal GetLeverage(Security security)
+        {
+            // no leverage is sent with an order, so eToro opens every position at 1
+            return 1m;
+        }
+
+        /// <summary>
         /// Returns true if the brokerage could accept this order. This takes into account order type, security type.
         /// </summary>
         /// <param name="security">The security of the order</param>

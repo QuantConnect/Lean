@@ -135,6 +135,16 @@ namespace QuantConnect.Tests.Common.Brokerages
             Assert.That(_brokerageModel.GetFeeModel(security), Is.InstanceOf<EtoroFeeModel>());
         }
 
+        [TestCase(SecurityType.Equity)]
+        [TestCase(SecurityType.Crypto)]
+        [TestCase(SecurityType.Forex)]
+        public void GetLeverageReturnsOne(SecurityType securityType)
+        {
+            var security = GetSecurityForType(securityType);
+
+            Assert.That(_brokerageModel.GetLeverage(security), Is.EqualTo(1m));
+        }
+
         private static Security GetSecurityForType(SecurityType securityType)
         {
             switch (securityType)
