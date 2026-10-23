@@ -742,7 +742,6 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
 
             _signalExport.Flush(CurrentTimeUtc);
 
-            // the delisting at expiry is only processed in backtesting, so in live the expired contracts are cleared here
             if (!_algorithm.IsWarmingUp)
             {
                 ClearExpiredOptionHoldings();
