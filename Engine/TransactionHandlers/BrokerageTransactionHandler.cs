@@ -742,6 +742,12 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
 
             _signalExport.Flush(CurrentTimeUtc);
 
+            // the delisting at expiry is only processed in backtesting, so in live the expired contracts are cleared here
+            if (!_algorithm.IsWarmingUp)
+            {
+                ClearExpiredOptionHoldings();
+            }
+
             // check if the brokerage should perform cash sync now
             if (!_algorithm.IsWarmingUp && _brokerage.ShouldPerformCashSync(CurrentTimeUtc))
             {
@@ -1727,6 +1733,27 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
                     // Process this order event
                     HandleOrderEvent(fill);
                 }
+            }
+        }
+
+        /// <summary>
+        /// Clears the holdings in option contracts past their expiry, the same way a brokerage position update with a zero
+        /// position does, for the brokerages that report nothing when a contract expires
+        /// </summary>
+        private void ClearExpiredOptionHoldings()
+        {
+            var expiredSymbols = new List<Symbol>();
+            foreach (var security in _algorithm.Securities.Values)
+            {
+                if (security.Invested && security.Symbol.SecurityType.IsOption() && OptionSymbol.IsOptionContractExpired(security.Symbol, CurrentTimeUtc))
+                {
+                    expiredSymbols.Add(security.Symbol);
+                }
+            }
+
+            foreach (var symbol in expiredSymbols)
+            {
+                HandleOptionNotification(new OptionNotificationEventArgs(symbol, 0));
             }
         }
 
