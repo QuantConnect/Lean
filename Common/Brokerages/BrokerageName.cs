@@ -217,6 +217,11 @@ namespace QuantConnect.Brokerages
         /// <summary>
         /// Transaction and submit/execution rules will use Clear Street models
         /// </summary>
-        ClearStreet
+        ClearStreet,
+
+        /// <summary>
+        /// Transaction and submit/execution rules will use eToro models
+        /// </summary>
+        Etoro
     }
 }
