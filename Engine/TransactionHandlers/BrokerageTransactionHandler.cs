@@ -1742,18 +1742,12 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
         /// </summary>
         private void ClearExpiredOptionHoldings()
         {
-            var expiredSymbols = new List<Symbol>();
             foreach (var security in _algorithm.Securities.Values)
             {
                 if (security.Invested && security.Symbol.SecurityType.IsOption() && OptionSymbol.IsOptionContractExpired(security.Symbol, CurrentTimeUtc))
                 {
-                    expiredSymbols.Add(security.Symbol);
+                    HandleOptionNotification(new OptionNotificationEventArgs(security.Symbol, 0));
                 }
-            }
-
-            foreach (var symbol in expiredSymbols)
-            {
-                HandleOptionNotification(new OptionNotificationEventArgs(symbol, 0));
             }
         }
 
