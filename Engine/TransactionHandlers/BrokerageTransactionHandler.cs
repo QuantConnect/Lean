@@ -742,14 +742,10 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
 
             _signalExport.Flush(CurrentTimeUtc);
 
-            if (!_algorithm.IsWarmingUp)
-            {
-                ClearExpiredOptionHoldings();
-            }
-
             // check if the brokerage should perform cash sync now
             if (!_algorithm.IsWarmingUp && _brokerage.ShouldPerformCashSync(CurrentTimeUtc))
             {
+                ClearExpiredOptionHoldings();
                 // only perform cash syncs if we haven't had a fill for at least 10 seconds
                 if (TimeSinceLastFill > TimeSpan.FromSeconds(10))
                 {
@@ -1737,7 +1733,7 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
 
         /// <summary>
         /// Clears the holdings in option contracts past their expiry, the same way a brokerage position update with a zero
-        /// position does, for the brokerages that report nothing when a contract expires
+        /// position does, for the brokerages that report nothing when a contract expires. Runs once a day with the cash sync.
         /// </summary>
         private void ClearExpiredOptionHoldings()
         {

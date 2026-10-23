@@ -2063,8 +2063,8 @@ namespace QuantConnect.Tests.Engine.BrokerageTransactionHandlerTests
             _transactionHandler.Initialize(algorithm, brokerage, new BacktestingResultHandler());
             algorithm.Transactions.SetOrderProcessor(_transactionHandler);
 
-            // 1 AM ET the day after expiry, before the daily cash sync time
-            _transactionHandler.TestCurrentTimeUtc = new DateTime(2021, 9, 9, 5, 0, 0);
+            // 8 AM ET the day after expiry, inside the daily cash sync window
+            _transactionHandler.TestCurrentTimeUtc = new DateTime(2021, 9, 9, 12, 0, 0);
 
             // Act: two time steps, the second must not book anything more
             _transactionHandler.ProcessSynchronousEvents();
