@@ -51,6 +51,8 @@ namespace QuantConnect.Orders.Fills
             // filling at a stale price when the latest data is more than one resolution bar behind the order submission
             // time (e.g. the first bar of the session after the open, or an intraday data gap). Otherwise fill on the
             // stale price with a warning.
+            // Fetched lazily and reused across the stale-data check and the fill-price resolution so the subscription
+            // configs are resolved at most once per fill.
             List<SubscriptionDataConfig> subscriptionConfigs = null;
             if (pricesEndTimeUtc.Add(Parameters.StalePriceTimeSpan) < order.Time)
             {

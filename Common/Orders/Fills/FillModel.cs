@@ -1122,7 +1122,7 @@ namespace QuantConnect.Orders.Fills
         /// Helper method to determine if the exchange is open before filling. Will allow pre/post market fills to occur based on configuration
         /// </summary>
         /// <param name="asset">Security which has subscribed data types</param>
-        protected virtual bool IsExchangeOpen(Security asset)
+        protected bool IsExchangeOpen(Security asset)
         {
             var configs = GetSubscriptionDataConfigs(asset);
             if (configs.Count == 0)
