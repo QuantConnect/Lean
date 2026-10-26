@@ -41,7 +41,8 @@ namespace QuantConnect.Orders.Fills
 
             if (order.Status == OrderStatus.Canceled) return fill;
 
-            // make sure the exchange is open on regular/extended market hours before filling
+            // Unlike equities where market orders are restricted to regular hours, futures trade near 24h
+            // and market fills follow the subscription's extended hours setting
             if (!IsExchangeOpen(asset)) return fill;
 
             var prices = GetPricesCheckingPythonWrapper(asset, order.Direction);
