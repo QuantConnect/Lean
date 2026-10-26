@@ -745,10 +745,10 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
             // check if the brokerage should perform cash sync now
             if (!_algorithm.IsWarmingUp && _brokerage.ShouldPerformCashSync(CurrentTimeUtc))
             {
-                ClearExpiredOptionHoldings();
                 // only perform cash syncs if we haven't had a fill for at least 10 seconds
                 if (TimeSinceLastFill > TimeSpan.FromSeconds(10))
                 {
+                    SyncOptionHoldings();
                     if (!_brokerage.PerformCashSync(_algorithm, CurrentTimeUtc, () => TimeSinceLastFill))
                     {
                         if (++_failedCashSyncAttempts >= MaxCashSyncAttempts)
@@ -1732,16 +1732,41 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
         }
 
         /// <summary>
-        /// Clears the holdings in option contracts past their expiry, the same way a brokerage position update with a zero
-        /// position does, for the brokerages that report nothing when a contract expires. Runs once a day with the cash sync.
+        /// Syncs the option holdings with the brokerage, the same way a brokerage position update does, for the brokerages
+        /// that report nothing when a contract expires or is assigned. Runs once a day with the cash sync.
         /// </summary>
-        private void ClearExpiredOptionHoldings()
+        private void SyncOptionHoldings()
         {
+            Dictionary<Symbol, decimal> brokerageHoldings = null;
             foreach (var security in _algorithm.Securities.Values)
             {
-                if (security.Invested && security.Symbol.SecurityType.IsOption() && OptionSymbol.IsOptionContractExpired(security.Symbol, CurrentTimeUtc))
+                if (!security.Invested || !security.Symbol.SecurityType.IsOption())
                 {
-                    HandleOptionNotification(new OptionNotificationEventArgs(security.Symbol, 0));
+                    continue;
+                }
+
+                if (brokerageHoldings == null)
+                {
+                    try
+                    {
+                        brokerageHoldings = _brokerage.GetAccountHoldings().ToDictionary(x => x.Symbol, x => x.Quantity);
+                    }
+                    catch (Exception err)
+                    {
+                        Log.Error(err, "BrokerageTransactionHandler.SyncOptionHoldings(): failed to get the account holdings, option holdings not synced.");
+                        return;
+                    }
+                }
+
+                var position = 0m;
+                if (!OptionSymbol.IsOptionContractExpired(security.Symbol, CurrentTimeUtc))
+                {
+                    brokerageHoldings.TryGetValue(security.Symbol, out position);
+                }
+
+                if (position != security.Holdings.Quantity)
+                {
+                    HandleOptionNotification(new OptionNotificationEventArgs(security.Symbol, position));
                 }
             }
         }
