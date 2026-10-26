@@ -71,5 +71,22 @@ namespace QuantConnect.Securities.CryptoFuture
 
             return new ConvertibleCashAmount(notionalPositionValue, cash);
         }
+
+        /// <summary>
+        /// Calculates profit from signed entry and exit position values expressed in the same currency, excluding fees.
+        /// </summary>
+        /// <param name="entryValue">The value of the quantity at entry</param>
+        /// <param name="exitValue">The value of the quantity at exit</param>
+        /// <returns>The profit in the currency of the supplied values</returns>
+        internal override decimal GetProfitFromValueChange(decimal entryValue, decimal exitValue)
+        {
+            if (Symbol.ID.Market != Market.DYDX && ((CryptoFuture)Security).IsCryptoCoinFuture())
+            {
+                // Inverse profit is signed entry value minus signed exit value.
+                return entryValue - exitValue;
+            }
+
+            return base.GetProfitFromValueChange(entryValue, exitValue);
+        }
     }
 }

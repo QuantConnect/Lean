@@ -471,6 +471,17 @@ namespace QuantConnect.Securities
         }
 
         /// <summary>
+        /// Calculates profit from signed entry and exit position values expressed in the same currency, excluding fees.
+        /// </summary>
+        /// <param name="entryValue">The value of the quantity at entry</param>
+        /// <param name="exitValue">The value of the quantity at exit</param>
+        /// <returns>The profit in the currency of the supplied values</returns>
+        internal virtual decimal GetProfitFromValueChange(decimal entryValue, decimal exitValue)
+        {
+            return exitValue - entryValue;
+        }
+
+        /// <summary>
         /// Profit if we closed the holdings right now including the approximate fees in units of the account's currency.
         /// </summary>
         /// <remarks>Does not use the transaction model for market fills but should.</remarks>
@@ -505,7 +516,7 @@ namespace QuantConnect.Securities
 
             var entryValue = GetQuantityValue(quantityToUse, entryPrice ?? AveragePrice).InAccountCurrency;
             var potentialExitValue = GetQuantityValue(quantityToUse, exitPrice ?? price).InAccountCurrency;
-            return potentialExitValue - entryValue - feesInAccountCurrency;
+            return GetProfitFromValueChange(entryValue, potentialExitValue) - feesInAccountCurrency;
         }
 
         /// <summary>

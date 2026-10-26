@@ -14,10 +14,12 @@
 */
 
 using System;
+using System.Collections.Generic;
 using NUnit.Framework;
 using QuantConnect.Algorithm;
 using QuantConnect.Data.Market;
 using QuantConnect.Orders;
+using QuantConnect.Orders.Fees;
 using QuantConnect.Securities;
 using QuantConnect.Securities.CryptoFuture;
 using QuantConnect.Brokerages;
@@ -205,6 +207,106 @@ namespace QuantConnect.Tests.Common.Securities.CryptoFuture
                 new BuyingPowerParameters(algo.Portfolio, cryptoFuture, OrderDirection.Buy));
 
             Assert.AreEqual(0, buyingPower.Value);
+        }
+
+        [TestCase("BTCUSD", Market.Binance, 100, 40000, 44000, 1000)]
+        [TestCase("BTCUSD", Market.Binance, 100, 40000, 36000, -1000)]
+        [TestCase("BTCUSD", Market.Binance, -100, 40000, 44000, -1000)]
+        [TestCase("BTCUSD", Market.Binance, -100, 40000, 36000, 1000)]
+        [TestCase("ADAUSDT", Market.Binance, 100, 0.4, 0.44, 4)]
+        [TestCase("ADAUSDT", Market.Binance, 100, 0.4, 0.36, -4)]
+        [TestCase("ADAUSDT", Market.Binance, -100, 0.4, 0.44, -4)]
+        [TestCase("ADAUSDT", Market.Binance, -100, 0.4, 0.36, 4)]
+        [TestCase("BTCUSD", Market.DYDX, 1, 40000, 44000, 4000)]
+        [TestCase("BTCUSD", Market.DYDX, 1, 40000, 36000, -4000)]
+        [TestCase("BTCUSD", Market.DYDX, -1, 40000, 44000, -4000)]
+        [TestCase("BTCUSD", Market.DYDX, -1, 40000, 36000, 4000)]
+        public void UnrealizedProfitFollowsPriceMove(string ticker, string market, decimal quantity,
+            decimal entryPrice, decimal exitPrice, decimal expectedProfit)
+        {
+            var algo = GetAlgorithm();
+            var cryptoFuture = algo.AddCryptoFuture(ticker, market: market);
+            cryptoFuture.FeeModel = new ConstantFeeModel(2);
+            cryptoFuture.Holdings.SetHoldings(entryPrice, quantity);
+            SetPrice(cryptoFuture, exitPrice);
+
+            // COIN-M: q * 100 * (1 / entry - 1 / exit) BTC, converted to USD at exit.
+            // Linear contracts: q * (exit - entry) in the quote currency (USD or USDT at 1).
+            Assert.Multiple(() =>
+            {
+                Assert.That(cryptoFuture.Holdings.TotalCloseProfit(includeFees: false), Is.EqualTo(expectedProfit).Within(0.00000001m));
+                Assert.That(cryptoFuture.Holdings.UnrealizedProfit, Is.EqualTo(expectedProfit - 2).Within(0.00000001m));
+                Assert.That(algo.Portfolio.TotalPortfolioValue,
+                    Is.EqualTo(algo.Portfolio.CashBook.TotalValueInAccountCurrency + expectedProfit - 2).Within(0.00000001m));
+                Assert.That(cryptoFuture.Holdings.TotalCloseProfit(includeFees: false,
+                    entryPrice: entryPrice, exitPrice: exitPrice, quantity: quantity / 2), Is.EqualTo(expectedProfit / 2).Within(0.00000001m));
+            });
+        }
+
+        [TestCase("BTCUSD", 100, 40000, 44000, 100, 0, 1000)]
+        [TestCase("BTCUSD", 100, 40000, 36000, 100, 0, -1000)]
+        [TestCase("BTCUSD", -100, 40000, 44000, 100, 0, -1000)]
+        [TestCase("BTCUSD", -100, 40000, 36000, 100, 0, 1000)]
+        [TestCase("BTCUSD", 100, 40000, 44000, 40, 0.0001, 400)]
+        [TestCase("BTCUSD", 100, 40000, 36000, 40, 0.0001, -400)]
+        [TestCase("BTCUSD", -100, 40000, 44000, 40, 0.0001, -400)]
+        [TestCase("BTCUSD", -100, 40000, 36000, 40, 0.0001, 400)]
+        [TestCase("ADAUSDT", 100, 0.4, 0.44, 100, 0, 4)]
+        [TestCase("ADAUSDT", -100, 0.4, 0.36, 100, 0, 4)]
+        [TestCase("ADAUSDT", 100, 0.4, 0.36, 40, 0.01, -1.6)]
+        [TestCase("ADAUSDT", -100, 0.4, 0.44, 40, 0.01, -1.6)]
+        public void CloseProfitSettlesInMarginCurrency(string ticker, decimal quantity, decimal entryPrice,
+            decimal exitPrice, decimal absoluteQuantityClosed, decimal fee, decimal expectedProfit)
+        {
+            var algo = GetAlgorithm();
+            var cryptoFuture = algo.AddCryptoFuture(ticker);
+            var isInverse = ticker == "BTCUSD";
+            var marginCash = isInverse ? cryptoFuture.BaseCurrency : cryptoFuture.QuoteCurrency;
+            var otherCash = isInverse ? cryptoFuture.QuoteCurrency : cryptoFuture.BaseCurrency;
+            marginCash.SetAmount(1);
+            cryptoFuture.FeeModel = new ConstantFeeModel(fee, marginCash.Symbol);
+            var orderFee = new OrderFee(new CashAmount(fee, marginCash.Symbol));
+
+            SetPrice(cryptoFuture, entryPrice);
+            algo.Portfolio.ProcessFills(new List<OrderEvent>
+            {
+                new OrderEvent(1, cryptoFuture.Symbol, algo.UtcTime, OrderStatus.Filled,
+                    quantity > 0 ? OrderDirection.Buy : OrderDirection.Sell, entryPrice, quantity, orderFee)
+            });
+
+            SetPrice(cryptoFuture, exitPrice);
+            var cashBeforeClose = marginCash.Amount;
+            var otherCashBeforeClose = otherCash.Amount;
+            var cashValueBeforeClose = algo.Portfolio.CashBook.TotalValueInAccountCurrency;
+            var quantityClosed = Math.Sign(quantity) * absoluteQuantityClosed;
+            algo.Portfolio.ProcessFills(new List<OrderEvent>
+            {
+                new OrderEvent(2, cryptoFuture.Symbol, algo.UtcTime, OrderStatus.Filled,
+                    quantity > 0 ? OrderDirection.Sell : OrderDirection.Buy, exitPrice, -quantityClosed, orderFee)
+            });
+
+            // The literal USD profits use the contract formulas above, scaled to the closed quantity.
+            // Inverse profit settles in BTC at the exit conversion rate; linear profit settles in USDT.
+            var expectedMarginProfit = isInverse ? expectedProfit / exitPrice : expectedProfit;
+            var expectedFees = isInverse ? fee * (entryPrice + exitPrice) : 2 * fee;
+            var expectedRemainingProfit = expectedProfit * (quantity - quantityClosed) / quantityClosed;
+            var closeFeeInAccountCurrency = fee * marginCash.ConversionRate;
+            var remainingLiquidationFee = quantity == quantityClosed ? 0 : closeFeeInAccountCurrency;
+            Assert.Multiple(() =>
+            {
+                Assert.AreEqual(1 - fee, cashBeforeClose, "Opening only debits the fee from collateral");
+                Assert.That(marginCash.Amount - cashBeforeClose, Is.EqualTo(expectedMarginProfit - fee).Within(0.000000000001m));
+                Assert.AreEqual(otherCashBeforeClose, otherCash.Amount);
+                Assert.That(cryptoFuture.Holdings.Profit, Is.EqualTo(expectedProfit).Within(0.00000001m));
+                Assert.That(cryptoFuture.Holdings.LastTradeProfit, Is.EqualTo(expectedProfit).Within(0.00000001m));
+                Assert.That(cryptoFuture.Holdings.TotalFees, Is.EqualTo(expectedFees).Within(0.00000001m));
+                Assert.That(cryptoFuture.Holdings.NetProfit, Is.EqualTo(expectedProfit - expectedFees).Within(0.00000001m));
+                Assert.AreEqual(quantity - quantityClosed, cryptoFuture.Holdings.Quantity);
+                Assert.That(cryptoFuture.Holdings.UnrealizedProfit,
+                    Is.EqualTo(expectedRemainingProfit - remainingLiquidationFee).Within(0.00000001m));
+                Assert.That(algo.Portfolio.TotalPortfolioValue, Is.EqualTo(cashValueBeforeClose + expectedProfit + expectedRemainingProfit
+                    - closeFeeInAccountCurrency - remainingLiquidationFee).Within(0.00000001m));
+            });
         }
 
         private static QCAlgorithm GetAlgorithm()
