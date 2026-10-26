@@ -1737,7 +1737,7 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
         /// </summary>
         private void SyncOptionHoldings()
         {
-            Dictionary<Symbol, decimal> brokerageHoldings = null;
+            var brokerageHoldings = default(Dictionary<Symbol, decimal>);
             foreach (var security in _algorithm.Securities.Values)
             {
                 if (!security.Invested || !security.Symbol.SecurityType.IsOption())
@@ -1747,9 +1747,17 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
 
                 if (brokerageHoldings == null)
                 {
+                    Log.Trace("BrokerageTransactionHandler.SyncOptionHoldings(): Start syncing option holdings...");
                     try
                     {
-                        brokerageHoldings = _brokerage.GetAccountHoldings().ToDictionary(x => x.Symbol, x => x.Quantity);
+                        brokerageHoldings = [];
+                        foreach (var holding in _brokerage.GetAccountHoldings())
+                        {
+                            if (holding.Symbol.SecurityType.IsOption())
+                            {
+                                brokerageHoldings.Add(holding.Symbol, holding.Quantity);
+                            }
+                        }
                     }
                     catch (Exception err)
                     {
@@ -1780,6 +1788,11 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
 
                     HandleOptionNotification(new OptionNotificationEventArgs(security.Symbol, position));
                 }
+            }
+
+            if (brokerageHoldings != null)
+            {
+                Log.Trace($"BrokerageTransactionHandler.SyncOptionHoldings(): Brokerage option holdings count {brokerageHoldings.Count}. Exit");
             }
         }
 
