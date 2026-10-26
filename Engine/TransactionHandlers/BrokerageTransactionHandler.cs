@@ -1766,6 +1766,18 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
 
                 if (position != security.Holdings.Quantity)
                 {
+                    var underlying = (security as Option).Underlying;
+                    if (underlying.Price == 0)
+                    {
+                        var lastKnownPrice = _algorithm.GetLastKnownPrice(underlying.Symbol);
+                        underlying.SetMarketPrice(lastKnownPrice);
+                        if (underlying.Price == 0)
+                        {
+                            Log.Error($"BrokerageTransactionHandler.SyncOptionHoldings(): no price for {underlying.Symbol.Value}, {security.Symbol.Value} not synced.");
+                            continue;
+                        }
+                    }
+
                     HandleOptionNotification(new OptionNotificationEventArgs(security.Symbol, position));
                 }
             }

@@ -2078,8 +2078,9 @@ namespace QuantConnect.Tests.Engine.BrokerageTransactionHandlerTests
             // 8 AM ET the day after expiry, inside the daily cash sync window
             _transactionHandler.TestCurrentTimeUtc = new DateTime(2021, 9, 9, 12, 0, 0);
 
-            // Act: two time steps, the second must not book anything more
+            // Act: two daily passes, the second must find nothing to book
             _transactionHandler.ProcessSynchronousEvents();
+            _transactionHandler.TestCurrentTimeUtc = _transactionHandler.TestCurrentTimeUtc.AddDays(1);
             _transactionHandler.ProcessSynchronousEvents();
             _transactionHandler.Exit();
 
@@ -2123,13 +2124,60 @@ namespace QuantConnect.Tests.Engine.BrokerageTransactionHandlerTests
             // 8 AM ET the day before expiry, inside the daily cash sync window
             _transactionHandler.TestCurrentTimeUtc = new DateTime(2021, 9, 9, 12, 0, 0);
 
-            // Act: two time steps, the second must not book anything more
+            // Act: two daily passes, the second must find nothing to book
             _transactionHandler.ProcessSynchronousEvents();
+            _transactionHandler.TestCurrentTimeUtc = _transactionHandler.TestCurrentTimeUtc.AddDays(1);
             _transactionHandler.ProcessSynchronousEvents();
             _transactionHandler.Exit();
 
             // Assert
             Assert.That(algorithm.Transactions.GetOrderTickets().Count(), Is.EqualTo(brokeragePosition == optionPosition ? 0 : 1));
+            Assert.That(algorithm.Portfolio[optionSymbol].Quantity, Is.EqualTo(expectedOptionPosition));
+            Assert.That(algorithm.Portfolio[equity.Symbol].Quantity, Is.EqualTo(expectedUnderlyingPosition));
+        }
+
+        [TestCase(true, -7, false, 1, 0, -600, Description = "Short Call -> ITM, no underlying price after a restart, seeded from history, assigned in full")]
+        [TestCase(false, -7, false, 0, -7, 100, Description = "Short Call -> ITM, no underlying price and no history, not synced")]
+        [TestCase(true, 1, true, 1, 0, 200, Description = "Long Call -> ITM, expired, no underlying price after a restart, seeded from history, exercised, gets the shares")]
+        public void ProcessSynchronousEventsSeedsUnderlyingPriceFromHistoryWhenMissing(
+            bool historyHasPrice,
+            int optionPosition,
+            bool expired,
+            int expectedTickets,
+            int expectedOptionPosition,
+            int expectedUnderlyingPosition
+            )
+        {
+            // Arrange: a SPY call loaded after a night restart, the underlying has no price yet
+            var algorithm = new TestAlgorithm
+            {
+                HistoryProvider = historyHasPrice ? new LastPriceHistoryProvider(455m) : new EmptyHistoryProvider()
+            };
+            var equity = algorithm.AddEquity("SPY");
+            // the contract expired the day before the pass, or expires the day after
+            var expiry = expired ? new DateTime(2021, 9, 8) : new DateTime(2021, 9, 10);
+            var optionSymbol = Symbol.CreateOption(equity.Symbol, equity.Symbol.ID.Market, OptionStyle.American, OptionRight.Call, 450m, expiry);
+            var option = algorithm.AddOptionContract(optionSymbol);
+            algorithm.Portfolio[equity.Symbol].SetHoldings(455m, 100);
+            algorithm.Portfolio[option.Symbol].SetHoldings(0.01m, optionPosition);
+            algorithm.SetLiveMode(true);
+
+            using var brokerage = new NoSubmitTestBrokerage(algorithm);
+            // the brokerage no longer lists the contract
+            brokerage.AccountHoldings = new List<Holding> { new Holding { Symbol = equity.Symbol, Quantity = 100 } };
+            _transactionHandler = new TestBrokerageTransactionHandler();
+            _transactionHandler.Initialize(algorithm, brokerage, new BacktestingResultHandler());
+            algorithm.Transactions.SetOrderProcessor(_transactionHandler);
+
+            // 8 AM ET on 2021-09-09, inside the daily cash sync window
+            _transactionHandler.TestCurrentTimeUtc = new DateTime(2021, 9, 9, 12, 0, 0);
+
+            // Act
+            _transactionHandler.ProcessSynchronousEvents();
+            _transactionHandler.Exit();
+
+            // Assert
+            Assert.That(algorithm.Transactions.GetOrderTickets().Count(), Is.EqualTo(expectedTickets));
             Assert.That(algorithm.Portfolio[optionSymbol].Quantity, Is.EqualTo(expectedOptionPosition));
             Assert.That(algorithm.Portfolio[equity.Symbol].Quantity, Is.EqualTo(expectedUnderlyingPosition));
         }
@@ -3230,6 +3278,33 @@ namespace QuantConnect.Tests.Engine.BrokerageTransactionHandlerTests
             public override IEnumerable<Slice> GetHistory(IEnumerable<HistoryRequest> requests, DateTimeZone sliceTimeZone)
             {
                 return Enumerable.Empty<Slice>();
+            }
+        }
+
+        internal class LastPriceHistoryProvider : HistoryProviderBase
+        {
+            private readonly decimal _price;
+
+            public override int DataPointCount => 1;
+
+            public LastPriceHistoryProvider(decimal price)
+            {
+                _price = price;
+            }
+
+            public override void Initialize(HistoryProviderInitializeParameters parameters)
+            {
+            }
+
+            public override IEnumerable<Slice> GetHistory(IEnumerable<HistoryRequest> requests, DateTimeZone sliceTimeZone)
+            {
+                var time = new DateTime(2021, 9, 8, 16, 0, 0);
+                var bars = new List<BaseData>();
+                foreach (var symbol in requests.Select(x => x.Symbol).Distinct())
+                {
+                    bars.Add(new TradeBar(time, symbol, _price, _price, _price, _price, 0));
+                }
+                return new[] { new Slice(time, bars, time) };
             }
         }
 
