@@ -748,8 +748,8 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
                 // only perform cash syncs if we haven't had a fill for at least 10 seconds
                 if (TimeSinceLastFill > TimeSpan.FromSeconds(10))
                 {
-                    SyncOptionHoldings();
-                    if (!_brokerage.PerformCashSync(_algorithm, CurrentTimeUtc, () => TimeSinceLastFill))
+                    // a failed holdings read counts as a failed sync attempt, retried at the next pass like the cash sync
+                    if (!SyncOptionHoldings() || !_brokerage.PerformCashSync(_algorithm, CurrentTimeUtc, () => TimeSinceLastFill))
                     {
                         if (++_failedCashSyncAttempts >= MaxCashSyncAttempts)
                         {
@@ -1735,7 +1735,8 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
         /// Syncs the option holdings with the brokerage, the same way a brokerage position update does, for the brokerages
         /// that report nothing when a contract expires or is assigned. Runs once a day with the cash sync.
         /// </summary>
-        private void SyncOptionHoldings()
+        /// <returns>False when the brokerage holdings could not be read, so the caller retries at the next pass like a failed cash sync</returns>
+        private bool SyncOptionHoldings()
         {
             var brokerageHoldings = default(Dictionary<Symbol, decimal>);
             foreach (var security in _algorithm.Securities.Values)
@@ -1762,7 +1763,7 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
                     catch (Exception err)
                     {
                         Log.Error(err, "BrokerageTransactionHandler.SyncOptionHoldings(): failed to get the account holdings, option holdings not synced.");
-                        return;
+                        return false;
                     }
                 }
 
@@ -1794,6 +1795,8 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
             {
                 Log.Trace($"BrokerageTransactionHandler.SyncOptionHoldings(): Brokerage option holdings count {brokerageHoldings.Count}. Exit");
             }
+
+            return true;
         }
 
         /// <summary>

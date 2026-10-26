@@ -2182,6 +2182,57 @@ namespace QuantConnect.Tests.Engine.BrokerageTransactionHandlerTests
             Assert.That(algorithm.Portfolio[equity.Symbol].Quantity, Is.EqualTo(expectedUnderlyingPosition));
         }
 
+        [TestCase(1, 1, 0, 200, "", Description = "Long Call -> ITM, expired, the first holdings read fails, booked on the next pass")]
+        [TestCase(4, 1, 0, 200, "", Description = "Long Call -> ITM, expired, four holdings reads fail, booked on the fifth pass")]
+        [TestCase(5, 0, 1, 100, "The maximum number of attempts for brokerage cash sync has been reached.", Description = "Long Call -> ITM, expired, five holdings reads fail, the fifth pass throws like a failed cash sync")]
+        public void ProcessSynchronousEventsRetriesTheOptionHoldingsSyncWhenTheBrokerageReadFails(
+            int failedReads,
+            int expectedTickets,
+            int expectedOptionPosition,
+            int expectedUnderlyingPosition,
+            string expectedError
+            )
+        {
+            // Arrange: an expired long SPY call, ITM, with 100 shares of the underlying, in live mode
+            var algorithm = new TestAlgorithm();
+            var equity = algorithm.AddEquity("SPY");
+            var optionSymbol = Symbol.CreateOption(equity.Symbol, equity.Symbol.ID.Market, OptionStyle.American, OptionRight.Call, 450m, new DateTime(2021, 9, 8));
+            var option = algorithm.AddOptionContract(optionSymbol);
+            algorithm.Portfolio[equity.Symbol].SetHoldings(455m, 100);
+            algorithm.Portfolio[option.Symbol].SetHoldings(0.01m, 1);
+            equity.SetMarketPrice(new Tick { Value = 455m });
+            algorithm.SetLiveMode(true);
+
+            using var brokerage = new NoSubmitTestBrokerage(algorithm) { AccountHoldingsFailures = failedReads };
+            _transactionHandler = new TestBrokerageTransactionHandler();
+            _transactionHandler.Initialize(algorithm, brokerage, new BacktestingResultHandler());
+            algorithm.Transactions.SetOrderProcessor(_transactionHandler);
+
+            // 8 AM ET the day after expiry, inside the daily cash sync window
+            _transactionHandler.TestCurrentTimeUtc = new DateTime(2021, 9, 9, 12, 0, 0);
+
+            // Act: one pass per failed read at the same time, so the window stays open, then the pass that reads the holdings
+            var error = string.Empty;
+            try
+            {
+                for (var i = 0; i <= failedReads; i++)
+                {
+                    _transactionHandler.ProcessSynchronousEvents();
+                }
+            }
+            catch (Exception exception)
+            {
+                error = exception.Message;
+            }
+            _transactionHandler.Exit();
+
+            // Assert
+            Assert.That(error, Is.EqualTo(expectedError));
+            Assert.That(algorithm.Transactions.GetOrderTickets().Count(), Is.EqualTo(expectedTickets));
+            Assert.That(algorithm.Portfolio[optionSymbol].Quantity, Is.EqualTo(expectedOptionPosition));
+            Assert.That(algorithm.Portfolio[equity.Symbol].Quantity, Is.EqualTo(expectedUnderlyingPosition));
+        }
+
         // Short Call --> OTM (expired worthless)
         [TestCase(-1, OptionRight.Call, 455, 100, 450, 1, 0, 100, "OTM")]
         // Short Put --> OTM (expired worthless)
@@ -3339,6 +3390,9 @@ namespace QuantConnect.Tests.Engine.BrokerageTransactionHandlerTests
 
             public List<Holding> AccountHoldings { get; set; }
 
+            // the number of GetAccountHoldings calls that throw before one succeeds
+            public int AccountHoldingsFailures { get; set; }
+
             public override bool IsConnected => _underlyingBrokerage.IsConnected;
 
             public NoSubmitTestBrokerage(IAlgorithm algorithm) : base("NoSubmitTestBrokerage")
@@ -3380,6 +3434,11 @@ namespace QuantConnect.Tests.Engine.BrokerageTransactionHandlerTests
 
             public override List<Holding> GetAccountHoldings()
             {
+                if (AccountHoldingsFailures-- > 0)
+                {
+                    throw new Exception("Connection error in GetAccountHoldings");
+                }
+
                 return AccountHoldings ?? _underlyingBrokerage.GetAccountHoldings();
             }
 
