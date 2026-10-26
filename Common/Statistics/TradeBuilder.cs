@@ -32,6 +32,8 @@ namespace QuantConnect.Statistics
         private class TradeState
         {
             internal Trade Trade { get; set; }
+            internal decimal MaxPrice { get; set; }
+            internal decimal MinPrice { get; set; }
             internal decimal MaxProfit { get; set; }
             internal decimal MaxDrawdown { get; set; }
 
@@ -162,6 +164,11 @@ namespace QuantConnect.Statistics
             for (var i = 0; i < position.PendingTrades.Count; i++)
             {
                 var tradeState = position.PendingTrades[i];
+                if (price > tradeState.MaxPrice)
+                    tradeState.MaxPrice = price;
+                else if (price < tradeState.MinPrice)
+                    tradeState.MinPrice = price;
+
                 var trade = tradeState.Trade;
                 var currentProfit = trade.Direction == TradeDirection.Long ? price - trade.EntryPrice : trade.EntryPrice - price;
                 tradeState.UpdateDrawdown(currentProfit);
@@ -192,6 +199,8 @@ namespace QuantConnect.Statistics
                 tradeState.Trade.Quantity /= split.SplitFactor;
                 tradeState.Trade.EntryPrice *= split.SplitFactor;
                 tradeState.Trade.ExitPrice *= split.SplitFactor;
+                tradeState.MinPrice *= split.SplitFactor;
+                tradeState.MaxPrice *= split.SplitFactor;
                 tradeState.MaxProfit *= split.SplitFactor;
                 tradeState.MaxDrawdown *= split.SplitFactor;
             }
@@ -274,7 +283,9 @@ namespace QuantConnect.Statistics
                                 Quantity = fill.AbsoluteFillQuantity,
                                 TotalFees = orderFee,
                                 OrderIds = new HashSet<int>() { fill.OrderId }
-                            }
+                            },
+                            MinPrice = fill.FillPrice,
+                            MaxPrice = fill.FillPrice
                         }
                     },
                     MinPrice = fill.FillPrice,
@@ -301,7 +312,9 @@ namespace QuantConnect.Statistics
                         Quantity = fill.AbsoluteFillQuantity,
                         TotalFees = orderFee,
                         OrderIds = new HashSet<int>() { fill.OrderId }
-                    }
+                    },
+                    MinPrice = fill.FillPrice,
+                    MaxPrice = fill.FillPrice
                 });
             }
             else
@@ -328,8 +341,8 @@ namespace QuantConnect.Statistics
                         trade.ProfitLoss = Math.Round((trade.ExitPrice - trade.EntryPrice) * trade.Quantity * (trade.Direction == TradeDirection.Long ? +1 : -1) * conversionRate * multiplier, 2);
                         // if closing multiple trades with the same order, assign order fee only once
                         trade.TotalFees += orderFeeAssigned ? 0 : orderFee;
-                        trade.MAE = Math.Round((trade.Direction == TradeDirection.Long ? position.MinPrice - trade.EntryPrice : trade.EntryPrice - position.MaxPrice) * trade.Quantity * conversionRate * multiplier, 2);
-                        trade.MFE = Math.Round((trade.Direction == TradeDirection.Long ? position.MaxPrice - trade.EntryPrice : trade.EntryPrice - position.MinPrice) * trade.Quantity * conversionRate * multiplier, 2);
+                        trade.MAE = Math.Round((trade.Direction == TradeDirection.Long ? tradeState.MinPrice - trade.EntryPrice : trade.EntryPrice - tradeState.MaxPrice) * trade.Quantity * conversionRate * multiplier, 2);
+                        trade.MFE = Math.Round((trade.Direction == TradeDirection.Long ? tradeState.MaxPrice - trade.EntryPrice : trade.EntryPrice - tradeState.MinPrice) * trade.Quantity * conversionRate * multiplier, 2);
                         trade.EndTradeDrawdown = Math.Round(tradeState.MaxDrawdown * trade.Quantity * conversionRate * multiplier, 2);
 
                         AddNewTrade(trade, fill);
@@ -350,8 +363,8 @@ namespace QuantConnect.Statistics
                             ExitPrice = fill.FillPrice,
                             ProfitLoss = Math.Round((fill.FillPrice - trade.EntryPrice) * absoluteUnexecutedQuantity * (trade.Direction == TradeDirection.Long ? +1 : -1) * conversionRate * multiplier, 2),
                             TotalFees = trade.TotalFees + (orderFeeAssigned ? 0 : orderFee),
-                            MAE = Math.Round((trade.Direction == TradeDirection.Long ? position.MinPrice - trade.EntryPrice : trade.EntryPrice - position.MaxPrice) * absoluteUnexecutedQuantity * conversionRate * multiplier, 2),
-                            MFE = Math.Round((trade.Direction == TradeDirection.Long ? position.MaxPrice - trade.EntryPrice : trade.EntryPrice - position.MinPrice) * absoluteUnexecutedQuantity * conversionRate * multiplier, 2),
+                            MAE = Math.Round((trade.Direction == TradeDirection.Long ? tradeState.MinPrice - trade.EntryPrice : trade.EntryPrice - tradeState.MaxPrice) * absoluteUnexecutedQuantity * conversionRate * multiplier, 2),
+                            MFE = Math.Round((trade.Direction == TradeDirection.Long ? tradeState.MaxPrice - trade.EntryPrice : trade.EntryPrice - tradeState.MinPrice) * absoluteUnexecutedQuantity * conversionRate * multiplier, 2),
                             EndTradeDrawdown = Math.Round(tradeState.MaxDrawdown * absoluteUnexecutedQuantity * conversionRate * multiplier, 2),
                             OrderIds = new HashSet<int>([..trade.OrderIds, fill.OrderId])
                         };
@@ -385,7 +398,9 @@ namespace QuantConnect.Statistics
                                 Quantity = fill.AbsoluteFillQuantity,
                                 TotalFees = 0,
                                 OrderIds = new HashSet<int>() { fill.OrderId }
-                            }
+                            },
+                            MinPrice = fill.FillPrice,
+                            MaxPrice = fill.FillPrice
                         }
                     };
                     position.MinPrice = fill.FillPrice;
