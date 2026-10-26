@@ -21,6 +21,7 @@ using QuantConnect.Securities.Option;
 using QuantConnect.Securities;
 using QuantConnect.Data.Market;
 using QuantConnect.Data;
+using QuantConnect.Orders.Fees;
 using System.Linq;
 
 namespace QuantConnect.Tests.Engine
@@ -114,6 +115,52 @@ namespace QuantConnect.Tests.Engine
 
                 Assert.AreEqual(expected[(Option)option], result.Quantity > 0, $"Failed on strike: {option.Symbol.ID.StrikePrice}");
             }
+        }
+
+        [TestCase(OptionRight.Call, 31.50, 100, 0)]
+        [TestCase(OptionRight.Put, 31.50, 100, 0)]
+        [TestCase(OptionRight.Call, 29.50, 100, 1)]
+        [TestCase(OptionRight.Put, 29.50, 100, 1)]
+        [TestCase(OptionRight.Call, 31.50, 1, 0)]
+        [TestCase(OptionRight.Put, 31.50, 1, 0)]
+        [TestCase(OptionRight.Call, 29.50, 1, 1)]
+        [TestCase(OptionRight.Put, 29.50, 1, 1)]
+        public void SimulatesAssignmentWithContractUnitOfTrade(OptionRight right, decimal bidPrice, int contractMultiplier, int expectedQuantity)
+        {
+            var expiration = new DateTime(2016, 2, 19);
+            var today = expiration.AddDays(-3).AddHours(10);
+            var securities = new SecurityManager(new TimeKeeper(today.ConvertToUtc(TimeZones.NewYork), new[] { TimeZones.NewYork }));
+            var underlying = new Security(
+                SecurityExchangeHours,
+                CreateTradeBarDataConfig(SecurityType.Equity, Symbols.SPY),
+                new Cash(Currencies.USD, 0, 1m),
+                SymbolProperties.GetDefault(Currencies.USD),
+                ErrorCurrencyConverter.Instance,
+                RegisteredSecurityDataTypesProvider.Null,
+                new SecurityCache()
+            ) { FeeModel = new ConstantFeeModel(0) };
+            securities.Add(Symbols.SPY, underlying);
+            underlying.SetMarketPrice(new Tick(today, Symbols.SPY, 200m, 199.99m, 200.01m));
+
+            var strikePrice = right == OptionRight.Call ? 170m : 230m;
+            var symbol = Symbol.CreateOption(Symbols.SPY, Market.USA, OptionStyle.American, right, strikePrice, expiration);
+            var option = new Option(
+                SecurityExchangeHours,
+                CreateTradeBarDataConfig(SecurityType.Option, symbol),
+                new Cash(Currencies.USD, 0, 1m),
+                new OptionSymbolProperties(string.Empty, Currencies.USD, contractMultiplier, 0.01m, 1),
+                ErrorCurrencyConverter.Instance,
+                RegisteredSecurityDataTypesProvider.Null
+            ) { Underlying = underlying, FeeModel = new ConstantFeeModel(0) };
+            securities.Add(symbol, option);
+            option.Holdings.SetHoldings(1, -1);
+            option.SetMarketPrice(new Tick(today, symbol, bidPrice + 0.05m, bidPrice, bidPrice + 0.10m));
+
+            // Exercising and closing the shares returns 29.99 per share for either right.
+            // Selling at 31.50 preserves time value, while exercising beats selling at 29.50.
+            var result = new DefaultOptionAssignmentModel().GetAssignment(new OptionAssignmentParameters(option));
+
+            Assert.AreEqual(expectedQuantity, result.Quantity);
         }
 
         private SubscriptionDataConfig CreateTradeBarDataConfig(SecurityType type, Symbol symbol)
