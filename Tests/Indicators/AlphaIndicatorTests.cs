@@ -434,7 +434,7 @@ namespace QuantConnect.Tests.Indicators
         public override void IndicatorShouldHaveSymbolAfterUpdates()
         {
             var period = 5;
-            var indicator = new Beta(Symbols.AAPL, Symbols.SPX, period);
+            var indicator = new Alpha(Symbols.AAPL, Symbols.SPX, period);
 
             for (var i = 0; i < 2 * period; i++)
             {
@@ -448,6 +448,122 @@ namespace QuantConnect.Tests.Indicators
                 indicator.Update(new TradeBar() { Symbol = Symbols.SPX, Low = 1, High = 2, Volume = 100, Close = 1000 + (i * 15), Time = startTime, EndTime = endTime });
                 Assert.AreEqual(Symbols.SPX, indicator.Current.Symbol);
             }
+        }
+
+        [Test]
+        public void AlphaCalculatesWhenSampleCountsDiverge()
+        {
+            var alphaPeriod = 2;
+            var betaPeriod = 4;
+            var indicator = new Alpha("testAlphaIndicator", Symbols.AAPL, Symbols.SPX, alphaPeriod, betaPeriod);
+
+            // Feed two reference-only (SPX) bars before target (AAPL) starts receiving data
+            var startTime = _reference;
+            for (var i = 0; i < 2; i++)
+            {
+                var barTime = startTime.AddDays(i);
+                indicator.Update(new TradeBar
+                {
+                    Symbol = Symbols.SPX,
+                    Low = 1,
+                    High = 2,
+                    Volume = 100,
+                    Close = 200 + i * 3,
+                    Time = barTime,
+                    EndTime = barTime.AddDays(1)
+                });
+            }
+
+            // Reference now has 2 samples, target has 0 samples
+            Assert.IsFalse(indicator.IsReady);
+            Assert.AreEqual(0m, indicator.Current.Value);
+
+            // Feed 5 timestamp-matched bars for both AAPL and SPX
+            for (var i = 2; i < 7; i++)
+            {
+                var barTime = startTime.AddDays(i);
+                var endTime = barTime.AddDays(1);
+
+                indicator.Update(new TradeBar
+                {
+                    Symbol = Symbols.AAPL,
+                    Low = 1,
+                    High = 2,
+                    Volume = 100,
+                    Close = 100 + (i - 2) * 2,
+                    Time = barTime,
+                    EndTime = endTime
+                });
+
+                indicator.Update(new TradeBar
+                {
+                    Symbol = Symbols.SPX,
+                    Low = 1,
+                    High = 2,
+                    Volume = 100,
+                    Close = 200 + i * 3,
+                    Time = barTime,
+                    EndTime = endTime
+                });
+            }
+
+            // Lifetime sample counts diverge (7 for reference vs 5 for target)
+            // But aligned observation count satisfies both alphaPeriod (2) and betaPeriod (4)
+            Assert.IsTrue(indicator.IsReady);
+            Assert.AreNotEqual(0m, indicator.Current.Value);
+        }
+
+        [Test]
+        public void AlphaCalculatesWithDifferentTimeZonesWhenSampleCountsDiverge()
+        {
+            var indicator = new Alpha("testAlphaIndicator", Symbols.SPY, Symbols.BTCUSD, 2, 4);
+
+            var startTime = _reference;
+            for (var i = 0; i < 2; i++)
+            {
+                var barTime = startTime.AddDays(i);
+                indicator.Update(new TradeBar
+                {
+                    Symbol = Symbols.BTCUSD,
+                    Low = 1,
+                    High = 2,
+                    Volume = 100,
+                    Close = 20000 + i * 100,
+                    Time = barTime,
+                    EndTime = barTime.AddDays(1)
+                });
+            }
+
+            for (var i = 2; i < 7; i++)
+            {
+                var barTime = startTime.AddDays(i);
+                var endTime = barTime.AddDays(1);
+
+                indicator.Update(new TradeBar
+                {
+                    Symbol = Symbols.SPY,
+                    Low = 1,
+                    High = 2,
+                    Volume = 100,
+                    Close = 300 + (i - 2) * 5,
+                    Time = barTime,
+                    EndTime = endTime
+                });
+
+                indicator.Update(new TradeBar
+                {
+                    Symbol = Symbols.BTCUSD,
+                    Low = 1,
+                    High = 2,
+                    Volume = 100,
+                    Close = 20000 + i * 100,
+                    Time = barTime,
+                    EndTime = endTime
+                });
+            }
+
+            Assert.IsTrue(indicator.IsReady);
+            Assert.AreNotEqual(0m, indicator.Current.Value);
         }
     }
 }

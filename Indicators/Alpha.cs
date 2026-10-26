@@ -13,10 +13,12 @@
  * limitations under the License.
 */
 
+using NodaTime;
 using Python.Runtime;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
 using QuantConnect.Python;
+using QuantConnect.Securities;
 using System;
 
 namespace QuantConnect.Indicators
@@ -74,6 +76,36 @@ namespace QuantConnect.Indicators
         private readonly IRiskFreeInterestRateModel _riskFreeInterestRateModel;
 
         /// <summary>
+        /// Market hours database used to resolve exchange time zones
+        /// </summary>
+        private static readonly MarketHoursDatabase _marketHoursDatabase = MarketHoursDatabase.FromDataFolder();
+
+        /// <summary>
+        /// Exchange time zone for the target symbol
+        /// </summary>
+        private readonly DateTimeZone _targetTimeZone;
+
+        /// <summary>
+        /// Exchange time zone for the reference symbol
+        /// </summary>
+        private readonly DateTimeZone _referenceTimeZone;
+
+        /// <summary>
+        /// End time of the latest observation for the target symbol
+        /// </summary>
+        private DateTime _targetEndTime;
+
+        /// <summary>
+        /// End time of the latest observation for the reference symbol
+        /// </summary>
+        private DateTime _referenceEndTime;
+
+        /// <summary>
+        /// End time of the observation for which alpha was last computed
+        /// </summary>
+        private DateTime _lastComputedEndTime;
+
+        /// <summary>
         /// Required period, in data points, for the indicator to be ready and fully initialized.
         /// </summary>
         public int WarmUpPeriod { get; private set; }
@@ -122,6 +154,9 @@ namespace QuantConnect.Indicators
             _referenceROC = new RateOfChange($"{name}_ReferenceROC", alphaPeriod);
 
             _beta = new Beta($"{name}_Beta", _targetSymbol, _referenceSymbol, betaPeriod);
+
+            _targetTimeZone = _marketHoursDatabase.GetExchangeHours(targetSymbol.ID.Market, targetSymbol, targetSymbol.ID.SecurityType).TimeZone;
+            _referenceTimeZone = _marketHoursDatabase.GetExchangeHours(referenceSymbol.ID.Market, referenceSymbol, referenceSymbol.ID.SecurityType).TimeZone;
 
             WarmUpPeriod = alphaPeriod >= betaPeriod ? alphaPeriod + 1 : betaPeriod + 1;
 
@@ -286,10 +321,12 @@ namespace QuantConnect.Indicators
 
             if (inputSymbol == _targetSymbol)
             {
+                _targetEndTime = input.EndTime;
                 _targetROC.Update(input.EndTime, input.Close);
             }
             else if (inputSymbol == _referenceSymbol)
             {
+                _referenceEndTime = input.EndTime;
                 _referenceROC.Update(input.EndTime, input.Close);
             }
             else
@@ -299,12 +336,38 @@ namespace QuantConnect.Indicators
 
             _beta.Update(input);
 
-            if (_targetROC.Samples == _referenceROC.Samples && _referenceROC.Samples > 0)
+            if (AreObservationsAligned() && _lastComputedEndTime != _targetEndTime)
             {
                 ComputeAlpha();
+                _lastComputedEndTime = _targetEndTime;
             }
 
             return _alpha;
+        }
+
+        /// <summary>
+        /// Determines whether both target and reference observations are aligned at the current time step
+        /// </summary>
+        private bool AreObservationsAligned()
+        {
+            if (_targetROC.Samples == 0 || _referenceROC.Samples == 0)
+            {
+                return false;
+            }
+
+            if (_targetEndTime == _referenceEndTime)
+            {
+                return true;
+            }
+
+            if (_targetTimeZone != _referenceTimeZone)
+            {
+                var targetUtc = _targetEndTime.ConvertToUtc(_targetTimeZone);
+                var referenceUtc = _referenceEndTime.ConvertToUtc(_referenceTimeZone);
+                return targetUtc == referenceUtc || targetUtc.Date == referenceUtc.Date;
+            }
+
+            return false;
         }
 
         /// <summary>
@@ -335,6 +398,9 @@ namespace QuantConnect.Indicators
             _referenceROC.Reset();
             _beta.Reset();
             _alpha = 0m;
+            _targetEndTime = default;
+            _referenceEndTime = default;
+            _lastComputedEndTime = default;
             base.Reset();
         }
     }
