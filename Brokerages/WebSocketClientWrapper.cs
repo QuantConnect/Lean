@@ -41,6 +41,11 @@ namespace QuantConnect.Brokerages
         private readonly object _locker = new object();
 
         /// <summary>
+        /// The permessage-deflate compression options offered to the server when connecting, null to disable compression
+        /// </summary>
+        public WebSocketDeflateOptions DeflateOptions { get; set; }
+
+        /// <summary>
         /// Wraps constructor
         /// </summary>
         /// <param name="url">The target websocket url</param>
@@ -232,6 +237,10 @@ namespace QuantConnect.Brokerages
                             if (_sessionToken != null)
                             {
                                 _client.Options.SetRequestHeader("x-session-token", _sessionToken);
+                            }
+                            if (DeflateOptions != null)
+                            {
+                                _client.Options.DangerousDeflateOptions = DeflateOptions;
                             }
                             _client.ConnectAsync(new Uri(_url), connectionCts.Token).SynchronouslyAwaitTask();
                         }
