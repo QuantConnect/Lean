@@ -424,10 +424,11 @@ namespace QuantConnect.Statistics
                 if (position.PendingFills.Aggregate(0m, (d, x) => d + x.FillQuantity) + fill.FillQuantity == 0 || fill.AbsoluteFillQuantity > Math.Abs(position.PendingFills.Aggregate(0m, (d, x) => d + x.FillQuantity)))
                 {
                     // trade closed
+                    var reverseQuantity = position.PendingFills.Sum(x => x.FillQuantity) + fill.FillQuantity;
+                    // Only the closing part of the fill belongs in the exit average.
+                    fill.FillQuantity -= reverseQuantity;
                     position.PendingFills.Add(fill);
                     position.TotalFees += orderFee;
-
-                    var reverseQuantity = position.PendingFills.Sum(x => x.FillQuantity);
 
                     var index = _matchingMethod == FillMatchingMethod.FIFO ? 0 : position.PendingFills.Count - 1;
 

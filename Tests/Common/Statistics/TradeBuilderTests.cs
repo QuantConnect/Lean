@@ -828,6 +828,75 @@ namespace QuantConnect.Tests.Common.Statistics
         }
 
         [Test]
+        public void FlatToFlatReversalAfterPartialExit(
+            [Values] TradeDirection direction,
+            [Values] FillMatchingMethod matchingMethod)
+        {
+            var builder = new TradeBuilder(FillGroupingMethod.FlatToFlat, matchingMethod);
+            builder.SetSecurityManager(_securityManager);
+            var sign = direction == TradeDirection.Long ? 1 : -1;
+            var entryDirection = direction == TradeDirection.Long ? OrderDirection.Buy : OrderDirection.Sell;
+            var exitDirection = direction == TradeDirection.Long ? OrderDirection.Sell : OrderDirection.Buy;
+            var time = _startTime;
+
+            builder.ProcessFill(
+                new OrderEvent(1, Symbols.SPY, time, OrderStatus.Filled, entryDirection,
+                    fillPrice: 100m, fillQuantity: 10 * sign, orderFee: _orderFee),
+                ConversionRate, _orderFee.Value.Amount);
+
+            builder.ProcessFill(
+                new OrderEvent(2, Symbols.SPY, time.AddMinutes(10), OrderStatus.Filled, exitDirection,
+                    fillPrice: 110m, fillQuantity: -5 * sign, orderFee: _orderFee),
+                ConversionRate, _orderFee.Value.Amount);
+
+            Assert.IsTrue(builder.HasOpenPosition(Symbols.SPY));
+            Assert.AreEqual(0, builder.ClosedTrades.Count);
+
+            // Half of this fill closes the original position; the rest opens the opposite position.
+            builder.ProcessFill(
+                new OrderEvent(3, Symbols.SPY, time.AddMinutes(20), OrderStatus.Filled, exitDirection,
+                    fillPrice: 120m, fillQuantity: -10 * sign, orderFee: _orderFee),
+                ConversionRate, _orderFee.Value.Amount);
+
+            Assert.IsTrue(builder.HasOpenPosition(Symbols.SPY));
+            Assert.AreEqual(1, builder.ClosedTrades.Count);
+
+            var trade1 = builder.ClosedTrades[0];
+
+            // Five units exit at 110 and five at 120: average 115, gross P&L +/-150.
+            Assert.AreEqual(150 * sign, trade1.ProfitLoss);
+            Assert.AreEqual(100m, trade1.EntryPrice);
+            Assert.AreEqual(115m, trade1.ExitPrice);
+            Assert.AreEqual(direction, trade1.Direction);
+            Assert.AreEqual(10, trade1.Quantity);
+            Assert.AreEqual(time, trade1.EntryTime);
+            Assert.AreEqual(time.AddMinutes(20), trade1.ExitTime);
+            Assert.AreEqual(3 * _orderFee.Value.Amount, trade1.TotalFees);
+            CollectionAssert.AreEquivalent(new[] { 1, 2, 3 }, trade1.OrderIds);
+
+            builder.ProcessFill(
+                new OrderEvent(4, Symbols.SPY, time.AddMinutes(30), OrderStatus.Filled, entryDirection,
+                    fillPrice: 120m, fillQuantity: 5 * sign, orderFee: _orderFee),
+                ConversionRate, _orderFee.Value.Amount);
+
+            Assert.IsFalse(builder.HasOpenPosition(Symbols.SPY));
+            Assert.AreEqual(2, builder.ClosedTrades.Count);
+
+            var trade2 = builder.ClosedTrades[1];
+
+            Assert.AreEqual(direction == TradeDirection.Long ? TradeDirection.Short : TradeDirection.Long, trade2.Direction);
+            Assert.AreEqual(5, trade2.Quantity);
+            Assert.AreEqual(120m, trade2.EntryPrice);
+            Assert.AreEqual(120m, trade2.ExitPrice);
+            Assert.AreEqual(time.AddMinutes(20), trade2.EntryTime);
+            Assert.AreEqual(time.AddMinutes(30), trade2.ExitTime);
+            Assert.AreEqual(0, trade2.ProfitLoss);
+            Assert.AreEqual(_orderFee.Value.Amount, trade2.TotalFees);
+            Assert.AreEqual(4 * _orderFee.Value.Amount, trade1.TotalFees + trade2.TotalFees);
+            CollectionAssert.AreEquivalent(new[] { 3, 4 }, trade2.OrderIds);
+        }
+
+        [Test]
         public void ScaleInScaleOut1Long(
             [Values] FillGroupingMethod groupingMethod,
             [Values] FillMatchingMethod matchingMethod,
