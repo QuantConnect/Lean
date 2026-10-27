@@ -68,8 +68,8 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
         // this value is used for determining how confident we are in our cash balance update
         private long _lastFillTimeTicks;
 
-        private const int MaxCashSyncAttempts = 5;
-        private int _failedCashSyncAttempts;
+        private const int MaxSyncAttempts = 5;
+        private int _failedSyncAttempts;
 
         /// <summary>
         /// Runs order requests on worker threads that pull from a single shared queue, keeping each order's
@@ -748,16 +748,18 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
                 // only perform cash syncs if we haven't had a fill for at least 10 seconds
                 if (TimeSinceLastFill > TimeSpan.FromSeconds(10))
                 {
-                    if (!SyncOptionHoldings() || !_brokerage.PerformCashSync(_algorithm, CurrentTimeUtc, () => TimeSinceLastFill))
+                    var optionHoldingsSynced = SyncOptionHoldings();
+                    if (!optionHoldingsSynced || !_brokerage.PerformCashSync(_algorithm, CurrentTimeUtc, () => TimeSinceLastFill))
                     {
-                        if (++_failedCashSyncAttempts >= MaxCashSyncAttempts)
+                        if (++_failedSyncAttempts >= MaxSyncAttempts)
                         {
-                            throw new Exception("The maximum number of attempts for brokerage cash sync has been reached.");
+                            var sync = optionHoldingsSynced ? "cash" : "option holdings";
+                            throw new Exception($"The maximum number of attempts for brokerage {sync} sync has been reached.");
                         }
                     }
                     else
                     {
-                        _failedCashSyncAttempts = 0;
+                        _failedSyncAttempts = 0;
                     }
                 }
             }
@@ -1731,10 +1733,10 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
         }
 
         /// <summary>
-        /// Syncs the option holdings with the brokerage, the same way a brokerage position update does, for the brokerages
-        /// that report nothing when a contract expires or is assigned. Runs once a day with the cash sync.
+        /// Syncs the option holdings with the brokerage once a day, with the cash sync, for the brokerages that report
+        /// nothing when a contract expires or is assigned
         /// </summary>
-        /// <returns>False when the brokerage holdings could not be read, so the caller retries at the next pass like a failed cash sync</returns>
+        /// <returns>True if the brokerage holdings were read, false otherwise</returns>
         private bool SyncOptionHoldings()
         {
             var brokerageHoldings = default(Dictionary<Symbol, decimal>);

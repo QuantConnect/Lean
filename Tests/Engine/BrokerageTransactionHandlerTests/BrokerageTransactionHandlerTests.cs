@@ -2184,7 +2184,7 @@ namespace QuantConnect.Tests.Engine.BrokerageTransactionHandlerTests
 
         [TestCase(1, 1, 0, 200, "", Description = "Long Call -> ITM, expired, the first holdings read fails, booked on the next pass")]
         [TestCase(4, 1, 0, 200, "", Description = "Long Call -> ITM, expired, four holdings reads fail, booked on the fifth pass")]
-        [TestCase(5, 0, 1, 100, "The maximum number of attempts for brokerage cash sync has been reached.", Description = "Long Call -> ITM, expired, five holdings reads fail, the fifth pass throws like a failed cash sync")]
+        [TestCase(5, 0, 1, 100, "The maximum number of attempts for brokerage option holdings sync has been reached.", Description = "Long Call -> ITM, expired, five holdings reads fail, the fifth pass throws")]
         public void ProcessSynchronousEventsRetriesTheOptionHoldingsSyncWhenTheBrokerageReadFails(
             int failedReads,
             int expectedTickets,
