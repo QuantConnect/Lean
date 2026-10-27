@@ -44,6 +44,7 @@ namespace QuantConnect.Brokerages
 
         private readonly object _locker = new();
         private readonly List<BrokerageMultiWebSocketEntry> _webSocketEntries = new();
+        private readonly Dictionary<IWebSocket, CancellationTokenSource> _resubscriptionCancellations = new();
 
         /// <summary>
         /// Initializes a new instance of the <see cref="BrokerageMultiWebSocketSubscriptionManager"/> class
@@ -188,6 +189,7 @@ namespace QuantConnect.Brokerages
                     {
                         entry.WebSocket.Open -= OnOpen;
                         entry.WebSocket.Message -= EventHandler;
+                        CancelResubscription(entry.WebSocket);
                         entry.WebSocket.Close();
                     }
                     catch (Exception ex)
@@ -308,7 +310,24 @@ namespace QuantConnect.Brokerages
 
         private void Disconnect(IWebSocket webSocket)
         {
+            lock (_locker)
+            {
+                CancelResubscription(webSocket);
+            }
             webSocket.Close();
+        }
+
+        /// <summary>
+        /// Cancels the resubscription task in progress for the given websocket, if any
+        /// </summary>
+        /// <remarks>Requires the caller to hold <see cref="_locker"/></remarks>
+        private void CancelResubscription(IWebSocket webSocket)
+        {
+            if (_resubscriptionCancellations.Remove(webSocket, out var cancellationTokenSource))
+            {
+                cancellationTokenSource.Cancel();
+                cancellationTokenSource.Dispose();
+            }
         }
 
         private void OnOpen(object sender, EventArgs e)
@@ -317,16 +336,28 @@ namespace QuantConnect.Brokerages
 
             lock (_locker)
             {
+                // a reconnection makes any resubscription still in progress on this websocket stale
+                CancelResubscription(webSocket);
+
                 foreach (var entry in _webSocketEntries)
                 {
                     if (entry.WebSocket == webSocket && entry.Symbols.Count > 0)
                     {
                         Log.Trace($"BrokerageMultiWebSocketSubscriptionManager.Connect(): WebSocket opened: {webSocket.GetHashCode()} - Resubscribing existing symbols: {entry.Symbols.Count}");
 
+                        var cancellationTokenSource = new CancellationTokenSource();
+                        _resubscriptionCancellations[webSocket] = cancellationTokenSource;
+                        var cancellationToken = cancellationTokenSource.Token;
+
                         Task.Factory.StartNew(() =>
                         {
                             foreach (var symbol in entry.Symbols)
                             {
+                                if (cancellationToken.IsCancellationRequested || !webSocket.IsOpen)
+                                {
+                                    Log.Trace($"BrokerageMultiWebSocketSubscriptionManager.OnOpen(): WebSocket: {webSocket.GetHashCode()} - Resubscription stopped, the connection was closed or reopened");
+                                    break;
+                                }
                                 _subscribeFunc(webSocket, symbol);
                             }
                         });
