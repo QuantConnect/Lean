@@ -306,6 +306,17 @@ namespace QuantConnect.Tests.Common
             Assert.AreEqual(new DateTime(1999, 12, 17), result.ID.Date.Date);
         }
 
+        [TestCase("ESZ05 C1200", "ESZ05")]
+        [TestCase("ESH09 P800", "ESH09")]
+        [TestCase("ESZ30 C3505", "ESZ30")]
+        public void ParseFutureOptionSymbolDoubleDigitYear(string ticker, string futureTicker)
+        {
+            var result = SymbolRepresentation.ParseFutureOptionSymbol(ticker);
+            var expectedFuture = SymbolRepresentation.ParseFutureSymbol(futureTicker);
+
+            Assert.AreEqual(expectedFuture, result.Underlying);
+        }
+
         [TestCase("PROPANE_NON_LDH_MONT_BELVIEU", QuantConnect.Securities.Futures.Energy.PropaneNonLDHMontBelvieu)]
         [TestCase("ARGUS_PROPANE_FAR_EAST_INDEX_BALMO", QuantConnect.Securities.Futures.Energy.ArgusPropaneFarEastIndexBALMO)]
         [TestCase("GASOLINE", QuantConnect.Securities.Futures.Energy.Gasoline)]

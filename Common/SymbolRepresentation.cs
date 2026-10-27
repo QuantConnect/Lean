@@ -212,7 +212,8 @@ namespace QuantConnect
             }
             var strike = split[1].Substring(1);
 
-            if (parsed.ExpirationYearShort < 10)
+            // a single digit year is in the 2020s, a double digit year already defines the decade: 'Z05' is 2005
+            if (parsed.ExpirationYearShortLength == 1)
             {
                 parsed.ExpirationYearShort += 20;
             }
