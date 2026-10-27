@@ -14,6 +14,7 @@
 */
 
 using System;
+using System.Threading.Tasks;
 using NUnit.Framework;
 using QuantConnect.Data.Market;
 using QuantConnect.Indicators;
@@ -135,6 +136,28 @@ namespace QuantConnect.Tests.Indicators
                 vp.Update(new TradeBar() { Symbol = Symbols.AAPL, Low = 1, High = 2, Volume = 100, Time = reference.AddDays(1 + i) });
                 Assert.AreEqual(i == period - 1, vp.IsReady);
             }
+        }
+
+        [TestCase(1)]
+        [TestCase(3)]
+        public void ValueAreaCoversWholeProfileWhenPercentageIsOne(int priceLevels)
+        {
+            var vp = new VolumeProfile(priceLevels, 1m, 1m);
+            var reference = new DateTime(2000, 1, 1);
+
+            // every update has to complete, the value area must grow up to the whole profile and stop there
+            var updates = Task.Run(() =>
+            {
+                for (var i = 0; i < priceLevels; i++)
+                {
+                    vp.Update(new TradeBar() { Symbol = Symbols.AAPL, Close = 10 + i, Volume = 100, Time = reference.AddDays(1 + i) });
+                }
+            });
+
+            Assert.IsTrue(updates.Wait(TimeSpan.FromSeconds(10)), "VolumeProfile.Update did not return");
+            Assert.AreEqual(100m * priceLevels, vp.ValueAreaVolume);
+            Assert.AreEqual(10m, vp.ValueAreaLow);
+            Assert.AreEqual(10m + priceLevels - 1, vp.ValueAreaHigh);
         }
 
         [TestCaseSource(nameof(BarsSequenceCases))]
