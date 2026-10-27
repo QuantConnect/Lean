@@ -285,16 +285,16 @@ namespace QuantConnect.Brokerages
         {
             switch (properties)
             {
-                case TerminalLinkOrderProperties terminalLink:
-                    if ((string.IsNullOrEmpty(terminalLink.LocateBroker) && string.IsNullOrEmpty(terminalLink.LocateId))
-                        || IsShortOpen(terminalLink.PositionSide, quantity, holdingsQuantity))
+                case QuantBridgeOrderProperties quantBridge:
+                    if ((string.IsNullOrEmpty(quantBridge.LocateBroker) && string.IsNullOrEmpty(quantBridge.LocateId))
+                        || IsShortOpen(quantBridge.PositionSide, quantity, holdingsQuantity))
                     {
                         return null;
                     }
-                    var terminalLinkCopy = (TerminalLinkOrderProperties)terminalLink.Clone();
-                    terminalLinkCopy.LocateBroker = null;
-                    terminalLinkCopy.LocateId = null;
-                    return terminalLinkCopy;
+                    var quantBridgeCopy = (QuantBridgeOrderProperties)quantBridge.Clone();
+                    quantBridgeCopy.LocateBroker = null;
+                    quantBridgeCopy.LocateId = null;
+                    return quantBridgeCopy;
 
                 case WolverineOrderProperties wolverine:
                     if (string.IsNullOrEmpty(wolverine.LocateBroker) || IsShortOpen(wolverine.PositionSide, quantity, holdingsQuantity))

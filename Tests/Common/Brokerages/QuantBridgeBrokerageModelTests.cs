@@ -23,9 +23,9 @@ using QuantConnect.Tests.Engine.DataFeeds;
 namespace QuantConnect.Tests.Common.Brokerages
 {
     [TestFixture, Parallelizable(ParallelScope.All)]
-    public class TerminalLinkBrokerageModelTests
+    public class QuantBridgeBrokerageModelTests
     {
-        private readonly TerminalLinkBrokerageModel _brokerageModel = new();
+        private readonly QuantBridgeBrokerageModel _brokerageModel = new();
 
         [TestCase("SPY", SecurityType.Equity)]
         [TestCase("SPY", SecurityType.Option)]
@@ -42,7 +42,7 @@ namespace QuantConnect.Tests.Common.Brokerages
             Assert.IsNull(message);
         }
 
-        // Forex/Crypto/Cfd and FutureOption are not tradable on TerminalLink
+        // Forex/Crypto/Cfd and FutureOption are not tradable on Quant Bridge
         [TestCase("EURUSD", SecurityType.Forex)]
         [TestCase("BTCUSD", SecurityType.Crypto)]
         [TestCase("DE10YBEUR", SecurityType.Cfd)]
@@ -63,7 +63,7 @@ namespace QuantConnect.Tests.Common.Brokerages
         {
             var algo = new AlgorithmStub();
             var security = algo.AddSecurity(SecurityType.Index, "SPX");
-            var properties = new TerminalLinkOrderProperties { IsCfdTrade = true };
+            var properties = new QuantBridgeOrderProperties { IsCfdTrade = true };
             var order = new MarketOrder(security.Symbol, 1, new DateTime(2024, 1, 2), properties: properties);
 
             Assert.IsTrue(_brokerageModel.CanSubmitOrder(security, order, out var message), message?.Message);

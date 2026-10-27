@@ -13,81 +13,22 @@
  * limitations under the License.
 */
 
-using System.Collections.Generic;
-using QuantConnect.Orders;
-using QuantConnect.Securities;
+using System;
 
 namespace QuantConnect.Brokerages
 {
     /// <summary>
     /// Provides Bloomberg EMSX (TerminalLink) specific properties.
     /// </summary>
-    public class TerminalLinkBrokerageModel : DefaultBrokerageModel
+    [Obsolete("TerminalLinkBrokerageModel is deprecated. Use QuantBridgeBrokerageModel instead.")]
+    public class TerminalLinkBrokerageModel : QuantBridgeBrokerageModel
     {
-        private readonly HashSet<SecurityType> _supportedSecurityTypes = new()
-        {
-            SecurityType.Equity,
-            SecurityType.Option,
-            SecurityType.IndexOption,
-            SecurityType.Future,
-            SecurityType.Index,
-        };
-
-        private readonly HashSet<OrderType> _supportedOrderTypes = new()
-        {
-            OrderType.Market,
-            OrderType.MarketOnOpen,
-            OrderType.Limit,
-            OrderType.StopMarket,
-            OrderType.StopLimit,
-        };
-
         /// <summary>
         /// Initializes a new instance of the <see cref="TerminalLinkBrokerageModel"/> class.
         /// </summary>
         /// <param name="accountType">Cash or Margin</param>
         public TerminalLinkBrokerageModel(AccountType accountType = AccountType.Margin) : base(accountType)
         {
-        }
-
-        /// <summary>
-        /// Returns true if the brokerage could accept this order.
-        /// </summary>
-        /// <param name="security">The security of the order</param>
-        /// <param name="order">The order to be processed</param>
-        /// <param name="message">If this function returns false, a brokerage message detailing why the order may not be submitted</param>
-        public override bool CanSubmitOrder(Security security, Order order, out BrokerageMessageEvent message)
-        {
-            if (!this.ValidateContingentOrdersNotSupported(order, out message))
-            {
-                return false;
-            }
-
-            if (!_supportedSecurityTypes.Contains(security.Type))
-            {
-                message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
-                    Messages.DefaultBrokerageModel.UnsupportedSecurityType(this, security));
-                return false;
-            }
-
-            if (!_supportedOrderTypes.Contains(order.Type))
-            {
-                message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
-                    Messages.DefaultBrokerageModel.UnsupportedOrderType(this, order, _supportedOrderTypes));
-                return false;
-            }
-
-            return base.CanSubmitOrder(security, order, out message);
-        }
-
-        /// <summary>
-        /// TerminalLink does not allow modifying live orders; the EMSX brokerage rejects updates.
-        /// </summary>
-        public override bool CanUpdateOrder(Security security, Order order, UpdateOrderRequest request, out BrokerageMessageEvent message)
-        {
-            message = new BrokerageMessageEvent(BrokerageMessageType.Warning, "NotSupported",
-                Messages.DefaultBrokerageModel.OrderUpdateNotSupported);
-            return false;
         }
     }
 }
