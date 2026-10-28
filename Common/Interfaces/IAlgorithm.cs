@@ -65,7 +65,7 @@ namespace QuantConnect.Interfaces
         }
 
         /// <summary>
-        /// Data subscription manager controls the information and subscriptions the algorithms recieves.
+        /// Data subscription manager controls the information and subscriptions the algorithms receives.
         /// Subscription configurations can be added through the Subscription Manager.
         /// </summary>
         SubscriptionManager SubscriptionManager

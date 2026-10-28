@@ -255,7 +255,7 @@ namespace QuantConnect.Util
         /// Try to get the length of arguments of a method
         /// </summary>
         /// <param name="pyObject">Object representing a method</param>
-        /// <param name="length">Lenght of arguments</param>
+        /// <param name="length">Length of arguments</param>
         /// <returns>True if pyObject is a method</returns>
         private static bool TryGetArgLength(PyObject pyObject, out long length)
         {

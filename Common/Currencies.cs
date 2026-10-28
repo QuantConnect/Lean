@@ -361,7 +361,7 @@ namespace QuantConnect
         /// </summary>
         /// <param name="value">The value with currency</param>
         /// <param name="parsedValue">The decimal equivalent to the string value after conversion</param>
-        /// <returns>True if the value was succesfuly converted</returns>
+        /// <returns>True if the value was successfully converted</returns>
         public static bool TryParse(string value, out decimal parsedValue)
         {
             // Strip out the currency (any character before the first number) ignoring blank spaces since they are not supposed to be in numbers with currency
