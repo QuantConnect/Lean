@@ -1737,19 +1737,19 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
         /// </summary>
         private void SyncOptionHoldings()
         {
-            var brokerageHoldings = default(Dictionary<Symbol, decimal>);
-            foreach (var security in _algorithm.Securities.Values)
+            try
             {
-                if (!security.Invested || !security.Symbol.SecurityType.IsOption())
+                var brokerageHoldings = default(Dictionary<Symbol, decimal>);
+                foreach (var security in _algorithm.Securities.Values)
                 {
-                    continue;
-                }
-
-                if (brokerageHoldings == null)
-                {
-                    Log.Trace("BrokerageTransactionHandler.SyncOptionHoldings(): Start syncing option holdings...");
-                    try
+                    if (!security.Invested || !security.Symbol.SecurityType.IsOption())
                     {
+                        continue;
+                    }
+
+                    if (brokerageHoldings == null)
+                    {
+                        Log.Trace("BrokerageTransactionHandler.SyncOptionHoldings(): Start syncing option holdings...");
                         brokerageHoldings = [];
                         foreach (var holding in _brokerage.GetAccountHoldings())
                         {
@@ -1759,40 +1759,35 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
                             }
                         }
                     }
-                    catch (Exception err)
+
+                    var position = 0m;
+                    if (!OptionSymbol.IsOptionContractExpired(security.Symbol, CurrentTimeUtc))
                     {
-                        Log.Error(err, "BrokerageTransactionHandler.SyncOptionHoldings(): failed to get the account holdings, option holdings not synced.");
-                        return;
+                        brokerageHoldings.TryGetValue(security.Symbol, out position);
                     }
-                }
 
-                var position = 0m;
-                if (!OptionSymbol.IsOptionContractExpired(security.Symbol, CurrentTimeUtc))
-                {
-                    brokerageHoldings.TryGetValue(security.Symbol, out position);
-                }
-
-                if (position != security.Holdings.Quantity)
-                {
-                    var underlying = (security as Option).Underlying;
-                    if (underlying.Price == 0)
+                    if (position != security.Holdings.Quantity)
                     {
-                        var lastKnownPrice = _algorithm.GetLastKnownPrice(underlying.Symbol);
-                        underlying.SetMarketPrice(lastKnownPrice);
+                        var underlying = (security as Option).Underlying;
                         if (underlying.Price == 0)
                         {
                             Log.Error($"BrokerageTransactionHandler.SyncOptionHoldings(): no price for {underlying.Symbol.Value}, {security.Symbol.Value} not synced.");
                             continue;
                         }
-                    }
 
-                    HandleOptionNotification(new OptionNotificationEventArgs(security.Symbol, position));
+                        Log.Trace($"BrokerageTransactionHandler.SyncOptionHoldings(): syncing option holding: Symbol: {security.Symbol.Value}, Holdings: {security.Holdings.Quantity}, Position: {position}");
+                        HandleOptionNotification(new OptionNotificationEventArgs(security.Symbol, position));
+                    }
+                }
+
+                if (brokerageHoldings != null)
+                {
+                    Log.Trace($"BrokerageTransactionHandler.SyncOptionHoldings(): Brokerage option holdings count {brokerageHoldings.Count}. Exit");
                 }
             }
-
-            if (brokerageHoldings != null)
+            catch (Exception err)
             {
-                Log.Trace($"BrokerageTransactionHandler.SyncOptionHoldings(): Brokerage option holdings count {brokerageHoldings.Count}. Exit");
+                Log.Error(err, "BrokerageTransactionHandler.SyncOptionHoldings(): failed to sync the option holdings.");
             }
         }
 
