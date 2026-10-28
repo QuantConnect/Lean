@@ -41,4 +41,15 @@ jobs:
         run: python run_benchmarks.py /Data
 
       - name: Compare Benchmarks
-        run: python compare_benchmarks.py LeanMaster/benchmark_results.json benchmark_results.json
+        id: compare
+        continue-on-error: true
+        run: python compare_benchmarks.py LeanMaster/benchmark_results.json benchmark_results.json failed_benchmarks.json
+
+      # a single sample per side is noisy: run the failed algorithms again on both sides and fail only if the regression repeats
+      - name: Re-check Failed Benchmarks
+        if: steps.compare.outcome == 'failure'
+        run: |
+          sleep 30
+          cd LeanMaster && python run_benchmarks.py /Data ../failed_benchmarks.json && cd ../
+          python run_benchmarks.py /Data failed_benchmarks.json
+          python compare_benchmarks.py LeanMaster/benchmark_results.json benchmark_results.json

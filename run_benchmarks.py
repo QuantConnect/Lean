@@ -11,6 +11,12 @@ if len(sys.argv) > 1:
 	dataPath = sys.argv[1]
 print(f'Using data path {dataPath}')
 
+# optional json file with the algorithms to run per language, such as the failures written by compare_benchmarks.py
+algorithmsToRun = None
+if len(sys.argv) > 2:
+	algorithmsToRun = json.load(open(sys.argv[2]))
+	print(f'Running only algorithms {algorithmsToRun}')
+
 results = {}
 for baseDirectory in ["Algorithm.CSharp/Benchmarks", "Algorithm.Python/Benchmarks"]:
 
@@ -24,6 +30,8 @@ for baseDirectory in ["Algorithm.CSharp/Benchmarks", "Algorithm.Python/Benchmark
 
 			if "Fine" in algorithmName:
 				# we skip fundamental benchmarks for now
+				continue
+			if algorithmsToRun is not None and algorithmName not in algorithmsToRun.get(language, []):
 				continue
 			algorithmLocation = "QuantConnect.Algorithm.CSharp.dll" if language == "CSharp" else os.path.join("../../../", baseDirectory, algorithmFile)
 			print(f'Start running algorithm {algorithmName} language {language}...')
