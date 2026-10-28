@@ -25,7 +25,8 @@ namespace QuantConnect.Tests.Indicators
     {
         protected override IndicatorBase<IBaseDataBar> CreateIndicator()
         {
-            RenkoBarSize = 1m;
+            // the test data prices are scaled by 10000
+            RenkoBarSize = 10000m;
             VolumeRenkoBarSize = 0.5m;
             return new PremierStochasticOscillator("PSO", 8, 5);
         }

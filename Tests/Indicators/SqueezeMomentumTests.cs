@@ -24,6 +24,8 @@ namespace QuantConnect.Tests.Indicators
     {
         protected override IndicatorBase<IBaseDataBar> CreateIndicator()
         {
+            // the test data prices are scaled by 10000
+            RenkoBarSize = 10000m;
             VolumeRenkoBarSize = 0.5m;
             return new SqueezeMomentum("SM", 20, 2, 20, 1.5m);
         }
