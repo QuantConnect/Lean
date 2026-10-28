@@ -2182,16 +2182,9 @@ namespace QuantConnect.Tests.Engine.BrokerageTransactionHandlerTests
             Assert.That(algorithm.Portfolio[equity.Symbol].Quantity, Is.EqualTo(expectedUnderlyingPosition));
         }
 
-        [TestCase(1, 1, 0, 200, "", Description = "Long Call -> ITM, expired, the first holdings read fails, booked on the next pass")]
-        [TestCase(4, 1, 0, 200, "", Description = "Long Call -> ITM, expired, four holdings reads fail, booked on the fifth pass")]
-        [TestCase(5, 0, 1, 100, "The maximum number of attempts for brokerage option holdings sync has been reached.", Description = "Long Call -> ITM, expired, five holdings reads fail, the fifth pass throws")]
-        public void ProcessSynchronousEventsRetriesTheOptionHoldingsSyncWhenTheBrokerageReadFails(
-            int failedReads,
-            int expectedTickets,
-            int expectedOptionPosition,
-            int expectedUnderlyingPosition,
-            string expectedError
-            )
+        [TestCase(1, Description = "Long Call -> ITM, expired, the holdings read fails on the first day, booked on the second day")]
+        [TestCase(2, Description = "Long Call -> ITM, expired, the holdings read fails on two days, booked on the third day")]
+        public void ProcessSynchronousEventsSkipsTheOptionHoldingsSyncForTheDayWhenTheBrokerageReadFails(int failedReads)
         {
             // Arrange: an expired long SPY call, ITM, with 100 shares of the underlying, in live mode
             var algorithm = new TestAlgorithm();
@@ -2208,29 +2201,23 @@ namespace QuantConnect.Tests.Engine.BrokerageTransactionHandlerTests
             _transactionHandler.Initialize(algorithm, brokerage, new BacktestingResultHandler());
             algorithm.Transactions.SetOrderProcessor(_transactionHandler);
 
-            // 8 AM ET the day after expiry, inside the daily cash sync window
-            _transactionHandler.TestCurrentTimeUtc = new DateTime(2021, 9, 9, 12, 0, 0);
-
-            // Act: one pass per failed read at the same time, so the window stays open, then the pass that reads the holdings
-            var error = string.Empty;
-            try
+            // Act: two passes a day at 8 AM ET, from the day after expiry; a failed read leaves the contract for the next day
+            for (var day = 0; day <= failedReads; day++)
             {
-                for (var i = 0; i <= failedReads; i++)
+                _transactionHandler.TestCurrentTimeUtc = new DateTime(2021, 9, 9, 12, 0, 0).AddDays(day);
+                _transactionHandler.ProcessSynchronousEvents();
+                _transactionHandler.ProcessSynchronousEvents();
+                if (day < failedReads)
                 {
-                    _transactionHandler.ProcessSynchronousEvents();
+                    Assert.That(algorithm.Transactions.GetOrderTickets().Count(), Is.EqualTo(0));
                 }
-            }
-            catch (Exception exception)
-            {
-                error = exception.Message;
             }
             _transactionHandler.Exit();
 
             // Assert
-            Assert.That(error, Is.EqualTo(expectedError));
-            Assert.That(algorithm.Transactions.GetOrderTickets().Count(), Is.EqualTo(expectedTickets));
-            Assert.That(algorithm.Portfolio[optionSymbol].Quantity, Is.EqualTo(expectedOptionPosition));
-            Assert.That(algorithm.Portfolio[equity.Symbol].Quantity, Is.EqualTo(expectedUnderlyingPosition));
+            Assert.That(algorithm.Transactions.GetOrderTickets().Count(), Is.EqualTo(1));
+            Assert.That(algorithm.Portfolio[optionSymbol].Quantity, Is.EqualTo(0));
+            Assert.That(algorithm.Portfolio[equity.Symbol].Quantity, Is.EqualTo(200));
         }
 
         // Short Call --> OTM (expired worthless)

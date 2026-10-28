@@ -68,8 +68,8 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
         // this value is used for determining how confident we are in our cash balance update
         private long _lastFillTimeTicks;
 
-        private const int MaxSyncAttempts = 5;
-        private int _failedSyncAttempts;
+        private const int MaxCashSyncAttempts = 5;
+        private int _failedCashSyncAttempts;
 
         /// <summary>
         /// Runs order requests on worker threads that pull from a single shared queue, keeping each order's
@@ -748,18 +748,17 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
                 // only perform cash syncs if we haven't had a fill for at least 10 seconds
                 if (TimeSinceLastFill > TimeSpan.FromSeconds(10))
                 {
-                    var optionHoldingsSynced = SyncOptionHoldings();
-                    if (!optionHoldingsSynced || !_brokerage.PerformCashSync(_algorithm, CurrentTimeUtc, () => TimeSinceLastFill))
+                    SyncOptionHoldings();
+                    if (!_brokerage.PerformCashSync(_algorithm, CurrentTimeUtc, () => TimeSinceLastFill))
                     {
-                        if (++_failedSyncAttempts >= MaxSyncAttempts)
+                        if (++_failedCashSyncAttempts >= MaxCashSyncAttempts)
                         {
-                            var sync = optionHoldingsSynced ? "cash" : "option holdings";
-                            throw new Exception($"The maximum number of attempts for brokerage {sync} sync has been reached.");
+                            throw new Exception("The maximum number of attempts for brokerage cash sync has been reached.");
                         }
                     }
                     else
                     {
-                        _failedSyncAttempts = 0;
+                        _failedCashSyncAttempts = 0;
                     }
                 }
             }
@@ -1736,8 +1735,7 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
         /// Syncs the option holdings with the brokerage once a day, with the cash sync, for the brokerages that report
         /// nothing when a contract expires or is assigned
         /// </summary>
-        /// <returns>True if the brokerage holdings were read, false otherwise</returns>
-        private bool SyncOptionHoldings()
+        private void SyncOptionHoldings()
         {
             var brokerageHoldings = default(Dictionary<Symbol, decimal>);
             foreach (var security in _algorithm.Securities.Values)
@@ -1764,7 +1762,7 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
                     catch (Exception err)
                     {
                         Log.Error(err, "BrokerageTransactionHandler.SyncOptionHoldings(): failed to get the account holdings, option holdings not synced.");
-                        return false;
+                        return;
                     }
                 }
 
@@ -1796,8 +1794,6 @@ namespace QuantConnect.Lean.Engine.TransactionHandlers
             {
                 Log.Trace($"BrokerageTransactionHandler.SyncOptionHoldings(): Brokerage option holdings count {brokerageHoldings.Count}. Exit");
             }
-
-            return true;
         }
 
         /// <summary>
