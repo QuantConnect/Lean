@@ -67,8 +67,10 @@ namespace QuantConnect.Tests.Brokerages
             var actualCrossZeroOrderStatusOrdering = new Queue<OrderStatus>();
             using var autoResetEventPartialFilledStatus = new AutoResetEvent(false);
             using var autoResetEventFilledStatus = new AutoResetEvent(false);
+            using var autoResetEventSecondPartPlaced = new AutoResetEvent(false);
 
             using var brokerage = InitializeBrokerage((leanOrder?.Symbol.Value, 180m, 10));
+            brokerage.OrderIdChanged += (_, _) => autoResetEventSecondPartPlaced.Set();
 
             brokerage.OrdersStatusChanged += (_, orderEvents) =>
             {
@@ -93,8 +95,11 @@ namespace QuantConnect.Tests.Brokerages
 
             Assert.IsTrue(response);
 
+            brokerage.FillOpenOrders();
             AssertComingOrderStatusByEvent(autoResetEventPartialFilledStatus, brokerage, OrderStatus.PartiallyFilled);
 
+            Assert.IsTrue(autoResetEventSecondPartPlaced.WaitOne(TimeSpan.FromSeconds(5)));
+            brokerage.FillOpenOrders();
             AssertComingOrderStatusByEvent(autoResetEventFilledStatus, brokerage, OrderStatus.Filled);
 
             CollectionAssert.AreEquivalent(expectedOrderStatusChangedOrdering, actualCrossZeroOrderStatusOrdering);
@@ -135,8 +140,10 @@ namespace QuantConnect.Tests.Brokerages
             using var autoResetEventPartialFilledStatus = new AutoResetEvent(false);
             using var autoResetEventUpdateSubmittedStatus = new AutoResetEvent(false);
             using var autoResetEventFilledStatus = new AutoResetEvent(false);
+            using var autoResetEventSecondPartPlaced = new AutoResetEvent(false);
 
             using var brokerage = InitializeBrokerage((leanOrder?.Symbol.Value, 180m, 10));
+            brokerage.OrderIdChanged += (_, _) => autoResetEventSecondPartPlaced.Set();
 
             brokerage.OrdersStatusChanged += (_, orderEvents) =>
             {
@@ -165,13 +172,16 @@ namespace QuantConnect.Tests.Brokerages
             var response = brokerage.PlaceOrder(leanOrder);
             Assert.IsTrue(response);
 
+            brokerage.FillOpenOrders();
             AssertComingOrderStatusByEvent(autoResetEventPartialFilledStatus, brokerage, OrderStatus.PartiallyFilled);
 
+            Assert.IsTrue(autoResetEventSecondPartPlaced.WaitOne(TimeSpan.FromSeconds(5)));
             var updateResponse = brokerage.UpdateOrder(leanOrder);
             Assert.IsTrue(updateResponse);
 
             AssertComingOrderStatusByEvent(autoResetEventUpdateSubmittedStatus, brokerage, OrderStatus.UpdateSubmitted);
 
+            brokerage.FillOpenOrders();
             AssertComingOrderStatusByEvent(autoResetEventFilledStatus, brokerage, OrderStatus.Filled);
 
             CollectionAssert.AreEquivalent(expectedOrderStatusChangedOrdering, actualCrossZeroOrderStatusOrdering);
@@ -272,6 +282,7 @@ namespace QuantConnect.Tests.Brokerages
             var response = brokerage.PlaceOrder(leanOrder);
             Assert.IsTrue(response);
 
+            brokerage.FillOpenOrders();
             AssertComingOrderStatusByEvent(autoResetEventInvalidStatus, brokerage, OrderStatus.Canceled);
 
             CollectionAssert.AreEquivalent(expectedOrderStatusChangedOrdering, actualCrossZeroOrderStatusOrdering);
@@ -343,6 +354,16 @@ namespace QuantConnect.Tests.Brokerages
             private readonly CancellationTokenSource _cancellationTokenSource = new();
 
             /// <summary>
+            /// Signals the simulated brokerage to fill its open orders.
+            /// </summary>
+            private readonly AutoResetEvent _fillOpenOrdersEvent = new(false);
+
+            /// <summary>
+            /// The task simulating the brokerage order updates.
+            /// </summary>
+            private Task _orderUpdatesTask;
+
+            /// <summary>
             /// Temporarily stores the IDs of brokerage orders for testing purposes.
             /// </summary>
             private List<string> _tempBrokerageOrderIds = new();
@@ -395,6 +416,14 @@ namespace QuantConnect.Tests.Brokerages
             public IEnumerable<Order> GetAllOrders(Func<Order, bool> filter)
             {
                 return _orderProvider.GetOrders(filter);
+            }
+
+            /// <summary>
+            /// Simulates the brokerage filling the open orders, as it would once they are placed.
+            /// </summary>
+            public void FillOpenOrders()
+            {
+                _fillOpenOrdersEvent.Set();
             }
 
 
@@ -519,6 +548,9 @@ namespace QuantConnect.Tests.Brokerages
 
             public override void Dispose()
             {
+                _cancellationTokenSource.Cancel();
+                _orderUpdatesTask.Wait();
+                _fillOpenOrdersEvent.Dispose();
                 _cancellationTokenSource.Dispose();
                 base.Dispose();
             }
@@ -533,13 +565,13 @@ namespace QuantConnect.Tests.Brokerages
             }
 
             /// <summary>
-            /// Simulates a brokerage sending order update events at regular intervals.
+            /// Simulates a brokerage sending order update events each time <see cref="FillOpenOrders"/> is called.
             /// </summary>
             /// <remarks>
-            /// This method starts a new long-running task that periodically checks for open orders
+            /// This method starts a new long-running task that checks for open orders each time it is signaled
             /// and updates their status. Specifically, it transitions orders with statuses 
             /// <see cref="OrderStatus.Submitted"/> or <see cref="OrderStatus.PartiallyFilled"/> 
-            /// to <see cref="OrderStatus.Filled"/> after a fixed delay.
+            /// to <see cref="OrderStatus.Filled"/>.
             /// </remarks>
             /// <example>
             /// <code>
@@ -553,11 +585,11 @@ namespace QuantConnect.Tests.Brokerages
             /// </exception>
             private void ImitationBrokerageOrderUpdates()
             {
-                Task.Factory.StartNew(() =>
+                _orderUpdatesTask = Task.Factory.StartNew(() =>
                 {
-                    while (!_cancellationTokenSource.IsCancellationRequested)
+                    var waitHandles = new[] { _fillOpenOrdersEvent, _cancellationTokenSource.Token.WaitHandle };
+                    while (WaitHandle.WaitAny(waitHandles) == 0)
                     {
-                        _cancellationTokenSource.Token.WaitHandle.WaitOne(TimeSpan.FromSeconds(3));
                         var orders = _orderProvider.GetOpenOrders();
                         foreach (var order in orders)
                         {
