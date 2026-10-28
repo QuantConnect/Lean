@@ -18,6 +18,7 @@ using NUnit.Framework;
 using QuantConnect.Brokerages;
 using QuantConnect.Orders;
 using QuantConnect.Securities;
+using QuantConnect.Tests.Brokerages;
 using QuantConnect.Tests.Engine.DataFeeds;
 
 namespace QuantConnect.Tests.Common.Brokerages
@@ -110,6 +111,17 @@ namespace QuantConnect.Tests.Common.Brokerages
             Assert.IsFalse(_brokerageModel.CanUpdateOrder(security, order, request, out var message));
             Assert.AreEqual(BrokerageMessageType.Warning, message.Type);
             Assert.AreEqual("NotSupported", message.Code);
+        }
+
+        [TestCase(BrokerageName.QuantBridge, typeof(QuantBridgeBrokerageModel))]
+        [TestCase(BrokerageName.TerminalLink, typeof(TerminalLinkBrokerageModel))]
+        public void CreateReturnsTheModelOfTheBrokerageName(BrokerageName brokerageName, Type modelType)
+        {
+            var model = BrokerageModel.Create(new OrderProvider(), brokerageName, AccountType.Margin);
+
+            Assert.AreEqual(modelType, model.GetType());
+            // both models map back to the new name; before the rename the old model mapped to Default
+            Assert.AreEqual(BrokerageName.QuantBridge, BrokerageModel.GetBrokerageName(model));
         }
 
         private static Order CreateOrder(OrderType orderType, Symbol symbol, decimal quantity)

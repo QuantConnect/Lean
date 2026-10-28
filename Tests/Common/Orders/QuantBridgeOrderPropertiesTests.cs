@@ -82,6 +82,36 @@ def getOrderProperties() -> QuantBridgeOrderProperties:
         }
 
         [Test]
+        public void SetsStrategyInPythonWithTheNamesFromBeforeTheRename()
+        {
+            using (Py.GIL())
+            {
+                var module = PyModule.FromString("terminalLinkModule",
+                    @"
+from AlgorithmImports import *
+
+def getOrderProperties() -> TerminalLinkOrderProperties:
+    properties = TerminalLinkOrderProperties()
+    properties.Strategy = TerminalLinkOrderProperties.StrategyParameters(""VWAP"", [
+        TerminalLinkOrderProperties.StrategyField(""09:30:00""),
+        TerminalLinkOrderProperties.StrategyField()
+    ])
+
+    return properties
+");
+
+                dynamic getOrderProperties = module.GetAttr("getOrderProperties");
+                var orderProperties = (TerminalLinkOrderProperties)getOrderProperties();
+
+                Assert.AreEqual("VWAP", orderProperties.Strategy.Name);
+                Assert.AreEqual(2, orderProperties.Strategy.Fields.Count);
+                Assert.IsTrue(orderProperties.Strategy.Fields[0].HasValue);
+                Assert.AreEqual("09:30:00", orderProperties.Strategy.Fields[0].Value);
+                Assert.IsFalse(orderProperties.Strategy.Fields[1].HasValue);
+            }
+        }
+
+        [Test]
         public void LocateFieldsDefaultToEmpty()
         {
             // Locate fields are only meaningful for Reg SHO short equity sales; for any other
