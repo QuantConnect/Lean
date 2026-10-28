@@ -17,6 +17,7 @@
 using System;
 using System.Collections.Generic;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using Newtonsoft.Json.Serialization;
 using NUnit.Framework;
 using QuantConnect.Algorithm.CSharp;
@@ -137,6 +138,21 @@ namespace QuantConnect.Tests.Common.Packets
             Assert.AreEqual("2024-01-01T10:00:00Z", job.Parameters["end-date"]);
             Assert.AreEqual("1.10", job.Parameters["leverage"]);
             Assert.AreEqual("true", job.Parameters["enabled"]);
+        }
+
+        [TestCase("2024-01-01T10:00:00Z")]
+        [TestCase("2024-01-01T10:00:00")]
+        [TestCase("2024-01-01T10:00:00.5Z")]
+        public void ParametersKeepTheirDateWhenReadFromAParsedTree(string date)
+        {
+            // parsed with the default settings, the tree holds the date strings as dates
+            var packet = JObject.Parse($"{{\"Parameters\":{{\"start-date\":\"{date}\",\"ema-fast\":\"10\",\"leverage\":1.5}}}}");
+
+            var job = packet.ToObject<BacktestNodePacket>();
+
+            Assert.AreEqual(date, job.Parameters["start-date"]);
+            Assert.AreEqual("10", job.Parameters["ema-fast"]);
+            Assert.AreEqual("1.5", job.Parameters["leverage"]);
         }
 
         [TestCase("{\"ema-fast\":\"10\",\"start-date\":\"2024-01-01T10:00:00Z\"}")]
