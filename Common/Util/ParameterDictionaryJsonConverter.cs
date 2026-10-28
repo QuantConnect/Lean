@@ -15,6 +15,7 @@
 
 using System;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using QuantConnect.Api;
 using System.Collections.Generic;
 
@@ -67,6 +68,24 @@ namespace QuantConnect.Util
 
                 case JsonToken.StartObject:
                     // {name: value, ...}
+                    if (reader is JTokenReader)
+                    {
+                        // an already parsed tree can hold dates where the JSON had strings, reading those as strings would use
+                        // the reader culture's format (MM/dd/yyyy HH:mm:ss), so they are written back in round-trip form instead
+                        var values = new Dictionary<string, string>();
+                        while (reader.Read() && reader.TokenType == JsonToken.PropertyName)
+                        {
+                            var name = (string)reader.Value;
+                            reader.Read();
+                            values[name] = reader.Value switch
+                            {
+                                DateTime dateTime => dateTime.ToStringInvariant("yyyy-MM-ddTHH:mm:ss.FFFFFFFK"),
+                                DateTimeOffset dateTimeOffset => dateTimeOffset.ToStringInvariant("o"),
+                                _ => serializer.Deserialize<string>(reader)
+                            };
+                        }
+                        return values;
+                    }
                     return serializer.Deserialize<Dictionary<string, string>>(reader);
 
                 case JsonToken.StartArray:
