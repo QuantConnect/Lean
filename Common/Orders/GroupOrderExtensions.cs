@@ -18,6 +18,7 @@ using System.Linq;
 using QuantConnect.Logging;
 using QuantConnect.Securities;
 using System.Collections.Generic;
+using System.ComponentModel;
 
 namespace QuantConnect.Orders
 {
@@ -34,6 +35,7 @@ namespace QuantConnect.Orders
         /// <param name="orders">List of orders in the combo</param>
         /// <returns>False if any of the orders in the combo is not yet found in the order provider. True otherwise</returns>
         /// <remarks>If the target order is not a combo order, the resulting list will contain that single order alone</remarks>
+        [EditorBrowsable(EditorBrowsableState.Never)]
         public static bool TryGetGroupOrders(this Order order, Func<int, Order> orderProvider, out List<Order> orders)
         {
             orders = new List<Order> { order };

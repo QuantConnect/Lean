@@ -17,6 +17,7 @@
 using System;
 using System.Linq;
 using System.Collections.Generic;
+using System.ComponentModel;
 
 namespace QuantConnect.Data.Auxiliary
 {
@@ -80,6 +81,7 @@ namespace QuantConnect.Data.Auxiliary
         /// Determines the symbol to use to fetch it's factor file
         /// </summary>
         /// <remarks>This is useful for futures where the symbol to use is the canonical</remarks>
+        [EditorBrowsable(EditorBrowsableState.Never)]
         public static Symbol GetFactorFileSymbol(this Symbol symbol)
         {
             return symbol.SecurityType == SecurityType.Future ? symbol.Canonical : symbol;
@@ -88,6 +90,7 @@ namespace QuantConnect.Data.Auxiliary
         /// <summary>
         /// Helper method to return an empty factor file
         /// </summary>
+        [EditorBrowsable(EditorBrowsableState.Never)]
         public static IFactorProvider GetEmptyFactorFile(this Symbol symbol)
         {
             if (symbol.SecurityType == SecurityType.Future)
