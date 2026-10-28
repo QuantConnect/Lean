@@ -29,6 +29,7 @@ namespace QuantConnect.Algorithm.CSharp
     public class DelistingLiquidationAtMarketCloseRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
     {
         private Symbol _symbol;
+        private decimal _lastBarVolume;
 
         /// <summary>
         /// The ticker of the equity that gets delisted
@@ -55,6 +56,12 @@ namespace QuantConnect.Algorithm.CSharp
         /// </summary>
         protected virtual DateTime End => new DateTime(2007, 5, 25);
 
+        /// <summary>
+        /// True if the liquidated position is larger than the volume of the last bar before the close. The market on close
+        /// fill is not capped by volume, so it is still expected to fill in full
+        /// </summary>
+        protected virtual bool LiquidationLargerThanLastBarVolume => false;
+
         public override void Initialize()
         {
             SetStartDate(Start);
@@ -66,6 +73,11 @@ namespace QuantConnect.Algorithm.CSharp
 
         public override void OnData(Slice slice)
         {
+            if (slice.Bars.TryGetValue(_symbol, out var bar))
+            {
+                _lastBarVolume = bar.Volume;
+            }
+
             // buy once and hold through the delisting, so the engine has to liquidate the position
             if (Transactions.OrdersCount == 0 && slice.Bars.ContainsKey(_symbol))
             {
@@ -100,6 +112,11 @@ namespace QuantConnect.Algorithm.CSharp
             if (Portfolio[_symbol].Invested)
             {
                 throw new RegressionTestException($"Expected the {_symbol} position to be liquidated");
+            }
+            if (LiquidationLargerThanLastBarVolume && Math.Abs(liquidation.Quantity) <= _lastBarVolume)
+            {
+                throw new RegressionTestException($"Expected the delisting liquidation of {liquidation.Quantity} to be larger than " +
+                    $"the last bar volume {_lastBarVolume}");
             }
         }
 

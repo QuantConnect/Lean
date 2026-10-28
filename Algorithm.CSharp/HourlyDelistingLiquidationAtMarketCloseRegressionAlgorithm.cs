@@ -35,6 +35,12 @@ namespace QuantConnect.Algorithm.CSharp
         protected override DateTime End => new DateTime(2021, 1, 25);
 
         /// <summary>
+        /// The last GDVD bar before the delisting is 2021-01-19 15:00 with a volume of 100, there is no data on 2021-01-20,
+        /// so the 1555 shares liquidation documents that the market on close fill is not capped by volume
+        /// </summary>
+        protected override bool LiquidationLargerThanLastBarVolume => true;
+
+        /// <summary>
         /// This is used by the regression test system to indicate which languages this algorithm is written in.
         /// </summary>
         public override List<Language> Languages { get; } = new() { Language.CSharp };
