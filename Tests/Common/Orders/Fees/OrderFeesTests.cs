@@ -14,7 +14,10 @@
  *
 */
 
+using System;
 using NUnit.Framework;
+using Python.Runtime;
+using QuantConnect.Orders;
 using QuantConnect.Orders.Fees;
 using QuantConnect.Securities;
 
@@ -43,6 +46,36 @@ namespace QuantConnect.Tests.Common.Orders.Fees
                 book.AccountCurrency);
 
             Assert.AreEqual(0, result3);
+        }
+
+        [Test]
+        public void OrderFeeIsNumericFromPython()
+        {
+            var fee = new OrderFee(new CashAmount(2m, Currencies.USD));
+            var order = new MarketOrder(Symbols.BTCUSD, 0.123m, DateTime.UtcNow);
+            var orderEvent = new OrderEvent(order, DateTime.UtcNow, new OrderFee(new CashAmount(3m, Currencies.USD)));
+
+            using (Py.GIL())
+            {
+                var module = PyModule.FromString("testModule",
+                    @"
+from AlgorithmImports import *
+
+def check(fee: OrderFee, order_event: OrderEvent):
+    fees = [fee, order_event.order_fee]
+    return sum(fees), fee + order_event.order_fee, fee > 0, fee < order_event.order_fee, float(order_event.order_fee), max(fees).value.amount
+");
+
+                dynamic check = module.GetAttr("check");
+                var result = check(fee, orderEvent);
+
+                Assert.AreEqual(5.0, (double)result[0]);
+                Assert.AreEqual(5.0, (double)result[1]);
+                Assert.IsTrue((bool)result[2]);
+                Assert.IsTrue((bool)result[3]);
+                Assert.AreEqual(3.0, (double)result[4]);
+                Assert.AreEqual(3m, (decimal)result[5]);
+            }
         }
     }
 }
