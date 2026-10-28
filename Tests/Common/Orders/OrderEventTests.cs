@@ -16,6 +16,7 @@
 using System;
 using Newtonsoft.Json;
 using NUnit.Framework;
+using Python.Runtime;
 using QuantConnect.Orders;
 using QuantConnect.Orders.Fees;
 using QuantConnect.Orders.Serialization;
@@ -168,6 +169,35 @@ namespace QuantConnect.Tests.Common.Orders
 
             Assert.AreEqual(orderEvent.OrderFee.Value.Amount, deserializeObject.OrderFee.Value.Amount);
             Assert.AreEqual(orderEvent.OrderFee.Value.Currency, deserializeObject.OrderFee.Value.Currency);
+        }
+
+        [Test]
+        public void EnumExtensionMethodsAreCallableFromPython()
+        {
+            var order = new LimitOrder(Symbols.BTCUSD, 0.123m, 100m, DateTime.UtcNow);
+            var orderEvent = new OrderEvent(order, DateTime.UtcNow, OrderFee.Zero) { Status = OrderStatus.Submitted };
+
+            using (Py.GIL())
+            {
+                var module = PyModule.FromString("testModule",
+                    @"
+from AlgorithmImports import *
+
+def check(order_event: OrderEvent, order: Order):
+    return (order_event.status.is_open(), order_event.status.is_closed(), order_event.status.IsFill(),
+        order.type.is_limit_order(), order.type.is_stop_order(), Resolution.MINUTE.to_time_span() == timedelta(minutes=1))
+");
+
+                dynamic check = module.GetAttr("check");
+                var result = check(orderEvent, order);
+
+                Assert.IsTrue((bool)result[0]);
+                Assert.IsFalse((bool)result[1]);
+                Assert.IsFalse((bool)result[2]);
+                Assert.IsTrue((bool)result[3]);
+                Assert.IsFalse((bool)result[4]);
+                Assert.IsTrue((bool)result[5]);
+            }
         }
     }
 }
