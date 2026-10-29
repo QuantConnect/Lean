@@ -89,7 +89,12 @@ namespace QuantConnect.Tests.Brokerages.TradeStation
 
         [TestCase(SecurityType.Equity, OrderType.Market, false)]
         [TestCase(SecurityType.Equity, OrderType.Limit, true)]
-        [TestCase(SecurityType.Option, OrderType.Limit, false)]
+        [TestCase(SecurityType.Option, OrderType.Market, false)]
+        [TestCase(SecurityType.Option, OrderType.Limit, true)]
+        [TestCase(SecurityType.IndexOption, OrderType.Market, false)]
+        [TestCase(SecurityType.IndexOption, OrderType.Limit, false)]
+        [TestCase(SecurityType.Future, OrderType.Market, false)]
+        [TestCase(SecurityType.Future, OrderType.Limit, false)]
         public void CanSubmitOrder_WhenOutsideRegularTradingHours(SecurityType securityType, OrderType orderType, bool isShouldSubmitOrder)
         {
             var symbol = Symbols.AAPL;
@@ -97,6 +102,12 @@ namespace QuantConnect.Tests.Brokerages.TradeStation
             {
                 case SecurityType.Option:
                     symbol = Symbol.CreateOption(symbol, Market.USA, OptionStyle.American, OptionRight.Call, 100m, new DateTime(2024, 05, 02));
+                    break;
+                case SecurityType.IndexOption:
+                    symbol = Symbol.CreateOption(Symbols.SPX, Market.USA, OptionStyle.European, OptionRight.Call, 5000m, new DateTime(2024, 05, 02));
+                    break;
+                case SecurityType.Future:
+                    symbol = Symbols.Future_ESZ18_Dec2018;
                     break;
             }
 
