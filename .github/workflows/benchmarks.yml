@@ -2,14 +2,17 @@ name: Benchmarks
 
 on:
   push:
-    branches: ['*']
-    tags: ['*']
+    branches: [master]
   pull_request:
     branches: [master]
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
+
+permissions:
+  contents: read
+  actions: read
 
 jobs:
   build:
@@ -22,34 +25,72 @@ jobs:
     steps:
       - uses: actions/checkout@v2
 
-      - name: Checkout Lean Master
-        uses: actions/checkout@v2
-        with:
-          repository: QuantConnect/Lean
-          path: LeanMaster
-          ref: 'master'
-      - name: Build Lean Master
-        run: dotnet build --verbosity q /p:Configuration=Release /p:WarningLevel=1 LeanMaster/QuantConnect.Lean.sln
-
-      - name: Run Benchmarks Master
-        run: cp run_benchmarks.py LeanMaster/run_benchmarks.py && cd LeanMaster && python run_benchmarks.py /Data && cd ../
-
       - name: Build
         run: dotnet build --verbosity q /p:Configuration=Release /p:WarningLevel=1 QuantConnect.Lean.sln
 
       - name: Run Benchmarks
         run: python run_benchmarks.py /Data
 
+      # master's results are the reference the pull requests compare against, instead of running master again in each of them
+      - name: Store Master Benchmarks
+        if: github.event_name == 'push'
+        uses: actions/upload-artifact@v4
+        with:
+          name: benchmark-results
+          path: benchmark_results.json
+
+      - name: Find Master Benchmarks
+        id: reference-run
+        if: github.event_name == 'pull_request'
+        continue-on-error: true
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: |
+          RUN_ID=$(curl -sSf -H "Authorization: Bearer $GITHUB_TOKEN" \
+            "$GITHUB_API_URL/repos/$GITHUB_REPOSITORY/actions/workflows/benchmarks.yml/runs?branch=master&event=push&status=success&per_page=1" \
+            | python -c "import sys, json; print(json.load(sys.stdin)['workflow_runs'][0]['id'])")
+          echo "id=$RUN_ID" >> $GITHUB_OUTPUT
+
+      - name: Fetch Master Benchmarks
+        id: reference
+        if: steps.reference-run.outcome == 'success'
+        continue-on-error: true
+        uses: actions/download-artifact@v4
+        with:
+          name: benchmark-results
+          path: reference
+          run-id: ${{ steps.reference-run.outputs.id }}
+          github-token: ${{ github.token }}
+
+      - name: Checkout Lean Master
+        if: github.event_name == 'pull_request'
+        uses: actions/checkout@v2
+        with:
+          repository: QuantConnect/Lean
+          path: LeanMaster
+          ref: 'master'
+
+      # without stored results, run master here as the reference, like before they were stored
+      - name: Run Benchmarks Master
+        if: github.event_name == 'pull_request' && steps.reference.outcome != 'success'
+        run: |
+          dotnet build --verbosity q /p:Configuration=Release /p:WarningLevel=1 LeanMaster/QuantConnect.Lean.sln
+          cp run_benchmarks.py LeanMaster/run_benchmarks.py && cd LeanMaster && python run_benchmarks.py /Data && cd ../
+          mkdir -p reference && cp LeanMaster/benchmark_results.json reference/benchmark_results.json
+
       - name: Compare Benchmarks
         id: compare
+        if: github.event_name == 'pull_request'
         continue-on-error: true
-        run: python compare_benchmarks.py LeanMaster/benchmark_results.json benchmark_results.json failed_benchmarks.json
+        run: python compare_benchmarks.py reference/benchmark_results.json benchmark_results.json failed_benchmarks.json
 
-      # a single sample per side is noisy: run the failed algorithms again on both sides and fail only if the regression repeats
+      # a single sample per side, maybe from another run and machine, is noisy: run the failed algorithms again on master and
+      # on the change on this machine, and fail only if the regression repeats
       - name: Re-check Failed Benchmarks
         if: steps.compare.outcome == 'failure'
         run: |
+          dotnet build --verbosity q /p:Configuration=Release /p:WarningLevel=1 LeanMaster/QuantConnect.Lean.sln
           sleep 30
-          cd LeanMaster && python run_benchmarks.py /Data ../failed_benchmarks.json && cd ../
+          cp run_benchmarks.py LeanMaster/run_benchmarks.py && cd LeanMaster && python run_benchmarks.py /Data ../failed_benchmarks.json && cd ../
           python run_benchmarks.py /Data failed_benchmarks.json
           python compare_benchmarks.py LeanMaster/benchmark_results.json benchmark_results.json

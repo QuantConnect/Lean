@@ -38,29 +38,24 @@ for baseDirectory in ["Algorithm.CSharp/Benchmarks", "Algorithm.Python/Benchmark
 
 			dataPointsPerSecond = []
 			benchmarkLengths = []
-			for x in range(1, 3):
+			subprocess.run(["dotnet", "./QuantConnect.Lean.Launcher.dll",
+				"--data-folder " + dataPath,
+				"--algorithm-language " + language,
+				"--algorithm-type-name " + algorithmName,
+				"--algorithm-location " + algorithmLocation,
+				"--log-handler ConsoleErrorLogHandler",
+				"--close-automatically true"],
+				cwd="./Launcher/bin/Release",
+				stdout=subprocess.DEVNULL,
+				stderr=subprocess.DEVNULL)
 
-				subprocess.run(["dotnet", "./QuantConnect.Lean.Launcher.dll",
-					"--data-folder " + dataPath,
-					"--algorithm-language " + language,
-					"--algorithm-type-name " + algorithmName,
-					"--algorithm-location " + algorithmLocation,
-					"--log-handler ConsoleErrorLogHandler",
-					"--close-automatically true"],
-					cwd="./Launcher/bin/Release",
-					stdout=subprocess.DEVNULL,
-					stderr=subprocess.DEVNULL)
-				if x == 1:
-					# skip first run
-					continue
-
-				algorithmLogs = os.path.join("./Launcher/bin/Release", algorithmName + "-log.txt")
-				file = open(algorithmLogs, 'r')
-				for line in file.readlines():
-					for match in re.findall(r"(\d+)k data points per second", line):
-						dataPointsPerSecond.append(int(match))
-					for match in re.findall(r" completed in (\d+)", line):
-						benchmarkLengths.append(int(match))
+			algorithmLogs = os.path.join("./Launcher/bin/Release", algorithmName + "-log.txt")
+			file = open(algorithmLogs, 'r')
+			for line in file.readlines():
+				for match in re.findall(r"(\d+)k data points per second", line):
+					dataPointsPerSecond.append(int(match))
+				for match in re.findall(r" completed in (\d+)", line):
+					benchmarkLengths.append(int(match))
 
 			averageDps = statistics.mean(dataPointsPerSecond)
 			averageLength = statistics.mean(benchmarkLengths)
