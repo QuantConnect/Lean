@@ -1819,7 +1819,13 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 ConsoleWriteLine($"TimeProvider now: {_manualTimeProvider.GetUtcNow().ToStringInvariant()} Count: {ts.Slice.Count}. " +
                     $"Delta (ms): {((decimal)delta.TotalMilliseconds).SmartRounding().ToStringInvariant()}{Environment.NewLine}"
                 );
-            });
+
+                if (count > 5)
+                {
+                    // we got what we wanted shortcut unit test
+                    _manualTimeProvider.SetCurrentTimeUtc(Time.EndOfTime);
+                }
+            }, endDate: Time.EndOfTime);
 
             Log.Trace("Count: " + count);
             Log.Trace("Spool up time: " + stopwatch.Elapsed);
@@ -2525,7 +2531,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds
                 {
                     _manualTimeProvider.SetCurrentTimeUtc(Time.EndOfTime);
                 }
-            }, secondsTimeStep: 60 * 60 * 3);
+            }, secondsTimeStep: 60 * 60 * 3, alwaysInvoke: true, endDate: Time.EndOfTime);
 
             Assert.AreEqual(AlgorithmStatus.RuntimeError, _algorithm.Status);
         }

@@ -32,6 +32,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Transport
     public class RemoteFileSubscriptionStreamReaderTests
     {
         private TestDownloadProvider _api;
+        private TimeSpan _retryDelayUnit;
 
         [SetUp]
         public void SetUp()
@@ -40,6 +41,9 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Transport
             _api.Initialize(Globals.UserId, Globals.UserToken, Globals.DataFolder);
             RemoteFileSubscriptionStreamReader.SetDownloadProvider(_api);
             TestDownloadProvider.DownloadCount = 0;
+            // the retries are still made, without waiting between them
+            _retryDelayUnit = RemoteFileSubscriptionStreamReader.RetryDelayUnit;
+            RemoteFileSubscriptionStreamReader.RetryDelayUnit = TimeSpan.Zero;
             // create cache directory if not existing
             if (!Directory.Exists(Globals.Cache))
             {
@@ -57,6 +61,7 @@ namespace QuantConnect.Tests.Engine.DataFeeds.Transport
         public void TearDown()
         {
             _api.DisposeSafely();
+            RemoteFileSubscriptionStreamReader.RetryDelayUnit = _retryDelayUnit;
         }
 
         [TestCase(true)]
