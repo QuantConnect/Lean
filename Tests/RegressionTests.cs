@@ -83,6 +83,9 @@ namespace QuantConnect.Tests
                 .Select(str => Parse.Enum<Language>(str.Value<string>()))
                 .ToHashSet();
 
+            var shardCount = TestContext.Parameters.Get("regression-shard-count", 1);
+            var shard = TestContext.Parameters.Get("regression-shard", 0);
+
             // find all regression algorithms in Algorithm.CSharp
             return (
                 from type in typeof(J).Assembly.GetTypes()
@@ -95,6 +98,8 @@ namespace QuantConnect.Tests
                 select factory(instance, language)
             )
             .OrderBy(x => x.Language).ThenBy(x => x.Algorithm)
+            // keep this process' share of the cases when they are split across several test runs
+            .Where((_, index) => index % shardCount == shard)
             // generate test cases from test parameters
             .Select(x => new TestCaseData(x).SetName(x.Language + "/" + x.Algorithm))
             .ToArray();

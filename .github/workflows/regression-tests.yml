@@ -25,8 +25,28 @@ jobs:
         run: dotnet build /p:Configuration=Release /v:quiet /p:WarningLevel=1 QuantConnect.Lean.sln
 
       - name: Run Tests
+        shell: bash
         run: |
-          dotnet test ./Tests/bin/Release/QuantConnect.Tests.dll \
-            --filter TestCategory=RegressionTests \
-            -- TestRunParameters.Parameter\(name=\"log-handler\", value=\"ConsoleErrorLogHandler\"\) \
-            TestRunParameters.Parameter\(name=\"reduced-disk-size\", value=\"true\"\)
+          # the regression algorithms run in independent shards at the same time, each from its own copy of the test binaries
+          # so the files a backtest writes next to them, such as the object store, aren't shared between shards
+          shards=4
+          pids=()
+          for shard in $(seq 0 $((shards - 1))); do
+            cp -r ./Tests/bin/Release ./Tests/bin/RegressionShard$shard
+            (
+              set -o pipefail
+              dotnet test ./Tests/bin/RegressionShard$shard/QuantConnect.Tests.dll \
+                --filter TestCategory=RegressionTests \
+                -- TestRunParameters.Parameter\(name=\"log-handler\", value=\"ConsoleErrorLogHandler\"\) \
+                TestRunParameters.Parameter\(name=\"reduced-disk-size\", value=\"true\"\) \
+                TestRunParameters.Parameter\(name=\"regression-shard\", value=\"$shard\"\) \
+                TestRunParameters.Parameter\(name=\"regression-shard-count\", value=\"$shards\"\) \
+                2>&1 | sed -u "s/^/[shard $shard] /"
+            ) &
+            pids+=($!)
+          done
+          status=0
+          for pid in "${pids[@]}"; do
+            wait $pid || status=1
+          done
+          exit $status

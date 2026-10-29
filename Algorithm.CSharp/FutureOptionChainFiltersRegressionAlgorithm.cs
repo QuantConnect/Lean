@@ -78,7 +78,8 @@ namespace QuantConnect.Algorithm.CSharp
             // One chain per future contract, keyed by its canonical option symbol
             foreach (var chain in slice.OptionChains.Values)
             {
-                if (chain.Symbol.Underlying.ID.Date != MarchExpiry)
+                // The time of day of the underlying's expiry depends on how its symbol was created, only its day identifies the contract
+                if (chain.Symbol.Underlying.ID.Date.Date != MarchExpiry)
                 {
                     throw new RegressionTestException($"Unexpected option chain for {chain.Symbol.Underlying}");
                 }

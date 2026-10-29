@@ -58,7 +58,8 @@ class FutureOptionChainFiltersRegressionAlgorithm(QCAlgorithm):
     def on_data(self, slice):
         # One chain per future contract, keyed by its canonical option symbol
         for chain in slice.option_chains.values():
-            if chain.symbol.underlying.id.date != self.MARCH_EXPIRY:
+            # The time of day of the underlying's expiry depends on how its symbol was created, only its day identifies the contract
+            if chain.symbol.underlying.id.date.date() != self.MARCH_EXPIRY.date():
                 raise AssertionError(f"Unexpected option chain for {chain.symbol.underlying}")
             self._chain_seen = True
 
