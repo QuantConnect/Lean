@@ -125,6 +125,9 @@ namespace QuantConnect.Tests.Common.Securities.Futures
         [TestCase("20250101", "20241230")]
         // 12/31/2021 is a US bank holiday but the Central Bank of Brazil still published its repeated PTAX that day
         [TestCase("20220101", "20211230")]
+        // December 31 on a Sunday: the Central Bank's last PTAX, on Friday the 29th, repeated the 28th's rate (3.3080 in 2017, 4.8413 in 2023)
+        [TestCase("20180101", "20171228")]
+        [TestCase("20240101", "20231228")]
         // other months terminate on the last business day of the preceding month, CME submission 11-125
         [TestCase("20110401", "20110331")]
         [TestCase("20120401", "20120330")]
