@@ -13,6 +13,7 @@
  * limitations under the License.
 */
 
+using System;
 using QuantConnect.Data;
 using QuantConnect.Data.Market;
 
@@ -35,9 +36,10 @@ namespace QuantConnect.Securities.Option
         /// <param name="contract">The option contract to evaluate</param>
         /// <returns>An instance of <see cref="OptionPriceModelResult"/> containing the theoretical
         /// price of the specified option contract</returns>
+        [Obsolete("This method is deprecated. Use Evaluate(OptionPriceModelParameters parameters) instead.")]
         public override OptionPriceModelResult Evaluate(Security security, Slice slice, OptionContract contract)
         {
-            return new OptionPriceModelResult(security.Price, NullGreeks.Instance);
+            return Evaluate(new OptionPriceModelParameters(security, slice, contract));
         }
 
         /// <summary>
@@ -49,7 +51,7 @@ namespace QuantConnect.Securities.Option
         /// price of the specified option contract</returns>
         public override OptionPriceModelResult Evaluate(OptionPriceModelParameters parameters)
         {
-            return Evaluate(parameters.Security, parameters.Slice, parameters.Contract);
+            return new OptionPriceModelResult(parameters.Security.Price, NullGreeks.Instance);
         }
     }
 }

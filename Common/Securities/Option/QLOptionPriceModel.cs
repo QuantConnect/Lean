@@ -105,8 +105,25 @@ namespace QuantConnect.Securities.Option
         /// <param name="contract">The option contract to evaluate</param>
         /// <returns>An instance of <see cref="OptionPriceModelResult"/> containing the theoretical
         /// price of the specified option contract</returns>
+        [Obsolete("This method is deprecated. Use Evaluate(OptionPriceModelParameters parameters) instead.")]
         public override OptionPriceModelResult Evaluate(Security security, Slice slice, OptionContract contract)
         {
+            return Evaluate(new OptionPriceModelParameters(security, slice, contract));
+        }
+
+        /// <summary>
+        /// Evaluates the specified option contract to compute a theoretical price, IV and greeks
+        /// </summary>
+        /// <param name="parameters">A <see cref="OptionPriceModelParameters"/> object
+        /// containing the security, slice and contract</param>
+        /// <returns>An instance of <see cref="OptionPriceModelResult"/> containing the theoretical
+        /// price of the specified option contract</returns>
+        public override OptionPriceModelResult Evaluate(OptionPriceModelParameters parameters)
+        {
+            var security = parameters.Security;
+            var slice = parameters.Slice;
+            var contract = parameters.Contract;
+
             if (!AllowedOptionStyles.Contains(contract.Symbol.ID.OptionStyle))
             {
                 throw new ArgumentException($"{contract.Symbol.ID.OptionStyle} style options are not supported by option price model '{this.GetType().Name}'");
@@ -301,18 +318,6 @@ namespace QuantConnect.Securities.Option
                 Log.Debug($"QLOptionPriceModel.Evaluate() error: {err.Message} {(Log.DebuggingEnabled ? err.StackTrace : string.Empty)} for {contract.Symbol}");
                 return OptionPriceModelResult.None;
             }
-        }
-
-        /// <summary>
-        /// Evaluates the specified option contract to compute a theoretical price, IV and greeks
-        /// </summary>
-        /// <param name="parameters">A <see cref="OptionPriceModelParameters"/> object
-        /// containing the security, slice and contract</param>
-        /// <returns>An instance of <see cref="OptionPriceModelResult"/> containing the theoretical
-        /// price of the specified option contract</returns>
-        public override OptionPriceModelResult Evaluate(OptionPriceModelParameters parameters)
-        {
-            return Evaluate(parameters.Security, parameters.Slice, parameters.Contract);
         }
 
         /// <summary>
