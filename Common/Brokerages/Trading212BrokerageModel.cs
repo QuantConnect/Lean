@@ -17,6 +17,7 @@
 using QuantConnect.Orders;
 using QuantConnect.Orders.Fees;
 using QuantConnect.Securities;
+using QuantConnect.Securities.Equity;
 using System.Collections.Generic;
 
 namespace QuantConnect.Brokerages
@@ -88,6 +89,21 @@ namespace QuantConnect.Brokerages
         public override IFeeModel GetFeeModel(Security security)
         {
             return new Trading212FeeModel();
+        }
+
+        /// <summary>
+        /// Gets a new settlement model for the security
+        /// </summary>
+        /// <remarks>
+        /// Trading 212 converts every trade to the account currency, so cash settles in the account
+        /// currency instead of the instrument's quote currency. The model keeps the T+1 settlement of
+        /// US equities, so sale proceeds become available once they settle.
+        /// </remarks>
+        /// <param name="security">The security to get a settlement model for</param>
+        /// <returns>The settlement model for this brokerage</returns>
+        public override ISettlementModel GetSettlementModel(Security security)
+        {
+            return new AccountCurrencyDelayedSettlementModel(Equity.DefaultSettlementDays, Equity.DefaultSettlementTime);
         }
 
         /// <summary>

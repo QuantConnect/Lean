@@ -19,6 +19,7 @@ using QuantConnect.Orders;
 using QuantConnect.Brokerages;
 using QuantConnect.Securities;
 using QuantConnect.Tests.Brokerages;
+using QuantConnect.Tests.Engine.DataFeeds;
 
 namespace QuantConnect.Tests.Common.Brokerages
 {
@@ -174,20 +175,62 @@ namespace QuantConnect.Tests.Common.Brokerages
         }
 
         [Test]
-        public void DefaultAccountTypeUsesDelayedEquitySettlement()
-        {
-            var security = GetSecurityForType(SecurityType.Equity);
-
-            Assert.That(_brokerageModel.GetSettlementModel(security), Is.InstanceOf<DelayedSettlementModel>());
-        }
-
-        [Test]
         public void CreateWithMarginAccountTypeStillUsesNoLeverage()
         {
             var model = BrokerageModel.Create(new OrderProvider(), BrokerageName.Trading212, AccountType.Margin);
             var security = GetSecurityForType(SecurityType.Equity);
 
             Assert.That(model.GetLeverage(security), Is.EqualTo(1m));
+        }
+
+        [Test]
+        public void GetSettlementModelReturnsAccountCurrencyDelayedSettlementModel()
+        {
+            var security = GetSecurityForType(SecurityType.Equity);
+
+            var settlementModel = _brokerageModel.GetSettlementModel(security);
+
+            Assert.That(settlementModel, Is.InstanceOf<AccountCurrencyDelayedSettlementModel>());
+        }
+
+        // Trading 212 converts every trade to the account currency, so a foreign currency buy
+        // debits the account currency cash instead of leaving a balance in the quote currency.
+        [Test]
+        public void SettlementModelSettlesForeignCurrencyBuysInTheAccountCurrency()
+        {
+            var algorithm = new AlgorithmStub();
+            algorithm.SetAccountCurrency(Currencies.GBP, 1000m);
+            var security = algorithm.AddSecurity(Symbols.AAPL);
+            var portfolio = algorithm.Portfolio;
+            // One USD is worth 0.8 GBP.
+            portfolio.SetCash(Currencies.USD, 0m, 0.8m);
+
+            var settlementModel = _brokerageModel.GetSettlementModel(security);
+            settlementModel.ApplyFunds(new ApplyFundsSettlementModelParameters(portfolio, security, DateTime.UtcNow,
+                new CashAmount(-1000m, Currencies.USD), null));
+
+            Assert.That(portfolio.CashBook[Currencies.GBP].Amount, Is.EqualTo(200m));
+            Assert.That(portfolio.CashBook[Currencies.USD].Amount, Is.EqualTo(0m));
+        }
+
+        // Sale proceeds wait for the T+1 settlement, converted to the account currency.
+        [Test]
+        public void SettlementModelHoldsForeignCurrencySaleProceedsUntilSettlement()
+        {
+            var algorithm = new AlgorithmStub();
+            algorithm.SetAccountCurrency(Currencies.GBP, 1000m);
+            var security = algorithm.AddSecurity(Symbols.AAPL);
+            var portfolio = algorithm.Portfolio;
+            // One USD is worth 0.8 GBP.
+            portfolio.SetCash(Currencies.USD, 0m, 0.8m);
+
+            var settlementModel = _brokerageModel.GetSettlementModel(security);
+            settlementModel.ApplyFunds(new ApplyFundsSettlementModelParameters(portfolio, security, DateTime.UtcNow,
+                new CashAmount(1000m, Currencies.USD), null));
+
+            Assert.That(portfolio.CashBook[Currencies.GBP].Amount, Is.EqualTo(1000m));
+            Assert.That(portfolio.CashBook[Currencies.USD].Amount, Is.EqualTo(0m));
+            Assert.That(portfolio.UnsettledCashBook[Currencies.GBP].Amount, Is.EqualTo(800m));
         }
 
         [Test]
