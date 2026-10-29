@@ -38,6 +38,9 @@ namespace QuantConnect.Data.UniverseSelection
         // `UniverseSelection.RemoveSecurityFromUniverse()` will query us at `GetSubscriptionRequests()` to get the `SubscriptionDataConfig` and remove it from the DF
         // and we need to return the config even after the call to `Remove()`
         private readonly HashSet<SubscriptionDataConfig> _pendingRemovedConfigs = new HashSet<SubscriptionDataConfig>();
+        // members which got a new configuration, like a new resolution or a removal and re-addition in the same time step, stay selected
+        // so `UniverseSelection.ApplyUniverseSelection()` will query us at `TryTakeChangedMembers()` to update their data subscriptions
+        private readonly HashSet<Symbol> _changedMembers = new HashSet<Symbol>();
         private readonly Func<DateTime, IEnumerable<Symbol>> _selector;
         private readonly object _lock = new ();
 
@@ -144,6 +147,11 @@ namespace QuantConnect.Data.UniverseSelection
             {
                 // let's not call the event having the lock if we don't need too
                 added = _subscriptionDataConfigs.Add(subscriptionDataConfig);
+                // re-adding a configuration pending removal keeps its existing data subscription
+                if (added && ContainsMember(subscriptionDataConfig.Symbol) && !_pendingRemovedConfigs.Remove(subscriptionDataConfig))
+                {
+                    _changedMembers.Add(subscriptionDataConfig.Symbol);
+                }
             }
 
             if (added)
@@ -255,6 +263,32 @@ namespace QuantConnect.Data.UniverseSelection
         }
 
         /// <summary>
+        /// Takes the members whose configurations changed while they stayed selected
+        /// </summary>
+        /// <param name="changedMembers">The symbols of the members with new configurations</param>
+        /// <param name="replacedConfigs">The configurations the changed members no longer request</param>
+        /// <returns>True if any member changed</returns>
+        internal bool TryTakeChangedMembers(out List<Symbol> changedMembers, out List<SubscriptionDataConfig> replacedConfigs)
+        {
+            lock (_lock)
+            {
+                if (_changedMembers.Count == 0)
+                {
+                    changedMembers = null;
+                    replacedConfigs = null;
+                    return false;
+                }
+
+                replacedConfigs = _pendingRemovedConfigs.Where(config => _changedMembers.Contains(config.Symbol)).ToList();
+                _pendingRemovedConfigs.ExceptWith(replacedConfigs);
+
+                changedMembers = _changedMembers.ToList();
+                _changedMembers.Clear();
+                return true;
+            }
+        }
+
+        /// <summary>
         /// Tries to remove the specified security from the universe.
         /// </summary>
         /// <param name="utcTime">The current utc time</param>
@@ -277,6 +311,7 @@ namespace QuantConnect.Data.UniverseSelection
             {
                 var toBeRemoved = _subscriptionDataConfigs.Where(x => x.Symbol == symbol).ToList();
                 var removedSymbol = _symbols.Remove(symbol);
+                _changedMembers.Remove(symbol);
 
                 if (removedSymbol || toBeRemoved.Any())
                 {

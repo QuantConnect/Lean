@@ -409,19 +409,19 @@ namespace QuantConnect.Tests.Engine.Results
             var equityPerformance = equity.ResampleEquivalence(dt => dt.Date, s => s.FirstValue()).PercentChange();
             var benchmarkPerformance = benchmark.PercentChange();
 
-            // Before 2020-01-10, the following Frame is created:
+            // The following Frame is created:
             // ==================================================================================
             // |                           equity              bench                perf        |
             // | 10/7/2013 12:00:00 AM  -> <missing>           <missing>            0           |
-            // | 10/8/2013 12:00:00 AM  -> 0                   -0.00835040609378598 0           |
-            // | 10/9/2013 12:00:00 AM  -> -0.0114877029999999 -0.0117646820298673  -0.0114877  |
-            // | 10/10/2013 12:00:00 AM -> 0.0111613132728369  0.000604537450206063 0.01116131  | <- (perf): This is the date we changed to minutely data.
-            // | 10/11/2013 12:00:00 AM -> 0.00642813429004656 0.0216210268330373   0.006428134 | <- If we were still using daily data, this value would be here: |
-            // | 10/12/2013 12:00:00 AM -> 0                   0.00638415728187288  0           | <----------------------------------------------------------------
+            // | 10/8/2013 12:00:00 AM  -> 0                   -0.0087038817532125  0           |
+            // | 10/9/2013 12:00:00 AM  -> -0.011121127        -0.0115877913009358  -0.01112113 |
+            // | 10/10/2013 12:00:00 AM -> 0.000512282154905   0.000543757827876358 0.0005122819 |
+            // | 10/11/2013 12:00:00 AM -> 0.0209270045689311  0.0221659977004138   0.020927    | <- (perf): The minute feed took over on 10/10.
+            // | 10/11/2013 8:00:00 PM  -> <missing>           0.00626326630191891  0.00590684  |
             // ==================================================================================
             //
-            // On 2013-10-10, we switch from Daily Resolution to Minute. From here onwards, our performance values
-            // are shifted backwards by 1 with the exception of the value on 10/10/2013 12:00:00 AM.
+            // On 2013-10-09 end of day we remove SPY (Daily) and re-add it at Minute resolution, so on 2013-10-10 the minute
+            // feed replaces the daily one: the RemoveSecurity liquidation and the re-buy both fill at the open of 10/10.
             Frame.CreateEmpty<DateTime, string>().Join("equity", equityPerformance).Join("bench", benchmarkPerformance).Join("perf", performance).Print();
 
             // Verify benchmark performance
@@ -453,9 +453,9 @@ namespace QuantConnect.Tests.Engine.Results
                 0,                      // First sample at start 10/7 12AM, zero because no change has occurred yet
                 0,                      // 10/7 - 10/8 <- We get first data at 12AM on 10/8
                 -0.01112113,            // 10/8 - 10/9 <- We buy with a MarketOnOpen order (submitted while the market is closed)
-                0.0005122819,           // 10/9 - 10/10 <- RemoveSecurity liquidation now converts (was filling at the stale previous close)
-                0.009923037000000001,   // 10/10 - 10/11
-                0.007853915             // 10/11 12AM - 10/11 8PM
+                0.0005122819,           // 10/9 - 10/10 <- RemoveSecurity at the end of 10/9 and re-add at Minute resolution
+                0.020926999999999998,   // 10/10 - 10/11 <- The minute feed takes over, the liquidation and the re-buy fill at the 10/10 open
+                0.00590684              // 10/11 12AM - 10/11 8PM
             };
 
             Assert.AreEqual(expectedPerformance, performance.Values.ToList());
@@ -470,8 +470,8 @@ namespace QuantConnect.Tests.Engine.Results
                 0,                          // First sample at start 10/7 12AM, seen as missing since percent change won't exists for that day
                 0,                          // 10/7 - 10/8 <- We get first data at 12AM on 10/8
                 -0.011121126999999979,      // 10/8 - 10/9 <- We buy with a MarketOnOpen order (submitted while the market is closed)
-                0.0005122821549045775,      // 10/9 - 10/10 <- RemoveSecurity liquidation now converts (was filling at the stale previous close)
-                0.009923037498293092,       // 10/10 - 10/11
+                0.0005122821549045775,      // 10/9 - 10/10 <- RemoveSecurity at the end of 10/9 and re-add at Minute resolution
+                0.020927004568931092,       // 10/10 - 10/11 <- The minute feed takes over, the liquidation and the re-buy fill at the 10/10 open
             };
 
             Assert.AreEqual(expectedEquityPerformance, equityPerformance.ValuesAll.ToList());
