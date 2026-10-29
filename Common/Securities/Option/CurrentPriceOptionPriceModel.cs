@@ -39,7 +39,7 @@ namespace QuantConnect.Securities.Option
         [Obsolete("This method is deprecated. Use Evaluate(OptionPriceModelParameters parameters) instead.")]
         public override OptionPriceModelResult Evaluate(Security security, Slice slice, OptionContract contract)
         {
-            return Evaluate(new OptionPriceModelParameters(security, slice, contract));
+            return new OptionPriceModelResult(security.Price, NullGreeks.Instance);
         }
 
         /// <summary>
@@ -51,7 +51,7 @@ namespace QuantConnect.Securities.Option
         /// price of the specified option contract</returns>
         public override OptionPriceModelResult Evaluate(OptionPriceModelParameters parameters)
         {
-            return new OptionPriceModelResult(parameters.Security.Price, NullGreeks.Instance);
+            return Evaluate(parameters.Security, parameters.Slice, parameters.Contract);
         }
     }
 }
