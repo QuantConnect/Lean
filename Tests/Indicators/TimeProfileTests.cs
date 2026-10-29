@@ -14,6 +14,7 @@
 */
 
 using System;
+using System.Threading.Tasks;
 using NUnit.Framework;
 using QuantConnect.Data.Market;
 using QuantConnect.Indicators;
@@ -119,6 +120,25 @@ namespace QuantConnect.Tests.Indicators
             TestHelper.AssertIndicatorIsInDefaultState(tp);
             tp.Update(new TradeBar() { Symbol = Symbols.IBM, Close = 1, Volume = 1, Time = reference.AddDays(1) });
             Assert.AreEqual(tp.Current.Value, 1m);
+        }
+
+        [Test]
+        public void ValueAreaSpansWholeProfileWhenItHoldsAllTheVolume()
+        {
+            var tp = new TimeProfile(3, 1m);
+            var reference = new DateTime(2000, 1, 1);
+            var closes = new[] { 10m, 11m, 12m };
+            var update = Task.Run(() =>
+            {
+                for (var i = 0; i < closes.Length; i++)
+                {
+                    tp.Update(new TradeBar() { Symbol = Symbols.AAPL, Close = closes[i], Volume = 100 * (i + 1), Time = reference.AddDays(1 + i) });
+                }
+            });
+
+            Assert.IsTrue(update.Wait(TimeSpan.FromSeconds(10)));
+            Assert.AreEqual(10m, tp.ValueAreaLow);
+            Assert.AreEqual(12m, tp.ValueAreaHigh);
         }
 
         [Test]

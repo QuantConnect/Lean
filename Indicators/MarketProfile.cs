@@ -291,6 +291,12 @@ namespace QuantConnect.Indicators
                 nextMinIndex = Math.Max(minIndex - 1, 0);
                 nextMaxIndex = Math.Min(maxIndex + 1, VolumePerPrice.Count - 1);
 
+                // The value area already spans every price level, it can't grow any further
+                if (nextMinIndex == lastMin && nextMaxIndex == lastMax)
+                {
+                    break;
+                }
+
                 if (nextMinIndex != lastMin)
                 {
                     lowVolume = VolumePerPrice.Values[nextMinIndex];
