@@ -357,7 +357,7 @@ namespace QuantConnect.Tests.Engine.Results
         [Test]
         public void HoldingsChangeForcesResultsStoreOnceSettled()
         {
-            var settleDelay = TimeSpan.FromSeconds(2);
+            var settleDelay = TimeSpan.FromSeconds(1);
             Config.Set("holdings-changed-store-delay", settleDelay.TotalSeconds.ToStringInvariant());
             using var api = new Api.Api();
             using var messaging = new QuantConnect.Messaging.Messaging();
@@ -413,7 +413,7 @@ namespace QuantConnect.Tests.Engine.Results
                 Trade(10);
 
                 // no store is forced before the holdings settle
-                Assert.IsFalse(resultHandler.WaitForStore(expectedStores + 1, TimeSpan.FromSeconds(1)), "A store was forced before the holdings settled");
+                Assert.IsFalse(resultHandler.WaitForStore(expectedStores + 1, settleDelay / 2), "A store was forced before the holdings settled");
                 // but once they settle, a store is forced without waiting for the scheduled one
                 Assert.IsTrue(resultHandler.WaitForStore(++expectedStores, settleDelay + TimeSpan.FromSeconds(5)), "No store was forced after the opened position settled");
                 Assert.GreaterOrEqual(stopwatch.Elapsed, settleDelay);

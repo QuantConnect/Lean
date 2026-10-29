@@ -36,6 +36,11 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Transport
         private static readonly object _fileSystemLock = new object();
 
         /// <summary>
+        /// The unit of the wait between download attempts, settable so the unit tests don't wait on the retries
+        /// </summary>
+        internal static TimeSpan RetryDelayUnit { get; set; } = TimeSpan.FromSeconds(1);
+
+        /// <summary>
         /// Gets whether or not this stream reader should be rate limited
         /// </summary>
         public bool ShouldBeRateLimited => false;
@@ -199,7 +204,7 @@ namespace QuantConnect.Lean.Engine.DataFeeds.Transport
 
                 if (attempt < maxAttempts)
                 {
-                    Thread.Sleep(2000 + 1000 * attempt);
+                    Thread.Sleep(RetryDelayUnit * (2 + attempt));
                 }
             }
 
