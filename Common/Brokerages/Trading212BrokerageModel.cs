@@ -15,6 +15,7 @@
 */
 
 using QuantConnect.Orders;
+using QuantConnect.Orders.Fees;
 using QuantConnect.Orders.TimeInForces;
 using QuantConnect.Securities;
 using System;
@@ -95,6 +96,16 @@ namespace QuantConnect.Brokerages
         public override decimal GetLeverage(Security security)
         {
             return 1m;
+        }
+
+        /// <summary>
+        /// Gets a new fee model that represents this brokerage's fee structure
+        /// </summary>
+        /// <param name="security">The security to get a fee model for</param>
+        /// <returns>The new fee model for this brokerage</returns>
+        public override IFeeModel GetFeeModel(Security security)
+        {
+            return new Trading212FeeModel();
         }
 
         /// <summary>
