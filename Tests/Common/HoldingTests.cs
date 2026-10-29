@@ -123,6 +123,19 @@ namespace QuantConnect.Tests.Common
         }
 
         [Test]
+        public void OptionWithoutUnderlying()
+        {
+            var source = "{\"averagePrice\": 689.6208, \"quantity\": 103, \"symbol\": {\"id\": \"SPX ZIC7DGAJYOUM|SPX 31\", \"value\": \"SPX   271217C07850000\"}}";
+            var deserialized = JsonConvert.DeserializeObject<Holding>(source);
+
+            Assert.AreEqual(Symbols.SPX, deserialized.Symbol.Underlying);
+
+            var algo = new AlgorithmStub();
+            var option = algo.AddOptionContract(deserialized.Symbol);
+            Assert.AreEqual(deserialized.Symbol, option.Symbol);
+        }
+
+        [Test]
         public void DefaultHoldings()
         {
             var algo = new AlgorithmStub();
