@@ -14,6 +14,7 @@
 */
 
 using NUnit.Framework;
+using Python.Runtime;
 using QuantConnect.Brokerages;
 
 namespace QuantConnect.Tests.Common
@@ -26,12 +27,38 @@ namespace QuantConnect.Tests.Common
         {
             Assert.AreEqual((int) BrokerageName.Default, 0);
             Assert.AreEqual((int) BrokerageName.QuantConnectBrokerage, 0);
+            Assert.AreEqual((int) BrokerageName.QuantconnectBrokerage, 0);
             Assert.AreEqual((int) BrokerageName.InteractiveBrokersBrokerage, 1);
             Assert.AreEqual((int) BrokerageName.TradierBrokerage, 2);
             Assert.AreEqual((int) BrokerageName.OandaBrokerage, 3);
             Assert.AreEqual((int) BrokerageName.FxcmBrokerage, 4);
             Assert.AreEqual((int) BrokerageName.Bitfinex, 5);
             Assert.AreEqual((int) BrokerageName.Coinbase, 32);
+        }
+
+        [Test]
+        public void DefaultBrokerageNameKeepsItsName()
+        {
+            Assert.AreEqual("QuantConnectBrokerage", BrokerageName.QuantconnectBrokerage.ToString());
+        }
+
+        [TestCase("DEFAULT")]
+        [TestCase("QUANT_CONNECT_BROKERAGE")]
+        [TestCase("QUANTCONNECT_BROKERAGE")]
+        public void DefaultBrokerageNamesWorkInPython(string brokerageName)
+        {
+            using (Py.GIL())
+            {
+                var pythonModule = PyModule.FromString("testModule", @$"
+from AlgorithmImports import *
+
+def return_brokerage_name():
+    return BrokerageName.{brokerageName}
+");
+                dynamic pythonFunction = pythonModule.GetAttr("return_brokerage_name");
+                var brokerage = pythonFunction();
+                Assert.AreEqual(BrokerageName.Default, (brokerage as PyObject).GetAndDispose<BrokerageName>());
+            }
         }
     }
 }
