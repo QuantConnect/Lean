@@ -3417,7 +3417,10 @@ namespace QuantConnect.Tests.Engine.DataFeeds
             {
                 dataQueueStarted.Set();
 
-                if (exchangeTimeZone == null)
+                // the subscription is created after the first time pulse and the aggregator drops data emitted before it,
+                // unsupported custom data never gets one
+                if (exchangeTimeZone == null
+                    || !shouldThrowException && !fdqh.SubscriptionDataConfigs.Any(config => config.Symbol == symbol))
                 {
                     return Enumerable.Empty<BaseData>();
                 }
