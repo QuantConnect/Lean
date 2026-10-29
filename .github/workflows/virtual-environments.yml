@@ -30,8 +30,8 @@ jobs:
           # The test groups below run at the same time, each one in its own test hosts and in order, and their output is shown as each one ends.
           # Packages that hang or interfere when sharing a test host keep running in their own dotnet test invocation, as before.
           packageTests() {
-            # Run Python Package Tests
-            dotnet test ./Tests/bin/Release/QuantConnect.Tests.dll --filter "FullyQualifiedName=QuantConnect.Tests.Python.PythonPackagesTests" --blame-hang-timeout 120seconds --blame-crash
+            # Run Python Package Tests, except PyStan, which runs in separatePackageTests to balance the groups
+            dotnet test ./Tests/bin/Release/QuantConnect.Tests.dll --filter "FullyQualifiedName=QuantConnect.Tests.Python.PythonPackagesTests&Name!=PyStan" --blame-hang-timeout 120seconds --blame-crash
           }
 
           virtualEnvironmentAndSeparatePackageTests() {
@@ -89,6 +89,8 @@ jobs:
             dotnet test ./Tests/bin/Release/QuantConnect.Tests.dll --filter "FullyQualifiedName=QuantConnect.Tests.Python.PythonPackagesTests.Tsfel" --blame-hang-timeout 120seconds --blame-crash
 
             dotnet test ./Tests/bin/Release/QuantConnect.Tests.dll --filter "FullyQualifiedName=QuantConnect.Tests.Python.PythonPackagesTests.ScikitOptimizeTest" --blame-hang-timeout 120seconds --blame-crash
+
+            dotnet test ./Tests/bin/Release/QuantConnect.Tests.dll --filter "FullyQualifiedName=QuantConnect.Tests.Python.PythonPackagesTests.PyStan" --blame-hang-timeout 120seconds --blame-crash
           }
 
           testGroups=(packageTests virtualEnvironmentAndSeparatePackageTests separatePackageTests)
