@@ -14,7 +14,6 @@
 */
 
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Linq;
 using QuantConnect.Util;
 
@@ -115,7 +114,6 @@ namespace QuantConnect.Data
         /// <remarks>One of the objectives of this method is to normalize the 'use mapping'
         /// check and void code duplication and related issues</remarks>
         /// <returns>True if ticker should be mapped</returns>
-        [EditorBrowsable(EditorBrowsableState.Never)]
         public static bool TickerShouldBeMapped(this SubscriptionDataConfig config)
         {
             // we create an instance of the data type, if it is a custom type
@@ -131,7 +129,6 @@ namespace QuantConnect.Data
         /// check and void code duplication and related issues</remarks>
         /// <param name="liveMode">True, is this is a live mode data stream</param>
         /// <returns>True if ticker prices should be scaled</returns>
-        [EditorBrowsable(EditorBrowsableState.Never)]
         public static bool PricesShouldBeScaled(this SubscriptionDataConfig config, bool liveMode = false)
         {
             if (config.IsCustomData || config.Symbol.Value.Contains("UNIVERSE"))
@@ -158,7 +155,6 @@ namespace QuantConnect.Data
         /// <remarks>Different than <see cref="PricesShouldBeScaled"/> because prices could be scale and no split and dividends
         /// really exist, like in the continuous futures case</remarks>
         /// <returns>True if this configuration requires split and divided handling</returns>
-        [EditorBrowsable(EditorBrowsableState.Never)]
         public static bool EmitSplitsAndDividends(this SubscriptionDataConfig config)
         {
             return !config.IsCustomData && !config.Symbol.Value.Contains("UNIVERSE") && config.SecurityType == SecurityType.Equity;
@@ -167,7 +163,6 @@ namespace QuantConnect.Data
         /// <summary>
         /// True if this configuration is associated with an asset which can have delisting events
         /// </summary>
-        [EditorBrowsable(EditorBrowsableState.Never)]
         public static bool CanBeDelisted(this SubscriptionDataConfig config)
         {
             return config.SecurityType.IsOption() || config.SecurityType == SecurityType.Future || config.SecurityType == SecurityType.Equity;
@@ -176,7 +171,6 @@ namespace QuantConnect.Data
         /// <summary>
         /// Initializes a new instance of the <see cref="BaseData"/> type defined in <paramref name="config"/> with the symbol properly set
         /// </summary>
-        [EditorBrowsable(EditorBrowsableState.Never)]
         public static BaseData GetBaseDataInstance(this SubscriptionDataConfig config)
         {
             var instance = config.Type.GetBaseDataInstance();

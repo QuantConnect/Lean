@@ -17,7 +17,6 @@ using System;
 using System.Linq;
 using QuantConnect.Logging;
 using System.Collections.Generic;
-using System.ComponentModel;
 
 namespace QuantConnect.Orders
 {
@@ -114,7 +113,6 @@ namespace QuantConnect.Orders
         /// <param name="orders">List of orders in the set, sorted by id</param>
         /// <returns>False if any of the orders in the set is not yet found in the order provider. True otherwise</returns>
         /// <remarks>If the target order is not a contingent order, the resulting list will contain that single order alone</remarks>
-        [EditorBrowsable(EditorBrowsableState.Never)]
         public static bool TryGetContingentOrders(this Order order, Func<int, Order> orderProvider, out List<Order> orders)
         {
             var contingency = order.Contingency;
@@ -168,7 +166,6 @@ namespace QuantConnect.Orders
         /// <param name="order">Target order, which can be any of the orders in the set</param>
         /// <param name="orderProvider">Order provider to use to access the existing orders</param>
         /// <returns>The existing orders of the set, including the given one, sorted by id</returns>
-        [EditorBrowsable(EditorBrowsableState.Never)]
         public static List<Order> GetExistingContingentOrders(this Order order, Func<int, Order> orderProvider)
         {
             var contingency = order.Contingency;
@@ -199,7 +196,6 @@ namespace QuantConnect.Orders
         /// </summary>
         /// <param name="order">The parent order</param>
         /// <param name="contingentOrders">The orders in the set</param>
-        [EditorBrowsable(EditorBrowsableState.Never)]
         public static IEnumerable<Order> GetContingentChildren(this Order order, IEnumerable<Order> contingentOrders)
         {
             var parent = order.GetContingencyLink(ContingencyRole.Parent);
@@ -215,7 +211,6 @@ namespace QuantConnect.Orders
         /// </summary>
         /// <param name="order">The child order</param>
         /// <param name="contingentOrders">The orders in the set</param>
-        [EditorBrowsable(EditorBrowsableState.Never)]
         public static IEnumerable<Order> GetContingentParents(this Order order, IEnumerable<Order> contingentOrders)
         {
             var child = order.GetContingencyLink(ContingencyRole.Child);
@@ -232,7 +227,6 @@ namespace QuantConnect.Orders
         /// </summary>
         /// <param name="order">The member order</param>
         /// <param name="contingentOrders">The orders in the set</param>
-        [EditorBrowsable(EditorBrowsableState.Never)]
         public static IEnumerable<Order> GetContingentSiblings(this Order order, IEnumerable<Order> contingentOrders)
         {
             if (order.GetSiblingLink() == null)
@@ -247,7 +241,6 @@ namespace QuantConnect.Orders
         /// </summary>
         /// <param name="order">The parent order</param>
         /// <param name="contingentOrders">The orders in the set</param>
-        [EditorBrowsable(EditorBrowsableState.Never)]
         public static List<Order> GetContingentDescendants(this Order order, IReadOnlyCollection<Order> contingentOrders)
         {
             var result = new List<Order>();
