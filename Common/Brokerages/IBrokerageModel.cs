@@ -198,8 +198,6 @@ namespace QuantConnect.Brokerages
                     return new DefaultBrokerageModel(accountType);
 
                 case BrokerageName.TerminalLink:
-                    return new TerminalLinkBrokerageModel(accountType);
-
                 case BrokerageName.QuantBridge:
                     return new QuantBridgeBrokerageModel(accountType);
 

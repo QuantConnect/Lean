@@ -113,14 +113,13 @@ namespace QuantConnect.Tests.Common.Brokerages
             Assert.AreEqual("NotSupported", message.Code);
         }
 
-        [TestCase(BrokerageName.QuantBridge, typeof(QuantBridgeBrokerageModel))]
-        [TestCase(BrokerageName.TerminalLink, typeof(TerminalLinkBrokerageModel))]
-        public void CreateReturnsTheModelOfTheBrokerageName(BrokerageName brokerageName, Type modelType)
+        [TestCase(BrokerageName.QuantBridge)]
+        [TestCase(BrokerageName.TerminalLink)]
+        public void CreateReturnsTheQuantBridgeModelForBothNames(BrokerageName brokerageName)
         {
             var model = BrokerageModel.Create(new OrderProvider(), brokerageName, AccountType.Margin);
 
-            Assert.AreEqual(modelType, model.GetType());
-            // both models map back to the new name; before the rename the old model mapped to Default
+            Assert.AreEqual(typeof(QuantBridgeBrokerageModel), model.GetType());
             Assert.AreEqual(BrokerageName.QuantBridge, BrokerageModel.GetBrokerageName(model));
         }
 
