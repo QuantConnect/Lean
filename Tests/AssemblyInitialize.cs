@@ -16,9 +16,12 @@
 
 using System;
 using System.IO;
+using System.Reflection;
+using System.Runtime.CompilerServices;
 using NUnit.Framework;
 using NUnit.Framework.Interfaces;
 using ProtoBuf.Meta;
+using Python.Runtime;
 using QuantConnect.Configuration;
 using QuantConnect.Data;
 using QuantConnect.Data.Custom.IconicTypes;
@@ -83,6 +86,18 @@ namespace QuantConnect.Tests
                 "../../../Algorithm.Framework/Selection",
                 "../../../Algorithm.Python"
                 });
+
+            // Python.NET's decimal type and the PandasData static constructor are initialized lazily, importing Python modules while
+            // holding a lock. A test holding the GIL and waiting on that lock deadlocks with the one initializing it, which waits
+            // for the GIL to finish the import, so we initialize them before tests run in parallel.
+            // See https://github.com/QuantConnect/pythonnet/issues/153
+            using (Py.GIL())
+            {
+                var pyDecimalType = typeof(PythonEngine).Assembly.GetType("Python.Runtime.Runtime")
+                    ?.GetField("PyDecimalType", BindingFlags.NonPublic | BindingFlags.Static)?.GetValue(null);
+                pyDecimalType?.GetType().GetProperty("Value").GetValue(pyDecimalType);
+                RuntimeHelpers.RunClassConstructor(typeof(PandasData).TypeHandle);
+            }
         }
 
         private static void TryAddIconicDataSubTypes()

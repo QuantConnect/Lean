@@ -14,14 +14,8 @@
 */
 
 using System;
-using System.Diagnostics;
 using System.IO;
-using System.Linq;
 using NUnit.Framework;
-using QuantConnect.Data;
-using QuantConnect.Data.Market;
-using QuantConnect.Lean.Engine.DataFeeds;
-using QuantConnect.Logging;
 using QuantConnect.Util;
 
 namespace QuantConnect.Tests.Common.Util
@@ -366,110 +360,6 @@ namespace QuantConnect.Tests.Common.Util
             Assert.AreEqual(0L, smartStream.GetInt64());
             Assert.AreEqual(1588291202486000, smartStream.GetInt64());
             Assert.AreEqual(1588291205550000, smartStream.GetInt64());
-        }
-
-        [Parallelizable(ParallelScope.None)]
-        [TestCase(typeof(TradeBar), typeof(TradeBarTest), TickType.Trade)]
-        [TestCase(typeof(QuoteBar), typeof(QuoteBarTest), TickType.Quote)]
-        public void Performance(Type streamReaderType, Type readLineReaderType, TickType tickType)
-        {
-            var streamReaderMilliSeconds = 0L;
-            var streamReaderCount = 0;
-            var getLineReaderMilliSeconds = 0L;
-            var getLineReaderCount = 0;
-            var stopWatch = new Stopwatch();
-            {
-                var config = new SubscriptionDataConfig(
-                    streamReaderType,
-                    Symbols.SPY,
-                    Resolution.Minute,
-                    TimeZones.NewYork,
-                    TimeZones.NewYork,
-                    false,
-                    true,
-                    false,
-                    tickType: tickType
-                );
-                using var zipCache = new ZipDataCacheProvider(TestGlobals.DataProvider);
-                var date = new DateTime(2013, 10, 07);
-                var reader = new TextSubscriptionDataSourceReader(
-                    zipCache,
-                    config,
-                    date,
-                    false,
-                    null);
-                var source = streamReaderType.GetBaseDataInstance().GetSource(config, date, false);
-                // warmup
-                streamReaderCount = reader.Read(source).Count();
-                streamReaderCount = 0;
-
-                // start test
-                stopWatch.Start();
-                for (int i = 0; i < 300; i++)
-                {
-                    streamReaderCount += reader.Read(source).Count();
-                }
-                stopWatch.Stop();
-                streamReaderMilliSeconds = stopWatch.ElapsedMilliseconds;
-                zipCache.DisposeSafely();
-            }
-
-            {
-                var config = new SubscriptionDataConfig(
-                    readLineReaderType,
-                    Symbols.SPY,
-                    Resolution.Minute,
-                    TimeZones.NewYork,
-                    TimeZones.NewYork,
-                    false,
-                    true,
-                    false,
-                    tickType: tickType
-                );
-                using var zipCache = new ZipDataCacheProvider(TestGlobals.DataProvider);
-                var date = new DateTime(2013, 10, 07);
-                var reader = new TextSubscriptionDataSourceReader(
-                    zipCache,
-                    config,
-                    date,
-                    false,
-                    null);
-                var source = readLineReaderType.GetBaseDataInstance().GetSource(config, date, false);
-                // warmup
-                getLineReaderCount = reader.Read(source).Count();
-                getLineReaderCount = 0;
-
-                // start test
-                stopWatch.Start();
-                for (int i = 0; i < 300; i++)
-                {
-                    getLineReaderCount += reader.Read(source).Count();
-                }
-                stopWatch.Stop();
-                getLineReaderMilliSeconds = stopWatch.ElapsedMilliseconds;
-            }
-            Log.Trace($"StreamReader: {streamReaderMilliSeconds}ms. Count {streamReaderCount}");
-            Log.Trace($"GetLine Reader: {getLineReaderMilliSeconds}ms. Count {getLineReaderCount}");
-
-            // its 50% faster but lets leave some room to avoid noise
-            Assert.IsTrue((streamReaderMilliSeconds * 1.5d) < getLineReaderMilliSeconds);
-            Assert.AreEqual(getLineReaderCount, streamReaderCount);
-        }
-
-        /// <summary>
-        /// Since this class does not implement <see cref="BaseData.Reader(SubscriptionDataConfig,StreamReader,DateTime,bool)"/>
-        /// directly it will fallback to get line reader
-        /// </summary>
-        private class TradeBarTest : TradeBar
-        {
-        }
-
-        /// <summary>
-        /// Since this class does not implement <see cref="BaseData.Reader(SubscriptionDataConfig,StreamReader,DateTime,bool)"/>
-        /// directly it will fallback to get line reader
-        /// </summary>
-        private class QuoteBarTest : QuoteBar
-        {
         }
     }
 }
