@@ -230,10 +230,15 @@ namespace QuantConnect.Brokerages
         /// Transaction and submit/execution rules will use Quant Bridge models
         /// </summary>
         QuantBridge,
-        
+
         /// <summary>
         /// Transaction and submit/execution rules will use eToro models
         /// </summary>
-        Etoro
+        Etoro,
+
+        /// <summary>
+        /// Transaction and submit/execution rules will use Trading 212 models
+        /// </summary>
+        Trading212
     }
 }
