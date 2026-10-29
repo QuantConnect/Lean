@@ -25,8 +25,9 @@ namespace QuantConnect.Algorithm.CSharp
 {
     /// <summary>
     /// Regression algorithm asserting that the indicators and consolidators created through the helper methods are
-    /// deregistered when their security is deselected by the universe or removed manually, and that the ones created
-    /// after the security is selected or added again receive data while the deregistered ones don't.
+    /// deregistered when their security is deselected by the universe or removed manually, that the ones created
+    /// after the security is selected or added again receive data while the deregistered ones don't, and that the
+    /// ones of a security that stays in the universe keep updating.
     /// See <see cref="IAlgorithmSettings.AutomaticIndicatorDeregistration"/>
     /// </summary>
     public class AutomaticIndicatorDeregistrationOnUniverseSelectionRegressionAlgorithm : QCAlgorithm, IRegressionAlgorithmDefinition
@@ -36,10 +37,13 @@ namespace QuantConnect.Algorithm.CSharp
 
         private Symbol _spy;
         private Symbol _aig;
+        private Symbol _ibm;
         private SymbolData _spyData;
         private SymbolData _aigData;
+        private SymbolData _ibmData;
         private bool _spyRemoved;
         private bool _spyReAdded;
+        private int _ibmBars;
 
         /// <summary>
         /// Initialise the data and resolution required, as well as the cash and start-end dates for your algorithm. All algorithms must initialized.
@@ -52,6 +56,7 @@ namespace QuantConnect.Algorithm.CSharp
 
             UniverseSettings.Resolution = Resolution.Daily;
             _aig = QuantConnect.Symbol.Create("AIG", SecurityType.Equity, Market.USA);
+            _ibm = QuantConnect.Symbol.Create("IBM", SecurityType.Equity, Market.USA);
             AddUniverse("MyUniverse", Resolution.Daily, SelectionFunction);
 
             _spy = AddEquity("SPY", Resolution.Daily).Symbol;
@@ -60,7 +65,7 @@ namespace QuantConnect.Algorithm.CSharp
 
         private IEnumerable<string> SelectionFunction(DateTime dateTime)
         {
-            // AIG leaves the universe and comes back on the same dates SPY is removed and re-added manually
+            // AIG leaves the universe and comes back on the same dates SPY is removed and re-added manually, IBM stays
             var selectAig = dateTime < _removalDate || dateTime >= _reAdditionDate;
             return selectAig ? new[] { "IBM", "AIG" } : new[] { "IBM" };
         }
@@ -71,6 +76,11 @@ namespace QuantConnect.Algorithm.CSharp
         /// <param name="slice">Slice object keyed by symbol containing the stock data</param>
         public override void OnData(Slice slice)
         {
+            if (slice.Bars.ContainsKey(_ibm))
+            {
+                _ibmBars++;
+            }
+
             if (!_spyRemoved && Time.Date >= _removalDate)
             {
                 _spyRemoved = true;
@@ -106,6 +116,10 @@ namespace QuantConnect.Algorithm.CSharp
                 {
                     _spyData.OnReAdded();
                 }
+                else if (security.Symbol == _ibm)
+                {
+                    _ibmData = new SymbolData(this, _ibm);
+                }
             }
 
             foreach (var security in changes.RemovedSecurities)
@@ -117,6 +131,10 @@ namespace QuantConnect.Algorithm.CSharp
                 else if (security.Symbol == _spy)
                 {
                     _spyData.OnRemoved();
+                }
+                else if (security.Symbol == _ibm)
+                {
+                    throw new RegressionTestException("IBM should stay in the universe");
                 }
             }
         }
@@ -130,6 +148,7 @@ namespace QuantConnect.Algorithm.CSharp
 
             _spyData.AssertDeregisteredOnRemoval();
             _aigData.AssertDeregisteredOnRemoval();
+            _ibmData.AssertKeptUpdating(_ibmBars);
         }
 
         private class SymbolData
@@ -191,6 +210,18 @@ namespace QuantConnect.Algorithm.CSharp
                     throw new RegressionTestException($"{_symbol}: the indicator and consolidator created after the security is re-added should get updates");
                 }
             }
+
+            public void AssertKeptUpdating(int expectedUpdates)
+            {
+                if (_removals != 0 || _sma.Consolidators.Count != 1)
+                {
+                    throw new RegressionTestException($"{_symbol}: the indicator of a security that stays should keep its consolidator");
+                }
+                if (expectedUpdates == 0 || _sma.Samples != expectedUpdates || _consolidatedCount != expectedUpdates)
+                {
+                    throw new RegressionTestException($"{_symbol}: the indicator and consolidator should get every bar. Bars: {expectedUpdates}, indicator: {_sma.Samples}, consolidator: {_consolidatedCount}");
+                }
+            }
         }
 
         /// <summary>
@@ -201,7 +232,7 @@ namespace QuantConnect.Algorithm.CSharp
         /// <summary>
         /// This is used by the regression test system to indicate which languages this algorithm is written in.
         /// </summary>
-        public List<Language> Languages { get; } = new() { Language.CSharp };
+        public List<Language> Languages { get; } = new() { Language.CSharp, Language.Python };
 
         /// <summary>
         /// Data Points count of all timeslices of algorithm

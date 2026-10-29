@@ -219,7 +219,7 @@ namespace QuantConnect.Algorithm
                 {
                     foreach (Security security in args.OldItems)
                     {
-                        DeregisterIndicatorsAndConsolidators(security.Symbol);
+                        RemoveSecurityConsolidators(security.Symbol);
                     }
                 }
             };

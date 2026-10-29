@@ -34,7 +34,7 @@ namespace QuantConnect.Tests.Common.Data
             var localtime = timeKeeper.GetLocalTimeKeeper(TimeZones.NewYork);
             var increment = TimeSpan.FromSeconds(seconds);
             using var consolidator = new TestConsolidator();
-            using var wrapper = new ConsolidatorWrapper(consolidator, increment, timeKeeper, localtime);
+            using var wrapper = new ConsolidatorWrapper(Symbols.SPY, consolidator, increment, timeKeeper, localtime);
             wrapper.AdvanceScanTime();
 
             Assert.AreEqual(time.Add(increment < Time.OneSecond ? Time.OneSecond : increment), wrapper.UtcScanTime);
@@ -49,7 +49,7 @@ namespace QuantConnect.Tests.Common.Data
             var localtime = timeKeeper.GetLocalTimeKeeper(TimeZones.NewYork);
             var increment = TimeSpan.FromSeconds(seconds);
             using var consolidator = new TestConsolidator();
-            using var wrapper = new ConsolidatorWrapper(consolidator, increment, timeKeeper, localtime);
+            using var wrapper = new ConsolidatorWrapper(Symbols.SPY, consolidator, increment, timeKeeper, localtime);
             wrapper.AdvanceScanTime();
 
             var expected = time.Add(increment < Time.OneSecond ? Time.OneSecond : increment);
@@ -69,7 +69,7 @@ namespace QuantConnect.Tests.Common.Data
             var localtime = timeKeeper.GetLocalTimeKeeper(TimeZones.NewYork);
             var increment = TimeSpan.FromSeconds(seconds);
             using var consolidator = new TestConsolidator();
-            using var wrapper = new ConsolidatorWrapper(consolidator, increment, timeKeeper, localtime);
+            using var wrapper = new ConsolidatorWrapper(Symbols.SPY, consolidator, increment, timeKeeper, localtime);
             wrapper.AdvanceScanTime();
 
             var expected = time.Add(increment < Time.OneSecond ? Time.OneSecond : increment);
@@ -111,7 +111,7 @@ namespace QuantConnect.Tests.Common.Data
             var localtime = timeKeeper.GetLocalTimeKeeper(tz);
             var increment = Time.OneHour;
             using var consolidator = new TestConsolidator();
-            using var wrapper = new ConsolidatorWrapper(consolidator, increment, timeKeeper, localtime);
+            using var wrapper = new ConsolidatorWrapper(Symbols.SPY, consolidator, increment, timeKeeper, localtime);
             wrapper.AdvanceScanTime();
 
             var expected = time.Add(Time.OneHour);
@@ -152,7 +152,7 @@ namespace QuantConnect.Tests.Common.Data
             var localtime = timeKeeper.GetLocalTimeKeeper(tz);
             var increment = Time.OneHour;
             using var consolidator = new TestConsolidator();
-            using var wrapper = new ConsolidatorWrapper(consolidator, increment, timeKeeper, localtime);
+            using var wrapper = new ConsolidatorWrapper(Symbols.SPY, consolidator, increment, timeKeeper, localtime);
             wrapper.AdvanceScanTime();
 
             var expected = time.Add(Time.OneHour);

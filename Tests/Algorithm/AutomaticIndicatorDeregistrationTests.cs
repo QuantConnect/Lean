@@ -14,7 +14,9 @@
 */
 
 using System;
+using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using NUnit.Framework;
 using QuantConnect.Algorithm;
 using QuantConnect.Data.Consolidators;
@@ -40,11 +42,17 @@ namespace QuantConnect.Tests.Algorithm
             _ibm = _algorithm.AddEquity("IBM").Symbol;
         }
 
-        private int ConsolidatorCount(Symbol symbol)
+        private List<IDataConsolidator> ConsolidatorsOf(Symbol symbol)
         {
             return _algorithm.SubscriptionManager.Subscriptions
                 .Where(config => config.Symbol == symbol)
-                .Sum(config => config.Consolidators.Count);
+                .SelectMany(config => config.Consolidators)
+                .ToList();
+        }
+
+        private int ConsolidatorCount(Symbol symbol)
+        {
+            return ConsolidatorsOf(symbol).Count;
         }
 
         [Test]
@@ -80,19 +88,21 @@ namespace QuantConnect.Tests.Algorithm
         }
 
         [Test]
-        public void DeregistersMultiSymbolIndicatorsThroughAnyOfTheirSymbols()
+        public void RemovesMultiSymbolIndicatorConsolidatorsOneSymbolAtATime()
         {
             var beta = _algorithm.B(_spy, _ibm, 10, Resolution.Daily);
-
             Assert.AreEqual(2, beta.Consolidators.Count);
 
             _algorithm.Securities.Remove(_spy);
 
-            Assert.IsEmpty(beta.Consolidators);
+            Assert.AreEqual(1, beta.Consolidators.Count);
             Assert.AreEqual(0, ConsolidatorCount(_spy));
-            Assert.AreEqual(0, ConsolidatorCount(_ibm));
+            Assert.AreEqual(1, ConsolidatorCount(_ibm));
 
-            Assert.DoesNotThrow(() => _algorithm.Securities.Remove(_ibm));
+            _algorithm.Securities.Remove(_ibm);
+
+            Assert.IsEmpty(beta.Consolidators);
+            Assert.AreEqual(0, ConsolidatorCount(_ibm));
         }
 
         [Test]
@@ -108,21 +118,108 @@ namespace QuantConnect.Tests.Algorithm
         }
 
         [Test]
-        public void DeregistersManuallyRegisteredIndicatorsButKeepsRawConsolidators()
+        public void RemovesManuallyRegisteredIndicatorsAndRawConsolidators()
         {
             var sma = new SimpleMovingAverage(10);
             _algorithm.RegisterIndicator(_spy, sma, Resolution.Minute);
 
-            using var rawConsolidator = new TradeBarConsolidator(TimeSpan.FromHours(1));
+            var rawConsolidator = new TradeBarConsolidator(TimeSpan.FromHours(1));
             _algorithm.SubscriptionManager.AddConsolidator(_spy, rawConsolidator);
 
             _algorithm.Securities.Remove(_spy);
 
             Assert.IsEmpty(sma.Consolidators);
+            Assert.AreEqual(0, ConsolidatorCount(_spy));
+        }
+
+        [Test]
+        public void RemovingTheMirrorOptionKeepsTheContractConsolidators()
+        {
+            var aapl = _algorithm.AddEquity("AAPL").Symbol;
+            var call = _algorithm.AddOptionContract(Symbols.CreateOptionSymbol("AAPL", OptionRight.Call, 250m, new DateTime(2016, 01, 15))).Symbol;
+            var put = _algorithm.AddOptionContract(Symbols.CreateOptionSymbol("AAPL", OptionRight.Put, 250m, new DateTime(2016, 01, 15))).Symbol;
+
+            var delta = _algorithm.D(call, put, resolution: Resolution.Minute);
+            Assert.AreEqual(3, delta.Consolidators.Count);
+
+            _algorithm.Securities.Remove(put);
+
+            Assert.AreEqual(0, ConsolidatorCount(put));
+            Assert.AreEqual(1, ConsolidatorCount(call));
+            Assert.AreEqual(1, ConsolidatorCount(aapl));
+            Assert.AreEqual(2, delta.Consolidators.Count);
+            Assert.IsTrue(delta.Consolidators.All(consolidator => ConsolidatorsOf(call).Contains(consolidator) || ConsolidatorsOf(aapl).Contains(consolidator)));
+        }
+
+        [Test]
+        public void RemovingTheReferenceSymbolKeepsTheTargetConsolidator()
+        {
+            var beta = _algorithm.B(_spy, _ibm, 10, Resolution.Daily);
+            Assert.AreEqual(2, beta.Consolidators.Count);
+
+            _algorithm.Securities.Remove(_ibm);
+
+            Assert.AreEqual(0, ConsolidatorCount(_ibm));
             Assert.AreEqual(1, ConsolidatorCount(_spy));
-            Assert.IsTrue(_algorithm.SubscriptionManager.Subscriptions
-                .Where(config => config.Symbol == _spy)
-                .Any(config => config.Consolidators.Contains(rawConsolidator)));
+            Assert.AreEqual(1, beta.Consolidators.Count);
+            Assert.IsTrue(ConsolidatorsOf(_spy).Contains(beta.Consolidators.Single()));
+        }
+
+        [Test]
+        public void DeregisteringMultiSymbolIndicatorsRemovesAllTheirConsolidators()
+        {
+            var beta = _algorithm.B(_spy, _ibm, 10, Resolution.Daily);
+
+            _algorithm.DeregisterIndicator(beta);
+
+            Assert.IsEmpty(beta.Consolidators);
+            Assert.AreEqual(0, ConsolidatorCount(_spy));
+            Assert.AreEqual(0, ConsolidatorCount(_ibm));
+        }
+
+        [TestCase(true)]
+        [TestCase(false)]
+        public void DoesNotKeepConsolidatorsRemovedThroughTheSubscriptionManager(bool automaticDeregistration)
+        {
+            _algorithm.Settings.AutomaticIndicatorDeregistration = automaticDeregistration;
+
+            var consolidator = ConsolidateAndRemove();
+            GC.Collect();
+            GC.WaitForPendingFinalizers();
+
+            Assert.IsFalse(consolidator.IsAlive);
+        }
+
+        [TestCase(true)]
+        [TestCase(false)]
+        public void DoesNotKeepIndicatorsWhoseConsolidatorWasRemovedThroughTheSubscriptionManager(bool automaticDeregistration)
+        {
+            _algorithm.Settings.AutomaticIndicatorDeregistration = automaticDeregistration;
+
+            var indicator = RegisterIndicatorAndRemoveItsConsolidator();
+            GC.Collect();
+            GC.WaitForPendingFinalizers();
+
+            Assert.IsFalse(indicator.IsAlive);
+        }
+
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        private WeakReference ConsolidateAndRemove()
+        {
+            var consolidator = _algorithm.Consolidate(_spy, Resolution.Hour, (TradeBar bar) => { });
+            _algorithm.SubscriptionManager.RemoveConsolidator(_spy, consolidator);
+            // the scan queue drops removed consolidators on the next scan
+            _algorithm.SubscriptionManager.ScanPastConsolidators(DateTime.MaxValue, _algorithm);
+            return new WeakReference(consolidator);
+        }
+
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        private WeakReference RegisterIndicatorAndRemoveItsConsolidator()
+        {
+            var sma = _algorithm.SMA(_spy, 10, Resolution.Minute);
+            _algorithm.SubscriptionManager.RemoveConsolidator(_spy, sma.Consolidators.Single());
+            _algorithm.SubscriptionManager.ScanPastConsolidators(DateTime.MaxValue, _algorithm);
+            return new WeakReference(sma);
         }
 
         [Test]
@@ -135,6 +232,20 @@ namespace QuantConnect.Tests.Algorithm
 
             Assert.AreEqual(1, sma.Consolidators.Count);
             Assert.AreEqual(1, ConsolidatorCount(_spy));
+        }
+
+        [Test]
+        public void DoesNotTrackIndicatorsRegisteredWhileDisabled()
+        {
+            _algorithm.Settings.AutomaticIndicatorDeregistration = false;
+            var sma = _algorithm.SMA(_spy, 10, Resolution.Minute);
+            _algorithm.Settings.AutomaticIndicatorDeregistration = true;
+
+            _algorithm.Securities.Remove(_spy);
+
+            // the consolidator is removed but the indicator was never linked to it
+            Assert.AreEqual(0, ConsolidatorCount(_spy));
+            Assert.AreEqual(1, sma.Consolidators.Count);
         }
 
         [Test]

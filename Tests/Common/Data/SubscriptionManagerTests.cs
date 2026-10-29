@@ -734,6 +734,36 @@ def get_consolidator():
             Assert.IsTrue(wrapper.Disposed);
         }
 
+        [Test]
+        public void RemoveConsolidatorsRemovesAllTheSymbolConsolidators()
+        {
+            var algorithm = new AlgorithmStub();
+            var spy = algorithm.AddEquity("SPY").Symbol;
+            var ibm = algorithm.AddEquity("IBM").Symbol;
+
+            using var spyHourConsolidator = new TradeBarConsolidator(TimeSpan.FromHours(1));
+            using var spyDayConsolidator = new TradeBarConsolidator(TimeSpan.FromDays(1));
+            using var ibmConsolidator = new TradeBarConsolidator(TimeSpan.FromHours(1));
+            algorithm.SubscriptionManager.AddConsolidator(spy, spyHourConsolidator);
+            algorithm.SubscriptionManager.AddConsolidator(spy, spyDayConsolidator);
+            algorithm.SubscriptionManager.AddConsolidator(ibm, ibmConsolidator);
+
+            var removed = algorithm.SubscriptionManager.RemoveConsolidators(spy);
+
+            CollectionAssert.AreEquivalent(new[] { spyHourConsolidator, spyDayConsolidator }, removed);
+            Assert.IsEmpty(GetConsolidators(algorithm, spy));
+            CollectionAssert.AreEqual(new[] { ibmConsolidator }, GetConsolidators(algorithm, ibm));
+            Assert.IsEmpty(algorithm.SubscriptionManager.RemoveConsolidators(spy));
+        }
+
+        private static List<IDataConsolidator> GetConsolidators(QCAlgorithm algorithm, Symbol symbol)
+        {
+            return algorithm.SubscriptionManager.Subscriptions
+                .Where(config => config.Symbol == symbol)
+                .SelectMany(config => config.Consolidators)
+                .ToList();
+        }
+
         [Test, Parallelizable(ParallelScope.None)]
         public void RunRemoveConsolidatorsRegressionAlgorithm()
         {

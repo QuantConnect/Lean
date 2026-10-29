@@ -20,6 +20,7 @@ using QuantConnect.Indicators;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using Python.Runtime;
 using QuantConnect.Util;
 using static QuantConnect.StringExtensions;
@@ -56,11 +57,9 @@ namespace QuantConnect.Algorithm
             "Period"
         };
 
-        // indicators and consolidators created through the helper methods, per symbol, so they can be
-        // deregistered when the security is removed, see 'DeregisterIndicatorsAndConsolidators'
-        private readonly Dictionary<Symbol, HashSet<IndicatorBase>> _registeredIndicators = new();
-        private readonly Dictionary<Symbol, HashSet<IDataConsolidator>> _registeredConsolidators = new();
-        private readonly object _registrationsLock = new();
+        // indicators fed by each registered consolidator, to detach it from them when its security is removed.
+        // Weakly keyed so entries die with the consolidator, see 'RemoveSecurityConsolidators'
+        private readonly ConditionalWeakTable<IDataConsolidator, HashSet<IndicatorBase>> _indicatorsByConsolidator = new();
 
         /// <summary>
         /// Gets whether or not WarmUpIndicator is allowed to warm up indicators
@@ -3396,52 +3395,29 @@ namespace QuantConnect.Algorithm
             foreach (var consolidator in indicator.Consolidators)
             {
                 SubscriptionManager.RemoveConsolidator(null, consolidator);
+                _indicatorsByConsolidator.Remove(consolidator);
             }
 
             indicator.Consolidators.Clear();
-
-            // multi symbol indicators (e.g. Beta) are tracked under each of their symbols
-            lock (_registrationsLock)
-            {
-                foreach (var indicators in _registeredIndicators.Values)
-                {
-                    indicators.Remove(indicator);
-                }
-            }
         }
 
         /// <summary>
-        /// Deregisters the indicators and consolidators created for the given symbol through the helper methods,
-        /// e.g. <see cref="SMA(Symbol, int, Resolution?, Func{IBaseData, decimal})"/> or
-        /// <see cref="Consolidate(Symbol, Resolution, Action{TradeBar})"/>, so they stop receiving data.
+        /// Removes the consolidators of the given symbol and detaches them from the indicators they feed.
         /// Multi symbol indicators, e.g. <see cref="B(Symbol, Symbol, int, Resolution?, Func{IBaseData, IBaseDataBar})"/>,
-        /// are deregistered through any of their symbols. Consolidators added directly through the
-        /// <see cref="SubscriptionManager"/> are not tracked and are kept.
+        /// only lose the consolidator of the removed symbol and keep the others.
         /// </summary>
-        /// <param name="symbol">The symbol whose indicators and consolidators will be deregistered</param>
-        private void DeregisterIndicatorsAndConsolidators(Symbol symbol)
+        /// <param name="symbol">The symbol whose consolidators will be removed</param>
+        private void RemoveSecurityConsolidators(Symbol symbol)
         {
-            HashSet<IndicatorBase> indicators;
-            HashSet<IDataConsolidator> consolidators;
-            lock (_registrationsLock)
+            foreach (var consolidator in SubscriptionManager.RemoveConsolidators(symbol))
             {
-                _registeredIndicators.Remove(symbol, out indicators);
-                _registeredConsolidators.Remove(symbol, out consolidators);
-            }
-
-            if (indicators != null)
-            {
-                foreach (var indicator in indicators)
+                if (_indicatorsByConsolidator.TryGetValue(consolidator, out var indicators))
                 {
-                    DeregisterIndicator(indicator);
-                }
-            }
-
-            if (consolidators != null)
-            {
-                foreach (var consolidator in consolidators)
-                {
-                    SubscriptionManager.RemoveConsolidator(symbol, consolidator);
+                    foreach (var indicator in indicators)
+                    {
+                        indicator.Consolidators.Remove(consolidator);
+                    }
+                    _indicatorsByConsolidator.Remove(consolidator);
                 }
             }
         }
@@ -4527,24 +4503,9 @@ namespace QuantConnect.Algorithm
             // register the consolidator for automatic updates via SubscriptionManager
             SubscriptionManager.AddConsolidator(symbol, consolidator, tickType);
 
-            lock (_registrationsLock)
+            if (indicatorBase != null && Settings.AutomaticIndicatorDeregistration)
             {
-                if (indicatorBase != null)
-                {
-                    if (!_registeredIndicators.TryGetValue(symbol, out var indicators))
-                    {
-                        _registeredIndicators[symbol] = indicators = new();
-                    }
-                    indicators.Add(indicatorBase);
-                }
-                else
-                {
-                    if (!_registeredConsolidators.TryGetValue(symbol, out var consolidators))
-                    {
-                        _registeredConsolidators[symbol] = consolidators = new();
-                    }
-                    consolidators.Add(consolidator);
-                }
+                _indicatorsByConsolidator.GetOrCreateValue(consolidator).Add(indicatorBase);
             }
         }
 

@@ -33,6 +33,7 @@ namespace QuantConnect.Data
     {
         private readonly PriorityQueue<ConsolidatorWrapper, ConsolidatorScanPriority> _consolidatorsSortedByScanTime;
         private readonly Dictionary<IDataConsolidator, ConsolidatorWrapper> _consolidators;
+        private readonly Dictionary<Symbol, HashSet<IDataConsolidator>> _consolidatorsBySymbol;
         private List<ConsolidatorWrapper> _consolidatorsToAdd;
         private readonly object _threadSafeCollectionLock;
         private readonly ITimeKeeper _timeKeeper;
@@ -65,6 +66,7 @@ namespace QuantConnect.Data
         public SubscriptionManager(ITimeKeeper timeKeeper)
         {
             _consolidators = new();
+            _consolidatorsBySymbol = new();
             _timeKeeper = timeKeeper;
             _consolidatorsSortedByScanTime = new(1000, ConsolidatorScanPriority.Comparer);
             _threadSafeCollectionLock = new object();
@@ -187,7 +189,13 @@ namespace QuantConnect.Data
                     subscription.Consolidators.Add(consolidator);
 
                     var wrapper = _consolidators[consolidator] =
-                        new ConsolidatorWrapper(consolidator, subscription.Increment, _timeKeeper, _timeKeeper.GetLocalTimeKeeper(subscription.ExchangeTimeZone));
+                        new ConsolidatorWrapper(symbol, consolidator, subscription.Increment, _timeKeeper, _timeKeeper.GetLocalTimeKeeper(subscription.ExchangeTimeZone));
+
+                    if (!_consolidatorsBySymbol.TryGetValue(symbol, out var symbolConsolidators))
+                    {
+                        _consolidatorsBySymbol[symbol] = symbolConsolidators = new();
+                    }
+                    symbolConsolidators.Add(consolidator);
 
                     lock (_threadSafeCollectionLock)
                     {
@@ -242,13 +250,39 @@ namespace QuantConnect.Data
 
             // dispose the scan wrapper even if the symbol has no subscriptions left (e.g. removed from the universe),
             // else 'ScanPastConsolidators' keeps re-enqueuing it forever
-            if (_consolidators.Remove(consolidator, out var consolidatorsToScan))
+            if (_consolidators.Remove(consolidator, out var wrapper))
             {
-                consolidatorsToScan.Dispose();
+                wrapper.Dispose();
+
+                if (_consolidatorsBySymbol.TryGetValue(wrapper.Symbol, out var symbolConsolidators)
+                    && symbolConsolidators.Remove(consolidator) && symbolConsolidators.Count == 0)
+                {
+                    _consolidatorsBySymbol.Remove(wrapper.Symbol);
+                }
             }
 
             // dispose of the consolidator to remove any remaining event handlers
             consolidator.DisposeSafely();
+        }
+
+        /// <summary>
+        /// Removes all the consolidators registered for the symbol
+        /// </summary>
+        /// <param name="symbol">The symbol whose consolidators will be removed</param>
+        /// <returns>The removed consolidators</returns>
+        public IReadOnlyCollection<IDataConsolidator> RemoveConsolidators(Symbol symbol)
+        {
+            if (!_consolidatorsBySymbol.TryGetValue(symbol, out var consolidators))
+            {
+                return Array.Empty<IDataConsolidator>();
+            }
+
+            var removed = consolidators.ToList();
+            foreach (var consolidator in removed)
+            {
+                RemoveConsolidator(symbol, consolidator);
+            }
+            return removed;
         }
 
         /// <summary>
