@@ -105,6 +105,7 @@ namespace QuantConnect.Securities.Option
         /// <param name="contract">The option contract to evaluate</param>
         /// <returns>An instance of <see cref="OptionPriceModelResult"/> containing the theoretical
         /// price of the specified option contract</returns>
+        [Obsolete("This method is deprecated. Use Evaluate(OptionPriceModelParameters parameters) instead.")]
         public override OptionPriceModelResult Evaluate(Security security, Slice slice, OptionContract contract)
         {
             if (!AllowedOptionStyles.Contains(contract.Symbol.ID.OptionStyle))
