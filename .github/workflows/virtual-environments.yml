@@ -24,8 +24,25 @@ jobs:
       - name: Run Python Virtual Environments Tests
         shell: bash
         run: |
+          # Both virtual environments are set up while the solution builds. Their test expects them at /lean-testenv, one at a time,
+          # so the one without system packages is set up aside and moved there before its test
+          setupVirtualEnvironments() {
+            # Python Virtual Environment System Packages
+            python -m venv /lean-testenv --system-site-packages && . /lean-testenv/bin/activate && pip install --no-cache-dir lean==1.0.221 && deactivate &&
+
+            # Python Virtual Environment
+            python -m venv /lean-testenv-no-system-packages && . /lean-testenv-no-system-packages/bin/activate && pip install --no-cache-dir lean==1.0.221 && deactivate
+          }
+          setupVirtualEnvironments > setupVirtualEnvironments.log 2>&1 &
+          setupVirtualEnvironmentsPid=$!
+
           # Build
           dotnet build /p:Configuration=Release /v:quiet /p:WarningLevel=1 QuantConnect.Lean.sln
+
+          wait $setupVirtualEnvironmentsPid && result=passed || result=failed
+          echo "========== setupVirtualEnvironments $result =========="
+          cat setupVirtualEnvironments.log
+          [ $result = passed ]
 
           # The test groups below run at the same time, each one in its own test hosts and in order, and their output is shown as each one ends.
           # Packages that hang or interfere when sharing a test host keep running in their own dotnet test invocation, as before.
@@ -35,14 +52,11 @@ jobs:
           }
 
           virtualEnvironmentAndSeparatePackageTests() {
-            # Python Virtual Environment System Packages
-            python -m venv /lean-testenv --system-site-packages && . /lean-testenv/bin/activate && pip install --no-cache-dir lean==1.0.221 && deactivate
-
             # Run Virtual Environment Test System Packages
             dotnet test ./Tests/bin/Release/QuantConnect.Tests.dll --filter "FullyQualifiedName=QuantConnect.Tests.Python.PythonVirtualEnvironmentTests.AssertVirtualEnvironment"
 
             # Python Virtual Environment
-            rm -rf /lean-testenv && python -m venv /lean-testenv && . /lean-testenv/bin/activate && pip install --no-cache-dir lean==1.0.221 && deactivate
+            rm -rf /lean-testenv && mv /lean-testenv-no-system-packages /lean-testenv
 
             # Run Virtual Environment Test
             dotnet test ./Tests/bin/Release/QuantConnect.Tests.dll --filter "FullyQualifiedName=QuantConnect.Tests.Python.PythonVirtualEnvironmentTests.AssertVirtualEnvironment"
@@ -70,6 +84,9 @@ jobs:
 
             # Run Shap
             dotnet test ./Tests/bin/Release/QuantConnect.Tests.dll --filter "FullyQualifiedName=QuantConnect.Tests.Python.PythonPackagesTests.KerasTest|PyvinecopulibTest" --blame-hang-timeout 120seconds --blame-crash
+
+            # Run Neuralforecast
+            dotnet test ./Tests/bin/Release/QuantConnect.Tests.dll --filter "FullyQualifiedName=QuantConnect.Tests.Python.PythonPackagesTests.Neuralforecast" --blame-hang-timeout 120seconds --blame-crash
           }
 
           separatePackageTests() {
@@ -83,8 +100,6 @@ jobs:
             dotnet test ./Tests/bin/Release/QuantConnect.Tests.dll --filter "FullyQualifiedName=QuantConnect.Tests.Python.PythonPackagesTests.MlxtendTest|Thinc" --blame-hang-timeout 120seconds --blame-crash
 
             dotnet test ./Tests/bin/Release/QuantConnect.Tests.dll --filter "FullyQualifiedName=QuantConnect.Tests.Python.PythonPackagesTests.ModuleVersionTestExplicit" --blame-hang-timeout 120seconds --blame-crash
-
-            dotnet test ./Tests/bin/Release/QuantConnect.Tests.dll --filter "FullyQualifiedName=QuantConnect.Tests.Python.PythonPackagesTests.Neuralforecast" --blame-hang-timeout 120seconds --blame-crash
 
             dotnet test ./Tests/bin/Release/QuantConnect.Tests.dll --filter "FullyQualifiedName=QuantConnect.Tests.Python.PythonPackagesTests.Tsfel" --blame-hang-timeout 120seconds --blame-crash
 
